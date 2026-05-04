@@ -628,6 +628,7 @@ class _IncomingOfferRowState extends ConsumerState<_IncomingOfferRow>
         SipDmSendError.peerBlocked => l10n.sipDmPeerBlocked,
         SipDmSendError.peerRateLimited => l10n.sipDmPeerRateLimited,
         SipDmSendError.budgetExhausted => l10n.sipDmBudgetExhausted,
+        SipDmSendError.peerUnsupported => l10n.sipPlayPeerUnsupported,
         _ => l10n.sipDmSessionClosed,
       };
       showErrorSnackBar(context, message);
@@ -1011,6 +1012,7 @@ class _TttBoardSectionState extends ConsumerState<_TttBoardSection>
         SipDmSendError.peerBlocked => l10n.sipDmPeerBlocked,
         SipDmSendError.peerRateLimited => l10n.sipDmPeerRateLimited,
         SipDmSendError.budgetExhausted => l10n.sipDmBudgetExhausted,
+        SipDmSendError.peerUnsupported => l10n.sipPlayPeerUnsupported,
         _ => l10n.sipDmSessionClosed,
       };
       AppLogging.sipPlay(
@@ -1428,6 +1430,7 @@ class _C4BoardSectionState extends ConsumerState<_C4BoardSection>
         SipDmSendError.peerBlocked => l10n.sipDmPeerBlocked,
         SipDmSendError.peerRateLimited => l10n.sipDmPeerRateLimited,
         SipDmSendError.budgetExhausted => l10n.sipDmBudgetExhausted,
+        SipDmSendError.peerUnsupported => l10n.sipPlayPeerUnsupported,
         _ => l10n.sipDmSessionClosed,
       };
       AppLogging.sipPlay(

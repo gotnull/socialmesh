@@ -43654,6 +43654,10 @@
     "@sipPlayDuplicateOfferBlocked": {
         "description": "Snackbar shown when the user attempts to send a second offer for a game while the previous offer for the same game is still pending or active in this session."
     },
+    "sipPlayPeerUnsupported": "This peer's app doesn't support games yet.",
+    "@sipPlayPeerUnsupported": {
+        "description": "Snackbar shown when a SIP Play frame (offer/accept/decline/resign/move) cannot be sent because the peer hasn't advertised dmPlayV1 capability and there's no session evidence either. Replaces the misleading sipDmSessionClosed fallback for the play-specific peer-unsupported error."
+    },
     "sipPlayLifecycleSent": "Offer sent",
     "@sipPlayLifecycleSent": {
         "description": "Snackbar shown to the offerer once the offer envelope has been transmitted to the peer."

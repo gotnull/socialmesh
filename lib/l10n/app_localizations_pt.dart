@@ -32876,6 +32876,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'A game offer is already in progress';
 
   @override
+  String get sipPlayPeerUnsupported =>
+      'A aplicação deste utilizador ainda não suporta jogos.';
+
+  @override
   String get sipPlayLifecycleSent => 'Offer sent';
 
   @override

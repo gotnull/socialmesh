@@ -31,6 +31,8 @@ import '../core/logging.dart';
 import '../services/protocol/overlay/overlay_secure_session_manager.dart';
 import '../services/protocol/overlay/overlay_types.dart';
 import '../services/protocol/sip/peer_rate_limiter.dart';
+import '../services/protocol/sip/play/sip_play_codec.dart';
+import '../services/protocol/sip/play/sip_play_constants.dart';
 import '../services/protocol/sip/sip_codec.dart';
 import '../services/protocol/sip/sip_constants.dart';
 import '../services/protocol/sip/sip_dm.dart';
@@ -107,6 +109,138 @@ class SipDmRouterOutcome {
     required SipDmInkBlockReason reason,
     required SipDmSendError error,
   }) : this._(isOk: false, error: error, inkBlockReason: reason);
+}
+
+/// Why a SIP Play send was allowed or blocked at the capability gate.
+///
+/// Lifted out as an enum (rather than free-form strings) so the
+/// outcome stays diagnosable in logs and pinnable in tests.
+enum SipPlaySendCapabilityReason {
+  /// Outbound `offer` (initiating action). Discovery cap cache
+  /// reports the peer as `dmPlayV1`-capable; allowed.
+  initiatingOfferRequiresCapability,
+
+  /// Lifecycle response (`accept` / `decline` / `resign` / `move`)
+  /// for which the session has at least one inbound dmPlay envelope
+  /// in history. The inbound envelope is direct evidence the peer
+  /// can produce dmPlay frames at the wire level for this session,
+  /// regardless of what the (asynchronous) discovery cap cache shows.
+  lifecycleResponseAllowedBySessionEvidence,
+
+  /// Lifecycle response with no inbound dmPlay yet (e.g. a self-
+  /// initiated game where we sent the offer and the peer hasn't yet
+  /// accepted), but the discovery cap cache already shows
+  /// `dmPlayV1`. Allowed.
+  lifecycleResponseAllowedByDiscoveryCapability,
+
+  /// Initiating offer with no peer entry in the discovery cache.
+  /// Blocked — we have neither cap evidence nor session evidence.
+  blockedPeerUnknown,
+
+  /// Initiating offer where the peer is known but has not advertised
+  /// `dmPlayV1`. Blocked — the wire frame would be silently dropped
+  /// on the peer side, wasting airtime.
+  blockedNoCapability,
+}
+
+/// Pure decision shape for the SIP Play capability gate.
+class SipPlaySendCapabilityDecision {
+  final bool allowed;
+  final SipPlaySendCapabilityReason reason;
+  const SipPlaySendCapabilityDecision._(this.allowed, this.reason);
+}
+
+/// Whether [action] is a lifecycle response (rather than an
+/// initiating action). Lifecycle responses are sendable based on
+/// session evidence — the discovery cap cache is asynchronous
+/// (CAP_BEACON every ~300s + jitter, or older clients that never
+/// advertise the per-DM-subtype bits at all), and refusing a response
+/// because of stale or never-populated cap data leaves the user
+/// stuck on a permanent pending bubble with no way to dismiss it.
+bool _isPlayLifecycleResponse(SipPlayAction action) =>
+    action == SipPlayAction.accept ||
+    action == SipPlayAction.decline ||
+    action == SipPlayAction.resign ||
+    action == SipPlayAction.move;
+
+/// Whether [session] has any inbound `dmPlay` history entry. One such
+/// entry proves the peer is capable of producing dmPlay frames at
+/// the wire level for this session, irrespective of what their
+/// discovery CAP_BEACON / CAP_RESP advertised. Used as the
+/// session-evidence signal for the capability gate.
+///
+/// O(N) in session.messages but only invoked on user-initiated send
+/// (Accept/Decline/Resign/move tap), so the scan cost is negligible.
+bool sessionHasInboundPlay(SipDmSession session) {
+  for (final m in session.messages) {
+    if (m.contentType == SipDmContentType.play &&
+        m.direction == SipDmDirection.inbound) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/// Capability-gating decision for outbound SIP Play frames.
+///
+/// Splits the gate by action category:
+///
+///   * `offer` (initiating) — strict: requires the peer to have
+///     advertised `dmPlayV1` via the discovery cap cache. We don't
+///     waste airtime initiating to a peer who can't decode the
+///     unknown msg_type.
+///   * `accept` / `decline` / `resign` / `move` (lifecycle response
+///     to an existing instance) — allowed if the session has any
+///     inbound dmPlay envelope (session evidence) OR the discovery
+///     cap cache already shows `dmPlayV1`. Either is sufficient.
+///
+/// Pure helper — no `Ref`, no I/O, no clock. Caller is responsible
+/// for reading discovery state + session messages and feeding the
+/// primitive inputs in.
+SipPlaySendCapabilityDecision evaluatePlaySendCapability({
+  required SipPlayAction action,
+  required bool peerKnown,
+  required bool peerSupportsDmPlayV1,
+  required bool sessionWitnessedInboundPlay,
+}) {
+  if (!_isPlayLifecycleResponse(action)) {
+    // Initiating action (offer, or any future non-response action).
+    if (!peerKnown) {
+      return const SipPlaySendCapabilityDecision._(
+        false,
+        SipPlaySendCapabilityReason.blockedPeerUnknown,
+      );
+    }
+    if (!peerSupportsDmPlayV1) {
+      return const SipPlaySendCapabilityDecision._(
+        false,
+        SipPlaySendCapabilityReason.blockedNoCapability,
+      );
+    }
+    return const SipPlaySendCapabilityDecision._(
+      true,
+      SipPlaySendCapabilityReason.initiatingOfferRequiresCapability,
+    );
+  }
+
+  // Lifecycle response: session evidence overrides stale discovery.
+  if (sessionWitnessedInboundPlay) {
+    return const SipPlaySendCapabilityDecision._(
+      true,
+      SipPlaySendCapabilityReason.lifecycleResponseAllowedBySessionEvidence,
+    );
+  }
+  // No session evidence yet — fall back to discovery cap cache.
+  if (peerKnown && peerSupportsDmPlayV1) {
+    return const SipPlaySendCapabilityDecision._(
+      true,
+      SipPlaySendCapabilityReason.lifecycleResponseAllowedByDiscoveryCapability,
+    );
+  }
+  return const SipPlaySendCapabilityDecision._(
+    false,
+    SipPlaySendCapabilityReason.blockedNoCapability,
+  );
 }
 
 /// Single entry point the UI uses for DM send. Not a `Notifier` —
@@ -254,16 +388,20 @@ class SipDmRouter {
   ///
   /// [playPayload] must be the byte sequence produced by
   /// `SipPlayCodec.encode` (a v1 SIP Play envelope). The router enforces:
-  ///   1. peer has advertised `dmPlayV1` (terminal block on miss),
+  ///   1. capability gate — strict for offers (initiating), session-
+  ///      evidence-aware for lifecycle responses; see
+  ///      [evaluatePlaySendCapability],
   ///   2. session is active and known,
   ///   3. T+S block + per-peer rate gate (PeerRateKind.play),
   ///   4. encoded size + envelope fits the rate limiter,
   ///   5. secure-when-all-true gate same as [sendText].
   ///
   /// Returns `SipDmRouterOutcome.failInk(...)` shape (reusing
-  /// [SipDmInkBlockReason] — peer-feature gate is the same family of
-  /// terminal failure) when the peer does not advertise SIP Play.
-  /// The UI should hide the Play composer mode when this fails.
+  /// [SipDmInkBlockReason]) when the capability gate refuses. The UI
+  /// hides the Play composer mode for new offers when caps say no;
+  /// this branch is defence-in-depth there but is the primary gate
+  /// for response actions whose UI cannot be hidden (the inbound
+  /// offer bubble's Accept/Decline buttons must always be reachable).
   Future<SipDmRouterOutcome> sendPlay({
     required int sessionTag,
     required Uint8List playPayload,
@@ -277,34 +415,53 @@ class SipDmRouter {
       return const SipDmRouterOutcome.fail(SipDmSendError.sessionNotFound);
     }
 
-    // Hard peer-feature gate. Distinct from the secure gate — peers
-    // without dmPlayV1 silently drop unknown 0x46 frames, so sending
-    // would be wasted airtime.
+    // Decode the envelope first — the action determines whether the
+    // capability gate is strict (offer) or session-evidence-aware
+    // (accept/decline/resign/move). A malformed envelope falls
+    // through to the legacy strict gate; it'll get rejected
+    // downstream by `dm.buildPlayMessage`'s defensive decode anyway.
+    final parsed = SipPlayCodec.decode(playPayload);
+    final action = parsed.isOk ? parsed.envelope!.action : null;
+
     final discovery = _ref.read(sipDiscoveryProvider);
-    if (discovery == null) {
-      return const SipDmRouterOutcome.failInk(
-        reason: SipDmInkBlockReason.peerUnknown,
-        error: SipDmSendError.peerUnsupported,
-      );
-    }
-    final peer = discovery.getPeer(session.peerNodeId);
-    if (peer == null) {
-      AppLogging.sipPlay(
-        'send_blocked reason=peer_unknown peer=0x'
-        '${session.peerNodeId.toRadixString(16)}',
-      );
-      return const SipDmRouterOutcome.failInk(
-        reason: SipDmInkBlockReason.peerUnknown,
-        error: SipDmSendError.peerUnsupported,
-      );
-    }
-    if (!peer.supportsDmPlayV1) {
-      AppLogging.sipPlay(
-        'send_blocked reason=peer_unsupported peer=0x'
-        '${session.peerNodeId.toRadixString(16)}',
-      );
-      return const SipDmRouterOutcome.failInk(
-        reason: SipDmInkBlockReason.peerUnsupported,
+    final peer = discovery?.getPeer(session.peerNodeId);
+    final peerKnown = peer != null;
+    final peerFeatures = peer?.features ?? 0;
+    final peerSupportsDmPlayV1 = peer?.supportsDmPlayV1 ?? false;
+    final sessionWitnessedInboundPlay = sessionHasInboundPlay(session);
+
+    final decision = action == null
+        ? const SipPlaySendCapabilityDecision._(
+            false,
+            SipPlaySendCapabilityReason.blockedNoCapability,
+          )
+        : evaluatePlaySendCapability(
+            action: action,
+            peerKnown: peerKnown,
+            peerSupportsDmPlayV1: peerSupportsDmPlayV1,
+            sessionWitnessedInboundPlay: sessionWitnessedInboundPlay,
+          );
+
+    // One log line per send-attempt — sendPlay is invoked from user
+    // tap handlers (offer/accept/decline/resign) or from the move
+    // submit path, so the call rate is naturally tap-bounded; no
+    // extra dedupe needed.
+    AppLogging.sipPlay(
+      'play_send_capability_check '
+      'action=${action?.name ?? 'malformed'} '
+      'peerCapabilityFeatures=0x${peerFeatures.toRadixString(16)} '
+      'sessionWitnessedPlay=$sessionWitnessedInboundPlay '
+      'allowed=${decision.allowed} '
+      'reason=${decision.reason.name}',
+    );
+
+    if (!decision.allowed) {
+      final blockReason =
+          decision.reason == SipPlaySendCapabilityReason.blockedPeerUnknown
+          ? SipDmInkBlockReason.peerUnknown
+          : SipDmInkBlockReason.peerUnsupported;
+      return SipDmRouterOutcome.failInk(
+        reason: blockReason,
         error: SipDmSendError.peerUnsupported,
       );
     }

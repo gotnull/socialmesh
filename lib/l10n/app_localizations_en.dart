@@ -32553,6 +32553,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'A game offer is already in progress';
 
   @override
+  String get sipPlayPeerUnsupported =>
+      'This peer\'s app doesn\'t support games yet.';
+
+  @override
   String get sipPlayLifecycleSent => 'Offer sent';
 
   @override

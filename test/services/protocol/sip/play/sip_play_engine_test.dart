@@ -840,4 +840,253 @@ void main() {
       expect(state.gameTypeCode, equals(0x03));
     });
   });
+
+  // Sticky-terminal invariant: a witnessed decline/resign envelope must
+  // make the instance non-blocking even if replay context is missing.
+  // Regression for the picker that stuck on "A game offer is already in
+  // progress" after the peer declined — see SocialMesh issue where a
+  // truncated history (offer entry lost, only decline surviving)
+  // replayed back to `pendingOffer` and blocked every future offer.
+  group('hasNonTerminalInstanceForGameType — sticky terminal invariant', () {
+    test('orphan decline with no offer → does not block', () {
+      // Replay context missing: only the decline survives. Without the
+      // sticky-terminal override, replay returns pendingOffer and the
+      // picker would refuse forever.
+      final entries = [
+        _entry(
+          _envelope(action: SipPlayAction.decline, seq: 1),
+          SipPlayEntryDirection.inbound,
+        ),
+      ];
+      expect(
+        SipPlayEngine.hasNonTerminalInstanceForGameType(
+          entries: entries,
+          gameTypeCode: _gameTypeTtt,
+        ),
+        isFalse,
+      );
+    });
+
+    test('orphan resign with no offer → does not block', () {
+      final entries = [
+        _entry(
+          _envelope(action: SipPlayAction.resign, seq: 1),
+          SipPlayEntryDirection.inbound,
+        ),
+      ];
+      expect(
+        SipPlayEngine.hasNonTerminalInstanceForGameType(
+          entries: entries,
+          gameTypeCode: _gameTypeTtt,
+        ),
+        isFalse,
+      );
+    });
+
+    test('offer alone → blocks', () {
+      final entries = [
+        _entry(
+          _envelope(action: SipPlayAction.offer, seq: 0),
+          SipPlayEntryDirection.outbound,
+        ),
+      ];
+      expect(
+        SipPlayEngine.hasNonTerminalInstanceForGameType(
+          entries: entries,
+          gameTypeCode: _gameTypeTtt,
+        ),
+        isTrue,
+      );
+    });
+
+    test('offer + decline → does not block', () {
+      final entries = [
+        _entry(
+          _envelope(action: SipPlayAction.offer, seq: 0),
+          SipPlayEntryDirection.inbound,
+        ),
+        _entry(
+          _envelope(action: SipPlayAction.decline, seq: 1),
+          SipPlayEntryDirection.outbound,
+        ),
+      ];
+      expect(
+        SipPlayEngine.hasNonTerminalInstanceForGameType(
+          entries: entries,
+          gameTypeCode: _gameTypeTtt,
+        ),
+        isFalse,
+      );
+    });
+
+    test('offer + accept + resign → does not block', () {
+      final entries = [
+        _entry(
+          _envelope(action: SipPlayAction.offer, seq: 0),
+          SipPlayEntryDirection.outbound,
+        ),
+        _entry(
+          _envelope(action: SipPlayAction.accept, seq: 1),
+          SipPlayEntryDirection.inbound,
+        ),
+        _entry(
+          _envelope(action: SipPlayAction.resign, seq: 2),
+          SipPlayEntryDirection.outbound,
+        ),
+      ];
+      expect(
+        SipPlayEngine.hasNonTerminalInstanceForGameType(
+          entries: entries,
+          gameTypeCode: _gameTypeTtt,
+        ),
+        isFalse,
+      );
+    });
+
+    test('offer + decline truncated to decline only → does not block '
+        '(captured-log regression: entries=1 lastAppliedSeq=-1 '
+        'status=pendingOffer)', () {
+      // Reproduces the exact log signature: history list lost the
+      // offer between epoch 9 and epoch 10, leaving only the decline.
+      // Replay alone would put this back at pendingOffer; the
+      // sticky-terminal override saves the user.
+      final fullLog = [
+        _entry(
+          _envelope(action: SipPlayAction.offer, seq: 0),
+          SipPlayEntryDirection.inbound,
+        ),
+        _entry(
+          _envelope(action: SipPlayAction.decline, seq: 1),
+          SipPlayEntryDirection.outbound,
+        ),
+      ];
+      final truncated = fullLog.sublist(1);
+      // Pin the underlying replay regression: with the offer gone,
+      // replay regresses to pendingOffer / -1 — the exact signature
+      // from the captured log. We assert it here so a future replay
+      // refactor can't silently mask the upstream issue.
+      final replayed = SipPlayEngine.replay(truncated);
+      expect(replayed.status, equals(SipPlayInstanceStatus.pendingOffer));
+      expect(replayed.lastAppliedSeq, equals(-1));
+      // Sticky-terminal override returns false despite replay regression.
+      expect(
+        SipPlayEngine.hasNonTerminalInstanceForGameType(
+          entries: truncated,
+          gameTypeCode: _gameTypeTtt,
+        ),
+        isFalse,
+      );
+    });
+
+    test('outbound offer + inbound decline scenario → fresh offer allowed', () {
+      // Mirror of the user's reported flow: I sent an offer, the
+      // peer declined. The picker must let me send another offer
+      // for the same game type without "A game offer is already in
+      // progress."
+      final entries = [
+        _entry(
+          _envelope(action: SipPlayAction.offer, seq: 0),
+          SipPlayEntryDirection.outbound,
+        ),
+        _entry(
+          _envelope(action: SipPlayAction.decline, seq: 1),
+          SipPlayEntryDirection.inbound,
+        ),
+      ];
+      expect(
+        SipPlayEngine.hasNonTerminalInstanceForGameType(
+          entries: entries,
+          gameTypeCode: _gameTypeTtt,
+        ),
+        isFalse,
+      );
+    });
+
+    test('multi-instance: one declined + one pending → still blocks '
+        '(only genuinely non-terminal offers gate the duplicate guard)', () {
+      final entries = [
+        // Instance A: declined, terminal.
+        _entry(
+          _envelope(action: SipPlayAction.offer, seq: 0, instanceId: 0xAAAA),
+          SipPlayEntryDirection.outbound,
+        ),
+        _entry(
+          _envelope(action: SipPlayAction.decline, seq: 1, instanceId: 0xAAAA),
+          SipPlayEntryDirection.inbound,
+        ),
+        // Instance B: pending, non-terminal.
+        _entry(
+          _envelope(action: SipPlayAction.offer, seq: 0, instanceId: 0xBBBB),
+          SipPlayEntryDirection.outbound,
+        ),
+      ];
+      expect(
+        SipPlayEngine.hasNonTerminalInstanceForGameType(
+          entries: entries,
+          gameTypeCode: _gameTypeTtt,
+        ),
+        isTrue,
+      );
+    });
+
+    test('multi-instance: one active + one declined → still blocks '
+        '(active game on same gameType gates fresh offer)', () {
+      final entries = [
+        // Instance A: declined, terminal.
+        _entry(
+          _envelope(action: SipPlayAction.offer, seq: 0, instanceId: 0xAAAA),
+          SipPlayEntryDirection.outbound,
+        ),
+        _entry(
+          _envelope(action: SipPlayAction.decline, seq: 1, instanceId: 0xAAAA),
+          SipPlayEntryDirection.inbound,
+        ),
+        // Instance B: active.
+        _entry(
+          _envelope(action: SipPlayAction.offer, seq: 0, instanceId: 0xBBBB),
+          SipPlayEntryDirection.outbound,
+        ),
+        _entry(
+          _envelope(action: SipPlayAction.accept, seq: 1, instanceId: 0xBBBB),
+          SipPlayEntryDirection.inbound,
+        ),
+      ];
+      expect(
+        SipPlayEngine.hasNonTerminalInstanceForGameType(
+          entries: entries,
+          gameTypeCode: _gameTypeTtt,
+        ),
+        isTrue,
+      );
+    });
+
+    test('different gameType → not affected by other-game terminal state', () {
+      // Declined TTT instance must not unblock or affect a C4 query.
+      final entries = [
+        _entry(
+          _envelope(
+            action: SipPlayAction.offer,
+            seq: 0,
+            gameTypeCode: _gameTypeTtt,
+          ),
+          SipPlayEntryDirection.outbound,
+        ),
+        _entry(
+          _envelope(
+            action: SipPlayAction.decline,
+            seq: 1,
+            gameTypeCode: _gameTypeTtt,
+          ),
+          SipPlayEntryDirection.inbound,
+        ),
+      ];
+      expect(
+        SipPlayEngine.hasNonTerminalInstanceForGameType(
+          entries: entries,
+          gameTypeCode: _gameTypeC4,
+        ),
+        isFalse,
+      );
+    });
+  });
 }

@@ -25997,6 +25997,7 @@
   "settingsSearchGameTurnsSubtitle": "Notifica-me quando for a minha vez num jogo.",
   "sipPlayGameNameTicTacToe": "Jogo do Galo",
   "sipPlayGameNameConnectFour": "Quatro em Linha",
+  "sipPlayPeerUnsupported": "A aplicação deste utilizador ainda não suporta jogos.",
   "offlineQueueMaxRetries": "Máximo de tentativas atingido: {error}",
   "@offlineQueueMaxRetries": {
     "placeholders": {

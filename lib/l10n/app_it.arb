@@ -25997,6 +25997,7 @@
   "settingsSearchGameTurnsSubtitle": "Avvisami quando è il mio turno in una partita.",
   "sipPlayGameNameTicTacToe": "Tris",
   "sipPlayGameNameConnectFour": "Forza Quattro",
+  "sipPlayPeerUnsupported": "L'app del peer non supporta ancora i giochi.",
   "offlineQueueMaxRetries": "Tentativi massimi raggiunti: {error}",
   "@offlineQueueMaxRetries": {
     "placeholders": {

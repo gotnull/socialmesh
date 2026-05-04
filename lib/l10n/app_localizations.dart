@@ -57266,6 +57266,12 @@ abstract class AppLocalizations {
   /// **'A game offer is already in progress'**
   String get sipPlayDuplicateOfferBlocked;
 
+  /// Snackbar shown when a SIP Play frame (offer/accept/decline/resign/move) cannot be sent because the peer hasn't advertised dmPlayV1 capability and there's no session evidence either. Replaces the misleading sipDmSessionClosed fallback for the play-specific peer-unsupported error.
+  ///
+  /// In en, this message translates to:
+  /// **'This peer\'s app doesn\'t support games yet.'**
+  String get sipPlayPeerUnsupported;
+
   /// Snackbar shown to the offerer once the offer envelope has been transmitted to the peer.
   ///
   /// In en, this message translates to:

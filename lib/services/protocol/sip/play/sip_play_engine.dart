@@ -593,20 +593,68 @@ class SipPlayEngine {
   /// receiver (`SipDmManager.handleInboundPlay`) — to refuse a second
   /// concurrent offer for the same game in the same session.
   ///
-  /// Pure replay-based check: groups entries by instanceId, replays
-  /// each, and returns true if any active instance is currently in
-  /// pendingOffer or active status with a matching gameTypeCode.
-  /// Terminal states (won/draw/declined/resigned) do NOT block — the
-  /// user can offer a fresh game once the previous one has resolved.
+  /// Groups entries by instanceId; each group is matched against
+  /// [gameTypeCode] via the first envelope. Per-group, the answer is
+  /// determined in two stages:
+  ///
+  /// 1. **Terminal-envelope override (sticky terminal invariant).**
+  ///    Terminal lifecycle envelopes are sticky. A witnessed decline /
+  ///    resign must make the instance non-blocking even if the offer
+  ///    or earlier replay context is missing. Without this, a
+  ///    truncated history (offer entry lost, only the decline
+  ///    surviving) replays back to `pendingOffer` and blocks every
+  ///    future offer for that gameType forever — see SocialMesh issue
+  ///    where the picker stuck on "A game offer is already in
+  ///    progress" after a peer declined.
+  /// 2. **Replay fallback.** When no terminal envelope is present, run
+  ///    the standard replay and treat `pendingOffer`/`active` as
+  ///    blocking; everything else (won/draw/unsupported/etc.) is
+  ///    non-blocking.
+  ///
+  /// When a group carries a terminal envelope but replay still lands
+  /// on a non-terminal status, that's a real history-coherence bug
+  /// upstream — log it (not deduped at the engine level — callers
+  /// invoke this rarely, on offer-tap or offer-receive) so the lost
+  /// entry can be investigated, but do not block the user.
   static bool hasNonTerminalInstanceForGameType({
     required List<SipPlayEntry> entries,
     required int gameTypeCode,
   }) {
     final byInstance = groupByInstance(entries);
-    for (final instanceEntries in byInstance.values) {
+    for (final group in byInstance.entries) {
+      final instanceId = group.key;
+      final instanceEntries = group.value;
       if (instanceEntries.isEmpty) continue;
       final firstGameType = instanceEntries.first.envelope.gameTypeCode;
       if (firstGameType != gameTypeCode) continue;
+
+      // Stage 1: terminal-envelope override.
+      SipPlayEntry? terminalEnvelope;
+      for (final e in instanceEntries) {
+        final action = e.envelope.action;
+        if (action == SipPlayAction.decline || action == SipPlayAction.resign) {
+          terminalEnvelope = e;
+          break;
+        }
+      }
+      if (terminalEnvelope != null) {
+        final state = replay(instanceEntries);
+        if (state.status == SipPlayInstanceStatus.pendingOffer ||
+            state.status == SipPlayInstanceStatus.active) {
+          AppLogging.sipPlay(
+            'lifecycle_incoherent '
+            'reason=terminalEnvelopeOverridesReplay '
+            'instance=0x${instanceId.toRadixString(16)} '
+            'gameType=0x${gameTypeCode.toRadixString(16)} '
+            'terminalAction=${terminalEnvelope.envelope.action.name} '
+            'replayStatus=${state.status.name} '
+            'entryCount=${instanceEntries.length}',
+          );
+        }
+        continue;
+      }
+
+      // Stage 2: replay-based fallback.
       final state = replay(instanceEntries);
       if (state.status == SipPlayInstanceStatus.pendingOffer ||
           state.status == SipPlayInstanceStatus.active) {
