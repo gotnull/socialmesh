@@ -25004,6 +25004,22 @@
     },
     "description": "Text in node management Parameters: {count} = numeric count."
   },
+  "nodedexSelfDeviceSubtitle": "Il tuo nodo mesh locale",
+  "@nodedexSelfDeviceSubtitle": {
+    "description": "NodeDex detail screen subtitle shown under the 'This Device' card when viewing the user's own connected node. Replaces the inferred-trait headline (e.g. 'Ghost') that is meaningless for self."
+  },
+  "nodedexSelfDeviceSummary": "L'attività mostrata qui proviene dalla sincronizzazione locale e dal traffico mesh osservato da questo dispositivo.",
+  "@nodedexSelfDeviceSummary": {
+    "description": "NodeDex detail screen summary text for the user's own node. Replaces the field-note copy (e.g. 'Most active in the night. Spotted on 1 of the last 14 days.') that implies third-party observation and is misleading for self."
+  },
+  "nodedexSelfDeviceTitle": "Questo dispositivo",
+  "@nodedexSelfDeviceTitle": {
+    "description": "NodeDex detail screen title for the card that replaces the trait/archetype card when viewing the user's own connected node."
+  },
+  "nodedexSelfLastSyncLabel": "Ultima sincronizzazione",
+  "@nodedexSelfLastSyncLabel": {
+    "description": "NodeDex discovery row label used in self-mode in place of 'Last encounter'. The value is sourced from the local connection's most recent sync, not a remote-peer encounter."
+  },
   "nodedexSetNickname": "Imposta soprannome",
   "@nodedexSetNickname": {
     "description": "Text displayed in node management"

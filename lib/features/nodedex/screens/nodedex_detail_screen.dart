@@ -93,6 +93,9 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
     with LifecycleSafeMixin<NodeDexDetailScreen> {
   late final TextEditingController _noteController;
   bool _editingNote = false;
+  // Tracks whether the self-presentation log has already fired for this screen
+  // instance so the message only surfaces once per open, not on every rebuild.
+  bool _loggedSelfPresentation = false;
 
   @override
   void initState() {
@@ -125,6 +128,19 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
     final scoredTraits = ref.watch(nodeDexScoredTraitsProvider(widget.nodeNum));
     final reduceMotion = ref.watch(reduceMotionEnabledProvider);
     final summary = ref.watch(nodeSummaryProvider(widget.nodeNum));
+    // Single source of truth for "is this the user's local node?". Drives the
+    // self-presentation branch (no archetype, no field note, renamed/hidden
+    // discovery rows) so remote-peer copy never appears for the user's own
+    // device. Never compare nodeNum to myNodeNum inline elsewhere — consume
+    // this provider.
+    final isSelf = ref.watch(nodeDexIsSelfProvider(widget.nodeNum));
+    if (isSelf && !_loggedSelfPresentation) {
+      _loggedSelfPresentation = true;
+      AppLogging.nodeDex(
+        'Self presentation selected for node ${widget.nodeNum} '
+        '(source: nodeDexIsSelfProvider)',
+      );
+    }
     // Use .value (not .asData?.value) so the count stays visible across
     // refreshes — asData returns null during AsyncLoading, which causes the
     // sticky-header trailing count to disappear/reappear and visibly nudges
@@ -257,22 +273,27 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
             ),
           ),
 
-          // Auto summary card — computed encounter insights
-          SliverToBoxAdapter(
-            child: _DetailEntrance(
-              index: 1,
-              reduceMotion: reduceMotion,
-              child: _CardContainer(
-                title: context.l10n.nodedexSummaryCardTitle,
-                icon: Icons.auto_awesome_outlined,
-                helpKey: 'auto_summary',
-                child: NodeSummaryCard(
-                  summary: summary,
-                  accentColor: entry.sigil?.primaryColor ?? context.accentColor,
+          // Auto summary card — computed encounter insights.
+          // Skipped for self: encounter-driven copy ("Most active in the
+          // night", "Spotted on N of the last M days") implies third-party
+          // observation and is misleading for the user's own device.
+          if (!isSelf)
+            SliverToBoxAdapter(
+              child: _DetailEntrance(
+                index: 1,
+                reduceMotion: reduceMotion,
+                child: _CardContainer(
+                  title: context.l10n.nodedexSummaryCardTitle,
+                  icon: Icons.auto_awesome_outlined,
+                  helpKey: 'auto_summary',
+                  child: NodeSummaryCard(
+                    summary: summary,
+                    accentColor:
+                        entry.sigil?.primaryColor ?? context.accentColor,
+                  ),
                 ),
               ),
             ),
-          ),
 
           // NodeBoard bridge — shows the node's personal BBS if it has one.
           // Feature-flag gated; NodeBoardNodeCard itself renders nothing when
@@ -298,7 +319,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                 child: _CardContainer(
                   title: context.l10n.petCompanionSectionTitle,
                   icon: Icons.egg_alt_outlined,
-                  helpKey: ref.watch(myNodeNumProvider) == entry.nodeNum
+                  helpKey: isSelf
                       ? 'pet_companion_self'
                       : 'pet_companion_remote',
                   child: PetCompanionContent(nodeNum: entry.nodeNum),
@@ -319,8 +340,17 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               ),
             ),
 
-          // Trait card
-          if (disclosure.showPrimaryTrait)
+          // Trait card — replaced by a self-device card for the user's own
+          // node (no archetype/Ghost/Familiar/etc. for self).
+          if (isSelf)
+            SliverToBoxAdapter(
+              child: _DetailEntrance(
+                index: 2,
+                reduceMotion: reduceMotion,
+                child: const _SelfDeviceCard(),
+              ),
+            )
+          else if (disclosure.showPrimaryTrait)
             SliverToBoxAdapter(
               child: _DetailEntrance(
                 index: 2,
@@ -329,8 +359,10 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               ),
             ),
 
-          // Trait evidence bullets
-          if (disclosure.showTraitEvidence && scoredTraits.isNotEmpty)
+          // Trait evidence bullets — skipped for self (no archetype to back).
+          if (!isSelf &&
+              disclosure.showTraitEvidence &&
+              scoredTraits.isNotEmpty)
             SliverToBoxAdapter(
               child: _DetailEntrance(
                 index: 3,
@@ -352,8 +384,10 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               ),
             ),
 
-          // Field note
-          if (disclosure.showFieldNote)
+          // Field note — skipped for self (uses third-party-observation copy
+          // like "spotted on N of the last M days" that is misleading for
+          // the user's own device).
+          if (!isSelf && disclosure.showFieldNote)
             SliverToBoxAdapter(
               child: _DetailEntrance(
                 index: 4,
@@ -368,8 +402,10 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               ),
             ),
 
-          // Observation timeline strip
-          if (disclosure.showTimeline)
+          // Observation timeline strip — encounter-density visual, skipped
+          // for self (self never accumulates encounters; see the !isOwnNode
+          // guard in NodeDexNotifier._handleNodesUpdate).
+          if (!isSelf && disclosure.showTimeline)
             SliverToBoxAdapter(
               child: _DetailEntrance(
                 index: 5,
@@ -395,8 +431,9 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               child: ReticulumActivityDetail(nodeNum: widget.nodeNum),
             ),
 
-          // All scored traits list (progressive: only at Tier 3+)
-          if (disclosure.showAllTraits && scoredTraits.length > 1)
+          // All scored traits list (progressive: only at Tier 3+).
+          // Skipped for self — same reason as the primary trait card.
+          if (!isSelf && disclosure.showAllTraits && scoredTraits.length > 1)
             SliverToBoxAdapter(
               child: _DetailEntrance(
                 index: 6,
@@ -418,7 +455,11 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
             child: _DetailEntrance(
               index: 7,
               reduceMotion: reduceMotion,
-              child: _DiscoveryStatsCard(entry: entry, node: node),
+              child: _DiscoveryStatsCard(
+                entry: entry,
+                node: node,
+                isSelf: isSelf,
+              ),
             ),
           ),
 
@@ -1347,14 +1388,66 @@ class _TraitCard extends StatelessWidget {
 }
 
 // =============================================================================
+// Self Device Card — replaces _TraitCard for the user's own connected node
+// =============================================================================
+
+class _SelfDeviceCard extends StatelessWidget {
+  const _SelfDeviceCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return _CardContainer(
+      title: context.l10n.nodedexSelfDeviceTitle,
+      icon: Icons.smartphone_outlined,
+      helpKey: 'pet_companion_self',
+      child: Padding(
+        padding: const EdgeInsets.only(top: AppTheme.spacing8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.l10n.nodedexSelfDeviceSubtitle,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing8),
+            Text(
+              context.l10n.nodedexSelfDeviceSummary,
+              style: TextStyle(
+                fontSize: 13,
+                color: context.textSecondary,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// =============================================================================
 // Discovery Stats Card
 // =============================================================================
 
 class _DiscoveryStatsCard extends StatelessWidget {
   final NodeDexEntry entry;
   final MeshNode? node;
+  // When true, the card shows a self-aware variant: Encounters and Messages
+  // rows are hidden (self never accumulates remote-peer encounters and
+  // messageCount only tracks inbound from self.from), and the "Last
+  // encounter" row is relabelled "Last sync" since the value reflects the
+  // local connection's last update, not a remote-peer encounter.
+  final bool isSelf;
 
-  const _DiscoveryStatsCard({required this.entry, required this.node});
+  const _DiscoveryStatsCard({
+    required this.entry,
+    required this.node,
+    this.isSelf = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1402,7 +1495,9 @@ class _DiscoveryStatsCard extends StatelessWidget {
               icon: Icons.access_time,
             ),
           _InfoRow(
-            label: context.l10n.nodedexLastSeen,
+            label: isSelf
+                ? context.l10n.nodedexSelfLastSyncLabel
+                : context.l10n.nodedexLastSeen,
             value: context.l10n.nodedexLastSeenAtTime(lastSeen, lastSeenTime),
             icon: Icons.schedule,
           ),
@@ -1411,22 +1506,30 @@ class _DiscoveryStatsCard extends StatelessWidget {
             value: ageLabel,
             icon: Icons.timelapse_outlined,
           ),
-          _InfoRow(
-            label: context.l10n.nodedexEncountersLabel,
-            value: entry.encounterCount.toString(),
-            icon: Icons.repeat,
-          ),
+          // Encounters row hidden for self: self never accumulates
+          // remote-peer encounters (see NodeDexNotifier._handleNodesUpdate
+          // !isOwnNode guard).
+          if (!isSelf)
+            _InfoRow(
+              label: context.l10n.nodedexEncountersLabel,
+              value: entry.encounterCount.toString(),
+              icon: Icons.repeat,
+            ),
           if (entry.maxDistanceSeen != null)
             _InfoRow(
               label: context.l10n.nodedexMaxRangeLabel,
               value: _formatDistance(context, entry.maxDistanceSeen!),
               icon: Icons.straighten,
             ),
-          _InfoRow(
-            label: context.l10n.nodedexMessagesLabel,
-            value: entry.messageCount.toString(),
-            icon: Icons.chat_bubble_outline,
-          ),
+          // Messages row hidden for self: messageCount is incremented only
+          // from inbound message.from, so self's count is structurally
+          // meaningless (outbound is never attributed back to self).
+          if (!isSelf)
+            _InfoRow(
+              label: context.l10n.nodedexMessagesLabel,
+              value: entry.messageCount.toString(),
+              icon: Icons.chat_bubble_outline,
+            ),
           _InfoRow(
             label: context.l10n.nodedexRegionsLabel,
             value: entry.regionCount.toString(),

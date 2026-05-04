@@ -369,6 +369,98 @@ void main() {
       },
     );
 
+    test('reconnect/sync does not record encounters for own node', () async {
+      // Pin behaviour: even when the local node is surfaced again with an
+      // advanced lastHeard (reconnect, nodesProvider refresh, sync tick),
+      // the self entry must not accumulate encounters or be treated as a
+      // remote peer. Regression guard for the !isOwnNode gate in
+      // NodeDexNotifier._handleNodesUpdate's existing-node branch.
+      //
+      // The initial discovery seeds whatever baseline counts NodeDexEntry
+      // .discovered uses; the assertion that matters is "no increment on the
+      // reconnect tick" — that's where the bug would manifest as a fake
+      // remote-peer encounter.
+      final ctx = _createTestContainer(preInitStore: preInitStore);
+      addTearDown(ctx.container.dispose);
+
+      final firstSeen = DateTime(2024, 1, 1, 12, 0);
+
+      await withClock(Clock.fixed(firstSeen), () async {
+        await _initProvider(ctx.container);
+        ctx.nodesNotifier.addNode(_makeNode(_myNodeNum, lastHeard: firstSeen));
+        await _pumpEventQueue();
+      });
+
+      final initialEntry = ctx.container.read(nodeDexProvider)[_myNodeNum]!;
+      final baselineEncounterCount = initialEntry.encounterCount;
+      final baselineEncounterRecords = initialEntry.encounters.length;
+
+      // Simulate a reconnect/sync tick: same myNodeNum, but the live node
+      // surfaces again with an advanced lastHeard well past any cooldown.
+      // Without the !isOwnNode guard at the existing-node branch, the
+      // shouldRecord gate would fire here and create a fake self-encounter.
+      final reconnectAt = firstSeen.add(const Duration(hours: 1));
+      await withClock(Clock.fixed(reconnectAt), () async {
+        ctx.nodesNotifier.setNodes({
+          _myNodeNum: _makeNode(_myNodeNum, lastHeard: reconnectAt),
+        });
+        await _pumpEventQueue();
+      });
+
+      final afterReconnect = ctx.container.read(nodeDexProvider)[_myNodeNum]!;
+      expect(
+        afterReconnect.encounterCount,
+        equals(baselineEncounterCount),
+        reason: 'self must never accumulate encounters across reconnects',
+      );
+      expect(
+        afterReconnect.encounters.length,
+        equals(baselineEncounterRecords),
+        reason: 'self must never accumulate encounter records',
+      );
+    });
+
+    test(
+      'nodeDexIsSelfProvider returns true only for the local node',
+      () async {
+        final ctx = _createTestContainer(preInitStore: preInitStore);
+        addTearDown(ctx.container.dispose);
+
+        await _initProvider(ctx.container);
+
+        expect(
+          ctx.container.read(nodeDexIsSelfProvider(_myNodeNum)),
+          isTrue,
+          reason: 'matching myNodeNum is self',
+        );
+        expect(
+          ctx.container.read(nodeDexIsSelfProvider(12345)),
+          isFalse,
+          reason: 'non-matching nodeNum is not self',
+        );
+      },
+    );
+
+    test(
+      'nodeDexIsSelfProvider defaults to false when myNodeNum is unknown',
+      () async {
+        final ctx = _createTestContainer(
+          preInitStore: preInitStore,
+          myNodeNum: null,
+        );
+        addTearDown(ctx.container.dispose);
+
+        await _initProvider(ctx.container);
+
+        expect(
+          ctx.container.read(nodeDexIsSelfProvider(_myNodeNum)),
+          isFalse,
+          reason:
+              'with no local identity, fall back to safe (remote) presentation',
+        );
+      },
+    );
+
     test('node 0 is skipped during discovery', () async {
       final ctx = _createTestContainer(preInitStore: preInitStore);
       addTearDown(ctx.container.dispose);

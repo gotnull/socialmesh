@@ -12055,6 +12055,19 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get nodedexSelfDeviceSubtitle => 'O teu nó mesh local';
+
+  @override
+  String get nodedexSelfDeviceSummary =>
+      'A atividade aqui apresentada provém da sincronização local e do tráfego mesh observado por este dispositivo.';
+
+  @override
+  String get nodedexSelfDeviceTitle => 'Este dispositivo';
+
+  @override
+  String get nodedexSelfLastSyncLabel => 'Última sincronização';
+
+  @override
   String get nodedexSetNickname => 'Definir apelido';
 
   @override

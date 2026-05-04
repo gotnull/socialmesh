@@ -12067,6 +12067,19 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get nodedexSelfDeviceSubtitle => 'Il tuo nodo mesh locale';
+
+  @override
+  String get nodedexSelfDeviceSummary =>
+      'L\'attività mostrata qui proviene dalla sincronizzazione locale e dal traffico mesh osservato da questo dispositivo.';
+
+  @override
+  String get nodedexSelfDeviceTitle => 'Questo dispositivo';
+
+  @override
+  String get nodedexSelfLastSyncLabel => 'Ultima sincronizzazione';
+
+  @override
   String get nodedexSetNickname => 'Imposta soprannome';
 
   @override

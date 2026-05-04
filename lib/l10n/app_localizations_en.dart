@@ -11960,6 +11960,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get nodedexSelfDeviceSubtitle => 'Your local mesh node';
+
+  @override
+  String get nodedexSelfDeviceSummary =>
+      'Activity shown here comes from local sync and mesh traffic observed by this device.';
+
+  @override
+  String get nodedexSelfDeviceTitle => 'This Device';
+
+  @override
+  String get nodedexSelfLastSyncLabel => 'Last sync';
+
+  @override
   String get nodedexSetNickname => 'Set nickname';
 
   @override

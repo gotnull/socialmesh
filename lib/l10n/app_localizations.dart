@@ -20971,6 +20971,30 @@ abstract class AppLocalizations {
   /// **'{count} historical links'**
   String nodedexSelectedLinksCount(int count);
 
+  /// NodeDex detail screen subtitle shown under the 'This Device' card when viewing the user's own connected node. Replaces the inferred-trait headline (e.g. 'Ghost') that is meaningless for self.
+  ///
+  /// In en, this message translates to:
+  /// **'Your local mesh node'**
+  String get nodedexSelfDeviceSubtitle;
+
+  /// NodeDex detail screen summary text for the user's own node. Replaces the field-note copy (e.g. 'Most active in the night. Spotted on 1 of the last 14 days.') that implies third-party observation and is misleading for self.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity shown here comes from local sync and mesh traffic observed by this device.'**
+  String get nodedexSelfDeviceSummary;
+
+  /// NodeDex detail screen title for the card that replaces the trait/archetype card when viewing the user's own connected node.
+  ///
+  /// In en, this message translates to:
+  /// **'This Device'**
+  String get nodedexSelfDeviceTitle;
+
+  /// NodeDex discovery row label used in self-mode in place of 'Last encounter'. The value is sourced from the local connection's most recent sync, not a remote-peer encounter.
+  ///
+  /// In en, this message translates to:
+  /// **'Last sync'**
+  String get nodedexSelfLastSyncLabel;
+
   /// Text displayed in node management
   ///
   /// In en, this message translates to:

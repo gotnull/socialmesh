@@ -417,8 +417,13 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
             node.lastHeard != null &&
             (prevLastHeard == null || node.lastHeard!.isAfter(prevLastHeard));
         final lastEncounter = _lastEncounterTime[nodeNum];
+        // isOwnNode is checked again here (in addition to the new-discovery
+        // branch above) so a reconnect or nodesProvider refresh that surfaces
+        // the local node with an advanced lastHeard cannot record a fake
+        // self-encounter or mark self as a remote peer.
         final shouldRecord =
             !seedOnly &&
+            !isOwnNode &&
             isRecentlyHeard &&
             hasFreshLastHeard &&
             (lastEncounter == null ||
@@ -1088,6 +1093,21 @@ final nodeDexEntryProvider = Provider.family<NodeDexEntry?, int>((
 ) {
   final entries = ref.watch(nodeDexProvider);
   return entries[nodeNum];
+});
+
+/// Single authority for "is this NodeDex entry the user's own connected device?".
+///
+/// Every NodeDex UI/widget that needs to branch on self vs. remote MUST consume
+/// this provider — never compare nodeNum to myNodeNum inline. Centralizing the
+/// check keeps the rule consistent if the source of identity ever changes
+/// (e.g. multi-radio context) and lets us add tests at one boundary.
+///
+/// Returns false when the local node identity is not yet known so callers
+/// default to the safe (remote-peer) presentation.
+final nodeDexIsSelfProvider = Provider.family<bool, int>((ref, nodeNum) {
+  final myNodeNum = ref.watch(myNodeNumProvider);
+  if (myNodeNum == null) return false;
+  return myNodeNum == nodeNum;
 });
 
 @immutable
