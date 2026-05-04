@@ -17,6 +17,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animated_empty_state.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
+import '../../../core/widgets/chat_bubble_text.dart';
 import '../../../core/widgets/chat_composer.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/info_table.dart';
@@ -703,9 +704,11 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
                       children: [
                         LinkifiedText(
                           text: message.text,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodyMedium?.copyWith(color: Colors.white),
+                          style: chatBubbleBodyStyle(
+                            ref,
+                            baseFontSize: 14,
+                            color: Colors.white,
+                          ),
                           linkStyle: const TextStyle(
                             color: Colors.white,
                             decoration: TextDecoration.underline,
@@ -792,8 +795,9 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
                       ],
                       LinkifiedText(
                         text: message.text,
-                        style: TextStyle(
-                          fontSize: 15,
+                        style: chatBubbleBodyStyle(
+                          ref,
+                          baseFontSize: 15,
                           color: context.textPrimary,
                         ),
                       ),

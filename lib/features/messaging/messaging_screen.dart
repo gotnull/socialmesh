@@ -32,6 +32,7 @@ import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/auto_scroll_text.dart';
+import '../../core/widgets/chat_bubble_text.dart';
 import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/linkified_text.dart';
@@ -3075,8 +3076,11 @@ class _MessageBubble extends ConsumerWidget {
                           ],
                           LinkifiedText(
                             text: message.text,
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(color: Colors.white),
+                            style: chatBubbleBodyStyle(
+                              ref,
+                              baseFontSize: 14,
+                              color: Colors.white,
+                            ),
                             linkStyle: const TextStyle(
                               color: Colors.white,
                               decoration: TextDecoration.underline,
@@ -3357,8 +3361,9 @@ class _MessageBubble extends ConsumerWidget {
                         ],
                         LinkifiedText(
                           text: message.text,
-                          style: TextStyle(
-                            fontSize: 15,
+                          style: chatBubbleBodyStyle(
+                            ref,
+                            baseFontSize: 15,
                             color: context.textPrimary,
                           ),
                         ),
