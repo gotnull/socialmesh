@@ -12,9 +12,11 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animated_empty_state.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/primary_gradient_button.dart';
+import '../../../core/widgets/search_filter_header.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
-import '../../../core/widgets/qr_share_sheet.dart';
+import '../../../core/widgets/status_filter_chip.dart';
 import '../../../models/meshcore_channel.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_providers.dart';
@@ -34,12 +36,24 @@ class MeshCoreChannelsScreen extends ConsumerStatefulWidget {
       _MeshCoreChannelsScreenState();
 }
 
+enum _MeshCoreChannelFilter { all, public, private }
+
 class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
     with LifecycleSafeMixin<MeshCoreChannelsScreen> {
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+  _MeshCoreChannelFilter _activeFilter = _MeshCoreChannelFilter.all;
+
   @override
   void initState() {
     super.initState();
     AppLogging.meshcore('event=screen.opened name=channels');
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -49,112 +63,109 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
     final deviceName = linkStatus.deviceName ?? 'MeshCore';
     final channelsState = ref.watch(meshCoreChannelsProvider);
 
-    // Filter to only show configured channels (non-empty name or PSK)
-    final channels = channelsState.channels
+    final allChannels = channelsState.channels
         .where((c) => c.name.isNotEmpty || !c.isDefaultPsk)
         .toList();
+    var channels = _applyFilter(allChannels);
+    if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
+      channels = channels
+          .where(
+            (channel) =>
+                channel.displayName.toLowerCase().contains(query) ||
+                channel.index.toString().contains(query),
+          )
+          .toList();
+    }
 
-    return GlassScaffold.body(
-      hasScrollBody: true,
-      leading: const MeshCoreHamburgerMenuButton(),
-      title:
-          '${context.l10n.meshcoreChannelsTitle}${channels.isEmpty ? '' : ' (${channels.length})'}',
-      actions: [
-        const MeshCoreDeviceStatusButton(),
-        AppBarOverflowMenu<String>(
-          onSelected: (value) {
-            switch (value) {
-              case 'create':
-                _showCreateChannelDialog();
-              case 'join':
-                _showJoinChannelDialog();
-              case 'refresh':
-                _refreshChannels();
-              case 'disconnect':
-                _disconnect();
-            }
-          },
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              value: 'create',
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.add_rounded,
-                    color: context.textSecondary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: AppTheme.spacing12),
-                  Text(
-                    context.l10n.meshcoreChannelsCreateChannel,
-                    style: TextStyle(color: context.textPrimary),
-                  ),
-                ],
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: GlassScaffold.body(
+        hasScrollBody: true,
+        leading: const MeshCoreHamburgerMenuButton(),
+        title:
+            '${context.l10n.meshcoreChannelsTitle}${allChannels.isEmpty ? '' : ' (${allChannels.length})'}',
+        actions: [
+          const MeshCoreDeviceStatusButton(),
+          AppBarOverflowMenu<String>(
+            onSelected: (value) {
+              switch (value) {
+                case 'create':
+                  _showCreateChannelDialog();
+                case 'join':
+                  _showJoinChannelDialog();
+                case 'refresh':
+                  _refreshChannels();
+                case 'disconnect':
+                  _disconnect();
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'create',
+                child: ListTile(
+                  leading: const Icon(Icons.add_rounded),
+                  title: Text(context.l10n.meshcoreChannelsCreateChannel),
+                  contentPadding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                ),
               ),
-            ),
-            PopupMenuItem(
-              value: 'join',
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.login_rounded,
-                    color: context.textSecondary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: AppTheme.spacing12),
-                  Text(
-                    context.l10n.meshcoreChannelsJoinChannel,
-                    style: TextStyle(color: context.textPrimary),
-                  ),
-                ],
+              PopupMenuItem(
+                value: 'join',
+                child: ListTile(
+                  leading: const Icon(Icons.login_rounded),
+                  title: Text(context.l10n.meshcoreChannelsJoinChannel),
+                  contentPadding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                ),
               ),
-            ),
-            PopupMenuItem(
-              value: 'refresh',
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.refresh_rounded,
-                    color: context.textSecondary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: AppTheme.spacing12),
-                  Text(
-                    context.l10n.meshcoreChannelsRefreshChannels,
-                    style: TextStyle(color: context.textPrimary),
-                  ),
-                ],
+              PopupMenuItem(
+                value: 'refresh',
+                child: ListTile(
+                  leading: const Icon(Icons.refresh_rounded),
+                  title: Text(context.l10n.meshcoreChannelsRefreshChannels),
+                  contentPadding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                ),
               ),
-            ),
-            const PopupMenuDivider(),
-            PopupMenuItem(
-              value: 'disconnect',
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.link_off_rounded,
-                    color: context.textSecondary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: AppTheme.spacing12),
-                  Text(
-                    context.l10n.meshcoreDisconnect,
-                    style: TextStyle(color: context.textPrimary),
-                  ),
-                ],
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'disconnect',
+                child: ListTile(
+                  leading: const Icon(Icons.link_off_rounded),
+                  title: Text(context.l10n.meshcoreDisconnect),
+                  contentPadding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                ),
               ),
-            ),
-          ],
-        ),
-      ],
-      body: !isConnected
-          ? _buildDisconnectedState()
-          : channelsState.isLoading && channels.isEmpty
-          ? _buildLoadingState()
-          : channels.isEmpty
-          ? _buildEmptyState(deviceName)
-          : _buildChannelsList(channels, channelsState.isLoading),
+            ],
+          ),
+        ],
+        body: !isConnected
+            ? _buildDisconnectedState()
+            : channelsState.isLoading && allChannels.isEmpty
+            ? _buildLoadingState()
+            : channels.isEmpty
+            ? _buildEmptyState(deviceName)
+            : _buildChannelsList(
+                channels,
+                allChannels,
+                channelsState.isLoading,
+              ),
+      ),
     );
+  }
+
+  List<MeshCoreChannel> _applyFilter(List<MeshCoreChannel> channels) {
+    switch (_activeFilter) {
+      case _MeshCoreChannelFilter.all:
+        return channels;
+      case _MeshCoreChannelFilter.public:
+        return channels.where((channel) => channel.isPublic).toList();
+      case _MeshCoreChannelFilter.private:
+        return channels.where((channel) => !channel.isPublic).toList();
+    }
   }
 
   Widget _buildLoadingState() {
@@ -174,30 +185,24 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
   }
 
   Widget _buildDisconnectedState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.spacing32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.link_off_rounded, size: 64, color: context.textTertiary),
-            const SizedBox(height: AppTheme.spacing16),
-            Text(
-              context.l10n.meshcoreDisconnectedTitle,
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(color: context.textPrimary),
-            ),
-            const SizedBox(height: AppTheme.spacing8),
-            Text(
-              context.l10n.meshcoreDisconnectedChannelsDescription,
-              textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
-            ),
-          ],
-        ),
+    return AnimatedEmptyState(
+      config: AnimatedEmptyStateConfig(
+        icons: const [
+          Icons.link_off_rounded,
+          Icons.router_outlined,
+          Icons.forum_outlined,
+          Icons.tag_rounded,
+          Icons.lock_rounded,
+          Icons.public_rounded,
+        ],
+        taglines: [
+          context.l10n.meshcoreDisconnectedChannelsDescription,
+          context.l10n.meshcoreChannelsEmptyTagline1,
+          context.l10n.meshcoreChannelsEmptyTagline2,
+        ],
+        titlePrefix: '',
+        titleKeyword: context.l10n.meshcoreDisconnectedTitle,
+        titleSuffix: '',
       ),
     );
   }
@@ -235,46 +240,111 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
     );
   }
 
-  Widget _buildChannelsList(List<MeshCoreChannel> channels, bool isLoading) {
-    return Column(
-      children: [
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: _refreshChannels,
-            child: ListView.builder(
-              padding: const EdgeInsets.all(AppTheme.spacing16),
-              itemCount: channels.length,
-              itemBuilder: (context, index) {
-                final channel = channels[index];
-                return _ChannelCard(
-                  channel: channel,
-                  onTap: () => _showChannelDetails(channel),
-                  onLongPress: () => _showChannelOptions(channel),
-                );
-              },
-            ),
-          ),
-        ),
-        if (isLoading)
-          Container(
-            padding: const EdgeInsets.all(AppTheme.spacing8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+  Widget _buildChannelsList(
+    List<MeshCoreChannel> channels,
+    List<MeshCoreChannel> allChannels,
+    bool isLoading,
+  ) {
+    final publicCount = allChannels.where((channel) => channel.isPublic).length;
+    final privateCount = allChannels.length - publicCount;
+    final textScaler = MediaQuery.textScalerOf(context);
+
+    return RefreshIndicator(
+      onRefresh: _refreshChannels,
+      child: CustomScrollView(
+        slivers: [
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: SearchFilterHeaderDelegate(
+              searchController: _searchController,
+              searchQuery: _searchQuery,
+              onSearchChanged: (value) => setState(() => _searchQuery = value),
+              hintText: context.l10n.channelsSearchHint,
+              textScaler: textScaler,
+              rebuildKey: Object.hashAll([
+                _activeFilter,
+                allChannels.length,
+                publicCount,
+                privateCount,
+              ]),
+              filterChips: [
+                StatusFilterChip(
+                  label: context.l10n.channelsFilterAll,
+                  count: allChannels.length,
+                  isSelected: _activeFilter == _MeshCoreChannelFilter.all,
+                  onTap: () => setState(
+                    () => _activeFilter = _MeshCoreChannelFilter.all,
+                  ),
                 ),
-                const SizedBox(width: AppTheme.spacing8),
-                Text(
-                  context.l10n.meshcoreRefreshing,
-                  style: TextStyle(color: context.textTertiary),
+                StatusFilterChip(
+                  label: context.l10n.meshcorePublic,
+                  count: publicCount,
+                  isSelected: _activeFilter == _MeshCoreChannelFilter.public,
+                  icon: Icons.public_rounded,
+                  color: AccentColors.purple,
+                  onTap: () => setState(
+                    () => _activeFilter = _MeshCoreChannelFilter.public,
+                  ),
+                ),
+                StatusFilterChip(
+                  label: context.l10n.meshcorePrivate,
+                  count: privateCount,
+                  isSelected: _activeFilter == _MeshCoreChannelFilter.private,
+                  icon: Icons.lock_rounded,
+                  color: AccentColors.green,
+                  onTap: () => setState(
+                    () => _activeFilter = _MeshCoreChannelFilter.private,
+                  ),
                 ),
               ],
             ),
           ),
-      ],
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing16,
+              AppTheme.spacing8,
+              AppTheme.spacing16,
+              AppTheme.spacing16,
+            ),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final channel = channels[index];
+                return _ChannelCard(
+                  channel: channel,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          MeshCoreChatScreen.channel(channel: channel),
+                    ),
+                  ),
+                  onLongPress: () => _showChannelOptions(channel),
+                );
+              }, childCount: channels.length),
+            ),
+          ),
+          if (isLoading)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(AppTheme.spacing8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(
+                      width: AppTheme.spacing16,
+                      height: AppTheme.spacing16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    const SizedBox(width: AppTheme.spacing8),
+                    Text(
+                      context.l10n.meshcoreRefreshing,
+                      style: TextStyle(color: context.textTertiary),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -283,11 +353,11 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
     await notifier.refresh();
   }
 
-  void _showCreateChannelDialog() {
+  Future<void> _showCreateChannelDialog() async {
     final nameController = TextEditingController();
     var isHashtag = true;
 
-    AppBottomSheet.show(
+    await AppBottomSheet.show<void>(
       context: context,
       child: StatefulBuilder(
         builder: (ctx, setSheetState) => Column(
@@ -306,6 +376,9 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
             TextField(
               controller: nameController,
               autofocus: true,
+              maxLength: 32,
+              onTapOutside: (_) =>
+                  FocusManager.instance.primaryFocus?.unfocus(),
               decoration: InputDecoration(
                 labelText: context.l10n.meshcoreChannelNameLabel,
                 labelStyle: TextStyle(color: context.textSecondary),
@@ -329,6 +402,7 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                   borderRadius: BorderRadius.circular(AppTheme.radius8),
                   borderSide: BorderSide(color: context.accentColor),
                 ),
+                counterText: '',
               ),
               style: TextStyle(color: context.textPrimary),
             ),
@@ -368,7 +442,10 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                 ),
                 const SizedBox(width: AppTheme.spacing12),
                 Expanded(
-                  child: FilledButton(
+                  child: PrimaryGradientButton(
+                    label: context.l10n.meshcoreCreate,
+                    icon: Icons.add_rounded,
+                    accentColor: AccentColors.purple,
                     onPressed: () async {
                       final name = nameController.text.trim();
                       if (name.isEmpty) {
@@ -415,14 +492,6 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                         );
                       }
                     },
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: AccentColors.purple,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      ),
-                    ),
-                    child: Text(context.l10n.meshcoreCreate),
                   ),
                 ),
               ],
@@ -431,6 +500,7 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
         ),
       ),
     );
+    nameController.dispose();
   }
 
   void _showJoinChannelDialog() {
@@ -531,11 +601,29 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
               controller: controller,
               autofocus: true,
               maxLength: 32,
+              onTapOutside: (_) =>
+                  FocusManager.instance.primaryFocus?.unfocus(),
               decoration: InputDecoration(
                 labelText: l10n.meshcoreChannelNameLabel,
+                labelStyle: TextStyle(color: context.textSecondary),
                 prefixText: '#',
                 prefixStyle: TextStyle(color: AccentColors.purple),
                 hintText: l10n.meshcoreChannelNameHintGeneral,
+                hintStyle: TextStyle(color: SemanticColors.muted),
+                filled: true,
+                fillColor: context.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                  borderSide: BorderSide(color: context.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                  borderSide: BorderSide(color: context.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                  borderSide: BorderSide(color: context.accentColor),
+                ),
                 counterText: '',
               ),
               style: TextStyle(color: context.textPrimary),
@@ -558,7 +646,10 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                 ),
                 const SizedBox(width: AppTheme.spacing12),
                 Expanded(
-                  child: FilledButton(
+                  child: PrimaryGradientButton(
+                    label: context.l10n.meshcoreJoin,
+                    icon: Icons.login_rounded,
+                    accentColor: AccentColors.purple,
                     onPressed: () {
                       final text = controller.text.trim();
                       if (text.isEmpty) {
@@ -570,14 +661,6 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                       }
                       Navigator.pop(sheetContext, text);
                     },
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: AccentColors.purple,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      ),
-                    ),
-                    child: Text(context.l10n.meshcoreJoin),
                   ),
                 ),
               ],
@@ -615,7 +698,7 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
   void _showEnterCodeDialog() {
     final controller = TextEditingController();
 
-    AppBottomSheet.show(
+    AppBottomSheet.show<void>(
       context: context,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -634,6 +717,8 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
             autofocus: true,
             maxLines: 3,
             maxLength: 256,
+            onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
+            textAlignVertical: TextAlignVertical.top,
             decoration: InputDecoration(
               hintText: context.l10n.meshcorePasteChannelCodeHint,
               hintStyle: TextStyle(color: SemanticColors.muted),
@@ -650,6 +735,11 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.accentColor),
+              ),
+              prefixIcon: Icon(Icons.key_rounded, color: context.textSecondary),
+              prefixIconConstraints: const BoxConstraints(
+                minWidth: 48,
+                minHeight: 48,
               ),
               counterText: '',
             ),
@@ -676,7 +766,9 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
               ),
               const SizedBox(width: AppTheme.spacing12),
               Expanded(
-                child: FilledButton(
+                child: PrimaryGradientButton(
+                  label: context.l10n.meshcoreJoin,
+                  icon: Icons.login_rounded,
                   onPressed: () {
                     final code = controller.text.trim();
                     if (code.isEmpty) {
@@ -717,100 +809,63 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                       );
                     }
                   },
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: context.accentColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radius12),
-                    ),
-                  ),
-                  child: Text(context.l10n.meshcoreJoin),
                 ),
               ),
             ],
           ),
         ],
       ),
-    );
-  }
-
-  void _showChannelDetails(MeshCoreChannel channel) {
-    final channelCode = generateChannelCode(channel);
-
-    QrShareSheet.show(
-      context: context,
-      title: channel.displayName,
-      subtitle: channel.isPublic
-          ? context.l10n.meshcorePublicChannel
-          : context.l10n.meshcorePrivateChannel,
-      qrData: channelCode,
-      infoText: context.l10n.meshcoreScanQrToJoinChannel,
-    );
+    ).whenComplete(controller.dispose);
   }
 
   void _showChannelOptions(MeshCoreChannel channel) {
-    AppBottomSheet.show(
+    AppBottomSheet.showActions<void>(
       context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            channel.displayName,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: context.textPrimary,
-              fontWeight: FontWeight.bold,
-            ),
+      header: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          channel.displayName,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            color: context.textPrimary,
+            fontWeight: FontWeight.bold,
           ),
-          const SizedBox(height: AppTheme.spacing16),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.chat_rounded, color: AccentColors.purple),
-            title: Text(
-              context.l10n.meshcoreOpenChannel,
-              style: TextStyle(color: context.textPrimary),
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) =>
-                      MeshCoreChatScreen.channel(channel: channel),
-                ),
-              );
-            },
-          ),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: Icon(Icons.share_rounded, color: context.textSecondary),
-            title: Text(
-              context.l10n.meshcoreShareChannel,
-              style: TextStyle(color: context.textPrimary),
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              final code = generateChannelCode(channel);
-              Clipboard.setData(ClipboardData(text: code));
-              showSuccessSnackBar(
-                context,
-                context.l10n.meshcoreChannelCodeCopied,
-              );
-            },
-          ),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: Icon(Icons.delete_rounded, color: AppTheme.errorRed),
-            title: Text(
-              context.l10n.meshcoreLeaveChannel,
-              style: TextStyle(color: AppTheme.errorRed),
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              _confirmLeaveChannel(channel);
-            },
-          ),
-        ],
+        ),
       ),
+      actions: [
+        BottomSheetAction(
+          icon: Icons.chat_rounded,
+          iconColor: AccentColors.purple,
+          label: context.l10n.meshcoreOpenChannel,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) =>
+                    MeshCoreChatScreen.channel(channel: channel),
+              ),
+            );
+          },
+        ),
+        BottomSheetAction(
+          icon: Icons.share_rounded,
+          label: context.l10n.meshcoreShareChannel,
+          onTap: () {
+            final code = generateChannelCode(channel);
+            Clipboard.setData(ClipboardData(text: code));
+            showSuccessSnackBar(
+              context,
+              context.l10n.meshcoreChannelCodeCopied,
+            );
+          },
+        ),
+        BottomSheetAction(
+          icon: Icons.delete_rounded,
+          label: context.l10n.meshcoreLeaveChannel,
+          isDestructive: true,
+          onTap: () {
+            _confirmLeaveChannel(channel);
+          },
+        ),
+      ],
     );
   }
 
@@ -859,12 +914,13 @@ class _ChannelCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isPublic = channel.isPublic;
 
-    return GestureDetector(
+    return BouncyTap(
       onTap: () {
         HapticFeedback.lightImpact();
         onTap();
       },
       onLongPress: onLongPress,
+      scaleFactor: 0.98,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
@@ -873,27 +929,28 @@ class _ChannelCard extends StatelessWidget {
           border: Border.all(color: context.border, width: 1),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spacing12),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
           child: Row(
             children: [
-              // Icon
               Container(
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: AccentColors.purple.withValues(alpha: 0.2),
+                  color: isPublic ? context.accentColor : context.background,
                   borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
                 child: Center(
-                  child: Icon(
-                    isPublic ? Icons.tag_rounded : Icons.lock_rounded,
-                    color: AccentColors.purple,
-                    size: 24,
+                  child: Text(
+                    '${channel.index}',
+                    style: TextStyle(
+                      color: isPublic ? Colors.white : context.textSecondary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(width: AppTheme.spacing12),
-              // Info
+              const SizedBox(width: AppTheme.spacing16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -910,34 +967,41 @@ class _ChannelCard extends StatelessWidget {
                     Row(
                       children: [
                         Icon(
-                          isPublic
-                              ? Icons.public_rounded
-                              : Icons.vpn_key_rounded,
+                          isPublic ? Icons.lock_open : Icons.lock,
                           size: 14,
-                          color: context.textTertiary,
+                          color: isPublic
+                              ? context.textTertiary
+                              : context.accentColor,
                         ),
-                        const SizedBox(width: AppTheme.spacing4),
+                        const SizedBox(width: AppTheme.spacing6),
                         Text(
                           isPublic
                               ? context.l10n.meshcorePublic
                               : context.l10n.meshcorePrivate,
                           style: TextStyle(
-                            color: context.textTertiary,
-                            fontSize: 12,
+                            color: context.textSecondary,
+                            fontSize: 13,
                           ),
                         ),
                         const SizedBox(width: AppTheme.spacing12),
-                        Icon(
-                          Icons.memory_rounded,
-                          size: 14,
-                          color: context.textTertiary,
-                        ),
-                        const SizedBox(width: AppTheme.spacing4),
-                        Text(
-                          context.l10n.meshcoreSlotIndex(channel.index),
-                          style: TextStyle(
-                            color: context.textTertiary,
-                            fontSize: 12,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: context.accentColor.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius4,
+                            ),
+                          ),
+                          child: Text(
+                            context.l10n.meshcoreSlotIndex(channel.index),
+                            style: TextStyle(
+                              color: context.accentColor,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ],

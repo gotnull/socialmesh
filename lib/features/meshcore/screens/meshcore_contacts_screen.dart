@@ -9,13 +9,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animated_empty_state.dart';
+import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/glass_scaffold.dart';
-import '../../../core/widgets/info_table.dart';
+import '../../../core/widgets/primary_gradient_button.dart';
 import '../../../core/widgets/search_filter_header.dart';
-import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/qr_share_sheet.dart';
+import '../../../core/widgets/status_filter_chip.dart';
 import '../../../models/meshcore_contact.dart';
 import '../contact_l10n.dart';
 import '../../../providers/app_providers.dart';
@@ -37,10 +38,13 @@ class MeshCoreContactsScreen extends ConsumerStatefulWidget {
       _MeshCoreContactsScreenState();
 }
 
+enum _MeshCoreContactFilter { all, unread, chat, repeaters, other }
+
 class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
     with LifecycleSafeMixin<MeshCoreContactsScreen> {
   String _searchQuery = '';
   final _searchController = TextEditingController();
+  _MeshCoreContactFilter _activeFilter = _MeshCoreContactFilter.all;
 
   @override
   void initState() {
@@ -61,8 +65,8 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
     final deviceName = linkStatus.deviceName ?? 'MeshCore';
     final contactsState = ref.watch(meshCoreContactsProvider);
 
-    // Filter contacts by search
-    var contacts = contactsState.contacts;
+    final allContacts = contactsState.contacts;
+    var contacts = _applyFilter(allContacts);
     if (_searchQuery.isNotEmpty) {
       contacts = contacts.where((c) {
         final query = _searchQuery.toLowerCase();
@@ -72,108 +76,101 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
       }).toList();
     }
 
-    return GlassScaffold.body(
-      hasScrollBody: true,
-      resizeToAvoidBottomInset: false,
-      leading: const MeshCoreHamburgerMenuButton(),
-      title:
-          '${context.l10n.meshcoreContactsTitle}${contacts.isEmpty ? '' : ' (${contacts.length})'}',
-      actions: [
-        const MeshCoreDeviceStatusButton(),
-        AppBarOverflowMenu<String>(
-          onSelected: (value) {
-            switch (value) {
-              case 'add_contact':
-                _showAddContactOptions();
-              case 'discover':
-                _refreshContacts();
-              case 'my_code':
-                _showMyContactCode();
-              case 'disconnect':
-                _disconnect();
-            }
-          },
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              value: 'add_contact',
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.person_add_rounded,
-                    color: context.textSecondary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: AppTheme.spacing12),
-                  Text(
-                    context.l10n.meshcoreAddContact,
-                    style: TextStyle(color: context.textPrimary),
-                  ),
-                ],
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: GlassScaffold.body(
+        hasScrollBody: true,
+        resizeToAvoidBottomInset: false,
+        leading: const MeshCoreHamburgerMenuButton(),
+        title:
+            '${context.l10n.meshcoreContactsTitle}${allContacts.isEmpty ? '' : ' (${allContacts.length})'}',
+        actions: [
+          const MeshCoreDeviceStatusButton(),
+          AppBarOverflowMenu<String>(
+            onSelected: (value) {
+              switch (value) {
+                case 'add_contact':
+                  _showAddContactOptions();
+                case 'discover':
+                  _refreshContacts();
+                case 'my_code':
+                  _showMyContactCode();
+                case 'disconnect':
+                  _disconnect();
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'add_contact',
+                child: ListTile(
+                  leading: const Icon(Icons.person_add_rounded),
+                  title: Text(context.l10n.meshcoreAddContact),
+                  contentPadding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                ),
               ),
-            ),
-            PopupMenuItem(
-              value: 'discover',
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.refresh_rounded,
-                    color: context.textSecondary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: AppTheme.spacing12),
-                  Text(
-                    context.l10n.meshcoreRefreshContacts,
-                    style: TextStyle(color: context.textPrimary),
-                  ),
-                ],
+              PopupMenuItem(
+                value: 'discover',
+                child: ListTile(
+                  leading: const Icon(Icons.refresh_rounded),
+                  title: Text(context.l10n.meshcoreRefreshContacts),
+                  contentPadding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                ),
               ),
-            ),
-            PopupMenuItem(
-              value: 'my_code',
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.qr_code_rounded,
-                    color: context.textSecondary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: AppTheme.spacing12),
-                  Text(
-                    context.l10n.meshcoreMyContactCode,
-                    style: TextStyle(color: context.textPrimary),
-                  ),
-                ],
+              PopupMenuItem(
+                value: 'my_code',
+                child: ListTile(
+                  leading: const Icon(Icons.qr_code_rounded),
+                  title: Text(context.l10n.meshcoreMyContactCode),
+                  contentPadding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                ),
               ),
-            ),
-            const PopupMenuDivider(),
-            PopupMenuItem(
-              value: 'disconnect',
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.link_off_rounded,
-                    color: context.textSecondary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: AppTheme.spacing12),
-                  Text(
-                    context.l10n.meshcoreDisconnect,
-                    style: TextStyle(color: context.textPrimary),
-                  ),
-                ],
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'disconnect',
+                child: ListTile(
+                  leading: const Icon(Icons.link_off_rounded),
+                  title: Text(context.l10n.meshcoreDisconnect),
+                  contentPadding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                ),
               ),
-            ),
-          ],
-        ),
-      ],
-      body: !isConnected
-          ? _buildDisconnectedState()
-          : contactsState.isLoading && contacts.isEmpty
-          ? _buildLoadingState()
-          : contacts.isEmpty
-          ? _buildEmptyState(deviceName)
-          : _buildContactsList(contacts, contactsState.isLoading),
+            ],
+          ),
+        ],
+        body: !isConnected
+            ? _buildDisconnectedState()
+            : contactsState.isLoading && allContacts.isEmpty
+            ? _buildLoadingState()
+            : contacts.isEmpty
+            ? _buildEmptyState(deviceName)
+            : _buildContactsList(
+                contacts,
+                allContacts,
+                contactsState.isLoading,
+              ),
+      ),
     );
+  }
+
+  List<MeshCoreContact> _applyFilter(List<MeshCoreContact> contacts) {
+    switch (_activeFilter) {
+      case _MeshCoreContactFilter.all:
+        return contacts;
+      case _MeshCoreContactFilter.unread:
+        return contacts.where((contact) => contact.unreadCount > 0).toList();
+      case _MeshCoreContactFilter.chat:
+        return contacts.where((contact) => contact.type == 1).toList();
+      case _MeshCoreContactFilter.repeaters:
+        return contacts.where((contact) => contact.type == 2).toList();
+      case _MeshCoreContactFilter.other:
+        return contacts
+            .where((contact) => contact.type != 1 && contact.type != 2)
+            .toList();
+    }
   }
 
   Widget _buildLoadingState() {
@@ -193,30 +190,24 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
   }
 
   Widget _buildDisconnectedState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.spacing32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.link_off_rounded, size: 64, color: context.textTertiary),
-            const SizedBox(height: AppTheme.spacing16),
-            Text(
-              context.l10n.meshcoreDisconnectedTitle,
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(color: context.textPrimary),
-            ),
-            const SizedBox(height: AppTheme.spacing8),
-            Text(
-              context.l10n.meshcoreDisconnectedContactsDescription,
-              textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
-            ),
-          ],
-        ),
+    return AnimatedEmptyState(
+      config: AnimatedEmptyStateConfig(
+        icons: const [
+          Icons.link_off_rounded,
+          Icons.router_outlined,
+          Icons.bluetooth_disabled_rounded,
+          Icons.people_outline_rounded,
+          Icons.contact_page_outlined,
+          Icons.cell_tower_rounded,
+        ],
+        taglines: [
+          context.l10n.meshcoreDisconnectedContactsDescription,
+          context.l10n.meshcoreContactsEmptyTagline1,
+          context.l10n.meshcoreContactsEmptyTagline2,
+        ],
+        titlePrefix: '',
+        titleKeyword: context.l10n.meshcoreDisconnectedTitle,
+        titleSuffix: '',
       ),
     );
   }
@@ -254,54 +245,134 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
     );
   }
 
-  Widget _buildContactsList(List<MeshCoreContact> contacts, bool isLoading) {
-    return Column(
-      children: [
-        // Search bar
-        SearchFilterHeader(
-          searchController: _searchController,
-          searchQuery: _searchQuery,
-          onSearchChanged: (value) => setState(() => _searchQuery = value),
-          hintText: context.l10n.meshcoreSearchContactsHint,
-        ),
-        // Contacts list
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: _refreshContacts,
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: contacts.length,
-              itemBuilder: (context, index) {
-                final contact = contacts[index];
-                return _ContactCard(
-                  contact: contact,
-                  onTap: () => _showContactDetails(contact),
-                  onLongPress: () => _showContactOptions(contact),
-                );
-              },
-            ),
-          ),
-        ),
-        if (isLoading)
-          Container(
-            padding: const EdgeInsets.all(AppTheme.spacing8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+  Widget _buildContactsList(
+    List<MeshCoreContact> contacts,
+    List<MeshCoreContact> allContacts,
+    bool isLoading,
+  ) {
+    final unreadCount = allContacts
+        .where((contact) => contact.unreadCount > 0)
+        .length;
+    final chatCount = allContacts.where((contact) => contact.type == 1).length;
+    final repeaterCount = allContacts
+        .where((contact) => contact.type == 2)
+        .length;
+    final otherCount = allContacts.length - chatCount - repeaterCount;
+    final textScaler = MediaQuery.textScalerOf(context);
+
+    return RefreshIndicator(
+      onRefresh: _refreshContacts,
+      child: CustomScrollView(
+        slivers: [
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: SearchFilterHeaderDelegate(
+              searchController: _searchController,
+              searchQuery: _searchQuery,
+              onSearchChanged: (value) => setState(() => _searchQuery = value),
+              hintText: context.l10n.meshcoreSearchContactsHint,
+              textScaler: textScaler,
+              rebuildKey: Object.hashAll([
+                _activeFilter,
+                allContacts.length,
+                unreadCount,
+                chatCount,
+                repeaterCount,
+                otherCount,
+              ]),
+              filterChips: [
+                StatusFilterChip(
+                  label: context.l10n.messagingFilterAll,
+                  count: allContacts.length,
+                  isSelected: _activeFilter == _MeshCoreContactFilter.all,
+                  onTap: () => setState(
+                    () => _activeFilter = _MeshCoreContactFilter.all,
+                  ),
                 ),
-                const SizedBox(width: AppTheme.spacing8),
-                Text(
-                  context.l10n.meshcoreRefreshing,
-                  style: TextStyle(color: context.textTertiary),
+                StatusFilterChip(
+                  label: context.l10n.messagingFilterUnread,
+                  count: unreadCount,
+                  isSelected: _activeFilter == _MeshCoreContactFilter.unread,
+                  icon: Icons.mark_email_unread_outlined,
+                  color: AccentColors.red,
+                  onTap: () => setState(
+                    () => _activeFilter = _MeshCoreContactFilter.unread,
+                  ),
+                ),
+                StatusFilterChip(
+                  label: context.l10n.meshcoreFilterChatNodes,
+                  count: chatCount,
+                  isSelected: _activeFilter == _MeshCoreContactFilter.chat,
+                  icon: Icons.person,
+                  color: AccentColors.blue,
+                  onTap: () => setState(
+                    () => _activeFilter = _MeshCoreContactFilter.chat,
+                  ),
+                ),
+                StatusFilterChip(
+                  label: context.l10n.meshcoreFilterRepeaters,
+                  count: repeaterCount,
+                  isSelected: _activeFilter == _MeshCoreContactFilter.repeaters,
+                  icon: Icons.cell_tower_rounded,
+                  color: AccentColors.green,
+                  onTap: () => setState(
+                    () => _activeFilter = _MeshCoreContactFilter.repeaters,
+                  ),
+                ),
+                StatusFilterChip(
+                  label: context.l10n.meshcoreFilterOtherNodes,
+                  count: otherCount,
+                  isSelected: _activeFilter == _MeshCoreContactFilter.other,
+                  icon: Icons.device_unknown,
+                  color: SemanticColors.disabled,
+                  onTap: () => setState(
+                    () => _activeFilter = _MeshCoreContactFilter.other,
+                  ),
                 ),
               ],
             ),
           ),
-      ],
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final contact = contacts[index];
+                return _ContactCard(
+                  contact: contact,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          MeshCoreChatScreen.contact(contact: contact),
+                    ),
+                  ),
+                  onLongPress: () => _showContactOptions(contact),
+                );
+              }, childCount: contacts.length),
+            ),
+          ),
+          if (isLoading)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(AppTheme.spacing8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(
+                      width: AppTheme.spacing16,
+                      height: AppTheme.spacing16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    const SizedBox(width: AppTheme.spacing8),
+                    Text(
+                      context.l10n.meshcoreRefreshing,
+                      style: TextStyle(color: context.textTertiary),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -396,151 +467,54 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
     );
   }
 
-  void _showContactDetails(MeshCoreContact contact) {
-    AppBottomSheet.show<void>(
-      context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            contact.name,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: context.textPrimary,
-            ),
-          ),
-          SizedBox(height: AppTheme.spacing16),
-          SectionTitle(title: context.l10n.meshcoreDeviceInfo),
-          InfoTable(
-            rows: [
-              InfoTableRow(
-                label: context.l10n.meshcoreChatInfoType,
-                value: contact.localizedTypeLabel(context.l10n),
-                icon: Icons.badge_outlined,
-              ),
-              InfoTableRow(
-                label: context.l10n.meshcoreChatInfoPath,
-                value: contact.localizedPathLabel(context.l10n),
-                icon: Icons.alt_route_outlined,
-              ),
-              InfoTableRow(
-                label: context.l10n.meshcorePublicKeySettingsLabel,
-                value: contact.publicKeyHex,
-                icon: Icons.key_outlined,
-              ),
-              if (contact.hasLocation)
-                InfoTableRow(
-                  label: context.l10n.meshcoreChatInfoLocation,
-                  value:
-                      '${contact.latitude?.toStringAsFixed(4)}, '
-                      '${contact.longitude?.toStringAsFixed(4)}',
-                  icon: Icons.place_outlined,
-                ),
-            ],
-          ),
-          SizedBox(height: AppTheme.spacing16),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            MeshCoreChatScreen.contact(contact: contact),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.chat_rounded),
-                  label: Text(context.l10n.meshcoreMessageButton),
-                ),
-              ),
-              SizedBox(width: AppTheme.spacing12),
-              OutlinedButton.icon(
-                onPressed: () {
-                  final code = generateContactCode(contact);
-                  Clipboard.setData(ClipboardData(text: code));
-                  showSuccessSnackBar(
-                    context,
-                    context.l10n.meshcoreContactCodeCopied,
-                  );
-                },
-                icon: const Icon(Icons.share_rounded),
-                label: Text(context.l10n.meshcoreShare),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   void _showContactOptions(MeshCoreContact contact) {
-    AppBottomSheet.show(
+    AppBottomSheet.showActions<void>(
       context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            contact.name,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+      header: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          contact.name,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            color: context.textPrimary,
+            fontWeight: FontWeight.bold,
           ),
-          const SizedBox(height: AppTheme.spacing16),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.chat_rounded, color: AccentColors.cyan),
-            title: Text(
-              context.l10n.meshcoreSendMessage,
-              style: const TextStyle(color: Colors.white),
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) =>
-                      MeshCoreChatScreen.contact(contact: contact),
-                ),
-              );
-            },
-          ),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: Icon(Icons.share_rounded, color: context.textSecondary),
-            title: Text(
-              context.l10n.meshcoreShareContact,
-              style: const TextStyle(color: Colors.white),
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              final code = generateContactCode(contact);
-              Clipboard.setData(ClipboardData(text: code));
-              showSuccessSnackBar(
-                context,
-                context.l10n.meshcoreContactCodeCopied,
-              );
-            },
-          ),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: Icon(Icons.delete_rounded, color: AppTheme.errorRed),
-            title: Text(
-              context.l10n.meshcoreRemoveContact,
-              style: TextStyle(color: AppTheme.errorRed),
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              _confirmRemoveContact(contact);
-            },
-          ),
-        ],
+        ),
       ),
+      actions: [
+        BottomSheetAction(
+          icon: Icons.chat_rounded,
+          iconColor: AccentColors.cyan,
+          label: context.l10n.meshcoreSendMessage,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) =>
+                    MeshCoreChatScreen.contact(contact: contact),
+              ),
+            );
+          },
+        ),
+        BottomSheetAction(
+          icon: Icons.share_rounded,
+          label: context.l10n.meshcoreShareContact,
+          onTap: () {
+            final code = generateContactCode(contact);
+            Clipboard.setData(ClipboardData(text: code));
+            showSuccessSnackBar(
+              context,
+              context.l10n.meshcoreContactCodeCopied,
+            );
+          },
+        ),
+        BottomSheetAction(
+          icon: Icons.delete_rounded,
+          label: context.l10n.meshcoreRemoveContact,
+          isDestructive: true,
+          onTap: () {
+            _confirmRemoveContact(contact);
+          },
+        ),
+      ],
     );
   }
 
@@ -582,7 +556,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
   void _enterContactCode() {
     final controller = TextEditingController();
 
-    AppBottomSheet.show(
+    AppBottomSheet.show<void>(
       context: context,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -603,6 +577,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
             controller: controller,
             autofocus: true,
             maxLines: 3,
+            textAlignVertical: TextAlignVertical.top,
             decoration: InputDecoration(
               hintText: context.l10n.meshcorePasteContactCodeHint,
               hintStyle: TextStyle(color: SemanticColors.muted),
@@ -619,6 +594,11 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.accentColor),
+              ),
+              prefixIcon: Icon(Icons.key_rounded, color: context.textSecondary),
+              prefixIconConstraints: const BoxConstraints(
+                minWidth: 48,
+                minHeight: 48,
               ),
               counterText: '',
             ),
@@ -645,7 +625,9 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
               ),
               const SizedBox(width: AppTheme.spacing12),
               Expanded(
-                child: FilledButton(
+                child: PrimaryGradientButton(
+                  label: context.l10n.meshcoreAdd,
+                  icon: Icons.person_add_rounded,
                   onPressed: () {
                     final code = controller.text.trim();
                     final contact = parseContactCode(code);
@@ -665,21 +647,13 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                       );
                     }
                   },
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: context.accentColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radius12),
-                    ),
-                  ),
-                  child: Text(context.l10n.meshcoreAdd),
                 ),
               ),
             ],
           ),
         ],
       ),
-    );
+    ).whenComplete(controller.dispose);
   }
 }
 
@@ -728,9 +702,10 @@ class _ContactCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final avatarColor = _getAvatarColor();
 
-    return GestureDetector(
+    return BouncyTap(
       onTap: onTap,
       onLongPress: onLongPress,
+      scaleFactor: 0.98,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(

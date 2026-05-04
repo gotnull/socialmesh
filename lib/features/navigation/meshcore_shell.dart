@@ -15,6 +15,7 @@ import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../core/widgets/qr_share_sheet.dart';
+import '../../core/widgets/status_banner.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/meshcore_providers.dart';
 import '../../providers/connection_providers.dart' as conn;
@@ -27,6 +28,7 @@ import '../meshcore/screens/meshcore_channels_screen.dart';
 import '../meshcore/screens/meshcore_tools_screen.dart';
 import '../meshcore/screens/meshcore_map_screen.dart';
 import '../meshcore/screens/meshcore_settings_screen.dart';
+import '../meshcore/screens/meshcore_qr_scanner_screen.dart';
 
 // MeshCore bottom navigation tab items
 class _MeshCoreNavItem {
@@ -272,7 +274,7 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
         children: [
           // Top status banner for disconnection/reconnection
           if (showReconnectionBanner)
-            _buildDisconnectedBanner(context, theme, deviceName),
+            _buildDisconnectedBanner(context, deviceName),
           // Main content
           Expanded(
             child: IndexedStack(
@@ -289,41 +291,16 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
     );
   }
 
-  Widget _buildDisconnectedBanner(
-    BuildContext context,
-    ThemeData theme,
-    String deviceName,
-  ) {
+  Widget _buildDisconnectedBanner(BuildContext context, String deviceName) {
     return SafeArea(
       bottom: false,
-      child: Container(
+      child: StatusBanner.error(
+        title: context.l10n.meshcoreShellDisconnectedFrom(deviceName),
+        icon: Icons.link_off_rounded,
         margin: const EdgeInsets.all(AppTheme.spacing12),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppTheme.errorRed.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(AppTheme.radius12),
-          border: Border.all(color: AppTheme.errorRed.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.link_off_rounded, color: AppTheme.errorRed, size: 20),
-            const SizedBox(width: AppTheme.spacing12),
-            Expanded(
-              child: Text(
-                context.l10n.meshcoreShellDisconnectedFrom(deviceName),
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.errorRed,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: _reconnect,
-              child: Text(
-                context.l10n.meshcoreShellReconnectButton,
-                style: TextStyle(color: AppTheme.errorRed),
-              ),
-            ),
-          ],
+        trailing: TextButton(
+          onPressed: _reconnect,
+          child: Text(context.l10n.meshcoreShellReconnectButton),
         ),
       ),
     );
@@ -686,15 +663,23 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
   }
 
   void _showAddContact() {
-    // Navigate to Contacts tab
     ref.read(meshCoreShellIndexProvider.notifier).setIndex(0);
-    showInfoSnackBar(context, context.l10n.meshcoreShellAddContactHint);
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            const MeshCoreQrScannerScreen(mode: MeshCoreScanMode.contact),
+      ),
+    );
   }
 
   void _showAddChannel() {
-    // Navigate to Channels tab
     ref.read(meshCoreShellIndexProvider.notifier).setIndex(1);
-    showInfoSnackBar(context, context.l10n.meshcoreShellAddChannelHint);
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            const MeshCoreQrScannerScreen(mode: MeshCoreScanMode.channel),
+      ),
+    );
   }
 
   void _showDiscoverContacts() {
@@ -1203,9 +1188,12 @@ class _MeshCoreDeviceSheetContentState
                 onTap: () {
                   Navigator.pop(context);
                   ref.read(meshCoreShellIndexProvider.notifier).setIndex(0);
-                  showInfoSnackBar(
-                    context,
-                    context.l10n.meshcoreShellAddContactHint,
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const MeshCoreQrScannerScreen(
+                        mode: MeshCoreScanMode.contact,
+                      ),
+                    ),
                   );
                 },
               ),
@@ -1217,9 +1205,12 @@ class _MeshCoreDeviceSheetContentState
                 onTap: () {
                   Navigator.pop(context);
                   ref.read(meshCoreShellIndexProvider.notifier).setIndex(1);
-                  showInfoSnackBar(
-                    context,
-                    context.l10n.meshcoreShellJoinChannelHint,
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const MeshCoreQrScannerScreen(
+                        mode: MeshCoreScanMode.channel,
+                      ),
+                    ),
                   );
                 },
               ),

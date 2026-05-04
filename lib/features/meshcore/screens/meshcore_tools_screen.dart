@@ -10,11 +10,13 @@ import '../../../core/logging.dart';
 import '../../../core/meshcore_constants.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/animated_empty_state.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/info_table.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/settings_primitives.dart';
+import '../../../core/widgets/status_banner.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../services/meshcore/protocol/meshcore_messages.dart';
@@ -56,34 +58,24 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
         leading: const MeshCoreHamburgerMenuButton(),
         title: context.l10n.meshcoreToolsTitle,
         actions: const [MeshCoreDeviceStatusButton()],
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spacing32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.link_off_rounded,
-                  size: 64,
-                  color: context.textTertiary,
-                ),
-                const SizedBox(height: AppTheme.spacing16),
-                Text(
-                  context.l10n.meshcoreDisconnectedToolsTitle,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(color: context.textPrimary),
-                ),
-                const SizedBox(height: AppTheme.spacing8),
-                Text(
-                  context.l10n.meshcoreDisconnectedToolsDescription,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: context.textSecondary,
-                  ),
-                ),
-              ],
-            ),
+        body: AnimatedEmptyState(
+          config: AnimatedEmptyStateConfig(
+            icons: const [
+              Icons.link_off_rounded,
+              Icons.build_outlined,
+              Icons.router_outlined,
+              Icons.info_outline_rounded,
+              Icons.battery_unknown_rounded,
+              Icons.settings_input_antenna_rounded,
+            ],
+            taglines: [
+              context.l10n.meshcoreDisconnectedToolsDescription,
+              context.l10n.meshcoreViewDeviceInfo,
+              context.l10n.meshcoreMonitorPowerStorage,
+            ],
+            titlePrefix: '',
+            titleKeyword: context.l10n.meshcoreDisconnectedToolsTitle,
+            titleSuffix: '',
           ),
         ),
       );
@@ -131,13 +123,17 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
               trailing: _chevron(context),
               onTap: () => _showBatteryInfo(battInfoState),
             ),
-            SettingsTile(
-              icon: Icons.route_rounded,
-              iconColor: AccentColors.purple,
-              title: context.l10n.meshcoreTracePath,
-              subtitle: context.l10n.meshcoreTracePacketRoutes,
-              trailing: _chevron(context),
-              onTap: _showTracePathDialog,
+            Opacity(
+              opacity: 0.4,
+              child: IgnorePointer(
+                child: SettingsTile(
+                  icon: Icons.route_rounded,
+                  iconColor: AccentColors.purple,
+                  title: context.l10n.meshcoreTracePath,
+                  subtitle: context.l10n.meshcoreTracePacketRoutes,
+                  trailing: _chevron(context),
+                ),
+              ),
             ),
             const SizedBox(height: AppTheme.spacing16),
 
@@ -524,123 +520,13 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
             ),
           ],
           SizedBox(height: AppTheme.spacing16),
-          Container(
-            padding: const EdgeInsets.all(AppTheme.spacing12),
-            decoration: BoxDecoration(
-              color: AccentColors.cyan.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(AppTheme.radius8),
-              border: Border.all(
-                color: AccentColors.cyan.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.info_outline_rounded,
-                  size: 18,
-                  color: AccentColors.cyan,
-                ),
-                SizedBox(width: AppTheme.spacing8),
-                Expanded(
-                  child: Text(
-                    context.l10n.meshcoreBasedOnLiPoVoltage,
-                    style: TextStyle(
-                      color: AccentColors.cyan.withValues(alpha: 0.9),
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          StatusBanner.info(
+            title: context.l10n.meshcoreBasedOnLiPoVoltage,
+            icon: Icons.info_outline_rounded,
           ),
         ],
       ),
     );
-  }
-
-  void _showTracePathDialog() {
-    final contacts = ref.read(meshCoreContactsProvider).contacts;
-
-    if (contacts.isEmpty) {
-      showInfoSnackBar(context, context.l10n.meshcoreNoContactsForTrace);
-      return;
-    }
-
-    AppBottomSheet.show<void>(
-      context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.l10n.meshcoreTracePathTitle,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-            ),
-          ),
-          SizedBox(height: AppTheme.spacing8),
-          Text(
-            context.l10n.meshcoreSelectContactToTrace,
-            style: TextStyle(color: context.textSecondary),
-          ),
-          SizedBox(height: AppTheme.spacing16),
-          ...contacts
-              .take(10)
-              .map(
-                (contact) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: CircleAvatar(
-                    backgroundColor: AccentColors.cyan.withValues(alpha: 0.2),
-                    child: Text(
-                      contact.name.isNotEmpty
-                          ? contact.name[0].toUpperCase()
-                          : '?',
-                      style: TextStyle(color: AccentColors.cyan),
-                    ),
-                  ),
-                  title: Text(
-                    contact.name.isNotEmpty
-                        ? contact.name
-                        : context.l10n.meshcoreUnknown,
-                    style: TextStyle(color: context.textPrimary),
-                  ),
-                  subtitle: Text(
-                    contact.publicKeyHex.length >= 16
-                        ? contact.publicKeyHex.substring(0, 16)
-                        : contact.publicKeyHex,
-                    style: TextStyle(
-                      color: context.textTertiary,
-                      fontFamily: AppTheme.fontFamily,
-                      fontSize: 11,
-                    ),
-                  ),
-                  trailing: Icon(
-                    Icons.arrow_forward_rounded,
-                    color: context.textTertiary,
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _startTracePath(contact.name, contact.publicKeyHex);
-                  },
-                ),
-              ),
-        ],
-      ),
-    );
-  }
-
-  void _startTracePath(String name, String pubKeyHex) {
-    showInfoSnackBar(
-      context,
-      context.l10n.meshcoreTracePathInitiated(
-        name.isNotEmpty ? name : context.l10n.meshcoreUnknown,
-      ),
-    );
-    // The actual trace path implementation would call:
-    // session.sendCommandWithPayload(MeshCoreCommands.sendTracePath, publicKey)
-    // and listen for MeshCorePushCodes.traceData responses
   }
 
   Future<void> _sendAdvertisement() async {
@@ -710,34 +596,10 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
             ],
           ),
           SizedBox(height: AppTheme.spacing16),
-          Container(
-            padding: const EdgeInsets.all(AppTheme.spacing12),
-            decoration: BoxDecoration(
-              color: AccentColors.pink.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(AppTheme.radius8),
-              border: Border.all(
-                color: AccentColors.pink.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.info_outline_rounded,
-                  size: 18,
-                  color: AccentColors.pink,
-                ),
-                SizedBox(width: AppTheme.spacing8),
-                Expanded(
-                  child: Text(
-                    context.l10n.meshcoreRadioConfiguredOnFirmware,
-                    style: TextStyle(
-                      color: AccentColors.pink.withValues(alpha: 0.9),
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          StatusBanner(
+            type: StatusBannerType.accent,
+            title: context.l10n.meshcoreRadioConfiguredOnFirmware,
+            icon: Icons.info_outline_rounded,
           ),
         ],
       ),

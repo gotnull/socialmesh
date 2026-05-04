@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 // lint-allow: scaffold — immersive camera scanner with transparent AppBar
+import 'dart:async';
+
 import '../../../core/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../core/logging.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/loading_indicator.dart';
 import '../../../models/meshcore_channel.dart';
@@ -28,8 +31,10 @@ class MeshCoreQrScannerScreen extends ConsumerStatefulWidget {
 }
 
 class _MeshCoreQrScannerScreenState
-    extends ConsumerState<MeshCoreQrScannerScreen> {
+    extends ConsumerState<MeshCoreQrScannerScreen>
+    with LifecycleSafeMixin<MeshCoreQrScannerScreen> {
   final MobileScannerController _controller = MobileScannerController();
+  StreamSubscription<BarcodeCapture>? _barcodeSubscription;
   bool _isProcessing = false;
   String? _lastScannedCode;
 
@@ -41,7 +46,7 @@ class _MeshCoreQrScannerScreenState
       'event=screen.opened name=qr_scanner mode=${widget.mode.name}',
     );
 
-    _controller.barcodes.listen(
+    _barcodeSubscription = _controller.barcodes.listen(
       (capture) {
         AppLogging.ble('MeshCore QR Scanner: Barcode stream event received');
       },
@@ -55,7 +60,7 @@ class _MeshCoreQrScannerScreenState
         .then((_) {
           AppLogging.ble('MeshCore QR Scanner: Camera started successfully');
           if (mounted) {
-            setState(() {});
+            safeSetState(() {});
           }
         })
         .catchError((error) {
@@ -68,6 +73,7 @@ class _MeshCoreQrScannerScreenState
   @override
   void dispose() {
     AppLogging.ble('MeshCore QR Scanner: dispose - stopping camera');
+    _barcodeSubscription?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -86,7 +92,7 @@ class _MeshCoreQrScannerScreenState
       'MeshCore QR Scanner: Detected code: ${code.substring(0, code.length > 50 ? 50 : code.length)}...',
     );
 
-    setState(() {
+    safeSetState(() {
       _isProcessing = true;
     });
 
@@ -257,7 +263,7 @@ class _MeshCoreQrScannerScreenState
   void _resetScanner() {
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
-        setState(() {
+        safeSetState(() {
           _isProcessing = false;
           _lastScannedCode = null;
         });

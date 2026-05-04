@@ -15,10 +15,12 @@ import '../../../core/los_analysis.dart';
 import '../../../core/map_config.dart';
 import '../../../core/safe_lat_lng.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/animated_empty_state.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/info_table.dart';
+import '../../../core/widgets/primary_gradient_button.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../utils/snackbar.dart';
 import '../../../models/meshcore_contact.dart';
@@ -439,64 +441,47 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
   }
 
   Widget _buildDisconnectedState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.spacing32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.link_off_rounded, size: 64, color: context.textTertiary),
-            const SizedBox(height: AppTheme.spacing16),
-            Text(
-              context.l10n.meshcoreDisconnectedMapTitle,
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(color: context.textPrimary),
-            ),
-            const SizedBox(height: AppTheme.spacing8),
-            Text(
-              context.l10n.meshcoreDisconnectedMapDescription,
-              textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
-            ),
-          ],
-        ),
+    return AnimatedEmptyState(
+      config: AnimatedEmptyStateConfig(
+        icons: const [
+          Icons.link_off_rounded,
+          Icons.map_outlined,
+          Icons.router_outlined,
+          Icons.location_off_rounded,
+          Icons.people_outline_rounded,
+          Icons.cell_tower_rounded,
+        ],
+        taglines: [
+          context.l10n.meshcoreDisconnectedMapDescription,
+          context.l10n.meshcoreNoContactsWithLocationDescription,
+          context.l10n.meshcoreContactsEmptyTagline1,
+        ],
+        titlePrefix: '',
+        titleKeyword: context.l10n.meshcoreDisconnectedMapTitle,
+        titleSuffix: '',
       ),
     );
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.spacing32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.location_off_rounded,
-              size: 64,
-              color: context.textTertiary,
-            ),
-            const SizedBox(height: AppTheme.spacing16),
-            Text(
-              context.l10n.meshcoreNoContactsWithLocation,
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(color: context.textPrimary),
-            ),
-            const SizedBox(height: AppTheme.spacing8),
-            Text(
-              context.l10n.meshcoreNoContactsWithLocationDescription,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: context.textSecondary,
-                height: 1.5,
-              ),
-            ),
-          ],
-        ),
+    return AnimatedEmptyState(
+      config: AnimatedEmptyStateConfig(
+        icons: const [
+          Icons.location_off_rounded,
+          Icons.map_outlined,
+          Icons.pin_drop_outlined,
+          Icons.people_outline_rounded,
+          Icons.gps_off_rounded,
+          Icons.cell_tower_rounded,
+        ],
+        taglines: [
+          context.l10n.meshcoreNoContactsWithLocationDescription,
+          context.l10n.meshcoreContactsEmptyTagline1,
+          context.l10n.meshcoreContactsEmptyTagline3,
+        ],
+        titlePrefix: '',
+        titleKeyword: context.l10n.meshcoreNoContactsWithLocation,
+        titleSuffix: '',
       ),
     );
   }
@@ -674,11 +659,19 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
   }
 
   void _showContactInfo(MeshCoreContact contact) {
-    AppBottomSheet.show<void>(
+    AppBottomSheet.showScrollable<void>(
       context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+      initialChildSize: 0.55,
+      minChildSize: 0.35,
+      maxChildSize: 0.9,
+      builder: (controller) => ListView(
+        controller: controller,
+        padding: const EdgeInsets.fromLTRB(
+          AppTheme.spacing24,
+          0,
+          AppTheme.spacing24,
+          AppTheme.spacing24,
+        ),
         children: [
           // Header
           Row(
@@ -750,7 +743,9 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
           Row(
             children: [
               Expanded(
-                child: FilledButton.icon(
+                child: PrimaryGradientButton(
+                  icon: Icons.chat_rounded,
+                  label: context.l10n.meshcoreMessageButton,
                   onPressed: () {
                     Navigator.pop(context);
                     Navigator.of(context).push(
@@ -760,8 +755,6 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
                       ),
                     );
                   },
-                  icon: const Icon(Icons.chat_rounded),
-                  label: Text(context.l10n.meshcoreMessageButton),
                 ),
               ),
               SizedBox(width: AppTheme.spacing12),
@@ -844,9 +837,9 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
             SizedBox(height: AppTheme.spacing16),
             SizedBox(
               width: double.infinity,
-              child: FilledButton(
+              child: PrimaryGradientButton(
+                label: context.l10n.meshcoreDone,
                 onPressed: () => Navigator.pop(ctx),
-                child: Text(context.l10n.meshcoreDone),
               ),
             ),
           ],

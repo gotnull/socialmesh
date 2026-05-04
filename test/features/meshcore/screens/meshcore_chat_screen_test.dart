@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:socialmesh/core/widgets/chat_composer.dart';
 import 'package:socialmesh/core/widgets/animated_empty_state.dart';
 import 'package:socialmesh/features/meshcore/screens/meshcore_chat_screen.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
@@ -70,6 +71,13 @@ Widget _wrap(Widget child) {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       theme: ThemeData.dark(),
+      builder: (context, child) {
+        final media = MediaQuery.of(context);
+        return MediaQuery(
+          data: media.copyWith(disableAnimations: true),
+          child: child!,
+        );
+      },
       home: child,
     ),
   );
@@ -88,6 +96,24 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues(<String, Object>{});
   });
+
+  MeshCoreMessage testMessage({
+    required String id,
+    required String text,
+    required bool isOutgoing,
+    MeshCoreMessageDeliveryStatus status =
+        MeshCoreMessageDeliveryStatus.delivered,
+  }) {
+    return MeshCoreMessage(
+      id: id,
+      text: text,
+      timestamp: DateTime(2026, 5, 4, 10, 30),
+      isOutgoing: isOutgoing,
+      status: status,
+      senderKey: Uint8List.fromList(List.generate(32, (i) => i + 1)),
+      senderName: 'RelayPeer',
+    );
+  }
 
   testWidgets(
     'contact chat: renders the canonical AnimatedEmptyState when no messages',
@@ -125,4 +151,126 @@ void main() {
       expect(find.byType(AnimatedEmptyState), findsOneWidget);
     },
   );
+
+  testWidgets('chat renders the canonical Meshtastic-style composer', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(
+      _wrap(MeshCoreChatScreen.contact(contact: _testContact())),
+    );
+    await _settle(tester);
+
+    expect(find.byType(ChatComposer), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(ChatComposer),
+        matching: find.byType(TextField),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(ChatComposer),
+        matching: find.byIcon(Icons.send),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'chat aligns incoming and outgoing bubbles like Meshtastic chat',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(
+        _wrap(
+          MeshCoreChatScreen.contact(
+            contact: _testContact(),
+            initialMessages: [
+              testMessage(
+                id: 'incoming',
+                text: 'incoming packet',
+                isOutgoing: false,
+              ),
+              testMessage(
+                id: 'outgoing',
+                text: 'outgoing packet',
+                isOutgoing: true,
+              ),
+            ],
+          ),
+        ),
+      );
+      await _settle(tester);
+
+      final incomingRect = tester.getRect(find.text('incoming packet'));
+      final outgoingRect = tester.getRect(find.text('outgoing packet'));
+
+      expect(incomingRect.left, lessThan(outgoingRect.left));
+      expect(outgoingRect.right, greaterThan(incomingRect.right));
+    },
+  );
+
+  testWidgets('chat send button stays inert for empty drafts and sends text', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(
+      _wrap(MeshCoreChatScreen.contact(contact: _testContact())),
+    );
+    await _settle(tester);
+
+    final sendTapTarget = find
+        .descendant(
+          of: find.byType(ChatComposer),
+          matching: find.byType(GestureDetector),
+        )
+        .last;
+
+    await tester.tap(sendTapTarget, warnIfMissed: false);
+    await tester.pump();
+    expect(find.text('fresh meshcore message'), findsNothing);
+
+    await tester.enterText(
+      find.descendant(
+        of: find.byType(ChatComposer),
+        matching: find.byType(TextField),
+      ),
+      'fresh meshcore message',
+    );
+    await tester.pump();
+    await tester.tap(sendTapTarget, warnIfMissed: false);
+    await tester.pump();
+
+    expect(find.text('fresh meshcore message'), findsOneWidget);
+  });
+
+  testWidgets('chat info sheet opens from the header action', (tester) async {
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(
+      _wrap(MeshCoreChatScreen.contact(contact: _testContact())),
+    );
+    await _settle(tester);
+
+    await tester.tap(find.byIcon(Icons.info_outline_rounded).first);
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.text('TestPeer'), findsWidgets);
+    expect(find.textContaining('00010203'), findsOneWidget);
+
+    Navigator.of(tester.element(find.byType(MeshCoreChatScreen))).pop();
+    await tester.pump();
+  });
 }

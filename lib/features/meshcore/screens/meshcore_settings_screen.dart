@@ -13,6 +13,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/info_table.dart';
+import '../../../core/widgets/primary_gradient_button.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/settings_primitives.dart';
 import '../../../providers/app_providers.dart';
@@ -96,26 +97,32 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                   trailing: _chevron(context),
                   onTap: () => _editNodeName(context, selfInfo?.nodeName),
                 ),
-                SettingsTile(
-                  icon: Icons.radio_rounded,
-                  title: context.l10n.meshcoreRadioSettings,
-                  subtitle: context.l10n.meshcoreRadioSettingsSubtitle,
-                  trailing: _chevron(context),
-                  onTap: () => _showRadioSettings(context),
+                _maybeDisabled(
+                  enabled: false,
+                  child: SettingsTile(
+                    icon: Icons.radio_rounded,
+                    title: context.l10n.meshcoreRadioSettings,
+                    subtitle: context.l10n.meshcoreRadioSettingsSubtitle,
+                    trailing: _chevron(context),
+                  ),
                 ),
-                SettingsTile(
-                  icon: Icons.location_on_outlined,
-                  title: context.l10n.meshcoreLocationSetting,
-                  subtitle: context.l10n.meshcoreSetNodePosition,
-                  trailing: _chevron(context),
-                  onTap: () => _editLocation(context),
+                _maybeDisabled(
+                  enabled: false,
+                  child: SettingsTile(
+                    icon: Icons.location_on_outlined,
+                    title: context.l10n.meshcoreLocationSetting,
+                    subtitle: context.l10n.meshcoreSetNodePosition,
+                    trailing: _chevron(context),
+                  ),
                 ),
-                SettingsTile(
-                  icon: Icons.visibility_off_outlined,
-                  title: context.l10n.meshcorePrivacyMode,
-                  subtitle: context.l10n.meshcoreControlAdvertVisibility,
-                  trailing: _chevron(context),
-                  onTap: () => _togglePrivacy(context),
+                _maybeDisabled(
+                  enabled: false,
+                  child: SettingsTile(
+                    icon: Icons.visibility_off_outlined,
+                    title: context.l10n.meshcorePrivacyMode,
+                    subtitle: context.l10n.meshcoreControlAdvertVisibility,
+                    trailing: _chevron(context),
+                  ),
                 ),
                 SizedBox(height: AppTheme.spacing16),
                 SettingsSectionHeader(title: context.l10n.meshcoreActions),
@@ -377,19 +384,20 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
               ),
               SizedBox(width: AppTheme.spacing12),
               Expanded(
-                child: FilledButton(
+                child: PrimaryGradientButton(
+                  label: context.l10n.meshcoreSave,
+                  icon: Icons.save_rounded,
                   onPressed: () async {
                     Navigator.pop(context);
                     await _setNodeName(controller.text.trim());
                   },
-                  child: Text(context.l10n.meshcoreSave),
                 ),
               ),
             ],
           ),
         ],
       ),
-    );
+    ).whenComplete(controller.dispose);
   }
 
   Future<void> _setNodeName(String name) async {
@@ -422,96 +430,6 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
         showErrorSnackBar(context, context.l10n.meshcoreFailedToSetName);
       }
     }
-  }
-
-  void _showRadioSettings(BuildContext context) {
-    AppBottomSheet.show<void>(
-      context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SectionTitle(title: context.l10n.meshcoreRadioSettingsDialogTitle),
-          InfoTable(
-            rows: [
-              InfoTableRow(
-                label: context.l10n.meshcoreFrequencyLabel,
-                value: context.l10n.meshcoreNotYetImplemented,
-                icon: Icons.broadcast_on_personal_outlined,
-              ),
-              InfoTableRow(
-                label: context.l10n.meshcoreTxPowerLabel,
-                value: context.l10n.meshcoreNotYetImplemented,
-                icon: Icons.bolt_outlined,
-              ),
-              InfoTableRow(
-                label: context.l10n.meshcoreBandwidthLabel,
-                value: context.l10n.meshcoreNotYetImplemented,
-                icon: Icons.speed_outlined,
-              ),
-            ],
-          ),
-          SizedBox(height: AppTheme.spacing16),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(context.l10n.meshcoreClose),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _editLocation(BuildContext context) {
-    _showStubSheet(
-      context,
-      title: context.l10n.meshcoreSetLocation,
-      body: context.l10n.meshcoreLocationComingSoon,
-    );
-  }
-
-  void _togglePrivacy(BuildContext context) {
-    _showStubSheet(
-      context,
-      title: context.l10n.meshcorePrivacyModeDialogTitle,
-      body: context.l10n.meshcorePrivacyComingSoon,
-    );
-  }
-
-  void _showStubSheet(
-    BuildContext context, {
-    required String title,
-    required String body,
-  }) {
-    AppBottomSheet.show<void>(
-      context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-            ),
-          ),
-          SizedBox(height: AppTheme.spacing12),
-          Text(body, style: TextStyle(color: context.textSecondary)),
-          SizedBox(height: AppTheme.spacing16),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(context.l10n.meshcoreClose),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Future<void> _sendAdvert() async {
@@ -717,9 +635,9 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
           SizedBox(height: AppTheme.spacing24),
           SizedBox(
             width: double.infinity,
-            child: FilledButton(
+            child: PrimaryGradientButton(
+              label: context.l10n.meshcoreClose,
               onPressed: () => Navigator.pop(context),
-              child: Text(context.l10n.meshcoreClose),
             ),
           ),
         ],

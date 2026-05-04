@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,8 +16,12 @@ import '../../../core/meshcore_constants.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animated_empty_state.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/auto_scroll_text.dart';
+import '../../../core/widgets/chat_composer.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/info_table.dart';
+import '../../../core/widgets/linkified_text.dart';
+import '../../../core/widgets/node_avatar.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../models/meshcore_contact.dart';
 import '../../../models/meshcore_channel.dart';
@@ -37,16 +42,20 @@ class MeshCoreChatScreen extends ConsumerStatefulWidget {
   final MeshCoreChatType chatType;
   final MeshCoreContact? contact;
   final MeshCoreChannel? channel;
+  @visibleForTesting
+  final List<MeshCoreMessage> initialMessages;
 
   const MeshCoreChatScreen.contact({
     super.key,
     required MeshCoreContact this.contact,
+    @visibleForTesting this.initialMessages = const [],
   }) : chatType = MeshCoreChatType.contact,
        channel = null;
 
   const MeshCoreChatScreen.channel({
     super.key,
     required MeshCoreChannel this.channel,
+    @visibleForTesting this.initialMessages = const [],
   }) : chatType = MeshCoreChatType.channel,
        contact = null;
 
@@ -102,7 +111,12 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       'event=screen.opened name=chat '
       'type=${widget.chatType == MeshCoreChatType.contact ? "contact" : "channel"}',
     );
-    _loadMessages();
+    if (widget.initialMessages.isNotEmpty) {
+      _messages.addAll(widget.initialMessages);
+      _isLoading = false;
+    } else {
+      _loadMessages();
+    }
     _subscribeToIncomingMessages();
   }
 
@@ -501,7 +515,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       onTap: _dismissKeyboard,
       child: GlassScaffold.body(
         hasScrollBody: true,
-        title: _title,
+        titleWidget: _buildTitleWidget(),
         actions: [
           IconButton(
             icon: Icon(Icons.info_outline_rounded, color: _accentColor),
@@ -534,13 +548,15 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
                 ),
               ),
 
-            // Messages list
             Expanded(
               child: _messages.isEmpty
                   ? _buildEmptyState()
                   : ListView.builder(
                       controller: _scrollController,
-                      padding: const EdgeInsets.all(AppTheme.spacing16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing16,
+                        vertical: AppTheme.spacing8,
+                      ),
                       itemCount: _messages.length,
                       itemBuilder: (context, index) {
                         return _buildMessageBubble(_messages[index]);
@@ -548,11 +564,63 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
                     ),
             ),
 
-            // Message input
             _buildMessageInput(),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTitleWidget() {
+    final isChannel = widget.chatType == MeshCoreChatType.channel;
+    final subtitle = isChannel
+        ? context.l10n.messagingChannelSubtitle
+        : context.l10n.messagingDirectMessageSubtitle;
+
+    return Row(
+      children: [
+        if (isChannel)
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: _accentColor.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              widget.channel!.isPublic ? Icons.tag_rounded : Icons.lock_rounded,
+              color: _accentColor,
+              size: 18,
+            ),
+          )
+        else
+          NodeAvatar(
+            text: _initialsFor(_title, fallback: '?'),
+            color: _accentColor,
+            size: 36,
+          ),
+        const SizedBox(width: AppTheme.spacing12),
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AutoScrollText(
+                _title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: context.textPrimary,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: TextStyle(fontSize: 12, color: context.textTertiary),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -608,57 +676,141 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   Widget _buildMessageBubble(MeshCoreMessage message) {
     final isOutgoing = message.isOutgoing;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        mainAxisAlignment: isOutgoing
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
-        children: [
-          if (!isOutgoing) const SizedBox(width: AppTheme.spacing40),
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: isOutgoing
-                    ? _accentColor.withValues(alpha: 0.3)
-                    : context.card,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(16),
-                  topRight: const Radius.circular(16),
-                  bottomLeft: Radius.circular(isOutgoing ? 16 : 4),
-                  bottomRight: Radius.circular(isOutgoing ? 4 : 16),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    message.text,
-                    style: TextStyle(color: context.textPrimary, fontSize: 15),
+    if (isOutgoing) {
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 400),
+        padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Flexible(
+                  child: Container(
+                    key: ValueKey('meshcore-message-${message.id}'),
+                    margin: const EdgeInsets.only(left: 64),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing16,
+                      vertical: AppTheme.spacing10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _outgoingBubbleColor(context, message.status),
+                      borderRadius: BorderRadius.circular(AppTheme.radius18),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        LinkifiedText(
+                          text: message.text,
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodyMedium?.copyWith(color: Colors.white),
+                          linkStyle: const TextStyle(
+                            color: Colors.white,
+                            decoration: TextDecoration.underline,
+                            decorationColor: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: AppTheme.spacing2),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _buildOutgoingStatusInline(message.status),
+                            if (message.status ==
+                                MeshCoreMessageDeliveryStatus.pending)
+                              const SizedBox(width: AppTheme.spacing4),
+                            Text(
+                              _formatTime(message.timestamp),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.white.withValues(alpha: 0.7),
+                              ),
+                            ),
+                            if (message.status !=
+                                MeshCoreMessageDeliveryStatus.pending) ...[
+                              const SizedBox(width: AppTheme.spacing4),
+                              _buildStatusIcon(message.status, sentByMe: true),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: AppTheme.spacing4),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    final showSender = widget.chatType == MeshCoreChatType.channel;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 400),
+      padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (showSender)
+            Padding(
+              padding: const EdgeInsets.only(right: AppTheme.spacing8),
+              child: NodeAvatar(
+                text: _initialsFor(_senderLabel(message), fallback: '?'),
+                color: _senderColor(message),
+                size: 32,
+              ),
+            ),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  key: ValueKey('meshcore-message-${message.id}'),
+                  margin: const EdgeInsets.only(right: 64),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing16,
+                    vertical: AppTheme.spacing10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: context.card,
+                    borderRadius: BorderRadius.circular(AppTheme.radius18),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (showSender) ...[
+                        Text(
+                          _senderLabel(message),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: _senderColor(message),
+                          ),
+                        ),
+                        const SizedBox(height: AppTheme.spacing2),
+                      ],
+                      LinkifiedText(
+                        text: message.text,
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: context.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spacing2),
                       Text(
                         _formatTime(message.timestamp),
                         style: TextStyle(
-                          color: context.textTertiary,
                           fontSize: 11,
+                          color: context.textTertiary,
                         ),
                       ),
-                      if (isOutgoing) ...[
-                        const SizedBox(width: AppTheme.spacing4),
-                        _buildStatusIcon(message.status),
-                      ],
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-          if (isOutgoing) const SizedBox(width: AppTheme.spacing40),
         ],
       ),
     );
@@ -670,21 +822,51 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
     return '$hour:$minute';
   }
 
-  Widget _buildStatusIcon(MeshCoreMessageDeliveryStatus status) {
+  Color _outgoingBubbleColor(
+    BuildContext context,
+    MeshCoreMessageDeliveryStatus status,
+  ) {
+    switch (status) {
+      case MeshCoreMessageDeliveryStatus.failed:
+        return AppTheme.errorRed.withValues(alpha: 0.8);
+      case MeshCoreMessageDeliveryStatus.pending:
+        return context.accentColor.withValues(alpha: 0.6);
+      case MeshCoreMessageDeliveryStatus.sent:
+      case MeshCoreMessageDeliveryStatus.delivered:
+        return context.accentColor;
+    }
+  }
+
+  Widget _buildOutgoingStatusInline(MeshCoreMessageDeliveryStatus status) {
+    if (status != MeshCoreMessageDeliveryStatus.pending) {
+      return const SizedBox.shrink();
+    }
+
+    return const SizedBox(
+      width: 12,
+      height: 12,
+      child: CircularProgressIndicator(strokeWidth: 1.5, color: Colors.white),
+    );
+  }
+
+  Widget _buildStatusIcon(
+    MeshCoreMessageDeliveryStatus status, {
+    bool sentByMe = false,
+  }) {
+    final muted = sentByMe
+        ? Colors.white.withValues(alpha: 0.7)
+        : context.textTertiary;
     switch (status) {
       case MeshCoreMessageDeliveryStatus.pending:
         return SizedBox(
-          width: 14,
-          height: 14,
-          child: CircularProgressIndicator(
-            strokeWidth: 1.5,
-            color: context.textTertiary,
-          ),
+          width: 12,
+          height: 12,
+          child: CircularProgressIndicator(strokeWidth: 1.5, color: muted),
         );
       case MeshCoreMessageDeliveryStatus.sent:
-        return Icon(Icons.done_rounded, size: 14, color: context.textTertiary);
+        return Icon(Icons.done_rounded, size: 14, color: muted);
       case MeshCoreMessageDeliveryStatus.delivered:
-        return Icon(Icons.done_all_rounded, size: 14, color: _accentColor);
+        return Icon(Icons.done_all_rounded, size: 14, color: muted);
       case MeshCoreMessageDeliveryStatus.failed:
         return Icon(
           Icons.error_outline_rounded,
@@ -696,65 +878,81 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
 
   Widget _buildMessageInput() {
     return Container(
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 8,
-        top: 8,
-        bottom: MediaQuery.of(context).padding.bottom + 8,
-      ),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
-        color: context.card.withValues(alpha: 0.5),
-        border: Border(top: BorderSide(color: context.border)),
+        color: context.card,
+        border: Border(
+          top: BorderSide(color: context.border.withValues(alpha: 0.3)),
+        ),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              onTapOutside: (_) =>
-                  FocusManager.instance.primaryFocus?.unfocus(),
-              maxLength: 500,
-              controller: _messageController,
-              focusNode: _focusNode,
-              maxLines: 4,
-              minLines: 1,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: InputDecoration(
-                hintText: context.l10n.meshcoreTypeMessageHint,
-                hintStyle: TextStyle(color: SemanticColors.muted),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
-                counterText: '',
+      child: SafeArea(
+        top: false,
+        child: ChatComposer(
+          controller: _messageController,
+          focusNode: _focusNode,
+          onSend: _sendMessage,
+          hintText: context.l10n.meshcoreTypeMessageHint,
+          sendTooltip: context.l10n.meshcoreSendMessage,
+          enabled: !_isSending,
+          leading: GestureDetector(
+            onTap: _showChatInfo,
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: context.background,
+                shape: BoxShape.circle,
               ),
-              style: TextStyle(color: context.textPrimary),
-              onSubmitted: (_) => _sendMessage(),
+              child: Icon(
+                Icons.info_outline_rounded,
+                color: context.textSecondary,
+                size: 20,
+              ),
             ),
           ),
-          const SizedBox(width: AppTheme.spacing8),
-          Container(
-            decoration: BoxDecoration(
-              color: _accentColor.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-            ),
-            child: IconButton(
-              onPressed: _isSending ? null : _sendMessage,
-              icon: _isSending
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: _accentColor,
-                      ),
-                    )
-                  : Icon(Icons.send_rounded, color: _accentColor),
-            ),
-          ),
-        ],
+        ),
       ),
     );
+  }
+
+  String _senderLabel(MeshCoreMessage message) {
+    if (message.senderName != null && message.senderName!.isNotEmpty) {
+      return message.senderName!;
+    }
+    final key = message.senderKey;
+    if (key == null || key.isEmpty) {
+      return context.l10n.meshcoreUnknown;
+    }
+    final hex = key
+        .take(2)
+        .map((b) => b.toRadixString(16).padLeft(2, '0'))
+        .join()
+        .toUpperCase();
+    return '!$hex';
+  }
+
+  String _initialsFor(String value, {required String fallback}) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return fallback;
+    return trimmed.length >= 2
+        ? trimmed.substring(0, 2).toUpperCase()
+        : trimmed.toUpperCase();
+  }
+
+  Color _senderColor(MeshCoreMessage message) {
+    final key = message.senderKey;
+    if (key == null || key.isEmpty) {
+      return AccentColors.purple;
+    }
+    final colors = [
+      const Color(0xFF5B4FCE),
+      const Color(0xFFD946A6),
+      AppTheme.graphBlue,
+      const Color(0xFFF59E0B),
+      AppTheme.errorRed,
+      AccentColors.emerald,
+    ];
+    return colors[key.first % colors.length];
   }
 
   void _showChatInfo() {
