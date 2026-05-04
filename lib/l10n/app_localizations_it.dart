@@ -11453,6 +11453,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get nodedexFirstSighting => 'Primo avvistamento';
 
   @override
+  String get nodedexFirstUsedLabel => 'Primo utilizzo';
+
+  @override
   String get nodedexGalleryHint =>
       'Tocca la carta per girarla • Scorri per sfogliare';
 
@@ -11704,6 +11707,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String nodedexLastSeenAtTime(String date, String time) {
     return '$date alle $time';
   }
+
+  @override
+  String get nodedexLastUsedLabel => 'Ultimo utilizzo';
 
   @override
   String get nodedexLegendFair => 'Discreto';

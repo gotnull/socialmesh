@@ -19933,6 +19933,12 @@ abstract class AppLocalizations {
   /// **'First Sighting'**
   String get nodedexFirstSighting;
 
+  /// NodeDex self-mode discovery row label. The first time this app connected to this nodeNum as the user's local radio. Connection-identity semantics, not mesh-observation — distinct from 'First Discovered' which records when the entry first appeared in the mesh from this phone's POV.
+  ///
+  /// In en, this message translates to:
+  /// **'First used'**
+  String get nodedexFirstUsedLabel;
+
   /// Hint text for an input field in node management
   ///
   /// In en, this message translates to:
@@ -20352,6 +20358,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{date} at {time}'**
   String nodedexLastSeenAtTime(String date, String time);
+
+  /// NodeDex self-mode discovery row label. The most recent time this app connected to this nodeNum as the user's local radio. Distinct from 'Last sync' (live-radio lastHeard) and from 'Last encounter' (mesh-observation). Stamped from myNodeNumProvider only, throttled to ~1 update per minute.
+  ///
+  /// In en, this message translates to:
+  /// **'Last used'**
+  String get nodedexLastUsedLabel;
 
   /// Text displayed in node management
   ///

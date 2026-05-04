@@ -187,9 +187,21 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
   /// Tracks the last encounter time per node to implement cooldown.
   final Map<int, DateTime> _lastEncounterTime = {};
 
+  /// Tracks the last `lastUsedAt` write per node, throttling SQL churn from
+  /// redundant `myNodeNumProvider` re-emissions on stream re-subscription.
+  /// Independent from [_lastEncounterTime] so the connection-identity
+  /// pipeline stays separated from mesh-observation ingest.
+  final Map<int, DateTime> _lastUsedFlushTime = {};
+
   /// Minimum gap between encounter recordings for the same node.
   /// Override via [encounterCooldownOverride] in tests.
   static Duration _defaultEncounterCooldown = const Duration(minutes: 5);
+
+  /// Minimum gap between `lastUsedAt` SQL writes for the same node. The
+  /// throttle absorbs `myNodeNumProvider` re-emissions from things like
+  /// stream re-subscription and persistence rehydrate.
+  /// Override via [lastUsedCooldownOverride] in tests.
+  static Duration _defaultLastUsedCooldown = const Duration(minutes: 1);
 
   /// Interval for co-seen relationship batch updates.
   /// Override via [coSeenFlushIntervalOverride] in tests.
@@ -200,6 +212,11 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
   static set encounterCooldownOverride(Duration value) =>
       _defaultEncounterCooldown = value;
 
+  /// Test-only override for last-used cooldown duration.
+  @visibleForTesting
+  static set lastUsedCooldownOverride(Duration value) =>
+      _defaultLastUsedCooldown = value;
+
   /// Test-only override for co-seen flush interval.
   @visibleForTesting
   static set coSeenFlushIntervalOverride(Duration value) =>
@@ -209,6 +226,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
   @visibleForTesting
   static void resetTestOverrides() {
     _defaultEncounterCooldown = const Duration(minutes: 5);
+    _defaultLastUsedCooldown = const Duration(minutes: 1);
     _defaultCoSeenFlushInterval = const Duration(minutes: 2);
   }
 
@@ -277,6 +295,24 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
       _handleNodesUpdate(previous ?? {}, next);
     });
 
+    // Listen to local-identity transitions and stamp firstUsedAt /
+    // lastUsedAt on the matching entry. Sourced from myNodeNumProvider
+    // (which fires only when the protocol stream surfaces a real connected
+    // identity) and NEVER from packet ingest — the encounter pipeline and
+    // the connection-identity pipeline must stay separated, otherwise sync
+    // replay of the local node's stale NodeDB entry would falsely advance
+    // lastUsedAt.
+    //
+    // The initial value at subscription time is handled separately by
+    // `_init()` (after `state` is populated), since `ref.listen` with
+    // `fireImmediately: true` would invoke the callback during `build()`,
+    // before `state` is initialised — and `_stampLocalIdentity` reads it.
+    ref.listen<int?>(myNodeNumProvider, (_, next) {
+      if (!ref.mounted) return;
+      if (next == null) return;
+      _stampLocalIdentity(next);
+    });
+
     ref.onDispose(() {
       _coSeenTimer?.cancel();
       // Use persistOnly to avoid setting state during dispose, which
@@ -293,6 +329,7 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
 
   Duration get _encounterCooldown => _defaultEncounterCooldown;
   Duration get _coSeenFlushInterval => _defaultCoSeenFlushInterval;
+  Duration get _lastUsedCooldown => _defaultLastUsedCooldown;
 
   Future<void> _init() async {
     if (_store == null) return;
@@ -312,6 +349,16 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
       final currentNodes = ref.read(nodesProvider);
       if (currentNodes.isNotEmpty) {
         _handleNodesUpdate({}, currentNodes, seedOnly: true);
+      }
+
+      // Stamp the initial connection-identity if it's already known. This
+      // mirrors what the myNodeNumProvider listener does on subsequent
+      // changes — the listener can't fire for the value that was present
+      // at subscription time, so we read it explicitly here. Runs after
+      // the seed so any newly-created self entry is in `state` already.
+      final initialMyNodeNum = ref.read(myNodeNumProvider);
+      if (initialMyNodeNum != null) {
+        _stampLocalIdentity(initialMyNodeNum);
       }
 
       // Start periodic co-seen relationship flush.
@@ -335,6 +382,55 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
   /// Handle node updates from the Meshtastic protocol layer.
   ///
   /// Creates new entries for newly discovered nodes and updates
+  /// Stamp `firstUsedAt` / `lastUsedAt` on the entry for [nodeNum] when the
+  /// app's local-identity stream emits it as the connected radio.
+  ///
+  /// **Driven by `myNodeNumProvider` only** — never invoked from packet
+  /// ingest. The two pipelines are kept separate so that sync-replay of the
+  /// local node's stale NodeDB entry through `_handleNodesUpdate` cannot
+  /// falsely advance these timestamps.
+  ///
+  /// Throttled by `[_lastUsedFlushTime]` + `[_lastUsedCooldown]` so the
+  /// myNodeNumProvider re-emissions that fire on stream re-subscription
+  /// don't churn SQL.
+  ///
+  /// If the entry doesn't exist yet, defer silently — the discovery path
+  /// in `_handleNodesUpdate` will create it shortly and the next emission
+  /// (or stream rehydrate) will catch up. We don't pre-create here because
+  /// `NodeDexEntry` requires a `firstSeen` and we shouldn't synthesize one
+  /// from connection-identity context.
+  void _stampLocalIdentity(int nodeNum) {
+    if (_store == null) return;
+    final entry = state[nodeNum];
+    if (entry == null) {
+      AppLogging.nodeDex(
+        'Local identity stamp deferred for node $nodeNum: '
+        'entry not yet created',
+      );
+      return;
+    }
+
+    final now = clock.now();
+    final lastFlush = _lastUsedFlushTime[nodeNum];
+    if (lastFlush != null && now.difference(lastFlush) < _lastUsedCooldown) {
+      return;
+    }
+    _lastUsedFlushTime[nodeNum] = now;
+
+    final updated = entry.copyWith(
+      firstUsedAt: entry.firstUsedAt ?? now,
+      lastUsedAt: now,
+    );
+    state = {...state, nodeNum: updated};
+    _lastKnownState = state;
+    _store!.saveEntry(updated);
+
+    AppLogging.nodeDex(
+      'Local identity stamp: node $nodeNum, '
+      'firstUsedAt=${updated.firstUsedAt}, lastUsedAt=${updated.lastUsedAt}',
+    );
+  }
+
   /// encounter records for re-seen nodes.
   ///
   /// Each node update is classified via [NodeIngestSource]:

@@ -471,6 +471,8 @@ class NodeDexSqliteStore {
       NodeDexTables.colLastObservedOnPreset: entry.lastObservedOnPreset,
       NodeDexTables.colLastObservedFreqOffset:
           entry.lastObservedFrequencyOffset,
+      NodeDexTables.colFirstUsedAtMs: entry.firstUsedAt?.millisecondsSinceEpoch,
+      NodeDexTables.colLastUsedAtMs: entry.lastUsedAt?.millisecondsSinceEpoch,
     };
   }
 
@@ -594,6 +596,16 @@ class NodeDexSqliteStore {
       lastObservedOnPreset: row[NodeDexTables.colLastObservedOnPreset] as int?,
       lastObservedFrequencyOffset:
           (row[NodeDexTables.colLastObservedFreqOffset] as num?)?.toDouble(),
+      firstUsedAt: row[NodeDexTables.colFirstUsedAtMs] != null
+          ? DateTime.fromMillisecondsSinceEpoch(
+              row[NodeDexTables.colFirstUsedAtMs] as int,
+            )
+          : null,
+      lastUsedAt: row[NodeDexTables.colLastUsedAtMs] != null
+          ? DateTime.fromMillisecondsSinceEpoch(
+              row[NodeDexTables.colLastUsedAtMs] as int,
+            )
+          : null,
     );
   }
 

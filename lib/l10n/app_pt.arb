@@ -24109,6 +24109,10 @@
   "@nodedexFirstSighting": {
     "description": "Text displayed in node management"
   },
+  "nodedexFirstUsedLabel": "Primeira utilização",
+  "@nodedexFirstUsedLabel": {
+    "description": "NodeDex self-mode discovery row label. The first time this app connected to this nodeNum as the user's local radio. Connection-identity semantics, not mesh-observation — distinct from 'First Discovered' which records when the entry first appeared in the mesh from this phone's POV."
+  },
   "nodedexGalleryHint": "Toque no cartão para virar • Deslize para navegar",
   "@nodedexGalleryHint": {
     "description": "Hint text for an input field in node management"
@@ -24476,6 +24480,10 @@
   "nodedexLastSeenStatLabel": "Último encontro",
   "@nodedexLastSeenStatLabel": {
     "description": "Label in node management"
+  },
+  "nodedexLastUsedLabel": "Última utilização",
+  "@nodedexLastUsedLabel": {
+    "description": "NodeDex self-mode discovery row label. The most recent time this app connected to this nodeNum as the user's local radio. Distinct from 'Last sync' (live-radio lastHeard) and from 'Last encounter' (mesh-observation). Stamped from myNodeNumProvider only, throttled to ~1 update per minute."
   },
   "nodedexLegendFair": "Razoável",
   "@nodedexLegendFair": {

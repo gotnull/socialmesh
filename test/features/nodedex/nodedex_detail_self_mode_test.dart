@@ -113,7 +113,11 @@ class _StaticNodeDexNotifier extends NodeDexNotifier {
 const int _myNodeNum = 99999;
 const int _remoteNodeNum = 12345;
 
-NodeDexEntry _entry(int nodeNum) {
+NodeDexEntry _entry(
+  int nodeNum, {
+  DateTime? firstUsedAt,
+  DateTime? lastUsedAt,
+}) {
   // Use a fixed clock-independent timestamp so date formatting is stable.
   final firstSeen = DateTime(2025, 1, 1, 12, 0);
   final lastSeen = DateTime(2025, 1, 14, 15, 30);
@@ -123,6 +127,8 @@ NodeDexEntry _entry(int nodeNum) {
     lastSeen: lastSeen,
     encounterCount: 1,
     sigil: SigilGenerator.generate(nodeNum),
+    firstUsedAt: firstUsedAt,
+    lastUsedAt: lastUsedAt,
   );
 }
 
@@ -134,12 +140,15 @@ Widget _wrap({
   required int nodeNum,
   required NodeDexSqliteStore store,
   required int? myNodeNum,
+  Map<int, NodeDexEntry>? entriesOverride,
 }) {
   // Pre-build the entry map so the static notifier returns it on first build.
-  final entries = <int, NodeDexEntry>{
-    _myNodeNum: _entry(_myNodeNum),
-    _remoteNodeNum: _entry(_remoteNodeNum),
-  };
+  final entries =
+      entriesOverride ??
+      <int, NodeDexEntry>{
+        _myNodeNum: _entry(_myNodeNum),
+        _remoteNodeNum: _entry(_remoteNodeNum),
+      };
 
   return ProviderScope(
     overrides: [
@@ -346,6 +355,166 @@ void main() {
         find.text(_l10n.nodedexSelfLastSyncLabel),
         findsNothing,
         reason: 'remote must not render the self-mode "Last sync" label',
+      );
+    });
+  });
+
+  // ===========================================================================
+  // Connection-identity row rendering (firstUsedAt / lastUsedAt)
+  //
+  // Per the plan: rows are hidden when null (no em-dash placeholder, since
+  // empty would feel broken on entries that were self before this feature
+  // shipped) and rendered when populated. Remote entries never have these
+  // fields set, so the rows must never appear there.
+  // ===========================================================================
+
+  group('NodeDexDetailScreen — connection-identity rows', () {
+    testWidgets(
+      'self mode renders First used + Last used rows when fields are set',
+      (tester) async {
+        await setUpViewport(tester);
+
+        final firstUsed = DateTime(2026, 4, 30, 23, 14);
+        final lastUsed = DateTime(2026, 5, 4, 9, 2);
+        final entries = <int, NodeDexEntry>{
+          _myNodeNum: _entry(
+            _myNodeNum,
+            firstUsedAt: firstUsed,
+            lastUsedAt: lastUsed,
+          ),
+          _remoteNodeNum: _entry(_remoteNodeNum),
+        };
+
+        await tester.pumpWidget(
+          _wrap(
+            nodeNum: _myNodeNum,
+            store: store,
+            myNodeNum: _myNodeNum,
+            entriesOverride: entries,
+          ),
+        );
+        await _settle(tester);
+
+        expect(
+          find.text(_l10n.nodedexFirstUsedLabel),
+          findsOneWidget,
+          reason: 'self with firstUsedAt set must render the First used row',
+        );
+        expect(
+          find.text(_l10n.nodedexLastUsedLabel),
+          findsOneWidget,
+          reason: 'self with lastUsedAt set must render the Last used row',
+        );
+      },
+    );
+
+    testWidgets(
+      'self mode HIDES First used + Last used rows when fields are null',
+      (tester) async {
+        await setUpViewport(tester);
+
+        // Default fixture leaves firstUsedAt and lastUsedAt null.
+        await tester.pumpWidget(
+          _wrap(nodeNum: _myNodeNum, store: store, myNodeNum: _myNodeNum),
+        );
+        await _settle(tester);
+
+        expect(
+          find.text(_l10n.nodedexFirstUsedLabel),
+          findsNothing,
+          reason: 'null firstUsedAt must not render an em-dash placeholder',
+        );
+        expect(
+          find.text(_l10n.nodedexLastUsedLabel),
+          findsNothing,
+          reason: 'null lastUsedAt must not render an em-dash placeholder',
+        );
+      },
+    );
+
+    testWidgets('remote mode never renders First used / Last used rows', (
+      tester,
+    ) async {
+      await setUpViewport(tester);
+
+      // Even with the timestamps populated on the remote entry (which
+      // shouldn't happen in production, but pin it as a UI gate so a
+      // future bug can't smuggle these rows into a remote screen).
+      final firstUsed = DateTime(2026, 4, 30, 23, 14);
+      final lastUsed = DateTime(2026, 5, 4, 9, 2);
+      final entries = <int, NodeDexEntry>{
+        _myNodeNum: _entry(_myNodeNum),
+        _remoteNodeNum: _entry(
+          _remoteNodeNum,
+          firstUsedAt: firstUsed,
+          lastUsedAt: lastUsed,
+        ),
+      };
+
+      await tester.pumpWidget(
+        _wrap(
+          nodeNum: _remoteNodeNum,
+          store: store,
+          myNodeNum: _myNodeNum,
+          entriesOverride: entries,
+        ),
+      );
+      await _settle(tester);
+
+      expect(
+        find.text(_l10n.nodedexFirstUsedLabel),
+        findsNothing,
+        reason: 'remote must never render the First used row',
+      );
+      expect(
+        find.text(_l10n.nodedexLastUsedLabel),
+        findsNothing,
+        reason: 'remote must never render the Last used row',
+      );
+    });
+
+    testWidgets('self mode hides First Discovered + Known For rows '
+        '(replaced by First used / Last used)', (tester) async {
+      await setUpViewport(tester);
+
+      await tester.pumpWidget(
+        _wrap(nodeNum: _myNodeNum, store: store, myNodeNum: _myNodeNum),
+      );
+      await _settle(tester);
+
+      expect(
+        find.text(_l10n.nodedexFirstDiscovered),
+        findsNothing,
+        reason:
+            'self mode must hide the mesh-observation '
+            '"First Discovered" row',
+      );
+      expect(
+        find.text(_l10n.nodedexKnownFor),
+        findsNothing,
+        reason: 'self mode must hide the mesh-observation "Known For" row',
+      );
+    });
+
+    testWidgets('remote mode still renders First Discovered + Known For rows', (
+      tester,
+    ) async {
+      await setUpViewport(tester);
+
+      await tester.pumpWidget(
+        _wrap(nodeNum: _remoteNodeNum, store: store, myNodeNum: _myNodeNum),
+      );
+      await _settle(tester);
+
+      expect(
+        find.text(_l10n.nodedexFirstDiscovered),
+        findsOneWidget,
+        reason: 'remote must still render the First Discovered row',
+      );
+      expect(
+        find.text(_l10n.nodedexKnownFor),
+        findsOneWidget,
+        reason: 'remote must still render the Known For row',
       );
     });
   });

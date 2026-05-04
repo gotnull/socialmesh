@@ -111,6 +111,10 @@ class _TestMyNodeNumNotifier extends MyNodeNumNotifier {
 
   @override
   int? build() => _initial;
+
+  /// Test-only mutator so device-switch / new-connection scenarios can be
+  /// driven without the real protocol stream.
+  void setMyNodeNum(int? value) => state = value;
 }
 
 // =============================================================================
@@ -189,6 +193,7 @@ NodeDexEntry _makeEntry({
 ({
   ProviderContainer container,
   _TestNodesNotifier nodesNotifier,
+  _TestMyNodeNumNotifier myNodeNumNotifier,
   NodeDexSqliteStore store,
 })
 _createTestContainer({
@@ -218,6 +223,7 @@ _createTestContainer({
   return (
     container: container,
     nodesNotifier: nodesNotifier,
+    myNodeNumNotifier: myNodeNumNotifier,
     store: preInitStore,
   );
 }
@@ -255,6 +261,7 @@ void main() {
 
     // Use zero-duration debounce/cooldowns so tests don't need fake timers.
     NodeDexNotifier.encounterCooldownOverride = Duration.zero;
+    NodeDexNotifier.lastUsedCooldownOverride = Duration.zero;
     NodeDexNotifier.coSeenFlushIntervalOverride = const Duration(
       milliseconds: 50,
     );
@@ -596,6 +603,305 @@ void main() {
       expect(entry.encounters.length, equals(1));
       expect(entry.encounters.first.latitude, equals(48.8566));
       expect(entry.encounters.first.longitude, equals(2.3522));
+    });
+  });
+
+  // ===========================================================================
+  // Connection-identity timestamps (firstUsedAt / lastUsedAt)
+  //
+  // These pin the load-bearing rule from the plan:
+  //   - stamping is sourced from myNodeNumProvider, not from
+  //     `_handleNodesUpdate` packet ingest;
+  //   - sync-replay of the local node via deviceDbSync MUST NOT advance
+  //     the timestamps;
+  //   - re-emission within the cooldown window does not churn lastUsedAt;
+  //   - a device switch freezes the previous entry's lastUsedAt and stamps
+  //     the new entry's firstUsedAt.
+  // ===========================================================================
+
+  group('connection-identity timestamps', () {
+    test(
+      'initial myNodeNum emission stamps firstUsedAt and lastUsedAt',
+      () async {
+        final stampTime = DateTime(2026, 5, 4, 12, 0);
+
+        await withClock(Clock.fixed(stampTime), () async {
+          final ctx = _createTestContainer(
+            preInitStore: preInitStore,
+            initialNodes: {_myNodeNum: _makeNode(_myNodeNum)},
+          );
+          addTearDown(ctx.container.dispose);
+
+          await _initProvider(ctx.container);
+
+          final entry = ctx.container.read(nodeDexProvider)[_myNodeNum]!;
+          expect(entry.firstUsedAt, equals(stampTime));
+          expect(entry.lastUsedAt, equals(stampTime));
+        });
+      },
+    );
+
+    test('reconnect within cooldown does not advance lastUsedAt', () async {
+      // Production cooldown is 1 minute. Pin a non-zero override so the
+      // throttle is meaningful (other tests reset it to zero).
+      NodeDexNotifier.lastUsedCooldownOverride = const Duration(minutes: 1);
+      addTearDown(() {
+        NodeDexNotifier.lastUsedCooldownOverride = Duration.zero;
+      });
+
+      final firstStamp = DateTime(2026, 5, 4, 12, 0);
+
+      final ctx = _createTestContainer(
+        preInitStore: preInitStore,
+        initialNodes: {_myNodeNum: _makeNode(_myNodeNum)},
+      );
+      addTearDown(ctx.container.dispose);
+
+      await withClock(Clock.fixed(firstStamp), () async {
+        await _initProvider(ctx.container);
+      });
+
+      // Simulate a brief disconnect/reconnect to the same radio: bounce
+      // myNodeNum through null and back. Riverpod dedupes same-value
+      // writes, so this null→value bounce is the realistic shape of a
+      // "re-emission" — what actually happens when the user disconnects
+      // then reconnects to the same radio. Both transitions happen 30s
+      // after the initial stamp — well within the 1-minute cooldown.
+      final reconnect = firstStamp.add(const Duration(seconds: 30));
+      await withClock(Clock.fixed(reconnect), () async {
+        ctx.myNodeNumNotifier.setMyNodeNum(null);
+        await _pumpEventQueue();
+        ctx.myNodeNumNotifier.setMyNodeNum(_myNodeNum);
+        await _pumpEventQueue();
+      });
+
+      final entry = ctx.container.read(nodeDexProvider)[_myNodeNum]!;
+      expect(
+        entry.lastUsedAt,
+        equals(firstStamp),
+        reason: 'reconnect within cooldown must not advance lastUsedAt',
+      );
+      expect(
+        entry.firstUsedAt,
+        equals(firstStamp),
+        reason: 'firstUsedAt is set once and never moves',
+      );
+    });
+
+    test('reconnect past cooldown advances lastUsedAt', () async {
+      NodeDexNotifier.lastUsedCooldownOverride = const Duration(minutes: 1);
+      addTearDown(() {
+        NodeDexNotifier.lastUsedCooldownOverride = Duration.zero;
+      });
+
+      final firstStamp = DateTime(2026, 5, 4, 12, 0);
+
+      final ctx = _createTestContainer(
+        preInitStore: preInitStore,
+        initialNodes: {_myNodeNum: _makeNode(_myNodeNum)},
+      );
+      addTearDown(ctx.container.dispose);
+
+      await withClock(Clock.fixed(firstStamp), () async {
+        await _initProvider(ctx.container);
+      });
+
+      // Bounce through null and back, 90s later — past the 1-minute
+      // cooldown. Same realistic disconnect/reconnect shape as the
+      // within-cooldown test.
+      final reconnect = firstStamp.add(const Duration(seconds: 90));
+      await withClock(Clock.fixed(reconnect), () async {
+        ctx.myNodeNumNotifier.setMyNodeNum(null);
+        await _pumpEventQueue();
+        ctx.myNodeNumNotifier.setMyNodeNum(_myNodeNum);
+        await _pumpEventQueue();
+      });
+
+      final entry = ctx.container.read(nodeDexProvider)[_myNodeNum]!;
+      expect(
+        entry.lastUsedAt,
+        equals(reconnect),
+        reason: 'reconnect past cooldown must advance lastUsedAt',
+      );
+      expect(entry.firstUsedAt, equals(firstStamp));
+    });
+
+    test(
+      'sync-replay (deviceDbSync) tick of local node does NOT stamp',
+      () async {
+        // Load-bearing guardrail: connection-identity stamping is wired to
+        // myNodeNumProvider only. If `_handleNodesUpdate` could stamp from
+        // sync-replay of the local node's stale NodeDB entry, lastUsedAt
+        // would falsely advance on every reconnect — defeating the whole
+        // multi-device purpose of the feature.
+        final ctx = _createTestContainer(
+          preInitStore: preInitStore,
+          // myNodeNum=null → no connection-identity emission ever.
+          myNodeNum: null,
+        );
+        addTearDown(ctx.container.dispose);
+
+        await _initProvider(ctx.container);
+
+        // Push the local node into nodesProvider with a STALE lastHeard so
+        // _classifyIngestSource returns NodeIngestSource.deviceDbSync.
+        final now = DateTime(2026, 5, 4, 12, 0);
+        final staleHeard = now.subtract(const Duration(hours: 2));
+        await withClock(Clock.fixed(now), () async {
+          ctx.nodesNotifier.addNode(
+            _makeNode(_myNodeNum, lastHeard: staleHeard, stale: true),
+          );
+          await _pumpEventQueue();
+        });
+
+        final entry = ctx.container.read(nodeDexProvider)[_myNodeNum]!;
+        expect(
+          entry.firstUsedAt,
+          isNull,
+          reason:
+              'sync-replay of local node must not stamp firstUsedAt — '
+              'stamping is connection-identity-driven, not packet-driven',
+        );
+        expect(
+          entry.lastUsedAt,
+          isNull,
+          reason:
+              'sync-replay of local node must not stamp lastUsedAt — '
+              'stamping is connection-identity-driven, not packet-driven',
+        );
+      },
+    );
+
+    test('remote nodes never get firstUsedAt / lastUsedAt stamped', () async {
+      final stampTime = DateTime(2026, 5, 4, 12, 0);
+
+      await withClock(Clock.fixed(stampTime), () async {
+        final ctx = _createTestContainer(
+          preInitStore: preInitStore,
+          initialNodes: {
+            _myNodeNum: _makeNode(_myNodeNum),
+            200: _makeNode(200),
+            300: _makeNode(300),
+          },
+        );
+        addTearDown(ctx.container.dispose);
+
+        await _initProvider(ctx.container);
+
+        final state = ctx.container.read(nodeDexProvider);
+        // Self entry got stamped.
+        expect(state[_myNodeNum]!.firstUsedAt, equals(stampTime));
+        expect(state[_myNodeNum]!.lastUsedAt, equals(stampTime));
+        // Remote entries did not.
+        expect(state[200]!.firstUsedAt, isNull);
+        expect(state[200]!.lastUsedAt, isNull);
+        expect(state[300]!.firstUsedAt, isNull);
+        expect(state[300]!.lastUsedAt, isNull);
+      });
+    });
+
+    test(
+      'switching myNodeNum freezes previous lastUsedAt and stamps the new entry',
+      () async {
+        const otherNodeNum = 88888;
+        final firstStamp = DateTime(2026, 5, 4, 12, 0);
+        final switchAt = firstStamp.add(const Duration(minutes: 10));
+
+        final ctx = _createTestContainer(
+          preInitStore: preInitStore,
+          initialNodes: {
+            _myNodeNum: _makeNode(_myNodeNum),
+            otherNodeNum: _makeNode(otherNodeNum),
+          },
+        );
+        addTearDown(ctx.container.dispose);
+
+        await withClock(Clock.fixed(firstStamp), () async {
+          await _initProvider(ctx.container);
+        });
+
+        final initialOriginal = ctx.container.read(
+          nodeDexProvider,
+        )[_myNodeNum]!;
+        expect(initialOriginal.firstUsedAt, equals(firstStamp));
+        expect(initialOriginal.lastUsedAt, equals(firstStamp));
+
+        // Switch myNodeNum to a different device.
+        await withClock(Clock.fixed(switchAt), () async {
+          ctx.myNodeNumNotifier.setMyNodeNum(otherNodeNum);
+          await _pumpEventQueue();
+        });
+
+        final state = ctx.container.read(nodeDexProvider);
+
+        // Previously-self entry's lastUsedAt is frozen at firstStamp — no
+        // further updates fire because the listener now stamps a different
+        // nodeNum.
+        expect(
+          state[_myNodeNum]!.lastUsedAt,
+          equals(firstStamp),
+          reason: 'previous self entry must retain its frozen lastUsedAt',
+        );
+        expect(
+          state[_myNodeNum]!.firstUsedAt,
+          equals(firstStamp),
+          reason: 'previous self entry must retain its firstUsedAt',
+        );
+        // Newly-self entry got its own firstUsedAt stamped.
+        expect(
+          state[otherNodeNum]!.firstUsedAt,
+          equals(switchAt),
+          reason: 'newly self entry must get firstUsedAt at switch time',
+        );
+        expect(
+          state[otherNodeNum]!.lastUsedAt,
+          equals(switchAt),
+          reason: 'newly self entry must get lastUsedAt at switch time',
+        );
+      },
+    );
+
+    test('mergeWith keeps min(firstUsedAt) and max(lastUsedAt)', () async {
+      // Pure model-level test — no container needed.
+      final earlyFirst = DateTime(2026, 1, 1);
+      final lateFirst = DateTime(2026, 3, 1);
+      final earlyLast = DateTime(2026, 4, 1);
+      final lateLast = DateTime(2026, 5, 1);
+
+      final local = _makeEntry(
+        nodeNum: _myNodeNum,
+      ).copyWith(firstUsedAt: lateFirst, lastUsedAt: earlyLast);
+      final remote = _makeEntry(
+        nodeNum: _myNodeNum,
+      ).copyWith(firstUsedAt: earlyFirst, lastUsedAt: lateLast);
+
+      final merged = local.mergeWith(remote);
+      expect(
+        merged.firstUsedAt,
+        equals(earlyFirst),
+        reason: 'merge must take the earlier firstUsedAt',
+      );
+      expect(
+        merged.lastUsedAt,
+        equals(lateLast),
+        reason: 'merge must take the later lastUsedAt',
+      );
+    });
+
+    test('mergeWith preserves the non-null side when only one is set', () {
+      final ts = DateTime(2026, 5, 4);
+      final local = _makeEntry(
+        nodeNum: _myNodeNum,
+      ).copyWith(firstUsedAt: ts, lastUsedAt: ts);
+      final remote = _makeEntry(nodeNum: _myNodeNum); // both null
+
+      final merged = local.mergeWith(remote);
+      expect(merged.firstUsedAt, equals(ts));
+      expect(merged.lastUsedAt, equals(ts));
+
+      final reverseMerged = remote.mergeWith(local);
+      expect(reverseMerged.firstUsedAt, equals(ts));
+      expect(reverseMerged.lastUsedAt, equals(ts));
     });
   });
 

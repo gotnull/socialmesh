@@ -744,6 +744,21 @@ class NodeDexEntry {
   /// setting, not the remote node's.
   final double? lastObservedFrequencyOffset;
 
+  /// First time this app connected to this nodeNum as the local radio.
+  ///
+  /// **Connection-identity semantics**, not mesh-observation. Stamped from
+  /// `myNodeNumProvider` emissions only — never from `_handleNodesUpdate`
+  /// ingest, which would falsely advance from sync-replay NodeDB data.
+  /// Null for entries that have never been the user's connected device
+  /// (i.e. all remote nodes, and self-entries persisted before this field
+  /// shipped).
+  final DateTime? firstUsedAt;
+
+  /// Most recent time this app connected to this nodeNum as the local
+  /// radio. Same connection-identity semantics as [firstUsedAt]; throttled
+  /// in the notifier to roughly one update per minute.
+  final DateTime? lastUsedAt;
+
   /// Maximum number of encounter records to retain.
   static const int maxEncounterRecords = 50;
 
@@ -788,6 +803,8 @@ class NodeDexEntry {
     this.mrrpServiceIds,
     this.lastObservedOnPreset,
     this.lastObservedFrequencyOffset,
+    this.firstUsedAt,
+    this.lastUsedAt,
   });
 
   /// Create a new entry for a freshly discovered node.
@@ -929,6 +946,10 @@ class NodeDexEntry {
     bool clearLastObservedOnPreset = false,
     double? lastObservedFrequencyOffset,
     bool clearLastObservedFrequencyOffset = false,
+    DateTime? firstUsedAt,
+    bool clearFirstUsedAt = false,
+    DateTime? lastUsedAt,
+    bool clearLastUsedAt = false,
   }) {
     // Auto-stamp when socialTag changes via copyWith.
     final effectiveStMs = clearSocialTag || socialTag != null
@@ -990,6 +1011,8 @@ class NodeDexEntry {
       lastObservedFrequencyOffset: clearLastObservedFrequencyOffset
           ? null
           : (lastObservedFrequencyOffset ?? this.lastObservedFrequencyOffset),
+      firstUsedAt: clearFirstUsedAt ? null : (firstUsedAt ?? this.firstUsedAt),
+      lastUsedAt: clearLastUsedAt ? null : (lastUsedAt ?? this.lastUsedAt),
     );
   }
 
@@ -1321,6 +1344,26 @@ class NodeDexEntry {
         ? (lastObservedFrequencyOffset ?? other.lastObservedFrequencyOffset)
         : (other.lastObservedFrequencyOffset ?? lastObservedFrequencyOffset);
 
+    // Connection-identity timestamps: keep min(firstUsedAt) and
+    // max(lastUsedAt) so import/sync never loses earlier-first or later-last
+    // history. Both nullable; either side may be unset.
+    final DateTime? mergedFirstUsedAt;
+    if (firstUsedAt != null && other.firstUsedAt != null) {
+      mergedFirstUsedAt = firstUsedAt!.isBefore(other.firstUsedAt!)
+          ? firstUsedAt
+          : other.firstUsedAt;
+    } else {
+      mergedFirstUsedAt = firstUsedAt ?? other.firstUsedAt;
+    }
+    final DateTime? mergedLastUsedAt;
+    if (lastUsedAt != null && other.lastUsedAt != null) {
+      mergedLastUsedAt = lastUsedAt!.isAfter(other.lastUsedAt!)
+          ? lastUsedAt
+          : other.lastUsedAt;
+    } else {
+      mergedLastUsedAt = lastUsedAt ?? other.lastUsedAt;
+    }
+
     return NodeDexEntry(
       nodeNum: nodeNum,
       firstSeen: mergedFirstSeen,
@@ -1352,6 +1395,8 @@ class NodeDexEntry {
       mrrpServiceIds: mergedMrrpServiceIds,
       lastObservedOnPreset: mergedLastObservedOnPreset,
       lastObservedFrequencyOffset: mergedLastObservedFreqOffset,
+      firstUsedAt: mergedFirstUsedAt,
+      lastUsedAt: mergedLastUsedAt,
     );
   }
 
@@ -1459,6 +1504,8 @@ class NodeDexEntry {
       if (lastObservedOnPreset != null) 'lorp': lastObservedOnPreset,
       if (lastObservedFrequencyOffset != null)
         'lofo': lastObservedFrequencyOffset,
+      if (firstUsedAt != null) 'fua': firstUsedAt!.millisecondsSinceEpoch,
+      if (lastUsedAt != null) 'lua': lastUsedAt!.millisecondsSinceEpoch,
     };
   }
 
@@ -1536,6 +1583,12 @@ class NodeDexEntry {
       mrrpServiceIds: json['mrrp_svc'] as String?,
       lastObservedOnPreset: json['lorp'] as int?,
       lastObservedFrequencyOffset: (json['lofo'] as num?)?.toDouble(),
+      firstUsedAt: json['fua'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(json['fua'] as int)
+          : null,
+      lastUsedAt: json['lua'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(json['lua'] as int)
+          : null,
     );
   }
 

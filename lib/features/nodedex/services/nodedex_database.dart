@@ -7,7 +7,7 @@
 // All tables, indices, and migration logic live here.
 //
 // Database: nodedex.db
-// Schema version: 1
+// Schema version: 11
 
 import 'dart:async';
 import 'dart:io';
@@ -22,7 +22,7 @@ import '../../../core/logging.dart';
 ///
 /// Bump this when adding tables, columns, or indices.
 /// Migration logic runs in [_onUpgrade].
-const int nodedexSchemaVersion = 10;
+const int nodedexSchemaVersion = 11;
 
 /// Table and column name constants for NodeDex SQLite schema.
 abstract final class NodeDexTables {
@@ -68,6 +68,11 @@ abstract final class NodeDexTables {
   // -- Frequency offset observation columns (v10) --
   static const colLastObservedFreqOffset = 'last_observed_freq_offset';
   static const colEncFreqOffset = 'enc_freq_offset';
+
+  // -- Connection-identity columns (v11) --
+  // Stamped from myNodeNumProvider emissions only — never from packet ingest.
+  static const colFirstUsedAtMs = 'first_used_at_ms';
+  static const colLastUsedAtMs = 'last_used_at_ms';
 
   // -- nodedex_encounters --
   static const encounters = 'nodedex_encounters';
@@ -252,7 +257,9 @@ class NodeDexDatabase {
         ${NodeDexTables.colSipDisplayName} TEXT,
         ${NodeDexTables.colMrrpServiceIds} TEXT,
         ${NodeDexTables.colLastObservedOnPreset} INTEGER,             -- v9
-        ${NodeDexTables.colLastObservedFreqOffset} REAL               -- v10
+        ${NodeDexTables.colLastObservedFreqOffset} REAL,              -- v10
+        ${NodeDexTables.colFirstUsedAtMs} INTEGER,                    -- v11
+        ${NodeDexTables.colLastUsedAtMs} INTEGER                      -- v11
       )
     ''');
     batch.execute(
@@ -531,6 +538,23 @@ class NodeDexDatabase {
       );
       AppLogging.storage(
         'NodeDexDatabase: v10 migration — added frequency offset columns',
+      );
+    }
+    if (oldVersion < 11) {
+      // v11: Connection-identity timestamps. Stamped from
+      // myNodeNumProvider emissions only — never from packet ingest. Both
+      // nullable; existing entries leave them NULL forever (remote nodes)
+      // or until the next time the user connects to that nodeNum (self).
+      await db.execute(
+        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
+        'ADD COLUMN ${NodeDexTables.colFirstUsedAtMs} INTEGER', // lint-allow: hardcoded-string
+      );
+      await db.execute(
+        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
+        'ADD COLUMN ${NodeDexTables.colLastUsedAtMs} INTEGER', // lint-allow: hardcoded-string
+      );
+      AppLogging.storage(
+        'NodeDexDatabase: v11 migration — added connection-identity columns',
       );
     }
   }

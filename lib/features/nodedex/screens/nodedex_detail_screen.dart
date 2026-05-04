@@ -1436,11 +1436,19 @@ class _SelfDeviceCard extends StatelessWidget {
 class _DiscoveryStatsCard extends StatelessWidget {
   final NodeDexEntry entry;
   final MeshNode? node;
-  // When true, the card shows a self-aware variant: Encounters and Messages
-  // rows are hidden (self never accumulates remote-peer encounters and
-  // messageCount only tracks inbound from self.from), and the "Last
-  // encounter" row is relabelled "Last sync" since the value reflects the
-  // local connection's last update, not a remote-peer encounter.
+  // When true, the card shows a self-aware variant:
+  //  - First Discovered and Known For rows are hidden (mesh-observation
+  //    framings that don't map cleanly to the user's own radio).
+  //  - Encounters and Messages rows are hidden (self never accumulates
+  //    remote-peer encounters and messageCount only tracks inbound from
+  //    message.from).
+  //  - The "Last encounter" row is relabelled "Last sync" since the value
+  //    reflects the local connection's last update, not a remote-peer
+  //    encounter.
+  //  - "First used" and "Last used" rows are added when the corresponding
+  //    fields are set; hidden when null (no em-dash placeholder — see
+  //    docs/.. and the plan rationale: empty would feel broken on entries
+  //    that were self before the feature shipped).
   final bool isSelf;
 
   const _DiscoveryStatsCard({
@@ -1477,17 +1485,56 @@ class _DiscoveryStatsCard extends StatelessWidget {
           )
         : null;
 
+    // Self-mode connection-identity rows. Hidden when null so entries that
+    // were self before this feature shipped never show empty placeholders.
+    final firstUsed = entry.firstUsedAt;
+    final lastUsed = entry.lastUsedAt;
+    final firstUsedLabel = firstUsed != null
+        ? context.l10n.nodedexLastSeenAtTime(
+            dateFormat.format(firstUsed),
+            timeFormat.format(firstUsed),
+          )
+        : null;
+    final lastUsedLabel = lastUsed != null
+        ? context.l10n.nodedexLastSeenAtTime(
+            dateFormat.format(lastUsed),
+            timeFormat.format(lastUsed),
+          )
+        : null;
+
     return _CardContainer(
       title: context.l10n.nodedexDiscoveryTitle,
       icon: Icons.explore_outlined,
       helpKey: 'discovery',
       child: Column(
         children: [
-          _InfoRow(
-            label: context.l10n.nodedexFirstDiscovered,
-            value: firstSeen,
-            icon: Icons.calendar_today_outlined,
-          ),
+          // First Discovered hidden for self: it's a mesh-observation
+          // framing ("when did this entry first appear in the mesh from
+          // this phone's POV"), not a connection-identity timestamp. Use
+          // First used for the connection-identity equivalent.
+          if (!isSelf)
+            _InfoRow(
+              label: context.l10n.nodedexFirstDiscovered,
+              value: firstSeen,
+              icon: Icons.calendar_today_outlined,
+            ),
+          // Self-mode: First used. Connection-identity stamp from
+          // myNodeNumProvider, hidden when null.
+          if (isSelf && firstUsedLabel != null)
+            _InfoRow(
+              label: context.l10n.nodedexFirstUsedLabel,
+              value: firstUsedLabel,
+              icon: Icons.login_outlined,
+            ),
+          // Self-mode: Last used. Most-recent connection-identity stamp.
+          // Distinct from "Last sync" (live-radio lastHeard) by design;
+          // both rows are valid simultaneously.
+          if (isSelf && lastUsedLabel != null)
+            _InfoRow(
+              label: context.l10n.nodedexLastUsedLabel,
+              value: lastUsedLabel,
+              icon: Icons.history_outlined,
+            ),
           if (liveLastHeardLabel != null)
             _InfoRow(
               label: context.l10n.nodedexLastHeard,
@@ -1501,11 +1548,14 @@ class _DiscoveryStatsCard extends StatelessWidget {
             value: context.l10n.nodedexLastSeenAtTime(lastSeen, lastSeenTime),
             icon: Icons.schedule,
           ),
-          _InfoRow(
-            label: context.l10n.nodedexKnownFor,
-            value: ageLabel,
-            icon: Icons.timelapse_outlined,
-          ),
+          // Known For hidden for self: same mesh-observation framing as
+          // First Discovered.
+          if (!isSelf)
+            _InfoRow(
+              label: context.l10n.nodedexKnownFor,
+              value: ageLabel,
+              icon: Icons.timelapse_outlined,
+            ),
           // Encounters row hidden for self: self never accumulates
           // remote-peer encounters (see NodeDexNotifier._handleNodesUpdate
           // !isOwnNode guard).
