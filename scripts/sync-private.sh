@@ -87,6 +87,7 @@ EXCLUDE_PATTERNS=(
   ".venv"
   ".DS_Store"
   "workflows"
+  ".git"
 )
 
 # Mapping from sync directory names to Firebase hosting target names.
