@@ -7,6 +7,7 @@ import 'dart:math';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -181,6 +182,87 @@ class AuthService {
     }
   }
 
+  /// If the current user is anonymous, upgrade their account in place
+  /// by linking the supplied credential. Otherwise plain
+  /// `signInWithCredential`.
+  ///
+  /// Why this matters: every install gets an anonymous Firebase uid at
+  /// app launch (see `_ensureAnonymousAuth` in main.dart). When the user
+  /// later signs in with a real provider, calling `signInWithCredential`
+  /// directly would discard the anonymous uid and produce a fresh one —
+  /// orphaning any data keyed on the previous uid (profile prefs, bug
+  /// history, RevenueCat alias chain, app-state Firestore docs).
+  /// `linkWithCredential` preserves the uid through the upgrade.
+  ///
+  /// Conflict path: when the credential already belongs to an existing
+  /// real account (different person previously signed up with the same
+  /// email/Google/Apple identity), the link operation fails with
+  /// `credential-already-in-use` or `email-already-in-use`. In that
+  /// case we fall back to a plain sign-in — the anon data is orphaned,
+  /// but successfully signing the user into their existing real
+  /// account is a stronger requirement than preserving anon state.
+  ///
+  /// Marked `@visibleForTesting` so the helper can be exercised
+  /// directly without spinning up the upstream OAuth flows
+  /// (GoogleSignIn, AppleSignIn, etc.) that the public sign-in
+  /// methods wrap. NOT a public API surface — call only from tests
+  /// or from the sign-in methods on this class.
+  @visibleForTesting
+  Future<UserCredential> linkAnonOrSignInWithCredential(
+    AuthCredential credential,
+  ) async {
+    final current = _auth.currentUser;
+    if (current != null && current.isAnonymous) {
+      try {
+        AppLogging.auth(
+          'linkAnonOrSignInWithCredential - linking anon uid=${current.uid.length >= 8 ? current.uid.substring(0, 8) : current.uid}…',
+        );
+        return await current.linkWithCredential(credential);
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'credential-already-in-use' ||
+            e.code == 'email-already-in-use') {
+          AppLogging.auth(
+            'linkAnonOrSignInWithCredential - link conflict (${e.code}) — falling back to signInWithCredential, anon data orphaned',
+          );
+          return await _auth.signInWithCredential(credential);
+        }
+        rethrow;
+      }
+    }
+    return await _auth.signInWithCredential(credential);
+  }
+
+  /// Provider-flow equivalent of [linkAnonOrSignInWithCredential] for
+  /// flows that go through `signInWithProvider` (GitHub, Twitter) where
+  /// no `AuthCredential` is constructed client-side.
+  ///
+  /// Marked `@visibleForTesting` for the same reason as
+  /// [linkAnonOrSignInWithCredential].
+  @visibleForTesting
+  Future<UserCredential> linkAnonOrSignInWithProvider(
+    AuthProvider provider,
+  ) async {
+    final current = _auth.currentUser;
+    if (current != null && current.isAnonymous) {
+      try {
+        AppLogging.auth(
+          'linkAnonOrSignInWithProvider - linking anon uid=${current.uid.length >= 8 ? current.uid.substring(0, 8) : current.uid}…',
+        );
+        return await current.linkWithProvider(provider);
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'credential-already-in-use' ||
+            e.code == 'email-already-in-use') {
+          AppLogging.auth(
+            'linkAnonOrSignInWithProvider - link conflict (${e.code}) — falling back to signInWithProvider, anon data orphaned',
+          );
+          return await _auth.signInWithProvider(provider);
+        }
+        rethrow;
+      }
+    }
+    return await _auth.signInWithProvider(provider);
+  }
+
   /// Sign in with email and password
   Future<UserCredential> signInWithEmail({
     required String email,
@@ -190,10 +272,11 @@ class AuthService {
         '${email.substring(0, email.indexOf('@').clamp(0, 3))}***@${email.split('@').last}';
     AppLogging.auth('signInWithEmail - START - email=$maskedEmail');
     try {
-      final credential = await _auth.signInWithEmailAndPassword(
+      final emailCredential = EmailAuthProvider.credential(
         email: email,
         password: password,
       );
+      final credential = await linkAnonOrSignInWithCredential(emailCredential);
       _logUserInfo('signInWithEmail - ✅ SUCCESS', credential.user);
       return credential;
     } on FirebaseAuthException catch (e) {
@@ -205,7 +288,14 @@ class AuthService {
     }
   }
 
-  /// Create a new account with email and password
+  /// Create a new account with email and password.
+  ///
+  /// If the user is currently anonymous, upgrades the anon account in
+  /// place by linking the email credential — preserves the uid and any
+  /// data tied to it. Conflict (`email-already-in-use`) is NOT
+  /// silently downgraded to a sign-in: the caller explicitly asked to
+  /// CREATE an account, so a conflict should surface as an error and
+  /// let the UI guide them to the sign-in path instead.
   Future<UserCredential> createAccount({
     required String email,
     required String password,
@@ -214,10 +304,23 @@ class AuthService {
         '${email.substring(0, email.indexOf('@').clamp(0, 3))}***@${email.split('@').last}';
     AppLogging.auth('createAccount - START - email=$maskedEmail');
     try {
-      final credential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      final current = _auth.currentUser;
+      UserCredential credential;
+      if (current != null && current.isAnonymous) {
+        AppLogging.auth(
+          'createAccount - linking anon uid=${current.uid.length >= 8 ? current.uid.substring(0, 8) : current.uid}…',
+        );
+        final emailCredential = EmailAuthProvider.credential(
+          email: email,
+          password: password,
+        );
+        credential = await current.linkWithCredential(emailCredential);
+      } else {
+        credential = await _auth.createUserWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+      }
       _logUserInfo('createAccount - ✅ SUCCESS', credential.user);
       return credential;
     } on FirebaseAuthException catch (e) {
@@ -286,7 +389,7 @@ class AuthService {
     final credential = GoogleAuthProvider.credential(idToken: idToken);
 
     try {
-      final userCredential = await _auth.signInWithCredential(credential);
+      final userCredential = await linkAnonOrSignInWithCredential(credential);
       _logUserInfo('signInWithGoogle - ✅ SUCCESS', userCredential.user);
       return userCredential;
     } on FirebaseAuthException catch (e) {
@@ -325,7 +428,9 @@ class AuthService {
         accessToken: appleCredential.authorizationCode,
       );
 
-      final userCredential = await _auth.signInWithCredential(oauthCredential);
+      final userCredential = await linkAnonOrSignInWithCredential(
+        oauthCredential,
+      );
       _logUserInfo('signInWithApple - ✅ SUCCESS', userCredential.user);
 
       // Apple only sends name on first sign-in, so save it if available
@@ -404,7 +509,7 @@ class AuthService {
       // Use redirect on web, popup on mobile
       if (Platform.isIOS || Platform.isAndroid) {
         AppLogging.auth('signInWithGitHub - Using signInWithProvider (mobile)');
-        userCredential = await _auth.signInWithProvider(githubProvider);
+        userCredential = await linkAnonOrSignInWithProvider(githubProvider);
       } else {
         AppLogging.auth('signInWithGitHub - Using signInWithPopup (web)');
         userCredential = await _auth.signInWithPopup(githubProvider);
@@ -441,7 +546,7 @@ class AuthService {
         AppLogging.auth(
           'signInWithTwitter - Using signInWithProvider (mobile)',
         );
-        userCredential = await _auth.signInWithProvider(twitterProvider);
+        userCredential = await linkAnonOrSignInWithProvider(twitterProvider);
       } else {
         AppLogging.auth('signInWithTwitter - Using signInWithPopup (web)');
         userCredential = await _auth.signInWithPopup(twitterProvider);

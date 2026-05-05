@@ -22536,6 +22536,92 @@ class AppLocalizationsIt extends AppLocalizations {
   String get premiumPurchaseFailed => 'Acquisto fallito. Riprova.';
 
   @override
+  String get alternativePayment => 'Pagamento alternativo';
+
+  @override
+  String get alternativePaymentSubtitle =>
+      'Acquista tramite Buy Me a Coffee anziché lo store';
+
+  @override
+  String get googlePlayUnavailable =>
+      'Google Play non disponibile su questo dispositivo — prova il pagamento alternativo.';
+
+  @override
+  String get buyMeACoffeeHandoffTitle => 'Paga tramite Buy Me a Coffee';
+
+  @override
+  String get buyMeACoffeeHandoffBody =>
+      'Copia questo codice di riferimento, incollalo nella nota di supporto su Buy Me a Coffee e completa il pagamento. Sbloccheremo il pacchetto non appena il pagamento sarà confermato.';
+
+  @override
+  String get referenceCodeLabel => 'Codice di riferimento';
+
+  @override
+  String get copyReferenceCode => 'Copia codice';
+
+  @override
+  String get referenceCodeCopied => 'Codice di riferimento copiato';
+
+  @override
+  String get openBuyMeACoffee => 'Apri Buy Me a Coffee';
+
+  @override
+  String expectedAmountLabel(Object amount) {
+    return 'Importo: $amount';
+  }
+
+  @override
+  String get couldNotOpenCheckout => 'Impossibile aprire il checkout. Riprova.';
+
+  @override
+  String get externalPurchaseRetry => 'Riprova';
+
+  @override
+  String get confirmingUnlock => 'Conferma dello sblocco in corso…';
+
+  @override
+  String get paymentProcessing =>
+      'In attesa della conferma del pagamento. Di solito richiede pochi secondi.';
+
+  @override
+  String get paymentFailed =>
+      'Impossibile confermare il pagamento. Se hai completato il pagamento, contatta il supporto.';
+
+  @override
+  String unlockSuccess(Object name) {
+    return '$name sbloccato!';
+  }
+
+  @override
+  String get unlockSuccessGeneric => 'Sblocco completato';
+
+  @override
+  String get unlockCodeFallback => 'Hai un codice di sblocco?';
+
+  @override
+  String get unlockCodeSheetTitle => 'Riscatta codice di sblocco';
+
+  @override
+  String get unlockCodeSheetBody =>
+      'Inserisci il codice di sblocco che ti ha inviato il supporto. I codici non sono sensibili al maiuscolo/minuscolo e i trattini sono opzionali.';
+
+  @override
+  String get unlockCodeFieldLabel => 'Codice di sblocco';
+
+  @override
+  String get unlockCodeFieldHint => 'SM-XXXX-XXXX';
+
+  @override
+  String get redeemCode => 'Riscatta';
+
+  @override
+  String get redeemCodeInvalid =>
+      'Codice non riconosciuto. Controlla e riprova.';
+
+  @override
+  String get dismiss => 'Chiudi';
+
+  @override
   String get premiumPurchaseError => 'Qualcosa è andato storto. Riprova.';
 
   @override

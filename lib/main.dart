@@ -65,6 +65,7 @@ import 'providers/meshcore_providers.dart';
 import 'services/meshcore/connection_coordinator.dart' show ConnectionResult;
 import 'features/automations/automation_providers.dart';
 import 'features/automations/automation_import_screen.dart';
+import 'features/external_purchase/confirming_unlock_overlay.dart';
 import 'features/widget_builder/widget_import_screen.dart';
 import 'models/mesh_models.dart';
 import 'models/social.dart';
@@ -184,7 +185,7 @@ Future<void> main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    AppLogging.debug('🔥 Firebase core initialized');
+    AppLogging.app('🔥 Firebase core initialized');
 
     // Gate telemetry — disabled by default until consent is verified in
     // _initializeFirebaseServices(). This ensures zero collection between
@@ -220,9 +221,23 @@ Future<void> main() async {
       }
     }
 
+    // Ensure every install has a Firebase identity. Best-effort with a
+    // short timeout so a slow or offline network never blocks startup
+    // beyond a few seconds. See [_ensureAnonymousAuth] for the rationale
+    // (closes a class of "unauthenticated" failures across reportBug,
+    // unlock-code redemption, and any future authenticated callable).
+    await _ensureAnonymousAuth().timeout(
+      const Duration(seconds: 3),
+      onTimeout: () {
+        AppLogging.auth(
+          '🔥 Anonymous sign-in timed out — continuing offline; will retry on next foreground',
+        );
+      },
+    );
+
     firebaseReadyCompleter.complete(true);
   } catch (e) {
-    AppLogging.debug('Firebase unavailable: $e - app running in offline mode');
+    AppLogging.app('Firebase unavailable: $e - app running in offline mode');
     firebaseReadyCompleter.complete(false);
   }
 
@@ -232,11 +247,59 @@ Future<void> main() async {
   // as a PlatformDispatcher error (the "_handlePlatformError" spike).
   unawaited(
     _initializeFirebaseServices().catchError((Object e, StackTrace st) {
-      AppLogging.debug('⚠️ _initializeFirebaseServices failed (non-fatal): $e');
+      AppLogging.app('⚠️ _initializeFirebaseServices failed (non-fatal): $e');
     }),
   );
 
   runApp(const ProviderScope(child: SocialmeshApp()));
+}
+
+/// Ensure the user has a Firebase auth identity.
+///
+/// If no user is signed in (real or anonymous), kicks off
+/// `signInAnonymously`. Best-effort: logs and returns on any failure so
+/// startup is never blocked. The next foreground-to-background-to-
+/// foreground cycle will re-run this through normal app lifecycle if
+/// it failed (no explicit retry plumbing — keeping it simple).
+///
+/// Why we need it:
+///   - Several Cloud Function callables (`reportBug`, future tightened
+///     versions of admin callables) require `request.auth` to be
+///     populated. Without a Firebase identity those calls fail with
+///     `unauthenticated`.
+///   - External-purchase entitlements are now device-scoped (install
+///     ID), but we still want a Firebase uid for non-purchase
+///     authenticated paths.
+///   - When the user later signs in with real credentials, use
+///     `linkWithCredential` (not `signInWith…`) to upgrade the anon
+///     account in place. That preserves the uid and any Firestore
+///     data keyed off it.
+///
+/// Production rollout note:
+///   Once the app version that ships this helper is broadly deployed,
+///   the backend can be tightened to require `request.auth` on
+///   `reportBug` (currently it accepts unauthenticated calls — see
+///   [backend/functions/src/index.ts] reportBug, line ~2510). Don't
+///   tighten the backend before this client change has rolled out, or
+///   older clients break.
+Future<void> _ensureAnonymousAuth() async {
+  try {
+    final current = FirebaseAuth.instance.currentUser;
+    if (current != null) {
+      AppLogging.auth(
+        '🔥 Firebase auth already present: uid=${current.uid} '
+        'anonymous=${current.isAnonymous}',
+      );
+      return;
+    }
+    AppLogging.auth('🔥 No Firebase user — signing in anonymously');
+    final cred = await FirebaseAuth.instance.signInAnonymously();
+    AppLogging.auth('🔥 Anonymous sign-in succeeded: uid=${cred.user?.uid}');
+  } catch (e) {
+    AppLogging.auth(
+      '🔥 Anonymous sign-in failed (non-fatal, app continues): $e',
+    );
+  }
 }
 
 /// SharedPreferences key tracking Firestore initialization success.
@@ -259,7 +322,7 @@ Future<void> _repairFirestoreCacheIfNeeded() async {
     final previousInitOk = prefs.getBool(_kFirestoreInitOk) ?? true;
     if (previousInitOk) return;
 
-    AppLogging.debug(
+    AppLogging.storage(
       'Firestore init failed last session — clearing persistence cache',
     );
 
@@ -267,16 +330,16 @@ Future<void> _repairFirestoreCacheIfNeeded() async {
       // clearPersistence() works before the native client is started,
       // so it won't trigger the same crash.
       await FirebaseFirestore.instance.clearPersistence();
-      AppLogging.debug('Firestore persistence cleared via SDK');
+      AppLogging.storage('Firestore persistence cleared via SDK');
     } catch (e) {
-      AppLogging.debug('clearPersistence() failed ($e) — deleting manually');
+      AppLogging.storage('clearPersistence() failed ($e) — deleting manually');
       await _deleteFirestoreCacheDirectory();
     }
 
     // Reset the flag so we don't clear on every startup.
     await prefs.setBool(_kFirestoreInitOk, true);
   } catch (e) {
-    AppLogging.debug('Firestore cache repair check failed: $e');
+    AppLogging.storage('Firestore cache repair check failed: $e');
   }
 }
 
@@ -299,16 +362,16 @@ Future<void> _deleteFirestoreCacheDirectory() async {
       final dir = Directory(path);
       if (await dir.exists()) {
         await dir.delete(recursive: true);
-        AppLogging.debug('Deleted Firestore cache directory: $path');
+        AppLogging.storage('Deleted Firestore cache directory: $path');
         deleted = true;
       }
     }
 
     if (!deleted) {
-      AppLogging.debug('No Firestore cache directories found to delete');
+      AppLogging.storage('No Firestore cache directories found to delete');
     }
   } catch (e) {
-    AppLogging.debug('Manual Firestore cache deletion failed: $e');
+    AppLogging.storage('Manual Firestore cache deletion failed: $e');
   }
 }
 
@@ -328,7 +391,7 @@ Future<void> _initializeFirebaseServices() async {
   try {
     await FirebaseFirestore.setLoggingEnabled(false);
   } catch (e) {
-    AppLogging.debug('Firestore logging config failed: $e');
+    AppLogging.storage('Firestore logging config failed: $e');
   }
 
   // Mark init as "in progress" — cleared to true after success.
@@ -348,13 +411,13 @@ Future<void> _initializeFirebaseServices() async {
       cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
     );
   } catch (e) {
-    AppLogging.debug('Firestore settings failed, trying without cache: $e');
+    AppLogging.storage('Firestore settings failed, trying without cache: $e');
     try {
       FirebaseFirestore.instance.settings = const Settings(
         persistenceEnabled: false,
       );
     } catch (e2) {
-      AppLogging.debug('Firestore unavailable: $e2');
+      AppLogging.storage('Firestore unavailable: $e2');
     }
   }
 
@@ -373,12 +436,12 @@ Future<void> _initializeFirebaseServices() async {
         .doc('_init')
         .get(const GetOptions(source: Source.cache))
         .timeout(const Duration(seconds: 5));
-    AppLogging.debug('Firestore LevelDB probe succeeded');
+    AppLogging.storage('Firestore LevelDB probe succeeded');
   } catch (e) {
     // A "not found in cache" error is fine — it means LevelDB opened.
     // Only a LevelDB / LOCK error is a real problem, and in that case
     // the fatal assertion already crashed the process (flag stays false).
-    AppLogging.debug('Firestore probe completed with expected error: $e');
+    AppLogging.storage('Firestore probe completed with expected error: $e');
   }
 
   // Firestore initialized successfully — mark flag so next startup
@@ -396,19 +459,19 @@ Future<void> _initializeFirebaseServices() async {
     final consentService = PrivacyConsentService(prefs);
     await consentService.applyPersistedConsent();
   } catch (e) {
-    AppLogging.debug('Privacy consent apply failed: $e');
+    AppLogging.app('Privacy consent apply failed: $e');
   }
 
   try {
     initProfileCloudSyncService();
   } catch (e) {
-    AppLogging.debug('Profile cloud sync init failed: $e');
+    AppLogging.sync('Profile cloud sync init failed: $e');
   }
 
   try {
     await PushNotificationService().initialize();
   } catch (e) {
-    AppLogging.debug('Push notification init failed: $e');
+    AppLogging.notifications('Push notification init failed: $e');
   }
 
   // Listen for connectivity changes and attempt to resolve pending images
@@ -586,7 +649,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       final locationService = ref.read(locationServiceProvider);
       if (!locationService.isRunning) return; // Already stopped — skip noise.
       locationService.stopLocationUpdates();
-      AppLogging.debug('🔋 Location updates paused (app backgrounded)');
+      AppLogging.app('🔋 Location updates paused (app backgrounded)');
     } catch (_) {
       // Location service may not be initialized yet — safe to ignore.
     }
@@ -601,7 +664,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       final isConnected = ref.read(isLinkConnectedProvider);
       if (isConnected) {
         locationService.startLocationUpdates();
-        AppLogging.debug('🔋 Location updates resumed (app foregrounded)');
+        AppLogging.app('🔋 Location updates resumed (app foregrounded)');
       }
     } catch (_) {
       // Location service may not be initialized yet — safe to ignore.
@@ -1264,7 +1327,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
   Future<void> _initializePurchases() async {
     try {
       final service = await ref.read(subscriptionServiceProvider.future);
-      AppLogging.debug('💰 RevenueCat initialized');
+      AppLogging.subscriptions('💰 RevenueCat initialized');
 
       // service.initialize() already called Purchases.configure() with the
       // current Firebase UID (when signed in), so no logIn / pre-login
@@ -1282,9 +1345,9 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       if (!mounted) return;
       final cloudSyncService = ref.read(cloudSyncEntitlementServiceProvider);
       await cloudSyncService.initialize();
-      AppLogging.debug('☁️ Cloud sync entitlement service initialized');
+      AppLogging.subscriptions('☁️ Cloud sync entitlement service initialized');
     } catch (e) {
-      AppLogging.debug('💰 RevenueCat init failed: $e');
+      AppLogging.subscriptions('💰 RevenueCat init failed: $e');
     }
   }
 
@@ -1294,9 +1357,9 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       if (!mounted) return;
       final deepLinkManager = ref.read(deepLinkManagerProvider);
       await deepLinkManager.initialize();
-      AppLogging.debug('🔗 Deep link manager initialized');
+      AppLogging.app('🔗 Deep link manager initialized');
     } catch (e) {
-      AppLogging.debug('🔗 Deep link init failed: $e');
+      AppLogging.app('🔗 Deep link init failed: $e');
     }
   }
 
@@ -1575,13 +1638,13 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     final isFirebaseReady = await firebaseReady.timeout(
       const Duration(seconds: 5),
       onTimeout: () {
-        AppLogging.debug('⏱️ Firebase ready timeout, using local accent color');
+        AppLogging.app('⏱️ Firebase ready timeout, using local accent color');
         return false;
       },
     );
 
     if (!isFirebaseReady) {
-      AppLogging.debug('📱 Firebase not ready, using local accent color');
+      AppLogging.app('📱 Firebase not ready, using local accent color');
       return;
     }
 
@@ -1589,42 +1652,42 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     try {
       // Wait for auth state to be ready
       final authState = await ref.read(authStateProvider.future);
-      AppLogging.debug('🎨 Auth state: ${authState?.email ?? "not signed in"}');
+      AppLogging.sync('🎨 Auth state: ${authState?.email ?? "not signed in"}');
 
       // If user is signed in, sync from cloud
       if (authState != null) {
-        AppLogging.debug('🎨 User signed in, reading profile (no invalidate)');
+        AppLogging.sync('🎨 User signed in, reading profile (no invalidate)');
         // NOTE: Don't invalidate userProfileProvider here!
         // UserProfileNotifier.build() already calls fullSync() which syncs from cloud.
         // Invalidating here causes redundant Firestore writes (batches 6, 7, 8).
 
-        AppLogging.debug('🎨 Waiting for profile future...');
+        AppLogging.sync('🎨 Waiting for profile future...');
         final profile = await ref.read(userProfileProvider.future);
         final prefs = profile?.preferences;
 
-        AppLogging.debug('🎨 Profile loaded: ${profile?.displayName}');
-        AppLogging.debug(
+        AppLogging.sync('🎨 Profile loaded: ${profile?.displayName}');
+        AppLogging.sync(
           '🎨 Profile accentColorIndex: ${profile?.accentColorIndex}',
         );
-        AppLogging.debug('🎨 Profile updatedAt: ${profile?.updatedAt}');
-        AppLogging.debug('🎨 Profile isSynced: ${profile?.isSynced}');
+        AppLogging.sync('🎨 Profile updatedAt: ${profile?.updatedAt}');
+        AppLogging.sync('🎨 Profile isSynced: ${profile?.isSynced}');
 
         // Update accent color from cloud if available
         final colorIndex = profile?.accentColorIndex;
-        AppLogging.debug('🎨 Cloud profile accentColorIndex: $colorIndex');
+        AppLogging.sync('🎨 Cloud profile accentColorIndex: $colorIndex');
         if (colorIndex != null &&
             colorIndex >= 0 &&
             colorIndex < AccentColors.all.length) {
           final cloudColor = AccentColors.all[colorIndex];
-          AppLogging.debug(
+          AppLogging.sync(
             '🎨 Setting color to: ${AccentColors.names[colorIndex]}',
           );
           await ref.read(accentColorProvider.notifier).setColor(cloudColor);
-          AppLogging.debug(
+          AppLogging.sync(
             '🎨 Updated accent color from cloud: ${AccentColors.names[colorIndex]}',
           );
         } else {
-          AppLogging.debug(
+          AppLogging.sync(
             '🎨 No valid accentColorIndex in profile, colorIndex=$colorIndex',
           );
         }
@@ -1641,7 +1704,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         await _loadRemainingCloudPreferences(settings, prefs);
       }
     } catch (e) {
-      AppLogging.debug('☁️ Cloud sync failed, using local settings: $e');
+      AppLogging.sync('☁️ Cloud sync failed, using local settings: $e');
     }
   }
 
@@ -1728,11 +1791,11 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
             .map((j) => CannedResponse.fromJson(j))
             .toList();
         await settings.setCannedResponses(responses);
-        AppLogging.debug(
+        AppLogging.sync(
           '📝 Loaded ${responses.length} canned responses from cloud',
         );
       } catch (e) {
-        AppLogging.debug('Failed to parse canned responses: $e');
+        AppLogging.sync('Failed to parse canned responses: $e');
       }
     }
 
@@ -1742,11 +1805,11 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         final jsonList = jsonDecode(prefs.tapbackConfigsJson!) as List;
         final configs = jsonList.map((j) => TapbackConfig.fromJson(j)).toList();
         await settings.setTapbackConfigs(configs);
-        AppLogging.debug(
+        AppLogging.sync(
           '👍 Loaded ${configs.length} tapback configs from cloud',
         );
       } catch (e) {
-        AppLogging.debug('Failed to parse tapback configs: $e');
+        AppLogging.sync('Failed to parse tapback configs: $e');
       }
     }
 
@@ -1756,7 +1819,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         rtttl: prefs.ringtoneRtttl!,
         name: prefs.ringtoneName!,
       );
-      AppLogging.debug('🔔 Loaded ringtone from cloud: ${prefs.ringtoneName}');
+      AppLogging.sync('🔔 Loaded ringtone from cloud: ${prefs.ringtoneName}');
     }
 
     // Load splash mesh config from cloud
@@ -1779,7 +1842,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       if (!mounted) return;
       // Invalidate the provider so it reloads with new config
       ref.invalidate(splashMeshConfigProvider);
-      AppLogging.debug('✨ Loaded splash mesh config from cloud');
+      AppLogging.sync('✨ Loaded splash mesh config from cloud');
     }
 
     // Load automations from cloud
@@ -1801,13 +1864,13 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       try {
         final iftttService = ref.read(iftttServiceProvider);
         await iftttService.loadFromJson(prefs.iftttConfigJson!);
-        AppLogging.debug('🔗 Loaded IFTTT config from cloud');
+        AppLogging.ifttt('🔗 Loaded IFTTT config from cloud');
       } catch (e) {
-        AppLogging.debug('Failed to parse IFTTT config: $e');
+        AppLogging.ifttt('Failed to parse IFTTT config: $e');
       }
     }
 
-    AppLogging.debug('☁️ Loaded user preferences from cloud profile');
+    AppLogging.sync('☁️ Loaded user preferences from cloud profile');
   }
 
   @override
@@ -1869,12 +1932,16 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           final disableAnimations =
               mediaQuery.disableAnimations ||
               accessibilityPrefs.reduceMotionMode.shouldReduceMotion;
+          // ConfirmingUnlockOverlay sits above every route so the
+          // post-redirect "Confirming your unlock…" state can surface
+          // regardless of which screen the user is on when the deep
+          // link arrives. Idle stage renders nothing.
           return MediaQuery(
             data: mediaQuery.copyWith(
               textScaler: clampedTextScaler,
               disableAnimations: disableAnimations,
             ),
-            child: child!,
+            child: ConfirmingUnlockOverlay(child: child!),
           );
         },
         theme: lightTheme,

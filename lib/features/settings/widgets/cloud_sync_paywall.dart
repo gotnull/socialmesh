@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
+import '../../../core/constants.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
@@ -12,6 +13,7 @@ import '../../../providers/connectivity_providers.dart';
 import '../../../providers/subscription_providers.dart';
 import '../../../services/subscription/cloud_sync_entitlement_service.dart';
 import '../../../utils/snackbar.dart';
+import '../../external_purchase/redeem_unlock_code_sheet.dart';
 import 'package:socialmesh/core/theme.dart';
 
 /// Soft paywall for cloud sync feature
@@ -244,6 +246,24 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
               onPressed: _restore,
               child: Text(context.l10n.premiumRestorePurchases),
             ),
+
+            // Support fallback. Cloud Sync is a store-only subscription
+            // — there is no Buy Me a Coffee path for recurring billing.
+            // This text link surfaces the redeem-code sheet for users
+            // who've been issued a manual unlock by support after a
+            // store payment problem. Gated by EXTERNAL_PURCHASE_ENABLED
+            // — codes are part of the same fallback pipeline.
+            if (AppFeatureFlags.isExternalPurchaseEnabled)
+              TextButton(
+                onPressed: () => showRedeemUnlockCodeSheet(context),
+                child: Text(
+                  context.l10n.unlockCodeFallback,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                ),
+              ),
           ],
 
           const SizedBox(height: AppTheme.spacing8),

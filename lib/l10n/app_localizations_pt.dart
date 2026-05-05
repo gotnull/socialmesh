@@ -22520,6 +22520,93 @@ class AppLocalizationsPt extends AppLocalizations {
   String get premiumPurchaseFailed => 'Compra falhou. Tente novamente.';
 
   @override
+  String get alternativePayment => 'Pagamento alternativo';
+
+  @override
+  String get alternativePaymentSubtitle =>
+      'Compre via Buy Me a Coffee em vez da loja';
+
+  @override
+  String get googlePlayUnavailable =>
+      'Google Play indisponível neste dispositivo — tente o pagamento alternativo.';
+
+  @override
+  String get buyMeACoffeeHandoffTitle => 'Pagar via Buy Me a Coffee';
+
+  @override
+  String get buyMeACoffeeHandoffBody =>
+      'Copie este código de referência, cole-o na nota de apoio no Buy Me a Coffee e conclua o pagamento. Desbloquearemos seu pacote assim que o pagamento for confirmado.';
+
+  @override
+  String get referenceCodeLabel => 'Código de referência';
+
+  @override
+  String get copyReferenceCode => 'Copiar código';
+
+  @override
+  String get referenceCodeCopied => 'Código de referência copiado';
+
+  @override
+  String get openBuyMeACoffee => 'Abrir Buy Me a Coffee';
+
+  @override
+  String expectedAmountLabel(Object amount) {
+    return 'Valor: $amount';
+  }
+
+  @override
+  String get couldNotOpenCheckout =>
+      'Não foi possível abrir o checkout. Tente novamente.';
+
+  @override
+  String get externalPurchaseRetry => 'Tentar novamente';
+
+  @override
+  String get confirmingUnlock => 'Confirmando seu desbloqueio…';
+
+  @override
+  String get paymentProcessing =>
+      'Aguardando confirmação do pagamento. Isso geralmente leva alguns segundos.';
+
+  @override
+  String get paymentFailed =>
+      'Não foi possível confirmar o pagamento. Se você concluiu o pagamento, entre em contato com o suporte.';
+
+  @override
+  String unlockSuccess(Object name) {
+    return '$name desbloqueado!';
+  }
+
+  @override
+  String get unlockSuccessGeneric => 'Desbloqueio concluído';
+
+  @override
+  String get unlockCodeFallback => 'Tem um código de desbloqueio?';
+
+  @override
+  String get unlockCodeSheetTitle => 'Resgatar código de desbloqueio';
+
+  @override
+  String get unlockCodeSheetBody =>
+      'Digite o código de desbloqueio que o suporte enviou. Os códigos não diferenciam maiúsculas e os hífens são opcionais.';
+
+  @override
+  String get unlockCodeFieldLabel => 'Código de desbloqueio';
+
+  @override
+  String get unlockCodeFieldHint => 'SM-XXXX-XXXX';
+
+  @override
+  String get redeemCode => 'Resgatar';
+
+  @override
+  String get redeemCodeInvalid =>
+      'Código não reconhecido. Verifique e tente novamente.';
+
+  @override
+  String get dismiss => 'Dispensar';
+
+  @override
   String get premiumPurchaseError => 'Algo deu errado. Tente novamente.';
 
   @override

@@ -22295,6 +22295,93 @@ class AppLocalizationsRu extends AppLocalizations {
   String get premiumPurchaseFailed => 'Purchase failed. Please try again.';
 
   @override
+  String get alternativePayment => 'Alternative payment';
+
+  @override
+  String get alternativePaymentSubtitle =>
+      'Buy via Buy Me a Coffee instead of the store';
+
+  @override
+  String get googlePlayUnavailable =>
+      'Google Play unavailable on this device — try alternative payment.';
+
+  @override
+  String get buyMeACoffeeHandoffTitle => 'Pay via Buy Me a Coffee';
+
+  @override
+  String get buyMeACoffeeHandoffBody =>
+      'Copy this reference code, paste it into the support note on Buy Me a Coffee, and complete checkout. We\'ll unlock your pack as soon as the payment is confirmed.';
+
+  @override
+  String get referenceCodeLabel => 'Reference code';
+
+  @override
+  String get copyReferenceCode => 'Copy code';
+
+  @override
+  String get referenceCodeCopied => 'Reference code copied';
+
+  @override
+  String get openBuyMeACoffee => 'Open Buy Me a Coffee';
+
+  @override
+  String expectedAmountLabel(Object amount) {
+    return 'Amount: $amount';
+  }
+
+  @override
+  String get couldNotOpenCheckout =>
+      'Couldn\'t open checkout. Please try again.';
+
+  @override
+  String get externalPurchaseRetry => 'Retry';
+
+  @override
+  String get confirmingUnlock => 'Confirming your unlock…';
+
+  @override
+  String get paymentProcessing =>
+      'Waiting for payment confirmation. This usually takes a few seconds.';
+
+  @override
+  String get paymentFailed =>
+      'Payment couldn\'t be confirmed. If you completed payment, contact support.';
+
+  @override
+  String unlockSuccess(Object name) {
+    return '$name unlocked!';
+  }
+
+  @override
+  String get unlockSuccessGeneric => 'Unlock complete';
+
+  @override
+  String get unlockCodeFallback => 'Have an unlock code?';
+
+  @override
+  String get unlockCodeSheetTitle => 'Redeem unlock code';
+
+  @override
+  String get unlockCodeSheetBody =>
+      'Enter the unlock code support sent you. Codes are case-insensitive and dashes are optional.';
+
+  @override
+  String get unlockCodeFieldLabel => 'Unlock code';
+
+  @override
+  String get unlockCodeFieldHint => 'SM-XXXX-XXXX';
+
+  @override
+  String get redeemCode => 'Redeem';
+
+  @override
+  String get redeemCodeInvalid =>
+      'That code wasn\'t recognised. Check it and try again.';
+
+  @override
+  String get dismiss => 'Dismiss';
+
+  @override
   String get premiumPurchaseError => 'Something went wrong. Please try again.';
 
   @override

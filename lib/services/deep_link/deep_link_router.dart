@@ -55,6 +55,7 @@ class DeepLinkRouter {
       DeepLinkType.automation => _routeAutomation(link),
       DeepLinkType.aetherFlight => _routeAetherFlight(link),
       DeepLinkType.legal => _routeLegal(link),
+      DeepLinkType.purchaseReturn => _routePurchaseReturn(link),
       DeepLinkType.invalid => DeepLinkRouteResult.fallback,
     };
 
@@ -258,6 +259,27 @@ class DeepLinkRouter {
       routeName: '/aether-flight',
       arguments: {'shareId': link.aetherFlightShareId},
       requiresDevice: false,
+    );
+  }
+
+  /// Route an external-purchase return deep link.
+  ///
+  /// The router stays pure — it surfaces the sessionId in arguments
+  /// and DeepLinkManager hands it to ExternalPurchaseService, which
+  /// drives the polling state machine. The route name is informational
+  /// (the actual confirmation overlay is mounted by app shell, not
+  /// pushed by the navigator) so we land on `/main` and let the
+  /// service-driven UI surface itself.
+  DeepLinkRouteResult _routePurchaseReturn(ParsedDeepLink link) {
+    if (!link.hasPurchaseSessionId) {
+      return DeepLinkRouteResult(
+        routeName: '/main',
+        fallbackMessage: 'Missing purchase session id',
+      );
+    }
+    return DeepLinkRouteResult(
+      routeName: '/main',
+      arguments: {'purchaseSessionId': link.purchaseSessionId},
     );
   }
 

@@ -53,6 +53,7 @@ class AppLogging {
   static bool? _channelsLoggingEnabled;
   static bool? _appLoggingEnabled;
   static bool? _subscriptionsLoggingEnabled;
+  static bool? _purchaseLoggingEnabled;
   static bool? _notificationsLoggingEnabled;
   static bool? _audioLoggingEnabled;
   static bool? _mapsLoggingEnabled;
@@ -193,6 +194,12 @@ class AppLogging {
     _subscriptionsLoggingEnabled ??=
         _safeGetEnv('SUBSCRIPTIONS_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _subscriptionsLoggingEnabled!;
+  }
+
+  static bool get purchaseLoggingEnabled {
+    _purchaseLoggingEnabled ??=
+        _safeGetEnv('PURCHASE_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    return _purchaseLoggingEnabled!;
   }
 
   static bool get notificationsLoggingEnabled {
@@ -460,6 +467,10 @@ class AppLogging {
 
   static void subscriptions(String message) {
     if (subscriptionsLoggingEnabled) debugPrint('Subscriptions: $message');
+  }
+
+  static void purchase(String message) {
+    if (purchaseLoggingEnabled) debugPrint('Purchase: $message');
   }
 
   static void notifications(String message) {
@@ -1050,6 +1061,7 @@ class AppLogging {
     _channelsLoggingEnabled = null;
     _appLoggingEnabled = null;
     _subscriptionsLoggingEnabled = null;
+    _purchaseLoggingEnabled = null;
     _notificationsLoggingEnabled = null;
     _audioLoggingEnabled = null;
     _mapsLoggingEnabled = null;

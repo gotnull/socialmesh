@@ -41,6 +41,12 @@ enum DeepLinkType {
   /// or socialmesh://legal/terms or socialmesh://legal/privacy
   legal,
 
+  /// External purchase return: socialmesh://purchase-return?sessionId=XYZ
+  /// The redirect itself NEVER unlocks anything — it kicks off polling
+  /// against the backend, which only flips to `paid` once the
+  /// Buy Me a Coffee webhook lands.
+  purchaseReturn,
+
   /// Invalid/unrecognized deep link - routes to fallback
   invalid,
 }
@@ -77,6 +83,7 @@ class ParsedDeepLink {
     this.aetherFlightShareId,
     this.legalDocument,
     this.legalSectionAnchor,
+    this.purchaseSessionId,
     this.validationErrors = const [],
   });
 
@@ -144,6 +151,11 @@ class ParsedDeepLink {
   /// Optional section anchor within the document (e.g. 'radio-compliance')
   final String? legalSectionAnchor;
 
+  // External purchase return fields
+  /// Session id from socialmesh://purchase-return?sessionId=… — handed
+  /// to ExternalPurchaseService to start polling for webhook confirmation.
+  final String? purchaseSessionId;
+
   /// Validation errors encountered during parsing.
   /// Empty list means the deep link is valid.
   final List<String> validationErrors;
@@ -186,6 +198,12 @@ class ParsedDeepLink {
 
   /// Whether this is a legal document link.
   bool get isLegalLink => type == DeepLinkType.legal && legalDocument != null;
+
+  /// Whether this is a valid purchase-return link with a session id.
+  bool get hasPurchaseSessionId =>
+      type == DeepLinkType.purchaseReturn &&
+      purchaseSessionId != null &&
+      purchaseSessionId!.isNotEmpty;
 
   /// Whether this legal link targets the terms of service.
   bool get isTermsLink => legalDocument == 'terms';

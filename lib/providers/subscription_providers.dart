@@ -4,13 +4,16 @@ import 'dart:async';
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart' hide PurchaseResult;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:socialmesh/core/constants.dart';
 import 'package:socialmesh/core/logging.dart';
 import '../config/revenuecat_config.dart';
 import '../models/subscription_models.dart';
 import '../services/subscription/subscription_service.dart';
+import 'external_purchase_providers.dart';
 
 /// Shared preferences provider - initialized at app start
 final sharedPreferencesProvider = FutureProvider<SharedPreferences>((
@@ -39,14 +42,37 @@ final purchaseStateProvider =
       PurchaseStateNotifier.new,
     );
 
+/// State holder that merges RevenueCat (store) purchases with external
+/// (BMC / unlock-code) entitlements into a single [PurchaseState].
+///
+/// Why the merge happens HERE instead of just in the derived providers
+/// (`hasFeatureProvider`, `hasPurchasedProvider`, `effectiveEntitlementsProvider`):
+/// the codebase has 30+ widget call sites that read the model directly
+/// — `purchaseState.hasFeature(feature)` / `purchaseState.hasPurchased(productId)`
+/// — bypassing the derived providers. Merging at the source ensures every
+/// consumer (provider-based AND direct-method-based) sees the same
+/// unified entitlement set without sweeping every call site.
+///
+/// Bundle expansion is also done here: when the merged set contains
+/// `complete_pack`, all six individual pack ids are added too. Single
+/// source of truth keeps `effectiveEntitlementsProvider` and the model
+/// methods in agreement.
 class PurchaseStateNotifier extends Notifier<PurchaseState> {
   StreamSubscription<PurchaseState>? _subscription;
+
+  /// Latest snapshot from the RevenueCat / store service. Kept private
+  /// so `state` always reflects the *merged* view downstream consumers
+  /// expect.
+  PurchaseState _rcState = PurchaseState.initial;
+
+  /// Latest snapshot of external (install-keyed) entitlements,
+  /// supplied by [externalEntitlementsProvider] via `ref.listen`.
+  Set<String> _external = const {};
 
   @override
   PurchaseState build() {
     AppLogging.subscriptions('💳 [PurchaseStateNotifier] build() called');
 
-    // Cancel any existing subscription when provider rebuilds
     ref.onDispose(() {
       AppLogging.subscriptions(
         '💳 [PurchaseStateNotifier] onDispose - cancelling stream subscription',
@@ -55,28 +81,68 @@ class PurchaseStateNotifier extends Notifier<PurchaseState> {
       _subscription = null;
     });
 
+    // External (BMC + unlock-code) entitlement merge — gated by
+    // EXTERNAL_PURCHASE_ENABLED. When the flag is off we skip the
+    // listen + initial read entirely so the FutureProvider's network
+    // fetch never fires AND no external product ids leak into the
+    // merged state. `_external` stays at its initial empty value, so
+    // `_computeMerged()` returns an RC-only PurchaseState exactly as
+    // the legacy code did before chunk 2 shipped.
+    if (AppFeatureFlags.isExternalPurchaseEnabled) {
+      // Side-effect: when external entitlements change (cache loaded,
+      // unlock-code redeemed, BMC webhook landed), recompute the merged
+      // state so every direct purchaseState consumer sees the new union
+      // immediately. `ref.listen` is the right tool here per the
+      // providers/CLAUDE.md guidance ("side effects use ref.listen").
+      ref.listen<AsyncValue<Set<String>>>(externalEntitlementsProvider, (
+        previous,
+        next,
+      ) {
+        final newExternal = next.maybeWhen(
+          data: (set) => set,
+          orElse: () => const <String>{},
+        );
+        if (_setEquals(newExternal, _external)) return;
+        _external = newExternal;
+        AppLogging.subscriptions(
+          '💳 [PurchaseStateNotifier] external entitlements changed: $_external',
+        );
+        state = _computeMerged();
+      });
+
+      // Initial read of external — may be AsyncLoading at first call.
+      _external = ref
+          .read(externalEntitlementsProvider)
+          .maybeWhen(data: (set) => set, orElse: () => const <String>{});
+    } else {
+      AppLogging.subscriptions(
+        '💳 [PurchaseStateNotifier] external purchase feature flag OFF — '
+        'skipping external entitlement merge',
+      );
+    }
+
     _init();
-    return PurchaseState.initial;
+    return _computeMerged();
   }
+
+  PurchaseState _computeMerged() =>
+      mergePurchaseStateForTest(_rcState, _external);
 
   Future<void> _init() async {
     AppLogging.subscriptions('💳 [PurchaseStateNotifier] _init() starting...');
     final service = await ref.read(subscriptionServiceProvider.future);
-    final initialState = service.currentState;
-    AppLogging.subscriptions(
-      '💳 [PurchaseStateNotifier] Setting initial state: ${initialState.purchasedProductIds}',
-    );
-
-    // Check if still mounted before updating state (after async gap)
     if (!ref.mounted) {
       AppLogging.subscriptions(
         '💳 [PurchaseStateNotifier] Not mounted after await, skipping init',
       );
       return;
     }
-    state = initialState;
+    _rcState = service.currentState;
+    AppLogging.subscriptions(
+      '💳 [PurchaseStateNotifier] Initial RC state: ${_rcState.purchasedProductIds}',
+    );
+    state = _computeMerged();
 
-    // Listen for state changes from the service
     AppLogging.subscriptions(
       '💳 [PurchaseStateNotifier] Setting up stateStream listener...',
     );
@@ -89,9 +155,10 @@ class PurchaseStateNotifier extends Notifier<PurchaseState> {
           return;
         }
         AppLogging.subscriptions(
-          '💳 [PurchaseStateNotifier] Stream received new state: ${newState.purchasedProductIds}',
+          '💳 [PurchaseStateNotifier] Stream received new RC state: ${newState.purchasedProductIds}',
         );
-        state = newState;
+        _rcState = newState;
+        state = _computeMerged();
       },
       onError: (e) {
         AppLogging.subscriptions('💳 [PurchaseStateNotifier] Stream error: $e');
@@ -106,67 +173,109 @@ class PurchaseStateNotifier extends Notifier<PurchaseState> {
     final service = await ref.read(subscriptionServiceProvider.future);
     await service.refreshPurchases();
 
-    // Check if still mounted before updating state (after async gap)
     if (!ref.mounted) {
       AppLogging.subscriptions(
         '💳 [PurchaseStateNotifier] Not mounted after refresh, skipping state update',
       );
       return;
     }
-    final newState = service.currentState;
+    _rcState = service.currentState;
     AppLogging.subscriptions(
-      '💳 [PurchaseStateNotifier] refresh() setting state: ${newState.purchasedProductIds}',
+      '💳 [PurchaseStateNotifier] refresh() setting RC state: ${_rcState.purchasedProductIds}',
     );
-    state = newState;
+    state = _computeMerged();
   }
 
   /// For debug/testing - add purchase
   Future<void> debugAddPurchase(String productId) async {
     final service = await ref.read(subscriptionServiceProvider.future);
     await service.debugAddPurchase(productId);
-    state = service.currentState;
+    _rcState = service.currentState;
+    state = _computeMerged();
   }
 
   /// For debug/testing - reset purchases
   Future<void> debugReset() async {
     final service = await ref.read(subscriptionServiceProvider.future);
     await service.debugReset();
-    state = service.currentState;
+    _rcState = service.currentState;
+    state = _computeMerged();
   }
 }
 
-/// Check if a specific feature is available
+bool _setEquals<T>(Set<T> a, Set<T> b) {
+  if (a.length != b.length) return false;
+  for (final v in a) {
+    if (!b.contains(v)) return false;
+  }
+  return true;
+}
+
+/// Pure merge function. Combines RevenueCat purchasedProductIds with
+/// external entitlements and applies bundle expansion (complete_pack
+/// implies all six individual packs).
+///
+/// Exposed for testing so the merge contract can be pinned without
+/// booting the full Notifier + service stack. Both
+/// [PurchaseStateNotifier._computeMerged] and the test suite call this
+/// directly — keeps the two in lockstep.
+@visibleForTesting
+PurchaseState mergePurchaseStateForTest(
+  PurchaseState rc,
+  Set<String> external,
+) {
+  final union = <String>{...rc.purchasedProductIds, ...external};
+  if (union.contains(RevenueCatConfig.completePackProductId)) {
+    for (final p in OneTimePurchases.completePackPurchases) {
+      union.add(p.productId);
+    }
+  }
+  return rc.copyWith(purchasedProductIds: union);
+}
+
+/// Check if a specific feature is available.
+///
+/// Reads through [effectiveEntitlementsProvider], which merges:
+///   - App Store / Play Store / RevenueCat entitlements
+///   - External (Buy Me a Coffee / unlock-code) entitlements
+///   - Bundle expansion: complete_pack implies all individual packs
+///
+/// UI gates depend on this provider directly. Adding a new entitlement
+/// source means extending the merge in [effectiveEntitlementsProvider]
+/// — no changes are needed here.
 final hasFeatureProvider = Provider.family<bool, PremiumFeature>((
   ref,
   feature,
 ) {
-  final state = ref.watch(purchaseStateProvider);
-  return state.hasFeature(feature);
+  final purchase = OneTimePurchases.getByFeature(feature);
+  if (purchase == null) return false;
+  final union = ref.watch(effectiveEntitlementsProvider);
+  return union.contains(purchase.productId);
 });
 
-/// Check if a specific product has been purchased
+/// Check if a specific product has been purchased (via any source).
+///
+/// See [hasFeatureProvider] for the merge contract.
 final hasPurchasedProvider = Provider.family<bool, String>((ref, productId) {
-  final state = ref.watch(purchaseStateProvider);
-  return state.hasPurchased(productId);
+  final union = ref.watch(effectiveEntitlementsProvider);
+  return union.contains(productId);
 });
 
-/// Check if user has all premium features unlocked (owns complete pack OR all individual packs)
-/// Users with all premium features get an "Authorised" badge
+/// Check if user has all premium features unlocked (owns complete pack OR all individual packs).
+/// Users with all premium features get an "Authorised" badge.
+///
+/// Walks the same merged entitlement set as [hasFeatureProvider], so
+/// external unlocks count toward the badge.
 final hasAllPremiumFeaturesProvider = Provider<bool>((ref) {
-  final state = ref.watch(purchaseStateProvider);
-
-  // Check if user owns complete pack
-  if (state.hasPurchased(RevenueCatConfig.completePackProductId)) {
+  final union = ref.watch(effectiveEntitlementsProvider);
+  if (union.contains(RevenueCatConfig.completePackProductId)) {
     return true;
   }
-
-  // Check if user owns all bundled packs (including Translation Pack)
   for (final purchase in OneTimePurchases.completePackPurchases) {
-    if (!state.hasPurchased(purchase.productId)) {
+    if (!union.contains(purchase.productId)) {
       return false;
     }
   }
-
   return true;
 });
 

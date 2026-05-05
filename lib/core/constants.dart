@@ -522,6 +522,35 @@ class AppFeatureFlags {
     }
   }
 
+  /// Whether the external (Buy Me a Coffee + unlock-code) purchase
+  /// pipeline is enabled.
+  ///
+  /// Set `EXTERNAL_PURCHASE_ENABLED=true` in `.env` to enable.
+  /// Default: false — keeps the fallback path completely invisible
+  /// until BMC config + webhook + Cloud Functions are verified
+  /// end-to-end on a target build.
+  ///
+  /// When OFF, every surface and side-effect is suppressed:
+  ///   - "Alternative payment" link beneath each pack tile + bundle CTA
+  ///     does not render
+  ///   - "Have an unlock code?" footer link does not render
+  ///   - `socialmesh://purchase-return` deep links are dropped
+  ///     (logged but never dispatched into the polling pipeline)
+  ///   - `PurchaseStateNotifier` skips the external entitlement merge
+  ///     entirely — no `getExternalEntitlements` network call,
+  ///     `purchaseState.purchasedProductIds` reflects RevenueCat only
+  ///
+  /// Re-enabling later is a single env flip; entitlements that landed
+  /// while the flag was on persist in Firestore and re-merge cleanly.
+  static bool get isExternalPurchaseEnabled {
+    try {
+      final raw = dotenv.env['EXTERNAL_PURCHASE_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Whether the in-app language selector is shown in Appearance & Accessibility.
   /// Set `LANGUAGE_SELECTOR_ENABLED=true` in `.env` to enable.
   /// Default: false — translations are handled by the OS locale automatically.

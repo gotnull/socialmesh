@@ -30601,6 +30601,106 @@
     "@premiumPurchaseFailed": {
         "description": "Error message in premium features"
     },
+    "alternativePayment": "Alternative payment",
+    "@alternativePayment": {
+        "description": "Secondary action label that opens the external (non-store) checkout fallback. Always shown alongside the primary store purchase button, never as a replacement."
+    },
+    "alternativePaymentSubtitle": "Buy via Buy Me a Coffee instead of the store",
+    "@alternativePaymentSubtitle": {
+        "description": "Subtitle under the Alternative payment row explaining the off-store path."
+    },
+    "googlePlayUnavailable": "Google Play unavailable on this device — try alternative payment.",
+    "@googlePlayUnavailable": {
+        "description": "Hint shown when Google Play billing fails to load on Android."
+    },
+    "buyMeACoffeeHandoffTitle": "Pay via Buy Me a Coffee",
+    "@buyMeACoffeeHandoffTitle": {
+        "description": "Title of the bottom sheet that hands the user off to Buy Me a Coffee with their reference code."
+    },
+    "buyMeACoffeeHandoffBody": "Copy this reference code, paste it into the support note on Buy Me a Coffee, and complete checkout. We'll unlock your pack as soon as the payment is confirmed.",
+    "@buyMeACoffeeHandoffBody": {
+        "description": "Instructions in the BMC handoff sheet."
+    },
+    "referenceCodeLabel": "Reference code",
+    "@referenceCodeLabel": {
+        "description": "Label above the SM-XXXX-XXXX reference code in the BMC handoff sheet."
+    },
+    "copyReferenceCode": "Copy code",
+    "@copyReferenceCode": {
+        "description": "Button label to copy the reference code to clipboard."
+    },
+    "referenceCodeCopied": "Reference code copied",
+    "@referenceCodeCopied": {
+        "description": "Snackbar shown after the reference code is copied to clipboard."
+    },
+    "openBuyMeACoffee": "Open Buy Me a Coffee",
+    "@openBuyMeACoffee": {
+        "description": "Primary CTA in the BMC handoff sheet — opens the external checkout URL."
+    },
+    "expectedAmountLabel": "Amount: {amount}",
+    "@expectedAmountLabel": {
+        "description": "Shows the expected payment amount in the BMC handoff sheet. Parameters: {amount} = formatted price (e.g. \"$4.99\")."
+    },
+    "couldNotOpenCheckout": "Couldn't open checkout. Please try again.",
+    "@couldNotOpenCheckout": {
+        "description": "Error message when url_launcher fails to open the BMC checkout URL."
+    },
+    "externalPurchaseRetry": "Retry",
+    "@externalPurchaseRetry": {
+        "description": "Retry action label inside the external purchase error panel."
+    },
+    "confirmingUnlock": "Confirming your unlock…",
+    "@confirmingUnlock": {
+        "description": "Title of the post-redirect overlay shown while polling the backend for webhook confirmation."
+    },
+    "paymentProcessing": "Waiting for payment confirmation. This usually takes a few seconds.",
+    "@paymentProcessing": {
+        "description": "Body text in the confirming-unlock overlay explaining the wait."
+    },
+    "paymentFailed": "Payment couldn't be confirmed. If you completed payment, contact support.",
+    "@paymentFailed": {
+        "description": "Body text in the confirming-unlock overlay when polling reports a terminal failure."
+    },
+    "unlockSuccess": "{name} unlocked!",
+    "@unlockSuccess": {
+        "description": "Title of the success state in the confirming-unlock overlay. Parameters: {name} = pack display name."
+    },
+    "unlockSuccessGeneric": "Unlock complete",
+    "@unlockSuccessGeneric": {
+        "description": "Success title used when the granted product can't be resolved to a pack name."
+    },
+    "unlockCodeFallback": "Have an unlock code?",
+    "@unlockCodeFallback": {
+        "description": "Tertiary action label revealing the support-issued unlock code redemption sheet."
+    },
+    "unlockCodeSheetTitle": "Redeem unlock code",
+    "@unlockCodeSheetTitle": {
+        "description": "Title of the unlock-code redemption sheet (support fallback only)."
+    },
+    "unlockCodeSheetBody": "Enter the unlock code support sent you. Codes are case-insensitive and dashes are optional.",
+    "@unlockCodeSheetBody": {
+        "description": "Body text in the unlock-code sheet."
+    },
+    "unlockCodeFieldLabel": "Unlock code",
+    "@unlockCodeFieldLabel": {
+        "description": "Text field label inside the unlock-code sheet."
+    },
+    "unlockCodeFieldHint": "SM-XXXX-XXXX",
+    "@unlockCodeFieldHint": {
+        "description": "Placeholder shown in the unlock code text field."
+    },
+    "redeemCode": "Redeem",
+    "@redeemCode": {
+        "description": "Submit button label inside the unlock-code sheet."
+    },
+    "redeemCodeInvalid": "That code wasn't recognised. Check it and try again.",
+    "@redeemCodeInvalid": {
+        "description": "Error shown when the redeem callable rejects the code."
+    },
+    "dismiss": "Dismiss",
+    "@dismiss": {
+        "description": "Generic dismiss action used by the confirming-unlock overlay's terminal states."
+    },
     "premiumPurchaseError": "Something went wrong. Please try again.",
     "@premiumPurchaseError": {
         "description": "Error message in premium features"

@@ -39409,6 +39409,156 @@ abstract class AppLocalizations {
   /// **'Purchase failed. Please try again.'**
   String get premiumPurchaseFailed;
 
+  /// Secondary action label that opens the external (non-store) checkout fallback. Always shown alongside the primary store purchase button, never as a replacement.
+  ///
+  /// In en, this message translates to:
+  /// **'Alternative payment'**
+  String get alternativePayment;
+
+  /// Subtitle under the Alternative payment row explaining the off-store path.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy via Buy Me a Coffee instead of the store'**
+  String get alternativePaymentSubtitle;
+
+  /// Hint shown when Google Play billing fails to load on Android.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Play unavailable on this device — try alternative payment.'**
+  String get googlePlayUnavailable;
+
+  /// Title of the bottom sheet that hands the user off to Buy Me a Coffee with their reference code.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay via Buy Me a Coffee'**
+  String get buyMeACoffeeHandoffTitle;
+
+  /// Instructions in the BMC handoff sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy this reference code, paste it into the support note on Buy Me a Coffee, and complete checkout. We\'ll unlock your pack as soon as the payment is confirmed.'**
+  String get buyMeACoffeeHandoffBody;
+
+  /// Label above the SM-XXXX-XXXX reference code in the BMC handoff sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference code'**
+  String get referenceCodeLabel;
+
+  /// Button label to copy the reference code to clipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy code'**
+  String get copyReferenceCode;
+
+  /// Snackbar shown after the reference code is copied to clipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference code copied'**
+  String get referenceCodeCopied;
+
+  /// Primary CTA in the BMC handoff sheet — opens the external checkout URL.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Buy Me a Coffee'**
+  String get openBuyMeACoffee;
+
+  /// Shows the expected payment amount in the BMC handoff sheet. Parameters: {amount} = formatted price (e.g. "$4.99").
+  ///
+  /// In en, this message translates to:
+  /// **'Amount: {amount}'**
+  String expectedAmountLabel(Object amount);
+
+  /// Error message when url_launcher fails to open the BMC checkout URL.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open checkout. Please try again.'**
+  String get couldNotOpenCheckout;
+
+  /// Retry action label inside the external purchase error panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get externalPurchaseRetry;
+
+  /// Title of the post-redirect overlay shown while polling the backend for webhook confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirming your unlock…'**
+  String get confirmingUnlock;
+
+  /// Body text in the confirming-unlock overlay explaining the wait.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for payment confirmation. This usually takes a few seconds.'**
+  String get paymentProcessing;
+
+  /// Body text in the confirming-unlock overlay when polling reports a terminal failure.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment couldn\'t be confirmed. If you completed payment, contact support.'**
+  String get paymentFailed;
+
+  /// Title of the success state in the confirming-unlock overlay. Parameters: {name} = pack display name.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} unlocked!'**
+  String unlockSuccess(Object name);
+
+  /// Success title used when the granted product can't be resolved to a pack name.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock complete'**
+  String get unlockSuccessGeneric;
+
+  /// Tertiary action label revealing the support-issued unlock code redemption sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Have an unlock code?'**
+  String get unlockCodeFallback;
+
+  /// Title of the unlock-code redemption sheet (support fallback only).
+  ///
+  /// In en, this message translates to:
+  /// **'Redeem unlock code'**
+  String get unlockCodeSheetTitle;
+
+  /// Body text in the unlock-code sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the unlock code support sent you. Codes are case-insensitive and dashes are optional.'**
+  String get unlockCodeSheetBody;
+
+  /// Text field label inside the unlock-code sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock code'**
+  String get unlockCodeFieldLabel;
+
+  /// Placeholder shown in the unlock code text field.
+  ///
+  /// In en, this message translates to:
+  /// **'SM-XXXX-XXXX'**
+  String get unlockCodeFieldHint;
+
+  /// Submit button label inside the unlock-code sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeem'**
+  String get redeemCode;
+
+  /// Error shown when the redeem callable rejects the code.
+  ///
+  /// In en, this message translates to:
+  /// **'That code wasn\'t recognised. Check it and try again.'**
+  String get redeemCodeInvalid;
+
+  /// Generic dismiss action used by the confirming-unlock overlay's terminal states.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get dismiss;
+
   /// Error message in premium features
   ///
   /// In en, this message translates to:

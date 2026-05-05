@@ -6,11 +6,13 @@ import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/constants.dart';
 import '../core/logging.dart';
 import '../core/navigation.dart';
 import '../models/mesh_models.dart';
 import '../providers/app_providers.dart';
 import '../providers/connection_providers.dart';
+import '../providers/external_purchase_providers.dart';
 import '../utils/snackbar.dart';
 import '../utils/text_sanitizer.dart';
 import 'deep_link/deep_link.dart';
@@ -211,6 +213,11 @@ class DeepLinkManager {
         return shareId != null
             ? 'aether-flight:$shareId'
             : null; // lint-allow: hardcoded-string
+      case DeepLinkType.purchaseReturn:
+        final sessionId = link.purchaseSessionId;
+        return sessionId != null
+            ? 'purchase-return:$sessionId'
+            : null; // lint-allow: hardcoded-string
       case DeepLinkType.invalid:
         return null;
     }
@@ -324,6 +331,15 @@ class DeepLinkManager {
         return;
       }
 
+      // External-purchase return: never navigates; hands the sessionId
+      // to ExternalPurchaseService which kicks off webhook polling.
+      // The redirect alone does NOT unlock anything — only a webhook-
+      // confirmed entitlement will flip the cache.
+      if (link.type == DeepLinkType.purchaseReturn) {
+        await _handlePurchaseReturn(link);
+        return;
+      }
+
       // For all other types, use the router
       AppLogging.qr('DeepLinkManager: 🗺️ Using router for ${link.type}');
       final routeResult = deepLinkRouter.route(link);
@@ -363,6 +379,44 @@ class DeepLinkManager {
   }
 
   /// Handle node deep links specially (may need Firestore fetch).
+  /// Hand a purchase-return sessionId off to ExternalPurchaseService.
+  ///
+  /// Never throws — provider read failures (e.g. service hasn't been
+  /// initialised yet) are logged and dropped, since this is a
+  /// best-effort wakeup. The user can also hit the Refresh affordance
+  /// in the confirmation overlay to retry.
+  Future<void> _handlePurchaseReturn(ParsedDeepLink link) async {
+    // Hard kill switch — when EXTERNAL_PURCHASE_ENABLED is off, drop
+    // the deep link silently. Logging it (but not dispatching) gives
+    // a forensic breadcrumb if a stale BMC redirect somehow reaches
+    // a feature-flagged-off build.
+    if (!AppFeatureFlags.isExternalPurchaseEnabled) {
+      AppLogging.purchase(
+        '[DeepLinkManager] purchase-return dropped — feature flag off '
+        '(uri=${link.originalUri})',
+      );
+      return;
+    }
+    final sessionId = link.purchaseSessionId;
+    if (sessionId == null || sessionId.isEmpty) {
+      AppLogging.purchase(
+        '[DeepLinkManager] purchase-return missing sessionId — ignoring',
+      );
+      return;
+    }
+    try {
+      final service = await _ref.read(externalPurchaseServiceProvider.future);
+      service.handleDeepLink(sessionId);
+      AppLogging.purchase(
+        '[DeepLinkManager] purchase-return dispatched sessionId=$sessionId',
+      );
+    } catch (e) {
+      AppLogging.purchase(
+        '[DeepLinkManager] purchase-return dispatch failed: $e',
+      );
+    }
+  }
+
   Future<void> _handleNodeLink(
     ParsedDeepLink link,
     NavigatorState navigator,

@@ -23,6 +23,8 @@ import '../../services/subscription/subscription_service.dart';
 import '../../utils/snackbar.dart';
 import '../automations/automations_screen.dart';
 import '../dashboard/widget_dashboard_screen.dart';
+import '../external_purchase/alternative_payment_link.dart';
+import '../external_purchase/redeem_unlock_code_sheet.dart';
 import 'ifttt_config_screen.dart';
 import 'ringtone_screen.dart';
 import 'theme_settings_screen.dart';
@@ -165,6 +167,24 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
 
               // Restore Purchases button (bottom)
               const RestorePurchasesButton(),
+
+              // Support fallback: redeem unlock code. Low-emphasis text
+              // link — primary CTAs above remain the canonical path.
+              // Gated by EXTERNAL_PURCHASE_ENABLED — codes are part of
+              // the same fallback pipeline, so they hide together.
+              if (AppFeatureFlags.isExternalPurchaseEnabled)
+                Center(
+                  child: TextButton(
+                    onPressed: () => showRedeemUnlockCodeSheet(context),
+                    child: Text(
+                      context.l10n.unlockCodeFallback,
+                      style: TextStyle(
+                        color: context.textTertiary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ),
 
               // Terms & Privacy
               const SizedBox(height: AppTheme.spacing16),
@@ -795,6 +815,22 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
             ),
           ),
 
+          // Alternative payment (secondary). Hidden once the bundle is
+          // owned — no fallback path is meaningful at that point.
+          if (!purchaseState.hasPurchased(
+            RevenueCatConfig.completePackProductId,
+          ))
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing16,
+              ),
+              child: Center(
+                child: AlternativePaymentLink(
+                  productId: RevenueCatConfig.completePackProductId,
+                ),
+              ),
+            ),
+
           // Lifetime reinforcement
           Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -974,129 +1010,144 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: Material(
-                  color: context.card,
-                  borderRadius: BorderRadius.circular(AppTheme.radius12),
-                  child: InkWell(
-                    onTap: isPurchased ? null : () => _purchaseItem(purchase),
-                    borderRadius: BorderRadius.circular(AppTheme.radius12),
-                    child: Container(
-                      padding: const EdgeInsets.all(AppTheme.spacing16),
-                      decoration: BoxDecoration(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Material(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                      child: InkWell(
+                        onTap: isPurchased
+                            ? null
+                            : () => _purchaseItem(purchase),
                         borderRadius: BorderRadius.circular(AppTheme.radius12),
-                        border: Border.all(
-                          color: isPurchased
-                              ? context.accentColor.withValues(alpha: 0.5)
-                              : context.border,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: context.accentColor.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.radius10,
-                              ),
+                        child: Container(
+                          padding: const EdgeInsets.all(AppTheme.spacing16),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius12,
                             ),
-                            child: Icon(
-                              _getPurchaseIcon(purchase.id),
-                              color: context.accentColor,
-                              size: 22,
+                            border: Border.all(
+                              color: isPurchased
+                                  ? context.accentColor.withValues(alpha: 0.5)
+                                  : context.border,
                             ),
                           ),
-                          SizedBox(width: AppTheme.spacing16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        storeProducts[purchase.productId]
-                                                ?.title ??
-                                            purchase.name,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16,
-                                          color: context.textPrimary,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    if (isPurchased) ...[
-                                      SizedBox(width: AppTheme.spacing8),
-                                      Icon(
-                                        Icons.check_circle,
-                                        color: context.accentColor,
-                                        size: 18,
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                Text(
-                                  _getDescription(purchase),
-                                  style: TextStyle(
-                                    color: context.textTertiary,
-                                    fontSize: 13,
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: context.accentColor.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius10,
                                   ),
                                 ),
-                              ],
-                            ),
+                                child: Icon(
+                                  _getPurchaseIcon(purchase.id),
+                                  color: context.accentColor,
+                                  size: 22,
+                                ),
+                              ),
+                              SizedBox(width: AppTheme.spacing16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            storeProducts[purchase.productId]
+                                                    ?.title ??
+                                                purchase.name,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 16,
+                                              color: context.textPrimary,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        if (isPurchased) ...[
+                                          SizedBox(width: AppTheme.spacing8),
+                                          Icon(
+                                            Icons.check_circle,
+                                            color: context.accentColor,
+                                            size: 18,
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                    Text(
+                                      _getDescription(purchase),
+                                      style: TextStyle(
+                                        color: context.textTertiary,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(width: AppTheme.spacing12),
+                              if (isPurchased)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: context.accentColor.withValues(
+                                      alpha: 0.2,
+                                    ),
+                                    borderRadius: BorderRadius.circular(
+                                      AppTheme.radius8,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    context.l10n.subscriptionOwned,
+                                    style: TextStyle(
+                                      color: context.accentColor,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                )
+                              else
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(
+                                      AppTheme.radius8,
+                                    ),
+                                    border: Border.all(
+                                      color: context.accentColor,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    storeProducts[purchase.productId]
+                                            ?.priceString ??
+                                        '\$${purchase.price.toStringAsFixed(2)}', // lint-allow: hardcoded-string
+                                    style: TextStyle(
+                                      color: context.accentColor,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
-                          SizedBox(width: AppTheme.spacing12),
-                          if (isPurchased)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: context.accentColor.withValues(
-                                  alpha: 0.2,
-                                ),
-                                borderRadius: BorderRadius.circular(
-                                  AppTheme.radius8,
-                                ),
-                              ),
-                              child: Text(
-                                context.l10n.subscriptionOwned,
-                                style: TextStyle(
-                                  color: context.accentColor,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            )
-                          else
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(
-                                  AppTheme.radius8,
-                                ),
-                                border: Border.all(color: context.accentColor),
-                              ),
-                              child: Text(
-                                storeProducts[purchase.productId]
-                                        ?.priceString ??
-                                    '\$${purchase.price.toStringAsFixed(2)}', // lint-allow: hardcoded-string
-                                style: TextStyle(
-                                  color: context.accentColor,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
+                    if (!isPurchased)
+                      AlternativePaymentLink(productId: purchase.productId),
+                  ],
                 ),
               );
             }),
