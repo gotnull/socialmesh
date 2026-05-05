@@ -2,10 +2,10 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/constants.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
@@ -482,7 +482,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
                 ],
               ),
             ),
-            if (kDebugMode)
+            if (AppFeatureFlags.isMeshCoreEnabled)
               PopupMenuItem(
                 value: 'meshcore_diag',
                 child: Row(

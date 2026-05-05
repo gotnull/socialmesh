@@ -2,11 +2,11 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/constants.dart';
 import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
@@ -620,7 +620,7 @@ class _AddEndpointFormState extends ConsumerState<_AddEndpointForm>
                 color: context.textPrimary,
               ),
             ),
-            if (kDebugMode) ...[
+            if (AppFeatureFlags.isMeshCoreEnabled) ...[
               const SizedBox(height: AppTheme.spacing16),
               ChipSelector<NetworkEndpointProtocol>(
                 value: _protocol,
