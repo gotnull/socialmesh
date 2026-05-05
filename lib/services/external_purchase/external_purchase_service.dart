@@ -224,9 +224,11 @@ class ExternalPurchaseService {
       // to coerce each element instead.
       final entitlementsRaw = (response['entitlements'] as List?) ?? const [];
       final list = entitlementsRaw
-          .map((e) => ExternalEntitlement.fromJson(
-                Map<String, dynamic>.from(e as Map),
-              ))
+          .map(
+            (e) => ExternalEntitlement.fromJson(
+              Map<String, dynamic>.from(e as Map),
+            ),
+          )
           .toList();
       await _cache.write(list);
       AppLogging.purchase(
