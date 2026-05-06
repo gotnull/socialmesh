@@ -91,21 +91,14 @@ docker-compose.yml
 firebase-service-account.json
 **/service-account*.json
 **/*-service-account.json
-/scripts/backfill-copyright-header.sh
-/scripts/*.json
-/scripts/run.sh
-/scripts/run-android.sh
-/scripts/fix-spdx-headers.sh
-/scripts/build-sprints-data.sh
-/scripts/verify_hosting_headers.sh
-/scripts/tak/
-/scripts/notification-icons/
+# Scripts: blanket exclude, explicit allowlist for CI / contributor-facing tools
+/scripts/*
+!/scripts/check-licenses.sh
+!/scripts/check_translation_coverage.py
+!/scripts/fetch_device_hardware.sh
+!/scripts/generate_protos.sh
+!/scripts/hooks/
 /scripts/hooks/*
-/scripts/railway-up.sh
-/scripts/security_audit_socialmesh.py
-/scripts/seed-beta-testers.js
-/scripts/store-versions.sh
-/scripts/test-mdns*.sh
 !/scripts/hooks/socialmesh-lint.sh
 /artifacts/
 
@@ -147,6 +140,7 @@ assets/widget_templates/*.json
 !/docs/ARCHITECTURE.md
 !/docs/BACKEND.md
 !/docs/RELEASING.md
+!/docs/TRANSLATION_GUIDE.md
 
 # Scripts dependencies
 /scripts/node_modules/
