@@ -30858,12 +30858,12 @@
     },
     "expectedAmountLabel": "Amount: {amount}",
     "@expectedAmountLabel": {
-        "description": "Shows the expected payment amount in the BMC handoff sheet. Parameters: {amount} = formatted price (e.g. \"$4.99\").",
         "placeholders": {
             "amount": {
                 "type": "String"
             }
-        }
+        },
+        "description": "Shows the expected payment amount in the BMC handoff sheet. Parameters: {amount} = formatted price (e.g. \"$4.99\")."
     },
     "couldNotOpenCheckout": "Couldn't open checkout. Please try again.",
     "@couldNotOpenCheckout": {
@@ -30887,12 +30887,12 @@
     },
     "unlockSuccess": "{name} unlocked!",
     "@unlockSuccess": {
-        "description": "Title of the success state in the confirming-unlock overlay. Parameters: {name} = pack display name.",
         "placeholders": {
             "name": {
                 "type": "String"
             }
-        }
+        },
+        "description": "Title of the success state in the confirming-unlock overlay. Parameters: {name} = pack display name."
     },
     "unlockSuccessGeneric": "Unlock complete",
     "@unlockSuccessGeneric": {
