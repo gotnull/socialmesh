@@ -89,8 +89,12 @@ class CloudSyncEntitlement {
 /// Service to manage cloud sync entitlements
 /// Combines RevenueCat subscription status with Firebase grandfathering
 class CloudSyncEntitlementService {
+  // lint-allow: socialmesh-name-casing — entitlement ID is the literal
+  // identifier configured in the RevenueCat dashboard. Renaming it
+  // there would invalidate every existing subscriber's entitlement,
+  // so the wrong-casing form is pinned here on purpose.
   static const String _entitlementId =
-      'SocialMesh Pro'; // lint-allow: hardcoded-string
+      'Socialmesh Pro'; // lint-allow: hardcoded-string
   static const String _cacheKey = 'cloud_sync_entitlement_cache';
   static const String _cacheTimestampKey = 'cloud_sync_entitlement_timestamp';
 

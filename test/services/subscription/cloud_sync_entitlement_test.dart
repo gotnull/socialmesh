@@ -122,8 +122,9 @@ void main() {
   group('CloudSyncEntitlementService', () {
     test('entitlement ID is correct', () {
       // This verifies the entitlement ID matches what's configured in RevenueCat
-      // The service uses 'SocialMesh Pro' as the entitlement identifier
+      // The service uses 'Socialmesh Pro' as the entitlement identifier
       // If this test fails, check RevenueCat dashboard configuration
+      // lint-allow: socialmesh-name-casing — see cloud_sync_entitlement_service.dart
       expect(
         CloudSyncEntitlementService.grandfatherCutoffDate,
         DateTime(2025, 2, 1),
