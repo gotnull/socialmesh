@@ -321,7 +321,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                   selectedDeepLink: _selectedDeepLink,
                   onDeepLinkSelected: (deepLink) {
                     safeSetState(() => _selectedDeepLink = deepLink);
-                    Navigator.of(context).pop();
+                    safeNavigatorPop();
                   },
                 ),
               ),
@@ -374,7 +374,7 @@ class _AdminBroadcastScreenState extends ConsumerState<AdminBroadcastScreen>
                         currentBody == previous.defaultBodyL10n(context)) {
                       _bodyController.text = icon.defaultBodyL10n(context);
                     }
-                    Navigator.of(context).pop();
+                    safeNavigatorPop();
                   },
                 ),
               ),

@@ -377,7 +377,7 @@ class _SipDmScreenState extends ConsumerState<SipDmScreen>
     if (encoded != null) {
       ref.read(protocolServiceProvider).sendSipPacket(encoded);
     }
-    if (mounted) Navigator.of(context).pop();
+    safeNavigatorPop();
   }
 
   // ---------------------------------------------------------------------

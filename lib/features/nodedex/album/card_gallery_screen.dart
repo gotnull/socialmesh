@@ -176,6 +176,7 @@ class _CardGalleryScreenState extends ConsumerState<CardGalleryScreen> {
   void _dismiss() {
     // Reset all flip states when leaving the gallery.
     ref.read(cardFlipStateProvider.notifier).resetAll();
+    if (!mounted) return;
     Navigator.of(context).pop();
   }
 

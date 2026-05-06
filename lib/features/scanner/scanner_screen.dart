@@ -1468,7 +1468,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           ref.read(appInitProvider) == AppInitState.needsScanner;
 
       if (widget.isOnboarding) {
-        Navigator.of(context).pop(device);
+        safeNavigatorPop(device);
         return;
       }
 
@@ -1592,7 +1592,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
       // If onboarding, return the device and let onboarding handle navigation
       if (widget.isOnboarding) {
-        Navigator.of(context).pop(device);
+        safeNavigatorPop(device);
         return;
       }
 

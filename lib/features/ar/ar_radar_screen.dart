@@ -187,8 +187,8 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ARCalibrationScreen(
-          onComplete: () => Navigator.of(context).pop(),
-          onSkip: () => Navigator.of(context).pop(),
+          onComplete: () => safeNavigatorPop(),
+          onSkip: () => safeNavigatorPop(),
         ),
       ),
     );
@@ -349,7 +349,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
                 // Back button
                 _buildControlButton(
                   icon: Icons.arrow_back,
-                  onTap: () => Navigator.of(context).pop(),
+                  onTap: () => safeNavigatorPop(),
                 ),
 
                 const Spacer(),

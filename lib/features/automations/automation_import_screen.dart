@@ -293,7 +293,7 @@ class _AutomationImportScreenState extends ConsumerState<AutomationImportScreen>
             ),
             const SizedBox(height: AppTheme.spacing24),
             ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => safeNavigatorPop(),
               child: Text(context.l10n.automationImportGoBack),
             ),
           ],

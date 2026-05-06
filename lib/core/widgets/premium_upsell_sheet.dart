@@ -242,7 +242,7 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
             context.l10n.premiumPurchaseUnlocked(purchase.name),
           );
           // Close sheet and return success
-          Navigator.of(context).pop(true);
+          safeNavigatorPop(true);
 
         case PurchaseResult.canceled:
           // User canceled, do nothing
@@ -278,7 +278,7 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
         final hasFeature = ref.read(hasFeatureProvider(widget.feature));
         if (hasFeature) {
           showSuccessSnackBar(context, context.l10n.premiumRestoreSuccess);
-          Navigator.of(context).pop(true);
+          safeNavigatorPop(true);
           return;
         }
       }

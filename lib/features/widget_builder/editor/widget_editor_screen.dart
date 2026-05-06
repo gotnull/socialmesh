@@ -2972,7 +2972,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
 
   void _saveWidget() {
     widget.onSave?.call(_schema);
-    Navigator.of(context).pop(_schema);
+    safeNavigatorPop(_schema);
   }
 }
 

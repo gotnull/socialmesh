@@ -1290,7 +1290,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
           SizedBox(
             width: double.infinity,
             child: FilledButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => safeNavigatorPop(),
               style: FilledButton.styleFrom(
                 backgroundColor: context.accentColor,
                 foregroundColor: Colors.white,

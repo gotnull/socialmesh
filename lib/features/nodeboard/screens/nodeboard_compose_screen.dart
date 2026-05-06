@@ -140,7 +140,7 @@ class _NodeBoardComposeScreenState extends ConsumerState<NodeBoardComposeScreen>
       'Compose: submitting kind=${widget.kind} section=${widget.sectionTitle}',
     );
     HapticFeedback.mediumImpact();
-    Navigator.of(context).pop(
+    safeNavigatorPop(
       NodeBoardComposeResult(
         title: _isThread ? _titleCtrl.text.trim() : null,
         body: _bodyCtrl.text.trim(),

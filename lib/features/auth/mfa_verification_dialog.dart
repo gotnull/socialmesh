@@ -200,7 +200,7 @@ class _MFAVerificationDialogState extends ConsumerState<MFAVerificationDialog>
         );
         return;
       }
-      Navigator.of(context).pop(userCredential);
+      safeNavigatorPop(userCredential);
       AppLogging.mfa('_resolveWithCredential — popped with credential');
     } on FirebaseAuthException catch (e) {
       AppLogging.mfa(

@@ -113,8 +113,7 @@ class _ReticulumCaptureDetailScreenState
     if (confirmed != true) return;
     if (!mounted) return;
     await ref.read(reticulumCaptureListProvider.notifier).delete(entry);
-    if (!mounted) return;
-    Navigator.of(context).pop();
+    safeNavigatorPop();
   }
 
   @override

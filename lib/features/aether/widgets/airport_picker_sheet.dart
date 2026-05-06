@@ -87,6 +87,7 @@ class _AirportPickerSheetState extends State<AirportPickerSheet> {
   }
 
   void _selectAirport(Airport airport) {
+    if (!mounted) return;
     HapticFeedback.selectionClick();
     Navigator.of(context).pop(airport);
   }

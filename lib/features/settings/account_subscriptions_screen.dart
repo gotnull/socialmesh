@@ -2731,7 +2731,7 @@ class _CloudSyncPaywallSheetState extends ConsumerState<_CloudSyncPaywallSheet>
     try {
       await Purchases.purchase(PurchaseParams.storeProduct(product));
       if (!mounted) return;
-      Navigator.of(context).pop();
+      safeNavigatorPop();
       showSuccessSnackBar(context, context.l10n.accountSubSubActivated);
     } catch (e) {
       AppLogging.subscriptions('Purchase error: $e');

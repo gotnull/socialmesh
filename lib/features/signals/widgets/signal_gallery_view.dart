@@ -139,12 +139,12 @@ class _SignalGalleryViewState extends ConsumerState<SignalGalleryView>
     if (remaining.isNegative) {
       // Already expired - pop immediately
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) Navigator.of(context).pop();
+        safeNavigatorPop();
       });
     } else {
       // Schedule pop for when it expires
       _expiryTimer = Timer(remaining, () {
-        if (mounted) Navigator.of(context).pop();
+        safeNavigatorPop();
       });
     }
   }

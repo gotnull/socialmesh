@@ -956,6 +956,7 @@ class _AddTopicSheetState extends ConsumerState<_AddTopicSheet> {
 
   void _submit() {
     if (!_canSubmit) return;
+    if (!mounted) return;
     Navigator.of(context).pop(
       _NewTopicResult(
         topic: _topicController.text.trim(),

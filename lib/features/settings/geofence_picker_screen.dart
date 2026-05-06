@@ -336,7 +336,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen>
       return;
     }
 
-    Navigator.of(context).pop(
+    safeNavigatorPop(
       GeofenceResult(
         latitude: _center!.latitude,
         longitude: _center!.longitude,

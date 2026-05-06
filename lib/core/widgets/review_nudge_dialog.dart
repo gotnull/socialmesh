@@ -58,15 +58,14 @@ class _ReviewNudgeDialogState extends ConsumerState<ReviewNudgeDialog>
       // Request the native review
       await reviewService.requestNativeReview();
 
-      if (!mounted) return;
-      Navigator.of(context).pop(true);
+      safeNavigatorPop(true);
     } catch (e) {
-      Navigator.of(context).pop(false);
+      safeNavigatorPop(false);
     }
   }
 
   void _handleNotNow() {
-    Navigator.of(context).pop(false);
+    safeNavigatorPop(false);
   }
 
   @override

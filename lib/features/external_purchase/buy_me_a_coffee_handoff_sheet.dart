@@ -134,7 +134,7 @@ class _BuyMeACoffeeHandoffBodyState
     // Dismiss the sheet — the user is now in the browser. The
     // confirmation overlay will take over once the deep-link return
     // arrives.
-    Navigator.of(context).pop();
+    safeNavigatorPop();
   }
 
   @override

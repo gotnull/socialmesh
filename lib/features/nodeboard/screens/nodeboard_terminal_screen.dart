@@ -118,8 +118,7 @@ class _NodeBoardTerminalScreenState
         break;
       case QuitEffect():
         HapticFeedback.lightImpact();
-        if (!mounted) return;
-        Navigator.of(context).pop();
+        safeNavigatorPop();
       case OpenIndexEffect(index: final i):
         _resolveOpenIndex(i);
       case OpenGuestbookEffect():

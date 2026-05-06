@@ -686,7 +686,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
       // Share to Aether API in background (non-blocking)
       _shareFlightInBackground(activeFlight);
 
-      Navigator.of(context).pop(true);
+      safeNavigatorPop(true);
       showSuccessSnackBar(
         context,
         activeFlight.isActive

@@ -84,7 +84,7 @@ class _RedeemUnlockCodeBodyState extends ConsumerState<_RedeemUnlockCodeBody>
         '[RedeemUnlockCodeSheet] redeemed productCount=${granted.length}',
       );
       ref.haptics.success();
-      Navigator.of(context).pop();
+      safeNavigatorPop();
       showSuccessSnackBar(context, context.l10n.unlockSuccessGeneric);
     } catch (e) {
       AppLogging.purchase('[RedeemUnlockCodeSheet] redeem failed: $e');

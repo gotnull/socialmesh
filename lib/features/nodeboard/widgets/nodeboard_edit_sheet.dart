@@ -128,7 +128,7 @@ class _NodeBoardEditSheetState extends ConsumerState<_NodeBoardEditSheet>
       HapticFeedback.lightImpact();
       // lint-allow: hardcoded-string
       showSuccessSnackBar(context, 'Board updated');
-      Navigator.of(context).pop(true);
+      safeNavigatorPop(true);
     } catch (e) {
       AppLogging.nodeBoard('Edit: ❌ failed: $e');
       if (!mounted) return;

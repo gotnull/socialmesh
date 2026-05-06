@@ -138,7 +138,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           showInfoSnackBar(context, context.l10n.signalHasFaded);
-          Navigator.of(context).pop();
+          safeNavigatorPop();
         }
       });
     } else {
@@ -146,7 +146,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
       _expiryTimer = Timer(remaining, () {
         if (mounted) {
           showInfoSnackBar(context, context.l10n.signalHasFaded);
-          Navigator.of(context).pop();
+          safeNavigatorPop();
         }
       });
     }

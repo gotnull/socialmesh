@@ -261,7 +261,7 @@ class _WidgetImportScreenState extends ConsumerState<WidgetImportScreen>
             ),
             const SizedBox(height: AppTheme.spacing24),
             ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: safeNavigatorPop,
               child: Text(context.l10n.widgetBuilderImportGoBack),
             ),
           ],

@@ -695,7 +695,7 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet>
             context,
             context.l10n.premiumPurchaseUnlocked(purchase.name),
           );
-          Navigator.of(context).pop(true);
+          safeNavigatorPop(true);
 
         case PurchaseResult.canceled:
           safeSetState(() => _isLoading = false);
@@ -729,7 +729,7 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet>
         final hasFeature = ref.read(hasFeatureProvider(widget.feature));
         if (hasFeature) {
           showSuccessSnackBar(context, context.l10n.premiumRestoreSuccess);
-          Navigator.of(context).pop(true);
+          safeNavigatorPop(true);
           return;
         }
       }

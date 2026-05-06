@@ -169,6 +169,7 @@ class _FlightSearchSheetState extends State<FlightSearchSheet> {
   }
 
   void _selectFlight(ActiveFlightInfo flight) {
+    if (!mounted) return;
     AppLogging.aether('FlightSearch: selected ${flight.callsign}');
     HapticFeedback.selectionClick();
     Navigator.of(context).pop(flight);

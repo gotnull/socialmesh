@@ -597,8 +597,7 @@ class _AddEndpointFormState extends ConsumerState<_AddEndpointForm>
 
     await widget.onSave(endpoint);
 
-    if (!mounted) return;
-    Navigator.of(context).pop();
+    safeNavigatorPop();
   }
 
   @override

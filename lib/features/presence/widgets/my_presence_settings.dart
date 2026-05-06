@@ -105,7 +105,7 @@ class _MyPresenceSettingsState extends ConsumerState<MyPresenceSettings>
                   ? Icon(Icons.check, color: context.accentColor)
                   : null,
               onTap: () {
-                Navigator.of(context).pop();
+                safeNavigatorPop();
                 _setIntent(intent);
               },
             );
@@ -160,7 +160,7 @@ class _MyPresenceSettingsState extends ConsumerState<MyPresenceSettings>
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () {
-                        Navigator.of(context).pop();
+                        safeNavigatorPop();
                         _setStatus(null);
                       },
                       child: Text(context.l10n.presenceClear),
@@ -171,7 +171,7 @@ class _MyPresenceSettingsState extends ConsumerState<MyPresenceSettings>
                 Expanded(
                   child: FilledButton(
                     onPressed: () {
-                      Navigator.of(context).pop();
+                      safeNavigatorPop();
                       final text = _statusController.text.trim();
                       _setStatus(text.isEmpty ? null : text);
                     },
