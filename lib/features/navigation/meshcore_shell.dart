@@ -78,40 +78,65 @@ final meshCoreShellScaffoldKeyProvider =
       GlobalKey<ScaffoldState>?
     >(MeshCoreShellScaffoldKeyNotifier.new);
 
-/// Widget to create a hamburger menu button for MeshCore app bars.
-/// Mirrors HamburgerMenuButton from MainShell for consistent UX.
+/// Context-aware leading button for MeshCore app bars.
+///
+/// On the MeshCore shell's root tabs (Contacts / Channels / Map /
+/// Tools — i.e. routes where `Navigator.canPop` is `false`), this
+/// renders a hamburger and opens the shell's drawer. On any pushed
+/// route above the shell (Settings, Device Info, etc.) it instead
+/// renders a back arrow and pops the route.
+///
+/// D25: pre-D25 the button always tried to open the drawer via the
+/// shell's scaffold key, which silently failed on pushed routes
+/// because the shell's `Scaffold` is not on top of the navigator
+/// stack — the drawer surface couldn't reach the foreground. Tapping
+/// did nothing visible. Splitting the behaviour by route depth makes
+/// the button do the obviously-correct thing in each context without
+/// touching any callsite.
 class MeshCoreHamburgerMenuButton extends ConsumerWidget {
   const MeshCoreHamburgerMenuButton({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final canPop = Navigator.canPop(context);
     final scaffoldKey = ref.watch(meshCoreShellScaffoldKeyProvider);
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return IconButton(
       icon: Icon(
-        Icons.menu,
+        canPop ? Icons.arrow_back : Icons.menu,
         color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
       ),
       onPressed: () {
         HapticFeedback.lightImpact();
-        // Open the drawer using the provider-stored scaffold key
+
+        if (canPop) {
+          // Pushed route — back arrow path. Never attempt to open
+          // the drawer; the shell's scaffold isn't on top of the
+          // navigator stack so `openDrawer` would silently no-op.
+          Navigator.pop(context);
+          return;
+        }
+
+        // Shell-root route — open the drawer using the provider-
+        // stored scaffold key.
         final scaffoldState = scaffoldKey?.currentState;
         if (scaffoldState != null) {
           scaffoldState.openDrawer();
         } else {
-          // Fallback: try to find a Scaffold ancestor
+          // Fallback: try to find a Scaffold ancestor (e.g. during
+          // tests where the shell key hasn't been published yet).
           try {
             Scaffold.of(context).openDrawer();
           } catch (e) {
-            // If no Scaffold ancestor found, log the issue
             AppLogging.debug(
               '⚠️ MeshCoreHamburgerMenuButton: Could not open drawer',
             );
           }
         }
       },
-      tooltip: context.l10n.meshcoreShellMenuTooltip,
+      tooltip: canPop ? l10n.commonGoBack : l10n.meshcoreShellMenuTooltip,
     );
   }
 }
