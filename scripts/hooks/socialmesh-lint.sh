@@ -808,8 +808,22 @@ check_file() {
   # translators and marketing copy are covered. Skip via per-file
   # `lint-allow: socialmesh-name-casing` (used in web/marketing.html
   # FAQ which documents the wrong forms intentionally).
+  #
+  # Path-based skips below cover identifiers baked into native
+  # project structure where renaming requires invasive Xcode/Android
+  # surgery (target rename, group renames, signing, build phases) and
+  # the symbol is internal-only, not user-facing:
+  #   - iOS widget extension target folder + its Xcode refs
+  #   - Android Application class + its AndroidManifest reference
   # ------------------------------------------------------------------
-  if ! grep -q 'lint-allow:.*socialmesh-name-casing' "$file" 2>/dev/null; then
+  local skip_name_casing=false
+  case "$file" in
+    ios/SocialmeshWidgets/*) skip_name_casing=true ;;
+    ios/Runner.xcodeproj/project.pbxproj) skip_name_casing=true ;;
+    android/app/src/main/AndroidManifest.xml) skip_name_casing=true ;;
+    android/app/src/main/kotlin/com/gotnull/socialmesh/SocialmeshApplication.kt) skip_name_casing=true ;;
+  esac
+  if [ "$skip_name_casing" = false ] && ! grep -q 'lint-allow:.*socialmesh-name-casing' "$file" 2>/dev/null; then
     grep_check "$file" \
       '(Socialmesh|Social[ -][Mm]esh|socialMesh)' \
       "socialmesh-name-casing" \
