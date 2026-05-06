@@ -7924,6 +7924,24 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreDisconnect => 'Desconectar';
 
   @override
+  String get meshcoreDrainQueueTool => 'Drain Message Queue';
+
+  @override
+  String get meshcoreDrainQueueToolSubtitle =>
+      'Manually pull next pending message from the radio';
+
+  @override
+  String get meshcoreDrainQueueResultMessage =>
+      'Pulled a pending message from the radio';
+
+  @override
+  String get meshcoreDrainQueueResultEmpty =>
+      'No pending messages on the radio';
+
+  @override
+  String get meshcoreDrainQueueFailed => 'Failed to drain message queue';
+
+  @override
   String get meshcoreDisconnectedChannelsDescription =>
       'Conecte um dispositivo MeshCore para ver os canais';
 

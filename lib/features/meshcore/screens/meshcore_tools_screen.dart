@@ -18,6 +18,7 @@ import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/settings_primitives.dart';
 import '../../../core/widgets/status_banner.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/meshcore_message_providers.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../services/meshcore/protocol/meshcore_messages.dart';
 import '../../../utils/snackbar.dart';
@@ -134,6 +135,20 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
                   trailing: _chevron(context),
                 ),
               ),
+            ),
+            // D21.B: manual `CMD_SYNC_NEXT_MESSAGE` drain. Recovers a
+            // missed `0x83` tickle (firmware queue has data but the
+            // companion never got the push, e.g. transport blip).
+            // Distinguishes "queue has data, tickle lost" vs "queue
+            // has no data". Sends one drain per tap; user can tap
+            // again if more messages are pending.
+            SettingsTile(
+              icon: Icons.cloud_download_rounded,
+              iconColor: AccentColors.cyan,
+              title: context.l10n.meshcoreDrainQueueTool,
+              subtitle: context.l10n.meshcoreDrainQueueToolSubtitle,
+              trailing: _chevron(context),
+              onTap: _drainMessageQueue,
             ),
             const SizedBox(height: AppTheme.spacing16),
 
@@ -549,6 +564,57 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
       if (mounted) {
         showErrorSnackBar(context, context.l10n.meshcoreFailedToSendAdTools);
       }
+    }
+  }
+
+  /// D21.B + D22: manual `CMD_SYNC_NEXT_MESSAGE` drain. The actual
+  /// send / classify / non-overlap-guard logic lives on
+  /// [MeshCoreConversationsNotifier.manualDrain] so the heartbeat,
+  /// the 0x83 auto-tickle, and this tap all share one drain lock and
+  /// one log shape. The tile only maps the classified outcome to a
+  /// snackbar.
+  Future<void> _drainMessageQueue() async {
+    final l10n = context.l10n;
+    final outcome = await ref
+        .read(meshCoreConversationsProvider.notifier)
+        .manualDrain();
+    AppLogging.meshcore(
+      'event=msg_waiting.drain.manual.result '
+      'result=${_outcomeKindName(outcome.kind)}'
+      '${outcome.code != null ? ' code=0x${outcome.code!.toRadixString(16).padLeft(2, '0')}' : ''}'
+      '${outcome.size != null ? ' size=${outcome.size}' : ''}',
+      error:
+          outcome.kind == MeshCoreDrainOutcomeKind.timeout ||
+          outcome.kind == MeshCoreDrainOutcomeKind.failed,
+    );
+    if (!mounted) return;
+    switch (outcome.kind) {
+      case MeshCoreDrainOutcomeKind.message:
+        showSuccessSnackBar(context, l10n.meshcoreDrainQueueResultMessage);
+        break;
+      case MeshCoreDrainOutcomeKind.noMore:
+        showSuccessSnackBar(context, l10n.meshcoreDrainQueueResultEmpty);
+        break;
+      case MeshCoreDrainOutcomeKind.timeout:
+      case MeshCoreDrainOutcomeKind.failed:
+      case MeshCoreDrainOutcomeKind.skipped:
+        showErrorSnackBar(context, l10n.meshcoreDrainQueueFailed);
+        break;
+    }
+  }
+
+  String _outcomeKindName(MeshCoreDrainOutcomeKind k) {
+    switch (k) {
+      case MeshCoreDrainOutcomeKind.message:
+        return 'message';
+      case MeshCoreDrainOutcomeKind.noMore:
+        return 'no_more';
+      case MeshCoreDrainOutcomeKind.timeout:
+        return 'timeout';
+      case MeshCoreDrainOutcomeKind.skipped:
+        return 'skipped';
+      case MeshCoreDrainOutcomeKind.failed:
+        return 'failed';
     }
   }
 

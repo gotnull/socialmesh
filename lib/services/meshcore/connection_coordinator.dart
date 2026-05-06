@@ -532,10 +532,13 @@ class ConnectionCoordinator {
         'ConnectionCoordinator: MeshCore connected and identified',
       );
       final info = _currentDeviceInfo;
+      // D20.C: unambiguous `name_len=N` format. The `c` suffix on
+      // `name=Nc` was previously misread as a literal short-name
+      // value during D20 recon. Length-only redaction is still safe.
       AppLogging.meshcore(
         'event=connect.succeeded transport=$transportTag attempt=c$attemptId '
         'node=${info?.nodeId ?? "none"} '
-        'name=${info?.displayName.length ?? 0}c '
+        'name_len=${info?.displayName.length ?? 0} '
         'battery=${info?.batteryPercentage ?? "?"}%',
       );
 

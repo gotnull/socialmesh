@@ -13969,6 +13969,36 @@ abstract class AppLocalizations {
   /// **'Disconnect'**
   String get meshcoreDisconnect;
 
+  /// Diagnostic tile title that triggers a manual CMD_SYNC_NEXT_MESSAGE drain of the firmware's pending-message queue
+  ///
+  /// In en, this message translates to:
+  /// **'Drain Message Queue'**
+  String get meshcoreDrainQueueTool;
+
+  /// Diagnostic tile subtitle for the manual drain action
+  ///
+  /// In en, this message translates to:
+  /// **'Manually pull next pending message from the radio'**
+  String get meshcoreDrainQueueToolSubtitle;
+
+  /// Success snackbar when manual drain returned an inbound message frame
+  ///
+  /// In en, this message translates to:
+  /// **'Pulled a pending message from the radio'**
+  String get meshcoreDrainQueueResultMessage;
+
+  /// Info snackbar when manual drain returned RESP_CODE_NO_MORE_MESSAGES
+  ///
+  /// In en, this message translates to:
+  /// **'No pending messages on the radio'**
+  String get meshcoreDrainQueueResultEmpty;
+
+  /// Error snackbar when manual drain failed (no session, transport error, timeout)
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to drain message queue'**
+  String get meshcoreDrainQueueFailed;
+
   /// Disconnected state description on channels screen
   ///
   /// In en, this message translates to:

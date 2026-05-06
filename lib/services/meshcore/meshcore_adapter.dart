@@ -154,11 +154,17 @@ class MeshCoreAdapter implements MeshDeviceAdapter {
       );
 
       AppLogging.protocol('MeshCore: Identified as $_deviceInfo');
+      // D20.C: prefer the unambiguous `name_len=N` form. The previous
+      // `name=Nc` shape (where the trailing `c` meant "characters" /
+      // a redaction unit) read like a literal value, which is what
+      // led to the D20 misdiagnosis of the rename path. Length-only
+      // is still safe for the structured-log channel; the actual
+      // node name is never logged here.
       AppLogging.meshcore(
         'event=identify.succeeded '
         'pk=${AppLogging.publicKeyFingerprint(selfInfo.pubKey)} '
         'node=${nodeId ?? "none"} '
-        'name=${displayName.length}c '
+        'name_len=${displayName.length} '
         'battery=${batteryPercentage ?? "?"}%',
       );
 

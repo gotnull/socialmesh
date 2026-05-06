@@ -112,5 +112,71 @@ void main() {
       );
       expect(sinkLines.single, contains('event=test pk=0B:none'));
     });
+
+    // D21.A: pin the redacted `target=` fingerprint format that
+    // `event=message.send.attempted type=contact` emits. Without
+    // this attribution we couldn't tell from the iPhone log which
+    // peer was being targeted, which left the D20 `0x82` ack-source
+    // ambiguous. The fingerprint must reuse `publicKeyFingerprint`
+    // and never leak full pubkey bytes.
+    test('contact send.attempted log emits redacted target=', () {
+      const sizeBytes = 12;
+      AppLogging.meshcore(
+        'event=message.send.attempted type=contact size=$sizeBytes '
+        'target=${AppLogging.publicKeyFingerprint(fullKey)}',
+      );
+      final line = sinkLines.single;
+
+      // Required shape pieces:
+      expect(line, contains('event=message.send.attempted'));
+      expect(line, contains('type=contact'));
+      expect(line, contains('size=12'));
+      expect(line, contains('target='));
+      expect(line, matches(r'target=32B:[0-9a-f]{8}…[0-9a-f]{8}'));
+
+      // Full pubkey hex must never leak.
+      expect(line.contains(fullKeyHex), isFalse);
+    });
+
+    test('channel send.attempted log does NOT include target=', () {
+      // Channels are flooded with no per-recipient ack, so target
+      // attribution doesn't apply. The chat-screen branch skips it.
+      const sizeBytes = 7;
+      AppLogging.meshcore(
+        'event=message.send.attempted type=channel size=$sizeBytes',
+      );
+      final line = sinkLines.single;
+      expect(line, contains('type=channel'));
+      expect(line, isNot(contains('target=')));
+    });
+
+    // D20.C: pin the unambiguous `name_len=N` redaction format. The
+    // previous `name=Nc` shape (where the trailing `c` meant
+    // "characters") was misread as a literal short-name value
+    // during D20 recon. Switch is intentional and tested.
+    test('node name length redaction uses unambiguous name_len=N', () {
+      const nodeName = 'WisMeshCore';
+      AppLogging.meshcore(
+        'event=identify.succeeded '
+        'pk=${AppLogging.publicKeyFingerprint(fullKey)} '
+        'name_len=${nodeName.length}',
+      );
+      final joined = sinkLines.join('\n');
+
+      // Length value present.
+      expect(
+        joined.contains('name_len=11'),
+        isTrue,
+        reason: 'expected name_len=N format',
+      );
+      // Old ambiguous shape must never reappear.
+      expect(
+        joined.contains('name=11c'),
+        isFalse,
+        reason: 'old ambiguous name=Nc format must not be reintroduced',
+      );
+      // Plaintext name itself must never leak.
+      expect(joined.contains(nodeName), isFalse);
+    });
   });
 }

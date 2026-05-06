@@ -10632,6 +10632,26 @@
     "@meshcoreDisconnect": {
         "description": "Overflow menu item to disconnect from device"
     },
+    "meshcoreDrainQueueTool": "Drain Message Queue",
+    "@meshcoreDrainQueueTool": {
+        "description": "Diagnostic tile title that triggers a manual CMD_SYNC_NEXT_MESSAGE drain of the firmware's pending-message queue"
+    },
+    "meshcoreDrainQueueToolSubtitle": "Manually pull next pending message from the radio",
+    "@meshcoreDrainQueueToolSubtitle": {
+        "description": "Diagnostic tile subtitle for the manual drain action"
+    },
+    "meshcoreDrainQueueResultMessage": "Pulled a pending message from the radio",
+    "@meshcoreDrainQueueResultMessage": {
+        "description": "Success snackbar when manual drain returned an inbound message frame"
+    },
+    "meshcoreDrainQueueResultEmpty": "No pending messages on the radio",
+    "@meshcoreDrainQueueResultEmpty": {
+        "description": "Info snackbar when manual drain returned RESP_CODE_NO_MORE_MESSAGES"
+    },
+    "meshcoreDrainQueueFailed": "Failed to drain message queue",
+    "@meshcoreDrainQueueFailed": {
+        "description": "Error snackbar when manual drain failed (no session, transport error, timeout)"
+    },
     "meshcoreDisconnectedChannelsDescription": "Connect to a MeshCore device to view channels",
     "@meshcoreDisconnectedChannelsDescription": {
         "description": "Disconnected state description on channels screen"

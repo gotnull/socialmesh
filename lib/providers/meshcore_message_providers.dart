@@ -23,6 +23,7 @@ import '../services/meshcore/protocol/meshcore_frame.dart';
 import '../services/meshcore/protocol/meshcore_session.dart';
 import '../services/meshcore/storage/meshcore_message_store.dart';
 import '../services/meshcore/storage/meshcore_contact_store.dart';
+import 'app_lifecycle_provider.dart';
 import 'meshcore_providers.dart';
 
 // ---------------------------------------------------------------------------
@@ -194,6 +195,70 @@ class MeshCoreMessage {
 enum MeshCoreMessageDeliveryStatus { pending, sent, delivered, failed }
 
 // ---------------------------------------------------------------------------
+// D22 — Drain coordination (heartbeat + manual + auto-tickle non-overlap)
+// ---------------------------------------------------------------------------
+
+/// Origin of an in-flight `CMD_SYNC_NEXT_MESSAGE` drain. Used by the
+/// non-overlap guard so a heartbeat tick cannot collide with a `0x83`
+/// auto-drain or a Tools-tile manual drain (and vice versa).
+///
+/// Public so tests can pin the skip-reason logged on overlap.
+enum MeshCoreDrainSource { tickle, manual, heartbeat }
+
+/// Classified outcome of a single drain attempt. Pinned shape so the
+/// Tools tile snackbar and the heartbeat iteration loop can both
+/// branch on the same enum without duplicating frame-code knowledge.
+enum MeshCoreDrainOutcomeKind { message, noMore, timeout, skipped, failed }
+
+/// Result of one [MeshCoreConversationsNotifier.drainOnce] call.
+class MeshCoreDrainOutcome {
+  final MeshCoreDrainOutcomeKind kind;
+
+  /// Frame command code on `kind == message` or `kind == noMore`.
+  final int? code;
+
+  /// Frame payload size on `kind == message`.
+  final int? size;
+
+  /// Skip reason on `kind == skipped` (e.g. `already_draining_<source>`).
+  final String? skipReason;
+
+  /// Failure reason runtime-type name on `kind == failed`.
+  final String? failureReason;
+
+  const MeshCoreDrainOutcome._(
+    this.kind, {
+    this.code,
+    this.size,
+    this.skipReason,
+    this.failureReason,
+  });
+
+  factory MeshCoreDrainOutcome.message(int code, int size) =>
+      MeshCoreDrainOutcome._(
+        MeshCoreDrainOutcomeKind.message,
+        code: code,
+        size: size,
+      );
+
+  factory MeshCoreDrainOutcome.noMore(int code) =>
+      MeshCoreDrainOutcome._(MeshCoreDrainOutcomeKind.noMore, code: code);
+
+  factory MeshCoreDrainOutcome.timeout() =>
+      const MeshCoreDrainOutcome._(MeshCoreDrainOutcomeKind.timeout);
+
+  factory MeshCoreDrainOutcome.skipped(String reason) => MeshCoreDrainOutcome._(
+    MeshCoreDrainOutcomeKind.skipped,
+    skipReason: reason,
+  );
+
+  factory MeshCoreDrainOutcome.failed(String reason) => MeshCoreDrainOutcome._(
+    MeshCoreDrainOutcomeKind.failed,
+    failureReason: reason,
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Conversation List Provider
 // ---------------------------------------------------------------------------
 
@@ -238,19 +303,91 @@ class MeshCoreConversationsNotifier
   final MeshCoreMessageStore _messageStore = MeshCoreMessageStore();
   final MeshCoreContactStore _contactStore = MeshCoreContactStore();
 
+  // D22.A: missed-tickle recovery drain heartbeat. Periodically fires
+  // `CMD_SYNC_NEXT_MESSAGE` while connected so messages already in the
+  // firmware queue (whose 0x83 tickle was missed) get pulled. The
+  // timer is owned here because this notifier already owns inbound
+  // frame routing, persistence, and the existing 0x83 auto-drain — so
+  // the heartbeat naturally shares the same parser/persistence path.
+  Timer? _heartbeatTimer;
+  MeshCoreSession? _heartbeatSession;
+
+  // D22 non-overlap guard. Set by [drainOnce] before sending the sync
+  // command, cleared in `finally`. Tickle / manual / heartbeat all
+  // consult and update this single field so two concurrent drains
+  // can't interleave waiters on the broadcast frame stream.
+  MeshCoreDrainSource? _activeDrain;
+
+  // Flipped to true in `ref.onDispose` so async work (deferred
+  // `_loadConversations`, in-flight drains) can bail out instead of
+  // writing to `state` after the notifier is gone.
+  bool _disposed = false;
+
+  /// Test override for the heartbeat interval. Production code uses
+  /// [kMeshCoreDrainHeartbeatSeconds]; tests can shorten this so the
+  /// heartbeat fires deterministically without `pumpAndSettle` for
+  /// 60 s. Reset via [debugResetHeartbeatInterval] in tearDown.
+  @visibleForTesting
+  static Duration debugHeartbeatInterval = const Duration(
+    seconds: kMeshCoreDrainHeartbeatSeconds,
+  );
+
+  /// Reset the heartbeat interval to the production default. Always
+  /// call from `tearDown` after using [debugHeartbeatInterval] so a
+  /// short interval doesn't bleed into unrelated tests.
+  @visibleForTesting
+  static void debugResetHeartbeatInterval() {
+    debugHeartbeatInterval = const Duration(
+      seconds: kMeshCoreDrainHeartbeatSeconds,
+    );
+  }
+
   @override
   MeshCoreConversationsState build() {
-    // Subscribe to incoming messages when session is available
+    // Subscribe to incoming messages when session is available, and
+    // start the missed-tickle heartbeat. Both lifecycles are bound to
+    // the active session: when the session disappears or the notifier
+    // is disposed, both are torn down.
     final session = ref.watch(meshCoreSessionProvider);
     if (session != null && session.isActive) {
       _subscribeToMessages(session);
+      _startHeartbeat(session);
+    } else {
+      // Session went away (disconnect / device swap). Tear down so a
+      // future reconnect re-arms cleanly via the next `build()`.
+      _stopHeartbeat('session_unavailable');
     }
 
-    // Load initial conversations
-    _loadConversations();
+    // D22.B: app foreground transitions. When the app comes back to
+    // the foreground we fire one extra drain so messages that arrived
+    // while we were paused are pulled immediately, without waiting
+    // for the next periodic tick. Skips silently when not connected
+    // or when another drain is already in flight.
+    ref.listen<bool>(appLifecycleProvider, (prev, isForeground) {
+      if (prev == isForeground) return;
+      if (!isForeground) return;
+      final s = ref.read(meshCoreSessionProvider);
+      if (s == null || !s.isActive) return;
+      AppLogging.meshcore('event=msg_waiting.drain.foreground.requested');
+      // Kick off via microtask so the listener returns synchronously.
+      Future.microtask(() => _runHeartbeatDrain(reason: 'foreground'));
+    });
+
+    // Load initial conversations. Deferred via `Future(() => ...)`
+    // so the first `state = state.copyWith(isLoading: true)` write
+    // inside `_loadConversations` runs on a separate event-loop
+    // turn, after `build()` has returned and the notifier's initial
+    // state has been committed by Riverpod. Pre-D22 this was a
+    // direct call which threw `Tried to read the state of an
+    // uninitialized provider` whenever the notifier was instantiated
+    // in a unit test (production happened to mask it because the
+    // first call site never asserted on state during build).
+    Future<void>(_loadConversations);
 
     ref.onDispose(() {
+      _disposed = true;
       _frameSubscription?.cancel();
+      _stopHeartbeat('disposed');
     });
 
     return const MeshCoreConversationsState.initial();
@@ -260,6 +397,194 @@ class MeshCoreConversationsNotifier
     _frameSubscription?.cancel();
     _frameSubscription = session.frameStream.listen(_handleFrame);
     AppLogging.protocol('MeshCore Conversations: Subscribed to frame stream');
+  }
+
+  void _startHeartbeat(MeshCoreSession session) {
+    // Idempotent: if we're already running for this exact session, no-op.
+    if (_heartbeatTimer != null && identical(_heartbeatSession, session)) {
+      return;
+    }
+    // Different session (reconnect, device swap) — cancel and re-arm.
+    _stopHeartbeat('session_changed');
+    _heartbeatSession = session;
+    final interval = debugHeartbeatInterval;
+    _heartbeatTimer = Timer.periodic(interval, (_) => _onHeartbeatTick());
+    AppLogging.meshcore(
+      'event=msg_waiting.heartbeat.started '
+      'interval_ms=${interval.inMilliseconds}',
+    );
+  }
+
+  void _stopHeartbeat(String reason) {
+    if (_heartbeatTimer == null && _heartbeatSession == null) return;
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = null;
+    _heartbeatSession = null;
+    AppLogging.meshcore('event=msg_waiting.heartbeat.stopped reason=$reason');
+  }
+
+  void _onHeartbeatTick() {
+    // Skip silently when session went stale between ticks.
+    final s = ref.read(meshCoreSessionProvider);
+    if (s == null || !s.isActive) {
+      _stopHeartbeat('session_inactive');
+      return;
+    }
+    Future.microtask(() => _runHeartbeatDrain(reason: 'tick'));
+  }
+
+  /// Iterative heartbeat drain. Pulls messages until the firmware
+  /// returns `RESP_CODE_NO_MORE_MESSAGES`, a timeout, or a skip. Each
+  /// pulled message frame is parsed + persisted by the existing
+  /// [_handleFrame] listener; this loop only re-issues sync commands.
+  Future<void> _runHeartbeatDrain({required String reason}) async {
+    // Cap iterations so a misbehaving firmware can't lock the loop.
+    const maxIterations = 16;
+    for (var i = 0; i < maxIterations; i++) {
+      final outcome = await drainOnce(MeshCoreDrainSource.heartbeat);
+      switch (outcome.kind) {
+        case MeshCoreDrainOutcomeKind.message:
+          AppLogging.meshcore(
+            'event=msg_waiting.drain.heartbeat.result result=message '
+            'code=0x${outcome.code!.toRadixString(16).padLeft(2, '0')} '
+            'size=${outcome.size ?? 0}',
+          );
+          // Loop and try again — there may be more queued.
+          continue;
+        case MeshCoreDrainOutcomeKind.noMore:
+          AppLogging.meshcore(
+            'event=msg_waiting.drain.heartbeat.result result=no_more',
+          );
+          return;
+        case MeshCoreDrainOutcomeKind.timeout:
+          AppLogging.meshcore(
+            'event=msg_waiting.drain.heartbeat.result result=timeout',
+            error: true,
+          );
+          return;
+        case MeshCoreDrainOutcomeKind.skipped:
+          AppLogging.meshcore(
+            'event=msg_waiting.drain.heartbeat.skipped '
+            'reason=${outcome.skipReason}',
+          );
+          return;
+        case MeshCoreDrainOutcomeKind.failed:
+          AppLogging.meshcore(
+            'event=msg_waiting.drain.heartbeat.failed '
+            'reason=${outcome.failureReason}',
+            error: true,
+          );
+          return;
+      }
+    }
+    AppLogging.meshcore(
+      'event=msg_waiting.drain.heartbeat.result result=cap '
+      'iterations=$maxIterations reason=$reason',
+    );
+  }
+
+  /// Public manual drain entry — invoked by the Tools tile. Single
+  /// shot, classified outcome (message / no_more / timeout / skipped
+  /// / failed). The Tools UI maps the outcome to a snackbar.
+  Future<MeshCoreDrainOutcome> manualDrain() async {
+    return drainOnce(MeshCoreDrainSource.manual);
+  }
+
+  /// Test entry point — fire one heartbeat tick synchronously without
+  /// waiting for the [Timer.periodic] interval. Same path as the
+  /// production timer callback.
+  @visibleForTesting
+  Future<void> debugFireHeartbeatTick() async {
+    final s = ref.read(meshCoreSessionProvider);
+    if (s == null || !s.isActive) return;
+    await _runHeartbeatDrain(reason: 'debug');
+  }
+
+  /// Whether the heartbeat timer is currently armed. Visible for tests
+  /// that need to assert start/stop transitions.
+  @visibleForTesting
+  bool get debugIsHeartbeatActive => _heartbeatTimer?.isActive ?? false;
+
+  /// Currently in-flight drain source, or null when idle. Visible for
+  /// tests that need to observe the non-overlap guard transitions.
+  @visibleForTesting
+  MeshCoreDrainSource? get debugActiveDrain => _activeDrain;
+
+  /// Send one `CMD_SYNC_NEXT_MESSAGE` and classify the response.
+  ///
+  /// Used by the heartbeat (loops until no_more), the Tools tile
+  /// (single shot), and the 0x83 auto-tickle path (fire-and-forget,
+  /// but still routed through this method so the non-overlap guard
+  /// covers it). The message frame itself is parsed + persisted by
+  /// the existing [_handleFrame] listener; this method only
+  /// classifies + emits the structured log.
+  ///
+  /// Non-overlap: if another drain is already in flight, returns
+  /// `MeshCoreDrainOutcome.skipped(reason)` immediately without
+  /// sending anything.
+  Future<MeshCoreDrainOutcome> drainOnce(MeshCoreDrainSource source) async {
+    if (_activeDrain != null) {
+      final reason = 'already_draining_${_activeDrain!.name}';
+      // Source-specific skip log so the field log makes attribution
+      // possible without parsing the wider event stream.
+      AppLogging.meshcore(
+        'event=msg_waiting.drain.${source.name}.skipped reason=$reason',
+      );
+      return MeshCoreDrainOutcome.skipped(reason);
+    }
+
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null || !session.isActive) {
+      AppLogging.meshcore(
+        'event=msg_waiting.drain.${source.name}.failed '
+        'reason=no_active_session',
+        error: true,
+      );
+      return MeshCoreDrainOutcome.failed('no_active_session');
+    }
+
+    _activeDrain = source;
+    final classified = Completer<MeshCoreDrainOutcome>();
+    StreamSubscription<MeshCoreFrame>? sub;
+    try {
+      sub = session.frameStream.listen((frame) {
+        final code = frame.command;
+        if (code == MeshCoreResponses.noMoreMessages) {
+          if (!classified.isCompleted) {
+            classified.complete(MeshCoreDrainOutcome.noMore(code));
+          }
+        } else if (code == MeshCoreResponses.contactMsgRecv ||
+            code == MeshCoreResponses.contactMsgRecvV3 ||
+            code == MeshCoreResponses.channelMsgRecv ||
+            code == MeshCoreResponses.channelMsgRecvV3) {
+          if (!classified.isCompleted) {
+            classified.complete(
+              MeshCoreDrainOutcome.message(code, frame.payload.length),
+            );
+          }
+        }
+      });
+
+      // Source-specific request log so the field log can attribute
+      // each `result=` line to its origin.
+      AppLogging.meshcore('event=msg_waiting.drain.${source.name}.requested');
+      await session.sendCommand(MeshCoreCommands.syncNextMessage);
+      final outcome = await classified.future.timeout(
+        const Duration(seconds: 3),
+        onTimeout: MeshCoreDrainOutcome.timeout,
+      );
+      return outcome;
+    } catch (e) {
+      AppLogging.meshcore(
+        'event=msg_waiting.drain.${source.name}.failed '
+        'reason=${e.runtimeType}',
+        error: true,
+      );
+      return MeshCoreDrainOutcome.failed(e.runtimeType.toString());
+    } finally {
+      await sub?.cancel();
+      _activeDrain = null;
+    }
   }
 
   void _handleFrame(MeshCoreFrame frame) {
@@ -302,36 +627,40 @@ class MeshCoreConversationsNotifier
   }
 
   void _handleMsgWaiting(MeshCoreFrame frame) {
-    // Send CMD_SYNC_NEXT_MESSAGE (0x0A) to firmware. The response
-    // will be either:
-    //   - a full RESP_CODE_*_MSG_RECV[_V3] frame, which our existing
-    //     `_handleFrame` chain parses + persists, OR
-    //   - RESP_CODE_NO_MORE_MESSAGES (0x0A, 1 byte) which we ignore.
-    // Either way the firmware queue advances by one entry per tickle.
-    // Multiple tickles arrive when multiple messages are queued; each
-    // independently triggers one drain. We do not loop here because
-    // each firmware queue entry generates its own tickle, so a single
-    // sync per tickle is the firmware-intended cadence.
+    // Send CMD_SYNC_NEXT_MESSAGE (0x0A) via the shared drain helper.
+    // Firmware emits one tickle per arrival, so per-tickle this is a
+    // single drain (no iterative loop here). The shared helper also
+    // routes through the D22 non-overlap guard so a tickle that
+    // races with the heartbeat or a manual tap is logged as skipped
+    // rather than firing a second concurrent waiter.
     AppLogging.meshcore(
       'event=msg_waiting.observed code=0x83 size=${frame.payload.length}',
     );
-    final session = ref.read(meshCoreSessionProvider);
-    if (session == null || !session.isActive) {
-      AppLogging.meshcore(
-        'event=msg_waiting.drain.skipped reason=no_active_session',
-        error: true,
-      );
-      return;
-    }
-    AppLogging.meshcore('event=msg_waiting.drain.requested');
     Future.microtask(() async {
-      try {
-        await session.sendCommand(MeshCoreCommands.syncNextMessage);
-      } catch (e) {
-        AppLogging.meshcore(
-          'event=msg_waiting.drain.failed reason=${e.runtimeType}',
-          error: true,
-        );
+      final outcome = await drainOnce(MeshCoreDrainSource.tickle);
+      switch (outcome.kind) {
+        case MeshCoreDrainOutcomeKind.message:
+          AppLogging.meshcore(
+            'event=msg_waiting.drain.tickle.result result=message '
+            'code=0x${outcome.code!.toRadixString(16).padLeft(2, '0')} '
+            'size=${outcome.size ?? 0}',
+          );
+          break;
+        case MeshCoreDrainOutcomeKind.noMore:
+          AppLogging.meshcore(
+            'event=msg_waiting.drain.tickle.result result=no_more',
+          );
+          break;
+        case MeshCoreDrainOutcomeKind.timeout:
+          AppLogging.meshcore(
+            'event=msg_waiting.drain.tickle.result result=timeout',
+            error: true,
+          );
+          break;
+        case MeshCoreDrainOutcomeKind.skipped:
+        case MeshCoreDrainOutcomeKind.failed:
+          // Already logged by drainOnce.
+          break;
       }
     });
   }
@@ -452,6 +781,29 @@ class MeshCoreConversationsNotifier
         'event=message.persist.skipped scope=contact '
         'reason=no_matching_contact sender_prefix=$senderPrefix',
       );
+      // D20.B: orphan-skip recovery. Firmware architecturally
+      // guarantees an advert push (0x80 / 0x8A) before any contact
+      // DM, because `onMessageRecv` takes a `ContactInfo&` and
+      // contacts only enter the firmware table via
+      // `onDiscoveredContact`. Hitting this branch implies a rare
+      // race (app connected mid-stream, missed the advert push).
+      // Trigger a contacts refresh so the NEXT inbound message
+      // from this sender finds a matching contact and persists
+      // correctly. The orphaned message itself is still dropped;
+      // creating a prefix-keyed placeholder contact would risk
+      // colliding with the full-key entry that arrives via the
+      // refresh, so we accept losing the first message in this
+      // edge case rather than corrupt the contacts table.
+      Future.microtask(() {
+        try {
+          ref.read(meshCoreContactsProvider.notifier).refresh();
+        } catch (e) {
+          AppLogging.meshcore(
+            'event=orphan.refresh.failed reason=${e.runtimeType}',
+            error: true,
+          );
+        }
+      });
     }
 
     _addMessageToConversation(conversationId, message, incrementUnread: true);
@@ -575,11 +927,13 @@ class MeshCoreConversationsNotifier
   }
 
   Future<void> _loadConversations() async {
+    if (_disposed) return;
     state = state.copyWith(isLoading: true);
 
     try {
       await _messageStore.init();
       await _contactStore.init();
+      if (_disposed) return;
 
       // Load contacts to build conversation list
       final contacts = await _contactStore.loadContacts();
@@ -668,9 +1022,32 @@ class MeshCoreConversationsNotifier
 
     state = state.copyWith(conversations: updated);
 
-    // Update unread count in storage
+    // Update unread count in storage AND propagate to the contacts
+    // notifier state so the Contacts list aggregate filter chip
+    // reflects the new unread (D20.A). Pre-D20 the contact store
+    // wrote SharedPreferences but `meshCoreContactsProvider.contacts`
+    // was only re-read on full refresh, so the per-tile fallback was
+    // accurate but the global "Unread N" filter chip stayed at 0.
+    // Channels skip the contacts-notifier propagation since channels
+    // don't live in the contacts list.
     if (incrementUnread && !isChannel) {
-      _contactStore.incrementUnreadCount(conversationId);
+      Future.microtask(() async {
+        try {
+          await _contactStore.init();
+          final newCount = await _contactStore.incrementUnreadCount(
+            conversationId,
+          );
+          ref
+              .read(meshCoreContactsProvider.notifier)
+              .updateUnreadCount(conversationId, newCount);
+        } catch (e) {
+          AppLogging.meshcore(
+            'event=unread.propagate.failed scope=contact '
+            'reason=${e.runtimeType}',
+            error: true,
+          );
+        }
+      });
     }
   }
 
@@ -679,14 +1056,49 @@ class MeshCoreConversationsNotifier
     // Full implementation would use message IDs to match specific messages
   }
 
-  /// Clear unread count for a conversation.
+  /// Clear unread count for a conversation. D20.A propagates the
+  /// clear to BOTH the contact store and the contacts notifier so
+  /// the Contacts list aggregate chip and the per-tile badge stay
+  /// in sync. The propagation runs unconditionally for any id that
+  /// is not a `channel_*` id, even when `state.conversations`
+  /// doesn't have a matching entry yet (e.g. fresh app start with
+  /// an empty `_contactStore` but a contact known to firmware via
+  /// `meshCoreContactsProvider`). Pre-D20 (and the first D20 cut)
+  /// the propagation was gated on the conversations-list lookup, so
+  /// reopening the chat after rebuild left the contacts notifier
+  /// state at the stale unread count.
   Future<void> markAsRead(String conversationId) async {
+    // Update in-memory conversation entry if present.
     final updated = List<MeshCoreConversation>.from(state.conversations);
     final index = updated.indexWhere((c) => c.id == conversationId);
     if (index >= 0) {
       updated[index] = updated[index].copyWith(unreadCount: 0);
       state = state.copyWith(conversations: updated);
-      await _contactStore.clearUnreadCount(conversationId);
+    }
+
+    // Channels don't live in the contacts notifier; skip the
+    // contact-side propagation for them.
+    final isChannelId = conversationId.startsWith('channel_');
+    if (!isChannelId) {
+      try {
+        await _contactStore.init();
+        await _contactStore.clearUnreadCount(conversationId);
+      } catch (e) {
+        AppLogging.meshcore(
+          'event=mark_read.store_clear.failed reason=${e.runtimeType}',
+          error: true,
+        );
+      }
+      try {
+        ref
+            .read(meshCoreContactsProvider.notifier)
+            .updateUnreadCount(conversationId, 0);
+      } catch (e) {
+        AppLogging.meshcore(
+          'event=mark_read.contacts_notifier.failed reason=${e.runtimeType}',
+          error: true,
+        );
+      }
     }
   }
 

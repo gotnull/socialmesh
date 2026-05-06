@@ -514,8 +514,19 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
     final chatTypeTag = widget.chatType == MeshCoreChatType.contact
         ? 'contact'
         : 'channel';
+    // D21.A: redacted target fingerprint on contact sends so the diag
+    // log can attribute later 0x82 acks to a specific peer. Without
+    // this we couldn't tell from the log alone whether an iPhone DM
+    // targeted Radio A or some other discovered peer. Channels are
+    // flooded with no per-recipient ack so target attribution does
+    // not apply.
+    final targetTag = widget.chatType == MeshCoreChatType.contact
+        ? ' target='
+              '${AppLogging.publicKeyFingerprint(widget.contact!.publicKey)}'
+        : '';
     AppLogging.meshcore(
-      'event=message.send.attempted type=$chatTypeTag size=${text.length}',
+      'event=message.send.attempted type=$chatTypeTag '
+      'size=${text.length}$targetTag',
     );
 
     try {

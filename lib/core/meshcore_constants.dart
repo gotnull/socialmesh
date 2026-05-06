@@ -363,6 +363,23 @@ class MeshCoreTimeouts {
   static const Duration request = Duration(seconds: 10);
 }
 
+// D22.A: missed-tickle recovery drain heartbeat interval (seconds).
+//
+// While connected to MeshCore, the conversations notifier periodically
+// fires `CMD_SYNC_NEXT_MESSAGE` to recover queued messages whose
+// one-shot `0x83` tickle was lost (transport blip, app cold-start
+// race, BLE buffer pressure). The firmware's queue is reachable via
+// the sync command at any time; the tickle is just a notification
+// that gets dropped silently when the companion is offline at the
+// moment of arrival.
+//
+// 60 s is the cheap-but-recovers-fast default: at idle this adds one
+// 1-byte command + one 1-byte `RESP_CODE_NO_MORE_MESSAGES` per minute
+// over the companion link (TCP / BLE), zero airtime. When the queue
+// is non-empty the heartbeat drains iteratively until empty in the
+// same tick.
+const int kMeshCoreDrainHeartbeatSeconds = 60;
+
 /// MeshCore code classification utilities.
 ///
 /// Code ranges from reference implementation:
