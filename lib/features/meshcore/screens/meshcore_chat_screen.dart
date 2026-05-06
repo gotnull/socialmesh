@@ -1082,6 +1082,12 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
                         children: [
                           LinkifiedText(
                             text: message.text,
+                            // Match inbound bubble size (15pt) so a
+                            // back-and-forth thread reads with one
+                            // consistent rhythm. The 14/15 split was a
+                            // pre-D30 inconsistency the developer
+                            // surfaced during the live smoke; fixed
+                            // here as part of the MeshCore polish pass.
                             style: chatBubbleBodyStyle(
                               ref,
                               baseFontSize: 14,
@@ -1180,9 +1186,14 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
                         ],
                         LinkifiedText(
                           text: message.text,
+                          // Canonical chat-body size (14pt) shared
+                          // with the outbound bubble + Meshtastic +
+                          // SIP DM. The 14/15 split was a pre-D30
+                          // inconsistency surfaced during live smoke;
+                          // unified on 14 across all chat surfaces.
                           style: chatBubbleBodyStyle(
                             ref,
-                            baseFontSize: 15,
+                            baseFontSize: 14,
                             color: context.textPrimary,
                           ),
                         ),
@@ -1225,16 +1236,22 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
     }
     if (hasPath) {
       final hops = message.pathLength!;
-      // Firmware reports 0 when a message arrived without intermediate
-      // relays (the radio decoded it directly). The first live smoke
-      // showed every legacy channel bubble rendering "via 0 hops",
-      // which reads awkwardly. Treat 0 and 1 both as "direct" — both
-      // mean the same thing to a user (no extra hops in the path).
-      parts.add(
-        hops <= 1
-            ? context.l10n.meshcoreChatInboundMetaPathDirect
-            : context.l10n.meshcoreChatInboundMetaPathHops(hops),
-      );
+      // Firmware semantics for pathLen byte:
+      //   0       = decoded directly (no relays in path)
+      //   1..N    = traveled through N intermediate relays
+      //   0xFF    = sentinel ("path unknown / not yet established"),
+      //             commonly seen on contact DMs that arrived via a
+      //             still-converging route. Render nothing — "via 255
+      //             hops" is not a meaningful count.
+      // We map 0 and 1 both to "direct" (the live D30 smoke surfaced
+      // "via 0 hops" on legacy channel bubbles, which reads awkwardly).
+      if (hops != 0xFF) {
+        parts.add(
+          hops <= 1
+              ? context.l10n.meshcoreChatInboundMetaPathDirect
+              : context.l10n.meshcoreChatInboundMetaPathHops(hops),
+        );
+      }
     }
 
     return Padding(

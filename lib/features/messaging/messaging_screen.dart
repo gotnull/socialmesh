@@ -3076,6 +3076,10 @@ class _MessageBubble extends ConsumerWidget {
                           ],
                           LinkifiedText(
                             text: message.text,
+                            // Match inbound bubble size (15pt) so a
+                            // back-and-forth thread reads with one
+                            // consistent rhythm. Pre-existing 14/15
+                            // split surfaced during D30 live smoke.
                             style: chatBubbleBodyStyle(
                               ref,
                               baseFontSize: 14,
@@ -3361,9 +3365,13 @@ class _MessageBubble extends ConsumerWidget {
                         ],
                         LinkifiedText(
                           text: message.text,
+                          // Canonical chat-body size (14pt). Pre-D30
+                          // this was 15 on inbound and 14 on outbound;
+                          // unified on 14 across MeshCore + SIP DM +
+                          // messaging during the D30 polish pass.
                           style: chatBubbleBodyStyle(
                             ref,
-                            baseFontSize: 15,
+                            baseFontSize: 14,
                             color: context.textPrimary,
                           ),
                         ),

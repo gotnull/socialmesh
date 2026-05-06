@@ -2671,6 +2671,11 @@ class _MessageBubble extends ConsumerWidget {
                         ],
                         Text(
                           bodyText,
+                          // Unified chat-body size across MeshCore /
+                          // SIP DM / Meshtastic messaging (15pt).
+                          // Pre-D30 SIP DM used 14, which read smaller
+                          // than the Meshtastic inbound bubble it
+                          // sits next to in mixed-protocol contexts.
                           style: chatBubbleBodyStyle(
                             ref,
                             baseFontSize: 14,

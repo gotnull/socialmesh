@@ -554,6 +554,46 @@ void main() {
       },
     );
 
+    testWidgets('inbound bubble HIDES path metadata when pathLength is 0xFF '
+        '(firmware "path unknown" sentinel — D30 live-smoke fix)', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1080, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      // Live D30 smoke surfaced "via 255 hops" on every contact DM
+      // bubble after the radios were brought onto a common region.
+      // 0xFF (255) is the firmware sentinel for "path unknown / not
+      // yet established", not a literal hop count; the metadata row
+      // must hide the path part (SNR if present still renders).
+      await tester.pumpWidget(
+        _wrap(
+          MeshCoreChatScreen.contact(
+            contact: _testContact(),
+            initialMessages: [
+              MeshCoreMessage(
+                id: 'inbound-pathless',
+                text: 'fresh DM',
+                timestamp: DateTime(2026, 5, 4, 10, 30),
+                isOutgoing: false,
+                status: MeshCoreMessageDeliveryStatus.delivered,
+                senderKey: Uint8List.fromList(List.generate(32, (i) => i + 1)),
+                pathLength: 0xFF,
+                snrQuarter: -8,
+              ),
+            ],
+          ),
+        ),
+      );
+      await _settle(tester);
+
+      expect(find.textContaining('via 255 hops'), findsNothing);
+      expect(find.textContaining('255'), findsNothing);
+      // SNR still renders even when path is unknown.
+      expect(find.textContaining('SNR -2.0 dB'), findsOneWidget);
+    });
+
     testWidgets(
       'outbound bubble does NOT show inline link metadata (D30 Part C)',
       (tester) async {
