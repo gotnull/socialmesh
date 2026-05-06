@@ -1,0 +1,33 @@
+# MeshCore upstream protocol drift pin.
+#
+# SocialMesh's MeshCore parser layer (lib/services/meshcore/protocol/) decodes
+# a hand-rolled binary frame protocol that has no IDL. To detect upstream
+# wire-format changes before they silently break our parsers, the
+# .github/workflows/check-meshcore-protocol.yml workflow runs weekly and
+# compares this pinned commit against upstream HEAD on the strict allowlist
+# of paths below. Any change opens an actionable issue. Any path that
+# disappears upstream fails the workflow loudly (the "watcher went blind"
+# case).
+#
+# Lives at repo root (not under tools/) so GitHub Actions can read it.
+# tools/ is gitignored from the public repo. .yml extension keeps IDE
+# language servers from misidentifying this as a C/C++ build file.
+#
+# When repinning: bump sha + pinned_at, refresh firmware_version /
+# firmware_ver_code from examples/companion_radio/MyMesh.h at the new
+# commit, and re-run flutter test test/services/meshcore/protocol/.
+
+repo: https://github.com/meshcore-dev/MeshCore
+branch: main
+sha: 1a7b3614a8439894714a58af55ab7f501e6bb928
+pinned_at: 2026-05-06
+firmware_version: v1.15.0
+firmware_ver_code: 11
+
+# Files SocialMesh parses byte-for-byte. Keep the list as small as
+# defensibly possible. Each entry must justify its presence: which
+# wire-format constants or struct layouts we depend on.
+watched_paths:
+  - examples/companion_radio/MyMesh.cpp
+  - examples/companion_radio/MyMesh.h
+  - examples/companion_radio/NodePrefs.h

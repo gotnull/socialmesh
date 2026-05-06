@@ -3,7 +3,7 @@
 Real captured frames from MeshCore companion-radio firmware, pinned per
 firmware version. Used to detect parser regressions when upstream changes
 the wire format. This directory works in tandem with the upstream drift
-watcher (`tools/meshcore_protocol/VERSION` +
+watcher (`meshcore_protocol/pin.yml` +
 `.github/workflows/check-meshcore-protocol.yml`):
 
 - The watcher fires when upstream source files change.
@@ -84,7 +84,7 @@ When upstream firmware bumps in a way that changes a wire format:
    parse cleanly until we drop support for the older builds.
 4. Update the parser if needed. Run the full fixture suite:
    `flutter test test/services/meshcore/protocol/`.
-5. Bump `tools/meshcore_protocol/VERSION` to match.
+5. Bump `meshcore_protocol/pin.yml` to match.
 
 ## Hard Rules
 

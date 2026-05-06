@@ -15,7 +15,7 @@ jobs:
       issues: write
 
     env:
-      PIN_FILE: tools/meshcore_protocol/VERSION
+      PIN_FILE: meshcore_protocol/pin.yml
 
     steps:
       - name: Checkout repository
@@ -97,7 +97,7 @@ jobs:
           set -euo pipefail
 
           if [ "$PINNED_SHA" = "$HEAD_SHA" ]; then
-            echo "Pinned SHA matches upstream HEAD — no drift."
+            echo "Pinned SHA matches upstream HEAD: no drift."
             {
               echo "drift=false"
               echo "missing="
@@ -241,7 +241,7 @@ jobs:
             echo "- [ ] For each changed file, decide whether the diff touches a wire format SocialMesh parses (CMD_/RESP_CODE_/PUSH_CODE_ defines, SELF_INFO byte layout, CONTACT byte layout, NodePrefs struct order)."
             echo "- [ ] If wire formats are affected, update parsers under \`lib/services/meshcore/protocol/\` AND add or refresh fixtures under \`test/services/meshcore/protocol/fixtures/\`."
             echo "- [ ] If the change is benign (comments, unrelated code), only the pin file needs updating."
-            echo "- [ ] Update \`tools/meshcore_protocol/VERSION\`: bump \`sha:\`, \`pinned_at:\`, and refresh \`firmware_version:\` / \`firmware_ver_code:\` from \`examples/companion_radio/MyMesh.h\` at the new commit."
+            echo "- [ ] Update \`meshcore_protocol/pin.yml\`: bump \`sha:\`, \`pinned_at:\`, and refresh \`firmware_version:\` / \`firmware_ver_code:\` from \`examples/companion_radio/MyMesh.h\` at the new commit."
             echo "- [ ] Run \`flutter test test/services/meshcore/protocol/\` and confirm green before closing this issue."
             echo
             echo "---"
@@ -256,7 +256,7 @@ jobs:
       - name: Fail loudly on missing watched paths
         if: steps.diff.outputs.missing != ''
         run: |
-          echo "::error::One or more watched paths no longer exist upstream. The drift watcher cannot detect changes on them. Update tools/meshcore_protocol/VERSION."
+          echo "::error::One or more watched paths no longer exist upstream. The drift watcher cannot detect changes on them. Update meshcore_protocol/pin.yml."
           exit 1
 
       - name: Summary
