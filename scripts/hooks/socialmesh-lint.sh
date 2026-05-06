@@ -40,6 +40,7 @@
 #   scripts/hooks/socialmesh-lint.sh file1 file2        # Check specific files
 #   scripts/hooks/socialmesh-lint.sh --format           # Also run dart format check
 #   scripts/hooks/socialmesh-lint.sh --em-dash file ... # Also flag em-dash chars (opt-in: see below)
+#   scripts/hooks/socialmesh-lint.sh --unsafe-pop file ... # Flag unsafe Navigator.pop in callbacks (opt-in)
 #   scripts/hooks/socialmesh-lint.sh --diff-only --format  # Combined
 #
 # --em-dash is opt-in by design. The em-dash character (U+2014) is banned
@@ -47,6 +48,18 @@
 # check by default would block routine edits on unrelated files. Pass
 # --em-dash when you specifically want to scrub em-dashes from files you are
 # touching (e.g. before committing your own changes).
+#
+# --unsafe-pop is opt-in by design. Closures like
+#   onPressed: () => Navigator.of(context).pop()
+# inside a State subclass capture this.context. State.context throws
+# FlutterError("This widget has been unmounted") when accessed after the
+# State is disposed - which happens when a tap-up event fires during route
+# teardown. This crash signature has been seen in production Crashlytics
+# (widget_import_screen.dart, e20436b6a738dc2e52cba727f13652b2). The fix is
+# safeNavigatorPop from LifecycleSafeMixin (or a mounted check). The lint
+# cannot distinguish State.context from a Builder/parameter context without
+# AST analysis, so pass --unsafe-pop when reviewing files you are about to
+# ship to surface candidates manually.
 #
 # Exit codes:
 #   0  All checks passed
@@ -91,6 +104,11 @@ CHECK_EM_DASH=false  # Opt-in: em-dash check is OFF by default. Hundreds of
                      # default would block routine edits on unrelated files.
                      # Pass --em-dash when you specifically want to scrub
                      # em-dashes from files you are about to touch.
+CHECK_UNSAFE_POP=false  # Opt-in: surfaces Navigator.of(context).pop in
+                        # arrow callbacks. False positives are unavoidable
+                        # without AST analysis (Builder/parameter contexts
+                        # are safe, State.context is not). Use when auditing
+                        # a file before shipping to verify each site.
 EXPLICIT_FILES=()
 
 while [ $# -gt 0 ]; do
@@ -99,6 +117,7 @@ while [ $# -gt 0 ]; do
     --diff-only)    DIFF_ONLY=true; shift ;;
     --format)       RUN_FORMAT=true; shift ;;
     --em-dash)      CHECK_EM_DASH=true; shift ;;
+    --unsafe-pop)   CHECK_UNSAFE_POP=true; shift ;;
     -*)             echo "Unknown flag: $1" >&2; exit 2 ;;
     *)              MODE="explicit"; EXPLICIT_FILES+=("$1"); shift ;;
   esac
@@ -785,6 +804,29 @@ check_file() {
       $'\xe2\x80\x94' \
       "no-em-dash" \
       "Em-dash character is banned project-wide. Use hyphen, colon, or split sentence." \
+      "error"
+  fi
+
+  # ------------------------------------------------------------------
+  # ERROR: Navigator.of(context).pop in arrow callback (Dart files only)
+  # See feedback_navigator_pop_state_context. Closures like
+  #   onPressed: () => Navigator.of(context).pop()
+  # capture this.context inside a State subclass and crash with
+  # FlutterError("This widget has been unmounted") when the tap-up
+  # event fires after the State is disposed (route teardown race).
+  # Production Crashlytics signature: e20436b6a738dc2e52cba727f13652b2.
+  # Fix: use safeNavigatorPop (LifecycleSafeMixin) or guard with
+  # if (!mounted) return;. Builder/parameter contexts are safe and
+  # will be flagged as false positives - audit each hit manually.
+  #
+  # OPT-IN because the regex cannot distinguish State.context from
+  # parameter contexts without AST analysis.
+  # ------------------------------------------------------------------
+  if [ "$CHECK_UNSAFE_POP" = true ] && [[ "$file" == *.dart ]]; then
+    grep_check "$file" \
+      'on(Pressed|Tap|LongPress|DoubleTap|Dismissed|Submitted|Changed):[[:space:]]*\(\)[[:space:]]*=>[[:space:]]*Navigator\.of\([^)]*\)\.pop' \
+      "unsafe-navigator-pop" \
+      "Navigator.of(context).pop in arrow callback - if context is State.context, swap for safeNavigatorPop or add a mounted guard. Skip if context is a Builder/parameter." \
       "error"
   fi
 
