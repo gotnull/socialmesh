@@ -468,6 +468,16 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
                 label: item.label,
                 isSelected: isSelected,
                 onTap: () {
+                  // Guard against tap-up events that fire after the
+                  // shell element has been disposed (e.g. user tapped
+                  // a nav tab the same frame Disconnect tore the
+                  // shell down). Crashlytics issue 5f6578e8 traced
+                  // here: `setIndex` triggered a Riverpod
+                  // notification on the build watch at line 282,
+                  // hitting a defunct ConsumerStatefulElement and
+                  // failing the framework
+                  // `_lifecycleState != defunct` assertion.
+                  if (!mounted) return;
                   ref.haptics.tabChange();
                   ref.read(meshCoreShellIndexProvider.notifier).setIndex(index);
                 },
