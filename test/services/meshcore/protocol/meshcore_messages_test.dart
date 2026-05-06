@@ -124,6 +124,132 @@ void main() {
       expect(result.value!.spreadingFactor, equals(12));
       expect(result.value!.codingRate, equals(5));
     });
+
+    // D16: parser must read freq + bw from SELF_INFO. Pre-D16 these were
+    // silently dropped, which forced the radio sheet to invent its own
+    // SharedPreferences cache (D11). The firmware was always sending
+    // them.
+    test('D16: extracts freq (kHz) from SELF_INFO offsets 47..50', () {
+      // Build a payload with freq = 869618 kHz (EU868 sub-band; what
+      // Radio A is on per devices.yaml).
+      final payload = <int>[
+        0x01, // advType
+        22, // tx_power
+        22, // MAX_LORA_TX_POWER
+        ...List.filled(meshCorePubKeySize, 0xAA), // pub_key
+        0, 0, 0, 0, // lat
+        0, 0, 0, 0, // lon
+        0, 0, 0, 0, // multi_acks, advert_loc_policy, telemetry, manual_add
+        // freq = 869618 kHz, u32 LE: 0x000D44F2
+        0xF2, 0x44, 0x0D, 0x00,
+        // bw = 62500 Hz, u32 LE: 0x0000F424
+        0x24, 0xF4, 0x00, 0x00,
+        8, // sf
+        5, // cr
+      ];
+      final result = parseSelfInfo(Uint8List.fromList(payload));
+
+      expect(result.isSuccess, isTrue);
+      expect(result.value!.freqKhz, equals(869618));
+      expect(result.value!.bandwidthHz, equals(62500));
+      expect(result.value!.spreadingFactor, equals(8));
+      expect(result.value!.codingRate, equals(5));
+      expect(result.value!.txPowerDbm, equals(22));
+    });
+
+    test('D16: extracts AU915 / 250kHz canonical defaults', () {
+      // Build a payload with the MeshCore companion-radio defaults
+      // (LORA_FREQ 915.0 / LORA_BW 250 / LORA_SF 10 / LORA_CR 5 per
+      // MyMesh.h:39-50). This is what a fresh-flashed AU/US radio
+      // would broadcast.
+      final payload = <int>[
+        0x01, 9, 22, // advType, tx_power, MAX_LORA_TX_POWER
+        ...List.filled(meshCorePubKeySize, 0xAA),
+        0, 0, 0, 0, 0, 0, 0, 0, // lat, lon
+        0, 0, 0, 0, // misc
+        // freq = 915000 kHz, u32 LE: 0x000DF638
+        0x38, 0xF6, 0x0D, 0x00,
+        // bw = 250000 Hz, u32 LE: 0x0003D090
+        0x90, 0xD0, 0x03, 0x00,
+        10, // sf
+        5, // cr
+      ];
+      final result = parseSelfInfo(Uint8List.fromList(payload));
+
+      expect(result.isSuccess, isTrue);
+      expect(result.value!.freqKhz, equals(915000));
+      expect(result.value!.bandwidthHz, equals(250000));
+      expect(result.value!.spreadingFactor, equals(10));
+      expect(result.value!.codingRate, equals(5));
+    });
+
+    test('D16: short payload leaves freq+bw null without throwing', () {
+      // Payload truncated before offset 47. Parser must NOT throw and
+      // MUST leave freqKhz / bandwidthHz null. Pre-existing minimal-
+      // payload behaviour (advType + tx_power + max + pubKey only)
+      // exercised this implicitly; D16 makes it explicit.
+      final payload = Uint8List.fromList([
+        0x01, 20, 22,
+        ...List.filled(meshCorePubKeySize, 0xBB),
+        // No further fields.
+      ]);
+      final result = parseSelfInfo(payload);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.value!.freqKhz, isNull);
+      expect(result.value!.bandwidthHz, isNull);
+      expect(result.value!.spreadingFactor, isNull);
+      expect(result.value!.codingRate, isNull);
+    });
+
+    test('D16: payload long enough for freq but not bw leaves bw null', () {
+      // Edge case: 51-byte payload contains everything up to and
+      // including freq[47..50] but is one byte short of bw[51..54].
+      // Parser MUST surface freq while leaving bw null instead of
+      // misreading or throwing.
+      final payload = <int>[
+        0x01, 20, 22,
+        ...List.filled(meshCorePubKeySize, 0xCC),
+        0, 0, 0, 0, 0, 0, 0, 0, // lat, lon (8)
+        0, 0, 0, 0, // misc (4) -> position 47
+        0xF2, 0x44, 0x0D, 0x00, // freq 869618 (4) -> position 51
+        // (no bw bytes)
+      ];
+      expect(payload.length, equals(51));
+      final result = parseSelfInfo(Uint8List.fromList(payload));
+
+      expect(result.isSuccess, isTrue);
+      expect(result.value!.freqKhz, equals(869618));
+      expect(result.value!.bandwidthHz, isNull);
+    });
+
+    test(
+      'D16: SELF_INFO toString surfaces all radio params for diag bundles',
+      () {
+        // Diag bundles need a single-line dump of the full radio state.
+        // Pre-D16 toString only carried name/advType/txPower so a diag
+        // log never showed freq/bw/sf/cr. Verify the new shape.
+        final payload = <int>[
+          0x01, 22, 22,
+          ...List.filled(meshCorePubKeySize, 0xAA),
+          0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0,
+          0xF2, 0x44, 0x0D, 0x00, // freq 869618
+          0x24, 0xF4, 0x00, 0x00, // bw 62500
+          8, // sf
+          5, // cr
+        ];
+        final result = parseSelfInfo(Uint8List.fromList(payload));
+        expect(result.isSuccess, isTrue);
+        final s = result.value!.toString();
+
+        expect(s, contains('freqKhz=869618'));
+        expect(s, contains('bw=62500'));
+        expect(s, contains('sf=8'));
+        expect(s, contains('cr=5'));
+        expect(s, contains('txPower=22'));
+      },
+    );
   });
 
   group('parseBattAndStorage', () {

@@ -10444,6 +10444,86 @@
             }
         }
     },
+    "meshcoreContactUnknownName": "Unknown",
+    "@meshcoreContactUnknownName": {
+        "description": "Display fallback for a MeshCore contact whose name field is empty (auto-added via mesh advert with no friendly name set). Shown both in the contacts list tile and as the title of the contact chat header."
+    },
+    "meshcoreRadioSettingsTitle": "Radio Settings",
+    "@meshcoreRadioSettingsTitle": {
+        "description": "MeshCore radio settings sheet title"
+    },
+    "meshcoreRadioSettingsHint": "Must match every other radio in your mesh.",
+    "@meshcoreRadioSettingsHint": {
+        "description": "Subtitle hint under the radio settings title"
+    },
+    "meshcoreRadioSettingsFreqSectionHeader": "FREQUENCY & BANDWIDTH",
+    "@meshcoreRadioSettingsFreqSectionHeader": {
+        "description": "Section header for frequency and bandwidth fields"
+    },
+    "meshcoreRadioSettingsModulationHeader": "MODULATION",
+    "@meshcoreRadioSettingsModulationHeader": {
+        "description": "Section header for SF + CR fields"
+    },
+    "meshcoreRadioSettingsPowerHeader": "TRANSMIT POWER",
+    "@meshcoreRadioSettingsPowerHeader": {
+        "description": "Section header for TX power field"
+    },
+    "meshcoreRadioSettingsFrequencyLabel": "Frequency (MHz)",
+    "@meshcoreRadioSettingsFrequencyLabel": {
+        "description": "Label for the frequency input"
+    },
+    "meshcoreRadioSettingsFrequencyHint": "e.g. 869.618",
+    "@meshcoreRadioSettingsFrequencyHint": {
+        "description": "Placeholder for the frequency input"
+    },
+    "meshcoreRadioSettingsBandwidthLabel": "Bandwidth (kHz)",
+    "@meshcoreRadioSettingsBandwidthLabel": {
+        "description": "Label for the bandwidth chip selector"
+    },
+    "meshcoreRadioSettingsSpreadingFactorLabel": "Spreading Factor",
+    "@meshcoreRadioSettingsSpreadingFactorLabel": {
+        "description": "Label for the spreading factor chip selector"
+    },
+    "meshcoreRadioSettingsCodingRateLabel": "Coding Rate",
+    "@meshcoreRadioSettingsCodingRateLabel": {
+        "description": "Label for the coding rate chip selector"
+    },
+    "meshcoreRadioSettingsTxPowerLabel": "TX Power (dBm)",
+    "@meshcoreRadioSettingsTxPowerLabel": {
+        "description": "Label for the TX power input"
+    },
+    "meshcoreRadioSettingsTxPowerHint": "-9 to 30",
+    "@meshcoreRadioSettingsTxPowerHint": {
+        "description": "Placeholder hint for TX power input"
+    },
+    "meshcoreRadioSettingsApply": "Apply",
+    "@meshcoreRadioSettingsApply": {
+        "description": "Apply / save button label on the radio settings sheet"
+    },
+    "meshcoreRadioSettingsApplying": "Applying…",
+    "@meshcoreRadioSettingsApplying": {
+        "description": "Apply button label while the radio settings request is in flight"
+    },
+    "meshcoreRadioSettingsValidationFreqRequired": "Frequency is required",
+    "@meshcoreRadioSettingsValidationFreqRequired": {
+        "description": "Validation error shown when frequency input is empty"
+    },
+    "meshcoreRadioSettingsValidationFreqRange": "Frequency must be 150–2500 MHz",
+    "@meshcoreRadioSettingsValidationFreqRange": {
+        "description": "Validation error shown when frequency input is out of supported range"
+    },
+    "meshcoreRadioSettingsValidationTxRange": "TX power must be -9 to 30 dBm",
+    "@meshcoreRadioSettingsValidationTxRange": {
+        "description": "Validation error shown when TX power input is out of supported range"
+    },
+    "meshcoreRadioSettingsAppliedSuccess": "Radio settings applied",
+    "@meshcoreRadioSettingsAppliedSuccess": {
+        "description": "Success snackbar after radio settings successfully applied"
+    },
+    "meshcoreRadioSettingsAppliedFailed": "Failed to apply radio settings",
+    "@meshcoreRadioSettingsAppliedFailed": {
+        "description": "Error snackbar shown when the radio rejected new settings or the request timed out"
+    },
     "meshcoreContactsEmptyTagline1": "Contacts appear here when discovered via mesh advertisements",
     "@meshcoreContactsEmptyTagline1": {
         "description": "Animated empty-state tagline shown when the contacts list is empty"

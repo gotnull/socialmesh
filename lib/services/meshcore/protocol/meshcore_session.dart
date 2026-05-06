@@ -145,11 +145,11 @@ enum MeshCoreSessionState {
 class MeshCoreSession {
   /// Outgoing command codes whose payload bytes can carry user-secret
   /// material (message bodies, public keys, channel PSKs, contact names).
-  /// kDebugMode TX dumps redact the payload for these codes — only the
+  /// kDebugMode TX dumps redact the payload for these codes; only the
   /// `code=` and `len=` are emitted.
   ///
   /// The `meshcore` observability channel still emits structured events
-  /// for these flows (e.g. `event=message.send.attempted size=N`) — those
+  /// for these flows (e.g. `event=message.send.attempted size=N`); those
   /// are size-only by construction and are unaffected by this denylist.
   ///
   /// Visible for testing.
@@ -267,9 +267,24 @@ class MeshCoreSession {
   }
 
   void _onFrameDecoded(MeshCoreFrame frame) {
-    // Debug logging: detailed RX info, payload-redacted for sensitive codes.
+    final hexCode = frame.command.toRadixString(16).padLeft(2, '0');
+
+    // D17.B: unconditional protocol-layer receive event. Authoritative
+    // source for inbound frame visibility, decoupled from any UI listener
+    // being mounted. The chat widget previously emitted this event, which
+    // meant inbound frames were invisible whenever a chat screen was not
+    // open (e.g. during the bridge tests in D15). Code + size only;
+    // payload bytes are deliberately omitted to keep secrets out of the
+    // structured log channel.
+    AppLogging.meshcore(
+      'event=frame.received scope=protocol code=0x$hexCode '
+      'size=${frame.payload.length}',
+    );
+
+    // Debug-only verbose dump for raw hex (full payload), payload-redacted
+    // for sensitive codes (message bodies, contact identity material,
+    // channel PSKs). Goes to the `Protocol:` log channel, not `meshcore`.
     if (kDebugMode) {
-      final hexCode = frame.command.toRadixString(16).padLeft(2, '0');
       if (sensitiveRxPayloadCodes.contains(frame.command)) {
         AppLogging.protocol(
           'MeshCore RX decoded: code=0x$hexCode '
@@ -889,6 +904,121 @@ class MeshCoreSession {
     );
 
     return response != null;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Radio parameters
+  // ---------------------------------------------------------------------------
+
+  /// Set the LoRa radio parameters on the connected MeshCore device.
+  ///
+  /// Wire format (mirrors upstream `MyMesh.cpp:CMD_SET_RADIO_PARAMS`):
+  /// `[freq:u32 LE in kHz][bw:u32 LE in Hz][sf:u8][cr:u8]`. The optional
+  /// `repeat` byte (firmware version code 9+) is not surfaced here yet.
+  ///
+  /// Firmware-side validation accepts:
+  /// - `freq` 150_000…2_500_000 kHz (150 MHz to 2.5 GHz)
+  /// - `bw`   7_000…500_000 Hz (7 kHz to 500 kHz)
+  /// - `sf`   5…12
+  /// - `cr`   5…8
+  ///
+  /// Throws [ArgumentError] for out-of-range inputs so the caller never
+  /// hits a slow firmware error path. Returns `true` when the radio
+  /// acknowledges with `RESP_CODE_OK` (0x00); `false` on timeout or
+  /// firmware error response.
+  Future<bool> setRadioParams({
+    required int freqKhz,
+    required int bandwidthHz,
+    required int spreadingFactor,
+    required int codingRate,
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    if (freqKhz < 150000 || freqKhz > 2500000) {
+      throw ArgumentError.value(
+        freqKhz,
+        'freqKhz',
+        'must be between 150000 and 2500000 kHz (150 MHz to 2.5 GHz)',
+      );
+    }
+    if (bandwidthHz < 7000 || bandwidthHz > 500000) {
+      throw ArgumentError.value(
+        bandwidthHz,
+        'bandwidthHz',
+        'must be between 7000 and 500000 Hz',
+      );
+    }
+    if (spreadingFactor < 5 || spreadingFactor > 12) {
+      throw ArgumentError.value(
+        spreadingFactor,
+        'spreadingFactor',
+        'must be between 5 and 12',
+      );
+    }
+    if (codingRate < 5 || codingRate > 8) {
+      throw ArgumentError.value(codingRate, 'codingRate', 'must be 5..8');
+    }
+
+    final payload = ByteData(10);
+    payload.setUint32(0, freqKhz, Endian.little);
+    payload.setUint32(4, bandwidthHz, Endian.little);
+    payload.setUint8(8, spreadingFactor);
+    payload.setUint8(9, codingRate);
+
+    AppLogging.meshcore(
+      'event=radio.set_params freq=${freqKhz}kHz bw=${bandwidthHz}Hz '
+      'sf=$spreadingFactor cr=$codingRate',
+    );
+
+    final response = await sendAndWait(
+      MeshCoreCommands.setRadioParams,
+      payload: payload.buffer.asUint8List(),
+      expectedResponse: MeshCoreResponses.ok,
+      timeout: timeout,
+    );
+
+    final ok = response != null;
+    AppLogging.meshcore(
+      'event=radio.set_params.${ok ? "succeeded" : "failed"}',
+      error: !ok,
+    );
+    return ok;
+  }
+
+  /// Set the LoRa transmit power in dBm.
+  ///
+  /// Wire format: `[power:int8]`. Range -9 to MAX_LORA_TX_POWER (typically
+  /// 22 dBm depending on board). The firmware rejects out-of-range values
+  /// with `RESP_CODE_ERR`. Returns `true` on `RESP_CODE_OK`.
+  Future<bool> setRadioTxPower({
+    required int powerDbm,
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    if (powerDbm < -9 || powerDbm > 30) {
+      throw ArgumentError.value(
+        powerDbm,
+        'powerDbm',
+        'must be between -9 and 30 dBm',
+      );
+    }
+
+    final payload = Uint8List(1);
+    payload[0] = powerDbm & 0xFF; // int8 two's-complement
+
+    AppLogging.meshcore('event=radio.set_tx_power power=${powerDbm}dBm');
+
+    final response = await sendAndWait(
+      MeshCoreCommands.setRadioTxPower,
+      payload: payload,
+      expectedResponse: MeshCoreResponses.ok,
+      timeout: timeout,
+    );
+
+    final ok = response != null;
+    AppLogging.meshcore(
+      'event=radio.set_tx_power.${ok ? "succeeded" : "failed"}',
+      error: !ok,
+    );
+    return ok;
   }
 
   // ---------------------------------------------------------------------------

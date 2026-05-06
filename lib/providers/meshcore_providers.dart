@@ -131,7 +131,7 @@ final meshProtocolTypeProvider = Provider<MeshProtocolType>((ref) {
 ///
 /// CRITICAL: Watches [meshCoreConnectionStateProvider] for reactivity.
 /// `connectionCoordinatorProvider` is a plain `Provider` holding the
-/// singleton — `ref.watch` on it never fires again because the
+/// singleton: `ref.watch` on it never fires again because the
 /// coordinator instance compares `==` to itself across rebuilds.
 /// Without the connection-state watch, this provider freezes at its
 /// first-built value (typically `null` at app launch, before connect).
@@ -946,4 +946,58 @@ class MeshCoreCaptureNotifier extends Notifier<MeshCoreCaptureSnapshot> {
 final meshCoreCaptureSnapshotProvider =
     NotifierProvider<MeshCoreCaptureNotifier, MeshCoreCaptureSnapshot>(
       MeshCoreCaptureNotifier.new,
+    );
+
+// ---------------------------------------------------------------------------
+// MeshCore Display Preferences
+// ---------------------------------------------------------------------------
+
+/// SharedPreferences key for the battery voltage display preference.
+///
+/// Public so widget tests can stage initial values without reaching into
+/// the notifier. Do not use this from production code; go through the
+/// notifier instead.
+@visibleForTesting
+const String kMeshCoreShowBatteryVoltagePrefKey =
+    'meshcore_settings_show_battery_voltage';
+
+/// Global app preference: render the battery row as voltage (true) or as
+/// percentage (false). Persists across screen navigation, disconnect /
+/// reconnect, and cold restart so the user does not have to retoggle on
+/// every visit to the MeshCore settings screen.
+///
+/// This is intentionally a global preference, not per-radio: it expresses
+/// how the user wants battery rendered, not a property of a specific
+/// device.
+class MeshCoreShowBatteryVoltageNotifier extends Notifier<bool> {
+  @override
+  bool build() {
+    Future.microtask(_loadFromPrefs);
+    return false;
+  }
+
+  Future<void> _loadFromPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      state = prefs.getBool(kMeshCoreShowBatteryVoltagePrefKey) ?? false;
+    } catch (_) {
+      // Default already in state. Silent recovery is fine here; the
+      // preference is non-critical and any failure to read implies a
+      // failed write later will surface to the user via the toggle.
+    }
+  }
+
+  /// Persist the preference and update reactive state in lockstep so a
+  /// listener never sees a value that wasn't written.
+  Future<void> set(bool value) async {
+    if (state == value) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(kMeshCoreShowBatteryVoltagePrefKey, value);
+    state = value;
+  }
+}
+
+final meshCoreShowBatteryVoltageProvider =
+    NotifierProvider<MeshCoreShowBatteryVoltageNotifier, bool>(
+      MeshCoreShowBatteryVoltageNotifier.new,
     );

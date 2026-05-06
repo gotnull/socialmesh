@@ -39,7 +39,14 @@
 #   scripts/hooks/socialmesh-lint.sh --diff-only        # Check only changed lines in staged files
 #   scripts/hooks/socialmesh-lint.sh file1 file2        # Check specific files
 #   scripts/hooks/socialmesh-lint.sh --format           # Also run dart format check
+#   scripts/hooks/socialmesh-lint.sh --em-dash file ... # Also flag em-dash chars (opt-in: see below)
 #   scripts/hooks/socialmesh-lint.sh --diff-only --format  # Combined
+#
+# --em-dash is opt-in by design. The em-dash character (U+2014) is banned
+# project-wide, but hundreds of legacy files still contain them. Running the
+# check by default would block routine edits on unrelated files. Pass
+# --em-dash when you specifically want to scrub em-dashes from files you are
+# touching (e.g. before committing your own changes).
 #
 # Exit codes:
 #   0  All checks passed
@@ -79,6 +86,11 @@ fi
 MODE="staged"       # staged | all | explicit
 DIFF_ONLY=false
 RUN_FORMAT=false
+CHECK_EM_DASH=false  # Opt-in: em-dash check is OFF by default. Hundreds of
+                     # legacy files contain em-dashes; flipping this on by
+                     # default would block routine edits on unrelated files.
+                     # Pass --em-dash when you specifically want to scrub
+                     # em-dashes from files you are about to touch.
 EXPLICIT_FILES=()
 
 while [ $# -gt 0 ]; do
@@ -86,6 +98,7 @@ while [ $# -gt 0 ]; do
     --all)          MODE="all"; shift ;;
     --diff-only)    DIFF_ONLY=true; shift ;;
     --format)       RUN_FORMAT=true; shift ;;
+    --em-dash)      CHECK_EM_DASH=true; shift ;;
     -*)             echo "Unknown flag: $1" >&2; exit 2 ;;
     *)              MODE="explicit"; EXPLICIT_FILES+=("$1"); shift ;;
   esac
@@ -753,8 +766,27 @@ check_file() {
   grep_check "$file" \
     '\.up\.railway\.app' \
     "no-railway-domains" \
-    "Railway domain (*.up.railway.app) — use socialmesh.app custom domains" \
+    "Railway domain (*.up.railway.app) - use socialmesh.app custom domains" \
     "error"
+
+  # ------------------------------------------------------------------
+  # ERROR: Em-dash (U+2014) anywhere - banned project-wide
+  # See user memory feedback_no_em_dash. Use hyphen, colon, or split
+  # sentence instead. Applies to Dart, ARB, markdown, YAML, shell, TS.
+  # The skip-generated guard at the top of check_file already excludes
+  # vendored / auto-generated files we do not own.
+  #
+  # OPT-IN: this check only runs with --em-dash because hundreds of
+  # legacy files still contain em-dashes; flipping it on by default
+  # would block routine edits unrelated to em-dash cleanup.
+  # ------------------------------------------------------------------
+  if [ "$CHECK_EM_DASH" = true ]; then
+    grep_check "$file" \
+      $'\xe2\x80\x94' \
+      "no-em-dash" \
+      "Em-dash character is banned project-wide. Use hyphen, colon, or split sentence." \
+      "error"
+  fi
 
   # ------------------------------------------------------------------
   # ERROR: SPDX header in prohibited directories

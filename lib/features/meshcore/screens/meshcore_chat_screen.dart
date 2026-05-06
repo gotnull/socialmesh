@@ -32,11 +32,53 @@ import '../../../providers/meshcore_providers.dart';
 import '../../../providers/meshcore_message_providers.dart';
 import '../../../services/meshcore/protocol/meshcore_frame.dart';
 import '../../../services/meshcore/storage/meshcore_message_store.dart';
+import '../parsers/meshcore_message_frame_parser.dart';
 import '../../../services/meshcore/storage/meshcore_contact_store.dart';
 import '../../../utils/snackbar.dart';
 
 /// Types of MeshCore chat conversations.
 enum MeshCoreChatType { contact, channel }
+
+/// Firmware ack code the app waits for after sending a text message,
+/// keyed by chat type. Channels are flooded with no per-recipient
+/// confirmation and the firmware returns RESP_CODE_OK (0x00) with an
+/// empty payload. Contact messages return RESP_CODE_SENT (0x06) with
+/// a 9-byte payload (expected_ack_hash + est_time_to_send); the routed
+/// delivery ack arrives separately as PUSH_CODE_SEND_CONFIRMED (0x82).
+///
+/// Visible for testing so the wire-level mapping is regression-pinned
+/// independently of the widget tree.
+@visibleForTesting
+int meshCoreExpectedSendResponseCode(MeshCoreChatType chatType) {
+  switch (chatType) {
+    case MeshCoreChatType.contact:
+      return MeshCoreResponses.sent;
+    case MeshCoreChatType.channel:
+      return MeshCoreResponses.ok;
+  }
+}
+
+/// True when [status] represents a successful delivery state that must
+/// not be downgraded by a late timeout. Used to make `_markMessageFailed`
+/// idempotent so a 5s timeout firing AFTER a routed-ack already flipped
+/// the bubble to `delivered` (or after firmware-OK flipped it to `sent`)
+/// does not stomp the success state. Pre-D14 the failure path was
+/// unconditional and clobbered confirmed deliveries.
+@visibleForTesting
+bool meshCoreIsTerminalDeliveryStatus(MeshCoreMessageDeliveryStatus status) {
+  return status == MeshCoreMessageDeliveryStatus.sent ||
+      status == MeshCoreMessageDeliveryStatus.delivered;
+}
+
+/// True when [status] is an outgoing-message state that a routed-ack
+/// 0x82 is allowed to flip to `delivered`. Pre-D14 only `pending`
+/// matched, which silently dropped routed-acks for any contact message
+/// that had already transitioned `pending` -> `sent` on RESP_CODE_SENT.
+@visibleForTesting
+bool meshCoreIsUnconfirmedOutgoingStatus(MeshCoreMessageDeliveryStatus status) {
+  return status == MeshCoreMessageDeliveryStatus.pending ||
+      status == MeshCoreMessageDeliveryStatus.sent;
+}
 
 /// MeshCore Chat Screen - for messaging contacts or channels.
 class MeshCoreChatScreen extends ConsumerStatefulWidget {
@@ -91,7 +133,12 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
 
   String get _title {
     if (widget.chatType == MeshCoreChatType.contact) {
-      return widget.contact!.name;
+      // The contact may have been auto-added from an inbound mesh advert
+      // that did not carry a friendly name. Fall back to the localized
+      // "Unknown" string so the chat header always renders a title rather
+      // than a blank line above the "Direct Message" subtitle.
+      final name = widget.contact!.name;
+      return name.isNotEmpty ? name : context.l10n.meshcoreContactUnknownName;
     } else {
       return widget.channel!.displayName;
     }
@@ -160,13 +207,17 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
             ..addAll(messages);
           _isLoading = false;
         });
-        // Clear unread count when opening chat
+        // Clear unread count when opening chat. D19.D extends this
+        // to channels too: pre-D19 only the contact path called
+        // markAsRead, so a channel with unread messages stayed
+        // unread forever on the Channels list tile until contact
+        // mode also opened. Both paths now mark-read on chat open.
         if (widget.chatType == MeshCoreChatType.contact) {
           await _contactStore.clearUnreadCount(_conversationId);
-          ref
-              .read(meshCoreConversationsProvider.notifier)
-              .markAsRead(_conversationId);
         }
+        ref
+            .read(meshCoreConversationsProvider.notifier)
+            .markAsRead(_conversationId);
         // Scroll to bottom after loading
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
       }
@@ -187,7 +238,13 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   }
 
   void _handleIncomingFrame(MeshCoreFrame frame) {
-    // Handle incoming messages for this conversation
+    // D17.B note: the unconditional `event=frame.received` tap moved
+    // to `MeshCoreSession._onFrameDecoded`. The chat widget no longer
+    // emits a duplicate of that event because (a) it would only fire
+    // when a chat screen happened to be mounted, masking real bridge
+    // failures (see D15), and (b) it produced two log lines per frame.
+    // The widget is still the per-handler dispatcher for chat-scoped
+    // frames; parse.ok / parse.rejected logs continue to fire here.
     if (widget.chatType == MeshCoreChatType.contact) {
       if (frame.command == MeshCoreResponses.contactMsgRecv ||
           frame.command == MeshCoreResponses.contactMsgRecvV3) {
@@ -200,90 +257,177 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       }
     }
 
-    // Handle delivery confirmation
+    // Push-code visibility. We don't fully wire send-confirmed routing
+    // here yet (channel messages never produce one; contact ACK
+    // tracking is a separate slice), but at minimum log when the
+    // firmware tickles us so the diag bundle proves the radio is alive
+    // and the BLE/TCP transport is delivering pushes.
     if (frame.command == MeshCorePushCodes.sendConfirmed) {
+      AppLogging.meshcore('event=push.observed code=0x82 name=send_confirmed');
       _handleDeliveryConfirmation(frame);
+    } else if (frame.command == MeshCorePushCodes.msgWaiting) {
+      AppLogging.meshcore('event=push.observed code=0x83 name=msg_waiting');
     }
   }
 
   void _handleIncomingContactMessage(MeshCoreFrame frame) {
-    if (frame.payload.length < 37) return;
+    final result = MeshCoreMessageFrameParser.parseContactMessage(frame);
+    if (!result.ok) {
+      AppLogging.meshcore(
+        'event=message.parse.rejected scope=contact '
+        'code=0x${frame.command.toRadixString(16).padLeft(2, '0')} '
+        'len=${frame.payload.length} '
+        'reason=${result.rejectReason}',
+        error: true,
+      );
+      return;
+    }
+    final parsed = result.value!;
 
-    // Parse sender key and check if it's from our contact
-    final senderKey = Uint8List.fromList(frame.payload.sublist(0, 32));
-    final senderKeyHex = _bytesToHex(senderKey);
+    AppLogging.meshcore(
+      'event=message.parse.ok scope=contact '
+      'protocol=${parsed.protocol.name} '
+      'pathLen=${parsed.pathLen} '
+      'txtType=${parsed.txtType} '
+      'snrQ=${parsed.snrQuarter ?? "-"} '
+      'size=${parsed.text.length}',
+    );
 
-    // Only process messages from the contact we're chatting with
-    if (senderKeyHex != widget.contact!.publicKeyHex) return;
+    // Match by 6-byte sender prefix. Firmware never sends the full
+    // 32-byte pubkey for inbound contact messages, so an exact-equality
+    // check against the contact's full publicKeyHex is structurally
+    // wrong and was the pre-D12 bug.
+    final isMine = MeshCoreMessageFrameParser.senderPrefixMatches(
+      contactPublicKeyHex: widget.contact!.publicKeyHex,
+      senderPrefixHex: parsed.senderPrefixHex,
+    );
+    if (!isMine) return;
 
-    final timestampRaw = _readUint32LE(frame.payload, 32);
-    final text = _readCString(frame.payload, 37);
+    // We have the contact's full pubkey on the widget. Preserve it on
+    // the persisted message rather than the truncated 6-byte prefix
+    // firmware just gave us, so message metadata is consistent with
+    // the contacts list.
+    final senderKey = widget.contact!.publicKey;
+
+    // D19.B: deterministic id matches the conversations notifier so
+    // when the chat reopens later, `_loadMessages` reads from the
+    // store and finds the same id (no duplicate bubble vs the
+    // transient in-memory entry we add below).
+    final stableId = meshCoreInboundContactMessageId(
+      senderPrefixHex: parsed.senderPrefixHex,
+      timestamp: parsed.timestamp,
+      text: parsed.text,
+    );
 
     final message = MeshCoreMessage(
-      id: '${DateTime.now().millisecondsSinceEpoch}_$senderKeyHex',
-      text: text,
-      timestamp: DateTime.fromMillisecondsSinceEpoch(timestampRaw * 1000),
+      id: stableId,
+      text: parsed.text,
+      timestamp: parsed.timestamp,
       isOutgoing: false,
       status: MeshCoreMessageDeliveryStatus.delivered,
       senderKey: senderKey,
     );
 
     if (mounted) {
+      // D19.B: in-memory only. The conversations notifier owns
+      // inbound persistence; calling `_persistMessage` here too
+      // would risk a double-write race against the off-frame
+      // microtask in the notifier. Both paths use the same
+      // deterministic id, so the store dedupes regardless, but
+      // not writing twice keeps the diag log surface clean.
       setState(() => _messages.add(message));
-      _persistMessage(message);
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     }
     AppLogging.meshcore(
-      'event=message.received type=contact size=${text.length} '
+      'event=message.received type=contact size=${parsed.text.length} '
       'sender=${AppLogging.publicKeyFingerprint(senderKey)}',
     );
   }
 
   void _handleIncomingChannelMessage(MeshCoreFrame frame) {
-    if (frame.payload.length < 38) return;
+    final result = MeshCoreMessageFrameParser.parseChannelMessage(frame);
+    if (!result.ok) {
+      // Log + drop. Reason carried so the diag bundle pins which
+      // firmware shape we hit (V3 too short, legacy too short,
+      // unknown command code). No exception, no UI surface, this is
+      // the routine drop path for frames that aren't for us.
+      AppLogging.meshcore(
+        'event=message.parse.rejected scope=channel '
+        'code=0x${frame.command.toRadixString(16).padLeft(2, '0')} '
+        'len=${frame.payload.length} '
+        'reason=${result.rejectReason}',
+        error: true,
+      );
+      return;
+    }
+    final parsed = result.value!;
 
-    // Parse channel index and check if it matches
-    final channelIndex = frame.payload[0];
-    if (channelIndex != widget.channel!.index) return;
+    AppLogging.meshcore(
+      'event=message.parse.ok scope=channel '
+      'protocol=${parsed.protocol.name} '
+      'channel=${parsed.channelIndex} '
+      'pathLen=${parsed.pathLen} '
+      'txtType=${parsed.txtType} '
+      'snrQ=${parsed.snrQuarter ?? "-"} '
+      'size=${parsed.text.length}',
+    );
 
-    final senderKey = Uint8List.fromList(frame.payload.sublist(1, 33));
-    final timestampRaw = _readUint32LE(frame.payload, 33);
-    final text = _readCString(frame.payload, 38);
+    // Filter to the channel slot the user is currently viewing.
+    if (parsed.channelIndex != widget.channel!.index) return;
 
+    // Channel messages never carry sender identity in firmware, so
+    // there is no senderKey to populate. The message model field
+    // exists but downstream persistence treats empty as "unknown
+    // sender" and renders the channel-anonymous bubble.
+    //
+    // D19.B: deterministic id matches the conversations notifier so
+    // the in-memory bubble we add here merges cleanly with the
+    // store-persisted entry on next chat reopen. Persistence itself
+    // is owned by `MeshCoreConversationsNotifier`; we only update the
+    // local UI list here.
+    final stableId = meshCoreInboundChannelMessageId(
+      channelIndex: parsed.channelIndex,
+      timestamp: parsed.timestamp,
+      text: parsed.text,
+    );
     final message = MeshCoreMessage(
-      id: '${DateTime.now().millisecondsSinceEpoch}_ch$channelIndex',
-      text: text,
-      timestamp: DateTime.fromMillisecondsSinceEpoch(timestampRaw * 1000),
+      id: stableId,
+      text: parsed.text,
+      timestamp: parsed.timestamp,
       isOutgoing: false,
       status: MeshCoreMessageDeliveryStatus.delivered,
-      senderKey: senderKey,
+      senderKey: null,
     );
 
     if (mounted) {
       setState(() => _messages.add(message));
-      _persistMessage(message);
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     }
     AppLogging.meshcore(
-      'event=message.received type=channel slot=$channelIndex '
-      'size=${text.length}',
+      'event=message.received type=channel slot=${parsed.channelIndex} '
+      'size=${parsed.text.length}',
     );
   }
 
   void _handleDeliveryConfirmation(MeshCoreFrame frame) {
-    // Mark the most recent pending outgoing message as delivered
+    // Mark the most recent unacknowledged outgoing message as delivered.
+    //
+    // After D14, contact sends transition pending -> sent on
+    // RESP_CODE_SENT (0x06) before the routed-ack 0x82 arrives, so the
+    // confirm handler must accept BOTH `pending` and `sent`. Pre-D14
+    // this only matched `pending` and silently dropped routed-acks for
+    // any message that had already flipped to `sent`.
     if (mounted && _messages.isNotEmpty) {
-      final lastPending = _messages.lastIndexWhere(
-        (m) =>
-            m.isOutgoing && m.status == MeshCoreMessageDeliveryStatus.pending,
+      final lastUnconfirmed = _messages.lastIndexWhere(
+        (m) => m.isOutgoing && meshCoreIsUnconfirmedOutgoingStatus(m.status),
       );
-      if (lastPending >= 0) {
+      if (lastUnconfirmed >= 0) {
         setState(() {
-          _messages[lastPending] = _messages[lastPending].copyWith(
+          _messages[lastUnconfirmed] = _messages[lastUnconfirmed].copyWith(
             status: MeshCoreMessageDeliveryStatus.delivered,
           );
         });
-        _persistMessage(_messages[lastPending]);
+        _persistMessage(_messages[lastUnconfirmed]);
       }
     }
   }
@@ -344,26 +488,6 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       case MeshCoreMessageDeliveryStatus.failed:
         return MeshCoreMessageStatus.failed;
     }
-  }
-
-  // Helper functions
-  static String _bytesToHex(Uint8List bytes) {
-    return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
-  }
-
-  static int _readUint32LE(Uint8List data, int offset) {
-    return data[offset] |
-        (data[offset + 1] << 8) |
-        (data[offset + 2] << 16) |
-        (data[offset + 3] << 24);
-  }
-
-  static String _readCString(Uint8List data, int offset) {
-    final chars = <int>[];
-    for (int i = offset; i < data.length && data[i] != 0; i++) {
-      chars.add(data[i]);
-    }
-    return String.fromCharCodes(chars);
   }
 
   void _scrollToBottom() {
@@ -446,19 +570,55 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
         return;
       }
 
-      // Send to contact or channel
-      if (widget.chatType == MeshCoreChatType.contact) {
-        final frame = _buildSendTextMsgFrame(widget.contact!.publicKey, text);
-        await session.sendFrame(frame);
-      } else {
-        final frame = _buildSendChannelTextMsgFrame(
-          widget.channel!.index,
-          text,
+      // Build the send frame. Firmware's synchronous ack code differs
+      // between the two send commands (D14 finding: contact path was
+      // false-timing-out because the app waited for OK on both):
+      //   * CMD_SEND_CHANNEL_TXT_MSG (0x03) -> RESP_CODE_OK (0x00),
+      //     0-byte payload. Channels are flooded with no routed ack.
+      //   * CMD_SEND_TXT_MSG          (0x02) -> RESP_CODE_SENT (0x06),
+      //     9-byte payload (expected_ack_hash + est_time_to_send).
+      //     A later PUSH_CODE_SEND_CONFIRMED (0x82) carries the
+      //     routed-delivery ack from the peer.
+      // We sendAndWait on the right code per chat type so the bubble
+      // flips to `sent` immediately on firmware ack, and the later
+      // 0x82 push (if any) flips `sent` -> `delivered` via
+      // `_handleDeliveryConfirmation`.
+      final frame = widget.chatType == MeshCoreChatType.contact
+          ? _buildSendTextMsgFrame(widget.contact!.publicKey, text)
+          : _buildSendChannelTextMsgFrame(widget.channel!.index, text);
+
+      final response = await session.sendAndWait(
+        frame.command,
+        payload: frame.payload,
+        expectedResponse: meshCoreExpectedSendResponseCode(widget.chatType),
+        timeout: const Duration(seconds: 5),
+      );
+
+      if (response == null) {
+        // Either firmware returned RESP_CODE_ERR (which the codec
+        // routes to the status stream and never satisfies a waiter)
+        // or no response landed before the 5s timeout. Either way
+        // the send is not confirmed.
+        _markMessageFailed(message.id);
+        AppLogging.protocol(
+          'MeshCore Chat: Send timeout / error for $_title: $text',
         );
-        await session.sendFrame(frame);
+        AppLogging.meshcore(
+          'event=message.send.timeout type=$chatTypeTag size=${text.length}',
+          error: true,
+        );
+        if (mounted) {
+          showErrorSnackBar(context, context.l10n.meshcoreFailedToSendMessage);
+        }
+        return;
       }
 
-      // Mark as sent (delivery confirmation will update to delivered)
+      // Firmware acknowledged the command. For channel messages this
+      // is the only ack we ever get (channel messages are flooded with
+      // no per-recipient confirmation). For contact messages the
+      // firmware may later emit PUSH_CODE_SEND_CONFIRMED (0x82) with
+      // the routed-ack, which `_handleDeliveryConfirmation` flips to
+      // `delivered`.
       if (mounted) {
         setState(() {
           final index = _messages.indexWhere((m) => m.id == message.id);
@@ -498,6 +658,14 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       setState(() {
         final index = _messages.indexWhere((m) => m.id == messageId);
         if (index >= 0) {
+          // Idempotent: only flip messages that have not yet reached a
+          // success state. Otherwise a late timeout would stomp a bubble
+          // that already flipped to `sent` (firmware OK landed) or
+          // `delivered` (routed-ack 0x82 landed) just before the 5s
+          // timeout fired. Pre-D14 this clobbered confirmed deliveries.
+          if (meshCoreIsTerminalDeliveryStatus(_messages[index].status)) {
+            return;
+          }
           _messages[index] = _messages[index].copyWith(
             status: MeshCoreMessageDeliveryStatus.failed,
           );

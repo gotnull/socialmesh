@@ -222,9 +222,6 @@ class MeshCoreCommands {
 
   /// Send binary request.
   static const int sendBinaryReq = 0x32;
-
-  /// Get radio settings.
-  static const int getRadioSettings = 0x39;
 }
 
 /// MeshCore response codes (device -> app, 0x00-0x7F).
@@ -281,9 +278,6 @@ class MeshCoreResponses {
 
   /// Custom variables.
   static const int customVars = 0x15;
-
-  /// Radio settings.
-  static const int radioSettings = 0x19;
 }
 
 /// MeshCore push codes (async device -> app, 0x80+).
@@ -372,7 +366,7 @@ class MeshCoreTimeouts {
 /// MeshCore code classification utilities.
 ///
 /// Code ranges from reference implementation:
-/// - Commands (app -> device): 0x01 - 0x39
+/// - Commands (app -> device): 0x01 - 0x7F (full sub-push range)
 /// - Responses (device -> app, synchronous): 0x00 - 0x7F
 /// - Push codes (device -> app, asynchronous): 0x80 - 0xFF
 ///
@@ -401,8 +395,13 @@ class MeshCoreCodeClassification {
 
   /// Check if [code] is a valid command code (app -> device).
   ///
-  /// Command codes are in the range 0x01 - 0x39 based.
-  /// Note: 0x00 is not a valid command (it's the OK response).
+  /// Commands occupy the same numeric range as response codes
+  /// (0x01..0x7F) since both are sub-push. Pre-D16 the upper bound was
+  /// pinned at a phantom `getRadioSettings = 0x39` constant which both
+  /// (a) doesn't exist in firmware and (b) was below several real
+  /// firmware command codes (e.g. CMD_GET_DEFAULT_FLOOD_SCOPE = 0x40).
+  /// Using the push-code boundary directly is the correct upper bound.
+  /// 0x00 is not a valid command (it's the OK response code).
   static bool isCommandCode(int code) =>
-      code >= 0x01 && code <= MeshCoreCommands.getRadioSettings;
+      code >= 0x01 && code < pushCodeBoundary;
 }

@@ -20,8 +20,10 @@ import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../services/meshcore/protocol/meshcore_frame.dart';
 import '../../../services/meshcore/protocol/meshcore_messages.dart';
+import '../../../services/meshcore/storage/meshcore_node_name_store.dart';
 import '../../../utils/snackbar.dart';
 import '../../navigation/meshcore_shell.dart';
+import '../widgets/meshcore_radio_settings_sheet.dart';
 
 /// MeshCore Settings screen.
 ///
@@ -37,21 +39,63 @@ class MeshCoreSettingsScreen extends ConsumerStatefulWidget {
 class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
     with LifecycleSafeMixin<MeshCoreSettingsScreen> {
   String _appVersion = '';
-  bool _showBatteryVoltage = false;
   bool _isSendingAdvert = false;
   bool _isSyncingTime = false;
+
+  /// Locally cached node name, hydrated from [MeshCoreNodeNameStore].
+  /// Used as a fallback for the Node Name tile subtitle when SelfInfo
+  /// has not yet loaded (cold-start, post-disconnect window). Null
+  /// means no cached value is available.
+  String? _cachedNodeName;
+  final MeshCoreNodeNameStore _nodeNameStore = MeshCoreNodeNameStore();
 
   @override
   void initState() {
     super.initState();
     AppLogging.meshcore('event=screen.opened name=settings');
     _loadVersionInfo();
+    _hydrateCachedNodeName();
   }
 
   Future<void> _loadVersionInfo() async {
     final packageInfo = await PackageInfo.fromPlatform();
     if (!mounted) return;
     safeSetState(() => _appVersion = packageInfo.version);
+  }
+
+  /// Pull the last-applied node name from local storage so the tile
+  /// can render something useful before SELF_INFO comes back. Keyed
+  /// by the coordinator's deviceInfo.nodeId; null while the
+  /// connection has not yet identified a device.
+  Future<void> _hydrateCachedNodeName() async {
+    final nodeKey = _nodeKey();
+    if (nodeKey == null) {
+      AppLogging.meshcore('event=node_name.hydrate.skipped reason=no_node_key');
+      return;
+    }
+    try {
+      final cached = await _nodeNameStore.load(nodeKey);
+      if (!mounted) return;
+      if (cached == null) {
+        AppLogging.meshcore('event=node_name.hydrate.miss');
+        return;
+      }
+      AppLogging.meshcore('event=node_name.hydrate.hit size=${cached.length}');
+      safeSetState(() => _cachedNodeName = cached);
+    } catch (e) {
+      AppLogging.meshcore(
+        'event=node_name.hydrate.failed reason=${e.runtimeType}',
+        error: true,
+      );
+    }
+  }
+
+  /// Stable per-device storage key. Mirrors the radio settings sheet
+  /// pattern so save/load always agree on the lowercase node id.
+  String? _nodeKey() {
+    final nodeId = ref.read(connectionCoordinatorProvider).deviceInfo?.nodeId;
+    if (nodeId == null || nodeId.isEmpty) return null;
+    return nodeId.toLowerCase();
   }
 
   void _dismissKeyboard() {
@@ -93,17 +137,31 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                 SettingsTile(
                   icon: Icons.person_outline_rounded,
                   title: context.l10n.meshcoreNodeNameSetting,
-                  subtitle: selfInfo?.nodeName ?? context.l10n.meshcoreNotSet,
+                  // Prefer the live SelfInfo name; fall back to the
+                  // locally-cached value (D13) so the tile renders
+                  // a useful string during the pre-SelfInfo /
+                  // post-disconnect window instead of "Not set".
+                  subtitle:
+                      (selfInfo?.nodeName.isNotEmpty == true
+                          ? selfInfo!.nodeName
+                          : _cachedNodeName) ??
+                      context.l10n.meshcoreNotSet,
                   trailing: _chevron(context),
-                  onTap: () => _editNodeName(context, selfInfo?.nodeName),
+                  onTap: () => _editNodeName(
+                    context,
+                    selfInfo?.nodeName.isNotEmpty == true
+                        ? selfInfo!.nodeName
+                        : _cachedNodeName,
+                  ),
                 ),
-                _maybeDisabled(
-                  enabled: false,
-                  child: SettingsTile(
-                    icon: Icons.radio_rounded,
-                    title: context.l10n.meshcoreRadioSettings,
-                    subtitle: context.l10n.meshcoreRadioSettingsSubtitle,
-                    trailing: _chevron(context),
+                SettingsTile(
+                  icon: Icons.radio_rounded,
+                  title: context.l10n.meshcoreRadioSettings,
+                  subtitle: context.l10n.meshcoreRadioSettingsSubtitle,
+                  trailing: _chevron(context),
+                  onTap: () => showMeshCoreRadioSettingsSheet(
+                    context: context,
+                    currentSelfInfo: selfInfo,
                   ),
                 ),
                 _maybeDisabled(
@@ -268,6 +326,12 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
   }
 
   InfoTableRow _batteryRow(MeshCoreBatteryState? state) {
+    // Display preference is a global, persisted app preference (D13)
+    // so the toggle survives screen reopen, navigation, and cold
+    // restart. Watch via ref so the row redraws as soon as the
+    // preference changes, including the cold-start hydration tick.
+    final showVoltage = ref.watch(meshCoreShowBatteryVoltageProvider);
+
     String displayValue;
     IconData icon;
     Color? iconColor;
@@ -276,7 +340,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
       displayValue = context.l10n.meshcoreBatteryUnknown;
       icon = Icons.battery_unknown_rounded;
       iconColor = SemanticColors.disabled;
-    } else if (_showBatteryVoltage) {
+    } else if (showVoltage) {
       displayValue =
           '${(state.voltageMillivolts! / 1000.0).toStringAsFixed(2)}V';
       icon = Icons.battery_full_rounded;
@@ -302,9 +366,16 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
       // Tapping the battery row toggles between % and voltage display.
       onTap: state?.voltageMillivolts == null
           ? null
-          : () {
+          : () async {
               HapticFeedback.selectionClick();
-              safeSetState(() => _showBatteryVoltage = !_showBatteryVoltage);
+              final next = !showVoltage;
+              await ref
+                  .read(meshCoreShowBatteryVoltageProvider.notifier)
+                  .set(next);
+              AppLogging.meshcore(
+                'event=settings.battery_display.set value='
+                '${next ? "voltage" : "percentage"}',
+              );
             },
     );
   }
@@ -414,6 +485,8 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
       return;
     }
 
+    AppLogging.meshcore('event=node_name.apply.attempted size=${name.length}');
+
     try {
       final payload = Uint8List.fromList([...name.codeUnits, 0]);
       await session.sendFrame(
@@ -423,9 +496,40 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
         ),
       );
       if (!mounted) return;
+
+      // Mirror locally AFTER firmware accepted the frame so a failed
+      // send never overwrites the cached value. Best-effort: a store
+      // failure is non-fatal because the firmware already has the new
+      // name; we just lose the cold-start fallback for this change.
+      final nodeKey = _nodeKey();
+      if (nodeKey != null) {
+        try {
+          await _nodeNameStore.save(nodeKey, name);
+          if (mounted) {
+            safeSetState(() => _cachedNodeName = name);
+          }
+          AppLogging.meshcore('event=node_name.persist.saved');
+        } catch (e) {
+          AppLogging.meshcore(
+            'event=node_name.persist.failed reason=${e.runtimeType}',
+            error: true,
+          );
+        }
+      } else {
+        AppLogging.meshcore(
+          'event=node_name.persist.skipped reason=no_node_key',
+        );
+      }
+
+      AppLogging.meshcore('event=node_name.apply.succeeded');
       selfInfoNotifier.refresh();
+      if (!mounted) return;
       showSuccessSnackBar(context, context.l10n.meshcoreNodeNameUpdated);
-    } catch (_) {
+    } catch (e) {
+      AppLogging.meshcore(
+        'event=node_name.apply.failed reason=${e.runtimeType}',
+        error: true,
+      );
       if (mounted) {
         showErrorSnackBar(context, context.l10n.meshcoreFailedToSetName);
       }

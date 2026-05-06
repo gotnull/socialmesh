@@ -118,13 +118,50 @@ void main() {
 
       // Action tile labels are still visible (the disable wrapper uses
       // Opacity + IgnorePointer so the affordance is discoverable). The
-      // important thing is no exceptions were thrown reaching this point —
+      // important thing is no exceptions were thrown reaching this point:
       // a regression in the disabled wrapper would surface a render error.
       expect(find.text(_l10n.meshcoreSendAdvertisement), findsOneWidget);
       expect(find.text(_l10n.meshcoreSyncTime), findsOneWidget);
       expect(find.text(_l10n.meshcoreRebootDevice), findsOneWidget);
 
       // No exceptions surfaced during the build/settle cycle.
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'D9: Radio Settings tile is enabled and renders the canonical chevron',
+    (tester) async {
+      // Regression: the tile was previously gated by `_maybeDisabled`
+      // (Opacity 0.4 + IgnorePointer) and had no onTap. After D9 it
+      // becomes interactive and opens the radio settings sheet.
+      tester.view.physicalSize = const Size(1080, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(_wrap());
+      await _settle(tester);
+
+      // Find the Radio Settings tile by its localized title.
+      final tileFinder = find.ancestor(
+        of: find.text(_l10n.meshcoreRadioSettings),
+        matching: find.byType(SettingsTile),
+      );
+      expect(tileFinder, findsOneWidget);
+
+      // The tile must be wrapped in an InkWell (the canonical onTap
+      // affordance: present only when SettingsTile.onTap != null).
+      final inkWellInTile = find.descendant(
+        of: tileFinder,
+        matching: find.byType(InkWell),
+      );
+      expect(
+        inkWellInTile,
+        findsOneWidget,
+        reason: 'Radio Settings tile must be tappable post-D9',
+      );
+
+      // No exceptions on render.
       expect(tester.takeException(), isNull);
     },
   );

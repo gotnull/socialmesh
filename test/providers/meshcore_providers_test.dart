@@ -301,4 +301,117 @@ void main() {
       expect(updated.lastRefresh, equals(DateTime(2024, 1, 1)));
     });
   });
+
+  group('MeshCoreShowBatteryVoltageNotifier', () {
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+    });
+
+    test('default value is false when nothing has been saved', () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      // build() returns false synchronously, then schedules a microtask
+      // to read from prefs. Pump once so the microtask completes before
+      // we assert.
+      expect(container.read(meshCoreShowBatteryVoltageProvider), isFalse);
+      await Future<void>.delayed(Duration.zero);
+      expect(container.read(meshCoreShowBatteryVoltageProvider), isFalse);
+    });
+
+    test('cold-start hydrates from previously saved value', () async {
+      SharedPreferences.setMockInitialValues({
+        kMeshCoreShowBatteryVoltagePrefKey: true,
+      });
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      // Touch the provider so build() runs, then let the microtask fire.
+      container.read(meshCoreShowBatteryVoltageProvider);
+      // Drain microtask + setBool's async write callback.
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(
+        container.read(meshCoreShowBatteryVoltageProvider),
+        isTrue,
+        reason: 'cold-start must rehydrate the persisted preference',
+      );
+    });
+
+    test('set(true) persists and surfaces immediately', () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      final notifier = container.read(
+        meshCoreShowBatteryVoltageProvider.notifier,
+      );
+      await notifier.set(true);
+      expect(container.read(meshCoreShowBatteryVoltageProvider), isTrue);
+
+      // A fresh container reading from the same SharedPreferences must
+      // see the persisted value (cold-restart simulation).
+      final restarted = ProviderContainer();
+      addTearDown(restarted.dispose);
+      restarted.read(meshCoreShowBatteryVoltageProvider);
+      await Future<void>.delayed(Duration.zero);
+      expect(restarted.read(meshCoreShowBatteryVoltageProvider), isTrue);
+    });
+
+    test('set(false) clears the preference back to default', () async {
+      SharedPreferences.setMockInitialValues({
+        kMeshCoreShowBatteryVoltagePrefKey: true,
+      });
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      // Trigger build then drain the hydration microtask before asserting.
+      container.read(meshCoreShowBatteryVoltageProvider);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      expect(container.read(meshCoreShowBatteryVoltageProvider), isTrue);
+
+      await container
+          .read(meshCoreShowBatteryVoltageProvider.notifier)
+          .set(false);
+      expect(container.read(meshCoreShowBatteryVoltageProvider), isFalse);
+
+      final restarted = ProviderContainer();
+      addTearDown(restarted.dispose);
+      restarted.read(meshCoreShowBatteryVoltageProvider);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      expect(restarted.read(meshCoreShowBatteryVoltageProvider), isFalse);
+    });
+
+    test('set(same) is a no-op', () async {
+      // Performance + observability hygiene: setting the same value
+      // should not trigger a reactive rebuild or a redundant write.
+      SharedPreferences.setMockInitialValues({
+        kMeshCoreShowBatteryVoltagePrefKey: true,
+      });
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      // Force build() to run and the cold-start hydration microtask to
+      // complete BEFORE attaching the listener, otherwise the
+      // false-then-true transition from cold-start would itself count
+      // as a rebuild and the assertion below would race the microtask.
+      container.read(meshCoreShowBatteryVoltageProvider);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      expect(container.read(meshCoreShowBatteryVoltageProvider), isTrue);
+
+      var rebuildCount = 0;
+      container.listen<bool>(
+        meshCoreShowBatteryVoltageProvider,
+        (_, _) => rebuildCount++,
+      );
+
+      await container
+          .read(meshCoreShowBatteryVoltageProvider.notifier)
+          .set(true); // already true
+      expect(rebuildCount, equals(0));
+    });
+  });
 }

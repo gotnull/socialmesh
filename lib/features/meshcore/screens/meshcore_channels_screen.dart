@@ -19,6 +19,7 @@ import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/status_filter_chip.dart';
 import '../../../models/meshcore_channel.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/meshcore_message_providers.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../../navigation/meshcore_shell.dart';
@@ -899,7 +900,14 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
 }
 
 /// Card widget for displaying a single channel.
-class _ChannelCard extends StatelessWidget {
+///
+/// D19.C: now a `ConsumerWidget` so the tile reflects the live
+/// last-message preview + unread badge from
+/// `meshCoreConversationsProvider`. Pre-D19 the tile rendered only
+/// static channel metadata, so an inbound message that the
+/// conversations notifier had ingested (D17/D18 path) was invisible
+/// until the user entered the chat.
+class _ChannelCard extends ConsumerWidget {
   final MeshCoreChannel channel;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
@@ -911,8 +919,16 @@ class _ChannelCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isPublic = channel.isPublic;
+    final conversationsState = ref.watch(meshCoreConversationsProvider);
+    final conversationId = 'channel_${channel.index}';
+    final conversation = conversationsState.conversations
+        .where((c) => c.id == conversationId)
+        .cast<MeshCoreConversation?>()
+        .firstWhere((_) => true, orElse: () => null);
+    final lastMessageText = conversation?.lastMessageText;
+    final unreadCount = conversation?.unreadCount ?? 0;
 
     return BouncyTap(
       onTap: () {
@@ -963,6 +979,24 @@ class _ChannelCard extends StatelessWidget {
                         fontSize: 15,
                       ),
                     ),
+                    if (lastMessageText != null &&
+                        lastMessageText.isNotEmpty) ...[
+                      const SizedBox(height: AppTheme.spacing2),
+                      Text(
+                        lastMessageText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: unreadCount > 0
+                              ? context.textPrimary
+                              : context.textSecondary,
+                          fontSize: 13,
+                          fontWeight: unreadCount > 0
+                              ? FontWeight.w500
+                              : FontWeight.w400,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: AppTheme.spacing4),
                     Row(
                       children: [
@@ -1009,6 +1043,27 @@ class _ChannelCard extends StatelessWidget {
                   ],
                 ),
               ),
+              if (unreadCount > 0) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: context.accentColor,
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
+                  ),
+                  child: Text(
+                    unreadCount > 99 ? '99+' : '$unreadCount',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppTheme.spacing6),
+              ],
               Icon(Icons.chevron_right_rounded, color: context.textTertiary),
             ],
           ),

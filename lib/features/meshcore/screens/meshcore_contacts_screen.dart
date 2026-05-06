@@ -20,6 +20,7 @@ import '../../../core/widgets/status_filter_chip.dart';
 import '../../../models/meshcore_contact.dart';
 import '../contact_l10n.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/meshcore_message_providers.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../../navigation/meshcore_shell.dart';
@@ -213,7 +214,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
   }
 
   Widget _buildEmptyState(String deviceName) {
-    // [deviceName] is no longer surfaced inline — the connected device is
+    // [deviceName] is no longer surfaced inline: the connected device is
     // already visible via the device-status button in the app bar; keeping
     // a separate "Connected to X" badge inside the empty state would be
     // duplicate UI and clash with the canonical AnimatedEmptyState shape.
@@ -658,7 +659,14 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
 }
 
 /// Card widget for displaying a single contact.
-class _ContactCard extends StatelessWidget {
+/// D19.C: now a `ConsumerWidget` so the tile reflects the live
+/// last-message preview pulled from `meshCoreConversationsProvider`.
+/// The unread badge keeps using `contact.unreadCount` (already
+/// hydrated from SharedPreferences via the contacts notifier) but
+/// falls back to the conversations provider's count when the
+/// contacts notifier hasn't refreshed yet, so a freshly-arrived
+/// inbound message bumps the badge immediately.
+class _ContactCard extends ConsumerWidget {
   final MeshCoreContact contact;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
@@ -699,8 +707,20 @@ class _ContactCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final avatarColor = _getAvatarColor();
+    final conversationsState = ref.watch(meshCoreConversationsProvider);
+    final conversation = conversationsState.conversations
+        .where((c) => c.id == contact.publicKeyHex)
+        .cast<MeshCoreConversation?>()
+        .firstWhere((_) => true, orElse: () => null);
+    final lastMessageText = conversation?.lastMessageText;
+    // Prefer contact-store-hydrated count for stability; fall back to
+    // the conversations notifier's live count for fresh inbound that
+    // hasn't been re-read into the contacts state yet.
+    final unreadCount = contact.unreadCount > 0
+        ? contact.unreadCount
+        : (conversation?.unreadCount ?? 0);
 
     return BouncyTap(
       onTap: onTap,
@@ -745,13 +765,33 @@ class _ContactCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      contact.name.isNotEmpty ? contact.name : 'Unknown',
+                      contact.name.isNotEmpty
+                          ? contact.name
+                          : context.l10n.meshcoreContactUnknownName,
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
                       ),
                     ),
+                    if (lastMessageText != null &&
+                        lastMessageText.isNotEmpty) ...[
+                      const SizedBox(height: AppTheme.spacing2),
+                      Text(
+                        lastMessageText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: unreadCount > 0
+                              ? context.textPrimary
+                              : context.textSecondary,
+                          fontSize: 13,
+                          fontWeight: unreadCount > 0
+                              ? FontWeight.w500
+                              : FontWeight.w400,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: AppTheme.spacing4),
                     Row(
                       children: [
@@ -788,7 +828,7 @@ class _ContactCard extends StatelessWidget {
                 ),
               ),
               // Unread badge / chevron
-              if (contact.unreadCount > 0)
+              if (unreadCount > 0)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -799,7 +839,7 @@ class _ContactCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
                   child: Text(
-                    '${contact.unreadCount}',
+                    unreadCount > 99 ? '99+' : '$unreadCount',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,

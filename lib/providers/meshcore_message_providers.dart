@@ -10,12 +10,14 @@
 // - Provides conversation list and message history
 
 import 'dart:async';
-import 'dart:typed_data';
+import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/logging.dart';
 import '../core/meshcore_constants.dart';
+import '../features/meshcore/parsers/meshcore_message_frame_parser.dart';
 import '../models/meshcore_contact.dart';
 import '../services/meshcore/protocol/meshcore_frame.dart';
 import '../services/meshcore/protocol/meshcore_session.dart';
@@ -80,6 +82,76 @@ class MeshCoreConversation {
       unreadCount: unreadCount ?? this.unreadCount,
     );
   }
+}
+
+/// Resolve the full-pubKey conversation id for an inbound frame's
+/// 6-byte sender prefix (12 lowercase hex chars from
+/// [MeshCoreContactMessageFrame.senderPrefixHex]). Returns the matching
+/// conversation's id (full hex pubkey) when a known contact has been
+/// discovered, or `null` when no contact in [conversations] starts with
+/// the prefix. Channel conversations are ignored.
+///
+/// Visible for testing so the prefix-to-conversation routing rule is
+/// regression-pinned independently of the Riverpod state machinery.
+@visibleForTesting
+String? meshCoreConversationIdForSenderPrefix(
+  Iterable<MeshCoreConversation> conversations,
+  String senderPrefixHex,
+) {
+  if (senderPrefixHex.length != 12) return null;
+  final needle = senderPrefixHex.toLowerCase();
+  for (final c in conversations) {
+    if (c.isChannel) continue;
+    if (c.id.toLowerCase().startsWith(needle)) return c.id;
+  }
+  return null;
+}
+
+/// 32-bit FNV-1a hash of a UTF-8 string, returned as 8 lowercase hex
+/// chars. Fast, stable, no crypto dependency. Used by D19's
+/// deterministic message-id scheme so the same inbound frame always
+/// produces the same id and `MeshCoreMessageStore.add*Message`'s
+/// indexWhere-by-id dedupe behaviour acts as a duplicate guard for
+/// free.
+///
+/// Public so the chat widget can derive identical ids for in-memory
+/// bubbles and have them merge cleanly with the persisted entry on
+/// next chat reload. Not cryptographic; do not use for security
+/// boundaries.
+String meshCoreFnv1a32Hex(String input) {
+  const prime = 0x01000193;
+  const offset = 0x811c9dc5;
+  var hash = offset;
+  for (final byte in utf8.encode(input)) {
+    hash = (hash ^ byte) & 0xffffffff;
+    hash = (hash * prime) & 0xffffffff;
+  }
+  return hash.toRadixString(16).padLeft(8, '0');
+}
+
+/// Deterministic id for an inbound channel message. Same channel,
+/// same firmware-supplied timestamp, same text => same id => the
+/// store's add-then-update-by-id path collapses retries / re-flooded
+/// duplicates into a single entry.
+String meshCoreInboundChannelMessageId({
+  required int channelIndex,
+  required DateTime timestamp,
+  required String text,
+}) {
+  final tsKey = timestamp.millisecondsSinceEpoch ~/ 1000;
+  return 'mc_in_ch_${channelIndex}_${tsKey}_${meshCoreFnv1a32Hex(text)}';
+}
+
+/// Deterministic id for an inbound contact message. Same sender prefix,
+/// same firmware-supplied timestamp, same text => same id.
+String meshCoreInboundContactMessageId({
+  required String senderPrefixHex,
+  required DateTime timestamp,
+  required String text,
+}) {
+  final tsKey = timestamp.millisecondsSinceEpoch ~/ 1000;
+  return 'mc_in_ct_${senderPrefixHex.toLowerCase()}_${tsKey}_'
+      '${meshCoreFnv1a32Hex(text)}';
 }
 
 /// A message in a MeshCore conversation.
@@ -191,7 +263,12 @@ class MeshCoreConversationsNotifier
   }
 
   void _handleFrame(MeshCoreFrame frame) {
-    // Handle incoming messages
+    // D17.A: provider routes inbound frames to the canonical D12
+    // parser, removing the pre-D12 broken hand-parser that silently
+    // dropped V3 frames at `<37`/`<38` length guards and assumed a
+    // fictional 32-byte sender pubkey layout that firmware never
+    // sends. The chat screen and the conversations provider now
+    // agree on frame layout because they share the same parser.
     if (frame.command == MeshCoreResponses.contactMsgRecv ||
         frame.command == MeshCoreResponses.contactMsgRecvV3) {
       _handleIncomingContactMessage(frame);
@@ -200,75 +277,301 @@ class MeshCoreConversationsNotifier
       _handleIncomingChannelMessage(frame);
     } else if (frame.command == MeshCorePushCodes.sendConfirmed) {
       _handleSendConfirmed(frame);
+    } else if (frame.command == MeshCorePushCodes.msgWaiting) {
+      // D18: this was the load-bearing missing handler. Firmware
+      // does NOT push received message frames to the companion
+      // automatically. It writes them to an offline queue and emits
+      // a one-byte `PUSH_CODE_MSG_WAITING` (0x83) tickle. The app
+      // must respond with `CMD_SYNC_NEXT_MESSAGE` to drain the queue.
+      // Without this handler every inbound message stayed on the
+      // firmware screen but never surfaced to the app, regardless
+      // of D12/D17.A parser correctness or RF settings.
+      // See `MeshCore/examples/companion_radio/MyMesh.cpp:459, 562`.
+      _handleMsgWaiting(frame);
+    } else if (frame.command == MeshCorePushCodes.advert ||
+        frame.command == MeshCorePushCodes.newAdvert) {
+      // D17.C: peer name propagation. Firmware emits 0x80 / 0x8A
+      // when an existing or new contact's advert is heard. Without
+      // an app-side handler these were silently ignored, leaving
+      // contact list names stale until the user manually tapped
+      // "Refresh Contacts". Refetching is the simplest correct fix
+      // (works for both push variants); a more targeted update via
+      // `CMD_GET_CONTACT_BY_KEY` would also work but is deferred.
+      _handleAdvertPush(frame);
     }
   }
 
-  void _handleIncomingContactMessage(MeshCoreFrame frame) {
-    // Parse message from payload
-    // Format: [senderPubKey: 32 bytes][timestamp: 4 bytes][flags: 1 byte][text...]
-    if (frame.payload.length < 37) return;
+  void _handleMsgWaiting(MeshCoreFrame frame) {
+    // Send CMD_SYNC_NEXT_MESSAGE (0x0A) to firmware. The response
+    // will be either:
+    //   - a full RESP_CODE_*_MSG_RECV[_V3] frame, which our existing
+    //     `_handleFrame` chain parses + persists, OR
+    //   - RESP_CODE_NO_MORE_MESSAGES (0x0A, 1 byte) which we ignore.
+    // Either way the firmware queue advances by one entry per tickle.
+    // Multiple tickles arrive when multiple messages are queued; each
+    // independently triggers one drain. We do not loop here because
+    // each firmware queue entry generates its own tickle, so a single
+    // sync per tickle is the firmware-intended cadence.
+    AppLogging.meshcore(
+      'event=msg_waiting.observed code=0x83 size=${frame.payload.length}',
+    );
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null || !session.isActive) {
+      AppLogging.meshcore(
+        'event=msg_waiting.drain.skipped reason=no_active_session',
+        error: true,
+      );
+      return;
+    }
+    AppLogging.meshcore('event=msg_waiting.drain.requested');
+    Future.microtask(() async {
+      try {
+        await session.sendCommand(MeshCoreCommands.syncNextMessage);
+      } catch (e) {
+        AppLogging.meshcore(
+          'event=msg_waiting.drain.failed reason=${e.runtimeType}',
+          error: true,
+        );
+      }
+    });
+  }
 
-    final senderKey = Uint8List.fromList(frame.payload.sublist(0, 32));
-    final senderKeyHex = _bytesToHex(senderKey);
-    final timestampRaw = _readUint32LE(frame.payload, 32);
-    final text = _readCString(frame.payload, 37);
+  void _handleIncomingContactMessage(MeshCoreFrame frame) {
+    final result = MeshCoreMessageFrameParser.parseContactMessage(frame);
+    if (!result.ok) {
+      AppLogging.meshcore(
+        'event=message.parse.rejected scope=contact source=conversations '
+        'code=0x${frame.command.toRadixString(16).padLeft(2, '0')} '
+        'len=${frame.payload.length} reason=${result.rejectReason}',
+        error: true,
+      );
+      return;
+    }
+    final parsed = result.value!;
+
+    // Resolve the 6-byte firmware-supplied sender prefix to the
+    // matching conversation. Conversation IDs are full pubKeyHex (64
+    // chars), so a prefix-startsWith match against the live
+    // conversation list is the right shape. If no contact has been
+    // discovered yet we fall back to the prefix itself as the
+    // conversation id; a later contacts.fetch will correctly merge it.
+    final senderPrefix = parsed.senderPrefixHex;
+    // First try the conversations provider's own list (built from
+    // `_contactStore`). If that misses, fall back to the firmware-
+    // fetched contacts in `meshCoreContactsProvider`. The two stores
+    // are separate: contacts shown in the UI come from the firmware
+    // fetch, but `_contactStore` only contains contacts that were
+    // explicitly saved client-side. Without this fallback, every
+    // first-time inbound contact message is orphaned. (D19.A live
+    // bridge test caught this: sim Contacts tile rendered "Unknown"
+    // for the iPhone radio, but `state.conversations` was empty so
+    // persistence was being skipped.)
+    String? matchedId = meshCoreConversationIdForSenderPrefix(
+      state.conversations,
+      senderPrefix,
+    );
+    Uint8List? fullSenderKey;
+    String? senderName;
+    if (matchedId != null) {
+      final matched = state.conversations.firstWhere((c) => c.id == matchedId);
+      fullSenderKey = matched.contact?.publicKey;
+      senderName = matched.contact?.name;
+    } else {
+      final contactsState = ref.read(meshCoreContactsProvider);
+      for (final c in contactsState.contacts) {
+        if (c.publicKeyHex.toLowerCase().startsWith(senderPrefix)) {
+          matchedId = c.publicKeyHex;
+          fullSenderKey = c.publicKey;
+          senderName = c.name;
+          break;
+        }
+      }
+    }
+    final String conversationId = matchedId ?? senderPrefix;
+
+    final stableId = meshCoreInboundContactMessageId(
+      senderPrefixHex: senderPrefix,
+      timestamp: parsed.timestamp,
+      text: parsed.text,
+    );
 
     final message = MeshCoreMessage(
-      id: '${DateTime.now().millisecondsSinceEpoch}_$senderKeyHex',
-      text: text,
-      timestamp: DateTime.fromMillisecondsSinceEpoch(timestampRaw * 1000),
+      id: stableId,
+      text: parsed.text,
+      timestamp: parsed.timestamp,
       isOutgoing: false,
       status: MeshCoreMessageDeliveryStatus.delivered,
-      senderKey: senderKey,
+      senderKey: fullSenderKey,
+      senderName: senderName,
+      pathLength: parsed.pathLen,
     );
 
-    AppLogging.protocol(
-      'MeshCore: Received contact message from $senderKeyHex: $text',
+    AppLogging.meshcore(
+      'event=message.received scope=contact source=conversations '
+      'protocol=${parsed.protocol.name} '
+      'sender_prefix=$senderPrefix size=${parsed.text.length}',
     );
 
-    // Update conversation and increment unread
-    _addMessageToConversation(senderKeyHex, message, incrementUnread: true);
+    // D19.A: persist inbound contact messages so the chat surfaces
+    // them on next open. Skip when no matching contact has been
+    // discovered yet (orphan path); a later `contacts.fetch` triggered
+    // by the advert push will populate the contact, and the next
+    // inbound message persists correctly. Persistence runs off-frame
+    // so it does not block the broadcast stream listener.
+    if (matchedId != null) {
+      final persistKey = matchedId;
+      Future.microtask(() async {
+        try {
+          await _messageStore.init();
+          await _messageStore.addContactMessage(
+            persistKey,
+            MeshCoreStoredMessage(
+              id: stableId,
+              senderKey: fullSenderKey ?? Uint8List(32),
+              text: parsed.text,
+              timestamp: parsed.timestamp,
+              isOutgoing: false,
+              status: MeshCoreMessageStatus.delivered,
+              pathLength: parsed.pathLen,
+              isChannelMessage: false,
+            ),
+          );
+          AppLogging.meshcore(
+            'event=message.persisted scope=contact size=${parsed.text.length}',
+          );
+        } catch (e) {
+          AppLogging.meshcore(
+            'event=message.persist.failed scope=contact '
+            'reason=${e.runtimeType}',
+            error: true,
+          );
+        }
+      });
+    } else {
+      AppLogging.meshcore(
+        'event=message.persist.skipped scope=contact '
+        'reason=no_matching_contact sender_prefix=$senderPrefix',
+      );
+    }
+
+    _addMessageToConversation(conversationId, message, incrementUnread: true);
   }
 
   void _handleIncomingChannelMessage(MeshCoreFrame frame) {
-    // Parse channel message from payload
-    // Format: [channelIdx: 1 byte][senderPubKey: 32 bytes][timestamp: 4 bytes][flags: 1 byte][text...]
-    if (frame.payload.length < 38) return;
+    final result = MeshCoreMessageFrameParser.parseChannelMessage(frame);
+    if (!result.ok) {
+      AppLogging.meshcore(
+        'event=message.parse.rejected scope=channel source=conversations '
+        'code=0x${frame.command.toRadixString(16).padLeft(2, '0')} '
+        'len=${frame.payload.length} reason=${result.rejectReason}',
+        error: true,
+      );
+      return;
+    }
+    final parsed = result.value!;
 
-    final channelIndex = frame.payload[0];
-    final senderKey = Uint8List.fromList(frame.payload.sublist(1, 33));
-    final timestampRaw = _readUint32LE(frame.payload, 33);
-    final text = _readCString(frame.payload, 38);
+    final stableId = meshCoreInboundChannelMessageId(
+      channelIndex: parsed.channelIndex,
+      timestamp: parsed.timestamp,
+      text: parsed.text,
+    );
 
     final message = MeshCoreMessage(
-      id: '${DateTime.now().millisecondsSinceEpoch}_ch$channelIndex',
-      text: text,
-      timestamp: DateTime.fromMillisecondsSinceEpoch(timestampRaw * 1000),
+      id: stableId,
+      text: parsed.text,
+      timestamp: parsed.timestamp,
       isOutgoing: false,
       status: MeshCoreMessageDeliveryStatus.delivered,
-      senderKey: senderKey,
+      // Channel messages carry no sender identity in firmware.
+      senderKey: null,
+      pathLength: parsed.pathLen,
     );
 
-    AppLogging.protocol(
-      'MeshCore: Received channel $channelIndex message: $text',
+    AppLogging.meshcore(
+      'event=message.received scope=channel source=conversations '
+      'protocol=${parsed.protocol.name} '
+      'channel=${parsed.channelIndex} size=${parsed.text.length}',
     );
 
-    // Update conversation and increment unread
+    // D19.A: persist inbound channel messages so the chat surfaces
+    // them on next open. Channel slot is fixed wire information so
+    // there is no orphan-skip path here. Re-flooded duplicates with
+    // identical (channel, timestamp, text) collapse into one stored
+    // entry via the deterministic id + store's add-by-id update.
+    Future.microtask(() async {
+      try {
+        await _messageStore.init();
+        await _messageStore.addChannelMessage(
+          parsed.channelIndex,
+          MeshCoreStoredMessage(
+            id: stableId,
+            senderKey: Uint8List(0),
+            text: parsed.text,
+            timestamp: parsed.timestamp,
+            isOutgoing: false,
+            status: MeshCoreMessageStatus.delivered,
+            pathLength: parsed.pathLen,
+            isChannelMessage: true,
+            channelIndex: parsed.channelIndex,
+          ),
+        );
+        AppLogging.meshcore(
+          'event=message.persisted scope=channel '
+          'channel=${parsed.channelIndex} size=${parsed.text.length}',
+        );
+      } catch (e) {
+        AppLogging.meshcore(
+          'event=message.persist.failed scope=channel '
+          'reason=${e.runtimeType}',
+          error: true,
+        );
+      }
+    });
+
     _addMessageToConversation(
-      'channel_$channelIndex',
+      'channel_${parsed.channelIndex}',
       message,
       incrementUnread: true,
       isChannel: true,
-      channelIndex: channelIndex,
+      channelIndex: parsed.channelIndex,
     );
   }
 
   void _handleSendConfirmed(MeshCoreFrame frame) {
-    // Handle delivery confirmation
-    // Payload contains the message hash/ID that was confirmed
-    AppLogging.protocol('MeshCore: Message delivery confirmed');
-    // Mark matching pending messages as delivered
+    AppLogging.meshcore(
+      'event=push.observed scope=conversations code=0x82 '
+      'name=send_confirmed',
+    );
     _markPendingAsDelivered();
+  }
+
+  void _handleAdvertPush(MeshCoreFrame frame) {
+    // D17.C: a peer's contact entry on firmware was just updated
+    // (renamed, path changed, freshly heard). Refetch contacts so
+    // the conversations list picks up the new name. Lossless fallback
+    // to the manual "Refresh Contacts" action that was previously the
+    // only path.
+    final isNew = frame.command == MeshCorePushCodes.newAdvert;
+    AppLogging.meshcore(
+      'event=advert.observed code=0x'
+      '${frame.command.toRadixString(16).padLeft(2, '0')} '
+      'new=$isNew size=${frame.payload.length}',
+    );
+    // Trigger a contacts refresh on the global contacts notifier.
+    // Use Future.microtask so we don't block the frame stream listener.
+    Future.microtask(() {
+      try {
+        ref.read(meshCoreContactsProvider.notifier).refresh();
+      } catch (e) {
+        AppLogging.meshcore(
+          'event=advert.refresh.failed reason=${e.runtimeType}',
+          error: true,
+        );
+      }
+    });
+    // Reload our own conversation list off the same refresh so the
+    // updated contact name surfaces in the conversations provider too.
+    Future.microtask(_loadConversations);
   }
 
   Future<void> _loadConversations() async {
@@ -390,26 +693,6 @@ class MeshCoreConversationsNotifier
   /// Refresh conversation list.
   Future<void> refresh() async {
     await _loadConversations();
-  }
-
-  // Helpers
-  static String _bytesToHex(Uint8List bytes) {
-    return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
-  }
-
-  static int _readUint32LE(Uint8List data, int offset) {
-    return data[offset] |
-        (data[offset + 1] << 8) |
-        (data[offset + 2] << 16) |
-        (data[offset + 3] << 24);
-  }
-
-  static String _readCString(Uint8List data, int offset) {
-    final chars = <int>[];
-    for (int i = offset; i < data.length && data[i] != 0; i++) {
-      chars.add(data[i]);
-    }
-    return String.fromCharCodes(chars);
   }
 }
 

@@ -136,30 +136,35 @@ void main() {
     });
 
     group('isCommandCode', () {
-      test('returns true for valid commands (0x01-0x39)', () {
+      test('returns true for valid commands across the sub-push range', () {
+        // D16: pre-fix the upper bound was a phantom `getRadioSettings
+        // = 0x39` constant which doesn't exist in firmware. Real
+        // firmware commands extend at least up to
+        // CMD_GET_DEFAULT_FLOOD_SCOPE (0x40), so the boundary now sits
+        // at the push-code line.
         expect(MeshCoreCodeClassification.isCommandCode(0x01), isTrue);
         expect(MeshCoreCodeClassification.isCommandCode(0x14), isTrue);
         expect(MeshCoreCodeClassification.isCommandCode(0x16), isTrue);
         expect(
           MeshCoreCodeClassification.isCommandCode(
-            MeshCoreCommands.getRadioSettings,
+            MeshCoreCommands.sendBinaryReq,
           ),
           isTrue,
         );
+        // Real firmware command above the old phantom 0x39 boundary
+        // (CMD_GET_DEFAULT_FLOOD_SCOPE = 0x40 in MyMesh.cpp).
+        expect(MeshCoreCodeClassification.isCommandCode(0x40), isTrue);
+        // Last valid sub-push code.
+        expect(MeshCoreCodeClassification.isCommandCode(0x7F), isTrue);
       });
 
       test('returns false for 0x00 (OK response)', () {
         expect(MeshCoreCodeClassification.isCommandCode(0x00), isFalse);
       });
 
-      test('returns false for codes above command range', () {
-        expect(
-          MeshCoreCodeClassification.isCommandCode(
-            MeshCoreCommands.getRadioSettings + 1,
-          ),
-          isFalse,
-        );
+      test('returns false at and above the push-code boundary', () {
         expect(MeshCoreCodeClassification.isCommandCode(0x80), isFalse);
+        expect(MeshCoreCodeClassification.isCommandCode(0xFF), isFalse);
       });
     });
 

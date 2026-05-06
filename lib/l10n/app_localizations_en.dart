@@ -7701,6 +7701,71 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get meshcoreContactUnknownName => 'Unknown';
+
+  @override
+  String get meshcoreRadioSettingsTitle => 'Radio Settings';
+
+  @override
+  String get meshcoreRadioSettingsHint =>
+      'Must match every other radio in your mesh.';
+
+  @override
+  String get meshcoreRadioSettingsFreqSectionHeader => 'FREQUENCY & BANDWIDTH';
+
+  @override
+  String get meshcoreRadioSettingsModulationHeader => 'MODULATION';
+
+  @override
+  String get meshcoreRadioSettingsPowerHeader => 'TRANSMIT POWER';
+
+  @override
+  String get meshcoreRadioSettingsFrequencyLabel => 'Frequency (MHz)';
+
+  @override
+  String get meshcoreRadioSettingsFrequencyHint => 'e.g. 869.618';
+
+  @override
+  String get meshcoreRadioSettingsBandwidthLabel => 'Bandwidth (kHz)';
+
+  @override
+  String get meshcoreRadioSettingsSpreadingFactorLabel => 'Spreading Factor';
+
+  @override
+  String get meshcoreRadioSettingsCodingRateLabel => 'Coding Rate';
+
+  @override
+  String get meshcoreRadioSettingsTxPowerLabel => 'TX Power (dBm)';
+
+  @override
+  String get meshcoreRadioSettingsTxPowerHint => '-9 to 30';
+
+  @override
+  String get meshcoreRadioSettingsApply => 'Apply';
+
+  @override
+  String get meshcoreRadioSettingsApplying => 'Applying…';
+
+  @override
+  String get meshcoreRadioSettingsValidationFreqRequired =>
+      'Frequency is required';
+
+  @override
+  String get meshcoreRadioSettingsValidationFreqRange =>
+      'Frequency must be 150–2500 MHz';
+
+  @override
+  String get meshcoreRadioSettingsValidationTxRange =>
+      'TX power must be -9 to 30 dBm';
+
+  @override
+  String get meshcoreRadioSettingsAppliedSuccess => 'Radio settings applied';
+
+  @override
+  String get meshcoreRadioSettingsAppliedFailed =>
+      'Failed to apply radio settings';
+
+  @override
   String get meshcoreContactsEmptyTagline1 =>
       'Contacts appear here when discovered via mesh advertisements';
 
@@ -8176,9 +8241,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meshcoreRadioSettingsSubtitle => 'Frequency, TX power, bandwidth';
-
-  @override
-  String get meshcoreRadioSettingsTitle => 'Radio Settings';
 
   @override
   String get meshcoreRadioSettingsTool => 'Radio Settings';

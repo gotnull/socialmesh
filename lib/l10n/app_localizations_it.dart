@@ -7782,6 +7782,73 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get meshcoreContactUnknownName => 'Sconosciuto';
+
+  @override
+  String get meshcoreRadioSettingsTitle => 'Impostazioni Radio';
+
+  @override
+  String get meshcoreRadioSettingsHint =>
+      'Deve corrispondere a tutte le altre radio nella tua mesh.';
+
+  @override
+  String get meshcoreRadioSettingsFreqSectionHeader =>
+      'FREQUENZA E LARGHEZZA DI BANDA';
+
+  @override
+  String get meshcoreRadioSettingsModulationHeader => 'MODULAZIONE';
+
+  @override
+  String get meshcoreRadioSettingsPowerHeader => 'POTENZA DI TRASMISSIONE';
+
+  @override
+  String get meshcoreRadioSettingsFrequencyLabel => 'Frequenza (MHz)';
+
+  @override
+  String get meshcoreRadioSettingsFrequencyHint => 'es. 869.618';
+
+  @override
+  String get meshcoreRadioSettingsBandwidthLabel => 'Larghezza di banda (kHz)';
+
+  @override
+  String get meshcoreRadioSettingsSpreadingFactorLabel => 'Spreading factor';
+
+  @override
+  String get meshcoreRadioSettingsCodingRateLabel => 'Coding rate';
+
+  @override
+  String get meshcoreRadioSettingsTxPowerLabel => 'Potenza TX (dBm)';
+
+  @override
+  String get meshcoreRadioSettingsTxPowerHint => 'da -9 a 30';
+
+  @override
+  String get meshcoreRadioSettingsApply => 'Applica';
+
+  @override
+  String get meshcoreRadioSettingsApplying => 'Applicazione…';
+
+  @override
+  String get meshcoreRadioSettingsValidationFreqRequired =>
+      'La frequenza è obbligatoria';
+
+  @override
+  String get meshcoreRadioSettingsValidationFreqRange =>
+      'La frequenza deve essere tra 150 e 2500 MHz';
+
+  @override
+  String get meshcoreRadioSettingsValidationTxRange =>
+      'La potenza TX deve essere tra -9 e 30 dBm';
+
+  @override
+  String get meshcoreRadioSettingsAppliedSuccess =>
+      'Impostazioni radio applicate';
+
+  @override
+  String get meshcoreRadioSettingsAppliedFailed =>
+      'Impossibile applicare le impostazioni radio';
+
+  @override
   String get meshcoreContactsEmptyTagline1 =>
       'I contatti compaiono qui quando vengono scoperti tramite annunci mesh';
 
@@ -8262,9 +8329,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get meshcoreRadioSettingsSubtitle =>
       'Frequenza, potenza TX, larghezza di banda';
-
-  @override
-  String get meshcoreRadioSettingsTitle => 'Impostazioni Radio';
 
   @override
   String get meshcoreRadioSettingsTool => 'Impostazioni Radio';

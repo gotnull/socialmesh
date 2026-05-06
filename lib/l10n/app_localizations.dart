@@ -13687,6 +13687,126 @@ abstract class AppLocalizations {
   /// **'{contactName} removed'**
   String meshcoreContactRemoved(String contactName);
 
+  /// Display fallback for a MeshCore contact whose name field is empty (auto-added via mesh advert with no friendly name set). Shown both in the contacts list tile and as the title of the contact chat header.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get meshcoreContactUnknownName;
+
+  /// Sheet title for radio settings in tools
+  ///
+  /// In en, this message translates to:
+  /// **'Radio Settings'**
+  String get meshcoreRadioSettingsTitle;
+
+  /// Subtitle hint under the radio settings title
+  ///
+  /// In en, this message translates to:
+  /// **'Must match every other radio in your mesh.'**
+  String get meshcoreRadioSettingsHint;
+
+  /// Section header for frequency and bandwidth fields
+  ///
+  /// In en, this message translates to:
+  /// **'FREQUENCY & BANDWIDTH'**
+  String get meshcoreRadioSettingsFreqSectionHeader;
+
+  /// Section header for SF + CR fields
+  ///
+  /// In en, this message translates to:
+  /// **'MODULATION'**
+  String get meshcoreRadioSettingsModulationHeader;
+
+  /// Section header for TX power field
+  ///
+  /// In en, this message translates to:
+  /// **'TRANSMIT POWER'**
+  String get meshcoreRadioSettingsPowerHeader;
+
+  /// Label for the frequency input
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency (MHz)'**
+  String get meshcoreRadioSettingsFrequencyLabel;
+
+  /// Placeholder for the frequency input
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 869.618'**
+  String get meshcoreRadioSettingsFrequencyHint;
+
+  /// Label for the bandwidth chip selector
+  ///
+  /// In en, this message translates to:
+  /// **'Bandwidth (kHz)'**
+  String get meshcoreRadioSettingsBandwidthLabel;
+
+  /// Label for the spreading factor chip selector
+  ///
+  /// In en, this message translates to:
+  /// **'Spreading Factor'**
+  String get meshcoreRadioSettingsSpreadingFactorLabel;
+
+  /// Label for the coding rate chip selector
+  ///
+  /// In en, this message translates to:
+  /// **'Coding Rate'**
+  String get meshcoreRadioSettingsCodingRateLabel;
+
+  /// Label for the TX power input
+  ///
+  /// In en, this message translates to:
+  /// **'TX Power (dBm)'**
+  String get meshcoreRadioSettingsTxPowerLabel;
+
+  /// Placeholder hint for TX power input
+  ///
+  /// In en, this message translates to:
+  /// **'-9 to 30'**
+  String get meshcoreRadioSettingsTxPowerHint;
+
+  /// Apply / save button label on the radio settings sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get meshcoreRadioSettingsApply;
+
+  /// Apply button label while the radio settings request is in flight
+  ///
+  /// In en, this message translates to:
+  /// **'Applying…'**
+  String get meshcoreRadioSettingsApplying;
+
+  /// Validation error shown when frequency input is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency is required'**
+  String get meshcoreRadioSettingsValidationFreqRequired;
+
+  /// Validation error shown when frequency input is out of supported range
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency must be 150–2500 MHz'**
+  String get meshcoreRadioSettingsValidationFreqRange;
+
+  /// Validation error shown when TX power input is out of supported range
+  ///
+  /// In en, this message translates to:
+  /// **'TX power must be -9 to 30 dBm'**
+  String get meshcoreRadioSettingsValidationTxRange;
+
+  /// Success snackbar after radio settings successfully applied
+  ///
+  /// In en, this message translates to:
+  /// **'Radio settings applied'**
+  String get meshcoreRadioSettingsAppliedSuccess;
+
+  /// Error snackbar shown when the radio rejected new settings or the request timed out
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to apply radio settings'**
+  String get meshcoreRadioSettingsAppliedFailed;
+
   /// Animated empty-state tagline shown when the contacts list is empty
   ///
   /// In en, this message translates to:
@@ -14568,12 +14688,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Frequency, TX power, bandwidth'**
   String get meshcoreRadioSettingsSubtitle;
-
-  /// Sheet title for radio settings in tools
-  ///
-  /// In en, this message translates to:
-  /// **'Radio Settings'**
-  String get meshcoreRadioSettingsTitle;
 
   /// Tool card title for radio settings
   ///

@@ -35,6 +35,18 @@ class MeshCoreSelfInfo {
   /// Device longitude (raw int32, needs conversion).
   final int? longitude;
 
+  /// LoRa carrier frequency in kHz, as the firmware reports it. Sourced
+  /// from `_prefs.freq` (companion-radio firmware ships this in SELF_INFO
+  /// at offsets 47..50 once the payload is long enough). Null on legacy /
+  /// truncated payloads where the field is absent. D16: this field used
+  /// to be silently dropped by `parseSelfInfo`, which is why the radio
+  /// settings sheet had to invent its own client-side cache (D11). The
+  /// firmware was always sending it.
+  final int? freqKhz;
+
+  /// LoRa bandwidth in Hz, mirroring [freqKhz]. SELF_INFO offsets 51..54.
+  final int? bandwidthHz;
+
   /// Spreading factor.
   final int? spreadingFactor;
 
@@ -54,6 +66,8 @@ class MeshCoreSelfInfo {
     required this.pubKey,
     this.latitude,
     this.longitude,
+    this.freqKhz,
+    this.bandwidthHz,
     this.spreadingFactor,
     this.codingRate,
     required this.nodeName,
@@ -62,7 +76,9 @@ class MeshCoreSelfInfo {
 
   @override
   String toString() =>
-      'MeshCoreSelfInfo(name=$nodeName, advType=$advType, txPower=$txPowerDbm)';
+      'MeshCoreSelfInfo(name=$nodeName, advType=$advType, '
+      'freqKhz=$freqKhz, bw=$bandwidthHz, sf=$spreadingFactor, '
+      'cr=$codingRate, txPower=$txPowerDbm)';
 }
 
 /// Parsed BATT_AND_STORAGE response data.
@@ -166,6 +182,8 @@ ParseResult<MeshCoreSelfInfo> parseSelfInfo(Uint8List payload) {
   // Optional fields (may not be present in short payloads)
   int? lat;
   int? lon;
+  int? freqKhz;
+  int? bandwidthHz;
   int? sf;
   int? cr;
   String nodeName = '';
@@ -176,17 +194,51 @@ ParseResult<MeshCoreSelfInfo> parseSelfInfo(Uint8List payload) {
     lon = reader.readInt32LE();
   }
 
-  // Skip to offset 55 for sf/cr (relative to start of payload)
-  // Current position after lat/lon is 43, need to skip to 55 = skip 12
-  if (payload.length > 56) {
-    // Position reader at offset 55
-    final sfOffset = 55;
-    if (sfOffset < payload.length) {
-      sf = payload[sfOffset];
-    }
-    if (sfOffset + 1 < payload.length) {
-      cr = payload[sfOffset + 1];
-    }
+  // SELF_INFO layout from companion-radio firmware (`MyMesh.cpp:1024+`):
+  //   0       RESP_CODE_SELF_INFO consumed by caller
+  //   0       advType                 [u8]
+  //   1       tx_power_dbm            [i8]
+  //   2       MAX_LORA_TX_POWER       [u8]
+  //   3..34   pub_key                 [32]
+  //   35..38  latitude  (signed *1e6) [i32 LE]
+  //   39..42  longitude (signed *1e6) [i32 LE]
+  //   43      multi_acks (v7+)        [u8]
+  //   44      advert_loc_policy       [u8]
+  //   45      telemetry_mode (packed) [u8]
+  //   46      manual_add_contacts     [u8]
+  //   47..50  freq (kHz)              [u32 LE]   <-- D16 read-back
+  //   51..54  bw   (Hz)               [u32 LE]   <-- D16 read-back
+  //   55      sf                      [u8]
+  //   56      cr                      [u8]
+  //   57..N   node_name (UTF-8, no trailing null)
+  //
+  // Pre-D16 the parser only extracted sf+cr and silently dropped freq+bw,
+  // which forced the radio settings sheet to keep its own SharedPreferences
+  // cache (D11). Now both fields are read directly from the firmware.
+  const freqOffset = 47;
+  const bwOffset = 51;
+  const sfOffset = 55;
+  const crOffset = 56;
+
+  if (payload.length >= freqOffset + 4) {
+    freqKhz =
+        payload[freqOffset] |
+        (payload[freqOffset + 1] << 8) |
+        (payload[freqOffset + 2] << 16) |
+        (payload[freqOffset + 3] << 24);
+  }
+  if (payload.length >= bwOffset + 4) {
+    bandwidthHz =
+        payload[bwOffset] |
+        (payload[bwOffset + 1] << 8) |
+        (payload[bwOffset + 2] << 16) |
+        (payload[bwOffset + 3] << 24);
+  }
+  if (payload.length > sfOffset) {
+    sf = payload[sfOffset];
+  }
+  if (payload.length > crOffset) {
+    cr = payload[crOffset];
   }
 
   // Node name is at offset 57
@@ -207,6 +259,8 @@ ParseResult<MeshCoreSelfInfo> parseSelfInfo(Uint8List payload) {
       pubKey: pubKey,
       latitude: lat,
       longitude: lon,
+      freqKhz: freqKhz,
+      bandwidthHz: bandwidthHz,
       spreadingFactor: sf,
       codingRate: cr,
       nodeName: nodeName,

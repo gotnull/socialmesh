@@ -18995,6 +18995,26 @@
       }
     }
   },
+  "meshcoreContactUnknownName": "Sconosciuto",
+  "meshcoreRadioSettingsTitle": "Impostazioni radio",
+  "meshcoreRadioSettingsHint": "Deve corrispondere a tutte le altre radio nella tua mesh.",
+  "meshcoreRadioSettingsFreqSectionHeader": "FREQUENZA E LARGHEZZA DI BANDA",
+  "meshcoreRadioSettingsModulationHeader": "MODULAZIONE",
+  "meshcoreRadioSettingsPowerHeader": "POTENZA DI TRASMISSIONE",
+  "meshcoreRadioSettingsFrequencyLabel": "Frequenza (MHz)",
+  "meshcoreRadioSettingsFrequencyHint": "es. 869.618",
+  "meshcoreRadioSettingsBandwidthLabel": "Larghezza di banda (kHz)",
+  "meshcoreRadioSettingsSpreadingFactorLabel": "Spreading factor",
+  "meshcoreRadioSettingsCodingRateLabel": "Coding rate",
+  "meshcoreRadioSettingsTxPowerLabel": "Potenza TX (dBm)",
+  "meshcoreRadioSettingsTxPowerHint": "da -9 a 30",
+  "meshcoreRadioSettingsApply": "Applica",
+  "meshcoreRadioSettingsApplying": "Applicazione…",
+  "meshcoreRadioSettingsValidationFreqRequired": "La frequenza è obbligatoria",
+  "meshcoreRadioSettingsValidationFreqRange": "La frequenza deve essere tra 150 e 2500 MHz",
+  "meshcoreRadioSettingsValidationTxRange": "La potenza TX deve essere tra -9 e 30 dBm",
+  "meshcoreRadioSettingsAppliedSuccess": "Impostazioni radio applicate",
+  "meshcoreRadioSettingsAppliedFailed": "Impossibile applicare le impostazioni radio",
   "meshcoreContactsEmptyTagline1": "I contatti compaiono qui quando vengono scoperti tramite annunci mesh",
   "@meshcoreContactsEmptyTagline1": {
     "description": "Animated empty-state tagline shown when the contacts list is empty"
