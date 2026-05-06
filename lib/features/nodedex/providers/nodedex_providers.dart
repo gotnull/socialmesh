@@ -2144,15 +2144,22 @@ final nodeDexSortedEntriesProvider = Provider<List<(NodeDexEntry, MeshNode?)>>((
     }).toList();
   }
 
-  // Apply search.
+  // Apply search. NodeDex is a journal of encounters — entries persist after
+  // the live node drops out of nodesProvider, so we must search the entry's
+  // own stored names too. Searching only against the live MeshNode would
+  // make any historical / out-of-range node unfindable.
   if (search.isNotEmpty) {
     paired = paired.where((pair) {
       final (entry, node) = pair;
-      final name = node?.displayName.toLowerCase() ?? '';
+      final liveName = node?.displayName.toLowerCase() ?? '';
+      final lastKnown = entry.lastKnownName?.toLowerCase() ?? '';
+      final nickname = entry.localNickname?.toLowerCase() ?? '';
       final hexId = entry.nodeNum.toRadixString(16).toLowerCase();
       final note = entry.userNote?.toLowerCase() ?? '';
       final tag = entry.socialTag?.name.toLowerCase() ?? '';
-      return name.contains(search) ||
+      return liveName.contains(search) ||
+          lastKnown.contains(search) ||
+          nickname.contains(search) ||
           hexId.contains(search) ||
           note.contains(search) ||
           tag.contains(search);

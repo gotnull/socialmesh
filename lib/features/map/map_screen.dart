@@ -3200,6 +3200,21 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   void _centerOnMyNode(List<_NodeWithPosition> nodes, int? myNodeNum) {
     if (myNodeNum == null) return;
+
+    // In NodeDex mode the synthesized `nodes` list comes from the encounter
+    // log, and own-node encounters are not re-recorded as the device moves
+    // (see _handleNodesUpdate's isOwnNode branch). The pin would be frozen
+    // at first-discovery position. Center on the live current position via
+    // nodesProvider instead.
+    if (widget.nodedexMode) {
+      final live = ref.read(nodesProvider)[myNodeNum];
+      if (live != null && live.hasPosition) {
+        _animatedMove(LatLng(live.latitude!, live.longitude!), 14.0);
+        HapticFeedback.lightImpact();
+        return;
+      }
+    }
+
     final myNode = nodes.where((n) => n.node.nodeNum == myNodeNum).firstOrNull;
     if (myNode != null) {
       _animatedMove(LatLng(myNode.latitude, myNode.longitude), 14.0);
