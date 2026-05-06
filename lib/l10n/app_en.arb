@@ -10960,9 +10960,17 @@
     "@meshcoreLocationApplyAction": {
         "description": "D26 — Apply button on the lat/lon editor sheet"
     },
-    "meshcoreLocationClearAction": "Clear location",
+    "meshcoreLocationClearAction": "Clear",
     "@meshcoreLocationClearAction": {
-        "description": "D26 — Clear-location button on the lat/lon editor sheet"
+        "description": "D26 - Clear-location button on the lat/lon editor sheet. Single word so it never wraps to two lines next to Apply."
+    },
+    "meshcoreLocationUseGps": "Use my location",
+    "@meshcoreLocationUseGps": {
+        "description": "D26 - Tertiary button above Apply/Clear that prefills lat/lon from the phone's GPS via LocationService."
+    },
+    "meshcoreLocationGpsUnavailable": "Location unavailable. Check permissions and try again.",
+    "@meshcoreLocationGpsUnavailable": {
+        "description": "D26 - Error snackbar shown when LocationService.getCurrentPosition() returns null (permission denied or no fix yet)."
     },
     "meshcoreLocationUpdated": "Location updated",
     "@meshcoreLocationUpdated": {

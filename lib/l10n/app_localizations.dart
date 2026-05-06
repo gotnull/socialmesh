@@ -14431,11 +14431,23 @@ abstract class AppLocalizations {
   /// **'Apply'**
   String get meshcoreLocationApplyAction;
 
-  /// D26 — Clear-location button on the lat/lon editor sheet
+  /// D26 - Clear-location button on the lat/lon editor sheet. Single word so it never wraps to two lines next to Apply.
   ///
   /// In en, this message translates to:
-  /// **'Clear location'**
+  /// **'Clear'**
   String get meshcoreLocationClearAction;
+
+  /// D26 - Tertiary button above Apply/Clear that prefills lat/lon from the phone's GPS via LocationService.
+  ///
+  /// In en, this message translates to:
+  /// **'Use my location'**
+  String get meshcoreLocationUseGps;
+
+  /// D26 - Error snackbar shown when LocationService.getCurrentPosition() returns null (permission denied or no fix yet).
+  ///
+  /// In en, this message translates to:
+  /// **'Location unavailable. Check permissions and try again.'**
+  String get meshcoreLocationGpsUnavailable;
 
   /// D26 — Success snackbar after applying a non-zero location
   ///

@@ -8179,7 +8179,14 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreLocationApplyAction => 'Apply';
 
   @override
-  String get meshcoreLocationClearAction => 'Clear location';
+  String get meshcoreLocationClearAction => 'Limpar';
+
+  @override
+  String get meshcoreLocationUseGps => 'Usar minha localização';
+
+  @override
+  String get meshcoreLocationGpsUnavailable =>
+      'Localização indisponível. Verifique as permissões e tente novamente.';
 
   @override
   String get meshcoreLocationUpdated => 'Location updated';

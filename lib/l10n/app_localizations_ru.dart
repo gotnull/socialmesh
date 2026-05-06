@@ -8103,7 +8103,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreLocationApplyAction => 'Apply';
 
   @override
-  String get meshcoreLocationClearAction => 'Clear location';
+  String get meshcoreLocationClearAction => 'Clear';
+
+  @override
+  String get meshcoreLocationUseGps => 'Use my location';
+
+  @override
+  String get meshcoreLocationGpsUnavailable =>
+      'Location unavailable. Check permissions and try again.';
 
   @override
   String get meshcoreLocationUpdated => 'Location updated';

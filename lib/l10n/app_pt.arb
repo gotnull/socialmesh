@@ -19375,6 +19375,18 @@
   "@meshcoreLocationSetting": {
     "description": "Settings tile title for location"
   },
+  "meshcoreLocationClearAction": "Limpar",
+  "@meshcoreLocationClearAction": {
+    "description": "D26 - Clear-location button on the lat/lon editor sheet. Single word so it never wraps to two lines next to Apply."
+  },
+  "meshcoreLocationUseGps": "Usar minha localização",
+  "@meshcoreLocationUseGps": {
+    "description": "D26 - Tertiary button above Apply/Clear that prefills lat/lon from the phone's GPS via LocationService."
+  },
+  "meshcoreLocationGpsUnavailable": "Localização indisponível. Verifique as permissões e tente novamente.",
+  "@meshcoreLocationGpsUnavailable": {
+    "description": "D26 - Error snackbar shown when LocationService.getCurrentPosition() returns null (permission denied or no fix yet)."
+  },
   "meshcoreLongPressForActions": "Pressione e segure para ações",
   "@meshcoreLongPressForActions": {
     "description": "Hint text on measurement card"

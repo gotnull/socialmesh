@@ -850,9 +850,10 @@ class _EditLocationResult {
 }
 
 /// D26: lat/lon editor sheet. Two `TextFormField`s with range
-/// validation (`lat ∈ [-90, 90]`, `lon ∈ [-180, 180]`) plus a
-/// "Clear location" action that dispatches `(0, 0)` (the firmware's
-/// stored-location-cleared convention). Coordinates never appear in
+/// validation (`lat ∈ [-90, 90]`, `lon ∈ [-180, 180]`) plus three
+/// actions: "Use my location" prefills from the phone GPS,
+/// "Clear" dispatches `(0, 0)` (firmware's clear convention), and
+/// "Apply" sends the entered values. Coordinates never appear in
 /// logs — the caller logs only `cleared=` and `location_set=true`.
 ///
 /// Body shape mirrors the canonical content-heavy bottom sheet
@@ -860,25 +861,49 @@ class _EditLocationResult {
 /// -> Expanded(ListView with widget.scrollController). Required by
 /// the project's bottom-sheet variant rule for any non-prompt
 /// surface to avoid the gray-area cosmetic bug.
-class _EditLocationSheet extends StatefulWidget {
+class _EditLocationSheet extends ConsumerStatefulWidget {
   final ScrollController scrollController;
 
   const _EditLocationSheet({required this.scrollController});
 
   @override
-  State<_EditLocationSheet> createState() => _EditLocationSheetState();
+  ConsumerState<_EditLocationSheet> createState() => _EditLocationSheetState();
 }
 
-class _EditLocationSheetState extends State<_EditLocationSheet> {
+class _EditLocationSheetState extends ConsumerState<_EditLocationSheet> {
   final _formKey = GlobalKey<FormState>();
   final _latController = TextEditingController();
   final _lonController = TextEditingController();
+  bool _fetchingGps = false;
 
   @override
   void dispose() {
     _latController.dispose();
     _lonController.dispose();
     super.dispose();
+  }
+
+  /// Prefill the lat/lon fields from the phone's GPS via the shared
+  /// [LocationService]. Failure (denied permission, no fix yet) just
+  /// surfaces a snackbar — the user can still type values manually.
+  Future<void> _useMyLocation() async {
+    if (_fetchingGps) return;
+    final l10n = context.l10n;
+    setState(() => _fetchingGps = true);
+    try {
+      final svc = ref.read(locationServiceProvider);
+      final pos = await svc.getCurrentPosition();
+      if (!mounted) return;
+      if (pos == null) {
+        showErrorSnackBar(context, l10n.meshcoreLocationGpsUnavailable);
+        return;
+      }
+      // 6-decimal precision matches the firmware's 1e6 wire scale.
+      _latController.text = pos.latitude.toStringAsFixed(6);
+      _lonController.text = pos.longitude.toStringAsFixed(6);
+    } finally {
+      if (mounted) setState(() => _fetchingGps = false);
+    }
   }
 
   String? _validateLat(String? value, AppLocalizations l10n) {
@@ -1024,6 +1049,24 @@ class _EditLocationSheetState extends State<_EditLocationSheet> {
             ),
           ),
           const SizedBox(height: AppTheme.spacing16),
+          // Tertiary "use my location" — full-width, text-style so
+          // it never competes with the primary Apply button. Sits
+          // above the Apply/Clear row so the two halved buttons keep
+          // single-line labels and matching widths.
+          OutlinedButton.icon(
+            onPressed: _fetchingGps ? null : _useMyLocation,
+            icon: _fetchingGps
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.my_location_rounded),
+            label: Text(l10n.meshcoreLocationUseGps),
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          // Apply + Clear: equal-width Row. Labels intentionally
+          // short (one word each) so they NEVER wrap to two lines.
           Row(
             children: [
               Expanded(
