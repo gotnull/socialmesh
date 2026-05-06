@@ -720,21 +720,35 @@ class MeshCoreBatteryState {
 
 enum MeshCoreBatteryStatus { idle, inProgress, success, failure }
 
-/// Notifier for MeshCore battery refresh (debug-only).
+/// Notifier for MeshCore battery refresh.
 ///
-/// Provides manual refresh of battery info for MeshCore devices.
+/// Provides reactive hydration of battery info on identify completion
+/// plus manual refresh for the user-tap path.
 class MeshCoreBatteryNotifier extends Notifier<MeshCoreBatteryState> {
   @override
   MeshCoreBatteryState build() {
-    // Initialize from current device info if available
+    // D24.A symmetry: watch the protocol-agnostic device-info signal
+    // (which `meshDeviceInfoProvider` rebuilds via the MeshCore
+    // connection-state stream) so the battery card hydrates
+    // automatically when identify completes. Pre-D24 this notifier
+    // used `ref.read(meshCoreAdapterProvider)` and was therefore
+    // captured at app-launch null state — Tools opened during connect
+    // showed `--` until the user tapped Refresh, identical to the
+    // self-info bug D24.A solved for TX Power / SF/CR. Watching the
+    // adapter directly does not help: the adapter singleton's
+    // reference does not change when `adapter.deviceInfo` flips, so
+    // `ref.watch(meshCoreAdapterProvider)` would still freeze.
+    final deviceInfo = ref.watch(meshDeviceInfoProvider);
     final adapter = ref.read(meshCoreAdapterProvider);
-    final deviceInfo = adapter?.deviceInfo;
+    final adapterDeviceInfo = adapter?.deviceInfo;
     if (deviceInfo != null &&
-        (deviceInfo.batteryPercentage != null ||
-            deviceInfo.batteryVoltageMillivolts != null)) {
+        deviceInfo.protocolType == MeshProtocolType.meshcore &&
+        adapterDeviceInfo != null &&
+        (adapterDeviceInfo.batteryPercentage != null ||
+            adapterDeviceInfo.batteryVoltageMillivolts != null)) {
       return MeshCoreBatteryState.success(
-        percentage: deviceInfo.batteryPercentage,
-        voltageMillivolts: deviceInfo.batteryVoltageMillivolts,
+        percentage: adapterDeviceInfo.batteryPercentage,
+        voltageMillivolts: adapterDeviceInfo.batteryVoltageMillivolts,
       );
     }
     return const MeshCoreBatteryState.idle();
