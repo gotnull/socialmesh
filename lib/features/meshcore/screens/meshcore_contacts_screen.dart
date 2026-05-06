@@ -765,8 +765,13 @@ class _ContactCard extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      contact.name.isNotEmpty
-                          ? contact.name
+                      // D23: `displayName` falls through to the
+                      // redacted pubkey fingerprint when the firmware
+                      // contact entry has an empty name field. Only
+                      // the rare empty-name + empty-pubkey case lands
+                      // on the localized "Unknown" placeholder.
+                      contact.displayName.isNotEmpty
+                          ? contact.displayName
                           : context.l10n.meshcoreContactUnknownName,
                       style: const TextStyle(
                         color: Colors.white,

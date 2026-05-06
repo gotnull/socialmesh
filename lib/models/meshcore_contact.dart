@@ -93,6 +93,27 @@ class MeshCoreContact {
     return '<${hex.substring(0, 8)}…${hex.substring(hex.length - 8)}>';
   }
 
+  /// User-facing display name with a deterministic, non-localized
+  /// fallback when the firmware contact entry has an empty name field
+  /// (D23 — auto-added contacts from inbound adverts that did not
+  /// carry a friendly name). Order:
+  ///
+  /// 1. [name] if non-empty
+  /// 2. [shortPubKeyHex] (`<79426d8d…0831782b>`) when the public key
+  ///    is large enough to fingerprint
+  /// 3. empty string — caller is expected to fall through to a
+  ///    localized "Unknown" placeholder
+  ///
+  /// Never exposes the full 64-char public-key hex; the bracketed
+  /// 8-head + 8-tail shape is the canonical UI fingerprint, mirroring
+  /// the log channel's pubkey redaction format.
+  String get displayName {
+    if (name.isNotEmpty) return name;
+    if (publicKey.isEmpty) return '';
+    if (publicKey.length < 8) return '';
+    return shortPubKeyHex;
+  }
+
   /// Human-readable type label.
   String get typeLabel => MeshCoreAdvType.label(type);
 

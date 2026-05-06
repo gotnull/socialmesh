@@ -133,12 +133,15 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
 
   String get _title {
     if (widget.chatType == MeshCoreChatType.contact) {
-      // The contact may have been auto-added from an inbound mesh advert
-      // that did not carry a friendly name. Fall back to the localized
-      // "Unknown" string so the chat header always renders a title rather
-      // than a blank line above the "Direct Message" subtitle.
-      final name = widget.contact!.name;
-      return name.isNotEmpty ? name : context.l10n.meshcoreContactUnknownName;
+      // D23: prefer the contact's `displayName` getter, which falls
+      // through to the redacted pubkey fingerprint
+      // (`<79426d8d…0831782b>`) when the firmware entry has an empty
+      // name. Only the rare empty-name + empty-pubkey case lands on
+      // the localized "Unknown" placeholder.
+      final display = widget.contact!.displayName;
+      return display.isNotEmpty
+          ? display
+          : context.l10n.meshcoreContactUnknownName;
     } else {
       return widget.channel!.displayName;
     }

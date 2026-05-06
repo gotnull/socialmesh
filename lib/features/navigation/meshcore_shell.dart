@@ -275,13 +275,25 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
           // Top status banner for disconnection/reconnection
           if (showReconnectionBanner)
             _buildDisconnectedBanner(context, deviceName),
-          // Main content
+          // Main content. D23: when the disconnected banner is shown
+          // it consumes the system top safe-area itself (via its
+          // SafeArea wrapper). The inner per-tab `GlassScaffold`
+          // would otherwise re-pad for the status bar from
+          // `MediaQuery.padding.top`, leaving a ~50 px dark gap
+          // between the banner and the inner app bar (most visible
+          // on the disconnected Tools empty-state). Stripping
+          // `removeTop: true` here tells the inner scaffolds the top
+          // padding has already been consumed, collapsing the gap.
           Expanded(
-            child: IndexedStack(
-              index: selectedIndex,
-              children: List.generate(
-                _navItems(context).length,
-                (index) => _buildScreen(index),
+            child: MediaQuery.removePadding(
+              context: context,
+              removeTop: showReconnectionBanner,
+              child: IndexedStack(
+                index: selectedIndex,
+                children: List.generate(
+                  _navItems(context).length,
+                  (index) => _buildScreen(index),
+                ),
               ),
             ),
           ),
