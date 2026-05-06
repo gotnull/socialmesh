@@ -18995,6 +18995,52 @@
       }
     }
   },
+  "meshcoreContactAddFailed": "Impossibile aggiungere {contactName}. La radio ha rifiutato la richiesta.",
+  "@meshcoreContactAddFailed": {
+    "description": "D29",
+    "placeholders": {"contactName": {"type": "String"}}
+  },
+  "meshcoreContactRemoveFailed": "Impossibile rimuovere {contactName}. La radio ha rifiutato la richiesta.",
+  "@meshcoreContactRemoveFailed": {
+    "description": "D29",
+    "placeholders": {"contactName": {"type": "String"}}
+  },
+  "meshcoreResetPath": "Reimposta percorso",
+  "@meshcoreResetPath": {"description": "D29"},
+  "meshcoreResetPathSubtitle": "Lascia che MeshCore riscopra il percorso migliore.",
+  "@meshcoreResetPathSubtitle": {"description": "D29"},
+  "meshcoreResetPathSuccess": "Percorso reimpostato per {contactName}",
+  "@meshcoreResetPathSuccess": {
+    "description": "D29",
+    "placeholders": {"contactName": {"type": "String"}}
+  },
+  "meshcoreResetPathFailed": "Impossibile reimpostare il percorso per {contactName}",
+  "@meshcoreResetPathFailed": {
+    "description": "D29",
+    "placeholders": {"contactName": {"type": "String"}}
+  },
+  "meshcoreShareChannelSubtitle": "Condividi nome e PSK con un altro dispositivo. Chiunque abbia questo codice può unirsi.",
+  "@meshcoreShareChannelSubtitle": {"description": "D29"},
+  "meshcoreImportChannel": "Importa canale",
+  "@meshcoreImportChannel": {"description": "D29"},
+  "meshcoreImportChannelTitle": "Importa codice canale",
+  "@meshcoreImportChannelTitle": {"description": "D29"},
+  "meshcoreImportChannelHint": "nome:psk_hex",
+  "@meshcoreImportChannelHint": {"description": "D29"},
+  "meshcoreChannelCodeCopied": "Codice canale copiato",
+  "@meshcoreChannelCodeCopied": {"description": "D29"},
+  "meshcoreInvalidChannelCode": "Codice canale non valido",
+  "@meshcoreInvalidChannelCode": {"description": "D29"},
+  "meshcoreChannelImported": "Canale '{name}' importato",
+  "@meshcoreChannelImported": {
+    "description": "D29",
+    "placeholders": {"name": {"type": "String"}}
+  },
+  "meshcoreChannelImportFailed": "Impossibile importare il canale '{name}'",
+  "@meshcoreChannelImportFailed": {
+    "description": "D29",
+    "placeholders": {"name": {"type": "String"}}
+  },
   "meshcoreContactUnknownName": "Sconosciuto",
   "meshcoreRadioSettingsHint": "Deve corrispondere a tutte le altre radio nella tua mesh.",
   "meshcoreRadioSettingsFreqSectionHeader": "FREQUENZA E LARGHEZZA DI BANDA",

@@ -115,7 +115,7 @@ class _MeshCoreQrScannerScreenState
     }
   }
 
-  void _processContactCode(String code) {
+  Future<void> _processContactCode(String code) async {
     // Try parsing as contact code (pubKeyHex:name format)
     final contact = parseContactCode(code);
     if (contact != null) {
@@ -134,13 +134,24 @@ class _MeshCoreQrScannerScreenState
         return;
       }
 
-      // Add the contact
-      ref.read(meshCoreContactsProvider.notifier).addContact(contact);
-      showSuccessSnackBar(
-        context,
-        context.l10n.meshcoreContactAddedToContacts(contact.name),
-      );
-      safeNavigatorPop(contact);
+      // D29 Part A: send to firmware first; only show success after ACK.
+      final ok = await ref
+          .read(meshCoreContactsProvider.notifier)
+          .addContact(contact);
+      if (!mounted) return;
+      if (ok) {
+        showSuccessSnackBar(
+          context,
+          context.l10n.meshcoreContactAddedToContacts(contact.name),
+        );
+        safeNavigatorPop(contact);
+      } else {
+        showErrorSnackBar(
+          context,
+          context.l10n.meshcoreContactAddFailed(contact.name),
+        );
+        _resetScanner();
+      }
       return;
     }
 
@@ -168,12 +179,24 @@ class _MeshCoreQrScannerScreenState
           return;
         }
 
-        ref.read(meshCoreContactsProvider.notifier).addContact(decodedContact);
-        showSuccessSnackBar(
-          context,
-          context.l10n.meshcoreContactAddedToContacts(decodedContact.name),
-        );
-        safeNavigatorPop(decodedContact);
+        // D29 Part A: send to firmware first; only show success after ACK.
+        final ok = await ref
+            .read(meshCoreContactsProvider.notifier)
+            .addContact(decodedContact);
+        if (!mounted) return;
+        if (ok) {
+          showSuccessSnackBar(
+            context,
+            context.l10n.meshcoreContactAddedToContacts(decodedContact.name),
+          );
+          safeNavigatorPop(decodedContact);
+        } else {
+          showErrorSnackBar(
+            context,
+            context.l10n.meshcoreContactAddFailed(decodedContact.name),
+          );
+          _resetScanner();
+        }
         return;
       }
     }

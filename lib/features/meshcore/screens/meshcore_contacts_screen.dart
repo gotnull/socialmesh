@@ -543,6 +543,14 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
           },
         ),
         BottomSheetAction(
+          icon: Icons.refresh_rounded,
+          iconColor: AccentColors.purple,
+          label: context.l10n.meshcoreResetPath,
+          onTap: () {
+            _resetContactPath(contact);
+          },
+        ),
+        BottomSheetAction(
           icon: Icons.delete_rounded,
           label: context.l10n.meshcoreRemoveContact,
           isDestructive: true,
@@ -566,13 +574,45 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
     if (confirmed != true) return;
     if (!mounted) return;
 
-    ref
+    // D29 Part B: send to firmware first; only show success after the
+    // radio ACKs and the contact list refreshes.
+    final ok = await ref
         .read(meshCoreContactsProvider.notifier)
         .removeContact(contact.publicKeyHex);
-    showSuccessSnackBar(
-      context,
-      context.l10n.meshcoreContactRemoved(contact.name),
-    );
+    if (!mounted) return;
+    if (ok) {
+      showSuccessSnackBar(
+        context,
+        context.l10n.meshcoreContactRemoved(contact.name),
+      );
+    } else {
+      showErrorSnackBar(
+        context,
+        context.l10n.meshcoreContactRemoveFailed(contact.name),
+      );
+    }
+  }
+
+  /// D29 Part C: reset the firmware-side learned route for [contact].
+  /// Routes through the wire (`CMD_RESET_PATH` 0x0D) and refreshes the
+  /// contact list. Non-destructive — no confirmation dialog; the
+  /// label copy explains what happens.
+  Future<void> _resetContactPath(MeshCoreContact contact) async {
+    final ok = await ref
+        .read(meshCoreContactsProvider.notifier)
+        .resetPath(contact.publicKeyHex);
+    if (!mounted) return;
+    if (ok) {
+      showSuccessSnackBar(
+        context,
+        context.l10n.meshcoreResetPathSuccess(contact.name),
+      );
+    } else {
+      showErrorSnackBar(
+        context,
+        context.l10n.meshcoreResetPathFailed(contact.name),
+      );
+    }
   }
 
   void _disconnect() async {
@@ -664,14 +704,26 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                 child: PrimaryGradientButton(
                   label: context.l10n.meshcoreAdd,
                   icon: Icons.person_add_rounded,
-                  onPressed: () {
+                  onPressed: () async {
                     final code = controller.text.trim();
                     final contact = parseContactCode(code);
-                    if (contact != null) {
-                      Navigator.pop(context);
-                      ref
-                          .read(meshCoreContactsProvider.notifier)
-                          .addContact(contact);
+                    if (contact == null) {
+                      showErrorSnackBar(
+                        context,
+                        context.l10n.meshcoreInvalidContactCode,
+                      );
+                      return;
+                    }
+                    Navigator.pop(context);
+                    // D29: send to firmware first; only show success
+                    // toast after the radio ACKs and the contact list
+                    // refreshes. Pre-D29 we showed success unconditionally
+                    // and the contact silently disappeared on next refresh.
+                    final ok = await ref
+                        .read(meshCoreContactsProvider.notifier)
+                        .addContact(contact);
+                    if (!mounted) return;
+                    if (ok) {
                       showSuccessSnackBar(
                         context,
                         context.l10n.meshcoreContactAdded(contact.name),
@@ -679,7 +731,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                     } else {
                       showErrorSnackBar(
                         context,
-                        context.l10n.meshcoreInvalidContactCode,
+                        context.l10n.meshcoreContactAddFailed(contact.name),
                       );
                     }
                   },

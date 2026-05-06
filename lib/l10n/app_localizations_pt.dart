@@ -7770,6 +7770,59 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String meshcoreContactAddFailed(String contactName) {
+    return 'Não foi possível adicionar $contactName. O rádio rejeitou a solicitação.';
+  }
+
+  @override
+  String meshcoreContactRemoveFailed(String contactName) {
+    return 'Não foi possível remover $contactName. O rádio rejeitou a solicitação.';
+  }
+
+  @override
+  String get meshcoreResetPath => 'Redefinir caminho';
+
+  @override
+  String get meshcoreResetPathSubtitle =>
+      'Deixe o MeshCore redescobrir a melhor rota.';
+
+  @override
+  String meshcoreResetPathSuccess(String contactName) {
+    return 'Caminho redefinido para $contactName';
+  }
+
+  @override
+  String meshcoreResetPathFailed(String contactName) {
+    return 'Não foi possível redefinir o caminho para $contactName';
+  }
+
+  @override
+  String get meshcoreShareChannelSubtitle =>
+      'Compartilhe nome e PSK com outro dispositivo. Qualquer pessoa com este código pode entrar.';
+
+  @override
+  String get meshcoreImportChannel => 'Importar canal';
+
+  @override
+  String get meshcoreImportChannelTitle => 'Importar código de canal';
+
+  @override
+  String get meshcoreImportChannelHint => 'nome:psk_hex';
+
+  @override
+  String get meshcoreInvalidChannelCode => 'Código de canal inválido';
+
+  @override
+  String meshcoreChannelImported(String name) {
+    return 'Canal \'$name\' importado';
+  }
+
+  @override
+  String meshcoreChannelImportFailed(String name) {
+    return 'Não foi possível importar o canal \'$name\'';
+  }
+
+  @override
   String get meshcoreContactUnknownName => 'Desconhecido';
 
   @override

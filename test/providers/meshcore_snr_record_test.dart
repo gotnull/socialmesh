@@ -63,7 +63,7 @@ void main() {
               '00' *
           6;
       final padded = hexKey.padRight(64, '0').substring(0, 64);
-      notifier.addContact(_contact(padded, name: 'TerryDev2'));
+      notifier.addContactLocal(_contact(padded, name: 'TerryDev2'));
 
       // Use the first 12 hex chars (= 6 bytes) as the firmware-supplied
       // sender prefix.
@@ -83,7 +83,7 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
       final notifier = container.read(meshCoreContactsProvider.notifier);
-      notifier.addContact(_contact('aa' * 32, name: 'A'));
+      notifier.addContactLocal(_contact('aa' * 32, name: 'A'));
 
       final matched = notifier.recordSnrFromPrefix('ff' * 6, -8);
       expect(matched, isNull);
@@ -97,7 +97,7 @@ void main() {
       // round-trips to lowercase, so the stored contact's key is
       // lowercase regardless of construction case.
       final key = 'ABCDEF010203${'00' * 26}';
-      notifier.addContact(_contact(key, name: 'B'));
+      notifier.addContactLocal(_contact(key, name: 'B'));
       final stored = container
           .read(meshCoreContactsProvider)
           .contacts
@@ -118,8 +118,8 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
       final notifier = container.read(meshCoreContactsProvider.notifier);
-      notifier.addContact(_contact('11' * 32, name: 'one'));
-      notifier.addContact(_contact('22' * 32, name: 'two'));
+      notifier.addContactLocal(_contact('11' * 32, name: 'one'));
+      notifier.addContactLocal(_contact('22' * 32, name: 'two'));
 
       notifier.recordSnrFromPrefix('11' * 6, 12);
 
@@ -134,7 +134,7 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
       final notifier = container.read(meshCoreContactsProvider.notifier);
-      notifier.addContact(_contact('aa' * 32));
+      notifier.addContactLocal(_contact('aa' * 32));
       expect(notifier.recordSnrFromPrefix('', 5), isNull);
     });
 
@@ -142,7 +142,7 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
       final notifier = container.read(meshCoreContactsProvider.notifier);
-      notifier.addContact(_contact('cc' * 32));
+      notifier.addContactLocal(_contact('cc' * 32));
 
       notifier.recordSnrFromPrefix('cc' * 6, -16);
       var c = container.read(meshCoreContactsProvider).contacts.first;

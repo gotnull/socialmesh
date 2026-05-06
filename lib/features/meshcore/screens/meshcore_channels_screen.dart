@@ -13,6 +13,7 @@ import '../../../core/widgets/animated_empty_state.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/primary_gradient_button.dart';
+import '../../../core/widgets/qr_share_sheet.dart';
 import '../../../core/widgets/search_filter_header.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
@@ -96,6 +97,8 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                   _showCreateChannelDialog();
                 case 'join':
                   _showJoinChannelDialog();
+                case 'import':
+                  _importChannelByCode();
                 case 'refresh':
                   _refreshChannels();
                 case 'disconnect':
@@ -117,6 +120,15 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                 child: ListTile(
                   leading: const Icon(Icons.login_rounded),
                   title: Text(context.l10n.meshcoreChannelsJoinChannel),
+                  contentPadding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'import',
+                child: ListTile(
+                  leading: const Icon(Icons.qr_code_scanner_rounded),
+                  title: Text(context.l10n.meshcoreImportChannel),
                   contentPadding: EdgeInsets.zero,
                   visualDensity: VisualDensity.compact,
                 ),
@@ -696,6 +708,153 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
     }
   }
 
+  /// D29 Part D: paste-code import path for channels.
+  ///
+  /// Mirrors `_showEnterCodeDialog` shape (single text field + parse +
+  /// `setChannel`) but is reachable from the overflow menu's "Import
+  /// Channel" entry, awaits the wire ACK, and surfaces explicit
+  /// success/failure rather than the fire-and-forget pattern the
+  /// pre-existing join-by-code flow uses. Logs do NOT include the
+  /// pasted code or PSK — only success/failure outcomes.
+  Future<void> _importChannelByCode() async {
+    final controller = TextEditingController();
+    await AppBottomSheet.show<void>(
+      context: context,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            context.l10n.meshcoreImportChannelTitle,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          TextField(
+            controller: controller,
+            autofocus: true,
+            maxLines: 3,
+            maxLength: 256,
+            onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
+            textAlignVertical: TextAlignVertical.top,
+            decoration: InputDecoration(
+              hintText: context.l10n.meshcoreImportChannelHint,
+              hintStyle: TextStyle(color: SemanticColors.muted),
+              filled: true,
+              fillColor: context.background,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                borderSide: BorderSide(color: context.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                borderSide: BorderSide(color: context.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                borderSide: BorderSide(color: context.accentColor),
+              ),
+              prefixIcon: Icon(
+                Icons.qr_code_scanner_rounded,
+                color: context.textSecondary,
+              ),
+              prefixIconConstraints: const BoxConstraints(
+                minWidth: 48,
+                minHeight: 48,
+              ),
+              counterText: '',
+            ),
+            style: TextStyle(
+              color: context.textPrimary,
+              fontFamily: AppTheme.fontFamily,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: SemanticColors.divider),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                    ),
+                  ),
+                  child: Text(context.l10n.meshcoreCancel),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: PrimaryGradientButton(
+                  label: context.l10n.meshcoreImportChannel,
+                  icon: Icons.qr_code_scanner_rounded,
+                  onPressed: () async {
+                    final code = controller.text.trim();
+                    if (code.isEmpty) {
+                      showErrorSnackBar(
+                        context,
+                        context.l10n.meshcoreErrorEnterChannelCode,
+                      );
+                      return;
+                    }
+                    // Pick the first free channel slot (firmware caps
+                    // at 8). If the slot search overflows we still
+                    // pass index 0; `setChannel` returns false and
+                    // the user sees a clear error.
+                    final channelsState = ref.read(meshCoreChannelsProvider);
+                    final existingIndices = channelsState.channels
+                        .map((c) => c.index)
+                        .toSet();
+                    var newIndex = 0;
+                    for (var i = 0; i < 8; i++) {
+                      if (!existingIndices.contains(i)) {
+                        newIndex = i;
+                        break;
+                      }
+                    }
+
+                    final parsed = parseChannelCode(code, index: newIndex);
+                    if (parsed == null) {
+                      showErrorSnackBar(
+                        context,
+                        context.l10n.meshcoreInvalidChannelCode,
+                      );
+                      return;
+                    }
+                    Navigator.pop(context);
+                    final ok = await ref
+                        .read(meshCoreChannelsProvider.notifier)
+                        .setChannel(parsed);
+                    if (!mounted) return;
+                    if (ok) {
+                      showSuccessSnackBar(
+                        context,
+                        context.l10n.meshcoreChannelImported(
+                          parsed.displayName,
+                        ),
+                      );
+                    } else {
+                      showErrorSnackBar(
+                        context,
+                        context.l10n.meshcoreChannelImportFailed(
+                          parsed.displayName,
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showEnterCodeDialog() {
     final controller = TextEditingController();
 
@@ -847,14 +1006,21 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
           },
         ),
         BottomSheetAction(
-          icon: Icons.share_rounded,
+          icon: Icons.qr_code_rounded,
           label: context.l10n.meshcoreShareChannel,
           onTap: () {
+            // D29 Part D: surface the channel as a QR + copyable code.
+            // The code carries the PSK so this is intentionally an
+            // explicit user action (no auto-share). The subtitle
+            // surfaces the PSK warning so the user knows what they
+            // are about to expose.
             final code = generateChannelCode(channel);
-            Clipboard.setData(ClipboardData(text: code));
-            showSuccessSnackBar(
-              context,
-              context.l10n.meshcoreChannelCodeCopied,
+            QrShareSheet.show(
+              context: context,
+              title: channel.displayName,
+              subtitle: context.l10n.meshcoreShareChannelSubtitle,
+              qrData: code,
+              infoText: context.l10n.meshcoreShareChannelSubtitle,
             );
           },
         ),

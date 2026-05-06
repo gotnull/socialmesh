@@ -10444,6 +10444,80 @@
             }
         }
     },
+    "meshcoreContactAddFailed": "Couldn't add {contactName}. The radio rejected the request.",
+    "@meshcoreContactAddFailed": {
+        "description": "D29 - error snackbar when CMD_ADD_UPDATE_CONTACT (0x09) fails (timeout / RESP_CODE_ERR).",
+        "placeholders": {
+            "contactName": {"type": "String"}
+        }
+    },
+    "meshcoreContactRemoveFailed": "Couldn't remove {contactName}. The radio rejected the request.",
+    "@meshcoreContactRemoveFailed": {
+        "description": "D29 - error snackbar when CMD_REMOVE_CONTACT (0x0F) fails.",
+        "placeholders": {
+            "contactName": {"type": "String"}
+        }
+    },
+    "meshcoreResetPath": "Reset Path",
+    "@meshcoreResetPath": {
+        "description": "D29 - contact action label that resets the firmware-side learned route. Tapping it lets MeshCore rediscover the best route for this contact."
+    },
+    "meshcoreResetPathSubtitle": "Let MeshCore rediscover the best route.",
+    "@meshcoreResetPathSubtitle": {
+        "description": "D29 - subtitle/help copy for the Reset Path action."
+    },
+    "meshcoreResetPathSuccess": "Path reset for {contactName}",
+    "@meshcoreResetPathSuccess": {
+        "description": "D29 - success snackbar after CMD_RESET_PATH (0x0D) ACK.",
+        "placeholders": {
+            "contactName": {"type": "String"}
+        }
+    },
+    "meshcoreResetPathFailed": "Couldn't reset path for {contactName}",
+    "@meshcoreResetPathFailed": {
+        "description": "D29 - error snackbar when CMD_RESET_PATH (0x0D) fails.",
+        "placeholders": {
+            "contactName": {"type": "String"}
+        }
+    },
+    "meshcoreShareChannelSubtitle": "Share name and PSK with another device. Anyone with this code can join.",
+    "@meshcoreShareChannelSubtitle": {
+        "description": "D29 - explanatory copy for the share-channel action; surfaces the PSK warning."
+    },
+    "meshcoreImportChannel": "Import Channel",
+    "@meshcoreImportChannel": {
+        "description": "D29 - action label to import a channel by pasted code or QR scan."
+    },
+    "meshcoreImportChannelTitle": "Import channel code",
+    "@meshcoreImportChannelTitle": {
+        "description": "D29 - bottom-sheet title for paste-code import."
+    },
+    "meshcoreImportChannelHint": "name:hex_psk",
+    "@meshcoreImportChannelHint": {
+        "description": "D29 - placeholder hint text in the channel-code import field."
+    },
+    "meshcoreChannelCodeCopied": "Channel code copied",
+    "@meshcoreChannelCodeCopied": {
+        "description": "D29 - clipboard-copy confirmation for channel share."
+    },
+    "meshcoreInvalidChannelCode": "Invalid channel code",
+    "@meshcoreInvalidChannelCode": {
+        "description": "D29 - error when a pasted channel code fails parseChannelCode validation."
+    },
+    "meshcoreChannelImported": "Channel '{name}' imported",
+    "@meshcoreChannelImported": {
+        "description": "D29 - success snackbar after a channel is added via import.",
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "meshcoreChannelImportFailed": "Couldn't import channel '{name}'",
+    "@meshcoreChannelImportFailed": {
+        "description": "D29 - error snackbar when channel import wire write fails.",
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
     "meshcoreContactUnknownName": "Unknown",
     "@meshcoreContactUnknownName": {
         "description": "Display fallback for a MeshCore contact whose name field is empty (auto-added via mesh advert with no friendly name set). Shown both in the contacts list tile and as the title of the contact chat header."

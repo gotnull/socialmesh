@@ -13375,7 +13375,7 @@ abstract class AppLocalizations {
   /// **'{channelName} is already in your channels'**
   String meshcoreChannelAlreadyExists(String channelName);
 
-  /// Success snackbar after copying channel code
+  /// D29 - clipboard-copy confirmation for channel share.
   ///
   /// In en, this message translates to:
   /// **'Channel code copied'**
@@ -13686,6 +13686,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{contactName} removed'**
   String meshcoreContactRemoved(String contactName);
+
+  /// D29 - error snackbar when CMD_ADD_UPDATE_CONTACT (0x09) fails (timeout / RESP_CODE_ERR).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t add {contactName}. The radio rejected the request.'**
+  String meshcoreContactAddFailed(String contactName);
+
+  /// D29 - error snackbar when CMD_REMOVE_CONTACT (0x0F) fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t remove {contactName}. The radio rejected the request.'**
+  String meshcoreContactRemoveFailed(String contactName);
+
+  /// D29 - contact action label that resets the firmware-side learned route. Tapping it lets MeshCore rediscover the best route for this contact.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Path'**
+  String get meshcoreResetPath;
+
+  /// D29 - subtitle/help copy for the Reset Path action.
+  ///
+  /// In en, this message translates to:
+  /// **'Let MeshCore rediscover the best route.'**
+  String get meshcoreResetPathSubtitle;
+
+  /// D29 - success snackbar after CMD_RESET_PATH (0x0D) ACK.
+  ///
+  /// In en, this message translates to:
+  /// **'Path reset for {contactName}'**
+  String meshcoreResetPathSuccess(String contactName);
+
+  /// D29 - error snackbar when CMD_RESET_PATH (0x0D) fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reset path for {contactName}'**
+  String meshcoreResetPathFailed(String contactName);
+
+  /// D29 - explanatory copy for the share-channel action; surfaces the PSK warning.
+  ///
+  /// In en, this message translates to:
+  /// **'Share name and PSK with another device. Anyone with this code can join.'**
+  String get meshcoreShareChannelSubtitle;
+
+  /// D29 - action label to import a channel by pasted code or QR scan.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Channel'**
+  String get meshcoreImportChannel;
+
+  /// D29 - bottom-sheet title for paste-code import.
+  ///
+  /// In en, this message translates to:
+  /// **'Import channel code'**
+  String get meshcoreImportChannelTitle;
+
+  /// D29 - placeholder hint text in the channel-code import field.
+  ///
+  /// In en, this message translates to:
+  /// **'name:hex_psk'**
+  String get meshcoreImportChannelHint;
+
+  /// D29 - error when a pasted channel code fails parseChannelCode validation.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid channel code'**
+  String get meshcoreInvalidChannelCode;
+
+  /// D29 - success snackbar after a channel is added via import.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel \'{name}\' imported'**
+  String meshcoreChannelImported(String name);
+
+  /// D29 - error snackbar when channel import wire write fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t import channel \'{name}\''**
+  String meshcoreChannelImportFailed(String name);
 
   /// Display fallback for a MeshCore contact whose name field is empty (auto-added via mesh advert with no friendly name set). Shown both in the contacts list tile and as the title of the contact chat header.
   ///

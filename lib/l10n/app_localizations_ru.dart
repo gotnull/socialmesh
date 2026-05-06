@@ -7698,6 +7698,59 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String meshcoreContactAddFailed(String contactName) {
+    return 'Couldn\'t add $contactName. The radio rejected the request.';
+  }
+
+  @override
+  String meshcoreContactRemoveFailed(String contactName) {
+    return 'Couldn\'t remove $contactName. The radio rejected the request.';
+  }
+
+  @override
+  String get meshcoreResetPath => 'Reset Path';
+
+  @override
+  String get meshcoreResetPathSubtitle =>
+      'Let MeshCore rediscover the best route.';
+
+  @override
+  String meshcoreResetPathSuccess(String contactName) {
+    return 'Path reset for $contactName';
+  }
+
+  @override
+  String meshcoreResetPathFailed(String contactName) {
+    return 'Couldn\'t reset path for $contactName';
+  }
+
+  @override
+  String get meshcoreShareChannelSubtitle =>
+      'Share name and PSK with another device. Anyone with this code can join.';
+
+  @override
+  String get meshcoreImportChannel => 'Import Channel';
+
+  @override
+  String get meshcoreImportChannelTitle => 'Import channel code';
+
+  @override
+  String get meshcoreImportChannelHint => 'name:hex_psk';
+
+  @override
+  String get meshcoreInvalidChannelCode => 'Invalid channel code';
+
+  @override
+  String meshcoreChannelImported(String name) {
+    return 'Channel \'$name\' imported';
+  }
+
+  @override
+  String meshcoreChannelImportFailed(String name) {
+    return 'Couldn\'t import channel \'$name\'';
+  }
+
+  @override
   String get meshcoreContactUnknownName => 'Unknown';
 
   @override

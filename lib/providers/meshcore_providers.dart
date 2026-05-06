@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/logging.dart';
 import '../core/transport.dart';
 import '../models/mesh_device.dart';
 import '../models/meshcore_contact.dart';
@@ -522,7 +523,11 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
     return matchedKey;
   }
 
-  void addContact(MeshCoreContact contact) {
+  /// Local-only add. Used by the post-wire refresh path and tests.
+  /// Production callers should use the async [addContact] which sends
+  /// `CMD_ADD_UPDATE_CONTACT` to firmware first.
+  @visibleForTesting
+  void addContactLocal(MeshCoreContact contact) {
     final updated = [...state.contacts];
     final existingIndex = updated.indexWhere(
       (c) => c.publicKeyHex == contact.publicKeyHex,
@@ -538,11 +543,95 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
     state = state.copyWith(contacts: updated);
   }
 
-  void removeContact(String publicKeyHex) {
+  /// Local-only remove. Production callers should use the async
+  /// [removeContact] which sends `CMD_REMOVE_CONTACT` to firmware first.
+  @visibleForTesting
+  void removeContactLocal(String publicKeyHex) {
     final updated = state.contacts
         .where((c) => c.publicKeyHex != publicKeyHex)
         .toList();
     state = state.copyWith(contacts: updated);
+  }
+
+  /// D29 Part A: add or update [contact] on the connected firmware
+  /// (`CMD_ADD_UPDATE_CONTACT` 0x09), then refresh the contact list
+  /// from the radio so the local cache matches the firmware state.
+  ///
+  /// Returns `true` only when the firmware ACKed with `RESP_CODE_OK`
+  /// AND the refresh completed. On failure (no session, wire error,
+  /// timeout) returns `false` and leaves local state untouched — the
+  /// caller is responsible for surfacing the error to the user.
+  ///
+  /// Pre-D29 this method only mutated local state, which silently
+  /// diverged from the firmware contact table on every refresh.
+  Future<bool> addContact(MeshCoreContact contact) async {
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null) {
+      AppLogging.meshcore(
+        'event=contact.add_update.skipped reason=no_session',
+        error: true,
+      );
+      return false;
+    }
+    final ok = await session.addUpdateContact(
+      pubKey: contact.publicKey,
+      advType: contact.type,
+      name: contact.name,
+      flags: 0,
+      pathLength: contact.pathLength,
+      pathBytes: contact.path,
+      latitude: contact.latitude,
+      longitude: contact.longitude,
+    );
+    if (!ok) return false;
+    await refresh();
+    return true;
+  }
+
+  /// D29 Part B: remove the contact whose [publicKeyHex] matches
+  /// (`CMD_REMOVE_CONTACT` 0x0F), then refresh from the radio.
+  ///
+  /// Returns `true` on `RESP_CODE_OK` + successful refresh. Pre-D29
+  /// this mutated only the local cache.
+  Future<bool> removeContact(String publicKeyHex) async {
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null) {
+      AppLogging.meshcore(
+        'event=contact.remove.skipped reason=no_session',
+        error: true,
+      );
+      return false;
+    }
+    final contact = state.contacts.firstWhere(
+      (c) => c.publicKeyHex == publicKeyHex,
+      orElse: () => throw ArgumentError('contact not found: $publicKeyHex'),
+    );
+    final ok = await session.removeContact(contact.publicKey);
+    if (!ok) return false;
+    await refresh();
+    return true;
+  }
+
+  /// D29 Part C: reset the firmware-side learned route for the
+  /// contact whose [publicKeyHex] matches (`CMD_RESET_PATH` 0x0D),
+  /// then refresh so the local cache picks up the new path state.
+  Future<bool> resetPath(String publicKeyHex) async {
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null) {
+      AppLogging.meshcore(
+        'event=contact.reset_path.skipped reason=no_session',
+        error: true,
+      );
+      return false;
+    }
+    final contact = state.contacts.firstWhere(
+      (c) => c.publicKeyHex == publicKeyHex,
+      orElse: () => throw ArgumentError('contact not found: $publicKeyHex'),
+    );
+    final ok = await session.resetPath(contact.publicKey);
+    if (!ok) return false;
+    await refresh();
+    return true;
   }
 }
 

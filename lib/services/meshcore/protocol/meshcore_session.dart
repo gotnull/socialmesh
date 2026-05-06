@@ -1023,6 +1023,209 @@ class MeshCoreSession {
   }
 
   // ---------------------------------------------------------------------------
+  // D29: Contact management commands
+  // ---------------------------------------------------------------------------
+
+  /// D29 Part A: add or update a contact in the firmware contact table
+  /// (`CMD_ADD_UPDATE_CONTACT` 0x09).
+  ///
+  /// Wire payload (after the 0x09 opcode byte):
+  /// ```
+  /// [0..31]   pubkey                  32B
+  /// [32]      adv_type                u8
+  /// [33]      flags                   u8
+  /// [34]      path_len                i8  (-1 / 0xFF = flood / unknown)
+  /// [35..98]  path                    64B (zero-padded)
+  /// [99..130] name                    32B (UTF-8, null-terminated, padded)
+  /// [131..134] last_advert_timestamp  u32 LE (unix seconds; 0 if unknown)
+  /// [135..138] gps_lat                i32 LE × 1e6 — included if [latitude] != null
+  /// [139..142] gps_lon                i32 LE × 1e6 — included if [longitude] != null
+  /// ```
+  ///
+  /// Firmware enforces minimum 36 bytes (pubkey + type + flags + path_len + path
+  /// header + name minimum). The 48-byte form (with GPS) lands at the
+  /// ` len >= 144` branch in `MyMesh.cpp`'s handler and is forward-compatible
+  /// with the optional `lastmod` (52 bytes) extension we don't surface.
+  ///
+  /// Caller MUST pass a 32-byte [pubKey]; the helper rejects partial or
+  /// short prefixes (the firmware contact table is keyed on full pubkey
+  /// and a partial-prefix add would silently corrupt the table).
+  ///
+  /// Returns `true` on `RESP_CODE_OK`. Returns `false` on timeout, error
+  /// response, or `RESP_CODE_ERR`. Caller should refresh the contact
+  /// list from firmware after success — the firmware does not push a
+  /// new contact frame.
+  Future<bool> addUpdateContact({
+    required Uint8List pubKey,
+    required int advType,
+    required String name,
+    int flags = 0,
+    int pathLength = -1,
+    Uint8List? pathBytes,
+    DateTime? lastAdvertAt,
+    double? latitude,
+    double? longitude,
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    if (pubKey.length != meshCorePubKeySize) {
+      throw ArgumentError.value(
+        pubKey.length,
+        'pubKey.length',
+        'must be exactly $meshCorePubKeySize bytes',
+      );
+    }
+    if (advType < 0 || advType > 0xFF) {
+      throw ArgumentError.value(advType, 'advType', 'must fit in uint8');
+    }
+    if (flags < 0 || flags > 0xFF) {
+      throw ArgumentError.value(flags, 'flags', 'must fit in uint8');
+    }
+    if (pathLength < -1 || pathLength > 64) {
+      throw ArgumentError.value(
+        pathLength,
+        'pathLength',
+        'must be in [-1, 64] (-1 = flood/unknown)',
+      );
+    }
+    final nameBytes = utf8.encode(name);
+    if (nameBytes.length > 31) {
+      throw ArgumentError.value(
+        name,
+        'name',
+        'must be at most 31 UTF-8 bytes (got ${nameBytes.length})',
+      );
+    }
+    final hasGps = latitude != null && longitude != null;
+    if (latitude != null && (latitude < -90 || latitude > 90)) {
+      throw ArgumentError.value(latitude, 'latitude', 'must be [-90, 90]');
+    }
+    if (longitude != null && (longitude < -180 || longitude > 180)) {
+      throw ArgumentError.value(longitude, 'longitude', 'must be [-180, 180]');
+    }
+
+    // Total payload size: 32+1+1+1+64+32+4 = 135 (no GPS), 143 (with GPS).
+    final totalLen = hasGps ? 143 : 135;
+    final payload = Uint8List(totalLen);
+    final view = ByteData.view(payload.buffer);
+
+    payload.setRange(0, 32, pubKey);
+    payload[32] = advType;
+    payload[33] = flags;
+    payload[34] =
+        pathLength & 0xFF; // signed int8 written as u8 two's complement
+    final path = pathBytes ?? const <int>[];
+    final pathCopyLen = path.length > 64 ? 64 : path.length;
+    if (pathCopyLen > 0) {
+      payload.setRange(35, 35 + pathCopyLen, path);
+    }
+    // Name at offset 99..130, null-terminator+padding handled by Uint8List
+    // default zero-fill (we never write past nameBytes.length).
+    payload.setRange(99, 99 + nameBytes.length, nameBytes);
+    final tsSecs = lastAdvertAt == null
+        ? 0
+        : (lastAdvertAt.toUtc().millisecondsSinceEpoch ~/ 1000) & 0xFFFFFFFF;
+    view.setUint32(131, tsSecs, Endian.little);
+    if (hasGps) {
+      view.setInt32(
+        135,
+        (latitude * kMeshCoreAdvertLatLonScale).round(),
+        Endian.little,
+      );
+      view.setInt32(
+        139,
+        (longitude * kMeshCoreAdvertLatLonScale).round(),
+        Endian.little,
+      );
+    }
+
+    AppLogging.meshcore(
+      'event=contact.add_update.attempted name_len=${nameBytes.length} '
+      'adv_type=$advType path_len=$pathLength has_gps=$hasGps',
+    );
+    final response = await sendAndWait(
+      MeshCoreCommands.addUpdateContact,
+      payload: payload,
+      expectedResponse: MeshCoreResponses.ok,
+      timeout: timeout,
+    );
+    final ok = response != null;
+    AppLogging.meshcore(
+      'event=contact.add_update.${ok ? "succeeded" : "failed"} '
+      'name_len=${nameBytes.length}',
+      error: !ok,
+    );
+    return ok;
+  }
+
+  /// D29 Part B: remove a contact from the firmware contact table
+  /// (`CMD_REMOVE_CONTACT` 0x0F).
+  ///
+  /// Wire payload: `[0x0F][pubkey 32B]` (33 bytes total).
+  ///
+  /// Caller MUST pass the full 32-byte pubkey. Returns `true` on
+  /// `RESP_CODE_OK`, `false` on `RESP_CODE_ERR` (e.g. contact not in
+  /// firmware table) or timeout.
+  Future<bool> removeContact(
+    Uint8List pubKey, {
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    if (pubKey.length != meshCorePubKeySize) {
+      throw ArgumentError.value(
+        pubKey.length,
+        'pubKey.length',
+        'must be exactly $meshCorePubKeySize bytes',
+      );
+    }
+    AppLogging.meshcore('event=contact.remove.attempted');
+    final response = await sendAndWait(
+      MeshCoreCommands.removeContact,
+      payload: Uint8List.fromList(pubKey),
+      expectedResponse: MeshCoreResponses.ok,
+      timeout: timeout,
+    );
+    final ok = response != null;
+    AppLogging.meshcore(
+      'event=contact.remove.${ok ? "succeeded" : "failed"}',
+      error: !ok,
+    );
+    return ok;
+  }
+
+  /// D29 Part C: reset the firmware-side learned route for a contact
+  /// (`CMD_RESET_PATH` 0x0D). After reset the radio's `out_path_len`
+  /// for the contact is set to flood/unknown and re-discovered on the
+  /// next outbound message.
+  ///
+  /// Wire payload: `[0x0D][pubkey 32B]` (33 bytes total). Firmware
+  /// does not push a contact-updated frame — caller should refresh the
+  /// contact list to see the new path state.
+  Future<bool> resetPath(
+    Uint8List pubKey, {
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    if (pubKey.length != meshCorePubKeySize) {
+      throw ArgumentError.value(
+        pubKey.length,
+        'pubKey.length',
+        'must be exactly $meshCorePubKeySize bytes',
+      );
+    }
+    AppLogging.meshcore('event=contact.reset_path.attempted');
+    final response = await sendAndWait(
+      MeshCoreCommands.resetPath,
+      payload: Uint8List.fromList(pubKey),
+      expectedResponse: MeshCoreResponses.ok,
+      timeout: timeout,
+    );
+    final ok = response != null;
+    AppLogging.meshcore(
+      'event=contact.reset_path.${ok ? "succeeded" : "failed"}',
+      error: !ok,
+    );
+    return ok;
+  }
+
+  // ---------------------------------------------------------------------------
   // D26: Identity + lifecycle commands
   // ---------------------------------------------------------------------------
 
