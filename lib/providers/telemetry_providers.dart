@@ -734,6 +734,8 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
                 uptimeSeconds: node.uptimeSeconds,
               ),
             );
+            ref.invalidate(deviceMetricsLogsProvider);
+            ref.invalidate(nodeDeviceMetricsLogsProvider(id));
           }
         }
 
@@ -778,6 +780,8 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
                 soilTemperature: node.soilTemperature,
               ),
             );
+            ref.invalidate(environmentMetricsLogsProvider);
+            ref.invalidate(nodeEnvironmentMetricsLogsProvider(id));
           }
         }
 
@@ -806,6 +810,8 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
                 ch3Current: node.ch3Current,
               ),
             );
+            ref.invalidate(powerMetricsLogsProvider);
+            ref.invalidate(nodePowerMetricsLogsProvider(id));
           }
         }
 
@@ -848,6 +854,8 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
                 co2: node.co2,
               ),
             );
+            ref.invalidate(airQualityMetricsLogsProvider);
+            ref.invalidate(nodeAirQualityMetricsLogsProvider(id));
           }
         }
 
@@ -893,6 +901,8 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
                   precisionBits: node.precisionBits,
                 ),
               );
+              ref.invalidate(positionLogsProvider);
+              ref.invalidate(nodePositionLogsProvider(id));
             }
           } else {
             // Low-precision: clear history, keep only latest.
@@ -922,6 +932,8 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
                 precisionBits: node.precisionBits,
               ),
             );
+            ref.invalidate(positionLogsProvider);
+            ref.invalidate(nodePositionLogsProvider(id));
           }
         }
       } catch (e) {
