@@ -8,6 +8,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
 import '../../../core/meshcore_constants.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
@@ -18,7 +19,6 @@ import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/settings_primitives.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_providers.dart';
-import '../../../services/meshcore/protocol/meshcore_frame.dart';
 import '../../../services/meshcore/protocol/meshcore_messages.dart';
 import '../../../services/meshcore/storage/meshcore_node_name_store.dart';
 import '../../../utils/snackbar.dart';
@@ -41,6 +41,10 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
   String _appVersion = '';
   bool _isSendingAdvert = false;
   bool _isSyncingTime = false;
+  // D26: gate the Node Location tile while a set/clear-location
+  // command is in flight so the user can't dispatch a second one
+  // before the first either OK's or fails.
+  bool _isApplyingLocation = false;
 
   /// Locally cached node name, hydrated from [MeshCoreNodeNameStore].
   /// Used as a fallback for the Node Name tile subtitle when SelfInfo
@@ -165,12 +169,15 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                   ),
                 ),
                 _maybeDisabled(
-                  enabled: false,
+                  enabled: isConnected && !_isApplyingLocation,
                   child: SettingsTile(
                     icon: Icons.location_on_outlined,
                     title: context.l10n.meshcoreLocationSetting,
-                    subtitle: context.l10n.meshcoreSetNodePosition,
+                    subtitle: _isApplyingLocation
+                        ? context.l10n.meshcoreApplying
+                        : context.l10n.meshcoreSetNodePosition,
                     trailing: _chevron(context),
+                    onTap: _editLocation,
                   ),
                 ),
                 _maybeDisabled(
@@ -485,16 +492,27 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
       return;
     }
 
+    // D26: route through the typed `setAdvertName` helper so we get
+    // (a) UTF-8 byte encoding (the previous `name.codeUnits` was
+    // UTF-16 so non-ASCII characters were silently corrupted), (b)
+    // pre-validated 31-byte limit matching firmware's `node_name[32]`
+    // buffer (with reserved null), and (c) the spurious trailing
+    // `0` removed (firmware truncates by length, no terminator on
+    // wire).
     AppLogging.meshcore('event=node_name.apply.attempted size=${name.length}');
 
     try {
-      final payload = Uint8List.fromList([...name.codeUnits, 0]);
-      await session.sendFrame(
-        MeshCoreFrame(
-          command: MeshCoreCommands.setAdvertName,
-          payload: payload,
-        ),
-      );
+      final ok = await session.setAdvertName(name);
+      if (!ok) {
+        AppLogging.meshcore(
+          'event=node_name.apply.failed reason=device_rejected',
+          error: true,
+        );
+        if (mounted) {
+          showErrorSnackBar(context, context.l10n.meshcoreFailedToSetName);
+        }
+        return;
+      }
       if (!mounted) return;
 
       // Mirror locally AFTER firmware accepted the frame so a failed
@@ -533,6 +551,63 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
       if (mounted) {
         showErrorSnackBar(context, context.l10n.meshcoreFailedToSetName);
       }
+    }
+  }
+
+  /// D26: open the lat/lon editor sheet. Validates `lat ∈ [-90,
+  /// 90]` and `lon ∈ [-180, 180]` before dispatching; routes through
+  /// the typed `setAdvertLatLon` helper. Logs are coordinate-free —
+  /// only `cleared=` and `location_set=true`. Includes a "Clear"
+  /// action that sends `(0, 0)` (firmware's clear-stored-location
+  /// convention).
+  Future<void> _editLocation() async {
+    // Use the State's `this.context` and capture l10n upfront so
+    // the analyzer's `use_build_context_synchronously` lint can
+    // verify the `mounted` guard is the canonical State one (not a
+    // shadowed parameter).
+    final l10n = context.l10n;
+    // D26: use the same `showScrollable` variant as the Radio
+    // Settings sheet (`device_sheet.dart` style: Column ->
+    // Padding(header) -> Expanded(ListView with widget
+    // .scrollController)). The compact `.show` variant landed too
+    // high on the screen for a 2-field form and tripped the
+    // gray-area cosmetic bug per the project's bottom-sheet variant
+    // rule — content-heavy sheets MUST use showScrollable.
+    final result = await AppBottomSheet.showScrollable<_EditLocationResult>(
+      context: context,
+      initialChildSize: 0.85,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (controller) => _EditLocationSheet(scrollController: controller),
+    );
+    if (result == null) return;
+    if (!mounted) return;
+
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null || !session.isActive) {
+      showErrorSnackBar(context, l10n.meshcoreNotConnected);
+      return;
+    }
+
+    safeSetState(() => _isApplyingLocation = true);
+    try {
+      final ok = await session.setAdvertLatLon(result.lat, result.lon);
+      if (!mounted) return;
+      if (ok) {
+        if (result.cleared) {
+          showSuccessSnackBar(context, l10n.meshcoreLocationCleared);
+        } else {
+          showSuccessSnackBar(context, l10n.meshcoreLocationUpdated);
+        }
+      } else {
+        showErrorSnackBar(context, l10n.meshcoreFailedToSetLocation);
+      }
+    } catch (_) {
+      if (mounted) {
+        showErrorSnackBar(context, l10n.meshcoreFailedToSetLocation);
+      }
+    } finally {
+      safeSetState(() => _isApplyingLocation = false);
     }
   }
 
@@ -576,21 +651,17 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
 
     safeSetState(() => _isSyncingTime = true);
     try {
-      final timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      final payload = Uint8List(4);
-      payload[0] = timestamp & 0xFF;
-      payload[1] = (timestamp >> 8) & 0xFF;
-      payload[2] = (timestamp >> 16) & 0xFF;
-      payload[3] = (timestamp >> 24) & 0xFF;
-
-      await session.sendFrame(
-        MeshCoreFrame(
-          command: MeshCoreCommands.setDeviceTime,
-          payload: payload,
-        ),
-      );
-      if (mounted) {
+      // D26: route through the typed `setDeviceTime` helper. Firmware
+      // is forward-only — if its RTC is already ahead of the phone
+      // (drift, manual adjustment), the helper returns `false` and we
+      // surface a different snackbar so the user knows the sync was
+      // not silently dropped on the floor.
+      final ok = await session.setDeviceTime();
+      if (!mounted) return;
+      if (ok) {
         showSuccessSnackBar(context, context.l10n.meshcoreTimeSynchronized);
+      } else {
+        showErrorSnackBar(context, context.l10n.meshcoreSyncTimeRejected);
       }
     } catch (_) {
       if (mounted) {
@@ -630,7 +701,13 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
     }
 
     try {
-      await session.sendCommand(MeshCoreCommands.reboot);
+      // D26: route through `rebootDevice` so the magic-word "reboot"
+      // payload is appended. The pre-D26 path called
+      // `sendCommand(MeshCoreCommands.reboot)` with no payload — the
+      // firmware's `memcmp(&cmd_frame[1], "reboot", 6)` check rejects
+      // that frame silently, so the tile never actually rebooted the
+      // radio. Fire-and-forget; firmware does not send OK.
+      await session.rebootDevice();
       if (mounted) {
         showSuccessSnackBar(context, context.l10n.meshcoreRebootCommandSent);
       }
@@ -751,5 +828,223 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
 
   static String _bytesToHex(Uint8List bytes) {
     return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+  }
+}
+
+/// D26: outcome returned from [_EditLocationSheet] via
+/// `Navigator.pop`. The sheet itself is pure UI; the calling state
+/// performs the actual `setAdvertLatLon` dispatch and toast.
+class _EditLocationResult {
+  final double lat;
+  final double lon;
+
+  /// True when the user explicitly tapped "Clear" (lat/lon both 0).
+  /// Used by the caller to switch the success snackbar copy.
+  final bool cleared;
+
+  const _EditLocationResult({
+    required this.lat,
+    required this.lon,
+    required this.cleared,
+  });
+}
+
+/// D26: lat/lon editor sheet. Two `TextFormField`s with range
+/// validation (`lat ∈ [-90, 90]`, `lon ∈ [-180, 180]`) plus a
+/// "Clear location" action that dispatches `(0, 0)` (the firmware's
+/// stored-location-cleared convention). Coordinates never appear in
+/// logs — the caller logs only `cleared=` and `location_set=true`.
+///
+/// Body shape mirrors the canonical content-heavy bottom sheet
+/// pattern (`device_sheet.dart` style): Column -> Padding(header)
+/// -> Expanded(ListView with widget.scrollController). Required by
+/// the project's bottom-sheet variant rule for any non-prompt
+/// surface to avoid the gray-area cosmetic bug.
+class _EditLocationSheet extends StatefulWidget {
+  final ScrollController scrollController;
+
+  const _EditLocationSheet({required this.scrollController});
+
+  @override
+  State<_EditLocationSheet> createState() => _EditLocationSheetState();
+}
+
+class _EditLocationSheetState extends State<_EditLocationSheet> {
+  final _formKey = GlobalKey<FormState>();
+  final _latController = TextEditingController();
+  final _lonController = TextEditingController();
+
+  @override
+  void dispose() {
+    _latController.dispose();
+    _lonController.dispose();
+    super.dispose();
+  }
+
+  String? _validateLat(String? value, AppLocalizations l10n) {
+    final raw = value?.trim() ?? '';
+    if (raw.isEmpty) return l10n.meshcoreLocationLatRangeError;
+    final v = double.tryParse(raw);
+    if (v == null || v < -90 || v > 90) {
+      return l10n.meshcoreLocationLatRangeError;
+    }
+    return null;
+  }
+
+  String? _validateLon(String? value, AppLocalizations l10n) {
+    final raw = value?.trim() ?? '';
+    if (raw.isEmpty) return l10n.meshcoreLocationLonRangeError;
+    final v = double.tryParse(raw);
+    if (v == null || v < -180 || v > 180) {
+      return l10n.meshcoreLocationLonRangeError;
+    }
+    return null;
+  }
+
+  void _apply() {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    final lat = double.parse(_latController.text.trim());
+    final lon = double.parse(_lonController.text.trim());
+    Navigator.of(
+      context,
+    ).pop(_EditLocationResult(lat: lat, lon: lon, cleared: false));
+  }
+
+  void _clear() {
+    Navigator.of(
+      context,
+    ).pop(const _EditLocationResult(lat: 0, lon: 0, cleared: true));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Form(
+      key: _formKey,
+      child: ListView(
+        controller: widget.scrollController,
+        padding: const EdgeInsets.fromLTRB(
+          AppTheme.spacing16,
+          AppTheme.spacing8,
+          AppTheme.spacing16,
+          AppTheme.spacing16,
+        ),
+        children: [
+          Text(
+            l10n.meshcoreLocationSheetTitle,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing8),
+          Text(
+            l10n.meshcoreLocationSheetPrivacyHint,
+            style: TextStyle(fontSize: 13, color: context.textTertiary),
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          TextFormField(
+            controller: _latController,
+            maxLength: 12,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+              signed: true,
+            ),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9.\-]')),
+            ],
+            onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
+            style: TextStyle(color: context.textPrimary),
+            validator: (v) => _validateLat(v, l10n),
+            decoration: InputDecoration(
+              labelText: l10n.meshcoreLocationLatLabel,
+              labelStyle: TextStyle(color: context.textSecondary),
+              hintText: l10n.meshcoreLocationLatHint,
+              hintStyle: TextStyle(color: SemanticColors.muted),
+              filled: true,
+              fillColor: context.background,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                borderSide: BorderSide(color: context.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                borderSide: BorderSide(color: context.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                borderSide: BorderSide(color: context.accentColor),
+              ),
+              prefixIcon: Icon(
+                Icons.my_location_outlined,
+                color: context.textSecondary,
+              ),
+              counterText: '',
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          TextFormField(
+            controller: _lonController,
+            maxLength: 12,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+              signed: true,
+            ),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9.\-]')),
+            ],
+            onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
+            style: TextStyle(color: context.textPrimary),
+            validator: (v) => _validateLon(v, l10n),
+            decoration: InputDecoration(
+              labelText: l10n.meshcoreLocationLonLabel,
+              labelStyle: TextStyle(color: context.textSecondary),
+              hintText: l10n.meshcoreLocationLonHint,
+              hintStyle: TextStyle(color: SemanticColors.muted),
+              filled: true,
+              fillColor: context.background,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                borderSide: BorderSide(color: context.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                borderSide: BorderSide(color: context.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                borderSide: BorderSide(color: context.accentColor),
+              ),
+              prefixIcon: Icon(
+                Icons.location_searching_outlined,
+                color: context.textSecondary,
+              ),
+              counterText: '',
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _clear,
+                  icon: const Icon(Icons.location_off_outlined),
+                  label: Text(l10n.meshcoreLocationClearAction),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: PrimaryGradientButton(
+                  label: l10n.meshcoreLocationApplyAction,
+                  icon: Icons.check_rounded,
+                  onPressed: _apply,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }

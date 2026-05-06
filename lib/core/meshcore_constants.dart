@@ -380,6 +380,291 @@ class MeshCoreTimeouts {
 // same tick.
 const int kMeshCoreDrainHeartbeatSeconds = 60;
 
+// D26: MeshCore advertised-name max length (firmware buffer minus
+// null terminator). The companion-radio firmware stores the node
+// name in `char node_name[32]` and reserves 1 byte for `\0`, so
+// `CMD_SET_ADVERT_NAME` (0x08) accepts at most 31 UTF-8 bytes of
+// payload. Longer payloads are silently truncated by the firmware.
+// Validate in the UI before sending so the user sees the limit
+// explicitly instead of getting a partially-saved name.
+const int kMeshCoreMaxNodeNameBytes = 31;
+
+// D26: MeshCore lat/lon scale used by `CMD_SET_ADVERT_LAT_LON`
+// (0x0E). The firmware stores `int32` and divides by `1e6` to
+// recover degrees. The same scale applies on the wire for
+// `setAdvertLatLon`. Note this is `1e6`, NOT `1e7` (Meshtastic
+// convention) — easy footgun if you derive from a Meshtastic-shaped
+// helper.
+const int kMeshCoreAdvertLatLonScale = 1000000;
+
+/// D26: MeshCore region preset.
+///
+/// Each preset packs the four LoRa params + a recommended TX power
+/// (firmware caps to the regulatory ceiling regardless). Selecting
+/// a preset prefills the radio settings sheet's frequency /
+/// bandwidth / SF / CR / TX power fields; manual edits switch the
+/// chip to "Custom" without changing any field values.
+///
+/// Persistence: the user's last-selected preset id is stored in
+/// `MeshCoreRadioParamsStore` for UI-state hydration only. Live
+/// firmware values from `selfInfo` remain the source of truth for
+/// what the radio actually has applied.
+///
+/// Source: community-curated values (verified against
+/// regulatory + practical operating windows for each region). Not
+/// derived from firmware; firmware does not ship preset tables.
+class MeshCoreRegionPreset {
+  /// Stable identifier used for persistence. Snake_case, never
+  /// translated. Adding new presets at the end of the list is
+  /// safe; renaming an id silently breaks last-selected hydration.
+  final String id;
+
+  /// User-visible label. English source; Italian/Portuguese ARBs
+  /// can localize on demand but most are place names that do not
+  /// translate.
+  final String label;
+
+  final double frequencyMHz;
+
+  /// Bandwidth in kHz (62.5 / 125 / 250 / 500 are the firmware-
+  /// supported buckets).
+  final double bandwidthKhz;
+
+  final int spreadingFactor;
+
+  /// Coding rate denominator: 5 → 4/5, 6 → 4/6, 7 → 4/7, 8 → 4/8.
+  final int codingRate;
+
+  /// Recommended TX power in dBm. Firmware will cap to the
+  /// regulatory maximum, so a 20 here may be applied as e.g. 14
+  /// in EU jurisdictions.
+  final int txPowerDbm;
+
+  const MeshCoreRegionPreset({
+    required this.id,
+    required this.label,
+    required this.frequencyMHz,
+    required this.bandwidthKhz,
+    required this.spreadingFactor,
+    required this.codingRate,
+    required this.txPowerDbm,
+  });
+}
+
+/// D26: canonical MeshCore region presets.
+///
+/// 19 named operating points covering the common regional bands
+/// (433 / 869 / 870 / 908 / 910 / 915 / 916 / 917 / 918 / 920 /
+/// 923 MHz). The values mirror the operating points used by the
+/// reference companion implementation; they are not regulatory
+/// guarantees and the user remains responsible for picking a
+/// preset that is legal in their jurisdiction. Custom is exposed
+/// as a UI-only sentinel and has no entry in this list.
+const List<MeshCoreRegionPreset> kMeshCoreRegionPresets = [
+  MeshCoreRegionPreset(
+    id: 'au_default',
+    label: 'Australia',
+    frequencyMHz: 915.8,
+    bandwidthKhz: 250,
+    spreadingFactor: 10,
+    codingRate: 5,
+    txPowerDbm: 20,
+  ),
+  MeshCoreRegionPreset(
+    id: 'au_narrow',
+    label: 'Australia (Narrow)',
+    frequencyMHz: 916.575,
+    bandwidthKhz: 62.5,
+    spreadingFactor: 7,
+    codingRate: 5,
+    txPowerDbm: 20,
+  ),
+  MeshCoreRegionPreset(
+    id: 'au_sa_wa_qld',
+    label: 'Australia SA, WA, QLD',
+    frequencyMHz: 923.125,
+    bandwidthKhz: 62.5,
+    spreadingFactor: 8,
+    codingRate: 5,
+    txPowerDbm: 20,
+  ),
+  MeshCoreRegionPreset(
+    id: 'cz',
+    label: 'Czech Republic',
+    frequencyMHz: 869.432,
+    bandwidthKhz: 62.5,
+    spreadingFactor: 7,
+    codingRate: 5,
+    txPowerDbm: 14,
+  ),
+  MeshCoreRegionPreset(
+    id: 'eu_433',
+    label: 'EU 433MHz',
+    frequencyMHz: 433.650,
+    bandwidthKhz: 250,
+    spreadingFactor: 11,
+    codingRate: 5,
+    txPowerDbm: 20,
+  ),
+  MeshCoreRegionPreset(
+    id: 'eu_uk_long_range',
+    label: 'EU/UK (Long Range)',
+    frequencyMHz: 869.525,
+    bandwidthKhz: 250,
+    spreadingFactor: 11,
+    codingRate: 5,
+    txPowerDbm: 14,
+  ),
+  MeshCoreRegionPreset(
+    id: 'eu_uk_medium_range',
+    label: 'EU/UK (Medium Range)',
+    frequencyMHz: 869.525,
+    bandwidthKhz: 250,
+    spreadingFactor: 10,
+    codingRate: 5,
+    txPowerDbm: 14,
+  ),
+  MeshCoreRegionPreset(
+    id: 'eu_uk_narrow',
+    label: 'EU/UK (Narrow)',
+    frequencyMHz: 869.618,
+    bandwidthKhz: 62.5,
+    spreadingFactor: 8,
+    codingRate: 5,
+    txPowerDbm: 14,
+  ),
+  MeshCoreRegionPreset(
+    id: 'nz_default',
+    label: 'New Zealand',
+    frequencyMHz: 917.375,
+    bandwidthKhz: 250,
+    spreadingFactor: 11,
+    codingRate: 5,
+    txPowerDbm: 20,
+  ),
+  MeshCoreRegionPreset(
+    id: 'nz_narrow',
+    label: 'New Zealand (Narrow)',
+    frequencyMHz: 917.375,
+    bandwidthKhz: 62.5,
+    spreadingFactor: 7,
+    codingRate: 5,
+    txPowerDbm: 20,
+  ),
+  MeshCoreRegionPreset(
+    id: 'pt_433',
+    label: 'Portugal 433',
+    frequencyMHz: 433.375,
+    bandwidthKhz: 62.5,
+    spreadingFactor: 9,
+    codingRate: 5,
+    txPowerDbm: 20,
+  ),
+  MeshCoreRegionPreset(
+    id: 'pt_869',
+    label: 'Portugal 869',
+    frequencyMHz: 869.618,
+    bandwidthKhz: 62.5,
+    spreadingFactor: 7,
+    codingRate: 5,
+    txPowerDbm: 14,
+  ),
+  MeshCoreRegionPreset(
+    id: 'ch',
+    label: 'Switzerland',
+    frequencyMHz: 869.618,
+    bandwidthKhz: 62.5,
+    spreadingFactor: 8,
+    codingRate: 5,
+    txPowerDbm: 14,
+  ),
+  MeshCoreRegionPreset(
+    id: 'us_arizona',
+    label: 'USA Arizona',
+    frequencyMHz: 908.205,
+    bandwidthKhz: 62.5,
+    spreadingFactor: 10,
+    codingRate: 5,
+    txPowerDbm: 20,
+  ),
+  MeshCoreRegionPreset(
+    id: 'us_canada',
+    label: 'USA/Canada',
+    frequencyMHz: 910.525,
+    bandwidthKhz: 62.5,
+    spreadingFactor: 7,
+    codingRate: 5,
+    txPowerDbm: 20,
+  ),
+  MeshCoreRegionPreset(
+    id: 'vn',
+    label: 'Vietnam',
+    frequencyMHz: 920.250,
+    bandwidthKhz: 250,
+    spreadingFactor: 11,
+    codingRate: 5,
+    txPowerDbm: 20,
+  ),
+  MeshCoreRegionPreset(
+    id: 'offgrid_433',
+    label: 'Off-Grid 433',
+    frequencyMHz: 433.0,
+    bandwidthKhz: 250,
+    spreadingFactor: 11,
+    codingRate: 8,
+    txPowerDbm: 20,
+  ),
+  MeshCoreRegionPreset(
+    id: 'offgrid_869',
+    label: 'Off-Grid 869',
+    frequencyMHz: 869.0,
+    bandwidthKhz: 250,
+    spreadingFactor: 11,
+    codingRate: 8,
+    txPowerDbm: 14,
+  ),
+  MeshCoreRegionPreset(
+    id: 'offgrid_918',
+    label: 'Off-Grid 918',
+    frequencyMHz: 918.0,
+    bandwidthKhz: 250,
+    spreadingFactor: 11,
+    codingRate: 8,
+    txPowerDbm: 20,
+  ),
+];
+
+/// Sentinel preset id used when the user has manually edited any
+/// radio param so it no longer matches a known preset's tuple.
+/// Stored in [MeshCoreRadioParamsStore] just like a real preset id;
+/// hydrating it leaves the chip un-highlighted.
+const String kMeshCoreCustomPresetId = 'custom';
+
+/// Find the preset in [kMeshCoreRegionPresets] whose tuple matches
+/// the given live radio params, or `null` if no preset matches and
+/// the user is on a Custom config. Bandwidth comparison uses a
+/// 0.5 kHz tolerance to absorb the 62.5 / 125.0 etc. float roundoff;
+/// frequency uses 0.001 MHz (1 kHz) tolerance for the same reason.
+MeshCoreRegionPreset? meshCoreRegionPresetMatching({
+  required double frequencyMHz,
+  required double bandwidthKhz,
+  required int spreadingFactor,
+  required int codingRate,
+  required int txPowerDbm,
+}) {
+  const freqTol = 0.001;
+  const bwTol = 0.5;
+  for (final p in kMeshCoreRegionPresets) {
+    if ((p.frequencyMHz - frequencyMHz).abs() > freqTol) continue;
+    if ((p.bandwidthKhz - bandwidthKhz).abs() > bwTol) continue;
+    if (p.spreadingFactor != spreadingFactor) continue;
+    if (p.codingRate != codingRate) continue;
+    if (p.txPowerDbm != txPowerDbm) continue;
+    return p;
+  }
+  return null;
+}
+
 /// MeshCore code classification utilities.
 ///
 /// Code ranges from reference implementation:

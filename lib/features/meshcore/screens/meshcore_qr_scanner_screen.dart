@@ -139,7 +139,7 @@ class _MeshCoreQrScannerScreenState
         context,
         context.l10n.meshcoreContactAddedToContacts(contact.name),
       );
-      Navigator.of(context).pop(contact);
+      safeNavigatorPop(contact);
       return;
     }
 
@@ -172,7 +172,7 @@ class _MeshCoreQrScannerScreenState
           context,
           context.l10n.meshcoreContactAddedToContacts(decodedContact.name),
         );
-        Navigator.of(context).pop(decodedContact);
+        safeNavigatorPop(decodedContact);
         return;
       }
     }
@@ -216,7 +216,7 @@ class _MeshCoreQrScannerScreenState
         context,
         context.l10n.meshcoreJoinedChannel(channel.displayName),
       );
-      Navigator.of(context).pop(channel);
+      safeNavigatorPop(channel);
       return;
     }
 
@@ -251,7 +251,7 @@ class _MeshCoreQrScannerScreenState
           context,
           context.l10n.meshcoreJoinedChannel(decodedChannel.displayName),
         );
-        Navigator.of(context).pop(decodedChannel);
+        safeNavigatorPop(decodedChannel);
         return;
       }
     }

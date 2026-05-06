@@ -13705,6 +13705,36 @@ abstract class AppLocalizations {
   /// **'Must match every other radio in your mesh.'**
   String get meshcoreRadioSettingsHint;
 
+  /// D26 — Section header for region preset row at top of MeshCore radio settings sheet
+  ///
+  /// In en, this message translates to:
+  /// **'REGION'**
+  String get meshcoreRadioSettingsRegionSectionHeader;
+
+  /// D26 — Title of the row that opens the region preset picker
+  ///
+  /// In en, this message translates to:
+  /// **'Region preset'**
+  String get meshcoreRadioSettingsRegionTileTitle;
+
+  /// D26 — Title of the modal sheet that lists region presets
+  ///
+  /// In en, this message translates to:
+  /// **'Choose region preset'**
+  String get meshcoreRadioSettingsRegionPickerTitle;
+
+  /// D26 — Sentinel label for a manually-edited radio config that does not match any preset
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get meshcoreRadioSettingsRegionCustom;
+
+  /// D26 — Subtitle of the Custom row in the region preset picker
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your current values'**
+  String get meshcoreRadioSettingsRegionCustomSubtitle;
+
   /// Section header for frequency and bandwidth fields
   ///
   /// In en, this message translates to:
@@ -14340,6 +14370,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Location'**
   String get meshcoreLocationInfoLabel;
+
+  /// D26 — In-flight subtitle while a settings tile is dispatching a command (e.g. set location)
+  ///
+  /// In en, this message translates to:
+  /// **'Applying…'**
+  String get meshcoreApplying;
+
+  /// D26 — Title of the lat/lon editor sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Set node location'**
+  String get meshcoreLocationSheetTitle;
+
+  /// D26 — Privacy hint shown in the lat/lon editor sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Your location may be broadcast to nearby nodes in your next advertisement.'**
+  String get meshcoreLocationSheetPrivacyHint;
+
+  /// D26 — Label for the latitude TextFormField
+  ///
+  /// In en, this message translates to:
+  /// **'Latitude'**
+  String get meshcoreLocationLatLabel;
+
+  /// D26 — Range hint for the latitude TextFormField
+  ///
+  /// In en, this message translates to:
+  /// **'-90 to 90'**
+  String get meshcoreLocationLatHint;
+
+  /// D26 — Validation error when latitude is out of range or unparseable
+  ///
+  /// In en, this message translates to:
+  /// **'Latitude must be between -90 and 90'**
+  String get meshcoreLocationLatRangeError;
+
+  /// D26 — Label for the longitude TextFormField
+  ///
+  /// In en, this message translates to:
+  /// **'Longitude'**
+  String get meshcoreLocationLonLabel;
+
+  /// D26 — Range hint for the longitude TextFormField
+  ///
+  /// In en, this message translates to:
+  /// **'-180 to 180'**
+  String get meshcoreLocationLonHint;
+
+  /// D26 — Validation error when longitude is out of range or unparseable
+  ///
+  /// In en, this message translates to:
+  /// **'Longitude must be between -180 and 180'**
+  String get meshcoreLocationLonRangeError;
+
+  /// D26 — Apply button on the lat/lon editor sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get meshcoreLocationApplyAction;
+
+  /// D26 — Clear-location button on the lat/lon editor sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Clear location'**
+  String get meshcoreLocationClearAction;
+
+  /// D26 — Success snackbar after applying a non-zero location
+  ///
+  /// In en, this message translates to:
+  /// **'Location updated'**
+  String get meshcoreLocationUpdated;
+
+  /// D26 — Success snackbar after clearing the stored location
+  ///
+  /// In en, this message translates to:
+  /// **'Location cleared'**
+  String get meshcoreLocationCleared;
+
+  /// D26 — Error snackbar when the radio rejects a setAdvertLatLon command
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to set location'**
+  String get meshcoreFailedToSetLocation;
+
+  /// D26 — Error snackbar when the firmware rejects setDeviceTime because device time is already ahead of the phone (firmware is forward-only)
+  ///
+  /// In en, this message translates to:
+  /// **'Device clock is already ahead — sync skipped'**
+  String get meshcoreSyncTimeRejected;
 
   /// Settings tile title for location
   ///

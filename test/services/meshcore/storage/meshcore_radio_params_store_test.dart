@@ -188,4 +188,59 @@ void main() {
       expect(await store.load('79426D8D'), equals(fresh));
     });
   });
+
+  group('D26 preset id persistence', () {
+    test('round-trips a known preset id', () async {
+      final store = MeshCoreRadioParamsStore();
+      await store.savePresetId('79426D8D', 'au_default');
+      expect(await store.loadPresetId('79426D8D'), equals('au_default'));
+    });
+
+    test('round-trips the Custom sentinel', () async {
+      final store = MeshCoreRadioParamsStore();
+      await store.savePresetId('79426D8D', 'custom');
+      expect(await store.loadPresetId('79426D8D'), equals('custom'));
+    });
+
+    test('case-insensitive nodeKey hydration', () async {
+      final store = MeshCoreRadioParamsStore();
+      await store.savePresetId('79426D8D', 'eu_uk_narrow');
+      expect(await store.loadPresetId('79426d8d'), equals('eu_uk_narrow'));
+    });
+
+    test('two different nodeKeys do not share a preset id', () async {
+      final store = MeshCoreRadioParamsStore();
+      await store.savePresetId('aaaaaaaa', 'us_canada');
+      await store.savePresetId('bbbbbbbb', 'eu_uk_narrow');
+      expect(await store.loadPresetId('aaaaaaaa'), equals('us_canada'));
+      expect(await store.loadPresetId('bbbbbbbb'), equals('eu_uk_narrow'));
+    });
+
+    test('clear() removes both the params blob AND the preset id', () async {
+      final store = MeshCoreRadioParamsStore();
+      const params = MeshCoreRadioParams(
+        freqKhz: 869618,
+        bandwidthHz: 62500,
+        spreadingFactor: 8,
+        codingRate: 5,
+        txPowerDbm: 14,
+      );
+      await store.save('79426D8D', params);
+      await store.savePresetId('79426D8D', 'eu_uk_narrow');
+      await store.clear('79426D8D');
+      expect(await store.load('79426D8D'), isNull);
+      expect(await store.loadPresetId('79426D8D'), isNull);
+    });
+
+    test('empty nodeKey is a no-op for save and load', () async {
+      final store = MeshCoreRadioParamsStore();
+      await store.savePresetId('', 'au_default');
+      expect(await store.loadPresetId(''), isNull);
+    });
+
+    test('unsaved nodeKey returns null', () async {
+      final store = MeshCoreRadioParamsStore();
+      expect(await store.loadPresetId('cafebabe'), isNull);
+    });
+  });
 }

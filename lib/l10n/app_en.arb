@@ -10456,6 +10456,26 @@
     "@meshcoreRadioSettingsHint": {
         "description": "Subtitle hint under the radio settings title"
     },
+    "meshcoreRadioSettingsRegionSectionHeader": "REGION",
+    "@meshcoreRadioSettingsRegionSectionHeader": {
+        "description": "D26 — Section header for region preset row at top of MeshCore radio settings sheet"
+    },
+    "meshcoreRadioSettingsRegionTileTitle": "Region preset",
+    "@meshcoreRadioSettingsRegionTileTitle": {
+        "description": "D26 — Title of the row that opens the region preset picker"
+    },
+    "meshcoreRadioSettingsRegionPickerTitle": "Choose region preset",
+    "@meshcoreRadioSettingsRegionPickerTitle": {
+        "description": "D26 — Title of the modal sheet that lists region presets"
+    },
+    "meshcoreRadioSettingsRegionCustom": "Custom",
+    "@meshcoreRadioSettingsRegionCustom": {
+        "description": "D26 — Sentinel label for a manually-edited radio config that does not match any preset"
+    },
+    "meshcoreRadioSettingsRegionCustomSubtitle": "Keep your current values",
+    "@meshcoreRadioSettingsRegionCustomSubtitle": {
+        "description": "D26 — Subtitle of the Custom row in the region preset picker"
+    },
     "meshcoreRadioSettingsFreqSectionHeader": "FREQUENCY & BANDWIDTH",
     "@meshcoreRadioSettingsFreqSectionHeader": {
         "description": "Section header for frequency and bandwidth fields"
@@ -10899,6 +10919,66 @@
     "meshcoreLocationInfoLabel": "Location",
     "@meshcoreLocationInfoLabel": {
         "description": "Info row label for location on map contact sheet"
+    },
+    "meshcoreApplying": "Applying…",
+    "@meshcoreApplying": {
+        "description": "D26 — In-flight subtitle while a settings tile is dispatching a command (e.g. set location)"
+    },
+    "meshcoreLocationSheetTitle": "Set node location",
+    "@meshcoreLocationSheetTitle": {
+        "description": "D26 — Title of the lat/lon editor sheet"
+    },
+    "meshcoreLocationSheetPrivacyHint": "Your location may be broadcast to nearby nodes in your next advertisement.",
+    "@meshcoreLocationSheetPrivacyHint": {
+        "description": "D26 — Privacy hint shown in the lat/lon editor sheet"
+    },
+    "meshcoreLocationLatLabel": "Latitude",
+    "@meshcoreLocationLatLabel": {
+        "description": "D26 — Label for the latitude TextFormField"
+    },
+    "meshcoreLocationLatHint": "-90 to 90",
+    "@meshcoreLocationLatHint": {
+        "description": "D26 — Range hint for the latitude TextFormField"
+    },
+    "meshcoreLocationLatRangeError": "Latitude must be between -90 and 90",
+    "@meshcoreLocationLatRangeError": {
+        "description": "D26 — Validation error when latitude is out of range or unparseable"
+    },
+    "meshcoreLocationLonLabel": "Longitude",
+    "@meshcoreLocationLonLabel": {
+        "description": "D26 — Label for the longitude TextFormField"
+    },
+    "meshcoreLocationLonHint": "-180 to 180",
+    "@meshcoreLocationLonHint": {
+        "description": "D26 — Range hint for the longitude TextFormField"
+    },
+    "meshcoreLocationLonRangeError": "Longitude must be between -180 and 180",
+    "@meshcoreLocationLonRangeError": {
+        "description": "D26 — Validation error when longitude is out of range or unparseable"
+    },
+    "meshcoreLocationApplyAction": "Apply",
+    "@meshcoreLocationApplyAction": {
+        "description": "D26 — Apply button on the lat/lon editor sheet"
+    },
+    "meshcoreLocationClearAction": "Clear location",
+    "@meshcoreLocationClearAction": {
+        "description": "D26 — Clear-location button on the lat/lon editor sheet"
+    },
+    "meshcoreLocationUpdated": "Location updated",
+    "@meshcoreLocationUpdated": {
+        "description": "D26 — Success snackbar after applying a non-zero location"
+    },
+    "meshcoreLocationCleared": "Location cleared",
+    "@meshcoreLocationCleared": {
+        "description": "D26 — Success snackbar after clearing the stored location"
+    },
+    "meshcoreFailedToSetLocation": "Failed to set location",
+    "@meshcoreFailedToSetLocation": {
+        "description": "D26 — Error snackbar when the radio rejects a setAdvertLatLon command"
+    },
+    "meshcoreSyncTimeRejected": "Device clock is already ahead — sync skipped",
+    "@meshcoreSyncTimeRejected": {
+        "description": "D26 — Error snackbar when the firmware rejects setDeviceTime because device time is already ahead of the phone (firmware is forward-only)"
     },
     "meshcoreLocationSetting": "Location",
     "@meshcoreLocationSetting": {

@@ -86,6 +86,7 @@ class MeshCoreRadioParams {
 /// persisted value.
 class MeshCoreRadioParamsStore {
   static const String _keyPrefix = 'meshcore_radio_params_';
+  static const String _presetIdKeyPrefix = 'meshcore_radio_preset_id_';
 
   /// Optional preferences override for tests.
   final SharedPreferences? _prefs;
@@ -98,6 +99,8 @@ class MeshCoreRadioParamsStore {
   }
 
   String _keyFor(String nodeKey) => '$_keyPrefix${nodeKey.toLowerCase()}';
+  String _presetKeyFor(String nodeKey) =>
+      '$_presetIdKeyPrefix${nodeKey.toLowerCase()}';
 
   /// Save the params last successfully applied to [nodeKey]. Overwrites
   /// any previous entry for the same key.
@@ -129,5 +132,29 @@ class MeshCoreRadioParamsStore {
     if (nodeKey.isEmpty) return;
     final prefs = await _resolve();
     await prefs.remove(_keyFor(nodeKey));
+    await prefs.remove(_presetKeyFor(nodeKey));
+  }
+
+  /// D26: persist the user-selected region preset id for [nodeKey].
+  /// This is **UI state only** — the preset id is the chip the user
+  /// last tapped on the radio settings sheet, not proof of what
+  /// firmware has applied. Live values from `selfInfo` remain the
+  /// source of truth for the actual radio params; this just hydrates
+  /// the chip's "selected" highlight when the sheet re-opens.
+  ///
+  /// Pass `kMeshCoreCustomPresetId` (or any unrecognised id) to
+  /// represent "the user manually edited a field and is no longer
+  /// on a known preset."
+  Future<void> savePresetId(String nodeKey, String presetId) async {
+    if (nodeKey.isEmpty) return;
+    final prefs = await _resolve();
+    await prefs.setString(_presetKeyFor(nodeKey), presetId);
+  }
+
+  /// Load the last-saved preset id for [nodeKey], or `null` if none.
+  Future<String?> loadPresetId(String nodeKey) async {
+    if (nodeKey.isEmpty) return null;
+    final prefs = await _resolve();
+    return prefs.getString(_presetKeyFor(nodeKey));
   }
 }

@@ -24,6 +24,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
+import '../../../core/meshcore_constants.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/theme.dart';
@@ -108,6 +109,13 @@ class _MeshCoreRadioSettingsSheetState
   late int _spreadingFactor;
   late int _codingRate;
 
+  // D26: currently-selected region preset id, or
+  // [kMeshCoreCustomPresetId] when the user has manually edited a
+  // field so the live tuple no longer matches a known preset.
+  // Source of truth for the "Region" chip's selection state only —
+  // not proof of what the radio has actually applied.
+  String _selectedPresetId = kMeshCoreCustomPresetId;
+
   bool _saving = false;
   bool _hydrating = true;
 
@@ -163,7 +171,89 @@ class _MeshCoreRadioSettingsSheetState
       );
     }
 
+    // D26: derive the initial preset selection from whatever values
+    // we just landed on (live SelfInfo wins, store fallback below).
+    _recomputeSelectedPreset();
     _hydrateFromStore();
+  }
+
+  /// D26: recompute [_selectedPresetId] from the current field
+  /// values. Called when the chip selectors / text fields change so
+  /// the Region chip stays in sync without a separate listener per
+  /// field. Pure function of `_bandwidthKhz`, `_spreadingFactor`,
+  /// `_codingRate`, and the parsed contents of `_freqController` /
+  /// `_txController`.
+  void _recomputeSelectedPreset() {
+    final freqMhz = double.tryParse(_freqController.text.trim());
+    final tx = int.tryParse(_txController.text.trim());
+    if (freqMhz == null || tx == null) {
+      _selectedPresetId = kMeshCoreCustomPresetId;
+      return;
+    }
+    final match = meshCoreRegionPresetMatching(
+      frequencyMHz: freqMhz,
+      bandwidthKhz: _bandwidthKhz,
+      spreadingFactor: _spreadingFactor,
+      codingRate: _codingRate,
+      txPowerDbm: tx,
+    );
+    _selectedPresetId = match?.id ?? kMeshCoreCustomPresetId;
+  }
+
+  /// D26: apply a region preset's tuple to all five fields and mark
+  /// the Region chip as selected. Manual edits afterwards switch the
+  /// chip back to Custom via [_recomputeSelectedPreset].
+  void _applyPreset(MeshCoreRegionPreset preset) {
+    safeSetState(() {
+      _freqController.text = preset.frequencyMHz.toStringAsFixed(3);
+      _bandwidthKhz = preset.bandwidthKhz;
+      _spreadingFactor = preset.spreadingFactor;
+      _codingRate = preset.codingRate;
+      _txController.text = preset.txPowerDbm.toString();
+      _selectedPresetId = preset.id;
+    });
+    AppLogging.meshcore('event=radio.preset.selected id=${preset.id}');
+  }
+
+  /// D26: human-readable label for the currently-selected preset, or
+  /// the localized "Custom" string when on a custom config.
+  String _currentPresetLabel(AppLocalizations l10n) {
+    if (_selectedPresetId == kMeshCoreCustomPresetId) {
+      return l10n.meshcoreRadioSettingsRegionCustom;
+    }
+    for (final p in kMeshCoreRegionPresets) {
+      if (p.id == _selectedPresetId) return p.label;
+    }
+    return l10n.meshcoreRadioSettingsRegionCustom;
+  }
+
+  /// D26: open the region picker as a scrollable bottom sheet. Shows
+  /// all 19 presets followed by a "Custom" sentinel row that keeps
+  /// whatever values the user currently has. A wrapping chip row
+  /// would cover several lines for 20 entries and look broken;
+  /// modal-pick keeps the sheet's main view tidy.
+  Future<void> _openPresetPicker(AppLocalizations l10n) async {
+    final picked = await AppBottomSheet.showScrollable<String>(
+      context: context,
+      initialChildSize: 0.7,
+      minChildSize: 0.4,
+      maxChildSize: 0.95,
+      builder: (controller) => _RegionPresetPickerList(
+        scrollController: controller,
+        selectedPresetId: _selectedPresetId,
+      ),
+    );
+    if (picked == null) return;
+    if (picked == kMeshCoreCustomPresetId) {
+      safeSetState(() => _selectedPresetId = kMeshCoreCustomPresetId);
+      AppLogging.meshcore('event=radio.preset.selected id=custom');
+      return;
+    }
+    final preset = kMeshCoreRegionPresets.firstWhere(
+      (p) => p.id == picked,
+      orElse: () => kMeshCoreRegionPresets.first,
+    );
+    _applyPreset(preset);
   }
 
   Future<void> _hydrateFromStore() async {
@@ -202,6 +292,8 @@ class _MeshCoreRadioSettingsSheetState
       'sf=${saved.spreadingFactor} cr=${saved.codingRate} '
       'tx=${saved.txPowerDbm}dBm',
     );
+    final savedPresetId = await _store.loadPresetId(key);
+    if (!mounted) return;
     safeSetState(() {
       _freqController.text = (saved.freqKhz / 1000).toString();
       _bandwidthKhz = saved.bandwidthHz / 1000;
@@ -210,6 +302,28 @@ class _MeshCoreRadioSettingsSheetState
       _txController.text = saved.txPowerDbm.toString();
       _hydrating = false;
     });
+    // D26: trust the persisted preset id only if it still maps to a
+    // tuple that matches what we just hydrated; if the user changed
+    // values out-of-band, recompute and fall through to Custom.
+    if (savedPresetId != null && savedPresetId != kMeshCoreCustomPresetId) {
+      final preset = kMeshCoreRegionPresets.firstWhere(
+        (p) => p.id == savedPresetId,
+        orElse: () => const MeshCoreRegionPreset(
+          id: kMeshCoreCustomPresetId,
+          label: '',
+          frequencyMHz: 0,
+          bandwidthKhz: 0,
+          spreadingFactor: 0,
+          codingRate: 0,
+          txPowerDbm: 0,
+        ),
+      );
+      if (preset.id != kMeshCoreCustomPresetId) {
+        _selectedPresetId = preset.id;
+        return;
+      }
+    }
+    _recomputeSelectedPreset();
   }
 
   @override
@@ -368,8 +482,14 @@ class _MeshCoreRadioSettingsSheetState
               txPowerDbm: txDbm,
             ),
           );
+          // D26: also persist the chip-selection state so the next
+          // sheet open re-highlights the right region. This is UI
+          // state only — the saved tuple above is the canonical
+          // store of last-applied values.
+          await _store.savePresetId(nodeKey, _selectedPresetId);
           AppLogging.meshcore(
-            'event=radio.persist.saved key_len=${nodeKey.length}',
+            'event=radio.persist.saved key_len=${nodeKey.length} '
+            'preset=$_selectedPresetId',
           );
         } catch (e) {
           // Storage failure is non-fatal: the radio still has the new
@@ -385,7 +505,7 @@ class _MeshCoreRadioSettingsSheetState
 
       AppLogging.meshcore('event=radio.apply.succeeded');
       if (!mounted) return;
-      Navigator.of(context).pop();
+      safeNavigatorPop();
       showSuccessSnackBar(context, l10n.meshcoreRadioSettingsAppliedSuccess);
     } catch (e) {
       AppLogging.meshcore(
@@ -439,6 +559,21 @@ class _MeshCoreRadioSettingsSheetState
               l10n.meshcoreRadioSettingsHint,
               style: TextStyle(fontSize: 13, color: context.textTertiary),
             ),
+          ),
+
+          // D26: Region preset selector. Opens a modal picker rather
+          // than a 20-chip wrap row because 19 named regions plus
+          // Custom would cover several lines and look broken.
+          SettingsSectionHeader(
+            title: l10n.meshcoreRadioSettingsRegionSectionHeader,
+          ),
+          SettingsTile(
+            icon: Icons.public,
+            iconColor: AccentColors.cyan,
+            title: l10n.meshcoreRadioSettingsRegionTileTitle,
+            subtitle: _currentPresetLabel(l10n),
+            trailing: Icon(Icons.chevron_right, color: context.textTertiary),
+            onTap: _saving ? null : () => _openPresetPicker(l10n),
           ),
 
           SettingsSectionHeader(
@@ -646,6 +781,138 @@ class _MeshCoreRadioSettingsSheetState
           ),
           SizedBox(height: AppTheme.spacing16),
         ],
+      ),
+    );
+  }
+}
+
+/// D26: scrollable picker list for the 19 region presets + Custom.
+/// Returns the picked preset id (or `kMeshCoreCustomPresetId`) via
+/// `Navigator.pop`. Pure stateless presentation; the calling sheet
+/// owns the actual field-write side effect.
+class _RegionPresetPickerList extends StatelessWidget {
+  final ScrollController scrollController;
+  final String selectedPresetId;
+
+  const _RegionPresetPickerList({
+    required this.scrollController,
+    required this.selectedPresetId,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppTheme.spacing16,
+            AppTheme.spacing8,
+            AppTheme.spacing16,
+            AppTheme.spacing12,
+          ),
+          child: Text(
+            l10n.meshcoreRadioSettingsRegionPickerTitle,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
+            ),
+          ),
+        ),
+        Divider(color: context.border, height: 1),
+        Expanded(
+          child: ListView.builder(
+            controller: scrollController,
+            padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
+            itemCount: kMeshCoreRegionPresets.length + 1, // +1 for Custom
+            itemBuilder: (context, index) {
+              if (index == kMeshCoreRegionPresets.length) {
+                return _PresetRow(
+                  label: l10n.meshcoreRadioSettingsRegionCustom,
+                  subtitle: l10n.meshcoreRadioSettingsRegionCustomSubtitle,
+                  selected: selectedPresetId == kMeshCoreCustomPresetId,
+                  onTap: () =>
+                      Navigator.of(context).pop(kMeshCoreCustomPresetId),
+                );
+              }
+              final p = kMeshCoreRegionPresets[index];
+              return _PresetRow(
+                label: p.label,
+                subtitle:
+                    '${p.frequencyMHz.toStringAsFixed(3)} MHz · '
+                    '${_bwLabel(p.bandwidthKhz)} kHz · '
+                    'SF${p.spreadingFactor} · 4/${p.codingRate} · '
+                    '${p.txPowerDbm} dBm',
+                selected: selectedPresetId == p.id,
+                onTap: () => Navigator.of(context).pop(p.id),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PresetRow extends StatelessWidget {
+  final String label;
+  final String subtitle;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _PresetRow({
+    required this.label,
+    required this.subtitle,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacing16,
+            vertical: AppTheme.spacing12,
+          ),
+          child: Row(
+            children: [
+              Icon(
+                selected
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+                color: selected ? context.accentColor : context.textSecondary,
+              ),
+              const SizedBox(width: AppTheme.spacing16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing2),
+                    Text(
+                      subtitle,
+                      style: context.bodySmallStyle?.copyWith(
+                        color: context.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

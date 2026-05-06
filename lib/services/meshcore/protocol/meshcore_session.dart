@@ -12,6 +12,7 @@
 // This is the main entry point for MeshCore protocol operations.
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kDebugMode;
@@ -1019,6 +1020,175 @@ class MeshCoreSession {
       error: !ok,
     );
     return ok;
+  }
+
+  // ---------------------------------------------------------------------------
+  // D26: Identity + lifecycle commands
+  // ---------------------------------------------------------------------------
+
+  /// Set the device's advertised name (`CMD_SET_ADVERT_NAME` 0x08).
+  ///
+  /// Wire payload: `[0x08][N UTF-8 name bytes]` (no trailing null).
+  /// Firmware caps at [kMeshCoreMaxNodeNameBytes] bytes; we
+  /// pre-validate so the user sees the limit explicitly instead
+  /// of getting a silently-truncated name on the radio. Empty
+  /// names are rejected to avoid the firmware persisting `""`.
+  ///
+  /// Throws [ArgumentError] on empty or oversized name. Returns
+  /// `true` on `RESP_CODE_OK`.
+  Future<bool> setAdvertName(
+    String name, {
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    if (name.isEmpty) {
+      throw ArgumentError.value(name, 'name', 'must not be empty');
+    }
+    final bytes = utf8.encode(name);
+    if (bytes.length > kMeshCoreMaxNodeNameBytes) {
+      throw ArgumentError.value(
+        name,
+        'name',
+        'must be at most $kMeshCoreMaxNodeNameBytes UTF-8 bytes '
+            '(got ${bytes.length})',
+      );
+    }
+
+    AppLogging.meshcore(
+      'event=identity.set_name.attempted name_len=${bytes.length}',
+    );
+
+    final response = await sendAndWait(
+      MeshCoreCommands.setAdvertName,
+      payload: Uint8List.fromList(bytes),
+      expectedResponse: MeshCoreResponses.ok,
+      timeout: timeout,
+    );
+    final ok = response != null;
+    AppLogging.meshcore(
+      'event=identity.set_name.${ok ? "succeeded" : "failed"}',
+      error: !ok,
+    );
+    return ok;
+  }
+
+  /// Set the device's advertised location (`CMD_SET_ADVERT_LAT_LON`
+  /// 0x0E).
+  ///
+  /// Wire payload: `[0x0E][lat int32 LE × 1e6][lon int32 LE × 1e6]`
+  /// (9 bytes). The firmware divides by [kMeshCoreAdvertLatLonScale]
+  /// to recover degrees and rejects out-of-range with
+  /// `ERR_CODE_ILLEGAL_ARG`. Pre-validating in the helper keeps the
+  /// rejection path off the wire entirely. Pass `(0, 0)` to clear
+  /// the stored location (the firmware accepts the all-zeros
+  /// special case).
+  ///
+  /// Throws [ArgumentError] on out-of-range. Returns `true` on
+  /// `RESP_CODE_OK`.
+  Future<bool> setAdvertLatLon(
+    double lat,
+    double lon, {
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    if (lat < -90 || lat > 90) {
+      throw ArgumentError.value(lat, 'lat', 'must be in [-90, 90]');
+    }
+    if (lon < -180 || lon > 180) {
+      throw ArgumentError.value(lon, 'lon', 'must be in [-180, 180]');
+    }
+
+    final latRaw = (lat * kMeshCoreAdvertLatLonScale).round();
+    final lonRaw = (lon * kMeshCoreAdvertLatLonScale).round();
+
+    final payload = ByteData(8)
+      ..setInt32(0, latRaw, Endian.little)
+      ..setInt32(4, lonRaw, Endian.little);
+
+    final cleared = lat == 0 && lon == 0;
+    AppLogging.meshcore(
+      'event=identity.set_location.attempted '
+      'cleared=$cleared location_set=true',
+    );
+
+    final response = await sendAndWait(
+      MeshCoreCommands.setAdvertLatLon,
+      payload: payload.buffer.asUint8List(),
+      expectedResponse: MeshCoreResponses.ok,
+      timeout: timeout,
+    );
+    final ok = response != null;
+    AppLogging.meshcore(
+      'event=identity.set_location.${ok ? "succeeded" : "failed"} '
+      'cleared=$cleared',
+      error: !ok,
+    );
+    return ok;
+  }
+
+  /// Push the current epoch seconds to the device
+  /// (`CMD_SET_DEVICE_TIME` 0x06). Wire payload: `[0x06][secs uint32
+  /// LE]` (5 bytes).
+  ///
+  /// **Forward-only**: firmware rejects times in the past with
+  /// `ERR_CODE_ILLEGAL_ARG`. If the radio's RTC is already ahead of
+  /// the phone (e.g. drifted), this will return `false` and the
+  /// caller should surface the "device clock is already ahead"
+  /// outcome to the user rather than retrying.
+  ///
+  /// Defaults to `DateTime.now()` in seconds; a [time] override is
+  /// accepted for tests.
+  Future<bool> setDeviceTime({
+    DateTime? time,
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    final epochSecs =
+        (time ?? DateTime.now()).toUtc().millisecondsSinceEpoch ~/ 1000;
+    if (epochSecs < 0 || epochSecs > 0xFFFFFFFF) {
+      throw ArgumentError.value(
+        epochSecs,
+        'epochSecs',
+        'does not fit in uint32',
+      );
+    }
+    final payload = ByteData(4)..setUint32(0, epochSecs, Endian.little);
+
+    AppLogging.meshcore(
+      'event=identity.set_time.attempted epoch_seconds=$epochSecs',
+    );
+    final response = await sendAndWait(
+      MeshCoreCommands.setDeviceTime,
+      payload: payload.buffer.asUint8List(),
+      expectedResponse: MeshCoreResponses.ok,
+      timeout: timeout,
+    );
+    final ok = response != null;
+    AppLogging.meshcore(
+      'event=identity.set_time.${ok ? "succeeded" : "failed"} '
+      'epoch_seconds=$epochSecs',
+      error: !ok,
+    );
+    return ok;
+  }
+
+  /// Reboot the radio (`CMD_REBOOT` 0x13). Wire payload requires the
+  /// literal magic word `"reboot"` after the opcode — without it
+  /// the firmware silently ignores the frame.
+  ///
+  /// Fire-and-forget: the radio does NOT send `RESP_CODE_OK`; it
+  /// just power-cycles. The transport will drop and the existing
+  /// reconnect logic picks the device back up on the next handshake.
+  /// Callers should expect `isConnected` to flip false shortly
+  /// after the await returns.
+  Future<void> rebootDevice() async {
+    AppLogging.meshcore('event=identity.reboot.requested');
+    // Magic-word literal — without it the firmware drops the frame
+    // (`memcmp(&cmd_frame[1], "reboot", 6)` check in companion
+    // firmware). Hardcoded; do not extract to a constant since the
+    // string itself IS the protocol.
+    final payload = Uint8List.fromList(<int>[
+      0x72, 0x65, 0x62, 0x6f, 0x6f, 0x74, // "reboot"
+    ]);
+    await sendCommandWithPayload(MeshCoreCommands.reboot, payload);
+    AppLogging.meshcore('event=identity.reboot.sent');
   }
 
   // ---------------------------------------------------------------------------

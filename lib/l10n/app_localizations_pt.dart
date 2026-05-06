@@ -7780,6 +7780,22 @@ class AppLocalizationsPt extends AppLocalizations {
       'Deve corresponder a todos os outros rádios da sua mesh.';
 
   @override
+  String get meshcoreRadioSettingsRegionSectionHeader => 'REGION';
+
+  @override
+  String get meshcoreRadioSettingsRegionTileTitle => 'Region preset';
+
+  @override
+  String get meshcoreRadioSettingsRegionPickerTitle => 'Choose region preset';
+
+  @override
+  String get meshcoreRadioSettingsRegionCustom => 'Custom';
+
+  @override
+  String get meshcoreRadioSettingsRegionCustomSubtitle =>
+      'Keep your current values';
+
+  @override
   String get meshcoreRadioSettingsFreqSectionHeader =>
       'FREQUÊNCIA E LARGURA DE BANDA';
 
@@ -8128,6 +8144,55 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get meshcoreLocationInfoLabel => 'Localização';
+
+  @override
+  String get meshcoreApplying => 'Applying…';
+
+  @override
+  String get meshcoreLocationSheetTitle => 'Set node location';
+
+  @override
+  String get meshcoreLocationSheetPrivacyHint =>
+      'Your location may be broadcast to nearby nodes in your next advertisement.';
+
+  @override
+  String get meshcoreLocationLatLabel => 'Latitude';
+
+  @override
+  String get meshcoreLocationLatHint => '-90 to 90';
+
+  @override
+  String get meshcoreLocationLatRangeError =>
+      'Latitude must be between -90 and 90';
+
+  @override
+  String get meshcoreLocationLonLabel => 'Longitude';
+
+  @override
+  String get meshcoreLocationLonHint => '-180 to 180';
+
+  @override
+  String get meshcoreLocationLonRangeError =>
+      'Longitude must be between -180 and 180';
+
+  @override
+  String get meshcoreLocationApplyAction => 'Apply';
+
+  @override
+  String get meshcoreLocationClearAction => 'Clear location';
+
+  @override
+  String get meshcoreLocationUpdated => 'Location updated';
+
+  @override
+  String get meshcoreLocationCleared => 'Location cleared';
+
+  @override
+  String get meshcoreFailedToSetLocation => 'Failed to set location';
+
+  @override
+  String get meshcoreSyncTimeRejected =>
+      'Device clock is already ahead — sync skipped';
 
   @override
   String get meshcoreLocationSetting => 'Localização';
