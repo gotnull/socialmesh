@@ -68,6 +68,15 @@ class MeshCoreContact {
   /// Unread message count.
   final int unreadCount;
 
+  /// D28: latest known SNR for this contact, encoded as the firmware's
+  /// raw int8 value scaled by 4 (so dB = snrQuarter / 4.0). Sourced
+  /// from inbound V3 message frames at receive time.
+  ///
+  /// Session-only: not persisted to the contact store. Cleared on
+  /// app restart and on contact-store reload from firmware. UI hides
+  /// the badge when this is null.
+  final int? snrQuarter;
+
   MeshCoreContact({
     required this.publicKey,
     required this.name,
@@ -81,7 +90,12 @@ class MeshCoreContact {
     required this.lastSeen,
     DateTime? lastMessageAt,
     this.unreadCount = 0,
+    this.snrQuarter,
   }) : lastMessageAt = lastMessageAt ?? lastSeen;
+
+  /// D28: SNR in dB derived from the raw firmware quarter encoding,
+  /// or null when no message has carried SNR for this contact yet.
+  double? get snrDb => snrQuarter == null ? null : snrQuarter! / 4.0;
 
   /// Public key as hex string.
   String get publicKeyHex => _bytesToHex(publicKey);
@@ -158,6 +172,8 @@ class MeshCoreContact {
     DateTime? lastSeen,
     DateTime? lastMessageAt,
     int? unreadCount,
+    int? snrQuarter,
+    bool clearSnrQuarter = false,
   }) {
     return MeshCoreContact(
       publicKey: publicKey ?? this.publicKey,
@@ -176,6 +192,7 @@ class MeshCoreContact {
       lastSeen: lastSeen ?? this.lastSeen,
       lastMessageAt: lastMessageAt ?? this.lastMessageAt,
       unreadCount: unreadCount ?? this.unreadCount,
+      snrQuarter: clearSnrQuarter ? null : (snrQuarter ?? this.snrQuarter),
     );
   }
 

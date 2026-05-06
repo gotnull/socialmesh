@@ -269,26 +269,66 @@ class MeshCoreConversationsState {
   final bool isLoading;
   final String? error;
 
+  /// D28: source of the in-flight drain (null = idle). Pinned for the
+  /// Tools queue-status card so the user can see whether a drain is
+  /// currently running and what triggered it.
+  final MeshCoreDrainSource? activeDrainSource;
+
+  /// D28: last completed drain's source (null = no drain has run yet).
+  final MeshCoreDrainSource? lastDrainSource;
+
+  /// D28: last completed drain's outcome.
+  final MeshCoreDrainOutcomeKind? lastDrainOutcome;
+
+  /// D28: timestamp when the last drain completed.
+  final DateTime? lastDrainAt;
+
+  /// D28: whether the drain heartbeat timer is currently armed.
+  final bool heartbeatActive;
+
   const MeshCoreConversationsState({
     this.conversations = const [],
     this.isLoading = false,
     this.error,
+    this.activeDrainSource,
+    this.lastDrainSource,
+    this.lastDrainOutcome,
+    this.lastDrainAt,
+    this.heartbeatActive = false,
   });
 
   const MeshCoreConversationsState.initial()
     : conversations = const [],
       isLoading = false,
-      error = null;
+      error = null,
+      activeDrainSource = null,
+      lastDrainSource = null,
+      lastDrainOutcome = null,
+      lastDrainAt = null,
+      heartbeatActive = false;
 
   MeshCoreConversationsState copyWith({
     List<MeshCoreConversation>? conversations,
     bool? isLoading,
     String? error,
+    MeshCoreDrainSource? activeDrainSource,
+    bool clearActiveDrainSource = false,
+    MeshCoreDrainSource? lastDrainSource,
+    MeshCoreDrainOutcomeKind? lastDrainOutcome,
+    DateTime? lastDrainAt,
+    bool? heartbeatActive,
   }) {
     return MeshCoreConversationsState(
       conversations: conversations ?? this.conversations,
       isLoading: isLoading ?? this.isLoading,
       error: error,
+      activeDrainSource: clearActiveDrainSource
+          ? null
+          : (activeDrainSource ?? this.activeDrainSource),
+      lastDrainSource: lastDrainSource ?? this.lastDrainSource,
+      lastDrainOutcome: lastDrainOutcome ?? this.lastDrainOutcome,
+      lastDrainAt: lastDrainAt ?? this.lastDrainAt,
+      heartbeatActive: heartbeatActive ?? this.heartbeatActive,
     );
   }
 
@@ -410,6 +450,7 @@ class MeshCoreConversationsNotifier
     _heartbeatSession = session;
     final interval = debugHeartbeatInterval;
     _heartbeatTimer = Timer.periodic(interval, (_) => _onHeartbeatTick());
+    _publishHeartbeatActive(true);
     AppLogging.meshcore(
       'event=msg_waiting.heartbeat.started '
       'interval_ms=${interval.inMilliseconds}',
@@ -421,7 +462,27 @@ class MeshCoreConversationsNotifier
     _heartbeatTimer?.cancel();
     _heartbeatTimer = null;
     _heartbeatSession = null;
+    _publishHeartbeatActive(false);
     AppLogging.meshcore('event=msg_waiting.heartbeat.stopped reason=$reason');
+  }
+
+  /// D28: publish heartbeat active/idle to the notifier state.
+  ///
+  /// Called from both `build()` (where `state` isn't initialised yet)
+  /// and post-build flows. Uses a `Future` rather than `Future.microtask`
+  /// so it runs on a separate event-loop turn AFTER build's initial
+  /// state has been committed by Riverpod, mirroring the same pattern
+  /// `_loadConversations` already uses to avoid the
+  /// "uninitialized provider" exception.
+  void _publishHeartbeatActive(bool active) {
+    Future<void>(() {
+      if (_disposed) return;
+      // Re-check the live timer reference so a fast start/stop pair
+      // doesn't overwrite the latest value with the older sentinel.
+      final live = _heartbeatTimer != null;
+      if (live != active) return;
+      state = state.copyWith(heartbeatActive: active);
+    });
   }
 
   void _onHeartbeatTick() {
@@ -545,8 +606,10 @@ class MeshCoreConversationsNotifier
     }
 
     _activeDrain = source;
+    if (!_disposed) state = state.copyWith(activeDrainSource: source);
     final classified = Completer<MeshCoreDrainOutcome>();
     StreamSubscription<MeshCoreFrame>? sub;
+    MeshCoreDrainOutcome outcome;
     try {
       sub = session.frameStream.listen((frame) {
         final code = frame.command;
@@ -570,22 +633,34 @@ class MeshCoreConversationsNotifier
       // each `result=` line to its origin.
       AppLogging.meshcore('event=msg_waiting.drain.${source.name}.requested');
       await session.sendCommand(MeshCoreCommands.syncNextMessage);
-      final outcome = await classified.future.timeout(
+      outcome = await classified.future.timeout(
         const Duration(seconds: 3),
         onTimeout: MeshCoreDrainOutcome.timeout,
       );
-      return outcome;
     } catch (e) {
       AppLogging.meshcore(
         'event=msg_waiting.drain.${source.name}.failed '
         'reason=${e.runtimeType}',
         error: true,
       );
-      return MeshCoreDrainOutcome.failed(e.runtimeType.toString());
+      outcome = MeshCoreDrainOutcome.failed(e.runtimeType.toString());
     } finally {
       await sub?.cancel();
       _activeDrain = null;
     }
+    // D28: publish post-drain status outside the try/finally so the
+    // outcome is the same value the caller observes. Do not write
+    // state inside finally or we risk reading `outcome` before it
+    // was assigned on the catch path.
+    if (!_disposed) {
+      state = state.copyWith(
+        clearActiveDrainSource: true,
+        lastDrainSource: source,
+        lastDrainAt: DateTime.now(),
+        lastDrainOutcome: outcome.kind,
+      );
+    }
+    return outcome;
   }
 
   void _handleFrame(MeshCoreFrame frame) {
@@ -678,6 +753,16 @@ class MeshCoreConversationsNotifier
       return;
     }
     final parsed = result.value!;
+
+    // D28 Part A: stamp latest SNR onto the matching contact (session
+    // only, no persistence). Done before conversation matching so
+    // the contacts list updates even when no conversation has been
+    // created yet for this sender.
+    if (parsed.snrQuarter != null) {
+      ref
+          .read(meshCoreContactsProvider.notifier)
+          .recordSnrFromPrefix(parsed.senderPrefixHex, parsed.snrQuarter!);
+    }
 
     // Resolve the 6-byte firmware-supplied sender prefix to the
     // matching conversation. Conversation IDs are full pubKeyHex (64
@@ -1042,7 +1127,11 @@ class MeshCoreConversationsNotifier
         return b.lastMessageTime!.compareTo(a.lastMessageTime!);
       });
 
-      state = MeshCoreConversationsState(conversations: conversations);
+      // D28: preserve queue-status fields (heartbeatActive, last-drain
+      // metadata) across the full-load reset. Pre-D28 this dropped them
+      // back to defaults, which would clobber the heartbeat-active flag
+      // set by `_publishHeartbeatActive` from `_startHeartbeat`.
+      state = state.copyWith(conversations: conversations, isLoading: false);
     } catch (e) {
       AppLogging.storage('MeshCore: Error loading conversations: $e');
       AppLogging.meshcore(

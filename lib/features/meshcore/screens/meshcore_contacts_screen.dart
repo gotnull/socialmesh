@@ -827,6 +827,10 @@ class _ContactCard extends ConsumerWidget {
                             fontSize: 12,
                           ),
                         ),
+                        if (contact.snrDb != null) ...[
+                          const SizedBox(width: AppTheme.spacing12),
+                          _SnrBadge(snrDb: contact.snrDb!),
+                        ],
                       ],
                     ),
                   ],
@@ -858,6 +862,72 @@ class _ContactCard extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// D28: Per-contact SNR badge.
+///
+/// Three signal bars colour-graded against the underlying dB and a
+/// numeric label. Bars present so the badge reads as link-quality at a
+/// glance; numeric label so the precise value is never hidden behind a
+/// qualitative bucket. Hidden by the caller when SNR is unknown.
+class _SnrBadge extends StatelessWidget {
+  final double snrDb;
+  const _SnrBadge({required this.snrDb});
+
+  /// Three-step bar fill: 0 / 1 / 2 / 3 bars active.
+  /// Thresholds picked to match LoRa SNR bands typical for MeshCore:
+  /// `>=  0 dB` excellent (3), `>= -7 dB` good (2), `>= -12 dB` weak (1),
+  /// below -12 dB very poor (0). Bars are visual hints; the numeric
+  /// label is the source of truth.
+  int get _activeBars {
+    if (snrDb >= 0) return 3;
+    if (snrDb >= -7) return 2;
+    if (snrDb >= -12) return 1;
+    return 0;
+  }
+
+  Color _accent(BuildContext context) {
+    final bars = _activeBars;
+    if (bars >= 3) return AccentColors.green;
+    if (bars >= 2) return AccentColors.cyan;
+    if (bars >= 1) return AppTheme.warningYellow;
+    return AppTheme.errorRed;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = _accent(context);
+    final active = _activeBars;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 0; i < 3; i++) ...[
+          Container(
+            width: 3,
+            height: 4 + i * 3.0,
+            margin: EdgeInsets.only(
+              right: i == 2 ? AppTheme.spacing6 : AppTheme.spacing2,
+            ),
+            decoration: BoxDecoration(
+              color: i < active
+                  ? accent
+                  : context.textTertiary.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(AppTheme.spacing2 / 2),
+            ),
+          ),
+        ],
+        Text(
+          context.l10n.meshcoreSnrLabel(snrDb.toStringAsFixed(1)),
+          style: TextStyle(
+            color: accent,
+            fontSize: 12,
+            fontFamily: AppTheme.fontFamily,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 }

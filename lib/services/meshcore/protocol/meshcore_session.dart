@@ -1124,6 +1124,117 @@ class MeshCoreSession {
     return ok;
   }
 
+  /// D28 Part C: send `CMD_SEND_TRACE_PATH` (0x24) and await the
+  /// matching `PUSH_CODE_TRACE_DATA` (0x89) push.
+  ///
+  /// Wire format (after the 0x24 opcode byte):
+  /// ```
+  /// [0..3] tag       u32 LE  — caller-supplied correlation id
+  /// [4..7] auth_code u32 LE  — typically 0 for unauthenticated traces
+  /// [8]    flag      u8      — control flags (typically 0)
+  /// [9..]  path_data variable — target path bytes (e.g. repeater pubkey
+  ///                              prefix sequence). Empty path = trace
+  ///                              along default route.
+  /// ```
+  ///
+  /// Returns the parsed [MeshCoreTraceResult] when the firmware push
+  /// arrives with a matching tag, or null if the [timeout] elapses
+  /// without a response. Callers MUST pass a unique [tag] per
+  /// in-flight trace so concurrent traces can't cross-correlate.
+  ///
+  /// Throws [ArgumentError] on path payload longer than 32 bytes
+  /// (firmware refuses larger payloads on the trace path).
+  Future<MeshCoreTraceResult?> sendTracePath({
+    required int tag,
+    required Uint8List path,
+    int authCode = 0,
+    int flag = 0,
+    Duration timeout = const Duration(seconds: 30),
+  }) async {
+    if (tag < 0 || tag > 0xFFFFFFFF) {
+      throw ArgumentError.value(tag, 'tag', 'must fit in uint32');
+    }
+    if (authCode < 0 || authCode > 0xFFFFFFFF) {
+      throw ArgumentError.value(authCode, 'authCode', 'must fit in uint32');
+    }
+    if (flag < 0 || flag > 0xFF) {
+      throw ArgumentError.value(flag, 'flag', 'must fit in uint8');
+    }
+    if (path.length > 32) {
+      throw ArgumentError.value(
+        path.length,
+        'path.length',
+        'trace path payload must be at most 32 bytes',
+      );
+    }
+
+    final builder = BytesBuilder();
+    final header = ByteData(9)
+      ..setUint32(0, tag, Endian.little)
+      ..setUint32(4, authCode, Endian.little)
+      ..setUint8(8, flag);
+    builder.add(header.buffer.asUint8List());
+    builder.add(path);
+    final payload = builder.toBytes();
+
+    AppLogging.meshcore(
+      'event=trace.requested tag=$tag path_len=${path.length}',
+    );
+
+    // Subscribe BEFORE sending so a fast firmware can't race us.
+    final completer = Completer<MeshCoreTraceResult?>();
+    StreamSubscription<MeshCoreFrame>? sub;
+    sub = frameStream.listen((frame) {
+      if (frame.command != MeshCorePushCodes.traceData) return;
+      final parsed = parseTraceData(frame.payload);
+      if (!parsed.isSuccess) {
+        AppLogging.meshcore(
+          'event=trace.parse.failed reason=${parsed.error}',
+          error: true,
+        );
+        return;
+      }
+      final result = parsed.value!;
+      if (result.tag != tag) {
+        // Different concurrent trace — not ours. Stay subscribed.
+        return;
+      }
+      if (!completer.isCompleted) {
+        completer.complete(result);
+      }
+    });
+
+    try {
+      await sendFrame(
+        MeshCoreFrame(
+          command: MeshCoreCommands.sendTracePath,
+          payload: payload,
+        ),
+      );
+      final result = await completer.future.timeout(
+        timeout,
+        onTimeout: () {
+          AppLogging.meshcore('event=trace.timeout tag=$tag', error: true);
+          return null;
+        },
+      );
+      if (result != null) {
+        AppLogging.meshcore(
+          'event=trace.succeeded tag=$tag hops=${result.hops.length}',
+        );
+      }
+      return result;
+    } catch (e) {
+      AppLogging.meshcore(
+        'event=trace.failed tag=$tag reason=${e.runtimeType}',
+        error: true,
+      );
+      return null;
+    } finally {
+      await sub.cancel();
+    }
+  }
+
   /// Push the current epoch seconds to the device
   /// (`CMD_SET_DEVICE_TIME` 0x06). Wire payload: `[0x06][secs uint32
   /// LE]` (5 bytes).

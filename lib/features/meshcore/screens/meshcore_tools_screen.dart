@@ -22,7 +22,10 @@ import '../../../providers/meshcore_message_providers.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../services/meshcore/protocol/meshcore_messages.dart';
 import '../../../utils/snackbar.dart';
+import '../../../models/meshcore_contact.dart';
 import '../../navigation/meshcore_shell.dart';
+import '../contact_l10n.dart';
+import 'meshcore_frame_log_screen.dart';
 
 /// MeshCore Tools screen.
 ///
@@ -124,18 +127,35 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
               trailing: _chevron(context),
               onTap: () => _showBatteryInfo(battInfoState),
             ),
-            Opacity(
-              opacity: 0.4,
-              child: IgnorePointer(
-                child: SettingsTile(
-                  icon: Icons.route_rounded,
-                  iconColor: AccentColors.purple,
-                  title: context.l10n.meshcoreTracePath,
-                  subtitle: context.l10n.meshcoreTracePacketRoutes,
-                  trailing: _chevron(context),
-                ),
-              ),
+            // D28: Trace Path — wire format observed in upstream and
+            // pinned in `parseTraceData`. Tile opens a contact picker
+            // sheet, sends `CMD_SEND_TRACE_PATH (0x24)`, and renders the
+            // hop list with per-hop SNR after the firmware push arrives.
+            SettingsTile(
+              icon: Icons.route_rounded,
+              iconColor: AccentColors.purple,
+              title: context.l10n.meshcoreTracePath,
+              subtitle: context.l10n.meshcoreTracePacketRoutes,
+              trailing: _chevron(context),
+              onTap: _openTracePath,
             ),
+            // D28 Part B: Frame Log viewer. Surfaces the in-memory
+            // capture infrastructure that already records every TX/RX
+            // frame in debug builds. Empty/unavailable empty state when
+            // capture is not active.
+            SettingsTile(
+              icon: Icons.terminal_rounded,
+              iconColor: AccentColors.blue,
+              title: context.l10n.meshcoreFrameLogTool,
+              subtitle: context.l10n.meshcoreFrameLogToolSubtitle,
+              trailing: _chevron(context),
+              onTap: _openFrameLog,
+            ),
+            // D28 Part D: queue status card (heartbeat + last-drain
+            // outcome + in-progress badge). Sits above the manual
+            // drain tile so the user can see the live state before
+            // tapping drain.
+            const _QueueStatusCard(),
             // D21.B: manual `CMD_SYNC_NEXT_MESSAGE` drain. Recovers a
             // missed `0x83` tickle (firmware queue has data but the
             // companion never got the push, e.g. transport blip).
@@ -669,6 +689,509 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
           ),
         ],
       ),
+    );
+  }
+
+  /// D28 Part B: open the MeshCore Frame Log screen.
+  void _openFrameLog() {
+    HapticFeedback.lightImpact();
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const MeshCoreFrameLogScreen()),
+    );
+  }
+
+  /// D28 Part C: open the Trace Path picker bottom sheet.
+  void _openTracePath() {
+    HapticFeedback.lightImpact();
+    AppBottomSheet.showScrollable<void>(
+      context: context,
+      initialChildSize: 0.85,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (scrollController) =>
+          MeshCoreTracePathSheet(scrollController: scrollController),
+    );
+  }
+}
+
+/// D28 Part D: queue-status diagnostic card.
+///
+/// Renders the drain heartbeat state, the in-flight drain source (if a
+/// drain is currently running), and a one-line summary of the most
+/// recent drain (`source -> outcome at HH:MM:SS`). Hidden / shown
+/// adaptively based on whether anything has happened yet.
+///
+/// Does NOT claim firmware queue depth — the firmware does not expose
+/// it. Copy uses "Last queue check" not "Queue depth" to avoid lying.
+class _QueueStatusCard extends ConsumerWidget {
+  const _QueueStatusCard();
+
+  String _formatTime(DateTime t) {
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${two(t.hour)}:${two(t.minute)}:${two(t.second)}';
+  }
+
+  String _outcomeLabel(BuildContext context, MeshCoreDrainOutcomeKind kind) {
+    final l = context.l10n;
+    switch (kind) {
+      case MeshCoreDrainOutcomeKind.message:
+        return l.meshcoreQueueOutcomeMessage;
+      case MeshCoreDrainOutcomeKind.noMore:
+        return l.meshcoreQueueOutcomeNoMore;
+      case MeshCoreDrainOutcomeKind.timeout:
+        return l.meshcoreQueueOutcomeTimeout;
+      case MeshCoreDrainOutcomeKind.skipped:
+        return l.meshcoreQueueOutcomeSkipped;
+      case MeshCoreDrainOutcomeKind.failed:
+        return l.meshcoreQueueOutcomeFailed;
+    }
+  }
+
+  String _sourceLabel(BuildContext context, MeshCoreDrainSource src) {
+    final l = context.l10n;
+    switch (src) {
+      case MeshCoreDrainSource.tickle:
+        return l.meshcoreQueueSourceTickle;
+      case MeshCoreDrainSource.manual:
+        return l.meshcoreQueueSourceManual;
+      case MeshCoreDrainSource.heartbeat:
+        return l.meshcoreQueueSourceHeartbeat;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(meshCoreConversationsProvider);
+    final l = context.l10n;
+    final accent = state.heartbeatActive
+        ? AccentColors.green
+        : context.textTertiary;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing16,
+        AppTheme.spacing8,
+        AppTheme.spacing16,
+        AppTheme.spacing4,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(AppTheme.spacing16),
+        decoration: BoxDecoration(
+          color: context.card,
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.cloud_sync_rounded, size: 18, color: accent),
+                const SizedBox(width: AppTheme.spacing8),
+                Expanded(
+                  child: Text(
+                    l.meshcoreQueueStatusTool,
+                    style: TextStyle(
+                      color: context.textPrimary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: AppTheme.fontFamily,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
+                  ),
+                  child: Text(
+                    state.heartbeatActive
+                        ? l.meshcoreQueueStatusHeartbeatActive
+                        : l.meshcoreQueueStatusHeartbeatIdle,
+                    style: TextStyle(
+                      color: accent,
+                      fontSize: 11,
+                      fontFamily: AppTheme.fontFamily,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (state.activeDrainSource != null) ...[
+              const SizedBox(height: AppTheme.spacing8),
+              Row(
+                children: [
+                  SizedBox(
+                    width: 12,
+                    height: 12,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AccentColors.cyan,
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing8),
+                  Text(
+                    l.meshcoreQueueStatusInProgress(
+                      _sourceLabel(context, state.activeDrainSource!),
+                    ),
+                    style: TextStyle(
+                      color: context.textSecondary,
+                      fontSize: 12,
+                      fontFamily: AppTheme.fontFamily,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: AppTheme.spacing8),
+            Text(
+              l.meshcoreQueueStatusLastCheck,
+              style: TextStyle(
+                color: context.textTertiary,
+                fontSize: 11,
+                fontFamily: AppTheme.fontFamily,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.6,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing4),
+            Text(
+              state.lastDrainAt == null ||
+                      state.lastDrainSource == null ||
+                      state.lastDrainOutcome == null
+                  ? l.meshcoreQueueStatusNoDrainYet
+                  : '${_sourceLabel(context, state.lastDrainSource!)} '
+                        '→ ' // arrow
+                        '${_outcomeLabel(context, state.lastDrainOutcome!)} '
+                        '@ ${_formatTime(state.lastDrainAt!)}',
+              style: TextStyle(
+                color: context.textSecondary,
+                fontSize: 13,
+                fontFamily: AppTheme.fontFamily,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// D28 Part C: Trace Path picker + result bottom sheet.
+///
+/// Two phases inside one sheet:
+/// 1. Picker — user taps a contact (chat or repeater). Sheet locks the
+///    target and fires `session.sendTracePath(...)`.
+/// 2. Result — once the firmware push arrives (or times out), the sheet
+///    swaps to a hop list with per-hop SNR.
+class MeshCoreTracePathSheet extends ConsumerStatefulWidget {
+  final ScrollController scrollController;
+  const MeshCoreTracePathSheet({super.key, required this.scrollController});
+
+  @override
+  ConsumerState<MeshCoreTracePathSheet> createState() =>
+      _MeshCoreTracePathSheetState();
+}
+
+class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
+    with LifecycleSafeMixin<MeshCoreTracePathSheet> {
+  MeshCoreContact? _selected;
+  MeshCoreContact? _running;
+  MeshCoreTraceResult? _result;
+  bool _failed = false;
+  bool _timedOut = false;
+
+  Future<void> _runTrace() async {
+    final target = _selected;
+    if (target == null) return;
+    safeSetState(() {
+      _running = target;
+      _result = null;
+      _failed = false;
+      _timedOut = false;
+    });
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null) {
+      safeSetState(() {
+        _failed = true;
+        _running = null;
+      });
+      return;
+    }
+    // Build path: single byte = first byte of target pubkey, matching
+    // the firmware's expectation that the path payload identifies the
+    // intermediate hops by their pubkey prefix. Empty path falls back
+    // to firmware-default routing; we always pass the target prefix
+    // here so the user gets a deterministic "trace to this contact"
+    // semantic.
+    final path = target.publicKey.isEmpty
+        ? Uint8List(0)
+        : Uint8List.fromList([target.publicKey[0]]);
+    final tag = DateTime.now().millisecondsSinceEpoch & 0xFFFFFFFF;
+    try {
+      final result = await session.sendTracePath(tag: tag, path: path);
+      if (!mounted) return;
+      if (result == null) {
+        safeSetState(() {
+          _timedOut = true;
+          _running = null;
+        });
+      } else {
+        safeSetState(() {
+          _result = result;
+          _running = null;
+        });
+      }
+    } catch (_) {
+      if (!mounted) return;
+      safeSetState(() {
+        _failed = true;
+        _running = null;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final contactsState = ref.watch(meshCoreContactsProvider);
+    // Filter to actionable trace targets — chat + repeater. Sensors
+    // and rooms aren't useful trace destinations.
+    final eligible = contactsState.contacts
+        .where((c) => c.isChat || c.isRepeater)
+        .toList(growable: false);
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppTheme.spacing16,
+            AppTheme.spacing12,
+            AppTheme.spacing16,
+            AppTheme.spacing8,
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.route_rounded, color: AccentColors.purple, size: 22),
+              const SizedBox(width: AppTheme.spacing8),
+              Expanded(
+                child: Text(
+                  l.meshcoreTracePathTitle,
+                  style: TextStyle(
+                    color: context.textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: AppTheme.fontFamily,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+        Expanded(
+          child: ListView(
+            controller: widget.scrollController,
+            padding: const EdgeInsets.all(AppTheme.spacing16),
+            children: [
+              if (_result != null)
+                _buildResult(context, _result!)
+              else if (_running != null)
+                _buildRunning(context, _running!)
+              else if (_failed)
+                StatusBanner.error(
+                  title: l.meshcoreTracePathFailed,
+                  icon: Icons.error_outline_rounded,
+                )
+              else if (_timedOut)
+                StatusBanner.warning(
+                  title: l.meshcoreTracePathTimeout,
+                  icon: Icons.hourglass_empty_rounded,
+                )
+              else
+                _buildPicker(context, eligible),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPicker(BuildContext context, List<MeshCoreContact> eligible) {
+    final l = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.meshcoreTracePathPickContact,
+          style: TextStyle(
+            color: context.textSecondary,
+            fontSize: 13,
+            fontFamily: AppTheme.fontFamily,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing12),
+        for (final c in eligible)
+          Container(
+            margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
+            decoration: BoxDecoration(
+              color: identical(_selected, c)
+                  ? AccentColors.purple.withValues(alpha: 0.15)
+                  : context.card,
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
+            ),
+            child: ListTile(
+              dense: true,
+              leading: Icon(
+                c.isRepeater ? Icons.cell_tower_rounded : Icons.person_rounded,
+                color: identical(_selected, c)
+                    ? AccentColors.purple
+                    : context.textSecondary,
+              ),
+              title: Text(
+                c.displayName.isNotEmpty
+                    ? c.displayName
+                    : l.meshcoreContactUnknownName,
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontFamily: AppTheme.fontFamily,
+                ),
+              ),
+              subtitle: Text(
+                c.localizedPathLabel(l),
+                style: TextStyle(
+                  color: context.textTertiary,
+                  fontFamily: AppTheme.fontFamily,
+                  fontSize: 12,
+                ),
+              ),
+              onTap: () => safeSetState(() => _selected = c),
+            ),
+          ),
+        const SizedBox(height: AppTheme.spacing16),
+        FilledButton.icon(
+          onPressed: _selected == null ? null : _runTrace,
+          icon: const Icon(Icons.play_arrow_rounded),
+          label: Text(l.meshcoreTracePathRunButton),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRunning(BuildContext context, MeshCoreContact target) {
+    final l = context.l10n;
+    final name = target.displayName.isNotEmpty
+        ? target.displayName
+        : l.meshcoreContactUnknownName;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing24),
+      child: Column(
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: AppTheme.spacing16),
+          Text(
+            l.meshcoreTracePathTracing(name),
+            style: TextStyle(
+              color: context.textSecondary,
+              fontFamily: AppTheme.fontFamily,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResult(BuildContext context, MeshCoreTraceResult result) {
+    final l = context.l10n;
+    final target = _selected;
+    final name = target?.displayName.isNotEmpty == true
+        ? target!.displayName
+        : l.meshcoreContactUnknownName;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.meshcoreTracePathResultHeadline(name),
+          style: TextStyle(
+            color: context.textPrimary,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            fontFamily: AppTheme.fontFamily,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing4),
+        Text(
+          l.meshcoreTracePathHops(result.hops.length),
+          style: TextStyle(
+            color: context.textTertiary,
+            fontSize: 12,
+            fontFamily: AppTheme.fontFamily,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing12),
+        for (var i = 0; i < result.hops.length; i++)
+          Container(
+            margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.spacing12,
+              vertical: AppTheme.spacing8,
+            ),
+            decoration: BoxDecoration(
+              color: context.card,
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AccentColors.purple.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
+                  ),
+                  child: Text(
+                    '${i + 1}',
+                    style: TextStyle(
+                      color: AccentColors.purple,
+                      fontFamily: AppTheme.fontFamily,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppTheme.spacing12),
+                Expanded(
+                  child: Text(
+                    '0x${result.hops[i].pathByte.toRadixString(16).padLeft(2, '0').toUpperCase()}',
+                    style: TextStyle(
+                      color: context.textPrimary,
+                      fontFamily: AppTheme.fontFamily,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+                Text(
+                  l.meshcoreSnrLabel(result.hops[i].snrDb.toStringAsFixed(1)),
+                  style: TextStyle(
+                    color: context.textSecondary,
+                    fontFamily: AppTheme.fontFamily,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(height: AppTheme.spacing16),
+        OutlinedButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l.meshcoreTracePathClose),
+        ),
+      ],
     );
   }
 }

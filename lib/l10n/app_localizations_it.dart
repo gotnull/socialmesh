@@ -8856,7 +8856,133 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get meshcoreFrameLogTool => 'Registro frame';
+
+  @override
+  String get meshcoreFrameLogToolSubtitle =>
+      'Frame MeshCore recenti ed eventi di protocollo';
+
+  @override
+  String get meshcoreFrameLogTitle => 'Registro frame';
+
+  @override
+  String get meshcoreFrameLogRefresh => 'Aggiorna';
+
+  @override
+  String get meshcoreFrameLogCopy => 'Copia registro';
+
+  @override
+  String meshcoreFrameLogCopied(int count) {
+    return 'Copiati $count frame';
+  }
+
+  @override
+  String get meshcoreFrameLogUnavailableHeadline =>
+      'Registro frame non disponibile';
+
+  @override
+  String get meshcoreFrameLogUnavailableDescription =>
+      'L\'acquisizione frame funziona solo in build di debug mentre si è connessi a un dispositivo MeshCore.';
+
+  @override
+  String get meshcoreFrameLogEmptyHeadline => 'Nessun frame ancora';
+
+  @override
+  String get meshcoreFrameLogEmptyDescription =>
+      'I frame RX/TX acquisiti appariranno qui man mano che arrivano.';
+
+  @override
+  String get meshcoreQueueStatusTool => 'Stato coda';
+
+  @override
+  String get meshcoreQueueStatusHeartbeatActive => 'Heartbeat attivo';
+
+  @override
+  String get meshcoreQueueStatusHeartbeatIdle => 'Heartbeat inattivo';
+
+  @override
+  String meshcoreQueueStatusInProgress(String source) {
+    return 'Drenaggio in corso ($source)';
+  }
+
+  @override
+  String get meshcoreQueueStatusLastCheck => 'Ultimo controllo coda';
+
+  @override
+  String get meshcoreQueueStatusNoDrainYet => 'Nessun controllo coda finora';
+
+  @override
+  String get meshcoreQueueOutcomeMessage => 'Messaggio recuperato';
+
+  @override
+  String get meshcoreQueueOutcomeNoMore => 'Nessun messaggio';
+
+  @override
+  String get meshcoreQueueOutcomeTimeout => 'Tempo scaduto';
+
+  @override
+  String get meshcoreQueueOutcomeSkipped => 'Saltato';
+
+  @override
+  String get meshcoreQueueOutcomeFailed => 'Fallito';
+
+  @override
+  String get meshcoreQueueSourceTickle => 'Tickle';
+
+  @override
+  String get meshcoreQueueSourceManual => 'Manuale';
+
+  @override
+  String get meshcoreQueueSourceHeartbeat => 'Heartbeat';
+
+  @override
+  String meshcoreSnrLabel(String snr) {
+    return '$snr dB';
+  }
+
+  @override
   String get meshcoreTracePathTitle => 'Traccia percorso';
+
+  @override
+  String get meshcoreTracePathPickContact => 'Scegli un contatto da tracciare.';
+
+  @override
+  String meshcoreTracePathTracing(String name) {
+    return 'Tracciamento percorso verso $name...';
+  }
+
+  @override
+  String meshcoreTracePathResultHeadline(String name) {
+    return 'Traccia verso $name';
+  }
+
+  @override
+  String meshcoreTracePathHops(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hop',
+      one: '1 hop',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshcoreTracePathHopRow(int index) {
+    return 'Hop $index';
+  }
+
+  @override
+  String get meshcoreTracePathTimeout => 'Tempo scaduto per la traccia';
+
+  @override
+  String get meshcoreTracePathFailed => 'Impossibile eseguire la traccia';
+
+  @override
+  String get meshcoreTracePathRunButton => 'Esegui traccia';
+
+  @override
+  String get meshcoreTracePathClose => 'Chiudi';
 
   @override
   String get meshcoreTxPowerLabel => 'Potenza TX';

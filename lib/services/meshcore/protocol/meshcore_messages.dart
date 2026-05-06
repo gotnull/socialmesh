@@ -125,6 +125,107 @@ class MeshCoreBattAndStorage {
       'storage=$storageUsed/$storageTotal)';
 }
 
+/// D28 Part C: one hop in a parsed `PUSH_CODE_TRACE_DATA` (0x89) response.
+class MeshCoreTraceHop {
+  /// Single-byte hop identifier (typically the first byte of the
+  /// repeater pubkey or a hop opcode). The companion firmware emits
+  /// these bytes one per hop in the same order they appear in the
+  /// response payload.
+  final int pathByte;
+
+  /// Raw firmware SNR encoding (signed int8, scaled by 4). Convert
+  /// with `snrDb = snrQuarter / 4.0`.
+  final int snrQuarter;
+
+  const MeshCoreTraceHop({required this.pathByte, required this.snrQuarter});
+
+  /// SNR in dB, derived from the firmware quarter encoding.
+  double get snrDb => snrQuarter / 4.0;
+
+  @override
+  String toString() =>
+      'MeshCoreTraceHop(pathByte=0x${pathByte.toRadixString(16).padLeft(2, '0')}, '
+      'snr=${snrDb.toStringAsFixed(2)}dB)';
+}
+
+/// D28 Part C: parsed `PUSH_CODE_TRACE_DATA` (0x89) payload.
+///
+/// Wire format (after the 0x89 opcode byte is consumed by the framer):
+/// ```
+/// [0]      reserved                       u8
+/// [1]      path_length                    u8
+/// [2]      flag                           u8
+/// [3..6]   tag                            u32 LE  (matches request tag)
+/// [7..10]  auth_code                      u32 LE
+/// [11..]   path_data (path_length bytes)
+/// [11+pl..] snr_array  (path_length bytes, signed int8 ÷ 4 → dB)
+/// ```
+///
+/// Receivers MUST verify that [tag] matches the tag they sent in
+/// `CMD_SEND_TRACE_PATH (0x24)` before treating the result as the
+/// response to their request — multiple traces can race.
+class MeshCoreTraceResult {
+  /// Correlation tag from the original request.
+  final int tag;
+
+  /// Firmware-supplied flag byte (typically zero).
+  final int flag;
+
+  /// Auth code echoed back from the request.
+  final int authCode;
+
+  /// Hops in the order they appear in the firmware payload.
+  final List<MeshCoreTraceHop> hops;
+
+  const MeshCoreTraceResult({
+    required this.tag,
+    required this.flag,
+    required this.authCode,
+    required this.hops,
+  });
+
+  @override
+  String toString() => 'MeshCoreTraceResult(tag=$tag, hops=${hops.length})';
+}
+
+/// D28 Part C: parse a `PUSH_CODE_TRACE_DATA` (0x89) frame payload.
+///
+/// Pass the payload AFTER the framer has stripped the opcode byte; the
+/// reserved byte at offset 0 is part of the wire payload here.
+ParseResult<MeshCoreTraceResult> parseTraceData(Uint8List payload) {
+  // Header is 11 bytes (1 reserved + 1 pathLen + 1 flag + 4 tag + 4 auth).
+  if (payload.length < 11) {
+    return ParseResult.failure(
+      'Trace data payload too short: ${payload.length} < 11',
+    );
+  }
+  final pathLen = payload[1];
+  final flag = payload[2];
+  final tag =
+      payload[3] | (payload[4] << 8) | (payload[5] << 16) | (payload[6] << 24);
+  final authCode =
+      payload[7] | (payload[8] << 8) | (payload[9] << 16) | (payload[10] << 24);
+  // Variable section: pathLen bytes of path data + pathLen bytes of SNR.
+  final required = 11 + (pathLen * 2);
+  if (payload.length < required) {
+    return ParseResult.failure(
+      'Trace data payload truncated: '
+      'have=${payload.length} need=$required (pathLen=$pathLen)',
+    );
+  }
+  final hops = <MeshCoreTraceHop>[];
+  for (var i = 0; i < pathLen; i++) {
+    final pathByte = payload[11 + i];
+    final raw = payload[11 + pathLen + i];
+    // Convert unsigned byte to signed int8.
+    final snrQuarter = raw < 128 ? raw : raw - 256;
+    hops.add(MeshCoreTraceHop(pathByte: pathByte, snrQuarter: snrQuarter));
+  }
+  return ParseResult.success(
+    MeshCoreTraceResult(tag: tag, flag: flag, authCode: authCode, hops: hops),
+  );
+}
+
 /// Result of parsing a MeshCore message.
 ///
 /// Contains either a successfully parsed message or an error description.

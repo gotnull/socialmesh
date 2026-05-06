@@ -11827,6 +11827,181 @@
             }
         }
     },
+    "meshcoreFrameLogTool": "Frame Log",
+    "@meshcoreFrameLogTool": {
+        "description": "D28 - Tools tile title for the MeshCore Frame Log viewer."
+    },
+    "meshcoreFrameLogToolSubtitle": "Recent MeshCore frames and protocol events",
+    "@meshcoreFrameLogToolSubtitle": {
+        "description": "D28 - Tools tile subtitle for the Frame Log viewer."
+    },
+    "meshcoreFrameLogTitle": "Frame Log",
+    "@meshcoreFrameLogTitle": {
+        "description": "D28 - App bar title for the Frame Log screen."
+    },
+    "meshcoreFrameLogRefresh": "Refresh",
+    "@meshcoreFrameLogRefresh": {
+        "description": "D28 - Refresh action tooltip on the Frame Log screen."
+    },
+    "meshcoreFrameLogCopy": "Copy log",
+    "@meshcoreFrameLogCopy": {
+        "description": "D28 - Copy-to-clipboard action tooltip on the Frame Log screen."
+    },
+    "meshcoreFrameLogCopied": "Copied {count} frames",
+    "@meshcoreFrameLogCopied": {
+        "description": "D28 - Snackbar after copying the frame log to clipboard.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshcoreFrameLogUnavailableHeadline": "Frame log unavailable",
+    "@meshcoreFrameLogUnavailableHeadline": {
+        "description": "D28 - Empty-state headline when MeshCore frame capture is not active (release build or no MeshCore connection)."
+    },
+    "meshcoreFrameLogUnavailableDescription": "Frame capture only runs in debug builds while connected to a MeshCore device.",
+    "@meshcoreFrameLogUnavailableDescription": {
+        "description": "D28 - Empty-state description for unavailable frame log."
+    },
+    "meshcoreFrameLogEmptyHeadline": "No frames yet",
+    "@meshcoreFrameLogEmptyHeadline": {
+        "description": "D28 - Empty-state headline when frame capture is active but has no frames."
+    },
+    "meshcoreFrameLogEmptyDescription": "Captured RX/TX frames will appear here as they arrive.",
+    "@meshcoreFrameLogEmptyDescription": {
+        "description": "D28 - Empty-state description while waiting for frames."
+    },
+    "meshcoreQueueStatusTool": "Queue Status",
+    "@meshcoreQueueStatusTool": {
+        "description": "D28 - Tools card title for the queue status."
+    },
+    "meshcoreQueueStatusHeartbeatActive": "Heartbeat active",
+    "@meshcoreQueueStatusHeartbeatActive": {
+        "description": "D28 - Pill label when the drain heartbeat timer is armed."
+    },
+    "meshcoreQueueStatusHeartbeatIdle": "Heartbeat idle",
+    "@meshcoreQueueStatusHeartbeatIdle": {
+        "description": "D28 - Pill label when the drain heartbeat is not running."
+    },
+    "meshcoreQueueStatusInProgress": "Drain in progress ({source})",
+    "@meshcoreQueueStatusInProgress": {
+        "description": "D28 - Live status while a drain is running.",
+        "placeholders": {
+            "source": {
+                "type": "String"
+            }
+        }
+    },
+    "meshcoreQueueStatusLastCheck": "Last queue check",
+    "@meshcoreQueueStatusLastCheck": {
+        "description": "D28 - Label for the last drain attempt summary."
+    },
+    "meshcoreQueueStatusNoDrainYet": "No queue check yet",
+    "@meshcoreQueueStatusNoDrainYet": {
+        "description": "D28 - Placeholder when no drain has run this session."
+    },
+    "meshcoreQueueOutcomeMessage": "Pulled message",
+    "@meshcoreQueueOutcomeMessage": {
+        "description": "D28 - Drain outcome label: a message was pulled from firmware."
+    },
+    "meshcoreQueueOutcomeNoMore": "No messages",
+    "@meshcoreQueueOutcomeNoMore": {
+        "description": "D28 - Drain outcome label: firmware reported no more queued messages."
+    },
+    "meshcoreQueueOutcomeTimeout": "Timed out",
+    "@meshcoreQueueOutcomeTimeout": {
+        "description": "D28 - Drain outcome label: drain hit the 3s timeout."
+    },
+    "meshcoreQueueOutcomeSkipped": "Skipped",
+    "@meshcoreQueueOutcomeSkipped": {
+        "description": "D28 - Drain outcome label: drain was skipped (overlapping)."
+    },
+    "meshcoreQueueOutcomeFailed": "Failed",
+    "@meshcoreQueueOutcomeFailed": {
+        "description": "D28 - Drain outcome label: drain failed (no session, exception)."
+    },
+    "meshcoreQueueSourceTickle": "Tickle",
+    "@meshcoreQueueSourceTickle": {
+        "description": "D28 - Drain source label: firmware msg-waiting tickle."
+    },
+    "meshcoreQueueSourceManual": "Manual",
+    "@meshcoreQueueSourceManual": {
+        "description": "D28 - Drain source label: user-tapped manual drain."
+    },
+    "meshcoreQueueSourceHeartbeat": "Heartbeat",
+    "@meshcoreQueueSourceHeartbeat": {
+        "description": "D28 - Drain source label: periodic heartbeat timer."
+    },
+    "meshcoreSnrLabel": "{snr} dB",
+    "@meshcoreSnrLabel": {
+        "description": "D28 - Per-contact SNR badge label, e.g. -5 dB.",
+        "placeholders": {
+            "snr": {
+                "type": "String"
+            }
+        }
+    },
+    "meshcoreTracePathTitle": "Trace Path",
+    "@meshcoreTracePathTitle": {
+        "description": "D28 - Bottom-sheet title for the trace path picker."
+    },
+    "meshcoreTracePathPickContact": "Pick a contact to trace through.",
+    "@meshcoreTracePathPickContact": {
+        "description": "D28 - Body copy in the trace path picker."
+    },
+    "meshcoreTracePathTracing": "Tracing path to {name}...",
+    "@meshcoreTracePathTracing": {
+        "description": "D28 - Status while waiting for trace response.",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "meshcoreTracePathResultHeadline": "Trace to {name}",
+    "@meshcoreTracePathResultHeadline": {
+        "description": "D28 - Result sheet title.",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "meshcoreTracePathHops": "{count, plural, =1{1 hop} other{{count} hops}}",
+    "@meshcoreTracePathHops": {
+        "description": "D28 - Hop count summary on the trace result.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshcoreTracePathHopRow": "Hop {index}",
+    "@meshcoreTracePathHopRow": {
+        "description": "D28 - Per-hop row label.",
+        "placeholders": {
+            "index": {
+                "type": "int"
+            }
+        }
+    },
+    "meshcoreTracePathTimeout": "Trace timed out",
+    "@meshcoreTracePathTimeout": {
+        "description": "D28 - Error toast when no 0x89 push arrives within the firmware-supplied timeout."
+    },
+    "meshcoreTracePathFailed": "Could not run trace",
+    "@meshcoreTracePathFailed": {
+        "description": "D28 - Error toast for trace send/parse failures."
+    },
+    "meshcoreTracePathRunButton": "Run trace",
+    "@meshcoreTracePathRunButton": {
+        "description": "D28 - Primary action label on the trace picker."
+    },
+    "meshcoreTracePathClose": "Close",
+    "@meshcoreTracePathClose": {
+        "description": "D28 - Close button on the trace result sheet."
+    },
     "meshcoreTracePathTitle": "Trace Path",
     "@meshcoreTracePathTitle": {
         "description": "Sheet title for trace path"

@@ -20225,6 +20225,95 @@
       }
     }
   },
+  "meshcoreFrameLogTool": "Registro de frames",
+  "@meshcoreFrameLogTool": {"description": "D28"},
+  "meshcoreFrameLogToolSubtitle": "Frames MeshCore recentes e eventos de protocolo",
+  "@meshcoreFrameLogToolSubtitle": {"description": "D28"},
+  "meshcoreFrameLogTitle": "Registro de frames",
+  "@meshcoreFrameLogTitle": {"description": "D28"},
+  "meshcoreFrameLogRefresh": "Atualizar",
+  "@meshcoreFrameLogRefresh": {"description": "D28"},
+  "meshcoreFrameLogCopy": "Copiar registro",
+  "@meshcoreFrameLogCopy": {"description": "D28"},
+  "meshcoreFrameLogCopied": "Copiados {count} frames",
+  "@meshcoreFrameLogCopied": {
+    "description": "D28",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "meshcoreFrameLogUnavailableHeadline": "Registro de frames indisponível",
+  "@meshcoreFrameLogUnavailableHeadline": {"description": "D28"},
+  "meshcoreFrameLogUnavailableDescription": "A captura de frames só funciona em builds de debug enquanto conectado a um dispositivo MeshCore.",
+  "@meshcoreFrameLogUnavailableDescription": {"description": "D28"},
+  "meshcoreFrameLogEmptyHeadline": "Nenhum frame ainda",
+  "@meshcoreFrameLogEmptyHeadline": {"description": "D28"},
+  "meshcoreFrameLogEmptyDescription": "Os frames RX/TX capturados aparecerão aqui à medida que chegarem.",
+  "@meshcoreFrameLogEmptyDescription": {"description": "D28"},
+  "meshcoreQueueStatusTool": "Estado da fila",
+  "@meshcoreQueueStatusTool": {"description": "D28"},
+  "meshcoreQueueStatusHeartbeatActive": "Heartbeat ativo",
+  "@meshcoreQueueStatusHeartbeatActive": {"description": "D28"},
+  "meshcoreQueueStatusHeartbeatIdle": "Heartbeat inativo",
+  "@meshcoreQueueStatusHeartbeatIdle": {"description": "D28"},
+  "meshcoreQueueStatusInProgress": "Drenagem em curso ({source})",
+  "@meshcoreQueueStatusInProgress": {
+    "description": "D28",
+    "placeholders": {"source": {"type": "String"}}
+  },
+  "meshcoreQueueStatusLastCheck": "Última verificação de fila",
+  "@meshcoreQueueStatusLastCheck": {"description": "D28"},
+  "meshcoreQueueStatusNoDrainYet": "Nenhuma verificação de fila ainda",
+  "@meshcoreQueueStatusNoDrainYet": {"description": "D28"},
+  "meshcoreQueueOutcomeMessage": "Mensagem recuperada",
+  "@meshcoreQueueOutcomeMessage": {"description": "D28"},
+  "meshcoreQueueOutcomeNoMore": "Sem mensagens",
+  "@meshcoreQueueOutcomeNoMore": {"description": "D28"},
+  "meshcoreQueueOutcomeTimeout": "Tempo esgotado",
+  "@meshcoreQueueOutcomeTimeout": {"description": "D28"},
+  "meshcoreQueueOutcomeSkipped": "Ignorado",
+  "@meshcoreQueueOutcomeSkipped": {"description": "D28"},
+  "meshcoreQueueOutcomeFailed": "Falhou",
+  "@meshcoreQueueOutcomeFailed": {"description": "D28"},
+  "meshcoreQueueSourceTickle": "Tickle",
+  "@meshcoreQueueSourceTickle": {"description": "D28"},
+  "meshcoreQueueSourceManual": "Manual",
+  "@meshcoreQueueSourceManual": {"description": "D28"},
+  "meshcoreQueueSourceHeartbeat": "Heartbeat",
+  "@meshcoreQueueSourceHeartbeat": {"description": "D28"},
+  "meshcoreSnrLabel": "{snr} dB",
+  "@meshcoreSnrLabel": {
+    "description": "D28",
+    "placeholders": {"snr": {"type": "String"}}
+  },
+  "meshcoreTracePathPickContact": "Escolha um contato para rastrear.",
+  "@meshcoreTracePathPickContact": {"description": "D28"},
+  "meshcoreTracePathTracing": "Rastreando caminho para {name}...",
+  "@meshcoreTracePathTracing": {
+    "description": "D28",
+    "placeholders": {"name": {"type": "String"}}
+  },
+  "meshcoreTracePathResultHeadline": "Rastrear para {name}",
+  "@meshcoreTracePathResultHeadline": {
+    "description": "D28",
+    "placeholders": {"name": {"type": "String"}}
+  },
+  "meshcoreTracePathHops": "{count, plural, =1{1 salto} other{{count} saltos}}",
+  "@meshcoreTracePathHops": {
+    "description": "D28",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "meshcoreTracePathHopRow": "Salto {index}",
+  "@meshcoreTracePathHopRow": {
+    "description": "D28",
+    "placeholders": {"index": {"type": "int"}}
+  },
+  "meshcoreTracePathTimeout": "Tempo esgotado no rastreamento",
+  "@meshcoreTracePathTimeout": {"description": "D28"},
+  "meshcoreTracePathFailed": "Não foi possível rastrear",
+  "@meshcoreTracePathFailed": {"description": "D28"},
+  "meshcoreTracePathRunButton": "Executar rastreamento",
+  "@meshcoreTracePathRunButton": {"description": "D28"},
+  "meshcoreTracePathClose": "Fechar",
+  "@meshcoreTracePathClose": {"description": "D28"},
   "meshcoreTracePathTitle": "Rastrear caminho",
   "@meshcoreTracePathTitle": {
     "description": "Sheet title for trace path"

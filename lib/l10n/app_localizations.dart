@@ -15619,11 +15619,215 @@ abstract class AppLocalizations {
   /// **'Trace path to {name} initiated'**
   String meshcoreTracePathInitiated(String name);
 
+  /// D28 - Tools tile title for the MeshCore Frame Log viewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Frame Log'**
+  String get meshcoreFrameLogTool;
+
+  /// D28 - Tools tile subtitle for the Frame Log viewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent MeshCore frames and protocol events'**
+  String get meshcoreFrameLogToolSubtitle;
+
+  /// D28 - App bar title for the Frame Log screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Frame Log'**
+  String get meshcoreFrameLogTitle;
+
+  /// D28 - Refresh action tooltip on the Frame Log screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get meshcoreFrameLogRefresh;
+
+  /// D28 - Copy-to-clipboard action tooltip on the Frame Log screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy log'**
+  String get meshcoreFrameLogCopy;
+
+  /// D28 - Snackbar after copying the frame log to clipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied {count} frames'**
+  String meshcoreFrameLogCopied(int count);
+
+  /// D28 - Empty-state headline when MeshCore frame capture is not active (release build or no MeshCore connection).
+  ///
+  /// In en, this message translates to:
+  /// **'Frame log unavailable'**
+  String get meshcoreFrameLogUnavailableHeadline;
+
+  /// D28 - Empty-state description for unavailable frame log.
+  ///
+  /// In en, this message translates to:
+  /// **'Frame capture only runs in debug builds while connected to a MeshCore device.'**
+  String get meshcoreFrameLogUnavailableDescription;
+
+  /// D28 - Empty-state headline when frame capture is active but has no frames.
+  ///
+  /// In en, this message translates to:
+  /// **'No frames yet'**
+  String get meshcoreFrameLogEmptyHeadline;
+
+  /// D28 - Empty-state description while waiting for frames.
+  ///
+  /// In en, this message translates to:
+  /// **'Captured RX/TX frames will appear here as they arrive.'**
+  String get meshcoreFrameLogEmptyDescription;
+
+  /// D28 - Tools card title for the queue status.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue Status'**
+  String get meshcoreQueueStatusTool;
+
+  /// D28 - Pill label when the drain heartbeat timer is armed.
+  ///
+  /// In en, this message translates to:
+  /// **'Heartbeat active'**
+  String get meshcoreQueueStatusHeartbeatActive;
+
+  /// D28 - Pill label when the drain heartbeat is not running.
+  ///
+  /// In en, this message translates to:
+  /// **'Heartbeat idle'**
+  String get meshcoreQueueStatusHeartbeatIdle;
+
+  /// D28 - Live status while a drain is running.
+  ///
+  /// In en, this message translates to:
+  /// **'Drain in progress ({source})'**
+  String meshcoreQueueStatusInProgress(String source);
+
+  /// D28 - Label for the last drain attempt summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Last queue check'**
+  String get meshcoreQueueStatusLastCheck;
+
+  /// D28 - Placeholder when no drain has run this session.
+  ///
+  /// In en, this message translates to:
+  /// **'No queue check yet'**
+  String get meshcoreQueueStatusNoDrainYet;
+
+  /// D28 - Drain outcome label: a message was pulled from firmware.
+  ///
+  /// In en, this message translates to:
+  /// **'Pulled message'**
+  String get meshcoreQueueOutcomeMessage;
+
+  /// D28 - Drain outcome label: firmware reported no more queued messages.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages'**
+  String get meshcoreQueueOutcomeNoMore;
+
+  /// D28 - Drain outcome label: drain hit the 3s timeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Timed out'**
+  String get meshcoreQueueOutcomeTimeout;
+
+  /// D28 - Drain outcome label: drain was skipped (overlapping).
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped'**
+  String get meshcoreQueueOutcomeSkipped;
+
+  /// D28 - Drain outcome label: drain failed (no session, exception).
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get meshcoreQueueOutcomeFailed;
+
+  /// D28 - Drain source label: firmware msg-waiting tickle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tickle'**
+  String get meshcoreQueueSourceTickle;
+
+  /// D28 - Drain source label: user-tapped manual drain.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get meshcoreQueueSourceManual;
+
+  /// D28 - Drain source label: periodic heartbeat timer.
+  ///
+  /// In en, this message translates to:
+  /// **'Heartbeat'**
+  String get meshcoreQueueSourceHeartbeat;
+
+  /// D28 - Per-contact SNR badge label, e.g. -5 dB.
+  ///
+  /// In en, this message translates to:
+  /// **'{snr} dB'**
+  String meshcoreSnrLabel(String snr);
+
   /// Sheet title for trace path
   ///
   /// In en, this message translates to:
   /// **'Trace Path'**
   String get meshcoreTracePathTitle;
+
+  /// D28 - Body copy in the trace path picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a contact to trace through.'**
+  String get meshcoreTracePathPickContact;
+
+  /// D28 - Status while waiting for trace response.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracing path to {name}...'**
+  String meshcoreTracePathTracing(String name);
+
+  /// D28 - Result sheet title.
+  ///
+  /// In en, this message translates to:
+  /// **'Trace to {name}'**
+  String meshcoreTracePathResultHeadline(String name);
+
+  /// D28 - Hop count summary on the trace result.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 hop} other{{count} hops}}'**
+  String meshcoreTracePathHops(int count);
+
+  /// D28 - Per-hop row label.
+  ///
+  /// In en, this message translates to:
+  /// **'Hop {index}'**
+  String meshcoreTracePathHopRow(int index);
+
+  /// D28 - Error toast when no 0x89 push arrives within the firmware-supplied timeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Trace timed out'**
+  String get meshcoreTracePathTimeout;
+
+  /// D28 - Error toast for trace send/parse failures.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not run trace'**
+  String get meshcoreTracePathFailed;
+
+  /// D28 - Primary action label on the trace picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Run trace'**
+  String get meshcoreTracePathRunButton;
+
+  /// D28 - Close button on the trace result sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get meshcoreTracePathClose;
 
   /// Info row label for TX power
   ///

@@ -498,6 +498,30 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
     updateUnreadCount(publicKeyHex, 0);
   }
 
+  /// D28: stamp the latest SNR (firmware quarter encoding) on the contact
+  /// whose pubkey starts with [senderPrefixHex] (a 6-byte / 12-char prefix
+  /// from the V3 inbound message frame). Returns the matched contact's
+  /// full pubkey hex if updated, or null if no contact matched. Session
+  /// only — no persistence to the contact store.
+  String? recordSnrFromPrefix(String senderPrefixHex, int snrQuarter) {
+    if (senderPrefixHex.isEmpty) return null;
+    final prefix = senderPrefixHex.toLowerCase();
+    final updated = <MeshCoreContact>[];
+    String? matchedKey;
+    for (final c in state.contacts) {
+      if (matchedKey == null &&
+          c.publicKeyHex.toLowerCase().startsWith(prefix)) {
+        matchedKey = c.publicKeyHex;
+        updated.add(c.copyWith(snrQuarter: snrQuarter));
+      } else {
+        updated.add(c);
+      }
+    }
+    if (matchedKey == null) return null;
+    state = state.copyWith(contacts: updated);
+    return matchedKey;
+  }
+
   void addContact(MeshCoreContact contact) {
     final updated = [...state.contacts];
     final existingIndex = updated.indexWhere(

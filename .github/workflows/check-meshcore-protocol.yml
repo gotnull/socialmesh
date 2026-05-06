@@ -1,0 +1,296 @@
+name: Check MeshCore Protocol Drift
+
+on:
+  schedule:
+    # Weekly, Monday 09:30 UTC (offset from check-protobufs to avoid
+    # both jobs hitting GitHub API at the same minute).
+    - cron: "30 9 * * 1"
+  workflow_dispatch:
+
+jobs:
+  check-meshcore-drift:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+
+    env:
+      PIN_FILE: tools/meshcore_protocol/VERSION
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Read pin file
+        id: pin
+        run: |
+          set -euo pipefail
+          if [ ! -f "$PIN_FILE" ]; then
+            echo "::error::Pin file $PIN_FILE not found. The drift watcher cannot run."
+            exit 1
+          fi
+
+          REPO=$(grep -E "^repo:" "$PIN_FILE" | awk '{print $2}')
+          BRANCH=$(grep -E "^branch:" "$PIN_FILE" | awk '{print $2}')
+          SHA=$(grep -E "^sha:" "$PIN_FILE" | awk '{print $2}')
+          PINNED_AT=$(grep -E "^pinned_at:" "$PIN_FILE" | awk '{print $2}')
+          FW_VER=$(grep -E "^firmware_version:" "$PIN_FILE" | awk '{print $2}')
+
+          PATHS=$(awk '
+            /^watched_paths:/ { flag=1; next }
+            /^[a-zA-Z]/       { flag=0 }
+            flag && /^[[:space:]]*-[[:space:]]/ {
+              sub(/^[[:space:]]*-[[:space:]]+/, "")
+              sub(/[[:space:]]*#.*$/, "")
+              sub(/[[:space:]]+$/, "")
+              if (length($0) > 0) print
+            }
+          ' "$PIN_FILE")
+
+          if [ -z "$REPO" ] || [ -z "$BRANCH" ] || [ -z "$SHA" ] || [ -z "$PATHS" ]; then
+            echo "::error::Pin file is missing required fields (repo/branch/sha/watched_paths)."
+            exit 1
+          fi
+
+          {
+            echo "repo=$REPO"
+            echo "branch=$BRANCH"
+            echo "pinned_sha=$SHA"
+            echo "pinned_at=$PINNED_AT"
+            echo "firmware_version=$FW_VER"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "watched_paths<<PATHS_EOF"
+            echo "$PATHS"
+            echo "PATHS_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "Pinned: $SHA ($PINNED_AT, firmware $FW_VER)"
+          echo "Branch: $BRANCH"
+          echo "Watched paths:"
+          echo "$PATHS" | sed 's/^/  - /'
+
+      - name: Resolve upstream HEAD
+        id: upstream
+        env:
+          REPO: ${{ steps.pin.outputs.repo }}
+          BRANCH: ${{ steps.pin.outputs.branch }}
+        run: |
+          set -euo pipefail
+          HEAD_SHA=$(git ls-remote "$REPO" "refs/heads/$BRANCH" | awk '{print $1}')
+          if [ -z "$HEAD_SHA" ]; then
+            echo "::error::Could not resolve $REPO @ refs/heads/$BRANCH."
+            exit 1
+          fi
+          echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          echo "Upstream HEAD: $HEAD_SHA"
+
+      - name: Diff watched paths
+        id: diff
+        env:
+          REPO: ${{ steps.pin.outputs.repo }}
+          PINNED_SHA: ${{ steps.pin.outputs.pinned_sha }}
+          HEAD_SHA: ${{ steps.upstream.outputs.head_sha }}
+          WATCHED_PATHS: ${{ steps.pin.outputs.watched_paths }}
+        run: |
+          set -euo pipefail
+
+          if [ "$PINNED_SHA" = "$HEAD_SHA" ]; then
+            echo "Pinned SHA matches upstream HEAD — no drift."
+            {
+              echo "drift=false"
+              echo "missing="
+              echo "changed="
+              echo "diff_body="
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          WORK=$(mktemp -d)
+          trap 'rm -rf "$WORK"' EXIT
+          git clone --quiet "$REPO" "$WORK/upstream"
+          cd "$WORK/upstream"
+
+          if ! git cat-file -e "$PINNED_SHA" 2>/dev/null; then
+            echo "::error::Pinned SHA $PINNED_SHA is not reachable in $REPO. The pin is corrupt."
+            exit 1
+          fi
+          if ! git cat-file -e "$HEAD_SHA" 2>/dev/null; then
+            echo "::error::Upstream HEAD $HEAD_SHA could not be fetched."
+            exit 1
+          fi
+
+          MISSING=""
+          CHANGED=""
+          DIFF_BODY=""
+
+          while IFS= read -r path; do
+            [ -z "$path" ] && continue
+
+            if ! git cat-file -e "${HEAD_SHA}:${path}" 2>/dev/null; then
+              MISSING="${MISSING}- ${path}"$'\n'
+              continue
+            fi
+
+            if ! git diff --quiet "$PINNED_SHA" "$HEAD_SHA" -- "$path"; then
+              CHANGED="${CHANGED}- ${path}"$'\n'
+              hunk=$(git diff "$PINNED_SHA" "$HEAD_SHA" -- "$path" | head -200)
+              DIFF_BODY="${DIFF_BODY}"$'\n'"#### \`${path}\`"$'\n\n'"\`\`\`diff"$'\n'"${hunk}"$'\n'"\`\`\`"$'\n'
+            fi
+          done <<< "$WATCHED_PATHS"
+
+          if [ -n "$MISSING" ] || [ -n "$CHANGED" ]; then
+            DRIFT="true"
+          else
+            DRIFT="false"
+          fi
+
+          {
+            echo "drift=$DRIFT"
+            echo "missing<<MISSING_EOF"
+            printf '%s' "$MISSING"
+            echo
+            echo "MISSING_EOF"
+            echo "changed<<CHANGED_EOF"
+            printf '%s' "$CHANGED"
+            echo
+            echo "CHANGED_EOF"
+            echo "diff_body<<DIFF_EOF"
+            printf '%s' "$DIFF_BODY"
+            echo
+            echo "DIFF_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          if [ -n "$MISSING" ]; then
+            echo "::warning::Watcher went blind on the following paths (no longer exist upstream):"
+            printf '%s' "$MISSING"
+          fi
+          if [ -n "$CHANGED" ]; then
+            echo "Changed watched paths:"
+            printf '%s' "$CHANGED"
+          fi
+
+      - name: Check for existing issue
+        id: existing
+        if: steps.diff.outputs.drift == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_SHA: ${{ steps.upstream.outputs.head_sha }}
+        run: |
+          set -euo pipefail
+          SHORT="${HEAD_SHA:0:12}"
+          EXISTING=$(gh issue list --label "meshcore-update" --state open --json number,title \
+                       --jq ".[] | select(.title | contains(\"$SHORT\")) | .number")
+          if [ -n "$EXISTING" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Issue #$EXISTING already covers $SHORT."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create issue
+        if: steps.diff.outputs.drift == 'true' && steps.existing.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ steps.pin.outputs.repo }}
+          PINNED_SHA: ${{ steps.pin.outputs.pinned_sha }}
+          PINNED_AT: ${{ steps.pin.outputs.pinned_at }}
+          PIN_FW_VER: ${{ steps.pin.outputs.firmware_version }}
+          HEAD_SHA: ${{ steps.upstream.outputs.head_sha }}
+          MISSING: ${{ steps.diff.outputs.missing }}
+          CHANGED: ${{ steps.diff.outputs.changed }}
+          DIFF_BODY: ${{ steps.diff.outputs.diff_body }}
+        run: |
+          set -euo pipefail
+          gh label create "meshcore-update" \
+            --description "MeshCore upstream protocol drift detected" \
+            --color "0366d6" 2>/dev/null || true
+
+          SHORT_PIN="${PINNED_SHA:0:12}"
+          SHORT_HEAD="${HEAD_SHA:0:12}"
+          TODAY=$(date -u +%Y-%m-%d)
+
+          {
+            echo "## MeshCore Upstream Drift Detected"
+            echo
+            echo "SocialMesh's MeshCore parser layer is verified against a pinned upstream commit. One or more watched files have changed since that pin, or have disappeared from upstream."
+            echo
+            echo "| | Commit | Date | Firmware |"
+            echo "|---|---|---|---|"
+            echo "| Pinned | [\`$SHORT_PIN\`]($REPO/commit/$PINNED_SHA) | $PINNED_AT | $PIN_FW_VER |"
+            echo "| Upstream HEAD | [\`$SHORT_HEAD\`]($REPO/commit/$HEAD_SHA) | $TODAY | (look up at HEAD) |"
+            echo
+            if [ -n "$MISSING" ]; then
+              echo "### Watched paths that no longer exist upstream"
+              echo
+              echo "**Watcher went blind on these paths.** They have been moved, renamed, or deleted upstream. Until the pin file is updated, drift cannot be detected on them."
+              echo
+              printf '%s\n' "$MISSING"
+            fi
+            if [ -n "$CHANGED" ]; then
+              echo "### Changed watched paths"
+              echo
+              printf '%s\n' "$CHANGED"
+            fi
+            echo "### Diff"
+            printf '%s\n' "$DIFF_BODY"
+            echo
+            echo "### Maintainer checklist"
+            echo
+            echo "- [ ] For each changed file, decide whether the diff touches a wire format SocialMesh parses (CMD_/RESP_CODE_/PUSH_CODE_ defines, SELF_INFO byte layout, CONTACT byte layout, NodePrefs struct order)."
+            echo "- [ ] If wire formats are affected, update parsers under \`lib/services/meshcore/protocol/\` AND add or refresh fixtures under \`test/services/meshcore/protocol/fixtures/\`."
+            echo "- [ ] If the change is benign (comments, unrelated code), only the pin file needs updating."
+            echo "- [ ] Update \`tools/meshcore_protocol/VERSION\`: bump \`sha:\`, \`pinned_at:\`, and refresh \`firmware_version:\` / \`firmware_ver_code:\` from \`examples/companion_radio/MyMesh.h\` at the new commit."
+            echo "- [ ] Run \`flutter test test/services/meshcore/protocol/\` and confirm green before closing this issue."
+            echo
+            echo "---"
+            echo "*Filed automatically by the MeshCore protocol drift watcher.*"
+          } > /tmp/issue_body.md
+
+          gh issue create \
+            --title "MeshCore upstream drift: pin $SHORT_PIN to $SHORT_HEAD" \
+            --label "meshcore-update,enhancement" \
+            --body-file /tmp/issue_body.md
+
+      - name: Fail loudly on missing watched paths
+        if: steps.diff.outputs.missing != ''
+        run: |
+          echo "::error::One or more watched paths no longer exist upstream. The drift watcher cannot detect changes on them. Update tools/meshcore_protocol/VERSION."
+          exit 1
+
+      - name: Summary
+        if: always()
+        env:
+          PINNED_SHA: ${{ steps.pin.outputs.pinned_sha }}
+          HEAD_SHA: ${{ steps.upstream.outputs.head_sha }}
+          DRIFT: ${{ steps.diff.outputs.drift }}
+          MISSING: ${{ steps.diff.outputs.missing }}
+          CHANGED: ${{ steps.diff.outputs.changed }}
+        run: |
+          {
+            echo "## MeshCore Protocol Drift Check"
+            echo
+            echo "| | Commit |"
+            echo "|---|---|"
+            echo "| Pinned | \`${PINNED_SHA:-(unread)}\` |"
+            echo "| Upstream HEAD | \`${HEAD_SHA:-(unresolved)}\` |"
+            echo
+            if [ "${DRIFT:-}" = "true" ]; then
+              echo "**Drift detected.**"
+              if [ -n "${MISSING:-}" ]; then
+                echo
+                echo "### Paths no longer upstream (watcher blind)"
+                printf '%s\n' "$MISSING"
+              fi
+              if [ -n "${CHANGED:-}" ]; then
+                echo
+                echo "### Changed paths"
+                printf '%s\n' "$CHANGED"
+              fi
+            elif [ "${DRIFT:-}" = "false" ]; then
+              echo "**Up to date.**"
+            else
+              echo "**Check did not complete.** See logs."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
