@@ -62,8 +62,6 @@ import 'providers/connectivity_providers.dart';
 import 'providers/presence_providers.dart';
 import 'providers/glyph_provider.dart';
 import 'providers/accessibility_providers.dart';
-import 'providers/meshcore_providers.dart';
-import 'services/meshcore/connection_coordinator.dart' show ConnectionResult;
 import 'features/automations/automation_providers.dart';
 import 'features/automations/automation_import_screen.dart';
 import 'features/external_purchase/confirming_unlock_overlay.dart';
@@ -982,7 +980,16 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       }
 
       if (lastProtocol == 'meshcore') {
-        await _performMeshCoreReconnectOnResume(deviceId, settings);
+        // D27: route through the protocol-aware dispatcher so TCP-saved
+        // peers reconnect via `connectMeshCoreTcp` and BLE-saved peers
+        // run the coordinator's BLE strategies. The previous in-place
+        // `_performMeshCoreReconnectOnResume` hardcoded `TransportType.ble`
+        // for every MeshCore peer, which is the bug surfaced during the
+        // D26 smoke (TCP-saved + GPS dialog → `CBManagerStateUnsupported`).
+        // Live smoke confirmed this still fired even after the original
+        // D27 dispatch consolidation; folding it into the same dispatcher
+        // closes the last on-resume gap.
+        dispatchReconnectMeshCoreAwareForWidget(ref, deviceId);
       } else {
         await _performMeshtasticReconnectOnResume(deviceId, settings);
       }
@@ -991,221 +998,6 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       _reconnectInFlight = false;
       AppLogging.connection('📱 RECONNECT ON RESUME: Completed, mutex cleared');
     }
-  }
-
-  /// Reconnect to a MeshCore device on app resume.
-  ///
-  /// On iOS, service UUID filtering during scans can miss MeshCore devices
-  /// because iOS may not include service UUIDs in the advertisement packet.
-  /// This method uses a multi-strategy approach:
-  /// 1. First try direct connection by device identifier (most reliable on iOS)
-  /// 2. Fall back to unfiltered scan matching by device identifier
-  Future<void> _performMeshCoreReconnectOnResume(
-    String deviceId,
-    dynamic settings,
-  ) async {
-    AppLogging.connection(
-      '📱 RECONNECT ON RESUME: MeshCore protocol detected, deviceId=$deviceId',
-    );
-
-    try {
-      // Strategy 1: Try direct connect by device identifier (no scan needed)
-      // On iOS, this is the most reliable way to reconnect to a known peripheral
-      AppLogging.connection(
-        '📱 RECONNECT ON RESUME: Strategy 1 - attempting direct connect by ID...',
-      );
-
-      DeviceInfo? foundDevice;
-
-      try {
-        // Check system devices first (peripherals iOS already knows about)
-        final systemDevices = await FlutterBluePlus.systemDevices([]);
-        if (!mounted) return;
-        AppLogging.connection(
-          '📱 RECONNECT ON RESUME: Found ${systemDevices.length} system devices',
-        );
-
-        for (final device in systemDevices) {
-          AppLogging.connection(
-            '📱 RECONNECT ON RESUME: System device: ${device.remoteId}',
-          );
-          if (device.remoteId.toString() == deviceId) {
-            AppLogging.connection(
-              '📱 RECONNECT ON RESUME: Target found in system devices!',
-            );
-            foundDevice = DeviceInfo(
-              id: device.remoteId.toString(),
-              name: device.platformName.isNotEmpty
-                  ? device.platformName
-                  : settings.lastDeviceName ??
-                        'MeshCore Device', // lint-allow: hardcoded-string
-              type: TransportType.ble,
-              address: device.remoteId.toString(),
-            );
-            break;
-          }
-        }
-
-        // If not found in system devices, create a device reference by ID
-        // This allows iOS to connect to a known peripheral without scanning
-        if (foundDevice == null) {
-          AppLogging.connection(
-            '📱 RECONNECT ON RESUME: Not in system devices, creating device by ID...',
-          );
-          foundDevice = DeviceInfo(
-            id: deviceId,
-            name:
-                settings.lastDeviceName ??
-                'MeshCore Device', // lint-allow: hardcoded-string
-            type: TransportType.ble,
-            address: deviceId,
-          );
-        }
-      } catch (e) {
-        AppLogging.connection(
-          '📱 RECONNECT ON RESUME: System devices check failed: $e',
-        );
-        // Create device reference anyway
-        foundDevice = DeviceInfo(
-          id: deviceId,
-          name:
-              settings.lastDeviceName ??
-              'MeshCore Device', // lint-allow: hardcoded-string
-          type: TransportType.ble,
-          address: deviceId,
-        );
-      }
-
-      // Try direct connection first
-      AppLogging.connection(
-        '📱 RECONNECT ON RESUME: Attempting direct connect to ${foundDevice.id}...',
-      );
-      ref
-          .read(autoReconnectStateProvider.notifier)
-          .setState(AutoReconnectState.connecting);
-
-      final coordinator = ref.read(connectionCoordinatorProvider);
-      var result = await coordinator.connect(device: foundDevice);
-
-      if (result.success) {
-        // Direct connect succeeded!
-        AppLogging.connection(
-          '📱 RECONNECT ON RESUME: Direct connect succeeded!',
-        );
-        await _finalizeMeshCoreReconnect(foundDevice, result);
-        if (!mounted) return;
-        return;
-      }
-
-      // Strategy 2: Direct connect failed, try scanning without service filter
-      // On iOS, service UUID filtering can miss devices that don't advertise
-      // their service UUIDs in the advertisement packet
-      AppLogging.connection(
-        '📱 RECONNECT ON RESUME: Direct connect failed (${result.errorMessage}), '
-        'trying Strategy 2 - unfiltered scan...',
-      );
-      ref
-          .read(autoReconnectStateProvider.notifier)
-          .setState(AutoReconnectState.scanning);
-
-      final transport = ref.read(transportProvider);
-
-      // Use scanAll=true to avoid iOS service UUID filtering issues
-      AppLogging.connection(
-        '📱 RECONNECT ON RESUME: Starting 10s unfiltered scan (scanAll=true), '
-        'matching by deviceId=$deviceId',
-      );
-      final scanStream = transport.scan(
-        timeout: const Duration(seconds: 10),
-        scanAll: true, // Important: don't filter by service UUID
-      );
-
-      foundDevice = null;
-      await for (final device in scanStream) {
-        AppLogging.connection(
-          '📱 RECONNECT ON RESUME: Scan found: ${device.id} (${device.name})',
-        );
-        if (!mounted) return;
-        if (device.id == deviceId) {
-          foundDevice = device;
-          AppLogging.connection(
-            '📱 RECONNECT ON RESUME: Target MeshCore device found in scan!',
-          );
-          break;
-        }
-      }
-
-      if (foundDevice == null) {
-        AppLogging.connection(
-          '📱 RECONNECT ON RESUME: MeshCore device not found in unfiltered scan',
-        );
-        ref
-            .read(autoReconnectStateProvider.notifier)
-            .setState(AutoReconnectState.failed);
-        return;
-      }
-
-      // Try to connect to the scanned device
-      AppLogging.connection(
-        '📱 RECONNECT ON RESUME: Connecting to scanned MeshCore device...',
-      );
-      ref
-          .read(autoReconnectStateProvider.notifier)
-          .setState(AutoReconnectState.connecting);
-
-      result = await coordinator.connect(device: foundDevice);
-
-      if (!result.success) {
-        AppLogging.connection(
-          '📱 RECONNECT ON RESUME: MeshCore connect failed: ${result.errorMessage}',
-        );
-        throw Exception(
-          result.errorMessage ?? 'MeshCore connection failed',
-        ); // lint-allow: hardcoded-string
-      }
-
-      await _finalizeMeshCoreReconnect(foundDevice, result);
-      if (!mounted) return;
-    } catch (e) {
-      AppLogging.connection('📱 RECONNECT ON RESUME: MeshCore failed: $e');
-      ref
-          .read(autoReconnectStateProvider.notifier)
-          .setState(AutoReconnectState.failed);
-    }
-  }
-
-  /// Finalize MeshCore reconnection by updating providers and state.
-  Future<void> _finalizeMeshCoreReconnect(
-    DeviceInfo device,
-    ConnectionResult result,
-  ) async {
-    // Update providers
-    ref.read(connectedDeviceProvider.notifier).setState(device);
-
-    // Mark as paired with isMeshCore=true
-    final nodeIdHex = result.deviceInfo?.nodeId ?? '0';
-    final nodeNumParsed = int.tryParse(nodeIdHex, radix: 16);
-    ref
-        .read(conn.deviceConnectionProvider.notifier)
-        .markAsPaired(device, nodeNumParsed, isMeshCore: true);
-
-    // Clear userDisconnected flags
-    ref.read(userDisconnectedProvider.notifier).setUserDisconnected(false);
-    ref.read(conn.deviceConnectionProvider.notifier).clearUserDisconnected();
-
-    AppLogging.connection(
-      '📱 RECONNECT ON RESUME: MeshCore connected: ${result.deviceInfo?.displayName}',
-    );
-
-    ref
-        .read(autoReconnectStateProvider.notifier)
-        .setState(AutoReconnectState.success);
-
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
-    ref
-        .read(autoReconnectStateProvider.notifier)
-        .setState(AutoReconnectState.idle);
   }
 
   /// Reconnect to a Meshtastic device on app resume.

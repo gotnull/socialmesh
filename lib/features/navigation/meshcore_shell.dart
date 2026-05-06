@@ -725,7 +725,23 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
     dispatchReconnectMeshCoreAwareForWidget(ref, deviceId);
   }
 
+  /// Drawer Disconnect tap.
+  ///
+  /// D27: route through `userCancelAutoReconnect` (sets `userDisconnected=true`,
+  /// tears down the transport, sets `autoReconnectState=idle`) instead of a
+  /// raw `coordinator.disconnect()`. Without this gate the new
+  /// `meshCoreLifecycleProvider` would observe the coordinator-driven
+  /// `MeshConnectionState.disconnected` transition and immediately
+  /// dispatch an auto-reconnect, defeating the user's intent.
   void _disconnect() async {
+    AppLogging.connection('event=shell.drawer.disconnect protocol=meshcore');
+    await ref
+        .read(conn.deviceConnectionProvider.notifier)
+        .userCancelAutoReconnect();
+    // Belt-and-braces: also drive the coordinator's own disconnect so any
+    // MeshCore-specific cleanup (capture, adapter teardown) runs even if
+    // userCancelAutoReconnect's `transportProvider.disconnect()` was a
+    // no-op for our coordinator-owned transport.
     final coordinator = ref.read(connectionCoordinatorProvider);
     await coordinator.disconnect();
   }

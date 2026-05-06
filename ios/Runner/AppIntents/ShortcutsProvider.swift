@@ -9,7 +9,7 @@ import Foundation
 import AppIntents
 
 @available(iOS 16.0, *)
-struct SocialmeshShortcuts: AppShortcutsProvider {
+struct SocialMeshShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         // Send Direct Message
         AppShortcut(
