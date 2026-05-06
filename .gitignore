@@ -148,5 +148,9 @@ assets/widget_templates/*.json
 android/key.properties
 .sandbox/
 
+# Agent skills (Flutter/Dart official skills); synced via scripts/sync-private.sh
+/.agents/
+/skills-lock.json
+
 # xcodebuild MCP per-developer session defaults (machine-local paths)
 .xcodebuildmcp/

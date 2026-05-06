@@ -1057,6 +1057,145 @@ class NotificationService {
     );
   }
 
+  /// D30 Part A: show a notification for an inbound MeshCore contact (DM)
+  /// message.
+  ///
+  /// Mirrors [showNewMessageNotification] but keys the notification id +
+  /// payload off the MeshCore contact's full pubkey hex (no synthesized
+  /// "fake nodeNum" — MeshCore identities are pubkeys, not 32-bit ints,
+  /// and contorting them into the Meshtastic shape would round-trip-break
+  /// the payload tap-handler). Reuses the same Android channel
+  /// (`direct_messages`) so the user's existing notification preferences
+  /// (sound, vibration, channel disable) apply uniformly across
+  /// protocols.
+  ///
+  /// Logs only the sender display name and message length — never the
+  /// pubkey, never the message body — so the structured log channel
+  /// stays redaction-safe.
+  Future<void> showMeshCoreContactMessageNotification({
+    required String senderName,
+    required String pubKeyHex,
+    required String message,
+    bool playSound = true,
+    bool vibrate = true,
+  }) async {
+    if (!_initialized) {
+      AppLogging.notifications(
+        '🔔 NotificationService not initialized, skipping MeshCore DM',
+      );
+      return;
+    }
+    final androidDetails = AndroidNotificationDetails(
+      'direct_messages',
+      'Direct Messages', // lint-allow: hardcoded-string
+      channelDescription: _l10n.notificationChannelDirectMessages,
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      groupKey: 'mesh_direct_messages',
+      playSound: playSound,
+      enableVibration: vibrate,
+    );
+    final iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: playSound,
+    );
+    final notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+      macOS: iosDetails,
+    );
+    final truncatedMessage = safeSubstring(message, 100);
+    // Stable, non-colliding 32-bit notification id derived from the
+    // first 4 bytes of the pubkey. Offset to keep clear of the
+    // Meshtastic DM range.
+    final keyBytes = pubKeyHex.length >= 8
+        ? int.tryParse(pubKeyHex.substring(0, 8), radix: 16) ?? 0
+        : 0;
+    final notificationId = (keyBytes & 0x7FFFFFFF) ~/ 16 + 3000000;
+    try {
+      await _notifications.show(
+        id: notificationId,
+        title: _l10n.notificationDirectMessageTitle(
+          senderName,
+          // Short code: last 4 hex chars of the pubkey, uppercase.
+          pubKeyHex.length >= 4
+              ? pubKeyHex.substring(pubKeyHex.length - 4).toUpperCase()
+              : '----',
+        ),
+        body: truncatedMessage,
+        notificationDetails: notificationDetails,
+        payload: 'meshcore-dm:$pubKeyHex',
+      );
+      AppLogging.notifications(
+        '🔔 Showed MeshCore DM notification from $senderName '
+        '(len=${truncatedMessage.length})',
+      );
+    } catch (e) {
+      AppLogging.notifications('🔔 Error showing MeshCore DM notification: $e');
+      rethrow;
+    }
+  }
+
+  /// D30 Part A: show a notification for an inbound MeshCore channel
+  /// message. Keys the id off the channel index + sender pubkey prefix
+  /// so simultaneous activity on different channels surfaces as
+  /// distinct notifications. Reuses the existing `channel_messages`
+  /// Android channel.
+  Future<void> showMeshCoreChannelMessageNotification({
+    required String senderName,
+    required String channelName,
+    required int channelIndex,
+    required String senderPrefixHex,
+    required String message,
+    bool playSound = true,
+    bool vibrate = true,
+  }) async {
+    if (!_initialized) return;
+    final androidDetails = AndroidNotificationDetails(
+      'channel_messages',
+      'Channel Messages', // lint-allow: hardcoded-string
+      channelDescription: _l10n.notificationChannelMessages,
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      groupKey: 'mesh_channel_messages',
+      playSound: playSound,
+      enableVibration: vibrate,
+    );
+    final iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: playSound,
+    );
+    final notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+      macOS: iosDetails,
+    );
+    final truncatedMessage = safeSubstring(message, 100);
+    final shortCode = senderPrefixHex.length >= 4
+        ? senderPrefixHex.substring(0, 4).toUpperCase()
+        : '----';
+    await _notifications.show(
+      // 2_500_000 base separates from Meshtastic channel range (2_000_000+).
+      id: 2500000 + (channelIndex & 0xFFFF),
+      title: _l10n.notificationChannelMessageTitle(
+        senderName,
+        shortCode,
+        channelName,
+      ),
+      body: truncatedMessage,
+      notificationDetails: notificationDetails,
+      payload: 'meshcore-channel:$channelIndex:$senderPrefixHex',
+    );
+    AppLogging.notifications(
+      '🔔 Showed MeshCore channel notification: $senderName in $channelName '
+      '(len=${truncatedMessage.length})',
+    );
+  }
+
   /// Cancel all notifications
   Future<void> cancelAll() async {
     await _notifications.cancelAll();

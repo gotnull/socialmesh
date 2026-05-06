@@ -24,7 +24,9 @@ import '../services/meshcore/protocol/meshcore_messages.dart' as msgs;
 import '../services/meshcore/protocol/meshcore_session.dart';
 import '../services/meshcore/storage/meshcore_message_store.dart';
 import '../services/meshcore/storage/meshcore_contact_store.dart';
+import '../services/notifications/notification_service.dart';
 import 'app_lifecycle_provider.dart';
+import 'app_providers.dart';
 import 'meshcore_providers.dart';
 
 // ---------------------------------------------------------------------------
@@ -167,6 +169,11 @@ class MeshCoreMessage {
   final String? senderName;
   final int? pathLength;
 
+  /// Signed link SNR encoded by the firmware in quarter-dB units.
+  /// Convert with `snrQuarter / 4.0` for dB. Only meaningful for
+  /// inbound messages; outbound is always null.
+  final int? snrQuarter;
+
   const MeshCoreMessage({
     required this.id,
     required this.text,
@@ -176,6 +183,7 @@ class MeshCoreMessage {
     this.senderKey,
     this.senderName,
     this.pathLength,
+    this.snrQuarter,
   });
 
   MeshCoreMessage copyWith({MeshCoreMessageDeliveryStatus? status}) {
@@ -188,6 +196,7 @@ class MeshCoreMessage {
       senderKey: senderKey,
       senderName: senderName,
       pathLength: pathLength,
+      snrQuarter: snrQuarter,
     );
   }
 }
@@ -832,6 +841,7 @@ class MeshCoreConversationsNotifier
       senderKey: fullSenderKey,
       senderName: senderName,
       pathLength: parsed.pathLen,
+      snrQuarter: parsed.snrQuarter,
     );
 
     AppLogging.meshcore(
@@ -862,6 +872,7 @@ class MeshCoreConversationsNotifier
               status: MeshCoreMessageStatus.delivered,
               pathLength: parsed.pathLen,
               isChannelMessage: false,
+              snrQuarter: parsed.snrQuarter,
             ),
           );
           AppLogging.meshcore(
@@ -906,6 +917,85 @@ class MeshCoreConversationsNotifier
     }
 
     _addMessageToConversation(conversationId, message, incrementUnread: true);
+
+    // D30 Part A: fire a local notification for inbound MeshCore DMs.
+    // Gated on the existing app-wide notification toggles so the user's
+    // master + per-category preferences apply uniformly across protocols.
+    // Only inbound persisted messages reach this point — the parser at
+    // the top of the handler runs only for `RESP_CODE_CONTACT_MSG_RECV*`
+    // frames (firmware → app), so there's no risk of self-echo
+    // notifications. Persistence ran via Future.microtask above; the
+    // notification fire-and-forget here doesn't block the broadcast
+    // listener.
+    if (matchedId != null && fullSenderKey != null) {
+      _maybeNotifyContactMessage(
+        senderName: senderName ?? '',
+        pubKeyHex: matchedId,
+        text: parsed.text,
+      );
+    }
+  }
+
+  /// D30 Part A: dispatch the contact-DM notification, gated on
+  /// `notificationsEnabled` + `directMessageNotificationsEnabled`. Reads
+  /// settings via the same `settingsServiceProvider` the Meshtastic side
+  /// uses, so toggling notifications off in the Settings screen
+  /// suppresses MeshCore + Meshtastic alike.
+  void _maybeNotifyContactMessage({
+    required String senderName,
+    required String pubKeyHex,
+    required String text,
+  }) {
+    Future.microtask(() async {
+      if (_disposed) return;
+      try {
+        final settings = await ref.read(settingsServiceProvider.future);
+        if (!settings.notificationsEnabled) return;
+        if (!settings.directMessageNotificationsEnabled) return;
+        await NotificationService().showMeshCoreContactMessageNotification(
+          senderName: senderName.isNotEmpty ? senderName : 'MeshCore',
+          pubKeyHex: pubKeyHex,
+          message: text,
+        );
+      } catch (e) {
+        AppLogging.meshcore(
+          'event=notification.dispatch.failed scope=contact '
+          'reason=${e.runtimeType}',
+          error: true,
+        );
+      }
+    });
+  }
+
+  /// D30 Part A: dispatch the channel notification.
+  void _maybeNotifyChannelMessage({
+    required String senderName,
+    required String channelName,
+    required int channelIndex,
+    required String senderPrefixHex,
+    required String text,
+  }) {
+    Future.microtask(() async {
+      if (_disposed) return;
+      try {
+        final settings = await ref.read(settingsServiceProvider.future);
+        if (!settings.notificationsEnabled) return;
+        if (!settings.channelMessageNotificationsEnabled) return;
+        await NotificationService().showMeshCoreChannelMessageNotification(
+          senderName: senderName.isNotEmpty ? senderName : 'MeshCore',
+          channelName: channelName.isNotEmpty ? channelName : 'Channel',
+          channelIndex: channelIndex,
+          senderPrefixHex: senderPrefixHex,
+          message: text,
+        );
+      } catch (e) {
+        AppLogging.meshcore(
+          'event=notification.dispatch.failed scope=channel '
+          'reason=${e.runtimeType}',
+          error: true,
+        );
+      }
+    });
   }
 
   void _handleIncomingChannelMessage(MeshCoreFrame frame) {
@@ -936,6 +1026,7 @@ class MeshCoreConversationsNotifier
       // Channel messages carry no sender identity in firmware.
       senderKey: null,
       pathLength: parsed.pathLen,
+      snrQuarter: parsed.snrQuarter,
     );
 
     AppLogging.meshcore(
@@ -964,6 +1055,7 @@ class MeshCoreConversationsNotifier
             pathLength: parsed.pathLen,
             isChannelMessage: true,
             channelIndex: parsed.channelIndex,
+            snrQuarter: parsed.snrQuarter,
           ),
         );
         AppLogging.meshcore(
@@ -985,6 +1077,24 @@ class MeshCoreConversationsNotifier
       incrementUnread: true,
       isChannel: true,
       channelIndex: parsed.channelIndex,
+    );
+
+    // D30 Part A: fire a local notification for inbound MeshCore channel
+    // messages. Channel frames carry no sender identity in firmware, so
+    // we surface the channel name only. Resolve the channel display
+    // name from the channels provider; fall back to a generic
+    // "Channel <index>" label if the channel isn't known yet.
+    final channels = ref.read(meshCoreChannelsProvider).channels;
+    final channelName = channels
+        .where((c) => c.index == parsed.channelIndex)
+        .map((c) => c.name)
+        .firstWhere((n) => n.isNotEmpty, orElse: () => '');
+    _maybeNotifyChannelMessage(
+      senderName: '',
+      channelName: channelName,
+      channelIndex: parsed.channelIndex,
+      senderPrefixHex: '',
+      text: parsed.text,
     );
   }
 
@@ -1379,6 +1489,7 @@ final meshCoreMessageHistoryProvider =
             status: _convertStatus(stored.status),
             senderKey: stored.senderKey,
             pathLength: stored.pathLength,
+            snrQuarter: stored.snrQuarter,
           );
         }).toList();
 

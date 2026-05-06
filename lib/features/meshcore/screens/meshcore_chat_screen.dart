@@ -21,6 +21,7 @@ import '../../../core/widgets/chat_bubble_text.dart';
 import '../../../core/widgets/chat_composer.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/info_table.dart';
+import '../../../core/widgets/jump_to_latest_pill.dart';
 import '../../../core/widgets/linkified_text.dart';
 import '../../../core/widgets/node_avatar.dart';
 import '../../../core/widgets/section_header.dart';
@@ -123,6 +124,16 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   final MeshCoreMessageStore _messageStore = MeshCoreMessageStore();
   final MeshCoreContactStore _contactStore = MeshCoreContactStore();
 
+  /// D30: jump-to-latest pill visibility. True when the user has
+  /// scrolled the message list up far enough that they're no longer
+  /// reading the bottom (most-recent) entry. Mirrors the SIP DM screen.
+  bool _showJumpToLatest = false;
+
+  /// Distance in pixels from the bottom within which we still consider
+  /// the user "at the latest". Mirrors the SIP DM threshold so the
+  /// affordance feels consistent across chat surfaces.
+  static const double _atBottomThresholdPx = 120;
+
   String get _conversationId {
     if (widget.chatType == MeshCoreChatType.contact) {
       return widget.contact!.publicKeyHex;
@@ -162,6 +173,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       'event=screen.opened name=chat '
       'type=${widget.chatType == MeshCoreChatType.contact ? "contact" : "channel"}',
     );
+    _scrollController.addListener(_onScroll);
     if (widget.initialMessages.isNotEmpty) {
       _messages.addAll(widget.initialMessages);
       _isLoading = false;
@@ -174,10 +186,32 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   @override
   void dispose() {
     _frameSubscription?.cancel();
+    _scrollController.removeListener(_onScroll);
     _messageController.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  /// D30: toggle [_showJumpToLatest] based on scroll position relative
+  /// to the bottom of the message list.
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    final distanceFromBottom = position.maxScrollExtent - position.pixels;
+    final shouldShow = distanceFromBottom > _atBottomThresholdPx;
+    if (shouldShow != _showJumpToLatest && mounted) {
+      setState(() => _showJumpToLatest = shouldShow);
+    }
+  }
+
+  /// D30: tap handler for the jump-to-latest pill.
+  void _jumpToLatest() {
+    HapticFeedback.lightImpact();
+    _scrollToBottom();
+    if (mounted) {
+      setState(() => _showJumpToLatest = false);
+    }
   }
 
   Future<void> _loadMessages() async {
@@ -200,6 +234,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
           status: _convertStatus(stored.status),
           senderKey: stored.senderKey,
           pathLength: stored.pathLength,
+          snrQuarter: stored.snrQuarter,
         );
       }).toList();
 
@@ -329,6 +364,8 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       isOutgoing: false,
       status: MeshCoreMessageDeliveryStatus.delivered,
       senderKey: senderKey,
+      pathLength: parsed.pathLen,
+      snrQuarter: parsed.snrQuarter,
     );
 
     if (mounted) {
@@ -339,7 +376,12 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       // deterministic id, so the store dedupes regardless, but
       // not writing twice keeps the diag log surface clean.
       setState(() => _messages.add(message));
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+      // D30: only auto-scroll when the user is parked at the bottom.
+      // Honour the jump-to-latest pill — if it's showing, the user is
+      // reading earlier history and we must not yank them away.
+      if (!_showJumpToLatest) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+      }
     }
     AppLogging.meshcore(
       'event=message.received type=contact size=${parsed.text.length} '
@@ -400,11 +442,17 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       isOutgoing: false,
       status: MeshCoreMessageDeliveryStatus.delivered,
       senderKey: null,
+      pathLength: parsed.pathLen,
+      snrQuarter: parsed.snrQuarter,
     );
 
     if (mounted) {
       setState(() => _messages.add(message));
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+      // D30: respect the jump-to-latest pill — only auto-scroll when
+      // the user is already parked at the bottom.
+      if (!_showJumpToLatest) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+      }
     }
     AppLogging.meshcore(
       'event=message.received type=channel slot=${parsed.channelIndex} '
@@ -453,6 +501,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
         pathLength: message.pathLength,
         isChannelMessage: widget.chatType == MeshCoreChatType.channel,
         channelIndex: widget.channel?.index,
+        snrQuarter: message.snrQuarter,
       );
 
       if (widget.chatType == MeshCoreChatType.contact) {
@@ -507,7 +556,172 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
     final text = _messageController.text.trim();
     if (text.isEmpty || _isSending) return;
 
-    // Capture providers before any await
+    final message = MeshCoreMessage(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      text: text,
+      timestamp: DateTime.now(),
+      isOutgoing: true,
+      status: MeshCoreMessageDeliveryStatus.pending,
+    );
+
+    setState(() {
+      _messages.add(message);
+      _messageController.clear();
+    });
+
+    // Persist immediately as pending so a kill-mid-send still surfaces
+    // the bubble after relaunch.
+    await _persistMessage(message);
+
+    // First send goes straight to the bottom. Retry (which calls
+    // `_doSend` directly) skips this so we don't fight the user's
+    // scroll position.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _scrollToBottom();
+    });
+
+    await _doSend(message);
+  }
+
+  /// D30 Part E: long-press action sheet on a message bubble. Offers
+  /// Copy (always), Retry (only for failed outbound messages), and
+  /// Delete locally (always). Operating on a no-longer-tracked message
+  /// is a quiet no-op so a stale long-press doesn't spam errors.
+  Future<void> _showMessageActions(MeshCoreMessage message) async {
+    HapticFeedback.mediumImpact();
+
+    final canRetry =
+        message.isOutgoing &&
+        message.status == MeshCoreMessageDeliveryStatus.failed &&
+        !_isSending;
+
+    final result = await AppBottomSheet.showActions<String>(
+      context: context,
+      actions: [
+        BottomSheetAction<String>(
+          icon: Icons.content_copy_rounded,
+          label: context.l10n.meshcoreChatActionCopy,
+          value: 'copy',
+        ),
+        if (canRetry)
+          BottomSheetAction<String>(
+            icon: Icons.refresh_rounded,
+            label: context.l10n.meshcoreChatActionRetry,
+            value: 'retry',
+          ),
+        BottomSheetAction<String>(
+          icon: Icons.delete_outline_rounded,
+          label: context.l10n.meshcoreChatActionDelete,
+          value: 'delete',
+          isDestructive: true,
+        ),
+      ],
+    );
+
+    if (!mounted) return;
+    switch (result) {
+      case 'copy':
+        await Clipboard.setData(ClipboardData(text: message.text));
+        if (mounted) {
+          showSuccessSnackBar(context, context.l10n.meshcoreChatMessageCopied);
+        }
+        break;
+      case 'retry':
+        await _retryFailedMessage(message);
+        break;
+      case 'delete':
+        await _deleteMessageLocally(message);
+        break;
+      default:
+        break;
+    }
+  }
+
+  /// D30 Part E: delete a single message from local storage and the
+  /// in-memory list. Emits no wire frame; remote peers retain their
+  /// copy. No-op if the message id is unknown to the store.
+  Future<void> _deleteMessageLocally(MeshCoreMessage message) async {
+    try {
+      await _messageStore.init();
+      final removed = widget.chatType == MeshCoreChatType.contact
+          ? await _messageStore.deleteContactMessage(
+              _conversationId,
+              message.id,
+            )
+          : await _messageStore.deleteChannelMessage(
+              widget.channel!.index,
+              message.id,
+            );
+
+      if (mounted) {
+        setState(() {
+          _messages.removeWhere((m) => m.id == message.id);
+        });
+      }
+
+      AppLogging.meshcore(
+        'event=message.delete.local '
+        'type=${widget.chatType == MeshCoreChatType.contact ? "contact" : "channel"} '
+        'storeRemoved=$removed',
+      );
+
+      if (mounted) {
+        showSuccessSnackBar(context, context.l10n.meshcoreChatMessageDeleted);
+      }
+    } catch (e) {
+      AppLogging.meshcore(
+        'event=message.delete.failed reason=${e.runtimeType}',
+        error: true,
+      );
+      if (mounted) {
+        showErrorSnackBar(
+          context,
+          context.l10n.meshcoreChatMessageDeleteFailed,
+        );
+      }
+    }
+  }
+
+  /// D30: retry a failed outbound message using the existing send path.
+  /// Reuses the same message id (no duplicate bubble), flips status
+  /// `failed` -> `pending`, and runs the wire send. Inbound messages,
+  /// non-failed outbound messages, and any send already in flight
+  /// (`_isSending`) are no-ops.
+  Future<void> _retryFailedMessage(MeshCoreMessage message) async {
+    if (_isSending) return;
+    if (!message.isOutgoing) return;
+    if (message.status != MeshCoreMessageDeliveryStatus.failed) return;
+
+    final index = _messages.indexWhere((m) => m.id == message.id);
+    if (index < 0) return;
+
+    setState(() {
+      _messages[index] = _messages[index].copyWith(
+        status: MeshCoreMessageDeliveryStatus.pending,
+      );
+    });
+    final pending = _messages[index];
+    await _persistMessage(pending);
+
+    AppLogging.meshcore(
+      'event=message.retry.requested '
+      'type=${widget.chatType == MeshCoreChatType.contact ? "contact" : "channel"} '
+      'size=${pending.text.length}',
+    );
+
+    await _doSend(pending);
+  }
+
+  /// D30 P0/P1: shared send body used by both the first send and the
+  /// retry path. Drives the firmware ack waiter, flips bubble status
+  /// on success/failure, and surfaces user-facing errors.
+  ///
+  /// Caller is responsible for ensuring the message already exists in
+  /// `_messages` (and storage) with `pending` status before calling.
+  Future<void> _doSend(MeshCoreMessage message) async {
+    if (_isSending) return;
+
+    // Capture providers before any await.
     final coordinator = ref.read(connectionCoordinatorProvider);
 
     setState(() {
@@ -518,10 +732,8 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
         ? 'contact'
         : 'channel';
     // D21.A: redacted target fingerprint on contact sends so the diag
-    // log can attribute later 0x82 acks to a specific peer. Without
-    // this we couldn't tell from the log alone whether an iPhone DM
-    // targeted Radio A or some other discovered peer. Channels are
-    // flooded with no per-recipient ack so target attribution does
+    // log can attribute later 0x82 acks to a specific peer. Channels
+    // are flooded with no per-recipient ack so target attribution does
     // not apply.
     final targetTag = widget.chatType == MeshCoreChatType.contact
         ? ' target='
@@ -529,33 +741,10 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
         : '';
     AppLogging.meshcore(
       'event=message.send.attempted type=$chatTypeTag '
-      'size=${text.length}$targetTag',
+      'size=${message.text.length}$targetTag',
     );
 
     try {
-      // Create local message with pending status
-      final message = MeshCoreMessage(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        text: text,
-        timestamp: DateTime.now(),
-        isOutgoing: true,
-        status: MeshCoreMessageDeliveryStatus.pending,
-      );
-
-      setState(() {
-        _messages.add(message);
-        _messageController.clear();
-      });
-
-      // Persist immediately as pending
-      await _persistMessage(message);
-
-      // Scroll to bottom
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _scrollToBottom();
-      });
-
-      // Send via MeshCore protocol (coordinator captured before await)
       final adapter = coordinator.meshCoreAdapter;
 
       if (adapter == null) {
@@ -570,7 +759,6 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
         return;
       }
 
-      // Build and send the message frame
       final session = adapter.session;
       if (session == null || !session.isActive) {
         _markMessageFailed(message.id);
@@ -593,13 +781,9 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       //     9-byte payload (expected_ack_hash + est_time_to_send).
       //     A later PUSH_CODE_SEND_CONFIRMED (0x82) carries the
       //     routed-delivery ack from the peer.
-      // We sendAndWait on the right code per chat type so the bubble
-      // flips to `sent` immediately on firmware ack, and the later
-      // 0x82 push (if any) flips `sent` -> `delivered` via
-      // `_handleDeliveryConfirmation`.
       final frame = widget.chatType == MeshCoreChatType.contact
-          ? _buildSendTextMsgFrame(widget.contact!.publicKey, text)
-          : _buildSendChannelTextMsgFrame(widget.channel!.index, text);
+          ? _buildSendTextMsgFrame(widget.contact!.publicKey, message.text)
+          : _buildSendChannelTextMsgFrame(widget.channel!.index, message.text);
 
       final response = await session.sendAndWait(
         frame.command,
@@ -609,16 +793,13 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       );
 
       if (response == null) {
-        // Either firmware returned RESP_CODE_ERR (which the codec
-        // routes to the status stream and never satisfies a waiter)
-        // or no response landed before the 5s timeout. Either way
-        // the send is not confirmed.
         _markMessageFailed(message.id);
         AppLogging.protocol(
-          'MeshCore Chat: Send timeout / error for $_title: $text',
+          'MeshCore Chat: Send timeout / error for $_title: ${message.text}',
         );
         AppLogging.meshcore(
-          'event=message.send.timeout type=$chatTypeTag size=${text.length}',
+          'event=message.send.timeout type=$chatTypeTag '
+          'size=${message.text.length}',
           error: true,
         );
         if (mounted) {
@@ -627,12 +808,6 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
         return;
       }
 
-      // Firmware acknowledged the command. For channel messages this
-      // is the only ack we ever get (channel messages are flooded with
-      // no per-recipient confirmation). For contact messages the
-      // firmware may later emit PUSH_CODE_SEND_CONFIRMED (0x82) with
-      // the routed-ack, which `_handleDeliveryConfirmation` flips to
-      // `delivered`.
       if (mounted) {
         setState(() {
           final index = _messages.indexWhere((m) => m.id == message.id);
@@ -645,9 +820,12 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
         _persistMessage(_messages.firstWhere((m) => m.id == message.id));
       }
 
-      AppLogging.protocol('MeshCore Chat: Sent message to $_title: $text');
+      AppLogging.protocol(
+        'MeshCore Chat: Sent message to $_title: ${message.text}',
+      );
       AppLogging.meshcore(
-        'event=message.send.accepted type=$chatTypeTag size=${text.length}',
+        'event=message.send.accepted type=$chatTypeTag '
+        'size=${message.text.length}',
       );
     } catch (e) {
       AppLogging.protocol('MeshCore Chat: Error sending message: $e');
@@ -655,6 +833,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
         'event=message.send.failed type=$chatTypeTag reason=${e.runtimeType}',
         error: true,
       );
+      _markMessageFailed(message.id);
       if (mounted) {
         showErrorSnackBar(context, context.l10n.meshcoreFailedToSendMessage);
       }
@@ -734,16 +913,30 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
             Expanded(
               child: _messages.isEmpty
                   ? _buildEmptyState()
-                  : ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.spacing16,
-                        vertical: AppTheme.spacing8,
-                      ),
-                      itemCount: _messages.length,
-                      itemBuilder: (context, index) {
-                        return _buildMessageBubble(_messages[index]);
-                      },
+                  : Stack(
+                      children: [
+                        ListView.builder(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacing16,
+                            vertical: AppTheme.spacing8,
+                          ),
+                          itemCount: _messages.length,
+                          itemBuilder: (context, index) {
+                            return _buildMessageBubble(_messages[index]);
+                          },
+                        ),
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: AppTheme.spacing12,
+                          child: JumpToLatestPill(
+                            visible: _showJumpToLatest,
+                            onTap: _jumpToLatest,
+                            label: context.l10n.meshcoreChatJumpToLatest,
+                          ),
+                        ),
+                      ],
                     ),
             ),
 
@@ -870,56 +1063,63 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Flexible(
-                  child: Container(
-                    key: ValueKey('meshcore-message-${message.id}'),
-                    margin: const EdgeInsets.only(left: 64),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.spacing16,
-                      vertical: AppTheme.spacing10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _outgoingBubbleColor(context, message.status),
-                      borderRadius: BorderRadius.circular(AppTheme.radius18),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        LinkifiedText(
-                          text: message.text,
-                          style: chatBubbleBodyStyle(
-                            ref,
-                            baseFontSize: 14,
-                            color: Colors.white,
-                          ),
-                          linkStyle: const TextStyle(
-                            color: Colors.white,
-                            decoration: TextDecoration.underline,
-                            decorationColor: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.spacing2),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _buildOutgoingStatusInline(message.status),
-                            if (message.status ==
-                                MeshCoreMessageDeliveryStatus.pending)
-                              const SizedBox(width: AppTheme.spacing4),
-                            Text(
-                              _formatTime(message.timestamp),
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.white.withValues(alpha: 0.7),
-                              ),
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onLongPress: () => _showMessageActions(message),
+                    child: Container(
+                      key: ValueKey('meshcore-message-${message.id}'),
+                      margin: const EdgeInsets.only(left: 64),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing16,
+                        vertical: AppTheme.spacing10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _outgoingBubbleColor(context, message.status),
+                        borderRadius: BorderRadius.circular(AppTheme.radius18),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          LinkifiedText(
+                            text: message.text,
+                            style: chatBubbleBodyStyle(
+                              ref,
+                              baseFontSize: 14,
+                              color: Colors.white,
                             ),
-                            if (message.status !=
-                                MeshCoreMessageDeliveryStatus.pending) ...[
-                              const SizedBox(width: AppTheme.spacing4),
-                              _buildStatusIcon(message.status, sentByMe: true),
+                            linkStyle: const TextStyle(
+                              color: Colors.white,
+                              decoration: TextDecoration.underline,
+                              decorationColor: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: AppTheme.spacing2),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildOutgoingStatusInline(message.status),
+                              if (message.status ==
+                                  MeshCoreMessageDeliveryStatus.pending)
+                                const SizedBox(width: AppTheme.spacing4),
+                              Text(
+                                _formatTime(message.timestamp),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                ),
+                              ),
+                              if (message.status !=
+                                  MeshCoreMessageDeliveryStatus.pending) ...[
+                                const SizedBox(width: AppTheme.spacing4),
+                                _buildStatusIcon(
+                                  message.status,
+                                  sentByMe: true,
+                                ),
+                              ],
                             ],
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -950,54 +1150,93 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  key: ValueKey('meshcore-message-${message.id}'),
-                  margin: const EdgeInsets.only(right: 64),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.spacing16,
-                    vertical: AppTheme.spacing10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.card,
-                    borderRadius: BorderRadius.circular(AppTheme.radius18),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (showSender) ...[
-                        Text(
-                          _senderLabel(message),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: _senderColor(message),
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onLongPress: () => _showMessageActions(message),
+                  child: Container(
+                    key: ValueKey('meshcore-message-${message.id}'),
+                    margin: const EdgeInsets.only(right: 64),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing16,
+                      vertical: AppTheme.spacing10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(AppTheme.radius18),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (showSender) ...[
+                          Text(
+                            _senderLabel(message),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: _senderColor(message),
+                            ),
+                          ),
+                          const SizedBox(height: AppTheme.spacing2),
+                        ],
+                        LinkifiedText(
+                          text: message.text,
+                          style: chatBubbleBodyStyle(
+                            ref,
+                            baseFontSize: 15,
+                            color: context.textPrimary,
                           ),
                         ),
                         const SizedBox(height: AppTheme.spacing2),
+                        Text(
+                          _formatTime(message.timestamp),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: context.textTertiary,
+                          ),
+                        ),
+                        _buildInboundLinkMeta(message),
                       ],
-                      LinkifiedText(
-                        text: message.text,
-                        style: chatBubbleBodyStyle(
-                          ref,
-                          baseFontSize: 15,
-                          color: context.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: AppTheme.spacing2),
-                      Text(
-                        _formatTime(message.timestamp),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: context.textTertiary,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// D30 Part C: inline SNR + hop-count metadata for inbound bubbles.
+  /// Hidden when the firmware did not surface either field. Outbound
+  /// bubbles never call this. SNR is encoded by the firmware in
+  /// quarter-dB units (signed int8 / 4 = dB).
+  Widget _buildInboundLinkMeta(MeshCoreMessage message) {
+    final hasSnr = message.snrQuarter != null;
+    final hasPath = message.pathLength != null;
+    if (!hasSnr && !hasPath) return const SizedBox.shrink();
+
+    final parts = <String>[];
+    if (hasSnr) {
+      final snrDb = message.snrQuarter! / 4.0;
+      parts.add(
+        context.l10n.meshcoreChatInboundMetaSnr(snrDb.toStringAsFixed(1)),
+      );
+    }
+    if (hasPath) {
+      final hops = message.pathLength!;
+      parts.add(
+        hops == 1
+            ? context.l10n.meshcoreChatInboundMetaPathDirect
+            : context.l10n.meshcoreChatInboundMetaPathHops(hops),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AppTheme.spacing2),
+      child: Text(
+        parts.join('  ·  '),
+        style: TextStyle(fontSize: 10, color: context.textTertiary),
       ),
     );
   }

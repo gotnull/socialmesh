@@ -140,6 +140,93 @@ void main() {
         expect(loadedB[0].text, equals('To contact B'));
       });
 
+      // D30 Part E: per-message delete used by the long-press
+      // "Delete locally" action. Pin both the happy path and the
+      // unknown-id no-op so a regression that turns the no-op into
+      // a throw (or worse, a silent clearAll) trips here.
+      test('deletes a single contact message by id (D30)', () async {
+        const contactKeyHex =
+            'cafebabe00112233445566778899aabbccddeeff00112233445566778899aabb';
+        final senderKey = Uint8List.fromList(List.generate(32, (i) => i));
+        await store.addContactMessage(
+          contactKeyHex,
+          MeshCoreStoredMessage(
+            id: 'keep',
+            senderKey: senderKey,
+            text: 'still here',
+            timestamp: DateTime(2026, 5, 4),
+            isOutgoing: true,
+          ),
+        );
+        await store.addContactMessage(
+          contactKeyHex,
+          MeshCoreStoredMessage(
+            id: 'drop',
+            senderKey: senderKey,
+            text: 'will be removed',
+            timestamp: DateTime(2026, 5, 4, 10, 1),
+            isOutgoing: true,
+          ),
+        );
+
+        final removed = await store.deleteContactMessage(contactKeyHex, 'drop');
+        expect(removed, isTrue);
+
+        final loaded = await store.loadContactMessages(contactKeyHex);
+        expect(loaded.map((m) => m.id), equals(['keep']));
+      });
+
+      test(
+        'deleteContactMessage is a quiet no-op on unknown id (D30)',
+        () async {
+          const contactKeyHex =
+              'cafebabe00112233445566778899aabbccddeeff00112233445566778899aabb';
+          final senderKey = Uint8List.fromList(List.generate(32, (i) => i));
+          await store.addContactMessage(
+            contactKeyHex,
+            MeshCoreStoredMessage(
+              id: 'keep',
+              senderKey: senderKey,
+              text: 'still here',
+              timestamp: DateTime(2026, 5, 4),
+              isOutgoing: true,
+            ),
+          );
+
+          final removed = await store.deleteContactMessage(
+            contactKeyHex,
+            'never-existed',
+          );
+          expect(removed, isFalse);
+
+          final loaded = await store.loadContactMessages(contactKeyHex);
+          expect(loaded.map((m) => m.id), equals(['keep']));
+        },
+      );
+
+      test('snrQuarter round-trips through JSON (D30 Part C)', () async {
+        const contactKeyHex =
+            'cafebabe00112233445566778899aabbccddeeff00112233445566778899aabb';
+        final senderKey = Uint8List.fromList(List.generate(32, (i) => i));
+        await store.addContactMessage(
+          contactKeyHex,
+          MeshCoreStoredMessage(
+            id: 'snr-msg',
+            senderKey: senderKey,
+            text: 'received',
+            timestamp: DateTime(2026, 5, 4),
+            isOutgoing: false,
+            pathLength: 2,
+            snrQuarter: -14, // -3.5 dB
+          ),
+        );
+
+        final loaded = await store.loadContactMessages(contactKeyHex);
+        expect(loaded, hasLength(1));
+        expect(loaded.first.snrQuarter, equals(-14));
+        expect(loaded.first.pathLength, equals(2));
+      });
+
       test('clears contact messages', () async {
         const contactKeyHex =
             'cafebabe00112233445566778899aabbccddeeff00112233445566778899aabb';

@@ -7584,6 +7584,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreChannelsTitle => 'Channels';
 
   @override
+  String get meshcoreChatActionCopy => 'Copy';
+
+  @override
+  String get meshcoreChatActionDelete => 'Delete locally';
+
+  @override
+  String get meshcoreChatActionRetry => 'Retry';
+
+  @override
   String get meshcoreChatEmptyTagline1 =>
       'Send the first one to start a conversation';
 
@@ -7604,6 +7613,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreChatEmptyTitleSuffix => ' yet';
 
   @override
+  String get meshcoreChatInboundMetaPathDirect => 'direct';
+
+  @override
+  String meshcoreChatInboundMetaPathHops(int hops) {
+    return 'via $hops hops';
+  }
+
+  @override
+  String meshcoreChatInboundMetaSnr(String snr) {
+    return 'SNR $snr dB';
+  }
+
+  @override
   String get meshcoreChatInfoLocation => 'Location';
 
   @override
@@ -7614,6 +7636,18 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get meshcoreChatInfoType => 'Type';
+
+  @override
+  String get meshcoreChatJumpToLatest => 'Jump to latest';
+
+  @override
+  String get meshcoreChatMessageCopied => 'Message copied';
+
+  @override
+  String get meshcoreChatMessageDeleted => 'Message deleted';
+
+  @override
+  String get meshcoreChatMessageDeleteFailed => 'Could not delete message';
 
   @override
   String get meshcoreChatNode => 'Chat Node';

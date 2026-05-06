@@ -30,6 +30,12 @@ class MeshCoreStoredMessage {
   final bool isChannelMessage;
   final int? channelIndex;
 
+  /// Signed link SNR encoded by the firmware in quarter-dB units (D30
+  /// inbound metadata). Persisted so the inbound bubble keeps its
+  /// SNR readout across cold reloads. Null on outbound or when the
+  /// firmware did not surface SNR for this frame.
+  final int? snrQuarter;
+
   MeshCoreStoredMessage({
     required this.id,
     required this.senderKey,
@@ -47,6 +53,7 @@ class MeshCoreStoredMessage {
     Uint8List? pathBytes,
     this.isChannelMessage = false,
     this.channelIndex,
+    this.snrQuarter,
   }) : pathBytes = pathBytes ?? Uint8List(0);
 
   String get senderKeyHex => _bytesToHex(senderKey);
@@ -60,6 +67,7 @@ class MeshCoreStoredMessage {
     int? tripTimeMs,
     int? pathLength,
     Uint8List? pathBytes,
+    int? snrQuarter,
   }) {
     return MeshCoreStoredMessage(
       id: id,
@@ -78,6 +86,7 @@ class MeshCoreStoredMessage {
       pathBytes: pathBytes ?? this.pathBytes,
       isChannelMessage: isChannelMessage,
       channelIndex: channelIndex,
+      snrQuarter: snrQuarter ?? this.snrQuarter,
     );
   }
 
@@ -101,6 +110,7 @@ class MeshCoreStoredMessage {
       'pathBytes': pathBytes.isNotEmpty ? base64Encode(pathBytes) : null,
       'isChannelMessage': isChannelMessage,
       'channelIndex': channelIndex,
+      'snrQuarter': snrQuarter,
     };
   }
 
@@ -130,6 +140,7 @@ class MeshCoreStoredMessage {
           : null,
       isChannelMessage: json['isChannelMessage'] as bool? ?? false,
       channelIndex: json['channelIndex'] as int?,
+      snrQuarter: json['snrQuarter'] as int?,
     );
   }
 
@@ -265,6 +276,32 @@ class MeshCoreMessageStore {
       messages.add(message);
     }
     await saveChannelMessages(channelIndex, messages);
+  }
+
+  /// Delete a single message from a contact conversation by id.
+  /// No-op when [messageId] is not present. Used by the D30 long-press
+  /// "Delete locally" action; emits no wire frame.
+  Future<bool> deleteContactMessage(
+    String contactKeyHex,
+    String messageId,
+  ) async {
+    final messages = await loadContactMessages(contactKeyHex);
+    final initial = messages.length;
+    messages.removeWhere((m) => m.id == messageId);
+    if (messages.length == initial) return false;
+    await saveContactMessages(contactKeyHex, messages);
+    return true;
+  }
+
+  /// Delete a single message from a channel conversation by id.
+  /// No-op when [messageId] is not present.
+  Future<bool> deleteChannelMessage(int channelIndex, String messageId) async {
+    final messages = await loadChannelMessages(channelIndex);
+    final initial = messages.length;
+    messages.removeWhere((m) => m.id == messageId);
+    if (messages.length == initial) return false;
+    await saveChannelMessages(channelIndex, messages);
+    return true;
   }
 
   /// Clear messages for a contact.

@@ -18827,6 +18827,18 @@
   "@meshcoreChannelsTitle": {
     "description": "Channels screen title (with optional count suffix)"
   },
+  "meshcoreChatActionCopy": "Copia",
+  "@meshcoreChatActionCopy": {
+    "description": "Long-press menu action: copy the message text to the clipboard"
+  },
+  "meshcoreChatActionDelete": "Elimina localmente",
+  "@meshcoreChatActionDelete": {
+    "description": "Long-press menu action: delete the message from local storage only (no wire frame, peer keeps their copy)"
+  },
+  "meshcoreChatActionRetry": "Riprova",
+  "@meshcoreChatActionRetry": {
+    "description": "Long-press menu action: retry sending a failed outbound message"
+  },
   "meshcoreChatEmptyTagline1": "Invia il primo per iniziare una conversazione",
   "@meshcoreChatEmptyTagline1": {
     "description": "Animated empty-state tagline shown when a chat has no messages"
@@ -18851,6 +18863,30 @@
   "@meshcoreChatEmptyTitleSuffix": {
     "description": "Animated empty-state title suffix shown after the keyword for an empty chat"
   },
+  "meshcoreChatInboundMetaPathDirect": "diretto",
+  "@meshcoreChatInboundMetaPathDirect": {
+    "description": "Inline metadata on inbound chat bubbles: shown when the message arrived in a single hop (no relays)"
+  },
+  "meshcoreChatInboundMetaPathHops": "tramite {hops} salti",
+  "@meshcoreChatInboundMetaPathHops": {
+    "description": "Inline metadata on inbound chat bubbles: shown when the message was relayed; {hops} is the number of hops the firmware reported (>1)",
+    "placeholders": {
+      "hops": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "meshcoreChatInboundMetaSnr": "SNR {snr} dB",
+  "@meshcoreChatInboundMetaSnr": {
+    "description": "Inline metadata on inbound chat bubbles: signal-to-noise ratio in dB; {snr} is a one-decimal number",
+    "placeholders": {
+      "snr": {
+        "type": "String",
+        "example": "-3.5"
+      }
+    }
+  },
   "meshcoreChatInfoLocation": "Posizione",
   "@meshcoreChatInfoLocation": {
     "description": "Contact info row label for the geographic location (lat/lon)"
@@ -18866,6 +18902,22 @@
   "meshcoreChatInfoType": "Tipo",
   "@meshcoreChatInfoType": {
     "description": "Contact info row label for the contact's advertisement type (chat/repeater/room/sensor)"
+  },
+  "meshcoreChatJumpToLatest": "Vai all'ultimo",
+  "@meshcoreChatJumpToLatest": {
+    "description": "Floating pill label shown when the user has scrolled away from the bottom of the message list"
+  },
+  "meshcoreChatMessageCopied": "Messaggio copiato",
+  "@meshcoreChatMessageCopied": {
+    "description": "Snackbar confirmation after the long-press Copy action"
+  },
+  "meshcoreChatMessageDeleted": "Messaggio eliminato",
+  "@meshcoreChatMessageDeleted": {
+    "description": "Snackbar confirmation after the long-press Delete locally action"
+  },
+  "meshcoreChatMessageDeleteFailed": "Impossibile eliminare il messaggio",
+  "@meshcoreChatMessageDeleteFailed": {
+    "description": "Error snackbar shown when deleting a message from local storage failed"
   },
   "meshcoreChatNode": "Nodo Chat",
   "@meshcoreChatNode": {

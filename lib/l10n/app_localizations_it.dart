@@ -7667,6 +7667,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get meshcoreChannelsTitle => 'Canali';
 
   @override
+  String get meshcoreChatActionCopy => 'Copia';
+
+  @override
+  String get meshcoreChatActionDelete => 'Elimina localmente';
+
+  @override
+  String get meshcoreChatActionRetry => 'Riprova';
+
+  @override
   String get meshcoreChatEmptyTagline1 =>
       'Invia il primo per iniziare una conversazione';
 
@@ -7688,6 +7697,19 @@ class AppLocalizationsIt extends AppLocalizations {
   String get meshcoreChatEmptyTitleSuffix => ' ancora';
 
   @override
+  String get meshcoreChatInboundMetaPathDirect => 'diretto';
+
+  @override
+  String meshcoreChatInboundMetaPathHops(int hops) {
+    return 'tramite $hops salti';
+  }
+
+  @override
+  String meshcoreChatInboundMetaSnr(String snr) {
+    return 'SNR $snr dB';
+  }
+
+  @override
   String get meshcoreChatInfoLocation => 'Posizione';
 
   @override
@@ -7698,6 +7720,19 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get meshcoreChatInfoType => 'Tipo';
+
+  @override
+  String get meshcoreChatJumpToLatest => 'Vai all\'ultimo';
+
+  @override
+  String get meshcoreChatMessageCopied => 'Messaggio copiato';
+
+  @override
+  String get meshcoreChatMessageDeleted => 'Messaggio eliminato';
+
+  @override
+  String get meshcoreChatMessageDeleteFailed =>
+      'Impossibile eliminare il messaggio';
 
   @override
   String get meshcoreChatNode => 'Nodo Chat';

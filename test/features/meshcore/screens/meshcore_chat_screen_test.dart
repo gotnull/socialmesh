@@ -8,8 +8,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/core/meshcore_constants.dart';
+import 'package:socialmesh/core/widgets/app_bottom_sheet.dart';
 import 'package:socialmesh/core/widgets/chat_composer.dart';
 import 'package:socialmesh/core/widgets/animated_empty_state.dart';
+import 'package:socialmesh/core/widgets/jump_to_latest_pill.dart';
 import 'package:socialmesh/features/meshcore/screens/meshcore_chat_screen.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:socialmesh/models/meshcore_channel.dart';
@@ -420,5 +422,265 @@ void main() {
         isFalse,
       );
     });
+  });
+
+  // ---------------------------------------------------------------------
+  // D30: message UX parity
+  //
+  // Pins the structural shape of the new affordances so a regression
+  // that re-introduces the pre-D30 UI (no jump-to-bottom pill, no
+  // long-press menu, no SNR/path readout, no delete-locally) trips
+  // here instead of silently shipping.
+  // ---------------------------------------------------------------------
+  group('D30 message UX parity', () {
+    MeshCoreMessage failedOutbound() {
+      return MeshCoreMessage(
+        id: 'failed-1',
+        text: 'failed packet',
+        timestamp: DateTime(2026, 5, 4, 10, 30),
+        isOutgoing: true,
+        status: MeshCoreMessageDeliveryStatus.failed,
+      );
+    }
+
+    MeshCoreMessage inboundWithLinkMeta() {
+      return MeshCoreMessage(
+        id: 'inbound-meta',
+        text: 'inbound packet',
+        timestamp: DateTime(2026, 5, 4, 10, 30),
+        isOutgoing: false,
+        status: MeshCoreMessageDeliveryStatus.delivered,
+        senderKey: Uint8List.fromList(List.generate(32, (i) => i + 1)),
+        senderName: 'RelayPeer',
+        pathLength: 2,
+        snrQuarter: -14, // -3.5 dB
+      );
+    }
+
+    testWidgets(
+      'jump-to-latest pill is present in the chat layout (D30 Part D)',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 4000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+
+        await tester.pumpWidget(
+          _wrap(
+            MeshCoreChatScreen.contact(
+              contact: _testContact(),
+              initialMessages: [
+                testMessage(id: 'one', text: 'first', isOutgoing: false),
+              ],
+            ),
+          ),
+        );
+        await _settle(tester);
+
+        // The pill is mounted inside a Stack overlay regardless of the
+        // user's scroll position; visibility flips via AnimatedOpacity
+        // and IgnorePointer when the user scrolls away from the bottom.
+        // Pin the structural mount so a regression that drops it (or
+        // reverts to a plain ListView) is caught here.
+        expect(find.byType(JumpToLatestPill), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'inbound bubble surfaces inline SNR + hop-count metadata (D30 Part C)',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 4000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+
+        await tester.pumpWidget(
+          _wrap(
+            MeshCoreChatScreen.contact(
+              contact: _testContact(),
+              initialMessages: [inboundWithLinkMeta()],
+            ),
+          ),
+        );
+        await _settle(tester);
+
+        // -14 / 4 = -3.5 dB; pathLength 2 -> "via 2 hops".
+        expect(
+          find.textContaining('SNR -3.5 dB'),
+          findsOneWidget,
+          reason: 'inbound bubble must show parsed SNR in dB',
+        );
+        expect(
+          find.textContaining('via 2 hops'),
+          findsOneWidget,
+          reason: 'inbound bubble must show parsed hop count',
+        );
+      },
+    );
+
+    testWidgets(
+      'outbound bubble does NOT show inline link metadata (D30 Part C)',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 4000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+
+        // Outbound carries no SNR or path from firmware; the metadata
+        // row must stay collapsed even if the model fields somehow
+        // leaked across (defence against a future model refactor that
+        // accidentally copies inbound fields onto outbound bubbles).
+        await tester.pumpWidget(
+          _wrap(
+            MeshCoreChatScreen.contact(
+              contact: _testContact(),
+              initialMessages: [
+                MeshCoreMessage(
+                  id: 'outbound-with-fake-meta',
+                  text: 'outgoing packet',
+                  timestamp: DateTime(2026, 5, 4, 10, 30),
+                  isOutgoing: true,
+                  status: MeshCoreMessageDeliveryStatus.sent,
+                  pathLength: 5, // ignored on outbound
+                  snrQuarter: -10, // ignored on outbound
+                ),
+              ],
+            ),
+          ),
+        );
+        await _settle(tester);
+
+        expect(find.textContaining('SNR'), findsNothing);
+        expect(find.textContaining('hops'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'long-press on a failed outbound bubble surfaces Copy + Retry + '
+      'Delete (D30 Part E)',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 4000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+
+        await tester.pumpWidget(
+          _wrap(
+            MeshCoreChatScreen.contact(
+              contact: _testContact(),
+              initialMessages: [failedOutbound()],
+            ),
+          ),
+        );
+        await _settle(tester);
+
+        // Long-press the failed bubble. The bubble's GestureDetector
+        // surrounds the inner Container so any text inside it is a
+        // valid hit-target.
+        await tester.longPress(find.text('failed packet'));
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // The action sheet is an AppBottomSheet.showActions surface.
+        // All three actions must be present for failed outbound.
+        expect(find.byType(AppBottomSheet), findsOneWidget);
+        expect(find.text('Copy'), findsOneWidget);
+        expect(find.text('Retry'), findsOneWidget);
+        expect(find.text('Delete locally'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'long-press on an inbound bubble does NOT show Retry (D30 Part E)',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 4000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+
+        await tester.pumpWidget(
+          _wrap(
+            MeshCoreChatScreen.contact(
+              contact: _testContact(),
+              initialMessages: [
+                testMessage(
+                  id: 'inbound-1',
+                  text: 'inbound packet',
+                  isOutgoing: false,
+                ),
+              ],
+            ),
+          ),
+        );
+        await _settle(tester);
+
+        await tester.longPress(find.text('inbound packet'));
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // Inbound + delivered: Retry must be hidden so a stray tap
+        // can't try to "retry sending" a message we received. Copy
+        // and Delete locally are still offered.
+        expect(find.text('Copy'), findsOneWidget);
+        expect(find.text('Delete locally'), findsOneWidget);
+        expect(find.text('Retry'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'long-press on a successfully sent outbound bubble does NOT show '
+      'Retry (D30 Part B/E)',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 4000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+
+        // Retry is gated to `failed` outbound only. Pin that gate so
+        // a future regression that loosens the predicate (e.g. allows
+        // retry for `sent` too) trips here. Resending a delivered
+        // message would create a duplicate at the peer.
+        await tester.pumpWidget(
+          _wrap(
+            MeshCoreChatScreen.contact(
+              contact: _testContact(),
+              initialMessages: [
+                MeshCoreMessage(
+                  id: 'sent-ok',
+                  text: 'happy path',
+                  timestamp: DateTime(2026, 5, 4, 10, 30),
+                  isOutgoing: true,
+                  status: MeshCoreMessageDeliveryStatus.delivered,
+                ),
+              ],
+            ),
+          ),
+        );
+        await _settle(tester);
+
+        await tester.longPress(find.text('happy path'));
+        await tester.pump(const Duration(milliseconds: 300));
+
+        expect(find.text('Copy'), findsOneWidget);
+        expect(find.text('Delete locally'), findsOneWidget);
+        expect(find.text('Retry'), findsNothing);
+      },
+    );
+
+    test(
+      'MeshCoreMessage round-trips snrQuarter through copyWith (D30 model)',
+      () {
+        // copyWith only takes a status override — the rest of the
+        // fields (including snrQuarter) must propagate untouched so
+        // a status flip during retry doesn't drop the inbound link
+        // metadata we already showed the user.
+        final msg = MeshCoreMessage(
+          id: 'm1',
+          text: 't',
+          timestamp: DateTime(2026, 5, 4),
+          isOutgoing: false,
+          status: MeshCoreMessageDeliveryStatus.delivered,
+          pathLength: 3,
+          snrQuarter: -8,
+        );
+        final flipped = msg.copyWith(
+          status: MeshCoreMessageDeliveryStatus.delivered,
+        );
+        expect(flipped.snrQuarter, equals(-8));
+        expect(flipped.pathLength, equals(3));
+      },
+    );
   });
 }

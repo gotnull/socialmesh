@@ -13495,6 +13495,24 @@ abstract class AppLocalizations {
   /// **'Channels'**
   String get meshcoreChannelsTitle;
 
+  /// Long-press menu action: copy the message text to the clipboard
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get meshcoreChatActionCopy;
+
+  /// Long-press menu action: delete the message from local storage only (no wire frame, peer keeps their copy)
+  ///
+  /// In en, this message translates to:
+  /// **'Delete locally'**
+  String get meshcoreChatActionDelete;
+
+  /// Long-press menu action: retry sending a failed outbound message
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get meshcoreChatActionRetry;
+
   /// Animated empty-state tagline shown when a chat has no messages
   ///
   /// In en, this message translates to:
@@ -13531,6 +13549,24 @@ abstract class AppLocalizations {
   /// **' yet'**
   String get meshcoreChatEmptyTitleSuffix;
 
+  /// Inline metadata on inbound chat bubbles: shown when the message arrived in a single hop (no relays)
+  ///
+  /// In en, this message translates to:
+  /// **'direct'**
+  String get meshcoreChatInboundMetaPathDirect;
+
+  /// Inline metadata on inbound chat bubbles: shown when the message was relayed; {hops} is the number of hops the firmware reported (>1)
+  ///
+  /// In en, this message translates to:
+  /// **'via {hops} hops'**
+  String meshcoreChatInboundMetaPathHops(int hops);
+
+  /// Inline metadata on inbound chat bubbles: signal-to-noise ratio in dB; {snr} is a one-decimal number
+  ///
+  /// In en, this message translates to:
+  /// **'SNR {snr} dB'**
+  String meshcoreChatInboundMetaSnr(String snr);
+
   /// Contact info row label for the geographic location (lat/lon)
   ///
   /// In en, this message translates to:
@@ -13554,6 +13590,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Type'**
   String get meshcoreChatInfoType;
+
+  /// Floating pill label shown when the user has scrolled away from the bottom of the message list
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to latest'**
+  String get meshcoreChatJumpToLatest;
+
+  /// Snackbar confirmation after the long-press Copy action
+  ///
+  /// In en, this message translates to:
+  /// **'Message copied'**
+  String get meshcoreChatMessageCopied;
+
+  /// Snackbar confirmation after the long-press Delete locally action
+  ///
+  /// In en, this message translates to:
+  /// **'Message deleted'**
+  String get meshcoreChatMessageDeleted;
+
+  /// Error snackbar shown when deleting a message from local storage failed
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete message'**
+  String get meshcoreChatMessageDeleteFailed;
 
   /// Device type label for chat nodes
   ///
