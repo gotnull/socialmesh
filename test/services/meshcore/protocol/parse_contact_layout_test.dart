@@ -5,14 +5,12 @@
 //
 // Pre-D24 the parser read a phantom layout (`pub_key + adv_type +
 // path_len + lastmod(uint16) + lat + lon + name`) that did not
-// match the firmware's `writeContactRespFrame` in
-// `MeshCore/examples/companion_radio/MyMesh.cpp`. As a result the
+// match the firmware's contact-response writer. As a result the
 // parser landed on the path-bytes slot when looking for the name
 // field; with an empty path (typical for nearby contacts) the
 // first byte was `0x00` and `readCString` returned an empty
 // string. The firmware actually stored the contact's name; we
-// just never read it. The ground-truth layout (verified against
-// meshcore-open's `Contact.fromFrame`) is now:
+// just never read it. The corrected ground-truth layout is now:
 //
 //   [0..31]    pub_key                      (32 bytes)
 //   [32]       adv_type                     (uint8)
@@ -65,8 +63,7 @@ Uint8List _buildPayload({
   if (path != null) {
     out.setRange(35, 35 + path.length.clamp(0, 64), path.take(64).toList());
   }
-  // Name slot is 32 bytes, null-padded; firmware encodes as
-  // UTF-8 (verified via meshcore-open's `readCString` consumer).
+  // Name slot is 32 bytes, null-padded; firmware encodes as UTF-8.
   final nameBytes = utf8.encode(name);
   for (var i = 0; i < nameBytes.length && i < 32; i++) {
     out[99 + i] = nameBytes[i];

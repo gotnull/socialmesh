@@ -913,7 +913,7 @@ class MeshCoreSession {
 
   /// Set the LoRa radio parameters on the connected MeshCore device.
   ///
-  /// Wire format (mirrors upstream `MyMesh.cpp:CMD_SET_RADIO_PARAMS`):
+  /// Wire format (`CMD_SET_RADIO_PARAMS`):
   /// `[freq:u32 LE in kHz][bw:u32 LE in Hz][sf:u8][cr:u8]`. The optional
   /// `repeat` byte (firmware version code 9+) is not surfaced here yet.
   ///
@@ -1042,10 +1042,10 @@ class MeshCoreSession {
   /// [139..142] gps_lon                i32 LE × 1e6 — included if [longitude] != null
   /// ```
   ///
-  /// Firmware enforces minimum 36 bytes (pubkey + type + flags + path_len + path
-  /// header + name minimum). The 48-byte form (with GPS) lands at the
-  /// ` len >= 144` branch in `MyMesh.cpp`'s handler and is forward-compatible
-  /// with the optional `lastmod` (52 bytes) extension we don't surface.
+  /// Firmware enforces a minimum payload of pubkey + type + flags + path_len
+  /// + path header + name. The form with GPS exercises the firmware's
+  /// optional-fields branch and is forward-compatible with the optional
+  /// `lastmod` extension we don't surface.
   ///
   /// Caller MUST pass a 32-byte [pubKey]; the helper rejects partial or
   /// short prefixes (the firmware contact table is keyed on full pubkey

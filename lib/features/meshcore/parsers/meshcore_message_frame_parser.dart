@@ -8,11 +8,10 @@
 // chat widget so unit tests can feed canned firmware-shaped bytes
 // without spinning a Flutter widget tree.
 //
-// Wire formats below mirror the canonical firmware source at
-// `MeshCore/examples/companion_radio/MyMesh.cpp` (D12 recon). The app
-// sends `appProtocolVersion = 3` to firmware, so V3 shapes are the
-// production case. Legacy shapes are kept for older firmware builds the
-// user might still be carrying.
+// Wire formats below are the protocol contract with the
+// companion-radio firmware. The app sends `appProtocolVersion = 3`,
+// so V3 shapes are the production case. Legacy shapes are kept for
+// older firmware builds the user might still be carrying.
 //
 // CRITICAL: do NOT invent a sender public-key field for these
 // responses. Firmware contact frames include only the first 6 bytes of

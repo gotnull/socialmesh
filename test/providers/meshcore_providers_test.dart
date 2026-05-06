@@ -42,7 +42,7 @@ void main() {
         lastSeen: DateTime.now(),
       );
 
-      notifier.addContact(contact);
+      notifier.addContactLocal(contact);
 
       final state = container.read(meshCoreContactsProvider);
       expect(state.contacts.length, equals(1));
@@ -56,7 +56,7 @@ void main() {
       final notifier = container.read(meshCoreContactsProvider.notifier);
       final publicKey = Uint8List.fromList(List.generate(32, (i) => i));
 
-      notifier.addContact(
+      notifier.addContactLocal(
         MeshCoreContact(
           publicKey: publicKey,
           name: 'Original',
@@ -67,7 +67,7 @@ void main() {
         ),
       );
 
-      notifier.addContact(
+      notifier.addContactLocal(
         MeshCoreContact(
           publicKey: publicKey,
           name: 'Updated',
@@ -90,7 +90,7 @@ void main() {
 
       final notifier = container.read(meshCoreContactsProvider.notifier);
 
-      notifier.addContact(
+      notifier.addContactLocal(
         MeshCoreContact(
           publicKey: Uint8List.fromList(List.generate(32, (_) => 0xCC)),
           name: 'Zeta',
@@ -101,7 +101,7 @@ void main() {
         ),
       );
 
-      notifier.addContact(
+      notifier.addContactLocal(
         MeshCoreContact(
           publicKey: Uint8List.fromList(List.generate(32, (_) => 0xAA)),
           name: 'Alpha',
@@ -112,7 +112,7 @@ void main() {
         ),
       );
 
-      notifier.addContact(
+      notifier.addContactLocal(
         MeshCoreContact(
           publicKey: Uint8List.fromList(List.generate(32, (_) => 0xBB)),
           name: 'Beta',
@@ -143,13 +143,13 @@ void main() {
         lastSeen: DateTime.now(),
       );
 
-      notifier.addContact(contact);
+      notifier.addContactLocal(contact);
       expect(
         container.read(meshCoreContactsProvider).contacts.length,
         equals(1),
       );
 
-      notifier.removeContact(contact.publicKeyHex);
+      notifier.removeContactLocal(contact.publicKeyHex);
       expect(
         container.read(meshCoreContactsProvider).contacts.length,
         equals(0),
@@ -171,7 +171,7 @@ void main() {
         unreadCount: 0,
       );
 
-      notifier.addContact(contact);
+      notifier.addContactLocal(contact);
       notifier.updateUnreadCount(contact.publicKeyHex, 5);
 
       final updated = container.read(meshCoreContactsProvider).contacts[0];
@@ -193,7 +193,7 @@ void main() {
         unreadCount: 10,
       );
 
-      notifier.addContact(contact);
+      notifier.addContactLocal(contact);
       notifier.clearUnread(contact.publicKeyHex);
 
       final updated = container.read(meshCoreContactsProvider).contacts[0];

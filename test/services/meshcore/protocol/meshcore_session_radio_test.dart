@@ -4,9 +4,8 @@
 // Tests for MeshCoreSession.setRadioParams and setRadioTxPower.
 //
 // The session helpers wrap CMD_SET_RADIO_PARAMS (0x0B) and
-// CMD_SET_RADIO_TX_POWER (0x0C). Wire format mirrors upstream
-// MyMesh.cpp: freq is u32 LE in kHz, bw is u32 LE in Hz, sf and cr are
-// u8, tx power is int8.
+// CMD_SET_RADIO_TX_POWER (0x0C). Wire format: freq is u32 LE in kHz,
+// bw is u32 LE in Hz, sf and cr are u8, tx power is int8.
 
 import 'dart:async';
 import 'dart:typed_data';

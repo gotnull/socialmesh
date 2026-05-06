@@ -701,7 +701,6 @@ class MeshCoreConversationsNotifier
       // Without this handler every inbound message stayed on the
       // firmware screen but never surfaced to the app, regardless
       // of D12/D17.A parser correctness or RF settings.
-      // See `MeshCore/examples/companion_radio/MyMesh.cpp:459, 562`.
       _handleMsgWaiting(frame);
     } else if (frame.command == MeshCorePushCodes.advert ||
         frame.command == MeshCorePushCodes.newAdvert) {

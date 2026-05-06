@@ -2,10 +2,9 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
 // D12 inbound parser tests. Canned firmware-shaped payloads, asserted
-// against the upstream wire format documented in
-// `MeshCore/examples/companion_radio/MyMesh.cpp`. Each case pins a
-// specific defect that the pre-D12 widget code shipped with so a
-// regression cannot silently revert.
+// against the protocol contract with the companion-radio firmware.
+// Each case pins a specific defect that the pre-D12 widget code
+// shipped with so a regression cannot silently revert.
 
 import 'dart:typed_data';
 

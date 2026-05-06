@@ -159,9 +159,8 @@ void main() {
 
     test('D16: extracts AU915 / 250kHz canonical defaults', () {
       // Build a payload with the MeshCore companion-radio defaults
-      // (LORA_FREQ 915.0 / LORA_BW 250 / LORA_SF 10 / LORA_CR 5 per
-      // MyMesh.h:39-50). This is what a fresh-flashed AU/US radio
-      // would broadcast.
+      // (LORA_FREQ 915.0 / LORA_BW 250 / LORA_SF 10 / LORA_CR 5).
+      // This is what a fresh-flashed AU/US radio would broadcast.
       final payload = <int>[
         0x01, 9, 22, // advType, tx_power, MAX_LORA_TX_POWER
         ...List.filled(meshCorePubKeySize, 0xAA),

@@ -172,7 +172,12 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
             ),
             const SizedBox(height: AppTheme.spacing16),
 
-            // Discovery Section
+            // Discovery Section. D29 cleanup: the Tools surface owns
+            // "do something now" actions. Persistent radio config
+            // (region preset + freq/bw/SF/CR/TX power) lives only in
+            // Settings → Radio Settings — the previous read-only
+            // duplicate here was confusing because it had the same
+            // label as the editable sheet but couldn't write.
             SettingsSectionHeader(title: context.l10n.meshcoreDiscovery),
             SettingsTile(
               icon: Icons.radar_rounded,
@@ -181,18 +186,6 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
               subtitle: context.l10n.meshcoreBroadcastPresenceToMesh,
               trailing: _chevron(context),
               onTap: _sendAdvertisement,
-            ),
-            const SizedBox(height: AppTheme.spacing16),
-
-            // Analysis Section
-            SettingsSectionHeader(title: context.l10n.meshcoreAnalysis),
-            SettingsTile(
-              icon: Icons.settings_input_antenna_rounded,
-              iconColor: AccentColors.pink,
-              title: context.l10n.meshcoreRadioSettingsTool,
-              subtitle: context.l10n.meshcoreViewLoRaConfig,
-              trailing: _chevron(context),
-              onTap: () => _showRadioSettings(selfInfoState),
             ),
             const SizedBox(height: AppTheme.spacing32),
           ],
@@ -636,60 +629,6 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
       case MeshCoreDrainOutcomeKind.failed:
         return 'failed';
     }
-  }
-
-  void _showRadioSettings(MeshCoreSelfInfoState selfInfoState) {
-    final info = selfInfoState.selfInfo;
-    if (info == null) {
-      showErrorSnackBar(
-        context,
-        context.l10n.meshcoreRadioSettingsNotAvailable,
-      );
-      return;
-    }
-
-    AppBottomSheet.show<void>(
-      context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SectionTitle(title: context.l10n.meshcoreRadioSettingsTitle),
-          InfoTable(
-            rows: [
-              InfoTableRow(
-                label: context.l10n.meshcoreTxPowerLabel,
-                value: '${info.txPowerDbm} dBm',
-                icon: Icons.bolt_outlined,
-              ),
-              InfoTableRow(
-                label: context.l10n.meshcoreMaxTxPowerLabel,
-                value: '${info.maxLoraTxPower} dBm',
-                icon: Icons.power_outlined,
-              ),
-              if (info.spreadingFactor != null)
-                InfoTableRow(
-                  label: context.l10n.meshcoreSpreadingFactorLabel,
-                  value: 'SF${info.spreadingFactor}',
-                  icon: Icons.broadcast_on_personal_outlined,
-                ),
-              if (info.codingRate != null)
-                InfoTableRow(
-                  label: context.l10n.meshcoreCodingRateLabel,
-                  value: '4/${info.codingRate}',
-                  icon: Icons.speed_outlined,
-                ),
-            ],
-          ),
-          SizedBox(height: AppTheme.spacing16),
-          StatusBanner(
-            type: StatusBannerType.accent,
-            title: context.l10n.meshcoreRadioConfiguredOnFirmware,
-            icon: Icons.info_outline_rounded,
-          ),
-        ],
-      ),
-    );
   }
 
   /// D28 Part B: open the MeshCore Frame Log screen.

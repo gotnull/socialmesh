@@ -73,7 +73,7 @@ void main() {
       addTearDown(c.dispose);
       final notifier = c.read(meshCoreContactsProvider.notifier);
       final radioB = _radioBKey();
-      notifier.addContact(_contact(publicKey: radioB, name: ''));
+      notifier.addContactLocal(_contact(publicKey: radioB, name: ''));
 
       final outcome = notifier.mergeAdvertName(_hex(radioB), 'WisMeshCore');
 
@@ -89,7 +89,7 @@ void main() {
       addTearDown(c.dispose);
       final notifier = c.read(meshCoreContactsProvider.notifier);
       final radioB = _radioBKey();
-      notifier.addContact(_contact(publicKey: radioB, name: 'OldName'));
+      notifier.addContactLocal(_contact(publicKey: radioB, name: 'OldName'));
 
       final outcome = notifier.mergeAdvertName(_hex(radioB), 'NewerName');
 
@@ -109,7 +109,7 @@ void main() {
       addTearDown(c.dispose);
       final notifier = c.read(meshCoreContactsProvider.notifier);
       final radioB = _radioBKey();
-      notifier.addContact(_contact(publicKey: radioB, name: 'StillHere'));
+      notifier.addContactLocal(_contact(publicKey: radioB, name: 'StillHere'));
 
       final outcome = notifier.mergeAdvertName(_hex(radioB), '');
 
@@ -145,7 +145,7 @@ void main() {
       addTearDown(c.dispose);
       final notifier = c.read(meshCoreContactsProvider.notifier);
       final radioB = _radioBKey();
-      notifier.addContact(_contact(publicKey: radioB, name: ''));
+      notifier.addContactLocal(_contact(publicKey: radioB, name: ''));
 
       final outcome = notifier.mergeAdvertName('96458be0b1c5', 'WisMeshCore');
       expect(outcome, equals('no_match'));
@@ -158,7 +158,7 @@ void main() {
       addTearDown(c.dispose);
       final notifier = c.read(meshCoreContactsProvider.notifier);
       final radioB = _radioBKey();
-      notifier.addContact(_contact(publicKey: radioB, name: ''));
+      notifier.addContactLocal(_contact(publicKey: radioB, name: ''));
 
       final upperHex = _hex(radioB).toUpperCase();
       final outcome = notifier.mergeAdvertName(upperHex, 'WisMeshCore');
@@ -176,8 +176,8 @@ void main() {
       final notifier = c.read(meshCoreContactsProvider.notifier);
       final radioB = _radioBKey();
       final radioC = Uint8List.fromList(List.generate(32, (i) => 0x33));
-      notifier.addContact(_contact(publicKey: radioC, name: 'ThirdRadio'));
-      notifier.addContact(_contact(publicKey: radioB, name: ''));
+      notifier.addContactLocal(_contact(publicKey: radioC, name: 'ThirdRadio'));
+      notifier.addContactLocal(_contact(publicKey: radioB, name: ''));
 
       final outcome = notifier.mergeAdvertName(_hex(radioB), 'WisMeshCore');
 
@@ -204,16 +204,16 @@ void main() {
       addTearDown(c.dispose);
       final notifier = c.read(meshCoreContactsProvider.notifier);
       final radioB = _radioBKey();
-      notifier.addContact(_contact(publicKey: radioB, name: 'X'));
+      notifier.addContactLocal(_contact(publicKey: radioB, name: 'X'));
 
       expect(notifier.mergeAdvertName(_hex(radioB), 'Y'), equals('preserved'));
-      notifier.removeContact(_hex(radioB));
+      notifier.removeContactLocal(_hex(radioB));
       expect(notifier.mergeAdvertName(_hex(radioB), 'Y'), equals('no_match'));
       expect(
         notifier.mergeAdvertName(_hex(radioB), ''),
         equals('empty_advert'),
       );
-      notifier.addContact(_contact(publicKey: radioB, name: ''));
+      notifier.addContactLocal(_contact(publicKey: radioB, name: ''));
       expect(notifier.mergeAdvertName(_hex(radioB), 'Y'), equals('ok'));
     });
   });

@@ -152,7 +152,7 @@ void main() {
           isTrue,
         );
         // Real firmware command above the old phantom 0x39 boundary
-        // (CMD_GET_DEFAULT_FLOOD_SCOPE = 0x40 in MyMesh.cpp).
+        // (`CMD_GET_DEFAULT_FLOOD_SCOPE = 0x40`).
         expect(MeshCoreCodeClassification.isCommandCode(0x40), isTrue);
         // Last valid sub-push code.
         expect(MeshCoreCodeClassification.isCommandCode(0x7F), isTrue);

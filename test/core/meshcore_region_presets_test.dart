@@ -45,9 +45,8 @@ void main() {
     });
 
     // Spot-check a handful of presets against the recon-source table.
-    // Anchored to the values verified against the meshcore-open
-    // reference repo at audit time. Adding new presets is fine; the
-    // anchored tuples must stay byte-stable.
+    // Adding new presets is fine; the anchored tuples below must stay
+    // byte-stable.
     test('Australia (default): 915.8 / 250 / SF10 / 4/5 / 20 dBm', () {
       final p = kMeshCoreRegionPresets.firstWhere((p) => p.id == 'au_default');
       expect(p.frequencyMHz, equals(915.8));

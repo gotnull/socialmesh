@@ -295,7 +295,7 @@ ParseResult<MeshCoreSelfInfo> parseSelfInfo(Uint8List payload) {
     lon = reader.readInt32LE();
   }
 
-  // SELF_INFO layout from companion-radio firmware (`MyMesh.cpp:1024+`):
+  // SELF_INFO layout (companion-radio firmware):
   //   0       RESP_CODE_SELF_INFO consumed by caller
   //   0       advType                 [u8]
   //   1       tx_power_dbm            [i8]
@@ -475,10 +475,9 @@ class MeshCoreContactInfo {
 
 /// Parse a CONTACT response payload (`RESP_CODE_CONTACT` / 0x03)
 /// or a NEW-ADVERT push payload (`PUSH_CODE_NEW_ADVERT` / 0x8A).
-/// Both share the firmware's `writeContactRespFrame` layout from
-/// `MeshCore/examples/companion_radio/MyMesh.cpp`. The byte map
-/// below is verified against meshcore-open's `Contact.fromFrame`
-/// (see `lib/models/contact.dart` of the reference repo).
+/// Both share the firmware's contact-response layout. The byte map
+/// below is the protocol contract; tests pin the offsets so a
+/// future refactor cannot silently change the encoding.
 ///
 /// Wire layout (after the leading code byte has been stripped by
 /// the codec, so offset 0 is the first byte of [payload]):
@@ -503,7 +502,7 @@ class MeshCoreContactInfo {
 /// "name" field, and a zero byte at that offset (typical when
 /// path is empty) terminated the C-string at length zero. The
 /// firmware actually stored a real name; we just never read it.
-/// Restored here against meshcore-open + firmware sources.
+/// Restored here against the firmware's actual layout.
 ParseResult<MeshCoreContactInfo> parseContact(Uint8List payload) {
   // Pre-D24 the minimum was 36 bytes; the corrected fixed layout
   // ends at offset 147 (lastmod), so anything shorter than the

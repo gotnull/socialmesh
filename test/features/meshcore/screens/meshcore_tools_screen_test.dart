@@ -10,12 +10,28 @@ import 'package:socialmesh/features/meshcore/screens/meshcore_tools_screen.dart'
 import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:socialmesh/l10n/app_localizations_en.dart';
 import 'package:socialmesh/providers/app_providers.dart';
+import 'package:socialmesh/providers/meshcore_message_providers.dart';
 
 final _l10n = AppLocalizationsEn();
 
+/// Inert override for the conversations provider so the widget test
+/// never mounts the live notifier (which spins a `Timer.periodic`
+/// heartbeat that outlives dispose and trips the
+/// `!timersPending` test-binding invariant). The Tools screen's
+/// `_QueueStatusCard` only reads the state shape, so a static
+/// initial value covers the render path.
+class _InertConversations extends MeshCoreConversationsNotifier {
+  @override
+  MeshCoreConversationsState build() =>
+      const MeshCoreConversationsState.initial();
+}
+
 Widget _wrap({required LinkStatus linkStatus}) {
   return ProviderScope(
-    overrides: [linkStatusProvider.overrideWithValue(linkStatus)],
+    overrides: [
+      linkStatusProvider.overrideWithValue(linkStatus),
+      meshCoreConversationsProvider.overrideWith(_InertConversations.new),
+    ],
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -66,14 +82,16 @@ void main() {
       await _settle(tester);
 
       // The screen now uses the canonical inner-settings primitives:
-      // 3 section headers (Diagnostics / Discovery / Analysis) and at
-      // least 5 action tiles. Pin the structural shape so a future
-      // regression that re-introduces hand-rolled tool cards fails here.
-      expect(find.byType(SettingsSectionHeader), findsNWidgets(3));
+      // 2 section headers (Diagnostics / Discovery) and at least 5
+      // action tiles. Pin the structural shape so a future regression
+      // that re-introduces hand-rolled tool cards fails here. The
+      // pre-D29 "Analysis" section + duplicated read-only Radio
+      // Settings tile were removed because the editable Radio
+      // Settings sheet in MeshCore Settings is the canonical surface.
+      expect(find.byType(SettingsSectionHeader), findsNWidgets(2));
       expect(find.byType(SettingsTile), findsAtLeast(5));
       expect(find.text(_l10n.meshcoreDiagnostics), findsOneWidget);
       expect(find.text(_l10n.meshcoreDiscovery), findsOneWidget);
-      expect(find.text(_l10n.meshcoreAnalysis), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

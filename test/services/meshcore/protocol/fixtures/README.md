@@ -34,8 +34,8 @@ and label them golden.
 
 - `<frame-kind>`: `self-info`, `contact`, `chan-msg`, `contact-msg`,
   `sync-drain`, `trace-data`, `status`, `push`, etc.
-- `<firmware-version>`: literal value of `FIRMWARE_VERSION` from
-  `examples/companion_radio/MyMesh.h` at capture time, with `v` and dots
+- `<firmware-version>`: literal value of `FIRMWARE_VERSION` from the
+  companion-radio firmware build at capture time, with `v` and dots
   preserved (e.g. `v1.15.0`).
 - `<short-description>`: lowercase-hyphenated, captures what the fixture
   proves (e.g. `eu868-region`, `with-gps`, `empty-name`).
@@ -60,7 +60,7 @@ or as a comment in the test. Suggested coverage targets:
 
 | Fixture                    | Proves                                                                |
 | -------------------------- | --------------------------------------------------------------------- |
-| `self-info__*`             | SELF_INFO byte layout matches `MyMesh.cpp:1010+` for the named build  |
+| `self-info__*`             | SELF_INFO byte layout matches the companion-radio firmware for the named build |
 | `contact__*`               | CONTACT response decodes name + advertise path + flags correctly      |
 | `chan-msg__*`              | RESP_CODE_CHANNEL_MSG_RECV / RECV_V3 round-trips                      |
 | `contact-msg__*`           | RESP_CODE_CONTACT_MSG_RECV / RECV_V3 round-trips                      |
@@ -76,7 +76,7 @@ When upstream firmware bumps in a way that changes a wire format:
 
 1. Reflash a test radio listed in `devices.yaml` to the new firmware
    version. Note the exact `FIRMWARE_VERSION` and `FIRMWARE_VER_CODE`
-   from `examples/companion_radio/MyMesh.h` at that build.
+   from the companion-radio firmware build header at that build.
 2. Capture the affected frame using `meshcore_capture.dart`. Save as
    `<frame-kind>__fw-<new-version>__<description>.bin`.
 3. Add the new fixture next to the old one. Do not delete the old

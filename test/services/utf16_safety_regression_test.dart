@@ -46,8 +46,7 @@ void main() {
   group('MeshCore contact name ingress', () {
     test('lone high surrogate code unit in name bytes is sanitized', () {
       // D24.B: parseContact layout corrected to match the firmware's
-      // `writeContactRespFrame` (`MeshCore/examples/companion_radio/
-      // MyMesh.cpp`):
+      // contact-response writer:
       //   [0..31]    pub_key                      (32 bytes)
       //   [32]       adv_type                     (uint8)
       //   [33]       flags                        (uint8)

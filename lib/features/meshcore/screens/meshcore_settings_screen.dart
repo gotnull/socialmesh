@@ -7,7 +7,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
-import '../../../core/meshcore_constants.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
@@ -39,7 +38,6 @@ class MeshCoreSettingsScreen extends ConsumerStatefulWidget {
 class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
     with LifecycleSafeMixin<MeshCoreSettingsScreen> {
   String _appVersion = '';
-  bool _isSendingAdvert = false;
   bool _isSyncingTime = false;
   // D26: gate the Node Location tile while a set/clear-location
   // command is in flight so the user can't dispatch a second one
@@ -191,18 +189,11 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                 ),
                 SizedBox(height: AppTheme.spacing16),
                 SettingsSectionHeader(title: context.l10n.meshcoreActions),
-                _maybeDisabled(
-                  enabled: isConnected && !_isSendingAdvert,
-                  child: SettingsTile(
-                    icon: Icons.cell_tower_rounded,
-                    title: context.l10n.meshcoreSendAdvertisement,
-                    subtitle: _isSendingAdvert
-                        ? context.l10n.meshcoreSending
-                        : context.l10n.meshcoreBroadcastYourPresence,
-                    trailing: _chevron(context),
-                    onTap: _sendAdvert,
-                  ),
-                ),
+                // D29 cleanup: "Send Advertisement" used to live here AND
+                // in Tools → Discovery. The Tools entry is the canonical
+                // "do something now" surface; Settings keeps only persistent
+                // configuration actions (sync time, refresh contacts,
+                // reboot).
                 _maybeDisabled(
                   enabled: isConnected && !_isSyncingTime,
                   child: SettingsTile(
@@ -237,15 +228,12 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                   ),
                 ),
                 SizedBox(height: AppTheme.spacing16),
-                SettingsSectionHeader(title: context.l10n.meshcoreDebug),
-                SettingsTile(
-                  icon: Icons.code_rounded,
-                  title: context.l10n.meshcoreProtocolCapture,
-                  subtitle: context.l10n.meshcoreViewFrameLogs,
-                  trailing: _chevron(context),
-                  onTap: () => _showProtocolCapture(context),
-                ),
-                SizedBox(height: AppTheme.spacing16),
+                // D29 cleanup: the legacy "Protocol Capture" stats sheet
+                // (active yes/no, frame count, refresh/clear) used to
+                // live in a Debug section here. The D28 Frame Log
+                // viewer in Tools → Diagnostics is the canonical
+                // capture surface; the legacy sheet was a near-
+                // duplicate that confused the menu structure.
                 SettingsSectionHeader(title: context.l10n.meshcoreAbout),
                 SettingsTile(
                   icon: Icons.info_outline_rounded,
@@ -611,34 +599,6 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
     }
   }
 
-  Future<void> _sendAdvert() async {
-    if (_isSendingAdvert) return;
-    final session = ref.read(meshCoreSessionProvider);
-    if (session == null || !session.isActive) {
-      if (mounted) {
-        showErrorSnackBar(context, context.l10n.meshcoreNotConnected);
-      }
-      return;
-    }
-
-    safeSetState(() => _isSendingAdvert = true);
-    try {
-      await session.sendCommand(MeshCoreCommands.sendSelfAdvert);
-      if (mounted) {
-        showSuccessSnackBar(context, context.l10n.meshcoreAdvertisementSent);
-      }
-    } catch (_) {
-      if (mounted) {
-        showErrorSnackBar(
-          context,
-          context.l10n.meshcoreFailedToSendAdvertisement,
-        );
-      }
-    } finally {
-      safeSetState(() => _isSendingAdvert = false);
-    }
-  }
-
   Future<void> _syncTime() async {
     if (_isSyncingTime) return;
     final session = ref.read(meshCoreSessionProvider);
@@ -716,76 +676,6 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
         showErrorSnackBar(context, context.l10n.meshcoreFailedToRebootDevice);
       }
     }
-  }
-
-  void _showProtocolCapture(BuildContext context) {
-    final captureState = ref.read(meshCoreCaptureSnapshotProvider);
-
-    AppBottomSheet.show<void>(
-      context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SectionTitle(title: context.l10n.meshcoreProtocolCaptureDialogTitle),
-          InfoTable(
-            rows: [
-              InfoTableRow(
-                label: context.l10n.meshcoreActiveLabel,
-                value: captureState.isActive
-                    ? context.l10n.commonYes
-                    : context.l10n.commonNo,
-                icon: captureState.isActive
-                    ? Icons.fiber_manual_record
-                    : Icons.fiber_manual_record_outlined,
-                iconColor: captureState.isActive
-                    ? SemanticColors.success
-                    : SemanticColors.disabled,
-              ),
-              InfoTableRow(
-                label: context.l10n.meshcoreFramesLabel,
-                value: '${captureState.totalCount}',
-                icon: Icons.layers_outlined,
-              ),
-            ],
-          ),
-          SizedBox(height: AppTheme.spacing16),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () {
-                    ref
-                        .read(meshCoreCaptureSnapshotProvider.notifier)
-                        .refresh();
-                    Navigator.pop(context);
-                  },
-                  child: Text(context.l10n.meshcoreRefresh),
-                ),
-              ),
-              if (captureState.hasFrames) ...[
-                SizedBox(width: AppTheme.spacing12),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      ref
-                          .read(meshCoreCaptureSnapshotProvider.notifier)
-                          .clear();
-                      Navigator.pop(context);
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: SemanticColors.warning,
-                      side: BorderSide(color: SemanticColors.warning),
-                    ),
-                    child: Text(context.l10n.meshcoreClear),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ],
-      ),
-    );
   }
 
   void _showAbout(BuildContext context) {

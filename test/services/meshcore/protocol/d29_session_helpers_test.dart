@@ -3,8 +3,9 @@
 
 // D29 - byte-for-byte regression pins for the contact management
 // session helpers (`addUpdateContact` 0x09, `removeContact` 0x0F,
-// `resetPath` 0x0D). Wire format derived from
-// `MeshCore/examples/companion_radio/MyMesh.cpp` handlers.
+// `resetPath` 0x0D). Wire format is part of the protocol contract
+// with the companion-radio firmware; pin the bytes so a future
+// refactor can't silently change the encoding.
 
 import 'dart:async';
 import 'dart:typed_data';

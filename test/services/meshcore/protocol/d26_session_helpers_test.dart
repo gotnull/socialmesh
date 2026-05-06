@@ -6,9 +6,8 @@
 // Each new helper in `MeshCoreSession` (`setAdvertName`,
 // `setAdvertLatLon`, `setDeviceTime`, `rebootDevice`) emits a
 // specific MeshCore command frame. The exact bytes are part of the
-// protocol contract with the firmware in
-// `MeshCore/examples/companion_radio/MyMesh.cpp`; pin them so a
-// future refactor can't silently change the encoding.
+// protocol contract with the companion-radio firmware; pin them so
+// a future refactor can't silently change the encoding.
 
 import 'dart:async';
 import 'dart:typed_data';
