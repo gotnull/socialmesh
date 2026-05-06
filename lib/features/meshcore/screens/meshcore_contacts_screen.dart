@@ -146,8 +146,15 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
             ? _buildDisconnectedState()
             : contactsState.isLoading && allContacts.isEmpty
             ? _buildLoadingState()
-            : contacts.isEmpty
+            : contacts.isEmpty && allContacts.isEmpty
             ? _buildEmptyState(deviceName)
+            : contacts.isEmpty
+            // D28 follow-up: filtered list is empty but we DO have
+            // contacts. Render a "no matches in this filter" surface
+            // with a Show All action so tapping a zero-count chip
+            // doesn't trap the user behind a misleading "Add Contact"
+            // empty state.
+            ? _buildFilteredEmptyState()
             : _buildContactsList(
                 contacts,
                 allContacts,
@@ -209,6 +216,34 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
         titlePrefix: '',
         titleKeyword: context.l10n.meshcoreDisconnectedTitle,
         titleSuffix: '',
+      ),
+    );
+  }
+
+  /// D28 follow-up: empty state for the case where the user has
+  /// contacts but the active filter excludes them all (e.g. tapping
+  /// "Unread 0" with no unread messages). The default empty state
+  /// shows "Add Contact" which is misleading — the user already has
+  /// contacts and just wants to back out of the empty filter. The
+  /// "Show all contacts" action resets [_activeFilter] to `all`.
+  Widget _buildFilteredEmptyState() {
+    final l10n = context.l10n;
+    return AnimatedEmptyState(
+      config: AnimatedEmptyStateConfig(
+        icons: const [
+          Icons.filter_alt_off_rounded,
+          Icons.filter_alt_outlined,
+          Icons.people_outline_rounded,
+        ],
+        taglines: [l10n.meshcoreContactsFilteredEmptyTagline],
+        titlePrefix: '',
+        titleKeyword: l10n.meshcoreContactsFilteredEmptyTitle,
+        titleSuffix: '',
+        actionLabel: l10n.meshcoreContactsFilteredEmptyAction,
+        actionIcon: Icons.clear_all_rounded,
+        onAction: () =>
+            setState(() => _activeFilter = _MeshCoreContactFilter.all),
+        accentColor: AccentColors.cyan,
       ),
     );
   }

@@ -6889,7 +6889,7 @@ abstract class AppLocalizations {
   /// Protocol chip label — MeshCore TCP. Debug-only path; brand name plus a (dev) suffix indicating non-production status.
   ///
   /// In en, this message translates to:
-  /// **'MeshCore (dev)'**
+  /// **'MeshCore'**
   String get networkProtocolMeshcoreDev;
 
   /// Error snackbar when export fails
@@ -13872,6 +13872,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **' yet'**
   String get meshcoreContactsEmptyTitleSuffix;
+
+  /// D28 follow-up - title for the filtered-empty state on the Contacts screen (active filter excludes all contacts but the user still has contacts)
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get meshcoreContactsFilteredEmptyTitle;
+
+  /// D28 follow-up - tagline for the filtered-empty state
+  ///
+  /// In en, this message translates to:
+  /// **'No contacts match the selected filter. Tap below to see all your contacts.'**
+  String get meshcoreContactsFilteredEmptyTagline;
+
+  /// D28 follow-up - resets the active filter to All
+  ///
+  /// In en, this message translates to:
+  /// **'Show all contacts'**
+  String get meshcoreContactsFilteredEmptyAction;
 
   /// Info row label for contacts count
   ///

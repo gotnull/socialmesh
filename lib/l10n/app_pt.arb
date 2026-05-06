@@ -9382,7 +9382,7 @@
   "debugScreenShareMeshcoreDiagnostics": "Compartilhar diagnóstico MeshCore",
   "debugScreenMeshcoreDiagnosticsSubject": "Diagnóstico MeshCore do SocialMesh",
   "networkProtocolMeshtastic": "Meshtastic",
-  "networkProtocolMeshcoreDev": "MeshCore (dev)",
+  "networkProtocolMeshcoreDev": "MeshCore",
   "debugScreenExportFailed": "Exportação falhou: {error}",
   "@debugScreenExportFailed": {
     "description": "Error snackbar when export fails",
@@ -19038,6 +19038,12 @@
   "@meshcoreContactsEmptyTitleSuffix": {
     "description": "Animated empty-state title suffix shown after the keyword for an empty contacts list"
   },
+  "meshcoreContactsFilteredEmptyTitle": "Sem correspondências",
+  "@meshcoreContactsFilteredEmptyTitle": {"description": "D28 follow-up"},
+  "meshcoreContactsFilteredEmptyTagline": "Nenhum contato corresponde ao filtro. Toque abaixo para ver todos os contatos.",
+  "@meshcoreContactsFilteredEmptyTagline": {"description": "D28 follow-up"},
+  "meshcoreContactsFilteredEmptyAction": "Mostrar todos os contatos",
+  "@meshcoreContactsFilteredEmptyAction": {"description": "D28 follow-up"},
   "meshcoreContactsLabel": "Contatos",
   "@meshcoreContactsLabel": {
     "description": "Info row label for contacts count"

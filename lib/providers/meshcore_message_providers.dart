@@ -441,8 +441,15 @@ class MeshCoreConversationsNotifier
   }
 
   void _startHeartbeat(MeshCoreSession session) {
-    // Idempotent: if we're already running for this exact session, no-op.
+    // Idempotent: if we're already running for this exact session, just
+    // re-publish the active flag and return. D28: re-publishing is
+    // important on a Notifier rebuild (e.g. when session provider
+    // cascades from a connection-state emit) — Riverpod replaces the
+    // notifier state with build's return value (initial =
+    // heartbeatActive=false) on every rebuild, so the publish has to
+    // fire to bring the state back in line with the timer.
     if (_heartbeatTimer != null && identical(_heartbeatSession, session)) {
+      _publishHeartbeatActive(true);
       return;
     }
     // Different session (reconnect, device swap) — cancel and re-arm.
@@ -458,7 +465,14 @@ class MeshCoreConversationsNotifier
   }
 
   void _stopHeartbeat(String reason) {
-    if (_heartbeatTimer == null && _heartbeatSession == null) return;
+    // D28: even on a no-op tear-down (already stopped), re-publish the
+    // false flag so a Notifier rebuild that occurred while the
+    // heartbeat was idle still shows the right pill. Same reason as
+    // `_startHeartbeat`'s re-publish branch.
+    if (_heartbeatTimer == null && _heartbeatSession == null) {
+      _publishHeartbeatActive(false);
+      return;
+    }
     _heartbeatTimer?.cancel();
     _heartbeatTimer = null;
     _heartbeatSession = null;

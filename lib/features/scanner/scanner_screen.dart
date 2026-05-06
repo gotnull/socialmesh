@@ -78,6 +78,17 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   /// but the transport hasn't fully torn down by the time Scanner inits.
   ProviderSubscription<conn.DeviceConnectionState2>? _disconnectSub;
 
+  /// D28 follow-up: parallel disconnect-completion listener for MeshCore.
+  /// `deviceConnectionProvider` is Meshtastic-flavoured and never
+  /// transitions to `disconnected` for a MeshCore session — the
+  /// MeshCore coordinator updates `meshCoreConnectionStateProvider`
+  /// instead. Without this listener, tapping Disconnect on a
+  /// MeshCore BLE device left the Scanner stuck in the
+  /// "User disconnected but transport still connected" branch
+  /// because the Meshtastic-flavoured listener never fired, so no
+  /// scan was ever started.
+  ProviderSubscription<AsyncValue<MeshConnectionState>>? _meshCoreDisconnectSub;
+
   /// Timer that auto-restarts BLE scanning after each scan cycle completes.
   /// Continuous scanning keeps the device list live instead of showing a
   /// dead "No devices found" screen with a manual "Scan Again" button.
@@ -297,6 +308,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     _rescanTimer?.cancel();
     _backgroundReconnectSub?.close();
     _disconnectSub?.close();
+    _meshCoreDisconnectSub?.close();
     // Cancel the watchdog. Once we're disposing, the timer can't usefully
     // resolve any in-flight connect attempt anyway.
     _manualConnectTimeout?.cancel();
@@ -351,20 +363,47 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   /// torn down (the disconnect is async). Once we see disconnected state,
   /// we start the normal scan flow.
   void _listenForDisconnectCompletion() {
+    // Helper that closes BOTH subscriptions and fires the scan once,
+    // regardless of which provider's signal arrived first.
+    void onDone(String source) {
+      AppLogging.connection(
+        '📡 SCANNER: Transport disconnect completed (source=$source) '
+        '— starting scan',
+      );
+      _disconnectSub?.close();
+      _disconnectSub = null;
+      _meshCoreDisconnectSub?.close();
+      _meshCoreDisconnectSub = null;
+      if (!mounted) return;
+      _startScan();
+    }
+
+    // Meshtastic-flavoured disconnect listener (existing path).
     _disconnectSub?.close();
     _disconnectSub = ref.listenManual<conn.DeviceConnectionState2>(
       conn.deviceConnectionProvider,
       (previous, next) {
         if (next.state == conn.DevicePairingState.disconnected ||
             next.state == conn.DevicePairingState.neverPaired) {
-          AppLogging.connection(
-            '📡 SCANNER: Transport disconnect completed (${next.state}) '
-            '— starting scan',
-          );
-          _disconnectSub?.close();
-          _disconnectSub = null;
-          if (!mounted) return;
-          _startScan();
+          onDone('meshtastic_provider');
+        }
+      },
+    );
+
+    // D28 follow-up: parallel MeshCore-flavoured disconnect listener.
+    // The MeshCore coordinator drives its own state stream
+    // (`meshCoreConnectionStateProvider`); the Meshtastic provider
+    // above never transitions for a MeshCore session, so without this
+    // listener the Scanner waited forever after a MeshCore Disconnect
+    // and never repopulated devices. Either signal is sufficient — we
+    // race them.
+    _meshCoreDisconnectSub?.close();
+    _meshCoreDisconnectSub = ref.listenManual<AsyncValue<MeshConnectionState>>(
+      meshCoreConnectionStateProvider,
+      (previous, next) {
+        final state = next.asData?.value;
+        if (state == MeshConnectionState.disconnected) {
+          onDone('meshcore_provider');
         }
       },
     );

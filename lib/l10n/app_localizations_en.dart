@@ -3868,7 +3868,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get networkProtocolMeshtastic => 'Meshtastic';
 
   @override
-  String get networkProtocolMeshcoreDev => 'MeshCore (dev)';
+  String get networkProtocolMeshcoreDev => 'MeshCore';
 
   @override
   String debugScreenExportFailed(String error) {
@@ -7801,6 +7801,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meshcoreContactsEmptyTitleSuffix => ' yet';
+
+  @override
+  String get meshcoreContactsFilteredEmptyTitle => 'No matches';
+
+  @override
+  String get meshcoreContactsFilteredEmptyTagline =>
+      'No contacts match the selected filter. Tap below to see all your contacts.';
+
+  @override
+  String get meshcoreContactsFilteredEmptyAction => 'Show all contacts';
 
   @override
   String get meshcoreContactsLabel => 'Contacts';

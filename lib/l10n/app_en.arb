@@ -5133,7 +5133,7 @@
     "@networkProtocolMeshtastic": {
         "description": "Protocol chip label — Meshtastic TCP. Brand name; do not translate."
     },
-    "networkProtocolMeshcoreDev": "MeshCore (dev)",
+    "networkProtocolMeshcoreDev": "MeshCore",
     "@networkProtocolMeshcoreDev": {
         "description": "Protocol chip label — MeshCore TCP. Debug-only path; brand name plus a (dev) suffix indicating non-production status."
     },
@@ -10567,6 +10567,18 @@
     "meshcoreContactsEmptyTitleSuffix": " yet",
     "@meshcoreContactsEmptyTitleSuffix": {
         "description": "Animated empty-state title suffix shown after the keyword for an empty contacts list"
+    },
+    "meshcoreContactsFilteredEmptyTitle": "No matches",
+    "@meshcoreContactsFilteredEmptyTitle": {
+        "description": "D28 follow-up - title for the filtered-empty state on the Contacts screen (active filter excludes all contacts but the user still has contacts)"
+    },
+    "meshcoreContactsFilteredEmptyTagline": "No contacts match the selected filter. Tap below to see all your contacts.",
+    "@meshcoreContactsFilteredEmptyTagline": {
+        "description": "D28 follow-up - tagline for the filtered-empty state"
+    },
+    "meshcoreContactsFilteredEmptyAction": "Show all contacts",
+    "@meshcoreContactsFilteredEmptyAction": {
+        "description": "D28 follow-up - resets the active filter to All"
     },
     "meshcoreContactsLabel": "Contacts",
     "@meshcoreContactsLabel": {

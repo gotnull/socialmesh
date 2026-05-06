@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/logging.dart';
 import '../../core/l10n/l10n_extension.dart';
+import '../../core/navigation.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
@@ -427,10 +428,11 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
   }
 
   /// Route-replace into the scanner.
-  void _goToScanner() {
-    ref.read(appInitProvider.notifier).setNeedsScanner();
-    Navigator.of(context).pushNamedAndRemoveUntil('/app', (route) => false);
-  }
+  ///
+  /// Used by the banner Cancel flow. Delegates to [_routeToScanner] so
+  /// the same root-navigator + setNeedsScanner pattern handles all
+  /// MeshCore-shell exit paths.
+  void _goToScanner() => _routeToScanner();
 
   Widget _buildBottomNav(BuildContext context, ThemeData theme, int selected) {
     return Container(
@@ -727,23 +729,57 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
 
   /// Drawer Disconnect tap.
   ///
-  /// D27: route through `userCancelAutoReconnect` (sets `userDisconnected=true`,
-  /// tears down the transport, sets `autoReconnectState=idle`) instead of a
-  /// raw `coordinator.disconnect()`. Without this gate the new
-  /// `meshCoreLifecycleProvider` would observe the coordinator-driven
-  /// `MeshConnectionState.disconnected` transition and immediately
-  /// dispatch an auto-reconnect, defeating the user's intent.
-  void _disconnect() async {
+  /// D28: route to Scanner immediately, mirroring the Meshtastic device
+  /// sheet's disconnect flow. Sequence:
+  ///
+  /// 1. Set `userDisconnected=true` and `autoReconnectState=idle`
+  ///    BEFORE the async transport teardown so the lifecycle listeners
+  ///    can't re-arm in the gap.
+  /// 2. `setNeedsScanner` + `pushNamedAndRemoveUntil('/app', ...)` — same
+  ///    route-replace pattern Meshtastic uses, so the user lands on the
+  ///    Scanner with no MeshCoreShell visible underneath.
+  /// 3. Fire `coordinator.disconnect()` AFTER the route swap so any
+  ///    coordinator-owned cleanup (capture, adapter teardown) still
+  ///    runs but doesn't block the visual transition.
+  ///
+  /// Pre-D28 the drawer only called `userCancelAutoReconnect` +
+  /// `coordinator.disconnect()`, leaving the user staring at the
+  /// MeshCoreShell with the disconnected banner — which doesn't match
+  /// the Meshtastic UX (where Disconnect always pops to Scanner).
+  void _disconnect() {
     AppLogging.connection('event=shell.drawer.disconnect protocol=meshcore');
-    await ref
-        .read(conn.deviceConnectionProvider.notifier)
-        .userCancelAutoReconnect();
-    // Belt-and-braces: also drive the coordinator's own disconnect so any
-    // MeshCore-specific cleanup (capture, adapter teardown) runs even if
-    // userCancelAutoReconnect's `transportProvider.disconnect()` was a
-    // no-op for our coordinator-owned transport.
+    ref.read(userDisconnectedProvider.notifier).setUserDisconnected(true);
+    ref
+        .read(autoReconnectStateProvider.notifier)
+        .setState(AutoReconnectState.idle);
+    _routeToScanner();
+    // Coordinator teardown after the route swap so MeshCore-owned
+    // resources (capture buffer, adapter, transport socket) close
+    // cleanly but don't gate the visual handoff.
     final coordinator = ref.read(connectionCoordinatorProvider);
-    await coordinator.disconnect();
+    Future.microtask(coordinator.disconnect);
+  }
+
+  /// Shared route-replace into the Scanner via the declarative
+  /// `appInitProvider.setNeedsScanner` + global `navigatorKey`.
+  /// Used by the drawer Disconnect, the device-sheet Disconnect, and
+  /// `_goToScanner` (the banner Cancel flow).
+  void _routeToScanner() {
+    ref.read(appInitProvider.notifier).setNeedsScanner();
+    final nav = navigatorKey.currentState;
+    if (nav != null) {
+      AppLogging.connection(
+        'MESHCORE_DISCONNECT_ROUTE_REPLACE_SCANNER source=shell '
+        'method=pushNamedAndRemoveUntil dest=/app',
+      );
+      nav.pushNamedAndRemoveUntil('/app', (route) => false);
+    } else {
+      AppLogging.connection(
+        'MESHCORE_DISCONNECT_ROUTE_REPLACE_SCANNER source=shell '
+        'method=local_fallback (navigatorKey.currentState=null)',
+      );
+      Navigator.of(context).pushNamedAndRemoveUntil('/app', (route) => false);
+    }
   }
 
   void _showAddContact() {
@@ -1461,8 +1497,15 @@ class _MeshCoreDeviceSheetContentState
   }
 
   Future<void> _disconnect(BuildContext context) async {
+    // Capture providers BEFORE the confirm-await so the disconnect
+    // path doesn't re-read `ref` after a late dispose.
     final coordinator = ref.read(connectionCoordinatorProvider);
-    final nav = Navigator.of(context);
+    final userDisconnectedNotifier = ref.read(
+      userDisconnectedProvider.notifier,
+    );
+    final autoReconnectNotifier = ref.read(autoReconnectStateProvider.notifier);
+    final appInitNotifier = ref.read(appInitProvider.notifier);
+
     final confirmed = await AppBottomSheet.showConfirm(
       context: context,
       title: context.l10n.meshcoreShellDisconnect,
@@ -1472,15 +1515,39 @@ class _MeshCoreDeviceSheetContentState
     );
 
     if (!mounted) return;
-    if (confirmed == true) {
-      safeSetState(() => _disconnecting = true);
+    if (confirmed != true) return;
 
-      // Close sheet first
-      nav.pop();
+    safeSetState(() => _disconnecting = true);
 
-      // Perform disconnect
-      await coordinator.disconnect();
+    // D28: mirror Meshtastic's `device_sheet.dart` disconnect order —
+    // suppress auto-reconnect, route-replace into the Scanner, THEN
+    // tear down the transport. The route swap closes the visible
+    // window where the sheet would otherwise stay mounted while the
+    // async coordinator.disconnect() ran.
+    AppLogging.connection(
+      'event=shell.device_sheet.disconnect protocol=meshcore',
+    );
+    userDisconnectedNotifier.setUserDisconnected(true);
+    autoReconnectNotifier.setState(AutoReconnectState.idle);
+
+    appInitNotifier.setNeedsScanner();
+    final rootNav = navigatorKey.currentState;
+    if (rootNav != null) {
+      AppLogging.connection(
+        'MESHCORE_DISCONNECT_ROUTE_REPLACE_SCANNER source=device_sheet '
+        'method=pushNamedAndRemoveUntil dest=/app',
+      );
+      rootNav.pushNamedAndRemoveUntil('/app', (route) => false);
+    } else if (context.mounted) {
+      AppLogging.connection(
+        'MESHCORE_DISCONNECT_ROUTE_REPLACE_SCANNER source=device_sheet '
+        'method=local_fallback (navigatorKey.currentState=null)',
+      );
+      Navigator.of(context).pushNamedAndRemoveUntil('/app', (route) => false);
     }
+
+    // Async transport teardown after the route swap.
+    await coordinator.disconnect();
   }
 
   void _showMyContactCode() {

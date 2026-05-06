@@ -11,6 +11,7 @@ import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/loading_indicator.dart';
+import '../../../core/widgets/qr_scanner_overlay.dart';
 import '../../../models/meshcore_channel.dart';
 import '../../../models/meshcore_contact.dart';
 import '../../../providers/meshcore_providers.dart';
@@ -307,34 +308,8 @@ class _MeshCoreQrScannerScreenState
       body: Stack(
         children: [
           MobileScanner(controller: _controller, onDetect: _onDetect),
-          // Scan frame overlay
-          Center(
-            child: Container(
-              width: 280,
-              height: 280,
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: _isProcessing ? AppTheme.successGreen : accentColor,
-                  width: 3,
-                ),
-                borderRadius: BorderRadius.circular(AppTheme.radius16),
-              ),
-            ),
-          ),
-          // Corner decorations
-          Center(
-            child: SizedBox(
-              width: 280,
-              height: 280,
-              child: Stack(
-                children: [
-                  _buildCorner(accentColor, Alignment.topLeft),
-                  _buildCorner(accentColor, Alignment.topRight),
-                  _buildCorner(accentColor, Alignment.bottomLeft),
-                  _buildCorner(accentColor, Alignment.bottomRight),
-                ],
-              ),
-            ),
+          QrScannerOverlay(
+            cornerColor: _isProcessing ? AppTheme.successGreen : accentColor,
           ),
           // Processing indicator
           if (_isProcessing) const Center(child: LoadingIndicator()),
@@ -362,81 +337,4 @@ class _MeshCoreQrScannerScreenState
       ),
     );
   }
-
-  Widget _buildCorner(Color color, Alignment alignment) {
-    const size = 30.0;
-    const thickness = 4.0;
-
-    final isTop =
-        alignment == Alignment.topLeft || alignment == Alignment.topRight;
-    final isLeft =
-        alignment == Alignment.topLeft || alignment == Alignment.bottomLeft;
-
-    return Positioned(
-      top: isTop ? 0 : null,
-      bottom: !isTop ? 0 : null,
-      left: isLeft ? 0 : null,
-      right: !isLeft ? 0 : null,
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: CustomPaint(
-          painter: _CornerPainter(
-            color: color,
-            thickness: thickness,
-            isTop: isTop,
-            isLeft: isLeft,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CornerPainter extends CustomPainter {
-  final Color color;
-  final double thickness;
-  final bool isTop;
-  final bool isLeft;
-
-  _CornerPainter({
-    required this.color,
-    required this.thickness,
-    required this.isTop,
-    required this.isLeft,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = thickness
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final path = Path();
-
-    if (isTop && isLeft) {
-      path.moveTo(0, size.height);
-      path.lineTo(0, 0);
-      path.lineTo(size.width, 0);
-    } else if (isTop && !isLeft) {
-      path.moveTo(0, 0);
-      path.lineTo(size.width, 0);
-      path.lineTo(size.width, size.height);
-    } else if (!isTop && isLeft) {
-      path.moveTo(0, 0);
-      path.lineTo(0, size.height);
-      path.lineTo(size.width, size.height);
-    } else {
-      path.moveTo(0, size.height);
-      path.lineTo(size.width, size.height);
-      path.lineTo(size.width, 0);
-    }
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

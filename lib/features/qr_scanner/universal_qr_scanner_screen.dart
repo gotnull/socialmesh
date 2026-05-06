@@ -12,6 +12,7 @@ import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/qr_scanner_overlay.dart';
 import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
@@ -1062,25 +1063,30 @@ class _UniversalQrScannerScreenState
 
   @override
   Widget build(BuildContext context) {
+    final accentColor = context.accentColor;
+
     return Scaffold(
-      backgroundColor: context.background,
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: context.background,
+        backgroundColor: Colors.transparent,
         title: Text(
           context.l10n.qrScannerTitle,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
-          ),
+          style: const TextStyle(color: Colors.white),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.close, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.flash_on, color: context.textPrimary),
+            icon: Icon(
+              _controller.torchEnabled ? Icons.flash_on : Icons.flash_off,
+              color: _controller.torchEnabled ? accentColor : Colors.white70,
+            ),
             onPressed: () => _controller.toggleTorch(),
           ),
           IconButton(
-            icon: Icon(Icons.flip_camera_ios, color: context.textPrimary),
+            icon: const Icon(Icons.flip_camera_ios, color: Colors.white70),
             onPressed: () => _controller.switchCamera(),
           ),
         ],
@@ -1088,58 +1094,34 @@ class _UniversalQrScannerScreenState
       body: Stack(
         children: [
           MobileScanner(controller: _controller, onDetect: _onDetect),
-          // Scanner overlay
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: context.accentColor.withValues(alpha: 0.5),
-                width: 2,
-              ),
-            ),
+          QrScannerOverlay(
+            cornerColor: _isProcessing ? AppTheme.successGreen : accentColor,
           ),
-          if (_isProcessing)
-            Container(
-              color: Colors.black54,
-              child: const Center(child: LoadingIndicator(size: 48)),
-            ),
+          if (_isProcessing) const Center(child: LoadingIndicator(size: 48)),
           Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
+            bottom: 100,
+            left: 20,
+            right: 20,
             child: Container(
-              padding: const EdgeInsets.all(AppTheme.spacing24),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    context.background.withValues(alpha: 0.9),
-                    context.background,
-                  ],
-                ),
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.qr_code_scanner,
-                    size: 32,
-                    color: context.accentColor,
-                  ),
+                  Icon(Icons.qr_code_scanner, size: 32, color: accentColor),
                   const SizedBox(height: AppTheme.spacing12),
                   Text(
                     context.l10n.qrScannerPrompt,
-                    style: TextStyle(color: context.textPrimary, fontSize: 14),
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: AppTheme.spacing8),
                   Text(
                     context.l10n.qrScannerSupportsHint,
-                    style: TextStyle(
-                      color: context.textSecondary,
-                      fontSize: 12,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
                     textAlign: TextAlign.center,
                   ),
                 ],
