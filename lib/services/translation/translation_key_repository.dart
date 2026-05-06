@@ -8,7 +8,7 @@ import '../../core/logging.dart';
 /// Secure local-only store for BYO translation provider API keys.
 ///
 /// Keys are stored exclusively on-device via [FlutterSecureStorage].
-/// They are never sent to Socialmesh servers, logged, or included in
+/// They are never sent to SocialMesh servers, logged, or included in
 /// crash reports.
 class TranslationKeyRepository {
   static const String _keyPrefix = 'translation_byo_key';

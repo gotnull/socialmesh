@@ -3,7 +3,7 @@
 
 // Lightweight preset identifier for NodeBoard terminal mode.
 //
-// The terminal is rendered in Socialmesh's standard premium theme
+// The terminal is rendered in SocialMesh's standard premium theme
 // (GlassScaffold, context.accentColor, context.card, etc.) — there is
 // no per-preset palette overriding the app theme. A preset is kept
 // only to drive optional retro flourishes: the prompt glyph and an
@@ -42,7 +42,7 @@ enum TerminalPreset {
   };
 
   /// The prompt glyph used in terminal output lines and the command
-  /// input prefix. Kept modest (one character) so Socialmesh accent
+  /// input prefix. Kept modest (one character) so SocialMesh accent
   /// colours drive visual identity, not giant retro characters.
   String get promptGlyph => switch (this) {
     TerminalPreset.classicGreen => '>',

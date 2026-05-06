@@ -8,7 +8,7 @@ import 'dart:typed_data';
 /// was originally handed by RNS, before fragmentation.
 ///
 /// Phase 2 stops here: a [ReticulumFrame] is opaque RNS bytes. It is
-/// not interpreted further by Socialmesh. A future Phase 3 TCP bridge
+/// not interpreted further by SocialMesh. A future Phase 3 TCP bridge
 /// would HDLC-encode `body` and ship it to a host-side `rnsd` for
 /// RNS itself to process.
 class ReticulumFrame {

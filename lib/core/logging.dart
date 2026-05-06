@@ -829,7 +829,7 @@ class AppLogging {
     if (sppNegotiationLoggingEnabled) debugPrint('SPP_NEG: $message');
   }
 
-  /// STL (Socialmesh Trust Layer) logging.
+  /// STL (SocialMesh Trust Layer) logging.
   /// Enable with STL_LOGGING_ENABLED=true in .env file.
   static bool get stlLoggingEnabled {
     _stlLoggingEnabled ??=
@@ -841,7 +841,7 @@ class AppLogging {
     if (stlLoggingEnabled) debugPrint('STL: $message');
   }
 
-  /// Socialmesh Overlay v0.2 logging — link state, resource transfer,
+  /// SocialMesh Overlay v0.2 logging — link state, resource transfer,
   /// persistence, capability negotiation. Enable with
   /// `OVERLAY_LOGGING_ENABLED=true` in the .env file.
   static bool get overlayLoggingEnabled {

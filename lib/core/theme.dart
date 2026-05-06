@@ -407,7 +407,6 @@ const appTaglines = [
   'Off-grid communication.', // lint-allow: hardcoded-string
   'No towers. No subscriptions.', // lint-allow: hardcoded-string
   'Your voice. Your network.', // lint-allow: hardcoded-string
-  'Zero knowledge. Zero tracking.', // lint-allow: hardcoded-string
   'Device to device. Mile after mile.', // lint-allow: hardcoded-string
   'Build infrastructure together.', // lint-allow: hardcoded-string
 ];

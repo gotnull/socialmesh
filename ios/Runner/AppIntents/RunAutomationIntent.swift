@@ -2,7 +2,7 @@
 //  RunAutomationIntent.swift
 //  Runner
 //
-//  Socialmesh App Intents - Run an in-app automation by name
+//  SocialMesh App Intents - Run an in-app automation by name
 //
 
 import Foundation
@@ -11,7 +11,7 @@ import AppIntents
 @available(iOS 16.0, *)
 struct RunAutomationIntent: AppIntent {
     static var title: LocalizedStringResource = "Run Automation"
-    static var description = IntentDescription("Run a Socialmesh automation by name")
+    static var description = IntentDescription("Run a SocialMesh automation by name")
     static var openAppWhenRun: Bool = false
     
     @Parameter(title: "Automation Name", description: "The name of the automation to run")
@@ -47,7 +47,7 @@ struct RunAutomationIntent: AppIntent {
 @available(iOS 16.0, *)
 struct ListAutomationsIntent: AppIntent {
     static var title: LocalizedStringResource = "List Automations"
-    static var description = IntentDescription("Get a list of available Socialmesh automations")
+    static var description = IntentDescription("Get a list of available SocialMesh automations")
     static var openAppWhenRun: Bool = false
     
     static var parameterSummary: some ParameterSummary {

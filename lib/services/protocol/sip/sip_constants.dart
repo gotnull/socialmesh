@@ -3,7 +3,7 @@
 
 /// SIP v0.1 protocol constants.
 ///
-/// All values are derived from the Socialmesh Interop Profile specification
+/// All values are derived from the SocialMesh Interop Profile specification
 /// (docs/sip/SIP_V0_1.md) and the pre-flight verification results in
 /// Sprint 011 (docs/sprints/SPRINT_011.md).
 ///

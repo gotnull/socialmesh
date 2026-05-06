@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Byte-accurate constants for the Socialmesh Overlay v0.2 stack.
+/// Byte-accurate constants for the SocialMesh Overlay v0.2 stack.
 ///
 /// Every value here is anchored to `docs/sip/OVERLAY_V0_2.md`. If the
 /// spec disagrees, the spec wins and this file is wrong. Budgets also

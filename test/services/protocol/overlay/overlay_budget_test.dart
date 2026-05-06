@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Byte-budget invariants for the Socialmesh Overlay v0.2 stack.
+/// Byte-budget invariants for the SocialMesh Overlay v0.2 stack.
 ///
 /// These assertions guard the numeric relationships documented in
 /// `docs/sip/OVERLAY_V0_2.md` §3 and §25. If a constant changes, this

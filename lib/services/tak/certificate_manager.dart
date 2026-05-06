@@ -98,7 +98,7 @@ class TakCertificateManager {
     final serial = Random.secure().nextInt(0x7FFFFFFF).abs() + 3;
     final certPem = _buildCert(
       subjectCn: callsign,
-      issuerCn: 'Socialmesh TAK CA',
+      issuerCn: 'SocialMesh TAK CA',
       publicKey: keyPair.publicKey,
       serial: serial,
       notBefore: DateTime.now().toUtc(),
@@ -158,8 +158,8 @@ class TakCertificateManager {
     final caPubKey = caKeyPair.publicKey;
     final caKeyPem = _encodePrivateKeyPem(caPrivKey);
     final caCertPem = _buildCert(
-      subjectCn: 'Socialmesh TAK CA',
-      issuerCn: 'Socialmesh TAK CA',
+      subjectCn: 'SocialMesh TAK CA',
+      issuerCn: 'SocialMesh TAK CA',
       publicKey: caPubKey,
       serial: 1,
       notBefore: now,
@@ -173,8 +173,8 @@ class TakCertificateManager {
     final serverPubKey = serverKeyPair.publicKey;
     final serverKeyPem = _encodePrivateKeyPem(serverPrivKey);
     final serverCertPem = _buildCert(
-      subjectCn: 'Socialmesh TAK Server',
-      issuerCn: 'Socialmesh TAK CA',
+      subjectCn: 'SocialMesh TAK Server',
+      issuerCn: 'SocialMesh TAK CA',
       publicKey: serverPubKey,
       serial: 2,
       notBefore: now,
@@ -194,7 +194,7 @@ class TakCertificateManager {
     _cachedServerKeyPem = serverKeyPem;
     _cachedCaExpiry = expiry;
     AppLogging.tak(
-      'Root CA generated: CN=Socialmesh TAK CA, expires=${expiry.toIso8601String()}',
+      'Root CA generated: CN=SocialMesh TAK CA, expires=${expiry.toIso8601String()}',
     );
   }
 

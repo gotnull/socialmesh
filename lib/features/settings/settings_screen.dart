@@ -1378,8 +1378,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         // About
         _SearchableSettingItem(
           icon: Icons.info,
-          title: context.l10n.settingsTileSocialmeshTitle,
-          subtitle: context.l10n.settingsTileSocialmeshSubtitle,
+          title: context.l10n.settingsTileSocialMeshTitle,
+          subtitle: context.l10n.settingsTileSocialMeshSubtitle,
           keywords: ['about', 'version', 'app', 'info'],
           section: context.l10n.settingsSectionAbout,
           onTap: () {
@@ -1390,7 +1390,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             );
             showSuccessSnackBar(
               context,
-              context.l10n.settingsSocialmeshVersionSnackbar(version),
+              context.l10n.settingsSocialMeshVersionSnackbar(version),
             );
           },
         ),
@@ -3420,7 +3420,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               );
                               return _SettingsTile(
                                 icon: Icons.info,
-                                title: context.l10n.settingsTileSocialmeshTitle,
+                                title: context.l10n.settingsTileSocialMeshTitle,
                                 subtitle: versionString,
                               );
                             },

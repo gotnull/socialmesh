@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:socialmesh/l10n/l10n_utils.dart';
 
-/// All supported deep link types in Socialmesh.
+/// All supported deep link types in SocialMesh.
 ///
 /// Each type corresponds to a specific feature/screen that can be
 /// reached via deep link. The `invalid` type is used for malformed

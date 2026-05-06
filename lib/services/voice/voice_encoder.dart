@@ -8,7 +8,7 @@ import '../codec2/codec2_bindings.dart';
 import '../codec2/codec2_ffi.dart';
 import 'voice_constants.dart';
 
-/// Encodes raw PCM audio to the Socialmesh Codec2 `.c2` wire format.
+/// Encodes raw PCM audio to the SocialMesh Codec2 `.c2` wire format.
 ///
 /// Wire format:
 /// ```

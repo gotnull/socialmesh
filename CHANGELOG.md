@@ -114,7 +114,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Open-sourced the Socialmesh mobile client under GPL-3.0
+- Open-sourced the SocialMesh mobile client under GPL-3.0
 - Architecture documentation (`docs/ARCHITECTURE.md`)
 - Backend boundary documentation (`docs/BACKEND.md`)
 - GitHub Actions CI pipeline with automated testing

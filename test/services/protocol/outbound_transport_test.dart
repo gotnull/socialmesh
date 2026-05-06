@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 /// Regression tests for outbound message transport selection and packet
-/// construction. These tests verify that Socialmesh matches the official
+/// construction. These tests verify that SocialMesh matches the official
 /// Meshtastic iOS app behaviour for standard message sending.
 ///
 /// Key invariants tested:
@@ -139,7 +139,7 @@ void main() {
 
   group('Data protobuf — user message construction', () {
     test('wantResponse must NOT be set for user text messages', () {
-      // Regression: Socialmesh previously set data.wantResponse = wantAck,
+      // Regression: SocialMesh previously set data.wantResponse = wantAck,
       // which told the receiving node to generate a ROUTING_APP response.
       // The official Meshtastic iOS app never sets wantResponse for user
       // messages. This extra response wastes airtime and deviates from
@@ -271,7 +271,7 @@ void main() {
 
   group('wantAck — matches official Meshtastic behaviour', () {
     test('channel broadcast should use wantAck=true', () {
-      // Regression: Socialmesh previously set wantAck=false for channel
+      // Regression: SocialMesh previously set wantAck=false for channel
       // messages. The official Meshtastic iOS app always sets wantAck=true
       // for ALL user messages (channel and DM).
       final data = pb.Data()
@@ -323,7 +323,7 @@ void main() {
         wantAck: true,
       );
 
-      // Both Socialmesh and meshtastic-ios leave these at protobuf default.
+      // Both SocialMesh and meshtastic-ios leave these at protobuf default.
       // The firmware sets hopLimit from LoRa config and hopStart = hopLimit
       // before radio transmission.
       expect(packet.hopLimit, 0);

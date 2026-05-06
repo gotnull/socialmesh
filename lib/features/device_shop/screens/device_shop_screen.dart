@@ -1323,7 +1323,7 @@ class _BecomeSellerSection extends StatelessWidget {
               child: DeviceShopPrimaryButton(
                 label: context.l10n.deviceShopContactUs,
                 icon: Icons.email_outlined,
-                onTap: () => _contactSocialmesh(context),
+                onTap: () => _contactSocialMesh(context),
                 animate: true,
               ),
             ),
@@ -1333,7 +1333,7 @@ class _BecomeSellerSection extends StatelessWidget {
     );
   }
 
-  void _contactSocialmesh(BuildContext context) async {
+  void _contactSocialMesh(BuildContext context) async {
     await launchEmailCompose(
       context: context,
       to: 'support@socialmesh.app',

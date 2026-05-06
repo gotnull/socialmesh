@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Socialmesh binary codec for custom packet types over Meshtastic.
+/// SocialMesh binary codec for custom packet types over Meshtastic.
 ///
 /// Encodes and decodes SM_PRESENCE, SM_SIGNAL, and SM_IDENTITY packets
 /// using compact binary encoding. All packets are transported via the

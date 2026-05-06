@@ -52,7 +52,7 @@ class WaveformAnalysis {
   final bool isFallback;
 }
 
-/// Analyses a Socialmesh `.c2` voice payload and returns a [WaveformAnalysis].
+/// Analyses a SocialMesh `.c2` voice payload and returns a [WaveformAnalysis].
 ///
 /// Results are cached in memory keyed by [cacheKey]. Repeated calls for the
 /// same key return the cached result without re-decoding.

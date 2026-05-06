@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// SPP (Socialmesh Payload Protocol) v1 constants.
+/// SPP (SocialMesh Payload Protocol) v1 constants.
 ///
 /// These constants define the wire format, limits, and timing for SPP v1
 /// payload transfers. They are derived from the existing file transfer

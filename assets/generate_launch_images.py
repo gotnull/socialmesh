@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate iOS Launch Screen images with Socialmesh branding.
+Generate iOS Launch Screen images with SocialMesh branding.
 
 Requires: 
   pip install Pillow cairosvg

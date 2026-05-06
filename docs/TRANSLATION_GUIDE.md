@@ -1,6 +1,6 @@
-# Socialmesh Translation Guide
+# SocialMesh Translation Guide
 
-This document is the complete reference for translating Socialmesh into new languages. It covers file structure, syntax rules, tooling, and workflow for both new and existing translators.
+This document is the complete reference for translating SocialMesh into new languages. It covers file structure, syntax rules, tooling, and workflow for both new and existing translators.
 
 ---
 
@@ -28,7 +28,7 @@ This document is the complete reference for translating Socialmesh into new lang
 
 ## Overview
 
-Socialmesh uses Flutter's built-in `gen_l10n` internationalization system. All user-facing strings are stored in ARB (Application Resource Bundle) files -- JSON files with a specific structure.
+SocialMesh uses Flutter's built-in `gen_l10n` internationalization system. All user-facing strings are stored in ARB (Application Resource Bundle) files -- JSON files with a specific structure.
 
 - **English** (`app_en.arb`) is the template. It contains every key plus `@description` metadata.
 - **Other locales** (`app_ru.arb`, `app_it.arb`, etc.) contain the same keys with translated values. No `@description` metadata is needed in translated files.
@@ -283,7 +283,7 @@ Russian needs `one`, `few`, `many`, and `other`. Italian needs `one` and `other`
 - **Parameter names** in curly braces: `{name}`, `{count}`
 - **Key names** (the left side of the colon): `"commonSave"`
 - **Technical terms** that are product names: "Meshtastic", "MeshCore", "NodeDex", "Aether", "TAK", "MQTT", "BLE", "LoRa"
-- **Brand names**: "Socialmesh", "IFTTT", "Firebase"
+- **Brand names**: "SocialMesh", "IFTTT", "Firebase"
 - **Unit abbreviations**: "dBm", "km", "MHz", "SNR"
 - **ICU syntax keywords**: `plural`, `select`, `other`, `few`, `many`, `one`
 - **The `@@locale` value**
@@ -292,7 +292,7 @@ Russian needs `one`, `few`, `many`, and `other`. Italian needs `one` and `other`
 
 - "Mesh" as a standalone word -- generally keep as "Mesh" since it is a technical term
 - "Node" -- can be translated if the language has a natural equivalent
-- "Signal" -- context-dependent; it is both a technical term and a Socialmesh feature name. Translate as the Socialmesh feature (like a social media post), not the radio signal
+- "Signal" -- context-dependent; it is both a technical term and a SocialMesh feature name. Translate as the SocialMesh feature (like a social media post), not the radio signal
 
 ---
 
@@ -615,7 +615,7 @@ Use plain quotes. The ARB format handles UTF-8 natively.
 
 - **Be concise.** Mobile screens are small. Shorter translations are usually better.
 - **Be consistent.** Use the same word for the same concept everywhere. If "Save" is "Сохранить" in one place, it should be "Сохранить" everywhere.
-- **Match formality.** Socialmesh uses informal but professional tone in English. Match that register in your language.
+- **Match formality.** SocialMesh uses informal but professional tone in English. Match that register in your language.
 - **Preserve capitalization patterns.** If the English is in Title Case, use your language's equivalent convention. If it is sentence case, use sentence case.
 
 ### Technical terms
@@ -625,7 +625,7 @@ Keep these in English (or the accepted local form):
 - Mesh, Node, BLE, LoRa, GPS, SNR, WiFi, USB, MQTT
 - Meshtastic, MeshCore, NodeDex, Aether
 - TAK, IFTTT, Firebase
-- App-specific features: Signal (as in a Socialmesh post), Sigil, Explorer Title
+- App-specific features: Signal (as in a SocialMesh post), Sigil, Explorer Title
 
 ### Tone
 
@@ -693,4 +693,4 @@ All ARB files must be UTF-8 without BOM. Most editors default to this.
 
 ## Questions?
 
-Open an issue on the Socialmesh repository or contact the maintainers. Include the locale code and the key name if you have a question about a specific string.
+Open an issue on the SocialMesh repository or contact the maintainers. Include the locale code and the key name if you have a question about a specific string.

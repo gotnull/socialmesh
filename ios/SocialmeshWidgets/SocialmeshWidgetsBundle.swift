@@ -2,7 +2,7 @@
 //  SocialmeshWidgetsBundle.swift
 //  SocialmeshWidgets
 //
-//  Widget bundle for Socialmesh Live Activities
+//  Widget bundle for SocialMesh Live Activities
 //
 
 import WidgetKit

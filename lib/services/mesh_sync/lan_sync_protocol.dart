@@ -51,7 +51,7 @@ const Duration lanSyncMessageTimeout = Duration(seconds: 10);
 /// Default sync port for mDNS advertisement.
 const int lanSyncDefaultPort = 4480;
 
-/// mDNS service type for Socialmesh peer sync.
+/// mDNS service type for SocialMesh peer sync.
 ///
 /// Uses hyphen (not underscore) per RFC 6335 Section 5.1: service names
 /// must contain only `[A-Za-z0-9-]`. Underscores are silently rejected

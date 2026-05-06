@@ -379,7 +379,7 @@ print(os.path.normpath(os.path.join(base, rel)))
 # accidental or incorrect headers are caught before they propagate.
 #
 # Approved identifiers for Dart source:
-#   GPL-3.0-or-later    standard Socialmesh application source
+#   GPL-3.0-or-later    standard SocialMesh application source
 #   GPL-3.0-only        upstream-derived code (Meshtastic-adjacent)
 #   LGPL-3.0-only       service engine interface (future use)
 #   Apache-2.0          protocol implementation if ever isolated (future use)
@@ -493,7 +493,7 @@ check_notice_meshtastic() {
 # Run all checks
 # ---------------------------------------------------------------------------
 if [[ "$SUMMARY_ONLY" == false ]]; then
-  echo -e "${BOLD}check-licenses.sh — Socialmesh license boundary checker${RESET}"
+  echo -e "${BOLD}check-licenses.sh — SocialMesh license boundary checker${RESET}"
   echo "------------------------------------------------------------"
 fi
 

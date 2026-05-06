@@ -64,7 +64,7 @@ class TextMessagePayloadTooLargeException implements Exception {
 /// Meshtastic publishes the authoritative `DATA_PAYLOAD_LEN = 233` constant in
 /// `mesh.proto`. Upstream Android validates the encoded `Data` protobuf against
 /// that ceiling before sending. This helper mirrors that wire-level check so
-/// Socialmesh's composer UI and send path rely on the same source of truth.
+/// SocialMesh's composer UI and send path rely on the same source of truth.
 class TextMessagePayloadSizer {
   TextMessagePayloadSizer.standard({this.replyId, this.isEmoji = false})
     : maxUtf8Bytes = _resolveMaxUtf8Bytes(replyId: replyId, isEmoji: isEmoji);

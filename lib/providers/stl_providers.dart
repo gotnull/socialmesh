@@ -7,7 +7,7 @@ import '../services/security/stl_middleware.dart';
 import '../services/security/stl_signing_service.dart';
 import 'app_providers.dart';
 
-/// STL (Socialmesh Trust Layer) middleware — singleton.
+/// STL (SocialMesh Trust Layer) middleware — singleton.
 ///
 /// Provides the middleware instance used to wrap/unwrap STL envelopes
 /// on the file transfer pipeline.

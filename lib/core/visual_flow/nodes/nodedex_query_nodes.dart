@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 // lint-allow: haptic-feedback — onTap delegates to parent callback
-// NodeDex query node builders for the Socialmesh visual automation flow builder.
+// NodeDex query node builders for the SocialMesh visual automation flow builder.
 //
 // These nodes allow users to build dynamic node list pipelines on the visual
 // canvas. A pipeline typically starts with an "All Nodes" source node and

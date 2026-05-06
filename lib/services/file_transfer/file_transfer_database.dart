@@ -15,7 +15,7 @@ import 'file_transfer_engine.dart';
 /// Persistent storage for file transfer state and chunk data.
 ///
 /// Uses a dedicated SQLite database (file_transfers.db) following the
-/// existing Socialmesh database patterns.
+/// existing SocialMesh database patterns.
 class FileTransferDatabase {
   static const _dbName = 'file_transfers.db';
   static const _dbVersion = 3;

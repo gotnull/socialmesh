@@ -25,7 +25,7 @@ enum SmPacketType {
   feedPost,
 }
 
-/// A decoded Socialmesh extension packet.
+/// A decoded SocialMesh extension packet.
 ///
 /// Use [SmCodec.decode] to obtain an instance, then switch on [type]
 /// and cast [payload] to the appropriate class.
@@ -74,16 +74,16 @@ class SmPacket {
   Uint8List get feedPostPayload => payload as Uint8List;
 }
 
-/// Top-level codec for Socialmesh extension packets.
+/// Top-level codec for SocialMesh extension packets.
 ///
 /// Routes incoming packets to the correct sub-codec based on portnum,
 /// and provides encoding helpers.
 class SmCodec {
   const SmCodec._();
 
-  /// Returns true if [portnum] is a Socialmesh extension portnum.
-  static bool isSocialmeshPortnum(int portnum) =>
-      SmPortnum.isSocialmesh(portnum);
+  /// Returns true if [portnum] is a SocialMesh extension portnum.
+  static bool isSocialMeshPortnum(int portnum) =>
+      SmPortnum.isSocialMesh(portnum);
 
   /// Decode a raw payload from a Meshtastic MeshPacket's `Data.payload`.
   ///
@@ -91,7 +91,7 @@ class SmCodec {
   /// [data] is the raw payload bytes.
   ///
   /// Returns null if:
-  /// - The portnum is not a Socialmesh extension portnum
+  /// - The portnum is not a SocialMesh extension portnum
   /// - The payload is malformed or has an unsupported version
   static SmPacket? decode(int portnum, Uint8List data) {
     switch (portnum) {

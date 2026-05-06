@@ -37,7 +37,7 @@ ShopSeller lilygoSeller(int productCount) => ShopSeller(
   reviewCount: 0, // We don't have review data from API
   productCount: productCount,
   salesCount: 0, // We don't have sales data from API
-  joinedAt: DateTime(2026, 2, 4), // LILYGO joined Socialmesh Feb 4, 2026
+  joinedAt: DateTime(2026, 2, 4), // LILYGO joined SocialMesh Feb 4, 2026
   countries: [
     'Worldwide', // LILYGO ships globally via their store
   ],

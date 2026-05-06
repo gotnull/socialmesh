@@ -47,7 +47,7 @@ FRAMEWORK_BIN="${FRAMEWORK_DIR}/objective_c"
 
 # No cached framework yet? Nothing to check; the build will populate.
 if [ ! -f "${FRAMEWORK_BIN}" ]; then
-  echo "[Socialmesh] native-assets cache: no objective_c framework cached yet, skipping check"
+  echo "[SocialMesh] native-assets cache: no objective_c framework cached yet, skipping check"
   exit 0
 fi
 
@@ -63,7 +63,7 @@ case "${PLATFORM_NAME}" in
     EXPECTED_PLATFORM="IOSSIMULATOR"
     ;;
   *)
-    echo "[Socialmesh] native-assets cache: unsupported PLATFORM_NAME=${PLATFORM_NAME}, skipping check"
+    echo "[SocialMesh] native-assets cache: unsupported PLATFORM_NAME=${PLATFORM_NAME}, skipping check"
     exit 0
     ;;
 esac
@@ -71,7 +71,7 @@ esac
 CACHED_PLATFORM=$(vtool -show-build "${FRAMEWORK_BIN}" 2>/dev/null | awk '/platform/ {print $2; exit}')
 
 if [ -z "${CACHED_PLATFORM}" ]; then
-  echo "[Socialmesh] native-assets cache: vtool failed to read platform from ${FRAMEWORK_BIN}, purging defensively"
+  echo "[SocialMesh] native-assets cache: vtool failed to read platform from ${FRAMEWORK_BIN}, purging defensively"
   rm -rf "${FRAMEWORK_DIR}"
   exit 0
 fi
@@ -83,11 +83,11 @@ fi
 
 # Mismatch — log loudly and purge so the downstream native-assets
 # build phase regenerates with the correct target.
-echo "warning: [Socialmesh] native-assets cache has wrong-platform objective_c.framework"
-echo "warning: [Socialmesh]   PLATFORM_NAME=${PLATFORM_NAME} expected=${EXPECTED_PLATFORM} cached=${CACHED_PLATFORM}"
-echo "warning: [Socialmesh]   Purging ${FRAMEWORK_DIR} so the next build regenerates for the current target."
-echo "warning: [Socialmesh]   This typically means a previous sim build (via xcodebuildmcp) populated the cache and a device build is now running."
-echo "warning: [Socialmesh]   See lib/services/protocol/CLAUDE.md or memory entry feedback_native_assets_cache_per_platform.md."
+echo "warning: [SocialMesh] native-assets cache has wrong-platform objective_c.framework"
+echo "warning: [SocialMesh]   PLATFORM_NAME=${PLATFORM_NAME} expected=${EXPECTED_PLATFORM} cached=${CACHED_PLATFORM}"
+echo "warning: [SocialMesh]   Purging ${FRAMEWORK_DIR} so the next build regenerates for the current target."
+echo "warning: [SocialMesh]   This typically means a previous sim build (via xcodebuildmcp) populated the cache and a device build is now running."
+echo "warning: [SocialMesh]   See lib/services/protocol/CLAUDE.md or memory entry feedback_native_assets_cache_per_platform.md."
 
 rm -rf "${FRAMEWORK_DIR}"
 
@@ -100,7 +100,7 @@ rm -rf "${FRAMEWORK_DIR}"
 STAMP_GLOB="${PROJECT_ROOT}/.dart_tool/flutter_build"
 if [ -d "${STAMP_GLOB}" ]; then
   find "${STAMP_GLOB}" -name 'install_code_assets.stamp' -print0 | while IFS= read -r -d '' stamp; do
-    echo "warning: [Socialmesh]   Removing stamp ${stamp}"
+    echo "warning: [SocialMesh]   Removing stamp ${stamp}"
     rm -f "${stamp}"
   done
 fi

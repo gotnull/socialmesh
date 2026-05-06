@@ -1,6 +1,6 @@
 # SNR and RSSI
 
-When you look at signal quality in Socialmesh, you'll see two key numbers: **SNR** and **RSSI**. Together, they tell you how well your radio is communicating with another node.
+When you look at signal quality in SocialMesh, you'll see two key numbers: **SNR** and **RSSI**. Together, they tell you how well your radio is communicating with another node.
 
 ## RSSI — How Strong is the Signal?
 
@@ -34,7 +34,7 @@ Conversely, a reasonable RSSI with poor SNR (lots of noise on the frequency) can
 
 ## Using These Numbers
 
-In Socialmesh, signal quality indicators are shown:
+In SocialMesh, signal quality indicators are shown:
 
 - On each node in the node list
 - In message details

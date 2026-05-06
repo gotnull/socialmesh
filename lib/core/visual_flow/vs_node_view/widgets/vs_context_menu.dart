@@ -2,9 +2,9 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 // Vendored from vs_node_view v2.1.1 — BSD-3-Clause
-// Import paths rewritten for Socialmesh vendoring.
+// Import paths rewritten for SocialMesh vendoring.
 // Modified: Replaced plain Card with glass morphism styled container matching
-// Socialmesh sci-fi aesthetic.
+// SocialMesh sci-fi aesthetic.
 // Modified: Added category icons and accent-colored section headers.
 // Modified: Back navigation button for subgroup menus.
 // Modified: Constrained width for mobile readability.
@@ -21,7 +21,7 @@ class VSContextMenu extends StatefulWidget {
   /// Base context menu for creating new nodes.
   ///
   /// Used in [VSNodeView] to present available node builders to the user.
-  /// Styled with glass morphism to match the Socialmesh sci-fi design
+  /// Styled with glass morphism to match the SocialMesh sci-fi design
   /// language.
   const VSContextMenu({required this.nodeBuilders, super.key});
 

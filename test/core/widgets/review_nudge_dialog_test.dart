@@ -60,7 +60,7 @@ void main() {
       await tester.tap(find.text('Show Dialog'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Enjoying Socialmesh?'), findsOneWidget);
+      expect(find.text('Enjoying SocialMesh?'), findsOneWidget);
       expect(
         find.text(
           'Your feedback helps us improve the app and reach more mesh enthusiasts.',
@@ -103,12 +103,12 @@ void main() {
       await tester.tap(find.text('Show Dialog'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Enjoying Socialmesh?'), findsOneWidget);
+      expect(find.text('Enjoying SocialMesh?'), findsOneWidget);
 
       await tester.tap(find.text('Not now'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Enjoying Socialmesh?'), findsNothing);
+      expect(find.text('Enjoying SocialMesh?'), findsNothing);
     });
 
     testWidgets('calls native review when Rate it is tapped', (tester) async {
@@ -216,13 +216,13 @@ void main() {
       await tester.tap(find.text('Show Dialog'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Enjoying Socialmesh?'), findsOneWidget);
+      expect(find.text('Enjoying SocialMesh?'), findsOneWidget);
 
       await tester.tap(find.text('Rate it'));
       await tester.pumpAndSettle();
 
       // Dialog should be closed after successful rate operation
-      expect(find.text('Enjoying Socialmesh?'), findsNothing);
+      expect(find.text('Enjoying SocialMesh?'), findsNothing);
     });
   });
 }

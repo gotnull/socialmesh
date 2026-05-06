@@ -1,6 +1,6 @@
 # Supported Hardware
 
-Meshtastic runs on several types of LoRa radio hardware. Socialmesh works with any Meshtastic-compatible device that supports BLE (Bluetooth Low Energy) or USB serial connections.
+Meshtastic runs on several types of LoRa radio hardware. SocialMesh works with any Meshtastic-compatible device that supports BLE (Bluetooth Low Energy) or USB serial connections.
 
 ## Common Hardware Families
 
@@ -55,8 +55,8 @@ When selecting a Meshtastic radio, consider:
 - **Form factor** — handheld vs fixed installation affects your hardware choice.
 - **Frequency band** — make sure the radio supports your region's frequency (e.g., 915 MHz for US, 868 MHz for EU).
 
-## Compatibility with Socialmesh
+## Compatibility with SocialMesh
 
-Socialmesh works with any Meshtastic device that runs the standard Meshtastic firmware and supports BLE. The app auto-detects the hardware model and adjusts its interface accordingly.
+SocialMesh works with any Meshtastic device that runs the standard Meshtastic firmware and supports BLE. The app auto-detects the hardware model and adjusts its interface accordingly.
 
 For USB connections (Android only), the device needs a USB serial interface — most ESP32-based Meshtastic boards support this via their USB-C or Micro-USB port.

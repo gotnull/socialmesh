@@ -2,7 +2,7 @@
 //  TracerouteIntent.swift
 //  Runner
 //
-//  Socialmesh App Intents - Send a traceroute to a node
+//  SocialMesh App Intents - Send a traceroute to a node
 //
 
 import Foundation

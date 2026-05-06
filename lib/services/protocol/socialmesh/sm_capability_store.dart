@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Tracks which mesh nodes support the Socialmesh binary protocol.
+/// Tracks which mesh nodes support the SocialMesh binary protocol.
 ///
 /// When we receive a packet on portnum 260/261/262 from a node,
 /// we mark that node as binary-capable. This information is used to:

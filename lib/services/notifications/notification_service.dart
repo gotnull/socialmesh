@@ -1401,7 +1401,7 @@ class NotificationService {
   }
 
   // ============================================================
-  // SIP (Socialmesh Interchange Protocol) NOTIFICATIONS
+  // SIP (SocialMesh Interchange Protocol) NOTIFICATIONS
   // ============================================================
 
   /// Show notification for an incoming SIP ephemeral DM message.

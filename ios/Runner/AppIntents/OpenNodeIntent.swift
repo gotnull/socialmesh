@@ -2,7 +2,7 @@
 //  OpenNodeIntent.swift
 //  Runner
 //
-//  Socialmesh App Intents - Open a specific node in the app
+//  SocialMesh App Intents - Open a specific node in the app
 //
 
 import Foundation
@@ -11,7 +11,7 @@ import AppIntents
 @available(iOS 16.0, *)
 struct OpenNodeIntent: AppIntent {
     static var title: LocalizedStringResource = "Open Node"
-    static var description = IntentDescription("Open a Meshtastic node in Socialmesh")
+    static var description = IntentDescription("Open a Meshtastic node in SocialMesh")
     static var openAppWhenRun: Bool = true
     
     @Parameter(title: "Node ID", description: "The node ID in hex format (e.g., 9c3a29a9 or !9c3a29a9)")

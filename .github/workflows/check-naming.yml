@@ -1,0 +1,83 @@
+name: Check App Name Casing
+
+# Hard-fail check that the canonical brand "SocialMesh" (single word,
+# both S and M capitalized) is the only form used in the codebase.
+# Banned forms: "Socialmesh", "Social Mesh", "Social-Mesh", "socialMesh".
+# Lowercase "socialmesh" is allowed (it appears in domains, emails,
+# bundle IDs, and Dart package names where lowercase is the correct
+# identifier form).
+#
+# Runs in seconds without setting up Flutter, so this is the fastest
+# signal on PRs. The same rule is also enforced by the project lint
+# (scripts/hooks/socialmesh-lint.sh) and by ci.yml; this workflow
+# duplicates the gate so brand drift cannot land even if the lint
+# step is somehow skipped.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  check-name-casing:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Run lint rule (socialmesh-name-casing) on all tracked files
+        run: bash scripts/hooks/socialmesh-lint.sh --all
+
+      - name: Standalone grep gate (defence-in-depth)
+        run: |
+          set -e
+
+          # Build the list of tracked files once so the grep is fast and
+          # auditable. Excludes the same identifier-territory paths the
+          # lint script skips: project files, generated localizations,
+          # native bundle directories, and the lint script itself.
+          mapfile -t files < <(git ls-files \
+            ':!build/' \
+            ':!lib/generated/' \
+            ':!lib/l10n/app_localizations*.dart' \
+            ':!ios/Runner.xcodeproj/' \
+            ':!ios/SocialmeshWidgets/' \
+            ':!ios/Runner/AppIntents/ShortcutsProvider.swift' \
+            ':!android/app/src/main/AndroidManifest.xml' \
+            ':!android/app/src/main/kotlin/' \
+            ':!scripts/hooks/socialmesh-lint.sh')
+
+          # Pattern matches the four banned forms:
+          #   Socialmesh   - capital S, lowercase m
+          #   Social Mesh  - two words
+          #   Social-Mesh  - hyphenated
+          #   socialMesh   - lowercase s, capital M
+          # Lowercase "socialmesh" (no capital) is intentionally NOT matched.
+          pattern='Socialmesh|Social[ -][Mm]esh|socialMesh'
+
+          # Honour per-file `lint-allow: socialmesh-name-casing` markers
+          # (used by web/marketing.html FAQ which documents wrong forms
+          # intentionally).
+          fail=0
+          for f in "${files[@]}"; do
+            if grep -q 'lint-allow:.*socialmesh-name-casing' "$f" 2>/dev/null; then
+              continue
+            fi
+            if grep -nE "$pattern" "$f" >/tmp/hit 2>/dev/null && [ -s /tmp/hit ]; then
+              echo "::error file=$f::Wrong app-name casing in $f - canonical form is 'SocialMesh' (capital S and M)."
+              sed "s|^|$f:|" /tmp/hit
+              fail=1
+            fi
+          done
+
+          if [ "$fail" -ne 0 ]; then
+            echo
+            echo "Banned forms: Socialmesh, Social Mesh, Social-Mesh, socialMesh."
+            echo "Canonical form: SocialMesh (single word, both S and M capitalized)."
+            echo "Lowercase 'socialmesh' is OK in identifiers, domains, and bundle IDs."
+            exit 1
+          fi

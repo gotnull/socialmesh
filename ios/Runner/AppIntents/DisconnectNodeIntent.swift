@@ -2,7 +2,7 @@
 //  DisconnectNodeIntent.swift
 //  Runner
 //
-//  Socialmesh App Intents - Disconnect from the current node
+//  SocialMesh App Intents - Disconnect from the current node
 //
 
 import Foundation

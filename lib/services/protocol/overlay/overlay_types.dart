@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Enums and flag bitfields for the Socialmesh Overlay v0.2 stack.
+/// Enums and flag bitfields for the SocialMesh Overlay v0.2 stack.
 ///
 /// Wire codes are anchored to `docs/sip/OVERLAY_V0_2.md` §10.1 (link
 /// message types), §11.2 (resource message types), and §10.3 (link

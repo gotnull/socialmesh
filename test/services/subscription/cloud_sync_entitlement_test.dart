@@ -122,7 +122,7 @@ void main() {
   group('CloudSyncEntitlementService', () {
     test('entitlement ID is correct', () {
       // This verifies the entitlement ID matches what's configured in RevenueCat
-      // The service uses 'Socialmesh Pro' as the entitlement identifier
+      // The service uses 'SocialMesh Pro' as the entitlement identifier
       // If this test fails, check RevenueCat dashboard configuration
       expect(
         CloudSyncEntitlementService.grandfatherCutoffDate,

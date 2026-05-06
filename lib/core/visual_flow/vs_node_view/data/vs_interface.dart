@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 // Vendored from vs_node_view v2.1.1 — BSD-3-Clause
-// Import paths rewritten for Socialmesh vendoring.
+// Import paths rewritten for SocialMesh vendoring.
 // Modified: Icon sizes increased from 15dp to 24dp for mobile touch targets.
 
 import 'package:flutter/material.dart';

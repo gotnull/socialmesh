@@ -3,7 +3,7 @@
 
 /// SPP v0.1 protocol constants.
 ///
-/// All values are derived from the Socialmesh Payload Protocol specification
+/// All values are derived from the SocialMesh Payload Protocol specification
 /// (docs/protocol/SPP_V0_1.md). SPP payloads ride inside MRRP service
 /// payloads. Constants here derive from [MrrpConstants] to guarantee
 /// bounded, mesh-safe payloads.

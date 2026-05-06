@@ -656,7 +656,7 @@ class ProtocolService {
   // BLE device name for hardware model inference
   String? _deviceName;
 
-  // --- Socialmesh binary protocol components ---
+  // --- SocialMesh binary protocol components ---
   final SmCapabilityStore _smCapabilityStore;
   final SmFeatureFlag _smFeatureFlag;
   final SmMetrics _smMetrics;
@@ -2476,7 +2476,7 @@ class ProtocolService {
       final rawPortnum = _extractRawPortnum(data);
 
       // Fast path: SM binary portnums bypass the enum-based switch.
-      if (SmCodec.isSocialmeshPortnum(rawPortnum)) {
+      if (SmCodec.isSocialMeshPortnum(rawPortnum)) {
         // Diagnostic: log every SM packet with fileTransfer tag so it
         // appears when filtering by FILE_TRANSFER_ENABLED logging.
         if (rawPortnum == SmPortnum.fileTransfer) {
@@ -2835,10 +2835,10 @@ class ProtocolService {
   }
 
   // ─────────────────────────────────────────────────────────────────
-  // Socialmesh binary protocol handlers (portnums 260/261/262)
+  // SocialMesh binary protocol handlers (portnums 260/261/262)
   // ─────────────────────────────────────────────────────────────────
 
-  /// Handle inbound Socialmesh binary packet.
+  /// Handle inbound SocialMesh binary packet.
   ///
   /// Decodes via [SmCodec], marks sender as binary-capable, and routes
   /// the decoded payload into the existing domain pipelines.
@@ -5902,7 +5902,7 @@ class ProtocolService {
   }
 
   // ─────────────────────────────────────────────────────────────────
-  // Socialmesh binary protocol send methods
+  // SocialMesh binary protocol send methods
   // ─────────────────────────────────────────────────────────────────
 
   /// Broadcast a binary SM_SIGNAL (portnum 261).

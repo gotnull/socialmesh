@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Persistent Ed25519 identity for the Socialmesh Overlay v0.2 stack.
+/// Persistent Ed25519 identity for the SocialMesh Overlay v0.2 stack.
 ///
 /// A **separate** keypair from `SipKeypair` — per the P3 locked
 /// principle that user identity, transport identity, and overlay
@@ -131,7 +131,7 @@ class OverlayIdentityKeypair {
   }
 
   /// First 8 bytes of the public key, matching the persona-hint shape
-  /// used elsewhere in Socialmesh.
+  /// used elsewhere in SocialMesh.
   Uint8List publicKeyHint() => Uint8List.fromList(publicKey().sublist(0, 8));
 
   /// Sign [data] with the local private key. Returns a 64-byte

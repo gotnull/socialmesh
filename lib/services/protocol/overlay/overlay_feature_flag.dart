@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Feature-flag holder for the Socialmesh Overlay v0.2 stack.
+/// Feature-flag holder for the SocialMesh Overlay v0.2 stack.
 ///
 /// P2 introduces the `OVERLAY_LINK_ENABLED` gate. When `false` (the
 /// default, and the shipped value for v0.2 rollout), every overlay

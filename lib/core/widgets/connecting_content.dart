@@ -131,7 +131,7 @@ class ConnectingContent extends StatelessWidget {
             const ConfiguredSplashMeshNode(),
             const SizedBox(height: AppTheme.spacing32),
           ],
-          SocialmeshSplitFlapLogo(fontSize: 32, accentColor: accentColor),
+          SocialMeshSplitFlapLogo(fontSize: 32, accentColor: accentColor),
           const SizedBox(height: AppTheme.spacing8),
           const AnimatedTagline(taglines: appTaglines),
           const SizedBox(height: AppTheme.spacing48),

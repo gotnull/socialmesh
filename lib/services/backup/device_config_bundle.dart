@@ -378,7 +378,7 @@ T? _decode<T>(Object? value, T Function(List<int>) parser) {
   }
 }
 
-/// Serialize a [ChannelConfig] (Socialmesh's flat model) to the wire-format
+/// Serialize a [ChannelConfig] (SocialMesh's flat model) to the wire-format
 /// `Channel` proto. Mirrors the approach used by the channel QR sharing flow
 /// in `channel_options_sheet.dart`.
 List<int> _channelToWire(ChannelConfig c) {

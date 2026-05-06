@@ -98,7 +98,7 @@ post_install do |installer|
       # forces. See ios/Scripts/check_native_assets_platform.sh for
       # the full rationale.
       # ----------------------------------------------------------------
-      check_phase_name = '[Socialmesh] Check native-assets platform'
+      check_phase_name = '[SocialMesh] Check native-assets platform'
       check_script_body = <<~SH
         "${PROJECT_DIR}/Scripts/check_native_assets_platform.sh"
       SH
@@ -138,7 +138,7 @@ post_install do |installer|
       # without this re-sign step. The simulator doesn't enforce
       # signatures so this is a no-op for sim builds.
       # ----------------------------------------------------------------
-      resign_phase_name = '[Socialmesh] Re-sign Embedded Frameworks'
+      resign_phase_name = '[SocialMesh] Re-sign Embedded Frameworks'
       resign_script_body = <<~SH
         # Workaround for package:objective_c shipping its iOS framework
         # adhoc-signed; iOS device install otherwise fails with 0xe8008014.

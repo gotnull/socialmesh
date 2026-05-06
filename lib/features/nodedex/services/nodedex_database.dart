@@ -470,7 +470,7 @@ class NodeDexDatabase {
       );
     }
     if (oldVersion < 7) {
-      // v7: Add SIP identity columns for Socialmesh Interop Profile peers.
+      // v7: Add SIP identity columns for SocialMesh Interop Profile peers.
       // All nullable — existing entries are non-SIP by default.
       await db.execute(
         'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string

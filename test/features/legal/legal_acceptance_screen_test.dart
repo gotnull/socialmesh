@@ -217,9 +217,9 @@ void main() {
       await tester.pumpWidget(_buildTestApp());
       await tester.pumpAndSettle();
 
-      // The app icon is wrapped with Semantics(label: 'Socialmesh app icon',
+      // The app icon is wrapped with Semantics(label: 'SocialMesh app icon',
       // excludeSemantics: true)
-      final iconSemantics = find.bySemanticsLabel('Socialmesh app icon');
+      final iconSemantics = find.bySemanticsLabel('SocialMesh app icon');
       expect(iconSemantics, findsOneWidget);
     });
 

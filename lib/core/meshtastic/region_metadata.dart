@@ -39,7 +39,7 @@ class RegionMetadata {
   final int dutyCycle;
 
   // True when the region maps to a single country (used by iOS to
-  // show a country flag — currently unused in Socialmesh, kept for
+  // show a country flag — currently unused in SocialMesh, kept for
   // parity).
   final bool isCountry;
 

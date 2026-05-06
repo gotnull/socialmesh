@@ -2,7 +2,7 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in Socialmesh, please report it privately.
+If you discover a security vulnerability in SocialMesh, please report it privately.
 
 **Do not open a public GitHub issue for security vulnerabilities.**
 
@@ -23,7 +23,7 @@ We will acknowledge receipt within 48 hours and provide updates on our investiga
 
 ## Scope
 
-This policy covers the Socialmesh mobile application source code in this repository.
+This policy covers the SocialMesh mobile application source code in this repository.
 
 Backend services, cloud infrastructure, and APIs are out of scope for this repository's security policy.
 

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// Riverpod provider for the Socialmesh visual automation flow builder.
+// Riverpod provider for the SocialMesh visual automation flow builder.
 //
 // This provider manages the VSNodeManager lifecycle, graph state, and bridges
 // the visual editor to the automations system via the flow compiler.

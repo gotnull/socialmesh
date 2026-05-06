@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Riverpod provider graph for the Socialmesh Overlay v0.2 stack.
+/// Riverpod provider graph for the SocialMesh Overlay v0.2 stack.
 ///
 /// One authoritative provider per responsibility; no duplicates; every
 /// attachment explicitly null-references its subscription on

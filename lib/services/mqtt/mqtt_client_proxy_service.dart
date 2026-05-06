@@ -572,7 +572,7 @@ class MqttClientProxyService {
 
     // Create MQTT client
     final clientId =
-        'SocialmeshMqttProxy-${nodeUserId ?? DateTime.now().millisecondsSinceEpoch}'; // lint-allow: hardcoded-string
+        'SocialMeshMqttProxy-${nodeUserId ?? DateTime.now().millisecondsSinceEpoch}'; // lint-allow: hardcoded-string
     final client = MqttServerClient.withPort(host, clientId, port);
 
     client.keepAlivePeriod = 60;

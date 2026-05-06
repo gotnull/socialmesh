@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 // Renders a board's ANSI/ASCII splash as monospace text inside a
-// Socialmesh-themed card. Input is sanitized by AnsiSanitizer so
+// SocialMesh-themed card. Input is sanitized by AnsiSanitizer so
 // escape sequences and control bytes cannot reach Flutter rendering.
 
 import 'package:flutter/material.dart';

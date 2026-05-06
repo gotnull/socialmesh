@@ -1,6 +1,6 @@
 # Connecting Your Device
 
-Socialmesh communicates with your Meshtastic radio over **Bluetooth Low Energy (BLE)**. Here's how the connection works and what to expect.
+SocialMesh communicates with your Meshtastic radio over **Bluetooth Low Energy (BLE)**. Here's how the connection works and what to expect.
 
 ## How BLE Works
 
@@ -13,7 +13,7 @@ The BLE connection is separate from the LoRa mesh. Think of it as:
 
 ## The Scanning Process
 
-When you open the scanner in Socialmesh:
+When you open the scanner in SocialMesh:
 
 1. Your phone scans for nearby BLE devices advertising as Meshtastic radios.
 2. Discovered radios appear in the list with their name, signal strength, and hardware model.
@@ -24,11 +24,11 @@ When you open the scanner in Socialmesh:
 
 BLE range is typically **10 to 30 metres**, depending on your phone, the radio hardware, and obstacles between them. In practice, you want your radio within a few metres for reliable communication.
 
-If the BLE connection drops, Socialmesh will attempt to reconnect automatically.
+If the BLE connection drops, SocialMesh will attempt to reconnect automatically.
 
 ## What Happens During Connection
 
-When Socialmesh connects to your radio:
+When SocialMesh connects to your radio:
 
 - It reads the radio's current configuration (channels, settings, node info).
 - It syncs the node list (all nodes the radio has heard).
@@ -37,7 +37,7 @@ When Socialmesh connects to your radio:
 
 ## USB Connection
 
-Some Meshtastic radios also support **USB serial** connections. This is an alternative to BLE that provides a faster, more stable connection — useful for stationary setups. Socialmesh supports USB connections on Android devices.
+Some Meshtastic radios also support **USB serial** connections. This is an alternative to BLE that provides a faster, more stable connection — useful for stationary setups. SocialMesh supports USB connections on Android devices.
 
 ## Tips for Reliable Connections
 

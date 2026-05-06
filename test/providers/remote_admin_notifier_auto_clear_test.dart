@@ -96,7 +96,7 @@ void main() {
         cleared.targetNodeNum,
         isNull,
         reason:
-            'iOS Settings picker resets on disconnect — Socialmesh must '
+            'iOS Settings picker resets on disconnect — SocialMesh must '
             'mirror this so a stale remote target cannot survive a '
             'reconnect cycle and silently route admin writes to the '
             'wrong node.',

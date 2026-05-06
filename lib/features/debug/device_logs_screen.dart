@@ -297,7 +297,7 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen>
       showInfoSnackBar(context, context.l10n.debugScreenDeviceNothingToShare);
       return;
     }
-    shareText(content, subject: 'Socialmesh Device Logs', context: context);
+    shareText(content, subject: 'SocialMesh Device Logs', context: context);
   }
 
   void _copyToClipboard() {

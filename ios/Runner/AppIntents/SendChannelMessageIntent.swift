@@ -2,7 +2,7 @@
 //  SendChannelMessageIntent.swift
 //  Runner
 //
-//  Socialmesh App Intents - Send a message to a channel
+//  SocialMesh App Intents - Send a message to a channel
 //
 
 import Foundation

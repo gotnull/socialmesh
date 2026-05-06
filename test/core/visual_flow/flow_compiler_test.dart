@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// Tests for the Socialmesh visual flow compiler.
+// Tests for the SocialMesh visual flow compiler.
 //
 // Covers:
 // - Simple trigger → action compilation

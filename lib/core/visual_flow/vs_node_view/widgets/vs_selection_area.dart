@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 // Vendored from vs_node_view v2.1.1 — BSD-3-Clause
-// Import paths rewritten for Socialmesh vendoring.
+// Import paths rewritten for SocialMesh vendoring.
 // Modified: Completely rewritten for mobile — replaced desktop Alt-key based
 // selection with two-finger drag gesture. On mobile, users perform a
 // two-finger pan to draw a selection rectangle. A single-finger pan is

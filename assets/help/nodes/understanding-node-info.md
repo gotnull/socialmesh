@@ -1,6 +1,6 @@
 # Understanding Node Info
 
-When you look at a node's details in Socialmesh, you'll see various numbers and indicators. Here's what they mean.
+When you look at a node's details in SocialMesh, you'll see various numbers and indicators. Here's what they mean.
 
 ## Signal Quality
 
@@ -32,7 +32,7 @@ If the node reports battery telemetry, you'll see its battery percentage. This i
 
 ## Distance and Bearing
 
-If both your node and the other node share GPS positions, Socialmesh calculates the straight-line distance and compass bearing between you. This is useful for understanding your mesh's geography.
+If both your node and the other node share GPS positions, SocialMesh calculates the straight-line distance and compass bearing between you. This is useful for understanding your mesh's geography.
 
 Note: this is the direct distance, not the path the radio signal takes. A node might be 2 km away in a straight line but the signal might travel a longer path via reflections.
 

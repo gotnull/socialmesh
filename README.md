@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="assets/app_icons/socialmesh_icon_512_rounded.png" width="120" alt="Socialmesh">
+  <img src="assets/app_icons/socialmesh_icon_512_rounded.png" width="120" alt="SocialMesh">
 </p>
 
-<h1 align="center">Socialmesh</h1>
+<h1 align="center">SocialMesh</h1>
 
 <p align="center">
   <strong>Mesh Radio Companion App</strong><br>
@@ -38,7 +38,7 @@
 
 Connect to your mesh radio, message off-grid, discover nodes, and explore the mesh — **all without internet**.
 
-Socialmesh works fully offline over BLE and USB. Firebase is optional for cloud sync and social features.
+SocialMesh works fully offline over BLE and USB. Firebase is optional for cloud sync and social features.
 
 ---
 
@@ -390,7 +390,7 @@ flutter build appbundle --release    # Play Store bundle
 
 ## URL Scheme
 
-Socialmesh registers `socialmesh://` for deep linking:
+SocialMesh registers `socialmesh://` for deep linking:
 
 ```
 socialmesh://channel/<base64>   # Import channel configuration
@@ -401,7 +401,7 @@ socialmesh://node/<base64>      # Import node information
 
 ## Project Status
 
-Socialmesh is a fully functional Meshtastic companion app available on iOS and Android. The codebase is stable and actively maintained.
+SocialMesh is a fully functional Meshtastic companion app available on iOS and Android. The codebase is stable and actively maintained.
 
 ### Contributions Welcome
 

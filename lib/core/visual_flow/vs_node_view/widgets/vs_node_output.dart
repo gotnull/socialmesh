@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 // Vendored from vs_node_view v2.1.1 — BSD-3-Clause
-// Import paths rewritten for Socialmesh vendoring.
+// Import paths rewritten for SocialMesh vendoring.
 // Modified: Enlarged touch targets for mobile usability (min 44dp hit area).
 // Modified: Added minimum drag distance before starting connection to prevent
 // accidental drags on mobile.

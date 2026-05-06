@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// Flow compiler for the Socialmesh visual automation flow builder.
+// Flow compiler for the SocialMesh visual automation flow builder.
 //
 // Walks the visual node graph backwards from action nodes to trigger nodes,
 // collecting conditions and logic gate semantics along the way, and produces

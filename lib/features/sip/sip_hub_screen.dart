@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// SIP Hub Screen — Socialmesh peer discovery and ephemeral DM hub.
+// SIP Hub Screen — SocialMesh peer discovery and ephemeral DM hub.
 //
 // Design patterns used (matching the rest of the app):
 // - GlassScaffold with slivers and SectionHeaderDelegates
@@ -56,7 +56,7 @@ import 'sip_peer_detail_sheet.dart';
 import 'widgets/peer_service_preview_row.dart';
 import 'widgets/sip_hub_your_services_section.dart';
 
-/// SIP Hub — discover nearby Socialmesh peers, handshake, and chat.
+/// SIP Hub — discover nearby SocialMesh peers, handshake, and chat.
 ///
 /// Entry point for all SIP UI. Gated behind SIP_ENABLED feature flag
 /// at the drawer level — this screen assumes SIP is enabled.

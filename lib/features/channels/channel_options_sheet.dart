@@ -139,7 +139,7 @@ Future<void> showChannelOptionsSheet(
 ///
 /// Encodes the channel settings (name, PSK, index, role) into a
 /// protobuf-serialised, base64url-encoded URL that can be scanned
-/// by any Socialmesh / Meshtastic client — fully offline.
+/// by any SocialMesh / Meshtastic client — fully offline.
 String _generateChannelUrl(ChannelConfig channel) {
   final channelSettings = channel_pb.ChannelSettings()..name = channel.name;
 

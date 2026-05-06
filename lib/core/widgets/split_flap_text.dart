@@ -396,8 +396,8 @@ class _BouncyOvershootCurve extends Curve {
 }
 
 /// Widget that displays "Social" + animated "mesh" with gradient
-class SocialmeshSplitFlapLogo extends StatelessWidget {
-  const SocialmeshSplitFlapLogo({
+class SocialMeshSplitFlapLogo extends StatelessWidget {
+  const SocialMeshSplitFlapLogo({
     super.key,
     this.fontSize = 32,
     this.fontWeight = FontWeight.bold,
@@ -438,7 +438,7 @@ class SocialmeshSplitFlapLogo extends StatelessWidget {
         ),
         // "mesh" - animated with gradient (LOWERCASE)
         SplitFlapText(
-          text: 'mesh', // lint-allow: hardcoded-string
+          text: 'Mesh', // lint-allow: hardcoded-string
           style: baseStyle,
           useGradient: true,
           gradientColors: gradientColors,

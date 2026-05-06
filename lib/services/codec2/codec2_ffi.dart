@@ -14,7 +14,7 @@ import 'codec2_bindings.dart';
 ///
 /// In the Codec2 v1.2.0 C API (codec2.h), `CODEC2_MODE_1200 = 5`.
 /// Wire-format header byte for 1200 bps in `.c2` files is `0x04` (our
-/// Socialmesh custom wire format identifier — see VoiceConstants).
+/// SocialMesh custom wire format identifier — see VoiceConstants).
 const int codec2Mode1200 = 5;
 
 /// Number of encoded bytes produced per frame at 1200 bps.

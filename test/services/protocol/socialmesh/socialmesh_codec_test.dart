@@ -38,14 +38,14 @@ void main() {
       expect(portnums.length, 3);
     });
 
-    test('isSocialmesh identifies correct portnums', () {
-      expect(SmPortnum.isSocialmesh(SmPortnum.presence), isTrue);
-      expect(SmPortnum.isSocialmesh(SmPortnum.signal), isTrue);
-      expect(SmPortnum.isSocialmesh(SmPortnum.identity), isTrue);
-      expect(SmPortnum.isSocialmesh(SmPortnum.legacy), isFalse);
-      expect(SmPortnum.isSocialmesh(0), isFalse);
-      expect(SmPortnum.isSocialmesh(257), isFalse);
-      expect(SmPortnum.isSocialmesh(511), isFalse);
+    test('isSocialMesh identifies correct portnums', () {
+      expect(SmPortnum.isSocialMesh(SmPortnum.presence), isTrue);
+      expect(SmPortnum.isSocialMesh(SmPortnum.signal), isTrue);
+      expect(SmPortnum.isSocialMesh(SmPortnum.identity), isTrue);
+      expect(SmPortnum.isSocialMesh(SmPortnum.legacy), isFalse);
+      expect(SmPortnum.isSocialMesh(0), isFalse);
+      expect(SmPortnum.isSocialMesh(257), isFalse);
+      expect(SmPortnum.isSocialMesh(511), isFalse);
     });
 
     test('payload limits are within LoRa MTU', () {
@@ -639,12 +639,12 @@ void main() {
   });
 
   group('SmCodec', () {
-    test('isSocialmeshPortnum delegates correctly', () {
-      expect(SmCodec.isSocialmeshPortnum(260), isTrue);
-      expect(SmCodec.isSocialmeshPortnum(261), isTrue);
-      expect(SmCodec.isSocialmeshPortnum(262), isTrue);
-      expect(SmCodec.isSocialmeshPortnum(256), isFalse);
-      expect(SmCodec.isSocialmeshPortnum(0), isFalse);
+    test('isSocialMeshPortnum delegates correctly', () {
+      expect(SmCodec.isSocialMeshPortnum(260), isTrue);
+      expect(SmCodec.isSocialMeshPortnum(261), isTrue);
+      expect(SmCodec.isSocialMeshPortnum(262), isTrue);
+      expect(SmCodec.isSocialMeshPortnum(256), isFalse);
+      expect(SmCodec.isSocialMeshPortnum(0), isFalse);
     });
 
     test('decode routes presence correctly', () {

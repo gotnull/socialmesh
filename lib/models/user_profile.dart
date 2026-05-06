@@ -306,7 +306,7 @@ class UserPreferences {
       splashMeshSize == null;
 }
 
-/// User profile model for the Socialmesh ecosystem.
+/// User profile model for the SocialMesh ecosystem.
 ///
 /// This represents a user's identity across the app, enabling:
 /// - Profile display and customization

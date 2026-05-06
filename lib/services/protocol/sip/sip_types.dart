@@ -4,7 +4,7 @@
 /// SIP message types, flags, error codes, and TLV type definitions.
 ///
 /// These enums and constants define the wire-level protocol vocabulary
-/// for the Socialmesh Interop Profile v0.1.
+/// for the SocialMesh Interop Profile v0.1.
 library;
 
 /// SIP message type codes (byte 4 of the frame header).

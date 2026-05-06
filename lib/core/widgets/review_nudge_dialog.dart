@@ -90,7 +90,7 @@ class _ReviewNudgeDialogState extends ConsumerState<ReviewNudgeDialog>
         ),
         const SizedBox(height: AppTheme.spacing16),
         Text(
-          'Enjoying Socialmesh?', // lint-allow: hardcoded-string
+          'Enjoying SocialMesh?', // lint-allow: hardcoded-string
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w600,
           ),

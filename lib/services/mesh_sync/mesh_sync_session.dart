@@ -4,7 +4,7 @@
 /// Mesh sync session model — peer-to-peer sync over opportunistic transports.
 ///
 /// A sync session encapsulates the state of an object exchange between two
-/// Socialmesh peers over BLE or LAN. Sessions are explicit (not firehose),
+/// SocialMesh peers over BLE or LAN. Sessions are explicit (not firehose),
 /// bounded (max batch size), and cursor-based (resume where we left off).
 library;
 

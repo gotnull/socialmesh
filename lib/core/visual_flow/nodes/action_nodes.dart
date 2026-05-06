@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// Action node builders for the Socialmesh visual automation flow builder.
+// Action node builders for the SocialMesh visual automation flow builder.
 //
 // Each ActionType maps to a VSOutputNode-style builder that:
 // - Accepts an EventSignalInputData (the upstream trigger/condition chain)

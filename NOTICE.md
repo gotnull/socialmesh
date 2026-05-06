@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-This file contains attribution notices for third-party software used in Socialmesh.
+This file contains attribution notices for third-party software used in SocialMesh.
 
 ## Meshtastic Protobufs
 

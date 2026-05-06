@@ -579,7 +579,7 @@ class MeshCoreSession {
   static const int _minSelfInfoPayloadSize = 35;
 
   /// App name sent in APP_START frame.
-  static const String _appName = 'Socialmesh';
+  static const String _appName = 'SocialMesh';
 
   /// Build a CMD_DEVICE_QUERY frame.
   ///

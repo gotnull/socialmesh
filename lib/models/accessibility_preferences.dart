@@ -41,7 +41,7 @@ enum TextScaleMode {
     null,
   ),
 
-  /// Socialmesh default - fixed base scale, ignores system settings
+  /// SocialMesh default - fixed base scale, ignores system settings
   socialmeshDefault('Default', 'Fixed size, ignores device settings', 1.0),
 
   /// Large text for better readability

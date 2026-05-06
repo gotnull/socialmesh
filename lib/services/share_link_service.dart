@@ -60,7 +60,7 @@ class ShareLinkService {
       'userId': node.userId,
       'description':
           description ??
-          'A mesh node on Socialmesh', // lint-allow: hardcoded-string
+          'A mesh node on SocialMesh', // lint-allow: hardcoded-string
       // Include position if available
       if (node.hasPosition) 'latitude': node.latitude,
       if (node.hasPosition) 'longitude': node.longitude,
@@ -79,8 +79,8 @@ class ShareLinkService {
     final shareUrl = AppUrls.shareNodeUrl(docRef.id);
 
     await Share.share(
-      'Check out ${node.displayName} on Socialmesh!\n$shareUrl', // lint-allow: hardcoded-string
-      subject: '${node.displayName} - Socialmesh Node',
+      'Check out ${node.displayName} on SocialMesh!\n$shareUrl', // lint-allow: hardcoded-string
+      subject: '${node.displayName} - SocialMesh Node',
       sharePositionOrigin: _getSafeSharePosition(sharePositionOrigin),
     );
   }
@@ -106,7 +106,7 @@ class ShareLinkService {
       'name': nodeName,
       'description':
           description ??
-          'A mesh node on Socialmesh', // lint-allow: hardcoded-string
+          'A mesh node on SocialMesh', // lint-allow: hardcoded-string
       'createdBy': currentUser.uid,
       'createdAt': FieldValue.serverTimestamp(),
       'expiresAt': Timestamp.fromDate(
@@ -117,8 +117,8 @@ class ShareLinkService {
     final shareUrl = AppUrls.shareNodeUrl(docRef.id);
 
     await Share.share(
-      'Check out $nodeName on Socialmesh!\n$shareUrl', // lint-allow: hardcoded-string
-      subject: '$nodeName - Socialmesh Node',
+      'Check out $nodeName on SocialMesh!\n$shareUrl', // lint-allow: hardcoded-string
+      subject: '$nodeName - SocialMesh Node',
       sharePositionOrigin: _getSafeSharePosition(sharePositionOrigin),
     );
   }
@@ -138,8 +138,8 @@ class ShareLinkService {
     AppLogging.qr('🔗 ShareService: Generated share URL: $shareUrl');
 
     await Share.share(
-      'Check out @$displayName on Socialmesh!\n$shareUrl', // lint-allow: hardcoded-string
-      subject: '@$displayName - Socialmesh Profile',
+      'Check out @$displayName on SocialMesh!\n$shareUrl', // lint-allow: hardcoded-string
+      subject: '@$displayName - SocialMesh Profile',
       sharePositionOrigin: _getSafeSharePosition(sharePositionOrigin),
     );
   }
@@ -153,8 +153,8 @@ class ShareLinkService {
     final shareUrl = AppUrls.shareWidgetUrl(widgetId);
 
     await Share.share(
-      'Check out $widgetName on Socialmesh!\n$shareUrl', // lint-allow: hardcoded-string
-      subject: '$widgetName - Socialmesh Widget',
+      'Check out $widgetName on SocialMesh!\n$shareUrl', // lint-allow: hardcoded-string
+      subject: '$widgetName - SocialMesh Widget',
       sharePositionOrigin: _getSafeSharePosition(sharePositionOrigin),
     );
   }
@@ -173,12 +173,12 @@ class ShareLinkService {
     );
 
     final text = label != null
-        ? 'Check out $label on Socialmesh!\n$shareUrl' // lint-allow: hardcoded-string
-        : 'Check out this location on Socialmesh!\n$shareUrl';
+        ? 'Check out $label on SocialMesh!\n$shareUrl' // lint-allow: hardcoded-string
+        : 'Check out this location on SocialMesh!\n$shareUrl';
 
     await Share.share(
       text,
-      subject: label ?? 'Socialmesh Location', // lint-allow: hardcoded-string
+      subject: label ?? 'SocialMesh Location', // lint-allow: hardcoded-string
       sharePositionOrigin: _getSafeSharePosition(sharePositionOrigin),
     );
   }
@@ -191,8 +191,8 @@ class ShareLinkService {
     final shareUrl = AppUrls.sharePostUrl(postId);
 
     await Share.share(
-      'Check out this post on Socialmesh!\n$shareUrl', // lint-allow: hardcoded-string
-      subject: 'Socialmesh Post',
+      'Check out this post on SocialMesh!\n$shareUrl', // lint-allow: hardcoded-string
+      subject: 'SocialMesh Post',
       sharePositionOrigin: _getSafeSharePosition(sharePositionOrigin),
     );
   }

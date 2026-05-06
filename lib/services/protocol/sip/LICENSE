@@ -1,4 +1,4 @@
-Socialmesh Interaction Protocol (SIP) and
+SocialMesh Interaction Protocol (SIP) and
 Mesh Request-Response Protocol (MRRP)
 ----------------------------------------------------------------------
 
@@ -22,7 +22,7 @@ without open-sourcing their own code.
 
 DART IMPLEMENTATION LICENSE
 The Dart source files in this directory (*.dart) are part of the
-Socialmesh application and are subject to the GNU General Public
+SocialMesh application and are subject to the GNU General Public
 License, version 3 or later (GPL-3.0-or-later), as declared by the
 SPDX header present in every source file.
 

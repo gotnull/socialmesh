@@ -1101,7 +1101,7 @@ void main() {
         observed.add((peerNodeId, features));
       };
 
-      // Peer advertises full Socialmesh feature set in HS_HELLO.
+      // Peer advertises full SocialMesh feature set in HS_HELLO.
       const fullFeatures = 0x3F0B; // sip0 | sip1 | sip3 | overlay bits | rich
       mgr.handleHello(
         0xAAAA,

@@ -2,7 +2,7 @@
 //  RestartNodeIntent.swift
 //  Runner
 //
-//  Socialmesh App Intents - Restart/reboot the connected node
+//  SocialMesh App Intents - Restart/reboot the connected node
 //
 
 import Foundation

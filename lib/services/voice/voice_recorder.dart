@@ -23,7 +23,7 @@ import 'voice_constants.dart';
 /// ```
 ///
 /// Auto-stops after [maxDuration] (defaults to the 1200 bps limit) to enforce
-/// the 8192-byte payload limit of the Socialmesh `.c2` wire format.
+/// the 8192-byte payload limit of the SocialMesh `.c2` wire format.
 class VoiceRecorder {
   VoiceRecorder({VoiceQuality? quality})
     : _quality = quality ?? VoiceConstants.defaultQuality;

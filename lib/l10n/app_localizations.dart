@@ -819,7 +819,7 @@ abstract class AppLocalizations {
   /// Hint text for an input field in admin panel
   ///
   /// In en, this message translates to:
-  /// **'e.g., 10% off for Socialmesh users'**
+  /// **'e.g., 10% off for SocialMesh users'**
   String get adminSellersDiscountDisplayHint;
 
   /// Label in admin panel
@@ -2275,7 +2275,7 @@ abstract class AppLocalizations {
   /// The name of the application.
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh'**
+  /// **'SocialMesh'**
   String get appTitle;
 
   /// Loading overlay subtitle
@@ -4543,13 +4543,13 @@ abstract class AppLocalizations {
   /// Share body text when sharing an automation
   ///
   /// In en, this message translates to:
-  /// **'Check out this automation on Socialmesh!'**
+  /// **'Check out this automation on SocialMesh!'**
   String get automationShareMessage;
 
   /// Info text below the QR code in the share sheet
   ///
   /// In en, this message translates to:
-  /// **'Scan this QR code in Socialmesh to import this automation'**
+  /// **'Scan this QR code in SocialMesh to import this automation'**
   String get automationShareScanInfo;
 
   /// Snackbar message prompting sign-in for sharing
@@ -4567,7 +4567,7 @@ abstract class AppLocalizations {
   /// Share subject when sharing an automation; {name} is the automation name
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh Automation: {name}'**
+  /// **'SocialMesh Automation: {name}'**
   String automationShareSubject(String name);
 
   /// Title of the QR share bottom sheet
@@ -5707,7 +5707,7 @@ abstract class AppLocalizations {
   /// Info text shown below the channel QR code
   ///
   /// In en, this message translates to:
-  /// **'Scan this QR code in Socialmesh to join this channel'**
+  /// **'Scan this QR code in SocialMesh to join this channel'**
   String get channelOptionsViewQrInfo;
 
   /// Text displayed in channel configuration
@@ -5737,13 +5737,13 @@ abstract class AppLocalizations {
   /// Text displayed in channel configuration
   ///
   /// In en, this message translates to:
-  /// **'Join my channel on Socialmesh!'**
+  /// **'Join my channel on SocialMesh!'**
   String get channelShareMessage;
 
   /// Text displayed in channel configuration
   ///
   /// In en, this message translates to:
-  /// **'Scan this QR code in Socialmesh to import this channel'**
+  /// **'Scan this QR code in SocialMesh to import this channel'**
   String get channelShareQrInfo;
 
   /// Button label in channel configuration
@@ -5761,7 +5761,7 @@ abstract class AppLocalizations {
   /// Text in channel configuration Parameters: {channelName} = display name.
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh Channel: {channelName}'**
+  /// **'SocialMesh Channel: {channelName}'**
   String channelShareSubject(String channelName);
 
   /// Title for the channel configuration screen
@@ -6877,7 +6877,7 @@ abstract class AppLocalizations {
   /// Share-sheet subject line for the MeshCore diagnostics bundle
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh MeshCore Diagnostics'**
+  /// **'SocialMesh MeshCore Diagnostics'**
   String get debugScreenMeshcoreDiagnosticsSubject;
 
   /// Protocol chip label — Meshtastic TCP. Brand name; do not translate.
@@ -8173,7 +8173,7 @@ abstract class AppLocalizations {
   /// Default email body template when user taps Contact Us from Device Shop seller section
   ///
   /// In en, this message translates to:
-  /// **'Hi Socialmesh team,\n\nI am interested in becoming a seller in the Device Shop.\n\nCompany name:\nWebsite:\nProduct types:\nRegion(s):\n\nAdditional details:\n'**
+  /// **'Hi SocialMesh team,\n\nI am interested in becoming a seller in the Device Shop.\n\nCompany name:\nWebsite:\nProduct types:\nRegion(s):\n\nAdditional details:\n'**
   String get deviceShopContactEmailBody;
 
   /// Error message in developer tools
@@ -8221,7 +8221,7 @@ abstract class AppLocalizations {
   /// Text displayed in developer tools
   ///
   /// In en, this message translates to:
-  /// **'Purchases are completed on the seller\'s official store. Socialmesh may earn a small commission from purchases made through these links. Socialmesh does not handle payment, shipping, warranty, or returns.'**
+  /// **'Purchases are completed on the seller\'s official store. SocialMesh may earn a small commission from purchases made through these links. SocialMesh does not handle payment, shipping, warranty, or returns.'**
   String get deviceShopMarketplaceDisclaimer;
 
   /// Title for the developer tools screen
@@ -8983,7 +8983,7 @@ abstract class AppLocalizations {
   /// Prompt sheet description
   ///
   /// In en, this message translates to:
-  /// **'If something isn\'t working correctly, you can report it to help improve Socialmesh for everyone.'**
+  /// **'If something isn\'t working correctly, you can report it to help improve SocialMesh for everyone.'**
   String get feedbackReportBugDescription;
 
   /// Prompt sheet title
@@ -9001,8 +9001,8 @@ abstract class AppLocalizations {
   /// Response bubble author for founder
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh'**
-  String get feedbackResponseAuthorSocialmesh;
+  /// **'SocialMesh'**
+  String get feedbackResponseAuthorSocialMesh;
 
   /// Response bubble author for user
   ///
@@ -11783,7 +11783,7 @@ abstract class AppLocalizations {
   /// Semantics label for the app icon on the legal acceptance screen
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh app icon'**
+  /// **'SocialMesh app icon'**
   String get legalAcceptanceAppIconSemantics;
 
   /// Month name used in formatting effective dates of legal documents
@@ -11861,7 +11861,7 @@ abstract class AppLocalizations {
   /// Explanation on the iOS decline screen informing the user that acceptance is required but they can return at any time
   ///
   /// In en, this message translates to:
-  /// **'Accepting the Terms of Service and Privacy Policy is required to use Socialmesh. You can review them and accept whenever you are ready.'**
+  /// **'Accepting the Terms of Service and Privacy Policy is required to use SocialMesh. You can review them and accept whenever you are ready.'**
   String get legalAcceptanceDeclineBody;
 
   /// Secondary button to decline the terms and exit the app gracefully
@@ -11939,7 +11939,7 @@ abstract class AppLocalizations {
   /// Subtitle explaining that the terms have been updated and re-acceptance is required to continue using the app
   ///
   /// In en, this message translates to:
-  /// **'We have updated our Terms of Service. Please review and accept the changes to continue using Socialmesh.'**
+  /// **'We have updated our Terms of Service. Please review and accept the changes to continue using SocialMesh.'**
   String get legalAcceptanceSubtitleUpdate;
 
   /// Subtitle showing the effective date of the Terms of Service document
@@ -12005,7 +12005,7 @@ abstract class AppLocalizations {
   /// Explanation shown on iOS when user taps Exit, since iOS cannot force-quit; informs them they can return and confirm later
   ///
   /// In en, this message translates to:
-  /// **'You must confirm your age to use Socialmesh. You can confirm whenever you are ready.'**
+  /// **'You must confirm your age to use SocialMesh. You can confirm whenever you are ready.'**
   String get legalEligibilityExitBody;
 
   /// Secondary button to exit the app if the user does not meet the age requirement
@@ -12017,7 +12017,7 @@ abstract class AppLocalizations {
   /// Semantics label for the exit button on the eligibility gate screen
   ///
   /// In en, this message translates to:
-  /// **'Exit. You must confirm your age to use Socialmesh.'**
+  /// **'Exit. You must confirm your age to use SocialMesh.'**
   String get legalEligibilityExitSemantics;
 
   /// Title shown on the iOS exit explanation screen when user taps Exit
@@ -17470,7 +17470,7 @@ abstract class AppLocalizations {
   /// Text in node management Parameters: {name} = display name, {url}.
   ///
   /// In en, this message translates to:
-  /// **'Check out {name} on Socialmesh!\n{url}'**
+  /// **'Check out {name} on SocialMesh!\n{url}'**
   String nodeAnalyticsShareText(String name, String url);
 
   /// Tooltip in node management
@@ -18743,7 +18743,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'SOCIALMESH'**
-  String get nodedexCardBrandSocialmesh;
+  String get nodedexCardBrandSocialMesh;
 
   /// Text displayed in node management
   ///
@@ -19672,7 +19672,7 @@ abstract class AppLocalizations {
   /// Text displayed in node management
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh NodeDex Export'**
+  /// **'SocialMesh NodeDex Export'**
   String get nodedexExportShareSubject;
 
   /// Text in node management Parameters: {coSeen}.
@@ -21298,7 +21298,7 @@ abstract class AppLocalizations {
   /// Text in node management Parameters: {name} = display name.
   ///
   /// In en, this message translates to:
-  /// **'Check out the Sigil Card for {name} on Socialmesh!'**
+  /// **'Check out the Sigil Card for {name} on SocialMesh!'**
   String nodedexShareCardCheckOut(String name);
 
   /// Error message in node management
@@ -21316,8 +21316,8 @@ abstract class AppLocalizations {
   /// Text displayed in node management
   ///
   /// In en, this message translates to:
-  /// **'Get Socialmesh:'**
-  String get nodedexShareGetSocialmesh;
+  /// **'Get SocialMesh:'**
+  String get nodedexShareGetSocialMesh;
 
   /// Text displayed in node management
   ///
@@ -21785,7 +21785,7 @@ abstract class AppLocalizations {
   /// **'Signal: {content}'**
   String nodedexTimelineSignal(String content);
 
-  /// Nodedex = Socialmesh's node database/encyclopedia (portmanteau of 'node' + 'index'). Do not translate.
+  /// Nodedex = SocialMesh's node database/encyclopedia (portmanteau of 'node' + 'index'). Do not translate.
   ///
   /// In en, this message translates to:
   /// **'NodeDex'**
@@ -23396,7 +23396,7 @@ abstract class AppLocalizations {
   /// UI text: product detail purchase disclaimer
   ///
   /// In en, this message translates to:
-  /// **'Purchases completed on seller\'s official store · Socialmesh may earn a commission'**
+  /// **'Purchases completed on seller\'s official store · SocialMesh may earn a commission'**
   String get productDetailPurchaseDisclaimer;
 
   /// Screen or section title
@@ -25706,7 +25706,7 @@ abstract class AppLocalizations {
   /// Copyright notice at the bottom of the scanner screen.
   ///
   /// In en, this message translates to:
-  /// **'© 2026 Socialmesh. All rights reserved.'**
+  /// **'© 2026 SocialMesh. All rights reserved.'**
   String get scannerCopyright;
 
   /// Column header in the device details table.
@@ -25934,7 +25934,7 @@ abstract class AppLocalizations {
   /// Version text shown at the bottom of the scanner screen.
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh v{version}'**
+  /// **'SocialMesh v{version}'**
   String scannerVersionText(String version);
 
   /// Short version text shown at the bottom of the inline scanner.
@@ -26036,7 +26036,7 @@ abstract class AppLocalizations {
   /// UI text: seller profile discount exclusive
   ///
   /// In en, this message translates to:
-  /// **'Exclusive discount code for Socialmesh users'**
+  /// **'Exclusive discount code for SocialMesh users'**
   String get sellerProfileDiscountExclusive;
 
   /// UI text: seller profile email
@@ -26594,13 +26594,13 @@ abstract class AppLocalizations {
   /// Application name passed to the Flutter LicensePage.
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh'**
+  /// **'SocialMesh'**
   String get settingsOpenSourceAppName;
 
   /// Legalese text passed to the Flutter LicensePage.
   ///
   /// In en, this message translates to:
-  /// **'© 2024 Socialmesh\n\nThis app uses open source software. See below for the complete list of third-party licenses.'**
+  /// **'© 2024 SocialMesh\n\nThis app uses open source software. See below for the complete list of third-party licenses.'**
   String get settingsOpenSourceLegalese;
 
   /// Subtitle in the premium card when all features are owned.
@@ -27215,11 +27215,11 @@ abstract class AppLocalizations {
   /// **'Fetching notification preferences'**
   String get settingsSocialNotificationsLoadingSubtitle;
 
-  /// Snackbar text shown when tapping the Socialmesh about tile.
+  /// Snackbar text shown when tapping the SocialMesh about tile.
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh v{version}'**
-  String settingsSocialmeshVersionSnackbar(String version);
+  /// **'SocialMesh v{version}'**
+  String settingsSocialMeshVersionSnackbar(String version);
 
   /// Subtitle of the 3D effects toggle tile.
   ///
@@ -27935,17 +27935,17 @@ abstract class AppLocalizations {
   /// **'Shake to report a bug'**
   String get settingsTileShakeToReportTitle;
 
-  /// Subtitle of the Socialmesh about tile in the About section.
+  /// Subtitle of the SocialMesh about tile in the About section.
   ///
   /// In en, this message translates to:
   /// **'Meshtastic companion app'**
-  String get settingsTileSocialmeshSubtitle;
+  String get settingsTileSocialMeshSubtitle;
 
-  /// Title of the Socialmesh about tile in the About section.
+  /// Title of the SocialMesh about tile in the About section.
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh'**
-  String get settingsTileSocialmeshTitle;
+  /// **'SocialMesh'**
+  String get settingsTileSocialMeshTitle;
 
   /// Subtitle of the notification sound toggle tile.
   ///
@@ -31778,7 +31778,7 @@ abstract class AppLocalizations {
   /// Description text in social features
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh uses automated systems to detect potentially sensitive content. You can adjust how this content is displayed.'**
+  /// **'SocialMesh uses automated systems to detect potentially sensitive content. You can adjust how this content is displayed.'**
   String get socialSensitiveContentDescription;
 
   /// Text displayed in social features
@@ -34394,7 +34394,7 @@ abstract class AppLocalizations {
   /// Share sheet subject for position CSV export.
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh Position Export'**
+  /// **'SocialMesh Position Export'**
   String get telemetryPositionExportSubject;
 
   /// Snackbar message after successful position export.
@@ -34568,7 +34568,7 @@ abstract class AppLocalizations {
   /// Share sheet subject for traceroute CSV export.
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh Traceroute Export ({scope})'**
+  /// **'SocialMesh Traceroute Export ({scope})'**
   String telemetryTracerouteExportSubject(String scope);
 
   /// Snackbar message after successful traceroute export.
@@ -37352,7 +37352,7 @@ abstract class AppLocalizations {
   /// Share sheet info text
   ///
   /// In en, this message translates to:
-  /// **'Scan this QR code in Socialmesh to import this widget'**
+  /// **'Scan this QR code in SocialMesh to import this widget'**
   String get widgetBuilderShareInfoText;
 
   /// Node selector title for share location action
@@ -37364,13 +37364,13 @@ abstract class AppLocalizations {
   /// Share message text
   ///
   /// In en, this message translates to:
-  /// **'Check out this widget on Socialmesh!'**
+  /// **'Check out this widget on SocialMesh!'**
   String get widgetBuilderShareMessage;
 
   /// Share subject line
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh Widget: {name}'**
+  /// **'SocialMesh Widget: {name}'**
   String widgetBuilderShareSubject(String name);
 
   /// Share sheet title
@@ -40408,7 +40408,7 @@ abstract class AppLocalizations {
   /// UI text: battery opt xiaomi step1
   ///
   /// In en, this message translates to:
-  /// **'Open Settings > Apps > Manage apps > Socialmesh.'**
+  /// **'Open Settings > Apps > Manage apps > SocialMesh.'**
   String get batteryOptXiaomiStep1;
 
   /// UI text: battery opt xiaomi step2
@@ -40426,7 +40426,7 @@ abstract class AppLocalizations {
   /// UI text: battery opt xiaomi step4
   ///
   /// In en, this message translates to:
-  /// **'Select \"No restrictions\" for Socialmesh.'**
+  /// **'Select \"No restrictions\" for SocialMesh.'**
   String get batteryOptXiaomiStep4;
 
   /// UI text: battery opt samsung step1
@@ -40444,7 +40444,7 @@ abstract class AppLocalizations {
   /// UI text: battery opt samsung step3
   ///
   /// In en, this message translates to:
-  /// **'Remove Socialmesh from the \"Sleeping apps\" and \"Deep sleeping apps\" lists.'**
+  /// **'Remove SocialMesh from the \"Sleeping apps\" and \"Deep sleeping apps\" lists.'**
   String get batteryOptSamsungStep3;
 
   /// UI text: battery opt samsung step4
@@ -40462,7 +40462,7 @@ abstract class AppLocalizations {
   /// UI text: battery opt huawei step2
   ///
   /// In en, this message translates to:
-  /// **'Find Socialmesh and set it to \"Manage manually\".'**
+  /// **'Find SocialMesh and set it to \"Manage manually\".'**
   String get batteryOptHuaweiStep2;
 
   /// UI text: battery opt huawei step3
@@ -40474,7 +40474,7 @@ abstract class AppLocalizations {
   /// UI text: battery opt oneplus step1
   ///
   /// In en, this message translates to:
-  /// **'Open Settings > Apps > App management > Socialmesh.'**
+  /// **'Open Settings > Apps > App management > SocialMesh.'**
   String get batteryOptOneplusStep1;
 
   /// UI text: battery opt oneplus step2
@@ -40486,13 +40486,13 @@ abstract class AppLocalizations {
   /// UI text: battery opt oneplus step3
   ///
   /// In en, this message translates to:
-  /// **'On OnePlus 14+: also check Settings > Battery > Battery optimization > Socialmesh > \"Don\'t optimize\".'**
+  /// **'On OnePlus 14+: also check Settings > Battery > Battery optimization > SocialMesh > \"Don\'t optimize\".'**
   String get batteryOptOneplusStep3;
 
   /// UI text: battery opt generic step1
   ///
   /// In en, this message translates to:
-  /// **'Open Settings > Apps > Socialmesh > Battery.'**
+  /// **'Open Settings > Apps > SocialMesh > Battery.'**
   String get batteryOptGenericStep1;
 
   /// UI text: battery opt generic step2
@@ -40504,7 +40504,7 @@ abstract class AppLocalizations {
   /// UI text: battery opt generic step3
   ///
   /// In en, this message translates to:
-  /// **'This allows Socialmesh to maintain the mesh connection in the background.'**
+  /// **'This allows SocialMesh to maintain the mesh connection in the background.'**
   String get batteryOptGenericStep3;
 
   /// Text displayed in help center
@@ -41332,7 +41332,7 @@ abstract class AppLocalizations {
   /// UI text: subscription celebration message
   ///
   /// In en, this message translates to:
-  /// **'You now have access to everything Socialmesh has to offer. Thank you for your support!'**
+  /// **'You now have access to everything SocialMesh has to offer. Thank you for your support!'**
   String get subscriptionCelebrationMessage;
 
   /// UI text: subscription awesome
@@ -41800,7 +41800,7 @@ abstract class AppLocalizations {
   /// Description text
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh collects minimal data to improve app stability and performance. You can control what is shared below.'**
+  /// **'SocialMesh collects minimal data to improve app stability and performance. You can control what is shared below.'**
   String get privacySettingsInfoDescription;
 
   /// UI text: privacy settings data collection
@@ -43665,7 +43665,7 @@ abstract class AppLocalizations {
   /// UI text: home widgets ios search
   ///
   /// In en, this message translates to:
-  /// **'Search for \"Socialmesh\"'**
+  /// **'Search for \"SocialMesh\"'**
   String get homeWidgetsIosSearch;
 
   /// Description text
@@ -46665,73 +46665,73 @@ abstract class AppLocalizations {
   /// UI text: data export share subject messages
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh Messages Export'**
+  /// **'SocialMesh Messages Export'**
   String get dataExportShareSubjectMessages;
 
   /// UI text: data export share subject device metrics
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh Device Metrics Export'**
+  /// **'SocialMesh Device Metrics Export'**
   String get dataExportShareSubjectDeviceMetrics;
 
   /// UI text: data export share subject environment metrics
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh Environment Metrics Export'**
+  /// **'SocialMesh Environment Metrics Export'**
   String get dataExportShareSubjectEnvironmentMetrics;
 
   /// UI text: data export share subject air quality
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh Air Quality Export'**
+  /// **'SocialMesh Air Quality Export'**
   String get dataExportShareSubjectAirQuality;
 
   /// UI text: data export share subject power metrics
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh Power Metrics Export'**
+  /// **'SocialMesh Power Metrics Export'**
   String get dataExportShareSubjectPowerMetrics;
 
   /// UI text: data export share subject position history
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh Position History Export'**
+  /// **'SocialMesh Position History Export'**
   String get dataExportShareSubjectPositionHistory;
 
   /// UI text: data export share subject routes
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh Routes Export'**
+  /// **'SocialMesh Routes Export'**
   String get dataExportShareSubjectRoutes;
 
   /// Traceroute = mesh network path discovery diagnostic. This is the email/share subject line.
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh Traceroute Export'**
+  /// **'SocialMesh Traceroute Export'**
   String get dataExportShareSubjectTraceroutes;
 
   /// UI text: data export share subject automations
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh Automations Export'**
+  /// **'SocialMesh Automations Export'**
   String get dataExportShareSubjectAutomations;
 
   /// UI text: data export share subject automation log
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh Automation Log Export'**
+  /// **'SocialMesh Automation Log Export'**
   String get dataExportShareSubjectAutomationLog;
 
   /// UI text: data export share subject node list
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh Node List Export'**
+  /// **'SocialMesh Node List Export'**
   String get dataExportShareSubjectNodeList;
 
   /// UI text: data export share subject complete
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh Complete Export'**
+  /// **'SocialMesh Complete Export'**
   String get dataExportShareSubjectComplete;
 
   /// UI text: data export unknown sender
@@ -46857,7 +46857,7 @@ abstract class AppLocalizations {
   /// Share-sheet subject for a device config backup file
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh Device Config Backup'**
+  /// **'SocialMesh Device Config Backup'**
   String get dataExportDeviceConfigBackupShareSubject;
 
   /// Title of the bottom sheet shown when restoring a device config bundle
@@ -46911,7 +46911,7 @@ abstract class AppLocalizations {
   /// Snackbar shown when the picked file fails to parse
   ///
   /// In en, this message translates to:
-  /// **'That file is not a valid Socialmesh device config backup.'**
+  /// **'That file is not a valid SocialMesh device config backup.'**
   String get dataExportDeviceConfigRestoreInvalidFile;
 
   /// Snackbar shown when the parsed bundle is empty
@@ -48535,7 +48535,7 @@ abstract class AppLocalizations {
   /// Second paragraph of map-reporting consent disclaimer.
   ///
   /// In en, this message translates to:
-  /// **'Please be advised that because the map report is not encrypted, your data may be stored and displayed permanently by third parties. Socialmesh does not assume responsibility for any such storage, display, or disclosure of this data.'**
+  /// **'Please be advised that because the map report is not encrypted, your data may be stored and displayed permanently by third parties. SocialMesh does not assume responsibility for any such storage, display, or disclosure of this data.'**
   String get mqttConfigMapReportConsentBody2;
 
   /// Opt-in checkbox label for map-reporting consent.
@@ -49789,7 +49789,7 @@ abstract class AppLocalizations {
   /// Text displayed in admin panel
   ///
   /// In en, this message translates to:
-  /// **'Your notification has been sent to all Socialmesh users.'**
+  /// **'Your notification has been sent to all SocialMesh users.'**
   String get adminBroadcastSentBody;
 
   /// Text displayed in admin panel
@@ -49837,7 +49837,7 @@ abstract class AppLocalizations {
   /// Text displayed in admin panel
   ///
   /// In en, this message translates to:
-  /// **'This will send a push notification to every Socialmesh user. Use sparingly for important announcements only.'**
+  /// **'This will send a push notification to every SocialMesh user. Use sparingly for important announcements only.'**
   String get adminBroadcastWarning;
 
   /// Label for platform target selector in admin broadcast panel
@@ -49975,7 +49975,7 @@ abstract class AppLocalizations {
   /// Hint text in admin panel Parameters: {seconds} = time duration.
   ///
   /// In en, this message translates to:
-  /// **'Sends a push notification to all Socialmesh users. A {seconds}s countdown gives you time to cancel.'**
+  /// **'Sends a push notification to all SocialMesh users. A {seconds}s countdown gives you time to cancel.'**
   String adminBroadcastSendHint(int seconds);
 
   /// Label in admin panel
@@ -50245,43 +50245,43 @@ abstract class AppLocalizations {
   /// Text displayed in admin panel
   ///
   /// In en, this message translates to:
-  /// **'We have an important announcement for the Socialmesh community.'**
+  /// **'We have an important announcement for the SocialMesh community.'**
   String get adminBroadcastDefBodyAnnouncement;
 
   /// Text displayed in admin panel
   ///
   /// In en, this message translates to:
-  /// **'A new version of Socialmesh is available with improvements and bug fixes.'**
+  /// **'A new version of SocialMesh is available with improvements and bug fixes.'**
   String get adminBroadcastDefBodyUpdate;
 
   /// Text displayed in admin panel
   ///
   /// In en, this message translates to:
-  /// **'We just launched a new feature in Socialmesh. Check it out!'**
+  /// **'We just launched a new feature in SocialMesh. Check it out!'**
   String get adminBroadcastDefBodyFeature;
 
   /// Text displayed in admin panel
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh services will be briefly unavailable for scheduled maintenance.'**
+  /// **'SocialMesh services will be briefly unavailable for scheduled maintenance.'**
   String get adminBroadcastDefBodyMaintenance;
 
   /// Text displayed in admin panel
   ///
   /// In en, this message translates to:
-  /// **'Please be aware of an important issue affecting Socialmesh.'**
+  /// **'Please be aware of an important issue affecting SocialMesh.'**
   String get adminBroadcastDefBodyAlert;
 
   /// Text displayed in admin panel
   ///
   /// In en, this message translates to:
-  /// **'We have something exciting to celebrate with the Socialmesh community!'**
+  /// **'We have something exciting to celebrate with the SocialMesh community!'**
   String get adminBroadcastDefBodyCelebration;
 
   /// Text displayed in admin panel
   ///
   /// In en, this message translates to:
-  /// **'Here is a helpful tip to get the most out of Socialmesh.'**
+  /// **'Here is a helpful tip to get the most out of SocialMesh.'**
   String get adminBroadcastDefBodyTip;
 
   /// Text displayed in admin panel
@@ -50317,7 +50317,7 @@ abstract class AppLocalizations {
   /// Text displayed in admin panel
   ///
   /// In en, this message translates to:
-  /// **'Join the latest Socialmesh community initiatives.'**
+  /// **'Join the latest SocialMesh community initiatives.'**
   String get adminBroadcastDefBodyCommunity;
 
   /// Text displayed in admin panel
@@ -50329,7 +50329,7 @@ abstract class AppLocalizations {
   /// Text displayed in admin panel
   ///
   /// In en, this message translates to:
-  /// **'A new theme pack is now available in the Socialmesh store.'**
+  /// **'A new theme pack is now available in the SocialMesh store.'**
   String get adminBroadcastDefBodyThemes;
 
   /// Text displayed in admin panel
@@ -50341,7 +50341,7 @@ abstract class AppLocalizations {
   /// Text displayed in admin panel
   ///
   /// In en, this message translates to:
-  /// **'New home screen widgets are now available for Socialmesh.'**
+  /// **'New home screen widgets are now available for SocialMesh.'**
   String get adminBroadcastDefBodyWidgets;
 
   /// Text displayed in admin panel
@@ -50353,7 +50353,7 @@ abstract class AppLocalizations {
   /// Text displayed in admin panel
   ///
   /// In en, this message translates to:
-  /// **'Connect Socialmesh with your favourite services via IFTTT.'**
+  /// **'Connect SocialMesh with your favourite services via IFTTT.'**
   String get adminBroadcastDefBodyIfttt;
 
   /// Text displayed in admin panel
@@ -51007,7 +51007,7 @@ abstract class AppLocalizations {
   /// Description text in admin panel
   ///
   /// In en, this message translates to:
-  /// **'Preview different QR code styles with the Socialmesh logo. All styles use Level H error correction for reliable scanning.'**
+  /// **'Preview different QR code styles with the SocialMesh logo. All styles use Level H error correction for reliable scanning.'**
   String get adminQrStyleDescription;
 
   /// Text displayed in admin panel
@@ -52018,7 +52018,7 @@ abstract class AppLocalizations {
   /// **'Forward local messages to broker'**
   String get globalLayerShareMessagesDescription;
 
-  /// Global Layer = Socialmesh's cloud mesh data sharing feature. Telemetry = device sensor data.
+  /// Global Layer = SocialMesh's cloud mesh data sharing feature. Telemetry = device sensor data.
   ///
   /// In en, this message translates to:
   /// **'Share Telemetry'**
@@ -52951,7 +52951,7 @@ abstract class AppLocalizations {
   /// Screen or section title
   ///
   /// In en, this message translates to:
-  /// **'Sigil API (Socialmesh)'**
+  /// **'Sigil API (SocialMesh)'**
   String get privacySettingsSigilTitle;
 
   /// Label in user profile
@@ -53605,7 +53605,7 @@ abstract class AppLocalizations {
   /// Description for acceptable_use help topic
   ///
   /// In en, this message translates to:
-  /// **'What you can and cannot do with Socialmesh'**
+  /// **'What you can and cannot do with SocialMesh'**
   String get helpAcceptableUseDescription;
 
   /// Title for user_responsibility help topic
@@ -53617,7 +53617,7 @@ abstract class AppLocalizations {
   /// Description for user_responsibility help topic
   ///
   /// In en, this message translates to:
-  /// **'How Socialmesh handles data and what you are responsible for'**
+  /// **'How SocialMesh handles data and what you are responsible for'**
   String get helpUserResponsibilityDescription;
 
   /// Title for file_transfer_overview help topic
@@ -54853,7 +54853,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step aether_leaderboard
   ///
   /// In en, this message translates to:
-  /// **'The **leaderboard is global and persistent** — stored in the cloud, not on your device. Rankings survive app reinstalls and are visible to the entire Socialmesh community. Top 3 get gold, silver, and bronze!'**
+  /// **'The **leaderboard is global and persistent** — stored in the cloud, not on your device. Rankings survive app reinstalls and are visible to the entire SocialMesh community. Top 3 get gold, silver, and bronze!'**
   String get helpAetherLeaderboardBubble;
 
   /// Help bubble text for step aether_tips
@@ -54931,7 +54931,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step use_intro
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh is a powerful tool — automations, signals, and mesh messaging give you a lot of capability. With that comes responsibility!'**
+  /// **'SocialMesh is a powerful tool — automations, signals, and mesh messaging give you a lot of capability. With that comes responsibility!'**
   String get helpUseIntroBubble;
 
   /// Help bubble text for step use_lawful
@@ -54961,7 +54961,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step responsibility_intro
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh is designed to be **privacy-first**. Your messages and data stay on your device — we do not store them on any server.'**
+  /// **'SocialMesh is designed to be **privacy-first**. Your messages and data stay on your device — we do not store them on any server.'**
   String get helpResponsibilityIntroBubble;
 
   /// Help bubble text for step responsibility_signals
@@ -55015,7 +55015,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step ft_beta
   ///
   /// In en, this message translates to:
-  /// **'This feature is **BETA**. Both nodes must be running Socialmesh on the same mesh channel. Standard Meshtastic nodes cannot receive these transfers.'**
+  /// **'This feature is **BETA**. Both nodes must be running SocialMesh on the same mesh channel. Standard Meshtastic nodes cannot receive these transfers.'**
   String get helpFtBetaBubble;
 
   /// Help bubble text for step ft_contacts
@@ -55249,7 +55249,7 @@ abstract class AppLocalizations {
   /// Section help text for timestamps in takSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'Event Time is when the CoT event was generated. Stale Time is when the entity should be considered outdated if no update arrives. Received is when Socialmesh received the event from the gateway. An entity is marked STALE when the current time exceeds Stale Time.'**
+  /// **'Event Time is when the CoT event was generated. Stale Time is when the entity should be considered outdated if no update arrives. Received is when SocialMesh received the event from the gateway. An entity is marked STALE when the current time exceeds Stale Time.'**
   String get helpTakSectionTimestamps;
 
   /// Section help text for tracking in takSectionHelp
@@ -55375,7 +55375,7 @@ abstract class AppLocalizations {
   /// What's new description for World Map feature
   ///
   /// In en, this message translates to:
-  /// **'See the entire global Meshtastic network on a single map. Every dot is a node sharing its location — zoom, pan, and tap to explore node details, hardware info, and last-seen times.\n\nNo connection required. The World Map pulls live data from the Socialmesh backend so you can explore the mesh anywhere.'**
+  /// **'See the entire global Meshtastic network on a single map. Every dot is a node sharing its location — zoom, pan, and tap to explore node details, hardware info, and last-seen times.\n\nNo connection required. The World Map pulls live data from the SocialMesh backend so you can explore the mesh anywhere.'**
   String get whatsNewWorldMapDescription;
 
   /// What's new subtitle for version 1.10.1
@@ -55465,7 +55465,7 @@ abstract class AppLocalizations {
   /// What's new description for TAK Gateway feature
   ///
   /// In en, this message translates to:
-  /// **'Bridge your mesh into the Team Awareness Kit (TAK) ecosystem. Socialmesh now connects to a TAK Gateway via WebSocket and streams live Cursor-on-Target entities onto your map.\n\nEvery entity is colored by standard affiliation and given a dimension-specific icon. Filter by affiliation, search callsigns, track entities with a long-press, and tap any marker for full CoT details. Find it in the drawer menu under Mesh.'**
+  /// **'Bridge your mesh into the Team Awareness Kit (TAK) ecosystem. SocialMesh now connects to a TAK Gateway via WebSocket and streams live Cursor-on-Target entities onto your map.\n\nEvery entity is colored by standard affiliation and given a dimension-specific icon. Filter by affiliation, search callsigns, track entities with a long-press, and tap any marker for full CoT details. Find it in the drawer menu under Mesh.'**
   String get whatsNewTakGatewayDescription;
 
   /// What's new subtitle for version 1.27.0
@@ -55895,7 +55895,7 @@ abstract class AppLocalizations {
   /// Headline for What's New popup
   ///
   /// In en, this message translates to:
-  /// **'What\'s New in Socialmesh'**
+  /// **'What\'s New in SocialMesh'**
   String get whatsNewHeadline;
 
   /// UI text: connecting status initializing
@@ -56555,19 +56555,19 @@ abstract class AppLocalizations {
   /// Title for the admin panel screen
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh Conformance Bundle'**
+  /// **'SocialMesh Conformance Bundle'**
   String get adminConformanceBundleTitle;
 
   /// Text displayed in admin panel
   ///
   /// In en, this message translates to:
-  /// **'Admin diagnostic bundle from Socialmesh'**
+  /// **'Admin diagnostic bundle from SocialMesh'**
   String get adminDiagnosticBundleText;
 
   /// Text in admin panel Parameters: {runId}.
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh Diagnostic {runId}'**
+  /// **'SocialMesh Diagnostic {runId}'**
   String adminDiagnosticBundleSubject(String runId);
 
   /// Text displayed in onboarding
@@ -57416,19 +57416,19 @@ abstract class AppLocalizations {
   /// **'{count} {count, plural, =1{person} other{people}} nearby'**
   String sipDiscoveryPeersNearby(int count);
 
-  /// Empty state text when no Socialmesh peers are found.
+  /// Empty state text when no SocialMesh peers are found.
   ///
   /// In en, this message translates to:
   /// **'No one nearby yet'**
   String get sipDiscoveryNoPeers;
 
-  /// Description for the empty state in Socialmesh discovery.
+  /// Description for the empty state in SocialMesh discovery.
   ///
   /// In en, this message translates to:
   /// **'People using Handshake will appear here when they\'re in range.'**
   String get sipDiscoveryNoPeersDescription;
 
-  /// Button to trigger a Socialmesh rollcall scan.
+  /// Button to trigger a SocialMesh rollcall scan.
   ///
   /// In en, this message translates to:
   /// **'Look for people'**
@@ -59087,7 +59087,7 @@ abstract class AppLocalizations {
   /// Subtitle of the Mesh Capacity Advisor card when the modem preset is unavailable.
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh can\'t assess preset suitability until it can read the current modem preset from your device.'**
+  /// **'SocialMesh can\'t assess preset suitability until it can read the current modem preset from your device.'**
   String get meshCapacityCardSubtitlePresetUnknown;
 
   /// Title of the Mesh Capacity Advisor explanation bottom sheet.
@@ -59171,7 +59171,7 @@ abstract class AppLocalizations {
   /// Risk paragraph in the Mesh Capacity explanation sheet — warns the user that compatibility is impacted.
   ///
   /// In en, this message translates to:
-  /// **'Changing presets affects who you can communicate with. Your group should move together, or you may stop hearing nodes that remain on the old preset. Socialmesh never changes radio settings on its own.'**
+  /// **'Changing presets affects who you can communicate with. Your group should move together, or you may stop hearing nodes that remain on the old preset. SocialMesh never changes radio settings on its own.'**
   String get meshCapacitySheetRiskBody;
 
   /// Primary action button label in the Mesh Capacity explanation sheet — navigates to the existing Radio Configuration screen so the user can change settings themselves.
@@ -60521,7 +60521,7 @@ abstract class AppLocalizations {
   /// Animated scanning state tagline 1.
   ///
   /// In en, this message translates to:
-  /// **'Scans for Socialmesh peers broadcasting on the mesh'**
+  /// **'Scans for SocialMesh peers broadcasting on the mesh'**
   String get meshExplorerScanningTagline1;
 
   /// Animated scanning state tagline 2.
@@ -60563,7 +60563,7 @@ abstract class AppLocalizations {
   /// Help bubble: Mesh Explorer intro step.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to **Mesh Explorer**! This shows all Socialmesh-capable peers currently in radio range. Anonymous peers appear instantly — no handshake needed.'**
+  /// **'Welcome to **Mesh Explorer**! This shows all SocialMesh-capable peers currently in radio range. Anonymous peers appear instantly — no handshake needed.'**
   String get helpMeshExplorerIntroBubble;
 
   /// Help bubble: Mesh Explorer peers step.
@@ -63866,7 +63866,7 @@ abstract class AppLocalizations {
   /// **'Provider Mode'**
   String get translationSettingsProviderModeLabel;
 
-  /// Option label for Socialmesh-managed provider mode
+  /// Option label for SocialMesh-managed provider mode
   ///
   /// In en, this message translates to:
   /// **'Managed'**
@@ -64181,7 +64181,7 @@ abstract class AppLocalizations {
   /// Empty state description guiding the user to scan
   ///
   /// In en, this message translates to:
-  /// **'Tap “Look for people” to find other Socialmesh users on the mesh'**
+  /// **'Tap “Look for people” to find other SocialMesh users on the mesh'**
   String get nearbyEmptyDescription;
 
   /// Animated tagline during empty scan state
@@ -65369,7 +65369,7 @@ abstract class AppLocalizations {
   /// Description for the Device Shop feature in What's New.
   ///
   /// In en, this message translates to:
-  /// **'Browse Meshtastic-compatible hardware from official partners and trusted sellers — all in one place. Filter by category, sort by price or new arrivals, and tap through to the seller\'s store to buy.\n\nPurchases happen on the seller\'s site; Socialmesh never handles payment, shipping, or returns. Find it in the drawer menu under Tools.'**
+  /// **'Browse Meshtastic-compatible hardware from official partners and trusted sellers — all in one place. Filter by category, sort by price or new arrivals, and tap through to the seller\'s store to buy.\n\nPurchases happen on the seller\'s site; SocialMesh never handles payment, shipping, or returns. Find it in the drawer menu under Tools.'**
   String get whatsNewDeviceShopDescription;
 
   /// CTA button label to open the Device Shop screen from What's New.
@@ -66983,7 +66983,7 @@ abstract class AppLocalizations {
   /// Header description on the Reticulum diagnostics screen.
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh observes RNS traffic on the mesh; behavior may be incomplete while the wire format is being characterized.'**
+  /// **'SocialMesh observes RNS traffic on the mesh; behavior may be incomplete while the wire format is being characterized.'**
   String get reticulumDiagDescription;
 
   /// Section header above the overview info table.
@@ -67349,7 +67349,7 @@ abstract class AppLocalizations {
   /// Cycling tagline on the empty library screen.
   ///
   /// In en, this message translates to:
-  /// **'Or import a .bin capture from another Socialmesh device.'**
+  /// **'Or import a .bin capture from another SocialMesh device.'**
   String get reticulumLibraryEmptyTagline3;
 
   /// Action button for importing an external capture file.
@@ -67973,7 +67973,7 @@ abstract class AppLocalizations {
   /// Body text of the RX-only banner.
   ///
   /// In en, this message translates to:
-  /// **'Socialmesh forwards reassembled RNS frames received over the air. No RNS frames are ever transmitted onto LoRa.'**
+  /// **'SocialMesh forwards reassembled RNS frames received over the air. No RNS frames are ever transmitted onto LoRa.'**
   String get reticulumBridgeRxOnlyMessage;
 
   /// Row label for the wall-clock instant of the most recent successful frame forward.

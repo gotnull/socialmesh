@@ -24,7 +24,7 @@ abstract final class SmPortnum {
   /// Mesh feed post broadcast.
   static const int feedPost = 264;
 
-  /// All Socialmesh portnums for capability detection.
+  /// All SocialMesh portnums for capability detection.
   static const Set<int> all = {
     presence,
     signal,
@@ -33,8 +33,8 @@ abstract final class SmPortnum {
     feedPost,
   };
 
-  /// Returns true if the portnum is a Socialmesh extension portnum.
-  static bool isSocialmesh(int portnum) => all.contains(portnum);
+  /// Returns true if the portnum is a SocialMesh extension portnum.
+  static bool isSocialMesh(int portnum) => all.contains(portnum);
 }
 
 /// Protocol version. High nibble of the header byte.

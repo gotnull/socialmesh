@@ -745,7 +745,7 @@ void main() {
 
     test('v0 legacy offer bypasses negotiation (backward compatibility)', () {
       // This documents intentional v0 backward compatibility:
-      // Older Socialmesh versions send v0 offers (header 0x04).
+      // Older SocialMesh versions send v0 offers (header 0x04).
       // These go directly to the engine with settings-based auto-accept,
       // bypassing SPP negotiation entirely.
       negotiation = PayloadNegotiation(

@@ -5,7 +5,7 @@ import 'dart:typed_data';
 
 import '../../core/logging.dart';
 
-/// STL (Socialmesh Trust Layer) envelope version.
+/// STL (SocialMesh Trust Layer) envelope version.
 abstract final class StlVersion {
   static const int v1 = 1;
   static const int current = v1;

@@ -1,6 +1,6 @@
 # Architecture
 
-Socialmesh is a Flutter mobile app (iOS/Android) that communicates with Meshtastic radios over BLE and USB. The app is fully functional offline; cloud features are optional.
+SocialMesh is a Flutter mobile app (iOS/Android) that communicates with Meshtastic radios over BLE and USB. The app is fully functional offline; cloud features are optional.
 
 ## License
 

@@ -1,6 +1,6 @@
-# Releasing Socialmesh
+# Releasing SocialMesh
 
-This document describes how to cut a release for the open-source Socialmesh client.
+This document describes how to cut a release for the open-source SocialMesh client.
 
 ## Prerequisites
 

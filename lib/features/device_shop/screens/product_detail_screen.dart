@@ -1187,7 +1187,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen>
   void _shareProduct(ShopProduct product) {
     final shareUrl = _resolvedPurchaseUrl(product) ?? product.purchaseUrl;
     final text =
-        '''Check out ${product.name} on Socialmesh!
+        '''Check out ${product.name} on SocialMesh!
 
 ${product.shortDescription ?? product.description}
 

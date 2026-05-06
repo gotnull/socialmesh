@@ -5,7 +5,7 @@
 // Each chip maps 1:1 to a typed command — tapping a chip executes the
 // exact same pipeline as typing the command.
 //
-// Styled in Socialmesh's canonical chip pattern: accent @ 12% fill,
+// Styled in SocialMesh's canonical chip pattern: accent @ 12% fill,
 // accent @ 50% border, icon + text in accent colour. Matches the
 // chip/filter style used across Signals, NodeDex, and Aether.
 

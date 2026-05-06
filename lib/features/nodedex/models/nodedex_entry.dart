@@ -689,7 +689,7 @@ class NodeDexEntry {
   /// Used for last-write-wins conflict resolution during Cloud Sync.
   final int? localNicknameUpdatedAtMs;
 
-  /// Whether this peer runs SIP (Socialmesh Interop Profile).
+  /// Whether this peer runs SIP (SocialMesh Interop Profile).
   ///
   /// Set to true when a verified SIP beacon or identity claim is received.
   /// Null means SIP status is unknown (pre-SIP node).

@@ -801,7 +801,7 @@ class SipHandshakeManager {
     // session*, which may be a subset of their full advertised
     // features. For the rich-cap UI gates (dmInkV1 / dmPlayV1 /
     // dmSignalV1) the gap is irrelevant — these are unconditionally
-    // advertised by every Socialmesh build — and even if the gap
+    // advertised by every SocialMesh build — and even if the gap
     // were real, the row gets corrected on the next CAP_BEACON.
     final featuresHook = onPeerFeaturesObserved;
     if (featuresHook != null) {

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Socialmesh TCP Attack Server
+SocialMesh TCP Attack Server
 
 Accepts connections from the app (via mDNS discovery) and sends
 malicious payloads to test resilience.
@@ -405,14 +405,14 @@ def main():
 
     print()
     print('╔══════════════════════════════════════════════════════════════╗')
-    print('║        ☠️  Socialmesh TCP Attack Server  ☠️                   ║')
+    print('║        ☠️  SocialMesh TCP Attack Server  ☠️                   ║')
     print('╠══════════════════════════════════════════════════════════════╣')
     print(f'║  WiFi IP:   {local_ip:<48}║')
     print(f'║  Port:      {PORT:<48}║')
     print(f'║  Suite:     {suite:<48}║')
     print('╠══════════════════════════════════════════════════════════════╣')
     print('║  1. This server advertises as a Meshtastic device          ║')
-    print('║  2. When Socialmesh connects, attack payloads are sent     ║')
+    print('║  2. When SocialMesh connects, attack payloads are sent     ║')
     print('║  3. Watch iOS console for SECURITY: prefixed log lines     ║')
     print('╚══════════════════════════════════════════════════════════════╝')
     print()
@@ -429,7 +429,7 @@ def main():
     server.bind((HOST, PORT))
     server.listen(1)
 
-    print(f'\n  {YELLOW}Waiting for Socialmesh to connect to HACK_deadc0de0666...{RESET}')
+    print(f'\n  {YELLOW}Waiting for SocialMesh to connect to HACK_deadc0de0666...{RESET}')
     print(f'  {DIM}(Open Connect screen, find the device, tap to connect){RESET}\n')
 
     conn = wait_for_connection(server, timeout=120)

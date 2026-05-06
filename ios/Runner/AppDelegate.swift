@@ -98,7 +98,7 @@ import os
     
     if fileManager.fileExists(atPath: crashMarkerPath) {
       // Previous run crashed during Firestore init - clear the cache
-      NSLog("Socialmesh: Detected previous Firestore crash, clearing cache")
+      NSLog("SocialMesh: Detected previous Firestore crash, clearing cache")
       clearFirestoreCache()
       try? fileManager.removeItem(atPath: crashMarkerPath)
       return
@@ -132,9 +132,9 @@ import os
       if fileManager.fileExists(atPath: fullPath) {
         do {
           try fileManager.removeItem(atPath: fullPath)
-          NSLog("Socialmesh: Cleared Firestore cache at \(relativePath)")
+          NSLog("SocialMesh: Cleared Firestore cache at \(relativePath)")
         } catch {
-          NSLog("Socialmesh: Failed to clear Firestore cache: \(error)")
+          NSLog("SocialMesh: Failed to clear Firestore cache: \(error)")
         }
       }
     }

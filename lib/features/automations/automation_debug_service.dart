@@ -278,6 +278,6 @@ class AutomationDebugService {
   /// Share debug data
   Future<void> shareDebugJson(AutomationRepository repository) async {
     final jsonStr = exportDebugJson(repository);
-    await shareText(jsonStr, subject: 'Socialmesh Automation Debug Export');
+    await shareText(jsonStr, subject: 'SocialMesh Automation Debug Export');
   }
 }

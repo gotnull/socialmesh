@@ -1189,7 +1189,7 @@ class _BrandFooter extends StatelessWidget {
               ),
               SizedBox(width: AppTheme.spacing3 * scale),
               Text(
-                context.l10n.nodedexCardBrandSocialmesh,
+                context.l10n.nodedexCardBrandSocialMesh,
                 style: TextStyle(
                   fontSize: 6.5 * scale,
                   fontWeight: FontWeight.w700,

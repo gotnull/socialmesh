@@ -26,7 +26,7 @@ class OpenAiTranslationConfig {
 /// Translation adapter using a user-supplied OpenAI API key.
 ///
 /// Calls the OpenAI Chat Completions API directly without going through
-/// Socialmesh Cloud Functions. The API key never leaves the device except
+/// SocialMesh Cloud Functions. The API key never leaves the device except
 /// in the direct HTTPS call to OpenAI. The key is never logged or included
 /// in analytics or crash reporting.
 class OpenAiTranslationAdapter implements TranslationAdapter {

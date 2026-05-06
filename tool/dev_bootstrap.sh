@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-# Socialmesh Developer Bootstrap Script
+# SocialMesh Developer Bootstrap Script
 # Sets up a development environment for contributors.
 #
 # Usage: ./tool/dev_bootstrap.sh
@@ -17,7 +17,7 @@ NC='\033[0m' # No Color
 print_header() {
     echo ""
     echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${CYAN}  Socialmesh Developer Bootstrap${NC}"
+    echo -e "${CYAN}  SocialMesh Developer Bootstrap${NC}"
     echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
 }

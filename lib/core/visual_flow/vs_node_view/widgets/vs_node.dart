@@ -2,9 +2,9 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 // Vendored from vs_node_view v2.1.1 — BSD-3-Clause
-// Import paths rewritten for Socialmesh vendoring.
+// Import paths rewritten for SocialMesh vendoring.
 // Modified: Replaced plain Card with glass morphism styled container matching
-// Socialmesh sci-fi aesthetic.
+// SocialMesh sci-fi aesthetic.
 // Modified: Node width increased from 125 to 180 for mobile readability.
 // Modified: Selected state uses accent glow border instead of solid color fill.
 // Modified: Replaced Draggable with GestureDetector pan-based drag for live
@@ -32,7 +32,7 @@ class VSNode extends StatefulWidget {
   /// The base node widget.
   ///
   /// Used inside [VSNodeView] to display nodes. Styled with a glass morphism
-  /// card and glow border on selection matching the Socialmesh sci-fi design
+  /// card and glow border on selection matching the SocialMesh sci-fi design
   /// language.
   ///
   /// Uses [GestureDetector] with pan callbacks instead of [Draggable] so the

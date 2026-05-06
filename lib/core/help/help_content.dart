@@ -2092,7 +2092,7 @@ class HelpContent {
       HelpStep(
         id: 'aether_leaderboard',
         bubbleText:
-            "The **leaderboard is global and persistent** — stored in the cloud, not on your device. Rankings survive app reinstalls and are visible to the entire Socialmesh community. Top 3 get gold, silver, and bronze!",
+            "The **leaderboard is global and persistent** — stored in the cloud, not on your device. Rankings survive app reinstalls and are visible to the entire SocialMesh community. Top 3 get gold, silver, and bronze!",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
@@ -2215,7 +2215,7 @@ class HelpContent {
     'timestamps':
         'Event Time is when the CoT event was generated. Stale Time is when '
         'the entity should be considered outdated if no update arrives. '
-        'Received is when Socialmesh received the event from the gateway. '
+        'Received is when SocialMesh received the event from the gateway. '
         'An entity is marked STALE when the current time exceeds Stale Time.',
     'tracking':
         'Tracked entities are pinned and highlighted on the map with a '
@@ -2289,7 +2289,7 @@ class HelpContent {
   static final HelpTopic acceptableUse = HelpTopic(
     id: 'acceptable_use',
     title: 'Acceptable Use & Prohibited Activities',
-    description: 'What you can and cannot do with Socialmesh',
+    description: 'What you can and cannot do with SocialMesh',
     icon: Icons.gavel_rounded,
     category: catLegal,
     priority: 2,
@@ -2297,7 +2297,7 @@ class HelpContent {
       HelpStep(
         id: 'use_intro',
         bubbleText:
-            "Socialmesh is a powerful tool — automations, signals, and mesh messaging give you a lot of capability. With that comes responsibility!",
+            "SocialMesh is a powerful tool — automations, signals, and mesh messaging give you a lot of capability. With that comes responsibility!",
         icoMood: MeshBrainMood.focused,
         canGoBack: false,
       ),
@@ -2332,7 +2332,7 @@ class HelpContent {
   static final HelpTopic userResponsibility = HelpTopic(
     id: 'user_responsibility',
     title: 'Your Data, Your Responsibility',
-    description: 'How Socialmesh handles data and what you are responsible for',
+    description: 'How SocialMesh handles data and what you are responsible for',
     icon: Icons.security_rounded,
     category: catLegal,
     priority: 3,
@@ -2340,7 +2340,7 @@ class HelpContent {
       HelpStep(
         id: 'responsibility_intro',
         bubbleText:
-            "Socialmesh is designed to be **privacy-first**. Your messages and data stay on your device — we do not store them on any server.",
+            "SocialMesh is designed to be **privacy-first**. Your messages and data stay on your device — we do not store them on any server.",
         icoMood: MeshBrainMood.focused,
         canGoBack: false,
       ),
@@ -2411,7 +2411,7 @@ class HelpContent {
       HelpStep(
         id: 'ft_beta',
         bubbleText:
-            "This feature is **BETA**. Both nodes must be running Socialmesh on the same mesh channel. Standard Meshtastic nodes cannot receive these transfers.",
+            "This feature is **BETA**. Both nodes must be running SocialMesh on the same mesh channel. Standard Meshtastic nodes cannot receive these transfers.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
@@ -2477,8 +2477,8 @@ class HelpContent {
 
   static final HelpTopic sipHubOverview = HelpTopic(
     id: 'sip_hub_overview',
-    title: 'Socialmesh',
-    description: 'Discover and chat with nearby Socialmesh peers',
+    title: 'SocialMesh',
+    description: 'Discover and chat with nearby SocialMesh peers',
     icon: Icons.sensors,
     category: catNetwork,
     priority: 7,
@@ -2486,7 +2486,7 @@ class HelpContent {
       HelpStep(
         id: 'sip_hub_intro',
         bubbleText:
-            "Welcome to **Socialmesh**! This is your peer discovery hub. Nearby devices running Socialmesh appear here once they beacon or respond to a rollcall.",
+            "Welcome to **SocialMesh**! This is your peer discovery hub. Nearby devices running SocialMesh appear here once they beacon or respond to a rollcall.",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
@@ -2526,7 +2526,7 @@ class HelpContent {
       HelpStep(
         id: 'mesh_explorer_intro',
         bubbleText:
-            "Welcome to **Mesh Explorer**! This shows all Socialmesh-capable peers currently in radio range. Anonymous peers appear instantly — no handshake needed.",
+            "Welcome to **Mesh Explorer**! This shows all SocialMesh-capable peers currently in radio range. Anonymous peers appear instantly — no handshake needed.",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),

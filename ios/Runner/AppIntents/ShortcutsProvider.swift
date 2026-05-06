@@ -2,7 +2,7 @@
 //  ShortcutsProvider.swift
 //  Runner
 //
-//  Socialmesh App Intents - Shortcuts provider for Siri integration
+//  SocialMesh App Intents - Shortcuts provider for Siri integration
 //
 
 import Foundation

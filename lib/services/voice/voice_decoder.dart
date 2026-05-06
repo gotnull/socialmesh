@@ -8,7 +8,7 @@ import '../codec2/codec2_bindings.dart';
 import '../codec2/codec2_ffi.dart';
 import 'voice_constants.dart';
 
-/// Decodes a Socialmesh `.c2` wire-format payload to a WAV byte buffer.
+/// Decodes a SocialMesh `.c2` wire-format payload to a WAV byte buffer.
 ///
 /// The returned WAV bytes can be fed to [VoicePlayer] (just_audio) for
 /// in-memory playback without writing to disk.

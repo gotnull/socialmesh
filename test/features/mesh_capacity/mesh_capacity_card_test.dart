@@ -151,7 +151,7 @@ void main() {
 
     expect(find.text('Preset not yet readable'), findsOneWidget);
     expect(
-      find.textContaining('Socialmesh can\'t assess preset suitability'),
+      find.textContaining('SocialMesh can\'t assess preset suitability'),
       findsOneWidget,
     );
   });

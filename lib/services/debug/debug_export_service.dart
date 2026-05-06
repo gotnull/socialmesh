@@ -327,7 +327,7 @@ class DebugExportService {
 
     await Share.shareXFiles(
       [XFile(file.path)],
-      subject: 'Socialmesh Debug Export $timestamp',
+      subject: 'SocialMesh Debug Export $timestamp',
       sharePositionOrigin: getSafeSharePosition(null, sharePositionOrigin),
     );
   }

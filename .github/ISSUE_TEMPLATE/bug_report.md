@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a bug in the Socialmesh app
+about: Report a bug in the SocialMesh app
 title: ""
 labels: bug
 assignees: ""

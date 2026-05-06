@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// Condition node builders for the Socialmesh visual automation flow builder.
+// Condition node builders for the SocialMesh visual automation flow builder.
 //
 // Each ConditionType maps to a VSNodeData builder that:
 // - Accepts an EventSignalInputData (the upstream trigger event)

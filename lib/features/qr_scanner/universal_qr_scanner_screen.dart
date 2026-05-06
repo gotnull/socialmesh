@@ -21,7 +21,7 @@ import '../../utils/snackbar.dart';
 import '../../utils/text_sanitizer.dart';
 import '../channels/channel_form_screen.dart';
 
-/// Universal QR code scanner that handles all Socialmesh QR code types:
+/// Universal QR code scanner that handles all SocialMesh QR code types:
 /// - Nodes (socialmesh://node/...)
 /// - Channels (socialmesh://channel/... or meshtastic.org/e/#...)
 /// - Automations (socialmesh://automation/...)
@@ -824,14 +824,14 @@ class _UniversalQrScannerScreenState
   ///   existing channel's slot with the scanned key)
   /// - `null` if the user cancels (or dismisses the sheet)
   ///
-  /// Replaces Socialmesh's prior silent "import at next free slot"
+  /// Replaces SocialMesh's prior silent "import at next free slot"
   /// behaviour, which produced duplicate channels with the same name
   /// at different indices. Mirrors the safety net the official
   /// Meshtastic iOS app enforces in `AccessoryManager.saveChannelSet`
   /// (Add mode rejects duplicate names with "Channel already exists";
   /// Replace All wipes the channel set). We surface the equivalent
   /// choice as Replace / Cancel — appropriate for the per-channel QR
-  /// shape Socialmesh uses today.
+  /// shape SocialMesh uses today.
   Future<bool?> _showChannelNameCollisionSheet({
     required ChannelConfig existing,
   }) {

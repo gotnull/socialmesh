@@ -4,7 +4,7 @@ On a mesh network, message delivery isn't guaranteed in the same way it is on th
 
 ## What "Delivered" Means
 
-When you see a delivery confirmation in Socialmesh, it means:
+When you see a delivery confirmation in SocialMesh, it means:
 
 - The **recipient's radio** received and decoded the message.
 - The recipient's radio sent an **acknowledgement (ACK)** back.

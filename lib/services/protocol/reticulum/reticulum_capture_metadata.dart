@@ -7,11 +7,11 @@ import 'reticulum_capture_classifier.dart';
 
 /// Provenance origin of a capture file.
 enum ReticulumCaptureSource {
-  /// Captured directly by Socialmesh's `ReticulumCaptureWriter` on
+  /// Captured directly by SocialMesh's `ReticulumCaptureWriter` on
   /// this device. Default for files in the live capture directory.
   local,
 
-  /// Imported from another Socialmesh installation via the system
+  /// Imported from another SocialMesh installation via the system
   /// share sheet (AirDrop, iMessage, Files share, etc.).
   shared,
 

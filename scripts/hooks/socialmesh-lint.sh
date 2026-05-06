@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# socialmesh-lint.sh -- Check staged (or specified) files for Socialmesh coding violations.
+# socialmesh-lint.sh -- Check staged (or specified) files for SocialMesh coding violations.
 #
 # Rules:
 #   no-todo-fixme-hack        TODO/FIXME/HACK comments
@@ -16,6 +16,7 @@
 #   no-bare-dropdown           Bare DropdownButton (wrap in DropdownButtonHideUnderline)
 #   no-ignore-directive        // ignore: outside lib/generated/
 #   no-railway-domains         Railway *.up.railway.app domains
+#   socialmesh-name-casing     Wrong app-name casing (canonical: SocialMesh; banned: Socialmesh, Social Mesh, etc.)
 #   spdx-wrong-path            SPDX header in prohibited dirs
 #   spdx-missing               Missing SPDX header in lib/test
 #   spdx-copyright-missing     Missing SPDX copyright in lib/test
@@ -787,6 +788,34 @@ check_file() {
     "no-railway-domains" \
     "Railway domain (*.up.railway.app) - use socialmesh.app custom domains" \
     "error"
+
+  # ------------------------------------------------------------------
+  # ERROR: Wrong app-name casing (all files, NON-NEGOTIABLE)
+  #
+  # Canonical form is "SocialMesh" (single word, both S and M
+  # capitalized). Banned forms:
+  #   Socialmesh   - capital S + lowercase m
+  #   Social Mesh  - two words
+  #   Social-Mesh  - hyphenated
+  #   socialMesh   - camelCase with lowercase s
+  #
+  # Lowercase "socialmesh" is INTENTIONALLY allowed - it is the
+  # correct form in identifiers, domains (socialmesh.app), emails
+  # (@socialmesh.app), bundle IDs (com.gotnull.socialmesh), Dart
+  # package names (package:socialmesh/...), and filesystem paths.
+  #
+  # Applies to every file type including ARB/HTML/MD/YAML so
+  # translators and marketing copy are covered. Skip via per-file
+  # `lint-allow: socialmesh-name-casing` (used in web/marketing.html
+  # FAQ which documents the wrong forms intentionally).
+  # ------------------------------------------------------------------
+  if ! grep -q 'lint-allow:.*socialmesh-name-casing' "$file" 2>/dev/null; then
+    grep_check "$file" \
+      '(Socialmesh|Social[ -][Mm]esh|socialMesh)' \
+      "socialmesh-name-casing" \
+      "Wrong app-name casing - use 'SocialMesh' (capital S and M). Banned: Socialmesh, Social Mesh, socialMesh, Social-Mesh. Lowercase 'socialmesh' is OK in identifiers/domains/paths." \
+      "error"
+  fi
 
   # ------------------------------------------------------------------
   # ERROR: Em-dash (U+2014) anywhere - banned project-wide

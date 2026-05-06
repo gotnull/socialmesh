@@ -98,7 +98,7 @@ enum VoiceQuality {
 
 /// Constants for the Codec2 voice message subsystem.
 ///
-/// Wire format (Socialmesh `.c2` container):
+/// Wire format (SocialMesh `.c2` container):
 /// ```
 /// [0xC2, modeByte, frameCountLow, frameCountHigh, frame0..frameN]
 /// ```

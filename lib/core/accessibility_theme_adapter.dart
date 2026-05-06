@@ -10,7 +10,7 @@ import 'package:socialmesh/core/theme.dart';
 
 /// Adapts ThemeData based on accessibility preferences
 ///
-/// This adapter takes the base Socialmesh theme and modifies it according
+/// This adapter takes the base SocialMesh theme and modifies it according
 /// to user accessibility preferences, including:
 /// - Font family changes
 /// - Text scaling with safe bounds

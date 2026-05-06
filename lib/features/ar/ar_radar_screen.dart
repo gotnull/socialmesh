@@ -724,7 +724,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
     }
 
     buffer.writeln();
-    buffer.writeln('Shared via Socialmesh AR');
+    buffer.writeln('Shared via SocialMesh AR');
 
     shareText(buffer.toString(), subject: 'Mesh Node: $name', context: context);
   }

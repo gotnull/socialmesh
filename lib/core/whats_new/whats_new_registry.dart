@@ -105,7 +105,7 @@ class WhatsNewRegistry {
     // v1.9.0 — Reachability introduction
     WhatsNewPayload(
       version: '1.9.0',
-      headline: "What's New in Socialmesh",
+      headline: "What's New in SocialMesh",
       subtitle: 'Version 1.9.0',
       items: [
         WhatsNewItem(
@@ -129,7 +129,7 @@ class WhatsNewRegistry {
     // v1.10.0 — World Map
     WhatsNewPayload(
       version: '1.10.0',
-      headline: "What's New in Socialmesh",
+      headline: "What's New in SocialMesh",
       subtitle: 'Version 1.10.0',
       items: [
         WhatsNewItem(
@@ -141,7 +141,7 @@ class WhatsNewRegistry {
               'tap to explore node details, hardware info, and last-seen '
               'times.\n\n'
               'No connection required. The World Map pulls live data from '
-              'the Socialmesh backend so you can explore the mesh anywhere.',
+              'the SocialMesh backend so you can explore the mesh anywhere.',
           icon: Icons.public,
           iconColor: Color(0xFF42A5F5), // Colors.blue.shade400
           deepLinkRoute: '/world-map',
@@ -154,7 +154,7 @@ class WhatsNewRegistry {
     // v1.10.1 — Presence introduction
     WhatsNewPayload(
       version: '1.10.1',
-      headline: "What's New in Socialmesh",
+      headline: "What's New in SocialMesh",
       subtitle: 'Version 1.10.1',
       items: [
         WhatsNewItem(
@@ -178,7 +178,7 @@ class WhatsNewRegistry {
     // v1.11.0 — Signals introduction
     WhatsNewPayload(
       version: '1.11.0',
-      headline: "What's New in Socialmesh",
+      headline: "What's New in SocialMesh",
       subtitle: 'Version 1.11.0',
       items: [
         WhatsNewItem(
@@ -203,7 +203,7 @@ class WhatsNewRegistry {
     // v1.13.0 — NodeDex introduction
     WhatsNewPayload(
       version: '1.13.0',
-      headline: "What's New in Socialmesh",
+      headline: "What's New in SocialMesh",
       subtitle: 'Version 1.13.0',
       items: [
         WhatsNewItem(
@@ -230,7 +230,7 @@ class WhatsNewRegistry {
     if (AppFeatureFlags.isAetherEnabled)
       WhatsNewPayload(
         version: '1.15.0',
-        headline: "What's New in Socialmesh",
+        headline: "What's New in SocialMesh",
         subtitle: 'Version 1.15.0',
         items: [
           WhatsNewItem(
@@ -257,7 +257,7 @@ class WhatsNewRegistry {
     if (AppFeatureFlags.isTakGatewayEnabled)
       WhatsNewPayload(
         version: '1.16.0',
-        headline: "What's New in Socialmesh",
+        headline: "What's New in SocialMesh",
         subtitle: 'Version 1.16.0',
         items: [
           WhatsNewItem(
@@ -265,7 +265,7 @@ class WhatsNewRegistry {
             title: 'TAK Gateway',
             description:
                 'Bridge your mesh into the Team Awareness Kit (TAK) ecosystem. '
-                'Socialmesh now connects to a TAK Gateway via WebSocket and '
+                'SocialMesh now connects to a TAK Gateway via WebSocket and '
                 'streams live Cursor-on-Target entities onto your map.\n\n'
                 'Every entity is colored by standard affiliation and '
                 'given a dimension-specific icon. Filter by affiliation, '
@@ -286,7 +286,7 @@ class WhatsNewRegistry {
     if (AppFeatureFlags.isTranslationEnabled)
       WhatsNewPayload(
         version: '1.27.0',
-        headline: "What's New in Socialmesh",
+        headline: "What's New in SocialMesh",
         subtitle: 'Version 1.27.0',
         items: [
           WhatsNewItem(
@@ -309,7 +309,7 @@ class WhatsNewRegistry {
     // v1.30.0 — IF/THEN/ELSE automations + grouped reactions
     WhatsNewPayload(
       version: '1.30.0',
-      headline: "What's New in Socialmesh",
+      headline: "What's New in SocialMesh",
       subtitle: 'Version 1.30.0',
       items: [
         WhatsNewItem(
@@ -347,7 +347,7 @@ class WhatsNewRegistry {
     if (AppFeatureFlags.isDeviceShopEnabled)
       WhatsNewPayload(
         version: '1.36.0',
-        headline: "What's New in Socialmesh",
+        headline: "What's New in SocialMesh",
         subtitle: 'Version 1.36.0',
         items: [
           WhatsNewItem(
@@ -358,7 +358,7 @@ class WhatsNewRegistry {
                 'and trusted sellers — all in one place. Filter by category, '
                 'sort by price or new arrivals, and tap through to the '
                 "seller's store to buy.\n\n"
-                "Purchases happen on the seller's site; Socialmesh never "
+                "Purchases happen on the seller's site; SocialMesh never "
                 'handles payment, shipping, or returns. Find it in the '
                 'drawer menu under Tools.',
             icon: Icons.storefront_outlined,

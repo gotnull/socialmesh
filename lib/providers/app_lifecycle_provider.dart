@@ -13,7 +13,7 @@ import '../core/logging.dart';
 /// providers and services should watch or listen to this provider to pause
 /// unnecessary work when the app is backgrounded, preventing battery drain.
 ///
-/// Updated by [_SocialmeshAppState.didChangeAppLifecycleState] in main.dart.
+/// Updated by [_SocialMeshAppState.didChangeAppLifecycleState] in main.dart.
 ///
 /// Consumers should use [ref.listen] or [ref.watch] to react:
 ///

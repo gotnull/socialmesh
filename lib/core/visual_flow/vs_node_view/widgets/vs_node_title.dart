@@ -3,7 +3,7 @@
 // lint-allow: haptic-feedback — onTap delegates to parent callback
 
 // Vendored from vs_node_view v2.1.1 — BSD-3-Clause
-// Import paths rewritten for Socialmesh vendoring.
+// Import paths rewritten for SocialMesh vendoring.
 // Modified: Replaced PopupMenuButton with a simpler icon button row for mobile.
 // Modified: Styled title with sci-fi themed divider and typography.
 

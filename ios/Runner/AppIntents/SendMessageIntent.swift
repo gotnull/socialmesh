@@ -2,7 +2,7 @@
 //  SendMessageIntent.swift
 //  Runner
 //
-//  Socialmesh App Intents - Send a direct message to a node
+//  SocialMesh App Intents - Send a direct message to a node
 //
 
 import Foundation

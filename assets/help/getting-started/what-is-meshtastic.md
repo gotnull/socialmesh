@@ -16,11 +16,11 @@ This relay behaviour is what makes it a _mesh_ network — there's no central to
 - **Private.** Messages are encrypted. Only people on the same channel can read them.
 - **Open source.** The firmware, the protocol, and the apps are all community-built.
 
-## Where Socialmesh Fits In
+## Where SocialMesh Fits In
 
-Socialmesh is a companion app for Meshtastic radios. It connects to your radio over Bluetooth (BLE) or USB and gives you a full-featured interface for messaging, mapping your mesh, monitoring signal quality, and managing your device settings.
+SocialMesh is a companion app for Meshtastic radios. It connects to your radio over Bluetooth (BLE) or USB and gives you a full-featured interface for messaging, mapping your mesh, monitoring signal quality, and managing your device settings.
 
-Think of it this way: Meshtastic is the engine — Socialmesh is the dashboard.
+Think of it this way: Meshtastic is the engine — SocialMesh is the dashboard.
 
 ## Common Uses
 

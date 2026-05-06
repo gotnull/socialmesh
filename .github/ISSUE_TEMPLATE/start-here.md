@@ -1,14 +1,14 @@
 ---
 name: Start Here
-about: New to Socialmesh? Read this before opening an issue
+about: New to SocialMesh? Read this before opening an issue
 title: ""
 labels: ""
 assignees: ""
 ---
 
-## Welcome to Socialmesh
+## Welcome to SocialMesh
 
-Socialmesh is a Flutter companion app for Meshtastic mesh radios. It connects to Meshtastic devices via Bluetooth Low Energy (BLE) or USB serial and provides messaging, node management, mapping, and device configuration.
+SocialMesh is a Flutter companion app for Meshtastic mesh radios. It connects to Meshtastic devices via Bluetooth Low Energy (BLE) or USB serial and provides messaging, node management, mapping, and device configuration.
 
 ### What this repository covers
 
@@ -39,13 +39,13 @@ PRs that attempt to reimplement backend services or add new cloud dependencies w
 
 ### Where to go
 
-| I want to...                    | Go here                                                       |
-| ------------------------------- | ------------------------------------------------------------- |
-| Report a bug                    | Use the **Bug Report** template                               |
-| Request a feature               | Use the **Feature Request** template                          |
-| Ask a question about the code   | Open a **Discussion** (if enabled) or issue                   |
-| Ask about Meshtastic firmware   | [meshtastic/firmware](https://github.com/meshtastic/firmware) |
-| Report a security vulnerability | See [SECURITY.md](https://github.com/gotnull/socialmesh/blob/main/SECURITY.md)                             |
+| I want to...                    | Go here                                                                        |
+| ------------------------------- | ------------------------------------------------------------------------------ |
+| Report a bug                    | Use the **Bug Report** template                                                |
+| Request a feature               | Use the **Feature Request** template                                           |
+| Ask a question about the code   | Open a **Discussion** (if enabled) or issue                                    |
+| Ask about Meshtastic firmware   | [meshtastic/firmware](https://github.com/meshtastic/firmware)                  |
+| Report a security vulnerability | See [SECURITY.md](https://github.com/gotnull/socialmesh/blob/main/SECURITY.md) |
 
 ### Not sure if your issue belongs here?
 

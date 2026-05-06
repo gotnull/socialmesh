@@ -2171,7 +2171,7 @@ These keys exist in the locale file but still have the English value. Either tra
 <details><summary><b>nodedex</b> (26)</summary>
 
 - `nodedexAirUtilTxLabel`
-- `nodedexCardBrandSocialmesh`
+- `nodedexCardBrandSocialMesh`
 - `nodedexCardDeviceFirmware`
 - `nodedexCardDeviceHardware`
 - `nodedexCardRarityStandard`
@@ -4529,7 +4529,7 @@ These keys exist in the locale file but still have the English value. Either tra
 <details><summary><b>nodedex</b> (27)</summary>
 
 - `nodedexAirUtilTxLabel`
-- `nodedexCardBrandSocialmesh`
+- `nodedexCardBrandSocialMesh`
 - `nodedexCardDeviceFirmware`
 - `nodedexCardDeviceHardware`
 - `nodedexDensityNormal`
@@ -8448,7 +8448,7 @@ These keys exist in the locale file but still have the English value. Either tra
 - `nodedexBestSnr`
 - `nodedexBestSnrStatLabel`
 - `nodedexBusiestDay`
-- `nodedexCardBrandSocialmesh`
+- `nodedexCardBrandSocialMesh`
 - `nodedexCardDeviceFirmware`
 - `nodedexCardDeviceHardware`
 - `nodedexCardDeviceRole`
@@ -8844,7 +8844,7 @@ These keys exist in the locale file but still have the English value. Either tra
 - `nodedexShareCardCheckOut`
 - `nodedexShareCardImageFailed`
 - `nodedexShareCouldNotShare`
-- `nodedexShareGetSocialmesh`
+- `nodedexShareGetSocialMesh`
 - `nodedexShareSigilCard`
 - `nodedexSightingsPlural`
 - `nodedexSightingsSingular`
@@ -11104,7 +11104,7 @@ These keys exist in the locale file but still have the English value. Either tra
 - `settingsSocialNewFollowersTitle`
 - `settingsSocialNotificationsLoading`
 - `settingsSocialNotificationsLoadingSubtitle`
-- `settingsSocialmeshVersionSnackbar`
+- `settingsSocialMeshVersionSnackbar`
 - `settingsTile3dEffectsSubtitle`
 - `settingsTile3dEffectsTitle`
 - `settingsTileAirQualitySubtitle`
@@ -11218,8 +11218,8 @@ These keys exist in the locale file but still have the English value. Either tra
 - `settingsTileSerialTitle`
 - `settingsTileShakeToReportSubtitle`
 - `settingsTileShakeToReportTitle`
-- `settingsTileSocialmeshSubtitle`
-- `settingsTileSocialmeshTitle`
+- `settingsTileSocialMeshSubtitle`
+- `settingsTileSocialMeshTitle`
 - `settingsTileSoundSubtitle`
 - `settingsTileSoundTitle`
 - `settingsTileStoreForwardSubtitle`

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Terminal output line rendered in the standard Socialmesh theme.
+// Terminal output line rendered in the standard SocialMesh theme.
 // Monospace preserves the BBS feel; colours come from context.*.
 
 import 'package:flutter/material.dart';

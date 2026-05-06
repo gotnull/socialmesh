@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// Custom interface type for the Socialmesh visual automation flow builder.
+// Custom interface type for the SocialMesh visual automation flow builder.
 //
 // NodeList interfaces carry filtered lists of mesh nodes through the
 // automation graph. They represent the output of NodeDex query nodes —

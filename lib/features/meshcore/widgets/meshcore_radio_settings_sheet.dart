@@ -522,7 +522,7 @@ class _MeshCoreRadioSettingsSheetState
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     // Keyboard dismissal is handled per-field via TextFormField.onTapOutside
-    // (canonical Socialmesh pattern; see mqtt_config_screen.dart). Avoid
+    // (canonical SocialMesh pattern; see mqtt_config_screen.dart). Avoid
     // a top-level GestureDetector here so we don't trip the haptic-feedback
     // lint, and so taps on chip rows / outlined buttons still bubble
     // through to their own handlers without an extra interception.
@@ -592,7 +592,7 @@ class _MeshCoreRadioSettingsSheetState
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                   ],
-                  // Canonical Socialmesh keyboard-dismissal pattern.
+                  // Canonical SocialMesh keyboard-dismissal pattern.
                   // tapping anywhere off the input drops focus. Mirrors
                   // the per-field behaviour used by mqtt_config_screen
                   // and the existing _editNodeName sheet.

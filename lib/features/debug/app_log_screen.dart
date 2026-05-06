@@ -246,7 +246,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen>
       showInfoSnackBar(context, context.l10n.debugScreenNothingToShare);
       return;
     }
-    shareText(content, subject: 'Socialmesh App Log', context: context);
+    shareText(content, subject: 'SocialMesh App Log', context: context);
   }
 
   /// Bundle the in-memory log buffer (filtered to MeshCore + connection +

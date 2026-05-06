@@ -3,7 +3,7 @@
 
 /// The active translation provider mode.
 enum TranslationProviderMode {
-  /// Socialmesh-managed Cloud Function backend (default).
+  /// SocialMesh-managed Cloud Function backend (default).
   managed,
 
   /// User supplies their own API key for direct provider calls.

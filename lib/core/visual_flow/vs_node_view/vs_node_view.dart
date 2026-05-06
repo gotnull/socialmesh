@@ -5,7 +5,7 @@
 // Original: https://github.com/Cunibon/vs_node_view
 // License: BSD-3-Clause (see LICENSE in this directory)
 //
-// Modifications for Socialmesh:
+// Modifications for SocialMesh:
 // - Import paths rewritten from package:vs_node_view/ to relative
 // - Sci-fi theming (glass morphism, glow wires, accent colors)
 // - Mobile UX (28dp touch targets, tap-to-connect, drag thresholds)

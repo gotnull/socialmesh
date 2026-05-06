@@ -747,11 +747,11 @@
   "@adminBroadcastDefBodyAether": {
     "description": "Text displayed in admin panel"
   },
-  "adminBroadcastDefBodyAlert": "Ti informiamo di un problema importante che riguarda Socialmesh.",
+  "adminBroadcastDefBodyAlert": "Ti informiamo di un problema importante che riguarda SocialMesh.",
   "@adminBroadcastDefBodyAlert": {
     "description": "Text displayed in admin panel"
   },
-  "adminBroadcastDefBodyAnnouncement": "Abbiamo un annuncio importante per la community Socialmesh.",
+  "adminBroadcastDefBodyAnnouncement": "Abbiamo un annuncio importante per la community SocialMesh.",
   "@adminBroadcastDefBodyAnnouncement": {
     "description": "Text displayed in admin panel"
   },
@@ -759,23 +759,23 @@
   "@adminBroadcastDefBodyAutomations": {
     "description": "Text displayed in admin panel"
   },
-  "adminBroadcastDefBodyCelebration": "Abbiamo qualcosa di entusiasmante da celebrare con la community Socialmesh!",
+  "adminBroadcastDefBodyCelebration": "Abbiamo qualcosa di entusiasmante da celebrare con la community SocialMesh!",
   "@adminBroadcastDefBodyCelebration": {
     "description": "Text displayed in admin panel"
   },
-  "adminBroadcastDefBodyCommunity": "Unisciti alle ultime iniziative della community Socialmesh.",
+  "adminBroadcastDefBodyCommunity": "Unisciti alle ultime iniziative della community SocialMesh.",
   "@adminBroadcastDefBodyCommunity": {
     "description": "Text displayed in admin panel"
   },
-  "adminBroadcastDefBodyFeature": "Abbiamo appena lanciato una nuova funzionalità in Socialmesh. Scoprila!",
+  "adminBroadcastDefBodyFeature": "Abbiamo appena lanciato una nuova funzionalità in SocialMesh. Scoprila!",
   "@adminBroadcastDefBodyFeature": {
     "description": "Text displayed in admin panel"
   },
-  "adminBroadcastDefBodyIfttt": "Connetti Socialmesh ai tuoi servizi preferiti tramite IFTTT.",
+  "adminBroadcastDefBodyIfttt": "Connetti SocialMesh ai tuoi servizi preferiti tramite IFTTT.",
   "@adminBroadcastDefBodyIfttt": {
     "description": "Text displayed in admin panel"
   },
-  "adminBroadcastDefBodyMaintenance": "I servizi Socialmesh saranno brevemente non disponibili per manutenzione programmata.",
+  "adminBroadcastDefBodyMaintenance": "I servizi SocialMesh saranno brevemente non disponibili per manutenzione programmata.",
   "@adminBroadcastDefBodyMaintenance": {
     "description": "Text displayed in admin panel"
   },
@@ -795,19 +795,19 @@
   "@adminBroadcastDefBodySignals": {
     "description": "Text displayed in admin panel"
   },
-  "adminBroadcastDefBodyThemes": "Un nuovo pacchetto temi è ora disponibile nello store Socialmesh.",
+  "adminBroadcastDefBodyThemes": "Un nuovo pacchetto temi è ora disponibile nello store SocialMesh.",
   "@adminBroadcastDefBodyThemes": {
     "description": "Text displayed in admin panel"
   },
-  "adminBroadcastDefBodyTip": "Ecco un suggerimento utile per sfruttare al meglio Socialmesh.",
+  "adminBroadcastDefBodyTip": "Ecco un suggerimento utile per sfruttare al meglio SocialMesh.",
   "@adminBroadcastDefBodyTip": {
     "description": "Text displayed in admin panel"
   },
-  "adminBroadcastDefBodyUpdate": "È disponibile una nuova versione di Socialmesh con miglioramenti e correzioni.",
+  "adminBroadcastDefBodyUpdate": "È disponibile una nuova versione di SocialMesh con miglioramenti e correzioni.",
   "@adminBroadcastDefBodyUpdate": {
     "description": "Text displayed in admin panel"
   },
-  "adminBroadcastDefBodyWidgets": "Nuovi widget per la schermata iniziale sono ora disponibili per Socialmesh.",
+  "adminBroadcastDefBodyWidgets": "Nuovi widget per la schermata iniziale sono ora disponibili per SocialMesh.",
   "@adminBroadcastDefBodyWidgets": {
     "description": "Text displayed in admin panel"
   },
@@ -1160,7 +1160,7 @@
   "@adminBroadcastSendAll": {
     "description": "Text displayed in admin panel"
   },
-  "adminBroadcastSendHint": "Invia una notifica push a tutti gli utenti Socialmesh. Un conto alla rovescia di {seconds}s ti dà tempo per annullare.",
+  "adminBroadcastSendHint": "Invia una notifica push a tutti gli utenti SocialMesh. Un conto alla rovescia di {seconds}s ti dà tempo per annullare.",
   "@adminBroadcastSendHint": {
     "placeholders": {
       "seconds": {
@@ -1177,7 +1177,7 @@
   "@adminBroadcastSendingTest": {
     "description": "Text displayed in admin panel"
   },
-  "adminBroadcastSentBody": "La notifica è stata inviata a tutti gli utenti Socialmesh.",
+  "adminBroadcastSentBody": "La notifica è stata inviata a tutti gli utenti SocialMesh.",
   "@adminBroadcastSentBody": {
     "description": "Text displayed in admin panel"
   },
@@ -1217,7 +1217,7 @@
   "@adminBroadcastTitleRequired": {
     "description": "Text displayed in admin panel"
   },
-  "adminBroadcastWarning": "Questo invierà una notifica push a ogni utente Socialmesh. Usa con moderazione solo per annunci importanti.",
+  "adminBroadcastWarning": "Questo invierà una notifica push a ogni utente SocialMesh. Usa con moderazione solo per annunci importanti.",
   "@adminBroadcastWarning": {
     "description": "Text displayed in admin panel"
   },
@@ -1411,7 +1411,7 @@
   "@adminConformanceAnomalies": {
     "description": "Text displayed in admin panel"
   },
-  "adminConformanceBundleTitle": "Bundle di conformità Socialmesh",
+  "adminConformanceBundleTitle": "Bundle di conformità SocialMesh",
   "@adminConformanceBundleTitle": {
     "description": "Title for the admin panel screen"
   },
@@ -1669,7 +1669,7 @@
   "@adminDiagWriteToggleSub": {
     "description": "Text displayed in admin panel"
   },
-  "adminDiagnosticBundleSubject": "Diagnostica Socialmesh {runId}",
+  "adminDiagnosticBundleSubject": "Diagnostica SocialMesh {runId}",
   "@adminDiagnosticBundleSubject": {
     "placeholders": {
       "runId": {
@@ -1678,7 +1678,7 @@
     },
     "description": "Text in admin panel Parameters: {runId}."
   },
-  "adminDiagnosticBundleText": "Bundle diagnostico amministrativo da Socialmesh",
+  "adminDiagnosticBundleText": "Bundle diagnostico amministrativo da SocialMesh",
   "@adminDiagnosticBundleText": {
     "description": "Text displayed in admin panel"
   },
@@ -2685,7 +2685,7 @@
   "@adminQrStyleCyberpunk": {
     "description": "Text displayed in admin panel"
   },
-  "adminQrStyleDescription": "Anteprima dei diversi stili di codice QR con il logo Socialmesh. Tutti gli stili usano la correzione errori Livello H per una scansione affidabile.",
+  "adminQrStyleDescription": "Anteprima dei diversi stili di codice QR con il logo SocialMesh. Tutti gli stili usano la correzione errori Livello H per una scansione affidabile.",
   "@adminQrStyleDescription": {
     "description": "Description text in admin panel"
   },
@@ -2901,7 +2901,7 @@
   "@adminSellersDiscountCodeLabel": {
     "description": "Label in admin panel"
   },
-  "adminSellersDiscountDisplayHint": "es. 10% di sconto per gli utenti Socialmesh",
+  "adminSellersDiscountDisplayHint": "es. 10% di sconto per gli utenti SocialMesh",
   "@adminSellersDiscountDisplayHint": {
     "description": "Hint text for an input field in admin panel"
   },
@@ -4059,7 +4059,7 @@
   "@ambientLightingTitle": {
     "description": "Title for the ambient lighting settings screen"
   },
-  "appTitle": "Socialmesh",
+  "appTitle": "SocialMesh",
   "@appTitle": {
     "description": "The name of the application."
   },
@@ -6628,7 +6628,7 @@
   "@batteryOptDontShowAgain": {
     "description": "UI text: battery opt dont show again"
   },
-  "batteryOptGenericStep1": "Apri Impostazioni > App > Socialmesh > Batteria.",
+  "batteryOptGenericStep1": "Apri Impostazioni > App > SocialMesh > Batteria.",
   "@batteryOptGenericStep1": {
     "description": "UI text: battery opt generic step1"
   },
@@ -6636,7 +6636,7 @@
   "@batteryOptGenericStep2": {
     "description": "UI text: battery opt generic step2"
   },
-  "batteryOptGenericStep3": "Questo permette a Socialmesh di mantenere la connessione mesh in background.",
+  "batteryOptGenericStep3": "Questo permette a SocialMesh di mantenere la connessione mesh in background.",
   "@batteryOptGenericStep3": {
     "description": "UI text: battery opt generic step3"
   },
@@ -6644,7 +6644,7 @@
   "@batteryOptHuaweiStep1": {
     "description": "UI text: battery opt huawei step1"
   },
-  "batteryOptHuaweiStep2": "Trova Socialmesh e impostalo su \"Gestisci manualmente\".",
+  "batteryOptHuaweiStep2": "Trova SocialMesh e impostalo su \"Gestisci manualmente\".",
   "@batteryOptHuaweiStep2": {
     "description": "UI text: battery opt huawei step2"
   },
@@ -6652,7 +6652,7 @@
   "@batteryOptHuaweiStep3": {
     "description": "UI text: battery opt huawei step3"
   },
-  "batteryOptOneplusStep1": "Apri Impostazioni > App > Gestione app > Socialmesh.",
+  "batteryOptOneplusStep1": "Apri Impostazioni > App > Gestione app > SocialMesh.",
   "@batteryOptOneplusStep1": {
     "description": "UI text: battery opt oneplus step1"
   },
@@ -6660,7 +6660,7 @@
   "@batteryOptOneplusStep2": {
     "description": "UI text: battery opt oneplus step2"
   },
-  "batteryOptOneplusStep3": "Su OnePlus 14+: controlla anche Impostazioni > Batteria > Ottimizzazione batteria > Socialmesh > \"Non ottimizzare\".",
+  "batteryOptOneplusStep3": "Su OnePlus 14+: controlla anche Impostazioni > Batteria > Ottimizzazione batteria > SocialMesh > \"Non ottimizzare\".",
   "@batteryOptOneplusStep3": {
     "description": "UI text: battery opt oneplus step3"
   },
@@ -6676,7 +6676,7 @@
   "@batteryOptSamsungStep2": {
     "description": "UI text: battery opt samsung step2"
   },
-  "batteryOptSamsungStep3": "Rimuovi Socialmesh dalle liste \"App in sospensione\" e \"App in sospensione profonda\".",
+  "batteryOptSamsungStep3": "Rimuovi SocialMesh dalle liste \"App in sospensione\" e \"App in sospensione profonda\".",
   "@batteryOptSamsungStep3": {
     "description": "UI text: battery opt samsung step3"
   },
@@ -6693,7 +6693,7 @@
     },
     "description": "Screen or section title Parameters: {oemName} = display name."
   },
-  "batteryOptXiaomiStep1": "Apri Impostazioni > App > Gestisci app > Socialmesh.",
+  "batteryOptXiaomiStep1": "Apri Impostazioni > App > Gestisci app > SocialMesh.",
   "@batteryOptXiaomiStep1": {
     "description": "UI text: battery opt xiaomi step1"
   },
@@ -6705,7 +6705,7 @@
   "@batteryOptXiaomiStep3": {
     "description": "UI text: battery opt xiaomi step3"
   },
-  "batteryOptXiaomiStep4": "Seleziona \"Nessuna restrizione\" per Socialmesh.",
+  "batteryOptXiaomiStep4": "Seleziona \"Nessuna restrizione\" per SocialMesh.",
   "@batteryOptXiaomiStep4": {
     "description": "UI text: battery opt xiaomi step4"
   },
@@ -7672,7 +7672,7 @@
     "description": "Text displayed in channel configuration"
   },
   "channelOptionsViewQr": "Mostra codice QR",
-  "channelOptionsViewQrInfo": "Scansiona questo codice QR in Socialmesh per unirti a questo canale",
+  "channelOptionsViewQrInfo": "Scansiona questo codice QR in SocialMesh per unirti a questo canale",
   "channelShareCreatingInvite": "Creazione link di invito...",
   "@channelShareCreatingInvite": {
     "description": "Text displayed in channel configuration"
@@ -9061,51 +9061,51 @@
   "@dataExportSectionTelemetry": {
     "description": "Telemetry = automated sensor data (battery, temperature, signal strength) collected from mesh devices."
   },
-  "dataExportShareSubjectAirQuality": "Esportazione qualità dell'aria Socialmesh",
+  "dataExportShareSubjectAirQuality": "Esportazione qualità dell'aria SocialMesh",
   "@dataExportShareSubjectAirQuality": {
     "description": "UI text: data export share subject air quality"
   },
-  "dataExportShareSubjectAutomationLog": "Esportazione log automazione Socialmesh",
+  "dataExportShareSubjectAutomationLog": "Esportazione log automazione SocialMesh",
   "@dataExportShareSubjectAutomationLog": {
     "description": "UI text: data export share subject automation log"
   },
-  "dataExportShareSubjectAutomations": "Esportazione automazioni Socialmesh",
+  "dataExportShareSubjectAutomations": "Esportazione automazioni SocialMesh",
   "@dataExportShareSubjectAutomations": {
     "description": "UI text: data export share subject automations"
   },
-  "dataExportShareSubjectComplete": "Esportazione completa Socialmesh",
+  "dataExportShareSubjectComplete": "Esportazione completa SocialMesh",
   "@dataExportShareSubjectComplete": {
     "description": "UI text: data export share subject complete"
   },
-  "dataExportShareSubjectDeviceMetrics": "Esportazione metriche dispositivo Socialmesh",
+  "dataExportShareSubjectDeviceMetrics": "Esportazione metriche dispositivo SocialMesh",
   "@dataExportShareSubjectDeviceMetrics": {
     "description": "UI text: data export share subject device metrics"
   },
-  "dataExportShareSubjectEnvironmentMetrics": "Esportazione metriche ambientali Socialmesh",
+  "dataExportShareSubjectEnvironmentMetrics": "Esportazione metriche ambientali SocialMesh",
   "@dataExportShareSubjectEnvironmentMetrics": {
     "description": "UI text: data export share subject environment metrics"
   },
-  "dataExportShareSubjectMessages": "Esportazione messaggi Socialmesh",
+  "dataExportShareSubjectMessages": "Esportazione messaggi SocialMesh",
   "@dataExportShareSubjectMessages": {
     "description": "UI text: data export share subject messages"
   },
-  "dataExportShareSubjectNodeList": "Esportazione elenco nodi Socialmesh",
+  "dataExportShareSubjectNodeList": "Esportazione elenco nodi SocialMesh",
   "@dataExportShareSubjectNodeList": {
     "description": "UI text: data export share subject node list"
   },
-  "dataExportShareSubjectPositionHistory": "Esportazione cronologia posizioni Socialmesh",
+  "dataExportShareSubjectPositionHistory": "Esportazione cronologia posizioni SocialMesh",
   "@dataExportShareSubjectPositionHistory": {
     "description": "UI text: data export share subject position history"
   },
-  "dataExportShareSubjectPowerMetrics": "Esportazione metriche energetiche Socialmesh",
+  "dataExportShareSubjectPowerMetrics": "Esportazione metriche energetiche SocialMesh",
   "@dataExportShareSubjectPowerMetrics": {
     "description": "UI text: data export share subject power metrics"
   },
-  "dataExportShareSubjectRoutes": "Esportazione percorsi Socialmesh",
+  "dataExportShareSubjectRoutes": "Esportazione percorsi SocialMesh",
   "@dataExportShareSubjectRoutes": {
     "description": "UI text: data export share subject routes"
   },
-  "dataExportShareSubjectTraceroutes": "Esportazione traceroute Socialmesh",
+  "dataExportShareSubjectTraceroutes": "Esportazione traceroute SocialMesh",
   "@dataExportShareSubjectTraceroutes": {
     "description": "Traceroute = mesh network path discovery diagnostic. This is the email/share subject line."
   },
@@ -9380,7 +9380,7 @@
     "description": "Overflow menu item: export debug JSON"
   },
   "debugScreenShareMeshcoreDiagnostics": "Condividi diagnostica MeshCore",
-  "debugScreenMeshcoreDiagnosticsSubject": "Diagnostica MeshCore Socialmesh",
+  "debugScreenMeshcoreDiagnosticsSubject": "Diagnostica MeshCore SocialMesh",
   "networkProtocolMeshtastic": "Meshtastic",
   "networkProtocolMeshcoreDev": "MeshCore (dev)",
   "debugScreenExportFailed": "Esportazione fallita: {error}",
@@ -10895,7 +10895,7 @@
   "@deviceShopHelpTooltip": {
     "description": "Tooltip in developer tools"
   },
-  "deviceShopMarketplaceDisclaimer": "Gli acquisti vengono completati sullo store ufficiale del venditore. Socialmesh potrebbe ricevere una piccola commissione dagli acquisti effettuati tramite questi link. Socialmesh non gestisce pagamenti, spedizioni, garanzie o resi.",
+  "deviceShopMarketplaceDisclaimer": "Gli acquisti vengono completati sullo store ufficiale del venditore. SocialMesh potrebbe ricevere una piccola commissione dagli acquisti effettuati tramite questi link. SocialMesh non gestisce pagamenti, spedizioni, garanzie o resi.",
   "@deviceShopMarketplaceDisclaimer": {
     "description": "Text displayed in developer tools"
   },
@@ -11932,7 +11932,7 @@
   "@feedbackReportBugAction": {
     "description": "Action button label"
   },
-  "feedbackReportBugDescription": "Se qualcosa non funziona correttamente, puoi segnalarlo per contribuire a migliorare Socialmesh per tutti.",
+  "feedbackReportBugDescription": "Se qualcosa non funziona correttamente, puoi segnalarlo per contribuire a migliorare SocialMesh per tutti.",
   "@feedbackReportBugDescription": {
     "description": "Prompt sheet description"
   },
@@ -11944,8 +11944,8 @@
   "@feedbackReportResolved": {
     "description": "Status message for resolved reports"
   },
-  "feedbackResponseAuthorSocialmesh": "Socialmesh",
-  "@feedbackResponseAuthorSocialmesh": {
+  "feedbackResponseAuthorSocialMesh": "SocialMesh",
+  "@feedbackResponseAuthorSocialMesh": {
     "description": "Response bubble author for founder"
   },
   "feedbackResponseAuthorYou": "Tu",
@@ -13838,7 +13838,7 @@
   },
   "globalLayerShareTelemetryLabel": "Condividi telemetria",
   "@globalLayerShareTelemetryLabel": {
-    "description": "Global Layer = Socialmesh's cloud mesh data sharing feature. Telemetry = device sensor data."
+    "description": "Global Layer = SocialMesh's cloud mesh data sharing feature. Telemetry = device sensor data."
   },
   "globalLayerShareTelemetrySubtitle": "Livello batteria, tensione e uptime del dispositivo verranno pubblicati sul broker.",
   "@globalLayerShareTelemetrySubtitle": {
@@ -14543,7 +14543,7 @@
   "@gpsStatusUnknown": {
     "description": "UI text: gps status unknown"
   },
-  "helpAcceptableUseDescription": "Cosa puoi e non puoi fare con Socialmesh",
+  "helpAcceptableUseDescription": "Cosa puoi e non puoi fare con SocialMesh",
   "@helpAcceptableUseDescription": {
     "description": "Description for acceptable_use help topic"
   },
@@ -14559,7 +14559,7 @@
   "@helpAetherIntroBubble": {
     "description": "Help bubble text for step aether_intro"
   },
-  "helpAetherLeaderboardBubble": "La **classifica è globale e permanente** — salvata nel cloud, non sul tuo dispositivo. Le posizioni sopravvivono ai reinstall dell'app e sono visibili a tutta la community Socialmesh. I primi 3 ottengono oro, argento e bronzo!",
+  "helpAetherLeaderboardBubble": "La **classifica è globale e permanente** — salvata nel cloud, non sul tuo dispositivo. Le posizioni sopravvivono ai reinstall dell'app e sono visibili a tutta la community SocialMesh. I primi 3 ottengono oro, argento e bronzo!",
   "@helpAetherLeaderboardBubble": {
     "description": "Help bubble text for step aether_leaderboard"
   },
@@ -15276,7 +15276,7 @@
   "@helpFileTransferOverviewTitle": {
     "description": "Title for file_transfer_overview help topic"
   },
-  "helpFtBetaBubble": "Questa funzione è in **BETA**. Entrambi i nodi devono eseguire Socialmesh sullo stesso canale mesh. I nodi Meshtastic standard non possono ricevere questi trasferimenti.",
+  "helpFtBetaBubble": "Questa funzione è in **BETA**. Entrambi i nodi devono eseguire SocialMesh sullo stesso canale mesh. I nodi Meshtastic standard non possono ricevere questi trasferimenti.",
   "@helpFtBetaBubble": {
     "description": "Help bubble text for step ft_beta"
   },
@@ -15468,7 +15468,7 @@
   "@helpMesh3dTapBubble": {
     "description": "Help bubble text for step mesh3d_tap"
   },
-  "helpMeshExplorerIntroBubble": "Benvenuto in **Mesh Explorer**! Qui vengono mostrati tutti i peer compatibili con Socialmesh attualmente nel raggio radio. I peer anonimi appaiono istantaneamente — nessun handshake necessario.",
+  "helpMeshExplorerIntroBubble": "Benvenuto in **Mesh Explorer**! Qui vengono mostrati tutti i peer compatibili con SocialMesh attualmente nel raggio radio. I peer anonimi appaiono istantaneamente — nessun handshake necessario.",
   "helpMeshExplorerOverviewDescription": "Esplora peer vicini e servizi mesh",
   "helpMeshExplorerOverviewTitle": "Mesh Explorer",
   "helpMeshExplorerPeersBubble": "Ogni riquadro mostra il **sigillo ambientale del peer** e le sue capacità. Tocca un peer per visualizzare i dettagli o avviare un **handshake SIP** per lo scambio di identità.",
@@ -15962,7 +15962,7 @@
   "@helpResponsibilityContentBubble": {
     "description": "Help bubble text for step responsibility_content"
   },
-  "helpResponsibilityIntroBubble": "Socialmesh è progettato per essere **privacy-first**. I tuoi messaggi e dati restano sul tuo dispositivo — non li archiviamo su nessun server.",
+  "helpResponsibilityIntroBubble": "SocialMesh è progettato per essere **privacy-first**. I tuoi messaggi e dati restano sul tuo dispositivo — non li archiviamo su nessun server.",
   "@helpResponsibilityIntroBubble": {
     "description": "Help bubble text for step responsibility_intro"
   },
@@ -16280,7 +16280,7 @@
   "@helpUseImpersonationBubble": {
     "description": "Help bubble text for step use_impersonation"
   },
-  "helpUseIntroBubble": "Socialmesh è uno strumento potente — automazioni, segnali e messaggistica mesh ti danno molte capacità. Con questo viene la responsabilità!",
+  "helpUseIntroBubble": "SocialMesh è uno strumento potente — automazioni, segnali e messaggistica mesh ti danno molte capacità. Con questo viene la responsabilità!",
   "@helpUseIntroBubble": {
     "description": "Help bubble text for step use_intro"
   },
@@ -16292,7 +16292,7 @@
   "@helpUseTermsLinkBubble": {
     "description": "Help bubble text for step use_terms_link"
   },
-  "helpUserResponsibilityDescription": "Come Socialmesh gestisce i dati e di cosa sei responsabile",
+  "helpUserResponsibilityDescription": "Come SocialMesh gestisce i dati e di cosa sei responsabile",
   "@helpUserResponsibilityDescription": {
     "description": "Description for user_responsibility help topic"
   },
@@ -16396,7 +16396,7 @@
   "@homeWidgetsIosPositionDesc": {
     "description": "Description text"
   },
-  "homeWidgetsIosSearch": "Cerca \"Socialmesh\"",
+  "homeWidgetsIosSearch": "Cerca \"SocialMesh\"",
   "@homeWidgetsIosSearch": {
     "description": "UI text: home widgets ios search"
   },
@@ -17184,7 +17184,7 @@
   "@legalAcceptanceAgreeSemantics": {
     "description": "Semantics label for the agree button on the legal acceptance screen"
   },
-  "legalAcceptanceAppIconSemantics": "Icona dell'app Socialmesh",
+  "legalAcceptanceAppIconSemantics": "Icona dell'app SocialMesh",
   "@legalAcceptanceAppIconSemantics": {
     "description": "Semantics label for the app icon on the legal acceptance screen"
   },
@@ -17236,7 +17236,7 @@
   "@legalAcceptanceDateFormatSeptember": {
     "description": "Month name used in formatting effective dates of legal documents"
   },
-  "legalAcceptanceDeclineBody": "Per utilizzare Socialmesh è necessario accettare i Termini di servizio e l'Informativa sulla privacy. Puoi rivederli e accettarli quando vuoi.",
+  "legalAcceptanceDeclineBody": "Per utilizzare SocialMesh è necessario accettare i Termini di servizio e l'Informativa sulla privacy. Puoi rivederli e accettarli quando vuoi.",
   "@legalAcceptanceDeclineBody": {
     "description": "Explanation on the iOS decline screen informing the user that acceptance is required but they can return at any time"
   },
@@ -17293,7 +17293,7 @@
   "@legalAcceptanceSubtitleInitial": {
     "description": "Subtitle on first launch prompting the user to review the legal documents before proceeding"
   },
-  "legalAcceptanceSubtitleUpdate": "Abbiamo aggiornato i Termini di servizio. Rivedi e accetta le modifiche per continuare a usare Socialmesh.",
+  "legalAcceptanceSubtitleUpdate": "Abbiamo aggiornato i Termini di servizio. Rivedi e accetta le modifiche per continuare a usare SocialMesh.",
   "@legalAcceptanceSubtitleUpdate": {
     "description": "Subtitle explaining that the terms have been updated and re-acceptance is required to continue using the app"
   },
@@ -17386,7 +17386,7 @@
   "@legalEligibilityConfirmSemantics": {
     "description": "Semantics label for the confirm button on the eligibility gate screen"
   },
-  "legalEligibilityExitBody": "Devi confermare la tua età per usare Socialmesh. Puoi confermare quando vuoi.",
+  "legalEligibilityExitBody": "Devi confermare la tua età per usare SocialMesh. Puoi confermare quando vuoi.",
   "@legalEligibilityExitBody": {
     "description": "Explanation shown on iOS when user taps Exit, since iOS cannot force-quit; informs them they can return and confirm later"
   },
@@ -17394,7 +17394,7 @@
   "@legalEligibilityExitButton": {
     "description": "Secondary button to exit the app if the user does not meet the age requirement"
   },
-  "legalEligibilityExitSemantics": "Esci. Devi confermare la tua età per usare Socialmesh.",
+  "legalEligibilityExitSemantics": "Esci. Devi confermare la tua età per usare SocialMesh.",
   "@legalEligibilityExitSemantics": {
     "description": "Semantics label for the exit button on the eligibility gate screen"
   },
@@ -18371,7 +18371,7 @@
   "meshExplorerScanCooldown": "La mesh è occupata, scansione bloccata",
   "meshExplorerScanSent": "Scansione dei peer vicini…",
   "meshExplorerScanningAction": "Scansiona ora",
-  "meshExplorerScanningTagline1": "Scansiona peer Socialmesh che trasmettono sulla mesh",
+  "meshExplorerScanningTagline1": "Scansiona peer SocialMesh che trasmettono sulla mesh",
   "meshExplorerScanningTagline2": "Tocca Scansiona per inviare un rollcall — attiva i peer vicini",
   "meshExplorerScanningTagline3": "I peer appaiono anonimi — effettua l'handshake per identificarli",
   "meshExplorerScanningTagline4": "Il raggio radio conta — prova ad avvicinarti alla mesh",
@@ -22862,8 +22862,8 @@
     },
     "description": "Text in node management Parameters: {day}."
   },
-  "nodedexCardBrandSocialmesh": "SOCIALMESH",
-  "@nodedexCardBrandSocialmesh": {
+  "nodedexCardBrandSocialMesh": "SOCIALMESH",
+  "@nodedexCardBrandSocialMesh": {
     "description": "Text displayed in node management"
   },
   "nodedexCardDeviceFirmware": "FIRMWARE",
@@ -23682,7 +23682,7 @@
   "@nodedexExportNothingToExport": {
     "description": "Text displayed in node management"
   },
-  "nodedexExportShareSubject": "Esportazione NodeDex Socialmesh",
+  "nodedexExportShareSubject": "Esportazione NodeDex SocialMesh",
   "@nodedexExportShareSubject": {
     "description": "Text displayed in node management"
   },
@@ -25085,8 +25085,8 @@
   "@nodedexShareCouldNotShare": {
     "description": "Text displayed in node management"
   },
-  "nodedexShareGetSocialmesh": "Scarica SocialMesh:",
-  "@nodedexShareGetSocialmesh": {
+  "nodedexShareGetSocialMesh": "Scarica SocialMesh:",
+  "@nodedexShareGetSocialMesh": {
     "description": "Text displayed in node management"
   },
   "nodedexShareSigilCard": "Condividi Sigil Card",
@@ -25505,7 +25505,7 @@
   },
   "nodedexTitle": "NodeDex",
   "@nodedexTitle": {
-    "description": "Nodedex = Socialmesh's node database/encyclopedia (portmanteau of 'node' + 'index'). Do not translate."
+    "description": "Nodedex = SocialMesh's node database/encyclopedia (portmanteau of 'node' + 'index'). Do not translate."
   },
   "nodedexTotalCount": "{count} totali",
   "@nodedexTotalCount": {
@@ -26353,7 +26353,7 @@
   "@onboardingWelcomeDescription": {
     "description": "Description for the welcome onboarding page"
   },
-  "onboardingWelcomeTitle": "Benvenuto su Socialmesh",
+  "onboardingWelcomeTitle": "Benvenuto su SocialMesh",
   "@onboardingWelcomeTitle": {
     "description": "Title for the first onboarding page"
   },
@@ -27543,7 +27543,7 @@
   "@privacySettingsFirebaseTitle": {
     "description": "Screen or section title"
   },
-  "privacySettingsInfoDescription": "Socialmesh raccoglie dati minimi per migliorare la stabilità e le prestazioni dell'app. Puoi controllare cosa viene condiviso qui sotto.",
+  "privacySettingsInfoDescription": "SocialMesh raccoglie dati minimi per migliorare la stabilità e le prestazioni dell'app. Puoi controllare cosa viene condiviso qui sotto.",
   "@privacySettingsInfoDescription": {
     "description": "Description text"
   },
@@ -27563,7 +27563,7 @@
   "@privacySettingsSigilCategories": {
     "description": "UI text: privacy settings sigil categories"
   },
-  "privacySettingsSigilTitle": "Sigil API (Socialmesh)",
+  "privacySettingsSigilTitle": "Sigil API (SocialMesh)",
   "@privacySettingsSigilTitle": {
     "description": "Screen or section title"
   },
@@ -27761,7 +27761,7 @@
   "@productDetailOutOfStockButton": {
     "description": "Button or action label"
   },
-  "productDetailPurchaseDisclaimer": "Acquisti completati sul negozio ufficiale del venditore · Socialmesh potrebbe ricevere una commissione",
+  "productDetailPurchaseDisclaimer": "Acquisti completati sul negozio ufficiale del venditore · SocialMesh potrebbe ricevere una commissione",
   "@productDetailPurchaseDisclaimer": {
     "description": "UI text: product detail purchase disclaimer"
   },
@@ -30154,7 +30154,7 @@
   "@scannerConnectionTimedOut": {
     "description": "User-friendly error message for BLE connection timeout errors."
   },
-  "scannerCopyright": "© 2026 Socialmesh. Tutti i diritti riservati.",
+  "scannerCopyright": "© 2026 SocialMesh. Tutti i diritti riservati.",
   "@scannerCopyright": {
     "description": "Copyright notice at the bottom of the scanner screen."
   },
@@ -30341,7 +30341,7 @@
   "@scannerUnsupportedDeviceMessage": {
     "description": "Second paragraph in the unknown-protocol warning sheet."
   },
-  "scannerVersionText": "Socialmesh v{version}",
+  "scannerVersionText": "SocialMesh v{version}",
   "@scannerVersionText": {
     "description": "Version text shown at the bottom of the scanner screen.",
     "placeholders": {
@@ -30678,7 +30678,7 @@
   "@sellerProfileCopyCodeTooltip": {
     "description": "Tooltip for copy discount code button"
   },
-  "sellerProfileDiscountExclusive": "Codice sconto esclusivo per gli utenti Socialmesh",
+  "sellerProfileDiscountExclusive": "Codice sconto esclusivo per gli utenti SocialMesh",
   "@sellerProfileDiscountExclusive": {
     "description": "UI text: seller profile discount exclusive"
   },
@@ -31130,11 +31130,11 @@
   "@settingsNotConfigured": {
     "description": "Subtitle shown for the region tile when no region has been configured."
   },
-  "settingsOpenSourceAppName": "Socialmesh",
+  "settingsOpenSourceAppName": "SocialMesh",
   "@settingsOpenSourceAppName": {
     "description": "Application name passed to the Flutter LicensePage."
   },
-  "settingsOpenSourceLegalese": "© 2024 Socialmesh\n\nQuesta app utilizza software open source. Consulta l'elenco completo delle licenze di terze parti qui sotto.",
+  "settingsOpenSourceLegalese": "© 2024 SocialMesh\n\nQuesta app utilizza software open source. Consulta l'elenco completo delle licenze di terze parti qui sotto.",
   "@settingsOpenSourceLegalese": {
     "description": "Legalese text passed to the Flutter LicensePage."
   },
@@ -31591,9 +31591,9 @@
   "@settingsSocialNotificationsLoadingSubtitle": {
     "description": "Subtitle of the social notifications tile while preferences are loading."
   },
-  "settingsSocialmeshVersionSnackbar": "Socialmesh v{version}",
-  "@settingsSocialmeshVersionSnackbar": {
-    "description": "Snackbar text shown when tapping the Socialmesh about tile.",
+  "settingsSocialMeshVersionSnackbar": "SocialMesh v{version}",
+  "@settingsSocialMeshVersionSnackbar": {
+    "description": "Snackbar text shown when tapping the SocialMesh about tile.",
     "placeholders": {
       "version": {
         "type": "String"
@@ -32066,13 +32066,13 @@
   "@settingsTileShakeToReportTitle": {
     "description": "Title of the shake-to-report settings tile."
   },
-  "settingsTileSocialmeshSubtitle": "App companion Meshtastic",
-  "@settingsTileSocialmeshSubtitle": {
-    "description": "Subtitle of the Socialmesh about tile in the About section."
+  "settingsTileSocialMeshSubtitle": "App companion Meshtastic",
+  "@settingsTileSocialMeshSubtitle": {
+    "description": "Subtitle of the SocialMesh about tile in the About section."
   },
-  "settingsTileSocialmeshTitle": "Socialmesh",
-  "@settingsTileSocialmeshTitle": {
-    "description": "Title of the Socialmesh about tile in the About section."
+  "settingsTileSocialMeshTitle": "SocialMesh",
+  "@settingsTileSocialMeshTitle": {
+    "description": "Title of the SocialMesh about tile in the About section."
   },
   "settingsTileSoundSubtitle": "Riproduci suono con le notifiche",
   "@settingsTileSoundSubtitle": {
@@ -33621,13 +33621,13 @@
   "sipConnecting": "Connessione…",
   "sipCountersTitle": "Contatori debug SIP",
   "sipDiscoveryDeviceClass": "Classe dispositivo: {deviceClass}",
-  "sipDiscoveryNoPeers": "Nessun peer Socialmesh rilevato",
+  "sipDiscoveryNoPeers": "Nessun peer SocialMesh rilevato",
   "sipDiscoveryNoPeersDescription": "I peer Handshake appariranno qui quando rilevati tramite beacon o rollcall.",
   "sipDiscoveryPeerAnonymous": "Peer SIP",
-  "sipDiscoveryPeersNearby": "{count} {count, plural, =1{peer} other{peer}} Socialmesh nelle vicinanze",
-  "sipDiscoveryScanButton": "Scansiona Socialmesh",
+  "sipDiscoveryPeersNearby": "{count} {count, plural, =1{peer} other{peer}} SocialMesh nelle vicinanze",
+  "sipDiscoveryScanButton": "Scansiona SocialMesh",
   "sipDiscoveryScanCooldown": "Scansione disponibile tra {seconds}s",
-  "sipDiscoveryTitle": "Scoperta Socialmesh",
+  "sipDiscoveryTitle": "Scoperta SocialMesh",
   "sipDisplayNameLabel": "Nome SIP",
   "sipDmActionCopy": "Copia",
   "sipDmActionDelete": "Elimina",
@@ -35198,7 +35198,7 @@
   "@socialSensitiveContentControl": {
     "description": "Text displayed in social features"
   },
-  "socialSensitiveContentDescription": "Socialmesh utilizza sistemi automatizzati per rilevare contenuti potenzialmente sensibili. Puoi modificare la visualizzazione di questi contenuti.",
+  "socialSensitiveContentDescription": "SocialMesh utilizza sistemi automatizzati per rilevare contenuti potenzialmente sensibili. Puoi modificare la visualizzazione di questi contenuti.",
   "@socialSensitiveContentDescription": {
     "description": "Description text in social features"
   },
@@ -35897,7 +35897,7 @@
   "@subscriptionBestValue": {
     "description": "UI text: subscription best value"
   },
-  "subscriptionCelebrationMessage": "Ora hai accesso a tutto ciò che Socialmesh ha da offrire. Grazie per il tuo supporto!",
+  "subscriptionCelebrationMessage": "Ora hai accesso a tutto ciò che SocialMesh ha da offrire. Grazie per il tuo supporto!",
   "@subscriptionCelebrationMessage": {
     "description": "UI text: subscription celebration message"
   },
@@ -37559,7 +37559,7 @@
   "@telemetryPositionDrawerTitle": {
     "description": "Drawer header title in the position map node list."
   },
-  "telemetryPositionExportSubject": "Esportazione posizioni Socialmesh",
+  "telemetryPositionExportSubject": "Esportazione posizioni SocialMesh",
   "@telemetryPositionExportSubject": {
     "description": "Share sheet subject for position CSV export."
   },
@@ -37695,7 +37695,7 @@
   "@telemetryTracerouteEmptyHint": {
     "description": "Empty-state subtitle for the traceroute screen."
   },
-  "telemetryTracerouteExportSubject": "Esportazione traceroute Socialmesh ({scope})",
+  "telemetryTracerouteExportSubject": "Esportazione traceroute SocialMesh ({scope})",
   "@telemetryTracerouteExportSubject": {
     "description": "Share sheet subject for traceroute CSV export.",
     "placeholders": {
@@ -38298,7 +38298,7 @@
   "@whatsNewCtaOpenWorldMap": {
     "description": "What's new CTA button: Open World Map"
   },
-  "whatsNewHeadline": "Novità in Socialmesh",
+  "whatsNewHeadline": "Novità in SocialMesh",
   "@whatsNewHeadline": {
     "description": "Headline for What's New popup"
   },
@@ -38334,7 +38334,7 @@
   "@whatsNewSignalsTitle": {
     "description": "What's new feature title: Signals"
   },
-  "whatsNewTakGatewayDescription": "Collega la tua rete mesh all'ecosistema Team Awareness Kit (TAK). Socialmesh ora si connette a un TAK Gateway via WebSocket e trasmette in tempo reale entità Cursor-on-Target sulla tua mappa.\n\nOgni entità è colorata per affiliazione standard e dotata di un'icona specifica per dimensione. Filtra per affiliazione, cerca indicativi di chiamata, traccia entità con una pressione prolungata e tocca qualsiasi marcatore per i dettagli CoT completi. Trovalo nel menu laterale sotto Mesh.",
+  "whatsNewTakGatewayDescription": "Collega la tua rete mesh all'ecosistema Team Awareness Kit (TAK). SocialMesh ora si connette a un TAK Gateway via WebSocket e trasmette in tempo reale entità Cursor-on-Target sulla tua mappa.\n\nOgni entità è colorata per affiliazione standard e dotata di un'icona specifica per dimensione. Filtra per affiliazione, cerca indicativi di chiamata, traccia entità con una pressione prolungata e tocca qualsiasi marcatore per i dettagli CoT completi. Trovalo nel menu laterale sotto Mesh.",
   "@whatsNewTakGatewayDescription": {
     "description": "What's new description for TAK Gateway feature"
   },
@@ -38370,7 +38370,7 @@
   "@whatsNewVersion190Subtitle": {
     "description": "What's new subtitle for version 1.9.0"
   },
-  "whatsNewWorldMapDescription": "Visualizza l'intera rete Meshtastic globale su una singola mappa. Ogni punto è un nodo che condivide la sua posizione — ingrandisci, scorri e tocca per esplorare i dettagli del nodo, info hardware e ultimo contatto.\n\nNessuna connessione necessaria. La mappa mondiale usa dati in tempo reale dal backend Socialmesh per esplorare la mesh ovunque.",
+  "whatsNewWorldMapDescription": "Visualizza l'intera rete Meshtastic globale su una singola mappa. Ogni punto è un nodo che condivide la sua posizione — ingrandisci, scorri e tocca per esplorare i dettagli del nodo, info hardware e ultimo contatto.\n\nNessuna connessione necessaria. La mappa mondiale usa dati in tempo reale dal backend SocialMesh per esplorare la mesh ovunque.",
   "@whatsNewWorldMapDescription": {
     "description": "What's new description for World Map feature"
   },
@@ -41101,7 +41101,7 @@
   "meshCapacityCardTitleCapacityLimited": "Quest'area potrebbe richiedere un preset più rapido",
   "meshCapacityCardSubtitleCapacityLimited": "{count, plural, =1{1 nodo vicino è attivo via radio. Il tempo d'aria è probabilmente saturo. Tocca per scoprire quale preset aiuterebbe.} other{{count} nodi vicini sono attivi via radio. Il tempo d'aria è probabilmente saturo. Tocca per scoprire quale preset aiuterebbe.}}",
   "meshCapacityCardTitlePresetUnknown": "Preset non ancora leggibile",
-  "meshCapacityCardSubtitlePresetUnknown": "Socialmesh non può valutare l'idoneità del preset finché non riesce a leggere il preset modem corrente dal tuo dispositivo.",
+  "meshCapacityCardSubtitlePresetUnknown": "SocialMesh non può valutare l'idoneità del preset finché non riesce a leggere il preset modem corrente dal tuo dispositivo.",
   "meshCapacitySheetTitle": "Perché la scelta del preset è importante",
   "meshCapacitySheetIntro": "I preset radio Meshtastic sono un compromesso tra portata e capacità. I preset a lungo raggio sono utili quando la rete è poco densa o stai cercando di scoprire altri nodi. In aree dense, le stesse impostazioni possono consumare troppo tempo d'aria, causando ritardi, messaggi persi e routing inaffidabile.",
   "meshCapacitySheetTradeoff": "I preset più rapidi riducono la portata ma permettono alla mesh locale di gestire più traffico. Le aree urbane dense e i grandi eventi solitamente richiedono preset più rapidi per restare reattivi. I deployment più sparsi e esplorativi traggono ancora vantaggio dai preset a lungo raggio.",
@@ -41115,7 +41115,7 @@
   "meshCapacitySheetSuggestedPresetLabel": "Preset suggerito",
   "meshCapacitySheetPresetUnknownValue": "Sconosciuto",
   "meshCapacitySheetRiskHeader": "Prima di cambiare preset",
-  "meshCapacitySheetRiskBody": "Cambiare preset influenza con chi puoi comunicare. Il tuo gruppo dovrebbe spostarsi insieme, altrimenti potresti smettere di sentire i nodi rimasti sul vecchio preset. Socialmesh non cambia mai le impostazioni radio da solo.",
+  "meshCapacitySheetRiskBody": "Cambiare preset influenza con chi puoi comunicare. Il tuo gruppo dovrebbe spostarsi insieme, altrimenti potresti smettere di sentire i nodi rimasti sul vecchio preset. SocialMesh non cambia mai le impostazioni radio da solo.",
   "meshCapacitySheetOpenSettings": "Apri impostazioni radio",
   "meshCapacitySheetClose": "Chiudi",
   "meshCapacityPressureUnknown": "Sconosciuto",

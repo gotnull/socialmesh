@@ -2,7 +2,7 @@
 //  SocialmeshWidgetsLiveActivity.swift
 //  SocialmeshWidgets
 //
-//  Socialmesh Live Activity — Lock Screen, Dynamic Island, CarPlay
+//  SocialMesh Live Activity — Lock Screen, Dynamic Island, CarPlay
 //  Clean layout, no blur/glow hacks, CarPlay-safe rendering
 //
 
@@ -609,7 +609,7 @@ struct ExpandedLeading: View {
                 .frame(width: 8, height: 8)
 
             VStack(alignment: .leading, spacing: 1) {
-                Text("Socialmesh")
+                Text("SocialMesh")
                     .font(SM.brand(12, weight: .bold))
                     .foregroundColor(SM.textPrimary)
 

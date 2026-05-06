@@ -12,7 +12,7 @@ import '../providers/device_shop_providers.dart' show lilygoSellerId;
 /// Service for fetching products directly from LILYGO's Shopify API
 ///
 /// LILYGO has granted permission to use their product information,
-/// images, and descriptions in the Socialmesh Device Shop.
+/// images, and descriptions in the SocialMesh Device Shop.
 class LilygoApiService {
   static const String _tag = '[LilygoApi]';
   static const String _baseUrl = 'https://lilygo.cc';

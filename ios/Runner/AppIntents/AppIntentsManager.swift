@@ -2,7 +2,7 @@
 //  AppIntentsManager.swift
 //  Runner
 //
-//  Socialmesh App Intents - Manager for Flutter communication
+//  SocialMesh App Intents - Manager for Flutter communication
 //
 //  Engine-readiness gate: App Intents with `openAppWhenRun = false` can fire
 //  before the FlutterEngine has finished initialising (e.g. Siri Shortcuts
@@ -143,7 +143,7 @@ class AppIntentsManager {
             }
         } else {
             // Engine not ready - park the invocation until markEngineReady().
-            NSLog("Socialmesh: AppIntentsManager queuing intent '%@' (engine not ready)", intentName)
+            NSLog("SocialMesh: AppIntentsManager queuing intent '%@' (engine not ready)", intentName)
             queue.sync {
                 pendingInvocations.append(doInvoke)
             }

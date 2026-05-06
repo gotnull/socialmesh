@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-// Trigger node builders for the Socialmesh visual automation flow builder.
+// Trigger node builders for the SocialMesh visual automation flow builder.
 //
 // Each TriggerType maps to a VSWidgetNode builder that:
 // - Presents a user-configurable widget (threshold sliders, node pickers, etc.)

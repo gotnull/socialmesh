@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 // Vendored from vs_node_view v2.1.1 — BSD-3-Clause
-// Import paths rewritten for Socialmesh vendoring.
+// Import paths rewritten for SocialMesh vendoring.
 // Modified: Added glow/shadow pass underneath main lines for sci-fi aesthetic.
 
 import 'package:flutter/material.dart';
@@ -15,7 +15,7 @@ class MultiGradientLinePainter extends CustomPainter {
   ///
   /// Each connection gets a glow pass (wider, blurred, semi-transparent)
   /// rendered beneath the main crisp line, producing the sci-fi neon-wire
-  /// aesthetic that matches the Socialmesh constellation view.
+  /// aesthetic that matches the SocialMesh constellation view.
   MultiGradientLinePainter({
     required this.data,
     this.glowEnabled = true,

@@ -8,7 +8,7 @@ import 'package:cryptography/cryptography.dart';
 import '../../core/logging.dart';
 import 'stl_envelope.dart';
 
-/// Ed25519 signing service for the Socialmesh Trust Layer (STL).
+/// Ed25519 signing service for the SocialMesh Trust Layer (STL).
 ///
 /// Uses the existing SIP keypair infrastructure for Ed25519 operations.
 /// This service is stateless — it accepts key material as parameters

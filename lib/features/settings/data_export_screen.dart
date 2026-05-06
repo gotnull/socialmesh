@@ -860,7 +860,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen>
       '<?xml version="1.0" encoding="UTF-8"?>',
     ); // lint-allow: hardcoded-string
     buffer.writeln(
-      '<gpx version="1.1" creator="Socialmesh" xmlns="http://www.topografix.com/GPX/1/1">', // lint-allow: hardcoded-string
+      '<gpx version="1.1" creator="SocialMesh" xmlns="http://www.topografix.com/GPX/1/1">', // lint-allow: hardcoded-string
     );
 
     for (final route in routes) {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Deep link handling pipeline for Socialmesh.
+/// Deep link handling pipeline for SocialMesh.
 ///
 /// This package provides a centralized, crash-safe deep link system:
 ///

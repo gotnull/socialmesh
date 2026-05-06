@@ -2,7 +2,7 @@
 //  GetOnlineNodesIntent.swift
 //  Runner
 //
-//  Socialmesh App Intents - Get count of online nodes
+//  SocialMesh App Intents - Get count of online nodes
 //
 
 import Foundation

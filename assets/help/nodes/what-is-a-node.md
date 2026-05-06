@@ -22,7 +22,7 @@ Every node on the mesh:
 
 ## How You See Nodes
 
-In Socialmesh, the node list shows every node your radio has heard. Each entry displays:
+In SocialMesh, the node list shows every node your radio has heard. Each entry displays:
 
 - The node's name
 - When it was last heard

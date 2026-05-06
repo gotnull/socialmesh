@@ -1,16 +1,16 @@
 # Your First Steps
 
-You've got a Meshtastic radio and Socialmesh on your phone. Here's what happens next.
+You've got a Meshtastic radio and SocialMesh on your phone. Here's what happens next.
 
 ## 1. Set Your Region
 
 Before your radio can transmit, it needs to know which country you're in. Different countries use different radio frequencies, and transmitting on the wrong one can be illegal.
 
-When you first connect, Socialmesh will prompt you to select your region. This configures the correct frequency band and power limits for your location. Once set, your radio will only operate within the legal parameters for your area.
+When you first connect, SocialMesh will prompt you to select your region. This configures the correct frequency band and power limits for your location. Once set, your radio will only operate within the legal parameters for your area.
 
 ## 2. Connect Over Bluetooth
 
-Socialmesh connects to your Meshtastic radio using **Bluetooth Low Energy (BLE)**. Turn on your radio, open the scanner in Socialmesh, and tap your device when it appears.
+SocialMesh connects to your Meshtastic radio using **Bluetooth Low Energy (BLE)**. Turn on your radio, open the scanner in SocialMesh, and tap your device when it appears.
 
 Once paired, your phone becomes the interface for your radio. You type messages on your phone, and the radio transmits them over LoRa to the mesh.
 
@@ -20,7 +20,7 @@ Every Meshtastic radio comes preconfigured with a default **LongFast** channel. 
 
 ## 4. See Who's Out There
 
-The node list in Socialmesh shows every Meshtastic radio your device has heard. Each entry shows:
+The node list in SocialMesh shows every Meshtastic radio your device has heard. Each entry shows:
 
 - The node's **name** (or a short ID if no name is set)
 - The **last time** it was heard

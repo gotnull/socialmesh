@@ -3,7 +3,7 @@
 // lint-allow: haptic-feedback — onTap delegates to parent callback
 
 // Vendored from vs_node_view v2.1.1 — BSD-3-Clause
-// Import paths rewritten for Socialmesh vendoring.
+// Import paths rewritten for SocialMesh vendoring.
 // Modified: Added sci-fi themed canvas background rendering.
 // Modified: Long-press gesture opens context menu with haptic-friendly delay.
 // Modified: Tap on canvas clears selection and closes context menu.

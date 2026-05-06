@@ -11,7 +11,7 @@ import '../models/tak_event.dart';
 /// Connection state for the gateway WebSocket.
 enum TakConnectionState { disconnected, connecting, connected, reconnecting }
 
-/// WebSocket client that connects to the Socialmesh TAK Gateway
+/// WebSocket client that connects to the SocialMesh TAK Gateway
 /// and streams normalized CoT events.
 ///
 /// Usage:

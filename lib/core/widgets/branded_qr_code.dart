@@ -35,7 +35,7 @@ enum QrStyle {
   smooth,
 }
 
-/// A QR code widget with the Socialmesh app icon centered with proper styling.
+/// A QR code widget with the SocialMesh app icon centered with proper styling.
 ///
 /// Uses pretty_qr_code for advanced styling options including smooth,
 /// dots, and square module shapes.

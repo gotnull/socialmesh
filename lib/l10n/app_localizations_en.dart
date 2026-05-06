@@ -382,7 +382,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminSellersDiscountDisplayHint =>
-      'e.g., 10% off for Socialmesh users';
+      'e.g., 10% off for SocialMesh users';
 
   @override
   String get adminSellersDiscountDisplayLabel => 'Display Label';
@@ -1213,7 +1213,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ambientLightingTitle => 'Ambient Lighting';
 
   @override
-  String get appTitle => 'Socialmesh';
+  String get appTitle => 'SocialMesh';
 
   @override
   String get arCalibratingSensors => 'Calibrating sensors...';
@@ -2550,11 +2550,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get automationShareMessage =>
-      'Check out this automation on Socialmesh!';
+      'Check out this automation on SocialMesh!';
 
   @override
   String get automationShareScanInfo =>
-      'Scan this QR code in Socialmesh to import this automation';
+      'Scan this QR code in SocialMesh to import this automation';
 
   @override
   String get automationShareSignIn => 'Sign in to share automations';
@@ -2564,7 +2564,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String automationShareSubject(String name) {
-    return 'Socialmesh Automation: $name';
+    return 'SocialMesh Automation: $name';
   }
 
   @override
@@ -3192,7 +3192,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get channelOptionsViewQrInfo =>
-      'Scan this QR code in Socialmesh to join this channel';
+      'Scan this QR code in SocialMesh to join this channel';
 
   @override
   String get channelShareCreatingInvite => 'Creating invite link...';
@@ -3209,11 +3209,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get channelShareInviteFailed => 'Failed to create invite link';
 
   @override
-  String get channelShareMessage => 'Join my channel on Socialmesh!';
+  String get channelShareMessage => 'Join my channel on SocialMesh!';
 
   @override
   String get channelShareQrInfo =>
-      'Scan this QR code in Socialmesh to import this channel';
+      'Scan this QR code in SocialMesh to import this channel';
 
   @override
   String get channelShareSignInAction => 'Sign In';
@@ -3223,7 +3223,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String channelShareSubject(String channelName) {
-    return 'Socialmesh Channel: $channelName';
+    return 'SocialMesh Channel: $channelName';
   }
 
   @override
@@ -3862,7 +3862,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get debugScreenMeshcoreDiagnosticsSubject =>
-      'Socialmesh MeshCore Diagnostics';
+      'SocialMesh MeshCore Diagnostics';
 
   @override
   String get networkProtocolMeshtastic => 'Meshtastic';
@@ -4585,7 +4585,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deviceShopContactEmailBody =>
-      'Hi Socialmesh team,\n\nI am interested in becoming a seller in the Device Shop.\n\nCompany name:\nWebsite:\nProduct types:\nRegion(s):\n\nAdditional details:\n';
+      'Hi SocialMesh team,\n\nI am interested in becoming a seller in the Device Shop.\n\nCompany name:\nWebsite:\nProduct types:\nRegion(s):\n\nAdditional details:\n';
 
   @override
   String get deviceShopErrorLoadingProducts => 'Error loading products';
@@ -4611,7 +4611,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deviceShopMarketplaceDisclaimer =>
-      'Purchases are completed on the seller\'s official store. Socialmesh may earn a small commission from purchases made through these links. Socialmesh does not handle payment, shipping, warranty, or returns.';
+      'Purchases are completed on the seller\'s official store. SocialMesh may earn a small commission from purchases made through these links. SocialMesh does not handle payment, shipping, warranty, or returns.';
 
   @override
   String get deviceShopMarketplaceInfoTitle => 'Marketplace Information';
@@ -5026,7 +5026,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get feedbackReportBugDescription =>
-      'If something isn\'t working correctly, you can report it to help improve Socialmesh for everyone.';
+      'If something isn\'t working correctly, you can report it to help improve SocialMesh for everyone.';
 
   @override
   String get feedbackReportBugTitle => 'Report a bug?';
@@ -5035,7 +5035,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get feedbackReportResolved => 'This report has been resolved';
 
   @override
-  String get feedbackResponseAuthorSocialmesh => 'Socialmesh';
+  String get feedbackResponseAuthorSocialMesh => 'SocialMesh';
 
   @override
   String get feedbackResponseAuthorYou => 'You';
@@ -6647,7 +6647,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'I agree to the Terms of Service and Privacy Policy. Tap to accept and continue.';
 
   @override
-  String get legalAcceptanceAppIconSemantics => 'Socialmesh app icon';
+  String get legalAcceptanceAppIconSemantics => 'SocialMesh app icon';
 
   @override
   String get legalAcceptanceDateFormatApril => 'April';
@@ -6687,7 +6687,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get legalAcceptanceDeclineBody =>
-      'Accepting the Terms of Service and Privacy Policy is required to use Socialmesh. You can review them and accept whenever you are ready.';
+      'Accepting the Terms of Service and Privacy Policy is required to use SocialMesh. You can review them and accept whenever you are ready.';
 
   @override
   String get legalAcceptanceDeclineButton => 'Not Now';
@@ -6734,7 +6734,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get legalAcceptanceSubtitleUpdate =>
-      'We have updated our Terms of Service. Please review and accept the changes to continue using Socialmesh.';
+      'We have updated our Terms of Service. Please review and accept the changes to continue using SocialMesh.';
 
   @override
   String legalAcceptanceTermsEffective(String date) {
@@ -6772,14 +6772,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get legalEligibilityExitBody =>
-      'You must confirm your age to use Socialmesh. You can confirm whenever you are ready.';
+      'You must confirm your age to use SocialMesh. You can confirm whenever you are ready.';
 
   @override
   String get legalEligibilityExitButton => 'Exit';
 
   @override
   String get legalEligibilityExitSemantics =>
-      'Exit. You must confirm your age to use Socialmesh.';
+      'Exit. You must confirm your age to use SocialMesh.';
 
   @override
   String get legalEligibilityExitTitle => 'Age Confirmation Required';
@@ -9812,7 +9812,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String nodeAnalyticsShareText(String name, String url) {
-    return 'Check out $name on Socialmesh!\n$url';
+    return 'Check out $name on SocialMesh!\n$url';
   }
 
   @override
@@ -10560,7 +10560,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get nodedexCardBrandSocialmesh => 'SOCIALMESH';
+  String get nodedexCardBrandSocialMesh => 'SOCIALMESH';
 
   @override
   String get nodedexCardDeviceFirmware => 'FIRMWARE';
@@ -11129,7 +11129,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Nothing to export — NodeDex is empty';
 
   @override
-  String get nodedexExportShareSubject => 'Socialmesh NodeDex Export';
+  String get nodedexExportShareSubject => 'SocialMesh NodeDex Export';
 
   @override
   String nodedexFieldNoteAnchor0(int coSeen) {
@@ -12138,7 +12138,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String nodedexShareCardCheckOut(String name) {
-    return 'Check out the Sigil Card for $name on Socialmesh!';
+    return 'Check out the Sigil Card for $name on SocialMesh!';
   }
 
   @override
@@ -12148,7 +12148,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nodedexShareCouldNotShare => 'Could not share card';
 
   @override
-  String get nodedexShareGetSocialmesh => 'Get Socialmesh:';
+  String get nodedexShareGetSocialMesh => 'Get SocialMesh:';
 
   @override
   String get nodedexShareSigilCard => 'Share Sigil Card';
@@ -13316,7 +13316,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get productDetailPurchaseDisclaimer =>
-      'Purchases completed on seller\'s official store · Socialmesh may earn a commission';
+      'Purchases completed on seller\'s official store · SocialMesh may earn a commission';
 
   @override
   String get productDetailPurchaseTitle => 'Purchase';
@@ -14617,7 +14617,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Connection timed out. The device may be out of range, powered off, or connected to another phone.';
 
   @override
-  String get scannerCopyright => '© 2026 Socialmesh. All rights reserved.';
+  String get scannerCopyright => '© 2026 SocialMesh. All rights reserved.';
 
   @override
   String get scannerDetailAddress => 'Address';
@@ -14750,7 +14750,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String scannerVersionText(String version) {
-    return 'Socialmesh v$version';
+    return 'SocialMesh v$version';
   }
 
   @override
@@ -14811,7 +14811,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sellerProfileDiscountExclusive =>
-      'Exclusive discount code for Socialmesh users';
+      'Exclusive discount code for SocialMesh users';
 
   @override
   String get sellerProfileEmail => 'Email';
@@ -15124,11 +15124,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsNotConfigured => 'Not configured';
 
   @override
-  String get settingsOpenSourceAppName => 'Socialmesh';
+  String get settingsOpenSourceAppName => 'SocialMesh';
 
   @override
   String get settingsOpenSourceLegalese =>
-      '© 2024 Socialmesh\n\nThis app uses open source software. See below for the complete list of third-party licenses.';
+      '© 2024 SocialMesh\n\nThis app uses open source software. See below for the complete list of third-party licenses.';
 
   @override
   String get settingsPremiumAllUnlocked => 'All features unlocked!';
@@ -15475,8 +15475,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Fetching notification preferences';
 
   @override
-  String settingsSocialmeshVersionSnackbar(String version) {
-    return 'Socialmesh v$version';
+  String settingsSocialMeshVersionSnackbar(String version) {
+    return 'SocialMesh v$version';
   }
 
   @override
@@ -15883,10 +15883,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTileShakeToReportTitle => 'Shake to report a bug';
 
   @override
-  String get settingsTileSocialmeshSubtitle => 'Meshtastic companion app';
+  String get settingsTileSocialMeshSubtitle => 'Meshtastic companion app';
 
   @override
-  String get settingsTileSocialmeshTitle => 'Socialmesh';
+  String get settingsTileSocialMeshTitle => 'SocialMesh';
 
   @override
   String get settingsTileSoundSubtitle => 'Play sound with notifications';
@@ -18030,7 +18030,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socialSensitiveContentDescription =>
-      'Socialmesh uses automated systems to detect potentially sensitive content. You can adjust how this content is displayed.';
+      'SocialMesh uses automated systems to detect potentially sensitive content. You can adjust how this content is displayed.';
 
   @override
   String get socialSensitiveContentExplanation =>
@@ -19535,7 +19535,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get telemetryPositionDrawerTitle => 'Nodes';
 
   @override
-  String get telemetryPositionExportSubject => 'Socialmesh Position Export';
+  String get telemetryPositionExportSubject => 'SocialMesh Position Export';
 
   @override
   String telemetryPositionExportedCount(int count) {
@@ -19633,7 +19633,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String telemetryTracerouteExportSubject(String scope) {
-    return 'Socialmesh Traceroute Export ($scope)';
+    return 'SocialMesh Traceroute Export ($scope)';
   }
 
   @override
@@ -21154,18 +21154,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get widgetBuilderShareInfoText =>
-      'Scan this QR code in Socialmesh to import this widget';
+      'Scan this QR code in SocialMesh to import this widget';
 
   @override
   String get widgetBuilderShareLocationWith => 'Share Location With';
 
   @override
   String get widgetBuilderShareMessage =>
-      'Check out this widget on Socialmesh!';
+      'Check out this widget on SocialMesh!';
 
   @override
   String widgetBuilderShareSubject(String name) {
-    return 'Socialmesh Widget: $name';
+    return 'SocialMesh Widget: $name';
   }
 
   @override
@@ -22857,7 +22857,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get batteryOptXiaomiStep1 =>
-      'Open Settings > Apps > Manage apps > Socialmesh.';
+      'Open Settings > Apps > Manage apps > SocialMesh.';
 
   @override
   String get batteryOptXiaomiStep2 => 'Tap \"AutoStart\" and enable it.';
@@ -22867,7 +22867,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get batteryOptXiaomiStep4 =>
-      'Select \"No restrictions\" for Socialmesh.';
+      'Select \"No restrictions\" for SocialMesh.';
 
   @override
   String get batteryOptSamsungStep1 =>
@@ -22878,7 +22878,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get batteryOptSamsungStep3 =>
-      'Remove Socialmesh from the \"Sleeping apps\" and \"Deep sleeping apps\" lists.';
+      'Remove SocialMesh from the \"Sleeping apps\" and \"Deep sleeping apps\" lists.';
 
   @override
   String get batteryOptSamsungStep4 =>
@@ -22889,7 +22889,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get batteryOptHuaweiStep2 =>
-      'Find Socialmesh and set it to \"Manage manually\".';
+      'Find SocialMesh and set it to \"Manage manually\".';
 
   @override
   String get batteryOptHuaweiStep3 =>
@@ -22897,7 +22897,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get batteryOptOneplusStep1 =>
-      'Open Settings > Apps > App management > Socialmesh.';
+      'Open Settings > Apps > App management > SocialMesh.';
 
   @override
   String get batteryOptOneplusStep2 =>
@@ -22905,11 +22905,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get batteryOptOneplusStep3 =>
-      'On OnePlus 14+: also check Settings > Battery > Battery optimization > Socialmesh > \"Don\'t optimize\".';
+      'On OnePlus 14+: also check Settings > Battery > Battery optimization > SocialMesh > \"Don\'t optimize\".';
 
   @override
   String get batteryOptGenericStep1 =>
-      'Open Settings > Apps > Socialmesh > Battery.';
+      'Open Settings > Apps > SocialMesh > Battery.';
 
   @override
   String get batteryOptGenericStep2 =>
@@ -22917,7 +22917,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get batteryOptGenericStep3 =>
-      'This allows Socialmesh to maintain the mesh connection in the background.';
+      'This allows SocialMesh to maintain the mesh connection in the background.';
 
   @override
   String get helpCenterNoResultsPrefix => 'No ';
@@ -23395,7 +23395,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subscriptionCelebrationMessage =>
-      'You now have access to everything Socialmesh has to offer. Thank you for your support!';
+      'You now have access to everything SocialMesh has to offer. Thank you for your support!';
 
   @override
   String get subscriptionAwesome => 'Awesome!';
@@ -23651,7 +23651,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacySettingsInfoDescription =>
-      'Socialmesh collects minimal data to improve app stability and performance. You can control what is shared below.';
+      'SocialMesh collects minimal data to improve app stability and performance. You can control what is shared below.';
 
   @override
   String get privacySettingsDataCollection => 'DATA COLLECTION';
@@ -24679,7 +24679,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeWidgetsIosTapPlusDesc => 'Located in the top-left corner';
 
   @override
-  String get homeWidgetsIosSearch => 'Search for \"Socialmesh\"';
+  String get homeWidgetsIosSearch => 'Search for \"SocialMesh\"';
 
   @override
   String get homeWidgetsIosSearchDesc => 'Or scroll to find our widgets';
@@ -26331,48 +26331,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dataExportClearAutomationLog => 'automation log';
 
   @override
-  String get dataExportShareSubjectMessages => 'Socialmesh Messages Export';
+  String get dataExportShareSubjectMessages => 'SocialMesh Messages Export';
 
   @override
   String get dataExportShareSubjectDeviceMetrics =>
-      'Socialmesh Device Metrics Export';
+      'SocialMesh Device Metrics Export';
 
   @override
   String get dataExportShareSubjectEnvironmentMetrics =>
-      'Socialmesh Environment Metrics Export';
+      'SocialMesh Environment Metrics Export';
 
   @override
   String get dataExportShareSubjectAirQuality =>
-      'Socialmesh Air Quality Export';
+      'SocialMesh Air Quality Export';
 
   @override
   String get dataExportShareSubjectPowerMetrics =>
-      'Socialmesh Power Metrics Export';
+      'SocialMesh Power Metrics Export';
 
   @override
   String get dataExportShareSubjectPositionHistory =>
-      'Socialmesh Position History Export';
+      'SocialMesh Position History Export';
 
   @override
-  String get dataExportShareSubjectRoutes => 'Socialmesh Routes Export';
+  String get dataExportShareSubjectRoutes => 'SocialMesh Routes Export';
 
   @override
   String get dataExportShareSubjectTraceroutes =>
-      'Socialmesh Traceroute Export';
+      'SocialMesh Traceroute Export';
 
   @override
   String get dataExportShareSubjectAutomations =>
-      'Socialmesh Automations Export';
+      'SocialMesh Automations Export';
 
   @override
   String get dataExportShareSubjectAutomationLog =>
-      'Socialmesh Automation Log Export';
+      'SocialMesh Automation Log Export';
 
   @override
-  String get dataExportShareSubjectNodeList => 'Socialmesh Node List Export';
+  String get dataExportShareSubjectNodeList => 'SocialMesh Node List Export';
 
   @override
-  String get dataExportShareSubjectComplete => 'Socialmesh Complete Export';
+  String get dataExportShareSubjectComplete => 'SocialMesh Complete Export';
 
   @override
   String get dataExportUnknownSender => 'Unknown';
@@ -26456,7 +26456,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dataExportDeviceConfigBackupShareSubject =>
-      'Socialmesh Device Config Backup';
+      'SocialMesh Device Config Backup';
 
   @override
   String get dataExportDeviceConfigRestoreSheetTitle => 'Restore Device Config';
@@ -26486,7 +26486,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dataExportDeviceConfigRestoreInvalidFile =>
-      'That file is not a valid Socialmesh device config backup.';
+      'That file is not a valid SocialMesh device config backup.';
 
   @override
   String get dataExportDeviceConfigRestoreEmpty =>
@@ -27438,7 +27438,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mqttConfigMapReportConsentBody2 =>
-      'Please be advised that because the map report is not encrypted, your data may be stored and displayed permanently by third parties. Socialmesh does not assume responsibility for any such storage, display, or disclosure of this data.';
+      'Please be advised that because the map report is not encrypted, your data may be stored and displayed permanently by third parties. SocialMesh does not assume responsibility for any such storage, display, or disclosure of this data.';
 
   @override
   String get mqttConfigMapReportOptInLabel =>
@@ -28141,7 +28141,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminBroadcastSentBody =>
-      'Your notification has been sent to all Socialmesh users.';
+      'Your notification has been sent to all SocialMesh users.';
 
   @override
   String get adminBroadcastDone => 'Done';
@@ -28171,7 +28171,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminBroadcastWarning =>
-      'This will send a push notification to every Socialmesh user. Use sparingly for important announcements only.';
+      'This will send a push notification to every SocialMesh user. Use sparingly for important announcements only.';
 
   @override
   String get adminBroadcastPlatformLabel => 'Target Platform';
@@ -28246,7 +28246,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String adminBroadcastSendHint(int seconds) {
-    return 'Sends a push notification to all Socialmesh users. A ${seconds}s countdown gives you time to cancel.';
+    return 'Sends a push notification to all SocialMesh users. A ${seconds}s countdown gives you time to cancel.';
   }
 
   @override
@@ -28383,31 +28383,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminBroadcastDefBodyAnnouncement =>
-      'We have an important announcement for the Socialmesh community.';
+      'We have an important announcement for the SocialMesh community.';
 
   @override
   String get adminBroadcastDefBodyUpdate =>
-      'A new version of Socialmesh is available with improvements and bug fixes.';
+      'A new version of SocialMesh is available with improvements and bug fixes.';
 
   @override
   String get adminBroadcastDefBodyFeature =>
-      'We just launched a new feature in Socialmesh. Check it out!';
+      'We just launched a new feature in SocialMesh. Check it out!';
 
   @override
   String get adminBroadcastDefBodyMaintenance =>
-      'Socialmesh services will be briefly unavailable for scheduled maintenance.';
+      'SocialMesh services will be briefly unavailable for scheduled maintenance.';
 
   @override
   String get adminBroadcastDefBodyAlert =>
-      'Please be aware of an important issue affecting Socialmesh.';
+      'Please be aware of an important issue affecting SocialMesh.';
 
   @override
   String get adminBroadcastDefBodyCelebration =>
-      'We have something exciting to celebrate with the Socialmesh community!';
+      'We have something exciting to celebrate with the SocialMesh community!';
 
   @override
   String get adminBroadcastDefBodyTip =>
-      'Here is a helpful tip to get the most out of Socialmesh.';
+      'Here is a helpful tip to get the most out of SocialMesh.';
 
   @override
   String get adminBroadcastDefBodySignals =>
@@ -28431,7 +28431,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminBroadcastDefBodyCommunity =>
-      'Join the latest Socialmesh community initiatives.';
+      'Join the latest SocialMesh community initiatives.';
 
   @override
   String get adminBroadcastDefBodyWorldMap =>
@@ -28439,7 +28439,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminBroadcastDefBodyThemes =>
-      'A new theme pack is now available in the Socialmesh store.';
+      'A new theme pack is now available in the SocialMesh store.';
 
   @override
   String get adminBroadcastDefBodyRingtones =>
@@ -28447,7 +28447,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminBroadcastDefBodyWidgets =>
-      'New home screen widgets are now available for Socialmesh.';
+      'New home screen widgets are now available for SocialMesh.';
 
   @override
   String get adminBroadcastDefBodyAutomations =>
@@ -28455,7 +28455,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminBroadcastDefBodyIfttt =>
-      'Connect Socialmesh with your favourite services via IFTTT.';
+      'Connect SocialMesh with your favourite services via IFTTT.';
 
   @override
   String get adminBroadcastDeepLinkCatCore => 'CORE';
@@ -28803,7 +28803,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminQrStyleDescription =>
-      'Preview different QR code styles with the Socialmesh logo. All styles use Level H error correction for reliable scanning.';
+      'Preview different QR code styles with the SocialMesh logo. All styles use Level H error correction for reliable scanning.';
 
   @override
   String get adminQrStyleSmooth => 'Smooth';
@@ -29895,7 +29895,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get privacySettingsRevenueCatTitle => 'RevenueCat';
 
   @override
-  String get privacySettingsSigilTitle => 'Sigil API (Socialmesh)';
+  String get privacySettingsSigilTitle => 'Sigil API (SocialMesh)';
 
   @override
   String get profileDeleteConfirmLabel => 'Delete';
@@ -30263,14 +30263,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpAcceptableUseDescription =>
-      'What you can and cannot do with Socialmesh';
+      'What you can and cannot do with SocialMesh';
 
   @override
   String get helpUserResponsibilityTitle => 'Your Data, Your Responsibility';
 
   @override
   String get helpUserResponsibilityDescription =>
-      'How Socialmesh handles data and what you are responsible for';
+      'How SocialMesh handles data and what you are responsible for';
 
   @override
   String get helpFileTransferOverviewTitle => 'File Transfers';
@@ -31092,7 +31092,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpAetherLeaderboardBubble =>
-      'The **leaderboard is global and persistent** — stored in the cloud, not on your device. Rankings survive app reinstalls and are visible to the entire Socialmesh community. Top 3 get gold, silver, and bronze!';
+      'The **leaderboard is global and persistent** — stored in the cloud, not on your device. Rankings survive app reinstalls and are visible to the entire SocialMesh community. Top 3 get gold, silver, and bronze!';
 
   @override
   String get helpAetherTipsBubble =>
@@ -31144,7 +31144,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpUseIntroBubble =>
-      'Socialmesh is a powerful tool — automations, signals, and mesh messaging give you a lot of capability. With that comes responsibility!';
+      'SocialMesh is a powerful tool — automations, signals, and mesh messaging give you a lot of capability. With that comes responsibility!';
 
   @override
   String get helpUseLawfulBubble =>
@@ -31164,7 +31164,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpResponsibilityIntroBubble =>
-      'Socialmesh is designed to be **privacy-first**. Your messages and data stay on your device — we do not store them on any server.';
+      'SocialMesh is designed to be **privacy-first**. Your messages and data stay on your device — we do not store them on any server.';
 
   @override
   String get helpResponsibilitySignalsBubble =>
@@ -31200,7 +31200,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpFtBetaBubble =>
-      'This feature is **BETA**. Both nodes must be running Socialmesh on the same mesh channel. Standard Meshtastic nodes cannot receive these transfers.';
+      'This feature is **BETA**. Both nodes must be running SocialMesh on the same mesh channel. Standard Meshtastic nodes cannot receive these transfers.';
 
   @override
   String get helpFtContactsBubble =>
@@ -31356,7 +31356,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpTakSectionTimestamps =>
-      'Event Time is when the CoT event was generated. Stale Time is when the entity should be considered outdated if no update arrives. Received is when Socialmesh received the event from the gateway. An entity is marked STALE when the current time exceeds Stale Time.';
+      'Event Time is when the CoT event was generated. Stale Time is when the entity should be considered outdated if no update arrives. Received is when SocialMesh received the event from the gateway. An entity is marked STALE when the current time exceeds Stale Time.';
 
   @override
   String get helpTakSectionTracking =>
@@ -31437,7 +31437,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewWorldMapDescription =>
-      'See the entire global Meshtastic network on a single map. Every dot is a node sharing its location — zoom, pan, and tap to explore node details, hardware info, and last-seen times.\n\nNo connection required. The World Map pulls live data from the Socialmesh backend so you can explore the mesh anywhere.';
+      'See the entire global Meshtastic network on a single map. Every dot is a node sharing its location — zoom, pan, and tap to explore node details, hardware info, and last-seen times.\n\nNo connection required. The World Map pulls live data from the SocialMesh backend so you can explore the mesh anywhere.';
 
   @override
   String get whatsNewVersion1101Subtitle => 'Version 1.10.1';
@@ -31487,7 +31487,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewTakGatewayDescription =>
-      'Bridge your mesh into the Team Awareness Kit (TAK) ecosystem. Socialmesh now connects to a TAK Gateway via WebSocket and streams live Cursor-on-Target entities onto your map.\n\nEvery entity is colored by standard affiliation and given a dimension-specific icon. Filter by affiliation, search callsigns, track entities with a long-press, and tap any marker for full CoT details. Find it in the drawer menu under Mesh.';
+      'Bridge your mesh into the Team Awareness Kit (TAK) ecosystem. SocialMesh now connects to a TAK Gateway via WebSocket and streams live Cursor-on-Target entities onto your map.\n\nEvery entity is colored by standard affiliation and given a dimension-specific icon. Filter by affiliation, search callsigns, track entities with a long-press, and tap any marker for full CoT details. Find it in the drawer menu under Mesh.';
 
   @override
   String get whatsNewVersion1270Subtitle => 'Version 1.27.0';
@@ -31738,7 +31738,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get whatsNewCtaOpenTakGateway => 'Open TAK Gateway';
 
   @override
-  String get whatsNewHeadline => 'What\'s New in Socialmesh';
+  String get whatsNewHeadline => 'What\'s New in SocialMesh';
 
   @override
   String get connectingStatusInitializing => 'Initializing';
@@ -32138,15 +32138,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get connectionCancelled => 'Connection was cancelled';
 
   @override
-  String get adminConformanceBundleTitle => 'Socialmesh Conformance Bundle';
+  String get adminConformanceBundleTitle => 'SocialMesh Conformance Bundle';
 
   @override
   String get adminDiagnosticBundleText =>
-      'Admin diagnostic bundle from Socialmesh';
+      'Admin diagnostic bundle from SocialMesh';
 
   @override
   String adminDiagnosticBundleSubject(String runId) {
-    return 'Socialmesh Diagnostic $runId';
+    return 'SocialMesh Diagnostic $runId';
   }
 
   @override
@@ -33636,7 +33636,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meshCapacityCardSubtitlePresetUnknown =>
-      'Socialmesh can\'t assess preset suitability until it can read the current modem preset from your device.';
+      'SocialMesh can\'t assess preset suitability until it can read the current modem preset from your device.';
 
   @override
   String get meshCapacitySheetTitle => 'Why preset choice matters';
@@ -33681,7 +33681,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meshCapacitySheetRiskBody =>
-      'Changing presets affects who you can communicate with. Your group should move together, or you may stop hearing nodes that remain on the old preset. Socialmesh never changes radio settings on its own.';
+      'Changing presets affects who you can communicate with. Your group should move together, or you may stop hearing nodes that remain on the old preset. SocialMesh never changes radio settings on its own.';
 
   @override
   String get meshCapacitySheetOpenSettings => 'Open radio settings';
@@ -34443,7 +34443,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meshExplorerScanningTagline1 =>
-      'Scans for Socialmesh peers broadcasting on the mesh';
+      'Scans for SocialMesh peers broadcasting on the mesh';
 
   @override
   String get meshExplorerScanningTagline2 =>
@@ -34469,7 +34469,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpMeshExplorerIntroBubble =>
-      'Welcome to **Mesh Explorer**! This shows all Socialmesh-capable peers currently in radio range. Anonymous peers appear instantly — no handshake needed.';
+      'Welcome to **Mesh Explorer**! This shows all SocialMesh-capable peers currently in radio range. Anonymous peers appear instantly — no handshake needed.';
 
   @override
   String get helpMeshExplorerPeersBubble =>
@@ -36546,7 +36546,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nearbyEmptyDescription =>
-      'Tap “Look for people” to find other Socialmesh users on the mesh';
+      'Tap “Look for people” to find other SocialMesh users on the mesh';
 
   @override
   String get nearbyEmptyTagline1 => 'Listening for nearby users…';
@@ -37219,7 +37219,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewDeviceShopDescription =>
-      'Browse Meshtastic-compatible hardware from official partners and trusted sellers — all in one place. Filter by category, sort by price or new arrivals, and tap through to the seller\'s store to buy.\n\nPurchases happen on the seller\'s site; Socialmesh never handles payment, shipping, or returns. Find it in the drawer menu under Tools.';
+      'Browse Meshtastic-compatible hardware from official partners and trusted sellers — all in one place. Filter by category, sort by price or new arrivals, and tap through to the seller\'s store to buy.\n\nPurchases happen on the seller\'s site; SocialMesh never handles payment, shipping, or returns. Find it in the drawer menu under Tools.';
 
   @override
   String get whatsNewCtaOpenDeviceShop => 'Open Device Shop';
@@ -38132,7 +38132,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reticulumDiagDescription =>
-      'Socialmesh observes RNS traffic on the mesh; behavior may be incomplete while the wire format is being characterized.';
+      'SocialMesh observes RNS traffic on the mesh; behavior may be incomplete while the wire format is being characterized.';
 
   @override
   String get reticulumDiagSectionOverview => 'OVERVIEW';
@@ -38330,7 +38330,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reticulumLibraryEmptyTagline3 =>
-      'Or import a .bin capture from another Socialmesh device.';
+      'Or import a .bin capture from another SocialMesh device.';
 
   @override
   String get reticulumLibraryImport => 'Import .bin file';
@@ -38660,7 +38660,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reticulumBridgeRxOnlyMessage =>
-      'Socialmesh forwards reassembled RNS frames received over the air. No RNS frames are ever transmitted onto LoRa.';
+      'SocialMesh forwards reassembled RNS frames received over the air. No RNS frames are ever transmitted onto LoRa.';
 
   @override
   String get reticulumBridgeLastForwardLabel => 'Last forwarded';

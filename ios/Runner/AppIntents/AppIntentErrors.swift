@@ -2,7 +2,7 @@
 //  AppIntentErrors.swift
 //  Runner
 //
-//  Socialmesh App Intents - Error definitions
+//  SocialMesh App Intents - Error definitions
 //
 
 import Foundation

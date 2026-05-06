@@ -13,7 +13,7 @@ version 3 only (GPL-3.0-only). The full license text is available at:
 and in the root LICENSE file of this repository.
 
 Files in this directory are unmodified copies of upstream Meshtastic protobuf
-definitions. Any modifications made by the Socialmesh project are clearly
+definitions. Any modifications made by the SocialMesh project are clearly
 marked and remain subject to GPL-3.0-only.
 
 SPDX-License-Identifier: GPL-3.0-only

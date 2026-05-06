@@ -626,7 +626,7 @@ class StoreProductInfo {
   });
 
   /// Clean the product title by removing the app name suffix that Google Play
-  /// automatically appends (e.g., "Widget Pack (Socialmesh)" -> "Widget Pack")
+  /// automatically appends (e.g., "Widget Pack (SocialMesh)" -> "Widget Pack")
   static String cleanTitle(String rawTitle) {
     // Google Play appends " (AppName)" to product titles on Android
     // Remove any trailing parenthetical content

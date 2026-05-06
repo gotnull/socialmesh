@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Feature flags for the Socialmesh binary protocol migration.
+/// Feature flags for the SocialMesh binary protocol migration.
 ///
 /// These control whether the app sends binary-encoded packets
 /// and whether it maintains legacy compatibility during the transition.
@@ -125,7 +125,7 @@ class SmFeatureFlag {
   void setLegacyCompatibilityMode(bool value) =>
       _legacyCompatibilityMode = value;
 
-  /// Whether the Socialmesh Interop Profile (SIP) is enabled.
+  /// Whether the SocialMesh Interop Profile (SIP) is enabled.
   ///
   /// When true, the app participates in SIP discovery, handshake,
   /// identity exchange, ephemeral DM, and micro-exchange.

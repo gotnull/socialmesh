@@ -251,7 +251,7 @@ Future<void> main() async {
     }),
   );
 
-  runApp(const ProviderScope(child: SocialmeshApp()));
+  runApp(const ProviderScope(child: SocialMeshApp()));
 }
 
 /// Ensure the user has a Firebase auth identity.
@@ -506,14 +506,14 @@ Future<void> _initializeFirebaseServices() async {
   }
 }
 
-class SocialmeshApp extends ConsumerStatefulWidget {
-  const SocialmeshApp({super.key});
+class SocialMeshApp extends ConsumerStatefulWidget {
+  const SocialMeshApp({super.key});
 
   @override
-  ConsumerState<SocialmeshApp> createState() => _SocialmeshAppState();
+  ConsumerState<SocialMeshApp> createState() => _SocialMeshAppState();
 }
 
-class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
+class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     with WidgetsBindingObserver, LifecycleSafeMixin {
   StreamSubscription<NotificationNavigation>? _pushNotificationSubscription;
   StreamSubscription<String>? _localNotificationTapSubscription;
@@ -1919,7 +1919,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     return RepaintBoundary(
       key: appRepaintBoundaryKey,
       child: MaterialApp(
-        title: 'Socialmesh', // lint-allow: hardcoded-string
+        title: 'SocialMesh', // lint-allow: hardcoded-string
         debugShowCheckedModeBanner: false,
         navigatorKey: navigatorKey,
         builder: (context, child) {
@@ -3226,9 +3226,9 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
             final appVersionAsync = ref.watch(appVersionProvider);
             final versionText = appVersionAsync.when(
               data: (version) =>
-                  'Socialmesh v$version', // lint-allow: hardcoded-string
-              loading: () => 'Socialmesh',
-              error: (_, _) => 'Socialmesh',
+                  'SocialMesh v$version', // lint-allow: hardcoded-string
+              loading: () => 'SocialMesh',
+              error: (_, _) => 'SocialMesh',
             );
 
             return Container(
@@ -3249,7 +3249,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
                     ),
                     const SizedBox(height: AppTheme.spacing2),
                     Text(
-                      '© 2026 Socialmesh. All rights reserved.',
+                      '© 2026 SocialMesh. All rights reserved.',
                       style: TextStyle(
                         fontSize: 11,
                         color: context.textTertiary.withValues(alpha: 0.7),

@@ -196,7 +196,7 @@ class RouteStorageService {
   String exportRouteAsGpx(Route route) {
     final buffer = StringBuffer();
     buffer.writeln('<?xml version="1.0" encoding="UTF-8"?>');
-    buffer.writeln('<gpx version="1.1" creator="Socialmesh">');
+    buffer.writeln('<gpx version="1.1" creator="SocialMesh">');
     buffer.writeln('  <metadata>');
     buffer.writeln('    <name>${_escapeXml(route.name)}</name>');
     if (route.notes != null) {

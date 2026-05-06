@@ -101,7 +101,7 @@ class CustomFirebaseMessagingService : FirebaseMessagingService() {
         )
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle(title ?: "Socialmesh")
+            .setContentTitle(title ?: "SocialMesh")
             .setContentText(body)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setAutoCancel(true)

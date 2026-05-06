@@ -58,7 +58,7 @@ class VoicePlayer {
   /// Whether the player currently has a loaded audio source (playing or paused).
   bool get hasSource => _player.audioSource != null;
 
-  /// Decodes [c2Payload] from the Socialmesh `.c2` wire format and plays it.
+  /// Decodes [c2Payload] from the SocialMesh `.c2` wire format and plays it.
   ///
   /// Returns false if decoding fails.
   Future<bool> playC2(Uint8List c2Payload) async {

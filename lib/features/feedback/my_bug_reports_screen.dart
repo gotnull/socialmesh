@@ -921,7 +921,7 @@ class _ResponseBubble extends StatelessWidget {
                   const SizedBox(width: AppTheme.spacing6),
                   Text(
                     isFounder
-                        ? context.l10n.feedbackResponseAuthorSocialmesh
+                        ? context.l10n.feedbackResponseAuthorSocialMesh
                         : context.l10n.feedbackResponseAuthorYou,
                     style: TextStyle(
                       fontSize: 11,

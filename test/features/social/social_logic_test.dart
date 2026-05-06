@@ -232,7 +232,7 @@ void main() {
     test('share message contains URL', () {
       const postId = 'test-post-id';
       final message =
-          'Check out this post on Socialmesh!\nsocialmesh://post/$postId';
+          'Check out this post on SocialMesh!\nsocialmesh://post/$postId';
 
       expect(message, contains('socialmesh://post/test-post-id'));
     });

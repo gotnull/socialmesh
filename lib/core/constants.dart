@@ -431,7 +431,7 @@ class AppFeatureFlags {
     }
   }
 
-  /// Whether the SIP (Socialmesh Identity Protocol) feature is enabled.
+  /// Whether the SIP (SocialMesh Identity Protocol) feature is enabled.
   /// Set `SIP_ENABLED=true` (or `HANDSHAKE_ENABLED=true`) in `.env`.
   /// Default: false — SIP UI is hidden unless explicitly enabled.
   static bool get isSipEnabled {

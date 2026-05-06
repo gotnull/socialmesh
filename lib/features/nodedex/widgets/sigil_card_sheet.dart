@@ -511,7 +511,7 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
         l10n.nodedexShareCardCheckOut(widget.displayName),
         if (webUrl != null) webUrl,
         '',
-        l10n.nodedexShareGetSocialmesh,
+        l10n.nodedexShareGetSocialMesh,
         'iOS: ${AppUrls.appStoreUrl}', // lint-allow: hardcoded-string
         'Android: ${AppUrls.playStoreUrl}', // lint-allow: hardcoded-string
       ];

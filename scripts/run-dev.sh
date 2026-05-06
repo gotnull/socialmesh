@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# run-dev.sh — Interactive launcher for Socialmesh on iOS, Android, or both
+# run-dev.sh — Interactive launcher for SocialMesh on iOS, Android, or both
 #
 # Usage:
 #   ./scripts/run-dev.sh [OPTIONS]
@@ -113,7 +113,7 @@ done
 # ---------------------------------------------------------------------------
 
 echo ""
-echo -e "${BOLD}Socialmesh Dev Launcher${NC}"
+echo -e "${BOLD}SocialMesh Dev Launcher${NC}"
 echo -e "${DIM}────────────────────────────────────${NC}"
 echo ""
 

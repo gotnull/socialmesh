@@ -213,7 +213,7 @@
     {
       "id": "supported-hardware",
       "title": "Supported Hardware",
-      "description": "Which Meshtastic-compatible radios work with Socialmesh.",
+      "description": "Which Meshtastic-compatible radios work with SocialMesh.",
       "category": "device",
       "icon": "memory",
       "order": 4,

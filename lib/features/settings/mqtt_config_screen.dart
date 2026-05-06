@@ -827,7 +827,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
                             // JSON Output and Client Proxy are mutually
                             // exclusive on the radio (JSON bypasses the
                             // encrypted proxy pipeline). TLS, however, is
-                            // independent — Socialmesh's proxy fully
+                            // independent — SocialMesh's proxy fully
                             // supports TLS to the broker, so do NOT force
                             // TLS off when proxy is enabled.
                             if (value) _jsonEnabled = false;

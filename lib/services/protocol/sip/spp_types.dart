@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// SPP (Socialmesh Payload Protocol) v0.1 type registry.
+/// SPP (SocialMesh Payload Protocol) v0.1 type registry.
 ///
 /// SPP provides a typed, versioned payload schema layer above MRRP.
 /// Each payload type has a numeric ID and versioned encode/decode semantics.

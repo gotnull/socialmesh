@@ -179,7 +179,7 @@ def build_bug_report_email_html(report_id, data):
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
                     <tr>
                       <td>
-                        <div style="font-size:20px;font-weight:700;letter-spacing:0.2px;">Socialmesh</div>
+                        <div style="font-size:20px;font-weight:700;letter-spacing:0.2px;">SocialMesh</div>
                         <div style="color:#98a2b3;font-size:13px;margin-top:4px;">Bug report</div>
                       </td>
                       <td style="text-align:right;vertical-align:middle;">
@@ -229,7 +229,7 @@ def build_bug_report_email_html(report_id, data):
               </tr>
               <tr>
                 <td style="padding:16px 0 0 0;color:#6c7487;font-size:11px;text-align:center;">
-                  Socialmesh bug report &middot; support@socialmesh.app
+                  SocialMesh bug report &middot; support@socialmesh.app
                 </td>
               </tr>
             </table>

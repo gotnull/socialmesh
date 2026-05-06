@@ -14,7 +14,7 @@ import 'package:socialmesh/generated/meshtastic/config.pbenum.dart';
 // matching metadata row is added.
 //
 // This test is the safety net that would have caught the seven-region
-// drift between Socialmesh and the upstream protobuf during the v2.7.22
+// drift between SocialMesh and the upstream protobuf during the v2.7.22
 // → v2.7.23 bump (PH_433/868/915, ANZ_433, KZ_433/863, NP_865, BR_902
 // were all in the protobuf but missing from the pickers).
 void main() {

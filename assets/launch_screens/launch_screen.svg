@@ -73,7 +73,7 @@
     <circle cx="100" cy="30" r="12" fill="#4F6AF6" />
   </g>
 
-  <!-- "Socialmesh" text - JetBrains Mono font-weight 700 matching web -->
+  <!-- "SocialMesh" text - JetBrains Mono font-weight 700 matching web -->
   <text x="621" y="1420" text-anchor="middle" font-family="JetBrains Mono, monospace"
-    font-weight="700" font-size="72" letter-spacing="-2" fill="url(#textGradient)">Socialmesh</text>
+    font-weight="700" font-size="72" letter-spacing="-2" fill="url(#textGradient)">SocialMesh</text>
 </svg>

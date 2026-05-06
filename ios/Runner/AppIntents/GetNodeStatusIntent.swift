@@ -2,7 +2,7 @@
 //  GetNodeStatusIntent.swift
 //  Runner
 //
-//  Socialmesh App Intents - Get status of a node
+//  SocialMesh App Intents - Get status of a node
 //
 
 import Foundation

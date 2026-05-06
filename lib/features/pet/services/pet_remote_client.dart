@@ -5,7 +5,7 @@
 //
 // ## Peer-targeting model (v1)
 //
-// Socialmesh does not have a peer-targeted MRRP request API. `sendSipPacket`
+// SocialMesh does not have a peer-targeted MRRP request API. `sendSipPacket`
 // broadcasts over the Meshtastic mesh (`to: 0xFFFFFFFF`, hopLimit=3), and
 // every peer that holds an accepted SIP handshake with us will see our
 // REQUEST. Any of them that has pet sharing enabled will encode their own

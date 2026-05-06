@@ -4,7 +4,7 @@
 // HTTP client for the local rns_companion service.
 //
 // The companion runs on the operator's own machine on
-// `http://127.0.0.1:8787` by default. Socialmesh consumes its
+// `http://127.0.0.1:8787` by default. SocialMesh consumes its
 // read-only JSON API to surface RNS / NomadNet visibility on the
 // phone. Per the companion's scope: NO posting, NO TX, NO mutation
 // — every method here is a GET.

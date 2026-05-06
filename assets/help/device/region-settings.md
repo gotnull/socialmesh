@@ -20,7 +20,7 @@ Transmitting on the wrong frequency or at too high a power can:
 
 ## Setting Your Region
 
-When you connect a new Meshtastic radio for the first time, Socialmesh will prompt you to select your region. This configures:
+When you connect a new Meshtastic radio for the first time, SocialMesh will prompt you to select your region. This configures:
 
 - The **frequency band** (which radio frequencies to use)
 - The **transmit power** limit

@@ -91,7 +91,7 @@ class PushNotificationService {
     'announcements',
     'Announcements',
     description:
-        'Important announcements from Socialmesh', // lint-allow: hardcoded-string
+        'Important announcements from SocialMesh', // lint-allow: hardcoded-string
     importance: Importance.high,
   );
 

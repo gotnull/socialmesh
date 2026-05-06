@@ -60,7 +60,7 @@ abstract final class OverlayEndpointId {
 
   /// 8-byte persona hint = `SHA-256(personaPubKey)[:8]`. Kept
   /// separate from [derive] so callers distinguish scoped endpoint
-  /// IDs from the raw persona hint used elsewhere in Socialmesh.
+  /// IDs from the raw persona hint used elsewhere in SocialMesh.
   static Future<Uint8List> personaHint(Uint8List personaPubKey) async {
     if (personaPubKey.length != 32) {
       throw ArgumentError.value(

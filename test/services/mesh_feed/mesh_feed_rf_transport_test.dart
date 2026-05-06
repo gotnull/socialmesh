@@ -102,9 +102,9 @@ void main() {
       expect(SmCodec.isFileTransferPayload(encoded), isFalse);
     });
 
-    test('feedPost portnum is recognized as Socialmesh', () {
-      expect(SmCodec.isSocialmeshPortnum(SmPortnum.feedPost), isTrue);
-      expect(SmCodec.isSocialmeshPortnum(264), isTrue);
+    test('feedPost portnum is recognized as SocialMesh', () {
+      expect(SmCodec.isSocialMeshPortnum(SmPortnum.feedPost), isTrue);
+      expect(SmCodec.isSocialMeshPortnum(264), isTrue);
     });
   });
 

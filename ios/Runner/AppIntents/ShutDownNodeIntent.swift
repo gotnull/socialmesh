@@ -2,7 +2,7 @@
 //  ShutDownNodeIntent.swift
 //  Runner
 //
-//  Socialmesh App Intents - Shut down the connected node
+//  SocialMesh App Intents - Shut down the connected node
 //
 
 import Foundation

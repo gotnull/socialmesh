@@ -29,9 +29,9 @@ A healthy mesh delivers messages reliably, doesn't waste airtime, and gives good
 - **Monitor airtime.** Keep an eye on how much each node is transmitting. LoRa has duty cycle limits in most regions.
 - **Optimise hop limits.** Use the lowest hop limit that delivers your messages reliably.
 
-## Socialmesh Tools
+## SocialMesh Tools
 
-Socialmesh provides several views to help you understand your mesh health:
+SocialMesh provides several views to help you understand your mesh health:
 
 - **Mesh Health** — an overview of your mesh's performance metrics.
 - **Node list** — shows signal quality for each node.
