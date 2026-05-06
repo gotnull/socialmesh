@@ -45,15 +45,28 @@ void expectRendersWithoutCrash(String s) {
 void main() {
   group('MeshCore contact name ingress', () {
     test('lone high surrogate code unit in name bytes is sanitized', () {
-      // parseContact layout: pub_key(32) + adv_type(1) + path_len(1) +
-      // lastmod(2) = 36 bytes header, then optional 8B lat/lon, then a
-      // null-terminated name. We skip the lat/lon (need < 8 remaining
-      // bytes after the 36B header) so name starts at offset 36.
-      final payload = Uint8List(40);
-      payload[36] = 0x41; // 'A'
-      payload[37] = 0xD8; // lone high surrogate code unit
-      payload[38] = 0x42; // 'B'
-      payload[39] = 0x00; // null terminator
+      // D24.B: parseContact layout corrected to match the firmware's
+      // `writeContactRespFrame` (`MeshCore/examples/companion_radio/
+      // MyMesh.cpp`):
+      //   [0..31]    pub_key                      (32 bytes)
+      //   [32]       adv_type                     (uint8)
+      //   [33]       flags                        (uint8)
+      //   [34]       path_len                     (uint8 / 0xFF flood)
+      //   [35..98]   path                         (64 bytes)
+      //   [99..130]  name                         (32 bytes null-padded)
+      //   [131..134] last_advert_timestamp        (uint32 LE)
+      //   [135..146] gps_lat / gps_lon / lastmod  (optional)
+      //
+      // The minimum-length parse path requires 135 bytes
+      // (pubkey + type + flags + path_len + path + name +
+      // last_advert_timestamp). Name lives at offset 99.
+      final payload = Uint8List(135);
+      payload[99] = 0x41; // 'A'
+      payload[100] = 0xD8; // lone high surrogate code unit
+      payload[101] = 0x42; // 'B'
+      // Trailing bytes 102..130 stay 0 → null-terminated within the
+      // 32-byte name slot.
+      // [131..134] = last_advert_timestamp left at 0.
 
       final result = parseContact(payload);
 

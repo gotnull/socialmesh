@@ -80,7 +80,23 @@ final meshCoreConnectionStateProvider = StreamProvider<MeshConnectionState>((
 /// instead of protocol-specific providers.
 ///
 /// Returns null when not connected or not yet identified.
+///
+/// D24.A: watches [meshCoreConnectionStateProvider] so the value is
+/// reactive across the MeshCore identify transition. The
+/// `connectionCoordinatorProvider` itself is a singleton-holder
+/// (`==` returns true on every rebuild), so watching only it would
+/// freeze this provider at its first value (typically `null` at app
+/// launch, before connect). Pre-D24 every consumer that opened
+/// before identify completed had to manually refresh; the
+/// connection-state watch closes that gap.
 final meshDeviceInfoProvider = Provider<MeshDeviceInfo?>((ref) {
+  // Force a rebuild on each MeshCore connection-state transition
+  // (disconnected → connecting → identifying → connected). The
+  // `connected` emission happens AFTER identify succeeds and
+  // `_currentDeviceInfo` is populated, so the freshly-read
+  // `coordinator.deviceInfo` below will pick it up.
+  ref.watch(meshCoreConnectionStateProvider);
+
   // Check coordinator first for MeshCore devices
   final coordinator = ref.watch(connectionCoordinatorProvider);
   if (coordinator.deviceInfo != null) {
@@ -188,38 +204,107 @@ class MeshCoreSelfInfoState {
 }
 
 class MeshCoreSelfInfoNotifier extends Notifier<MeshCoreSelfInfoState> {
+  // D24.A: dedupe key + cancel guard.
+  //
+  // `_loadedForNodeId` records the `nodeId` we last fetched for, so a
+  // spurious rebuild (e.g. another transition on
+  // `meshCoreConnectionStateProvider` while still connected) does
+  // not re-issue `getSelfInfo()`. Cleared on disconnect so the
+  // next reconnect re-loads fresh state.
+  String? _loadedForNodeId;
+
+  // Flipped by `ref.onDispose` so async work bails instead of writing
+  // to `state` after the notifier is gone (mirrors the D22
+  // conversations-notifier pattern).
+  bool _disposed = false;
+
   @override
   MeshCoreSelfInfoState build() {
-    // Auto-fetch when adapter is available
-    final adapter = ref.watch(meshCoreAdapterProvider);
-    if (adapter != null && adapter.deviceInfo != null) {
-      // Device is identified, try to get self info
-      _loadSelfInfo();
+    // Riverpod 3.x reuses the `Notifier` instance across rebuilds
+    // (e.g. after `invalidate`), so a sticky `_disposed = true` from
+    // a previous `ref.onDispose` would prevent the deferred load
+    // from ever running again. Reset on every build entry so the
+    // flag tracks the CURRENT lifecycle.
+    _disposed = false;
+
+    // D24.A: react to MeshCore identify completion via the
+    // protocol-agnostic device-info signal. Pre-D24 we watched
+    // `meshCoreAdapterProvider`, but the adapter reference does not
+    // change identity when `adapter.deviceInfo` flips from null →
+    // populated, so Riverpod skipped the rebuild and the user had to
+    // tap Refresh to hydrate Battery / TX Power / SF/CR.
+    //
+    // `meshDeviceInfoProvider` (D24.A-reactive) emits a non-null
+    // value only after identify succeeds, and re-emits null on
+    // disconnect, giving us both the "load now" and "clear stale
+    // state" edges for free.
+    final deviceInfo = ref.watch(meshDeviceInfoProvider);
+
+    if (deviceInfo == null) {
+      // Disconnected or not yet identified — clear cache and reset
+      // dedupe key so the next identify re-fetches.
+      _loadedForNodeId = null;
+      // Defer the state-reset off-build so `state` getter is not
+      // accessed during the still-uninitialized initial build
+      // (Riverpod 3 throws `Tried to read the state of an
+      // uninitialized provider` otherwise). Re-checking inside the
+      // microtask is safe because `state` is initialized by then.
+      Future<void>(() {
+        if (_disposed) return;
+        if (state.selfInfo == null && state.error == null && !state.isLoading) {
+          return;
+        }
+        state = const MeshCoreSelfInfoState.initial();
+      });
+    } else if (deviceInfo.protocolType == MeshProtocolType.meshcore &&
+        deviceInfo.nodeId != _loadedForNodeId) {
+      // First identify for this device this session, OR a different
+      // device than we last loaded for. Defer the fetch off-build so
+      // `state = ...loading()` runs after build returns and the
+      // notifier's initial state has been committed.
+      Future<void>(_loadSelfInfo);
     }
+
+    ref.onDispose(() {
+      _disposed = true;
+    });
+
     return const MeshCoreSelfInfoState.initial();
   }
 
   Future<void> _loadSelfInfo() async {
+    if (_disposed) return;
     state = const MeshCoreSelfInfoState.loading();
     try {
       final session = ref.read(meshCoreSessionProvider);
       if (session == null) {
+        if (_disposed) return;
         state = MeshCoreSelfInfoState.failed('No session available');
         return;
       }
 
       final selfInfo = await session.getSelfInfo();
+      if (_disposed) return;
       if (selfInfo != null) {
         state = MeshCoreSelfInfoState.loaded(selfInfo);
+        // Cache the nodeId we loaded for so spurious rebuilds don't
+        // re-fetch. Read the current device info (may have changed
+        // during the await — defensive).
+        final info = ref.read(meshDeviceInfoProvider);
+        _loadedForNodeId = info?.nodeId;
       } else {
         state = MeshCoreSelfInfoState.failed('Failed to get self info');
       }
     } catch (e) {
+      if (_disposed) return;
       state = MeshCoreSelfInfoState.failed(e.toString());
     }
   }
 
+  /// Manual refresh path — bypasses the dedupe key so the user-tap
+  /// always hits the wire.
   Future<void> refresh() async {
+    _loadedForNodeId = null;
     await _loadSelfInfo();
   }
 }
@@ -360,6 +445,52 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
       return c;
     }).toList();
     state = state.copyWith(contacts: updated);
+  }
+
+  /// D24.B: safe in-place merge of a freshly observed advert name
+  /// into the local contacts state. Called from
+  /// `MeshCoreConversationsNotifier._handleAdvertPush` after parsing
+  /// a `PUSH_CODE_NEW_ADVERT` (0x8A) payload.
+  ///
+  /// Returns one of: `'ok'` (local entry updated), `'no_match'`
+  /// (caller should refresh contacts to pick up the new entry),
+  /// `'preserved'` (local has a non-empty name; advert name is
+  /// ignored to honour the `do not overwrite a non-empty name`
+  /// rule), or `'empty_advert'` (advert carried no name; nothing
+  /// to merge).
+  ///
+  /// Hard rules (per D24.B spec):
+  ///   - never overwrite a non-empty contact name with an empty
+  ///     advert name
+  ///   - never create a placeholder contact from an advert (callers
+  ///     must trigger a contacts refresh on `'no_match'` instead)
+  ///   - match by full public key only — sender prefix or partial
+  ///     identity must NOT take this path
+  String mergeAdvertName(String publicKeyHex, String advertName) {
+    if (advertName.isEmpty) return 'empty_advert';
+    if (publicKeyHex.length != 64) return 'no_match';
+    final keyLower = publicKeyHex.toLowerCase();
+
+    final updated = <MeshCoreContact>[];
+    var matched = false;
+    var changed = false;
+    for (final c in state.contacts) {
+      if (c.publicKeyHex.toLowerCase() == keyLower) {
+        matched = true;
+        if (c.name.isEmpty) {
+          updated.add(c.copyWith(name: advertName));
+          changed = true;
+        } else {
+          updated.add(c);
+        }
+      } else {
+        updated.add(c);
+      }
+    }
+    if (!matched) return 'no_match';
+    if (!changed) return 'preserved';
+    state = state.copyWith(contacts: updated);
+    return 'ok';
   }
 
   /// Clear unread count for a contact.

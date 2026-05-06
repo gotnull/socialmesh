@@ -20,6 +20,7 @@ import '../core/meshcore_constants.dart';
 import '../features/meshcore/parsers/meshcore_message_frame_parser.dart';
 import '../models/meshcore_contact.dart';
 import '../services/meshcore/protocol/meshcore_frame.dart';
+import '../services/meshcore/protocol/meshcore_messages.dart' as msgs;
 import '../services/meshcore/protocol/meshcore_session.dart';
 import '../services/meshcore/storage/meshcore_message_store.dart';
 import '../services/meshcore/storage/meshcore_contact_store.dart';
@@ -909,8 +910,82 @@ class MeshCoreConversationsNotifier
       '${frame.command.toRadixString(16).padLeft(2, '0')} '
       'new=$isNew size=${frame.payload.length}',
     );
+
+    // D24.B: only `PUSH_CODE_NEW_ADVERT` (0x8A) carries the full
+    // ContactInfo (same shape as `RESP_CODE_CONTACT` / 0x03).
+    // `PUSH_CODE_ADVERT` (0x80) is just the 32-byte pubkey of an
+    // already-known contact: there's no name field to merge, so
+    // the only useful response is the existing contacts refresh.
+    if (isNew) {
+      final result = msgs.parseContact(frame.payload);
+      if (result.isSuccess) {
+        final info = result.value!;
+        // Size-only log of the parsed name length so the field log
+        // can attribute heal attempts without leaking the name.
+        AppLogging.meshcore(
+          'event=contact.advert.name.observed name_len=${info.name.length}',
+        );
+        if (info.name.isNotEmpty) {
+          AppLogging.meshcore('event=contact.advert.name.update.attempted');
+          Future.microtask(() {
+            try {
+              final outcome = ref
+                  .read(meshCoreContactsProvider.notifier)
+                  .mergeAdvertName(info.publicKeyHex, info.name);
+              switch (outcome) {
+                case 'ok':
+                  AppLogging.meshcore(
+                    'event=contact.advert.name.update.succeeded',
+                  );
+                  break;
+                case 'preserved':
+                  AppLogging.meshcore(
+                    'event=contact.advert.name.update.skipped '
+                    'reason=existing_name_preserved',
+                  );
+                  break;
+                case 'no_match':
+                  AppLogging.meshcore(
+                    'event=contact.advert.name.update.skipped '
+                    'reason=unknown_contact_will_refresh',
+                  );
+                  break;
+                case 'empty_advert':
+                  // Defensive — already gated above.
+                  AppLogging.meshcore(
+                    'event=contact.advert.name.update.skipped '
+                    'reason=empty_advert',
+                  );
+                  break;
+              }
+            } catch (e) {
+              AppLogging.meshcore(
+                'event=contact.advert.name.update.failed '
+                'reason=${e.runtimeType}',
+                error: true,
+              );
+            }
+          });
+        } else {
+          AppLogging.meshcore(
+            'event=contact.advert.name.update.skipped '
+            'reason=empty_advert',
+          );
+        }
+      } else {
+        AppLogging.meshcore(
+          'event=contact.advert.parse.failed reason=${result.error} '
+          'size=${frame.payload.length}',
+          error: true,
+        );
+      }
+    }
+
     // Trigger a contacts refresh on the global contacts notifier.
     // Use Future.microtask so we don't block the frame stream listener.
+    // For `'no_match'` outcomes above this is the recovery path:
+    // firmware just added a brand-new contact and the next
+    // `getContacts()` returns it.
     Future.microtask(() {
       try {
         ref.read(meshCoreContactsProvider.notifier).refresh();

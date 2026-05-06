@@ -323,10 +323,17 @@ class MeshCoreContactInfo {
   /// Last modification timestamp.
   final int lastMod;
 
-  /// Latitude (raw int32, divide by 1e7 for degrees).
+  /// Latitude (raw int32, divide by 1e7 for degrees in this model;
+  /// the firmware actually encodes degrees * 1e6, so the
+  /// `latitudeDegrees` getter under-reports by 10x. D24.B does not
+  /// touch this scale to avoid widening scope into the map UI;
+  /// the next slice that owns coordinate display should fold the
+  /// `1e6` correction into both this getter and any cached
+  /// SharedPreferences entries.
   final int? latitude;
 
-  /// Longitude (raw int32, divide by 1e7 for degrees).
+  /// Longitude (raw int32, divide by 1e7 for degrees — see scale
+  /// caveat above on [latitude]).
   final int? longitude;
 
   /// Contact name.
@@ -365,22 +372,51 @@ class MeshCoreContactInfo {
       'MeshCoreContactInfo(name=$name, type=$advType, path=$pathLength)';
 }
 
-/// Parse a CONTACT response payload.
+/// Parse a CONTACT response payload (`RESP_CODE_CONTACT` / 0x03)
+/// or a NEW-ADVERT push payload (`PUSH_CODE_NEW_ADVERT` / 0x8A).
+/// Both share the firmware's `writeContactRespFrame` layout from
+/// `MeshCore/examples/companion_radio/MyMesh.cpp`. The byte map
+/// below is verified against meshcore-open's `Contact.fromFrame`
+/// (see `lib/models/contact.dart` of the reference repo).
 ///
-/// CONTACT format:
+/// Wire layout (after the leading code byte has been stripped by
+/// the codec, so offset 0 is the first byte of [payload]):
+///
 /// ```
-/// [0-31] = pub_key (32 bytes)
-/// [32] = adv_type
-/// [33] = path_len (signed: -1 for flood)
-/// [34-35] = lastmod (uint16 LE)
-/// [36-39] = lat (int32 LE, 0 if no location)
-/// [40-43] = lon (int32 LE, 0 if no location)
-/// [44+] = name (null-terminated, max 32 chars)
-/// [after name] = path_bytes (path_len bytes if path_len > 0)
+/// [0..31]    = pub_key            (32 bytes)
+/// [32]       = adv_type           (uint8)
+/// [33]       = flags              (uint8)
+/// [34]       = path_len           (int8: 0xFF = flood, else hop count)
+/// [35..98]   = path               (64 bytes, valid prefix = path_len)
+/// [99..130]  = name               (32 bytes, null-padded ASCII)
+/// [131..134] = last_advert_ts     (uint32 LE, seconds since epoch)
+/// [135..138] = gps_lat            (int32 LE, degrees * 1e6)
+/// [139..142] = gps_lon            (int32 LE, degrees * 1e6)
+/// [143..146] = lastmod            (uint32 LE)
 /// ```
+///
+/// D24.B: pre-D24 the parser read a phantom `pubkey + adv_type +
+/// path_len + lastmod(uint16) + lat + lon + name` layout that did
+/// not match the firmware. The bug surfaced as every nameless-
+/// looking contact: the parser landed on `out_path[9..]` for the
+/// "name" field, and a zero byte at that offset (typical when
+/// path is empty) terminated the C-string at length zero. The
+/// firmware actually stored a real name; we just never read it.
+/// Restored here against meshcore-open + firmware sources.
 ParseResult<MeshCoreContactInfo> parseContact(Uint8List payload) {
-  // Minimum: pub_key(32) + adv_type(1) + path_len(1) + lastmod(2) = 36
-  const minLength = 36;
+  // Pre-D24 the minimum was 36 bytes; the corrected fixed layout
+  // ends at offset 147 (lastmod), so anything shorter than the
+  // path-end (98) is unparseable. Older firmware versions that
+  // truncate optional trailing fields are tolerated below by
+  // making lat/lon/lastmod optional after the 131-byte name end.
+  const minLength =
+      32 /*pub*/ +
+      1 /*type*/ +
+      1 /*flags*/ +
+      1 /*plen*/ +
+      meshCoreMaxPathSize +
+      meshCoreMaxNameSize +
+      4 /*last_advert_ts*/;
 
   if (payload.length < minLength) {
     return ParseResult.failure(
@@ -393,35 +429,51 @@ ParseResult<MeshCoreContactInfo> parseContact(Uint8List payload) {
   // Required fields
   final pubKey = reader.readBytes(meshCorePubKeySize);
   final advType = reader.readByte();
+  reader.readByte(); // flags — currently unused by the app surface
   final pathLenUnsigned = reader.readByte();
-  final pathLen = pathLenUnsigned >= 128
-      ? pathLenUnsigned - 256
-      : pathLenUnsigned;
-  final lastMod = reader.readUint16LE();
+  // 0xFF (255) is the firmware's sentinel for "flood / no direct
+  // path"; map to -1 to preserve the historical
+  // `MeshCoreContactInfo.pathLength` contract (signed: -1 = flood).
+  final pathLen = pathLenUnsigned == 0xFF
+      ? -1
+      : (pathLenUnsigned > meshCoreMaxPathSize
+            ? meshCoreMaxPathSize
+            : pathLenUnsigned);
 
-  // Optional lat/lon (need 8 more bytes)
+  // Read the full 64-byte path slot, slice to the valid prefix.
+  final pathSlot = reader.readBytes(meshCoreMaxPathSize);
+  final pathBytes = pathLen > 0 ? pathSlot.sublist(0, pathLen) : Uint8List(0);
+
+  // 32-byte null-padded name. `readCString` treats the first
+  // `\0` as terminator and sanitizes lone surrogates.
+  final name = reader.readCString(meshCoreMaxNameSize);
+
+  // Mandatory `last_advert_timestamp`.
+  final lastAdvertTs = reader.readUint32LE();
+
+  // Optional gps_lat / gps_lon / lastmod (12 bytes total).
   int? lat;
   int? lon;
-  if (reader.remaining >= 8) {
-    lat = reader.readInt32LE();
-    lon = reader.readInt32LE();
-    // Zero means no location
-    if (lat == 0 && lon == 0) {
-      lat = null;
-      lon = null;
+  int lastMod = lastAdvertTs;
+  if (reader.remaining >= 12) {
+    final latRaw = reader.readInt32LE();
+    final lonRaw = reader.readInt32LE();
+    final lastModRaw = reader.readUint32LE();
+    if (latRaw != 0 || lonRaw != 0) {
+      lat = latRaw;
+      lon = lonRaw;
     }
-  }
-
-  // Name (null-terminated)
-  String name = '';
-  if (reader.hasRemaining) {
-    name = reader.readCString(meshCoreMaxNameSize);
-  }
-
-  // Path bytes (if path_len > 0)
-  Uint8List pathBytes = Uint8List(0);
-  if (pathLen > 0 && reader.remaining >= pathLen) {
-    pathBytes = reader.readBytes(pathLen);
+    if (lastModRaw != 0) {
+      lastMod = lastModRaw;
+    }
+  } else if (reader.remaining >= 8) {
+    // Legacy firmware: gps fields without lastmod tail.
+    final latRaw = reader.readInt32LE();
+    final lonRaw = reader.readInt32LE();
+    if (latRaw != 0 || lonRaw != 0) {
+      lat = latRaw;
+      lon = lonRaw;
+    }
   }
 
   return ParseResult.success(
