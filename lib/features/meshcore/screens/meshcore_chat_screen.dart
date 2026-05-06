@@ -1225,8 +1225,13 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
     }
     if (hasPath) {
       final hops = message.pathLength!;
+      // Firmware reports 0 when a message arrived without intermediate
+      // relays (the radio decoded it directly). The first live smoke
+      // showed every legacy channel bubble rendering "via 0 hops",
+      // which reads awkwardly. Treat 0 and 1 both as "direct" — both
+      // mean the same thing to a user (no extra hops in the path).
       parts.add(
-        hops == 1
+        hops <= 1
             ? context.l10n.meshcoreChatInboundMetaPathDirect
             : context.l10n.meshcoreChatInboundMetaPathHops(hops),
       );

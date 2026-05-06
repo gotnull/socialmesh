@@ -517,6 +517,44 @@ void main() {
     );
 
     testWidgets(
+      'inbound bubble shows "direct" when pathLength is 0 (live-smoke fix)',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 4000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+
+        // Live D30 smoke surfaced "via 0 hops" on legacy channel
+        // bubbles where the firmware reports pathLen == 0 (no
+        // intermediate relays). That reads awkwardly. The widget now
+        // treats hops <= 1 as "direct"; pin both 0 and 1.
+        await tester.pumpWidget(
+          _wrap(
+            MeshCoreChatScreen.contact(
+              contact: _testContact(),
+              initialMessages: [
+                MeshCoreMessage(
+                  id: 'inbound-direct-0',
+                  text: 'unrelayed',
+                  timestamp: DateTime(2026, 5, 4, 10, 30),
+                  isOutgoing: false,
+                  status: MeshCoreMessageDeliveryStatus.delivered,
+                  senderKey: Uint8List.fromList(
+                    List.generate(32, (i) => i + 1),
+                  ),
+                  pathLength: 0,
+                ),
+              ],
+            ),
+          ),
+        );
+        await _settle(tester);
+
+        expect(find.textContaining('direct'), findsOneWidget);
+        expect(find.textContaining('via 0 hops'), findsNothing);
+      },
+    );
+
+    testWidgets(
       'outbound bubble does NOT show inline link metadata (D30 Part C)',
       (tester) async {
         tester.view.physicalSize = const Size(1080, 4000);
