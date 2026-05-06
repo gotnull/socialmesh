@@ -18996,7 +18996,6 @@
     }
   },
   "meshcoreContactUnknownName": "Sconosciuto",
-  "meshcoreRadioSettingsTitle": "Impostazioni radio",
   "meshcoreRadioSettingsHint": "Deve corrispondere a tutte le altre radio nella tua mesh.",
   "meshcoreRadioSettingsFreqSectionHeader": "FREQUENZA E LARGHEZZA DI BANDA",
   "meshcoreRadioSettingsModulationHeader": "MODULAZIONE",
@@ -20041,6 +20040,49 @@
         "type": "String"
       }
     }
+  },
+  "meshcoreShellSearchingFor": "Ricerca di {deviceName}...",
+  "@meshcoreShellSearchingFor": {
+    "description": "D27 - Reconnecting banner title while scanning.",
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      }
+    }
+  },
+  "meshcoreShellReconnectingTo": "Riconnessione a {deviceName}...",
+  "@meshcoreShellReconnectingTo": {
+    "description": "D27 - Reconnecting banner title while connecting.",
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      }
+    }
+  },
+  "meshcoreShellCancelReconnect": "Annulla",
+  "@meshcoreShellCancelReconnect": {
+    "description": "D27 - Cancel button on the reconnecting banner."
+  },
+  "meshcoreShellReconnectFailedTitle": "Impossibile riconnettersi a {deviceName}",
+  "@meshcoreShellReconnectFailedTitle": {
+    "description": "D27 - Reconnect-failed banner title.",
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      }
+    }
+  },
+  "meshcoreShellReconnectFailedSubtitle": "Controlla che il dispositivo sia acceso e nel raggio d'azione.",
+  "@meshcoreShellReconnectFailedSubtitle": {
+    "description": "D27 - Reconnect-failed banner subtitle."
+  },
+  "meshcoreShellGoToScanner": "Scanner",
+  "@meshcoreShellGoToScanner": {
+    "description": "D27 - Go-to-Scanner action on the reconnect-failed banner."
+  },
+  "meshcoreShellRetry": "Riprova",
+  "@meshcoreShellRetry": {
+    "description": "D27 - Retry action on the reconnect-failed banner."
   },
   "meshcoreShellScanToAddContact": "Scansiona per aggiungere come contatto",
   "@meshcoreShellScanToAddContact": {
@@ -23008,10 +23050,6 @@
   "@nodedexConstellationEmptySubtitle": {
     "description": "Subtitle in node management"
   },
-  "nodedexConstellationEmptyTitle": "Nessuna costellazione",
-  "@nodedexConstellationEmptyTitle": {
-    "description": "Title for the node management screen"
-  },
   "nodedexConstellationLinkCount": "{count} link",
   "@nodedexConstellationLinkCount": {
     "placeholders": {
@@ -23045,10 +23083,6 @@
   "nodedexConstellationSearchNodes": "Cerca nodi",
   "@nodedexConstellationSearchNodes": {
     "description": "Text displayed in node management"
-  },
-  "nodedexConstellationTitle": "Costellazione",
-  "@nodedexConstellationTitle": {
-    "description": "Title for the node management screen"
   },
   "nodedexDayFri": "Ven",
   "@nodedexDayFri": {
@@ -24581,7 +24615,7 @@
   "@nodedexMaxRangeLabel": {
     "description": "Label in node management"
   },
-  "nodedexMapTooltip": "Mostra mappa",
+  "nodedexMapTooltip": "Mappa NodeDex",
   "@nodedexMapTooltip": {
     "description": "Tooltip for the Map button in the NodeDex header"
   },
@@ -27210,12 +27244,26 @@
   "referenceCodeCopied": "Codice di riferimento copiato",
   "openBuyMeACoffee": "Apri Buy Me a Coffee",
   "expectedAmountLabel": "Importo: {amount}",
+  "@expectedAmountLabel": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "couldNotOpenCheckout": "Impossibile aprire il checkout. Riprova.",
   "externalPurchaseRetry": "Riprova",
   "confirmingUnlock": "Conferma dello sblocco in corso…",
   "paymentProcessing": "In attesa della conferma del pagamento. Di solito richiede pochi secondi.",
   "paymentFailed": "Impossibile confermare il pagamento. Se hai completato il pagamento, contatta il supporto.",
   "unlockSuccess": "{name} sbloccato!",
+  "@unlockSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "unlockSuccessGeneric": "Sblocco completato",
   "unlockCodeFallback": "Hai un codice di sblocco?",
   "unlockCodeSheetTitle": "Riscatta codice di sblocco",

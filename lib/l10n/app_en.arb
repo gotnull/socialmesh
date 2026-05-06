@@ -11250,10 +11250,6 @@
     "@meshcoreRadioSettingsSubtitle": {
         "description": "Settings tile subtitle for radio settings"
     },
-    "meshcoreRadioSettingsTitle": "Radio Settings",
-    "@meshcoreRadioSettingsTitle": {
-        "description": "Sheet title for radio settings in tools"
-    },
     "meshcoreRadioSettingsTool": "Radio Settings",
     "@meshcoreRadioSettingsTool": {
         "description": "Tool card title for radio settings"
@@ -11646,6 +11642,49 @@
                 "type": "String"
             }
         }
+    },
+    "meshcoreShellSearchingFor": "Searching for {deviceName}...",
+    "@meshcoreShellSearchingFor": {
+        "description": "D27 - Reconnecting banner title in the MeshCore shell while the auto-reconnect manager is in the scanning state.",
+        "placeholders": {
+            "deviceName": {
+                "type": "String"
+            }
+        }
+    },
+    "meshcoreShellReconnectingTo": "Reconnecting to {deviceName}...",
+    "@meshcoreShellReconnectingTo": {
+        "description": "D27 - Reconnecting banner title while the auto-reconnect manager is in the connecting state.",
+        "placeholders": {
+            "deviceName": {
+                "type": "String"
+            }
+        }
+    },
+    "meshcoreShellCancelReconnect": "Cancel",
+    "@meshcoreShellCancelReconnect": {
+        "description": "D27 - Cancel button on the reconnecting banner. Drives an authoritative user-cancel and routes back to the Scanner."
+    },
+    "meshcoreShellReconnectFailedTitle": "Couldn't reconnect to {deviceName}",
+    "@meshcoreShellReconnectFailedTitle": {
+        "description": "D27 - Reconnect-failed banner title, shown when the auto-reconnect manager has exhausted retries.",
+        "placeholders": {
+            "deviceName": {
+                "type": "String"
+            }
+        }
+    },
+    "meshcoreShellReconnectFailedSubtitle": "Check the device is on and within range.",
+    "@meshcoreShellReconnectFailedSubtitle": {
+        "description": "D27 - Reconnect-failed banner subtitle, hint to the user about likely causes."
+    },
+    "meshcoreShellGoToScanner": "Scanner",
+    "@meshcoreShellGoToScanner": {
+        "description": "D27 - Go-to-Scanner action on the reconnect-failed banner."
+    },
+    "meshcoreShellRetry": "Retry",
+    "@meshcoreShellRetry": {
+        "description": "D27 - Retry action on the reconnect-failed banner. Re-arms the auto-reconnect manager."
     },
     "meshcoreShellScanToAddContact": "Scan to add as contact",
     "@meshcoreShellScanToAddContact": {
@@ -14605,10 +14644,6 @@
     "@nodedexConstellationEmptySubtitle": {
         "description": "Subtitle in node management"
     },
-    "nodedexConstellationEmptyTitle": "No Historical Constellation Yet",
-    "@nodedexConstellationEmptyTitle": {
-        "description": "Title for the node management screen"
-    },
     "nodedexConstellationLinkCount": "{count} historical links",
     "@nodedexConstellationLinkCount": {
         "placeholders": {
@@ -14642,10 +14677,6 @@
     "nodedexConstellationSearchNodes": "Search nodes",
     "@nodedexConstellationSearchNodes": {
         "description": "Text displayed in node management"
-    },
-    "nodedexConstellationTitle": "Historical Constellation",
-    "@nodedexConstellationTitle": {
-        "description": "Title for the node management screen"
     },
     "nodedexDayFri": "Fri",
     "@nodedexDayFri": {
@@ -16233,7 +16264,7 @@
     "@nodedexMaxRangeLabel": {
         "description": "Label in node management"
     },
-    "nodedexMapTooltip": "Show map view",
+    "nodedexMapTooltip": "NodeDex Map",
     "@nodedexMapTooltip": {
         "description": "Tooltip for the Map button in the NodeDex header"
     },
@@ -30827,7 +30858,12 @@
     },
     "expectedAmountLabel": "Amount: {amount}",
     "@expectedAmountLabel": {
-        "description": "Shows the expected payment amount in the BMC handoff sheet. Parameters: {amount} = formatted price (e.g. \"$4.99\")."
+        "description": "Shows the expected payment amount in the BMC handoff sheet. Parameters: {amount} = formatted price (e.g. \"$4.99\").",
+        "placeholders": {
+            "amount": {
+                "type": "String"
+            }
+        }
     },
     "couldNotOpenCheckout": "Couldn't open checkout. Please try again.",
     "@couldNotOpenCheckout": {
@@ -30851,7 +30887,12 @@
     },
     "unlockSuccess": "{name} unlocked!",
     "@unlockSuccess": {
-        "description": "Title of the success state in the confirming-unlock overlay. Parameters: {name} = pack display name."
+        "description": "Title of the success state in the confirming-unlock overlay. Parameters: {name} = pack display name.",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
     },
     "unlockSuccessGeneric": "Unlock complete",
     "@unlockSuccessGeneric": {

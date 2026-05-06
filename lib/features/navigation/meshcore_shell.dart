@@ -9,7 +9,6 @@ import 'package:socialmesh/core/logging.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
-import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/info_table.dart';
@@ -20,8 +19,6 @@ import '../../providers/app_providers.dart';
 import '../../providers/meshcore_providers.dart';
 import '../../providers/connection_providers.dart' as conn;
 import '../../services/haptic_service.dart';
-import '../../services/meshcore/connection_coordinator.dart'
-    show ConnectionResult, MeshCoreTcpDeviceId;
 import '../../utils/snackbar.dart';
 import '../meshcore/screens/meshcore_contacts_screen.dart';
 import '../meshcore/screens/meshcore_channels_screen.dart';
@@ -299,7 +296,7 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
         children: [
           // Top status banner for disconnection/reconnection
           if (showReconnectionBanner)
-            _buildDisconnectedBanner(context, deviceName),
+            _buildReconnectingBanner(context, deviceName),
           // Main content. D23: when the disconnected banner is shown
           // it consumes the system top safe-area itself (via its
           // SafeArea wrapper). The inner per-tab `GlassScaffold`
@@ -328,19 +325,111 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
     );
   }
 
-  Widget _buildDisconnectedBanner(BuildContext context, String deviceName) {
+  /// State-aware reconnecting banner (D27).
+  ///
+  /// Renders one of four shapes driven by [autoReconnectStateProvider]:
+  ///
+  /// - `scanning` / `connecting` -> loading spinner + "Reconnecting…" with
+  ///   a Cancel button that drives an authoritative user-cancel and routes
+  ///   to Scanner.
+  /// - `failed` -> error banner with Retry + Go to Scanner.
+  /// - `idle` (default) -> existing `Disconnected from <device>` shape
+  ///   with a single Reconnect button.
+  /// - `success` -> caller already hides the banner via `showReconnectionBanner`.
+  ///
+  /// Mirrors Meshtastic's [TopStatusBanner] UX conceptually but is a
+  /// MeshCore-specific duplicate by design (D27 boundary): no Meshtastic UI
+  /// is touched, and a future deduplication pass can fold the two together
+  /// once both are battle-tested.
+  Widget _buildReconnectingBanner(BuildContext context, String deviceName) {
+    final autoState = ref.watch(autoReconnectStateProvider);
+    final isScanning = autoState == AutoReconnectState.scanning;
+    final isConnecting = autoState == AutoReconnectState.connecting;
+    final isReconnecting = isScanning || isConnecting;
+    final isFailed = autoState == AutoReconnectState.failed;
+    final l10n = context.l10n;
+
+    if (isReconnecting) {
+      return SafeArea(
+        bottom: false,
+        child: StatusBanner.info(
+          title: isScanning
+              ? l10n.meshcoreShellSearchingFor(deviceName)
+              : l10n.meshcoreShellReconnectingTo(deviceName),
+          icon: Icons.bluetooth_searching_rounded,
+          isLoading: true,
+          margin: const EdgeInsets.all(AppTheme.spacing12),
+          trailing: TextButton(
+            onPressed: _cancelReconnectAndGoToScanner,
+            child: Text(l10n.meshcoreShellCancelReconnect),
+          ),
+        ),
+      );
+    }
+
+    if (isFailed) {
+      return SafeArea(
+        bottom: false,
+        child: StatusBanner.error(
+          title: l10n.meshcoreShellReconnectFailedTitle(deviceName),
+          subtitle: l10n.meshcoreShellReconnectFailedSubtitle,
+          icon: Icons.error_outline_rounded,
+          margin: const EdgeInsets.all(AppTheme.spacing12),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextButton(
+                onPressed: _goToScanner,
+                child: Text(l10n.meshcoreShellGoToScanner),
+              ),
+              const SizedBox(width: AppTheme.spacing4),
+              TextButton(
+                onPressed: _reconnect,
+                child: Text(l10n.meshcoreShellRetry),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // idle / disconnected default
     return SafeArea(
       bottom: false,
       child: StatusBanner.error(
-        title: context.l10n.meshcoreShellDisconnectedFrom(deviceName),
+        title: l10n.meshcoreShellDisconnectedFrom(deviceName),
         icon: Icons.link_off_rounded,
         margin: const EdgeInsets.all(AppTheme.spacing12),
         trailing: TextButton(
           onPressed: _reconnect,
-          child: Text(context.l10n.meshcoreShellReconnectButton),
+          child: Text(l10n.meshcoreShellReconnectButton),
         ),
       ),
     );
+  }
+
+  /// Authoritative user-cancel + route replacement to Scanner.
+  ///
+  /// Mirrors Meshtastic's banner Cancel flow: drive
+  /// [DeviceConnectionNotifier.userCancelAutoReconnect] (sets
+  /// `userDisconnected=true` and tears down any in-flight transport) then
+  /// route-replace into the scanner via `setNeedsScanner` + `/app` so we
+  /// don't end up stacking a scanner on top of a still-mounted shell.
+  Future<void> _cancelReconnectAndGoToScanner() async {
+    AppLogging.connection(
+      'event=shell.banner.cancel reason=user_tap protocol=meshcore',
+    );
+    await ref
+        .read(conn.deviceConnectionProvider.notifier)
+        .userCancelAutoReconnect();
+    if (!mounted) return;
+    _goToScanner();
+  }
+
+  /// Route-replace into the scanner.
+  void _goToScanner() {
+    ref.read(appInitProvider.notifier).setNeedsScanner();
+    Navigator.of(context).pushNamedAndRemoveUntil('/app', (route) => false);
   }
 
   Widget _buildBottomNav(BuildContext context, ThemeData theme, int selected) {
@@ -608,90 +697,32 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
     );
   }
 
-  void _reconnect() async {
-    // Get saved device info
-    final settingsAsync = ref.read(settingsServiceProvider);
-    final settings = settingsAsync.asData?.value;
+  /// Reconnect tap from the banner.
+  ///
+  /// Routes through [dispatchReconnectMeshCoreAware] (D27) so the
+  /// reconnect runs on the protocol-aware path, advances
+  /// [autoReconnectStateProvider] (which the banner watches), and
+  /// reuses the same dispatch the auto-reconnect manager uses. The
+  /// previous direct-coordinator implementation bypassed
+  /// `autoReconnectState`, leaving the banner in a "Disconnected"
+  /// shape while the connect was in flight.
+  void _reconnect() {
+    AppLogging.connection(
+      'event=shell.banner.action action=reconnect protocol=meshcore',
+    );
+    final settings = ref.read(settingsServiceProvider).asData?.value;
     final deviceId = settings?.lastDeviceId;
-    final deviceName =
-        settings?.lastDeviceName ??
-        context.l10n.meshcoreShellDefaultDeviceNameFull;
-
     if (deviceId == null) {
       showErrorSnackBar(context, context.l10n.meshcoreShellNoSavedDevice);
       return;
     }
-
-    // Show reconnecting feedback
-    showLoadingSnackBar(
-      context,
-      context.l10n.meshcoreShellReconnecting(deviceName),
-      duration: const Duration(seconds: 30),
-    );
-
-    final coordinator = ref.read(connectionCoordinatorProvider);
-
-    // Dispatch by saved-id shape: TCP ids go straight through the
-    // coordinator's TCP entry point (no BLE detection); BLE/USB ids
-    // continue through the canonical `connect(device)` path.
-    final tcpId = MeshCoreTcpDeviceId.tryParse(deviceId);
-    final ConnectionResult result;
-    final DeviceInfo device;
-    if (tcpId != null) {
-      device = DeviceInfo(
-        id: deviceId,
-        name: deviceName,
-        type: TransportType.network,
-        address: '${tcpId.host}:${tcpId.port}',
-      );
-      result = await coordinator.connectMeshCoreTcp(
-        host: tcpId.host,
-        port: tcpId.port,
-      );
-    } else {
-      device = DeviceInfo(
-        id: deviceId,
-        name: deviceName,
-        type: TransportType.ble,
-        address: deviceId,
-      );
-      result = await coordinator.connect(
-        device: device,
-        // Pass through any uuids carried on the DeviceInfo so the
-        // detection layer doesn't fall back to name-based routing
-        // (D3 lesson — `Meshtastic_*` named MeshCore peers).
-        advertisedServiceUuids: device.serviceUuids,
-      );
-    }
-
-    if (!mounted) return;
-
-    if (result.success) {
-      // Update connection providers
-      ref.read(connectedDeviceProvider.notifier).setState(device);
-
-      final nodeIdHex = result.deviceInfo?.nodeId ?? '0';
-      final nodeNumParsed = int.tryParse(nodeIdHex, radix: 16);
-      ref
-          .read(conn.deviceConnectionProvider.notifier)
-          .markAsPaired(device, nodeNumParsed, isMeshCore: true);
-
-      ScaffoldMessenger.of(context).clearSnackBars();
-      showSuccessSnackBar(
-        context,
-        context.l10n.meshcoreShellConnectedTo(
-          result.deviceInfo?.displayName ?? deviceName,
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      showErrorSnackBar(
-        context,
-        context.l10n.meshcoreShellReconnectFailed(
-          result.errorMessage ?? context.l10n.meshcoreShellUnknown,
-        ),
-      );
-    }
+    // Clear any prior user-disconnected flag so the banner Retry tap
+    // re-arms the auto-reconnect manager.
+    ref.read(userDisconnectedProvider.notifier).setUserDisconnected(false);
+    ref
+        .read(autoReconnectStateProvider.notifier)
+        .setState(AutoReconnectState.scanning);
+    dispatchReconnectMeshCoreAwareForWidget(ref, deviceId);
   }
 
   void _disconnect() async {

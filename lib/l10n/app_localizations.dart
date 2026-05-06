@@ -13693,7 +13693,7 @@ abstract class AppLocalizations {
   /// **'Unknown'**
   String get meshcoreContactUnknownName;
 
-  /// Sheet title for radio settings in tools
+  /// MeshCore radio settings sheet title
   ///
   /// In en, this message translates to:
   /// **'Radio Settings'**
@@ -15402,6 +15402,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reconnecting to {deviceName}...'**
   String meshcoreShellReconnecting(String deviceName);
+
+  /// D27 - Reconnecting banner title in the MeshCore shell while the auto-reconnect manager is in the scanning state.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching for {deviceName}...'**
+  String meshcoreShellSearchingFor(String deviceName);
+
+  /// D27 - Reconnecting banner title while the auto-reconnect manager is in the connecting state.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnecting to {deviceName}...'**
+  String meshcoreShellReconnectingTo(String deviceName);
+
+  /// D27 - Cancel button on the reconnecting banner. Drives an authoritative user-cancel and routes back to the Scanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get meshcoreShellCancelReconnect;
+
+  /// D27 - Reconnect-failed banner title, shown when the auto-reconnect manager has exhausted retries.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reconnect to {deviceName}'**
+  String meshcoreShellReconnectFailedTitle(String deviceName);
+
+  /// D27 - Reconnect-failed banner subtitle, hint to the user about likely causes.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the device is on and within range.'**
+  String get meshcoreShellReconnectFailedSubtitle;
+
+  /// D27 - Go-to-Scanner action on the reconnect-failed banner.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanner'**
+  String get meshcoreShellGoToScanner;
+
+  /// D27 - Retry action on the reconnect-failed banner. Re-arms the auto-reconnect manager.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get meshcoreShellRetry;
 
   /// Subtitle on the QR share sheet for adding a MeshCore contact.
   ///
@@ -18943,12 +18985,6 @@ abstract class AppLocalizations {
   /// **'Discover more nodes to build the historical graph.\nHistorically co-seen nodes form constellation links.'**
   String get nodedexConstellationEmptySubtitle;
 
-  /// Empty-state title shown when there isn't enough data to render the Constellation.
-  ///
-  /// In en, this message translates to:
-  /// **'Constellation is quiet'**
-  String get nodedexConstellationEmptyTitle;
-
   /// Text in node management Parameters: {count} = numeric count.
   ///
   /// In en, this message translates to:
@@ -18984,12 +19020,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search nodes'**
   String get nodedexConstellationSearchNodes;
-
-  /// App bar title for the per-node Constellation graph.
-  ///
-  /// In en, this message translates to:
-  /// **'Constellation'**
-  String get nodedexConstellationTitle;
 
   /// Text displayed in node management
   ///
@@ -20710,7 +20740,7 @@ abstract class AppLocalizations {
   /// Tooltip for the Map button in the NodeDex header
   ///
   /// In en, this message translates to:
-  /// **'Show map view'**
+  /// **'NodeDex Map'**
   String get nodedexMapTooltip;
 
   /// App bar title shown when MapScreen runs in nodedexMode (drawer NodeDex → Map child + in-NodeDex overflow menu Map item)
@@ -39743,7 +39773,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Amount: {amount}'**
-  String expectedAmountLabel(Object amount);
+  String expectedAmountLabel(String amount);
 
   /// Error message when url_launcher fails to open the BMC checkout URL.
   ///
@@ -39779,7 +39809,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{name} unlocked!'**
-  String unlockSuccess(Object name);
+  String unlockSuccess(String name);
 
   /// Success title used when the granted product can't be resolved to a pack name.
   ///
@@ -68312,6 +68342,12 @@ abstract class AppLocalizations {
   /// **'Unreachable'**
   String get rnsCompanionStatusUnreachable;
 
+  /// App bar title for the per-node Constellation graph.
+  ///
+  /// In en, this message translates to:
+  /// **'Constellation'**
+  String get nodedexConstellationTitle;
+
   /// App bar action label that opens the Constellation graph from a NodeDex detail screen.
   ///
   /// In en, this message translates to:
@@ -68359,6 +68395,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Inferred'**
   String get nodedexConstellationFilterShowInferred;
+
+  /// Empty-state title shown when there isn't enough data to render the Constellation.
+  ///
+  /// In en, this message translates to:
+  /// **'Constellation is quiet'**
+  String get nodedexConstellationEmptyTitle;
 
   /// Empty-state body when the centre node has no NodeDex entry.
   ///

@@ -18996,7 +18996,6 @@
     }
   },
   "meshcoreContactUnknownName": "Desconhecido",
-  "meshcoreRadioSettingsTitle": "Configurações de rádio",
   "meshcoreRadioSettingsHint": "Deve corresponder a todos os outros rádios da sua mesh.",
   "meshcoreRadioSettingsFreqSectionHeader": "FREQUÊNCIA E LARGURA DE BANDA",
   "meshcoreRadioSettingsModulationHeader": "MODULAÇÃO",
@@ -20041,6 +20040,49 @@
         "type": "String"
       }
     }
+  },
+  "meshcoreShellSearchingFor": "Procurando {deviceName}...",
+  "@meshcoreShellSearchingFor": {
+    "description": "D27 - Reconnecting banner title while scanning.",
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      }
+    }
+  },
+  "meshcoreShellReconnectingTo": "Reconectando a {deviceName}...",
+  "@meshcoreShellReconnectingTo": {
+    "description": "D27 - Reconnecting banner title while connecting.",
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      }
+    }
+  },
+  "meshcoreShellCancelReconnect": "Cancelar",
+  "@meshcoreShellCancelReconnect": {
+    "description": "D27 - Cancel button on the reconnecting banner."
+  },
+  "meshcoreShellReconnectFailedTitle": "Não foi possível reconectar a {deviceName}",
+  "@meshcoreShellReconnectFailedTitle": {
+    "description": "D27 - Reconnect-failed banner title.",
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      }
+    }
+  },
+  "meshcoreShellReconnectFailedSubtitle": "Verifique se o dispositivo está ligado e dentro do alcance.",
+  "@meshcoreShellReconnectFailedSubtitle": {
+    "description": "D27 - Reconnect-failed banner subtitle."
+  },
+  "meshcoreShellGoToScanner": "Scanner",
+  "@meshcoreShellGoToScanner": {
+    "description": "D27 - Go-to-Scanner action on the reconnect-failed banner."
+  },
+  "meshcoreShellRetry": "Tentar novamente",
+  "@meshcoreShellRetry": {
+    "description": "D27 - Retry action on the reconnect-failed banner."
   },
   "meshcoreShellScanToAddContact": "Escaneie para adicionar como contato",
   "@meshcoreShellScanToAddContact": {
@@ -23008,10 +23050,6 @@
   "@nodedexConstellationEmptySubtitle": {
     "description": "Subtitle in node management"
   },
-  "nodedexConstellationEmptyTitle": "Nenhuma constelação",
-  "@nodedexConstellationEmptyTitle": {
-    "description": "Title for the node management screen"
-  },
   "nodedexConstellationLinkCount": "{count} ligações",
   "@nodedexConstellationLinkCount": {
     "placeholders": {
@@ -23045,10 +23083,6 @@
   "nodedexConstellationSearchNodes": "Buscar nós",
   "@nodedexConstellationSearchNodes": {
     "description": "Text displayed in node management"
-  },
-  "nodedexConstellationTitle": "Constelação",
-  "@nodedexConstellationTitle": {
-    "description": "Title for the node management screen"
   },
   "nodedexDayFri": "Sex",
   "@nodedexDayFri": {
@@ -24581,7 +24615,7 @@
   "@nodedexMaxRangeLabel": {
     "description": "Label in node management"
   },
-  "nodedexMapTooltip": "Mostrar mapa",
+  "nodedexMapTooltip": "Mapa NodeDex",
   "@nodedexMapTooltip": {
     "description": "Tooltip for the Map button in the NodeDex header"
   },
@@ -27210,12 +27244,26 @@
   "referenceCodeCopied": "Código de referência copiado",
   "openBuyMeACoffee": "Abrir Buy Me a Coffee",
   "expectedAmountLabel": "Valor: {amount}",
+  "@expectedAmountLabel": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "couldNotOpenCheckout": "Não foi possível abrir o checkout. Tente novamente.",
   "externalPurchaseRetry": "Tentar novamente",
   "confirmingUnlock": "Confirmando seu desbloqueio…",
   "paymentProcessing": "Aguardando confirmação do pagamento. Isso geralmente leva alguns segundos.",
   "paymentFailed": "Não foi possível confirmar o pagamento. Se você concluiu o pagamento, entre em contato com o suporte.",
   "unlockSuccess": "{name} desbloqueado!",
+  "@unlockSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "unlockSuccessGeneric": "Desbloqueio concluído",
   "unlockCodeFallback": "Tem um código de desbloqueio?",
   "unlockCodeSheetTitle": "Resgatar código de desbloqueio",

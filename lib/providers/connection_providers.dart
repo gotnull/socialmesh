@@ -1154,6 +1154,23 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     }
   }
 
+  /// Public entry point for protocol-aware reconnect dispatch (D27).
+  ///
+  /// Used by `dispatchReconnectMeshCoreAware` and the MeshCore lifecycle
+  /// listener so every mid-session reconnect for a saved MeshCore peer
+  /// flows through the coordinator's protocol-aware path
+  /// ([_startMeshCoreBackgroundConnection]) — TCP ids dispatch to
+  /// `connectMeshCoreTcp`, BLE ids fall through to the BLE strategies,
+  /// and the Meshtastic `transportProvider` is never consulted.
+  ///
+  /// Fire-and-forget: callers do not await the result. Internal state
+  /// machine (`_backgroundScanInProgress`, autoReconnectStateProvider,
+  /// devicePairingState) tracks progress for the UI.
+  Future<void> startMeshCoreReconnect(String deviceId) async {
+    final settings = await ref.read(settingsServiceProvider.future);
+    await _startMeshCoreBackgroundConnection(deviceId, settings);
+  }
+
   /// Start background connection for MeshCore device.
   ///
   /// Uses the same direct-connect-by-id strategy as resume reconnect.

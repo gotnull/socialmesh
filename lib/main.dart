@@ -49,6 +49,7 @@ import 'models/canned_response.dart';
 import 'models/tapback.dart';
 import 'models/user_profile.dart';
 import 'providers/app_providers.dart';
+import 'providers/meshcore_lifecycle_provider.dart';
 import 'providers/auth_providers.dart';
 import 'providers/profile_providers.dart';
 import 'providers/telemetry_providers.dart';
@@ -1879,6 +1880,10 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     // so they stay active regardless of which screen is shown
     ref.watch(autoReconnectManagerProvider);
     ref.watch(bluetoothStateListenerProvider);
+    // D27: MeshCore-specific foreground/disconnect reconnect listener.
+    // Closes the gap left by the Meshtastic-only autoReconnectManager,
+    // which bails on `lastDeviceProtocol == 'meshcore'`.
+    ref.watch(meshCoreLifecycleProvider);
     ref.watch(liveActivityManagerProvider);
 
     // Watch telemetry logger to automatically save telemetry data

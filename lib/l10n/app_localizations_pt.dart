@@ -8717,6 +8717,34 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String meshcoreShellSearchingFor(String deviceName) {
+    return 'Procurando $deviceName...';
+  }
+
+  @override
+  String meshcoreShellReconnectingTo(String deviceName) {
+    return 'Reconectando a $deviceName...';
+  }
+
+  @override
+  String get meshcoreShellCancelReconnect => 'Cancelar';
+
+  @override
+  String meshcoreShellReconnectFailedTitle(String deviceName) {
+    return 'Não foi possível reconectar a $deviceName';
+  }
+
+  @override
+  String get meshcoreShellReconnectFailedSubtitle =>
+      'Verifique se o dispositivo está ligado e dentro do alcance.';
+
+  @override
+  String get meshcoreShellGoToScanner => 'Scanner';
+
+  @override
+  String get meshcoreShellRetry => 'Tentar novamente';
+
+  @override
   String get meshcoreShellScanToAddContact =>
       'Escaneie para adicionar como contato';
 
@@ -10765,9 +10793,6 @@ class AppLocalizationsPt extends AppLocalizations {
       'Descubra mais nós para ver como se conectam.\nNós vistos juntos formam links de constelação.';
 
   @override
-  String get nodedexConstellationEmptyTitle => 'Constelação silenciosa';
-
-  @override
   String nodedexConstellationLinkCount(int count) {
     return '$count ligações';
   }
@@ -10788,9 +10813,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get nodedexConstellationSearchNodes => 'Buscar nós';
-
-  @override
-  String get nodedexConstellationTitle => 'Constelação';
 
   @override
   String get nodedexDayFri => 'Sex';
@@ -11895,7 +11917,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nodedexMaxRangeLabel => 'Alcance máx.';
 
   @override
-  String get nodedexMapTooltip => 'Mostrar mapa';
+  String get nodedexMapTooltip => 'Mapa NodeDex';
 
   @override
   String get nodedexMapTitle => 'Mapa NodeDex';
@@ -22704,7 +22726,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get openBuyMeACoffee => 'Abrir Buy Me a Coffee';
 
   @override
-  String expectedAmountLabel(Object amount) {
+  String expectedAmountLabel(String amount) {
     return 'Valor: $amount';
   }
 
@@ -22727,7 +22749,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Não foi possível confirmar o pagamento. Se você concluiu o pagamento, entre em contato com o suporte.';
 
   @override
-  String unlockSuccess(Object name) {
+  String unlockSuccess(String name) {
     return '$name desbloqueado!';
   }
 
@@ -39185,6 +39207,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get rnsCompanionStatusUnreachable => 'Unreachable';
 
   @override
+  String get nodedexConstellationTitle => 'Constelação';
+
+  @override
   String get nodedexConstellationOpen => 'Constelação';
 
   @override
@@ -39207,6 +39232,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get nodedexConstellationFilterShowInferred => 'Inferidas';
+
+  @override
+  String get nodedexConstellationEmptyTitle => 'Constelação silenciosa';
 
   @override
   String get nodedexConstellationEmptyMissing =>

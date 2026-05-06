@@ -54,6 +54,8 @@ import '../generated/meshtastic/mesh.pb.dart' as mesh_pb;
 import 'meshcore_providers.dart';
 import 'social_providers.dart';
 import 'telemetry_providers.dart';
+import '../services/meshcore/connection_coordinator.dart'
+    show MeshCoreTcpDeviceId;
 import 'connection_providers.dart';
 import 'age_eligibility_provider.dart';
 import 'file_transfer_providers.dart';
@@ -1790,7 +1792,111 @@ void restoreTransportTypeFromSettings(Ref ref, SettingsService settings) {
 /// into the right reconnect path without reimplementing the BLE vs
 /// network routing. Internal callers still use `_dispatchReconnect`.
 void dispatchReconnectForDevice(Ref ref, String deviceId) {
+  dispatchReconnectMeshCoreAware(ref, deviceId);
+}
+
+/// D27: Protocol-aware reconnect dispatch.
+///
+/// When the saved peer is a MeshCore device, route the reconnect through
+/// [DeviceConnectionNotifier.startMeshCoreReconnect] so the coordinator's
+/// own TCP/BLE routing decides the transport. The Meshtastic
+/// `transportProvider.reconnectMode` is never consulted for MeshCore.
+///
+/// Why: `_dispatchReconnect` switches on `transportProvider.reconnectMode`,
+/// but MeshCore connections live on a separate ConnectionCoordinator
+/// singleton and never register as `transportProvider`. For a TCP-saved
+/// MeshCore peer the Meshtastic transport defaults to BLE/scanBased and
+/// the dispatcher would otherwise route to `_performReconnect` → BLE scan
+/// → `PlatformException(CBManagerStateUnsupported)` when iOS suppresses
+/// BT during permission dialogs. Defence-in-depth: every existing
+/// MeshCore-bail in app_providers.dart still stands; this helper turns
+/// three ad-hoc checks into one named consolidation point.
+///
+/// Logging: emits `event=reconnect.requested protocol=<...> transport=<...>`
+/// at the meshcore log namespace so the field test matrix can verify
+/// route selection without inspecting BLE platform calls.
+void dispatchReconnectMeshCoreAware(Ref ref, String deviceId) {
+  final settings = ref.read(settingsServiceProvider).asData?.value;
+  if (_routeMeshCoreReconnect(
+    deviceId: deviceId,
+    lastProtocol: settings?.lastDeviceProtocol,
+    onMeshCore: () => ref
+        .read(deviceConnectionProvider.notifier)
+        .startMeshCoreReconnect(deviceId),
+  )) {
+    return;
+  }
   _dispatchReconnect(ref, deviceId);
+}
+
+/// WidgetRef variant of [dispatchReconnectMeshCoreAware]. Mirrors the
+/// `prepareForDeviceTransition` pattern: a thin wrapper for widget-layer
+/// callers (banner Reconnect tap, etc.) that re-uses the same routing
+/// rule as the internal `Ref` variant.
+void dispatchReconnectMeshCoreAwareForWidget(WidgetRef ref, String deviceId) {
+  final settings = ref.read(settingsServiceProvider).asData?.value;
+  if (_routeMeshCoreReconnect(
+    deviceId: deviceId,
+    lastProtocol: settings?.lastDeviceProtocol,
+    onMeshCore: () => ref
+        .read(deviceConnectionProvider.notifier)
+        .startMeshCoreReconnect(deviceId),
+  )) {
+    return;
+  }
+  // Meshtastic widget-layer callers should not normally hit this path
+  // (autoReconnectManager owns Meshtastic dispatch). If this fires we
+  // log it loudly so a future regression can be tracked down rather
+  // than silently routing into the BLE scan loop.
+  AppLogging.connection(
+    '⚠️ dispatchReconnectMeshCoreAwareForWidget: non-meshcore protocol '
+    'reached widget-layer reconnect dispatcher (deviceId=$deviceId) — '
+    'ignoring; Meshtastic widgets should drive autoReconnectManager',
+  );
+}
+
+/// Shared routing rule used by both Ref and WidgetRef variants. Returns
+/// `true` if the call was handled by the MeshCore branch (caller should
+/// short-circuit), `false` if the caller should run its Meshtastic path.
+bool _routeMeshCoreReconnect({
+  required String deviceId,
+  required String? lastProtocol,
+  required void Function() onMeshCore,
+}) {
+  if (lastProtocol != 'meshcore') return false;
+  final transportTag = MeshCoreTcpDeviceId.tryParse(deviceId) != null
+      ? 'tcp'
+      : 'ble';
+  AppLogging.connection(
+    '🔄 dispatchReconnect: protocol=meshcore transport=$transportTag '
+    'deviceId=$deviceId',
+  );
+  AppLogging.meshcore(
+    'event=reconnect.requested protocol=meshcore transport=$transportTag',
+  );
+  onMeshCore();
+  return true;
+}
+
+/// Test-only seam over [_routeMeshCoreReconnect]. Returns whether the
+/// MeshCore branch was taken and, if so, the transport tag the dispatcher
+/// would have logged. Exists so D27 routing tests can pin the rule
+/// without standing up the full container + DeviceConnectionNotifier
+/// + Meshtastic transport graph.
+@visibleForTesting
+({bool routed, String? transportTag}) routeMeshCoreReconnectForTest({
+  required String deviceId,
+  required String? lastProtocol,
+}) {
+  String? tag;
+  final routed = _routeMeshCoreReconnect(
+    deviceId: deviceId,
+    lastProtocol: lastProtocol,
+    onMeshCore: () {
+      tag = MeshCoreTcpDeviceId.tryParse(deviceId) != null ? 'tcp' : 'ble';
+    },
+  );
+  return (routed: routed, transportTag: tag);
 }
 
 /// WidgetRef wrapper for widget-layer callers (scanner, etc.). Delegates
@@ -2247,7 +2353,12 @@ final bluetoothStateListenerProvider = Provider<void>((ref) {
             .read(autoReconnectStateProvider.notifier)
             .setState(AutoReconnectState.scanning);
 
-        _dispatchReconnect(ref, lastDeviceId);
+        // D27: route through the protocol-aware dispatcher even though
+        // the MeshCore guard above already returned early. Defence in
+        // depth — a future regression in the early-return logic must
+        // not be able to reintroduce a BLE scan for a saved MeshCore
+        // peer.
+        dispatchReconnectMeshCoreAware(ref, lastDeviceId);
       });
     }
   });
@@ -2393,8 +2504,10 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
             .read(autoReconnectStateProvider.notifier)
             .setState(AutoReconnectState.scanning);
 
-        // Run reconnect via strategy dispatch (BLE scan vs TCP endpoint).
-        _dispatchReconnect(ref, lastDeviceId);
+        // Run reconnect via protocol-aware dispatcher. The early MeshCore
+        // bail above already returned, so this path is Meshtastic-only;
+        // we keep the helper for defence in depth (D27).
+        dispatchReconnectMeshCoreAware(ref, lastDeviceId);
       } else {
         AppLogging.connection('NOT attempting reconnect - conditions not met');
       }
