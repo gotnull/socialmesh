@@ -870,7 +870,8 @@ class _EditLocationSheet extends ConsumerStatefulWidget {
   ConsumerState<_EditLocationSheet> createState() => _EditLocationSheetState();
 }
 
-class _EditLocationSheetState extends ConsumerState<_EditLocationSheet> {
+class _EditLocationSheetState extends ConsumerState<_EditLocationSheet>
+    with LifecycleSafeMixin<_EditLocationSheet> {
   final _formKey = GlobalKey<FormState>();
   final _latController = TextEditingController();
   final _lonController = TextEditingController();
@@ -889,7 +890,7 @@ class _EditLocationSheetState extends ConsumerState<_EditLocationSheet> {
   Future<void> _useMyLocation() async {
     if (_fetchingGps) return;
     final l10n = context.l10n;
-    setState(() => _fetchingGps = true);
+    safeSetState(() => _fetchingGps = true);
     try {
       final svc = ref.read(locationServiceProvider);
       final pos = await svc.getCurrentPosition();
@@ -902,7 +903,7 @@ class _EditLocationSheetState extends ConsumerState<_EditLocationSheet> {
       _latController.text = pos.latitude.toStringAsFixed(6);
       _lonController.text = pos.longitude.toStringAsFixed(6);
     } finally {
-      if (mounted) setState(() => _fetchingGps = false);
+      safeSetState(() => _fetchingGps = false);
     }
   }
 
