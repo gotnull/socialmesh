@@ -13669,6 +13669,42 @@ abstract class AppLocalizations {
   /// **'Delete locally'**
   String get meshcoreChatActionDelete;
 
+  /// D33 — long-press menu action that opens the composer in reply mode targeting this message
+  ///
+  /// In en, this message translates to:
+  /// **'Reply'**
+  String get meshcoreChatActionReply;
+
+  /// D33 — header line of the composer reply chip; {name} is the target sender's display name (or 'You' for own outbound messages)
+  ///
+  /// In en, this message translates to:
+  /// **'Replying to {name}'**
+  String meshcoreChatComposerReplyingTo(String name);
+
+  /// D33 — accessibility label / tooltip for the [×] button on the composer reply chip
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel reply'**
+  String get meshcoreChatComposerCancelReply;
+
+  /// D33 — fallback row shown above a reply bubble when the target message isn't in local history
+  ///
+  /// In en, this message translates to:
+  /// **'Reply to a message you don\'t have'**
+  String get meshcoreChatReplyMissingTarget;
+
+  /// D33 — sender label used in the composer chip + reply quote preview when the target is the user's own outbound message
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get meshcoreChatReplyYou;
+
+  /// D33 — snackbar shown when MeshCoreSendRateLimiter rejects a reply (or any text) send. {seconds} is the suggested retry delay rounded to whole seconds.
+  ///
+  /// In en, this message translates to:
+  /// **'Too much radio traffic. Try again in {seconds}s.'**
+  String meshcoreChatReplyRateLimited(int seconds);
+
   /// Long-press menu action: retry sending a failed outbound message
   ///
   /// In en, this message translates to:

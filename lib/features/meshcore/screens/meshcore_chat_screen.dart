@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/constants.dart';
 import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/meshcore_constants.dart';
@@ -31,6 +32,7 @@ import '../contact_l10n.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../providers/meshcore_message_providers.dart';
+import '../../../services/meshcore/protocol/meshcore_chat_meta_envelope.dart';
 import '../../../services/meshcore/protocol/meshcore_frame.dart';
 import '../../../services/meshcore/storage/meshcore_message_store.dart';
 import '../parsers/meshcore_message_frame_parser.dart';
@@ -134,6 +136,12 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   /// affordance feels consistent across chat surfaces.
   static const double _atBottomThresholdPx = 120;
 
+  /// D33: source message the user is currently composing a reply to.
+  /// Null when the composer is not in reply mode. Set by the long-press
+  /// Reply action, cleared by Cancel reply, by a successful send, or
+  /// when the source message disappears (e.g. local-delete).
+  MeshCoreMessage? _replyingTo;
+
   String get _conversationId {
     if (widget.chatType == MeshCoreChatType.contact) {
       return widget.contact!.publicKeyHex;
@@ -235,6 +243,8 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
           senderKey: stored.senderKey,
           pathLength: stored.pathLength,
           snrQuarter: stored.snrQuarter,
+          mmf: stored.mmf,
+          replyToMmf: stored.replyToMmf,
         );
       }).toList();
 
@@ -502,6 +512,11 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
         isChannelMessage: widget.chatType == MeshCoreChatType.channel,
         channelIndex: widget.channel?.index,
         snrQuarter: message.snrQuarter,
+        // D33: round-trip MMF + replyToMmf so the on-disk record matches
+        // the in-memory bubble. On reload, `_loadMessages` reads these
+        // back so the reply quote-preview row renders without re-decoding.
+        mmf: message.mmf,
+        replyToMmf: message.replyToMmf,
       );
 
       if (widget.chatType == MeshCoreChatType.contact) {
@@ -556,17 +571,33 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
     final text = _messageController.text.trim();
     if (text.isEmpty || _isSending) return;
 
+    // D33: lock in one wire timestamp so the same value lands in BOTH
+    // the wire frame's timestamp field AND the outbound MMF. Receivers
+    // echo the wire timestamp verbatim, so as long as we use the same
+    // integer at both places, the receiver-derived MMF matches our
+    // outbound MMF byte-for-byte.
+    final now = DateTime.now();
+    final timestampS = now.millisecondsSinceEpoch ~/ 1000;
+    final ownMmf = _outboundMmfFor(timestampS).toStableString();
+
+    // D33: snapshot reply state and clear UI state up-front so a quick
+    // re-tap on Send doesn't double-send into the same reply.
+    final replyTarget = _replyingTo;
+
     final message = MeshCoreMessage(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: now.millisecondsSinceEpoch.toString(),
       text: text,
-      timestamp: DateTime.now(),
+      timestamp: now,
       isOutgoing: true,
       status: MeshCoreMessageDeliveryStatus.pending,
+      mmf: ownMmf,
+      replyToMmf: replyTarget?.mmf,
     );
 
     setState(() {
       _messages.add(message);
       _messageController.clear();
+      _replyingTo = null;
     });
 
     // Persist immediately as pending so a kill-mid-send still surfaces
@@ -580,7 +611,68 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       if (mounted) _scrollToBottom();
     });
 
-    await _doSend(message);
+    await _doSend(message, timestampS: timestampS, replyTarget: replyTarget);
+  }
+
+  /// D33: compute the outbound MMF for a message stamped at
+  /// [timestampS] (Unix-epoch seconds). Channel scope uses the
+  /// channel index; contact scope uses the FIRST 6 BYTES of the
+  /// peer's full 32-byte public key. Both sides of the conversation
+  /// observe the same `(scope, peer-prefix-or-channel, timestamp)`
+  /// triple, so derived MMFs agree.
+  MeshCoreMmf _outboundMmfFor(int timestampS) {
+    if (widget.chatType == MeshCoreChatType.contact) {
+      return MeshCoreMmf.contact(
+        peerPubkeyPrefix: Uint8List.fromList(
+          widget.contact!.publicKey.sublist(0, 6),
+        ),
+        targetTimestampS: timestampS,
+      );
+    }
+    return MeshCoreMmf.channel(
+      channelIndex: widget.channel!.index,
+      targetTimestampS: timestampS,
+    );
+  }
+
+  /// D33: build the human-readable fallback summary appended after
+  /// `[/mrrp]`. Non-SocialMesh peers see `Sender replied: body`
+  /// rendered as plain text since they don't strip the envelope.
+  /// The codec self-truncates to [kChatMetaSummaryMaxBytes].
+  String _replySummaryFor(String body) {
+    final me = context.l10n.meshcoreChatReplyYou;
+    return '$me replied: $body';
+  }
+
+  /// D33: locate the locally-stored message a given MMF refers to.
+  /// Returns null if no message in the visible list matches — the
+  /// caller surfaces the "Reply to a message you don't have"
+  /// fallback in that case.
+  MeshCoreMessage? _findMessageByMmf(String mmf) {
+    for (final m in _messages) {
+      if (m.mmf == mmf) return m;
+    }
+    return null;
+  }
+
+  /// D33: enter reply-compose mode. Latches the source message so
+  /// the next send threads against it. No-op when the source has no
+  /// MMF (the long-press menu hides Reply in that case, but defence
+  /// in depth — a stale tap shouldn't half-arm reply state).
+  void _startReply(MeshCoreMessage source) {
+    if (source.mmf == null) return;
+    HapticFeedback.selectionClick();
+    setState(() => _replyingTo = source);
+    _focusNode.requestFocus();
+  }
+
+  /// D33: exit reply-compose mode. Called by the chip's X button,
+  /// after a successful send (handled inline), and any flow that
+  /// invalidates the source bubble (local-delete, cleared list).
+  void _cancelReply() {
+    if (_replyingTo == null) return;
+    HapticFeedback.selectionClick();
+    setState(() => _replyingTo = null);
   }
 
   /// D30 Part E: long-press action sheet on a message bubble. Offers
@@ -595,9 +687,23 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
         message.status == MeshCoreMessageDeliveryStatus.failed &&
         !_isSending;
 
+    // D33: Reply is offered only when the feature flag is on AND the
+    // source message has a derivable MMF. Pre-D33 records (and any
+    // outbound message we couldn't pin a stable target on) hide
+    // Reply rather than offering it and silently dropping the
+    // envelope client-side.
+    final canReply =
+        AppFeatureFlags.enableMeshCoreReplies && message.mmf != null;
+
     final result = await AppBottomSheet.showActions<String>(
       context: context,
       actions: [
+        if (canReply)
+          BottomSheetAction<String>(
+            icon: Icons.reply_rounded,
+            label: context.l10n.meshcoreChatActionReply,
+            value: 'reply',
+          ),
         BottomSheetAction<String>(
           icon: Icons.content_copy_rounded,
           label: context.l10n.meshcoreChatActionCopy,
@@ -620,6 +726,9 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
 
     if (!mounted) return;
     switch (result) {
+      case 'reply':
+        _startReply(message);
+        break;
       case 'copy':
         await Clipboard.setData(ClipboardData(text: message.text));
         if (mounted) {
@@ -709,7 +818,32 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       'size=${pending.text.length}',
     );
 
-    await _doSend(pending);
+    // D33: retries fire a fresh wire timestamp so the radio doesn't
+    // see two distinct frames sharing the same `(senderPrefix, ts)`
+    // pair (the firmware's tag-based dedupe table would silently drop
+    // the retry as a duplicate). The retry's MMF + replyToMmf are
+    // updated in lockstep to keep the local store consistent.
+    final retryTs = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final retryMmf = _outboundMmfFor(retryTs).toStableString();
+    final retryReplyTarget = pending.replyToMmf == null
+        ? null
+        : _findMessageByMmf(pending.replyToMmf!);
+    if (!mounted) return;
+    setState(() {
+      final i = _messages.indexWhere((m) => m.id == pending.id);
+      if (i >= 0) {
+        _messages[i] = _messages[i].copyWith(mmf: retryMmf);
+      }
+    });
+    final retryMessage = _messages.firstWhere((m) => m.id == pending.id);
+    await _persistMessage(retryMessage);
+    if (!mounted) return;
+
+    await _doSend(
+      retryMessage,
+      timestampS: retryTs,
+      replyTarget: retryReplyTarget,
+    );
   }
 
   /// D30 P0/P1: shared send body used by both the first send and the
@@ -718,7 +852,18 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   ///
   /// Caller is responsible for ensuring the message already exists in
   /// `_messages` (and storage) with `pending` status before calling.
-  Future<void> _doSend(MeshCoreMessage message) async {
+  ///
+  /// D33: [timestampS] is the Unix-epoch-seconds timestamp the wire
+  /// frame must carry — caller controls this so the outbound MMF
+  /// (already stored on [message]) matches what receivers will derive.
+  /// [replyTarget], when non-null, causes the wire body to be encoded
+  /// as a chat-meta REPLY envelope; when null the body is sent
+  /// verbatim (existing plain-text path).
+  Future<void> _doSend(
+    MeshCoreMessage message, {
+    required int timestampS,
+    MeshCoreMessage? replyTarget,
+  }) async {
     if (_isSending) return;
 
     // Capture providers before any await.
@@ -772,6 +917,28 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
         return;
       }
 
+      // D33: when [replyTarget] is non-null AND has an MMF, encode the
+      // wire body as a chat-meta REPLY envelope. The bubble's stored
+      // `text` (the user's typed body) and the wire body diverge: the
+      // local copy keeps the body verbatim; the wire body adds the
+      // [mrrp]…[/mrrp] envelope + human summary so non-SocialMesh
+      // peers see a comprehensible "<sender> replied: <body>" line.
+      final wireBody = (replyTarget?.mmf != null)
+          ? ChatMetaEnvelopeCodec.encodeReply(
+              target: MeshCoreMmf.parseString(replyTarget!.mmf!)!,
+              body: message.text,
+              summary: _replySummaryFor(message.text),
+            )
+          : message.text;
+      final isReplyEnvelope = replyTarget?.mmf != null;
+      if (isReplyEnvelope) {
+        AppLogging.meshcore(
+          'event=chat_meta.reply.send.attempted type=$chatTypeTag '
+          'target=${replyTarget!.mmf} body_size=${message.text.length} '
+          'wire_size=${utf8.encode(wireBody).length}',
+        );
+      }
+
       // Build the send frame. Firmware's synchronous ack code differs
       // between the two send commands (D14 finding: contact path was
       // false-timing-out because the app waited for OK on both):
@@ -782,17 +949,53 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       //     A later PUSH_CODE_SEND_CONFIRMED (0x82) carries the
       //     routed-delivery ack from the peer.
       final frame = widget.chatType == MeshCoreChatType.contact
-          ? _buildSendTextMsgFrame(widget.contact!.publicKey, message.text)
-          : _buildSendChannelTextMsgFrame(widget.channel!.index, message.text);
+          ? _buildSendTextMsgFrame(
+              widget.contact!.publicKey,
+              wireBody,
+              timestampS,
+            )
+          : _buildSendChannelTextMsgFrame(
+              widget.channel!.index,
+              wireBody,
+              timestampS,
+            );
 
-      final response = await session.sendAndWait(
-        frame.command,
+      // D33: route through `sendTextMessage` so the new
+      // `MeshCoreSendRateLimiter` gets to gate the send. The
+      // budget accounting and host-side rejection live in the
+      // session; the chat surface only needs to discriminate the
+      // three terminal outcomes.
+      final result = await session.sendTextMessage(
+        command: frame.command,
         payload: frame.payload,
         expectedResponse: meshCoreExpectedSendResponseCode(widget.chatType),
         timeout: const Duration(seconds: 5),
       );
 
-      if (response == null) {
+      if (result.rateLimited) {
+        _markMessageFailed(message.id);
+        AppLogging.meshcore(
+          'event=message.send.rate_limited type=$chatTypeTag '
+          'size=${message.text.length} '
+          'wait_ms=${result.nextSendIn?.inMilliseconds ?? 0} '
+          'reply=${isReplyEnvelope ? 1 : 0}',
+          error: true,
+        );
+        if (mounted) {
+          // D33: surface the seconds-remaining hint instead of the
+          // generic failure message. Round up so a sub-second wait
+          // still reads as "1s" rather than "0s".
+          final waitMs = result.nextSendIn?.inMilliseconds ?? 0;
+          final waitSeconds = ((waitMs + 999) ~/ 1000).clamp(1, 60);
+          showErrorSnackBar(
+            context,
+            context.l10n.meshcoreChatReplyRateLimited(waitSeconds),
+          );
+        }
+        return;
+      }
+
+      if (result.firmwareTimeout) {
         _markMessageFailed(message.id);
         AppLogging.protocol(
           'MeshCore Chat: Send timeout / error for $_title: ${message.text}',
@@ -1080,6 +1283,8 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
+                          if (message.replyToMmf != null)
+                            _buildReplyQuoteRow(message, onAccent: true),
                           LinkifiedText(
                             text: message.text,
                             // Match inbound bubble size (15pt) so a
@@ -1184,6 +1389,8 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
                           ),
                           const SizedBox(height: AppTheme.spacing2),
                         ],
+                        if (message.replyToMmf != null)
+                          _buildReplyQuoteRow(message, onAccent: false),
                         LinkifiedText(
                           text: message.text,
                           // Canonical chat-body size (14pt) shared
@@ -1215,6 +1422,116 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
           ),
         ],
       ),
+    );
+  }
+
+  /// D33: inline quote-preview row that renders above the body of any
+  /// bubble whose `replyToMmf` is set. Two states:
+  ///
+  ///   - **Resolved**: the local store has the target message — the row
+  ///     shows the target author + a single-line preview of its body
+  ///     and tapping it scrolls the list to the target bubble.
+  ///   - **Missing**: the target isn't in the local store (out-of-order
+  ///     receive, contact-side gap, peer pre-D33). The row falls back
+  ///     to a localized "Reply to a message you don't have" line and
+  ///     does not attach a tap handler.
+  ///
+  /// [onAccent] is true when the row is rendered inside the outbound
+  /// (accent-coloured) bubble so the inner background contrasts against
+  /// white text instead of [context.card].
+  Widget _buildReplyQuoteRow(
+    MeshCoreMessage message, {
+    required bool onAccent,
+  }) {
+    final targetMmf = message.replyToMmf;
+    if (targetMmf == null) return const SizedBox.shrink();
+
+    final target = _findMessageByMmf(targetMmf);
+    final accent = onAccent
+        ? Colors.white.withValues(alpha: 0.85)
+        : _accentColor;
+    final bodyColor = onAccent
+        ? Colors.white.withValues(alpha: 0.85)
+        : context.textSecondary;
+    final railColor = onAccent
+        ? Colors.white.withValues(alpha: 0.65)
+        : _accentColor;
+    final fillColor = onAccent
+        ? Colors.white.withValues(alpha: 0.15)
+        : _accentColor.withValues(alpha: 0.10);
+
+    final isResolved = target != null;
+    final headLabel = isResolved
+        ? _replyAuthorLabel(target)
+        : context.l10n.meshcoreChatReplyMissingTarget;
+    final preview = isResolved ? _replyPreviewBody(target) : '';
+
+    final inner = Container(
+      decoration: BoxDecoration(
+        color: fillColor,
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
+        border: Border(left: BorderSide(color: railColor, width: 2)),
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing8,
+        vertical: AppTheme.spacing4,
+      ),
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            headLabel,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: accent,
+            ),
+          ),
+          if (preview.isNotEmpty)
+            Text(
+              preview,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 11, color: bodyColor),
+            ),
+        ],
+      ),
+    );
+
+    if (!isResolved) return inner;
+    return GestureDetector(
+      key: ValueKey('meshcore-reply-quote-${message.id}'),
+      behavior: HitTestBehavior.opaque,
+      onTap: () => _jumpToMessage(target.id),
+      child: inner,
+    );
+  }
+
+  /// D33: scroll the list so the bubble with [messageId] is visible
+  /// near the centre. Used by the reply quote-preview row's tap
+  /// handler. Falls back to a no-op when the id isn't in the visible
+  /// list (e.g. trimmed by the 500-message store cap).
+  void _jumpToMessage(String messageId) {
+    final index = _messages.indexWhere((m) => m.id == messageId);
+    if (index < 0) return;
+    HapticFeedback.selectionClick();
+    if (!_scrollController.hasClients) return;
+    // Approximate per-bubble height. The list isn't a fixed-extent
+    // ListView so we can't compute exactly; estimating 76px per
+    // bubble and clamping to the available scroll range keeps the
+    // jump close enough that the target enters the viewport.
+    const estPerBubble = 76.0;
+    final position = _scrollController.position;
+    final target = (index * estPerBubble).clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
+    );
+    _scrollController.animateTo(
+      target,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
     );
   }
 
@@ -1334,32 +1651,127 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       ),
       child: SafeArea(
         top: false,
-        child: ChatComposer(
-          controller: _messageController,
-          focusNode: _focusNode,
-          onSend: _sendMessage,
-          hintText: context.l10n.meshcoreTypeMessageHint,
-          sendTooltip: context.l10n.meshcoreSendMessage,
-          enabled: !_isSending,
-          leading: GestureDetector(
-            onTap: _showChatInfo,
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: context.background,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.info_outline_rounded,
-                color: context.textSecondary,
-                size: 20,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_replyingTo != null) _buildReplyComposerChip(_replyingTo!),
+            ChatComposer(
+              controller: _messageController,
+              focusNode: _focusNode,
+              onSend: _sendMessage,
+              hintText: context.l10n.meshcoreTypeMessageHint,
+              sendTooltip: context.l10n.meshcoreSendMessage,
+              enabled: !_isSending,
+              leading: GestureDetector(
+                onTap: _showChatInfo,
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: context.background,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.info_outline_rounded,
+                    color: context.textSecondary,
+                    size: 20,
+                  ),
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
+  }
+
+  /// D33: composer banner shown above the input while in reply mode.
+  /// Renders `Replying to {name}` + the source body's first line, with
+  /// an X to cancel. The widget uses the shared accent rail + tonal
+  /// background so the reply context reads at a glance without
+  /// stealing focus from the composer.
+  Widget _buildReplyComposerChip(MeshCoreMessage source) {
+    final nameText = _replyAuthorLabel(source);
+    final preview = _replyPreviewBody(source);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+      child: Container(
+        key: const ValueKey('meshcore-reply-composer-chip'),
+        decoration: BoxDecoration(
+          color: _accentColor.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          border: Border(left: BorderSide(color: _accentColor, width: 3)),
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spacing12,
+          vertical: AppTheme.spacing8,
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.reply_rounded, size: 16, color: _accentColor),
+            const SizedBox(width: AppTheme.spacing8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    context.l10n.meshcoreChatComposerReplyingTo(nameText),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: _accentColor,
+                    ),
+                  ),
+                  if (preview.isNotEmpty)
+                    Text(
+                      preview,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textSecondary,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            IconButton(
+              key: const ValueKey('meshcore-reply-composer-cancel'),
+              icon: const Icon(Icons.close_rounded),
+              iconSize: 18,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              tooltip: context.l10n.meshcoreChatComposerCancelReply,
+              color: context.textSecondary,
+              onPressed: _cancelReply,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// D33: rendering label for the author of [source]. Outbound
+  /// messages show "You"; inbound channel messages show the sender
+  /// name when available, falling back to the bubble's existing
+  /// `_senderLabel`; inbound contact messages show the contact's
+  /// own display name.
+  String _replyAuthorLabel(MeshCoreMessage source) {
+    if (source.isOutgoing) return context.l10n.meshcoreChatReplyYou;
+    if (widget.chatType == MeshCoreChatType.contact) {
+      return _title;
+    }
+    return _senderLabel(source);
+  }
+
+  /// D33: short single-line preview of [source]'s body for the chip
+  /// and the bubble quote-row. Strips embedded line breaks and trims
+  /// to ~80 chars before the rendering layer ellipsizes further.
+  String _replyPreviewBody(MeshCoreMessage source) {
+    final flat = source.text.replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (flat.length <= 80) return flat;
+    return flat.substring(0, 80);
   }
 
   String _senderLabel(MeshCoreMessage message) {
@@ -1578,19 +1990,24 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
 
   /// Build CMD_SEND_TXT_MSG frame for contact message.
   /// Format: [cmd][txt_type][attempt][timestamp x4][pub_key_prefix x6][text...]\0
-  MeshCoreFrame _buildSendTextMsgFrame(Uint8List recipientPubKey, String text) {
-    final timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+  ///
+  /// D33: [timestampS] is supplied by the caller so the same value can
+  /// be reused for the outbound MMF (`02:<peerPrefix>:<ts>`). Receivers
+  /// echo the timestamp verbatim, so MMFs derived from the wire field
+  /// match on both ends.
+  MeshCoreFrame _buildSendTextMsgFrame(
+    Uint8List recipientPubKey,
+    String text,
+    int timestampS,
+  ) {
     final builder = BytesBuilder();
     builder.addByte(0); // txt_type = plain
     builder.addByte(0); // attempt = 0
-    // timestamp (4 bytes little-endian)
-    builder.addByte(timestamp & 0xFF);
-    builder.addByte((timestamp >> 8) & 0xFF);
-    builder.addByte((timestamp >> 16) & 0xFF);
-    builder.addByte((timestamp >> 24) & 0xFF);
-    // pub_key prefix (first 6 bytes)
+    builder.addByte(timestampS & 0xFF);
+    builder.addByte((timestampS >> 8) & 0xFF);
+    builder.addByte((timestampS >> 16) & 0xFF);
+    builder.addByte((timestampS >> 24) & 0xFF);
     builder.add(recipientPubKey.sublist(0, 6));
-    // text + null terminator
     builder.add(utf8.encode(text));
     builder.addByte(0);
 
@@ -1602,17 +2019,18 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
 
   /// Build CMD_SEND_CHANNEL_TXT_MSG frame for channel message.
   /// Format: [cmd][txt_type][channel_idx][timestamp x4][text...]\0
-  MeshCoreFrame _buildSendChannelTextMsgFrame(int channelIndex, String text) {
-    final timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+  MeshCoreFrame _buildSendChannelTextMsgFrame(
+    int channelIndex,
+    String text,
+    int timestampS,
+  ) {
     final builder = BytesBuilder();
     builder.addByte(0); // txt_type = plain
     builder.addByte(channelIndex);
-    // timestamp (4 bytes little-endian)
-    builder.addByte(timestamp & 0xFF);
-    builder.addByte((timestamp >> 8) & 0xFF);
-    builder.addByte((timestamp >> 16) & 0xFF);
-    builder.addByte((timestamp >> 24) & 0xFF);
-    // text + null terminator
+    builder.addByte(timestampS & 0xFF);
+    builder.addByte((timestampS >> 8) & 0xFF);
+    builder.addByte((timestampS >> 16) & 0xFF);
+    builder.addByte((timestampS >> 24) & 0xFF);
     builder.add(utf8.encode(text));
     builder.addByte(0);
 

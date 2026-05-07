@@ -19,6 +19,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 
 import '../../../core/logging.dart';
 import '../../../core/meshcore_constants.dart';
+import '../meshcore_send_rate_limiter.dart';
 import 'meshcore_capture.dart';
 import 'meshcore_codec.dart';
 import 'meshcore_frame.dart';
@@ -189,6 +190,21 @@ class MeshCoreSession {
   final MeshCoreTransport _transport;
   final MeshCoreCodec _codec;
 
+  /// D33: token-bucket rate limiter that gates outbound text-message
+  /// payloads (`CMD_SEND_TXT_MSG` and `CMD_SEND_CHANNEL_TXT_MSG`).
+  /// One bucket per session; refills lazily on each acquire.
+  ///
+  /// Exposed publicly (read-only) so the chat composer can show a
+  /// remaining-budget hint and a countdown to the next allowed send.
+  /// Other commands (advertise, get_channel, etc.) are NOT gated —
+  /// they're infrequent and don't compete with chat airtime.
+  final MeshCoreSendRateLimiter _sendRateLimiter;
+
+  /// Read-only view of the text-send budget. UI uses
+  /// `sendRateLimiter.remainingBytes` and the result of
+  /// `sendTextMessage(...)` to surface rate-limit feedback.
+  MeshCoreSendRateLimiter get sendRateLimiter => _sendRateLimiter;
+
   final StreamController<MeshCoreFrame> _frameController;
   final StreamController<String> _errorController;
   StreamSubscription<Uint8List>? _rawSubscription;
@@ -217,25 +233,34 @@ class MeshCoreSession {
   ///
   /// The session immediately starts listening to the transport's rawRxStream
   /// and decoding frames.
-  MeshCoreSession(this._transport)
+  MeshCoreSession(this._transport, {MeshCoreSendRateLimiter? sendRateLimiter})
     : _frameController = StreamController<MeshCoreFrame>.broadcast(),
       _errorController = StreamController<String>.broadcast(),
-      _codec = MeshCoreCodec() {
+      _codec = MeshCoreCodec(),
+      _sendRateLimiter = sendRateLimiter ?? MeshCoreSendRateLimiter() {
     _initialize();
   }
 
   /// Creates a session with custom codec (for testing).
-  MeshCoreSession.withCodec(this._transport, this._codec)
-    : _frameController = StreamController<MeshCoreFrame>.broadcast(),
-      _errorController = StreamController<String>.broadcast() {
+  MeshCoreSession.withCodec(
+    this._transport,
+    this._codec, {
+    MeshCoreSendRateLimiter? sendRateLimiter,
+  }) : _frameController = StreamController<MeshCoreFrame>.broadcast(),
+       _errorController = StreamController<String>.broadcast(),
+       _sendRateLimiter = sendRateLimiter ?? MeshCoreSendRateLimiter() {
     _initialize();
   }
 
   /// Creates a session with optional capture (for debugging).
-  MeshCoreSession.withCapture(this._transport, this._capture)
-    : _frameController = StreamController<MeshCoreFrame>.broadcast(),
-      _errorController = StreamController<String>.broadcast(),
-      _codec = MeshCoreCodec() {
+  MeshCoreSession.withCapture(
+    this._transport,
+    this._capture, {
+    MeshCoreSendRateLimiter? sendRateLimiter,
+  }) : _frameController = StreamController<MeshCoreFrame>.broadcast(),
+       _errorController = StreamController<String>.broadcast(),
+       _codec = MeshCoreCodec(),
+       _sendRateLimiter = sendRateLimiter ?? MeshCoreSendRateLimiter() {
     _initialize();
   }
 
@@ -569,6 +594,73 @@ class MeshCoreSession {
     } on TimeoutException {
       return null;
     }
+  }
+
+  /// D33: typed wrapper for outbound text-message sends that gates
+  /// via [_sendRateLimiter] before consulting [sendAndWait].
+  ///
+  /// Use this for `CMD_SEND_TXT_MSG` (0x02) and
+  /// `CMD_SEND_CHANNEL_TXT_MSG` (0x03). Other commands keep using
+  /// [sendAndWait] directly — they are infrequent and don't compete
+  /// for chat airtime budget.
+  ///
+  /// Returns a [MeshCoreTextSendResult] discriminating:
+  ///   - `ok`              : firmware acknowledged with the expected
+  ///                         response code; payload arrived.
+  ///   - `rateLimited`     : the send was rejected at the host before
+  ///                         hitting the wire. Tokens are NOT consumed.
+  ///                         `nextSendIn` tells the UI when to retry.
+  ///   - `firmwareTimeout` : firmware never replied with the expected
+  ///                         response within [timeout].
+  ///
+  /// Budget accounting: the rate limiter charges
+  /// `payload.length + 1` bytes (1 byte for the cmd byte). Framing
+  /// overhead (codec markers, length prefix, end-of-frame) is NOT
+  /// counted; the 1024 B / 60 s default budget already folds that
+  /// in. Local validation that throws BEFORE this method is called
+  /// (e.g. `ArgumentError` on `setChannel`'s slot range) does NOT
+  /// consume tokens.
+  Future<MeshCoreTextSendResult> sendTextMessage({
+    required int command,
+    required Uint8List payload,
+    required int expectedResponse,
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    if (command != MeshCoreCommands.sendTxtMsg &&
+        command != MeshCoreCommands.sendChannelTxtMsg) {
+      throw ArgumentError.value(
+        command,
+        'command',
+        'sendTextMessage only supports sendTxtMsg / sendChannelTxtMsg',
+      );
+    }
+
+    final budgetBytes = payload.length + 1;
+    final decision = _sendRateLimiter.tryAcquire(budgetBytes);
+    if (!decision.allowed) {
+      AppLogging.meshcore(
+        'event=text.send.rate_limited '
+        'cmd=0x${command.toRadixString(16).padLeft(2, '0')} '
+        'bytes=$budgetBytes '
+        'remaining=${decision.remainingBytes} '
+        'wait_ms=${decision.nextSendIn.inMilliseconds}',
+      );
+      return MeshCoreTextSendResult.rateLimited(
+        nextSendIn: decision.nextSendIn,
+        remainingBytes: decision.remainingBytes,
+      );
+    }
+
+    final response = await sendAndWait(
+      command,
+      payload: payload,
+      expectedResponse: expectedResponse,
+      timeout: timeout,
+    );
+    if (response == null) {
+      return MeshCoreTextSendResult.firmwareTimeout();
+    }
+    return MeshCoreTextSendResult.ok(response: response);
   }
 
   // ---------------------------------------------------------------------------
@@ -1613,3 +1705,58 @@ class MeshCoreSession {
     await _statusController.close();
   }
 }
+
+/// D33: outcome of [MeshCoreSession.sendTextMessage].
+///
+/// Discriminates the three terminal states a text-send can reach:
+/// successful firmware ack, host-side rate-limit rejection, or
+/// firmware response timeout.
+class MeshCoreTextSendResult {
+  /// Kind of outcome. Branch on this rather than nested null checks.
+  final MeshCoreTextSendOutcome outcome;
+
+  /// Firmware response frame on success; null in the other two states.
+  final MeshCoreFrame? response;
+
+  /// On `rateLimited`: how long the caller should wait before
+  /// retrying. UI uses this to drive a countdown.
+  final Duration? nextSendIn;
+
+  /// On `rateLimited`: bytes still available in the budget window
+  /// (which the rejected request did NOT consume).
+  final int? remainingBytes;
+
+  const MeshCoreTextSendResult._({
+    required this.outcome,
+    this.response,
+    this.nextSendIn,
+    this.remainingBytes,
+  });
+
+  factory MeshCoreTextSendResult.ok({required MeshCoreFrame response}) =>
+      MeshCoreTextSendResult._(
+        outcome: MeshCoreTextSendOutcome.ok,
+        response: response,
+      );
+
+  factory MeshCoreTextSendResult.rateLimited({
+    required Duration nextSendIn,
+    required int remainingBytes,
+  }) => MeshCoreTextSendResult._(
+    outcome: MeshCoreTextSendOutcome.rateLimited,
+    nextSendIn: nextSendIn,
+    remainingBytes: remainingBytes,
+  );
+
+  factory MeshCoreTextSendResult.firmwareTimeout() =>
+      const MeshCoreTextSendResult._(
+        outcome: MeshCoreTextSendOutcome.firmwareTimeout,
+      );
+
+  bool get ok => outcome == MeshCoreTextSendOutcome.ok;
+  bool get rateLimited => outcome == MeshCoreTextSendOutcome.rateLimited;
+  bool get firmwareTimeout =>
+      outcome == MeshCoreTextSendOutcome.firmwareTimeout;
+}
+
+enum MeshCoreTextSendOutcome { ok, rateLimited, firmwareTimeout }

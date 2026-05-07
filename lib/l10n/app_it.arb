@@ -18952,6 +18952,36 @@
   "@meshcoreChatActionDelete": {
     "description": "Long-press menu action: delete the message from local storage only (no wire frame, peer keeps their copy)"
   },
+  "meshcoreChatActionReply": "Rispondi",
+  "@meshcoreChatActionReply": {
+    "description": "D33 — long-press menu action that opens the composer in reply mode targeting this message"
+  },
+  "meshcoreChatComposerReplyingTo": "Risposta a {name}",
+  "@meshcoreChatComposerReplyingTo": {
+    "description": "D33 — header line of the composer reply chip; {name} is the target sender's display name (or 'You' for own outbound messages)",
+    "placeholders": {
+      "name": {"type": "String", "example": "Bob"}
+    }
+  },
+  "meshcoreChatComposerCancelReply": "Annulla risposta",
+  "@meshcoreChatComposerCancelReply": {
+    "description": "D33 — accessibility label / tooltip for the [×] button on the composer reply chip"
+  },
+  "meshcoreChatReplyMissingTarget": "Risposta a un messaggio non disponibile",
+  "@meshcoreChatReplyMissingTarget": {
+    "description": "D33 — fallback row shown above a reply bubble when the target message isn't in local history"
+  },
+  "meshcoreChatReplyYou": "Tu",
+  "@meshcoreChatReplyYou": {
+    "description": "D33 — sender label used in the composer chip + reply quote preview when the target is the user's own outbound message"
+  },
+  "meshcoreChatReplyRateLimited": "Troppo traffico radio. Riprova tra {seconds}s.",
+  "@meshcoreChatReplyRateLimited": {
+    "description": "D33 — snackbar shown when MeshCoreSendRateLimiter rejects a reply (or any text) send. {seconds} is the suggested retry delay rounded to whole seconds.",
+    "placeholders": {
+      "seconds": {"type": "int", "example": "12"}
+    }
+  },
   "meshcoreChatActionRetry": "Riprova",
   "@meshcoreChatActionRetry": {
     "description": "Long-press menu action: retry sending a failed outbound message"

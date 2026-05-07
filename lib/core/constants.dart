@@ -510,6 +510,33 @@ class AppFeatureFlags {
     }
   }
 
+  /// D33: gate the MeshCore reply UI + send path.
+  ///
+  /// Set `MESHCORE_REPLIES_ENABLED=true` in `.env` to enable.
+  /// Default: false. Read at every chat-screen build, so toggling
+  /// requires a process restart.
+  ///
+  /// What this flag gates:
+  ///   - Long-press "Reply" menu action (hidden when OFF).
+  ///   - Composer reply state and `sendReply` API (blocked when OFF).
+  ///
+  /// What this flag does NOT gate:
+  ///   - Inbound reply envelope parsing (always-on so a flag flip
+  ///     mid-conversation doesn't make existing reply bubbles render
+  ///     as raw envelope text).
+  ///   - Existing plain-text send (untouched).
+  ///
+  /// Spec: `docs/protocol/MESHCORE_REPLIES_D33_IMPLEMENTATION_PLAN.md`
+  /// §4.
+  static bool get enableMeshCoreReplies {
+    try {
+      final raw = dotenv.env['MESHCORE_REPLIES_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Whether the Translation Pack feature UI is enabled.
   /// Set `TRANSLATION_ENABLED=true` in `.env` to enable.
   /// Default: false — translation features are hidden until ready for release.

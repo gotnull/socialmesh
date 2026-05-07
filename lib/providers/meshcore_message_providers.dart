@@ -19,6 +19,7 @@ import '../core/logging.dart';
 import '../core/meshcore_constants.dart';
 import '../features/meshcore/parsers/meshcore_message_frame_parser.dart';
 import '../models/meshcore_contact.dart';
+import '../services/meshcore/protocol/meshcore_chat_meta_envelope.dart';
 import '../services/meshcore/protocol/meshcore_frame.dart';
 import '../services/meshcore/protocol/meshcore_messages.dart' as msgs;
 import '../services/meshcore/protocol/meshcore_session.dart';
@@ -174,6 +175,18 @@ class MeshCoreMessage {
   /// inbound messages; outbound is always null.
   final int? snrQuarter;
 
+  /// D33: cross-device MeshCore Message Fingerprint (MMF) for THIS
+  /// message — `01:<idx>:<ts>` for channel, `02:<peerPrefix>:<ts>`
+  /// for contact. Set on send (outbound) and receive (inbound) so
+  /// both ends derive the same id for the same logical message.
+  /// Null on records pre-dating D33 OR records that lack enough
+  /// stable fields to derive an MMF safely.
+  final String? mmf;
+
+  /// D33: MMF of the message THIS message replies to. Null when
+  /// this message is not a reply.
+  final String? replyToMmf;
+
   const MeshCoreMessage({
     required this.id,
     required this.text,
@@ -184,9 +197,15 @@ class MeshCoreMessage {
     this.senderName,
     this.pathLength,
     this.snrQuarter,
+    this.mmf,
+    this.replyToMmf,
   });
 
-  MeshCoreMessage copyWith({MeshCoreMessageDeliveryStatus? status}) {
+  MeshCoreMessage copyWith({
+    MeshCoreMessageDeliveryStatus? status,
+    String? mmf,
+    String? replyToMmf,
+  }) {
     return MeshCoreMessage(
       id: id,
       text: text,
@@ -197,6 +216,8 @@ class MeshCoreMessage {
       senderName: senderName,
       pathLength: pathLength,
       snrQuarter: snrQuarter,
+      mmf: mmf ?? this.mmf,
+      replyToMmf: replyToMmf ?? this.replyToMmf,
     );
   }
 }
@@ -347,6 +368,22 @@ class MeshCoreConversationsState {
 }
 
 /// Notifier for MeshCore conversations.
+/// D33: parse a hex string into raw bytes. Tolerates upper/lower-case
+/// and strips a single leading `0x` prefix. Returns an empty list if
+/// any character isn't hex or the length is odd; callers treat that
+/// as "no MMF derivable".
+List<int> _hexToBytes(String hex) {
+  final clean = hex.startsWith('0x') ? hex.substring(2) : hex;
+  if (clean.length.isOdd) return const [];
+  final out = <int>[];
+  for (var i = 0; i < clean.length; i += 2) {
+    final byte = int.tryParse(clean.substring(i, i + 2), radix: 16);
+    if (byte == null) return const [];
+    out.add(byte);
+  }
+  return out;
+}
+
 class MeshCoreConversationsNotifier
     extends Notifier<MeshCoreConversationsState> {
   StreamSubscription<MeshCoreFrame>? _frameSubscription;
@@ -832,9 +869,38 @@ class MeshCoreConversationsNotifier
       text: parsed.text,
     );
 
+    // D33: decode any chat-meta envelope embedded in the body. On a
+    // recognised REPLY envelope we replace the displayed body with
+    // the structured payload's body and stamp `replyToMmf` so the
+    // chat surface can render the quote preview row. On a plain
+    // text or unknown envelope, the body is rendered as-is.
+    final decoded = ChatMetaEnvelopeCodec.decode(parsed.text);
+    String displayText = parsed.text;
+    String? replyToMmf;
+    if (decoded.envelope != null && decoded.envelope!.op == ChatMetaOps.reply) {
+      final reply = ChatMetaReplyPayload.parse(decoded.envelope!.payload);
+      if (reply != null) {
+        displayText = reply.body;
+        replyToMmf = reply.target.toStableString();
+        AppLogging.meshcore(
+          'event=chat_meta.reply.received scope=contact '
+          'target=${reply.target.toStableString()} '
+          'body_size=${reply.body.length}',
+        );
+      }
+    }
+
+    // Compute the MMF for THIS message. Both ends of the
+    // conversation observe the same `(senderPrefix, target_ts)`
+    // pair, so receiver-derived and sender-derived MMFs agree.
+    final ownMmf = MeshCoreMmf.contact(
+      peerPubkeyPrefix: Uint8List.fromList(_hexToBytes(senderPrefix)),
+      targetTimestampS: parsed.timestamp.millisecondsSinceEpoch ~/ 1000,
+    ).toStableString();
+
     final message = MeshCoreMessage(
       id: stableId,
-      text: parsed.text,
+      text: displayText,
       timestamp: parsed.timestamp,
       isOutgoing: false,
       status: MeshCoreMessageDeliveryStatus.delivered,
@@ -842,12 +908,14 @@ class MeshCoreConversationsNotifier
       senderName: senderName,
       pathLength: parsed.pathLen,
       snrQuarter: parsed.snrQuarter,
+      mmf: ownMmf,
+      replyToMmf: replyToMmf,
     );
 
     AppLogging.meshcore(
       'event=message.received scope=contact source=conversations '
       'protocol=${parsed.protocol.name} '
-      'sender_prefix=$senderPrefix size=${parsed.text.length}',
+      'sender_prefix=$senderPrefix size=${displayText.length}',
     );
 
     // D19.A: persist inbound contact messages so the chat surfaces
@@ -866,13 +934,21 @@ class MeshCoreConversationsNotifier
             MeshCoreStoredMessage(
               id: stableId,
               senderKey: fullSenderKey ?? Uint8List(32),
-              text: parsed.text,
+              // D33: store the displayed body (envelope stripped on
+              // reply messages) so the chat surface never re-decodes
+              // on each load. The original raw envelope bytes are
+              // not retained — losing them is fine because the
+              // structured payload (target MMF + body) is what we
+              // actually need.
+              text: displayText,
               timestamp: parsed.timestamp,
               isOutgoing: false,
               status: MeshCoreMessageStatus.delivered,
               pathLength: parsed.pathLen,
               isChannelMessage: false,
               snrQuarter: parsed.snrQuarter,
+              mmf: ownMmf,
+              replyToMmf: replyToMmf,
             ),
           );
           AppLogging.meshcore(
@@ -1017,9 +1093,34 @@ class MeshCoreConversationsNotifier
       text: parsed.text,
     );
 
+    // D33: same envelope decode path as the contact handler. Replies
+    // surface as `text=replyBody, replyToMmf=target.mmf`; plain text
+    // and unknown envelopes pass through unchanged.
+    final decoded = ChatMetaEnvelopeCodec.decode(parsed.text);
+    String displayText = parsed.text;
+    String? replyToMmf;
+    if (decoded.envelope != null && decoded.envelope!.op == ChatMetaOps.reply) {
+      final reply = ChatMetaReplyPayload.parse(decoded.envelope!.payload);
+      if (reply != null) {
+        displayText = reply.body;
+        replyToMmf = reply.target.toStableString();
+        AppLogging.meshcore(
+          'event=chat_meta.reply.received scope=channel '
+          'channel=${parsed.channelIndex} '
+          'target=${reply.target.toStableString()} '
+          'body_size=${reply.body.length}',
+        );
+      }
+    }
+
+    final ownMmf = MeshCoreMmf.channel(
+      channelIndex: parsed.channelIndex,
+      targetTimestampS: parsed.timestamp.millisecondsSinceEpoch ~/ 1000,
+    ).toStableString();
+
     final message = MeshCoreMessage(
       id: stableId,
-      text: parsed.text,
+      text: displayText,
       timestamp: parsed.timestamp,
       isOutgoing: false,
       status: MeshCoreMessageDeliveryStatus.delivered,
@@ -1027,12 +1128,14 @@ class MeshCoreConversationsNotifier
       senderKey: null,
       pathLength: parsed.pathLen,
       snrQuarter: parsed.snrQuarter,
+      mmf: ownMmf,
+      replyToMmf: replyToMmf,
     );
 
     AppLogging.meshcore(
       'event=message.received scope=channel source=conversations '
       'protocol=${parsed.protocol.name} '
-      'channel=${parsed.channelIndex} size=${parsed.text.length}',
+      'channel=${parsed.channelIndex} size=${displayText.length}',
     );
 
     // D19.A: persist inbound channel messages so the chat surfaces
@@ -1048,7 +1151,7 @@ class MeshCoreConversationsNotifier
           MeshCoreStoredMessage(
             id: stableId,
             senderKey: Uint8List(0),
-            text: parsed.text,
+            text: displayText,
             timestamp: parsed.timestamp,
             isOutgoing: false,
             status: MeshCoreMessageStatus.delivered,
@@ -1056,11 +1159,13 @@ class MeshCoreConversationsNotifier
             isChannelMessage: true,
             channelIndex: parsed.channelIndex,
             snrQuarter: parsed.snrQuarter,
+            mmf: ownMmf,
+            replyToMmf: replyToMmf,
           ),
         );
         AppLogging.meshcore(
           'event=message.persisted scope=channel '
-          'channel=${parsed.channelIndex} size=${parsed.text.length}',
+          'channel=${parsed.channelIndex} size=${displayText.length}',
         );
       } catch (e) {
         AppLogging.meshcore(

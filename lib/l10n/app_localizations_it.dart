@@ -7769,6 +7769,29 @@ class AppLocalizationsIt extends AppLocalizations {
   String get meshcoreChatActionDelete => 'Elimina localmente';
 
   @override
+  String get meshcoreChatActionReply => 'Rispondi';
+
+  @override
+  String meshcoreChatComposerReplyingTo(String name) {
+    return 'Risposta a $name';
+  }
+
+  @override
+  String get meshcoreChatComposerCancelReply => 'Annulla risposta';
+
+  @override
+  String get meshcoreChatReplyMissingTarget =>
+      'Risposta a un messaggio non disponibile';
+
+  @override
+  String get meshcoreChatReplyYou => 'Tu';
+
+  @override
+  String meshcoreChatReplyRateLimited(int seconds) {
+    return 'Troppo traffico radio. Riprova tra ${seconds}s.';
+  }
+
+  @override
   String get meshcoreChatActionRetry => 'Riprova';
 
   @override
