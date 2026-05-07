@@ -578,7 +578,11 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
     // outbound MMF byte-for-byte.
     final now = DateTime.now();
     final timestampS = now.millisecondsSinceEpoch ~/ 1000;
-    final ownMmf = _outboundMmfFor(timestampS).toStableString();
+    // D33: nullable when self pubkey isn't yet loaded (rare; chat
+    // can't be opened pre-identification). Persisting `mmf=null` is
+    // fine — the message just doesn't participate in the reply MMF
+    // index until the next send/load cycle stamps it.
+    final ownMmf = _outboundMmfFor(timestampS)?.toStableString();
 
     // D33: snapshot reply state and clear UI state up-front so a quick
     // re-tap on Send doesn't double-send into the same reply.
@@ -617,15 +621,32 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   /// D33: compute the outbound MMF for a message stamped at
   /// [timestampS] (Unix-epoch seconds). Channel scope uses the
   /// channel index; contact scope uses the FIRST 6 BYTES of the
-  /// peer's full 32-byte public key. Both sides of the conversation
-  /// observe the same `(scope, peer-prefix-or-channel, timestamp)`
-  /// triple, so derived MMFs agree.
-  MeshCoreMmf _outboundMmfFor(int timestampS) {
+  /// **author's** (i.e. self's) public key. Receivers observe the
+  /// same prefix verbatim in the wire frame's `senderPrefix` field,
+  /// so receiver-derived inbound MMFs (which use that senderPrefix)
+  /// match the author's outbound MMF byte-for-byte.
+  ///
+  /// Pre-fix this used `widget.contact!.publicKey.sublist(0, 6)` —
+  /// "the other party's" prefix — which produced asymmetric MMFs
+  /// across the conversation: the author's stored MMF used the
+  /// receiver's prefix while the receiver's stored MMF (from the
+  /// wire's senderPrefix) used the author's prefix. Replies that
+  /// embedded the author-side MMF as `target` then failed to
+  /// resolve on the receiver side, surfacing the
+  /// "Reply to a message you don't have" fallback even when the
+  /// target was clearly in the receiver's local store. Field-test
+  /// confirmed this on 2026-05-07; spec was internally inconsistent.
+  ///
+  /// Returns null if self-pubkey isn't available yet (e.g. selfInfo
+  /// hasn't loaded). Callers fall through to the legacy mmf=null
+  /// path so the message persists without an MMF rather than
+  /// crashing.
+  MeshCoreMmf? _outboundMmfFor(int timestampS) {
     if (widget.chatType == MeshCoreChatType.contact) {
+      final selfPubkey = ref.read(meshCoreSelfInfoProvider).selfInfo?.pubKey;
+      if (selfPubkey == null || selfPubkey.length < 6) return null;
       return MeshCoreMmf.contact(
-        peerPubkeyPrefix: Uint8List.fromList(
-          widget.contact!.publicKey.sublist(0, 6),
-        ),
+        peerPubkeyPrefix: Uint8List.fromList(selfPubkey.sublist(0, 6)),
         targetTimestampS: timestampS,
       );
     }
@@ -824,7 +845,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
     // the retry as a duplicate). The retry's MMF + replyToMmf are
     // updated in lockstep to keep the local store consistent.
     final retryTs = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-    final retryMmf = _outboundMmfFor(retryTs).toStableString();
+    final retryMmf = _outboundMmfFor(retryTs)?.toStableString();
     final retryReplyTarget = pending.replyToMmf == null
         ? null
         : _findMessageByMmf(pending.replyToMmf!);

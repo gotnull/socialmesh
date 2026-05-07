@@ -101,17 +101,24 @@ void main() {
       expect(loaded.first.replyToMmf, isNull);
     });
 
-    test('outbound contact record uses partition-key prefix for MMF', () async {
-      // Outbound: senderKey is the SELF's, not the recipient's.
-      // The MMF must be derived from the partition (recipient
-      // pubkey hex).
+    test('outbound contact record with empty senderKey stays mmf = null '
+        '(post-fix: senderKey is the author prefix; no recoverable '
+        'author => mmf null, do NOT invent from partition)', () async {
+      // Author-prefix rule (2026-05-07): contact-scope MMF uses the
+      // author's pubkey prefix. For outbound records the author is
+      // self, persisted as `senderKey`. A pre-fix outbound record
+      // saved with `senderKey = Uint8List(0)` (selfInfo unavailable
+      // at persist time) has no recoverable author prefix and must
+      // stay `mmf = null` rather than fall back to the partition's
+      // recipient prefix — that would re-introduce the asymmetry
+      // the fix exists to eliminate.
       final partition =
           '79426d8db8fd'
           '${'00' * 26}';
       final legacy = [
         {
           'id': 'legacy-contact-out-1',
-          'senderKey': base64Encode(Uint8List(0)), // self / unknown
+          'senderKey': base64Encode(Uint8List(0)), // self pubkey unknown
           'text': 'pre-D33 outbound DM',
           'timestamp': 1700000000000,
           'isOutgoing': true,
@@ -125,13 +132,84 @@ void main() {
       final store = MeshCoreMessageStore();
       final loaded = await store.loadContactMessages(partition);
       expect(loaded, hasLength(1));
+      expect(loaded.first.mmf, isNull);
+    });
+
+    test('outbound contact record with self senderKey backfills MMF '
+        'from author prefix (NOT partition / recipient prefix)', () async {
+      // Author-prefix rule: outbound MMF must use the AUTHOR's
+      // (= self's) pubkey prefix, even though the partition is
+      // keyed by the recipient. This is the cross-device-symmetry
+      // contract: when the recipient stores the same wire frame as
+      // inbound, they extract the same prefix from the wire's
+      // `senderPrefix` field (which IS the author's prefix), so
+      // both sides derive the same MMF.
+      final selfPubkey = Uint8List.fromList([
+        0x96,
+        0x45,
+        0x8B,
+        0xE0,
+        0xB1,
+        0xC5,
+        ...List.filled(26, 0xAA),
+      ]);
+      // Partition uses the recipient's pubkey hex (different from author).
+      final partition =
+          '79426d8dbb8f'
+          '${'11' * 26}';
+      final legacy = [
+        {
+          'id': 'legacy-contact-out-2',
+          'senderKey': base64Encode(selfPubkey),
+          'text': 'pre-D33 outbound DM (self stored)',
+          'timestamp': 1700000000000,
+          'isOutgoing': true,
+          'status': 1,
+        },
+      ];
+      SharedPreferences.setMockInitialValues({
+        'meshcore_messages_contact_$partition': jsonEncode(legacy),
+      });
+
+      final store = MeshCoreMessageStore();
+      final loaded = await store.loadContactMessages(partition);
+      expect(loaded, hasLength(1));
       expect(
         loaded.first.mmf,
-        '02:79426d8db8fd:6553f100',
+        '02:96458be0b1c5:6553f100',
         reason:
-            'outbound MMF must use the recipient prefix '
-            '(=partition key) so both ends agree',
+            'outbound MMF must derive from senderKey (author) prefix, '
+            'NOT from partition (recipient) prefix',
       );
+    });
+
+    test('outbound contact record with all-zero senderKey stays '
+        'mmf = null (sentinel guard against legacy zeros)', () async {
+      // Defence-in-depth: a legacy persist that wrote a 32-byte
+      // all-zero buffer (because `selfInfo?.pubKey ?? Uint8List(32)`
+      // fell through to zeros) would otherwise produce the
+      // semantically-meaningless MMF `02:000000000000:<ts>` which
+      // can't resolve on either side. The backfill detects this
+      // sentinel and refuses to invent an MMF.
+      final partition = 'aa' * 32;
+      final legacy = [
+        {
+          'id': 'legacy-contact-out-zeros',
+          'senderKey': base64Encode(Uint8List(32)), // all zeros
+          'text': 'pre-D33 outbound with sentinel zeros',
+          'timestamp': 1700000000000,
+          'isOutgoing': true,
+          'status': 1,
+        },
+      ];
+      SharedPreferences.setMockInitialValues({
+        'meshcore_messages_contact_$partition': jsonEncode(legacy),
+      });
+
+      final store = MeshCoreMessageStore();
+      final loaded = await store.loadContactMessages(partition);
+      expect(loaded, hasLength(1));
+      expect(loaded.first.mmf, isNull);
     });
 
     test(

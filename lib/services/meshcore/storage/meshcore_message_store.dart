@@ -400,36 +400,37 @@ class MeshCoreMessageStore {
   /// Backfill MMF on a contact record when missing AND the input has
   /// enough stable fields.
   ///
-  /// Inbound records use `senderKey` (the OTHER end's pubkey from
-  /// the receiver's perspective).
-  /// Outbound records use the partition's [contactKeyHex] (the
-  /// recipient's pubkey from the sender's perspective).
-  /// Both branches converge on the same per-pair MMF.
+  /// **Author-prefix rule** (post-2026-05-07 fix): both inbound and
+  /// outbound records derive the MMF from `senderKey` — the chat
+  /// surface persists `senderKey` as the AUTHOR's pubkey for both
+  /// directions (inbound: contact who wrote it; outbound: self via
+  /// `selfInfo.pubKey`). This guarantees both ends of a conversation
+  /// derive `02:<author_prefix>:<ts>` for the same logical message.
   ///
-  /// Idempotent + side-effect-free. Records that lack the necessary
-  /// data (e.g. inbound with empty `senderKey`) stay `mmf = null`.
+  /// Pre-fix the outbound branch used the partition's contact pubkey
+  /// (the recipient), which produced asymmetric MMFs and broke
+  /// cross-device reply target resolution. The [contactKeyHex]
+  /// parameter is retained for API stability but no longer
+  /// participates in derivation.
+  ///
+  /// Idempotent + side-effect-free. Records that lack a usable
+  /// senderKey (length < 6 OR all-zero bytes from a legacy persist
+  /// where `selfInfo.pubKey` was unavailable) stay `mmf = null`.
   MeshCoreStoredMessage _backfillContactMmf(
     MeshCoreStoredMessage m,
     String contactKeyHex,
   ) {
     if (m.mmf != null) return m;
-
-    // Pick the source of the 6-byte peer prefix. Inbound: senderKey.
-    // Outbound: the partition's full contact pubkey hex.
-    String? prefixHex;
-    if (m.isOutgoing) {
-      if (contactKeyHex.length >= 12) {
-        prefixHex = contactKeyHex.substring(0, 12).toLowerCase();
-      }
-    } else {
-      if (m.senderKey.length >= 6) {
-        prefixHex = m.senderKey
-            .sublist(0, 6)
-            .map((b) => b.toRadixString(16).padLeft(2, '0'))
-            .join();
-      }
-    }
-    if (prefixHex == null) return m;
+    if (m.senderKey.length < 6) return m;
+    final headSix = m.senderKey.sublist(0, 6);
+    // Sentinel guard: legacy outbound records persisted before
+    // selfInfo loaded saved a Uint8List(32) of zeros. Those cannot
+    // be safely backfilled to a meaningful MMF, so skip rather
+    // than invent a `02:000000000000:<ts>` that won't resolve.
+    if (headSix.every((b) => b == 0)) return m;
+    final prefixHex = headSix
+        .map((b) => b.toRadixString(16).padLeft(2, '0'))
+        .join();
     final mmf = _contactMmfString(
       peerPubkeyPrefixHex: prefixHex,
       timestamp: m.timestamp,

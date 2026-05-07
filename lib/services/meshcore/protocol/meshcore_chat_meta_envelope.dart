@@ -121,11 +121,21 @@ class MmfScope {
   /// Channel scope: `[scope:0x01][channel_idx:u8][target_ts:u32_LE]` = 6 B.
   static const int channel = 0x01;
 
-  /// Contact scope: `[scope:0x02][peer_pubkey_prefix:6B][target_ts:u32_LE]`
-  /// = 11 B. The 6-byte prefix is **the other party's** public-key
-  /// prefix (sender's prefix on inbound; recipient's prefix on
-  /// outbound) so both ends derive the same MMF for the same
-  /// logical conversation.
+  /// Contact scope: `[scope:0x02][author_pubkey_prefix:6B][target_ts:u32_LE]`
+  /// = 11 B. The 6-byte prefix is the **author's** public-key prefix —
+  /// i.e. self's prefix when stamping an outbound message, and the
+  /// wire frame's `senderPrefix` when stamping an inbound one. Both
+  /// ends of a conversation thus derive `02:<author>:<ts>` for the
+  /// same logical message, so cross-device reply target resolution
+  /// works in both directions.
+  ///
+  /// Pre-fix this was specced as "the other party's" prefix
+  /// (recipient on outbound, sender on inbound). Field-test 2026-05-07
+  /// confirmed that produces asymmetric MMFs across the conversation:
+  /// the author and receiver stored different prefixes for the same
+  /// logical message, so embedded reply targets never resolved on the
+  /// receiver side. The wire format byte layout is unchanged; only
+  /// the derivation rule was corrected.
   static const int contact = 0x02;
 }
 
