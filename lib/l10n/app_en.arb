@@ -10295,6 +10295,10 @@
     "@meshcoreChannelEditImportFromCode": {
         "description": "Button label that imports a `name:pskHex` channel code from the PSK field"
     },
+    "meshcoreChannelEditImportFromCodeSubtitle": "Splits a name:pskHex code from the PSK field into the two inputs above",
+    "@meshcoreChannelEditImportFromCodeSubtitle": {
+        "description": "Subtitle on the Paste from channel code action tile, explaining what tapping it will do"
+    },
     "meshcoreChannelEditNameHint": "e.g. #public, #squad",
     "@meshcoreChannelEditNameHint": {
         "description": "Placeholder text for the channel-name input"

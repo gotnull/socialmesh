@@ -13519,6 +13519,12 @@ abstract class AppLocalizations {
   /// **'Paste from channel code'**
   String get meshcoreChannelEditImportFromCode;
 
+  /// Subtitle on the Paste from channel code action tile, explaining what tapping it will do
+  ///
+  /// In en, this message translates to:
+  /// **'Splits a name:pskHex code from the PSK field into the two inputs above'**
+  String get meshcoreChannelEditImportFromCodeSubtitle;
+
   /// Placeholder text for the channel-name input
   ///
   /// In en, this message translates to:

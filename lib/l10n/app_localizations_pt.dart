@@ -7670,6 +7670,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreChannelEditImportFromCode => 'Colar do código do canal';
 
   @override
+  String get meshcoreChannelEditImportFromCodeSubtitle =>
+      'Divide um código nome:pskHex do campo PSK nos dois campos acima';
+
+  @override
   String get meshcoreChannelEditNameHint => 'ex.: #public, #squad';
 
   @override

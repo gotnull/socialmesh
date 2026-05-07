@@ -215,7 +215,10 @@ class _MeshCoreChannelEditSheetState
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final accent = AccentColors.purple;
+    // Respect the user's Theme Pack selection. Earlier MeshCore sheets
+    // hardcoded `AccentColors.purple` which overrode the theme; the
+    // canonical pattern across Meshtastic screens is `context.accentColor`.
+    final accent = context.accentColor;
 
     return Form(
       key: _formKey,
@@ -307,77 +310,68 @@ class _MeshCoreChannelEditSheetState
 
           SettingsSectionHeader(title: l10n.meshcoreChannelEditPskSection),
           FieldGroupCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextFormField(
-                  controller: _pskController,
-                  maxLength: 200,
-                  autocorrect: false,
-                  enableSuggestions: false,
-                  textInputAction: TextInputAction.done,
-                  onTapOutside: (_) =>
-                      FocusManager.instance.primaryFocus?.unfocus(),
-                  style: TextStyle(
-                    color: context.textPrimary,
-                    fontFamily: AppTheme.fontFamily,
-                  ),
-                  // PSK is treated as sensitive and the firmware never
-                  // surfaces it back in plaintext logs (D29 redaction).
-                  // We don't auto-mask the field because the user
-                  // explicitly pasted it and needs to verify they
-                  // typed/pasted the right value.
-                  validator: (v) => _validatePsk(v, l10n),
-                  decoration: InputDecoration(
-                    labelText: l10n.meshcoreChannelEditPskLabel,
-                    labelStyle: TextStyle(color: context.textSecondary),
-                    hintText: l10n.meshcoreChannelEditPskHint,
-                    hintStyle: TextStyle(color: SemanticColors.muted),
-                    helperText: l10n.meshcoreChannelEditPskHelper,
-                    helperStyle: TextStyle(
-                      color: context.textTertiary,
-                      fontSize: 12,
-                    ),
-                    helperMaxLines: 3,
-                    filled: true,
-                    fillColor: context.background,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radius8),
-                      borderSide: BorderSide(color: context.border),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radius8),
-                      borderSide: BorderSide(color: context.border),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radius8),
-                      borderSide: BorderSide(color: accent),
-                    ),
-                    prefixIcon: Icon(
-                      Icons.vpn_key_rounded,
-                      color: context.textSecondary,
-                    ),
-                    counterText: '',
-                  ),
+            child: TextFormField(
+              controller: _pskController,
+              maxLength: 200,
+              autocorrect: false,
+              enableSuggestions: false,
+              textInputAction: TextInputAction.done,
+              onTapOutside: (_) =>
+                  FocusManager.instance.primaryFocus?.unfocus(),
+              style: TextStyle(
+                color: context.textPrimary,
+                fontFamily: AppTheme.fontFamily,
+              ),
+              // PSK is treated as sensitive and the firmware never
+              // surfaces it back in plaintext logs (D29 redaction).
+              // We don't auto-mask the field because the user
+              // explicitly pasted it and needs to verify they
+              // typed/pasted the right value.
+              validator: (v) => _validatePsk(v, l10n),
+              decoration: InputDecoration(
+                labelText: l10n.meshcoreChannelEditPskLabel,
+                labelStyle: TextStyle(color: context.textSecondary),
+                hintText: l10n.meshcoreChannelEditPskHint,
+                hintStyle: TextStyle(color: SemanticColors.muted),
+                helperText: l10n.meshcoreChannelEditPskHelper,
+                helperStyle: TextStyle(
+                  color: context.textTertiary,
+                  fontSize: 12,
                 ),
-                const SizedBox(height: AppTheme.spacing12),
-                OutlinedButton.icon(
-                  onPressed: _saving ? null : _tryImportChannelCode,
-                  icon: const Icon(Icons.content_paste_go_rounded),
-                  label: Text(l10n.meshcoreChannelEditImportFromCode),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: accent,
-                    side: BorderSide(color: context.border),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppTheme.spacing12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radius8),
-                    ),
-                  ),
+                helperMaxLines: 3,
+                filled: true,
+                fillColor: context.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                  borderSide: BorderSide(color: context.border),
                 ),
-              ],
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                  borderSide: BorderSide(color: context.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                  borderSide: BorderSide(color: accent),
+                ),
+                prefixIcon: Icon(
+                  Icons.vpn_key_rounded,
+                  color: context.textSecondary,
+                ),
+                counterText: '',
+              ),
             ),
+          ),
+          // Action affordance for the paste-from-code shortcut. Lives
+          // OUTSIDE the FieldGroupCard as its own SettingsTile so it
+          // matches the canonical inner-settings rhythm (action rows
+          // = tiles, not bordered buttons inside cards). The tile is
+          // disabled while the wire write is in flight.
+          SettingsTile(
+            icon: Icons.content_paste_go_rounded,
+            iconColor: accent,
+            title: l10n.meshcoreChannelEditImportFromCode,
+            subtitle: l10n.meshcoreChannelEditImportFromCodeSubtitle,
+            onTap: _saving ? null : _tryImportChannelCode,
           ),
 
           Padding(
@@ -453,7 +447,7 @@ class _MeshCoreChannelEditSheetState
                           ? Icons.radio_button_checked
                           : Icons.radio_button_unchecked,
                       color: i == _selectedSlot
-                          ? AccentColors.purple
+                          ? context.accentColor
                           : context.textSecondary,
                     ),
                     const SizedBox(width: AppTheme.spacing16),

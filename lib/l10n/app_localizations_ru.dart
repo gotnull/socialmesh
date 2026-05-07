@@ -7600,6 +7600,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreChannelEditImportFromCode => 'Paste from channel code';
 
   @override
+  String get meshcoreChannelEditImportFromCodeSubtitle =>
+      'Splits a name:pskHex code from the PSK field into the two inputs above';
+
+  @override
   String get meshcoreChannelEditNameHint => 'e.g. #public, #squad';
 
   @override
