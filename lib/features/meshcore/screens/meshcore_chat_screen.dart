@@ -360,22 +360,40 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
     // D19.B: deterministic id matches the conversations notifier so
     // when the chat reopens later, `_loadMessages` reads from the
     // store and finds the same id (no duplicate bubble vs the
-    // transient in-memory entry we add below).
+    // transient in-memory entry we add below). The id derives from
+    // the RAW wire text (envelope-bearing) so both paths agree even
+    // when the chat-screen's in-memory branch strips the envelope
+    // for display below.
     final stableId = meshCoreInboundContactMessageId(
       senderPrefixHex: parsed.senderPrefixHex,
       timestamp: parsed.timestamp,
       text: parsed.text,
     );
 
+    // D33: mirror the provider's envelope-decode + author-prefix MMF
+    // stamp on the in-memory bubble. Without this the freshly
+    // received bubble has `mmf == null` until the chat closes and
+    // reloads from the store, hiding the long-press Reply action on
+    // a just-arrived message (live smoke 2026-05-07). The provider
+    // path persists with the same fields; we match it 1:1 so a
+    // store-reload doesn't change the rendered bubble.
+    final decoration = meshCoreInboundContactDecoration(
+      text: parsed.text,
+      timestamp: parsed.timestamp,
+      senderPrefixHex: parsed.senderPrefixHex,
+    );
+
     final message = MeshCoreMessage(
       id: stableId,
-      text: parsed.text,
+      text: decoration.displayText,
       timestamp: parsed.timestamp,
       isOutgoing: false,
       status: MeshCoreMessageDeliveryStatus.delivered,
       senderKey: senderKey,
       pathLength: parsed.pathLen,
       snrQuarter: parsed.snrQuarter,
+      mmf: decoration.mmf,
+      replyToMmf: decoration.replyToMmf,
     );
 
     if (mounted) {
@@ -445,15 +463,28 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       timestamp: parsed.timestamp,
       text: parsed.text,
     );
+
+    // D33: mirror the provider's envelope-decode + MMF stamp on the
+    // in-memory bubble so the long-press Reply action lights up
+    // immediately on freshly received channel messages, before any
+    // chat reload. Same rationale as `_handleIncomingContactMessage`.
+    final decoration = meshCoreInboundChannelDecoration(
+      text: parsed.text,
+      timestamp: parsed.timestamp,
+      channelIndex: parsed.channelIndex,
+    );
+
     final message = MeshCoreMessage(
       id: stableId,
-      text: parsed.text,
+      text: decoration.displayText,
       timestamp: parsed.timestamp,
       isOutgoing: false,
       status: MeshCoreMessageDeliveryStatus.delivered,
       senderKey: null,
       pathLength: parsed.pathLen,
       snrQuarter: parsed.snrQuarter,
+      mmf: decoration.mmf,
+      replyToMmf: decoration.replyToMmf,
     );
 
     if (mounted) {
@@ -2060,4 +2091,95 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       payload: builder.toBytes(),
     );
   }
+}
+
+/// D33 result of the chat-screen's live-inbound chat-meta decoration
+/// pass. Carries the trio the in-memory bubble needs at the moment
+/// the inbound frame lands so the long-press Reply action lights up
+/// without waiting for a store reload.
+typedef MeshCoreInboundDecoration = ({
+  String displayText,
+  String? mmf,
+  String? replyToMmf,
+});
+
+/// D33: decorate a freshly-received CONTACT inbound message with the
+/// envelope-stripped display body and the cross-device MMFs.
+///
+/// Mirrors the provider-side decode at
+/// `lib/providers/meshcore_message_providers.dart:872-913`. When the
+/// body is a recognised REPLY envelope, the displayed text becomes
+/// the reply body and `replyToMmf` carries the target MMF. The own
+/// MMF uses the AUTHOR's pubkey prefix (= the wire `senderPrefixHex`
+/// for inbound) per the post-0fab0026 author-prefix rule.
+///
+/// Returns `mmf == null` if `senderPrefixHex` doesn't decode to
+/// exactly 6 bytes; callers treat that as "no MMF derivable" and the
+/// bubble simply isn't reply-able until the next store reload.
+MeshCoreInboundDecoration meshCoreInboundContactDecoration({
+  required String text,
+  required DateTime timestamp,
+  required String senderPrefixHex,
+}) {
+  final decoded = ChatMetaEnvelopeCodec.decode(text);
+  String displayText = text;
+  String? replyToMmf;
+  if (decoded.envelope != null && decoded.envelope!.op == ChatMetaOps.reply) {
+    final reply = ChatMetaReplyPayload.parse(decoded.envelope!.payload);
+    if (reply != null) {
+      displayText = reply.body;
+      replyToMmf = reply.target.toStableString();
+    }
+  }
+  final senderPrefixBytes = _meshcoreChatScreenHexToBytes(senderPrefixHex);
+  final mmf = senderPrefixBytes.length == 6
+      ? MeshCoreMmf.contact(
+          peerPubkeyPrefix: Uint8List.fromList(senderPrefixBytes),
+          targetTimestampS: timestamp.millisecondsSinceEpoch ~/ 1000,
+        ).toStableString()
+      : null;
+  return (displayText: displayText, mmf: mmf, replyToMmf: replyToMmf);
+}
+
+/// D33: channel-scope twin of [meshCoreInboundContactDecoration]. The
+/// MMF is `[scope:0x01][channel_idx:u8][target_ts:u32_LE]` and never
+/// depends on a sender prefix, so it always derives.
+MeshCoreInboundDecoration meshCoreInboundChannelDecoration({
+  required String text,
+  required DateTime timestamp,
+  required int channelIndex,
+}) {
+  final decoded = ChatMetaEnvelopeCodec.decode(text);
+  String displayText = text;
+  String? replyToMmf;
+  if (decoded.envelope != null && decoded.envelope!.op == ChatMetaOps.reply) {
+    final reply = ChatMetaReplyPayload.parse(decoded.envelope!.payload);
+    if (reply != null) {
+      displayText = reply.body;
+      replyToMmf = reply.target.toStableString();
+    }
+  }
+  final mmf = MeshCoreMmf.channel(
+    channelIndex: channelIndex,
+    targetTimestampS: timestamp.millisecondsSinceEpoch ~/ 1000,
+  ).toStableString();
+  return (displayText: displayText, mmf: mmf, replyToMmf: replyToMmf);
+}
+
+/// D33 helper: parse a hex string into raw bytes. Mirrors the
+/// provider-side helper in `meshcore_message_providers.dart` so the
+/// chat screen can derive author-prefix MMFs without taking a
+/// cross-feature import. Returns an empty list when the input isn't
+/// valid hex / has odd length; callers treat that as "no MMF
+/// derivable" and leave `mmf = null`.
+List<int> _meshcoreChatScreenHexToBytes(String hex) {
+  final clean = hex.startsWith('0x') ? hex.substring(2) : hex;
+  if (clean.length.isOdd) return const [];
+  final out = <int>[];
+  for (var i = 0; i < clean.length; i += 2) {
+    final byte = int.tryParse(clean.substring(i, i + 2), radix: 16);
+    if (byte == null) return const [];
+    out.add(byte);
+  }
+  return out;
 }

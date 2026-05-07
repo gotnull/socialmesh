@@ -1004,10 +1004,16 @@ class MeshCoreConversationsNotifier
     // notification fire-and-forget here doesn't block the broadcast
     // listener.
     if (matchedId != null && fullSenderKey != null) {
+      // D33: pass the envelope-stripped `displayText` (set above when a
+      // REPLY envelope decoded successfully) so the iOS notification
+      // banner doesn't surface raw `[mrrp]<base64>[/mrrp] You replied:
+      // …` text. Live smoke 2026-05-07 caught the leak. For plain
+      // (non-envelope) messages displayText == parsed.text so the
+      // user-facing copy is unchanged.
       _maybeNotifyContactMessage(
         senderName: senderName ?? '',
         pubKeyHex: matchedId,
-        text: parsed.text,
+        text: displayText,
       );
     }
   }
@@ -1194,12 +1200,17 @@ class MeshCoreConversationsNotifier
         .where((c) => c.index == parsed.channelIndex)
         .map((c) => c.name)
         .firstWhere((n) => n.isNotEmpty, orElse: () => '');
+    // D33: pass the envelope-stripped `displayText` (set above when a
+    // REPLY envelope decoded successfully) so the iOS notification
+    // banner doesn't surface raw `[mrrp]…[/mrrp]` text. See the
+    // contact-mirror at `_maybeNotifyContactMessage` callsite for the
+    // matching note.
     _maybeNotifyChannelMessage(
       senderName: '',
       channelName: channelName,
       channelIndex: parsed.channelIndex,
       senderPrefixHex: '',
-      text: parsed.text,
+      text: displayText,
     );
   }
 
