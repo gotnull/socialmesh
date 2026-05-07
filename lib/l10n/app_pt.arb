@@ -18827,6 +18827,123 @@
   "@meshcoreChannelsTitle": {
     "description": "Channels screen title (with optional count suffix)"
   },
+  "meshcoreChannelEditAddedSuccess": "Canal \"{name}\" adicionado",
+  "@meshcoreChannelEditAddedSuccess": {
+    "description": "Snackbar confirming a new channel slot was written to the radio",
+    "placeholders": {
+      "name": {"type": "String", "example": "Public"}
+    }
+  },
+  "meshcoreChannelEditCodeImportFailed": "Não foi possível interpretar o código do canal",
+  "@meshcoreChannelEditCodeImportFailed": {
+    "description": "Error snackbar when the pasted PSK field doesn't parse as a `name:pskHex` channel code"
+  },
+  "meshcoreChannelEditHint": "Os canais ficam armazenados no rádio. Cada slot guarda um nome e uma chave pré-compartilhada de 128 bits.",
+  "@meshcoreChannelEditHint": {
+    "description": "Sub-header explainer for the channel edit sheet"
+  },
+  "meshcoreChannelEditImportFromCode": "Colar do código do canal",
+  "@meshcoreChannelEditImportFromCode": {
+    "description": "Button label that imports a `name:pskHex` channel code from the PSK field"
+  },
+  "meshcoreChannelEditNameHint": "ex.: #public, #squad",
+  "@meshcoreChannelEditNameHint": {
+    "description": "Placeholder text for the channel-name input"
+  },
+  "meshcoreChannelEditNameLabel": "Nome do canal",
+  "@meshcoreChannelEditNameLabel": {
+    "description": "Label for the channel-name input"
+  },
+  "meshcoreChannelEditNameRequired": "O nome é obrigatório",
+  "@meshcoreChannelEditNameRequired": {
+    "description": "Form validation error when the channel-name field is empty"
+  },
+  "meshcoreChannelEditNameSection": "Nome",
+  "@meshcoreChannelEditNameSection": {
+    "description": "Section header above the channel-name field"
+  },
+  "meshcoreChannelEditNameTooLong": "O nome deve ter 32 bytes ou menos",
+  "@meshcoreChannelEditNameTooLong": {
+    "description": "Form validation error when the channel-name exceeds the 32-byte firmware limit"
+  },
+  "meshcoreChannelEditPickSlotTitle": "Escolha um slot",
+  "@meshcoreChannelEditPickSlotTitle": {
+    "description": "Title of the bottom-sheet slot picker opened from the slot tile"
+  },
+  "meshcoreChannelEditPskBadHex": "A PSK deve ser hexadecimal (0-9, a-f)",
+  "@meshcoreChannelEditPskBadHex": {
+    "description": "Form validation error when the PSK field contains non-hex characters"
+  },
+  "meshcoreChannelEditPskBadLength": "A PSK deve ter 32 caracteres hexadecimais (16 bytes)",
+  "@meshcoreChannelEditPskBadLength": {
+    "description": "Form validation error when the PSK field isn't exactly 32 hex chars"
+  },
+  "meshcoreChannelEditPskHelper": "32 caracteres hexadecimais. Você também pode colar um código completo de canal (nome:hex) e tocar no botão de importação abaixo.",
+  "@meshcoreChannelEditPskHelper": {
+    "description": "Helper text under the PSK input explaining the accepted formats"
+  },
+  "meshcoreChannelEditPskHint": "32 caracteres hex ou código nome:pskHex",
+  "@meshcoreChannelEditPskHint": {
+    "description": "Placeholder text for the PSK input"
+  },
+  "meshcoreChannelEditPskLabel": "Chave pré-compartilhada",
+  "@meshcoreChannelEditPskLabel": {
+    "description": "Label for the PSK input"
+  },
+  "meshcoreChannelEditPskRequired": "A PSK é obrigatória",
+  "@meshcoreChannelEditPskRequired": {
+    "description": "Form validation error when the PSK field is empty"
+  },
+  "meshcoreChannelEditPskSection": "Chave pré-compartilhada",
+  "@meshcoreChannelEditPskSection": {
+    "description": "Section header above the PSK input"
+  },
+  "meshcoreChannelEditSave": "Salvar canal",
+  "@meshcoreChannelEditSave": {
+    "description": "Primary submit button label on the channel edit sheet"
+  },
+  "meshcoreChannelEditSaveFailed": "Não foi possível salvar o canal. Verifique o slot e a PSK e tente novamente.",
+  "@meshcoreChannelEditSaveFailed": {
+    "description": "Error snackbar when the radio rejects the channel write or the call times out"
+  },
+  "meshcoreChannelEditSavedSuccess": "Canal \"{name}\" salvo",
+  "@meshcoreChannelEditSavedSuccess": {
+    "description": "Snackbar confirming an existing channel slot was edited",
+    "placeholders": {
+      "name": {"type": "String", "example": "Public"}
+    }
+  },
+  "meshcoreChannelEditSaving": "Salvando…",
+  "@meshcoreChannelEditSaving": {
+    "description": "Submit-button label while the wire write is in flight"
+  },
+  "meshcoreChannelEditSlotLabel": "Slot do canal",
+  "@meshcoreChannelEditSlotLabel": {
+    "description": "Label of the slot-picker tile"
+  },
+  "meshcoreChannelEditSlotOccupied": "em uso",
+  "@meshcoreChannelEditSlotOccupied": {
+    "description": "Inline tag on slots that already hold a channel"
+  },
+  "meshcoreChannelEditSlotSection": "Slot",
+  "@meshcoreChannelEditSlotSection": {
+    "description": "Section header above the slot picker"
+  },
+  "meshcoreChannelEditSlotSubtitle": "Slot {index}",
+  "@meshcoreChannelEditSlotSubtitle": {
+    "description": "Subtitle on the slot tile / row in the slot picker",
+    "placeholders": {
+      "index": {"type": "int", "example": "0"}
+    }
+  },
+  "meshcoreChannelEditTitleAdd": "Adicionar canal",
+  "@meshcoreChannelEditTitleAdd": {
+    "description": "Sheet title when adding a new channel slot"
+  },
+  "meshcoreChannelEditTitleEdit": "Editar canal",
+  "@meshcoreChannelEditTitleEdit": {
+    "description": "Sheet title when editing an existing channel slot"
+  },
   "meshcoreChatActionCopy": "Copiar",
   "@meshcoreChatActionCopy": {
     "description": "Long-press menu action: copy the message text to the clipboard"

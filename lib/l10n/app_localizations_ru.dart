@@ -7584,6 +7584,99 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreChannelsTitle => 'Channels';
 
   @override
+  String meshcoreChannelEditAddedSuccess(String name) {
+    return 'Channel \"$name\" added';
+  }
+
+  @override
+  String get meshcoreChannelEditCodeImportFailed =>
+      'Could not parse channel code';
+
+  @override
+  String get meshcoreChannelEditHint =>
+      'Channels are stored on the radio. Each slot holds a name and a 128-bit pre-shared key.';
+
+  @override
+  String get meshcoreChannelEditImportFromCode => 'Paste from channel code';
+
+  @override
+  String get meshcoreChannelEditNameHint => 'e.g. #public, #squad';
+
+  @override
+  String get meshcoreChannelEditNameLabel => 'Channel name';
+
+  @override
+  String get meshcoreChannelEditNameRequired => 'Name is required';
+
+  @override
+  String get meshcoreChannelEditNameSection => 'Name';
+
+  @override
+  String get meshcoreChannelEditNameTooLong => 'Name must be 32 bytes or fewer';
+
+  @override
+  String get meshcoreChannelEditPickSlotTitle => 'Pick a slot';
+
+  @override
+  String get meshcoreChannelEditPskBadHex =>
+      'PSK must be hexadecimal (0-9, a-f)';
+
+  @override
+  String get meshcoreChannelEditPskBadLength =>
+      'PSK must be 32 hex characters (16 bytes)';
+
+  @override
+  String get meshcoreChannelEditPskHelper =>
+      '32 hex characters. You can also paste a full channel code (name:hex) and tap the import button below.';
+
+  @override
+  String get meshcoreChannelEditPskHint => '32 hex chars or name:pskHex code';
+
+  @override
+  String get meshcoreChannelEditPskLabel => 'Pre-shared key';
+
+  @override
+  String get meshcoreChannelEditPskRequired => 'PSK is required';
+
+  @override
+  String get meshcoreChannelEditPskSection => 'Pre-shared key';
+
+  @override
+  String get meshcoreChannelEditSave => 'Save channel';
+
+  @override
+  String get meshcoreChannelEditSaveFailed =>
+      'Could not save channel. Check the slot index and PSK and try again.';
+
+  @override
+  String meshcoreChannelEditSavedSuccess(String name) {
+    return 'Channel \"$name\" saved';
+  }
+
+  @override
+  String get meshcoreChannelEditSaving => 'Saving…';
+
+  @override
+  String get meshcoreChannelEditSlotLabel => 'Channel slot';
+
+  @override
+  String get meshcoreChannelEditSlotOccupied => 'in use';
+
+  @override
+  String get meshcoreChannelEditSlotSection => 'Slot';
+
+  @override
+  String meshcoreChannelEditSlotSubtitle(int index) {
+    return 'Slot $index';
+  }
+
+  @override
+  String get meshcoreChannelEditTitleAdd => 'Add channel';
+
+  @override
+  String get meshcoreChannelEditTitleEdit => 'Edit channel';
+
+  @override
   String get meshcoreChatActionCopy => 'Copy';
 
   @override

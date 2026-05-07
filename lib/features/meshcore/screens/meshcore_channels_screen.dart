@@ -24,6 +24,7 @@ import '../../../providers/meshcore_message_providers.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../../navigation/meshcore_shell.dart';
+import '../widgets/meshcore_channel_edit_sheet.dart';
 import 'meshcore_chat_screen.dart';
 import 'meshcore_qr_scanner_screen.dart';
 
@@ -95,6 +96,8 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
               switch (value) {
                 case 'create':
                   _showCreateChannelDialog();
+                case 'add_custom':
+                  _openCanonicalChannelEditSheet();
                 case 'join':
                   _showJoinChannelDialog();
                 case 'import':
@@ -111,6 +114,15 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                 child: ListTile(
                   leading: const Icon(Icons.add_rounded),
                   title: Text(context.l10n.meshcoreChannelsCreateChannel),
+                  contentPadding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'add_custom',
+                child: ListTile(
+                  leading: const Icon(Icons.tune_rounded),
+                  title: Text(context.l10n.meshcoreChannelEditTitleAdd),
                   contentPadding: EdgeInsets.zero,
                   visualDensity: VisualDensity.compact,
                 ),
@@ -364,6 +376,27 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
   Future<void> _refreshChannels() async {
     final notifier = ref.read(meshCoreChannelsProvider.notifier);
     await notifier.refresh();
+  }
+
+  /// D31: open the canonical channel edit sheet. Pre-populates from
+  /// [existing] when editing; otherwise opens in add-mode and offers
+  /// the lowest unused slot. Both paths funnel through the provider's
+  /// `addChannel` / `editChannel` / `removeChannel` wrappers (post-ACK
+  /// refresh, validate-before-wire, no secret logging).
+  void _openCanonicalChannelEditSheet({MeshCoreChannel? existing}) {
+    final occupied = ref
+        .read(meshCoreChannelsProvider)
+        .channels
+        .map((c) => c.index)
+        .toSet();
+    showMeshCoreChannelEditSheet(
+      context: context,
+      mode: existing == null
+          ? MeshCoreChannelEditMode.add
+          : MeshCoreChannelEditMode.edit,
+      existing: existing,
+      occupiedSlots: occupied,
+    );
   }
 
   Future<void> _showCreateChannelDialog() async {
@@ -1006,6 +1039,11 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
           },
         ),
         BottomSheetAction(
+          icon: Icons.edit_rounded,
+          label: context.l10n.meshcoreChannelEditTitleEdit,
+          onTap: () => _openCanonicalChannelEditSheet(existing: channel),
+        ),
+        BottomSheetAction(
           icon: Icons.qr_code_rounded,
           label: context.l10n.meshcoreShareChannel,
           onTap: () {
@@ -1047,15 +1085,21 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
 
     if (confirmed != true || !mounted) return;
 
-    // Clear channel by setting empty name and default PSK
-    await ref
+    // D31: route through the typed `removeChannel` wrapper so the
+    // wire-op semantics (no dedicated delete opcode; effective
+    // delete = setChannel(idx, "", zeros) + post-ACK refresh) live
+    // in one place. Returns false on firmware reject / timeout.
+    final ok = await ref
         .read(meshCoreChannelsProvider.notifier)
-        .setChannel(MeshCoreChannel.empty(channel.index));
-    if (mounted) {
+        .removeChannel(index: channel.index);
+    if (!mounted) return;
+    if (ok) {
       showSuccessSnackBar(
         context,
         context.l10n.meshcoreLeftChannel(channel.displayName),
       );
+    } else {
+      showErrorSnackBar(context, context.l10n.meshcoreChannelEditSaveFailed);
     }
   }
 

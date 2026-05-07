@@ -867,34 +867,65 @@ class MeshCoreSession {
     return channels;
   }
 
-  /// Set a channel on the device.
+  /// Set a channel slot on the device.
   ///
-  /// [index] is the channel slot (0-7).
-  /// [name] is the channel name (max 32 chars).
-  /// [psk] is the pre-shared key (16 bytes).
+  /// Wire format (`CMD_SET_CHANNEL` = `0x20`), payload after cmd byte:
+  /// `[idx:u8][name:32 bytes (null-padded)][psk:16 bytes]` = 49 bytes.
+  /// Firmware reads `name` as a 32-byte char buffer (null-terminated
+  /// within the buffer) and `secret` as 16 raw bytes. The 32-byte secret
+  /// branch is signalled by the firmware as `ERR_CODE_UNSUPPORTED_CMD`
+  /// at the pinned SHA — only 128-bit keys are supported.
+  ///
+  /// Firmware returns `RESP_CODE_OK` (0x00) on success, `RESP_CODE_ERR`
+  /// (0x01) with `ERR_CODE_NOT_FOUND` on bad slot index. Changes apply
+  /// live (`saveChannels()` is called immediately).
+  ///
+  /// **D31 wire-format fix**: pre-D31 this padded the name region to
+  /// 33 bytes (32 + 1 extra null), producing a 50-byte payload. The
+  /// firmware accepts that length but reads `secret` from a fixed
+  /// offset, so the extra zero became `secret[0]`, shifted the supplied
+  /// PSK by 1, and silently dropped `psk[15]`. Every channel write
+  /// since this function landed produced a corrupted PSK. Fixed here
+  /// to pad to exactly 32 bytes and pinned by a byte-vector test.
+  ///
+  /// [index] is the channel slot (0-based; firmware capacity is
+  /// `MAX_GROUP_CHANNELS`, board-dependent — 8 is the conservative
+  /// default our `getChannels` polls).
+  /// [name] is the channel name (max 32 bytes; longer names are
+  /// truncated. Firmware's `StrHelper::strncpy` accepts 0-32 byte names).
+  /// [psk] is the pre-shared key — must be exactly 16 bytes (128-bit).
   Future<bool> setChannel({
     required int index,
     required String name,
     required Uint8List psk,
     Duration timeout = const Duration(seconds: 5),
   }) async {
+    if (index < 0 || index > 255) {
+      throw ArgumentError.value(index, 'index', 'must fit in u8');
+    }
     if (psk.length != 16) {
-      throw ArgumentError('PSK must be 16 bytes');
+      throw ArgumentError.value(
+        psk.length,
+        'psk.length',
+        'PSK must be exactly 16 bytes (128-bit)',
+      );
+    }
+    final nameBytes = name.codeUnits.take(32).toList();
+    if (nameBytes.length > 32) {
+      throw ArgumentError.value(
+        name.length,
+        'name.length',
+        'name must encode to at most 32 bytes',
+      );
     }
 
-    // Build SET_CHANNEL payload: [index][name...][0x00 padding to 33][psk x16]
+    // Build payload: [idx:u8][name:32 (null-padded)][psk:16] = 49 bytes.
     final builder = BytesBuilder();
     builder.addByte(index);
-
-    // Name (max 32 bytes, null-terminated)
-    final nameBytes = name.codeUnits.take(32).toList();
     builder.add(nameBytes);
-    // Pad with zeros to 33 bytes total (32 name + 1 null)
-    for (int i = nameBytes.length; i < 33; i++) {
+    for (int i = nameBytes.length; i < 32; i++) {
       builder.addByte(0);
     }
-
-    // PSK (16 bytes)
     builder.add(psk);
 
     final response = await sendAndWait(
@@ -905,6 +936,39 @@ class MeshCoreSession {
     );
 
     return response != null;
+  }
+
+  /// Clear (delete) a channel slot on the device.
+  ///
+  /// MeshCore firmware has **no dedicated delete-channel opcode** at
+  /// the pinned SHA. The effective wire op is `setChannel(idx, "", 0×16)`
+  /// — overwrite the slot with empty name + all-zero secret. Our
+  /// `parseChannelInfo` then treats the slot as unconfigured
+  /// (`MeshCoreChannelInfo.isEmpty`), hiding it from `getChannels`.
+  ///
+  /// This wrapper exists so callers express intent ("remove this slot")
+  /// without each having to know the empty-set convention. The byte
+  /// vector this produces is pinned by a separate test from
+  /// [setChannel] so a refactor that breaks the convention is caught.
+  ///
+  /// Caveat: firmware always computes `sha256(secret)` even when the
+  /// secret is all zeros, so the slot's stored hash is non-zero after
+  /// removal. This is harmless because real channels never use an
+  /// all-zero secret, but it's why the firmware-side state is "slot
+  /// overwritten with zeros" rather than "slot reset / forgotten".
+  ///
+  /// Returns `true` when the firmware ACKs the overwrite with
+  /// `RESP_CODE_OK` (0x00); `false` on timeout or firmware error.
+  Future<bool> removeChannel({
+    required int index,
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    return setChannel(
+      index: index,
+      name: '',
+      psk: Uint8List(16),
+      timeout: timeout,
+    );
   }
 
   // ---------------------------------------------------------------------------

@@ -737,34 +737,103 @@ class MeshCoreChannelsNotifier extends Notifier<MeshCoreChannelsState> {
   }
 
   /// Add or update a channel on the device.
-  Future<bool> setChannel(MeshCoreChannel channel) async {
+  ///
+  /// Convenience wrapper that takes the existing [MeshCoreChannel]
+  /// model. Equivalent to [addChannel]/[editChannel] — `CMD_SET_CHANNEL`
+  /// is overwrite-by-slot, so the firmware doesn't distinguish "add"
+  /// from "edit". The intent-based aliases below exist so caller code
+  /// reads naturally at the UI layer.
+  ///
+  /// On firmware ACK this re-fetches the channel list so local state
+  /// reflects what the radio actually persisted, not what the client
+  /// asked for. Failure leaves state intact.
+  Future<bool> setChannel(MeshCoreChannel channel) {
+    return _writeChannel(
+      index: channel.index,
+      name: channel.name,
+      psk: channel.psk,
+    );
+  }
+
+  /// Add a new channel slot. Same wire op as [editChannel] (firmware's
+  /// `CMD_SET_CHANNEL` is overwrite-by-slot); the distinction is
+  /// caller intent and UI affordance.
+  Future<bool> addChannel({
+    required int index,
+    required String name,
+    required Uint8List psk,
+  }) {
+    return _writeChannel(index: index, name: name, psk: psk);
+  }
+
+  /// Edit an existing channel slot's name and/or PSK. Same wire op as
+  /// [addChannel].
+  Future<bool> editChannel({
+    required int index,
+    required String name,
+    required Uint8List psk,
+  }) {
+    return _writeChannel(index: index, name: name, psk: psk);
+  }
+
+  /// Remove a channel slot. There is no dedicated firmware delete
+  /// opcode at the pinned SHA — this overwrites the slot with empty
+  /// name + zero PSK. After firmware ACK + refresh, the slot reads
+  /// back as `MeshCoreChannelInfo.isEmpty` and is filtered out of
+  /// `getChannels`. See `MeshCoreSession.removeChannel` for the wire
+  /// convention.
+  ///
+  /// Returns `true` on firmware ACK + successful refresh; `false` on
+  /// invalid slot, no session, firmware error, or timeout. Local state
+  /// is only mutated via the post-ACK refresh.
+  Future<bool> removeChannel({required int index}) async {
+    if (index < 0 || index > 255) return false;
+
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null) return false;
+
     try {
-      final session = ref.read(meshCoreSessionProvider);
-      if (session == null) return false;
-
-      final success = await session.setChannel(
-        index: channel.index,
-        name: channel.name,
-        psk: channel.psk,
-      );
-
+      final success = await session.removeChannel(index: index);
       if (success) {
-        // Update local state
-        final updated = [...state.channels];
-        final existingIndex = updated.indexWhere(
-          (c) => c.index == channel.index,
-        );
-        if (existingIndex >= 0) {
-          updated[existingIndex] = channel;
-        } else {
-          updated.add(channel);
-          updated.sort((a, b) => a.index.compareTo(b.index));
-        }
-        state = state.copyWith(channels: updated);
+        await _loadChannels();
       }
-
       return success;
-    } catch (e) {
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Single internal write path so add/edit/setChannel converge on one
+  /// validate-then-wire-then-refresh pipeline. Any input that the
+  /// session wrapper would have thrown an `ArgumentError` for is
+  /// pre-rejected here so the UI can surface a validation error
+  /// without burning a wire round-trip.
+  Future<bool> _writeChannel({
+    required int index,
+    required String name,
+    required Uint8List psk,
+  }) async {
+    if (index < 0 || index > 255) return false;
+    if (name.codeUnits.length > 32) return false;
+    if (psk.length != 16) return false;
+
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null) return false;
+
+    try {
+      final success = await session.setChannel(
+        index: index,
+        name: name,
+        psk: psk,
+      );
+      if (success) {
+        // Re-fetch so local state reflects firmware's authoritative
+        // view (catches partial writes, slot-not-found rewrites the
+        // empty channel back, etc). Failure path leaves state intact.
+        await _loadChannels();
+      }
+      return success;
+    } catch (_) {
       return false;
     }
   }

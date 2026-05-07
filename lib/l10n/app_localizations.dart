@@ -13495,6 +13495,168 @@ abstract class AppLocalizations {
   /// **'Channels'**
   String get meshcoreChannelsTitle;
 
+  /// Snackbar confirming a new channel slot was written to the radio
+  ///
+  /// In en, this message translates to:
+  /// **'Channel \"{name}\" added'**
+  String meshcoreChannelEditAddedSuccess(String name);
+
+  /// Error snackbar when the pasted PSK field doesn't parse as a `name:pskHex` channel code
+  ///
+  /// In en, this message translates to:
+  /// **'Could not parse channel code'**
+  String get meshcoreChannelEditCodeImportFailed;
+
+  /// Sub-header explainer for the channel edit sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Channels are stored on the radio. Each slot holds a name and a 128-bit pre-shared key.'**
+  String get meshcoreChannelEditHint;
+
+  /// Button label that imports a `name:pskHex` channel code from the PSK field
+  ///
+  /// In en, this message translates to:
+  /// **'Paste from channel code'**
+  String get meshcoreChannelEditImportFromCode;
+
+  /// Placeholder text for the channel-name input
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. #public, #squad'**
+  String get meshcoreChannelEditNameHint;
+
+  /// Label for the channel-name input
+  ///
+  /// In en, this message translates to:
+  /// **'Channel name'**
+  String get meshcoreChannelEditNameLabel;
+
+  /// Form validation error when the channel-name field is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Name is required'**
+  String get meshcoreChannelEditNameRequired;
+
+  /// Section header above the channel-name field
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get meshcoreChannelEditNameSection;
+
+  /// Form validation error when the channel-name exceeds the 32-byte firmware limit
+  ///
+  /// In en, this message translates to:
+  /// **'Name must be 32 bytes or fewer'**
+  String get meshcoreChannelEditNameTooLong;
+
+  /// Title of the bottom-sheet slot picker opened from the slot tile
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a slot'**
+  String get meshcoreChannelEditPickSlotTitle;
+
+  /// Form validation error when the PSK field contains non-hex characters
+  ///
+  /// In en, this message translates to:
+  /// **'PSK must be hexadecimal (0-9, a-f)'**
+  String get meshcoreChannelEditPskBadHex;
+
+  /// Form validation error when the PSK field isn't exactly 32 hex chars
+  ///
+  /// In en, this message translates to:
+  /// **'PSK must be 32 hex characters (16 bytes)'**
+  String get meshcoreChannelEditPskBadLength;
+
+  /// Helper text under the PSK input explaining the accepted formats
+  ///
+  /// In en, this message translates to:
+  /// **'32 hex characters. You can also paste a full channel code (name:hex) and tap the import button below.'**
+  String get meshcoreChannelEditPskHelper;
+
+  /// Placeholder text for the PSK input
+  ///
+  /// In en, this message translates to:
+  /// **'32 hex chars or name:pskHex code'**
+  String get meshcoreChannelEditPskHint;
+
+  /// Label for the PSK input
+  ///
+  /// In en, this message translates to:
+  /// **'Pre-shared key'**
+  String get meshcoreChannelEditPskLabel;
+
+  /// Form validation error when the PSK field is empty
+  ///
+  /// In en, this message translates to:
+  /// **'PSK is required'**
+  String get meshcoreChannelEditPskRequired;
+
+  /// Section header above the PSK input
+  ///
+  /// In en, this message translates to:
+  /// **'Pre-shared key'**
+  String get meshcoreChannelEditPskSection;
+
+  /// Primary submit button label on the channel edit sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Save channel'**
+  String get meshcoreChannelEditSave;
+
+  /// Error snackbar when the radio rejects the channel write or the call times out
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save channel. Check the slot index and PSK and try again.'**
+  String get meshcoreChannelEditSaveFailed;
+
+  /// Snackbar confirming an existing channel slot was edited
+  ///
+  /// In en, this message translates to:
+  /// **'Channel \"{name}\" saved'**
+  String meshcoreChannelEditSavedSuccess(String name);
+
+  /// Submit-button label while the wire write is in flight
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get meshcoreChannelEditSaving;
+
+  /// Label of the slot-picker tile
+  ///
+  /// In en, this message translates to:
+  /// **'Channel slot'**
+  String get meshcoreChannelEditSlotLabel;
+
+  /// Inline tag on slots that already hold a channel
+  ///
+  /// In en, this message translates to:
+  /// **'in use'**
+  String get meshcoreChannelEditSlotOccupied;
+
+  /// Section header above the slot picker
+  ///
+  /// In en, this message translates to:
+  /// **'Slot'**
+  String get meshcoreChannelEditSlotSection;
+
+  /// Subtitle on the slot tile / row in the slot picker
+  ///
+  /// In en, this message translates to:
+  /// **'Slot {index}'**
+  String meshcoreChannelEditSlotSubtitle(int index);
+
+  /// Sheet title when adding a new channel slot
+  ///
+  /// In en, this message translates to:
+  /// **'Add channel'**
+  String get meshcoreChannelEditTitleAdd;
+
+  /// Sheet title when editing an existing channel slot
+  ///
+  /// In en, this message translates to:
+  /// **'Edit channel'**
+  String get meshcoreChannelEditTitleEdit;
+
   /// Long-press menu action: copy the message text to the clipboard
   ///
   /// In en, this message translates to:

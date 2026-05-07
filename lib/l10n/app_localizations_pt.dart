@@ -7654,6 +7654,101 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreChannelsTitle => 'Canais';
 
   @override
+  String meshcoreChannelEditAddedSuccess(String name) {
+    return 'Canal \"$name\" adicionado';
+  }
+
+  @override
+  String get meshcoreChannelEditCodeImportFailed =>
+      'Não foi possível interpretar o código do canal';
+
+  @override
+  String get meshcoreChannelEditHint =>
+      'Os canais ficam armazenados no rádio. Cada slot guarda um nome e uma chave pré-compartilhada de 128 bits.';
+
+  @override
+  String get meshcoreChannelEditImportFromCode => 'Colar do código do canal';
+
+  @override
+  String get meshcoreChannelEditNameHint => 'ex.: #public, #squad';
+
+  @override
+  String get meshcoreChannelEditNameLabel => 'Nome do canal';
+
+  @override
+  String get meshcoreChannelEditNameRequired => 'O nome é obrigatório';
+
+  @override
+  String get meshcoreChannelEditNameSection => 'Nome';
+
+  @override
+  String get meshcoreChannelEditNameTooLong =>
+      'O nome deve ter 32 bytes ou menos';
+
+  @override
+  String get meshcoreChannelEditPickSlotTitle => 'Escolha um slot';
+
+  @override
+  String get meshcoreChannelEditPskBadHex =>
+      'A PSK deve ser hexadecimal (0-9, a-f)';
+
+  @override
+  String get meshcoreChannelEditPskBadLength =>
+      'A PSK deve ter 32 caracteres hexadecimais (16 bytes)';
+
+  @override
+  String get meshcoreChannelEditPskHelper =>
+      '32 caracteres hexadecimais. Você também pode colar um código completo de canal (nome:hex) e tocar no botão de importação abaixo.';
+
+  @override
+  String get meshcoreChannelEditPskHint =>
+      '32 caracteres hex ou código nome:pskHex';
+
+  @override
+  String get meshcoreChannelEditPskLabel => 'Chave pré-compartilhada';
+
+  @override
+  String get meshcoreChannelEditPskRequired => 'A PSK é obrigatória';
+
+  @override
+  String get meshcoreChannelEditPskSection => 'Chave pré-compartilhada';
+
+  @override
+  String get meshcoreChannelEditSave => 'Salvar canal';
+
+  @override
+  String get meshcoreChannelEditSaveFailed =>
+      'Não foi possível salvar o canal. Verifique o slot e a PSK e tente novamente.';
+
+  @override
+  String meshcoreChannelEditSavedSuccess(String name) {
+    return 'Canal \"$name\" salvo';
+  }
+
+  @override
+  String get meshcoreChannelEditSaving => 'Salvando…';
+
+  @override
+  String get meshcoreChannelEditSlotLabel => 'Slot do canal';
+
+  @override
+  String get meshcoreChannelEditSlotOccupied => 'em uso';
+
+  @override
+  String get meshcoreChannelEditSlotSection => 'Slot';
+
+  @override
+  String meshcoreChannelEditSlotSubtitle(int index) {
+    return 'Slot $index';
+  }
+
+  @override
+  String get meshcoreChannelEditTitleAdd => 'Adicionar canal';
+
+  @override
+  String get meshcoreChannelEditTitleEdit => 'Editar canal';
+
+  @override
   String get meshcoreChatActionCopy => 'Copiar';
 
   @override
