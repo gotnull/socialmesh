@@ -7671,6 +7671,49 @@ class AppLocalizationsPt extends AppLocalizations {
       'Divide um código nome:pskHex do campo PSK nos dois campos acima';
 
   @override
+  String get meshcoreChannelEditRandomPskTooltip => 'Gerar chave aleatória';
+
+  @override
+  String get meshcoreChannelEditRandomPskGenerated => 'Chave aleatória gerada';
+
+  @override
+  String get meshcoreChannelEditDeriveFromPassphrase =>
+      'Gerar a partir de frase-senha';
+
+  @override
+  String get meshcoreChannelEditDeriveFromPassphraseSubtitle =>
+      'Cria uma chave de canal repetível de 128 bits a partir de uma frase-senha';
+
+  @override
+  String get meshcoreChannelEditPassphraseSheetTitle =>
+      'Gerar a partir de frase-senha';
+
+  @override
+  String get meshcoreChannelEditPassphraseSheetHint =>
+      'Digite a mesma frase-senha em todos os dispositivos que devem entrar neste canal. A mesma frase-senha sempre produz a mesma chave.';
+
+  @override
+  String get meshcoreChannelEditPassphraseLabel => 'Frase-senha';
+
+  @override
+  String get meshcoreChannelEditPassphraseHint =>
+      'ex. laranja-bicicleta-trovão';
+
+  @override
+  String get meshcoreChannelEditPassphraseHelper =>
+      'Sua frase-senha nunca é armazenada ou enviada. Apenas a chave derivada é gravada no rádio.';
+
+  @override
+  String get meshcoreChannelEditPassphraseRequired => 'Digite uma frase-senha';
+
+  @override
+  String get meshcoreChannelEditPassphraseGenerate => 'Gerar chave';
+
+  @override
+  String get meshcoreChannelEditPassphrasePskGenerated =>
+      'Chave gerada a partir da frase-senha';
+
+  @override
   String get meshcoreChannelEditNameHint => 'ex.: #public, #squad';
 
   @override

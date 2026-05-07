@@ -13519,6 +13519,78 @@ abstract class AppLocalizations {
   /// **'Splits a name:pskHex code from the PSK field into the two inputs above'**
   String get meshcoreChannelEditImportFromCodeSubtitle;
 
+  /// D34d — accessibility tooltip for the dice button in the PSK input that fills the field with a random 16-byte (128-bit) PSK
+  ///
+  /// In en, this message translates to:
+  /// **'Generate random key'**
+  String get meshcoreChannelEditRandomPskTooltip;
+
+  /// D34d — short snackbar shown after the dice button generates a random PSK
+  ///
+  /// In en, this message translates to:
+  /// **'Random key generated'**
+  String get meshcoreChannelEditRandomPskGenerated;
+
+  /// D34d — title of the action tile that opens the passphrase-to-PSK derivation sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Generate from passphrase'**
+  String get meshcoreChannelEditDeriveFromPassphrase;
+
+  /// D34d — subtitle on the passphrase-to-PSK action tile explaining the deterministic derivation
+  ///
+  /// In en, this message translates to:
+  /// **'Creates a repeatable 128-bit channel key from a passphrase'**
+  String get meshcoreChannelEditDeriveFromPassphraseSubtitle;
+
+  /// D34d — header of the passphrase-to-PSK bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Generate from passphrase'**
+  String get meshcoreChannelEditPassphraseSheetTitle;
+
+  /// D34d — sub-header explainer above the passphrase input, calling out the deterministic property
+  ///
+  /// In en, this message translates to:
+  /// **'Type the same passphrase on every device that should join this channel. The same passphrase always produces the same key.'**
+  String get meshcoreChannelEditPassphraseSheetHint;
+
+  /// D34d — label of the passphrase TextField
+  ///
+  /// In en, this message translates to:
+  /// **'Passphrase'**
+  String get meshcoreChannelEditPassphraseLabel;
+
+  /// D34d — placeholder text for the passphrase TextField
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. orange-bicycle-thunder'**
+  String get meshcoreChannelEditPassphraseHint;
+
+  /// D34d — privacy reassurance shown beneath the passphrase TextField
+  ///
+  /// In en, this message translates to:
+  /// **'Your passphrase is never stored or sent anywhere. Only the derived key is written to the radio.'**
+  String get meshcoreChannelEditPassphraseHelper;
+
+  /// D34d — validation error when the user tries to generate a PSK with an empty or whitespace-only passphrase
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a passphrase'**
+  String get meshcoreChannelEditPassphraseRequired;
+
+  /// D34d — primary button on the passphrase sheet that performs the HMAC-SHA256 derivation and returns the 16-byte PSK
+  ///
+  /// In en, this message translates to:
+  /// **'Generate key'**
+  String get meshcoreChannelEditPassphraseGenerate;
+
+  /// D34d — short snackbar shown after the passphrase sheet successfully derives and fills the PSK field
+  ///
+  /// In en, this message translates to:
+  /// **'Key generated from passphrase'**
+  String get meshcoreChannelEditPassphrasePskGenerated;
+
   /// Placeholder text for the channel-name input
   ///
   /// In en, this message translates to:
