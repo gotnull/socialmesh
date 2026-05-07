@@ -52,10 +52,13 @@ void main() {
     await _settle(tester);
 
     // Each section is rendered via the canonical SettingsSectionHeader.
-    expect(find.byType(SettingsSectionHeader), findsNWidgets(4));
+    // D29 removed the standalone Debug section (Protocol Capture moved
+    // to Tools' Frame Log; the dedup pass landed alongside the rest of
+    // D29). Three section headers remain: Node Settings / Actions /
+    // About.
+    expect(find.byType(SettingsSectionHeader), findsNWidgets(3));
     expect(find.text(_l10n.meshcoreNodeSettings), findsOneWidget);
     expect(find.text(_l10n.meshcoreActions), findsOneWidget);
-    expect(find.text(_l10n.meshcoreDebug), findsOneWidget);
     expect(find.text(_l10n.meshcoreAbout), findsOneWidget);
   });
 
@@ -120,7 +123,10 @@ void main() {
       // Opacity + IgnorePointer so the affordance is discoverable). The
       // important thing is no exceptions were thrown reaching this point:
       // a regression in the disabled wrapper would surface a render error.
-      expect(find.text(_l10n.meshcoreSendAdvertisement), findsOneWidget);
+      // D29 dropped the "Send Advertisement" action tile from this
+      // screen — the same affordance lives on the Tools tab now, so
+      // the settings list keeps the irreversible-radio-state actions
+      // (Sync Time, Reboot Device) plus the editor entries.
       expect(find.text(_l10n.meshcoreSyncTime), findsOneWidget);
       expect(find.text(_l10n.meshcoreRebootDevice), findsOneWidget);
 

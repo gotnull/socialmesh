@@ -260,7 +260,7 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
         actionLabel: context.l10n.meshcoreCreateChannelButton,
         actionIcon: Icons.add_rounded,
         onAction: _showCreateChannelDialog,
-        accentColor: AccentColors.purple,
+        accentColor: context.accentColor,
       ),
     );
   }
@@ -612,10 +612,10 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
       leading: Container(
         padding: const EdgeInsets.all(AppTheme.spacing10),
         decoration: BoxDecoration(
-          color: AccentColors.purple.withValues(alpha: 0.15),
+          color: context.accentColor.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(AppTheme.radius12),
         ),
-        child: Icon(icon, color: AccentColors.purple),
+        child: Icon(icon, color: context.accentColor),
       ),
       title: Text(title, style: TextStyle(color: context.textPrimary)),
       subtitle: Text(subtitle, style: TextStyle(color: context.textSecondary)),
@@ -652,7 +652,7 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                 labelText: l10n.meshcoreChannelNameLabel,
                 labelStyle: TextStyle(color: context.textSecondary),
                 prefixText: '#',
-                prefixStyle: TextStyle(color: AccentColors.purple),
+                prefixStyle: TextStyle(color: context.accentColor),
                 hintText: l10n.meshcoreChannelNameHintGeneral,
                 hintStyle: TextStyle(color: SemanticColors.muted),
                 filled: true,
@@ -694,7 +694,6 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                   child: PrimaryGradientButton(
                     label: context.l10n.meshcoreJoin,
                     icon: Icons.login_rounded,
-                    accentColor: AccentColors.purple,
                     onPressed: () {
                       final text = controller.text.trim();
                       if (text.isEmpty) {
@@ -1026,7 +1025,7 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
       actions: [
         BottomSheetAction(
           icon: Icons.chat_rounded,
-          iconColor: AccentColors.purple,
+          iconColor: context.accentColor,
           label: context.l10n.meshcoreOpenChannel,
           onTap: () {
             Navigator.of(context).push(

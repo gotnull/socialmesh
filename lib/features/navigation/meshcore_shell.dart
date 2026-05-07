@@ -548,7 +548,7 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
                   _MeshCoreDrawerMenuTile(
                     icon: Icons.add_rounded,
                     label: context.l10n.meshcoreShellDrawerAddChannel,
-                    iconColor: AccentColors.purple,
+                    iconColor: context.accentColor,
                     onTap: () {
                       ref.haptics.tabChange();
                       Navigator.pop(context);

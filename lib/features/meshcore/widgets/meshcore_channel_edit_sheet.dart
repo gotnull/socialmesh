@@ -220,191 +220,200 @@ class _MeshCoreChannelEditSheetState
     // canonical pattern across Meshtastic screens is `context.accentColor`.
     final accent = context.accentColor;
 
-    return Form(
-      key: _formKey,
-      child: ListView(
-        controller: widget.scrollController,
-        padding: EdgeInsets.zero,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppTheme.spacing16,
-              AppTheme.spacing8,
-              AppTheme.spacing16,
-              AppTheme.spacing4,
-            ),
-            child: Text(
-              _isEdit
-                  ? l10n.meshcoreChannelEditTitleEdit
-                  : l10n.meshcoreChannelEditTitleAdd,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: context.textPrimary,
+    // D31c: shift the body's background from the sheet shell's
+    // `context.card` to `context.background` so nested SettingsTile /
+    // FieldGroupCard surfaces (also `context.card`) pop with the same
+    // contrast they have on full-screen settings. Drag-pill chrome
+    // above the builder stays on `context.card`. No tile borders are
+    // added (CLAUDE.md bans `Border.all` on canonical primitives).
+    return ColoredBox(
+      color: context.background,
+      child: Form(
+        key: _formKey,
+        child: ListView(
+          controller: widget.scrollController,
+          padding: EdgeInsets.zero,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppTheme.spacing16,
+                AppTheme.spacing8,
+                AppTheme.spacing16,
+                AppTheme.spacing4,
+              ),
+              child: Text(
+                _isEdit
+                    ? l10n.meshcoreChannelEditTitleEdit
+                    : l10n.meshcoreChannelEditTitleAdd,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: context.textPrimary,
+                ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppTheme.spacing16,
-              0,
-              AppTheme.spacing16,
-              AppTheme.spacing16,
-            ),
-            child: Text(
-              l10n.meshcoreChannelEditHint,
-              style: TextStyle(fontSize: 13, color: context.textTertiary),
-            ),
-          ),
-
-          SettingsSectionHeader(title: l10n.meshcoreChannelEditSlotSection),
-          SettingsTile(
-            icon: Icons.numbers_rounded,
-            iconColor: accent,
-            title: l10n.meshcoreChannelEditSlotLabel,
-            subtitle: l10n.meshcoreChannelEditSlotSubtitle(_selectedSlot),
-            trailing: _isEdit
-                ? null
-                : Icon(Icons.chevron_right, color: context.textTertiary),
-            onTap: (_isEdit || _saving) ? null : () => _openSlotPicker(l10n),
-          ),
-
-          SettingsSectionHeader(title: l10n.meshcoreChannelEditNameSection),
-          FieldGroupCard(
-            child: TextFormField(
-              controller: _nameController,
-              maxLength: 32,
-              autocorrect: false,
-              textInputAction: TextInputAction.next,
-              onTapOutside: (_) =>
-                  FocusManager.instance.primaryFocus?.unfocus(),
-              style: TextStyle(color: context.textPrimary),
-              validator: (v) => _validateName(v, l10n),
-              decoration: InputDecoration(
-                labelText: l10n.meshcoreChannelEditNameLabel,
-                labelStyle: TextStyle(color: context.textSecondary),
-                hintText: l10n.meshcoreChannelEditNameHint,
-                hintStyle: TextStyle(color: SemanticColors.muted),
-                filled: true,
-                fillColor: context.background,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radius8),
-                  borderSide: BorderSide(color: context.border),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radius8),
-                  borderSide: BorderSide(color: context.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radius8),
-                  borderSide: BorderSide(color: accent),
-                ),
-                prefixIcon: Icon(
-                  Icons.tag_rounded,
-                  color: context.textSecondary,
-                ),
-                counterText: '',
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppTheme.spacing16,
+                0,
+                AppTheme.spacing16,
+                AppTheme.spacing16,
+              ),
+              child: Text(
+                l10n.meshcoreChannelEditHint,
+                style: TextStyle(fontSize: 13, color: context.textTertiary),
               ),
             ),
-          ),
 
-          SettingsSectionHeader(title: l10n.meshcoreChannelEditPskSection),
-          FieldGroupCard(
-            child: TextFormField(
-              controller: _pskController,
-              maxLength: 200,
-              autocorrect: false,
-              enableSuggestions: false,
-              textInputAction: TextInputAction.done,
-              onTapOutside: (_) =>
-                  FocusManager.instance.primaryFocus?.unfocus(),
-              style: TextStyle(
-                color: context.textPrimary,
-                fontFamily: AppTheme.fontFamily,
-              ),
-              // PSK is treated as sensitive and the firmware never
-              // surfaces it back in plaintext logs (D29 redaction).
-              // We don't auto-mask the field because the user
-              // explicitly pasted it and needs to verify they
-              // typed/pasted the right value.
-              validator: (v) => _validatePsk(v, l10n),
-              decoration: InputDecoration(
-                labelText: l10n.meshcoreChannelEditPskLabel,
-                labelStyle: TextStyle(color: context.textSecondary),
-                hintText: l10n.meshcoreChannelEditPskHint,
-                hintStyle: TextStyle(color: SemanticColors.muted),
-                helperText: l10n.meshcoreChannelEditPskHelper,
-                helperStyle: TextStyle(
-                  color: context.textTertiary,
-                  fontSize: 12,
-                ),
-                helperMaxLines: 3,
-                filled: true,
-                fillColor: context.background,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radius8),
-                  borderSide: BorderSide(color: context.border),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radius8),
-                  borderSide: BorderSide(color: context.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radius8),
-                  borderSide: BorderSide(color: accent),
-                ),
-                prefixIcon: Icon(
-                  Icons.vpn_key_rounded,
-                  color: context.textSecondary,
-                ),
-                counterText: '',
-              ),
+            SettingsSectionHeader(title: l10n.meshcoreChannelEditSlotSection),
+            SettingsTile(
+              icon: Icons.numbers_rounded,
+              iconColor: accent,
+              title: l10n.meshcoreChannelEditSlotLabel,
+              subtitle: l10n.meshcoreChannelEditSlotSubtitle(_selectedSlot),
+              trailing: _isEdit
+                  ? null
+                  : Icon(Icons.chevron_right, color: context.textTertiary),
+              onTap: (_isEdit || _saving) ? null : () => _openSlotPicker(l10n),
             ),
-          ),
-          // Action affordance for the paste-from-code shortcut. Lives
-          // OUTSIDE the FieldGroupCard as its own SettingsTile so it
-          // matches the canonical inner-settings rhythm (action rows
-          // = tiles, not bordered buttons inside cards). The tile is
-          // disabled while the wire write is in flight.
-          SettingsTile(
-            icon: Icons.content_paste_go_rounded,
-            iconColor: accent,
-            title: l10n.meshcoreChannelEditImportFromCode,
-            subtitle: l10n.meshcoreChannelEditImportFromCodeSubtitle,
-            onTap: _saving ? null : _tryImportChannelCode,
-          ),
 
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppTheme.spacing16,
-              AppTheme.spacing24,
-              AppTheme.spacing16,
-              AppTheme.spacing16,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _saving ? null : () => Navigator.pop(context),
-                    child: Text(l10n.meshcoreCancel),
+            SettingsSectionHeader(title: l10n.meshcoreChannelEditNameSection),
+            FieldGroupCard(
+              child: TextFormField(
+                controller: _nameController,
+                maxLength: 32,
+                autocorrect: false,
+                textInputAction: TextInputAction.next,
+                onTapOutside: (_) =>
+                    FocusManager.instance.primaryFocus?.unfocus(),
+                style: TextStyle(color: context.textPrimary),
+                validator: (v) => _validateName(v, l10n),
+                decoration: InputDecoration(
+                  labelText: l10n.meshcoreChannelEditNameLabel,
+                  labelStyle: TextStyle(color: context.textSecondary),
+                  hintText: l10n.meshcoreChannelEditNameHint,
+                  hintStyle: TextStyle(color: SemanticColors.muted),
+                  filled: true,
+                  fillColor: context.background,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
+                    borderSide: BorderSide(color: context.border),
                   ),
-                ),
-                const SizedBox(width: AppTheme.spacing12),
-                Expanded(
-                  child: PrimaryGradientButton(
-                    label: _saving
-                        ? l10n.meshcoreChannelEditSaving
-                        : l10n.meshcoreChannelEditSave,
-                    icon: Icons.check_rounded,
-                    accentColor: accent,
-                    onPressed: _saving ? null : _save,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
+                    borderSide: BorderSide(color: context.border),
                   ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
+                    borderSide: BorderSide(color: accent),
+                  ),
+                  prefixIcon: Icon(
+                    Icons.tag_rounded,
+                    color: context.textSecondary,
+                  ),
+                  counterText: '',
                 ),
-              ],
+              ),
             ),
-          ),
-          SizedBox(height: AppTheme.spacing16),
-        ],
+
+            SettingsSectionHeader(title: l10n.meshcoreChannelEditPskSection),
+            FieldGroupCard(
+              child: TextFormField(
+                controller: _pskController,
+                maxLength: 200,
+                autocorrect: false,
+                enableSuggestions: false,
+                textInputAction: TextInputAction.done,
+                onTapOutside: (_) =>
+                    FocusManager.instance.primaryFocus?.unfocus(),
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontFamily: AppTheme.fontFamily,
+                ),
+                // PSK is treated as sensitive and the firmware never
+                // surfaces it back in plaintext logs (D29 redaction).
+                // We don't auto-mask the field because the user
+                // explicitly pasted it and needs to verify they
+                // typed/pasted the right value.
+                validator: (v) => _validatePsk(v, l10n),
+                decoration: InputDecoration(
+                  labelText: l10n.meshcoreChannelEditPskLabel,
+                  labelStyle: TextStyle(color: context.textSecondary),
+                  hintText: l10n.meshcoreChannelEditPskHint,
+                  hintStyle: TextStyle(color: SemanticColors.muted),
+                  helperText: l10n.meshcoreChannelEditPskHelper,
+                  helperStyle: TextStyle(
+                    color: context.textTertiary,
+                    fontSize: 12,
+                  ),
+                  helperMaxLines: 3,
+                  filled: true,
+                  fillColor: context.background,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
+                    borderSide: BorderSide(color: context.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
+                    borderSide: BorderSide(color: context.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
+                    borderSide: BorderSide(color: accent),
+                  ),
+                  prefixIcon: Icon(
+                    Icons.vpn_key_rounded,
+                    color: context.textSecondary,
+                  ),
+                  counterText: '',
+                ),
+              ),
+            ),
+            // Action affordance for the paste-from-code shortcut. Lives
+            // OUTSIDE the FieldGroupCard as its own SettingsTile so it
+            // matches the canonical inner-settings rhythm (action rows
+            // = tiles, not bordered buttons inside cards). The tile is
+            // disabled while the wire write is in flight.
+            SettingsTile(
+              icon: Icons.content_paste_go_rounded,
+              iconColor: accent,
+              title: l10n.meshcoreChannelEditImportFromCode,
+              subtitle: l10n.meshcoreChannelEditImportFromCodeSubtitle,
+              onTap: _saving ? null : _tryImportChannelCode,
+            ),
+
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppTheme.spacing16,
+                AppTheme.spacing24,
+                AppTheme.spacing16,
+                AppTheme.spacing16,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _saving ? null : () => Navigator.pop(context),
+                      child: Text(l10n.meshcoreCancel),
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing12),
+                  Expanded(
+                    child: PrimaryGradientButton(
+                      label: _saving
+                          ? l10n.meshcoreChannelEditSaving
+                          : l10n.meshcoreChannelEditSave,
+                      icon: Icons.check_rounded,
+                      accentColor: accent,
+                      onPressed: _saving ? null : _save,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: AppTheme.spacing16),
+          ],
+        ),
       ),
     );
   }

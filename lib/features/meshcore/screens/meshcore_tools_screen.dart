@@ -133,7 +133,7 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
             // hop list with per-hop SNR after the firmware push arrives.
             SettingsTile(
               icon: Icons.route_rounded,
-              iconColor: AccentColors.purple,
+              iconColor: context.accentColor,
               title: context.l10n.meshcoreTracePath,
               subtitle: context.l10n.meshcoreTracePacketRoutes,
               trailing: _chevron(context),
@@ -905,59 +905,66 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
         .where((c) => c.isChat || c.isRepeater)
         .toList(growable: false);
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppTheme.spacing16,
-            AppTheme.spacing12,
-            AppTheme.spacing16,
-            AppTheme.spacing8,
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.route_rounded, color: AccentColors.purple, size: 22),
-              const SizedBox(width: AppTheme.spacing8),
-              Expanded(
-                child: Text(
-                  l.meshcoreTracePathTitle,
-                  style: TextStyle(
-                    color: context.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: AppTheme.fontFamily,
+    // D31c: shift the body's background to `context.background` so
+    // the unselected contact rows (which use `context.card`) pop
+    // against the page-like surface, with the same rhythm as
+    // full-screen settings.
+    return ColoredBox(
+      color: context.background,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing16,
+              AppTheme.spacing12,
+              AppTheme.spacing16,
+              AppTheme.spacing8,
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.route_rounded, color: context.accentColor, size: 22),
+                const SizedBox(width: AppTheme.spacing8),
+                Expanded(
+                  child: Text(
+                    l.meshcoreTracePathTitle,
+                    style: TextStyle(
+                      color: context.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: AppTheme.fontFamily,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        const Divider(height: 1),
-        Expanded(
-          child: ListView(
-            controller: widget.scrollController,
-            padding: const EdgeInsets.all(AppTheme.spacing16),
-            children: [
-              if (_result != null)
-                _buildResult(context, _result!)
-              else if (_running != null)
-                _buildRunning(context, _running!)
-              else if (_failed)
-                StatusBanner.error(
-                  title: l.meshcoreTracePathFailed,
-                  icon: Icons.error_outline_rounded,
-                )
-              else if (_timedOut)
-                StatusBanner.warning(
-                  title: l.meshcoreTracePathTimeout,
-                  icon: Icons.hourglass_empty_rounded,
-                )
-              else
-                _buildPicker(context, eligible),
-            ],
+          const Divider(height: 1),
+          Expanded(
+            child: ListView(
+              controller: widget.scrollController,
+              padding: const EdgeInsets.all(AppTheme.spacing16),
+              children: [
+                if (_result != null)
+                  _buildResult(context, _result!)
+                else if (_running != null)
+                  _buildRunning(context, _running!)
+                else if (_failed)
+                  StatusBanner.error(
+                    title: l.meshcoreTracePathFailed,
+                    icon: Icons.error_outline_rounded,
+                  )
+                else if (_timedOut)
+                  StatusBanner.warning(
+                    title: l.meshcoreTracePathTimeout,
+                    icon: Icons.hourglass_empty_rounded,
+                  )
+                else
+                  _buildPicker(context, eligible),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -980,7 +987,7 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
             margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
             decoration: BoxDecoration(
               color: identical(_selected, c)
-                  ? AccentColors.purple.withValues(alpha: 0.15)
+                  ? context.accentColor.withValues(alpha: 0.15)
                   : context.card,
               borderRadius: BorderRadius.circular(AppTheme.radius12),
             ),
@@ -989,7 +996,7 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
               leading: Icon(
                 c.isRepeater ? Icons.cell_tower_rounded : Icons.person_rounded,
                 color: identical(_selected, c)
-                    ? AccentColors.purple
+                    ? context.accentColor
                     : context.textSecondary,
               ),
               title: Text(
@@ -1091,13 +1098,13 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
                   height: 28,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: AccentColors.purple.withValues(alpha: 0.2),
+                    color: context.accentColor.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(AppTheme.radius8),
                   ),
                   child: Text(
                     '${i + 1}',
                     style: TextStyle(
-                      color: AccentColors.purple,
+                      color: context.accentColor,
                       fontFamily: AppTheme.fontFamily,
                       fontWeight: FontWeight.w600,
                     ),

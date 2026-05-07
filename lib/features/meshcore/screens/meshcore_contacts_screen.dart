@@ -544,7 +544,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
         ),
         BottomSheetAction(
           icon: Icons.refresh_rounded,
-          iconColor: AccentColors.purple,
+          iconColor: context.accentColor,
           label: context.l10n.meshcoreResetPath,
           onTap: () {
             _resetContactPath(contact);
