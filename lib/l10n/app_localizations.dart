@@ -13387,12 +13387,6 @@ abstract class AppLocalizations {
   /// **'Channel \"{channelName}\" created'**
   String meshcoreChannelCreated(String channelName);
 
-  /// Hint text for private channel name input
-  ///
-  /// In en, this message translates to:
-  /// **'Channel name'**
-  String get meshcoreChannelNameHint;
-
   /// Hint text for hashtag channel name input in join dialog
   ///
   /// In en, this message translates to:
@@ -14263,6 +14257,18 @@ abstract class AppLocalizations {
   /// **'Create'**
   String get meshcoreCreate;
 
+  /// Helper text under the channel-name input on the simple Create channel dialog explaining the deterministic hashtag-derived PSK convention
+  ///
+  /// In en, this message translates to:
+  /// **'PSK is derived from the # name. Anyone who knows the name can join.'**
+  String get meshcoreCreateChannelHashtagHelper;
+
+  /// Hint redirecting users who need a private (paste-PSK) channel to the canonical edit sheet, replacing the unsafe predictable-PSK toggle that was removed in D31b
+  ///
+  /// In en, this message translates to:
+  /// **'For a private channel with your own 128-bit key, use \"Add channel\" instead.'**
+  String get meshcoreCreateChannelPrivateRedirect;
+
   /// Button label to create a channel
   ///
   /// In en, this message translates to:
@@ -15103,12 +15109,6 @@ abstract class AppLocalizations {
   /// **'Protocol Capture'**
   String get meshcoreProtocolCaptureDialogTitle;
 
-  /// Subtitle for public hashtag channel toggle
-  ///
-  /// In en, this message translates to:
-  /// **'PSK derived from name (discoverable)'**
-  String get meshcorePskDerivedFromName;
-
   /// Channel card type label for public channel
   ///
   /// In en, this message translates to:
@@ -15120,12 +15120,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Public Channel'**
   String get meshcorePublicChannel;
-
-  /// Toggle label for public hashtag channel option
-  ///
-  /// In en, this message translates to:
-  /// **'Public Hashtag Channel'**
-  String get meshcorePublicHashtagChannel;
 
   /// Success snackbar after copying public key
   ///
@@ -15180,12 +15174,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Radio Settings'**
   String get meshcoreRadioSettingsTool;
-
-  /// Subtitle for private channel toggle
-  ///
-  /// In en, this message translates to:
-  /// **'Random PSK (private)'**
-  String get meshcoreRandomPskPrivate;
 
   /// Confirm button label for rebooting device
   ///

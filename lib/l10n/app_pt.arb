@@ -18755,10 +18755,6 @@
       }
     }
   },
-  "meshcoreChannelNameHint": "Nome do canal",
-  "@meshcoreChannelNameHint": {
-    "description": "Hint text for private channel name input"
-  },
   "meshcoreChannelNameHintGeneral": "geral",
   "@meshcoreChannelNameHintGeneral": {
     "description": "Hint text for hashtag channel name input in join dialog"
@@ -19304,6 +19300,14 @@
     "description": "Action label to copy measurement summary"
   },
   "meshcoreCreate": "Criar",
+  "meshcoreCreateChannelHashtagHelper": "A PSK é derivada do nome com #. Qualquer pessoa que saiba o nome pode entrar.",
+  "@meshcoreCreateChannelHashtagHelper": {
+    "description": "Helper text under the channel-name input on the simple Create channel dialog explaining the deterministic hashtag-derived PSK convention"
+  },
+  "meshcoreCreateChannelPrivateRedirect": "Para um canal privado com sua própria chave de 128 bits, use \"Adicionar canal\".",
+  "@meshcoreCreateChannelPrivateRedirect": {
+    "description": "Hint redirecting users who need a private (paste-PSK) channel to the canonical edit sheet, replacing the unsafe predictable-PSK toggle that was removed in D31b"
+  },
   "@meshcoreCreate": {
     "description": "Create button label"
   },
@@ -19821,10 +19825,6 @@
   "@meshcoreProtocolCaptureDialogTitle": {
     "description": "Dialog title for protocol capture"
   },
-  "meshcorePskDerivedFromName": "PSK derivada do nome (descobrível)",
-  "@meshcorePskDerivedFromName": {
-    "description": "Subtitle for public hashtag channel toggle"
-  },
   "meshcorePublic": "Público",
   "@meshcorePublic": {
     "description": "Channel card type label for public channel"
@@ -19832,10 +19832,6 @@
   "meshcorePublicChannel": "Canal Público",
   "@meshcorePublicChannel": {
     "description": "Channel type label for public channels"
-  },
-  "meshcorePublicHashtagChannel": "Canal Hashtag Público",
-  "@meshcorePublicHashtagChannel": {
-    "description": "Toggle label for public hashtag channel option"
   },
   "meshcorePublicKeyCopied": "Chave pública copiada",
   "@meshcorePublicKeyCopied": {
@@ -19876,10 +19872,6 @@
   "meshcoreRadioSettingsTool": "Configurações de Rádio",
   "@meshcoreRadioSettingsTool": {
     "description": "Tool card title for radio settings"
-  },
-  "meshcoreRandomPskPrivate": "PSK aleatória (privado)",
-  "@meshcoreRandomPskPrivate": {
-    "description": "Subtitle for private channel toggle"
   },
   "meshcoreReboot": "Reiniciar",
   "@meshcoreReboot": {

@@ -400,150 +400,149 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
   }
 
   Future<void> _showCreateChannelDialog() async {
+    // D31b: this dialog now ONLY creates hashtag-derived public
+    // channels (deterministic SHA-256(`#name`)[:16] PSK). The pre-D31b
+    // "Private" toggle generated a predictable `[0, 1, ..., 15]`
+    // placeholder PSK — that's not a private channel, that's a
+    // public channel whose key is on every developer's machine. The
+    // toggle is gone; users who want a real private channel are
+    // routed to "Add channel" (the canonical edit sheet) where they
+    // must paste a real 128-bit PSK or import via channel code.
     final nameController = TextEditingController();
-    var isHashtag = true;
 
     await AppBottomSheet.show<void>(
       context: context,
-      child: StatefulBuilder(
-        builder: (ctx, setSheetState) => Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              context.l10n.meshcoreCreateChannelDialogTitle,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: context.textPrimary,
-              ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.l10n.meshcoreCreateChannelDialogTitle,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
             ),
-            const SizedBox(height: AppTheme.spacing16),
-            TextField(
-              controller: nameController,
-              autofocus: true,
-              maxLength: 32,
-              onTapOutside: (_) =>
-                  FocusManager.instance.primaryFocus?.unfocus(),
-              decoration: InputDecoration(
-                labelText: context.l10n.meshcoreChannelNameLabel,
-                labelStyle: TextStyle(color: context.textSecondary),
-                hintText: isHashtag
-                    ? context.l10n.meshcoreChannelNameHintHashtag
-                    : context.l10n.meshcoreChannelNameHint,
-                hintStyle: TextStyle(color: SemanticColors.muted),
-                prefixText: isHashtag ? '#' : null,
-                prefixStyle: TextStyle(color: AccentColors.purple),
-                filled: true,
-                fillColor: context.background,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radius8),
-                  borderSide: BorderSide(color: context.border),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radius8),
-                  borderSide: BorderSide(color: context.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radius8),
-                  borderSide: BorderSide(color: context.accentColor),
-                ),
-                counterText: '',
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          TextField(
+            controller: nameController,
+            autofocus: true,
+            maxLength: 32,
+            onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
+            decoration: InputDecoration(
+              labelText: context.l10n.meshcoreChannelNameLabel,
+              labelStyle: TextStyle(color: context.textSecondary),
+              hintText: context.l10n.meshcoreChannelNameHintHashtag,
+              hintStyle: TextStyle(color: SemanticColors.muted),
+              prefixText: '#',
+              prefixStyle: TextStyle(color: context.accentColor),
+              filled: true,
+              fillColor: context.background,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                borderSide: BorderSide(color: context.border),
               ),
-              style: TextStyle(color: context.textPrimary),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                borderSide: BorderSide(color: context.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                borderSide: BorderSide(color: context.accentColor),
+              ),
+              counterText: '',
             ),
-            const SizedBox(height: AppTheme.spacing16),
-            ListTile(
-              title: Text(
-                context.l10n.meshcorePublicHashtagChannel,
-                style: TextStyle(color: context.textPrimary, fontSize: 14),
-              ),
-              subtitle: Text(
-                isHashtag
-                    ? context.l10n.meshcorePskDerivedFromName
-                    : context.l10n.meshcoreRandomPskPrivate,
-                style: TextStyle(color: context.textTertiary, fontSize: 12),
-              ),
-              trailing: ThemedSwitch(
-                value: isHashtag,
-                onChanged: (v) => setSheetState(() => isHashtag = v),
-              ),
-              contentPadding: EdgeInsets.zero,
-            ),
-            const SizedBox(height: AppTheme.spacing24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(color: SemanticColors.divider),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      ),
+            style: TextStyle(color: context.textPrimary),
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          Text(
+            context.l10n.meshcoreCreateChannelHashtagHelper,
+            style: TextStyle(color: context.textTertiary, fontSize: 12),
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          Text(
+            context.l10n.meshcoreCreateChannelPrivateRedirect,
+            style: TextStyle(color: context.textTertiary, fontSize: 12),
+          ),
+          const SizedBox(height: AppTheme.spacing24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: BorderSide(color: SemanticColors.divider),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
-                    child: Text(context.l10n.meshcoreCancel),
                   ),
+                  child: Text(context.l10n.meshcoreCancel),
                 ),
-                const SizedBox(width: AppTheme.spacing12),
-                Expanded(
-                  child: PrimaryGradientButton(
-                    label: context.l10n.meshcoreCreate,
-                    icon: Icons.add_rounded,
-                    accentColor: AccentColors.purple,
-                    onPressed: () async {
-                      final name = nameController.text.trim();
-                      if (name.isEmpty) {
-                        showErrorSnackBar(
-                          ctx,
-                          context.l10n.meshcoreErrorEnterChannelName,
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: PrimaryGradientButton(
+                  label: context.l10n.meshcoreCreate,
+                  icon: Icons.add_rounded,
+                  // D31b: respect user theme pack instead of hardcoded
+                  // purple, matching the canonical edit sheet.
+                  onPressed: () async {
+                    final name = nameController.text.trim();
+                    if (name.isEmpty) {
+                      showErrorSnackBar(
+                        context,
+                        context.l10n.meshcoreErrorEnterChannelName,
+                      );
+                      return;
+                    }
+
+                    safeNavigatorPop();
+
+                    // Create channel with next available index.
+                    final channelsState = ref.read(meshCoreChannelsProvider);
+                    final existingIndices = channelsState.channels
+                        .map((c) => c.index)
+                        .toSet();
+                    var newIndex = 0;
+                    for (var i = 0; i < 8; i++) {
+                      if (!existingIndices.contains(i)) {
+                        newIndex = i;
+                        break;
+                      }
+                    }
+
+                    // D31b: hashtag-derive only. PSK is
+                    // SHA-256(`#name`)[:16] — deterministic by design,
+                    // shared across every client that knows the name,
+                    // never random and never the broken `[0..15]`
+                    // placeholder.
+                    final channel = MeshCoreChannel.publicChannel(
+                      newIndex,
+                      name,
+                    );
+
+                    await ref
+                        .read(meshCoreChannelsProvider.notifier)
+                        .addChannel(
+                          index: channel.index,
+                          name: channel.name,
+                          psk: channel.psk,
                         );
-                        return;
-                      }
 
-                      Navigator.pop(ctx);
-
-                      // Create channel with next available index
-                      final channelsState = ref.read(meshCoreChannelsProvider);
-                      final existingIndices = channelsState.channels
-                          .map((c) => c.index)
-                          .toSet();
-                      var newIndex = 0;
-                      for (var i = 0; i < 8; i++) {
-                        if (!existingIndices.contains(i)) {
-                          newIndex = i;
-                          break;
-                        }
-                      }
-
-                      final channel = isHashtag
-                          ? MeshCoreChannel.publicChannel(newIndex, name)
-                          : MeshCoreChannel(
-                              index: newIndex,
-                              name: name,
-                              psk: Uint8List.fromList(
-                                List.generate(16, (i) => i),
-                              ),
-                            );
-
-                      await ref
-                          .read(meshCoreChannelsProvider.notifier)
-                          .setChannel(channel);
-
-                      if (mounted) {
-                        showSuccessSnackBar(
-                          context,
-                          context.l10n.meshcoreChannelCreated(channel.name),
-                        );
-                      }
-                    },
-                  ),
+                    if (mounted) {
+                      showSuccessSnackBar(
+                        context,
+                        context.l10n.meshcoreChannelCreated(channel.name),
+                      );
+                    }
+                  },
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
     nameController.dispose();

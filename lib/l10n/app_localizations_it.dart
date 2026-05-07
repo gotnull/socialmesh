@@ -7610,9 +7610,6 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get meshcoreChannelNameHint => 'Nome canale';
-
-  @override
   String get meshcoreChannelNameHintGeneral => 'generale';
 
   @override
@@ -8117,6 +8114,14 @@ class AppLocalizationsIt extends AppLocalizations {
   String get meshcoreCreate => 'Crea';
 
   @override
+  String get meshcoreCreateChannelHashtagHelper =>
+      'La PSK è derivata dal nome con #. Chiunque conosca il nome può entrare.';
+
+  @override
+  String get meshcoreCreateChannelPrivateRedirect =>
+      'Per un canale privato con la tua chiave a 128 bit, usa \"Aggiungi canale\".';
+
+  @override
   String get meshcoreCreateChannelButton => 'Crea Canale';
 
   @override
@@ -8579,16 +8584,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get meshcoreProtocolCaptureDialogTitle => 'Cattura Protocollo';
 
   @override
-  String get meshcorePskDerivedFromName => 'PSK derivata dal nome (scopribile)';
-
-  @override
   String get meshcorePublic => 'Pubblico';
 
   @override
   String get meshcorePublicChannel => 'Canale Pubblico';
-
-  @override
-  String get meshcorePublicHashtagChannel => 'Canale Hashtag Pubblico';
 
   @override
   String get meshcorePublicKeyCopied => 'Chiave pubblica copiata';
@@ -8619,9 +8618,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get meshcoreRadioSettingsTool => 'Impostazioni Radio';
-
-  @override
-  String get meshcoreRandomPskPrivate => 'PSK casuale (privato)';
 
   @override
   String get meshcoreReboot => 'Riavvia';
