@@ -8060,6 +8060,90 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreContactTypeUnknown => 'Desconhecido';
 
   @override
+  String get meshcoreToolsDiscoveryTitle => 'Nós descobertos';
+
+  @override
+  String get meshcoreToolsDiscoverySubtitle =>
+      'Pares MeshCore ouvidos recentemente';
+
+  @override
+  String get meshcoreDiscoveryTitle => 'Nós descobertos';
+
+  @override
+  String get meshcoreDiscoveryClearAll => 'Limpar nós descobertos';
+
+  @override
+  String get meshcoreDiscoveryClearAllConfirm =>
+      'Limpar todos os nós ouvidos recentemente? Isto não afeta os contatos importados.';
+
+  @override
+  String get meshcoreDiscoveryEmptyTitlePrefix => 'Nenhum';
+
+  @override
+  String get meshcoreDiscoveryEmptyTitleKeyword => 'nó descoberto';
+
+  @override
+  String get meshcoreDiscoveryEmptyTitleSuffix => 'ainda';
+
+  @override
+  String get meshcoreDiscoveryTagline1 =>
+      'Anúncios MeshCore ouvidos recentemente aparecerão aqui.';
+
+  @override
+  String get meshcoreDiscoveryTagline2 =>
+      'Toque em um nó descoberto para visualizar ou importar.';
+
+  @override
+  String get meshcoreDiscoveryTagline3 =>
+      'A descoberta é apenas em memória e se reinicia ao reabrir o app.';
+
+  @override
+  String get meshcoreDiscoverySearchHint => 'Pesquisar nós ouvidos';
+
+  @override
+  String get meshcoreDiscoverySortRecent => 'Ordenar por recentes';
+
+  @override
+  String get meshcoreDiscoverySortAlpha => 'Ordenar A-Z';
+
+  @override
+  String get meshcoreDiscoveryAddContact => 'Adicionar contato';
+
+  @override
+  String get meshcoreDiscoveryCopyContactCode => 'Copiar código do contato';
+
+  @override
+  String get meshcoreDiscoveryDeleteEntry => 'Remover da lista';
+
+  @override
+  String get meshcoreDiscoveryNeedFullAdvert =>
+      'Aguardando um anúncio completo deste nó antes de poder importá-lo.';
+
+  @override
+  String meshcoreDiscoveryAddContactSuccess(String contactName) {
+    return '$contactName adicionado';
+  }
+
+  @override
+  String meshcoreDiscoveryAddContactFailed(String contactName) {
+    return 'Não foi possível adicionar $contactName';
+  }
+
+  @override
+  String meshcoreDiscoveryLastHeard(String timeAgo) {
+    return 'há $timeAgo';
+  }
+
+  @override
+  String get meshcoreDiscoveryJustNow => 'agora';
+
+  @override
+  String get meshcoreDiscoveryBadgeImported => 'Importado';
+
+  @override
+  String get meshcoreDiscoveryBadgeHeard => 'Ouvido';
+
+  @override
   String get meshcoreTracePathSavePathHelper =>
       'Os caminhos salvos podem ficar desatualizados conforme a mesh se reorganiza. Redefina o caminho para voltar ao automático.';
 
@@ -12074,10 +12158,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nodedexFilterRadioPreset => 'Radio Preset';
 
   @override
-  String get nodedexRadioPresetUnknown => 'Unknown';
+  String get nodedexRadioPresetUnknown => 'Desconhecido';
 
   @override
-  String get nodedexFrequencyOffset => 'Freq Offset';
+  String get nodedexFrequencyOffset => 'Offset Freq';
 
   @override
   String nodedexFrequencyOffsetValue(String offset) {

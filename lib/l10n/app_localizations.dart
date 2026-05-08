@@ -14191,6 +14191,150 @@ abstract class AppLocalizations {
   /// **'Unknown'**
   String get meshcoreContactTypeUnknown;
 
+  /// D34b-A1 - Tools tile that opens the recent-heard MeshCore peers screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Discovered Nodes'**
+  String get meshcoreToolsDiscoveryTitle;
+
+  /// D34b-A1 - subtitle on the Tools → Discovered Nodes tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently heard MeshCore peers'**
+  String get meshcoreToolsDiscoverySubtitle;
+
+  /// D34b-A1 - app-bar title on the discovery screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Discovered Nodes'**
+  String get meshcoreDiscoveryTitle;
+
+  /// D34b-A1 - destructive action label that empties the heard list.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear discovered nodes'**
+  String get meshcoreDiscoveryClearAll;
+
+  /// D34b-A1 - confirm message for Clear discovered nodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear every recently-heard node? This does not affect imported contacts.'**
+  String get meshcoreDiscoveryClearAllConfirm;
+
+  /// D34b-A1 - empty-state title prefix word before the gradient keyword.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get meshcoreDiscoveryEmptyTitlePrefix;
+
+  /// D34b-A1 - empty-state title gradient keyword.
+  ///
+  /// In en, this message translates to:
+  /// **'discovered'**
+  String get meshcoreDiscoveryEmptyTitleKeyword;
+
+  /// D34b-A1 - empty-state title suffix after the gradient keyword.
+  ///
+  /// In en, this message translates to:
+  /// **'nodes yet'**
+  String get meshcoreDiscoveryEmptyTitleSuffix;
+
+  /// D34b-A1 - empty-state cycling tagline 1.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently heard MeshCore adverts will appear here.'**
+  String get meshcoreDiscoveryTagline1;
+
+  /// D34b-A1 - empty-state cycling tagline 2.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a discovered node to view it or import it.'**
+  String get meshcoreDiscoveryTagline2;
+
+  /// D34b-A1 - empty-state cycling tagline 3.
+  ///
+  /// In en, this message translates to:
+  /// **'Discovery is in-memory only and resets on app restart.'**
+  String get meshcoreDiscoveryTagline3;
+
+  /// D34b-A1 - placeholder text in the discovery search field.
+  ///
+  /// In en, this message translates to:
+  /// **'Search heard nodes'**
+  String get meshcoreDiscoverySearchHint;
+
+  /// D34b-A1 - tooltip on the sort toggle when current mode is 'most recent first'.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by recent'**
+  String get meshcoreDiscoverySortRecent;
+
+  /// D34b-A1 - tooltip on the sort toggle when current mode is alphabetical.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort A-Z'**
+  String get meshcoreDiscoverySortAlpha;
+
+  /// D34b-A1 - long-press action that imports a heard node into the local contact list via CMD_ADD_UPDATE_CONTACT (0x09).
+  ///
+  /// In en, this message translates to:
+  /// **'Add contact'**
+  String get meshcoreDiscoveryAddContact;
+
+  /// D34b-A1 - long-press action that copies a name:pubkey share string to clipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy contact code'**
+  String get meshcoreDiscoveryCopyContactCode;
+
+  /// D34b-A1 - long-press action that removes one entry from the heard list (does NOT remove from local contacts).
+  ///
+  /// In en, this message translates to:
+  /// **'Delete from list'**
+  String get meshcoreDiscoveryDeleteEntry;
+
+  /// D34b-A1 - snackbar shown when the user taps a heard entry that only has a 0x80 re-heard ping (no name / type yet).
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for a full advert from this node before it can be imported.'**
+  String get meshcoreDiscoveryNeedFullAdvert;
+
+  /// D34b-A1 - success snackbar after a heard node is imported. {contactName} is the node's display name.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {contactName}'**
+  String meshcoreDiscoveryAddContactSuccess(String contactName);
+
+  /// D34b-A1 - failure snackbar after the import flow returns false. {contactName} is the node's display name.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not add {contactName}'**
+  String meshcoreDiscoveryAddContactFailed(String contactName);
+
+  /// D34b-A1 - relative-time label appended to a discovered node's metadata row. {timeAgo} is a short shape like '5m', '2h', or 'just now'.
+  ///
+  /// In en, this message translates to:
+  /// **'{timeAgo} ago'**
+  String meshcoreDiscoveryLastHeard(String timeAgo);
+
+  /// D34b-A1 - relative-time fallback for very recent adverts (<60s).
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get meshcoreDiscoveryJustNow;
+
+  /// D34b-A1 - badge shown next to a heard node that's already in the local contact list.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported'**
+  String get meshcoreDiscoveryBadgeImported;
+
+  /// D34b-A1 - badge shown next to a heard node that has NOT been imported into the local contact list.
+  ///
+  /// In en, this message translates to:
+  /// **'Heard'**
+  String get meshcoreDiscoveryBadgeHeard;
+
   /// D34c-A - small helper paragraph above the Save as Contact Path button on the trace result sheet, warning that saved paths can become stale.
   ///
   /// In en, this message translates to:

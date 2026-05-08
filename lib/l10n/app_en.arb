@@ -10813,6 +10813,111 @@
     "@meshcoreContactTypeUnknown": {
         "description": "D34c-A - localized fallback label for unknown / future advert types on the detail screen."
     },
+    "meshcoreToolsDiscoveryTitle": "Discovered Nodes",
+    "@meshcoreToolsDiscoveryTitle": {
+        "description": "D34b-A1 - Tools tile that opens the recent-heard MeshCore peers screen."
+    },
+    "meshcoreToolsDiscoverySubtitle": "Recently heard MeshCore peers",
+    "@meshcoreToolsDiscoverySubtitle": {
+        "description": "D34b-A1 - subtitle on the Tools → Discovered Nodes tile."
+    },
+    "meshcoreDiscoveryTitle": "Discovered Nodes",
+    "@meshcoreDiscoveryTitle": {
+        "description": "D34b-A1 - app-bar title on the discovery screen."
+    },
+    "meshcoreDiscoveryClearAll": "Clear discovered nodes",
+    "@meshcoreDiscoveryClearAll": {
+        "description": "D34b-A1 - destructive action label that empties the heard list."
+    },
+    "meshcoreDiscoveryClearAllConfirm": "Clear every recently-heard node? This does not affect imported contacts.",
+    "@meshcoreDiscoveryClearAllConfirm": {
+        "description": "D34b-A1 - confirm message for Clear discovered nodes."
+    },
+    "meshcoreDiscoveryEmptyTitlePrefix": "No",
+    "@meshcoreDiscoveryEmptyTitlePrefix": {
+        "description": "D34b-A1 - empty-state title prefix word before the gradient keyword."
+    },
+    "meshcoreDiscoveryEmptyTitleKeyword": "discovered",
+    "@meshcoreDiscoveryEmptyTitleKeyword": {
+        "description": "D34b-A1 - empty-state title gradient keyword."
+    },
+    "meshcoreDiscoveryEmptyTitleSuffix": "nodes yet",
+    "@meshcoreDiscoveryEmptyTitleSuffix": {
+        "description": "D34b-A1 - empty-state title suffix after the gradient keyword."
+    },
+    "meshcoreDiscoveryTagline1": "Recently heard MeshCore adverts will appear here.",
+    "@meshcoreDiscoveryTagline1": {
+        "description": "D34b-A1 - empty-state cycling tagline 1."
+    },
+    "meshcoreDiscoveryTagline2": "Tap a discovered node to view it or import it.",
+    "@meshcoreDiscoveryTagline2": {
+        "description": "D34b-A1 - empty-state cycling tagline 2."
+    },
+    "meshcoreDiscoveryTagline3": "Discovery is in-memory only and resets on app restart.",
+    "@meshcoreDiscoveryTagline3": {
+        "description": "D34b-A1 - empty-state cycling tagline 3."
+    },
+    "meshcoreDiscoverySearchHint": "Search heard nodes",
+    "@meshcoreDiscoverySearchHint": {
+        "description": "D34b-A1 - placeholder text in the discovery search field."
+    },
+    "meshcoreDiscoverySortRecent": "Sort by recent",
+    "@meshcoreDiscoverySortRecent": {
+        "description": "D34b-A1 - tooltip on the sort toggle when current mode is 'most recent first'."
+    },
+    "meshcoreDiscoverySortAlpha": "Sort A-Z",
+    "@meshcoreDiscoverySortAlpha": {
+        "description": "D34b-A1 - tooltip on the sort toggle when current mode is alphabetical."
+    },
+    "meshcoreDiscoveryAddContact": "Add contact",
+    "@meshcoreDiscoveryAddContact": {
+        "description": "D34b-A1 - long-press action that imports a heard node into the local contact list via CMD_ADD_UPDATE_CONTACT (0x09)."
+    },
+    "meshcoreDiscoveryCopyContactCode": "Copy contact code",
+    "@meshcoreDiscoveryCopyContactCode": {
+        "description": "D34b-A1 - long-press action that copies a name:pubkey share string to clipboard."
+    },
+    "meshcoreDiscoveryDeleteEntry": "Delete from list",
+    "@meshcoreDiscoveryDeleteEntry": {
+        "description": "D34b-A1 - long-press action that removes one entry from the heard list (does NOT remove from local contacts)."
+    },
+    "meshcoreDiscoveryNeedFullAdvert": "Waiting for a full advert from this node before it can be imported.",
+    "@meshcoreDiscoveryNeedFullAdvert": {
+        "description": "D34b-A1 - snackbar shown when the user taps a heard entry that only has a 0x80 re-heard ping (no name / type yet)."
+    },
+    "meshcoreDiscoveryAddContactSuccess": "Added {contactName}",
+    "@meshcoreDiscoveryAddContactSuccess": {
+        "description": "D34b-A1 - success snackbar after a heard node is imported. {contactName} is the node's display name.",
+        "placeholders": {
+            "contactName": {"type": "String"}
+        }
+    },
+    "meshcoreDiscoveryAddContactFailed": "Could not add {contactName}",
+    "@meshcoreDiscoveryAddContactFailed": {
+        "description": "D34b-A1 - failure snackbar after the import flow returns false. {contactName} is the node's display name.",
+        "placeholders": {
+            "contactName": {"type": "String"}
+        }
+    },
+    "meshcoreDiscoveryLastHeard": "{timeAgo} ago",
+    "@meshcoreDiscoveryLastHeard": {
+        "description": "D34b-A1 - relative-time label appended to a discovered node's metadata row. {timeAgo} is a short shape like '5m', '2h', or 'just now'.",
+        "placeholders": {
+            "timeAgo": {"type": "String"}
+        }
+    },
+    "meshcoreDiscoveryJustNow": "just now",
+    "@meshcoreDiscoveryJustNow": {
+        "description": "D34b-A1 - relative-time fallback for very recent adverts (<60s)."
+    },
+    "meshcoreDiscoveryBadgeImported": "Imported",
+    "@meshcoreDiscoveryBadgeImported": {
+        "description": "D34b-A1 - badge shown next to a heard node that's already in the local contact list."
+    },
+    "meshcoreDiscoveryBadgeHeard": "Heard",
+    "@meshcoreDiscoveryBadgeHeard": {
+        "description": "D34b-A1 - badge shown next to a heard node that has NOT been imported into the local contact list."
+    },
     "meshcoreTracePathSavePathHelper": "Saved paths can become stale as the mesh re-routes. Reset the path to return to auto.",
     "@meshcoreTracePathSavePathHelper": {
         "description": "D34c-A - small helper paragraph above the Save as Contact Path button on the trace result sheet, warning that saved paths can become stale."

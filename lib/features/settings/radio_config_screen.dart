@@ -18,6 +18,7 @@ import '../../providers/countdown_providers.dart';
 import '../../services/protocol/admin_target.dart';
 import '../../providers/help_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
+import '../../utils/number_format.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/config.pb.dart' as config_pb;
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
@@ -90,13 +91,16 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
 
   /// Commit the frequency override value when the field loses focus,
   /// matching meshtastic-ios behavior where formatting applies on commit.
+  /// Locale-aware parse so users on IT / DE / FR / RU / ES keyboards
+  /// who type a comma decimal separator (e.g. "869,075") are accepted.
   void _onFreqFocusChanged() {
     if (!_freqFocusNode.hasFocus) {
-      final text = _freqController.text.trim();
-      final parsed = double.tryParse(text);
+      final parsed = NumberFormatUtils.tryParseLocaleDouble(
+        _freqController.text,
+      );
       final value = parsed ?? 0.0;
       setState(() => _overrideFrequency = value);
-      // Normalize the displayed text on commit
+      // Normalize the displayed text on commit (always dot-separated).
       _freqController.text = value > 0 ? value.toStringAsFixed(3) : '';
     }
   }
@@ -187,8 +191,10 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
   Future<void> _saveConfig() async {
     // Commit any in-progress frequency override text before saving,
     // in case the user taps Save while the field still has focus.
-    final freqText = _freqController.text.trim();
-    final freqParsed = double.tryParse(freqText);
+    // Locale-aware parse: accepts both "869.075" and "869,075".
+    final freqParsed = NumberFormatUtils.tryParseLocaleDouble(
+      _freqController.text,
+    );
     _overrideFrequency = freqParsed ?? 0.0;
 
     // Commit any in-progress channel number text before saving.
@@ -798,7 +804,10 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                 ),
               ),
               SizedBox(
-                width: 100,
+                // 120 px holds `XXXX.XXX` (8 monospace chars + padding)
+                // comfortably; 100 px clipped 7-char values like
+                // "869.075" against the right edge.
+                width: 120,
                 child: TextFormField(
                   controller: _freqController,
                   focusNode: _freqFocusNode,
@@ -806,6 +815,12 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
+                  // Restrict to digits + a single decimal separator
+                  // (dot OR comma — locale-aware parse normalises on
+                  // commit).
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                  ],
                   textAlign: TextAlign.center,
                   style: TextStyle(color: context.textPrimary),
                   decoration: InputDecoration(

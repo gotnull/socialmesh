@@ -14,6 +14,7 @@ import '../../core/widgets/settings_primitives.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/countdown_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
+import '../../utils/number_format.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/config.pb.dart' as config_pb;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
@@ -74,15 +75,18 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
 
   /// Commit the ADC multiplier value when the field loses focus,
   /// matching the frequency override pattern in radio_config_screen.
+  /// Locale-aware parse so users on IT / DE / FR / RU / ES keyboards
+  /// who type a comma decimal separator (e.g. "2,5") are accepted.
   void _onAdcFocusChanged() {
     if (!_adcFocusNode.hasFocus) {
-      final text = _adcController.text.trim();
-      final parsed = double.tryParse(text);
+      final parsed = NumberFormatUtils.tryParseLocaleDouble(
+        _adcController.text,
+      );
       final value = (parsed != null && parsed >= 2.0 && parsed <= 6.0)
           ? parsed
           : _adcMultiplier;
       setState(() => _adcMultiplier = value);
-      // Normalize the displayed text on commit
+      // Normalize the displayed text on commit (always dot-separated).
       _adcController.text = value.toStringAsFixed(2);
     }
   }
@@ -162,8 +166,10 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
   Future<void> _saveConfig() async {
     // Commit any in-progress ADC multiplier text before saving,
     // in case the user taps Save while the field still has focus.
-    final adcText = _adcController.text.trim();
-    final adcParsed = double.tryParse(adcText);
+    // Locale-aware parse: accepts both "2.5" and "2,5".
+    final adcParsed = NumberFormatUtils.tryParseLocaleDouble(
+      _adcController.text,
+    );
     if (adcParsed != null && adcParsed >= 2.0 && adcParsed <= 6.0) {
       _adcMultiplier = adcParsed;
     }
@@ -386,6 +392,15 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
                                           const TextInputType.numberWithOptions(
                                             decimal: true,
                                           ),
+                                      // Restrict to digits + decimal
+                                      // separators (dot OR comma).
+                                      // Locale-aware parse normalises
+                                      // on commit.
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.allow(
+                                          RegExp(r'[0-9.,]'),
+                                        ),
+                                      ],
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         color: context.textPrimary,

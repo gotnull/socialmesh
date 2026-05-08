@@ -1235,6 +1235,21 @@ class MeshCoreConversationsNotifier
       'new=$isNew size=${frame.payload.length}',
     );
 
+    // D34b-A1: 0x80 carries the 32-byte pubkey of an already-heard
+    // peer. Bump the recent-heard buffer's `lastHeard` so the
+    // discovery screen reflects activity even when no full advert
+    // has been observed in this session.
+    if (!isNew && frame.payload.length >= 32) {
+      final pubKey = Uint8List.fromList(frame.payload.sublist(0, 32));
+      try {
+        ref
+            .read(meshCoreDiscoveredAdvertsProvider.notifier)
+            .bumpLastHeard(pubKey);
+      } catch (_) {
+        // Swallow — discovery feed is a best-effort surface.
+      }
+    }
+
     // D24.B: only `PUSH_CODE_NEW_ADVERT` (0x8A) carries the full
     // ContactInfo (same shape as `RESP_CODE_CONTACT` / 0x03).
     // `PUSH_CODE_ADVERT` (0x80) is just the 32-byte pubkey of an
@@ -1249,6 +1264,17 @@ class MeshCoreConversationsNotifier
         AppLogging.meshcore(
           'event=contact.advert.name.observed name_len=${info.name.length}',
         );
+        // D34b-A1: record the discovered advert before we attempt
+        // any name-merge — the recent-heard feed should reflect a
+        // newly-observed peer even when the local contact slot is
+        // already populated and the merge bails on "preserved".
+        try {
+          ref
+              .read(meshCoreDiscoveredAdvertsProvider.notifier)
+              .recordAdvert(info, isNew: true);
+        } catch (_) {
+          // Swallow — discovery feed is a best-effort surface.
+        }
         if (info.name.isNotEmpty) {
           AppLogging.meshcore('event=contact.advert.name.update.attempted');
           Future.microtask(() {

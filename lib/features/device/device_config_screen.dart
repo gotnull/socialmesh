@@ -18,6 +18,7 @@ import '../../core/widgets/info_table.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
+import '../../utils/number_format.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../providers/countdown_providers.dart';
@@ -711,10 +712,14 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
         );
       }
 
-      // If licensed mode is enabled, set HAM mode parameters
+      // If licensed mode is enabled, set HAM mode parameters.
+      // Locale-aware parse: accepts both "869.075" and "869,075".
       if (_isLicensed && hamModeChanged) {
         final frequency =
-            double.tryParse(_frequencyOverrideController.text) ?? 0.0;
+            NumberFormatUtils.tryParseLocaleDouble(
+              _frequencyOverrideController.text,
+            ) ??
+            0.0;
         await protocol.setHamMode(
           callSign: _longNameController.text,
           txPower: _txPower,
@@ -1990,6 +1995,11 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
+                    // Restrict to digits + decimal separators (dot OR
+                    // comma). Locale-aware parse normalises on commit.
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                    ],
                     style: TextStyle(color: context.textPrimary, fontSize: 14),
                     decoration: InputDecoration(
                       hintText: context.l10n.deviceConfigFrequencyOverrideHint,

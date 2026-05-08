@@ -7987,6 +7987,89 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshcoreContactTypeUnknown => 'Unknown';
 
   @override
+  String get meshcoreToolsDiscoveryTitle => 'Discovered Nodes';
+
+  @override
+  String get meshcoreToolsDiscoverySubtitle => 'Recently heard MeshCore peers';
+
+  @override
+  String get meshcoreDiscoveryTitle => 'Discovered Nodes';
+
+  @override
+  String get meshcoreDiscoveryClearAll => 'Clear discovered nodes';
+
+  @override
+  String get meshcoreDiscoveryClearAllConfirm =>
+      'Clear every recently-heard node? This does not affect imported contacts.';
+
+  @override
+  String get meshcoreDiscoveryEmptyTitlePrefix => 'No';
+
+  @override
+  String get meshcoreDiscoveryEmptyTitleKeyword => 'discovered';
+
+  @override
+  String get meshcoreDiscoveryEmptyTitleSuffix => 'nodes yet';
+
+  @override
+  String get meshcoreDiscoveryTagline1 =>
+      'Recently heard MeshCore adverts will appear here.';
+
+  @override
+  String get meshcoreDiscoveryTagline2 =>
+      'Tap a discovered node to view it or import it.';
+
+  @override
+  String get meshcoreDiscoveryTagline3 =>
+      'Discovery is in-memory only and resets on app restart.';
+
+  @override
+  String get meshcoreDiscoverySearchHint => 'Search heard nodes';
+
+  @override
+  String get meshcoreDiscoverySortRecent => 'Sort by recent';
+
+  @override
+  String get meshcoreDiscoverySortAlpha => 'Sort A-Z';
+
+  @override
+  String get meshcoreDiscoveryAddContact => 'Add contact';
+
+  @override
+  String get meshcoreDiscoveryCopyContactCode => 'Copy contact code';
+
+  @override
+  String get meshcoreDiscoveryDeleteEntry => 'Delete from list';
+
+  @override
+  String get meshcoreDiscoveryNeedFullAdvert =>
+      'Waiting for a full advert from this node before it can be imported.';
+
+  @override
+  String meshcoreDiscoveryAddContactSuccess(String contactName) {
+    return 'Added $contactName';
+  }
+
+  @override
+  String meshcoreDiscoveryAddContactFailed(String contactName) {
+    return 'Could not add $contactName';
+  }
+
+  @override
+  String meshcoreDiscoveryLastHeard(String timeAgo) {
+    return '$timeAgo ago';
+  }
+
+  @override
+  String get meshcoreDiscoveryJustNow => 'just now';
+
+  @override
+  String get meshcoreDiscoveryBadgeImported => 'Imported';
+
+  @override
+  String get meshcoreDiscoveryBadgeHeard => 'Heard';
+
+  @override
   String get meshcoreTracePathSavePathHelper =>
       'Saved paths can become stale as the mesh re-routes. Reset the path to return to auto.';
 

@@ -25,6 +25,7 @@ import '../../../utils/snackbar.dart';
 import '../../../models/meshcore_contact.dart';
 import '../../navigation/meshcore_shell.dart';
 import '../contact_l10n.dart';
+import 'meshcore_discovery_screen.dart';
 import 'meshcore_frame_log_screen.dart';
 
 /// MeshCore Tools screen.
@@ -138,6 +139,18 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
               subtitle: context.l10n.meshcoreTracePacketRoutes,
               trailing: _chevron(context),
               onTap: _openTracePath,
+            ),
+            // D34b-A1: Discovered Nodes — recent-heard feed populated
+            // from 0x8A / 0x80 pushes. In-memory only; capped at 100;
+            // no autoadd-config dependency.
+            SettingsTile(
+              key: const ValueKey('meshcore-tools-discovery-tile'),
+              icon: Icons.podcasts_rounded,
+              iconColor: context.accentColor,
+              title: context.l10n.meshcoreToolsDiscoveryTitle,
+              subtitle: context.l10n.meshcoreToolsDiscoverySubtitle,
+              trailing: _chevron(context),
+              onTap: () => openMeshCoreDiscoveryScreen(context),
             ),
             // D28 Part B: Frame Log viewer. Surfaces the in-memory
             // capture infrastructure that already records every TX/RX

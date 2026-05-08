@@ -1392,3 +1392,229 @@ final meshCoreShowBatteryVoltageProvider =
     NotifierProvider<MeshCoreShowBatteryVoltageNotifier, bool>(
       MeshCoreShowBatteryVoltageNotifier.new,
     );
+
+// =============================================================================
+// D34b-A1: Discovered / heard MeshCore peers (recent-heard feed).
+// =============================================================================
+
+/// One entry in the recent-heard feed. In-memory only — never persisted.
+///
+/// Populated by `_handleAdvertPush` in [MeshCoreConversationsNotifier]:
+///   - `PUSH_CODE_NEW_ADVERT (0x8A)` carries the full 147-byte contact
+///     descriptor → entry has `hasFullInfo = true`.
+///   - `PUSH_CODE_ADVERT (0x80)` carries only a 32-byte pubkey → if no
+///     full entry exists yet we record a minimal stub with empty
+///     `name` and `advType = null` so the recency surface still picks
+///     up the bump.
+///
+/// Privacy:
+///   - Logs surface only `pubkey=<8B…8T>` redacted fingerprints, never
+///     the full pubkey or path bytes.
+///   - The buffer is in-memory only and lost on app restart by design.
+class HeardAdvert {
+  /// Full 32-byte public key.
+  final Uint8List publicKey;
+
+  /// Display name from the firmware contact slot. Empty string when the
+  /// only push observed so far was a 0x80 (re-heard, pubkey-only).
+  final String name;
+
+  /// Advertised contact type (chat / repeater / room / sensor) from the
+  /// firmware contact slot. `null` when only 0x80 has been observed.
+  final int? advType;
+
+  /// Wall-clock time at which the FIRST advert from this pubkey was
+  /// recorded in this session.
+  final DateTime firstHeard;
+
+  /// Wall-clock time at which the MOST RECENT advert (any push code)
+  /// from this pubkey was observed.
+  final DateTime lastHeard;
+
+  /// `true` iff a `PUSH_CODE_NEW_ADVERT (0x8A)` carried the full
+  /// contact descriptor at any point. `false` for entries created
+  /// purely from `PUSH_CODE_ADVERT (0x80)` re-heard pings — those
+  /// carry no name or type and the UI shows a fingerprint placeholder
+  /// + "Heard" badge, not an importable card.
+  final bool hasFullInfo;
+
+  const HeardAdvert({
+    required this.publicKey,
+    required this.name,
+    required this.advType,
+    required this.firstHeard,
+    required this.lastHeard,
+    required this.hasFullInfo,
+  });
+
+  String get publicKeyHex => publicKey
+      .map((b) => b.toRadixString(16).padLeft(2, '0'))
+      .join()
+      .toLowerCase();
+
+  /// Canonical UI fingerprint mirroring the redaction format used by
+  /// the log channel and `MeshCoreContact.shortPubKeyHex`.
+  String get shortPubKeyHex {
+    final hex = publicKeyHex;
+    if (hex.length < 16) return hex;
+    return '<${hex.substring(0, 8)}…${hex.substring(hex.length - 8)}>';
+  }
+
+  /// Human-facing display name with deterministic fingerprint
+  /// fallback. Mirrors `MeshCoreContact.displayName` so heard / imported
+  /// rows render the same way.
+  String get displayName {
+    if (name.isNotEmpty) return name;
+    if (publicKey.isEmpty) return '';
+    if (publicKey.length < 8) return '';
+    return shortPubKeyHex;
+  }
+
+  HeardAdvert copyWith({
+    String? name,
+    int? advType,
+    DateTime? lastHeard,
+    bool? hasFullInfo,
+  }) {
+    return HeardAdvert(
+      publicKey: publicKey,
+      name: name ?? this.name,
+      advType: advType ?? this.advType,
+      firstHeard: firstHeard,
+      lastHeard: lastHeard ?? this.lastHeard,
+      hasFullInfo: hasFullInfo ?? this.hasFullInfo,
+    );
+  }
+}
+
+/// In-memory recent-heard feed of MeshCore advert pushes.
+///
+/// Capped at [_maxEntries]. Self-pubkey filtered. Sorted by `lastHeard`
+/// descending in [state] so the UI renders most-recent first without
+/// extra work. Re-emits a fresh `List.unmodifiable` view on every
+/// mutation so Riverpod's identity-based equality triggers downstream
+/// rebuilds reliably.
+class MeshCoreDiscoveredAdvertsNotifier extends Notifier<List<HeardAdvert>> {
+  /// Hard cap. FIFO eviction by `lastHeard` (oldest evicted first when
+  /// the cap is exceeded).
+  static const int maxEntries = 100;
+
+  final Map<String, HeardAdvert> _byPubkey = {};
+
+  @override
+  List<HeardAdvert> build() => const [];
+
+  /// Record (or update) an advert from a successfully-parsed 0x8A
+  /// payload. [isNew] is the firmware's "is this a brand-new contact?"
+  /// flag; we don't currently expose it in the model, but the parameter
+  /// is part of the API contract so future surfaces (e.g. a "new"
+  /// pulse) can wire in without touching callers.
+  void recordAdvert(MeshCoreContactInfo info, {required bool isNew}) {
+    if (_isSelfPubkey(info.publicKey)) return;
+    final hex = info.publicKeyHex.toLowerCase();
+    final now = DateTime.now();
+    final existing = _byPubkey[hex];
+    final entry = HeardAdvert(
+      publicKey: info.publicKey,
+      name: info.name,
+      advType: info.advType,
+      firstHeard: existing?.firstHeard ?? now,
+      lastHeard: now,
+      hasFullInfo: true,
+    );
+    _byPubkey[hex] = entry;
+    AppLogging.meshcore(
+      'event=discovery.recorded source=0x8A '
+      'pubkey=${AppLogging.publicKeyFingerprint(info.publicKey)} '
+      'name_len=${info.name.length} adv_type=${info.advType}',
+    );
+    _evictIfOver();
+    _emit();
+  }
+
+  /// Bump `lastHeard` for an existing entry, OR (if the pubkey is not
+  /// yet in the buffer) record a minimal stub from a 0x80 re-heard
+  /// ping. The stub has no name/type and surfaces in the UI as a
+  /// fingerprint-only "Heard" row that can't be imported until a full
+  /// 0x8A arrives. The latter behaviour matches the spec's "create a
+  /// minimal entry if full pubkey is available" branch.
+  void bumpLastHeard(Uint8List pubKey) {
+    if (_isSelfPubkey(pubKey)) return;
+    if (pubKey.length < 8) return;
+    final hex = _hex(pubKey).toLowerCase();
+    final now = DateTime.now();
+    final existing = _byPubkey[hex];
+    if (existing == null) {
+      _byPubkey[hex] = HeardAdvert(
+        publicKey: Uint8List.fromList(pubKey),
+        name: '',
+        advType: null,
+        firstHeard: now,
+        lastHeard: now,
+        hasFullInfo: false,
+      );
+      AppLogging.meshcore(
+        'event=discovery.recorded source=0x80 '
+        'pubkey=${AppLogging.publicKeyFingerprint(pubKey)} '
+        'minimal=true',
+      );
+    } else {
+      _byPubkey[hex] = existing.copyWith(lastHeard: now);
+    }
+    _evictIfOver();
+    _emit();
+  }
+
+  /// Remove a single entry by its pubkey hex (lowercase, 64 chars).
+  /// Idempotent — silent no-op when the entry isn't present.
+  void remove(String pubKeyHex) {
+    if (_byPubkey.remove(pubKeyHex.toLowerCase()) != null) {
+      _emit();
+    }
+  }
+
+  /// Empty the whole heard list. Used by the Discovery screen's
+  /// "Delete all" overflow.
+  void clearAll() {
+    if (_byPubkey.isEmpty) return;
+    _byPubkey.clear();
+    _emit();
+  }
+
+  bool _isSelfPubkey(Uint8List candidate) {
+    final selfInfo = ref.read(meshCoreSelfInfoProvider).selfInfo;
+    if (selfInfo == null) return false;
+    final self = selfInfo.pubKey;
+    if (self.length != candidate.length) return false;
+    for (var i = 0; i < candidate.length; i++) {
+      if (self[i] != candidate[i]) return false;
+    }
+    return true;
+  }
+
+  void _evictIfOver() {
+    if (_byPubkey.length <= maxEntries) return;
+    // Evict entries with oldest `lastHeard` until at cap.
+    final sorted = _byPubkey.entries.toList()
+      ..sort((a, b) => a.value.lastHeard.compareTo(b.value.lastHeard));
+    final toRemove = _byPubkey.length - maxEntries;
+    for (var i = 0; i < toRemove; i++) {
+      _byPubkey.remove(sorted[i].key);
+    }
+  }
+
+  void _emit() {
+    final sorted = _byPubkey.values.toList()
+      ..sort((a, b) => b.lastHeard.compareTo(a.lastHeard));
+    state = List.unmodifiable(sorted);
+  }
+
+  String _hex(Uint8List bytes) =>
+      bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+}
+
+/// Riverpod 3.x notifier provider for the recent-heard feed.
+final meshCoreDiscoveredAdvertsProvider =
+    NotifierProvider<MeshCoreDiscoveredAdvertsNotifier, List<HeardAdvert>>(
+      MeshCoreDiscoveredAdvertsNotifier.new,
+    );
