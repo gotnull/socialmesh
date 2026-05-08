@@ -25,6 +25,7 @@ import '../../../providers/meshcore_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../../navigation/meshcore_shell.dart';
 import 'meshcore_chat_screen.dart';
+import 'meshcore_contact_detail_screen.dart';
 import 'meshcore_qr_scanner_screen.dart';
 
 /// MeshCore Contacts screen.
@@ -528,6 +529,16 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                     MeshCoreChatScreen.contact(contact: contact),
               ),
             );
+          },
+        ),
+        // D34c-A: Read-only contact detail surface — pubkey, path,
+        // hops, last-heard, GPS. No override controls in this slice.
+        BottomSheetAction(
+          icon: Icons.info_outline_rounded,
+          iconColor: context.accentColor,
+          label: context.l10n.meshcoreContactDetailViewDetails,
+          onTap: () {
+            openMeshCoreContactDetail(context, contact: contact);
           },
         ),
         BottomSheetAction(

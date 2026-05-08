@@ -612,6 +612,70 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
     return true;
   }
 
+  /// D34c-A: persist a successful trace's hop bytes back to the
+  /// contact's stored path via `CMD_ADD_UPDATE_CONTACT` (0x09).
+  ///
+  /// All other contact metadata (`type`, `name`, `latitude`,
+  /// `longitude`, `flags`) is preserved verbatim — only
+  /// `out_path_len` and `out_path` are mutated on the firmware side.
+  /// Local state is NOT mutated until after the firmware ACK; on a
+  /// non-OK ACK or wire failure the call returns `false` and leaves
+  /// the in-memory contact list untouched. Caller surfaces the
+  /// error.
+  ///
+  /// `hopBytes` is the byte sequence the firmware expects to walk
+  /// when sending to this contact — typically extracted from a
+  /// `MeshCoreTraceResult.hops.map((h) => h.pathByte)` after a
+  /// successful Trace Path. Length must be in `[0, 64]`. An empty
+  /// `hopBytes` resolves to `pathLength = 0` (direct route); 64+
+  /// bytes are clamped at the session-helper layer.
+  ///
+  /// Logging surface (privacy-redacted):
+  ///   - `event=contact.set_path_from_trace.attempted pubkey=<8B fingerprint> path_len=N`
+  ///   - `event=contact.set_path_from_trace.<succeeded|failed> ...`
+  /// Path bytes themselves are NEVER logged.
+  Future<bool> setContactPathFromTrace({
+    required String publicKeyHex,
+    required Uint8List hopBytes,
+  }) async {
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null) {
+      AppLogging.meshcore(
+        'event=contact.set_path_from_trace.skipped reason=no_session',
+        error: true,
+      );
+      return false;
+    }
+    final contact = state.contacts.firstWhere(
+      (c) => c.publicKeyHex == publicKeyHex,
+      orElse: () => throw ArgumentError('contact not found: $publicKeyHex'),
+    );
+    AppLogging.meshcore(
+      'event=contact.set_path_from_trace.attempted '
+      'pubkey=${AppLogging.publicKeyFingerprint(contact.publicKey)} '
+      'path_len=${hopBytes.length}',
+    );
+    final ok = await session.addUpdateContact(
+      pubKey: contact.publicKey,
+      advType: contact.type,
+      name: contact.name,
+      flags: 0,
+      pathLength: hopBytes.length,
+      pathBytes: hopBytes,
+      latitude: contact.latitude,
+      longitude: contact.longitude,
+    );
+    AppLogging.meshcore(
+      'event=contact.set_path_from_trace.${ok ? 'succeeded' : 'failed'} '
+      'pubkey=${AppLogging.publicKeyFingerprint(contact.publicKey)} '
+      'path_len=${hopBytes.length}',
+      error: !ok,
+    );
+    if (!ok) return false;
+    await refresh();
+    return true;
+  }
+
   /// D29 Part C: reset the firmware-side learned route for the
   /// contact whose [publicKeyHex] matches (`CMD_RESET_PATH` 0x0D),
   /// then refresh so the local cache picks up the new path state.

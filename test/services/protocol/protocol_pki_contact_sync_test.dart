@@ -197,6 +197,9 @@ _setupServiceWithPeer(
 
   // Seed _myNodeNum so sendMessage's "device not ready" guard passes.
   await protocol.handleIncomingPacket(_frameMyNodeInfo(_myNodeNum));
+  // Bypass the new readiness gate — this test injects packets directly
+  // rather than running the full two-phase handshake.
+  protocol.debugForceReadinessForTesting(OperationalReadiness.ready);
 
   // Seed the destination peer in the local nodeDB.
   await protocol.handleIncomingPacket(

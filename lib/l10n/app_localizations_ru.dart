@@ -7904,6 +7904,97 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreResetPath => 'Reset Path';
 
   @override
+  String get meshcoreContactDetailViewDetails => 'View Details';
+
+  @override
+  String get meshcoreContactDetailIdentity => 'Identity';
+
+  @override
+  String get meshcoreContactDetailRouting => 'Routing';
+
+  @override
+  String get meshcoreContactDetailActivity => 'Activity';
+
+  @override
+  String get meshcoreContactDetailLocation => 'Location';
+
+  @override
+  String get meshcoreContactDetailActions => 'Actions';
+
+  @override
+  String get meshcoreContactDetailName => 'Name';
+
+  @override
+  String get meshcoreContactDetailType => 'Type';
+
+  @override
+  String get meshcoreContactDetailPublicKey => 'Public Key';
+
+  @override
+  String get meshcoreContactDetailPath => 'Path';
+
+  @override
+  String get meshcoreContactDetailHops => 'Hops';
+
+  @override
+  String get meshcoreContactDetailPathBytes => 'Path Bytes';
+
+  @override
+  String get meshcoreContactDetailSnr => 'SNR';
+
+  @override
+  String get meshcoreContactDetailLastSeen => 'Last Seen';
+
+  @override
+  String get meshcoreContactDetailLatitude => 'Latitude';
+
+  @override
+  String get meshcoreContactDetailLongitude => 'Longitude';
+
+  @override
+  String get meshcoreContactDetailTracePathSubtitle =>
+      'Run a trace to this contact and view the per-hop SNR.';
+
+  @override
+  String get meshcoreContactDetailResetPathSubtitle =>
+      'Forget the saved route and let MeshCore rediscover the best path.';
+
+  @override
+  String get meshcoreContactDetailPubKeyCopied => 'Public key copied';
+
+  @override
+  String get meshcoreContactTypeChat => 'Chat';
+
+  @override
+  String get meshcoreContactTypeRepeater => 'Repeater';
+
+  @override
+  String get meshcoreContactTypeRoom => 'Room';
+
+  @override
+  String get meshcoreContactTypeSensor => 'Sensor';
+
+  @override
+  String get meshcoreContactTypeUnknown => 'Unknown';
+
+  @override
+  String get meshcoreTracePathSavePathHelper =>
+      'Saved paths can become stale as the mesh re-routes. Reset the path to return to auto.';
+
+  @override
+  String get meshcoreTracePathSaveAsContactPath => 'Save as Contact Path';
+
+  @override
+  String meshcoreTracePathSaveAsContactPathSuccess(String contactName) {
+    return 'Saved path for $contactName';
+  }
+
+  @override
+  String meshcoreTracePathSaveAsContactPathFailed(String contactName) {
+    return 'Could not save path for $contactName';
+  }
+
+  @override
   String get meshcoreResetPathSubtitle =>
       'Let MeshCore rediscover the best route.';
 

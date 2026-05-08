@@ -14035,6 +14035,174 @@ abstract class AppLocalizations {
   /// **'Reset Path'**
   String get meshcoreResetPath;
 
+  /// D34c-A - contact long-press action that opens the read-only contact detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'View Details'**
+  String get meshcoreContactDetailViewDetails;
+
+  /// D34c-A - section header on the contact detail screen for identity fields (name, type, public key).
+  ///
+  /// In en, this message translates to:
+  /// **'Identity'**
+  String get meshcoreContactDetailIdentity;
+
+  /// D34c-A - section header on the contact detail screen for routing fields (path, hops, SNR).
+  ///
+  /// In en, this message translates to:
+  /// **'Routing'**
+  String get meshcoreContactDetailRouting;
+
+  /// D34c-A - section header on the contact detail screen for activity fields (last seen).
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get meshcoreContactDetailActivity;
+
+  /// D34c-A - section header on the contact detail screen for the GPS location fields.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get meshcoreContactDetailLocation;
+
+  /// D34c-A - section header on the contact detail screen for action tiles (trace, reset).
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get meshcoreContactDetailActions;
+
+  /// D34c-A - row label for the contact's name on the detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get meshcoreContactDetailName;
+
+  /// D34c-A - row label for the contact's adv type on the detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get meshcoreContactDetailType;
+
+  /// D34c-A - row label for the redacted public-key fingerprint on the detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Public Key'**
+  String get meshcoreContactDetailPublicKey;
+
+  /// D34c-A - row label for the contact's path summary (Direct / N hops / Flood).
+  ///
+  /// In en, this message translates to:
+  /// **'Path'**
+  String get meshcoreContactDetailPath;
+
+  /// D34c-A - row label for the contact's hop count.
+  ///
+  /// In en, this message translates to:
+  /// **'Hops'**
+  String get meshcoreContactDetailHops;
+
+  /// D34c-A - row label for the saved path bytes hex string on the detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Path Bytes'**
+  String get meshcoreContactDetailPathBytes;
+
+  /// D34c-A - row label for the contact's most recent SNR reading on the detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'SNR'**
+  String get meshcoreContactDetailSnr;
+
+  /// D34c-A - row label for the contact's last-seen timestamp on the detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Seen'**
+  String get meshcoreContactDetailLastSeen;
+
+  /// D34c-A - row label for the contact's GPS latitude on the detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Latitude'**
+  String get meshcoreContactDetailLatitude;
+
+  /// D34c-A - row label for the contact's GPS longitude on the detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Longitude'**
+  String get meshcoreContactDetailLongitude;
+
+  /// D34c-A - subtitle on the Trace Path tile in the contact detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Run a trace to this contact and view the per-hop SNR.'**
+  String get meshcoreContactDetailTracePathSubtitle;
+
+  /// D34c-A - subtitle on the Reset Path tile in the contact detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Forget the saved route and let MeshCore rediscover the best path.'**
+  String get meshcoreContactDetailResetPathSubtitle;
+
+  /// D34c-A - snackbar shown after the user taps the redacted pubkey row to copy the full public key.
+  ///
+  /// In en, this message translates to:
+  /// **'Public key copied'**
+  String get meshcoreContactDetailPubKeyCopied;
+
+  /// D34c-A - localized label for advert type 1 (chat).
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get meshcoreContactTypeChat;
+
+  /// D34c-A - localized label for advert type 2 (repeater).
+  ///
+  /// In en, this message translates to:
+  /// **'Repeater'**
+  String get meshcoreContactTypeRepeater;
+
+  /// D34c-A - localized label for advert type 3 (room).
+  ///
+  /// In en, this message translates to:
+  /// **'Room'**
+  String get meshcoreContactTypeRoom;
+
+  /// D34c-A - localized label for advert type 4 (sensor).
+  ///
+  /// In en, this message translates to:
+  /// **'Sensor'**
+  String get meshcoreContactTypeSensor;
+
+  /// D34c-A - localized fallback label for unknown / future advert types on the detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get meshcoreContactTypeUnknown;
+
+  /// D34c-A - small helper paragraph above the Save as Contact Path button on the trace result sheet, warning that saved paths can become stale.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved paths can become stale as the mesh re-routes. Reset the path to return to auto.'**
+  String get meshcoreTracePathSavePathHelper;
+
+  /// D34c-A - button label on the trace result sheet that writes the trace's hop bytes back to the target contact via CMD_ADD_UPDATE_CONTACT (0x09).
+  ///
+  /// In en, this message translates to:
+  /// **'Save as Contact Path'**
+  String get meshcoreTracePathSaveAsContactPath;
+
+  /// D34c-A - success snackbar after the trace path saves to the contact via 0x09. {contactName} is the contact's display name.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved path for {contactName}'**
+  String meshcoreTracePathSaveAsContactPathSuccess(String contactName);
+
+  /// D34c-A - failure snackbar after the trace-path save flow. {contactName} is the contact's display name.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save path for {contactName}'**
+  String meshcoreTracePathSaveAsContactPathFailed(String contactName);
+
   /// D29 - subtitle/help copy for the Reset Path action.
   ///
   /// In en, this message translates to:

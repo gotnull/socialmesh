@@ -128,6 +128,9 @@ void main() {
     transport = _CapturingTransport();
     protocol = ProtocolService(transport);
     await _primeNodeNum(protocol);
+    // Bypass the new readiness gate — this test injects packets directly
+    // rather than running the full two-phase handshake.
+    protocol.debugForceReadinessForTesting(OperationalReadiness.ready);
   });
 
   group('Remote admin routing: setDeviceConfig', () {

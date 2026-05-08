@@ -3,7 +3,7 @@
 
 import 'dart:typed_data';
 
-import '../utils/text_sanitizer.dart';
+import '../services/meshcore/protocol/meshcore_messages.dart' as msgs;
 
 /// Advertisement types for MeshCore contacts.
 class MeshCoreAdvType {
@@ -214,81 +214,45 @@ class MeshCoreContact {
   }
 }
 
-/// Parse a contact from MeshCore protocol response.
+/// Parse a contact from a `RESP_CODE_CONTACT (0x03)` or
+/// `PUSH_CODE_NEW_ADVERT (0x8A)` payload (after the leading code byte
+/// has been stripped by the codec) into a [MeshCoreContact] model.
 ///
-/// CONTACT response format:
-/// ```
-/// [0] = resp_code (0x03)
-/// [1-32] = pub_key (32 bytes)
-/// [33] = adv_type
-/// [34] = path_len (-1 for flood)
-/// [35-36] = lastmod (uint16 LE)
-/// [37-40] = lat (int32 LE, optional)
-/// [41-44] = lon (int32 LE, optional)
-/// [45+] = name (null-terminated)
-/// [after name] = path_bytes (path_len bytes, if path_len > 0)
-/// ```
+/// **Layout owner:** the byte-accurate firmware layout is documented
+/// and pinned by the canonical parser at
+/// [services/meshcore/protocol/meshcore_messages.dart] (`parseContact`)
+/// + tests in `test/services/meshcore/protocol/parse_contact_layout_test.dart`.
+/// This function is a thin model-typed adapter over that canonical
+/// parser so callers that only need a [MeshCoreContact] (rather than
+/// the richer [MeshCoreContactInfo]) get the corrected layout for
+/// free without duplicating the byte arithmetic.
+///
+/// Pre-D34c-A this was an out-of-date inline parser that read a
+/// phantom `[pubkey][adv_type][path_len][lastmod-u16][lat][lon][name]`
+/// shape — the actual firmware layout is `[pubkey][type][flags]
+/// [out_path_len][out_path×64][name×32][last_advert_ts][lat][lon][lastmod]`.
+/// The legacy body returned `path = Uint8List(0)` unconditionally,
+/// silently dropping the firmware's path bytes. D34c-A delegates to
+/// the canonical parser so the path bytes survive into the model.
+///
+/// Returns `null` when the payload is shorter than the minimum
+/// canonical layout, or when the canonical parser otherwise rejects
+/// it. Callers must handle null (e.g., refresh contacts via the live
+/// `getContacts` flow on the session).
 MeshCoreContact? parseContact(Uint8List payload) {
-  // Minimum: pub_key(32) + adv_type(1) + path_len(1) + lastmod(2) = 36
-  if (payload.length < 36) return null;
-
-  final pubKey = Uint8List.fromList(payload.sublist(0, 32));
-  final advType = payload[32];
-  final pathLen = payload[33].toSigned(8); // Signed byte
-  // lastmod at [34-35] - skip for now
-
-  // Try to read lat/lon
-  double? lat;
-  double? lon;
-  int nameOffset = 36;
-
-  if (payload.length >= 44) {
-    final latRaw = _readInt32LE(payload, 36);
-    final lonRaw = _readInt32LE(payload, 40);
-    // MeshCore uses raw int32 for lat/lon, convert to degrees
-    if (latRaw != 0 || lonRaw != 0) {
-      lat = latRaw / 1e7;
-      lon = lonRaw / 1e7;
-    }
-    nameOffset = 44;
-  }
-
-  // Read name (null-terminated)
-  String name = '';
-  if (nameOffset < payload.length) {
-    int end = nameOffset;
-    while (end < payload.length && payload[end] != 0) {
-      end++;
-    }
-    name = sanitizeExternalText(
-      String.fromCharCodes(payload.sublist(nameOffset, end)),
-    );
-  }
-
-  // Read path bytes if path_len > 0
-  Uint8List pathBytes = Uint8List(0);
-  // Skip for now - path bytes follow the null-terminated name
-
+  final result = msgs.parseContact(payload);
+  if (!result.isSuccess) return null;
+  final info = result.value!;
   return MeshCoreContact(
-    publicKey: pubKey,
-    name: name,
-    type: advType,
-    pathLength: pathLen,
-    path: pathBytes,
-    latitude: lat,
-    longitude: lon,
+    publicKey: info.publicKey,
+    name: info.name,
+    type: info.advType,
+    pathLength: info.pathLength,
+    path: info.pathBytes,
+    latitude: info.latitudeDegrees,
+    longitude: info.longitudeDegrees,
     lastSeen: DateTime.now(),
   );
-}
-
-int _readInt32LE(Uint8List data, int offset) {
-  int val =
-      data[offset] |
-      (data[offset + 1] << 8) |
-      (data[offset + 2] << 16) |
-      (data[offset + 3] << 24);
-  if (val >= 0x80000000) val -= 0x100000000;
-  return val;
 }
 
 /// Generate contact code for sharing (base64 of public key + name).

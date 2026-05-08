@@ -10709,6 +10709,124 @@
     "@meshcoreResetPath": {
         "description": "D29 - contact action label that resets the firmware-side learned route. Tapping it lets MeshCore rediscover the best route for this contact."
     },
+    "meshcoreContactDetailViewDetails": "View Details",
+    "@meshcoreContactDetailViewDetails": {
+        "description": "D34c-A - contact long-press action that opens the read-only contact detail screen."
+    },
+    "meshcoreContactDetailIdentity": "Identity",
+    "@meshcoreContactDetailIdentity": {
+        "description": "D34c-A - section header on the contact detail screen for identity fields (name, type, public key)."
+    },
+    "meshcoreContactDetailRouting": "Routing",
+    "@meshcoreContactDetailRouting": {
+        "description": "D34c-A - section header on the contact detail screen for routing fields (path, hops, SNR)."
+    },
+    "meshcoreContactDetailActivity": "Activity",
+    "@meshcoreContactDetailActivity": {
+        "description": "D34c-A - section header on the contact detail screen for activity fields (last seen)."
+    },
+    "meshcoreContactDetailLocation": "Location",
+    "@meshcoreContactDetailLocation": {
+        "description": "D34c-A - section header on the contact detail screen for the GPS location fields."
+    },
+    "meshcoreContactDetailActions": "Actions",
+    "@meshcoreContactDetailActions": {
+        "description": "D34c-A - section header on the contact detail screen for action tiles (trace, reset)."
+    },
+    "meshcoreContactDetailName": "Name",
+    "@meshcoreContactDetailName": {
+        "description": "D34c-A - row label for the contact's name on the detail screen."
+    },
+    "meshcoreContactDetailType": "Type",
+    "@meshcoreContactDetailType": {
+        "description": "D34c-A - row label for the contact's adv type on the detail screen."
+    },
+    "meshcoreContactDetailPublicKey": "Public Key",
+    "@meshcoreContactDetailPublicKey": {
+        "description": "D34c-A - row label for the redacted public-key fingerprint on the detail screen."
+    },
+    "meshcoreContactDetailPath": "Path",
+    "@meshcoreContactDetailPath": {
+        "description": "D34c-A - row label for the contact's path summary (Direct / N hops / Flood)."
+    },
+    "meshcoreContactDetailHops": "Hops",
+    "@meshcoreContactDetailHops": {
+        "description": "D34c-A - row label for the contact's hop count."
+    },
+    "meshcoreContactDetailPathBytes": "Path Bytes",
+    "@meshcoreContactDetailPathBytes": {
+        "description": "D34c-A - row label for the saved path bytes hex string on the detail screen."
+    },
+    "meshcoreContactDetailSnr": "SNR",
+    "@meshcoreContactDetailSnr": {
+        "description": "D34c-A - row label for the contact's most recent SNR reading on the detail screen."
+    },
+    "meshcoreContactDetailLastSeen": "Last Seen",
+    "@meshcoreContactDetailLastSeen": {
+        "description": "D34c-A - row label for the contact's last-seen timestamp on the detail screen."
+    },
+    "meshcoreContactDetailLatitude": "Latitude",
+    "@meshcoreContactDetailLatitude": {
+        "description": "D34c-A - row label for the contact's GPS latitude on the detail screen."
+    },
+    "meshcoreContactDetailLongitude": "Longitude",
+    "@meshcoreContactDetailLongitude": {
+        "description": "D34c-A - row label for the contact's GPS longitude on the detail screen."
+    },
+    "meshcoreContactDetailTracePathSubtitle": "Run a trace to this contact and view the per-hop SNR.",
+    "@meshcoreContactDetailTracePathSubtitle": {
+        "description": "D34c-A - subtitle on the Trace Path tile in the contact detail screen."
+    },
+    "meshcoreContactDetailResetPathSubtitle": "Forget the saved route and let MeshCore rediscover the best path.",
+    "@meshcoreContactDetailResetPathSubtitle": {
+        "description": "D34c-A - subtitle on the Reset Path tile in the contact detail screen."
+    },
+    "meshcoreContactDetailPubKeyCopied": "Public key copied",
+    "@meshcoreContactDetailPubKeyCopied": {
+        "description": "D34c-A - snackbar shown after the user taps the redacted pubkey row to copy the full public key."
+    },
+    "meshcoreContactTypeChat": "Chat",
+    "@meshcoreContactTypeChat": {
+        "description": "D34c-A - localized label for advert type 1 (chat)."
+    },
+    "meshcoreContactTypeRepeater": "Repeater",
+    "@meshcoreContactTypeRepeater": {
+        "description": "D34c-A - localized label for advert type 2 (repeater)."
+    },
+    "meshcoreContactTypeRoom": "Room",
+    "@meshcoreContactTypeRoom": {
+        "description": "D34c-A - localized label for advert type 3 (room)."
+    },
+    "meshcoreContactTypeSensor": "Sensor",
+    "@meshcoreContactTypeSensor": {
+        "description": "D34c-A - localized label for advert type 4 (sensor)."
+    },
+    "meshcoreContactTypeUnknown": "Unknown",
+    "@meshcoreContactTypeUnknown": {
+        "description": "D34c-A - localized fallback label for unknown / future advert types on the detail screen."
+    },
+    "meshcoreTracePathSavePathHelper": "Saved paths can become stale as the mesh re-routes. Reset the path to return to auto.",
+    "@meshcoreTracePathSavePathHelper": {
+        "description": "D34c-A - small helper paragraph above the Save as Contact Path button on the trace result sheet, warning that saved paths can become stale."
+    },
+    "meshcoreTracePathSaveAsContactPath": "Save as Contact Path",
+    "@meshcoreTracePathSaveAsContactPath": {
+        "description": "D34c-A - button label on the trace result sheet that writes the trace's hop bytes back to the target contact via CMD_ADD_UPDATE_CONTACT (0x09)."
+    },
+    "meshcoreTracePathSaveAsContactPathSuccess": "Saved path for {contactName}",
+    "@meshcoreTracePathSaveAsContactPathSuccess": {
+        "description": "D34c-A - success snackbar after the trace path saves to the contact via 0x09. {contactName} is the contact's display name.",
+        "placeholders": {
+            "contactName": {"type": "String"}
+        }
+    },
+    "meshcoreTracePathSaveAsContactPathFailed": "Could not save path for {contactName}",
+    "@meshcoreTracePathSaveAsContactPathFailed": {
+        "description": "D34c-A - failure snackbar after the trace-path save flow. {contactName} is the contact's display name.",
+        "placeholders": {
+            "contactName": {"type": "String"}
+        }
+    },
     "meshcoreResetPathSubtitle": "Let MeshCore rediscover the best route.",
     "@meshcoreResetPathSubtitle": {
         "description": "D29 - subtitle/help copy for the Reset Path action."

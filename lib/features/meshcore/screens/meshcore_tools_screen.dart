@@ -642,15 +642,22 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
   /// D28 Part C: open the Trace Path picker bottom sheet.
   void _openTracePath() {
     HapticFeedback.lightImpact();
-    AppBottomSheet.showScrollable<void>(
-      context: context,
-      initialChildSize: 0.85,
-      minChildSize: 0.5,
-      maxChildSize: 0.95,
-      builder: (scrollController) =>
-          MeshCoreTracePathSheet(scrollController: scrollController),
-    );
+    showMeshCoreTracePathSheet(context);
   }
+}
+
+/// D28 Part C / D34c-A: top-level launcher for the Trace Path bottom
+/// sheet, callable from the Tools tile, the Contact Detail screen, or
+/// any future per-contact entry point.
+Future<void> showMeshCoreTracePathSheet(BuildContext context) {
+  return AppBottomSheet.showScrollable<void>(
+    context: context,
+    initialChildSize: 0.85,
+    minChildSize: 0.5,
+    maxChildSize: 0.95,
+    builder: (scrollController) =>
+        MeshCoreTracePathSheet(scrollController: scrollController),
+  );
 }
 
 /// D28 Part D: queue-status diagnostic card.
@@ -1133,11 +1140,71 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
             ),
           ),
         const SizedBox(height: AppTheme.spacing16),
+        // D34c-A: only surface "Save as Contact Path" when the trace
+        // returned at least one hop AND we have a target contact in
+        // scope (the picker locks `_selected` before firing the trace).
+        // Saved paths can become stale as the mesh re-routes; the
+        // helper text reminds the user that this is a snapshot, not a
+        // permanent route.
+        if (target != null && result.hops.isNotEmpty) ...[
+          Text(
+            l.meshcoreTracePathSavePathHelper,
+            style: TextStyle(
+              color: context.textTertiary,
+              fontSize: 12,
+              fontFamily: AppTheme.fontFamily,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing8),
+          FilledButton.icon(
+            key: const ValueKey('meshcore-trace-save-as-contact-path'),
+            onPressed: () => _saveAsContactPath(target, result),
+            icon: const Icon(Icons.save_rounded),
+            label: Text(l.meshcoreTracePathSaveAsContactPath),
+          ),
+          const SizedBox(height: AppTheme.spacing8),
+        ],
         OutlinedButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(l.meshcoreTracePathClose),
         ),
       ],
     );
+  }
+
+  /// D34c-A: write the freshly-traced hop bytes back to the target
+  /// contact's stored path via `CMD_ADD_UPDATE_CONTACT (0x09)`.
+  /// Routes through `meshCoreContactsProvider.setContactPathFromTrace`
+  /// so all metadata is preserved and the contact list refreshes
+  /// after the firmware ACK.
+  Future<void> _saveAsContactPath(
+    MeshCoreContact target,
+    MeshCoreTraceResult result,
+  ) async {
+    final l = context.l10n;
+    final hopBytes = Uint8List.fromList(
+      result.hops.map((h) => h.pathByte).toList(growable: false),
+    );
+    final ok = await ref
+        .read(meshCoreContactsProvider.notifier)
+        .setContactPathFromTrace(
+          publicKeyHex: target.publicKeyHex,
+          hopBytes: hopBytes,
+        );
+    if (!mounted) return;
+    final name = target.displayName.isNotEmpty
+        ? target.displayName
+        : l.meshcoreContactUnknownName;
+    if (ok) {
+      showSuccessSnackBar(
+        context,
+        l.meshcoreTracePathSaveAsContactPathSuccess(name),
+      );
+    } else {
+      showErrorSnackBar(
+        context,
+        l.meshcoreTracePathSaveAsContactPathFailed(name),
+      );
+    }
   }
 }
