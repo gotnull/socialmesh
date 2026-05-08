@@ -3265,6 +3265,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
       }
     } catch (e) {
       if (context.mounted) {
+        // Readiness gate (Step 6c).
+        if (maybeShowTxBlockedSnackBar(context, e)) {
+          return;
+        }
         showErrorSnackBar(
           context,
           context.l10n.nodeDetailTracerouteError(e.toString()),

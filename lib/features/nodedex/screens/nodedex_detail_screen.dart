@@ -48,7 +48,6 @@ import '../../pet/widgets/pet_companion_card.dart';
 import '../../../services/protocol/sip/mrrp_types.dart';
 
 import '../models/nodedex_entry.dart';
-import '../models/observed_radio_preset.dart';
 import '../models/sigil_evolution.dart';
 import '../node_constellation/node_constellation_screen.dart';
 import '../providers/nodedex_providers.dart';
@@ -65,6 +64,7 @@ import '../widgets/observation_timeline.dart';
 import '../widgets/node_activity_timeline.dart';
 import '../widgets/node_summary_card.dart';
 import '../widgets/patina_stamp.dart';
+import '../widgets/radio_compatibility_card.dart';
 import '../../../core/widgets/section_header.dart';
 import '../widgets/section_info_button.dart';
 import '../widgets/sigil_card_sheet.dart';
@@ -463,10 +463,21 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
             ),
           ),
 
-          // Signal records
+          // Radio compatibility (hidden for self via the widget itself).
+          // Sits between Discovery and Signal Records so the user reads
+          // "what was observed" before "what the signal looked like".
           SliverToBoxAdapter(
             child: _DetailEntrance(
               index: 8,
+              reduceMotion: reduceMotion,
+              child: RadioCompatibilityCard(nodeNum: widget.nodeNum),
+            ),
+          ),
+
+          // Signal records
+          SliverToBoxAdapter(
+            child: _DetailEntrance(
+              index: 9,
               reduceMotion: reduceMotion,
               child: _SignalRecordsCard(entry: entry),
             ),
@@ -1590,25 +1601,9 @@ class _DiscoveryStatsCard extends StatelessWidget {
             value: entry.distinctPositionCount.toString(),
             icon: Icons.pin_drop_outlined,
           ),
-          if (entry.lastObservedOnPreset != null)
-            _InfoRow(
-              label: context.l10n.nodedexFilterRadioPreset,
-              value:
-                  ObservedRadioPreset.fromProtobufValue(
-                    entry.lastObservedOnPreset!,
-                  )?.label(context.l10n) ??
-                  context.l10n.nodedexRadioPresetUnknown,
-              icon: Icons.radio_outlined,
-            ),
-          if (entry.lastObservedFrequencyOffset != null &&
-              entry.lastObservedFrequencyOffset != 0.0)
-            _InfoRow(
-              label: context.l10n.nodedexFrequencyOffset,
-              value: context.l10n.nodedexFrequencyOffsetValue(
-                entry.lastObservedFrequencyOffset!.toStringAsFixed(1),
-              ),
-              icon: Icons.tune_outlined,
-            ),
+          // Radio preset and frequency offset rows previously lived here.
+          // They moved to _RadioCompatibilityCard so the surface that
+          // matters (preset comparison + reachability) gets its own card.
         ],
       ),
     );

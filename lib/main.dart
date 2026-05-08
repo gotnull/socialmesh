@@ -28,6 +28,7 @@ import 'core/theme.dart';
 import 'core/widgets/glass_scaffold.dart';
 import 'core/widgets/loading_indicator.dart';
 import 'core/transport.dart';
+import 'services/protocol/protocol_service.dart' show OperationalReadiness;
 
 import 'services/transport/background_message_processor.dart';
 import 'core/accessibility_theme_adapter.dart';
@@ -783,6 +784,53 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       'autoReconnectState=$autoReconnectState, '
       'userDisconnected=$userDisconnected',
     );
+
+    // iOS-state-restoration safety net (Meshtastic only).
+    //
+    // After force-close + reopen or long background idle, iOS Core
+    // Bluetooth restores the GATT link but `flutter_blue_plus` does not
+    // auto-resubscribe FROMNUM notifications. The transport reports
+    // `connected`, the existing early-return below skips reconnect,
+    // and the protocol stays wedged (phase-2 stalled, parameters
+    // "Unknown", TX silently fails) until the user manually reconnects.
+    //
+    // Trigger a coordinator-managed restore if the BLE link is up but
+    // the protocol has not reached `ready`. The coordinator's
+    // user-disconnect / in-flight / transport-disconnected pre-checks
+    // make this safe; we only call it when there is a real wedge to
+    // recover from. MeshCore is unaffected — it has its own coordinator.
+    if (protocol != 'meshcore' && isLinkConnected && !userDisconnected) {
+      final readiness = ref
+          .read(meshtasticReadinessProvider)
+          .maybeWhen(data: (r) => r, orElse: () => null);
+      // `idle` is the no-active-session case (cold start before any
+      // protocol.start() has run) — leave it to the existing
+      // disconnected-with-saved-device branch below to drive a fresh
+      // connect. `ready` means the session is healthy — don't disturb.
+      // We only restore from the in-between wedged states.
+      final isWedged =
+          readiness != null &&
+          readiness != OperationalReadiness.ready &&
+          readiness != OperationalReadiness.idle;
+      if (isWedged) {
+        AppLogging.connection(
+          '📱 APP RESUMED: BLE link connected but protocol wedged '
+          '(readiness=$readiness) — triggering restoreSession',
+        );
+        try {
+          await ref
+              .read(conn.deviceConnectionProvider.notifier)
+              .restoreSessionForLifecycleResume();
+        } catch (e) {
+          AppLogging.connection(
+            '📱 APP RESUMED: restoreSessionForLifecycleResume failed: $e',
+          );
+        }
+        // Whether the restore succeeded or aborted (stale, in-flight,
+        // user-disconnect race), the existing branches below still need
+        // to run their checks — fall through.
+      }
+    }
 
     // If the active protocol link is connected, do nothing
     if (isLinkConnected) {

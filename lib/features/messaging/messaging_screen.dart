@@ -1738,6 +1738,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       // Check mounted after await before updating state
       if (!mounted) return;
 
+      // Readiness gate (Step 6c): if TX was blocked because the
+      // Meshtastic protocol has not finished its handshake, surface the
+      // friendly snackbar and leave the message in `pending` so the
+      // user can resend after the banner clears.
+      if (maybeShowTxBlockedSnackBar(context, e)) {
+        return;
+      }
+
       // Update status to failed with error
       messagesNotifier.updateMessage(
         messageId,
@@ -1864,6 +1872,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     } catch (e) {
       // Check mounted after await before updating state
       if (!mounted) return;
+
+      // Readiness gate (Step 6c): same friendly snackbar as the
+      // initial-send catch.
+      if (maybeShowTxBlockedSnackBar(context, e)) {
+        return;
+      }
 
       messagesNotifier.updateMessage(
         message.id,

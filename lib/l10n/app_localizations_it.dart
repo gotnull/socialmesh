@@ -32920,6 +32920,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Il dispositivo è stato resettato o sostituito. Configuralo di nuovo.';
 
   @override
+  String get connectionErrorBondForgotten =>
+      'Questo dispositivo è stato rimosso dalle impostazioni Bluetooth di Android. Riassocialo dallo Scanner.';
+
+  @override
   String countdownTracerouteTo(String displayName) {
     return 'Traceroute verso $displayName';
   }
@@ -39780,4 +39784,85 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get nodedexConstellationActionDetails => 'Apri dettagli';
+
+  @override
+  String get statusConfiguring => 'Configurazione di SocialMesh in corso…';
+
+  @override
+  String get statusDegraded =>
+      'La connessione è ancora in fase di ripristino. Tocca per riconnetterti.';
+
+  @override
+  String get txBlockedNotReady =>
+      'SocialMesh è ancora in fase di configurazione. Riprova tra un momento.';
+
+  @override
+  String get nodedexRadioCompatibilityTitle => 'Compatibilità radio';
+
+  @override
+  String get nodedexReachabilityLabel => 'Raggiungibilità';
+
+  @override
+  String get nodedexLocalPresetNow => 'Preset radio attuale';
+
+  @override
+  String get nodedexLastObservedPreset => 'Sentito quando eri su';
+
+  @override
+  String get nodedexObservationSourceLabel => 'Osservato tramite';
+
+  @override
+  String get nodedexHopsAwayLabel => 'Hop di distanza';
+
+  @override
+  String nodedexHopsAwayValue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hop',
+      one: '1 hop',
+      zero: 'Diretto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get nodedexReachabilityLikelyOnRf =>
+      'Probabilmente raggiungibile in RF';
+
+  @override
+  String get nodedexReachabilityDifferentPreset =>
+      'Preset diverso dall\'ultimo contatto';
+
+  @override
+  String get nodedexReachabilityDifferentFrequencyOffset =>
+      'Offset di frequenza diverso';
+
+  @override
+  String get nodedexReachabilityIndirectOrMqtt => 'Visibile via MQTT o relay';
+
+  @override
+  String get nodedexReachabilityLocalRadioUnknown =>
+      'Connetti una radio per confrontare';
+
+  @override
+  String get nodedexReachabilityUnknown => 'Dati insufficienti per confrontare';
+
+  @override
+  String get nodedexReachabilitySelf => 'Questa radio';
+
+  @override
+  String get nodedexObservationSourceDirectRf => 'RF diretto';
+
+  @override
+  String get nodedexObservationSourceMqtt => 'Bridge MQTT';
+
+  @override
+  String get nodedexObservationSourceIndirectRf => 'RF rilanciato';
+
+  @override
+  String get nodedexObservationSourceNodeDb => 'Sincronizzato dal dispositivo';
+
+  @override
+  String get nodedexObservationSourceUnknown => 'Sconosciuto';
 }

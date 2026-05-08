@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
@@ -130,6 +131,18 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
 
   void _startDismissTimer() {
     _cancelDismissTimer();
+    // Suppress the 2 s auto-dismiss while the Meshtastic protocol is
+    // not yet `ready`. Without this, the banner would vanish before
+    // the two-phase handshake completes (regression visible to users
+    // as "Unknown" parameters with no visible feedback). Configuring
+    // and Recovering both keep the banner up.
+    final bannerState = ref.read(meshtasticBannerStateProvider);
+    if (bannerState != MeshtasticBannerState.passthrough) {
+      AppLogging.connection(
+        'RECONNECT_BANNER_DISMISS_SUPPRESSED bannerState=${bannerState.name}',
+      );
+      return;
+    }
     _dismissTimer = Timer(const Duration(seconds: 2), () {
       if (mounted) _animateOut();
     });
@@ -330,6 +343,14 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // Meshtastic readiness banner state. Pure presentation — never
+    // touches `unifiedConnectionStateProvider`. MeshCore sessions
+    // resolve to `passthrough` so the existing banner logic below
+    // remains the single source of truth for that protocol.
+    final bannerState = ref.watch(meshtasticBannerStateProvider);
+    final isConfiguring = bannerState == MeshtasticBannerState.configuring;
+    final isDegraded = bannerState == MeshtasticBannerState.recovering;
+
     // Use frozen props during exit animation so content doesn't flash.
     final effectiveReconnectState =
         _frozenReconnectState ?? widget.autoReconnectState;
@@ -359,6 +380,11 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
         !isUserDisconnected &&
         !isTerminalInvalidated &&
         !isAuthFailed &&
+        // Don't fire a parallel auto-reconnect while the readiness
+        // restoreSession is doing its thing — the coordinator already
+        // owns the recovery and a parallel scan would race it.
+        !isConfiguring &&
+        !isDegraded &&
         widget.autoReconnectEnabled &&
         !_autoRetryTriggered) {
       _autoRetryTriggered = true;
@@ -373,13 +399,25 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
       });
     }
 
-    final foregroundColor = isTerminalInvalidated
+    // Meshtastic readiness override (presentation only). Wins over the
+    // existing reconnect/disconnect text when the protocol is mid-
+    // handshake or recovering, so the banner never shows "Connected"
+    // while the protocol is wedged. MeshCore is unaffected (passthrough).
+    final foregroundColor = isConfiguring
+        ? context.accentColor
+        : isDegraded
+        ? AppTheme.errorRed
+        : isTerminalInvalidated
         ? AppTheme.errorRed
         : isReconnecting
         ? context.accentColor
         : (isFailed ? AppTheme.errorRed : AccentColors.orange);
 
-    final icon = isTerminalInvalidated
+    final icon = isConfiguring
+        ? Icons.bluetooth_searching_rounded
+        : isDegraded
+        ? Icons.bluetooth_disabled_rounded
+        : isTerminalInvalidated
         ? Icons.error_outline_rounded
         : isReconnecting
         ? Icons.bluetooth_searching_rounded
@@ -387,7 +425,11 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
 
     final invalidatedMessage =
         'Device was reset or replaced. Forget it from Bluetooth settings and set it up again.'; // lint-allow: hardcoded-string
-    final message = isTerminalInvalidated
+    final message = isConfiguring
+        ? context.l10n.statusConfiguring
+        : isDegraded
+        ? context.l10n.statusDegraded
+        : isTerminalInvalidated
         ? invalidatedMessage
         : isReconnecting
         ? (isScanning
@@ -470,7 +512,7 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
                               alignment: Alignment.center,
                               children: [
                                 Icon(icon, size: 18, color: foregroundColor),
-                                if (isReconnecting)
+                                if (isReconnecting || isConfiguring)
                                   SizedBox(
                                     width: 24,
                                     height: 24,

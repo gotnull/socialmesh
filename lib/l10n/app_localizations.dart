@@ -57290,6 +57290,12 @@ abstract class AppLocalizations {
   /// **'Device was reset or replaced. Set it up again.'**
   String get connectionErrorDeviceReset;
 
+  /// Banner copy shown when SocialMesh detects on Android that the saved Meshtastic device is no longer in the system bonded list. Routes the user to Scanner so the OS pairing PIN flow runs again. Android-only — iOS does not expose pre-connection bond state.
+  ///
+  /// In en, this message translates to:
+  /// **'This device was removed from Android Bluetooth settings. Re-pair it from Scanner.'**
+  String get connectionErrorBondForgotten;
+
   /// UI text: countdown traceroute to Parameters: {displayName} = display name.
   ///
   /// In en, this message translates to:
@@ -69277,6 +69283,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Inspect details'**
   String get nodedexConstellationActionDetails;
+
+  /// Top status banner shown while the BLE link is up but the Meshtastic protocol has not finished its two-phase handshake (linkConnected, handshakePhase1, or handshakePhase2). Brand casing: SocialMesh.
+  ///
+  /// In en, this message translates to:
+  /// **'Configuring SocialMesh…'**
+  String get statusConfiguring;
+
+  /// Top status banner shown when the readiness watchdog gave up after a failed session rebuild. Tappable to manually reconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection is still recovering. Tap to reconnect.'**
+  String get statusDegraded;
+
+  /// Snackbar shown when the user tries to send a message or traceroute while the protocol is not yet operational. Brand casing: SocialMesh.
+  ///
+  /// In en, this message translates to:
+  /// **'Still configuring SocialMesh. Try again in a moment.'**
+  String get txBlockedNotReady;
+
+  /// Title of the NodeDex detail screen card that compares the node's last-known radio context against the local radio's current config.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio compatibility'**
+  String get nodedexRadioCompatibilityTitle;
+
+  /// Row label in the Radio Compatibility card. Value summarizes whether the node is likely reachable on direct RF, was last seen on a different preset, came in via MQTT/relay, or is unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Reachability'**
+  String get nodedexReachabilityLabel;
+
+  /// Row label in the Radio Compatibility card showing the local radio's current modem preset.
+  ///
+  /// In en, this message translates to:
+  /// **'Your radio preset'**
+  String get nodedexLocalPresetNow;
+
+  /// Row label in the Radio Compatibility card showing which local-radio preset was active the last time the node was observed. We never know the remote node's preset; only ours at observation time.
+  ///
+  /// In en, this message translates to:
+  /// **'Heard when you were on'**
+  String get nodedexLastObservedPreset;
+
+  /// Row label in the Radio Compatibility card. Value is the transport classification of the latest observation (Direct RF, MQTT bridge, Relayed RF, Synced from device, or Unknown).
+  ///
+  /// In en, this message translates to:
+  /// **'Observed via'**
+  String get nodedexObservationSourceLabel;
+
+  /// Row label in the Radio Compatibility card showing relay distance. Value uses nodedexHopsAwayValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Hops away'**
+  String get nodedexHopsAwayLabel;
+
+  /// Plural for the hops-away row in the Radio Compatibility card. =0 renders as 'Direct'.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Direct} =1{1 hop} other{{count} hops}}'**
+  String nodedexHopsAwayValue(int count);
+
+  /// Reachability row value when the local radio's current preset matches the preset that was active when the node was last observed, the latest observation came in over direct RF, and the node is 0 hops away. Hedged with 'Likely' because real reachability also depends on airtime, SNR, node state, encryption, and current topology.
+  ///
+  /// In en, this message translates to:
+  /// **'Likely reachable on RF'**
+  String get nodedexReachabilityLikelyOnRf;
+
+  /// Reachability row value when the local radio's preset has changed since the node was last observed.
+  ///
+  /// In en, this message translates to:
+  /// **'Different preset since last contact'**
+  String get nodedexReachabilityDifferentPreset;
+
+  /// Reachability row value when presets match but the local radio's frequency offset differs from the offset that was active when the node was last observed.
+  ///
+  /// In en, this message translates to:
+  /// **'Different frequency offset'**
+  String get nodedexReachabilityDifferentFrequencyOffset;
+
+  /// Reachability row value when the latest observation was either MQTT-bridged or arrived with hops > 0. Describes the latest observation, not a permanent reachability claim.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible via MQTT or relay'**
+  String get nodedexReachabilityIndirectOrMqtt;
+
+  /// Reachability row value when no radio is connected and the comparison cannot be performed. The rest of the Radio Compatibility card still renders persisted values.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a radio to compare'**
+  String get nodedexReachabilityLocalRadioUnknown;
+
+  /// Reachability row value when the node has been seen but no preset metadata is recorded for the observation.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data to compare'**
+  String get nodedexReachabilityUnknown;
+
+  /// Reachability row value for the user's own connected node. The card itself is hidden in this case; the string exists for completeness in case a future surface needs it.
+  ///
+  /// In en, this message translates to:
+  /// **'This radio'**
+  String get nodedexReachabilitySelf;
+
+  /// Observation source value: arrived over direct LoRa RF with hops = 0.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct RF'**
+  String get nodedexObservationSourceDirectRf;
+
+  /// Observation source value: passed through an MQTT gateway at some point on its path.
+  ///
+  /// In en, this message translates to:
+  /// **'MQTT bridge'**
+  String get nodedexObservationSourceMqtt;
+
+  /// Observation source value: arrived over LoRa RF but relayed through one or more intermediate nodes (hops > 0).
+  ///
+  /// In en, this message translates to:
+  /// **'Relayed RF'**
+  String get nodedexObservationSourceIndirectRf;
+
+  /// Observation source value: came from the device's NodeDB sync at reconnect, not a fresh live observation.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced from device'**
+  String get nodedexObservationSourceNodeDb;
+
+  /// Observation source value: legacy firmware or other case where via_mqtt was not present and we cannot classify the path.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get nodedexObservationSourceUnknown;
 }
 
 class _AppLocalizationsDelegate

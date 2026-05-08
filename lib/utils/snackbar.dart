@@ -99,6 +99,24 @@ void showInfoSnackBar(
   );
 }
 
+/// If [error] is a [StateError] thrown by `ProtocolService._assertOperational`
+/// (i.e. a TX path was blocked because the Meshtastic readiness state is
+/// not yet `ready`), surface the friendly localised snackbar and return
+/// `true`. Otherwise return `false` so the caller can fall through to its
+/// existing error-display path.
+///
+/// Wired at UI call sites only (Step 6c) so the protocol return type
+/// stays unchanged. The detection key is the `'protocol not ready'`
+/// substring written by `_assertOperational`'s `StateError.message` —
+/// see `lib/services/protocol/protocol_service.dart`.
+bool maybeShowTxBlockedSnackBar(BuildContext context, Object error) {
+  if (error is StateError && error.message.contains('protocol not ready')) {
+    showInfoSnackBar(context, context.l10n.txBlockedNotReady);
+    return true;
+  }
+  return false;
+}
+
 /// Shows a loading snackbar with spinner
 void showLoadingSnackBar(
   BuildContext context,

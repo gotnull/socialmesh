@@ -23,9 +23,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/logging.dart';
 import '../core/safety/error_handler.dart';
 import '../core/transport.dart';
+import '../services/protocol/meshtastic_readiness_flag.dart';
+import '../services/protocol/protocol_service.dart'
+    show OperationalReadiness, ProtocolService;
+import '../services/transport/ble_transport.dart' show BleTransport;
 import '../services/meshcore/connection_coordinator.dart'
     show ConnectionResult, MeshCoreTcpDeviceId;
 import '../services/transport/background_ble_service.dart';
+import 'app_lifecycle_provider.dart';
 import 'app_providers.dart';
 import 'scanner_lifecycle_providers.dart';
 import 'connectivity_providers.dart';
@@ -74,7 +79,16 @@ enum PairingInvalidationReason {
 
   /// Local databases wiped during account deletion. The BLE bond is stale
   /// and the user must forget the device in Bluetooth settings.
-  accountDeleted('account_deleted');
+  accountDeleted('account_deleted'),
+
+  /// Android-only: after the final reconnect scan-fail, the saved
+  /// `lastDeviceId` is no longer present in
+  /// `FlutterBluePlus.bondedDevices`. The user likely removed the
+  /// device from Android Bluetooth settings. UI surfaces a re-pair
+  /// CTA instead of the generic "Device not found" copy. iOS cannot
+  /// detect this pre-connection (no bond-state API on CBPeripheral),
+  /// so this reason is never produced on iOS.
+  bondForgotten('bond_forgotten_after_scan_fail');
 
   final String logValue;
   const PairingInvalidationReason(this.logValue);
@@ -228,6 +242,536 @@ class DeviceConnectionState2 {
 // DEVICE CONNECTION NOTIFIER
 // =============================================================================
 
+/// Single canonical entry point for re-binding the Meshtastic protocol to
+/// a (newly or already) connected transport. Every reconnect path —
+/// auto-reconnect after a transport blip, background scan/connect, manual
+/// retry, lifecycle resume — funnels through [restoreSession] so the
+/// stale-state hazards listed below are handled uniformly:
+///
+/// - **Single-flight via [_inFlight]**: overlapping triggers (iOS may
+///   emit repeated `AppLifecycleState.resumed` events; auto-reconnect
+///   races against manual reconnect) collapse onto one execution; later
+///   callers `await` the existing future instead of starting a parallel
+///   restore.
+/// - **Session generation via [_sessionGeneration]**: every restore is
+///   tagged with a monotonic generation. After every async boundary the
+///   `_doRestore` body re-checks the generation; if it has advanced (e.g.
+///   the user disconnected, switched devices, or the transport was
+///   disposed) the restore aborts before doing anything else, never
+///   resurrecting a stale device.
+/// - **Intentional-disconnect respect via [isUserDisconnected]**: a
+///   restore triggered by lifecycle resume or transport reconnect is
+///   silently skipped when the user has explicitly disconnected. This
+///   read is provided as a callback so the coordinator does not depend
+///   on the [DeviceConnectionNotifier]'s private state directly.
+/// - **BLE-restoration safety net**: when the transport is a
+///   [BleTransport], `refreshNotifications()` runs first to repair the
+///   stale `_fromNumSubscription` left by iOS Core Bluetooth state
+///   restoration before `protocol.stop()` then `protocol.start()` rebuild
+///   a fresh handshake.
+///
+/// The coordinator deliberately does NOT touch UI providers (no banner
+/// text, no snackbars) and does NOT auto-trigger session rebuilds — that
+/// is the watchdog's job (Step 4, gated, default OFF in release).
+/// MeshCore is unaffected; it has its own `ConnectionCoordinator`.
+///
+/// **Visibility**: the class is public (no underscore) only so a focused
+/// unit test in `test/providers/restore_session_coordinator_test.dart`
+/// can construct and exercise it directly with `ProviderContainer`
+/// overrides for `transportProvider` / `protocolServiceProvider`.
+/// Production code MUST go through
+/// [DeviceConnectionNotifier.restoreSessionForLifecycleResume] (or
+/// remain inside the connection notifier itself) — never construct an
+/// extra instance.
+@visibleForTesting
+class RestoreSessionCoordinator {
+  RestoreSessionCoordinator({
+    required this.readTransport,
+    required this.readProtocol,
+    required this.isUserDisconnected,
+    bool Function()? isAppBackgrounded,
+  }) : isAppBackgrounded = isAppBackgrounded ?? _alwaysForeground;
+
+  /// Re-reads the current transport on every restore so a transport
+  /// swap (BLE -> TCP, or transport-provider re-creation) takes effect
+  /// immediately without rewiring the coordinator.
+  final DeviceTransport Function() readTransport;
+
+  /// Re-reads the current [ProtocolService]. Same rationale as
+  /// [readTransport].
+  final ProtocolService Function() readProtocol;
+
+  final bool Function() isUserDisconnected;
+
+  /// Returns `true` while the app is in the background (paused / inactive
+  /// / detached). Used to enforce a one-attempt budget per background
+  /// session — see [_kBackgroundAttemptBudget]. Defaulted to "always
+  /// foreground" so unit tests that don't care about lifecycle keep
+  /// working unchanged.
+  final bool Function() isAppBackgrounded;
+
+  static bool _alwaysForeground() => false;
+
+  /// Maximum number of restore attempts permitted while the app is
+  /// backgrounded before we suppress further attempts until foreground.
+  /// Battery / thermal safety is the design constraint here — repeated
+  /// failed restores while backgrounded create a hot-phone-overnight
+  /// regression. 1 covers the legitimate "iOS woke us with state
+  /// restoration" case once and refuses to spin.
+  static const int _kBackgroundAttemptBudget = 1;
+
+  int _sessionGeneration = 0;
+  Future<void>? _inFlight;
+  int _backgroundAttemptCount = 0;
+  bool _budgetExhaustedLogged = false;
+
+  /// Current generation. Bumped at the start of every accepted
+  /// [restoreSession] and explicitly via [invalidate].
+  int get sessionGeneration => _sessionGeneration;
+
+  /// True while a restore is in flight. Callers may use this to gate
+  /// downstream behavior (e.g. a watchdog arming itself only after the
+  /// restore completed).
+  bool get inFlight => _inFlight != null;
+
+  /// True when the per-background-session attempt budget has been
+  /// consumed (i.e. a further restore call would be denied with
+  /// `cause=background_budget_exhausted`). Used by the readiness
+  /// watchdog to suppress its rebuild when a user is actively keeping
+  /// the app backgrounded — battery-safety beats staying connected.
+  bool get backgroundBudgetExhausted =>
+      _backgroundAttemptCount >= _kBackgroundAttemptBudget;
+
+  /// Bump the generation without running a restore. Call this on user
+  /// disconnect, device switch, transport disposal, or any other
+  /// authoritative "the previous session is dead" event so any
+  /// in-flight restore aborts at its next stale check.
+  void invalidate(String reason) {
+    final old = _sessionGeneration;
+    _sessionGeneration++;
+    AppLogging.connection(
+      'RESTORE: invalidate gen=$old -> $_sessionGeneration reason=$reason',
+    );
+  }
+
+  /// Canonical reconnect routine. Idempotent under concurrent calls.
+  ///
+  /// Pre-checks (in order, each logs and short-circuits):
+  /// 1. user-disconnected → skip;
+  /// 2. in-flight → return the in-flight future;
+  /// 3. transport not connected → skip (caller must connect first).
+  ///
+  /// On entry: bumps the generation, refreshes BLE notifications (BLE
+  /// transports only), calls `protocol.stop()`, binds the new generation
+  /// onto the protocol service, calls `protocol.start()`. Each `await`
+  /// is followed by a stale check that aborts cleanly without touching
+  /// shared state when a newer restore (or user disconnect) has taken
+  /// over.
+  Future<void> restoreSession({required String reason}) async {
+    if (isUserDisconnected()) {
+      AppLogging.connection(
+        'RESTORE: skipped reason=$reason cause=user_disconnected',
+      );
+      return;
+    }
+
+    // Background safety budget — enforced BEFORE the single-flight + the
+    // transport check so repeated background attempts don't even pay the
+    // cost of those checks. Foreground is always-allowed; the budget
+    // resets when we observe foreground (the natural moments — lifecycle
+    // resume, manual reconnect, auto-reconnect) all happen in foreground
+    // with the app's existing flow. See `_kBackgroundAttemptBudget`.
+    final backgrounded = isAppBackgrounded();
+    if (!backgrounded) {
+      _backgroundAttemptCount = 0;
+      _budgetExhaustedLogged = false;
+    } else {
+      if (_backgroundAttemptCount >= _kBackgroundAttemptBudget) {
+        if (!_budgetExhaustedLogged) {
+          AppLogging.connection(
+            'BACKGROUND_RECONNECT: giving_up_until_foreground '
+            'count=$_backgroundAttemptCount budget=$_kBackgroundAttemptBudget',
+          );
+          _budgetExhaustedLogged = true;
+        }
+        AppLogging.connection(
+          'RESTORE: skipped reason=$reason cause=background_budget_exhausted '
+          'count=$_backgroundAttemptCount',
+        );
+        return;
+      }
+      _backgroundAttemptCount++;
+      AppLogging.connection(
+        'BACKGROUND_RECONNECT: attempt count=$_backgroundAttemptCount '
+        'budget=$_kBackgroundAttemptBudget reason=$reason',
+      );
+    }
+
+    if (_inFlight != null) {
+      AppLogging.connection(
+        'RESTORE: skipped reason=$reason cause=in_flight gen=$_sessionGeneration',
+      );
+      return _inFlight;
+    }
+    final transport = readTransport();
+    if (!transport.isConnected) {
+      AppLogging.connection(
+        'RESTORE: skipped reason=$reason cause=transport_disconnected',
+      );
+      return;
+    }
+
+    final myGen = ++_sessionGeneration;
+    final stopwatch = Stopwatch()..start();
+    AppLogging.connection(
+      'RESTORE: begin gen=$myGen reason=$reason transport=${transport.runtimeType}',
+    );
+
+    final future = _doRestore(myGen, transport, stopwatch);
+    _inFlight = future;
+    try {
+      await future;
+    } finally {
+      // Only clear the in-flight slot if it still points at our future —
+      // a later restore that overwrote it (cannot happen today because
+      // single-flight blocks it, but cheap defense) must not be cleared
+      // by an earlier completion.
+      if (identical(_inFlight, future)) {
+        _inFlight = null;
+      }
+    }
+  }
+
+  Future<void> _doRestore(
+    int gen,
+    DeviceTransport transport,
+    Stopwatch sw,
+  ) async {
+    bool stale() {
+      if (_sessionGeneration != gen) {
+        AppLogging.connection(
+          'RESTORE: stale gen=$gen current=$_sessionGeneration -- abort',
+        );
+        return true;
+      }
+      if (isUserDisconnected()) {
+        AppLogging.connection(
+          'RESTORE: stale gen=$gen cause=user_disconnected -- abort',
+        );
+        return true;
+      }
+      return false;
+    }
+
+    final protocol = readProtocol();
+
+    if (transport is BleTransport) {
+      AppLogging.connection('BLE_NOTIF: refresh attempted gen=$gen');
+      try {
+        await transport.refreshNotifications();
+        if (stale()) return;
+        AppLogging.connection('BLE_NOTIF: refresh ok gen=$gen');
+      } catch (e) {
+        AppLogging.connection('BLE_NOTIF: refresh failed gen=$gen err=$e');
+        if (stale()) return;
+      }
+    }
+
+    // `stop()` is synchronous in this codebase — it cancels the data
+    // subscription, errors any pending completers, and resets
+    // `_isStarted = false` so the upcoming `start()` is allowed past the
+    // `_isStarted && _transport.isConnected` short-circuit.
+    protocol.stop();
+    if (stale()) return;
+    protocol.bindSessionGeneration(gen);
+    if (stale()) return;
+    await protocol.start();
+    if (stale()) return;
+    AppLogging.connection(
+      'RESTORE: end gen=$gen elapsed=${sw.elapsedMilliseconds}ms '
+      'readiness=${protocol.readiness}',
+    );
+  }
+}
+
+/// Auto-rebuild side of the readiness fix (Step 4). Watches
+/// `protocol.readinessStream` and, if a restore reaches `linkConnected`
+/// but never advances to `ready` within deadline, triggers ONE clean
+/// transport-disconnect + fresh `startBackgroundConnection()` cycle via
+/// the supplied [triggerRebuild] callback. The rebuild flows through
+/// `RestoreSessionCoordinator` so session-generation, single-flight,
+/// user-disconnect, and background-budget guards still apply — the
+/// watchdog is NEVER a separate reconnect path.
+///
+/// Hard rules baked into this class:
+/// - **OFF in release by default.** [MeshtasticReadinessFlags] resolves
+///   to `watchdogEnabled=false` in release unless env override flips it.
+/// - **No reconnect/rebuild loop.** At most one rebuild per
+///   [_kRebuildBackoff] (60 s). After the backoff also fails, the next
+///   timeout-trigger logs `WATCHDOG: suppressed_backoff` and waits.
+/// - **Suppressed in background once the coordinator's budget is
+///   exhausted.** Battery / thermal safety wins.
+/// - **Phase-1 timeout is a warning only**, not a rebuild trigger. The
+///   rebuild fires on total-timeout (20 s) only — phase-1 (18 s) just
+///   surfaces the wedge in logs sooner for triage. The phase-1 warning
+///   only logs if readiness is still in `linkConnected` /
+///   `handshakePhase1` when the timer fires; firmware that completes
+///   phase-1 before the deadline gets no false-positive warning.
+/// - **Timer ownership is single-arm-per-generation**. `_arm()`
+///   cancels any prior timers and creates a fresh pair before storing
+///   them in [_phase1Timer] / [_totalTimer]. Every timer callback
+///   captures its own [Timer] reference and self-suppresses if the
+///   field no longer points at it (cancel + replace race), if the
+///   coordinator's generation moved on, or if readiness is already
+///   `ready`. Together these prevent the orphan-total-timer rebuild
+///   that fired one unnecessary `transport.disconnect()` per healthy
+///   restore cycle in field testing.
+@visibleForTesting
+class ReadinessWatchdog {
+  ReadinessWatchdog({
+    required this.flags,
+    required this.coordinator,
+    required this.readinessStream,
+    required this.triggerRebuild,
+    required this.isAppBackgrounded,
+    DateTime Function()? clock,
+  }) : clock = clock ?? DateTime.now;
+
+  final MeshtasticReadinessFlags flags;
+  final RestoreSessionCoordinator coordinator;
+  final Stream<OperationalReadiness> readinessStream;
+  final Future<void> Function() triggerRebuild;
+  final bool Function() isAppBackgrounded;
+
+  /// Wall-clock source for the rebuild-backoff window. Defaults to
+  /// [DateTime.now]; tests inject a fake-clock-aware callback so
+  /// `fakeAsync` can advance the backoff window deterministically.
+  /// Production code uses `DateTime.now` (the timer itself is enough
+  /// for the deadline; this clock only governs the 60 s rebuild cap).
+  final DateTime Function() clock;
+
+  /// Phase-1 deadline: log a "still in phase 1" warning. No rebuild.
+  /// 18 s covers the slowest observed phase-1 on Heltec firmware (~14 s).
+  /// Healthy devices nominally complete phase-1 in 1-3 s, so this
+  /// remains a useful "something is wrong" signal even at 18 s.
+  static const Duration _kPhase1Deadline = Duration(seconds: 18);
+
+  /// Total deadline: rebuild trigger when readiness has not reached
+  /// `ready`.
+  static const Duration _kTotalDeadline = Duration(seconds: 20);
+
+  /// Minimum interval between rebuilds. After a rebuild fires, no
+  /// further rebuild will fire from the watchdog for this duration even
+  /// if readiness still hasn't reached `ready`.
+  static const Duration _kRebuildBackoff = Duration(seconds: 60);
+
+  StreamSubscription<OperationalReadiness>? _subscription;
+  Timer? _phase1Timer;
+  Timer? _totalTimer;
+  DateTime? _lastRebuildAt;
+  bool _phase1LoggedThisArm = false;
+
+  /// Generation the current pair of timers was armed for. `null` means
+  /// "no armed timers right now" (just-constructed, just-cancelled, or
+  /// post-`stop`). Stale timer callbacks compare against this and the
+  /// coordinator's current generation to decide whether to act.
+  int? _armedGeneration;
+
+  /// Last readiness state observed on the stream. Updated synchronously
+  /// in [_onReadiness] before the per-state branch runs, so timer
+  /// callbacks reading this see the same value the cancellation /
+  /// arming logic just used.
+  OperationalReadiness _lastReadiness = OperationalReadiness.idle;
+
+  /// Test-only window into the armed-for generation, mirroring the
+  /// pattern used by [RestoreSessionCoordinator.sessionGeneration].
+  @visibleForTesting
+  int? get armedGenerationForTesting => _armedGeneration;
+
+  @visibleForTesting
+  OperationalReadiness get lastReadinessForTesting => _lastReadiness;
+
+  /// Subscribe to readiness transitions. No-op if the watchdog flag is
+  /// disabled — call sites can construct the watchdog unconditionally
+  /// for symmetry without paying any cost in release.
+  void start() {
+    if (!flags.watchdogEnabled) return;
+    _subscription = readinessStream.listen(_onReadiness);
+  }
+
+  /// Cancel the subscription and any armed timers. Idempotent.
+  Future<void> stop() async {
+    _cancelTimers(reason: 'stop');
+    await _subscription?.cancel();
+    _subscription = null;
+  }
+
+  void _onReadiness(OperationalReadiness state) {
+    _lastReadiness = state;
+    switch (state) {
+      case OperationalReadiness.linkConnected:
+      case OperationalReadiness.handshakePhase1:
+      case OperationalReadiness.handshakePhase2:
+        _arm();
+      case OperationalReadiness.ready:
+        _cancelTimers(reason: 'ready');
+      case OperationalReadiness.idle:
+        _cancelTimers(reason: 'idle');
+      case OperationalReadiness.degraded:
+        _cancelTimers(reason: 'degraded');
+    }
+  }
+
+  void _arm() {
+    if (!flags.watchdogEnabled) return;
+    final gen = coordinator.sessionGeneration;
+
+    // Idempotent skip: same generation, both timers still alive.
+    // Re-emitting `linkConnected -> handshakePhase1 -> handshakePhase2`
+    // for the same restore should NOT recreate timers.
+    if (_armedGeneration == gen &&
+        (_phase1Timer?.isActive ?? false) &&
+        (_totalTimer?.isActive ?? false)) {
+      AppLogging.connection('WATCHDOG: arm_skipped already_armed gen=$gen');
+      return;
+    }
+
+    // Replace path: cancel any prior timers cleanly before creating a
+    // fresh pair. Without this, an `_arm()` call that races a
+    // partially-fired previous arm (phase-1 fired, total still
+    // pending) would drop the field reference but leave the OS-level
+    // timer alive — the orphan total timer that fired spurious
+    // rebuilds in field testing.
+    if (_phase1Timer != null || _totalTimer != null) {
+      AppLogging.connection(
+        'WATCHDOG: rearm_cancelled_previous gen=$gen '
+        'previousGen=$_armedGeneration',
+      );
+      _phase1Timer?.cancel();
+      _phase1Timer = null;
+      _totalTimer?.cancel();
+      _totalTimer = null;
+    }
+
+    _armedGeneration = gen;
+    _phase1LoggedThisArm = false;
+    AppLogging.connection(
+      'WATCHDOG: armed deadline=${_kTotalDeadline.inSeconds}s gen=$gen',
+    );
+
+    // Capture each timer in a `late final` local so the callback can
+    // self-identify against the field. If `_arm()` runs again and
+    // replaces the field, the old callback's `identical(..., self)`
+    // check returns false and the callback exits without side effects.
+    late final Timer phase1;
+    phase1 = Timer(_kPhase1Deadline, () => _onPhase1Timeout(gen, phase1));
+    _phase1Timer = phase1;
+
+    late final Timer total;
+    total = Timer(_kTotalDeadline, () => _onTotalTimeout(gen, total));
+    _totalTimer = total;
+  }
+
+  void _cancelTimers({required String reason}) {
+    if (_phase1Timer == null && _totalTimer == null) return;
+    AppLogging.connection(
+      'WATCHDOG: cancelled reason=$reason gen=$_armedGeneration',
+    );
+    _phase1Timer?.cancel();
+    _phase1Timer = null;
+    _totalTimer?.cancel();
+    _totalTimer = null;
+    _armedGeneration = null;
+  }
+
+  void _onPhase1Timeout(int gen, Timer self) {
+    // Self-identity guard: the field no longer points at us, so a
+    // newer arm has replaced this timer (or `_cancelTimers` ran).
+    if (!identical(_phase1Timer, self)) {
+      AppLogging.connection(
+        'WATCHDOG: stale_timer_suppressed timerGen=$gen '
+        'currentGen=${coordinator.sessionGeneration}',
+      );
+      return;
+    }
+    // Stale-generation guard: the coordinator advanced past this gen.
+    if (_armedGeneration != gen || gen != coordinator.sessionGeneration) {
+      AppLogging.connection(
+        'WATCHDOG: stale_timer_suppressed timerGen=$gen '
+        'currentGen=${coordinator.sessionGeneration}',
+      );
+      return;
+    }
+    // Only warn if we're actually still stuck in phase-1. If readiness
+    // already advanced to `handshakePhase2` (or further) by the time
+    // the timer fires, phase-1 actually completed within the deadline
+    // and the warning would be a false positive.
+    final stuckInPhase1 =
+        _lastReadiness == OperationalReadiness.linkConnected ||
+        _lastReadiness == OperationalReadiness.handshakePhase1;
+    if (stuckInPhase1 && !_phase1LoggedThisArm) {
+      AppLogging.connection('WATCHDOG: phase1 timeout gen=$gen');
+      _phase1LoggedThisArm = true;
+    }
+  }
+
+  Future<void> _onTotalTimeout(int gen, Timer self) async {
+    // Self-identity guard: orphan from a replaced or cancelled arm.
+    if (!identical(_totalTimer, self)) {
+      AppLogging.connection(
+        'WATCHDOG: stale_timer_suppressed timerGen=$gen '
+        'currentGen=${coordinator.sessionGeneration}',
+      );
+      return;
+    }
+    // Stale-generation guard.
+    if (_armedGeneration != gen || gen != coordinator.sessionGeneration) {
+      AppLogging.connection(
+        'WATCHDOG: stale_timer_suppressed timerGen=$gen '
+        'currentGen=${coordinator.sessionGeneration}',
+      );
+      return;
+    }
+    // Already-ready guard. The cancel-on-ready path in `_onReadiness`
+    // is the primary protection; this is defence in depth for the
+    // race where the timer's callback was already enqueued before the
+    // cancel ran.
+    if (_lastReadiness == OperationalReadiness.ready) {
+      AppLogging.connection(
+        'WATCHDOG: stale_timer_suppressed timerGen=$gen '
+        'currentGen=${coordinator.sessionGeneration}',
+      );
+      return;
+    }
+
+    AppLogging.connection('WATCHDOG: total timeout gen=$gen');
+
+    if (isAppBackgrounded() || coordinator.backgroundBudgetExhausted) {
+      AppLogging.connection('WATCHDOG: suppressed_in_background gen=$gen');
+      return;
+    }
+
+    final now = clock();
+    if (_lastRebuildAt != null &&
+        now.difference(_lastRebuildAt!) < _kRebuildBackoff) {
+      AppLogging.connection(
+        'WATCHDOG: suppressed_backoff gen=$gen '
+        'since=${now.difference(_lastRebuildAt!).inSeconds}s '
+        'min=${_kRebuildBackoff.inSeconds}s',
+      );
+      return;
+    }
+    _lastRebuildAt = now;
+
+    try {
+      await triggerRebuild();
+      AppLogging.connection('WATCHDOG: rebuild outcome=ok gen=$gen');
+    } catch (e) {
+      AppLogging.connection('WATCHDOG: rebuild outcome=error:$e gen=$gen');
+    }
+  }
+}
+
 /// Manages device connection lifecycle independently from app initialization.
 /// Starts connection asynchronously in background after app is ready.
 class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
@@ -236,6 +780,18 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   Timer? _retryTimer; // Timer for retry attempts
   bool _isInitialized = false;
   bool _userDisconnected = false; // Track if user manually disconnected
+
+  /// Owns the canonical reconnect routine. Lazy-init in [build] so the
+  /// closure captures the current `ref` and `_userDisconnected` reads.
+  late final RestoreSessionCoordinator _restoreCoordinator;
+
+  /// Auto-rebuild side of the readiness fix. Subscribes to
+  /// `protocol.readinessStream` and triggers ONE clean rebuild per
+  /// 60 s when readiness fails to reach `ready`. Always constructed
+  /// (cheap), but its `start()` is a no-op when the watchdog flag is
+  /// disabled (release-default OFF).
+  late final ReadinessWatchdog _watchdog;
+  bool _watchdogRebuildInFlight = false;
   bool _backgroundScanInProgress = false; // Guard against concurrent scans
   bool _authFailurePending =
       false; // Track PIN/auth failure through disconnect sequence
@@ -256,15 +812,80 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
   @override
   DeviceConnectionState2 build() {
+    _restoreCoordinator = RestoreSessionCoordinator(
+      readTransport: () => ref.read(transportProvider),
+      readProtocol: () => ref.read(protocolServiceProvider),
+      isUserDisconnected: () => _userDisconnected,
+      isAppBackgrounded: () => !ref.read(appLifecycleProvider),
+    );
+
+    _watchdog = ReadinessWatchdog(
+      flags: ref.read(meshtasticReadinessFlagsProvider),
+      coordinator: _restoreCoordinator,
+      readinessStream: ref.read(protocolServiceProvider).readinessStream,
+      triggerRebuild: _triggerWatchdogRebuild,
+      isAppBackgrounded: () => !ref.read(appLifecycleProvider),
+    );
+    _watchdog.start();
+
     // Clean up subscriptions when provider is disposed
     ref.onDispose(() {
       AppLogging.connection('🔌 DeviceConnectionNotifier: Disposing...');
+      _restoreCoordinator.invalidate('notifier_dispose');
+      _watchdog.stop();
       _connectionSubscription?.cancel();
       _scanTimer?.cancel();
       _retryTimer?.cancel();
     });
 
     return const DeviceConnectionState2(state: DevicePairingState.neverPaired);
+  }
+
+  /// Test-only: expose the restore-session generation so tests can assert
+  /// stale-restore behavior without poking private fields.
+  @visibleForTesting
+  int get restoreSessionGenerationForTesting =>
+      _restoreCoordinator.sessionGeneration;
+
+  /// Run the canonical restore routine from the lifecycle-resume hook.
+  ///
+  /// Called by `main.dart`'s `_handleAppResumed` when the BLE link is up
+  /// but the Meshtastic protocol is not operational. The coordinator's
+  /// own pre-checks (user-disconnected, in-flight, transport-not-
+  /// connected) make this safe to call unconditionally from the
+  /// lifecycle hook; the caller still owns the "is this a situation
+  /// worth restoring?" decision (don't disturb a healthy session).
+  Future<void> restoreSessionForLifecycleResume() async {
+    await _restoreCoordinator.restoreSession(reason: 'lifecycle_resume');
+  }
+
+  /// Watchdog rebuild trigger. Disconnects the transport (forcing iOS
+  /// to drop any state-restored GATT) then re-enters the existing
+  /// `startBackgroundConnection()` path, which itself goes through the
+  /// coordinator's `restoreSession`. Generation, single-flight,
+  /// user-disconnect, and background-budget guards all still apply.
+  ///
+  /// **Not a separate reconnect path** — every guard the coordinator
+  /// enforces fires here too. A user-disconnect mid-rebuild causes the
+  /// next `startBackgroundConnection` call to return early on its own
+  /// `_userDisconnected` check.
+  Future<void> _triggerWatchdogRebuild() async {
+    if (_userDisconnected) return;
+    if (_watchdogRebuildInFlight) return;
+    _watchdogRebuildInFlight = true;
+    try {
+      final transport = ref.read(transportProvider);
+      try {
+        await transport.disconnect();
+      } catch (e) {
+        AppLogging.connection(
+          'WATCHDOG: rebuild transport.disconnect failed: $e',
+        );
+      }
+      await startBackgroundConnection();
+    } finally {
+      _watchdogRebuildInFlight = false;
+    }
   }
 
   /// Test-only method to set state directly.
@@ -615,31 +1236,6 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     try {
       final protocol = ref.read(protocolServiceProvider);
 
-      // Guard: if the protocol is already configured (e.g. another code path
-      // already called start() for this connection), skip the redundant start.
-      // Without this, the second start() clears _configurationComplete, creates
-      // a fresh completer, and waits 30 seconds for config packets that were
-      // already consumed — wasting battery on BLE polling and producing a
-      // misleading TimeoutException in logs.
-      if (protocol.configurationComplete && protocol.myNodeNum != null) {
-        AppLogging.connection(
-          '🔌 _initializeProtocolAfterAutoReconnect: SKIPPING — '
-          'protocol already configured (myNodeNum=${protocol.myNodeNum})',
-        );
-        // Still update state to connected if needed
-        if (state.state != DevicePairingState.connected) {
-          state = state.copyWith(
-            state: DevicePairingState.connected,
-            lastConnectedAt: DateTime.now(),
-            myNodeNum: protocol.myNodeNum,
-            reason: DisconnectReason.none,
-            reconnectAttempts: 0,
-            connectionSessionId: _nextConnectionSessionId(),
-          );
-        }
-        return;
-      }
-
       // Get device info from transport or use stored info
       final deviceName = state.device?.name ?? 'Unknown';
       protocol.setDeviceName(deviceName);
@@ -649,7 +1245,16 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       AppLogging.connection(
         '🔌 _initializeProtocolAfterAutoReconnect: Starting protocol for $deviceName...',
       );
-      await protocol.start();
+      // Route through the canonical restore routine. Replaces a prior
+      // `if (configurationComplete && myNodeNum != null) skip` guard
+      // that could leave stale state in place when phase-2 stalled —
+      // myNodeNum was already set in phase-1 and the skip-guard fell
+      // through to a `start()` that short-circuited on
+      // `_isStarted && _transport.isConnected` and never re-attached
+      // the packet stream. The coordinator's `_inFlight` provides the
+      // dedup the old skip-guard was trying to provide, without
+      // skipping legitimate restores.
+      await _restoreCoordinator.restoreSession(reason: 'auto_reconnect');
 
       // Verify we got configuration
       if (protocol.myNodeNum == null) {
@@ -1051,10 +1656,18 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           '🔌 startBackgroundConnection: Device not found in scan (attempt ${_reconnectAttempt + 1})',
         );
 
-        // Check if we're in region apply flow - use more aggressive retry
-        final regionState = ref.read(regionConfigProvider);
-        final isRegionApplying =
-            regionState.applyStatus == RegionApplyStatus.applying;
+        // Check if we're in region apply flow - use more aggressive retry.
+        //
+        // Read through `regionApplyInFlightProvider` (a leaf with no
+        // upstream dependencies), NOT `regionConfigProvider`.
+        // `regionConfigProvider`'s notifier listens to
+        // `deviceConnectionProvider`, so reading it from inside
+        // `DeviceConnectionNotifier` closes a Riverpod cycle and throws
+        // `CircularDependencyError`. The leaf provider is set/cleared
+        // by `RegionConfigNotifier` at apply-start and apply-finish
+        // edges, so it stays in sync without participating in the
+        // dependency graph.
+        final isRegionApplying = ref.read(regionApplyInFlightProvider);
 
         // Set max attempts based on context
         _maxReconnectAttempts = isRegionApplying
@@ -1102,6 +1715,61 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           '🔌 startBackgroundConnection: Max retries exceeded ($_maxReconnectAttempts attempts)',
         );
         _reconnectAttempt = 0; // Reset for next disconnect event
+
+        // Platform-appropriate unreachable-vs-forgotten differentiation.
+        //
+        // Android: at the final scan-fail (about to enter unreachable
+        // state), check the system bond list. If `lastDeviceId` is
+        // missing, the user removed the device from Android Bluetooth
+        // settings — surface a re-pair CTA instead of the generic
+        // "Device not found" copy. The pre-scan cleanup branch above
+        // already runs the same check, but it can be skipped if
+        // `bondedDevices` threw, or the bond can be removed mid-scan.
+        // This is the safety net.
+        //
+        // iOS: scan-fail alone is NEVER inferred as pairing
+        // invalidation. There is no pre-connection bond-state API on
+        // CBPeripheral, so the only reliable signal is a
+        // connect/auth failure (handled separately in
+        // `_connectToDevice`'s catch block). Falls through to the
+        // existing unreachable behaviour.
+        if (Platform.isAndroid) {
+          try {
+            final bondedDevices = await FlutterBluePlus.bondedDevices;
+            final stillBonded = bondedDevices.any(
+              (d) => d.remoteId.toString() == lastDeviceId,
+            );
+            if (!stillBonded) {
+              AppLogging.connection(
+                '🔌 startBackgroundConnection: Final scan-fail + bond '
+                'missing for $lastDeviceId. Routing to pairing '
+                'invalidation (bondForgotten).',
+              );
+              await handlePairingInvalidation(
+                PairingInvalidationReason.bondForgotten,
+              );
+              return;
+            }
+            AppLogging.connection(
+              '🔌 startBackgroundConnection: Final scan-fail with bond '
+              'still present. Treating as unreachable (radio off / '
+              'out of range).',
+            );
+          } catch (e) {
+            // Bond query failed. Fall through to existing unreachable
+            // path. Logging the failure so triage is not blind.
+            AppLogging.connection(
+              '🔌 startBackgroundConnection: Bond check at final scan-fail '
+              'threw: $e. Falling through to unreachable.',
+            );
+          }
+        } else {
+          AppLogging.connection(
+            '🔌 startBackgroundConnection: Final scan-fail on iOS. No '
+            'pre-connect bond signal; treating as unreachable. Pairing '
+            'invalidation only fires on connect/auth failure.',
+          );
+        }
 
         final invalidated = await reportMissingSavedDevice();
         if (!invalidated) {
@@ -1583,10 +2251,21 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         .read(autoReconnectStateProvider.notifier)
         .setState(AutoReconnectState.failed);
 
+    // UX copy is reason-specific. `bondForgotten` is the
+    // Android-only "user removed the device from Bluetooth settings"
+    // case and gets re-pair guidance; every other reason keeps the
+    // existing "Device was reset or replaced" copy. Only fire the
+    // re-pair text when there is an actual pairing/auth signal — a
+    // plain scan-fail with the bond still present must NOT reach this
+    // branch (the call site checks bond presence first).
+    final errorMessage = reason == PairingInvalidationReason.bondForgotten
+        ? safeL10n().connectionErrorBondForgotten
+        : safeL10n().connectionErrorDeviceReset;
+
     state = DeviceConnectionState2(
       state: DevicePairingState.pairedDeviceInvalidated,
       reason: DisconnectReason.deviceNotFound,
-      errorMessage: safeL10n().connectionErrorDeviceReset,
+      errorMessage: errorMessage,
       connectionSessionId: _connectionSessionId,
     );
   }
@@ -1598,6 +2277,18 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
   Future<void> _connectToDevice(DeviceInfo device) async {
     AppLogging.connection('Connecting to: ${device.name} (${device.id})');
+
+    // Explicit user-initiated connect clears the disconnect latch.
+    // The `RestoreSessionCoordinator.isUserDisconnected` guard exists
+    // to block opportunistic restore paths (auto-reconnect, lifecycle
+    // resume) from resurrecting a session after the user tapped
+    // Disconnect. `_connectToDevice` is the opposite: an explicit tap
+    // (Scanner, banner Reconnect) saying "yes, connect now". Without
+    // this clear, the coordinator skipped `protocol.start()` after a
+    // prior disconnect, transport came up but readiness stayed at
+    // `idle`, and the missing `myNodeNum` was misdiagnosed as
+    // Authentication failed.
+    clearUserDisconnected();
 
     state = state.copyWith(
       state: DevicePairingState.connecting,
@@ -1637,7 +2328,12 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       protocol.setBleManufacturerName(transport.bleManufacturerName);
 
       AppLogging.connection('Starting protocol...');
-      await protocol.start();
+      // Route through the canonical restore routine so the BLE-restoration
+      // safety net (refreshNotifications + clean stop+start) runs on every
+      // fresh connect too — a freshly-paired session can also inherit a
+      // stale subscription from a prior `_RecordingTransport` lifecycle on
+      // some flutter_blue_plus / iOS combinations.
+      await _restoreCoordinator.restoreSession(reason: 'connect_to_device');
 
       // Verify we got configuration
       if (protocol.myNodeNum == null) {
@@ -1929,6 +2625,10 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     _userDisconnected = true;
     _backgroundScanInProgress = false; // Clear scan guard to allow future scans
     AppLogging.connection('🔌 disconnect(): Set _userDisconnected=true');
+    // Bump the restore generation so any in-flight `restoreSession()`
+    // (e.g. a lifecycle-resume restore that started a moment ago) aborts
+    // at its next stale check before touching protocol/transport.
+    _restoreCoordinator.invalidate('user_disconnect');
 
     // Also sync with the global userDisconnectedProvider
     ref.read(userDisconnectedProvider.notifier).setUserDisconnected(true);

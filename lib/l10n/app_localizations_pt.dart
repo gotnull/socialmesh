@@ -32899,6 +32899,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'O dispositivo foi redefinido ou substituído. Configure-o novamente.';
 
   @override
+  String get connectionErrorBondForgotten =>
+      'Este dispositivo foi removido das configurações Bluetooth do Android. Emparelhe-o novamente no Scanner.';
+
+  @override
   String countdownTracerouteTo(String displayName) {
     return 'Traceroute para $displayName';
   }
@@ -39758,4 +39762,84 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get nodedexConstellationActionDetails => 'Abrir detalhes';
+
+  @override
+  String get statusConfiguring => 'A configurar o SocialMesh…';
+
+  @override
+  String get statusDegraded =>
+      'A ligação ainda está a recuperar. Toca para te reconectares.';
+
+  @override
+  String get txBlockedNotReady =>
+      'O SocialMesh ainda está a configurar. Tenta novamente daqui a pouco.';
+
+  @override
+  String get nodedexRadioCompatibilityTitle => 'Compatibilidade de rádio';
+
+  @override
+  String get nodedexReachabilityLabel => 'Alcançabilidade';
+
+  @override
+  String get nodedexLocalPresetNow => 'Preset de rádio atual';
+
+  @override
+  String get nodedexLastObservedPreset => 'Ouvido quando estavas em';
+
+  @override
+  String get nodedexObservationSourceLabel => 'Observado via';
+
+  @override
+  String get nodedexHopsAwayLabel => 'Saltos de distância';
+
+  @override
+  String nodedexHopsAwayValue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count saltos',
+      one: '1 salto',
+      zero: 'Direto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get nodedexReachabilityLikelyOnRf => 'Provavelmente alcançável por RF';
+
+  @override
+  String get nodedexReachabilityDifferentPreset =>
+      'Preset diferente desde o último contacto';
+
+  @override
+  String get nodedexReachabilityDifferentFrequencyOffset =>
+      'Offset de frequência diferente';
+
+  @override
+  String get nodedexReachabilityIndirectOrMqtt => 'Visível via MQTT ou relay';
+
+  @override
+  String get nodedexReachabilityLocalRadioUnknown =>
+      'Liga um rádio para comparar';
+
+  @override
+  String get nodedexReachabilityUnknown => 'Dados insuficientes para comparar';
+
+  @override
+  String get nodedexReachabilitySelf => 'Este rádio';
+
+  @override
+  String get nodedexObservationSourceDirectRf => 'RF direto';
+
+  @override
+  String get nodedexObservationSourceMqtt => 'Ponte MQTT';
+
+  @override
+  String get nodedexObservationSourceIndirectRf => 'RF retransmitido';
+
+  @override
+  String get nodedexObservationSourceNodeDb => 'Sincronizado do dispositivo';
+
+  @override
+  String get nodedexObservationSourceUnknown => 'Desconhecido';
 }

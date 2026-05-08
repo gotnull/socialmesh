@@ -8390,6 +8390,7 @@
   "@connectionErrorDeviceReset": {
     "description": "Error message shown to the user"
   },
+  "connectionErrorBondForgotten": "Questo dispositivo è stato rimosso dalle impostazioni Bluetooth di Android. Riassocialo dallo Scanner.",
   "contentModerationAdultContent": "Contenuto per adulti",
   "@contentModerationAdultContent": {
     "description": "UI text: content moderation adult content"
@@ -41900,5 +41901,27 @@
   "nodedexConstellationActionFavourite": "Preferito",
   "nodedexConstellationActionUnfavourite": "Rimuovi preferito",
   "nodedexConstellationActionMap": "Mostra sulla mappa",
-  "nodedexConstellationActionDetails": "Apri dettagli"
+  "nodedexConstellationActionDetails": "Apri dettagli",
+  "statusConfiguring": "Configurazione di SocialMesh in corso…",
+  "statusDegraded": "La connessione è ancora in fase di ripristino. Tocca per riconnetterti.",
+  "txBlockedNotReady": "SocialMesh è ancora in fase di configurazione. Riprova tra un momento.",
+  "nodedexRadioCompatibilityTitle": "Compatibilità radio",
+  "nodedexReachabilityLabel": "Raggiungibilità",
+  "nodedexLocalPresetNow": "Preset radio attuale",
+  "nodedexLastObservedPreset": "Sentito quando eri su",
+  "nodedexObservationSourceLabel": "Osservato tramite",
+  "nodedexHopsAwayLabel": "Hop di distanza",
+  "nodedexHopsAwayValue": "{count, plural, =0{Diretto} =1{1 hop} other{{count} hop}}",
+  "nodedexReachabilityLikelyOnRf": "Probabilmente raggiungibile in RF",
+  "nodedexReachabilityDifferentPreset": "Preset diverso dall'ultimo contatto",
+  "nodedexReachabilityDifferentFrequencyOffset": "Offset di frequenza diverso",
+  "nodedexReachabilityIndirectOrMqtt": "Visibile via MQTT o relay",
+  "nodedexReachabilityLocalRadioUnknown": "Connetti una radio per confrontare",
+  "nodedexReachabilityUnknown": "Dati insufficienti per confrontare",
+  "nodedexReachabilitySelf": "Questa radio",
+  "nodedexObservationSourceDirectRf": "RF diretto",
+  "nodedexObservationSourceMqtt": "Bridge MQTT",
+  "nodedexObservationSourceIndirectRf": "RF rilanciato",
+  "nodedexObservationSourceNodeDb": "Sincronizzato dal dispositivo",
+  "nodedexObservationSourceUnknown": "Sconosciuto"
 }

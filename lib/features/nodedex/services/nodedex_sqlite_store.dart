@@ -16,6 +16,7 @@ import '../../../core/logging.dart';
 import '../../../services/protocol/sip/sip_types.dart';
 import '../models/import_preview.dart';
 import '../models/nodedex_entry.dart';
+import '../models/observation_source.dart';
 import '../services/sigil_generator.dart';
 import 'nodedex_database.dart';
 
@@ -473,6 +474,9 @@ class NodeDexSqliteStore {
           entry.lastObservedFrequencyOffset,
       NodeDexTables.colFirstUsedAtMs: entry.firstUsedAt?.millisecondsSinceEpoch,
       NodeDexTables.colLastUsedAtMs: entry.lastUsedAt?.millisecondsSinceEpoch,
+      NodeDexTables.colLastObservationSource:
+          entry.lastObservationSource?.storageString,
+      NodeDexTables.colLastHopsAway: entry.lastHopsAway,
     };
   }
 
@@ -596,6 +600,10 @@ class NodeDexSqliteStore {
       lastObservedOnPreset: row[NodeDexTables.colLastObservedOnPreset] as int?,
       lastObservedFrequencyOffset:
           (row[NodeDexTables.colLastObservedFreqOffset] as num?)?.toDouble(),
+      lastObservationSource: ObservationSource.fromStorageString(
+        row[NodeDexTables.colLastObservationSource] as String?,
+      ),
+      lastHopsAway: row[NodeDexTables.colLastHopsAway] as int?,
       firstUsedAt: row[NodeDexTables.colFirstUsedAtMs] != null
           ? DateTime.fromMillisecondsSinceEpoch(
               row[NodeDexTables.colFirstUsedAtMs] as int,

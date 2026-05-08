@@ -32567,6 +32567,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Device was reset or replaced. Set it up again.';
 
   @override
+  String get connectionErrorBondForgotten =>
+      'This device was removed from Android Bluetooth settings. Re-pair it from Scanner.';
+
+  @override
   String countdownTracerouteTo(String displayName) {
     return 'Traceroute to $displayName';
   }
@@ -39406,4 +39410,84 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get nodedexConstellationActionDetails => 'Inspect details';
+
+  @override
+  String get statusConfiguring => 'Configuring SocialMesh…';
+
+  @override
+  String get statusDegraded =>
+      'Connection is still recovering. Tap to reconnect.';
+
+  @override
+  String get txBlockedNotReady =>
+      'Still configuring SocialMesh. Try again in a moment.';
+
+  @override
+  String get nodedexRadioCompatibilityTitle => 'Radio compatibility';
+
+  @override
+  String get nodedexReachabilityLabel => 'Reachability';
+
+  @override
+  String get nodedexLocalPresetNow => 'Your radio preset';
+
+  @override
+  String get nodedexLastObservedPreset => 'Heard when you were on';
+
+  @override
+  String get nodedexObservationSourceLabel => 'Observed via';
+
+  @override
+  String get nodedexHopsAwayLabel => 'Hops away';
+
+  @override
+  String nodedexHopsAwayValue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hops',
+      one: '1 hop',
+      zero: 'Direct',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get nodedexReachabilityLikelyOnRf => 'Likely reachable on RF';
+
+  @override
+  String get nodedexReachabilityDifferentPreset =>
+      'Different preset since last contact';
+
+  @override
+  String get nodedexReachabilityDifferentFrequencyOffset =>
+      'Different frequency offset';
+
+  @override
+  String get nodedexReachabilityIndirectOrMqtt => 'Visible via MQTT or relay';
+
+  @override
+  String get nodedexReachabilityLocalRadioUnknown =>
+      'Connect a radio to compare';
+
+  @override
+  String get nodedexReachabilityUnknown => 'Not enough data to compare';
+
+  @override
+  String get nodedexReachabilitySelf => 'This radio';
+
+  @override
+  String get nodedexObservationSourceDirectRf => 'Direct RF';
+
+  @override
+  String get nodedexObservationSourceMqtt => 'MQTT bridge';
+
+  @override
+  String get nodedexObservationSourceIndirectRf => 'Relayed RF';
+
+  @override
+  String get nodedexObservationSourceNodeDb => 'Synced from device';
+
+  @override
+  String get nodedexObservationSourceUnknown => 'Unknown';
 }

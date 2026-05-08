@@ -141,6 +141,12 @@ class PurchaseStateNotifier extends Notifier<PurchaseState> {
     AppLogging.subscriptions(
       '💳 [PurchaseStateNotifier] Initial RC state: ${_rcState.purchasedProductIds}',
     );
+    if (_rcState.purchasedProductIds.isNotEmpty) {
+      AppLogging.purchase(
+        'WIDGET_GATE: restored entitlement source=revenuecat '
+        'productIds=${_rcState.purchasedProductIds}',
+      );
+    }
     state = _computeMerged();
 
     AppLogging.subscriptions(

@@ -14,6 +14,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui';
 import 'package:socialmesh/core/theme.dart';
+import 'package:socialmesh/features/nodedex/models/observation_source.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:socialmesh/services/protocol/sip/sip_types.dart';
 
@@ -744,6 +745,18 @@ class NodeDexEntry {
   /// setting, not the remote node's.
   final double? lastObservedFrequencyOffset;
 
+  /// Classification of how the latest observation reached this device.
+  /// Stamped at ingest from `MeshPacket.via_mqtt` + `MeshNode.hopsAway`.
+  /// Null for legacy entries; the radio compatibility helper falls back
+  /// to live MeshNode metadata when this is null.
+  final ObservationSource? lastObservationSource;
+
+  /// Hop count of the latest observation. 0 = direct, >0 = relayed.
+  /// Sourced from `NodeInfo.hopsAway`. Null for legacy entries; the
+  /// radio compatibility helper falls back to the live MeshNode value
+  /// when this is null.
+  final int? lastHopsAway;
+
   /// First time this app connected to this nodeNum as the local radio.
   ///
   /// **Connection-identity semantics**, not mesh-observation. Stamped from
@@ -803,6 +816,8 @@ class NodeDexEntry {
     this.mrrpServiceIds,
     this.lastObservedOnPreset,
     this.lastObservedFrequencyOffset,
+    this.lastObservationSource,
+    this.lastHopsAway,
     this.firstUsedAt,
     this.lastUsedAt,
   });
@@ -818,6 +833,8 @@ class NodeDexEntry {
     double? longitude,
     int? observedOnPreset,
     double? frequencyOffset,
+    ObservationSource? observationSource,
+    int? hopsAway,
     SigilData? sigil,
     String? lastKnownName,
     String? lastKnownHardware,
@@ -852,6 +869,8 @@ class NodeDexEntry {
       lastKnownFirmware: lastKnownFirmware,
       lastObservedOnPreset: observedOnPreset,
       lastObservedFrequencyOffset: frequencyOffset,
+      lastObservationSource: observationSource,
+      lastHopsAway: hopsAway,
     );
   }
 
@@ -946,6 +965,10 @@ class NodeDexEntry {
     bool clearLastObservedOnPreset = false,
     double? lastObservedFrequencyOffset,
     bool clearLastObservedFrequencyOffset = false,
+    ObservationSource? lastObservationSource,
+    bool clearLastObservationSource = false,
+    int? lastHopsAway,
+    bool clearLastHopsAway = false,
     DateTime? firstUsedAt,
     bool clearFirstUsedAt = false,
     DateTime? lastUsedAt,
@@ -1011,6 +1034,12 @@ class NodeDexEntry {
       lastObservedFrequencyOffset: clearLastObservedFrequencyOffset
           ? null
           : (lastObservedFrequencyOffset ?? this.lastObservedFrequencyOffset),
+      lastObservationSource: clearLastObservationSource
+          ? null
+          : (lastObservationSource ?? this.lastObservationSource),
+      lastHopsAway: clearLastHopsAway
+          ? null
+          : (lastHopsAway ?? this.lastHopsAway),
       firstUsedAt: clearFirstUsedAt ? null : (firstUsedAt ?? this.firstUsedAt),
       lastUsedAt: clearLastUsedAt ? null : (lastUsedAt ?? this.lastUsedAt),
     );
@@ -1030,6 +1059,8 @@ class NodeDexEntry {
     double? longitude,
     int? observedOnPreset,
     double? frequencyOffset,
+    ObservationSource? observationSource,
+    int? hopsAway,
   }) {
     final now = timestamp ?? DateTime.now();
     final encounter = EncounterRecord(
@@ -1089,6 +1120,8 @@ class NodeDexEntry {
       lastObservedOnPreset: observedOnPreset ?? lastObservedOnPreset,
       lastObservedFrequencyOffset:
           frequencyOffset ?? lastObservedFrequencyOffset,
+      lastObservationSource: observationSource ?? lastObservationSource,
+      lastHopsAway: hopsAway ?? lastHopsAway,
     );
   }
 
@@ -1344,6 +1377,16 @@ class NodeDexEntry {
         ? (lastObservedFrequencyOffset ?? other.lastObservedFrequencyOffset)
         : (other.lastObservedFrequencyOffset ?? lastObservedFrequencyOffset);
 
+    // Observation source + hops-away: same "prefer most recently seen"
+    // strategy. Stamped from packet metadata at ingest, not user-editable.
+    final ObservationSource? mergedLastObservationSource =
+        lastSeen.isAfter(other.lastSeen)
+        ? (lastObservationSource ?? other.lastObservationSource)
+        : (other.lastObservationSource ?? lastObservationSource);
+    final int? mergedLastHopsAway = lastSeen.isAfter(other.lastSeen)
+        ? (lastHopsAway ?? other.lastHopsAway)
+        : (other.lastHopsAway ?? lastHopsAway);
+
     // Connection-identity timestamps: keep min(firstUsedAt) and
     // max(lastUsedAt) so import/sync never loses earlier-first or later-last
     // history. Both nullable; either side may be unset.
@@ -1395,6 +1438,8 @@ class NodeDexEntry {
       mrrpServiceIds: mergedMrrpServiceIds,
       lastObservedOnPreset: mergedLastObservedOnPreset,
       lastObservedFrequencyOffset: mergedLastObservedFreqOffset,
+      lastObservationSource: mergedLastObservationSource,
+      lastHopsAway: mergedLastHopsAway,
       firstUsedAt: mergedFirstUsedAt,
       lastUsedAt: mergedLastUsedAt,
     );
@@ -1504,6 +1549,9 @@ class NodeDexEntry {
       if (lastObservedOnPreset != null) 'lorp': lastObservedOnPreset,
       if (lastObservedFrequencyOffset != null)
         'lofo': lastObservedFrequencyOffset,
+      if (lastObservationSource != null)
+        'los': lastObservationSource!.storageString,
+      if (lastHopsAway != null) 'lha': lastHopsAway,
       if (firstUsedAt != null) 'fua': firstUsedAt!.millisecondsSinceEpoch,
       if (lastUsedAt != null) 'lua': lastUsedAt!.millisecondsSinceEpoch,
     };
@@ -1583,6 +1631,10 @@ class NodeDexEntry {
       mrrpServiceIds: json['mrrp_svc'] as String?,
       lastObservedOnPreset: json['lorp'] as int?,
       lastObservedFrequencyOffset: (json['lofo'] as num?)?.toDouble(),
+      lastObservationSource: ObservationSource.fromStorageString(
+        json['los'] as String?,
+      ),
+      lastHopsAway: json['lha'] as int?,
       firstUsedAt: json['fua'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['fua'] as int)
           : null,

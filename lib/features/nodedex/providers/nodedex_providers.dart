@@ -38,6 +38,7 @@ import '../../../providers/signal_providers.dart';
 import '../models/import_preview.dart';
 import '../models/node_activity_event.dart';
 import '../models/nodedex_entry.dart';
+import '../models/observation_source.dart';
 
 import '../services/nodedex_database.dart';
 import '../services/nodedex_sqlite_store.dart';
@@ -263,6 +264,19 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     } catch (_) {
       return null;
     }
+  }
+
+  /// Classify how this observation reached the local radio.
+  ///
+  /// Combines `viaMqtt` (firmware-stamped) with `hopCount` to produce one
+  /// of: directRf, mqtt, indirectRf, unknown. We never synthesize
+  /// `nodeDb` here because this helper is only called from the live
+  /// encounter path; sync replays skip the write.
+  ObservationSource _resolveObservationSource(MeshNode node) {
+    if (node.viaMqtt) return ObservationSource.mqtt;
+    final hops = node.hopCount;
+    if (hops == null) return ObservationSource.unknown;
+    return hops > 0 ? ObservationSource.indirectRf : ObservationSource.directRf;
   }
 
   bool _isRecentCoSeenActivity(MeshNode node, DateTime now) {
@@ -510,6 +524,14 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         final currentFreqOffset = isLive
             ? _resolveCurrentFrequencyOffset()
             : null;
+        // Observation context (transport classification + hop count) is
+        // only meaningful for live remote sightings. Self-node and
+        // sync-replay paths leave it null so historical reachability
+        // signals don't get overwritten with stale or self values.
+        final observationSource = isLive
+            ? _resolveObservationSource(node)
+            : null;
+        final hopsAway = isLive ? node.hopCount : null;
         // Discovery timestamp prefers the device's authoritative
         // firstHeard, falling back to the node's lastHeard (which the
         // protocol layer derives from `packet.rxTime`), and only finally
@@ -528,6 +550,8 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
           longitude: node.hasPosition ? node.longitude : null,
           observedOnPreset: currentPreset,
           frequencyOffset: currentFreqOffset,
+          observationSource: observationSource,
+          hopsAway: hopsAway,
           sigil: sigil,
           lastKnownName: liveName,
           lastKnownHardware: node.hardwareModel,
@@ -560,7 +584,9 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
           'source: ${source.name}, '
           'lastHeard: ${node.lastHeard?.toIso8601String() ?? "null"}, '
           'SNR: ${node.snr ?? "n/a"}, '
-          'distance: ${node.distance != null ? "${node.distance!.round()}m" : "n/a"}',
+          'distance: ${node.distance != null ? "${node.distance!.round()}m" : "n/a"}, '
+          'viaMqtt: ${node.viaMqtt}, '
+          'hopCount: ${node.hopCount ?? "n/a"}',
         );
       } else if (isOwnNode) {
         // Own node already exists — update position/region and name,
@@ -620,6 +646,8 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         if (shouldRecord) {
           final currentPreset = _resolveCurrentPreset();
           final currentFreqOffset = _resolveCurrentFrequencyOffset();
+          final observationSource = _resolveObservationSource(node);
+          final hopsAway = node.hopCount;
           // Encounter timestamp tracks when the node was actually heard
           // (the firmware-stamped `node.lastHeard`), not when the phone
           // processed the update. This keeps the activity histogram and
@@ -635,6 +663,8 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
             longitude: node.hasPosition ? node.longitude : null,
             observedOnPreset: currentPreset,
             frequencyOffset: currentFreqOffset,
+            observationSource: observationSource,
+            hopsAway: hopsAway,
           );
 
           // Ensure sigil is generated if missing (e.g., from older data).

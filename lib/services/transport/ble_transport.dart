@@ -840,6 +840,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
     }
     _refreshInFlight = true;
     _refreshNotificationsCount++;
+    AppLogging.ble('BLE_NOTIF: refresh attempted');
     try {
       AppLogging.ble('🔄 Refreshing fromNum notification subscription');
 
@@ -866,6 +867,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
             );
       } catch (e) {
         _refreshNotificationsFailureCount++;
+        AppLogging.ble('BLE_NOTIF: refresh failed err=$e');
         AppLogging.ble(
           '⚠️ refreshNotifications: setNotifyValue failed: $e — '
           'preserving existing subscription',
@@ -923,6 +925,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
         );
       } catch (e) {
         _refreshNotificationsFailureCount++;
+        AppLogging.ble('BLE_NOTIF: refresh failed err=$e');
         AppLogging.ble(
           '⚠️ refreshNotifications: failed to install new listener — '
           'declaring disconnect for auto-reconnect: $e',
@@ -931,6 +934,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
         return;
       }
 
+      AppLogging.ble('BLE_NOTIF: refresh ok');
       AppLogging.ble('🔄 fromNum notifications refreshed');
 
       // After re-subscribing, do one drain of fromRadio in case data

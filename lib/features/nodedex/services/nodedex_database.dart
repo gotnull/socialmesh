@@ -7,7 +7,7 @@
 // All tables, indices, and migration logic live here.
 //
 // Database: nodedex.db
-// Schema version: 11
+// Schema version: 12
 
 import 'dart:async';
 import 'dart:io';
@@ -22,7 +22,7 @@ import '../../../core/logging.dart';
 ///
 /// Bump this when adding tables, columns, or indices.
 /// Migration logic runs in [_onUpgrade].
-const int nodedexSchemaVersion = 11;
+const int nodedexSchemaVersion = 12;
 
 /// Table and column name constants for NodeDex SQLite schema.
 abstract final class NodeDexTables {
@@ -73,6 +73,13 @@ abstract final class NodeDexTables {
   // Stamped from myNodeNumProvider emissions only — never from packet ingest.
   static const colFirstUsedAtMs = 'first_used_at_ms';
   static const colLastUsedAtMs = 'last_used_at_ms';
+
+  // -- Observation context columns (v12) --
+  // Stamped at ingest from MeshPacket.via_mqtt + MeshNode.hopsAway. Both
+  // nullable. The radio compatibility helper falls back to live MeshNode
+  // metadata when these are NULL on legacy entries.
+  static const colLastObservationSource = 'last_observation_source';
+  static const colLastHopsAway = 'last_hops_away';
 
   // -- nodedex_encounters --
   static const encounters = 'nodedex_encounters';
@@ -259,7 +266,9 @@ class NodeDexDatabase {
         ${NodeDexTables.colLastObservedOnPreset} INTEGER,             -- v9
         ${NodeDexTables.colLastObservedFreqOffset} REAL,              -- v10
         ${NodeDexTables.colFirstUsedAtMs} INTEGER,                    -- v11
-        ${NodeDexTables.colLastUsedAtMs} INTEGER                      -- v11
+        ${NodeDexTables.colLastUsedAtMs} INTEGER,                     -- v11
+        ${NodeDexTables.colLastObservationSource} TEXT,               -- v12
+        ${NodeDexTables.colLastHopsAway} INTEGER                      -- v12
       )
     ''');
     batch.execute(
@@ -555,6 +564,25 @@ class NodeDexDatabase {
       );
       AppLogging.storage(
         'NodeDexDatabase: v11 migration — added connection-identity columns',
+      );
+    }
+    if (oldVersion < 12) {
+      // v12: Observation context. Track the transport classification
+      // (direct_rf / mqtt / indirect_rf / node_db / unknown) and hop
+      // count of the latest observation, so reachability comparisons
+      // survive reconnect. Both nullable; legacy entries leave them
+      // NULL forever and the radio compatibility helper falls back to
+      // the live MeshNode metadata at display time.
+      await db.execute(
+        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
+        'ADD COLUMN ${NodeDexTables.colLastObservationSource} TEXT', // lint-allow: hardcoded-string
+      );
+      await db.execute(
+        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
+        'ADD COLUMN ${NodeDexTables.colLastHopsAway} INTEGER', // lint-allow: hardcoded-string
+      );
+      AppLogging.storage(
+        'NodeDexDatabase: v12 migration — added observation context columns',
       );
     }
   }

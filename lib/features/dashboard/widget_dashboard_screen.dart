@@ -38,10 +38,18 @@ import '../../providers/subscription_providers.dart';
 import '../settings/subscription_screen.dart';
 import '../../core/widgets/loading_indicator.dart';
 
-/// Widgets available for free - showcase the feature
+/// Widgets available for free.
+///
+/// Must stay in sync with the first-launch default dashboard
+/// (`DashboardWidgetsNotifier._getDefaultWidgets`) — any widget that
+/// ships on the default dashboard must also be re-addable from the
+/// picker without purchasing, otherwise removing then re-adding
+/// triggers a paywall the user did not see when the widget was first
+/// installed.
 const _freeWidgetTypes = {
   DashboardWidgetType.signalStrength,
   DashboardWidgetType.networkOverview,
+  DashboardWidgetType.recentMessages,
   DashboardWidgetType.custom, // Custom widgets are free
 };
 
@@ -1035,8 +1043,24 @@ class _AddWidgetSheet extends ConsumerWidget {
                   isAdded: isAdded,
                   isLocked: isLocked,
                   onTap: () {
+                    // One gate-decision log per user action. Logging
+                    // per-itemBuilder-call would emit O(visible widgets)
+                    // lines on every list rebuild — too noisy.
+                    final entitled = isFree || hasWidgetPack;
+                    AppLogging.purchase(
+                      'WIDGET_GATE: ${type.name} enabled=$isAdded '
+                      'entitled=$entitled isFree=$isFree '
+                      'hasWidgetPack=$hasWidgetPack source=picker',
+                    );
+
                     // Locked widgets do nothing - user should tap Unlock button
-                    if (isLocked) return;
+                    if (isLocked) {
+                      AppLogging.purchase(
+                        'WIDGET_GATE: blocked reason=isLocked type=${type.name} '
+                        'isFree=$isFree hasWidgetPack=$hasWidgetPack',
+                      );
+                      return;
+                    }
                     if (isAdded) {
                       // Find the config and remove it
                       final config = currentConfigs.firstWhere(

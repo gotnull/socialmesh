@@ -355,6 +355,12 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
     } catch (e) {
       safeSetState(() => _isSendingTraceroute = false);
       if (context.mounted) {
+        // Readiness gate (Step 6c): friendlier text when blocked by the
+        // not-yet-operational protocol; otherwise fall through to the
+        // generic traceroute error.
+        if (maybeShowTxBlockedSnackBar(context, e)) {
+          return;
+        }
         showErrorSnackBar(
           context,
           context.l10n.nodeDetailTracerouteError(e.toString()),

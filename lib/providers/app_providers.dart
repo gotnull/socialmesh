@@ -22,6 +22,7 @@ import '../services/transport/network_transport.dart';
 import '../services/transport/usb_transport.dart';
 import '../services/backup/device_config_backup_service.dart';
 import '../services/protocol/admin_target.dart';
+import '../services/protocol/meshtastic_readiness_flag.dart';
 import '../services/protocol/protocol_service.dart';
 import '../services/protocol/reticulum/reticulum_fragment_event.dart';
 import '../services/storage/storage_service.dart';
@@ -895,6 +896,103 @@ final unifiedConnectionStateProvider = Provider<DeviceConnectionState>((ref) {
     loading: () => DeviceConnectionState.disconnected,
     error: (_, _) => DeviceConnectionState.disconnected,
   );
+});
+
+/// Stream of [OperationalReadiness] transitions for the Meshtastic
+/// protocol service. Distinct from [unifiedConnectionStateProvider] which
+/// reflects raw transport (BLE/TCP/USB) link state — readiness only
+/// reaches `ready` when the two-phase handshake completes in the current
+/// session generation. UI banners and TX guards should observe this
+/// rather than transport state.
+///
+/// MeshCore is unaffected — it has its own connection coordinator.
+final meshtasticReadinessProvider = StreamProvider<OperationalReadiness>((ref) {
+  final protocol = ref.watch(protocolServiceProvider);
+  return protocol.readinessStream;
+});
+
+/// Snapshot of [MeshtasticReadinessFlags] read from the current `.env`
+/// environment + build mode. Watchdog auto-rebuild is gated by
+/// `flags.watchdogEnabled` (default OFF in release, ON in debug/profile,
+/// env override wins). Other moving parts of the readiness fix are not
+/// flagged.
+final meshtasticReadinessFlagsProvider = Provider<MeshtasticReadinessFlags>((
+  _,
+) {
+  try {
+    return MeshtasticReadinessFlags.fromEnv();
+  } catch (_) {
+    // dotenv may be uninitialised in some test contexts.
+    return MeshtasticReadinessFlags.disabled;
+  }
+});
+
+/// Convenience predicate: protocol is fully operational and TX is safe.
+/// Watching this is the recommended way for UI to gate "send" buttons or
+/// to suppress the "Configuring SocialMesh…" banner.
+final meshtasticOperationalProvider = Provider<bool>((ref) {
+  final readinessAsync = ref.watch(meshtasticReadinessProvider);
+  return readinessAsync.maybeWhen(
+    data: (r) => r == OperationalReadiness.ready,
+    orElse: () => false,
+  );
+});
+
+/// Banner-friendly classification of the Meshtastic protocol state.
+/// Keeps `unifiedConnectionStateProvider` untouched globally — only
+/// presentation surfaces that explicitly opt-in (currently
+/// `TopStatusBanner`) consume this.
+enum MeshtasticBannerState {
+  /// Either MeshCore is the active protocol, or readiness is `ready`,
+  /// or the readiness stream has not delivered a value yet.
+  /// **Banner falls through to its existing logic in this case** —
+  /// no Configuring/Recovering override.
+  passthrough,
+
+  /// Readiness is `linkConnected | handshakePhase1 | handshakePhase2`,
+  /// or `idle` while the transport is still connected (the brief
+  /// `ready -> idle -> linkConnected` window during an active restore).
+  /// Banner shows "Configuring SocialMesh…" and suppresses dismiss.
+  configuring,
+
+  /// Readiness is `degraded` — phase-2 timed out or a transport blip
+  /// hit mid-handshake. Banner shows the recovering CTA.
+  recovering,
+}
+
+/// Derived banner state for the Meshtastic protocol. MeshCore sessions
+/// always return [MeshtasticBannerState.passthrough] so the existing
+/// banner logic remains unchanged for that protocol.
+final meshtasticBannerStateProvider = Provider<MeshtasticBannerState>((ref) {
+  final settingsAsync = ref.watch(settingsServiceProvider);
+  final settings = settingsAsync.asData?.value;
+  if (settings?.lastDeviceProtocol == 'meshcore') {
+    return MeshtasticBannerState.passthrough;
+  }
+
+  final readinessAsync = ref.watch(meshtasticReadinessProvider);
+  final readiness = readinessAsync.maybeWhen(
+    data: (r) => r,
+    orElse: () => null,
+  );
+  if (readiness == null || readiness == OperationalReadiness.ready) {
+    return MeshtasticBannerState.passthrough;
+  }
+  if (readiness == OperationalReadiness.degraded) {
+    return MeshtasticBannerState.recovering;
+  }
+  if (readiness == OperationalReadiness.idle) {
+    // The brief `ready -> idle -> linkConnected` window during a
+    // restore: keep showing Configuring instead of flashing
+    // Disconnected. If the transport is also down, the protocol is
+    // genuinely stopped — pass through to existing Disconnected logic.
+    final transport = ref.watch(transportProvider);
+    return transport.isConnected
+        ? MeshtasticBannerState.configuring
+        : MeshtasticBannerState.passthrough;
+  }
+  // linkConnected | handshakePhase1 | handshakePhase2
+  return MeshtasticBannerState.configuring;
 });
 
 /// Whether the active protocol link is connected.

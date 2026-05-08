@@ -105,6 +105,10 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
     } catch (e) {
       safeSetState(() => _isSendingTraceroute = false);
       if (context.mounted) {
+        // Readiness gate (Step 6c).
+        if (maybeShowTxBlockedSnackBar(context, e)) {
+          return;
+        }
         showErrorSnackBar(
           context,
           context.l10n.nodeDetailTracerouteError(e.toString()),

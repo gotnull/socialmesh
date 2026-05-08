@@ -473,6 +473,35 @@ class ProtocolService {
   /// recovery mode and extend patience before pairing invalidation.
   final StreamController<void> _localConfigWriteController;
 
+  /// Broadcasts [OperationalReadiness] transitions. UI and TX guards
+  /// observe this stream rather than raw transport state.
+  final StreamController<OperationalReadiness> _readinessController;
+
+  /// Current operational-readiness state. Starts at [OperationalReadiness.idle]
+  /// and is driven by `_setReadiness` from `start`/`stop`, the transport
+  /// state-stream listener, and the handshake completion handlers.
+  OperationalReadiness _readiness = OperationalReadiness.idle;
+
+  /// Monotonic session generation, bumped by the connection-providers
+  /// `RestoreSessionCoordinator` via [bindSessionGeneration] before each
+  /// restore. Used as a coarse staleness tag in readiness logs and lets
+  /// callers correlate ConfigComplete frames with the originating restore.
+  /// Within one [ProtocolService] start cycle the generation is fixed —
+  /// the actual stale-completion guard is on the coordinator side
+  /// (cancelled `_dataSubscription` + errored completers in `stop`).
+  int _sessionGeneration = 0;
+
+  /// Wall-clock anchor for the current bind, set by
+  /// [bindSessionGeneration]. Used solely to emit a single
+  /// `RESTORE: first packet rx +<ms>ms gen=<n>` log line when the
+  /// first inbound packet arrives after a restore.
+  DateTime? _bindAt;
+
+  /// True once the first-packet-RX-after-restore log has fired for the
+  /// current bind. Reset by [bindSessionGeneration] so each restore
+  /// emits exactly one such log line.
+  bool _firstRxAfterBindLogged = false;
+
   StreamSubscription<List<int>>? _dataSubscription;
   StreamSubscription<DeviceConnectionState>? _transportStateSubscription;
 
@@ -1052,6 +1081,8 @@ class ProtocolService {
        _mqttClientProxyMessageController =
            StreamController<pb.MqttClientProxyMessage>.broadcast(),
        _localConfigWriteController = StreamController<void>.broadcast(),
+       _readinessController =
+           StreamController<OperationalReadiness>.broadcast(),
        _dedupeStore = dedupeStore ?? MeshPacketDedupeStore(),
        _smCapabilityStore = smCapabilityStore ?? SmCapabilityStore(),
        _smFeatureFlag = smFeatureFlag ?? SmFeatureFlag(),
@@ -1394,6 +1425,92 @@ class ProtocolService {
   /// Configuration complete
   bool get configurationComplete => _configurationComplete;
 
+  /// Current operational-readiness state (see [OperationalReadiness] for
+  /// what each value means and why it differs from raw transport state).
+  OperationalReadiness get readiness => _readiness;
+
+  /// Stream of operational-readiness transitions. Broadcast — multiple
+  /// listeners (UI banner, TX guard, watchdog) may attach independently.
+  Stream<OperationalReadiness> get readinessStream =>
+      _readinessController.stream;
+
+  /// Convenience predicate: protocol is fully operational and TX is safe.
+  bool get isOperational => _readiness == OperationalReadiness.ready;
+
+  /// Current session generation, set by [bindSessionGeneration] from the
+  /// `RestoreSessionCoordinator` before each `start()` cycle.
+  int get sessionGeneration => _sessionGeneration;
+
+  /// Bind a session-generation tag for the upcoming `start()` cycle.
+  ///
+  /// Called by `RestoreSessionCoordinator.restoreSession` before `start()`
+  /// so readiness logs can correlate with the originating restore. The
+  /// generation is opaque to the protocol service itself — within one
+  /// start cycle the generation is fixed; the actual stale-completion
+  /// guard is on the coordinator side (cancelled `_dataSubscription` +
+  /// errored completers in `stop`).
+  void bindSessionGeneration(int gen) {
+    _sessionGeneration = gen;
+    _bindAt = DateTime.now();
+    _firstRxAfterBindLogged = false;
+  }
+
+  /// Test-only: expose the first-RX-after-bind state-machine bits so
+  /// `test/services/protocol/first_rx_after_restore_log_test.dart` can
+  /// assert the contract (one log per bind) without scraping logs —
+  /// `AppLogging.protocol` writes to `debugPrint`, not the
+  /// `setAppLogSink` channel, so capture-based tests don't work for it.
+  @visibleForTesting
+  bool get firstRxAfterBindLoggedForTesting => _firstRxAfterBindLogged;
+
+  @visibleForTesting
+  DateTime? get bindAtForTesting => _bindAt;
+
+  /// Test-only readiness override.
+  ///
+  /// Existing protocol tests inject MyNodeInfo packets directly to drive
+  /// `_myNodeNum != null` without running a full two-phase handshake. They
+  /// must call this once with [OperationalReadiness.ready] to satisfy the
+  /// new TX guards. Production code paths reach `ready` only via
+  /// `_handleConfigCompleteId`'s phase-2 branch — this hook does not
+  /// short-circuit that.
+  @visibleForTesting
+  void debugForceReadinessForTesting(OperationalReadiness state) {
+    _setReadiness(state, reason: 'debug_force_for_testing');
+  }
+
+  /// Drive a readiness transition. No-op when the new state equals the
+  /// current state (deduplicates noisy emissions on repeated triggers).
+  /// Logs every change with old/new/reason and the bound session
+  /// generation for triage.
+  void _setReadiness(OperationalReadiness next, {required String reason}) {
+    if (_readiness == next) return;
+    final old = _readiness;
+    _readiness = next;
+    AppLogging.protocol(
+      'READINESS: $old -> $next ($reason) gen=$_sessionGeneration',
+    );
+    if (!_readinessController.isClosed) {
+      _readinessController.add(next);
+    }
+  }
+
+  /// TX/admin guard: throw [StateError] when the protocol is not
+  /// operational. Surfaces in the same shape every existing TX path
+  /// already uses for `!_transport.isConnected`, so callers see no API
+  /// change. Emits a structured `TX_BLOCKED:` log so the regression is
+  /// observable from logs alone.
+  void _assertOperational(String methodName) {
+    if (_readiness != OperationalReadiness.ready) {
+      AppLogging.protocol(
+        'TX_BLOCKED: $methodName readiness=$_readiness gen=$_sessionGeneration',
+      );
+      throw StateError(
+        'Cannot $methodName: protocol not ready (readiness=$_readiness)',
+      );
+    }
+  }
+
   /// Check if the transport is connected
   bool get isConnected => _transport.isConnected;
 
@@ -1504,6 +1621,11 @@ class ProtocolService {
         },
       );
       AppLogging.protocol('DATA_SUBSCRIBED to transport');
+      AppLogging.protocol('PACKET_STREAM: listener attached');
+      _setReadiness(
+        OperationalReadiness.linkConnected,
+        reason: 'data_subscription_attached',
+      );
 
       // Listen for transport disconnection to fail fast
       _transportStateSubscription = _transport.stateStream.listen((state) {
@@ -1511,6 +1633,10 @@ class ProtocolService {
             state == DeviceConnectionState.error) {
           AppLogging.protocol(
             'Transport disconnected/error during config wait',
+          );
+          _setReadiness(
+            OperationalReadiness.degraded,
+            reason: 'transport_${state.name}',
           );
           // Per-session contact-sync cache is invalid the moment the radio
           // is gone — a different radio (different NodeDB) could attach next.
@@ -1959,6 +2085,7 @@ class ProtocolService {
     _isStarted = false;
     _startInFlight = false;
     _startCompleter = null;
+    _setReadiness(OperationalReadiness.idle, reason: 'stop');
     AppLogging.protocol('PROTOCOL_STOP_COMPLETE instance=$hashCode');
   }
 
@@ -2015,6 +2142,17 @@ class ProtocolService {
       _lastDataReceivedAt = DateTime.now();
       _notificationRefreshRequested = false;
       _stallEpisodeStartedAt = null;
+      // Log the first inbound packet after a restore exactly once per
+      // bind. Uses only the existing `_sessionGeneration` + a single
+      // wall-clock anchor recorded in `bindSessionGeneration` — no
+      // additional protocol state introduced.
+      if (!_firstRxAfterBindLogged && _bindAt != null) {
+        final elapsedMs = DateTime.now().difference(_bindAt!).inMilliseconds;
+        AppLogging.protocol(
+          'RESTORE: first packet rx +${elapsedMs}ms gen=$_sessionGeneration',
+        );
+        _firstRxAfterBindLogged = true;
+      }
       AppLogging.protocol('Received ${data.length} bytes');
 
       // --- SECURITY AUDIT LOGGING ---
@@ -2193,6 +2331,11 @@ class ProtocolService {
       }
 
       _configurationComplete = true;
+      AppLogging.protocol('ADMIN_DRAIN: phase1 complete myNodeNum=$_myNodeNum');
+      _setReadiness(
+        OperationalReadiness.handshakePhase2,
+        reason: 'phase1_complete',
+      );
       if (_configCompleter != null && !_configCompleter!.isCompleted) {
         _configCompleter!.complete();
       }
@@ -2227,6 +2370,26 @@ class ProtocolService {
       AppLogging.protocol(
         'Handshake: queue drain complete — phoneQueue replay done',
       );
+      AppLogging.protocol(
+        'ADMIN_DRAIN: phase2 complete configurationComplete=$_configurationComplete',
+      );
+
+      // Required predicate for `ready` (regression guard): the bug we are
+      // fixing is that `_myNodeNum` arrives in phase 1 but phase 2 never
+      // completes. Until ALL three hold simultaneously, callers must keep
+      // seeing not-operational so TX is gated and the UI banner shows
+      // "Configuring".
+      if (_configurationComplete &&
+          _dataSubscription != null &&
+          _myNodeNum != null) {
+        _setReadiness(OperationalReadiness.ready, reason: 'phase2_complete');
+      } else {
+        AppLogging.protocol(
+          'READINESS: phase2 complete but predicate failed '
+          '(configurationComplete=$_configurationComplete, '
+          'dataSub=${_dataSubscription != null}, myNodeNum=$_myNodeNum)',
+        );
+      }
 
       // Release the retry loop in _requestQueueDrain.
       if (_queueDrainCompleter != null && !_queueDrainCompleter!.isCompleted) {
@@ -5365,6 +5528,13 @@ class ProtocolService {
       // bundle (config + NodeDB). The second phase (queue drain) is kicked
       // off on receipt of configCompleteId; see `_requestQueueDrain`.
       _handshakePhase = _HandshakePhase.awaitingInitialConfig;
+      _setReadiness(
+        OperationalReadiness.handshakePhase1,
+        reason: 'wantConfig_phase1_send',
+      );
+      AppLogging.protocol(
+        'ADMIN_DRAIN: phase1 start nonce=$_nonceInitialConfig',
+      );
       AppLogging.protocol(
         'Handshake: sending initial wantConfigId (nonce: $_nonceInitialConfig)',
       );
@@ -5441,6 +5611,10 @@ class ProtocolService {
           return;
         }
 
+        AppLogging.protocol(
+          'ADMIN_DRAIN: phase2 start nonce=$_nonceQueueDrain '
+          'attempt=$attempt/$maxAttempts',
+        );
         AppLogging.protocol(
           'Handshake: sending queue-drain wantConfigId '
           '(nonce: $_nonceQueueDrain, attempt $attempt/$maxAttempts)',
@@ -5617,6 +5791,7 @@ class ProtocolService {
     bool isEmoji = false,
     List<int>? pkiPublicKey,
   }) async {
+    _assertOperational('sendMessage');
     // Validate we're ready to send
     if (_myNodeNum == null) {
       throw StateError(
@@ -7285,6 +7460,7 @@ class ProtocolService {
     bool isEmoji = false,
     List<int>? pkiPublicKey,
   }) async {
+    _assertOperational('sendMessageWithPreTracking');
     // Validate we're ready to send
     if (_myNodeNum == null) {
       throw StateError(
@@ -7741,6 +7917,7 @@ class ProtocolService {
   /// can show a "No Response" entry while waiting.  When the inbound
   /// response arrives, the placeholder is replaced by the full log.
   Future<void> sendTraceroute(int nodeNum) async {
+    _assertOperational('sendTraceroute');
     AppLogging.protocol('Sending traceroute to node $nodeNum');
 
     // Create an empty RouteDiscovery for the request
@@ -7804,6 +7981,7 @@ class ProtocolService {
   /// Remote channel changes require a separate admin session with the target
   /// node. This method intentionally uses [MeshPacketBuilder.localAdmin].
   Future<void> setChannel(ChannelConfig config) async {
+    _assertOperational('setChannel');
     // Validate we're ready to send
     if (_myNodeNum == null) {
       throw StateError('Cannot set channel: device not ready (no node number)');
@@ -10702,6 +10880,7 @@ class ProtocolService {
     await _meshTelemetryController.close();
     await _mqttClientProxyMessageController.close();
     await _localConfigWriteController.close();
+    await _readinessController.close();
   }
 }
 
@@ -10712,4 +10891,40 @@ enum _HandshakePhase {
   awaitingInitialConfig,
   awaitingQueueDrain,
   complete,
+}
+
+/// Observable readiness state of [ProtocolService] separate from raw
+/// transport (BLE link) state.
+///
+/// "BLE connected" is not the same as "Meshtastic operational": phase-1
+/// handshake sets `_myNodeNum` early but phase-2 (queue drain) can stall
+/// indefinitely if iOS Core Bluetooth state restoration hands the GATT
+/// link back without the Dart side resubscribing the FROMNUM
+/// characteristic. UI and TX paths must gate on
+/// [OperationalReadiness.ready], not on transport `isConnected`.
+enum OperationalReadiness {
+  /// Service stopped or no transport activity.
+  idle,
+
+  /// Transport link is up and the data-stream listener is wired, but the
+  /// configuration handshake has not started yet.
+  linkConnected,
+
+  /// Phase-1 wantConfigId was sent. Awaiting initial-config replay +
+  /// `configCompleteId(_nonceInitialConfig)`.
+  handshakePhase1,
+
+  /// Phase-1 completed (`_myNodeNum` populated). Awaiting phase-2
+  /// queue-drain replay + `configCompleteId(_nonceQueueDrain)`.
+  /// **`_myNodeNum != null` alone is NOT sufficient for `ready` — the
+  /// regression's root cause is precisely this gap.**
+  handshakePhase2,
+
+  /// Phase-2 completed in the current session generation; node DB +
+  /// channels + config hydrated; safe for TX.
+  ready,
+
+  /// Transport disconnected mid-handshake, or a watchdog gave up after
+  /// failed session rebuild. UI surfaces this as a "Tap to reconnect" CTA.
+  degraded,
 }
