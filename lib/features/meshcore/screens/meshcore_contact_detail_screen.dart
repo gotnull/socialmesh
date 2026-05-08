@@ -58,32 +58,35 @@ class MeshCoreContactDetailScreen extends ConsumerWidget {
       orElse: () => initialContact,
     );
 
-    return GlassScaffold.body(
+    return GlassScaffold(
       title: live.displayName.isNotEmpty
           ? live.displayName
           : l10n.meshcoreContactUnknownName,
-      hasScrollBody: true,
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AppTheme.spacing16,
-          AppTheme.spacing16,
-          AppTheme.spacing16,
-          AppTheme.spacing24,
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(
+            AppTheme.spacing16,
+            AppTheme.spacing16,
+            AppTheme.spacing16,
+            AppTheme.spacing24,
+          ),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              _identitySection(context, live),
+              const SizedBox(height: AppTheme.spacing16),
+              _routingSection(context, live),
+              const SizedBox(height: AppTheme.spacing16),
+              _activitySection(context, live),
+              if (live.hasLocation) ...[
+                const SizedBox(height: AppTheme.spacing16),
+                _locationSection(context, live),
+              ],
+              const SizedBox(height: AppTheme.spacing24),
+              _actionsSection(context, ref, live),
+            ]),
+          ),
         ),
-        children: [
-          _identitySection(context, live),
-          const SizedBox(height: AppTheme.spacing16),
-          _routingSection(context, live),
-          const SizedBox(height: AppTheme.spacing16),
-          _activitySection(context, live),
-          if (live.hasLocation) ...[
-            const SizedBox(height: AppTheme.spacing16),
-            _locationSection(context, live),
-          ],
-          const SizedBox(height: AppTheme.spacing24),
-          _actionsSection(context, ref, live),
-        ],
-      ),
+      ],
     );
   }
 
