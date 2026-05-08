@@ -765,17 +765,29 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
               },
             ),
             children: [
-              // Tile layer
+              // Tile layer. Routes to Mapbox when its flag + token are set.
               TileLayer(
-                urlTemplate: _mapStyle.url,
-                subdomains: _mapStyle.subdomains,
+                urlTemplate:
+                    MapConfig.mapboxUrlForStyle(
+                      _mapStyle,
+                      satelliteLabelsOn: _showSatelliteLabels,
+                    ) ??
+                    _mapStyle.url,
+                subdomains: MapConfig.isMapboxActive
+                    ? const <String>[]
+                    : _mapStyle.subdomains,
                 userAgentPackageName: MapConfig.userAgentPackageName,
-                retinaMode: _mapStyle != MapTileStyle.satellite,
+                retinaMode: MapConfig.isMapboxActive
+                    ? true
+                    : _mapStyle != MapTileStyle.satellite,
                 evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
               ),
               // Transparent place-name + boundary overlay above satellite
-              // imagery. Sits below all mesh / node overlays.
-              if (_mapStyle == MapTileStyle.satellite && _showSatelliteLabels)
+              // imagery. Sits below all mesh / node overlays. Skipped on the
+              // Mapbox path (labels baked into satellite-streets-v12).
+              if (_mapStyle == MapTileStyle.satellite &&
+                  _showSatelliteLabels &&
+                  !MapConfig.isMapboxActive)
                 MapConfig.satelliteReferenceLabelsTileLayer(),
               // Marker clustering for better visualization of dense areas.
               // Markers do NOT capture selection state — selection styling is
@@ -1148,12 +1160,16 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     int visibleCount,
     bool hasFilters,
   ) {
-    final attributionUrl = _mapStyle == MapTileStyle.satellite
+    final attributionUrl = MapConfig.isMapboxActive
+        ? MapConfig.mapboxAttributionUrl
+        : _mapStyle == MapTileStyle.satellite
         ? 'https://www.esri.com'
         : _mapStyle == MapTileStyle.terrain
         ? 'https://opentopomap.org'
         : 'https://carto.com/attributions';
-    final attributionLabel = _mapStyle == MapTileStyle.satellite
+    final attributionLabel = MapConfig.isMapboxActive
+        ? MapConfig.mapboxAttributionLabel
+        : _mapStyle == MapTileStyle.satellite
         ? '© Esri'
         : _mapStyle == MapTileStyle.terrain
         ? '© OpenTopoMap © OSM'

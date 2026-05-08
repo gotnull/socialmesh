@@ -162,12 +162,21 @@ class MeshMapWidget extends StatelessWidget {
           onLongPress: onLongPress,
         ),
         children: [
-          // Map tiles
+          // Map tiles. Routes to Mapbox when its flag + token are set.
           TileLayer(
-            urlTemplate: mapStyle.url,
-            subdomains: mapStyle.subdomains,
+            urlTemplate:
+                MapConfig.mapboxUrlForStyle(
+                  mapStyle,
+                  satelliteLabelsOn: showSatelliteLabels,
+                ) ??
+                mapStyle.url,
+            subdomains: MapConfig.isMapboxActive
+                ? const <String>[]
+                : mapStyle.subdomains,
             userAgentPackageName: MapConfig.userAgentPackageName,
-            retinaMode: mapStyle != MapTileStyle.satellite,
+            retinaMode: MapConfig.isMapboxActive
+                ? true
+                : mapStyle != MapTileStyle.satellite,
             evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
             // Disable tile animation for better performance
             tileBuilder: animateTiles
@@ -178,8 +187,11 @@ class MeshMapWidget extends StatelessWidget {
           ),
 
           // Transparent place-name + boundary overlay above satellite
-          // imagery. Sits below additional layers and node markers.
-          if (mapStyle == MapTileStyle.satellite && showSatelliteLabels)
+          // imagery. Sits below additional layers and node markers. Skipped
+          // on the Mapbox path (labels baked into satellite-streets-v12).
+          if (mapStyle == MapTileStyle.satellite &&
+              showSatelliteLabels &&
+              !MapConfig.isMapboxActive)
             MapConfig.satelliteReferenceLabelsTileLayer(),
 
           // Additional layers (polylines, circles, etc.)
@@ -241,7 +253,8 @@ class MeshMapWidget extends StatelessWidget {
               ),
             ),
 
-          // Attribution (matches world mesh style)
+          // Attribution (matches world mesh style). Mapbox TOS requires
+          // their attribution line and tap-through.
           if (showAttribution)
             Positioned(
               left: 8,
@@ -249,7 +262,9 @@ class MeshMapWidget extends StatelessWidget {
               child: GestureDetector(
                 onTap: () => launchUrl(
                   Uri.parse(
-                    mapStyle == MapTileStyle.satellite
+                    MapConfig.isMapboxActive
+                        ? MapConfig.mapboxAttributionUrl
+                        : mapStyle == MapTileStyle.satellite
                         ? 'https://www.esri.com'
                         : mapStyle == MapTileStyle.terrain
                         ? 'https://opentopomap.org'
@@ -266,7 +281,9 @@ class MeshMapWidget extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppTheme.radius4),
                   ),
                   child: Text(
-                    mapStyle == MapTileStyle.satellite
+                    MapConfig.isMapboxActive
+                        ? MapConfig.mapboxAttributionLabel
+                        : mapStyle == MapTileStyle.satellite
                         ? '© Esri'
                         : mapStyle == MapTileStyle.terrain
                         ? '© OpenTopoMap © OSM'

@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter_map/flutter_map.dart';
 
+import 'constants.dart';
 import 'logging.dart';
 
 /// Centralized map configuration
@@ -77,6 +78,53 @@ class MapConfig {
       errorTileCallback: _onTileError,
     );
   }
+
+  // Mapbox style slug per non-satellite enum. Satellite is special-cased
+  // below because it switches between two slugs based on the labels toggle.
+  static const Map<MapTileStyle, String> _mapboxStyleSlugs = {
+    MapTileStyle.dark: 'mapbox/dark-v11',
+    MapTileStyle.light: 'mapbox/light-v11',
+    MapTileStyle.terrain: 'mapbox/outdoors-v12',
+  };
+
+  // Mapbox does not ship a transparent labels-only raster style. The closest
+  // equivalent to "satellite + labels" is satellite-streets-v12, which bakes
+  // labels and roads into the imagery. Satellite-only is satellite-v9.
+  static String _mapboxSatelliteSlug({required bool labelsOn}) =>
+      labelsOn ? 'mapbox/satellite-streets-v12' : 'mapbox/satellite-v9';
+
+  /// True when the Mapbox feature flag is on AND a token is present.
+  /// Callers use this to swap base tile URLs and attribution.
+  static bool get isMapboxActive {
+    if (!AppFeatureFlags.isMapboxEnabled) return false;
+    return AppUrls.mapboxToken.isNotEmpty;
+  }
+
+  /// Mapbox raster-tile URL for the given style, or null when Mapbox is not
+  /// active. Callers fall back to [MapTileStyle.url].
+  ///
+  /// 256-pixel tiles match flutter_map's default `tileSize`; setting
+  /// `retinaMode: true` on the [TileLayer] appends `@2x` at request time.
+  static String? mapboxUrlForStyle(
+    MapTileStyle style, {
+    required bool satelliteLabelsOn,
+  }) {
+    if (!isMapboxActive) return null;
+    final slug = style == MapTileStyle.satellite
+        ? _mapboxSatelliteSlug(labelsOn: satelliteLabelsOn)
+        : _mapboxStyleSlugs[style];
+    if (slug == null) return null;
+    final token = AppUrls.mapboxToken;
+    return 'https://api.mapbox.com/styles/v1/$slug/tiles/256/{z}/{x}/{y}?access_token=$token';
+  }
+
+  // Mapbox TOS requires the © Mapbox + © OpenStreetMap line on the map view
+  // and a link back to mapbox.com/about/maps. The "Improve this map"
+  // anchor is also required for Mapbox-hosted styles when the link is
+  // tappable; we point the chip at the about page which satisfies both.
+  static const String mapboxAttributionLabel = '© Mapbox © OpenStreetMap';
+  static const String mapboxAttributionUrl =
+      'https://www.mapbox.com/about/maps/';
 }
 
 /// Map tile style options

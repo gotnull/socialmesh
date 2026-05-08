@@ -53,6 +53,10 @@ class AppUrls {
   static String get nodeBoardApiUrl =>
       dotenv.env['NODEBOARD_API_URL'] ?? 'https://nodeboard.socialmesh.app';
 
+  /// Mapbox public access token (`pk.*`) used for raster Static Tiles API
+  /// requests. Empty when not configured; callers must check before using.
+  static String get mapboxToken => dotenv.env['MAPBOX_TOKEN'] ?? '';
+
   // Legal & Documentation URLs
   static String get termsUrl => '$baseUrl/terms';
   static String get privacyUrl => '$baseUrl/privacy';
@@ -331,6 +335,19 @@ class AppFeatureFlags {
   static bool get isMeshCoreEnabled {
     try {
       final raw = dotenv.env['MESHCORE_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Whether map tiles route to Mapbox instead of CARTO + Esri + OpenTopoMap.
+  /// Effective only when `MAPBOX_TOKEN` is also set (callers re-check via
+  /// `MapConfig.isMapboxActive`). Set `MAPBOX_ENABLED=true` in `.env`.
+  /// Default: false — the base experience uses the existing tile providers.
+  static bool get isMapboxEnabled {
+    try {
+      final raw = dotenv.env['MAPBOX_ENABLED']?.toLowerCase().trim();
       return raw == 'true' || raw == '1';
     } catch (_) {
       return false;

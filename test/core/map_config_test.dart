@@ -47,6 +47,37 @@ void main() {
       }
     });
 
+    group('Mapbox tile provider', () {
+      // dotenv is not loaded in unit tests, so AppFeatureFlags.isMapboxEnabled
+      // returns false by default — Mapbox is inactive. These tests pin that
+      // contract so the rest of the app cannot accidentally start hitting the
+      // Mapbox endpoint just because the feature was wired in.
+      test('inactive by default in tests (no dotenv loaded)', () {
+        expect(MapConfig.isMapboxActive, isFalse);
+      });
+
+      test('mapboxUrlForStyle returns null when Mapbox is inactive', () {
+        for (final style in MapTileStyle.values) {
+          expect(
+            MapConfig.mapboxUrlForStyle(style, satelliteLabelsOn: true),
+            isNull,
+          );
+          expect(
+            MapConfig.mapboxUrlForStyle(style, satelliteLabelsOn: false),
+            isNull,
+          );
+        }
+      });
+
+      test('attribution short form matches Mapbox + OSM TOS', () {
+        expect(MapConfig.mapboxAttributionLabel, '© Mapbox © OpenStreetMap');
+        expect(
+          MapConfig.mapboxAttributionUrl,
+          startsWith('https://www.mapbox.com/'),
+        );
+      });
+    });
+
     group('satellite reference labels overlay', () {
       test('url is a transparent Esri reference layer', () {
         expect(MapConfig.satelliteReferenceLabelsUrl, startsWith('https://'));

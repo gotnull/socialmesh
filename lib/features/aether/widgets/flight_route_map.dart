@@ -92,11 +92,20 @@ class FlightRouteMap extends StatelessWidget {
               backgroundColor: AppTheme.darkBackground,
             ),
             children: [
-              // Dark tile layer (same as mesh map)
+              // Dark tile layer (same as mesh map). Routes to mapbox/dark-v11
+              // when Mapbox is active so the visual matches the rest of the app.
               TileLayer(
-                urlTemplate: MapTileStyle.dark.url,
-                subdomains: MapTileStyle.dark.subdomains,
+                urlTemplate:
+                    MapConfig.mapboxUrlForStyle(
+                      MapTileStyle.dark,
+                      satelliteLabelsOn: false,
+                    ) ??
+                    MapTileStyle.dark.url,
+                subdomains: MapConfig.isMapboxActive
+                    ? const <String>[]
+                    : MapTileStyle.dark.subdomains,
                 userAgentPackageName: MapConfig.userAgentPackageName,
+                retinaMode: MapConfig.isMapboxActive,
                 evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
               ),
 

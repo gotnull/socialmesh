@@ -1484,12 +1484,24 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       },
                     ),
                     children: [
-                      // Map tiles
+                      // Map tiles. When Mapbox is active the URL switches to
+                      // Mapbox's raster Static Tiles API and the Esri labels
+                      // overlay below is skipped — Mapbox bakes labels into
+                      // satellite-streets-v12 directly.
                       TileLayer(
-                        urlTemplate: _mapStyle.url,
-                        subdomains: _mapStyle.subdomains,
+                        urlTemplate:
+                            MapConfig.mapboxUrlForStyle(
+                              _mapStyle,
+                              satelliteLabelsOn: _showSatelliteLabels,
+                            ) ??
+                            _mapStyle.url,
+                        subdomains: MapConfig.isMapboxActive
+                            ? const <String>[]
+                            : _mapStyle.subdomains,
                         userAgentPackageName: MapConfig.userAgentPackageName,
-                        retinaMode: _mapStyle != MapTileStyle.satellite,
+                        retinaMode: MapConfig.isMapboxActive
+                            ? true
+                            : _mapStyle != MapTileStyle.satellite,
                         evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
                         // No tileBuilder — AnimatedOpacity at constant 1.0
                         // created unnecessary animation controllers per tile,
@@ -1497,8 +1509,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       ),
                       // Transparent place-name + boundary overlay above
                       // satellite imagery. Sits below mesh / node overlays.
+                      // Skipped on the Mapbox path (labels are baked into
+                      // satellite-streets-v12).
                       if (_mapStyle == MapTileStyle.satellite &&
-                          _showSatelliteLabels)
+                          _showSatelliteLabels &&
+                          !MapConfig.isMapboxActive)
                         MapConfig.satelliteReferenceLabelsTileLayer(),
                       // Range circles (theoretical coverage) - hide in location only mode
                       if (_showRangeCircles && !widget.locationOnlyMode)
@@ -1828,14 +1843,19 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             _buildDistanceLabels(nodesWithPosition, myNodeNum),
                           ),
                         ),
-                      // Map attribution (matches world mesh style)
+                      // Map attribution (matches world mesh style). Mapbox
+                      // TOS requires the © Mapbox + © OpenStreetMap line and
+                      // a tap-through to about/maps when their tiles are
+                      // active.
                       Positioned(
                         left: 8,
                         bottom: 8,
                         child: GestureDetector(
                           onTap: () => launchUrl(
                             Uri.parse(
-                              _mapStyle == MapTileStyle.satellite
+                              MapConfig.isMapboxActive
+                                  ? MapConfig.mapboxAttributionUrl
+                                  : _mapStyle == MapTileStyle.satellite
                                   ? 'https://www.esri.com'
                                   : _mapStyle == MapTileStyle.terrain
                                   ? 'https://opentopomap.org'
@@ -1854,7 +1874,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               ),
                             ),
                             child: Text(
-                              _mapStyle == MapTileStyle.satellite
+                              MapConfig.isMapboxActive
+                                  ? MapConfig.mapboxAttributionLabel
+                                  : _mapStyle == MapTileStyle.satellite
                                   ? '© Esri'
                                   : _mapStyle == MapTileStyle.terrain
                                   ? '© OpenTopoMap © OSM'

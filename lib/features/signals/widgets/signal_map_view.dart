@@ -167,15 +167,27 @@ class _SignalMapViewState extends ConsumerState<SignalMapView>
             backgroundColor: context.background,
           ),
           children: [
+            // Tile layer. Routes to Mapbox when its flag + token are set.
             TileLayer(
-              urlTemplate: _mapStyle.url,
-              subdomains: _mapStyle.subdomains,
+              urlTemplate:
+                  MapConfig.mapboxUrlForStyle(
+                    _mapStyle,
+                    satelliteLabelsOn: _showSatelliteLabels,
+                  ) ??
+                  _mapStyle.url,
+              subdomains: MapConfig.isMapboxActive
+                  ? const <String>[]
+                  : _mapStyle.subdomains,
               userAgentPackageName: MapConfig.userAgentPackageName,
+              retinaMode: MapConfig.isMapboxActive,
               evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
             ),
             // Transparent place-name + boundary overlay above satellite
-            // imagery. Sits below mesh / signal markers.
-            if (_mapStyle == MapTileStyle.satellite && _showSatelliteLabels)
+            // imagery. Sits below mesh / signal markers. Skipped on the
+            // Mapbox path (labels baked into satellite-streets-v12).
+            if (_mapStyle == MapTileStyle.satellite &&
+                _showSatelliteLabels &&
+                !MapConfig.isMapboxActive)
               MapConfig.satelliteReferenceLabelsTileLayer(),
             MarkerLayer(
               markers: finiteMarkers(
@@ -206,14 +218,17 @@ class _SignalMapViewState extends ConsumerState<SignalMapView>
                 }),
               ),
             ),
-            // Map attribution (matches world mesh style)
+            // Map attribution (matches world mesh style). Mapbox TOS
+            // requires their attribution line and tap-through.
             Positioned(
               left: 8,
               bottom: 8,
               child: GestureDetector(
                 onTap: () => launchUrl(
                   Uri.parse(
-                    _mapStyle == MapTileStyle.satellite
+                    MapConfig.isMapboxActive
+                        ? MapConfig.mapboxAttributionUrl
+                        : _mapStyle == MapTileStyle.satellite
                         ? 'https://www.esri.com'
                         : _mapStyle == MapTileStyle.terrain
                         ? 'https://opentopomap.org'
@@ -230,7 +245,9 @@ class _SignalMapViewState extends ConsumerState<SignalMapView>
                     borderRadius: BorderRadius.circular(AppTheme.radius4),
                   ),
                   child: Text(
-                    _mapStyle == MapTileStyle.satellite
+                    MapConfig.isMapboxActive
+                        ? MapConfig.mapboxAttributionLabel
+                        : _mapStyle == MapTileStyle.satellite
                         ? '© Esri'
                         : _mapStyle == MapTileStyle.terrain
                         ? '© OpenTopoMap © OSM'
