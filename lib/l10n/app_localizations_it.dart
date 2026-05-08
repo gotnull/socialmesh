@@ -7095,6 +7095,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get mapHideRangeCircles => 'Nascondi cerchi di portata';
 
   @override
+  String get mapHideSatelliteLabels => 'Nascondi etichette satellite';
+
+  @override
   String get mapHideTakEntities => 'Nascondi entità TAK';
 
   @override
@@ -7267,6 +7270,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get mapShowRangeCircles => 'Mostra cerchi di portata';
+
+  @override
+  String get mapShowSatelliteLabels => 'Mostra etichette satellite';
 
   @override
   String get mapShowTakEntities => 'Mostra entità TAK';

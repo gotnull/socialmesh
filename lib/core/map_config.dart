@@ -23,6 +23,16 @@ class MapConfig {
   static const double minZoom = 3.0;
   static const double maxZoom = 18.0;
 
+  // Esri's transparent reference tile service that publishes country / state /
+  // province boundaries and populated-place labels (cities, towns, villages)
+  // designed to sit on top of World_Imagery. Same provider, same TOS, same
+  // attribution as the base imagery.
+  static const String satelliteReferenceLabelsUrl =
+      'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
+
+  // Short-form attribution; matches base imagery so the strip stays compact.
+  static const String satelliteReferenceLabelsAttribution = '© Esri';
+
   /// Error tile callback for logging tile load failures
   static void _onTileError(
     TileImage tile,
@@ -50,6 +60,19 @@ class MapConfig {
       urlTemplate: style.url,
       subdomains: style.subdomains,
       userAgentPackageName: userAgentPackageName,
+      evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
+      errorTileCallback: _onTileError,
+    );
+  }
+
+  // Transparent reference overlay (boundaries + place names) intended to be
+  // stacked above the satellite base layer.
+  static TileLayer satelliteReferenceLabelsTileLayer() {
+    return TileLayer(
+      urlTemplate: satelliteReferenceLabelsUrl,
+      userAgentPackageName: userAgentPackageName,
+      // Reference layer has no @2x assets; matching base satellite retina off.
+      retinaMode: false,
       evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
       errorTileCallback: _onTileError,
     );

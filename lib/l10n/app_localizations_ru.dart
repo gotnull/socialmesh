@@ -7015,6 +7015,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get mapHideRangeCircles => 'Hide range circles';
 
   @override
+  String get mapHideSatelliteLabels => 'Hide satellite labels';
+
+  @override
   String get mapHideTakEntities => 'Hide TAK entities';
 
   @override
@@ -7185,6 +7188,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get mapShowRangeCircles => 'Show range circles';
+
+  @override
+  String get mapShowSatelliteLabels => 'Show satellite labels';
 
   @override
   String get mapShowTakEntities => 'Show TAK entities';

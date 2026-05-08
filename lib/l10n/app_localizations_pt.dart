@@ -7080,6 +7080,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get mapHideRangeCircles => 'Ocultar círculos de alcance';
 
   @override
+  String get mapHideSatelliteLabels => 'Ocultar rótulos do satélite';
+
+  @override
   String get mapHideTakEntities => 'Ocultar entidades TAK';
 
   @override
@@ -7254,6 +7257,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get mapShowRangeCircles => 'Mostrar círculos de alcance';
+
+  @override
+  String get mapShowSatelliteLabels => 'Mostrar rótulos do satélite';
 
   @override
   String get mapShowTakEntities => 'Mostrar entidades TAK';

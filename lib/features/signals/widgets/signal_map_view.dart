@@ -45,6 +45,7 @@ class _SignalMapViewState extends ConsumerState<SignalMapView>
   Post? _selectedSignal;
   bool _showSignalList = false;
   MapTileStyle _mapStyle = MapTileStyle.dark;
+  bool _showSatelliteLabels = true;
 
   /// Programmatically focus on a specific signal: select the preview card
   /// and center/zoom the map to its location.
@@ -109,8 +110,14 @@ class _SignalMapViewState extends ConsumerState<SignalMapView>
     final settings = await settingsFuture;
     if (!mounted) return;
     final index = settings.mapTileStyleIndex;
+    final labelsEnabled = settings.satelliteLabelsEnabled;
     if (index >= 0 && index < MapTileStyle.values.length) {
-      safeSetState(() => _mapStyle = MapTileStyle.values[index]);
+      safeSetState(() {
+        _mapStyle = MapTileStyle.values[index];
+        _showSatelliteLabels = labelsEnabled;
+      });
+    } else {
+      safeSetState(() => _showSatelliteLabels = labelsEnabled);
     }
   }
 
@@ -166,6 +173,10 @@ class _SignalMapViewState extends ConsumerState<SignalMapView>
               userAgentPackageName: MapConfig.userAgentPackageName,
               evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
             ),
+            // Transparent place-name + boundary overlay above satellite
+            // imagery. Sits below mesh / signal markers.
+            if (_mapStyle == MapTileStyle.satellite && _showSatelliteLabels)
+              MapConfig.satelliteReferenceLabelsTileLayer(),
             MarkerLayer(
               markers: finiteMarkers(
                 _signalsWithLocation.map((signal) {

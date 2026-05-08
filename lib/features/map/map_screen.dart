@@ -143,6 +143,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   bool _showRangeCircles = false;
   bool _showConnectionLines = false;
   bool _showPositionHistory = false;
+  bool _showSatelliteLabels = true;
 
   /// When true in traceroute mode, only nodes part of the route are shown.
   bool _tracerouteRouteOnly = false;
@@ -248,6 +249,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _showConnectionLines = settings.mapShowConnectionLines;
         _showPositionHistory = settings.mapShowPositionHistory;
         _connectionMaxDistance = settings.mapConnectionMaxDistance;
+        _showSatelliteLabels = settings.satelliteLabelsEnabled;
       });
     }
   }
@@ -267,6 +269,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     await settings.setMapShowConnectionLines(_showConnectionLines);
     await settings.setMapShowPositionHistory(_showPositionHistory);
     await settings.setMapConnectionMaxDistance(_connectionMaxDistance);
+    await settings.setSatelliteLabelsEnabled(_showSatelliteLabels);
   }
 
   /// Animate camera to a specific location with smooth easing
@@ -941,6 +944,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   setState(() => _mapStyle = MapTileStyle.light);
                   unawaited(_saveMapStyle(MapTileStyle.light));
                   break;
+                case 'satellite_labels':
+                  setState(() => _showSatelliteLabels = !_showSatelliteLabels);
+                  unawaited(_saveMapLayerSettings());
+                  break;
                 case 'traceroute_route_only':
                   setState(() => _tracerouteRouteOnly = !_tracerouteRouteOnly);
                   break;
@@ -1055,6 +1062,31 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   ),
                 ),
               ),
+              // Satellite labels toggle — only meaningful in satellite mode,
+              // so the entry stays hidden for the other styles.
+              if (_mapStyle == MapTileStyle.satellite)
+                PopupMenuItem(
+                  value: 'satellite_labels',
+                  child: Row(
+                    children: [
+                      Icon(
+                        _showSatelliteLabels
+                            ? Icons.label
+                            : Icons.label_outline,
+                        size: 18,
+                        color: _showSatelliteLabels
+                            ? context.accentColor
+                            : context.textSecondary,
+                      ),
+                      SizedBox(width: AppTheme.spacing8),
+                      Text(
+                        _showSatelliteLabels
+                            ? context.l10n.mapHideSatelliteLabels
+                            : context.l10n.mapShowSatelliteLabels,
+                      ),
+                    ],
+                  ),
+                ),
               const PopupMenuDivider(),
               // Traceroute: show route only toggle
               if (widget.tracerouteLog != null)
@@ -1463,6 +1495,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         // created unnecessary animation controllers per tile,
                         // causing visible lag on initial map load.
                       ),
+                      // Transparent place-name + boundary overlay above
+                      // satellite imagery. Sits below mesh / node overlays.
+                      if (_mapStyle == MapTileStyle.satellite &&
+                          _showSatelliteLabels)
+                        MapConfig.satelliteReferenceLabelsTileLayer(),
                       // Range circles (theoretical coverage) - hide in location only mode
                       if (_showRangeCircles && !widget.locationOnlyMode)
                         CircleLayer(

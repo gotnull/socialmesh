@@ -46,6 +46,33 @@ void main() {
         expect(layer.urlTemplate, style.url);
       }
     });
+
+    group('satellite reference labels overlay', () {
+      test('url is a transparent Esri reference layer', () {
+        expect(MapConfig.satelliteReferenceLabelsUrl, startsWith('https://'));
+        expect(
+          MapConfig.satelliteReferenceLabelsUrl,
+          contains('arcgisonline.com'),
+        );
+        expect(
+          MapConfig.satelliteReferenceLabelsUrl,
+          contains('Reference/World_Boundaries_and_Places'),
+        );
+        expect(MapConfig.satelliteReferenceLabelsUrl, contains('{z}'));
+        expect(MapConfig.satelliteReferenceLabelsUrl, contains('{x}'));
+        expect(MapConfig.satelliteReferenceLabelsUrl, contains('{y}'));
+      });
+
+      test('attribution short form matches base imagery', () {
+        expect(MapConfig.satelliteReferenceLabelsAttribution, '© Esri');
+      });
+
+      test('factory builds a TileLayer with the overlay url', () {
+        final overlay = MapConfig.satelliteReferenceLabelsTileLayer();
+        expect(overlay, isNotNull);
+        expect(overlay.urlTemplate, MapConfig.satelliteReferenceLabelsUrl);
+      });
+    });
   });
 
   group('MapTileStyle', () {

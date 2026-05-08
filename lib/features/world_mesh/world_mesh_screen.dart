@@ -61,6 +61,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
   final ValueNotifier<WorldMeshNode?> _selectedNodeNotifier =
       ValueNotifier<WorldMeshNode?>(null);
   MapTileStyle _mapStyle = MapTileStyle.dark;
+  bool _showSatelliteLabels = true;
   String _searchQuery = '';
   bool _showSearch = false;
   bool _showSearchResults = false;
@@ -182,9 +183,15 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     final settingsFuture = ref.read(settingsServiceProvider.future);
     final settings = await settingsFuture;
     final index = settings.mapTileStyleIndex;
+    final labelsEnabled = settings.satelliteLabelsEnabled;
     if (!mounted) return;
     if (index >= 0 && index < MapTileStyle.values.length) {
-      safeSetState(() => _mapStyle = MapTileStyle.values[index]);
+      safeSetState(() {
+        _mapStyle = MapTileStyle.values[index];
+        _showSatelliteLabels = labelsEnabled;
+      });
+    } else {
+      safeSetState(() => _showSatelliteLabels = labelsEnabled);
     }
   }
 
@@ -766,6 +773,10 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                 retinaMode: _mapStyle != MapTileStyle.satellite,
                 evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
               ),
+              // Transparent place-name + boundary overlay above satellite
+              // imagery. Sits below all mesh / node overlays.
+              if (_mapStyle == MapTileStyle.satellite && _showSatelliteLabels)
+                MapConfig.satelliteReferenceLabelsTileLayer(),
               // Marker clustering for better visualization of dense areas.
               // Markers do NOT capture selection state — selection styling is
               // rendered by `_SelectionHighlightLayer` below, so a node tap

@@ -451,6 +451,16 @@ class SettingsService {
   bool get mapShowRangeCircles =>
       _preferences.getBool('map_show_range_circles') ?? false;
 
+  // Reference labels overlay above satellite imagery (boundaries + place
+  // names from Esri). Defaults to true: directly answers user feedback that
+  // village / town / city names should be visible in satellite mode.
+  Future<void> setSatelliteLabelsEnabled(bool enabled) async {
+    await _preferences.setBool('map_satellite_labels_enabled', enabled);
+  }
+
+  bool get satelliteLabelsEnabled =>
+      _preferences.getBool('map_satellite_labels_enabled') ?? true;
+
   Future<void> setMapShowConnectionLines(bool enabled) async {
     await _preferences.setBool('map_show_connection_lines', enabled);
   }

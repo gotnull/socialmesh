@@ -9480,6 +9480,10 @@
     "@mapHideRangeCircles": {
         "description": "Text displayed in map view"
     },
+    "mapHideSatelliteLabels": "Hide satellite labels",
+    "@mapHideSatelliteLabels": {
+        "description": "Map menu action that hides the place-name and boundary overlay above satellite imagery."
+    },
     "mapHideTakEntities": "Hide TAK entities",
     "@mapHideTakEntities": {
         "description": "TAK = Team Awareness Kit (shared SA platform). Entities = tracked markers on the map."
@@ -9724,6 +9728,10 @@
     "mapShowRangeCircles": "Show range circles",
     "@mapShowRangeCircles": {
         "description": "Text displayed in map view"
+    },
+    "mapShowSatelliteLabels": "Show satellite labels",
+    "@mapShowSatelliteLabels": {
+        "description": "Map menu action that overlays village, town and city labels with country and state boundaries above satellite imagery."
     },
     "mapShowTakEntities": "Show TAK entities",
     "@mapShowTakEntities": {

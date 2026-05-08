@@ -12440,6 +12440,12 @@ abstract class AppLocalizations {
   /// **'Hide range circles'**
   String get mapHideRangeCircles;
 
+  /// Map menu action that hides the place-name and boundary overlay above satellite imagery.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide satellite labels'**
+  String get mapHideSatelliteLabels;
+
   /// TAK = Team Awareness Kit (shared SA platform). Entities = tracked markers on the map.
   ///
   /// In en, this message translates to:
@@ -12756,6 +12762,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show range circles'**
   String get mapShowRangeCircles;
+
+  /// Map menu action that overlays village, town and city labels with country and state boundaries above satellite imagery.
+  ///
+  /// In en, this message translates to:
+  /// **'Show satellite labels'**
+  String get mapShowSatelliteLabels;
 
   /// TAK = Team Awareness Kit (shared SA platform). Entities = tracked markers on the map.
   ///

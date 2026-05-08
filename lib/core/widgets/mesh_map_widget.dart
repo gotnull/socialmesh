@@ -95,6 +95,11 @@ class MeshMapWidget extends StatelessWidget {
   /// Attribution widgets
   final List<SourceAttribution>? attributions;
 
+  /// Stack a transparent place-name + boundary overlay above satellite
+  /// imagery so village / town / city labels appear in satellite mode. Has
+  /// no effect when [mapStyle] is not [MapTileStyle.satellite].
+  final bool showSatelliteLabels;
+
   const MeshMapWidget({
     super.key,
     this.mapController,
@@ -124,6 +129,7 @@ class MeshMapWidget extends StatelessWidget {
     this.popupBuilder,
     this.showAttribution = true,
     this.attributions,
+    this.showSatelliteLabels = true,
   });
 
   @override
@@ -170,6 +176,11 @@ class MeshMapWidget extends StatelessWidget {
                   }
                 : null,
           ),
+
+          // Transparent place-name + boundary overlay above satellite
+          // imagery. Sits below additional layers and node markers.
+          if (mapStyle == MapTileStyle.satellite && showSatelliteLabels)
+            MapConfig.satelliteReferenceLabelsTileLayer(),
 
           // Additional layers (polylines, circles, etc.)
           ...additionalLayers,
