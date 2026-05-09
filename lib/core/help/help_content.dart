@@ -1843,6 +1843,10 @@ class HelpContent {
         'identity and primary trait — like a naturalist\'s field observation. '
         'The same node always produces the same note; it never changes, and '
         'it never travels over the mesh.',
+    'radio_compatibility':
+        'Compares your local radio\'s current preset and frequency against '
+        'the values stamped on this node\'s last observation. Use this to '
+        'spot mismatches that prevent direct RF reachability.',
     // Album-specific section help
     'album_rarity':
         'Rarity tiers are computed from encounter count and inferred trait. '
@@ -3021,6 +3025,7 @@ class HelpContent {
     'pet_companion_remote' => l10n.helpNodeDexSectionPetCompanionRemote,
     'mrrp_services' => l10n.helpNodeDexSectionMrrpServices,
     'field_note' => l10n.helpNodeDexSectionFieldNote,
+    'radio_compatibility' => l10n.helpNodeDexSectionRadioCompatibility,
     'album_rarity' => l10n.helpNodeDexSectionAlbumRarity,
     'album_grouping' => l10n.helpNodeDexSectionAlbumGrouping,
     'album_explorer_title' => l10n.helpNodeDexSectionAlbumExplorerTitle,

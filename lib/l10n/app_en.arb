@@ -42848,6 +42848,14 @@
     "@helpNodeDexSectionFieldNote": {
         "description": "Section help text for field_note in nodeDexSectionHelp"
     },
+    "helpNodeDexSectionRadioCompatibility": "Compares your local radio's current preset and frequency against the values stamped on this node's last observation. Use this to spot mismatches that prevent direct RF reachability — for example, a node observed on a long-range preset while your radio is on short-range.",
+    "@helpNodeDexSectionRadioCompatibility": {
+        "description": "Section help text for radio_compatibility in nodeDexSectionHelp"
+    },
+    "nodedexHelpRadioCompatibility": "Radio compatibility",
+    "@nodedexHelpRadioCompatibility": {
+        "description": "Help sheet title for the Radio Compatibility section"
+    },
     "helpNodeDexSectionAlbumRarity": "Rarity tiers are computed from encounter count and inferred trait. Common nodes have few encounters, while Legendary nodes combine rare traits with deep observation history. Rarity determines the card border color and holographic shimmer intensity.",
     "@helpNodeDexSectionAlbumRarity": {
         "description": "Section help text for album_rarity in nodeDexSectionHelp"

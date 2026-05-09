@@ -66,6 +66,7 @@ import '../widgets/node_summary_card.dart';
 import '../widgets/patina_stamp.dart';
 import '../widgets/radio_compatibility_card.dart';
 import '../../../core/widgets/section_header.dart';
+import '../widgets/nodedex_card.dart';
 import '../widgets/section_info_button.dart';
 import '../widgets/sigil_card_sheet.dart';
 import '../widgets/sigil_painter.dart';
@@ -273,7 +274,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               child: _DetailEntrance(
                 index: 1,
                 reduceMotion: reduceMotion,
-                child: _CardContainer(
+                child: NodeDexCard(
                   title: context.l10n.nodedexSummaryCardTitle,
                   icon: Icons.auto_awesome_outlined,
                   helpKey: 'auto_summary',
@@ -307,7 +308,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               child: _DetailEntrance(
                 index: 2,
                 reduceMotion: reduceMotion,
-                child: _CardContainer(
+                child: NodeDexCard(
                   title: context.l10n.petCompanionSectionTitle,
                   icon: Icons.egg_alt_outlined,
                   helpKey: isSelf
@@ -358,7 +359,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               child: _DetailEntrance(
                 index: 3,
                 reduceMotion: reduceMotion,
-                child: _CardContainer(
+                child: NodeDexCard(
                   title: context.l10n.nodedexTraitEvidenceTitle,
                   icon: Icons.fact_check_outlined,
                   helpKey: 'trait_evidence',
@@ -401,7 +402,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               child: _DetailEntrance(
                 index: 5,
                 reduceMotion: reduceMotion,
-                child: _CardContainer(
+                child: NodeDexCard(
                   title: context.l10n.nodedexObservationTimelineTitle,
                   icon: Icons.timeline,
                   helpKey: 'observation_timeline',
@@ -429,7 +430,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               child: _DetailEntrance(
                 index: 6,
                 reduceMotion: reduceMotion,
-                child: _CardContainer(
+                child: NodeDexCard(
                   title: context.l10n.nodedexAdditionalTraits,
                   icon: Icons.bubble_chart_outlined,
                   helpKey: 'additional_traits',
@@ -1398,34 +1399,31 @@ class _SelfDeviceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _CardContainer(
+    return NodeDexCard(
       title: context.l10n.nodedexSelfDeviceTitle,
       icon: Icons.smartphone_outlined,
       helpKey: 'pet_companion_self',
-      child: Padding(
-        padding: const EdgeInsets.only(top: AppTheme.spacing8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              context.l10n.nodedexSelfDeviceSubtitle,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: context.textPrimary,
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.l10n.nodedexSelfDeviceSubtitle,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
             ),
-            const SizedBox(height: AppTheme.spacing8),
-            Text(
-              context.l10n.nodedexSelfDeviceSummary,
-              style: TextStyle(
-                fontSize: 13,
-                color: context.textSecondary,
-                height: 1.4,
-              ),
+          ),
+          const SizedBox(height: AppTheme.spacing8),
+          Text(
+            context.l10n.nodedexSelfDeviceSummary,
+            style: TextStyle(
+              fontSize: 13,
+              color: context.textSecondary,
+              height: 1.4,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -1504,7 +1502,7 @@ class _DiscoveryStatsCard extends StatelessWidget {
           )
         : null;
 
-    return _CardContainer(
+    return NodeDexCard(
       title: context.l10n.nodedexDiscoveryTitle,
       icon: Icons.explore_outlined,
       helpKey: 'discovery',
@@ -1624,7 +1622,7 @@ class _SignalRecordsCard extends StatelessWidget {
     final hasSignalData = entry.bestSnr != null || entry.bestRssi != null;
     if (!hasSignalData) return const SizedBox.shrink();
 
-    return _CardContainer(
+    return NodeDexCard(
       title: context.l10n.nodedexSignalRecordsTitle,
       icon: Icons.signal_cellular_alt,
       helpKey: 'signal',
@@ -1678,7 +1676,7 @@ class _SocialTagCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _CardContainer(
+    return NodeDexCard(
       title: context.l10n.nodedexClassificationTitle,
       icon: Icons.label_outline,
       helpKey: 'social_tag',
@@ -1703,19 +1701,13 @@ class _SocialTagCard extends StatelessWidget {
         ),
       ),
       child: entry.socialTag != null
-          ? Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: SocialTagBadge(tag: entry.socialTag!, onTap: onEditTag),
-            )
-          : Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                context.l10n.nodedexNoClassification,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: context.textTertiary,
-                  fontStyle: FontStyle.italic,
-                ),
+          ? SocialTagBadge(tag: entry.socialTag!, onTap: onEditTag)
+          : Text(
+              context.l10n.nodedexNoClassification,
+              style: TextStyle(
+                fontSize: 13,
+                color: context.textTertiary,
+                fontStyle: FontStyle.italic,
               ),
             ),
     );
@@ -1751,7 +1743,7 @@ class _UserNoteCard extends StatelessWidget {
         FocusScope.of(context).unfocus();
       },
       behavior: HitTestBehavior.translucent,
-      child: _CardContainer(
+      child: NodeDexCard(
         title: context.l10n.nodedexNoteTitle,
         icon: Icons.edit_note,
         helpKey: 'note',
@@ -1834,16 +1826,13 @@ class _UserNoteCard extends StatelessWidget {
                 ),
               ),
         child: editing
-            ? Padding(
-                padding: const EdgeInsets.only(top: AppTheme.spacing8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    _NoteEditField(controller: controller),
-                    const SizedBox(height: AppTheme.spacing4),
-                    _CharCounter(controller: controller, max: 280),
-                  ],
-                ),
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  _NoteEditField(controller: controller),
+                  const SizedBox(height: AppTheme.spacing4),
+                  _CharCounter(controller: controller, max: 280),
+                ],
               )
             : _UserNotePlaceholder(entry: entry),
       ),
@@ -1907,26 +1896,23 @@ class _UserNotePlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: AppTheme.spacing4),
-      child: entry.userNote != null && entry.userNote!.trim().isNotEmpty
-          ? Text(
-              entry.userNote!,
-              style: TextStyle(
-                fontSize: 14,
-                color: context.textPrimary,
-                height: 1.5,
-              ),
-            )
-          : Text(
-              context.l10n.nodedexNoNoteYet,
-              style: TextStyle(
-                fontSize: 13,
-                color: context.textTertiary,
-                fontStyle: FontStyle.italic,
-              ),
+    return entry.userNote != null && entry.userNote!.trim().isNotEmpty
+        ? Text(
+            entry.userNote!,
+            style: TextStyle(
+              fontSize: 14,
+              color: context.textPrimary,
+              height: 1.5,
             ),
-    );
+          )
+        : Text(
+            context.l10n.nodedexNoNoteYet,
+            style: TextStyle(
+              fontSize: 13,
+              color: context.textTertiary,
+              fontStyle: FontStyle.italic,
+            ),
+          );
   }
 }
 
@@ -1971,59 +1957,65 @@ class _RegionHistoryCard extends StatelessWidget {
     final regions = List<SeenRegion>.from(entry.seenRegions)
       ..sort((a, b) => b.lastSeen.compareTo(a.lastSeen));
 
-    return _CardContainer(
+    return NodeDexCard(
       title: context.l10n.nodedexRegionsLabel,
       icon: Icons.public_outlined,
       helpKey: 'regions',
       child: Column(
-        children: regions.map((region) {
-          final dateFormat = DateFormat('MMM d');
-          return Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: context.accentColor.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.pin_drop_outlined,
-                    size: 15,
-                    color: context.accentColor,
-                  ),
-                ),
-                const SizedBox(width: AppTheme.spacing12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        region.label,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: context.textPrimary,
-                        ),
+        children: [
+          for (var i = 0; i < regions.length; i++) ...[
+            if (i > 0) const SizedBox(height: AppTheme.spacing8),
+            Builder(
+              builder: (context) {
+                final region = regions[i];
+                final dateFormat = DateFormat('MMM d');
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: context.accentColor.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
                       ),
-                      const SizedBox(height: AppTheme.spacing2),
-                      Text(
-                        '${context.l10n.nodedexRegionEncounterCount(region.encounterCount)} '
-                        '\u00B7 ${dateFormat.format(region.firstSeen)} \u2013 ${dateFormat.format(region.lastSeen)}', // lint-allow: hardcoded-string
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: context.textTertiary,
-                        ),
+                      child: Icon(
+                        Icons.pin_drop_outlined,
+                        size: 14,
+                        color: context.accentColor,
                       ),
-                    ],
-                  ),
-                ),
-              ],
+                    ),
+                    const SizedBox(width: AppTheme.spacing12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            region.label,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: context.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: AppTheme.spacing2),
+                          Text(
+                            '${context.l10n.nodedexRegionEncounterCount(region.encounterCount)} '
+                            '\u00B7 ${dateFormat.format(region.firstSeen)} \u2013 ${dateFormat.format(region.lastSeen)}', // lint-allow: hardcoded-string
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: context.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
-          );
-        }).toList(),
+          ],
+        ],
       ),
     );
   }
@@ -2201,6 +2193,8 @@ class _EncounterActivityCardState extends State<_EncounterActivityCard> {
                   ),
                 ),
               ),
+              const SizedBox(width: AppTheme.spacing4),
+              const SectionInfoButton(helpKey: 'encounters'),
             ],
           ),
           const SizedBox(height: AppTheme.spacing4),
@@ -3346,7 +3340,7 @@ class _DeviceInfoCard extends StatelessWidget {
 
     if (!hasDeviceInfo) return const SizedBox.shrink();
 
-    return _CardContainer(
+    return NodeDexCard(
       title: context.l10n.nodedexDeviceTitle,
       icon: Icons.developer_board_outlined,
       helpKey: 'device',
@@ -3435,7 +3429,7 @@ class _MrrpServicesCard extends StatelessWidget {
 
     if (serviceIds.isEmpty) return const SizedBox.shrink();
 
-    return _CardContainer(
+    return NodeDexCard(
       title: context.l10n.nodedexMrrpServicesTitle,
       icon: Icons.hub_outlined,
       helpKey: 'mrrp_services',
@@ -3457,60 +3451,6 @@ class _MrrpServicesCard extends StatelessWidget {
 // =============================================================================
 // Shared Card Widgets
 // =============================================================================
-
-/// Standard card container used across all detail cards.
-///
-/// Provides a consistent header with icon + title + optional trailing
-/// widget, and wraps the child content in a styled container.
-class _CardContainer extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final Widget? trailing;
-  final String? helpKey;
-  final Widget child;
-
-  const _CardContainer({
-    required this.title,
-    required this.icon,
-    this.trailing,
-    this.helpKey,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius16),
-        border: Border.all(
-          color: context.border.withValues(alpha: 0.15),
-          width: 0.5,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SectionTitle(
-            title: title,
-            leadingIcon: icon,
-            helpSheetBuilder: helpKey == null
-                ? null
-                : (ctx) => NodeDexHelpSheetBody(helpKey: helpKey!),
-          ),
-          if (trailing != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
-              child: Align(alignment: Alignment.centerRight, child: trailing),
-            ),
-          child,
-        ],
-      ),
-    );
-  }
-}
 
 // =============================================================================
 // Sticky Card Header Delegate — pinned header for long scrollable sections
@@ -3757,7 +3697,7 @@ class _InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
+      padding: const EdgeInsets.only(bottom: AppTheme.spacing10),
       child: Row(
         children: [
           Icon(

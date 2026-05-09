@@ -16,12 +16,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/info_table.dart';
-import '../../../core/widgets/section_header.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/observation_source.dart';
 import '../models/observed_radio_preset.dart';
 import '../providers/nodedex_radio_compatibility_provider.dart';
 import '../services/radio_compatibility.dart';
+import 'nodedex_card.dart';
 
 /// NodeDex detail-screen card that surfaces radio compatibility context.
 ///
@@ -48,30 +48,11 @@ class RadioCompatibilityCard extends ConsumerWidget {
     final l10n = context.l10n;
     final rows = _buildRows(summary, l10n);
 
-    return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spacing16,
-        vertical: AppTheme.spacing4,
-      ),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius16),
-        border: Border.all(
-          color: context.border.withValues(alpha: 0.15),
-          width: 0.5,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SectionTitle(
-            title: l10n.nodedexRadioCompatibilityTitle,
-            leadingIcon: Icons.radio_outlined,
-          ),
-          InfoTable(rows: rows),
-        ],
-      ),
+    return NodeDexCard(
+      title: l10n.nodedexRadioCompatibilityTitle,
+      icon: Icons.radio_outlined,
+      helpKey: 'radio_compatibility',
+      child: InfoTable(rows: rows),
     );
   }
 

@@ -32273,6 +32273,13 @@ class AppLocalizationsIt extends AppLocalizations {
       'A short, deterministic journal entry generated from this node\'s identity and primary trait — like a naturalist\'s field observation. The same node always produces the same note; it never changes, and it never travels over the mesh.';
 
   @override
+  String get helpNodeDexSectionRadioCompatibility =>
+      'Confronta il preset e la frequenza correnti della tua radio locale con i valori registrati nell\'ultima osservazione di questo nodo. Usalo per individuare incompatibilità che impediscono la raggiungibilità RF diretta.';
+
+  @override
+  String get nodedexHelpRadioCompatibility => 'Compatibilità radio';
+
+  @override
   String get helpNodeDexSectionAlbumRarity =>
       'I livelli di rarità sono calcolati dal conteggio incontri e dal tratto dedotto. ';
 

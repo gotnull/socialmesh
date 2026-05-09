@@ -15555,6 +15555,14 @@
   "@helpNodeDexSectionEncounters": {
     "description": "Section help text for encounters in nodeDexSectionHelp"
   },
+  "helpNodeDexSectionRadioCompatibility": "Compara o preset e a frequência atuais do seu rádio local com os valores registrados na última observação deste nó. Use para identificar incompatibilidades que impedem a alcançabilidade RF direta.",
+  "@helpNodeDexSectionRadioCompatibility": {
+    "description": "Section help text for radio_compatibility in nodeDexSectionHelp"
+  },
+  "nodedexHelpRadioCompatibility": "Compatibilidade de rádio",
+  "@nodedexHelpRadioCompatibility": {
+    "description": "Help sheet title for the Radio Compatibility section"
+  },
   "helpNodeDexSectionNote": "Uma nota de texto livre para qualquer coisa que você queira lembrar sobre este nó. ",
   "@helpNodeDexSectionNote": {
     "description": "Section help text for note in nodeDexSectionHelp"

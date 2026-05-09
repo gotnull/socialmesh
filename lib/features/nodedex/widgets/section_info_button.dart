@@ -130,6 +130,8 @@ class NodeDexHelpSheetBody extends StatelessWidget {
         return l10n.nodedexHelpConstellationLinks;
       case 'device':
         return l10n.nodedexHelpDeviceInfo;
+      case 'radio_compatibility':
+        return l10n.nodedexHelpRadioCompatibility;
       default:
         return l10n.nodedexHelpInfoDefault;
     }

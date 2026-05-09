@@ -225,13 +225,12 @@ class _TimelineEventTile extends StatelessWidget {
             width: 32,
             child: Column(
               children: [
-                // Top connector
+                // Top connector — collapsed to 0 on the first tile so
+                // its content sits flush with the body's top padding.
                 Container(
                   width: 1.5,
-                  height: 8,
-                  color: isFirst
-                      ? Colors.transparent
-                      : context.border.withValues(alpha: 0.3),
+                  height: isFirst ? 0 : 8,
+                  color: context.border.withValues(alpha: 0.3),
                 ),
                 // Dot
                 Container(

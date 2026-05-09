@@ -22,10 +22,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animated_avatar_stack.dart';
-import '../../../core/widgets/section_header.dart';
 import '../../../providers/accessibility_providers.dart';
 import 'nodedex_avatar_stack.dart';
-import 'section_info_button.dart';
+import 'nodedex_card.dart';
 
 /// View model for the co-seen network card on the node detail screen.
 @immutable
@@ -108,57 +107,35 @@ class CoSeenNetworkCard extends ConsumerWidget {
               onTap!();
             }
           : null,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        padding: const EdgeInsets.all(AppTheme.spacing16),
-        decoration: BoxDecoration(
-          color: context.card,
-          borderRadius: BorderRadius.circular(AppTheme.radius16),
-          border: Border.all(
-            color: context.border.withValues(alpha: 0.15),
-            width: 0.5,
+      child: NodeDexCard(
+        title: context.l10n.nodedexCoSeenCardTitle,
+        icon: Icons.hub_outlined,
+        helpKey: 'coseen',
+        trailing: AnimatedAvatarStack(
+          items: items,
+          maxVisible: AvatarStackDefaults.maxVisible,
+          avatarSize: AvatarStackDefaults.avatarSize,
+          animationEnabled: !reduceMotion,
+          showOverflowCount: true,
+          onOverflowTap: onTap != null
+              ? () {
+                  HapticFeedback.selectionClick();
+                  onTap!();
+                }
+              : null,
+          overflowSemanticLabel: items.length > AvatarStackDefaults.maxVisible
+              ? context.l10n.avatarStackOverflowLabel(
+                  items.length - AvatarStackDefaults.maxVisible,
+                )
+              : null,
+          semanticLabel: context.l10n.avatarStackCoSeenLabel(
+            viewModel.totalCount,
           ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            SectionTitle(
-              title: context.l10n.nodedexCoSeenCardTitle,
-              leadingIcon: Icons.hub_outlined,
-              helpSheetBuilder: (ctx) =>
-                  const NodeDexHelpSheetBody(helpKey: 'coseen'),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: AnimatedAvatarStack(
-                  items: items,
-                  maxVisible: AvatarStackDefaults.maxVisible,
-                  avatarSize: AvatarStackDefaults.avatarSize,
-                  animationEnabled: !reduceMotion,
-                  showOverflowCount: true,
-                  onOverflowTap: onTap != null
-                      ? () {
-                          HapticFeedback.selectionClick();
-                          onTap!();
-                        }
-                      : null,
-                  overflowSemanticLabel:
-                      items.length > AvatarStackDefaults.maxVisible
-                      ? context.l10n.avatarStackOverflowLabel(
-                          items.length - AvatarStackDefaults.maxVisible,
-                        )
-                      : null,
-                  semanticLabel: context.l10n.avatarStackCoSeenLabel(
-                    viewModel.totalCount,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing4),
-            // Subtitle — peer count description
             Text(
               context.l10n.nodedexCoSeenCardSubtitle(viewModel.totalCount),
               style: TextStyle(
