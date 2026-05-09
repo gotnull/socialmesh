@@ -59,6 +59,9 @@ class SectionTitle extends StatelessWidget {
           Flexible(
             child: Text(
               title.toUpperCase(),
+              maxLines: 1,
+              softWrap: false,
+              overflow: TextOverflow.fade,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,

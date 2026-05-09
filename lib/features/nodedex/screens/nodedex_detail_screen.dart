@@ -141,15 +141,6 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
         '(source: nodeDexIsSelfProvider)',
       );
     }
-    // Use .value (not .asData?.value) so the count stays visible across
-    // refreshes — asData returns null during AsyncLoading, which causes the
-    // sticky-header trailing count to disappear/reappear and visibly nudges
-    // the layout on Android.
-    final timelineEventCount = ref
-        .watch(nodeActivityTimelineProvider(widget.nodeNum))
-        .value
-        ?.length;
-
     if (entry == null) {
       return GlassScaffold.body(
         title: context.l10n.nodedexTitle,
@@ -555,14 +546,14 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
 
           // Encounter activity — pinned header + body
           if (entry.encounters.isNotEmpty) ...[
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _NodeDexStickyHeaderDelegate(
-                title: context.l10n.nodedexEncounterActivityTitle,
-                icon: Icons.insights,
-                helpKey: 'encounters',
-                trailing: context.l10n.nodedexTotalCount(
-                  entry.encounters.length,
+            SliverPadding(
+              padding: const EdgeInsets.only(top: 4),
+              sliver: SliverPersistentHeader(
+                pinned: true,
+                delegate: _NodeDexStickyHeaderDelegate(
+                  title: context.l10n.nodedexEncounterActivityTitle,
+                  icon: Icons.insights,
+                  helpKey: 'encounters',
                 ),
               ),
             ),
@@ -577,14 +568,14 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
 
           // Co-seen nodes — pinned header + body
           if (recentCoSeenLinks.isNotEmpty) ...[
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _NodeDexStickyHeaderDelegate(
-                title: context.l10n.nodedexCoSeenLinksTitle,
-                icon: Icons.auto_awesome,
-                helpKey: 'coseen',
-                trailing: context.l10n.nodedexTotalCount(
-                  recentCoSeenLinks.length,
+            SliverPadding(
+              padding: const EdgeInsets.only(top: 4),
+              sliver: SliverPersistentHeader(
+                pinned: true,
+                delegate: _NodeDexStickyHeaderDelegate(
+                  title: context.l10n.nodedexCoSeenLinksTitle,
+                  icon: Icons.auto_awesome,
+                  helpKey: 'coseen',
                 ),
               ),
             ),
@@ -598,15 +589,15 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           ],
 
           // Node activity timeline — unified chronological feed
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _NodeDexStickyHeaderDelegate(
-              title: context.l10n.nodedexActivityTimelineTitle,
-              icon: Icons.timeline,
-              helpKey: 'activity_timeline',
-              trailing: timelineEventCount != null
-                  ? context.l10n.nodedexTotalCount(timelineEventCount)
-                  : null,
+          SliverPadding(
+            padding: const EdgeInsets.only(top: 4),
+            sliver: SliverPersistentHeader(
+              pinned: true,
+              delegate: _NodeDexStickyHeaderDelegate(
+                title: context.l10n.nodedexActivityTimelineTitle,
+                icon: Icons.timeline,
+                helpKey: 'activity_timeline',
+              ),
             ),
           ),
           SliverToBoxAdapter(
@@ -2186,28 +2177,37 @@ class _EncounterActivityCardState extends State<_EncounterActivityCard> {
             const SizedBox(height: AppTheme.spacing16),
           ],
 
-          // Recent encounters header with calendar action
           Row(
             children: [
               Icon(Icons.history, size: 12, color: context.textTertiary),
               const SizedBox(width: AppTheme.spacing4),
-              Text(
-                _selectedDate != null
-                    ? DateFormat(
-                        'MMM d, yyyy', // lint-allow: hardcoded-string
-                      ).format(_selectedDate!).toUpperCase()
-                    : context.l10n.nodedexRecentLabel,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: _selectedDate != null
-                      ? context.accentColor
-                      : context.textTertiary,
-                  letterSpacing: 0.8,
+              Flexible(
+                child: Text(
+                  _selectedDate != null
+                      ? DateFormat(
+                          'MMM d, yyyy', // lint-allow: hardcoded-string
+                        ).format(_selectedDate!).toUpperCase()
+                      : context.l10n.nodedexRecentLabel,
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.fade,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: _selectedDate != null
+                        ? context.accentColor
+                        : context.textTertiary,
+                    letterSpacing: 0.8,
+                  ),
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacing4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
               if (_selectedDate != null) ...[
-                const SizedBox(width: AppTheme.spacing6),
                 GestureDetector(
                   onTap: () {
                     setState(() {
@@ -2241,14 +2241,15 @@ class _EncounterActivityCardState extends State<_EncounterActivityCard> {
                     ),
                   ),
                 ),
+                const SizedBox(width: AppTheme.spacing8),
               ],
-              const Spacer(),
-              if (encounters.isNotEmpty)
+              if (encounters.isNotEmpty) ...[
                 Text(
                   context.l10n.nodedexEncounterCountLabel(encounters.length),
                   style: TextStyle(fontSize: 9, color: context.textTertiary),
                 ),
-              const SizedBox(width: AppTheme.spacing8),
+                const SizedBox(width: AppTheme.spacing8),
+              ],
               GestureDetector(
                 onTap: _showCalendarPicker,
                 child: Container(
@@ -3492,16 +3493,18 @@ class _CardContainer extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header — canonical SectionTitle owns layout, (i) icon, and
-          // help-sheet plumbing. Hand-rolled subheader rows are banned.
           SectionTitle(
             title: title,
             leadingIcon: icon,
             helpSheetBuilder: helpKey == null
                 ? null
                 : (ctx) => NodeDexHelpSheetBody(helpKey: helpKey!),
-            trailing: trailing,
           ),
+          if (trailing != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+              child: Align(alignment: Alignment.centerRight, child: trailing),
+            ),
           child,
         ],
       ),
@@ -3520,13 +3523,11 @@ class _NodeDexStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
   final String title;
   final IconData icon;
   final String helpKey;
-  final String? trailing;
 
   _NodeDexStickyHeaderDelegate({
     required this.title,
     required this.icon,
     required this.helpKey,
-    this.trailing,
   });
 
   @override
@@ -3579,26 +3580,12 @@ class _NodeDexStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
                     ]
                   : null,
             ),
-            // Header — canonical SectionTitle owns layout, (i) icon,
-            // and help-sheet plumbing. SectionTitle adds its own
-            // bottom padding (spacing8); we wrap in `Center` so the
-            // header sits vertically centred inside the sticky band.
             child: Center(
               child: SectionTitle(
                 title: title,
                 leadingIcon: icon,
                 helpSheetBuilder: (ctx) =>
                     NodeDexHelpSheetBody(helpKey: helpKey),
-                trailing: trailing == null
-                    ? null
-                    : Text(
-                        trailing!,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: context.textTertiary,
-                          fontFamily: AppTheme.fontFamily,
-                        ),
-                      ),
               ),
             ),
           ),
@@ -3617,8 +3604,7 @@ class _NodeDexStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(covariant _NodeDexStickyHeaderDelegate oldDelegate) {
     return title != oldDelegate.title ||
         icon != oldDelegate.icon ||
-        helpKey != oldDelegate.helpKey ||
-        trailing != oldDelegate.trailing;
+        helpKey != oldDelegate.helpKey;
   }
 }
 

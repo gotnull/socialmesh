@@ -123,37 +123,37 @@ class CoSeenNetworkCard extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header — canonical SectionTitle owns layout, (i) icon,
-            // and help-sheet plumbing. The animated avatar cluster
-            // sits in the trailing slot. Hand-rolled subheader rows
-            // are banned project-wide; keeping a uniform header line
-            // means the (i) and the title baseline always agree with
-            // every other card on the screen.
             SectionTitle(
               title: context.l10n.nodedexCoSeenCardTitle,
               leadingIcon: Icons.hub_outlined,
               helpSheetBuilder: (ctx) =>
                   const NodeDexHelpSheetBody(helpKey: 'coseen'),
-              trailing: AnimatedAvatarStack(
-                items: items,
-                maxVisible: AvatarStackDefaults.maxVisible,
-                avatarSize: AvatarStackDefaults.avatarSize,
-                animationEnabled: !reduceMotion,
-                showOverflowCount: true,
-                onOverflowTap: onTap != null
-                    ? () {
-                        HapticFeedback.selectionClick();
-                        onTap!();
-                      }
-                    : null,
-                overflowSemanticLabel:
-                    items.length > AvatarStackDefaults.maxVisible
-                    ? context.l10n.avatarStackOverflowLabel(
-                        items.length - AvatarStackDefaults.maxVisible,
-                      )
-                    : null,
-                semanticLabel: context.l10n.avatarStackCoSeenLabel(
-                  viewModel.totalCount,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: AnimatedAvatarStack(
+                  items: items,
+                  maxVisible: AvatarStackDefaults.maxVisible,
+                  avatarSize: AvatarStackDefaults.avatarSize,
+                  animationEnabled: !reduceMotion,
+                  showOverflowCount: true,
+                  onOverflowTap: onTap != null
+                      ? () {
+                          HapticFeedback.selectionClick();
+                          onTap!();
+                        }
+                      : null,
+                  overflowSemanticLabel:
+                      items.length > AvatarStackDefaults.maxVisible
+                      ? context.l10n.avatarStackOverflowLabel(
+                          items.length - AvatarStackDefaults.maxVisible,
+                        )
+                      : null,
+                  semanticLabel: context.l10n.avatarStackCoSeenLabel(
+                    viewModel.totalCount,
+                  ),
                 ),
               ),
             ),
