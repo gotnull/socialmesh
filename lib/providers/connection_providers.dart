@@ -2489,6 +2489,38 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       return; // No device to reconnect to
     }
 
+    // Pairing-invalidation routing.
+    //
+    // Apple Core Bluetooth surfaces a peer-removed-pairing event by
+    // throwing FlutterBluePlusException(apple-code: 14, "Peer removed
+    // pairing information") inside connect(). The exception is rethrown
+    // to the caller (Scanner._connectToDevice), but the transport ALSO
+    // emits a disconnected/error state, which lands here through the
+    // listener. Without the routing below, this path silently downgrades
+    // the failure to unexpectedDisconnect and the auto-reconnect manager
+    // spins. Consult the transport's last captured connect error and
+    // route to the existing pairing-invalidation flow when it matches.
+    final transport = ref.read(transportProvider);
+    if (transport is BleTransport) {
+      final lastError = transport.lastDisconnectError;
+      if (lastError != null && isPairingInvalidationError(lastError)) {
+        final appleCode = pairingInvalidationAppleCode(lastError);
+        AppLogging.connection(
+          'PAIRING_INVALIDATED platform=ios '
+          'reason=peer_removed_pairing_information '
+          'appleCode=${appleCode ?? "n/a"}',
+        );
+        transport.clearLastDisconnectError();
+        unawaited(
+          handlePairingInvalidation(
+            PairingInvalidationReason.peerReset,
+            appleCode: appleCode,
+          ),
+        );
+        return;
+      }
+    }
+
     state = state.copyWith(
       state: DevicePairingState.disconnected,
       reason: reason,

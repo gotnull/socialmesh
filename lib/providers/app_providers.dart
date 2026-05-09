@@ -126,6 +126,15 @@ class AppInitNotifier extends Notifier<AppInitState> {
     _transition(AppInitState.needsScanner, 'setNeedsScanner');
   }
 
+  /// Test seam: force any [AppInitState] without going through the
+  /// production transition gates. Used by appShellProvider tests
+  /// that need to drive the splash / age / error / terms-acceptance
+  /// gates which the production API does not expose.
+  @visibleForTesting
+  void debugForceStateForTesting(AppInitState forced) {
+    _transition(forced, 'debugForceStateForTesting');
+  }
+
   /// Initialize core app services (NO device connection here).
   /// Device connection is handled asynchronously by DeviceConnectionNotifier.
   Future<void> initialize() async {
@@ -7059,13 +7068,17 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
 
     final completer = Completer<void>();
     ProviderSubscription<DeviceConnectionState2>? connectionSub;
+    ProviderSubscription<AsyncValue<OperationalReadiness>>? readinessSub;
     bool sawDisconnect = false;
     bool sawReconnect = false;
+    bool readinessReady = false;
+    bool deviceMatches = true;
 
-    void completeSuccess() {
+    void completeSuccess(String reason) {
       if (!completer.isCompleted) {
         AppLogging.connection(
-          '🌍 REGION_FLOW session=$sessionId region_confirmed=${region.name}',
+          'REGION_CONFIRMATION: ready target=${targetDeviceId ?? "null"} '
+          'session=$sessionId region=${region.name} reason=$reason',
         );
         completer.complete();
       }
@@ -7086,11 +7099,18 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
       return; // Device already has the region - no need to wait for reboot
     }
 
+    AppLogging.connection(
+      'REGION_CONFIRMATION: waiting readiness target=${targetDeviceId ?? "null"} '
+      'session=$sessionId region=${region.name}',
+    );
+
     // Setting region causes device reboot, which causes disconnect/reconnect.
-    // We track the connection state through this cycle:
-    // 1. Connected -> Disconnected (expected reboot)
-    // 2. Disconnected -> Connecting -> Connected (auto-reconnect)
-    // 3. Once reconnected and protocol is ready, we complete
+    // Confirmation requires the protocol to reach
+    // OperationalReadiness.ready in this cycle. The connection-state
+    // listener tracks the disconnect/reconnect arc and the target-device
+    // identity; the readiness listener gates the actual completion.
+    // DevicePairingState.connected by itself fires too early (before
+    // phase-2 hydration) and was timing the scanner's hard-timeout out.
     connectionSub = ref.listen<DeviceConnectionState2>(deviceConnectionProvider, (
       previous,
       next,
@@ -7109,22 +7129,40 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
         return;
       }
 
-      // If we see terminal invalidation, that's a real error
+      // If we see terminal invalidation (apple-code 14, peer reset,
+      // bond lost), surface it as a typed error so the scanner /
+      // region-selection screen can route to re-pair guidance instead
+      // of stranding on Connecting.
       if (next.isTerminalInvalidated) {
+        AppLogging.connection(
+          'REGION_CONFIRMATION: pairing_invalidated target=${targetDeviceId ?? "null"} '
+          'session=$sessionId',
+        );
         completeError(
-          StateError('Region apply canceled - terminal invalidation'),
+          const _RegionPairingInvalidatedException(
+            'Region apply canceled - pairing invalidated',
+          ),
         );
         return;
       }
 
-      // Track reconnect - but only complete if device is fully connected
-      // (state == DevicePairingState.connected, not just .connecting)
+      // Track reconnect identity. Don't complete here unless live
+      // protocol readiness is already ready — the readiness arm owns
+      // completion when it transitions to ready. We sync-read
+      // `protocol.readiness` instead of trusting a cached
+      // `readinessReady` flag because Riverpod can replay a STALE
+      // ready emission from the prior session through a freshly
+      // attached listener (observed: connection arm fired
+      // `connected_then_ready` while live readiness was still phase2,
+      // because a gen=1 ready emission set the flag before the
+      // device-reboot disconnect even happened).
       if (sawDisconnect &&
           !sawReconnect &&
           next.isConnected &&
           next.state == DevicePairingState.connected) {
         final reconnectedDeviceId = next.device?.id;
         if (targetDeviceId != null && reconnectedDeviceId != targetDeviceId) {
+          deviceMatches = false;
           completeError(
             StateError(
               'Region apply canceled - reconnected to different device',
@@ -7136,22 +7174,72 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
         AppLogging.connection(
           '🌍 REGION_FLOW session=$sessionId reconnected_after_reboot newSession=${next.connectionSessionId}',
         );
-
-        // Device is fully reconnected - region change succeeded
-        // The device only reboots after accepting the region, so if we're
-        // connected again, the region was applied successfully.
-        completeSuccess();
+        final liveReadiness = protocol.readiness;
+        if (liveReadiness == OperationalReadiness.ready) {
+          completeSuccess('connected_then_ready');
+        } else {
+          AppLogging.connection(
+            'REGION_CONFIRMATION: connected_not_ready '
+            'readiness=${liveReadiness.name} session=$sessionId',
+          );
+        }
       }
     });
 
+    readinessSub = ref.listen<AsyncValue<OperationalReadiness>>(
+      meshtasticReadinessProvider,
+      (previous, next) {
+        if (!ref.mounted) return;
+        final readiness = next.asData?.value;
+        if (readiness == null) return;
+        if (readiness != OperationalReadiness.ready) {
+          // Drop the cached flag when readiness drops away from ready.
+          // Without this, a stale ready replay (e.g. Riverpod-cached
+          // value from before a disconnect) would persist across the
+          // reboot cycle and the connection arm would prematurely
+          // complete on the next sawReconnect.
+          if (readinessReady) {
+            AppLogging.connection(
+              'REGION_CONFIRMATION: readiness_dropped '
+              'readiness=${readiness.name} session=$sessionId',
+            );
+            readinessReady = false;
+          }
+          // Useful diagnostic so a stuck phase-2 is visible in logs.
+          if (readiness != OperationalReadiness.idle &&
+              readiness != OperationalReadiness.linkConnected) {
+            AppLogging.connection(
+              'REGION_CONFIRMATION: connected_not_ready readiness=${readiness.name} '
+              'session=$sessionId',
+            );
+          }
+          return;
+        }
+        readinessReady = true;
+        if (!deviceMatches) return;
+        if (!sawDisconnect) {
+          // Defensive: if the device never rebooted (firmware accepted
+          // region without reset), the connection-arm flag stays false
+          // forever. Allow ready to land confirmation when the protocol
+          // already reflects the requested region.
+          if (protocol.currentRegion == region) {
+            completeSuccess('ready_no_reboot');
+          }
+          return;
+        }
+        completeSuccess('ready_after_reboot');
+      },
+    );
+
     try {
       await completer.future.timeout(
-        const Duration(seconds: 90), // Increased timeout for slow reboots
+        const Duration(seconds: 90),
         onTimeout: () {
           AppErrorHandler.addBreadcrumb(
             'Region: 90s confirmation timeout ' // lint-allow: hardcoded-string
             '(region=${region.name}, session=$sessionId, ' // lint-allow: hardcoded-string
-            'sawDisconnect=$sawDisconnect, sawReconnect=$sawReconnect)', // lint-allow: hardcoded-string
+            'sawDisconnect=$sawDisconnect, sawReconnect=$sawReconnect, ' // lint-allow: hardcoded-string
+            'readinessReady=$readinessReady)', // lint-allow: hardcoded-string
           );
           throw TimeoutException(
             'Timed out waiting for device to reconnect after region change',
@@ -7160,8 +7248,21 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
       );
     } finally {
       connectionSub.close();
+      readinessSub.close();
     }
   }
+}
+
+/// Region-confirmation aborted because the BLE pairing was invalidated
+/// (peer reset, apple-code 14, bond removed) during the reconnect cycle.
+/// `applyRegion`'s catch promotes this to a re-pair UX path instead of
+/// silently absorbing it as a generic timeout.
+class _RegionPairingInvalidatedException implements Exception {
+  final String message;
+  const _RegionPairingInvalidatedException(this.message);
+
+  @override
+  String toString() => 'RegionPairingInvalidatedException: $message';
 }
 
 final regionConfigProvider =

@@ -203,10 +203,11 @@ class _NodeListTile extends StatelessWidget {
                 child: Center(
                   child: Text(
                     node.shortName?.isNotEmpty == true
-                        ? node.shortName![0].toUpperCase()
+                        ? node.shortName!.characters.first.toUpperCase()
                         : node.nodeNum
                               .toRadixString(16)
-                              .substring(0, 1)
+                              .characters
+                              .first
                               .toUpperCase(),
                     style: TextStyle(
                       fontSize: 14,

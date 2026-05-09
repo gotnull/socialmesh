@@ -154,3 +154,4 @@ android/key.properties
 
 # xcodebuild MCP per-developer session defaults (machine-local paths)
 .xcodebuildmcp/
+logs_output.txt

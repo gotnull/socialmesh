@@ -87,6 +87,12 @@ void main() {
         RegionApplyStatus.applying,
       );
 
+      // Drive readiness to `ready` BEFORE the reconnect: the
+      // connection arm's sync-read of protocol.readiness must see
+      // ready at the moment it observes the post-reboot connected
+      // transition (Fix B made readiness a gating condition).
+      fakeProtocol.debugForceReadinessForTesting(OperationalReadiness.ready);
+
       // Simulate reconnect after device reboot - this completes the region apply
       container
           .read(deviceConnectionProvider.notifier)
@@ -186,6 +192,10 @@ void main() {
     );
     expect(container.read(needsRegionSetupProvider), isFalse);
 
+    // Drive readiness=ready BEFORE the reconnect so the connection
+    // arm's sync-read in _awaitRegionConfirmation sees it (Fix B).
+    fakeProtocol.debugForceReadinessForTesting(OperationalReadiness.ready);
+
     // Simulate reconnect with new session - this completes the region apply
     container
         .read(deviceConnectionProvider.notifier)
@@ -273,6 +283,9 @@ void main() {
         );
 
     await Future<void>.delayed(Duration.zero);
+
+    // Drive readiness=ready BEFORE reconnect (Fix B gating).
+    fakeProtocol.debugForceReadinessForTesting(OperationalReadiness.ready);
 
     // Simulate reconnect after reboot (same device)
     container

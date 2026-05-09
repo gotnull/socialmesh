@@ -19,6 +19,8 @@ import '../../core/widgets/ico_help_system.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/connection_providers.dart' as conn;
 import '../../generated/meshtastic/config.pbenum.dart';
+import '../onboarding/meshtastic_onboarding_flow.dart';
+import '../onboarding/meshtastic_onboarding_state.dart';
 import '../../utils/permissions.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/status_banner.dart';
@@ -88,14 +90,65 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
   bool _showPairingInvalidationHint = false;
   bool _applying = false;
 
+  /// Listener that closes the screen when the onboarding-flow
+  /// coordinator reaches a terminal state. Required for the
+  /// OnboardingScreen path: that flow pushes RegionSelectionScreen
+  /// via `Navigator.push` and awaits the pop to continue. When the
+  /// coordinator owns the flow, RegionSelection stops self-popping
+  /// inside `_saveRegion` (the coordinator is the only owner of
+  /// completion); without this listener the pushed route would
+  /// strand on screen forever after the coordinator reaches
+  /// `OnboardingReady` / `OnboardingFailed` / etc.
+  ///
+  /// When RegionSelectionScreen is rendered inline by
+  /// `_AppRouter`/`appShellProvider` (no Navigator.push above it),
+  /// `Navigator.canPop()` is false and the listener is a no-op —
+  /// the router unmount path handles the screen swap.
+  ProviderSubscription<MeshtasticOnboardingState>? _onboardingFlowTerminalSub;
+
   @override
   void initState() {
     super.initState();
     AppLogging.connection(
       '🌍 RegionSelection: initState — isInitialSetup=${widget.isInitialSetup}',
     );
+
+    // Pop-on-terminal listener. Only armed when the coordinator is
+    // active. listenManual is correct in initState (no state mutation
+    // until the listener fires).
+    final flowEnabled = ref.read(meshtasticOnboardingFlowFlagsProvider).enabled;
+    if (flowEnabled && widget.isInitialSetup) {
+      _onboardingFlowTerminalSub = ref.listenManual<MeshtasticOnboardingState>(
+        meshtasticOnboardingFlowProvider,
+        (previous, next) {
+          if (!mounted) return;
+          if (!next.isTerminal) return;
+          if (previous != null && previous.isTerminal) return;
+          if (!Navigator.canPop(context)) {
+            AppLogging.connection(
+              '🌍 RegionSelection: terminal '
+              'phase=${next.phase.name} '
+              'no-op — rendered inline (cannot pop)',
+            );
+            return;
+          }
+          AppLogging.connection(
+            '🌍 RegionSelection: terminal phase=${next.phase.name} — '
+            'popping pushed route',
+          );
+          Navigator.of(context).pop();
+        },
+      );
+    }
+
     // Load current region after build
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadCurrentRegion());
+  }
+
+  @override
+  void dispose() {
+    _onboardingFlowTerminalSub?.close();
+    super.dispose();
   }
 
   void _loadCurrentRegion() {
@@ -196,7 +249,33 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
     );
 
     if (isInitialSetup) {
-      // ── ONBOARDING / INITIAL SETUP FLOW ──
+      // Onboarding-flow gated path (default-on in debug). When the
+      // coordinator owns this flow, region writes/reboot/reconnect/
+      // readiness all happen via state machine listeners. The screen
+      // stays mounted while the coordinator transitions through
+      // writingRegion / awaitingReboot / awaitingReconnect /
+      // awaitingReadiness, and is unmounted by `_AppRouter` when the
+      // coordinator reaches OnboardingReady. No self-pop, no inline
+      // applyRegion, no settings refresh dance.
+      final flowEnabled = ref
+          .read(meshtasticOnboardingFlowFlagsProvider)
+          .enabled;
+      if (flowEnabled) {
+        AppLogging.connection(
+          '🌍 RegionSelection: onboarding-flow active — '
+          'dispatching selectRegion(${_selectedRegion!.name}) '
+          'to coordinator',
+        );
+        ref
+            .read(meshtasticOnboardingFlowProvider.notifier)
+            .selectRegion(_selectedRegion!);
+        // Stay on screen — appShellProvider will route us out when
+        // the coordinator reaches OnboardingReady.
+        // _applying remains true so the overlay keeps showing.
+        return;
+      }
+
+      // ── LEGACY ONBOARDING / INITIAL SETUP FLOW ──
       // Stay on screen so the user sees progress during the device reboot.
       // After apply completes, persist regionConfigured, refresh the
       // settings provider, then POP back to the caller (onboarding).

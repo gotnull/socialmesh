@@ -40,6 +40,8 @@ import 'widgets/connecting_animation.dart';
 import 'widgets/mdns_discovery_section.dart';
 import 'widgets/network_connection_section.dart';
 import '../device/region_selection_screen.dart';
+import '../onboarding/meshtastic_onboarding_flow.dart';
+import '../onboarding/meshtastic_onboarding_state.dart';
 
 class ScannerScreen extends ConsumerStatefulWidget {
   final bool isOnboarding;
@@ -77,6 +79,25 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   /// before starting a scan. This happens when the user taps Disconnect
   /// but the transport hasn't fully torn down by the time Scanner inits.
   ProviderSubscription<conn.DeviceConnectionState2>? _disconnectSub;
+
+  /// Subscription that resets the `_connecting` overlay if the
+  /// transport-state listener path emits a pairing-invalidation while
+  /// Scanner is still showing the connecting overlay. Defends against
+  /// the case where apple-code 14 surfaces through `_handleDisconnect`
+  /// (and routes to `pairedDeviceInvalidated`) instead of throwing back
+  /// to Scanner's own catch block — without this safety net the overlay
+  /// would stay up indefinitely under a stale `_connecting=true` flag.
+  ProviderSubscription<conn.DeviceConnectionState2>?
+  _pairingInvalidationSafetySub;
+
+  /// Subscription that resets the `_connecting` overlay when the
+  /// onboarding-flow coordinator reaches any terminal state (ready,
+  /// failed, pairingInvalidated, cancelled). The legacy success path
+  /// relied on `_AppRouter` unmounting Scanner via setInitialized;
+  /// the coordinator now owns that promotion, but Scanner's overlay
+  /// state lives in this widget's State, so we need an explicit
+  /// listener to keep them in sync.
+  ProviderSubscription<MeshtasticOnboardingState>? _onboardingFlowOverlaySub;
 
   /// D28 follow-up: parallel disconnect-completion listener for MeshCore.
   /// `deviceConnectionProvider` is Meshtastic-flavoured and never
@@ -252,6 +273,56 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       });
     }
 
+    // Pairing-invalidation safety net for the connecting overlay.
+    // When apple-code 14 surfaces through the transport state listener
+    // (rather than the Scanner's own catch in `_connectToDevice`),
+    // `_connecting` is left at true and the overlay stays forever.
+    // This listener catches the resulting pairedDeviceInvalidated
+    // transition and clears the overlay.
+    _pairingInvalidationSafetySub = ref
+        .listenManual<conn.DeviceConnectionState2>(
+          conn.deviceConnectionProvider,
+          (previous, next) {
+            if (!mounted) return;
+            if (!_connecting) return;
+            if (next.isTerminalInvalidated &&
+                (previous == null || !previous.isTerminalInvalidated)) {
+              AppLogging.connection(
+                'SCANNER_CONNECTING_RESET reason=pairing_invalidated',
+              );
+              safeSetState(() {
+                _connecting = false;
+                _autoReconnecting = false;
+                _showPairingInvalidationHint = true;
+              });
+            }
+          },
+        );
+
+    // Mirror onboarding-flow terminal states into the connecting
+    // overlay. With the coordinator owning post-tap navigation, the
+    // overlay now follows coordinator state instead of being
+    // implicitly cleared by widget unmount.
+    _onboardingFlowOverlaySub = ref.listenManual<MeshtasticOnboardingState>(
+      meshtasticOnboardingFlowProvider,
+      (previous, next) {
+        if (!mounted) return;
+        if (!_connecting) return;
+        if (!next.isTerminal) return;
+        if (previous != null && previous.isTerminal) return;
+        AppLogging.connection(
+          'SCANNER_OVERLAY: cleared reason=onboarding_${next.phase.name}',
+        );
+        safeSetState(() {
+          _connecting = false;
+          _autoReconnecting = false;
+          if (next is OnboardingPairingInvalidated) {
+            _showPairingInvalidationHint = true;
+          }
+        });
+      },
+    );
+
     // Defer BLE-triggering work (scan / auto-reconnect) to a post-frame
     // callback. This prevents a cosmetic duplicate-Scanner issue that occurs
     // during manual disconnect and factory reset:
@@ -305,10 +376,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
   @override
   void dispose() {
+    AppLogging.connection(
+      '📡 SCANNER: dispose hashCode=$hashCode _connecting=$_connecting',
+    );
     _rescanTimer?.cancel();
     _backgroundReconnectSub?.close();
     _disconnectSub?.close();
     _meshCoreDisconnectSub?.close();
+    _pairingInvalidationSafetySub?.close();
+    _onboardingFlowOverlaySub?.close();
     // Cancel the watchdog. Once we're disposing, the timer can't usefully
     // resolve any in-flight connect attempt anyway.
     _manualConnectTimeout?.cancel();
@@ -996,6 +1072,32 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         '📡 SCANNER: Scan stream completed, found ${_devices.length} devices',
       );
 
+      // A successful scan proves the BLE adapter is alive AND the app
+      // has permission to use it. Clear any BLE-state error banner
+      // that a PRIOR scan attempt set (transient init wedge,
+      // user-toggled-off recovery, permission re-granted from
+      // Settings, etc.). The pairing-invalidation hint is owned by a
+      // separate flag and is intentionally NOT cleared here — it
+      // requires the user to forget+re-pair in iOS Settings before
+      // scans can find the right device, and the rescan loop runs
+      // continuously.
+      if (mounted && !_showPairingInvalidationHint && _errorMessage != null) {
+        final stale = _errorMessage!;
+        final isTransientBleError =
+            stale.contains('Bluetooth is not ready') ||
+            stale.contains('Bluetooth permission denied') ||
+            stale.contains('Bluetooth is turned off') ||
+            stale.contains('Please turn on Bluetooth');
+        if (isTransientBleError) {
+          AppLogging.connection(
+            'SCANNER_ERROR_CLEARED reason=successful_scan stale="$stale"',
+          );
+          safeSetState(() {
+            _errorMessage = null;
+          });
+        }
+      }
+
       // After scan completes, check if saved device was found
       // If not, show info banner that it may be connected elsewhere
       if (mounted && _savedDeviceId != null) {
@@ -1312,6 +1414,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     // This allows auto-reconnect to work for this new device.
     userDisconnectedNotifier.setUserDisconnected(false);
     deviceConnectionNotifier.clearUserDisconnected();
+
+    // Hand off to the onboarding coordinator (no-op when flag is off).
+    // The coordinator now owns the post-tap state machine; this scanner
+    // function still does the BLE link work but stops calling
+    // setInitialized / pushing RegionSelection on its own.
+    ref.read(meshtasticOnboardingFlowProvider.notifier).connect(device);
 
     // Acquire a monotonic session token. Set the manualConnecting
     // latch and arm the watchdog. The latch is cleared on terminal
@@ -1722,6 +1830,36 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           regionState.applyStatus != RegionApplyStatus.applying &&
           regionState.applyStatus != RegionApplyStatus.applied &&
           regionState.applyStatus != RegionApplyStatus.failed;
+
+      // Onboarding-flow ownership: when the new coordinator is on,
+      // every post-connect navigation decision belongs to it. Scanner
+      // stops here. The coordinator's listeners will see the
+      // device-region stream emit UNSET (or set), drive
+      // RegionRequired -> WritingRegion -> AwaitingReboot -> ...
+      // and finally call setInitialized exactly once on Ready.
+      // _AppRouter then unmounts Scanner via appShellProvider.
+      final onboardingFlowEnabled = ref
+          .read(meshtasticOnboardingFlowFlagsProvider)
+          .enabled;
+      if (onboardingFlowEnabled) {
+        AppLogging.connection(
+          '📡 SCANNER: onboarding-flow active — '
+          'deferring post-connect navigation to coordinator '
+          '(needsRegionSetup=$needsRegionSetup, isFromNeedsScanner=$isFromNeedsScanner)',
+        );
+        // Manual-connect latch is cleared here so the auto-reconnect
+        // manager can take ownership of the reboot/reconnect cycle
+        // (the coordinator does not run a separate reconnect path).
+        if (manualSession != null) {
+          _clearManualConnectIfCurrent(
+            manualSession,
+            reason: 'onboarding_flow_handoff',
+          );
+        } else {
+          autoReconnectNotifier.setState(AutoReconnectState.idle);
+        }
+        return;
+      }
 
       if (shouldShowRegionPicker) {
         // Navigate to region selection using push (NOT pushReplacement).

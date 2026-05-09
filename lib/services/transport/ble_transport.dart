@@ -123,6 +123,17 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
   String? _bleModelNumber;
   String? _bleManufacturerName;
 
+  // Last error captured during connect() — kept so that the
+  // transport-state-listener path in DeviceConnectionNotifier can route
+  // BLE-layer pairing failures (apple-code 14, "Peer removed pairing
+  // information") through handlePairingInvalidation instead of
+  // downgrading them to a generic unexpectedDisconnect. The connect
+  // exception travels through the scanner's catch, but the listener
+  // path runs in parallel with no error context. Cleared at the start
+  // of every connect() and on successful link-up so a stale error
+  // cannot poison a later session.
+  Object? _lastDisconnectError;
+
   /// Get the BLE model number read from Device Information Service
   @override
   String? get bleModelNumber => _bleModelNumber;
@@ -130,6 +141,20 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
   /// Get the BLE manufacturer name read from Device Information Service
   @override
   String? get bleManufacturerName => _bleManufacturerName;
+
+  /// Last error captured during connect(); null when there is no
+  /// outstanding error. Consumers must inspect this via
+  /// `isPairingInvalidationError` only at the moment a disconnect is
+  /// observed. Cleared on connect-start and on successful link-up.
+  Object? get lastDisconnectError => _lastDisconnectError;
+
+  /// Clear the captured connect error. Called by
+  /// DeviceConnectionNotifier after the error is consumed (routed to
+  /// pairing invalidation or otherwise handled) so a follow-up reconnect
+  /// does not see a stale value.
+  void clearLastDisconnectError() {
+    _lastDisconnectError = null;
+  }
 
   BleTransport()
     : _stateController = StreamController<DeviceConnectionState>.broadcast(),
@@ -171,7 +196,10 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
 
       // Start the Android foreground service when BLE connects so the OS
       // keeps the Dart isolate (and therefore the BLE link) alive.
+      // Also clear any captured connect-error: a successful link means
+      // any prior pairing-invalidation no longer applies.
       if (newState == DeviceConnectionState.connected) {
+        _lastDisconnectError = null;
         _startBackgroundService();
       }
     }
@@ -295,6 +323,54 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
             retryCount++;
             final errorStr = e.toString();
             AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: startScan() error: $errorStr');
+
+            // iOS Core Bluetooth surfaces a few distinct state codes
+            // through the same `bluetooth must be turned on` umbrella
+            // exception. They mean very different things to the user.
+            //
+            //  - CBManagerStateUnauthorized: app does NOT have BT
+            //    permission. Retry will not help; user must grant it
+            //    in iOS Settings -> SocialMesh -> Bluetooth.
+            //  - CBManagerStatePoweredOff: the user really did turn
+            //    BT off in Settings -> Bluetooth.
+            //  - CBManagerStateUnknown / generic "must be turned on"
+            //    without a specific subcode: transient init window
+            //    after a process resume; retry is the correct fix.
+            //
+            // Detecting the unauthorized case lets us emit a precise
+            // recovery message instead of the misleading "ensure
+            // Bluetooth is enabled" copy.
+            final isUnauthorized = errorStr.contains(
+              'CBManagerStateUnauthorized',
+            );
+            final isPoweredOff = errorStr.contains('CBManagerStatePoweredOff');
+
+            if (isUnauthorized) {
+              AppLogging.ble(
+                '⚠️ 📡 BLE_TRANSPORT: BLE permission denied '
+                '(CBManagerStateUnauthorized) — retries will not help',
+              );
+              controller.addError(
+                Exception(
+                  'Bluetooth permission denied. Enable it in Settings > SocialMesh > Bluetooth.', // lint-allow: hardcoded-string
+                ),
+              );
+              return;
+            }
+
+            if (isPoweredOff) {
+              AppLogging.ble(
+                '⚠️ 📡 BLE_TRANSPORT: BLE powered off '
+                '(CBManagerStatePoweredOff) — retries will not help',
+              );
+              controller.addError(
+                Exception(
+                  'Bluetooth is turned off. Turn it on in Settings > Bluetooth.', // lint-allow: hardcoded-string
+                ),
+              );
+              return;
+            }
+
             // Handle transient Bluetooth states
             if (errorStr.contains('CBManagerStateUnknown') ||
                 errorStr.contains('bluetooth must be turned on') ||
@@ -462,6 +538,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
 
     _updateState(DeviceConnectionState.connecting);
     _connectedDeviceName = device.name;
+    _lastDisconnectError = null;
 
     try {
       AppLogging.ble('Connecting to ${device.name}...');
@@ -550,6 +627,7 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
       });
     } catch (e) {
       AppLogging.ble('⚠️ Connection error: $e');
+      _lastDisconnectError = e;
       await disconnect();
       _updateState(DeviceConnectionState.error);
       rethrow;

@@ -892,7 +892,7 @@ class _NodePickerContentState extends State<_NodePickerContent> {
                     child: Center(
                       child: Text(
                         (node.shortName?.isNotEmpty == true)
-                            ? node.shortName![0].toUpperCase()
+                            ? node.shortName!.characters.first.toUpperCase()
                             : '?',
                         style: TextStyle(
                           color: presence.isActive

@@ -3493,10 +3493,11 @@ class _NodeMarkerState extends State<_NodeMarker>
         children: [
           Text(
             (widget.node.shortName?.isNotEmpty == true
-                ? widget.node.shortName![0].toUpperCase()
+                ? widget.node.shortName!.characters.first.toUpperCase()
                 : widget.node.nodeNum
                       .toRadixString(16)
-                      .substring(0, 1)
+                      .characters
+                      .first
                       .toUpperCase()),
             style: TextStyle(
               fontSize: widget.isSelected ? 16 : 14,
@@ -3822,10 +3823,11 @@ class _NodeListItem extends StatelessWidget {
                   children: [
                     Text(
                       (node.shortName?.isNotEmpty == true
-                          ? node.shortName![0].toUpperCase()
+                          ? node.shortName!.characters.first.toUpperCase()
                           : node.nodeNum
                                 .toRadixString(16)
-                                .substring(0, 1)
+                                .characters
+                                .first
                                 .toUpperCase()),
                       style: TextStyle(
                         fontSize: 14,

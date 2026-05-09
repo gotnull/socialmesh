@@ -349,6 +349,7 @@ class _MainShellState extends ConsumerState<MainShell> {
   @override
   void initState() {
     super.initState();
+    AppLogging.connection('🏠 MainShell: initState hashCode=$hashCode');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         ref.read(mainShellScaffoldKeyProvider.notifier).setKey(_scaffoldKey);
@@ -396,6 +397,7 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   @override
   void dispose() {
+    AppLogging.connection('🏠 MainShell: dispose hashCode=$hashCode');
     // Note: We don't clear the scaffold key here because:
     // 1. Modifying providers during dispose causes Riverpod exceptions
     // 2. When MainShell is recreated, initState will set a new key anyway

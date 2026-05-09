@@ -859,7 +859,7 @@ class _NodeMarker extends StatelessWidget {
       child: Center(
         child: Text(
           (node.shortName?.isNotEmpty == true)
-              ? node.shortName![0].toUpperCase()
+              ? node.shortName!.characters.first.toUpperCase()
               : node.nodeNum.toString()[0],
           style: TextStyle(
             fontSize: isSelected ? 16 : 14,
@@ -1002,7 +1002,7 @@ class _NodeListItem extends StatelessWidget {
                 child: Center(
                   child: Text(
                     (node.shortName?.isNotEmpty == true)
-                        ? node.shortName![0].toUpperCase()
+                        ? node.shortName!.characters.first.toUpperCase()
                         : node.nodeNum.toString()[0],
                     style: TextStyle(
                       fontSize: 14,

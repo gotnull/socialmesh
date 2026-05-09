@@ -94,8 +94,6 @@ import 'features/navigation/main_shell.dart';
 import 'features/navigation/app_root_shell.dart';
 import 'features/legal/legal_acceptance_screen.dart';
 import 'features/legal/eligibility_gate_screen.dart';
-import 'core/legal/legal_constants.dart';
-import 'providers/remote_legal_versions_provider.dart';
 import 'core/widgets/legal_document_sheet.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/onboarding/screens/mesh_brain_emotion_test_screen.dart';
@@ -124,6 +122,8 @@ import 'services/channel_invite_service.dart';
 import 'features/aether/screens/aether_flight_detail_screen.dart';
 import 'features/aether/providers/aether_providers.dart';
 import 'features/aether/models/aether_flight.dart';
+import 'features/onboarding/app_shell_provider.dart';
+import 'features/device/region_selection_screen.dart';
 // import 'features/intro/intro_screen.dart';
 import 'models/route.dart' as route_model;
 import 'core/navigation.dart';
@@ -2900,10 +2900,29 @@ class _AppRouterState extends ConsumerState<_AppRouter> {
 
   @override
   Widget build(BuildContext context) {
-    final initState = ref.watch(appInitProvider);
+    // Diagnostic that fires on EVERY build, before any provider read.
+    // Pairs with APP_SHELL below so we can distinguish "_AppRouter
+    // never rebuilt" from "_AppRouter rebuilt but provider returned
+    // unexpected shell".
+    AppLogging.connection('🎯 _AppRouter: build entry hashCode=$hashCode');
+
+    // Also peek the canonical signal feeds so the next log line lets
+    // us correlate widget-tree vs provider state without needing to
+    // query the device live.
+    final appInitSnapshot = ref.read(appInitProvider);
+    AppLogging.connection(
+      '🎯 _AppRouter: build appInit=$appInitSnapshot hashCode=$hashCode',
+    );
+
+    // Single source of truth for shell selection. Combines
+    // appInitProvider (boot lifecycle) with the onboarding flow
+    // coordinator so Scanner/Region/MainShell ownership lives in
+    // one declarative mapper instead of being split across widgets,
+    // notifiers, and a Navigator.push/pop dance.
+    final resolution = ref.watch(appShellProvider);
 
     // Check readiness whenever state changes
-    if (initState == AppInitState.ready) {
+    if (resolution.shell == AppShell.mainShell) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           ref.read(deepLinkReadyProvider.notifier).setReady();
@@ -2911,66 +2930,30 @@ class _AppRouterState extends ConsumerState<_AppRouter> {
       });
     }
 
-    switch (initState) {
-      case AppInitState.uninitialized:
-      case AppInitState.initializing:
+    AppLogging.connection(
+      'APP_SHELL: route=${resolution.shell.name} '
+      'reason=${resolution.reason} hashCode=$hashCode',
+    );
+
+    switch (resolution.shell) {
+      case AppShell.splash:
         return const _SplashScreen();
-      case AppInitState.error:
+      case AppShell.error:
         return const _ErrorScreen();
-      case AppInitState.needsAgeEligibility:
+      case AppShell.ageEligibility:
         return const EligibilityGateScreen();
-      case AppInitState.needsOnboarding:
+      case AppShell.onboarding:
         return const OnboardingScreen();
-      case AppInitState.needsTermsAcceptance:
+      case AppShell.termsAcceptance:
         return const LegalAcceptanceScreen();
-      case AppInitState.needsScanner:
-        // First time user needs to pair a device before using mesh features
+      case AppShell.scanner:
         return const ScannerScreen();
-      case AppInitState.ready:
-        // Terms acceptance gate: check AFTER device setup (scanner + region)
-        // but BEFORE showing the main shell. This ensures region selection
-        // completes first (which uses pushReplacement and setInitialized),
-        // then terms are shown here at the router level where navigation
-        // is clean.
-        //
-        // Effective versions are resolved from Firestore (server-side
-        // legal_versions document) with a hardcoded floor. This lets us
-        // trigger re-acceptance by updating Firestore — no app update
-        // needed.
-        final effectiveAsync = ref.watch(effectiveLegalVersionsProvider);
-        final settingsAsync = ref.watch(settingsServiceProvider);
-        final needsTerms =
-            settingsAsync.whenOrNull(
-              data: (settings) {
-                final acceptedTerms = settings.acceptedTermsVersion;
-                final acceptedPrivacy = settings.acceptedPrivacyVersion;
-                final effective = effectiveAsync.asData?.value;
-                final reqTerms =
-                    effective?.termsVersion ?? LegalConstants.termsVersion;
-                final reqPrivacy =
-                    effective?.privacyVersion ?? LegalConstants.privacyVersion;
-                // String compare on YYYY-MM-DD: a stored version >= required
-                // is accepted. A stored version older than required prompts.
-                // This avoids a race where, while `effectiveAsync` is still
-                // resolving from Firestore, `reqTerms` falls back to the
-                // hardcoded floor — if the user had previously accepted a
-                // higher Firestore-bumped version on an older build, strict
-                // `!=` would re-prompt on every cold launch.
-                if (acceptedTerms == null || acceptedPrivacy == null) {
-                  return true;
-                }
-                return acceptedTerms.compareTo(reqTerms) < 0 ||
-                    acceptedPrivacy.compareTo(reqPrivacy) < 0;
-              },
-            ) ??
-            false;
-        if (needsTerms) {
-          return const LegalAcceptanceScreen();
-        }
-        // App is ready - route to protocol-specific shell
-        // AppRootShell watches activeProtocolProvider and routes to:
-        // - MainShell for Meshtastic/none
-        // - MeshCoreShell for MeshCore
+      case AppShell.regionPicker:
+        // Onboarding flow drives the region picker. The picker reads
+        // the coordinator state for progress, calls flow.selectRegion
+        // on submit, and calls flow.cancel on back. No self-pop.
+        return const RegionSelectionScreen(isInitialSetup: true);
+      case AppShell.mainShell:
         return const AppRootShell();
     }
   }
