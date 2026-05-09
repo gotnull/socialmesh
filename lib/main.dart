@@ -2884,6 +2884,26 @@ class _AppRouterState extends ConsumerState<_AppRouter> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAppReady();
     });
+    // Diagnostic: explicit ref.listen on appInitProvider AND
+    // appShellProvider to verify Riverpod is notifying this widget
+    // when state changes. ref.listen always fires on state change,
+    // independent of whether ref.watch triggers a build. If these
+    // fire but build() does not, the rebuild path is broken; if
+    // these don't fire either, the subscription itself is broken.
+    ref.listenManual<AppInitState>(appInitProvider, (previous, next) {
+      AppLogging.connection(
+        'APP_ROUTER_LISTEN: appInit prev=$previous next=$next '
+        'hashCode=$hashCode',
+      );
+    });
+    ref.listenManual<AppShellResolution>(appShellProvider, (previous, next) {
+      AppLogging.connection(
+        'APP_ROUTER_LISTEN: appShell '
+        'prev=${previous?.shell.name}/${previous?.reason} '
+        'next=${next.shell.name}/${next.reason} '
+        'hashCode=$hashCode',
+      );
+    });
   }
 
   void _checkAppReady() {
