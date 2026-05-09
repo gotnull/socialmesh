@@ -5,6 +5,8 @@
 // These providers enable the UI to access protocol-agnostic device
 // information without depending on Meshtastic or MeshCore specific code.
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,6 +19,7 @@ import '../models/meshcore_channel.dart';
 import '../services/meshcore/connection_coordinator.dart';
 import '../services/meshcore/meshcore_adapter.dart';
 import '../services/meshcore/meshcore_detector.dart';
+import '../services/meshcore/meshcore_send_rate_limiter.dart';
 import '../services/meshcore/protocol/meshcore_capture.dart';
 import '../services/meshcore/protocol/meshcore_messages.dart';
 import '../services/meshcore/protocol/meshcore_session.dart';
@@ -1617,4 +1620,59 @@ class MeshCoreDiscoveredAdvertsNotifier extends Notifier<List<HeardAdvert>> {
 final meshCoreDiscoveredAdvertsProvider =
     NotifierProvider<MeshCoreDiscoveredAdvertsNotifier, List<HeardAdvert>>(
       MeshCoreDiscoveredAdvertsNotifier.new,
+    );
+
+// ---------------------------------------------------------------------------
+// D34a: chat-traffic measurement (in-memory only).
+// ---------------------------------------------------------------------------
+
+/// Riverpod 3.x notifier exposing the live [ChatTrafficSnapshot] from
+/// the active MeshCore session's rate limiter.
+///
+/// Updates at 1 Hz while subscribed. Returns an empty snapshot when no
+/// session is connected. State is in-memory only — nothing is
+/// persisted, exported, or transmitted.
+class MeshCoreChatTrafficNotifier extends Notifier<ChatTrafficSnapshot> {
+  Timer? _ticker;
+
+  @override
+  ChatTrafficSnapshot build() {
+    ref.onDispose(() {
+      _ticker?.cancel();
+      _ticker = null;
+    });
+
+    // Re-build whenever the live session swaps (connect / disconnect).
+    final session = ref.watch(meshCoreSessionProvider);
+    _ticker?.cancel();
+    if (session == null) {
+      return ChatTrafficSnapshot.empty(DateTime.now());
+    }
+
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
+      // Re-read session through ref so a swap mid-tick is honoured.
+      final live = ref.read(meshCoreSessionProvider);
+      if (live == null) {
+        state = ChatTrafficSnapshot.empty(DateTime.now());
+        return;
+      }
+      state = live.sendRateLimiter.snapshot();
+    });
+    return session.sendRateLimiter.snapshot();
+  }
+
+  /// Force-refresh the snapshot from the live limiter. Used by the
+  /// chat send path (and tests) so a `recordSend` becomes visible
+  /// without waiting for the next 1 Hz tick.
+  void refreshNow() {
+    final session = ref.read(meshCoreSessionProvider);
+    state = session == null
+        ? ChatTrafficSnapshot.empty(DateTime.now())
+        : session.sendRateLimiter.snapshot();
+  }
+}
+
+final meshCoreChatTrafficProvider =
+    NotifierProvider<MeshCoreChatTrafficNotifier, ChatTrafficSnapshot>(
+      MeshCoreChatTrafficNotifier.new,
     );

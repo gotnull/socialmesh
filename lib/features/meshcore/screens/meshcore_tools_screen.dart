@@ -25,6 +25,7 @@ import '../../../utils/snackbar.dart';
 import '../../../models/meshcore_contact.dart';
 import '../../navigation/meshcore_shell.dart';
 import '../contact_l10n.dart';
+import '../widgets/meshcore_chat_traffic_card.dart';
 import 'meshcore_discovery_screen.dart';
 import 'meshcore_frame_log_screen.dart';
 
@@ -169,6 +170,12 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
             // drain tile so the user can see the live state before
             // tapping drain.
             const _QueueStatusCard(),
+            // D34a: chat-traffic measurement card. Surfaces the
+            // rolling 60-s send budget usage, per-kind counts, and
+            // peak/last-rejection metadata. In-memory only; no
+            // persistence, no remote export. Reactions row is
+            // reserved (always 0) until D34b.
+            const MeshCoreChatTrafficCard(),
             // D21.B: manual `CMD_SYNC_NEXT_MESSAGE` drain. Recovers a
             // missed `0x83` tickle (firmware queue has data but the
             // companion never got the push, e.g. transport blip).

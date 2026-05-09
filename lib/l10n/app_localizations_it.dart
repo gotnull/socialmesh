@@ -8155,6 +8155,51 @@ class AppLocalizationsIt extends AppLocalizations {
   String get meshcoreDiscoveryBadgeHeard => 'Sentito';
 
   @override
+  String get meshcoreChatTrafficTitle => 'Traffico chat (60 s)';
+
+  @override
+  String get meshcoreChatTrafficText => 'Testo';
+
+  @override
+  String get meshcoreChatTrafficReplies => 'Risposte';
+
+  @override
+  String get meshcoreChatTrafficReactions => 'Reazioni';
+
+  @override
+  String get meshcoreChatTrafficRejected => 'Rifiutati';
+
+  @override
+  String get meshcoreChatTrafficPeak => 'Picco di sessione';
+
+  @override
+  String get meshcoreChatTrafficLastRejection => 'Ultimo rifiuto';
+
+  @override
+  String get meshcoreChatTrafficRemaining => 'Budget residuo';
+
+  @override
+  String get meshcoreChatTrafficNoSession => 'Nessuna sessione MeshCore attiva';
+
+  @override
+  String get meshcoreChatTrafficNone => '-';
+
+  @override
+  String meshcoreChatTrafficUsage(int used, int capacity) {
+    return '$used / $capacity B';
+  }
+
+  @override
+  String meshcoreChatTrafficByteCount(int bytes, int count) {
+    return '$bytes B ($count)';
+  }
+
+  @override
+  String meshcoreChatTrafficBytes(int bytes) {
+    return '$bytes B';
+  }
+
+  @override
   String get meshcoreTracePathSavePathHelper =>
       'I percorsi salvati possono diventare obsoleti quando la mesh si reindirizza. Reimposta il percorso per tornare in automatico.';
 

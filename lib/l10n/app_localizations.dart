@@ -14335,6 +14335,84 @@ abstract class AppLocalizations {
   /// **'Heard'**
   String get meshcoreDiscoveryBadgeHeard;
 
+  /// D34a - title for the MeshCore Tools diagnostics card showing the rolling 60-second airtime/byte budget usage.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat traffic (60 s)'**
+  String get meshcoreChatTrafficTitle;
+
+  /// D34a - row label for plain (non-reply, non-reaction) text bytes sent in the current window.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get meshcoreChatTrafficText;
+
+  /// D34a - row label for reply-envelope bytes sent in the current window.
+  ///
+  /// In en, this message translates to:
+  /// **'Replies'**
+  String get meshcoreChatTrafficReplies;
+
+  /// D34a - row label for reaction bytes (reserved; D34a does not implement reactions).
+  ///
+  /// In en, this message translates to:
+  /// **'Reactions'**
+  String get meshcoreChatTrafficReactions;
+
+  /// D34a - row label for sends rejected by the rate limiter in the current window.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get meshcoreChatTrafficRejected;
+
+  /// D34a - row label for the highest single-window byte usage observed since session start.
+  ///
+  /// In en, this message translates to:
+  /// **'Peak this session'**
+  String get meshcoreChatTrafficPeak;
+
+  /// D34a - row label for the timestamp of the most recent rate-limit rejection.
+  ///
+  /// In en, this message translates to:
+  /// **'Last rejection'**
+  String get meshcoreChatTrafficLastRejection;
+
+  /// D34a - row label for the bytes still available in the current 60-s window.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining budget'**
+  String get meshcoreChatTrafficRemaining;
+
+  /// D34a - placeholder shown in the diagnostics card when no MeshCore device is connected.
+  ///
+  /// In en, this message translates to:
+  /// **'No active MeshCore session'**
+  String get meshcoreChatTrafficNoSession;
+
+  /// D34a - dash placeholder rendered when the last-rejection timestamp is unset (no rejection has occurred this session).
+  ///
+  /// In en, this message translates to:
+  /// **'-'**
+  String get meshcoreChatTrafficNone;
+
+  /// D34a - progress-bar label showing 'used / capacity bytes' (e.g. '642 / 1024 B').
+  ///
+  /// In en, this message translates to:
+  /// **'{used} / {capacity} B'**
+  String meshcoreChatTrafficUsage(int used, int capacity);
+
+  /// D34a - per-kind row value showing total bytes plus parenthesised send count (e.g. '412 B (3)').
+  ///
+  /// In en, this message translates to:
+  /// **'{bytes} B ({count})'**
+  String meshcoreChatTrafficByteCount(int bytes, int count);
+
+  /// D34a - generic 'N B' value formatter (peak window usage, remaining budget).
+  ///
+  /// In en, this message translates to:
+  /// **'{bytes} B'**
+  String meshcoreChatTrafficBytes(int bytes);
+
   /// D34c-A - small helper paragraph above the Save as Contact Path button on the trace result sheet, warning that saved paths can become stale.
   ///
   /// In en, this message translates to:

@@ -38,6 +38,33 @@ class MeshCoreSendRateLimiterConstants {
 
   /// Total byte capacity per window.
   static const int budgetBytesPerWindow = 1024;
+
+  /// D34a: how many recently-closed 60-s windows are kept in memory for
+  /// the rolling-average computation surfaced in the Tools diagnostics
+  /// card. The active (still-filling) window is tracked separately.
+  static const int recentWindowsKept = 10;
+}
+
+/// D34a: kind tags used to attribute outbound text bytes for the
+/// chat-traffic measurement layer.
+///
+/// The `reaction*` values are reserved-only — D34a does NOT implement
+/// reactions. They exist so the future D34b reactions slice does not
+/// have to rename buckets, and so regression tests can pin that the
+/// names round-trip without populating their counters.
+enum MeshCoreSendKind {
+  plainContact,
+  plainChannel,
+  replyContact,
+  replyChannel,
+  reactionContact,
+  reactionChannel,
+}
+
+extension MeshCoreSendKindLog on MeshCoreSendKind {
+  /// Stable wire-safe label used in `event=text.send.*` log lines.
+  /// Matches the enum identifier — never the user-facing label.
+  String get logTag => name;
 }
 
 /// Outcome of a `tryAcquire` call. Allows the UI / send pipeline to
@@ -66,6 +93,108 @@ class MeshCoreRateLimiterDecision {
   });
 }
 
+/// D34a: immutable snapshot of the chat-traffic counters surfaced to
+/// the Tools diagnostics card and the `meshCoreChatTrafficProvider`.
+///
+/// Privacy: contains only counts, byte totals, kind tags, and
+/// timestamps. No payload content, pubkey, channel name, MMF, or
+/// envelope bytes are ever stored here.
+class ChatTrafficSnapshot {
+  /// Bytes successfully sent in the currently-filling window. Equal to
+  /// `currentWindowSentBytes`; surfaced under both names because the
+  /// progress bar reads `usedBytes / capacityBytes`.
+  final int currentWindowUsedBytes;
+
+  /// Window capacity (matches the rate limiter budget — 1024 B by
+  /// default).
+  final int windowCapacityBytes;
+
+  /// Token-bucket headroom from the live rate limiter. The send-side
+  /// rejection happens when `attemptBytes > remainingBytes`.
+  final int remainingBytes;
+
+  /// Bytes sent (allowed) in the current window. Same value as
+  /// [currentWindowUsedBytes].
+  final int currentWindowSentBytes;
+
+  /// Bytes attempted but rejected by the rate limiter in the current
+  /// window. Does NOT consume the token bucket — this is purely a
+  /// counter for diagnostics.
+  final int currentWindowRejectedBytes;
+
+  /// Per-kind counts of successful sends in the current window.
+  /// Always contains every [MeshCoreSendKind] entry (zero-valued when
+  /// the bucket is empty).
+  final Map<MeshCoreSendKind, int> sendCountByKind;
+
+  /// Per-kind counts of rejected sends in the current window.
+  final Map<MeshCoreSendKind, int> rejectedCountByKind;
+
+  /// Largest `currentWindowSentBytes` value ever observed during the
+  /// lifetime of the underlying limiter (i.e. since session start).
+  /// Reset by [MeshCoreSendRateLimiter.reset].
+  final int peakWindowUsage;
+
+  /// Mean of the `sentBytes` values across the last
+  /// [MeshCoreSendRateLimiterConstants.recentWindowsKept] closed
+  /// windows. Returns 0 when no closed windows have rolled yet.
+  final double rollingAverageBytes;
+
+  /// Wall-clock time the active 60-s window began. The Tools card
+  /// uses this to render "this minute starts at HH:MM:SS".
+  final DateTime windowStart;
+
+  /// Wall-clock time of the most recent rejection observed, or null
+  /// if no rejection has occurred since the limiter was constructed.
+  final DateTime? lastRejection;
+
+  const ChatTrafficSnapshot({
+    required this.currentWindowUsedBytes,
+    required this.windowCapacityBytes,
+    required this.remainingBytes,
+    required this.currentWindowSentBytes,
+    required this.currentWindowRejectedBytes,
+    required this.sendCountByKind,
+    required this.rejectedCountByKind,
+    required this.peakWindowUsage,
+    required this.rollingAverageBytes,
+    required this.windowStart,
+    required this.lastRejection,
+  });
+
+  /// Empty snapshot used by the provider when no MeshCore session is
+  /// live. Renders the "No active MeshCore session" placeholder.
+  factory ChatTrafficSnapshot.empty(DateTime now) {
+    return ChatTrafficSnapshot(
+      currentWindowUsedBytes: 0,
+      windowCapacityBytes:
+          MeshCoreSendRateLimiterConstants.budgetBytesPerWindow,
+      remainingBytes: MeshCoreSendRateLimiterConstants.budgetBytesPerWindow,
+      currentWindowSentBytes: 0,
+      currentWindowRejectedBytes: 0,
+      sendCountByKind: _zeroCounts(),
+      rejectedCountByKind: _zeroCounts(),
+      peakWindowUsage: 0,
+      rollingAverageBytes: 0.0,
+      windowStart: now,
+      lastRejection: null,
+    );
+  }
+
+  /// True when the snapshot has zero send / rejected activity. Used by
+  /// the Tools card to short-circuit the kind-row rendering.
+  bool get isIdle =>
+      currentWindowSentBytes == 0 &&
+      currentWindowRejectedBytes == 0 &&
+      peakWindowUsage == 0;
+
+  static Map<MeshCoreSendKind, int> _zeroCounts() {
+    return <MeshCoreSendKind, int>{
+      for (final k in MeshCoreSendKind.values) k: 0,
+    };
+  }
+}
+
 /// Token-bucket rate limiter for outbound MeshCore text payloads.
 ///
 /// Single instance per [MeshCoreSession]. Threading: not thread-safe
@@ -84,6 +213,31 @@ class MeshCoreSendRateLimiter {
   /// Wall-clock time of the last refill, in millis since epoch.
   int _lastRefillMs;
 
+  /// D34a: start of the active measurement window in millis since
+  /// epoch. Rotates every [_windowMs] independent of the token-bucket
+  /// refill cadence.
+  int _windowStartMs;
+
+  /// D34a: per-kind sent/rejected accumulators for the active window.
+  final Map<MeshCoreSendKind, int> _sendCounts =
+      ChatTrafficSnapshot._zeroCounts();
+  final Map<MeshCoreSendKind, int> _rejectedCounts =
+      ChatTrafficSnapshot._zeroCounts();
+  int _windowSentBytes = 0;
+  int _windowRejectedBytes = 0;
+
+  /// D34a: sent-byte totals for the last
+  /// [MeshCoreSendRateLimiterConstants.recentWindowsKept] closed
+  /// windows. Oldest first; capped via FIFO.
+  final List<int> _recentClosedWindowBytes = <int>[];
+
+  /// D34a: largest observed `_windowSentBytes` during this limiter's
+  /// lifetime.
+  int _peakWindowUsage = 0;
+
+  /// D34a: wall-clock of the most recent rejection, or null.
+  int? _lastRejectionMs;
+
   MeshCoreSendRateLimiter({
     DateTime Function()? clock,
     int? capacityBytes,
@@ -98,7 +252,8 @@ class MeshCoreSendRateLimiter {
        _remainingBytes =
            capacityBytes ??
            MeshCoreSendRateLimiterConstants.budgetBytesPerWindow,
-       _lastRefillMs = (clock ?? DateTime.now).call().millisecondsSinceEpoch;
+       _lastRefillMs = (clock ?? DateTime.now).call().millisecondsSinceEpoch,
+       _windowStartMs = (clock ?? DateTime.now).call().millisecondsSinceEpoch;
 
   /// Total budget capacity.
   int get capacity => _capacity;
@@ -205,5 +360,122 @@ class MeshCoreSendRateLimiter {
   void reset() {
     _remainingBytes = _capacity;
     _lastRefillMs = _clock().millisecondsSinceEpoch;
+    _windowStartMs = _lastRefillMs;
+    _windowSentBytes = 0;
+    _windowRejectedBytes = 0;
+    for (final k in MeshCoreSendKind.values) {
+      _sendCounts[k] = 0;
+      _rejectedCounts[k] = 0;
+    }
+    _recentClosedWindowBytes.clear();
+    _peakWindowUsage = 0;
+    _lastRejectionMs = null;
+  }
+
+  // ---------------------------------------------------------------------------
+  // D34a: chat-traffic measurement layer
+  // ---------------------------------------------------------------------------
+
+  /// Rotate the active 60-s measurement window when wall-clock has
+  /// crossed the next boundary. Closes the active window into the
+  /// recent-windows ring, evicts past
+  /// [MeshCoreSendRateLimiterConstants.recentWindowsKept], and resets
+  /// the active per-kind accumulators. Idle windows close as zero-byte
+  /// entries so the rolling average reflects real airtime.
+  void _rotateWindowIfNeeded() {
+    final nowMs = _clock().millisecondsSinceEpoch;
+    var elapsed = nowMs - _windowStartMs;
+    if (elapsed < _windowMs) return;
+
+    while (elapsed >= _windowMs) {
+      final closingBytes = _windowSentBytes;
+      _recentClosedWindowBytes.add(closingBytes);
+      while (_recentClosedWindowBytes.length >
+          MeshCoreSendRateLimiterConstants.recentWindowsKept) {
+        _recentClosedWindowBytes.removeAt(0);
+      }
+      if (closingBytes > _peakWindowUsage) {
+        _peakWindowUsage = closingBytes;
+      }
+      AppLogging.meshcore(
+        'event=text.send.window_reset peak_bytes=$_peakWindowUsage',
+      );
+      _windowSentBytes = 0;
+      _windowRejectedBytes = 0;
+      for (final k in MeshCoreSendKind.values) {
+        _sendCounts[k] = 0;
+        _rejectedCounts[k] = 0;
+      }
+      _windowStartMs += _windowMs;
+      elapsed -= _windowMs;
+    }
+  }
+
+  /// Record a send attempt against the measurement counters. Called by
+  /// [MeshCoreSession.sendTextMessage] AFTER `tryAcquire` so the
+  /// `allowed` flag faithfully reflects whether the bytes consumed the
+  /// token bucket.
+  ///
+  /// Privacy: this method must only be passed counts and the kind. The
+  /// caller must NEVER pass a payload, pubkey, or any envelope content
+  /// — `bytes` is the post-envelope size already known to the limiter.
+  void recordSend({
+    required MeshCoreSendKind kind,
+    required int bytes,
+    required bool allowed,
+  }) {
+    _rotateWindowIfNeeded();
+    if (bytes <= 0) return;
+    if (allowed) {
+      _windowSentBytes += bytes;
+      _sendCounts[kind] = (_sendCounts[kind] ?? 0) + 1;
+      if (_windowSentBytes > _peakWindowUsage) {
+        _peakWindowUsage = _windowSentBytes;
+      }
+      AppLogging.meshcore(
+        'event=text.send.recorded '
+        'kind=${kind.logTag} '
+        'bytes=$bytes '
+        'win_used=$_windowSentBytes '
+        'win_cap=$_capacity',
+      );
+    } else {
+      _windowRejectedBytes += bytes;
+      _rejectedCounts[kind] = (_rejectedCounts[kind] ?? 0) + 1;
+      _lastRejectionMs = _clock().millisecondsSinceEpoch;
+      // event=text.send.rate_limited is logged at the session
+      // boundary (where the kind tag and remaining-bytes context
+      // live). The counter side stays silent here to avoid double-
+      // logging the same rejection event.
+    }
+  }
+
+  /// Build an immutable [ChatTrafficSnapshot] from the current state.
+  /// Lazily rotates closed windows so the snapshot's `windowStart`
+  /// always reflects the active 60-s bucket.
+  ChatTrafficSnapshot snapshot() {
+    _rotateWindowIfNeeded();
+    _refill();
+    final avg = _recentClosedWindowBytes.isEmpty
+        ? 0.0
+        : _recentClosedWindowBytes.reduce((a, b) => a + b) /
+              _recentClosedWindowBytes.length;
+    return ChatTrafficSnapshot(
+      currentWindowUsedBytes: _windowSentBytes,
+      windowCapacityBytes: _capacity,
+      remainingBytes: _remainingBytes,
+      currentWindowSentBytes: _windowSentBytes,
+      currentWindowRejectedBytes: _windowRejectedBytes,
+      sendCountByKind: Map<MeshCoreSendKind, int>.unmodifiable(_sendCounts),
+      rejectedCountByKind: Map<MeshCoreSendKind, int>.unmodifiable(
+        _rejectedCounts,
+      ),
+      peakWindowUsage: _peakWindowUsage,
+      rollingAverageBytes: avg,
+      windowStart: DateTime.fromMillisecondsSinceEpoch(_windowStartMs),
+      lastRejection: _lastRejectionMs == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(_lastRejectionMs!),
+    );
   }
 }

@@ -32,6 +32,7 @@ import '../contact_l10n.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../providers/meshcore_message_providers.dart';
+import '../../../services/meshcore/meshcore_send_rate_limiter.dart';
 import '../../../services/meshcore/protocol/meshcore_chat_meta_envelope.dart';
 import '../../../services/meshcore/protocol/meshcore_frame.dart';
 import '../../../services/meshcore/storage/meshcore_message_store.dart';
@@ -1017,11 +1018,25 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       // budget accounting and host-side rejection live in the
       // session; the chat surface only needs to discriminate the
       // three terminal outcomes.
+      //
+      // D34a: pass an explicit `sendKind` so the chat-traffic
+      // measurement layer can attribute bytes to the right bucket
+      // (the session has no visibility into the reply target after
+      // the wire body is encoded).
+      final isContact = widget.chatType == MeshCoreChatType.contact;
+      final sendKind = isReplyEnvelope
+          ? (isContact
+                ? MeshCoreSendKind.replyContact
+                : MeshCoreSendKind.replyChannel)
+          : (isContact
+                ? MeshCoreSendKind.plainContact
+                : MeshCoreSendKind.plainChannel);
       final result = await session.sendTextMessage(
         command: frame.command,
         payload: frame.payload,
         expectedResponse: meshCoreExpectedSendResponseCode(widget.chatType),
         timeout: const Duration(seconds: 5),
+        sendKind: sendKind,
       );
 
       if (result.rateLimited) {

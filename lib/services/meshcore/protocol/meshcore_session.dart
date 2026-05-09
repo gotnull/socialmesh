@@ -625,6 +625,7 @@ class MeshCoreSession {
     required Uint8List payload,
     required int expectedResponse,
     Duration timeout = const Duration(seconds: 5),
+    MeshCoreSendKind? sendKind,
   }) async {
     if (command != MeshCoreCommands.sendTxtMsg &&
         command != MeshCoreCommands.sendChannelTxtMsg) {
@@ -635,21 +636,38 @@ class MeshCoreSession {
       );
     }
 
+    // D34a: classify the send for the chat-traffic measurement layer.
+    // Real callers (chat screen) pass `sendKind` explicitly. The
+    // inference path is a safety net for any caller that forgets:
+    //   - reply if the payload starts with the chat-meta fallback
+    //     prefix `[mrrp]`
+    //   - plain otherwise
+    //   - contact/channel from the command code
+    final kind = sendKind ?? _inferSendKind(command, payload);
+
     final budgetBytes = payload.length + 1;
     final decision = _sendRateLimiter.tryAcquire(budgetBytes);
     if (!decision.allowed) {
       AppLogging.meshcore(
         'event=text.send.rate_limited '
+        'kind=${kind.logTag} '
         'cmd=0x${command.toRadixString(16).padLeft(2, '0')} '
         'bytes=$budgetBytes '
         'remaining=${decision.remainingBytes} '
         'wait_ms=${decision.nextSendIn.inMilliseconds}',
+      );
+      _sendRateLimiter.recordSend(
+        kind: kind,
+        bytes: budgetBytes,
+        allowed: false,
       );
       return MeshCoreTextSendResult.rateLimited(
         nextSendIn: decision.nextSendIn,
         remainingBytes: decision.remainingBytes,
       );
     }
+
+    _sendRateLimiter.recordSend(kind: kind, bytes: budgetBytes, allowed: true);
 
     final response = await sendAndWait(
       command,
@@ -662,6 +680,42 @@ class MeshCoreSession {
     }
     return MeshCoreTextSendResult.ok(response: response);
   }
+
+  /// D34a: literal `startsWith([mrrp])` test on the wire payload.
+  ///
+  /// Production callers (the chat screen) always pass an explicit
+  /// `sendKind`, so the prefix sniff only fires for tests and any
+  /// future caller that omits the kind. False negatives (a reply
+  /// payload whose routing header pushes `[mrrp]` past offset 0)
+  /// classify as plain — acceptable, since per-kind attribution is
+  /// best-effort when the kind is omitted; the byte budget itself is
+  /// always counted correctly.
+  static MeshCoreSendKind _inferSendKind(int command, Uint8List payload) {
+    final isReply =
+        payload.length >= _kMrrpPrefix.length &&
+        _startsWithBytes(payload, _kMrrpPrefix);
+    final isChannel = command == MeshCoreCommands.sendChannelTxtMsg;
+    if (isReply) {
+      return isChannel
+          ? MeshCoreSendKind.replyChannel
+          : MeshCoreSendKind.replyContact;
+    }
+    return isChannel
+        ? MeshCoreSendKind.plainChannel
+        : MeshCoreSendKind.plainContact;
+  }
+
+  static bool _startsWithBytes(Uint8List bytes, List<int> prefix) {
+    for (int i = 0; i < prefix.length; i++) {
+      if (bytes[i] != prefix[i]) return false;
+    }
+    return true;
+  }
+
+  /// `[mrrp]` as raw UTF-8 bytes. Mirrors `kFallbackPrefix` from the
+  /// chat-meta envelope codec; copied locally so the session does not
+  /// import the codec just to read this constant.
+  static const List<int> _kMrrpPrefix = [0x5B, 0x6D, 0x72, 0x72, 0x70, 0x5D];
 
   // ---------------------------------------------------------------------------
   // High-level Protocol Primitives

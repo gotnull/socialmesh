@@ -10918,6 +10918,69 @@
     "@meshcoreDiscoveryBadgeHeard": {
         "description": "D34b-A1 - badge shown next to a heard node that has NOT been imported into the local contact list."
     },
+    "meshcoreChatTrafficTitle": "Chat traffic (60 s)",
+    "@meshcoreChatTrafficTitle": {
+        "description": "D34a - title for the MeshCore Tools diagnostics card showing the rolling 60-second airtime/byte budget usage."
+    },
+    "meshcoreChatTrafficText": "Text",
+    "@meshcoreChatTrafficText": {
+        "description": "D34a - row label for plain (non-reply, non-reaction) text bytes sent in the current window."
+    },
+    "meshcoreChatTrafficReplies": "Replies",
+    "@meshcoreChatTrafficReplies": {
+        "description": "D34a - row label for reply-envelope bytes sent in the current window."
+    },
+    "meshcoreChatTrafficReactions": "Reactions",
+    "@meshcoreChatTrafficReactions": {
+        "description": "D34a - row label for reaction bytes (reserved; D34a does not implement reactions)."
+    },
+    "meshcoreChatTrafficRejected": "Rejected",
+    "@meshcoreChatTrafficRejected": {
+        "description": "D34a - row label for sends rejected by the rate limiter in the current window."
+    },
+    "meshcoreChatTrafficPeak": "Peak this session",
+    "@meshcoreChatTrafficPeak": {
+        "description": "D34a - row label for the highest single-window byte usage observed since session start."
+    },
+    "meshcoreChatTrafficLastRejection": "Last rejection",
+    "@meshcoreChatTrafficLastRejection": {
+        "description": "D34a - row label for the timestamp of the most recent rate-limit rejection."
+    },
+    "meshcoreChatTrafficRemaining": "Remaining budget",
+    "@meshcoreChatTrafficRemaining": {
+        "description": "D34a - row label for the bytes still available in the current 60-s window."
+    },
+    "meshcoreChatTrafficNoSession": "No active MeshCore session",
+    "@meshcoreChatTrafficNoSession": {
+        "description": "D34a - placeholder shown in the diagnostics card when no MeshCore device is connected."
+    },
+    "meshcoreChatTrafficNone": "-",
+    "@meshcoreChatTrafficNone": {
+        "description": "D34a - dash placeholder rendered when the last-rejection timestamp is unset (no rejection has occurred this session)."
+    },
+    "meshcoreChatTrafficUsage": "{used} / {capacity} B",
+    "@meshcoreChatTrafficUsage": {
+        "description": "D34a - progress-bar label showing 'used / capacity bytes' (e.g. '642 / 1024 B').",
+        "placeholders": {
+            "used": {"type": "int"},
+            "capacity": {"type": "int"}
+        }
+    },
+    "meshcoreChatTrafficByteCount": "{bytes} B ({count})",
+    "@meshcoreChatTrafficByteCount": {
+        "description": "D34a - per-kind row value showing total bytes plus parenthesised send count (e.g. '412 B (3)').",
+        "placeholders": {
+            "bytes": {"type": "int"},
+            "count": {"type": "int"}
+        }
+    },
+    "meshcoreChatTrafficBytes": "{bytes} B",
+    "@meshcoreChatTrafficBytes": {
+        "description": "D34a - generic 'N B' value formatter (peak window usage, remaining budget).",
+        "placeholders": {
+            "bytes": {"type": "int"}
+        }
+    },
     "meshcoreTracePathSavePathHelper": "Saved paths can become stale as the mesh re-routes. Reset the path to return to auto.",
     "@meshcoreTracePathSavePathHelper": {
         "description": "D34c-A - small helper paragraph above the Save as Contact Path button on the trace result sheet, warning that saved paths can become stale."
