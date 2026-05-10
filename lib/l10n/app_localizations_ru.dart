@@ -8152,6 +8152,41 @@ class AppLocalizationsRu extends AppLocalizations {
       'Firmware-internal flags. Include this value when filing a support report.';
 
   @override
+  String get meshcoreRadioStatsPacketsSection => 'Packet counters';
+
+  @override
+  String get meshcoreRadioStatsPacketsExpand => 'Expand packet counters';
+
+  @override
+  String get meshcoreRadioStatsPacketsCollapse => 'Collapse packet counters';
+
+  @override
+  String get meshcoreRadioStatsPacketsReceived => 'Packets received';
+
+  @override
+  String get meshcoreRadioStatsPacketsSent => 'Packets sent';
+
+  @override
+  String get meshcoreRadioStatsPacketsSentFlood => 'Sent flood';
+
+  @override
+  String get meshcoreRadioStatsPacketsSentDirect => 'Sent direct';
+
+  @override
+  String get meshcoreRadioStatsPacketsRecvFlood => 'Received flood';
+
+  @override
+  String get meshcoreRadioStatsPacketsRecvDirect => 'Received direct';
+
+  @override
+  String get meshcoreRadioStatsPacketsRecvErrors => 'Reception errors';
+
+  @override
+  String meshcoreRadioStatsPacketsCount(String value) {
+    return '$value';
+  }
+
+  @override
   String get meshcoreRadioStatsStale => 'Stale data, reconnecting…';
 
   @override

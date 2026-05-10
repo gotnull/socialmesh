@@ -8230,6 +8230,43 @@ class AppLocalizationsPt extends AppLocalizations {
       'Flags internas do firmware. Inclua este valor ao abrir um chamado de suporte.';
 
   @override
+  String get meshcoreRadioStatsPacketsSection => 'Contadores de pacotes';
+
+  @override
+  String get meshcoreRadioStatsPacketsExpand =>
+      'Expandir contadores de pacotes';
+
+  @override
+  String get meshcoreRadioStatsPacketsCollapse =>
+      'Recolher contadores de pacotes';
+
+  @override
+  String get meshcoreRadioStatsPacketsReceived => 'Pacotes recebidos';
+
+  @override
+  String get meshcoreRadioStatsPacketsSent => 'Pacotes enviados';
+
+  @override
+  String get meshcoreRadioStatsPacketsSentFlood => 'Enviados flood';
+
+  @override
+  String get meshcoreRadioStatsPacketsSentDirect => 'Enviados direto';
+
+  @override
+  String get meshcoreRadioStatsPacketsRecvFlood => 'Recebidos flood';
+
+  @override
+  String get meshcoreRadioStatsPacketsRecvDirect => 'Recebidos direto';
+
+  @override
+  String get meshcoreRadioStatsPacketsRecvErrors => 'Erros de recepção';
+
+  @override
+  String meshcoreRadioStatsPacketsCount(String value) {
+    return '$value';
+  }
+
+  @override
   String get meshcoreRadioStatsStale => 'Dados desatualizados, reconectando…';
 
   @override

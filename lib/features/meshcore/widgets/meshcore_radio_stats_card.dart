@@ -1,18 +1,25 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D35-A: MeshCore companion-radio stats Tools card.
+// D35-A / D35-B-A / D35-PACKETS-A: MeshCore companion-radio stats card.
 //
-// Surfaces the firmware-backed RADIO subtype (`STATS_TYPE_RADIO`)
-// fetched via `CMD_GET_STATS` (0x38). Polls at 1 Hz while mounted via
-// `meshCoreRadioStatsProvider`. The fetch path bypasses the D34a chat
-// rate limiter, so polling does NOT compete with chat airtime.
+// Surfaces the firmware-backed stats subtypes fetched via
+// `CMD_GET_STATS` (0x38):
+//   - RADIO (D35-A): noise floor, RSSI, SNR, TX/RX airtime, 1 Hz poll.
+//   - CORE (D35-B-A): uptime, firmware TX queue, opaque error flags
+//     when non-zero, 0.2 Hz poll.
+//   - PACKETS (D35-PACKETS-A): collapsible subsection. RX/TX
+//     aggregates, sent/recv flood/direct breakdown, opaque reception
+//     errors. Lazy 0.1 Hz poll that ONLY runs while expanded - the
+//     provider auto-disposes when no listener subscribes.
+//
+// All three fetch paths bypass the D34a chat rate limiter; polling
+// does NOT compete with chat airtime (regression-pinned).
 //
 // Privacy: the card NEVER renders pubkeys, MMFs, channel names, raw
 // payloads, message plaintext, or envelope content. Only typed
-// numeric values from the firmware: noise floor (dBm), last RSSI
-// (dBm), last SNR (dB), TX/RX airtime (Duration). Pinned by the
-// widget redaction sweep in `d35_radio_stats_card_test.dart`.
+// numeric values from the firmware. Pinned by the widget redaction
+// sweep in the D35-A / D35-B-A / D35-PACKETS-A widget tests.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,11 +32,23 @@ import '../../../l10n/app_localizations.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../services/meshcore/protocol/meshcore_messages.dart';
 
-class MeshCoreRadioStatsCard extends ConsumerWidget {
+class MeshCoreRadioStatsCard extends ConsumerStatefulWidget {
   const MeshCoreRadioStatsCard({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MeshCoreRadioStatsCard> createState() =>
+      _MeshCoreRadioStatsCardState();
+}
+
+class _MeshCoreRadioStatsCardState
+    extends ConsumerState<MeshCoreRadioStatsCard> {
+  /// D35-PACKETS-A: collapsed by default. The packets provider is only
+  /// watched when this is true, so its auto-dispose timer never runs
+  /// for users who don't expand the section.
+  bool _packetsExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
     final snapshot = ref.watch(meshCoreRadioStatsProvider);
     final core = ref.watch(meshCoreCoreStatsProvider);
@@ -56,6 +75,15 @@ class MeshCoreRadioStatsCard extends ConsumerWidget {
               leadingIcon: Icons.cell_tower_rounded,
             ),
             _Body(snapshot: snapshot, core: core, l10n: l10n),
+            if (snapshot.isConnected) ...[
+              const SizedBox(height: AppTheme.spacing12),
+              _PacketsSection(
+                expanded: _packetsExpanded,
+                l10n: l10n,
+                onToggle: () =>
+                    setState(() => _packetsExpanded = !_packetsExpanded),
+              ),
+            ],
           ],
         ),
       ),
@@ -320,5 +348,192 @@ class _ErrorFlagsHelper extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+/// D35-PACKETS-A: collapsible "Packet counters" subsection.
+///
+/// The header row is always rendered; the inner `Consumer` that
+/// watches `meshCorePacketsStatsProvider` is mounted ONLY when
+/// expanded. Combined with `NotifierProvider.autoDispose` on the
+/// packets provider, this gives strict lazy semantics: collapsed =
+/// no listener = no timer = zero wire chatter. Pinned by the
+/// provider auto-dispose test and by a live-smoke step asserting no
+/// `event=packets_stats.fetched` log lines while collapsed.
+class _PacketsSection extends StatelessWidget {
+  final bool expanded;
+  final AppLocalizations l10n;
+  final VoidCallback onToggle;
+
+  const _PacketsSection({
+    required this.expanded,
+    required this.l10n,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          key: const ValueKey('meshcore-radio-stats-packets-header'),
+          onTap: onToggle,
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.spacing4,
+              vertical: AppTheme.spacing8,
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  expanded
+                      ? Icons.expand_less_rounded
+                      : Icons.expand_more_rounded,
+                  size: 18,
+                  color: context.textSecondary,
+                  semanticLabel: expanded
+                      ? l10n.meshcoreRadioStatsPacketsCollapse
+                      : l10n.meshcoreRadioStatsPacketsExpand,
+                ),
+                const SizedBox(width: AppTheme.spacing8),
+                Expanded(
+                  child: Text(
+                    l10n.meshcoreRadioStatsPacketsSection,
+                    style: TextStyle(
+                      color: context.textSecondary,
+                      fontFamily: AppTheme.fontFamily,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (expanded) ...[
+          const SizedBox(height: AppTheme.spacing4),
+          const _PacketsBody(),
+        ],
+      ],
+    );
+  }
+}
+
+/// Inner Consumer wrapper. Watching this provider here (and only
+/// here) is what triggers the auto-dispose timer to start. When the
+/// parent collapses the section, this widget unmounts, the listener
+/// drops, and `MeshCorePacketsStatsNotifier.dispose` cancels the
+/// timer.
+class _PacketsBody extends ConsumerWidget {
+  const _PacketsBody();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final snapshot = ref.watch(meshCorePacketsStatsProvider);
+    final latest = snapshot.latest;
+
+    if (latest == null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
+        child: Row(
+          children: [
+            Icon(
+              Icons.hourglass_empty_rounded,
+              size: 14,
+              color: context.textTertiary,
+            ),
+            const SizedBox(width: AppTheme.spacing8),
+            Expanded(
+              child: Text(
+                l10n.meshcoreRadioStatsFetching,
+                key: const ValueKey('meshcore-radio-stats-packets-fetching'),
+                style: TextStyle(
+                  color: context.textSecondary,
+                  fontFamily: AppTheme.fontFamily,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final rows = <InfoTableRow>[
+      InfoTableRow(
+        label: l10n.meshcoreRadioStatsPacketsReceived,
+        value: l10n.meshcoreRadioStatsPacketsCount(
+          _formatCount(latest.packetsReceived),
+        ),
+        icon: Icons.call_received_rounded,
+      ),
+      InfoTableRow(
+        label: l10n.meshcoreRadioStatsPacketsSent,
+        value: l10n.meshcoreRadioStatsPacketsCount(
+          _formatCount(latest.packetsSent),
+        ),
+        icon: Icons.call_made_rounded,
+      ),
+      InfoTableRow(
+        label: l10n.meshcoreRadioStatsPacketsSentFlood,
+        value: l10n.meshcoreRadioStatsPacketsCount(
+          _formatCount(latest.sentFlood),
+        ),
+        icon: Icons.broadcast_on_personal_rounded,
+      ),
+      InfoTableRow(
+        label: l10n.meshcoreRadioStatsPacketsSentDirect,
+        value: l10n.meshcoreRadioStatsPacketsCount(
+          _formatCount(latest.sentDirect),
+        ),
+        icon: Icons.near_me_rounded,
+      ),
+      InfoTableRow(
+        label: l10n.meshcoreRadioStatsPacketsRecvFlood,
+        value: l10n.meshcoreRadioStatsPacketsCount(
+          _formatCount(latest.recvFlood),
+        ),
+        icon: Icons.podcasts_rounded,
+      ),
+      InfoTableRow(
+        label: l10n.meshcoreRadioStatsPacketsRecvDirect,
+        value: l10n.meshcoreRadioStatsPacketsCount(
+          _formatCount(latest.recvDirect),
+        ),
+        icon: Icons.cell_tower_rounded,
+      ),
+      InfoTableRow(
+        label: l10n.meshcoreRadioStatsPacketsRecvErrors,
+        value: l10n.meshcoreRadioStatsPacketsCount(
+          _formatCount(latest.recvErrors),
+        ),
+        icon: Icons.warning_amber_rounded,
+      ),
+    ];
+
+    return Opacity(
+      opacity: snapshot.isStale ? 0.55 : 1.0,
+      child: InfoTable(rows: rows),
+    );
+  }
+
+  /// Format an integer with thousands separators (e.g. 1247 -> "1,247").
+  /// Uses a manual grouping so the result is locale-stable.
+  static String _formatCount(int n) {
+    if (n < 1000) return '$n';
+    final s = n.toString();
+    final buf = StringBuffer();
+    var firstGroup = s.length % 3;
+    if (firstGroup == 0) firstGroup = 3;
+    buf.write(s.substring(0, firstGroup));
+    for (var i = firstGroup; i < s.length; i += 3) {
+      buf.write(',');
+      buf.write(s.substring(i, i + 3));
+    }
+    return buf.toString();
   }
 }

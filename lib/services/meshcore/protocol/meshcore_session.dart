@@ -1000,6 +1000,70 @@ class MeshCoreSession {
     return stats;
   }
 
+  /// D35-PACKETS-A: fetch the firmware-side PACKETS stats subtype.
+  ///
+  /// Wire: outbound `[CMD_GET_STATS=0x38][STATS_TYPE_PACKETS=2]`
+  /// (2 B); inbound `[RESP_CODE_STATS=0x18][STATS_TYPE_PACKETS=2] +
+  /// 28 B payload`. The parser (`MeshCorePacketsStats.parse`) rejects
+  /// wrong length / wrong discriminator / wrong subtype.
+  ///
+  /// Returns `null` on timeout, transport drop, or any payload that
+  /// fails the discriminator/length checks. UI callers must treat
+  /// null as "no fresh data" and either keep the previous snapshot
+  /// or fall back to the disconnected placeholder. UI callers MUST
+  /// NOT surface this as an error (firmware blips and transport
+  /// reconnects are normal).
+  ///
+  /// **Bypasses `MeshCoreSendRateLimiter`**: this is a host-side
+  /// management request, not a chat-bound text send, so it does not
+  /// compete for the 1024 B / 60 s D34a budget. Pinned by the
+  /// session regression test.
+  Future<MeshCorePacketsStats?> getPacketsStats({
+    Duration timeout = const Duration(seconds: 3),
+  }) async {
+    final response = await sendAndWait(
+      MeshCoreCommands.getStats,
+      payload: Uint8List.fromList([MeshCoreStatsType.packets]),
+      expectedResponse: MeshCoreResponses.stats,
+      timeout: timeout,
+    );
+
+    if (response == null) {
+      AppLogging.meshcore('event=packets_stats.timeout');
+      return null;
+    }
+
+    // The response payload is the body AFTER the command byte.
+    // Reconstruct the full 30-byte frame so the parser can validate
+    // the resp_code + subtype discriminators against its own
+    // expectations. PACKETS body length is 29 (subtype + 7 u32
+    // counters = 1 + 28 = 29).
+    final body = response.payload;
+    if (body.length != 29) {
+      // Wrong subtype (RADIO / CORE) or truncated frame. Drop
+      // silently; caller treats as transient.
+      return null;
+    }
+    final reframed = Uint8List(30);
+    reframed[0] = MeshCoreResponses.stats;
+    reframed.setRange(1, 30, body);
+
+    final stats = MeshCorePacketsStats.parse(reframed);
+    if (stats == null) return null;
+
+    AppLogging.meshcore(
+      'event=packets_stats.fetched '
+      'rx=${stats.packetsReceived} '
+      'tx=${stats.packetsSent} '
+      'tx_flood=${stats.sentFlood} '
+      'tx_direct=${stats.sentDirect} '
+      'rx_flood=${stats.recvFlood} '
+      'rx_direct=${stats.recvDirect} '
+      'rx_err=${stats.recvErrors}',
+    );
+    return stats;
+  }
+
   /// Check device connectivity using battery request.
   ///
   /// MeshCore has no explicit ping/pong, so we use battery request

@@ -14485,6 +14485,72 @@ abstract class AppLocalizations {
   /// **'Firmware-internal flags. Include this value when filing a support report.'**
   String get meshcoreRadioStatsErrorFlagsHelper;
 
+  /// D35-PACKETS-A - section header for the collapsible packet-counter subsection on the Companion Radio card.
+  ///
+  /// In en, this message translates to:
+  /// **'Packet counters'**
+  String get meshcoreRadioStatsPacketsSection;
+
+  /// D35-PACKETS-A - accessibility label for the section header when collapsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand packet counters'**
+  String get meshcoreRadioStatsPacketsExpand;
+
+  /// D35-PACKETS-A - accessibility label for the section header when expanded.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse packet counters'**
+  String get meshcoreRadioStatsPacketsCollapse;
+
+  /// D35-PACKETS-A - row label for the radio-driver aggregate RX packet counter.
+  ///
+  /// In en, this message translates to:
+  /// **'Packets received'**
+  String get meshcoreRadioStatsPacketsReceived;
+
+  /// D35-PACKETS-A - row label for the radio-driver aggregate TX packet counter.
+  ///
+  /// In en, this message translates to:
+  /// **'Packets sent'**
+  String get meshcoreRadioStatsPacketsSent;
+
+  /// D35-PACKETS-A - row label for flood-routed TX packets.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent flood'**
+  String get meshcoreRadioStatsPacketsSentFlood;
+
+  /// D35-PACKETS-A - row label for direct-routed TX packets.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent direct'**
+  String get meshcoreRadioStatsPacketsSentDirect;
+
+  /// D35-PACKETS-A - row label for flood-mode RX packets.
+  ///
+  /// In en, this message translates to:
+  /// **'Received flood'**
+  String get meshcoreRadioStatsPacketsRecvFlood;
+
+  /// D35-PACKETS-A - row label for direct-routed RX packets.
+  ///
+  /// In en, this message translates to:
+  /// **'Received direct'**
+  String get meshcoreRadioStatsPacketsRecvDirect;
+
+  /// D35-PACKETS-A - row label for the opaque packet-reception error tally. Surfaced as a single count; the firmware does not categorise these errors and the UI must NOT invent labels.
+  ///
+  /// In en, this message translates to:
+  /// **'Reception errors'**
+  String get meshcoreRadioStatsPacketsRecvErrors;
+
+  /// D35-PACKETS-A - formatter for a packet-counter integer value. Caller passes a pre-formatted thousands-grouped string (e.g. '1,247').
+  ///
+  /// In en, this message translates to:
+  /// **'{value}'**
+  String meshcoreRadioStatsPacketsCount(String value);
+
   /// D35-A - hint shown when the most recent successful radio-stats fetch is older than the staleness threshold (transport blip in progress).
   ///
   /// In en, this message translates to:

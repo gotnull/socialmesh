@@ -2076,3 +2076,131 @@ final meshCoreCoreStatsProvider =
     NotifierProvider<MeshCoreCoreStatsNotifier, MeshCoreCoreStatsSnapshot>(
       MeshCoreCoreStatsNotifier.new,
     );
+
+// ---------------------------------------------------------------------------
+// D35-PACKETS-A: Companion radio PACKETS stats provider.
+//
+// Exposes the firmware-side cumulative packet counters
+// (`STATS_TYPE_PACKETS`). Auto-disposes when no listener is watching
+// so the timer stops the instant the Companion Radio card's "Packet
+// counters" subsection collapses. Pinned by a provider regression
+// test.
+// ---------------------------------------------------------------------------
+
+/// Immutable wrapper carrying the latest [MeshCorePacketsStats] plus
+/// the connection / staleness signals the Tools card renders.
+class MeshCorePacketsStatsSnapshot {
+  final MeshCorePacketsStats? latest;
+  final bool isStale;
+  final bool isConnected;
+
+  const MeshCorePacketsStatsSnapshot({
+    required this.latest,
+    required this.isStale,
+    required this.isConnected,
+  });
+
+  const MeshCorePacketsStatsSnapshot.disconnected()
+    : latest = null,
+      isStale = false,
+      isConnected = false;
+}
+
+/// D35-PACKETS-A poll cadence and staleness threshold.
+///
+/// Counts tick at the rate of mesh activity (typically a few packets
+/// per minute on a quiet channel, occasionally bursty). 10 s is slow
+/// enough to keep wire chatter low and fast enough to catch bursts
+/// within one tick. Stale threshold = 3 missed polls.
+const Duration _kPacketsStatsPollInterval = Duration(seconds: 10);
+const Duration _kPacketsStatsStaleAfter = Duration(seconds: 30);
+
+/// Riverpod 3.x notifier polling `getPacketsStats()` while
+/// subscribed. Combined with `NotifierProvider.autoDispose`, this
+/// gives strict lazy semantics: the timer ONLY runs when at least
+/// one widget is watching the provider. When the last listener
+/// unsubscribes (e.g. the user collapses the Packet counters
+/// subsection), the Notifier is disposed and the timer is cancelled
+/// before the next tick.
+class MeshCorePacketsStatsNotifier
+    extends Notifier<MeshCorePacketsStatsSnapshot> {
+  Timer? _ticker;
+  bool _inFlight = false;
+
+  @override
+  MeshCorePacketsStatsSnapshot build() {
+    ref.onDispose(() {
+      _ticker?.cancel();
+      _ticker = null;
+    });
+
+    final session = ref.watch(meshCoreSessionProvider);
+    _ticker?.cancel();
+    if (session == null) {
+      return const MeshCorePacketsStatsSnapshot.disconnected();
+    }
+
+    Future.microtask(_pollOnce);
+
+    _ticker = Timer.periodic(_kPacketsStatsPollInterval, (_) => _pollOnce());
+
+    return const MeshCorePacketsStatsSnapshot(
+      latest: null,
+      isStale: false,
+      isConnected: true,
+    );
+  }
+
+  Future<void> _pollOnce() async {
+    if (_inFlight) return;
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null) {
+      state = const MeshCorePacketsStatsSnapshot.disconnected();
+      return;
+    }
+
+    _inFlight = true;
+    try {
+      final stats = await session.getPacketsStats();
+      final stillConnected = ref.read(meshCoreSessionProvider) != null;
+      if (!stillConnected) {
+        state = const MeshCorePacketsStatsSnapshot.disconnected();
+        return;
+      }
+      if (stats == null) {
+        final prev = state.latest;
+        state = MeshCorePacketsStatsSnapshot(
+          latest: prev,
+          isStale: prev != null,
+          isConnected: true,
+        );
+        return;
+      }
+      state = MeshCorePacketsStatsSnapshot(
+        latest: stats,
+        isStale: false,
+        isConnected: true,
+      );
+    } finally {
+      _inFlight = false;
+    }
+  }
+
+  /// Force-refresh from the live session. Used by tests and any UI
+  /// that wants a fresh snapshot without waiting for the 10 s tick.
+  Future<void> refreshNow() => _pollOnce();
+
+  /// Recompute the stale flag against [now]. Mirrors the helpers on
+  /// [MeshCoreRadioStatsNotifier] and [MeshCoreCoreStatsNotifier].
+  bool isStaleAt(DateTime now) {
+    final latest = state.latest;
+    if (latest == null) return false;
+    return now.difference(latest.fetchedAt) > _kPacketsStatsStaleAfter;
+  }
+}
+
+final meshCorePacketsStatsProvider =
+    NotifierProvider.autoDispose<
+      MeshCorePacketsStatsNotifier,
+      MeshCorePacketsStatsSnapshot
+    >(MeshCorePacketsStatsNotifier.new);

@@ -310,6 +310,125 @@ class MeshCoreCoreStats {
       '${errorFlags.toRadixString(16).padLeft(4, '0')})';
 }
 
+/// D35-PACKETS-A: parsed `RESP_CODE_STATS` (0x18) payload for the
+/// PACKETS subtype.
+///
+/// The companion firmware exposes this on `CMD_GET_STATS` (0x38) with
+/// the second byte set to `STATS_TYPE_PACKETS` (2). Wire layout
+/// (30 bytes):
+///
+/// ```
+/// offset  field              type      notes
+/// 0       resp_code          u8 = 0x18 RESP_CODE_STATS
+/// 1       stats_type         u8 = 2    STATS_TYPE_PACKETS
+/// 2-5     packets_received   u32 LE    radio-driver aggregate RX
+/// 6-9     packets_sent       u32 LE    radio-driver aggregate TX
+/// 10-13   sent_flood         u32 LE    flood-routed TX
+/// 14-17   sent_direct        u32 LE    direct-routed TX
+/// 18-21   recv_flood         u32 LE    flood-mode RX
+/// 22-25   recv_direct        u32 LE    direct-routed RX
+/// 26-29   recv_errors        u32 LE    opaque RX-error tally
+/// ```
+///
+/// Resets:
+///   - All counters reset only on power cycle (radio-driver memory).
+///   - The firmware exposes NO host command to clear them.
+///
+/// Privacy:
+///   - The PACKETS response carries no peer identity, no message
+///     content, no path bytes, no PSKs. Only aggregate cumulative
+///     packet counts.
+///   - `recvErrors` is a single opaque tally maintained by the radio
+///     driver. The firmware source defines no error categories; the
+///     UI MUST surface this as one count, never per-bit / per-cause
+///     labels.
+///   - `packetsReceived` and `recvFlood + recvDirect` may not sum
+///     identically: the radio driver's aggregate counter and the
+///     mesh-routing breakdown can diverge slightly (overheard
+///     traffic, malformed headers). A small delta is expected.
+class MeshCorePacketsStats {
+  /// Total RX packets seen by the radio driver. Aggregate across all
+  /// modes.
+  final int packetsReceived;
+
+  /// Total TX packets emitted by the radio driver. Aggregate across
+  /// all modes.
+  final int packetsSent;
+
+  /// Packets we transmitted in flood mode.
+  final int sentFlood;
+
+  /// Packets we transmitted via direct routing (known path).
+  final int sentDirect;
+
+  /// Packets we heard in flood-mode broadcast.
+  final int recvFlood;
+
+  /// Packets we heard via direct routing (destined for or relayed by
+  /// this node).
+  final int recvDirect;
+
+  /// Generic packet-reception failures. The firmware does NOT
+  /// categorise these (no CRC vs header-mismatch vs decode-failure
+  /// breakdown). Surface as one opaque count.
+  final int recvErrors;
+
+  /// Wall-clock time the snapshot was received. Used by the provider
+  /// to flag stale data when transport drops mid-poll.
+  final DateTime fetchedAt;
+
+  const MeshCorePacketsStats({
+    required this.packetsReceived,
+    required this.packetsSent,
+    required this.sentFlood,
+    required this.sentDirect,
+    required this.recvFlood,
+    required this.recvDirect,
+    required this.recvErrors,
+    required this.fetchedAt,
+  });
+
+  /// Parse a PACKETS-subtype stats payload. Returns `null` on:
+  ///   - wrong length (must be exactly 30 bytes),
+  ///   - wrong discriminator (`payload[0] != 0x18`),
+  ///   - wrong subtype (`payload[1] != 2`).
+  ///
+  /// `now` lets tests inject a deterministic `fetchedAt`. Production
+  /// callers omit it; the parser falls back to `DateTime.now()`.
+  static MeshCorePacketsStats? parse(Uint8List payload, {DateTime? now}) {
+    if (payload.length != 30) return null;
+    if (payload[0] != 0x18) return null;
+    if (payload[1] != 2) return null;
+
+    final byteData = ByteData.sublistView(payload);
+    final rx = byteData.getUint32(2, Endian.little);
+    final tx = byteData.getUint32(6, Endian.little);
+    final txFlood = byteData.getUint32(10, Endian.little);
+    final txDirect = byteData.getUint32(14, Endian.little);
+    final rxFlood = byteData.getUint32(18, Endian.little);
+    final rxDirect = byteData.getUint32(22, Endian.little);
+    final rxErr = byteData.getUint32(26, Endian.little);
+
+    return MeshCorePacketsStats(
+      packetsReceived: rx,
+      packetsSent: tx,
+      sentFlood: txFlood,
+      sentDirect: txDirect,
+      recvFlood: rxFlood,
+      recvDirect: rxDirect,
+      recvErrors: rxErr,
+      fetchedAt: now ?? DateTime.now(),
+    );
+  }
+
+  @override
+  String toString() =>
+      'MeshCorePacketsStats(rx=$packetsReceived tx=$packetsSent '
+      'tx_flood=$sentFlood tx_direct=$sentDirect '
+      'rx_flood=$recvFlood rx_direct=$recvDirect '
+      'rx_err=$recvErrors)';
+}
+
 /// D28 Part C: one hop in a parsed `PUSH_CODE_TRACE_DATA` (0x89) response.
 class MeshCoreTraceHop {
   /// Single-byte hop identifier (typically the first byte of the

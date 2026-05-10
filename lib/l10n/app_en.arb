@@ -11032,6 +11032,53 @@
     "@meshcoreRadioStatsErrorFlagsHelper": {
         "description": "D35-B-A - tooltip / inline helper text under the error-flags row, clarifying the value is opaque and only useful in support reports."
     },
+    "meshcoreRadioStatsPacketsSection": "Packet counters",
+    "@meshcoreRadioStatsPacketsSection": {
+        "description": "D35-PACKETS-A - section header for the collapsible packet-counter subsection on the Companion Radio card."
+    },
+    "meshcoreRadioStatsPacketsExpand": "Expand packet counters",
+    "@meshcoreRadioStatsPacketsExpand": {
+        "description": "D35-PACKETS-A - accessibility label for the section header when collapsed."
+    },
+    "meshcoreRadioStatsPacketsCollapse": "Collapse packet counters",
+    "@meshcoreRadioStatsPacketsCollapse": {
+        "description": "D35-PACKETS-A - accessibility label for the section header when expanded."
+    },
+    "meshcoreRadioStatsPacketsReceived": "Packets received",
+    "@meshcoreRadioStatsPacketsReceived": {
+        "description": "D35-PACKETS-A - row label for the radio-driver aggregate RX packet counter."
+    },
+    "meshcoreRadioStatsPacketsSent": "Packets sent",
+    "@meshcoreRadioStatsPacketsSent": {
+        "description": "D35-PACKETS-A - row label for the radio-driver aggregate TX packet counter."
+    },
+    "meshcoreRadioStatsPacketsSentFlood": "Sent flood",
+    "@meshcoreRadioStatsPacketsSentFlood": {
+        "description": "D35-PACKETS-A - row label for flood-routed TX packets."
+    },
+    "meshcoreRadioStatsPacketsSentDirect": "Sent direct",
+    "@meshcoreRadioStatsPacketsSentDirect": {
+        "description": "D35-PACKETS-A - row label for direct-routed TX packets."
+    },
+    "meshcoreRadioStatsPacketsRecvFlood": "Received flood",
+    "@meshcoreRadioStatsPacketsRecvFlood": {
+        "description": "D35-PACKETS-A - row label for flood-mode RX packets."
+    },
+    "meshcoreRadioStatsPacketsRecvDirect": "Received direct",
+    "@meshcoreRadioStatsPacketsRecvDirect": {
+        "description": "D35-PACKETS-A - row label for direct-routed RX packets."
+    },
+    "meshcoreRadioStatsPacketsRecvErrors": "Reception errors",
+    "@meshcoreRadioStatsPacketsRecvErrors": {
+        "description": "D35-PACKETS-A - row label for the opaque packet-reception error tally. Surfaced as a single count; the firmware does not categorise these errors and the UI must NOT invent labels."
+    },
+    "meshcoreRadioStatsPacketsCount": "{value}",
+    "@meshcoreRadioStatsPacketsCount": {
+        "description": "D35-PACKETS-A - formatter for a packet-counter integer value. Caller passes a pre-formatted thousands-grouped string (e.g. '1,247').",
+        "placeholders": {
+            "value": {"type": "String"}
+        }
+    },
     "meshcoreRadioStatsStale": "Stale data, reconnecting…",
     "@meshcoreRadioStatsStale": {
         "description": "D35-A - hint shown when the most recent successful radio-stats fetch is older than the staleness threshold (transport blip in progress)."
