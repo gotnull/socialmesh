@@ -63,6 +63,7 @@ import '../profile/profile_screen.dart';
 import '../debug/device_logs_screen.dart';
 import '../nodedex/map/nodedex_map_screen.dart';
 import '../nodedex/screens/nodedex_screen.dart';
+import '../operations/presentation/operations_screen.dart';
 import '../social/screens/activity_timeline_screen.dart';
 import '../social/screens/social_hub_screen.dart';
 import '../aether/screens/aether_screen.dart';
@@ -927,6 +928,15 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
         iconColor: AccentColors.coral,
         requiresConnection: false,
         whatsNewBadgeKey: 'nodeboard',
+      ),
+    if (AppFeatureFlags.isOperationsEnabled)
+      DrawerMenuItem(
+        icon: Icons.flag_outlined,
+        label: l10n.navigationOperations,
+        screen: const OperationsScreen(),
+        iconColor: AccentColors.emerald,
+        requiresConnection: false,
+        whatsNewBadgeKey: 'operations',
       ),
     DrawerMenuItem(
       icon: Icons.people_alt_outlined,

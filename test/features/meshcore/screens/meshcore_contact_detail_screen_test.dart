@@ -6,13 +6,13 @@
 // Pinned invariants:
 //   - Canonical sections render in order: Identity, Routing, Activity,
 //     (Location only when GPS present), Actions.
-//   - **No force-flood / force-direct / force-N-hop override controls
-//     surface in this slice.** D34c-B will gate those behind a
-//     dedicated safety-reviewed UI.
 //   - GPS row hides when the contact has no real location (lat==null
 //     && lon==null per the post-D34c-A parser semantics).
-//   - The Trace Path and Reset Path action tiles are present and
-//     keyed for stable lookup.
+//   - Trace Path, Path Override, and Reset Path action tiles are
+//     present and keyed for stable lookup.
+//   - Manual N-hop entry UI is NOT present (D34c-B-A intentionally
+//     defers it). The override sheet exposes only Force Flood, Force
+//     Direct, and Reset to Auto; D34c-B-A widget tests pin those.
 
 import 'dart:typed_data';
 
@@ -117,8 +117,11 @@ void main() {
     expect(find.text('-0.12340'), findsOneWidget);
   });
 
-  testWidgets('D34c-A scope guard: NO force-flood / force-direct / force-N-hop '
-      'override controls surface', (tester) async {
+  testWidgets('D34c-B-A scope guard: Force Flood / Force Direct labels '
+      'do NOT surface on the contact detail screen body — they live '
+      'inside the action sheet only. Manual N-hop UI is absent.', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(1080, 4000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -126,18 +129,20 @@ void main() {
     await tester.pumpWidget(_wrap(_contact()));
     await tester.pumpAndSettle();
 
-    // Pin the absence of any string that names an override
-    // semantic. These are the labels D34c-B might introduce; they
-    // MUST NOT exist today.
-    expect(find.textContaining('Force flood'), findsNothing);
-    expect(find.textContaining('Force direct'), findsNothing);
-    expect(find.textContaining('Force '), findsNothing);
-    expect(find.textContaining('Override'), findsNothing);
-    expect(find.textContaining('N hops'), findsNothing);
+    // The detail body must NOT spell out the override action labels
+    // until the user opens the sheet (those labels live inside the
+    // bottom sheet, not the page).
+    expect(find.text('Force flood'), findsNothing);
+    expect(find.text('Force direct'), findsNothing);
+    // Manual N-hop entry UI is intentionally NOT present.
+    expect(find.textContaining('Manual N-hop'), findsNothing);
+    expect(find.textContaining('Manual path'), findsNothing);
+    // No raw byte editor labels.
+    expect(find.textContaining('Path bytes (edit)'), findsNothing);
   });
 
   testWidgets(
-    'action tiles for Trace Path and Reset Path are present and keyed',
+    'action tiles for Trace Path, Path Override, and Reset Path are present and keyed',
     (tester) async {
       tester.view.physicalSize = const Size(1080, 4000);
       tester.view.devicePixelRatio = 1.0;
@@ -148,6 +153,10 @@ void main() {
 
       expect(
         find.byKey(const ValueKey('meshcore-contact-detail-trace-path')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('meshcore-contact-detail-path-override')),
         findsOneWidget,
       );
       expect(

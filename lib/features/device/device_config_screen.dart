@@ -839,6 +839,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                 controller: _longNameController,
                 maxLength: maxLongNameLength,
                 hint: context.l10n.deviceConfigLongNameHint,
+                inputFormatters: [
+                  Utf8ByteLengthLimitingTextInputFormatter(maxLongNameLength),
+                ],
               ),
 
               SizedBox(height: AppTheme.spacing16),
@@ -854,11 +857,8 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                 maxLength: maxShortNameLength,
                 hint: context.l10n.deviceConfigShortNameHint,
                 inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
-                  UpperCaseTextFormatter(),
-                  LengthLimitingTextInputFormatter(maxShortNameLength),
+                  Utf8ByteLengthLimitingTextInputFormatter(maxShortNameLength),
                 ],
-                textCapitalization: TextCapitalization.characters,
               ),
 
               const SizedBox(height: AppTheme.spacing8),
@@ -1742,7 +1742,6 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
     required int maxLength,
     required String hint,
     List<TextInputFormatter>? inputFormatters,
-    TextCapitalization textCapitalization = TextCapitalization.none,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -1791,27 +1790,33 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: controller.text.length >= maxLength
-                        ? AppTheme.warningYellow.withValues(alpha: 0.15)
-                        : context.background,
-                    borderRadius: BorderRadius.circular(AppTheme.radius8),
-                  ),
-                  child: Text(
-                    '${controller.text.length}/$maxLength',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: controller.text.length >= maxLength
-                          ? AppTheme.warningYellow
-                          : context.textTertiary,
-                    ),
-                  ),
+                Builder(
+                  builder: (_) {
+                    final used = utf8ByteLength(controller.text);
+                    final atLimit = used >= maxLength;
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: atLimit
+                            ? AppTheme.warningYellow.withValues(alpha: 0.15)
+                            : context.background,
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      ),
+                      child: Text(
+                        '$used/$maxLength',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: atLimit
+                              ? AppTheme.warningYellow
+                              : context.textTertiary,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -1827,9 +1832,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
             ),
             child: TextField(
               controller: controller,
-              maxLength: maxLength,
               inputFormatters: inputFormatters,
-              textCapitalization: textCapitalization,
               style: TextStyle(
                 fontSize: 15,
                 color: context.textPrimary,

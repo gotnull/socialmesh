@@ -676,12 +676,25 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
     );
     if (!ok) return false;
     await refresh();
+    // D34c-B-A: surface the override flag so the routing card
+    // renders "N hops (forced)" after a saved trace. Empty trace
+    // (direct route) sets pathOverride = 0 and matches the Force
+    // Direct semantics.
+    _applyLocalPathOverride(
+      publicKeyHex: publicKeyHex,
+      pathOverride: hopBytes.length,
+      pathOverrideBytes: Uint8List.fromList(hopBytes),
+    );
     return true;
   }
 
   /// D29 Part C: reset the firmware-side learned route for the
   /// contact whose [publicKeyHex] matches (`CMD_RESET_PATH` 0x0D),
   /// then refresh so the local cache picks up the new path state.
+  ///
+  /// D34c-B-A: also clears any in-memory `pathOverride` /
+  /// `pathOverrideBytes` so the routing card returns to its
+  /// unforced label after the user resets.
   Future<bool> resetPath(String publicKeyHex) async {
     final session = ref.read(meshCoreSessionProvider);
     if (session == null) {
@@ -698,9 +711,137 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
     final ok = await session.resetPath(contact.publicKey);
     if (!ok) return false;
     await refresh();
+    _clearLocalPathOverride(publicKeyHex);
     return true;
   }
+
+  /// D34c-B-A: write a user-chosen path override to the firmware
+  /// contact entry AND mirror the choice into the local
+  /// `pathOverride` / `pathOverrideBytes` fields so the routing card
+  /// surfaces the "(forced)" suffix until reset.
+  ///
+  /// Modes shipping in this slice:
+  ///   - [PathOverrideMode.forceFlood]   → wire `pathLength = -1`
+  ///                                       (encoded as `0xFF`),
+  ///                                       empty path bytes.
+  ///   - [PathOverrideMode.forceDirect]  → wire `pathLength = 0`,
+  ///                                       empty path bytes.
+  ///
+  /// Manual N-hop entry is intentionally NOT exposed here. Saved
+  /// traces flow through [setContactPathFromTrace], which carries
+  /// the trace's hop bytes verbatim.
+  ///
+  /// Atomic: on a non-OK firmware ACK or wire failure the call
+  /// returns `false`, leaves the in-memory contact list untouched,
+  /// and emits `event=contact.set_path_override.failed`. On success,
+  /// `refresh()` reloads from firmware and the local override flag
+  /// is reapplied so the "(forced)" pill survives the round-trip.
+  ///
+  /// Logging surface (privacy-redacted):
+  ///   - `event=contact.set_path_override.attempted mode=<name> pubkey=<8B fingerprint>`
+  ///   - `event=contact.set_path_override.<succeeded|failed> ...`
+  /// Path bytes themselves are NEVER logged.
+  Future<bool> setPathOverride({
+    required String publicKeyHex,
+    required PathOverrideMode mode,
+  }) async {
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null) {
+      AppLogging.meshcore(
+        'event=contact.set_path_override.skipped reason=no_session '
+        'mode=${mode.name}',
+        error: true,
+      );
+      return false;
+    }
+    final contact = state.contacts.firstWhere(
+      (c) => c.publicKeyHex == publicKeyHex,
+      orElse: () => throw ArgumentError('contact not found: $publicKeyHex'),
+    );
+
+    final wirePathLength = switch (mode) {
+      PathOverrideMode.forceFlood => -1,
+      PathOverrideMode.forceDirect => 0,
+    };
+
+    AppLogging.meshcore(
+      'event=contact.set_path_override.attempted '
+      'mode=${mode.name} '
+      'pubkey=${AppLogging.publicKeyFingerprint(contact.publicKey)}',
+    );
+
+    final ok = await session.addUpdateContact(
+      pubKey: contact.publicKey,
+      advType: contact.type,
+      name: contact.name,
+      flags: 0,
+      pathLength: wirePathLength,
+      pathBytes: Uint8List(0),
+      latitude: contact.latitude,
+      longitude: contact.longitude,
+    );
+
+    AppLogging.meshcore(
+      'event=contact.set_path_override.${ok ? "succeeded" : "failed"} '
+      'mode=${mode.name} '
+      'pubkey=${AppLogging.publicKeyFingerprint(contact.publicKey)}',
+      error: !ok,
+    );
+
+    if (!ok) return false;
+    await refresh();
+    _applyLocalPathOverride(
+      publicKeyHex: publicKeyHex,
+      pathOverride: wirePathLength,
+      pathOverrideBytes: Uint8List(0),
+    );
+    return true;
+  }
+
+  /// Mutates the live contacts list to set the `pathOverride` flag on
+  /// the matching contact. Used after [setPathOverride] and
+  /// [setContactPathFromTrace] succeed. Idempotent on miss.
+  void _applyLocalPathOverride({
+    required String publicKeyHex,
+    required int pathOverride,
+    required Uint8List pathOverrideBytes,
+  }) {
+    final hex = publicKeyHex.toLowerCase();
+    var changed = false;
+    final updated = state.contacts.map((c) {
+      if (c.publicKeyHex.toLowerCase() != hex) return c;
+      changed = true;
+      return c.copyWith(
+        pathOverride: pathOverride,
+        pathOverrideBytes: pathOverrideBytes,
+      );
+    }).toList();
+    if (!changed) return;
+    state = state.copyWith(contacts: updated);
+  }
+
+  /// Clears the `pathOverride` / `pathOverrideBytes` flag on the
+  /// matching contact. Called from [resetPath] post-ACK so the
+  /// routing card returns to its unforced label. Idempotent on miss.
+  void _clearLocalPathOverride(String publicKeyHex) {
+    final hex = publicKeyHex.toLowerCase();
+    var changed = false;
+    final updated = state.contacts.map((c) {
+      if (c.publicKeyHex.toLowerCase() != hex) return c;
+      if (c.pathOverride == null && c.pathOverrideBytes == null) return c;
+      changed = true;
+      return c.copyWith(clearPathOverride: true);
+    }).toList();
+    if (!changed) return;
+    state = state.copyWith(contacts: updated);
+  }
 }
+
+/// D34c-B-A: user-chosen path override modes for
+/// [MeshCoreContactsNotifier.setPathOverride]. Manual N-hop entry is
+/// intentionally absent — the only way to write an N-hop path today
+/// is via the trace flow ([setContactPathFromTrace]).
+enum PathOverrideMode { forceFlood, forceDirect }
 
 final meshCoreContactsProvider =
     NotifierProvider<MeshCoreContactsNotifier, MeshCoreContactsState>(

@@ -8143,6 +8143,62 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get meshcorePathOverrideTitle => 'Path override';
+
+  @override
+  String get meshcorePathOverrideSubtitle =>
+      'Force flood, force direct, or reset to auto.';
+
+  @override
+  String get meshcorePathOverrideForceFlood => 'Force flood';
+
+  @override
+  String get meshcorePathOverrideForceFloodSubtitle =>
+      'Higher airtime cost; works even if the peer\'s path changes.';
+
+  @override
+  String get meshcorePathOverrideForceDirect => 'Force direct';
+
+  @override
+  String get meshcorePathOverrideForceDirectSubtitle =>
+      'Only works when the peer is in radio range.';
+
+  @override
+  String get meshcorePathOverrideResetToAuto => 'Reset to auto';
+
+  @override
+  String get meshcorePathOverrideForceDirectConfirmTitle =>
+      'Force direct delivery?';
+
+  @override
+  String meshcorePathOverrideForceDirectConfirmMessage(String contactName) {
+    return 'Messages will only succeed if $contactName is in radio range of this device. Mesh re-routing is disabled until you reset the path.';
+  }
+
+  @override
+  String get meshcorePathOverrideConfirmApply => 'Force direct';
+
+  @override
+  String meshcorePathOverrideForceFloodSuccess(String contactName) {
+    return 'Force flood applied to $contactName';
+  }
+
+  @override
+  String meshcorePathOverrideForceFloodFailed(String contactName) {
+    return 'Couldn\'t apply force flood to $contactName';
+  }
+
+  @override
+  String meshcorePathOverrideForceDirectSuccess(String contactName) {
+    return 'Force direct applied to $contactName';
+  }
+
+  @override
+  String meshcorePathOverrideForceDirectFailed(String contactName) {
+    return 'Couldn\'t apply force direct to $contactName';
+  }
+
+  @override
   String get meshcoreShareChannelSubtitle =>
       'Share name and PSK with another device. Anyone with this code can join.';
 
@@ -39816,9 +39872,5 @@ class AppLocalizationsRu extends AppLocalizations {
   String get operationMapCoverageObjective => 'Reveal map regions';
 
   @override
-  String get settingsTileOperationsTitle => 'Operations';
-
-  @override
-  String get settingsTileOperationsSubtitle =>
-      'Track passive participation objectives.';
+  String get navigationOperations => 'Operations';
 }

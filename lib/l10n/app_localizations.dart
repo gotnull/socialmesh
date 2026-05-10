@@ -7723,13 +7723,13 @@ abstract class AppLocalizations {
   /// Hint text for an input field in developer tools
   ///
   /// In en, this message translates to:
-  /// **'e.g. FUZZ'**
+  /// **'e.g. FUZZ or 🎉'**
   String get deviceConfigShortNameHint;
 
   /// Subtitle in developer tools Parameters: {maxLength}.
   ///
   /// In en, this message translates to:
-  /// **'Max {maxLength} characters (A-Z, 0-9)'**
+  /// **'Max {maxLength} bytes (emoji supported)'**
   String deviceConfigShortNameSubtitle(int maxLength);
 
   /// Title for the developer tools screen
@@ -14454,6 +14454,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t reset path for {contactName}'**
   String meshcoreResetPathFailed(String contactName);
+
+  /// D34c-B-A - title for the contact-detail tile that opens the path override action sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Path override'**
+  String get meshcorePathOverrideTitle;
+
+  /// D34c-B-A - subtitle for the path override tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Force flood, force direct, or reset to auto.'**
+  String get meshcorePathOverrideSubtitle;
+
+  /// D34c-B-A - action label that writes pathLength=-1 to firmware (flood every send).
+  ///
+  /// In en, this message translates to:
+  /// **'Force flood'**
+  String get meshcorePathOverrideForceFlood;
+
+  /// D34c-B-A - non-blocking helper text on the Force Flood action row.
+  ///
+  /// In en, this message translates to:
+  /// **'Higher airtime cost; works even if the peer\'s path changes.'**
+  String get meshcorePathOverrideForceFloodSubtitle;
+
+  /// D34c-B-A - action label that writes pathLength=0 to firmware (direct route, no mesh re-routing).
+  ///
+  /// In en, this message translates to:
+  /// **'Force direct'**
+  String get meshcorePathOverrideForceDirect;
+
+  /// D34c-B-A - non-blocking helper text on the Force Direct action row.
+  ///
+  /// In en, this message translates to:
+  /// **'Only works when the peer is in radio range.'**
+  String get meshcorePathOverrideForceDirectSubtitle;
+
+  /// D34c-B-A - action label that calls CMD_RESET_PATH (0x0D) and clears the local override flag.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to auto'**
+  String get meshcorePathOverrideResetToAuto;
+
+  /// D34c-B-A - confirmation sheet title shown before applying Force Direct.
+  ///
+  /// In en, this message translates to:
+  /// **'Force direct delivery?'**
+  String get meshcorePathOverrideForceDirectConfirmTitle;
+
+  /// D34c-B-A - confirmation body for Force Direct, naming the contact and explaining the failure mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages will only succeed if {contactName} is in radio range of this device. Mesh re-routing is disabled until you reset the path.'**
+  String meshcorePathOverrideForceDirectConfirmMessage(String contactName);
+
+  /// D34c-B-A - confirm button label on the Force Direct confirm sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Force direct'**
+  String get meshcorePathOverrideConfirmApply;
+
+  /// D34c-B-A - success snackbar after Force Flood is written.
+  ///
+  /// In en, this message translates to:
+  /// **'Force flood applied to {contactName}'**
+  String meshcorePathOverrideForceFloodSuccess(String contactName);
+
+  /// D34c-B-A - error snackbar after Force Flood write fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t apply force flood to {contactName}'**
+  String meshcorePathOverrideForceFloodFailed(String contactName);
+
+  /// D34c-B-A - success snackbar after Force Direct is written.
+  ///
+  /// In en, this message translates to:
+  /// **'Force direct applied to {contactName}'**
+  String meshcorePathOverrideForceDirectSuccess(String contactName);
+
+  /// D34c-B-A - error snackbar after Force Direct write fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t apply force direct to {contactName}'**
+  String meshcorePathOverrideForceDirectFailed(String contactName);
 
   /// D29 - explanatory copy for the share-channel action; surfaces the PSK warning.
   ///
@@ -69998,17 +70082,11 @@ abstract class AppLocalizations {
   /// **'Reveal map regions'**
   String get operationMapCoverageObjective;
 
-  /// Title of the settings entry that opens the Operations screen.
+  /// Drawer label for the Operations screen, where passive participation objectives are listed. Slots into the Discover section alongside NodeDex and Mesh Feed.
   ///
   /// In en, this message translates to:
   /// **'Operations'**
-  String get settingsTileOperationsTitle;
-
-  /// Subtitle of the settings entry that opens the Operations screen.
-  ///
-  /// In en, this message translates to:
-  /// **'Track passive participation objectives.'**
-  String get settingsTileOperationsSubtitle;
+  String get navigationOperations;
 }
 
 class _AppLocalizationsDelegate

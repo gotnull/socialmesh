@@ -1,17 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'dart:convert';
+
 import 'package:flutter/services.dart';
 
-/// Meshtastic protocol validation utilities
-/// Based on Meshtastic firmware constraints
+// Meshtastic protocol validation utilities. Long/short name limits are byte
+// counts because the firmware fields are length-prefixed UTF-8, so a 4-byte
+// emoji exactly fills the 4-byte short_name slot.
 
 /// Maximum length for channel name (11 characters, no spaces)
 const int maxChannelNameLength = 11;
 
-/// Maximum length for user long name (39 bytes)
+/// Maximum byte length of `User.long_name` (Meshtastic firmware caps at
+/// 40 bytes including the trailing null).
 const int maxLongNameLength = 39;
 
-/// Maximum length for user short name (4 characters, uppercase)
+/// Maximum byte length of `User.short_name` (Meshtastic firmware caps at
+/// 5 bytes including the trailing null). Emojis are allowed; one BMP-plane
+/// emoji is 3 bytes UTF-8, one supplementary-plane emoji is 4 bytes.
 const int maxShortNameLength = 4;
 
 /// Validates and sanitizes a channel name according to Meshtastic specs
@@ -55,52 +61,50 @@ String? validateChannelName(String name) {
   return null;
 }
 
-/// Validates and sanitizes a user long name
-/// - Max 39 bytes
-/// - Printable characters only
-String sanitizeLongName(String name) {
-  // Remove non-printable characters
-  var sanitized = name.replaceAll(RegExp(r'[^\x20-\x7E]'), '');
+/// UTF-8 byte length of [s].
+int utf8ByteLength(String s) => utf8.encode(s).length;
 
-  // Truncate to max length (byte-aware)
-  while (sanitized.length > maxLongNameLength) {
-    sanitized = sanitized.substring(0, sanitized.length - 1);
+/// Truncate [s] to at most [maxBytes] UTF-8 bytes, walking by Unicode rune so
+/// a multi-byte character is never split. A single emoji is one rune, so
+/// "🎉" (4 bytes) survives a 4-byte limit but "🎉A" does not.
+String truncateUtf8(String s, int maxBytes) {
+  if (utf8ByteLength(s) <= maxBytes) return s;
+  final buf = StringBuffer();
+  var bytes = 0;
+  for (final rune in s.runes) {
+    final ch = String.fromCharCodes([rune]);
+    final w = utf8ByteLength(ch);
+    if (bytes + w > maxBytes) break;
+    buf.write(ch);
+    bytes += w;
   }
-
-  return sanitized.trim();
+  return buf.toString();
 }
+
+/// Sanitize a user long name: trim whitespace and truncate to
+/// [maxLongNameLength] UTF-8 bytes. Emojis and non-Latin scripts pass
+/// through unchanged.
+String sanitizeLongName(String name) =>
+    truncateUtf8(name.trim(), maxLongNameLength);
 
 /// Validates a user long name
 /// Returns null if valid, error message if invalid
 String? validateLongName(String name) {
-  if (name.isEmpty) {
+  if (name.trim().isEmpty) {
     return 'Name is required'; // lint-allow: hardcoded-string
   }
 
-  if (name.length > maxLongNameLength) {
-    return 'Name must be $maxLongNameLength characters or less'; // lint-allow: hardcoded-string
+  if (utf8ByteLength(name) > maxLongNameLength) {
+    return 'Name must be $maxLongNameLength bytes or less'; // lint-allow: hardcoded-string
   }
 
   return null;
 }
 
-/// Validates and sanitizes a user short name
-/// - Max 4 characters
-/// - Uppercase alphanumeric only
-String sanitizeShortName(String name) {
-  // Convert to uppercase
-  var sanitized = name.toUpperCase();
-
-  // Remove non-alphanumeric characters
-  sanitized = sanitized.replaceAll(RegExp(r'[^A-Z0-9]'), '');
-
-  // Truncate to max length
-  if (sanitized.length > maxShortNameLength) {
-    sanitized = sanitized.substring(0, maxShortNameLength);
-  }
-
-  return sanitized;
-}
+/// Sanitize a user short name: truncate to [maxShortNameLength] UTF-8 bytes.
+/// No case conversion or charset filter — emojis and lowercase are allowed
+/// to match the official Meshtastic-Apple companion app.
+String sanitizeShortName(String name) => truncateUtf8(name, maxShortNameLength);
 
 /// Validates a user short name
 /// Returns null if valid, error message if invalid
@@ -109,15 +113,34 @@ String? validateShortName(String name) {
     return 'Short name is required'; // lint-allow: hardcoded-string
   }
 
-  if (name.length > maxShortNameLength) {
-    return 'Short name must be $maxShortNameLength characters or less'; // lint-allow: hardcoded-string
-  }
-
-  if (!RegExp(r'^[A-Z0-9]*$').hasMatch(name.toUpperCase())) {
-    return 'Short name can only contain letters and numbers'; // lint-allow: hardcoded-string
+  if (utf8ByteLength(name) > maxShortNameLength) {
+    return 'Short name must be $maxShortNameLength bytes or less'; // lint-allow: hardcoded-string
   }
 
   return null;
+}
+
+/// Text input formatter that limits input to [maxBytes] UTF-8 bytes.
+/// Use this instead of `LengthLimitingTextInputFormatter` for protocol
+/// fields that are length-bounded in bytes (e.g. Meshtastic short_name
+/// is 4 bytes, which is exactly one supplementary-plane emoji).
+class Utf8ByteLengthLimitingTextInputFormatter extends TextInputFormatter {
+  Utf8ByteLengthLimitingTextInputFormatter(this.maxBytes);
+
+  final int maxBytes;
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (utf8ByteLength(newValue.text) <= maxBytes) return newValue;
+    final truncated = truncateUtf8(newValue.text, maxBytes);
+    return TextEditingValue(
+      text: truncated,
+      selection: TextSelection.collapsed(offset: truncated.length),
+    );
+  }
 }
 
 /// Text input formatter that converts text to uppercase

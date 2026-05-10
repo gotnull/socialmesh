@@ -10311,11 +10311,11 @@
   "@deviceConfigShortName": {
     "description": "Text displayed in developer tools"
   },
-  "deviceConfigShortNameHint": "es. FUZZ",
+  "deviceConfigShortNameHint": "es. FUZZ o 🎉",
   "@deviceConfigShortNameHint": {
     "description": "Hint text for an input field in developer tools"
   },
-  "deviceConfigShortNameSubtitle": "Max {maxLength} caratteri (A-Z, 0-9)",
+  "deviceConfigShortNameSubtitle": "Max {maxLength} byte (emoji supportate)",
   "@deviceConfigShortNameSubtitle": {
     "placeholders": {
       "maxLength": {
@@ -19428,6 +19428,34 @@
     "description": "D29",
     "placeholders": {"contactName": {"type": "String"}}
   },
+  "meshcorePathOverrideTitle": "Override percorso",
+  "@meshcorePathOverrideTitle": {"description": "D34c-B-A"},
+  "meshcorePathOverrideSubtitle": "Forza flood, forza diretto o ripristina automatico.",
+  "@meshcorePathOverrideSubtitle": {"description": "D34c-B-A"},
+  "meshcorePathOverrideForceFlood": "Forza flood",
+  "@meshcorePathOverrideForceFlood": {"description": "D34c-B-A"},
+  "meshcorePathOverrideForceFloodSubtitle": "Costo airtime maggiore; funziona anche se il percorso del peer cambia.",
+  "@meshcorePathOverrideForceFloodSubtitle": {"description": "D34c-B-A"},
+  "meshcorePathOverrideForceDirect": "Forza diretto",
+  "@meshcorePathOverrideForceDirect": {"description": "D34c-B-A"},
+  "meshcorePathOverrideForceDirectSubtitle": "Funziona solo quando il peer è in portata radio.",
+  "@meshcorePathOverrideForceDirectSubtitle": {"description": "D34c-B-A"},
+  "meshcorePathOverrideResetToAuto": "Ripristina automatico",
+  "@meshcorePathOverrideResetToAuto": {"description": "D34c-B-A"},
+  "meshcorePathOverrideForceDirectConfirmTitle": "Forzare la consegna diretta?",
+  "@meshcorePathOverrideForceDirectConfirmTitle": {"description": "D34c-B-A"},
+  "meshcorePathOverrideForceDirectConfirmMessage": "I messaggi avranno successo solo se {contactName} è in portata radio di questo dispositivo. Il rerouting mesh è disabilitato finché non ripristini il percorso.",
+  "@meshcorePathOverrideForceDirectConfirmMessage": {"description": "D34c-B-A", "placeholders": {"contactName": {"type": "String"}}},
+  "meshcorePathOverrideConfirmApply": "Forza diretto",
+  "@meshcorePathOverrideConfirmApply": {"description": "D34c-B-A"},
+  "meshcorePathOverrideForceFloodSuccess": "Forza flood applicato a {contactName}",
+  "@meshcorePathOverrideForceFloodSuccess": {"description": "D34c-B-A", "placeholders": {"contactName": {"type": "String"}}},
+  "meshcorePathOverrideForceFloodFailed": "Impossibile applicare forza flood a {contactName}",
+  "@meshcorePathOverrideForceFloodFailed": {"description": "D34c-B-A", "placeholders": {"contactName": {"type": "String"}}},
+  "meshcorePathOverrideForceDirectSuccess": "Forza diretto applicato a {contactName}",
+  "@meshcorePathOverrideForceDirectSuccess": {"description": "D34c-B-A", "placeholders": {"contactName": {"type": "String"}}},
+  "meshcorePathOverrideForceDirectFailed": "Impossibile applicare forza diretto a {contactName}",
+  "@meshcorePathOverrideForceDirectFailed": {"description": "D34c-B-A", "placeholders": {"contactName": {"type": "String"}}},
   "meshcoreShareChannelSubtitle": "Condividi nome e PSK con un altro dispositivo. Chiunque abbia questo codice può unirsi.",
   "@meshcoreShareChannelSubtitle": {"description": "D29"},
   "meshcoreImportChannel": "Importa canale",
@@ -42082,6 +42110,5 @@
   "operationMapCoverageTitle": "Map Coverage",
   "operationMapCoverageDescription": "Rivela nuove regioni della mappa tramite l'attività osservata.",
   "operationMapCoverageObjective": "Rivela regioni della mappa",
-  "settingsTileOperationsTitle": "Operazioni",
-  "settingsTileOperationsSubtitle": "Segui obiettivi di partecipazione passiva."
+  "navigationOperations": "Operazioni"
 }

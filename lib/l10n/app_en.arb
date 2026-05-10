@@ -5714,11 +5714,11 @@
     "@deviceConfigShortName": {
         "description": "Text displayed in developer tools"
     },
-    "deviceConfigShortNameHint": "e.g. FUZZ",
+    "deviceConfigShortNameHint": "e.g. FUZZ or 🎉",
     "@deviceConfigShortNameHint": {
         "description": "Hint text for an input field in developer tools"
     },
-    "deviceConfigShortNameSubtitle": "Max {maxLength} characters (A-Z, 0-9)",
+    "deviceConfigShortNameSubtitle": "Max {maxLength} bytes (emoji supported)",
     "@deviceConfigShortNameSubtitle": {
         "placeholders": {
             "maxLength": {
@@ -11017,6 +11017,77 @@
     "meshcoreResetPathFailed": "Couldn't reset path for {contactName}",
     "@meshcoreResetPathFailed": {
         "description": "D29 - error snackbar when CMD_RESET_PATH (0x0D) fails.",
+        "placeholders": {
+            "contactName": {"type": "String"}
+        }
+    },
+    "meshcorePathOverrideTitle": "Path override",
+    "@meshcorePathOverrideTitle": {
+        "description": "D34c-B-A - title for the contact-detail tile that opens the path override action sheet."
+    },
+    "meshcorePathOverrideSubtitle": "Force flood, force direct, or reset to auto.",
+    "@meshcorePathOverrideSubtitle": {
+        "description": "D34c-B-A - subtitle for the path override tile."
+    },
+    "meshcorePathOverrideForceFlood": "Force flood",
+    "@meshcorePathOverrideForceFlood": {
+        "description": "D34c-B-A - action label that writes pathLength=-1 to firmware (flood every send)."
+    },
+    "meshcorePathOverrideForceFloodSubtitle": "Higher airtime cost; works even if the peer's path changes.",
+    "@meshcorePathOverrideForceFloodSubtitle": {
+        "description": "D34c-B-A - non-blocking helper text on the Force Flood action row."
+    },
+    "meshcorePathOverrideForceDirect": "Force direct",
+    "@meshcorePathOverrideForceDirect": {
+        "description": "D34c-B-A - action label that writes pathLength=0 to firmware (direct route, no mesh re-routing)."
+    },
+    "meshcorePathOverrideForceDirectSubtitle": "Only works when the peer is in radio range.",
+    "@meshcorePathOverrideForceDirectSubtitle": {
+        "description": "D34c-B-A - non-blocking helper text on the Force Direct action row."
+    },
+    "meshcorePathOverrideResetToAuto": "Reset to auto",
+    "@meshcorePathOverrideResetToAuto": {
+        "description": "D34c-B-A - action label that calls CMD_RESET_PATH (0x0D) and clears the local override flag."
+    },
+    "meshcorePathOverrideForceDirectConfirmTitle": "Force direct delivery?",
+    "@meshcorePathOverrideForceDirectConfirmTitle": {
+        "description": "D34c-B-A - confirmation sheet title shown before applying Force Direct."
+    },
+    "meshcorePathOverrideForceDirectConfirmMessage": "Messages will only succeed if {contactName} is in radio range of this device. Mesh re-routing is disabled until you reset the path.",
+    "@meshcorePathOverrideForceDirectConfirmMessage": {
+        "description": "D34c-B-A - confirmation body for Force Direct, naming the contact and explaining the failure mode.",
+        "placeholders": {
+            "contactName": {"type": "String"}
+        }
+    },
+    "meshcorePathOverrideConfirmApply": "Force direct",
+    "@meshcorePathOverrideConfirmApply": {
+        "description": "D34c-B-A - confirm button label on the Force Direct confirm sheet."
+    },
+    "meshcorePathOverrideForceFloodSuccess": "Force flood applied to {contactName}",
+    "@meshcorePathOverrideForceFloodSuccess": {
+        "description": "D34c-B-A - success snackbar after Force Flood is written.",
+        "placeholders": {
+            "contactName": {"type": "String"}
+        }
+    },
+    "meshcorePathOverrideForceFloodFailed": "Couldn't apply force flood to {contactName}",
+    "@meshcorePathOverrideForceFloodFailed": {
+        "description": "D34c-B-A - error snackbar after Force Flood write fails.",
+        "placeholders": {
+            "contactName": {"type": "String"}
+        }
+    },
+    "meshcorePathOverrideForceDirectSuccess": "Force direct applied to {contactName}",
+    "@meshcorePathOverrideForceDirectSuccess": {
+        "description": "D34c-B-A - success snackbar after Force Direct is written.",
+        "placeholders": {
+            "contactName": {"type": "String"}
+        }
+    },
+    "meshcorePathOverrideForceDirectFailed": "Couldn't apply force direct to {contactName}",
+    "@meshcorePathOverrideForceDirectFailed": {
+        "description": "D34c-B-A - error snackbar after Force Direct write fails.",
         "placeholders": {
             "contactName": {"type": "String"}
         }
@@ -53209,12 +53280,8 @@
     "@operationMapCoverageObjective": {
         "description": "Objective row for map coverage."
     },
-    "settingsTileOperationsTitle": "Operations",
-    "@settingsTileOperationsTitle": {
-        "description": "Title of the settings entry that opens the Operations screen."
-    },
-    "settingsTileOperationsSubtitle": "Track passive participation objectives.",
-    "@settingsTileOperationsSubtitle": {
-        "description": "Subtitle of the settings entry that opens the Operations screen."
+    "navigationOperations": "Operations",
+    "@navigationOperations": {
+        "description": "Drawer label for the Operations screen, where passive participation objectives are listed. Slots into the Discover section alongside NodeDex and Mesh Feed."
     }
 }

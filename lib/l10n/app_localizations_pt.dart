@@ -4376,11 +4376,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get deviceConfigShortName => 'Nome curto';
 
   @override
-  String get deviceConfigShortNameHint => 'ex. FUZZ';
+  String get deviceConfigShortNameHint => 'ex. FUZZ ou 🎉';
 
   @override
   String deviceConfigShortNameSubtitle(int maxLength) {
-    return 'Máx. $maxLength caracteres (A-Z, 0-9)';
+    return 'Máx. $maxLength bytes (emoji suportado)';
   }
 
   @override
@@ -8218,6 +8218,62 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String meshcoreResetPathFailed(String contactName) {
     return 'Não foi possível redefinir o caminho para $contactName';
+  }
+
+  @override
+  String get meshcorePathOverrideTitle => 'Substituição de caminho';
+
+  @override
+  String get meshcorePathOverrideSubtitle =>
+      'Forçar inundação, forçar direto ou redefinir para automático.';
+
+  @override
+  String get meshcorePathOverrideForceFlood => 'Forçar inundação';
+
+  @override
+  String get meshcorePathOverrideForceFloodSubtitle =>
+      'Custo de airtime maior; funciona mesmo se o caminho do par mudar.';
+
+  @override
+  String get meshcorePathOverrideForceDirect => 'Forçar direto';
+
+  @override
+  String get meshcorePathOverrideForceDirectSubtitle =>
+      'Funciona apenas quando o par está ao alcance do rádio.';
+
+  @override
+  String get meshcorePathOverrideResetToAuto => 'Redefinir para automático';
+
+  @override
+  String get meshcorePathOverrideForceDirectConfirmTitle =>
+      'Forçar entrega direta?';
+
+  @override
+  String meshcorePathOverrideForceDirectConfirmMessage(String contactName) {
+    return 'As mensagens só serão entregues se $contactName estiver ao alcance de rádio deste dispositivo. O reroteamento da mesh fica desativado até você redefinir o caminho.';
+  }
+
+  @override
+  String get meshcorePathOverrideConfirmApply => 'Forçar direto';
+
+  @override
+  String meshcorePathOverrideForceFloodSuccess(String contactName) {
+    return 'Forçar inundação aplicado a $contactName';
+  }
+
+  @override
+  String meshcorePathOverrideForceFloodFailed(String contactName) {
+    return 'Não foi possível aplicar forçar inundação a $contactName';
+  }
+
+  @override
+  String meshcorePathOverrideForceDirectSuccess(String contactName) {
+    return 'Forçar direto aplicado a $contactName';
+  }
+
+  @override
+  String meshcorePathOverrideForceDirectFailed(String contactName) {
+    return 'Não foi possível aplicar forçar direto a $contactName';
   }
 
   @override
@@ -40170,9 +40226,5 @@ class AppLocalizationsPt extends AppLocalizations {
   String get operationMapCoverageObjective => 'Revele regiões do mapa';
 
   @override
-  String get settingsTileOperationsTitle => 'Operações';
-
-  @override
-  String get settingsTileOperationsSubtitle =>
-      'Acompanhe objetivos de participação passiva.';
+  String get navigationOperations => 'Operações';
 }

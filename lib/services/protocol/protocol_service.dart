@@ -58,6 +58,7 @@ import '../notifications/notification_service.dart';
 import '../security/stl_envelope.dart';
 import '../security/stl_middleware.dart';
 import '../../utils/text_sanitizer.dart';
+import '../../utils/validation.dart';
 import '../../models/presence_confidence.dart';
 import '../../features/nodes/node_display_name_resolver.dart';
 
@@ -8144,12 +8145,15 @@ class ProtocolService {
     }
 
     try {
-      // Validate and trim lengths
+      // Truncate to the protobuf byte budget. The fields are length-prefixed
+      // UTF-8, so a 4-byte emoji exactly fills short_name. Code-unit
+      // truncation would over-send (a 2-code-unit emoji is 4 bytes) or split
+      // a surrogate pair.
       final trimmedLong = longName != null
-          ? safeTruncateCodeUnits(longName, 36)
+          ? truncateUtf8(longName, maxLongNameLength)
           : null;
       final trimmedShort = shortName != null
-          ? safeTruncateCodeUnits(shortName, 4)
+          ? truncateUtf8(shortName, maxShortNameLength)
           : null;
 
       AppLogging.protocol(

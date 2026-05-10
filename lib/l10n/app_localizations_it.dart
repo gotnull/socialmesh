@@ -4388,11 +4388,11 @@ class AppLocalizationsIt extends AppLocalizations {
   String get deviceConfigShortName => 'Nome breve';
 
   @override
-  String get deviceConfigShortNameHint => 'es. FUZZ';
+  String get deviceConfigShortNameHint => 'es. FUZZ o 🎉';
 
   @override
   String deviceConfigShortNameSubtitle(int maxLength) {
-    return 'Max $maxLength caratteri (A-Z, 0-9)';
+    return 'Max $maxLength byte (emoji supportate)';
   }
 
   @override
@@ -8229,6 +8229,62 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String meshcoreResetPathFailed(String contactName) {
     return 'Impossibile reimpostare il percorso per $contactName';
+  }
+
+  @override
+  String get meshcorePathOverrideTitle => 'Override percorso';
+
+  @override
+  String get meshcorePathOverrideSubtitle =>
+      'Forza flood, forza diretto o ripristina automatico.';
+
+  @override
+  String get meshcorePathOverrideForceFlood => 'Forza flood';
+
+  @override
+  String get meshcorePathOverrideForceFloodSubtitle =>
+      'Costo airtime maggiore; funziona anche se il percorso del peer cambia.';
+
+  @override
+  String get meshcorePathOverrideForceDirect => 'Forza diretto';
+
+  @override
+  String get meshcorePathOverrideForceDirectSubtitle =>
+      'Funziona solo quando il peer è in portata radio.';
+
+  @override
+  String get meshcorePathOverrideResetToAuto => 'Ripristina automatico';
+
+  @override
+  String get meshcorePathOverrideForceDirectConfirmTitle =>
+      'Forzare la consegna diretta?';
+
+  @override
+  String meshcorePathOverrideForceDirectConfirmMessage(String contactName) {
+    return 'I messaggi avranno successo solo se $contactName è in portata radio di questo dispositivo. Il rerouting mesh è disabilitato finché non ripristini il percorso.';
+  }
+
+  @override
+  String get meshcorePathOverrideConfirmApply => 'Forza diretto';
+
+  @override
+  String meshcorePathOverrideForceFloodSuccess(String contactName) {
+    return 'Forza flood applicato a $contactName';
+  }
+
+  @override
+  String meshcorePathOverrideForceFloodFailed(String contactName) {
+    return 'Impossibile applicare forza flood a $contactName';
+  }
+
+  @override
+  String meshcorePathOverrideForceDirectSuccess(String contactName) {
+    return 'Forza diretto applicato a $contactName';
+  }
+
+  @override
+  String meshcorePathOverrideForceDirectFailed(String contactName) {
+    return 'Impossibile applicare forza diretto a $contactName';
   }
 
   @override
@@ -40194,9 +40250,5 @@ class AppLocalizationsIt extends AppLocalizations {
   String get operationMapCoverageObjective => 'Rivela regioni della mappa';
 
   @override
-  String get settingsTileOperationsTitle => 'Operazioni';
-
-  @override
-  String get settingsTileOperationsSubtitle =>
-      'Segui obiettivi di partecipazione passiva.';
+  String get navigationOperations => 'Operazioni';
 }

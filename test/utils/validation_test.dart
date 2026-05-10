@@ -92,6 +92,46 @@ void main() {
     });
   });
 
+  group('utf8ByteLength', () {
+    test('counts ASCII as 1 byte per char', () {
+      expect(utf8ByteLength(''), 0);
+      expect(utf8ByteLength('A'), 1);
+      expect(utf8ByteLength('Hello'), 5);
+    });
+
+    test('counts supplementary-plane emoji as 4 bytes', () {
+      expect(utf8ByteLength('🎉'), 4);
+      expect(utf8ByteLength('A🎉'), 5);
+    });
+
+    test('counts BMP-plane emoji as 3 bytes', () {
+      expect(utf8ByteLength('☎'), 3);
+    });
+  });
+
+  group('truncateUtf8', () {
+    test('returns input unchanged when within budget', () {
+      expect(truncateUtf8('ABCD', 4), 'ABCD');
+      expect(truncateUtf8('🎉', 4), '🎉');
+    });
+
+    test('truncates ASCII at byte boundary', () {
+      expect(truncateUtf8('ABCDE', 4), 'ABCD');
+    });
+
+    test('never splits a multi-byte rune', () {
+      // 🎉 is one rune, 4 bytes. Budget of 3 bytes drops it entirely
+      // rather than splitting into invalid UTF-8.
+      expect(truncateUtf8('🎉', 3), '');
+      // "A🎉" is 5 bytes. Budget of 4 keeps "A" and drops 🎉.
+      expect(truncateUtf8('A🎉', 4), 'A');
+    });
+
+    test('keeps the first emoji when there is room', () {
+      expect(truncateUtf8('🎉🚀', 4), '🎉');
+    });
+  });
+
   group('sanitizeLongName', () {
     test('returns empty for empty input', () {
       expect(sanitizeLongName(''), '');
@@ -102,12 +142,13 @@ void main() {
       expect(sanitizeLongName('Test 123!'), 'Test 123!');
     });
 
-    test('removes non-printable characters', () {
-      expect(sanitizeLongName('Hello\x00World'), 'HelloWorld');
-      expect(sanitizeLongName('Test\x1F'), 'Test');
+    test('preserves emoji and non-Latin scripts', () {
+      expect(sanitizeLongName('Hello 🎉'), 'Hello 🎉');
+      expect(sanitizeLongName('日本語'), '日本語');
+      expect(sanitizeLongName('café'), 'café');
     });
 
-    test('truncates to max length', () {
+    test('truncates by UTF-8 byte length', () {
       expect(sanitizeLongName('a' * 50), 'a' * 39);
     });
 
@@ -124,10 +165,18 @@ void main() {
     test('returns null for valid name', () {
       expect(validateLongName('Valid Name'), isNull);
       expect(validateLongName('Test 123'), isNull);
+      expect(validateLongName('Hello 🎉'), isNull);
     });
 
-    test('returns error for too long name', () {
-      expect(validateLongName('a' * 40), 'Name must be 39 characters or less');
+    test('returns error when over byte budget', () {
+      expect(validateLongName('a' * 40), 'Name must be 39 bytes or less');
+    });
+
+    test('counts emoji as multi-byte', () {
+      // 9 emoji × 4 bytes = 36 bytes — fits.
+      expect(validateLongName('🎉' * 9), isNull);
+      // 10 emoji × 4 bytes = 40 bytes — exceeds 39-byte budget.
+      expect(validateLongName('🎉' * 10), 'Name must be 39 bytes or less');
     });
 
     test('accepts max length name', () {
@@ -140,23 +189,32 @@ void main() {
       expect(sanitizeShortName(''), '');
     });
 
-    test('converts to uppercase', () {
-      expect(sanitizeShortName('abc'), 'ABC');
-      expect(sanitizeShortName('aBcD'), 'ABCD');
+    test('preserves case', () {
+      expect(sanitizeShortName('abc'), 'abc');
+      expect(sanitizeShortName('aBcD'), 'aBcD');
     });
 
-    test('removes non-alphanumeric characters', () {
-      expect(sanitizeShortName('ab!c'), 'ABC');
-      expect(sanitizeShortName('a_b'), 'AB');
-      expect(sanitizeShortName('a b'), 'AB');
+    test('keeps punctuation and spaces', () {
+      expect(sanitizeShortName('a!b'), 'a!b');
+      expect(sanitizeShortName('a_b'), 'a_b');
+      expect(sanitizeShortName('a b'), 'a b');
     });
 
-    test('truncates to max length', () {
-      expect(sanitizeShortName('abcdef'), 'ABCD');
+    test('keeps a single 4-byte emoji', () {
+      expect(sanitizeShortName('🎉'), '🎉');
+    });
+
+    test('truncates at UTF-8 byte budget', () {
+      expect(sanitizeShortName('abcdef'), 'abcd');
+      // Two emoji = 8 bytes; only the first survives 4-byte budget.
+      expect(sanitizeShortName('🎉🚀'), '🎉');
+      // Emoji + ASCII can't both fit in 4 bytes.
+      expect(sanitizeShortName('🎉A'), '🎉');
+      expect(sanitizeShortName('A🎉'), 'A');
     });
 
     test('handles numbers', () {
-      expect(sanitizeShortName('ab12'), 'AB12');
+      expect(sanitizeShortName('ab12'), 'ab12');
       expect(sanitizeShortName('1234'), '1234');
     });
   });
@@ -170,33 +228,70 @@ void main() {
       expect(validateShortName('ABC'), isNull);
       expect(validateShortName('AB12'), isNull);
       expect(validateShortName('1234'), isNull);
+      expect(validateShortName('🎉'), isNull);
     });
 
-    test('returns error for too long name', () {
-      expect(
-        validateShortName('ABCDE'),
-        'Short name must be 4 characters or less',
-      );
+    test('returns error when over byte budget', () {
+      expect(validateShortName('ABCDE'), 'Short name must be 4 bytes or less');
+      // Two 4-byte emojis = 8 bytes.
+      expect(validateShortName('🎉🚀'), 'Short name must be 4 bytes or less');
     });
 
-    test('returns error for special characters', () {
-      expect(
-        validateShortName('AB_C'),
-        'Short name can only contain letters and numbers',
-      );
-      expect(
-        validateShortName('A B'),
-        'Short name can only contain letters and numbers',
-      );
+    test('accepts punctuation, spaces, and lowercase', () {
+      expect(validateShortName('a_b'), isNull);
+      expect(validateShortName('a b'), isNull);
+      expect(validateShortName('abcd'), isNull);
     });
 
     test('accepts max length name', () {
       expect(validateShortName('ABCD'), isNull);
+      expect(validateShortName('🎉'), isNull); // Exactly 4 bytes.
+    });
+  });
+
+  group('Utf8ByteLengthLimitingTextInputFormatter', () {
+    late Utf8ByteLengthLimitingTextInputFormatter formatter;
+
+    setUp(() {
+      formatter = Utf8ByteLengthLimitingTextInputFormatter(4);
     });
 
-    test('validates lowercase as valid (converts internally)', () {
-      // validateShortName converts to uppercase before regex check
-      expect(validateShortName('abcd'), isNull);
+    test('passes input within budget through unchanged', () {
+      const newValue = TextEditingValue(
+        text: 'AB',
+        selection: TextSelection.collapsed(offset: 2),
+      );
+      final result = formatter.formatEditUpdate(
+        const TextEditingValue(),
+        newValue,
+      );
+      expect(result.text, 'AB');
+      expect(result.selection.baseOffset, 2);
+    });
+
+    test('truncates over-budget input at rune boundary', () {
+      const newValue = TextEditingValue(
+        text: 'ABCDE',
+        selection: TextSelection.collapsed(offset: 5),
+      );
+      final result = formatter.formatEditUpdate(
+        const TextEditingValue(),
+        newValue,
+      );
+      expect(result.text, 'ABCD');
+      expect(result.selection.baseOffset, 4);
+    });
+
+    test('keeps the first emoji when a second would overflow', () {
+      const newValue = TextEditingValue(
+        text: '🎉🚀',
+        selection: TextSelection.collapsed(offset: 4),
+      );
+      final result = formatter.formatEditUpdate(
+        const TextEditingValue(),
+        newValue,
+      );
+      expect(result.text, '🎉');
     });
   });
 

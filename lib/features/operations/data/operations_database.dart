@@ -84,7 +84,18 @@ class OperationsDatabase {
   }
 
   Future<void> _onConfigure(Database db) async {
-    await db.execute('PRAGMA journal_mode=WAL');
+    // iOS's SqfliteDarwinDatabase rejects `PRAGMA journal_mode=WAL` via
+    // execute (it returns a row, so the iOS plugin treats `execute` as
+    // an error). NodeDex + Tasks both use `rawQuery` here for the same
+    // reason. In-memory databases (tests via testDbPath) don't support
+    // WAL, so the assert is gated to on-disk paths only.
+    final walResult = await db.rawQuery('PRAGMA journal_mode=WAL');
+    if (testDbPath == null) {
+      assert(
+        walResult.isNotEmpty && walResult.first['journal_mode'] == 'wal',
+        'Operations DB WAL mode not active',
+      ); // lint-allow: hardcoded-string
+    }
     await db.execute('PRAGMA foreign_keys=ON');
   }
 

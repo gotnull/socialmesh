@@ -4,22 +4,27 @@
 // D34c-A — MeshCore contact detail screen.
 //
 // Read-only view of a single MeshCore contact's identity + routing +
-// activity + location metadata, with two safe actions (Trace Path,
-// Reset Path) that already shipped in D28/D29.
+// activity + location metadata, with safe actions (Trace Path, Path
+// Override, Reset Path) gated by canonical primitives.
+//
+// D34c-B-A added the Path Override tile: tapping it opens an
+// `AppBottomSheet.showActions` with Force Flood / Force Direct /
+// Reset to Auto. Force Direct fires a confirmation sheet with the
+// "out of range = silent failure" warning before applying.
 //
 // Hard rules:
-//   - No force-flood / force-direct / force-N-hop override controls.
-//     Those wait for a dedicated D34c-B safety-gated slice. The
-//     `pathBytes` row shows the saved hops so the user can verify
-//     them, but there is no UI to mutate them in this slice — only
-//     "Save as Contact Path" via the Trace flow can write a new path
-//     today, and that lives in the Trace result sheet (D28).
+//   - No manual N-hop entry. The only way to write an N-hop path is
+//     via the trace flow ("Save as Contact Path" in the trace
+//     result sheet, D28).
+//   - The routing card stays read-only `InfoTable` — override
+//     actions live exclusively in the bottom sheet.
 //   - No log lines emit the full pubkey or the full path bytes.
 //     Pubkey is shown via the existing `<8B…8T>` redacted
 //     fingerprint; path bytes are surfaced in the UI only.
 //   - Uses canonical primitives only — `GlassScaffold`,
-//     `SectionTitle`, `InfoTable` / `InfoTableRow`. No hand-rolled
-//     `Row(Icon + Spacer + Text)` rows.
+//     `SectionTitle`, `InfoTable` / `InfoTableRow`,
+//     `AppBottomSheet.showActions`, `AppBottomSheet.showConfirm`. No
+//     hand-rolled `Row(Icon + Spacer + Text)` rows.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -27,6 +32,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/info_table.dart';
 import '../../../core/widgets/section_header.dart';
@@ -218,6 +224,14 @@ class MeshCoreContactDetailScreen extends ConsumerWidget {
           onTap: () => showMeshCoreTracePathSheet(context),
         ),
         SettingsTile(
+          key: const ValueKey('meshcore-contact-detail-path-override'),
+          icon: Icons.alt_route_rounded,
+          iconColor: context.accentColor,
+          title: l10n.meshcorePathOverrideTitle,
+          subtitle: l10n.meshcorePathOverrideSubtitle,
+          onTap: () => _openPathOverrideSheet(context, ref, c),
+        ),
+        SettingsTile(
           key: const ValueKey('meshcore-contact-detail-reset-path'),
           icon: Icons.refresh_rounded,
           iconColor: context.accentColor,
@@ -265,6 +279,96 @@ class MeshCoreContactDetailScreen extends ConsumerWidget {
               : context.l10n.meshcoreContactUnknownName,
         ),
       );
+    }
+  }
+
+  /// D34c-B-A: presents Force Flood / Force Direct / Reset to Auto
+  /// as discrete actions. Force Direct routes through a confirm
+  /// sheet (`_confirmForceDirect`) so the user must opt in twice
+  /// before delivery is constrained to the direct route.
+  Future<void> _openPathOverrideSheet(
+    BuildContext context,
+    WidgetRef ref,
+    MeshCoreContact c,
+  ) async {
+    final l10n = context.l10n;
+    final accent = context.accentColor;
+    await AppBottomSheet.showActions<void>(
+      context: context,
+      actions: [
+        BottomSheetAction<void>(
+          icon: Icons.broadcast_on_personal_rounded,
+          iconColor: accent,
+          label: l10n.meshcorePathOverrideForceFlood,
+          subtitle: l10n.meshcorePathOverrideForceFloodSubtitle,
+          onTap: () =>
+              _applyOverride(context, ref, c, PathOverrideMode.forceFlood),
+        ),
+        BottomSheetAction<void>(
+          icon: Icons.near_me_rounded,
+          iconColor: accent,
+          label: l10n.meshcorePathOverrideForceDirect,
+          subtitle: l10n.meshcorePathOverrideForceDirectSubtitle,
+          onTap: () => _confirmForceDirect(context, ref, c),
+        ),
+        BottomSheetAction<void>(
+          icon: Icons.refresh_rounded,
+          iconColor: accent,
+          label: l10n.meshcorePathOverrideResetToAuto,
+          onTap: () => _resetPath(context, ref, c),
+        ),
+      ],
+    );
+  }
+
+  /// D34c-B-A: two-step gate for Force Direct. Direct delivery is
+  /// safe only when the peer is in radio range; this confirm sheet
+  /// makes the failure mode explicit so the user opts in
+  /// deliberately.
+  Future<void> _confirmForceDirect(
+    BuildContext context,
+    WidgetRef ref,
+    MeshCoreContact c,
+  ) async {
+    final l10n = context.l10n;
+    final name = c.displayName.isNotEmpty
+        ? c.displayName
+        : l10n.meshcoreContactUnknownName;
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: l10n.meshcorePathOverrideForceDirectConfirmTitle,
+      message: l10n.meshcorePathOverrideForceDirectConfirmMessage(name),
+      confirmLabel: l10n.meshcorePathOverrideConfirmApply,
+    );
+    if (confirmed != true) return;
+    if (!context.mounted) return;
+    await _applyOverride(context, ref, c, PathOverrideMode.forceDirect);
+  }
+
+  Future<void> _applyOverride(
+    BuildContext context,
+    WidgetRef ref,
+    MeshCoreContact c,
+    PathOverrideMode mode,
+  ) async {
+    final l10n = context.l10n;
+    final ok = await ref
+        .read(meshCoreContactsProvider.notifier)
+        .setPathOverride(publicKeyHex: c.publicKeyHex, mode: mode);
+    if (!context.mounted) return;
+    final name = c.displayName.isNotEmpty
+        ? c.displayName
+        : l10n.meshcoreContactUnknownName;
+    final successMsg = mode == PathOverrideMode.forceFlood
+        ? l10n.meshcorePathOverrideForceFloodSuccess(name)
+        : l10n.meshcorePathOverrideForceDirectSuccess(name);
+    final failedMsg = mode == PathOverrideMode.forceFlood
+        ? l10n.meshcorePathOverrideForceFloodFailed(name)
+        : l10n.meshcorePathOverrideForceDirectFailed(name);
+    if (ok) {
+      showSuccessSnackBar(context, successMsg);
+    } else {
+      showErrorSnackBar(context, failedMsg);
     }
   }
 
