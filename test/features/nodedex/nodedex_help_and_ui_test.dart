@@ -59,9 +59,9 @@ void main() {
       expect(stepIds, contains('nodedex_device'));
     });
 
-    test('topic has exactly 18 steps', () {
+    test('topic has exactly 19 steps', () {
       final topic = HelpContent.getTopic('nodedex_detail')!;
-      expect(topic.steps.length, equals(18));
+      expect(topic.steps.length, equals(19));
     });
 
     test('first step cannot go back', () {
@@ -148,8 +148,8 @@ void main() {
       }
     });
 
-    test('has exactly 25 entries (19 node-detail + 6 album)', () {
-      expect(HelpContent.nodeDexSectionHelp.length, equals(25));
+    test('has exactly 26 entries (20 node-detail + 6 album)', () {
+      expect(HelpContent.nodeDexSectionHelp.length, equals(26));
     });
 
     test('all values are non-empty strings', () {
