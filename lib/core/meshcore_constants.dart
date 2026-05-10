@@ -222,6 +222,13 @@ class MeshCoreCommands {
 
   /// Send binary request.
   static const int sendBinaryReq = 0x32;
+
+  /// D35-A: get firmware-side stats. Second byte selects the
+  /// subtype — only `MeshCoreStatsType.radio` (1) is consumed in
+  /// this slice; CORE/PACKETS subtypes are intentionally deferred.
+  /// Available on companion firmware v8 and newer; SocialMesh's
+  /// pinned firmware (v1.15.0 / ver_code 11) is well past that gate.
+  static const int getStats = 0x38;
 }
 
 /// MeshCore response codes (device -> app, 0x00-0x7F).
@@ -278,6 +285,33 @@ class MeshCoreResponses {
 
   /// Custom variables.
   static const int customVars = 0x15;
+
+  /// D35-A: response to `MeshCoreCommands.getStats`. Second byte
+  /// echoes the requested subtype. Only the RADIO subtype payload
+  /// is parsed today.
+  static const int stats = 0x18;
+}
+
+/// D35-A: stats subtypes carried as the second byte of both the
+/// `getStats` request and the `stats` response.
+///
+/// Only [radio] is consumed by SocialMesh today. The CORE / PACKETS
+/// subtypes are intentionally deferred — adding them later is a
+/// separate slice with its own UX review.
+class MeshCoreStatsType {
+  MeshCoreStatsType._();
+
+  /// Battery mV + uptime seconds + error flags + queue depth.
+  /// Reserved-only; not parsed in D35-A.
+  static const int core = 0;
+
+  /// Noise floor + last RSSI + last SNR (raw quarter-dB) + cumulative
+  /// TX/RX airtime seconds. Parsed by `MeshCoreRadioStats`.
+  static const int radio = 1;
+
+  /// RX/TX packet counters + flooded/direct breakdowns + reception
+  /// errors. Reserved-only; not parsed in D35-A.
+  static const int packets = 2;
 }
 
 /// MeshCore push codes (async device -> app, 0x80+).

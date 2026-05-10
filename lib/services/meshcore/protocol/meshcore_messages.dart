@@ -125,6 +125,97 @@ class MeshCoreBattAndStorage {
       'storage=$storageUsed/$storageTotal)';
 }
 
+/// D35-A: parsed `RESP_CODE_STATS` (0x18) payload for the RADIO subtype.
+///
+/// The companion firmware exposes this on `CMD_GET_STATS` (0x38) with the
+/// second byte set to `STATS_TYPE_RADIO` (1). Wire layout (14 bytes):
+///
+/// ```
+/// offset  field            type      notes
+/// 0       resp_code        u8 = 0x18 RESP_CODE_STATS
+/// 1       stats_type       u8 = 1    STATS_TYPE_RADIO
+/// 2-3     noise_floor      i16 LE    dBm
+/// 4       last_rssi        i8        dBm
+/// 5       last_snr_raw     i8        quarter-dB (raw / 4 = dB)
+/// 6-9     tx_air_secs      u32 LE    cumulative TX airtime, seconds
+/// 10-13   rx_air_secs      u32 LE    cumulative RX airtime, seconds
+/// ```
+///
+/// TX/RX airtime totals are cumulative since last firmware power
+/// cycle; the firmware does NOT expose a reset command. Noise floor /
+/// RSSI / SNR are momentary readouts at fetch time.
+class MeshCoreRadioStats {
+  /// Noise floor in dBm. Negative values typical (-110 .. -90).
+  final int noiseFloorDbm;
+
+  /// Last observed RSSI in dBm. Negative values typical.
+  final int lastRssiDbm;
+
+  /// Last observed SNR encoded as the firmware's raw int8 quarter-dB
+  /// value. Use [snrDb] for the human-readable conversion.
+  final int lastSnrQuarter;
+
+  /// Cumulative TX airtime since the radio booted. Resets only on
+  /// power cycle.
+  final Duration txAirtime;
+
+  /// Cumulative RX airtime since the radio booted. Resets only on
+  /// power cycle.
+  final Duration rxAirtime;
+
+  /// Wall-clock time the snapshot was received. Used by the provider
+  /// to flag stale data when transport drops mid-poll.
+  final DateTime fetchedAt;
+
+  const MeshCoreRadioStats({
+    required this.noiseFloorDbm,
+    required this.lastRssiDbm,
+    required this.lastSnrQuarter,
+    required this.txAirtime,
+    required this.rxAirtime,
+    required this.fetchedAt,
+  });
+
+  /// Last SNR in dB (raw quarter-dB / 4.0). Negative values are
+  /// typical; values may be small fractional numbers.
+  double get snrDb => lastSnrQuarter / 4.0;
+
+  /// Parse a RADIO-subtype stats payload. Returns `null` on:
+  ///   - wrong length (must be exactly 14 bytes),
+  ///   - wrong discriminator (`payload[0] != 0x18`),
+  ///   - wrong subtype (`payload[1] != 1`).
+  ///
+  /// `now` lets tests inject a deterministic `fetchedAt`. Production
+  /// callers omit it; the parser falls back to `DateTime.now()`.
+  static MeshCoreRadioStats? parse(Uint8List payload, {DateTime? now}) {
+    if (payload.length != 14) return null;
+    if (payload[0] != 0x18) return null;
+    if (payload[1] != 1) return null;
+
+    final byteData = ByteData.sublistView(payload);
+    final noise = byteData.getInt16(2, Endian.little);
+    final rssi = byteData.getInt8(4);
+    final snrRaw = byteData.getInt8(5);
+    final txSecs = byteData.getUint32(6, Endian.little);
+    final rxSecs = byteData.getUint32(10, Endian.little);
+
+    return MeshCoreRadioStats(
+      noiseFloorDbm: noise,
+      lastRssiDbm: rssi,
+      lastSnrQuarter: snrRaw,
+      txAirtime: Duration(seconds: txSecs),
+      rxAirtime: Duration(seconds: rxSecs),
+      fetchedAt: now ?? DateTime.now(),
+    );
+  }
+
+  @override
+  String toString() =>
+      'MeshCoreRadioStats(noise=${noiseFloorDbm}dBm, '
+      'rssi=${lastRssiDbm}dBm, snr_q=$lastSnrQuarter, '
+      'tx=${txAirtime.inSeconds}s, rx=${rxAirtime.inSeconds}s)';
+}
+
 /// D28 Part C: one hop in a parsed `PUSH_CODE_TRACE_DATA` (0x89) response.
 class MeshCoreTraceHop {
   /// Single-byte hop identifier (typically the first byte of the

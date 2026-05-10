@@ -874,6 +874,69 @@ class MeshCoreSession {
     return result.value;
   }
 
+  /// D35-A: fetch the firmware-side RADIO stats subtype.
+  ///
+  /// Wire: outbound `[CMD_GET_STATS=0x38][STATS_TYPE_RADIO=1]` (2 B);
+  /// inbound `[RESP_CODE_STATS=0x18][STATS_TYPE_RADIO=1] + 12 B
+  /// payload`. The parser (`MeshCoreRadioStats.parse`) rejects wrong
+  /// length / wrong discriminator / wrong subtype.
+  ///
+  /// Returns `null` on timeout, transport drop, or any payload that
+  /// fails the discriminator/length checks. UI callers must treat
+  /// null as "no fresh data" and either keep the previous snapshot
+  /// or fall back to the disconnected placeholder. UI callers MUST
+  /// NOT surface this as an error to the user (firmware blips and
+  /// transport reconnects are normal).
+  ///
+  /// **Bypasses `MeshCoreSendRateLimiter`**: this is a host-side
+  /// management request, not a chat-bound text send, so it does not
+  /// compete for the 1024 B / 60 s D34a budget. Pinned by a session
+  /// regression test that asserts `ChatTrafficSnapshot.currentWindow`
+  /// counters do NOT bump across `getRadioStats()` polls.
+  Future<MeshCoreRadioStats?> getRadioStats({
+    Duration timeout = const Duration(seconds: 3),
+  }) async {
+    final response = await sendAndWait(
+      MeshCoreCommands.getStats,
+      payload: Uint8List.fromList([MeshCoreStatsType.radio]),
+      expectedResponse: MeshCoreResponses.stats,
+      timeout: timeout,
+    );
+
+    if (response == null) {
+      AppLogging.meshcore('event=radio_stats.timeout');
+      return null;
+    }
+
+    // The response payload is the body AFTER the command byte. To
+    // parse via `MeshCoreRadioStats.parse` we need to reconstruct the
+    // full 14-byte frame (resp_code + subtype + 12 B body). The
+    // `response.command` carries 0x18 and `response.payload` carries
+    // the body starting with the subtype byte.
+    final body = response.payload;
+    if (body.length != 13) {
+      // Wrong subtype (CORE / PACKETS) or truncated frame. Drop
+      // silently; caller treats as transient.
+      return null;
+    }
+    final reframed = Uint8List(14);
+    reframed[0] = MeshCoreResponses.stats;
+    reframed.setRange(1, 14, body);
+
+    final stats = MeshCoreRadioStats.parse(reframed);
+    if (stats == null) return null;
+
+    AppLogging.meshcore(
+      'event=radio_stats.fetched '
+      'noise=${stats.noiseFloorDbm} '
+      'rssi=${stats.lastRssiDbm} '
+      'snr_q=${stats.lastSnrQuarter} '
+      'tx_s=${stats.txAirtime.inSeconds} '
+      'rx_s=${stats.rxAirtime.inSeconds}',
+    );
+    return stats;
+  }
+
   /// Check device connectivity using battery request.
   ///
   /// MeshCore has no explicit ping/pong, so we use battery request

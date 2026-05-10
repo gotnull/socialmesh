@@ -14413,6 +14413,96 @@ abstract class AppLocalizations {
   /// **'{bytes} B'**
   String meshcoreChatTrafficBytes(int bytes);
 
+  /// D35-A - title for the MeshCore Tools card showing firmware-backed radio link health (noise floor, RSSI, SNR, airtime totals).
+  ///
+  /// In en, this message translates to:
+  /// **'Companion radio'**
+  String get meshcoreRadioStatsTitle;
+
+  /// D35-A - row label for the noise floor reading from STATS_TYPE_RADIO.
+  ///
+  /// In en, this message translates to:
+  /// **'Noise floor'**
+  String get meshcoreRadioStatsNoiseFloor;
+
+  /// D35-A - row label for the most recent RSSI value reported by the companion radio.
+  ///
+  /// In en, this message translates to:
+  /// **'Last RSSI'**
+  String get meshcoreRadioStatsLastRssi;
+
+  /// D35-A - row label for the most recent SNR value reported by the companion radio (in dB).
+  ///
+  /// In en, this message translates to:
+  /// **'Last SNR'**
+  String get meshcoreRadioStatsLastSnr;
+
+  /// D35-A - row label for cumulative TX airtime since the radio booted.
+  ///
+  /// In en, this message translates to:
+  /// **'TX airtime'**
+  String get meshcoreRadioStatsTxAirtime;
+
+  /// D35-A - row label for cumulative RX airtime since the radio booted.
+  ///
+  /// In en, this message translates to:
+  /// **'RX airtime'**
+  String get meshcoreRadioStatsRxAirtime;
+
+  /// D35-A - inline note clarifying that the firmware does not expose a reset action for TX/RX airtime.
+  ///
+  /// In en, this message translates to:
+  /// **'Airtime totals reset only on a radio power cycle.'**
+  String get meshcoreRadioStatsAirtimeResetNote;
+
+  /// D35-A - hint shown when the most recent successful radio-stats fetch is older than the staleness threshold (transport blip in progress).
+  ///
+  /// In en, this message translates to:
+  /// **'Stale data, reconnecting…'**
+  String get meshcoreRadioStatsStale;
+
+  /// D35-A - placeholder shown when a session is connected but no successful radio-stats fetch has landed yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for first reading…'**
+  String get meshcoreRadioStatsFetching;
+
+  /// D35-A - placeholder shown when no MeshCore device is connected.
+  ///
+  /// In en, this message translates to:
+  /// **'No active MeshCore session'**
+  String get meshcoreRadioStatsNoSession;
+
+  /// D35-A - dBm value formatter for noise floor and RSSI rows.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} dBm'**
+  String meshcoreRadioStatsDbm(int value);
+
+  /// D35-A - dB value formatter for SNR row (one decimal place; pass the formatted string).
+  ///
+  /// In en, this message translates to:
+  /// **'{value} dB'**
+  String meshcoreRadioStatsDb(String value);
+
+  /// D35-A - duration formatter used for hours+minutes airtime totals.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h {minutes} m'**
+  String meshcoreRadioStatsDurationHm(int hours, int minutes);
+
+  /// D35-A - duration formatter used for minutes+seconds airtime totals (under one hour).
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} m {seconds} s'**
+  String meshcoreRadioStatsDurationMs(int minutes, int seconds);
+
+  /// D35-A - duration formatter used for seconds-only airtime totals (under one minute).
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds} s'**
+  String meshcoreRadioStatsDurationSeconds(int seconds);
+
   /// D34c-A - small helper paragraph above the Save as Contact Path button on the trace result sheet, warning that saved paths can become stale.
   ///
   /// In en, this message translates to:

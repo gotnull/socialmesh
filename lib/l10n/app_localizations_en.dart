@@ -8115,6 +8115,62 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get meshcoreRadioStatsTitle => 'Companion radio';
+
+  @override
+  String get meshcoreRadioStatsNoiseFloor => 'Noise floor';
+
+  @override
+  String get meshcoreRadioStatsLastRssi => 'Last RSSI';
+
+  @override
+  String get meshcoreRadioStatsLastSnr => 'Last SNR';
+
+  @override
+  String get meshcoreRadioStatsTxAirtime => 'TX airtime';
+
+  @override
+  String get meshcoreRadioStatsRxAirtime => 'RX airtime';
+
+  @override
+  String get meshcoreRadioStatsAirtimeResetNote =>
+      'Airtime totals reset only on a radio power cycle.';
+
+  @override
+  String get meshcoreRadioStatsStale => 'Stale data, reconnecting…';
+
+  @override
+  String get meshcoreRadioStatsFetching => 'Waiting for first reading…';
+
+  @override
+  String get meshcoreRadioStatsNoSession => 'No active MeshCore session';
+
+  @override
+  String meshcoreRadioStatsDbm(int value) {
+    return '$value dBm';
+  }
+
+  @override
+  String meshcoreRadioStatsDb(String value) {
+    return '$value dB';
+  }
+
+  @override
+  String meshcoreRadioStatsDurationHm(int hours, int minutes) {
+    return '$hours h $minutes m';
+  }
+
+  @override
+  String meshcoreRadioStatsDurationMs(int minutes, int seconds) {
+    return '$minutes m $seconds s';
+  }
+
+  @override
+  String meshcoreRadioStatsDurationSeconds(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
   String get meshcoreTracePathSavePathHelper =>
       'Saved paths can become stale as the mesh re-routes. Reset the path to return to auto.';
 

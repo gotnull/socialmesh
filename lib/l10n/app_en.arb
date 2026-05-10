@@ -10981,6 +10981,83 @@
             "bytes": {"type": "int"}
         }
     },
+    "meshcoreRadioStatsTitle": "Companion radio",
+    "@meshcoreRadioStatsTitle": {
+        "description": "D35-A - title for the MeshCore Tools card showing firmware-backed radio link health (noise floor, RSSI, SNR, airtime totals)."
+    },
+    "meshcoreRadioStatsNoiseFloor": "Noise floor",
+    "@meshcoreRadioStatsNoiseFloor": {
+        "description": "D35-A - row label for the noise floor reading from STATS_TYPE_RADIO."
+    },
+    "meshcoreRadioStatsLastRssi": "Last RSSI",
+    "@meshcoreRadioStatsLastRssi": {
+        "description": "D35-A - row label for the most recent RSSI value reported by the companion radio."
+    },
+    "meshcoreRadioStatsLastSnr": "Last SNR",
+    "@meshcoreRadioStatsLastSnr": {
+        "description": "D35-A - row label for the most recent SNR value reported by the companion radio (in dB)."
+    },
+    "meshcoreRadioStatsTxAirtime": "TX airtime",
+    "@meshcoreRadioStatsTxAirtime": {
+        "description": "D35-A - row label for cumulative TX airtime since the radio booted."
+    },
+    "meshcoreRadioStatsRxAirtime": "RX airtime",
+    "@meshcoreRadioStatsRxAirtime": {
+        "description": "D35-A - row label for cumulative RX airtime since the radio booted."
+    },
+    "meshcoreRadioStatsAirtimeResetNote": "Airtime totals reset only on a radio power cycle.",
+    "@meshcoreRadioStatsAirtimeResetNote": {
+        "description": "D35-A - inline note clarifying that the firmware does not expose a reset action for TX/RX airtime."
+    },
+    "meshcoreRadioStatsStale": "Stale data, reconnecting…",
+    "@meshcoreRadioStatsStale": {
+        "description": "D35-A - hint shown when the most recent successful radio-stats fetch is older than the staleness threshold (transport blip in progress)."
+    },
+    "meshcoreRadioStatsFetching": "Waiting for first reading…",
+    "@meshcoreRadioStatsFetching": {
+        "description": "D35-A - placeholder shown when a session is connected but no successful radio-stats fetch has landed yet."
+    },
+    "meshcoreRadioStatsNoSession": "No active MeshCore session",
+    "@meshcoreRadioStatsNoSession": {
+        "description": "D35-A - placeholder shown when no MeshCore device is connected."
+    },
+    "meshcoreRadioStatsDbm": "{value} dBm",
+    "@meshcoreRadioStatsDbm": {
+        "description": "D35-A - dBm value formatter for noise floor and RSSI rows.",
+        "placeholders": {
+            "value": {"type": "int"}
+        }
+    },
+    "meshcoreRadioStatsDb": "{value} dB",
+    "@meshcoreRadioStatsDb": {
+        "description": "D35-A - dB value formatter for SNR row (one decimal place; pass the formatted string).",
+        "placeholders": {
+            "value": {"type": "String"}
+        }
+    },
+    "meshcoreRadioStatsDurationHm": "{hours} h {minutes} m",
+    "@meshcoreRadioStatsDurationHm": {
+        "description": "D35-A - duration formatter used for hours+minutes airtime totals.",
+        "placeholders": {
+            "hours": {"type": "int"},
+            "minutes": {"type": "int"}
+        }
+    },
+    "meshcoreRadioStatsDurationMs": "{minutes} m {seconds} s",
+    "@meshcoreRadioStatsDurationMs": {
+        "description": "D35-A - duration formatter used for minutes+seconds airtime totals (under one hour).",
+        "placeholders": {
+            "minutes": {"type": "int"},
+            "seconds": {"type": "int"}
+        }
+    },
+    "meshcoreRadioStatsDurationSeconds": "{seconds} s",
+    "@meshcoreRadioStatsDurationSeconds": {
+        "description": "D35-A - duration formatter used for seconds-only airtime totals (under one minute).",
+        "placeholders": {
+            "seconds": {"type": "int"}
+        }
+    },
     "meshcoreTracePathSavePathHelper": "Saved paths can become stale as the mesh re-routes. Reset the path to return to auto.",
     "@meshcoreTracePathSavePathHelper": {
         "description": "D34c-A - small helper paragraph above the Save as Contact Path button on the trace result sheet, warning that saved paths can become stale."

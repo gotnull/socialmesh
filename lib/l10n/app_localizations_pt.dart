@@ -8189,6 +8189,62 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get meshcoreRadioStatsTitle => 'Rádio companion';
+
+  @override
+  String get meshcoreRadioStatsNoiseFloor => 'Piso de ruído';
+
+  @override
+  String get meshcoreRadioStatsLastRssi => 'Último RSSI';
+
+  @override
+  String get meshcoreRadioStatsLastSnr => 'Último SNR';
+
+  @override
+  String get meshcoreRadioStatsTxAirtime => 'Airtime TX';
+
+  @override
+  String get meshcoreRadioStatsRxAirtime => 'Airtime RX';
+
+  @override
+  String get meshcoreRadioStatsAirtimeResetNote =>
+      'Os totais de airtime só são zerados quando o rádio é desligado e ligado novamente.';
+
+  @override
+  String get meshcoreRadioStatsStale => 'Dados desatualizados, reconectando…';
+
+  @override
+  String get meshcoreRadioStatsFetching => 'Aguardando a primeira leitura…';
+
+  @override
+  String get meshcoreRadioStatsNoSession => 'Nenhuma sessão MeshCore ativa';
+
+  @override
+  String meshcoreRadioStatsDbm(int value) {
+    return '$value dBm';
+  }
+
+  @override
+  String meshcoreRadioStatsDb(String value) {
+    return '$value dB';
+  }
+
+  @override
+  String meshcoreRadioStatsDurationHm(int hours, int minutes) {
+    return '$hours h $minutes min';
+  }
+
+  @override
+  String meshcoreRadioStatsDurationMs(int minutes, int seconds) {
+    return '$minutes min $seconds s';
+  }
+
+  @override
+  String meshcoreRadioStatsDurationSeconds(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
   String get meshcoreTracePathSavePathHelper =>
       'Os caminhos salvos podem ficar desatualizados conforme a mesh se reorganiza. Redefina o caminho para voltar ao automático.';
 

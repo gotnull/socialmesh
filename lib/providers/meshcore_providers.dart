@@ -1817,3 +1817,139 @@ final meshCoreChatTrafficProvider =
     NotifierProvider<MeshCoreChatTrafficNotifier, ChatTrafficSnapshot>(
       MeshCoreChatTrafficNotifier.new,
     );
+
+// ---------------------------------------------------------------------------
+// D35-A: Companion radio stats provider (firmware-backed link health).
+// ---------------------------------------------------------------------------
+
+/// Immutable wrapper carrying the latest [MeshCoreRadioStats] plus the
+/// connection / staleness signals the Tools card renders.
+///
+/// Three rendering states:
+///   - `isConnected == false`  → card shows the disconnected placeholder.
+///   - `isConnected && latest == null` → card is connected but no
+///     successful fetch has landed yet (typically the first 1 s after
+///     mount). Show a quiet "fetching" placeholder, not stale red.
+///   - `isConnected && latest != null && isStale` → values render greyed
+///     with a stale hint; transport blip in progress.
+///   - `isConnected && latest != null && !isStale` → live values.
+class MeshCoreRadioStatsSnapshot {
+  final MeshCoreRadioStats? latest;
+  final bool isStale;
+  final bool isConnected;
+
+  const MeshCoreRadioStatsSnapshot({
+    required this.latest,
+    required this.isStale,
+    required this.isConnected,
+  });
+
+  /// Snapshot used while no MeshCore session is connected.
+  const MeshCoreRadioStatsSnapshot.disconnected()
+    : latest = null,
+      isStale = false,
+      isConnected = false;
+}
+
+/// D35-A: staleness threshold. If the most recent successful fetch is
+/// older than this, the Tools card greys the values and surfaces the
+/// stale hint. 5 s matches the live-smoke plan: a transport blip
+/// should be visible to the user within one polling round-trip plus
+/// two retries.
+const Duration _kRadioStatsStaleAfter = Duration(seconds: 5);
+
+/// Riverpod 3.x notifier polling `getRadioStats()` at 1 Hz while
+/// subscribed. The firmware request bypasses the D34a chat rate
+/// limiter (verified by `d35_radio_stats_session_test.dart`), so the
+/// poll loop does not compete for the 1024 B / 60 s text budget.
+///
+/// In-memory only. No persistence, no diagnostics export, no remote
+/// telemetry.
+class MeshCoreRadioStatsNotifier extends Notifier<MeshCoreRadioStatsSnapshot> {
+  Timer? _ticker;
+  bool _inFlight = false;
+
+  @override
+  MeshCoreRadioStatsSnapshot build() {
+    ref.onDispose(() {
+      _ticker?.cancel();
+      _ticker = null;
+    });
+
+    final session = ref.watch(meshCoreSessionProvider);
+    _ticker?.cancel();
+    if (session == null) {
+      return const MeshCoreRadioStatsSnapshot.disconnected();
+    }
+
+    // Kick off the first fetch immediately so the card populates
+    // within the first second instead of waiting for the timer tick.
+    Future.microtask(_pollOnce);
+
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) => _pollOnce());
+
+    return const MeshCoreRadioStatsSnapshot(
+      latest: null,
+      isStale: false,
+      isConnected: true,
+    );
+  }
+
+  Future<void> _pollOnce() async {
+    if (_inFlight) return;
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null) {
+      state = const MeshCoreRadioStatsSnapshot.disconnected();
+      return;
+    }
+
+    _inFlight = true;
+    try {
+      final stats = await session.getRadioStats();
+      // Re-read session in case it swapped during the await.
+      final stillConnected = ref.read(meshCoreSessionProvider) != null;
+      if (!stillConnected) {
+        state = const MeshCoreRadioStatsSnapshot.disconnected();
+        return;
+      }
+      if (stats == null) {
+        // Timeout / wrong-subtype / truncated: keep the previous
+        // snapshot but flag it stale so the UI can grey it.
+        final prev = state.latest;
+        state = MeshCoreRadioStatsSnapshot(
+          latest: prev,
+          isStale: prev != null,
+          isConnected: true,
+        );
+        return;
+      }
+      state = MeshCoreRadioStatsSnapshot(
+        latest: stats,
+        isStale: false,
+        isConnected: true,
+      );
+    } finally {
+      _inFlight = false;
+    }
+  }
+
+  /// Force-refresh from the live session. Used by tests and any UI
+  /// that wants to pull a fresh snapshot without waiting for the
+  /// 1 Hz tick.
+  Future<void> refreshNow() => _pollOnce();
+
+  /// Recompute the stale flag against [now]. The 1 Hz timer already
+  /// drives a fresh fetch every second, but the widget reads the
+  /// snapshot synchronously; this helper lets the widget decide
+  /// "stale at render time" without forcing another fetch.
+  bool isStaleAt(DateTime now) {
+    final latest = state.latest;
+    if (latest == null) return false;
+    return now.difference(latest.fetchedAt) > _kRadioStatsStaleAfter;
+  }
+}
+
+final meshCoreRadioStatsProvider =
+    NotifierProvider<MeshCoreRadioStatsNotifier, MeshCoreRadioStatsSnapshot>(
+      MeshCoreRadioStatsNotifier.new,
+    );
