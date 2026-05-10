@@ -32,6 +32,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/logging.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
@@ -42,6 +43,14 @@ import '../services/trait_engine.dart';
 import '../widgets/sigil_card.dart';
 import 'album_constants.dart';
 import 'album_providers.dart';
+
+const Color _nodeDexCardBackSurface = Color(0xFF0D1117);
+const Color _nodeDexCardBackInsetSurface = Color(0xFF111827);
+
+@visibleForTesting
+Color nodeDexCardBackSurfaceColor(BuildContext context) {
+  return _nodeDexCardBackSurface;
+}
 
 /// A card that flips between front (SigilCard) and back (stats) on tap.
 ///
@@ -139,6 +148,10 @@ class _CardFlipWidgetState extends ConsumerState<CardFlipWidget>
 
   void _handleTap() {
     ref.read(cardFlipStateProvider.notifier).toggleFlip(widget.entry.nodeNum);
+    AppLogging.nodeDex(
+      'Card flip toggled: node=${widget.hexId}, '
+      'toBack=${!_showingBack}, animate=${widget.animate}',
+    );
 
     if (!widget.animate) {
       // Instant swap for reduce-motion.
@@ -272,9 +285,7 @@ class _CardBack extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: context.isDarkMode
-            ? AppTheme.textPrimaryLight
-            : AppTheme.lightCardAlt,
+        color: nodeDexCardBackSurfaceColor(context),
         borderRadius: BorderRadius.circular(AlbumConstants.slotBorderRadius),
         border: Border.all(
           color: rarity.borderColor,
@@ -294,53 +305,70 @@ class _CardBack extends StatelessWidget {
         borderRadius: BorderRadius.circular(
           AlbumConstants.slotBorderRadius - rarity.borderWidth,
         ),
-        child: Padding(
-          padding: EdgeInsets.all(AppTheme.spacing12 * scale),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              _BackHeader(
-                displayName: displayName,
-                hexId: hexId,
-                rarity: rarity,
-                traitColor: traitColor,
-                scale: scale,
+        child: ColoredBox(
+          color: _nodeDexCardBackSurface,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: const Alignment(0.0, -0.7),
+                radius: 1.1,
+                colors: [
+                  rarity.borderColor.withValues(alpha: 0.12),
+                  _nodeDexCardBackInsetSurface.withValues(alpha: 0.65),
+                  _nodeDexCardBackSurface,
+                ],
+                stops: const [0.0, 0.45, 1.0],
               ),
-              SizedBox(height: AppTheme.spacing8 * scale),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(AppTheme.spacing12 * scale),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Header
+                  _BackHeader(
+                    displayName: displayName,
+                    hexId: hexId,
+                    rarity: rarity,
+                    traitColor: traitColor,
+                    scale: scale,
+                  ),
+                  SizedBox(height: AppTheme.spacing8 * scale),
 
-              // Divider
-              _OrnamentLine(color: rarity.borderColor, scale: scale),
-              SizedBox(height: AppTheme.spacing8 * scale),
+                  // Divider
+                  _OrnamentLine(color: rarity.borderColor, scale: scale),
+                  SizedBox(height: AppTheme.spacing8 * scale),
 
-              // Encounter stats
-              _StatsSection(entry: entry, scale: scale),
-              SizedBox(height: AppTheme.spacing6 * scale),
+                  // Encounter stats
+                  _StatsSection(entry: entry, scale: scale),
+                  SizedBox(height: AppTheme.spacing6 * scale),
 
-              // Trait classification
-              _TraitSection(traitResult: effectiveTrait, scale: scale),
-              SizedBox(height: AppTheme.spacing6 * scale),
+                  // Trait classification
+                  _TraitSection(traitResult: effectiveTrait, scale: scale),
+                  SizedBox(height: AppTheme.spacing6 * scale),
 
-              // Patina breakdown (if available)
-              if (patinaResult != null) ...[
-                _PatinaSection(
-                  result: patinaResult!,
-                  accentColor: traitColor,
-                  scale: scale,
-                ),
-                SizedBox(height: AppTheme.spacing6 * scale),
-              ],
+                  // Patina breakdown (if available)
+                  if (patinaResult != null) ...[
+                    _PatinaSection(
+                      result: patinaResult!,
+                      accentColor: traitColor,
+                      scale: scale,
+                    ),
+                    SizedBox(height: AppTheme.spacing6 * scale),
+                  ],
 
-              const Spacer(),
+                  const Spacer(),
 
-              // Region and co-seen summary
-              _BottomSummary(entry: entry, rarity: rarity, scale: scale),
+                  // Region and co-seen summary
+                  _BottomSummary(entry: entry, rarity: rarity, scale: scale),
 
-              SizedBox(height: AppTheme.spacing4 * scale),
+                  SizedBox(height: AppTheme.spacing4 * scale),
 
-              // Footer
-              _BackFooter(rarity: rarity, scale: scale),
-            ],
+                  // Footer
+                  _BackFooter(rarity: rarity, scale: scale),
+                ],
+              ),
+            ),
           ),
         ),
       ),

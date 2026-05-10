@@ -22,6 +22,7 @@
 import 'dart:typed_data';
 import 'dart:ui';
 
+import '../../../core/logging.dart';
 import '../models/nodedex_entry.dart';
 import 'package:socialmesh/core/theme.dart';
 
@@ -33,6 +34,14 @@ import 'package:socialmesh/core/theme.dart';
 /// hash, ensuring visual diversity without external dependencies.
 class SigilGenerator {
   SigilGenerator._();
+
+  static const int _maxCacheSize = 512;
+  static const Set<int> _instrumentedNodeNums = {
+    0xAF10D229,
+    0x599D1617,
+    0x698571A8,
+  };
+  static final Map<int, SigilData> _cache = <int, SigilData>{};
 
   /// The curated palette of sigil colors.
   ///
@@ -63,6 +72,20 @@ class SigilGenerator {
   /// The result is always the same for the same [nodeNum].
   /// This is a pure function with no side effects.
   static SigilData generate(int nodeNum) {
+    final cached = _cache[nodeNum];
+    if (cached != null) {
+      if (_instrumentedNodeNums.contains(nodeNum)) {
+        AppLogging.nodeDex(
+          'Sigil cache hit: node=!${nodeNum.toRadixString(16).toUpperCase()}',
+        );
+      }
+      return cached;
+    }
+
+    final stopwatch = _instrumentedNodeNums.contains(nodeNum)
+        ? (Stopwatch()..start())
+        : null;
+
     // Mix the bits of the node number to distribute entropy.
     // We use multiple rounds of mixing to extract independent parameters.
     final h0 = mix(nodeNum);
@@ -107,7 +130,7 @@ class SigilGenerator {
       tertiaryIndex = (tertiaryIndex + 1) % _palette.length;
     }
 
-    return SigilData(
+    final sigil = SigilData(
       vertices: vertices,
       rotation: rotation,
       innerRings: innerRings,
@@ -118,6 +141,26 @@ class SigilGenerator {
       secondaryColor: _palette[secondaryIndex],
       tertiaryColor: _palette[tertiaryIndex],
     );
+
+    if (_cache.length >= _maxCacheSize) {
+      _cache.remove(_cache.keys.first);
+    }
+    _cache[nodeNum] = sigil;
+
+    if (stopwatch != null) {
+      stopwatch.stop();
+      AppLogging.nodeDex(
+        'Sigil generated: node=!${nodeNum.toRadixString(16).toUpperCase()}, '
+        'elapsedUs=${stopwatch.elapsedMicroseconds}, '
+        'vertices=$vertices, rings=$innerRings, radials=$drawRadials, '
+        'palette=${sigil.primaryColor.toARGB32().toRadixString(16)}/'
+        '${sigil.secondaryColor.toARGB32().toRadixString(16)}/'
+        '${sigil.tertiaryColor.toARGB32().toRadixString(16)}, '
+        'cacheSize=${_cache.length}',
+      );
+    }
+
+    return sigil;
   }
 
   /// Generate the 3-color palette for a node without the full sigil.

@@ -65,11 +65,20 @@ class HolographicEffect extends StatefulWidget {
   /// Optional override for the shimmer cycle duration.
   final Duration? cycleDuration;
 
+  /// Whether this widget should position itself to fill its nearest [Stack].
+  ///
+  /// The album grid places the effect directly in a card-sized [Stack], so
+  /// the default remains positioned. The full-screen gallery wraps the effect
+  /// in its own clipped card bounds and disables this to avoid filling the
+  /// entire PageView cell.
+  final bool positioned;
+
   const HolographicEffect({
     super.key,
     required this.rarityIndex,
     this.animate = true,
     this.cycleDuration,
+    this.positioned = true,
   });
 
   @override
@@ -119,40 +128,55 @@ class _HolographicEffectState extends State<HolographicEffect>
     if (!_shouldRender) return const SizedBox.shrink();
 
     final opacity = AlbumConstants.holoOpacityFor(widget.rarityIndex);
+    final child = _HolographicLayer(
+      opacity: opacity,
+      animate: widget.animate,
+      controller: _controller,
+    );
 
-    if (!widget.animate) {
+    return widget.positioned ? Positioned.fill(child: child) : child;
+  }
+}
+
+class _HolographicLayer extends StatelessWidget {
+  final double opacity;
+  final bool animate;
+  final Animation<double> controller;
+
+  const _HolographicLayer({
+    required this.opacity,
+    required this.animate,
+    required this.controller,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!animate) {
       // Static sheen for reduce-motion.
-      return Positioned.fill(
-        child: IgnorePointer(
-          child: Opacity(
-            opacity: opacity,
-            child: CustomPaint(
-              painter: _HolographicPainter(
-                phase: 0.3, // Fixed position for static sheen.
-                opacity: 1.0,
-              ),
-            ),
+      return IgnorePointer(
+        child: Opacity(
+          opacity: opacity,
+          child: CustomPaint(
+            painter: _HolographicPainter(phase: 0.3, opacity: 1.0),
           ),
         ),
       );
     }
 
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, _) {
-            return Opacity(
-              opacity: opacity,
-              child: CustomPaint(
-                painter: _HolographicPainter(
-                  phase: _controller.value,
-                  opacity: 1.0,
-                ),
+    return IgnorePointer(
+      child: AnimatedBuilder(
+        animation: controller,
+        builder: (context, _) {
+          return Opacity(
+            opacity: opacity,
+            child: CustomPaint(
+              painter: _HolographicPainter(
+                phase: controller.value,
+                opacity: 1.0,
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }

@@ -49,6 +49,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../providers/app_providers.dart';
 
+import '../../../core/logging.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../services/haptic_service.dart';
@@ -150,6 +151,10 @@ class _CardGalleryScreenState extends ConsumerState<CardGalleryScreen> {
       initialPage: widget.initialIndex,
       viewportFraction: AlbumConstants.galleryViewportFraction,
     );
+    AppLogging.nodeDex(
+      'Card gallery opened: initialIndex=${widget.initialIndex}, '
+      'animate=${widget.animate}',
+    );
 
     // Set initial gallery index in provider.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -168,12 +173,14 @@ class _CardGalleryScreenState extends ConsumerState<CardGalleryScreen> {
   void _onPageChanged(int index) {
     setState(() => _currentPage = index);
     ref.read(galleryIndexProvider.notifier).setIndex(index);
+    AppLogging.nodeDex('Card gallery page changed: index=$index');
 
     // Light haptic on page change.
     ref.read(hapticServiceProvider).trigger(HapticType.selection);
   }
 
   void _dismiss() {
+    AppLogging.nodeDex('Card gallery dismissed');
     // Reset all flip states when leaving the gallery.
     ref.read(cardFlipStateProvider.notifier).resetAll();
     if (!mounted) return;
@@ -340,53 +347,61 @@ class _GalleryPage extends ConsumerWidget {
             final cardWidth = math
                 .min(maxWidth, cardWidthFromHeight)
                 .clamp(200.0, 380.0);
+            final cardHeight = cardWidth * 1.4;
 
-            return Stack(
-              alignment: Alignment.center,
-              children: [
-                // The flippable card.
-                CardFlipWidget(
-                  entry: entry,
-                  traitResult: traitResult,
-                  patinaResult: patinaResult,
-                  displayName: displayName,
-                  hexId: hexId,
-                  width: cardWidth,
-                  animate: animate,
-                  front: Stack(
-                    children: [
-                      // The SigilCard itself.
-                      SigilCard(
-                        nodeNum: entry.nodeNum,
-                        sigil: sigil,
-                        displayName: displayName,
-                        hexId: hexId,
-                        traitResult: traitResult,
-                        entry: entry,
-                        hardwareModel: hardwareModel,
-                        role: role,
-                        firmwareVersion: firmwareVersion,
-                        animated: animate,
-                        width: cardWidth,
-                      ),
-
-                      // Holographic shimmer overlay.
-                      if (rarity.index >= CardRarity.rare.index)
-                        Positioned.fill(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(
-                              AlbumConstants.slotBorderRadius,
-                            ),
-                            child: HolographicEffect(
-                              rarityIndex: rarity.index,
-                              animate: animate,
-                            ),
+            return RepaintBoundary(
+              child: SizedBox(
+                width: cardWidth,
+                height: cardHeight,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // The flippable card.
+                    CardFlipWidget(
+                      entry: entry,
+                      traitResult: traitResult,
+                      patinaResult: patinaResult,
+                      displayName: displayName,
+                      hexId: hexId,
+                      width: cardWidth,
+                      animate: animate,
+                      front: Stack(
+                        children: [
+                          // The SigilCard itself.
+                          SigilCard(
+                            nodeNum: entry.nodeNum,
+                            sigil: sigil,
+                            displayName: displayName,
+                            hexId: hexId,
+                            traitResult: traitResult,
+                            entry: entry,
+                            hardwareModel: hardwareModel,
+                            role: role,
+                            firmwareVersion: firmwareVersion,
+                            animated: animate,
+                            width: cardWidth,
                           ),
-                        ),
-                    ],
-                  ),
+
+                          // Holographic shimmer overlay.
+                          if (rarity.index >= CardRarity.rare.index)
+                            Positioned.fill(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(
+                                  AlbumConstants.slotBorderRadius,
+                                ),
+                                child: HolographicEffect(
+                                  rarityIndex: rarity.index,
+                                  animate: animate,
+                                  positioned: false,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             );
           },
         ),
