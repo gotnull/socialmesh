@@ -365,6 +365,20 @@ class AppFeatureFlags {
     }
   }
 
+  /// Whether the Operations participation objectives feature is enabled.
+  /// Set `OPERATIONS_ENABLED=true` in `.env` to enable.
+  /// Default: false — the Operations surface is hidden until explicitly
+  /// enabled. Operations observe existing app state passively and never
+  /// add RF traffic, but the UI is gated while v1 stabilizes.
+  static bool get isOperationsEnabled {
+    try {
+      final raw = dotenv.env['OPERATIONS_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Whether the TAK Gateway feature is enabled.
   /// Set `TAK_GATEWAY_ENABLED=true` in `.env` to enable.
   /// Default: false — all TAK features are off unless explicitly enabled.

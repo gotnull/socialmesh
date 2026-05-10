@@ -69661,6 +69661,354 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unknown'**
   String get nodedexObservationSourceUnknown;
+
+  /// App bar title for the Operations screen, where passive participation objectives are listed.
+  ///
+  /// In en, this message translates to:
+  /// **'Operations'**
+  String get operationsScreenTitle;
+
+  /// Fallback app bar title for the Operation detail screen when the operation cannot be resolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Operation'**
+  String get operationDetailTitle;
+
+  /// Status banner shown when the requested operation id does not match any catalog entry.
+  ///
+  /// In en, this message translates to:
+  /// **'This operation is no longer available.'**
+  String get operationDetailNotFound;
+
+  /// Generic error message shown when the operations state fails to load.
+  ///
+  /// In en, this message translates to:
+  /// **'Operations could not be loaded. Please try again.'**
+  String get operationsErrorBody;
+
+  /// Status banner shown when the Operations feature flag is off.
+  ///
+  /// In en, this message translates to:
+  /// **'Operations are not enabled in this build.'**
+  String get operationsDisabledBody;
+
+  /// First word of the empty-state title on the Operations screen.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get operationsEmptyTitlePrefix;
+
+  /// Animated keyword in the empty-state title on the Operations screen.
+  ///
+  /// In en, this message translates to:
+  /// **'operations'**
+  String get operationsEmptyTitleKeyword;
+
+  /// Trailing words after the animated keyword in the empty-state title.
+  ///
+  /// In en, this message translates to:
+  /// **'to track yet'**
+  String get operationsEmptyTitleSuffix;
+
+  /// Cycling empty-state tagline 1.
+  ///
+  /// In en, this message translates to:
+  /// **'Encounter nodes to start your first objective.'**
+  String get operationsEmptyTagline1;
+
+  /// Cycling empty-state tagline 2.
+  ///
+  /// In en, this message translates to:
+  /// **'Run a traceroute to map the mesh.'**
+  String get operationsEmptyTagline2;
+
+  /// Cycling empty-state tagline 3.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay nearby and let the radios do the work.'**
+  String get operationsEmptyTagline3;
+
+  /// Section header above the list of in-progress and not-yet-started operations.
+  ///
+  /// In en, this message translates to:
+  /// **'ACTIVE'**
+  String get operationsSectionActive;
+
+  /// Section header above the list of completed operations.
+  ///
+  /// In en, this message translates to:
+  /// **'COMPLETED'**
+  String get operationsSectionCompleted;
+
+  /// Subtitle on the operation card showing total progress against total target across all objectives.
+  ///
+  /// In en, this message translates to:
+  /// **'{completed} / {target} progress'**
+  String operationCardProgressSubtitle(int completed, int target);
+
+  /// Subtitle on the operation card when the operation is complete.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get operationCardCompletedSubtitle;
+
+  /// Section title above the per-objective progress card on the operation detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'OBJECTIVES'**
+  String get operationDetailObjectivesSection;
+
+  /// Section title above the rewards card on the operation detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'REWARDS'**
+  String get operationDetailRewardsSection;
+
+  /// Section title above the status info table on the operation detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'STATUS'**
+  String get operationDetailStatusSection;
+
+  /// Info-table label for the operation's category on the detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get operationDetailStatusCategoryLabel;
+
+  /// Info-table label for the operation's lifecycle state on the detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'State'**
+  String get operationDetailStatusStateLabel;
+
+  /// Info-table label for the timestamp when the operation completed.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed at'**
+  String get operationDetailStatusCompletedAtLabel;
+
+  /// Info-table label for the timestamp when the user acknowledged the reward.
+  ///
+  /// In en, this message translates to:
+  /// **'Reward acknowledged at'**
+  String get operationDetailStatusClaimedAtLabel;
+
+  /// Title of the action tile that lets the user mark a completed operation's reward as acknowledged.
+  ///
+  /// In en, this message translates to:
+  /// **'Acknowledge reward'**
+  String get operationDetailClaimAcknowledgeTitle;
+
+  /// Subtitle of the acknowledge-reward action tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark this completion as seen.'**
+  String get operationDetailClaimAcknowledgeSubtitle;
+
+  /// Display label for the Discovery operation category.
+  ///
+  /// In en, this message translates to:
+  /// **'Discovery'**
+  String get operationCategoryDiscovery;
+
+  /// Display label for the Connectivity operation category.
+  ///
+  /// In en, this message translates to:
+  /// **'Connectivity'**
+  String get operationCategoryConnectivity;
+
+  /// Display label for the Coverage operation category.
+  ///
+  /// In en, this message translates to:
+  /// **'Coverage'**
+  String get operationCategoryCoverage;
+
+  /// Display label for the Endurance operation category.
+  ///
+  /// In en, this message translates to:
+  /// **'Endurance'**
+  String get operationCategoryEndurance;
+
+  /// Display label for the Community operation category.
+  ///
+  /// In en, this message translates to:
+  /// **'Community'**
+  String get operationCategoryCommunity;
+
+  /// Lifecycle state value when the operation has no progress yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not started'**
+  String get operationStateNotStarted;
+
+  /// Lifecycle state value when the operation has partial progress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get operationStateInProgress;
+
+  /// Lifecycle state value when every objective has reached its target.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get operationStateCompleted;
+
+  /// Title of the first-contact operation: encounter at least one non-self node.
+  ///
+  /// In en, this message translates to:
+  /// **'First Contact'**
+  String get operationFirstContactTitle;
+
+  /// Description of the first-contact operation.
+  ///
+  /// In en, this message translates to:
+  /// **'Encounter your first node on the mesh.'**
+  String get operationFirstContactDescription;
+
+  /// Objective row for first contact.
+  ///
+  /// In en, this message translates to:
+  /// **'Encounter 1 unique node'**
+  String get operationFirstContactObjective;
+
+  /// Reward label for first contact.
+  ///
+  /// In en, this message translates to:
+  /// **'First Contact badge'**
+  String get operationFirstContactRewardLabel;
+
+  /// Title of the signal-hunter operation: encounter ten unique non-self nodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Signal Hunter'**
+  String get operationSignalHunterTitle;
+
+  /// Description of the signal-hunter operation.
+  ///
+  /// In en, this message translates to:
+  /// **'Build a roster of unique nodes you have encountered.'**
+  String get operationSignalHunterDescription;
+
+  /// Objective row for signal hunter.
+  ///
+  /// In en, this message translates to:
+  /// **'Encounter 10 unique nodes'**
+  String get operationSignalHunterObjective;
+
+  /// Reward label for signal hunter.
+  ///
+  /// In en, this message translates to:
+  /// **'Signal Hunter patch'**
+  String get operationSignalHunterRewardLabel;
+
+  /// Title of the pathfinder operation: complete one successful traceroute.
+  ///
+  /// In en, this message translates to:
+  /// **'Pathfinder'**
+  String get operationPathfinderTitle;
+
+  /// Description of the pathfinder operation.
+  ///
+  /// In en, this message translates to:
+  /// **'Trace the route to a remote node and confirm the path.'**
+  String get operationPathfinderDescription;
+
+  /// Objective row for pathfinder.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete 1 traceroute'**
+  String get operationPathfinderObjective;
+
+  /// Reward label for pathfinder.
+  ///
+  /// In en, this message translates to:
+  /// **'Pathfinder title'**
+  String get operationPathfinderRewardLabel;
+
+  /// Title of the long-range-observer operation. Deferred in v1 until distance data is reliable.
+  ///
+  /// In en, this message translates to:
+  /// **'Long Range Observer'**
+  String get operationLongRangeObserverTitle;
+
+  /// Description of the long-range-observer operation.
+  ///
+  /// In en, this message translates to:
+  /// **'Observe a node at unusual distance.'**
+  String get operationLongRangeObserverDescription;
+
+  /// Objective row for long-range observer.
+  ///
+  /// In en, this message translates to:
+  /// **'Observe a far node'**
+  String get operationLongRangeObserverObjective;
+
+  /// Title of the night-watch operation. Deferred in v1 until session-window observation is in place.
+  ///
+  /// In en, this message translates to:
+  /// **'Night Watch'**
+  String get operationNightWatchTitle;
+
+  /// Description of the night-watch operation.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintain an active connection through a quiet window.'**
+  String get operationNightWatchDescription;
+
+  /// Objective row for night watch.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold an active connection'**
+  String get operationNightWatchObjective;
+
+  /// Title of the multi-hop-observer operation. Deferred in v1.
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-hop Observer'**
+  String get operationMultiHopObserverTitle;
+
+  /// Description of the multi-hop-observer operation.
+  ///
+  /// In en, this message translates to:
+  /// **'Observe a multi-hop route through the mesh.'**
+  String get operationMultiHopObserverDescription;
+
+  /// Objective row for multi-hop observer.
+  ///
+  /// In en, this message translates to:
+  /// **'Observe a multi-hop route'**
+  String get operationMultiHopObserverObjective;
+
+  /// Title of the map-coverage operation. Deferred in v1 until tile-coverage tracking exists.
+  ///
+  /// In en, this message translates to:
+  /// **'Map Coverage'**
+  String get operationMapCoverageTitle;
+
+  /// Description of the map-coverage operation.
+  ///
+  /// In en, this message translates to:
+  /// **'Reveal new map regions through observed activity.'**
+  String get operationMapCoverageDescription;
+
+  /// Objective row for map coverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Reveal map regions'**
+  String get operationMapCoverageObjective;
+
+  /// Title of the settings entry that opens the Operations screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Operations'**
+  String get settingsTileOperationsTitle;
+
+  /// Subtitle of the settings entry that opens the Operations screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Track passive participation objectives.'**
+  String get settingsTileOperationsSubtitle;
 }
 
 class _AppLocalizationsDelegate

@@ -40007,4 +40007,196 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get nodedexObservationSourceUnknown => 'Sconosciuto';
+
+  @override
+  String get operationsScreenTitle => 'Operazioni';
+
+  @override
+  String get operationDetailTitle => 'Operazione';
+
+  @override
+  String get operationDetailNotFound =>
+      'Questa operazione non è più disponibile.';
+
+  @override
+  String get operationsErrorBody =>
+      'Impossibile caricare le operazioni. Riprova.';
+
+  @override
+  String get operationsDisabledBody =>
+      'Le operazioni non sono attive in questa build.';
+
+  @override
+  String get operationsEmptyTitlePrefix => 'Nessuna';
+
+  @override
+  String get operationsEmptyTitleKeyword => 'operazione';
+
+  @override
+  String get operationsEmptyTitleSuffix => 'da seguire';
+
+  @override
+  String get operationsEmptyTagline1 =>
+      'Incontra nodi per iniziare il tuo primo obiettivo.';
+
+  @override
+  String get operationsEmptyTagline2 =>
+      'Esegui un traceroute per mappare la mesh.';
+
+  @override
+  String get operationsEmptyTagline3 =>
+      'Resta nelle vicinanze e lascia che siano le radio a lavorare.';
+
+  @override
+  String get operationsSectionActive => 'ATTIVE';
+
+  @override
+  String get operationsSectionCompleted => 'COMPLETATE';
+
+  @override
+  String operationCardProgressSubtitle(int completed, int target) {
+    return '$completed / $target progressi';
+  }
+
+  @override
+  String get operationCardCompletedSubtitle => 'Completata';
+
+  @override
+  String get operationDetailObjectivesSection => 'OBIETTIVI';
+
+  @override
+  String get operationDetailRewardsSection => 'RICOMPENSE';
+
+  @override
+  String get operationDetailStatusSection => 'STATO';
+
+  @override
+  String get operationDetailStatusCategoryLabel => 'Categoria';
+
+  @override
+  String get operationDetailStatusStateLabel => 'Stato';
+
+  @override
+  String get operationDetailStatusCompletedAtLabel => 'Completata il';
+
+  @override
+  String get operationDetailStatusClaimedAtLabel => 'Ricompensa confermata il';
+
+  @override
+  String get operationDetailClaimAcknowledgeTitle => 'Conferma ricompensa';
+
+  @override
+  String get operationDetailClaimAcknowledgeSubtitle =>
+      'Segna questo completamento come visto.';
+
+  @override
+  String get operationCategoryDiscovery => 'Scoperta';
+
+  @override
+  String get operationCategoryConnectivity => 'Connettività';
+
+  @override
+  String get operationCategoryCoverage => 'Copertura';
+
+  @override
+  String get operationCategoryEndurance => 'Resistenza';
+
+  @override
+  String get operationCategoryCommunity => 'Comunità';
+
+  @override
+  String get operationStateNotStarted => 'Non iniziata';
+
+  @override
+  String get operationStateInProgress => 'In corso';
+
+  @override
+  String get operationStateCompleted => 'Completata';
+
+  @override
+  String get operationFirstContactTitle => 'First Contact';
+
+  @override
+  String get operationFirstContactDescription =>
+      'Incontra il tuo primo nodo sulla mesh.';
+
+  @override
+  String get operationFirstContactObjective => 'Incontra 1 nodo unico';
+
+  @override
+  String get operationFirstContactRewardLabel => 'Distintivo First Contact';
+
+  @override
+  String get operationSignalHunterTitle => 'Signal Hunter';
+
+  @override
+  String get operationSignalHunterDescription =>
+      'Costruisci un elenco dei nodi unici incontrati.';
+
+  @override
+  String get operationSignalHunterObjective => 'Incontra 10 nodi unici';
+
+  @override
+  String get operationSignalHunterRewardLabel => 'Patch Signal Hunter';
+
+  @override
+  String get operationPathfinderTitle => 'Pathfinder';
+
+  @override
+  String get operationPathfinderDescription =>
+      'Traccia la rotta verso un nodo remoto e conferma il percorso.';
+
+  @override
+  String get operationPathfinderObjective => 'Completa 1 traceroute';
+
+  @override
+  String get operationPathfinderRewardLabel => 'Titolo Pathfinder';
+
+  @override
+  String get operationLongRangeObserverTitle => 'Long Range Observer';
+
+  @override
+  String get operationLongRangeObserverDescription =>
+      'Osserva un nodo a distanza insolita.';
+
+  @override
+  String get operationLongRangeObserverObjective => 'Osserva un nodo lontano';
+
+  @override
+  String get operationNightWatchTitle => 'Night Watch';
+
+  @override
+  String get operationNightWatchDescription =>
+      'Mantieni una connessione attiva durante una finestra silenziosa.';
+
+  @override
+  String get operationNightWatchObjective => 'Mantieni una connessione attiva';
+
+  @override
+  String get operationMultiHopObserverTitle => 'Multi-hop Observer';
+
+  @override
+  String get operationMultiHopObserverDescription =>
+      'Osserva una rotta multi-hop attraverso la mesh.';
+
+  @override
+  String get operationMultiHopObserverObjective =>
+      'Osserva una rotta multi-hop';
+
+  @override
+  String get operationMapCoverageTitle => 'Map Coverage';
+
+  @override
+  String get operationMapCoverageDescription =>
+      'Rivela nuove regioni della mappa tramite l\'attività osservata.';
+
+  @override
+  String get operationMapCoverageObjective => 'Rivela regioni della mappa';
+
+  @override
+  String get settingsTileOperationsTitle => 'Operazioni';
+
+  @override
+  String get settingsTileOperationsSubtitle =>
+      'Segui obiettivi di partecipazione passiva.';
 }

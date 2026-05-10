@@ -52976,5 +52976,245 @@
     "nodedexObservationSourceUnknown": "Unknown",
     "@nodedexObservationSourceUnknown": {
         "description": "Observation source value: legacy firmware or other case where via_mqtt was not present and we cannot classify the path."
+    },
+    "operationsScreenTitle": "Operations",
+    "@operationsScreenTitle": {
+        "description": "App bar title for the Operations screen, where passive participation objectives are listed."
+    },
+    "operationDetailTitle": "Operation",
+    "@operationDetailTitle": {
+        "description": "Fallback app bar title for the Operation detail screen when the operation cannot be resolved."
+    },
+    "operationDetailNotFound": "This operation is no longer available.",
+    "@operationDetailNotFound": {
+        "description": "Status banner shown when the requested operation id does not match any catalog entry."
+    },
+    "operationsErrorBody": "Operations could not be loaded. Please try again.",
+    "@operationsErrorBody": {
+        "description": "Generic error message shown when the operations state fails to load."
+    },
+    "operationsDisabledBody": "Operations are not enabled in this build.",
+    "@operationsDisabledBody": {
+        "description": "Status banner shown when the Operations feature flag is off."
+    },
+    "operationsEmptyTitlePrefix": "No",
+    "@operationsEmptyTitlePrefix": {
+        "description": "First word of the empty-state title on the Operations screen."
+    },
+    "operationsEmptyTitleKeyword": "operations",
+    "@operationsEmptyTitleKeyword": {
+        "description": "Animated keyword in the empty-state title on the Operations screen."
+    },
+    "operationsEmptyTitleSuffix": "to track yet",
+    "@operationsEmptyTitleSuffix": {
+        "description": "Trailing words after the animated keyword in the empty-state title."
+    },
+    "operationsEmptyTagline1": "Encounter nodes to start your first objective.",
+    "@operationsEmptyTagline1": {
+        "description": "Cycling empty-state tagline 1."
+    },
+    "operationsEmptyTagline2": "Run a traceroute to map the mesh.",
+    "@operationsEmptyTagline2": {
+        "description": "Cycling empty-state tagline 2."
+    },
+    "operationsEmptyTagline3": "Stay nearby and let the radios do the work.",
+    "@operationsEmptyTagline3": {
+        "description": "Cycling empty-state tagline 3."
+    },
+    "operationsSectionActive": "ACTIVE",
+    "@operationsSectionActive": {
+        "description": "Section header above the list of in-progress and not-yet-started operations."
+    },
+    "operationsSectionCompleted": "COMPLETED",
+    "@operationsSectionCompleted": {
+        "description": "Section header above the list of completed operations."
+    },
+    "operationCardProgressSubtitle": "{completed} / {target} progress",
+    "@operationCardProgressSubtitle": {
+        "placeholders": {
+            "completed": {
+                "type": "int"
+            },
+            "target": {
+                "type": "int"
+            }
+        },
+        "description": "Subtitle on the operation card showing total progress against total target across all objectives."
+    },
+    "operationCardCompletedSubtitle": "Completed",
+    "@operationCardCompletedSubtitle": {
+        "description": "Subtitle on the operation card when the operation is complete."
+    },
+    "operationDetailObjectivesSection": "OBJECTIVES",
+    "@operationDetailObjectivesSection": {
+        "description": "Section title above the per-objective progress card on the operation detail screen."
+    },
+    "operationDetailRewardsSection": "REWARDS",
+    "@operationDetailRewardsSection": {
+        "description": "Section title above the rewards card on the operation detail screen."
+    },
+    "operationDetailStatusSection": "STATUS",
+    "@operationDetailStatusSection": {
+        "description": "Section title above the status info table on the operation detail screen."
+    },
+    "operationDetailStatusCategoryLabel": "Category",
+    "@operationDetailStatusCategoryLabel": {
+        "description": "Info-table label for the operation's category on the detail screen."
+    },
+    "operationDetailStatusStateLabel": "State",
+    "@operationDetailStatusStateLabel": {
+        "description": "Info-table label for the operation's lifecycle state on the detail screen."
+    },
+    "operationDetailStatusCompletedAtLabel": "Completed at",
+    "@operationDetailStatusCompletedAtLabel": {
+        "description": "Info-table label for the timestamp when the operation completed."
+    },
+    "operationDetailStatusClaimedAtLabel": "Reward acknowledged at",
+    "@operationDetailStatusClaimedAtLabel": {
+        "description": "Info-table label for the timestamp when the user acknowledged the reward."
+    },
+    "operationDetailClaimAcknowledgeTitle": "Acknowledge reward",
+    "@operationDetailClaimAcknowledgeTitle": {
+        "description": "Title of the action tile that lets the user mark a completed operation's reward as acknowledged."
+    },
+    "operationDetailClaimAcknowledgeSubtitle": "Mark this completion as seen.",
+    "@operationDetailClaimAcknowledgeSubtitle": {
+        "description": "Subtitle of the acknowledge-reward action tile."
+    },
+    "operationCategoryDiscovery": "Discovery",
+    "@operationCategoryDiscovery": {
+        "description": "Display label for the Discovery operation category."
+    },
+    "operationCategoryConnectivity": "Connectivity",
+    "@operationCategoryConnectivity": {
+        "description": "Display label for the Connectivity operation category."
+    },
+    "operationCategoryCoverage": "Coverage",
+    "@operationCategoryCoverage": {
+        "description": "Display label for the Coverage operation category."
+    },
+    "operationCategoryEndurance": "Endurance",
+    "@operationCategoryEndurance": {
+        "description": "Display label for the Endurance operation category."
+    },
+    "operationCategoryCommunity": "Community",
+    "@operationCategoryCommunity": {
+        "description": "Display label for the Community operation category."
+    },
+    "operationStateNotStarted": "Not started",
+    "@operationStateNotStarted": {
+        "description": "Lifecycle state value when the operation has no progress yet."
+    },
+    "operationStateInProgress": "In progress",
+    "@operationStateInProgress": {
+        "description": "Lifecycle state value when the operation has partial progress."
+    },
+    "operationStateCompleted": "Completed",
+    "@operationStateCompleted": {
+        "description": "Lifecycle state value when every objective has reached its target."
+    },
+    "operationFirstContactTitle": "First Contact",
+    "@operationFirstContactTitle": {
+        "description": "Title of the first-contact operation: encounter at least one non-self node."
+    },
+    "operationFirstContactDescription": "Encounter your first node on the mesh.",
+    "@operationFirstContactDescription": {
+        "description": "Description of the first-contact operation."
+    },
+    "operationFirstContactObjective": "Encounter 1 unique node",
+    "@operationFirstContactObjective": {
+        "description": "Objective row for first contact."
+    },
+    "operationFirstContactRewardLabel": "First Contact badge",
+    "@operationFirstContactRewardLabel": {
+        "description": "Reward label for first contact."
+    },
+    "operationSignalHunterTitle": "Signal Hunter",
+    "@operationSignalHunterTitle": {
+        "description": "Title of the signal-hunter operation: encounter ten unique non-self nodes."
+    },
+    "operationSignalHunterDescription": "Build a roster of unique nodes you have encountered.",
+    "@operationSignalHunterDescription": {
+        "description": "Description of the signal-hunter operation."
+    },
+    "operationSignalHunterObjective": "Encounter 10 unique nodes",
+    "@operationSignalHunterObjective": {
+        "description": "Objective row for signal hunter."
+    },
+    "operationSignalHunterRewardLabel": "Signal Hunter patch",
+    "@operationSignalHunterRewardLabel": {
+        "description": "Reward label for signal hunter."
+    },
+    "operationPathfinderTitle": "Pathfinder",
+    "@operationPathfinderTitle": {
+        "description": "Title of the pathfinder operation: complete one successful traceroute."
+    },
+    "operationPathfinderDescription": "Trace the route to a remote node and confirm the path.",
+    "@operationPathfinderDescription": {
+        "description": "Description of the pathfinder operation."
+    },
+    "operationPathfinderObjective": "Complete 1 traceroute",
+    "@operationPathfinderObjective": {
+        "description": "Objective row for pathfinder."
+    },
+    "operationPathfinderRewardLabel": "Pathfinder title",
+    "@operationPathfinderRewardLabel": {
+        "description": "Reward label for pathfinder."
+    },
+    "operationLongRangeObserverTitle": "Long Range Observer",
+    "@operationLongRangeObserverTitle": {
+        "description": "Title of the long-range-observer operation. Deferred in v1 until distance data is reliable."
+    },
+    "operationLongRangeObserverDescription": "Observe a node at unusual distance.",
+    "@operationLongRangeObserverDescription": {
+        "description": "Description of the long-range-observer operation."
+    },
+    "operationLongRangeObserverObjective": "Observe a far node",
+    "@operationLongRangeObserverObjective": {
+        "description": "Objective row for long-range observer."
+    },
+    "operationNightWatchTitle": "Night Watch",
+    "@operationNightWatchTitle": {
+        "description": "Title of the night-watch operation. Deferred in v1 until session-window observation is in place."
+    },
+    "operationNightWatchDescription": "Maintain an active connection through a quiet window.",
+    "@operationNightWatchDescription": {
+        "description": "Description of the night-watch operation."
+    },
+    "operationNightWatchObjective": "Hold an active connection",
+    "@operationNightWatchObjective": {
+        "description": "Objective row for night watch."
+    },
+    "operationMultiHopObserverTitle": "Multi-hop Observer",
+    "@operationMultiHopObserverTitle": {
+        "description": "Title of the multi-hop-observer operation. Deferred in v1."
+    },
+    "operationMultiHopObserverDescription": "Observe a multi-hop route through the mesh.",
+    "@operationMultiHopObserverDescription": {
+        "description": "Description of the multi-hop-observer operation."
+    },
+    "operationMultiHopObserverObjective": "Observe a multi-hop route",
+    "@operationMultiHopObserverObjective": {
+        "description": "Objective row for multi-hop observer."
+    },
+    "operationMapCoverageTitle": "Map Coverage",
+    "@operationMapCoverageTitle": {
+        "description": "Title of the map-coverage operation. Deferred in v1 until tile-coverage tracking exists."
+    },
+    "operationMapCoverageDescription": "Reveal new map regions through observed activity.",
+    "@operationMapCoverageDescription": {
+        "description": "Description of the map-coverage operation."
+    },
+    "operationMapCoverageObjective": "Reveal map regions",
+    "@operationMapCoverageObjective": {
+        "description": "Objective row for map coverage."
+    },
+    "settingsTileOperationsTitle": "Operations",
+    "@settingsTileOperationsTitle": {
+        "description": "Title of the settings entry that opens the Operations screen."
+    },
+    "settingsTileOperationsSubtitle": "Track passive participation objectives.",
+    "@settingsTileOperationsSubtitle": {
+        "description": "Subtitle of the settings entry that opens the Operations screen."
     }
 }

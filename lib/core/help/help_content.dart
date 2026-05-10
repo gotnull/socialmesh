@@ -1746,6 +1746,12 @@ class HelpContent {
             "The **Field Note** is a short, deterministic journal entry generated from the node's identity and primary trait. The same node always produces the same note — and it never travels over the mesh.",
         icoMood: MeshBrainMood.playful,
       ),
+      HelpStep(
+        id: 'nodedex_radio_compatibility',
+        bubbleText:
+            "**Radio Compatibility** compares your local radio's current preset and frequency against the values stamped on this node's last observation. Use it to spot mismatches that prevent direct RF reachability.",
+        icoMood: MeshBrainMood.curious,
+      ),
     ],
   );
 

@@ -83,6 +83,7 @@ class AppLogging {
   static bool? _adminDiagLoggingEnabled;
   static bool? _tasksLoggingEnabled;
   static bool? _taskSyncLoggingEnabled;
+  static bool? _operationsLoggingEnabled;
   static bool? _fileTransferLoggingEnabled;
   static bool? _sipLoggingEnabled;
   static bool? _sipInkLoggingEnabled;
@@ -630,6 +631,22 @@ class AppLogging {
     if (taskSyncLoggingEnabled) debugPrint('TaskSync: $message');
   }
 
+  // Operations system observability — passive participation objectives
+  // (encounter-based, traceroute-based, etc.). Sparse, transition-based
+  // events: ingest, dedupe-skipped, progress-updated, objective-completed,
+  // operation-completed, persist-failed, disabled.
+  //
+  // Enable with OPERATIONS_LOGGING_ENABLED=true in .env file.
+  static bool get operationsLoggingEnabled {
+    _operationsLoggingEnabled ??=
+        _safeGetEnv('OPERATIONS_LOGGING_ENABLED')?.toLowerCase() == 'true';
+    return _operationsLoggingEnabled!;
+  }
+
+  static void operations(String message) {
+    if (operationsLoggingEnabled) debugPrint('Operations: $message');
+  }
+
   /// Admin diagnostic harness logging.
   /// Always enabled — diagnostic sessions are explicit user actions.
   static bool get adminDiagLoggingEnabled {
@@ -1091,6 +1108,7 @@ class AppLogging {
     _adminDiagLoggingEnabled = null;
     _tasksLoggingEnabled = null;
     _taskSyncLoggingEnabled = null;
+    _operationsLoggingEnabled = null;
     _fileTransferLoggingEnabled = null;
     _sipLoggingEnabled = null;
     _sipInkLoggingEnabled = null;

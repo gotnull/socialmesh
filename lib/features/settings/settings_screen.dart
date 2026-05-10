@@ -63,6 +63,7 @@ import 'theme_settings_screen.dart';
 import 'appearance_accessibility_screen.dart';
 import 'privacy_settings_screen.dart';
 import '../automations/automations_screen.dart';
+import '../operations/presentation/operations_screen.dart';
 import '../automations/automation_providers.dart';
 import 'canned_responses_screen.dart';
 import 'canned_message_module_config_screen.dart';
@@ -788,6 +789,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             ),
           ),
         ),
+
+        // Operations — passive participation objectives. Surfaced here
+        // (rather than in a dedicated section) until v1 stabilizes.
+        if (AppFeatureFlags.isOperationsEnabled)
+          _SearchableSettingItem(
+            icon: Icons.flag_outlined,
+            title: context.l10n.settingsTileOperationsTitle,
+            subtitle: context.l10n.settingsTileOperationsSubtitle,
+            keywords: [
+              'operations',
+              'objectives',
+              'quests',
+              'progress',
+              'badges',
+            ],
+            section: context.l10n.settingsSectionMessaging,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const OperationsScreen()),
+            ),
+          ),
 
         // File Transfer
         if (AppFeatureFlags.isFileTransferEnabled)
