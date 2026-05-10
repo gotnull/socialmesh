@@ -8219,7 +8219,25 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get meshcoreRadioStatsAirtimeResetNote =>
-      'I totali di airtime si azzerano solo allo spegnimento e riaccensione della radio.';
+      'Airtime e uptime si azzerano solo allo spegnimento e riaccensione della radio.';
+
+  @override
+  String get meshcoreRadioStatsUptime => 'Uptime';
+
+  @override
+  String get meshcoreRadioStatsFirmwareQueue => 'Coda TX firmware';
+
+  @override
+  String get meshcoreRadioStatsFirmwareErrorFlags => 'Flag di errore firmware';
+
+  @override
+  String meshcoreRadioStatsErrorFlagsHex(String value) {
+    return '0x$value';
+  }
+
+  @override
+  String get meshcoreRadioStatsErrorFlagsHelper =>
+      'Flag interni del firmware. Includi questo valore in eventuali segnalazioni di supporto.';
 
   @override
   String get meshcoreRadioStatsStale =>

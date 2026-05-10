@@ -14449,11 +14449,41 @@ abstract class AppLocalizations {
   /// **'RX airtime'**
   String get meshcoreRadioStatsRxAirtime;
 
-  /// D35-A - inline note clarifying that the firmware does not expose a reset action for TX/RX airtime.
+  /// D35-A / updated D35-B-A - inline note clarifying that the firmware does not expose a reset action for TX/RX airtime; D35-B-A extended this to also cover uptime.
   ///
   /// In en, this message translates to:
-  /// **'Airtime totals reset only on a radio power cycle.'**
+  /// **'Airtime and uptime reset only on a radio power cycle.'**
   String get meshcoreRadioStatsAirtimeResetNote;
+
+  /// D35-B-A - row label for the firmware uptime since power-on.
+  ///
+  /// In en, this message translates to:
+  /// **'Uptime'**
+  String get meshcoreRadioStatsUptime;
+
+  /// D35-B-A - row label for outbound LoRa packets pending transmission. Distinct from the D28 inbound drain heartbeat card.
+  ///
+  /// In en, this message translates to:
+  /// **'Firmware TX queue'**
+  String get meshcoreRadioStatsFirmwareQueue;
+
+  /// D35-B-A - row label for the firmware-internal error-flag accumulator. Surfaces only when non-zero; bits are NOT named in the firmware source so the value is shown as opaque hex.
+  ///
+  /// In en, this message translates to:
+  /// **'Firmware error flags'**
+  String get meshcoreRadioStatsFirmwareErrorFlags;
+
+  /// D35-B-A - opaque-hex formatter for the firmware error-flag accumulator. Caller passes a 4-character zero-padded uppercase hex string (e.g. '0042').
+  ///
+  /// In en, this message translates to:
+  /// **'0x{value}'**
+  String meshcoreRadioStatsErrorFlagsHex(String value);
+
+  /// D35-B-A - tooltip / inline helper text under the error-flags row, clarifying the value is opaque and only useful in support reports.
+  ///
+  /// In en, this message translates to:
+  /// **'Firmware-internal flags. Include this value when filing a support report.'**
+  String get meshcoreRadioStatsErrorFlagsHelper;
 
   /// D35-A - hint shown when the most recent successful radio-stats fetch is older than the staleness threshold (transport blip in progress).
   ///

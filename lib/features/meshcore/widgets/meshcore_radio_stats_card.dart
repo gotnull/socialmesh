@@ -23,6 +23,7 @@ import '../../../core/widgets/info_table.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../providers/meshcore_providers.dart';
+import '../../../services/meshcore/protocol/meshcore_messages.dart';
 
 class MeshCoreRadioStatsCard extends ConsumerWidget {
   const MeshCoreRadioStatsCard({super.key});
@@ -31,6 +32,7 @@ class MeshCoreRadioStatsCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final snapshot = ref.watch(meshCoreRadioStatsProvider);
+    final core = ref.watch(meshCoreCoreStatsProvider);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -53,7 +55,7 @@ class MeshCoreRadioStatsCard extends ConsumerWidget {
               title: l10n.meshcoreRadioStatsTitle,
               leadingIcon: Icons.cell_tower_rounded,
             ),
-            _Body(snapshot: snapshot, l10n: l10n),
+            _Body(snapshot: snapshot, core: core, l10n: l10n),
           ],
         ),
       ),
@@ -63,9 +65,10 @@ class MeshCoreRadioStatsCard extends ConsumerWidget {
 
 class _Body extends StatelessWidget {
   final MeshCoreRadioStatsSnapshot snapshot;
+  final MeshCoreCoreStatsSnapshot core;
   final AppLocalizations l10n;
 
-  const _Body({required this.snapshot, required this.l10n});
+  const _Body({required this.snapshot, required this.core, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -94,42 +97,89 @@ class _Body extends StatelessWidget {
           ),
         Opacity(
           opacity: snapshot.isStale ? 0.55 : 1.0,
-          child: InfoTable(
-            rows: [
-              InfoTableRow(
-                label: l10n.meshcoreRadioStatsNoiseFloor,
-                value: l10n.meshcoreRadioStatsDbm(latest.noiseFloorDbm),
-                icon: Icons.graphic_eq_rounded,
-              ),
-              InfoTableRow(
-                label: l10n.meshcoreRadioStatsLastRssi,
-                value: l10n.meshcoreRadioStatsDbm(latest.lastRssiDbm),
-                icon: Icons.signal_cellular_alt_rounded,
-              ),
-              InfoTableRow(
-                label: l10n.meshcoreRadioStatsLastSnr,
-                value: l10n.meshcoreRadioStatsDb(
-                  latest.snrDb.toStringAsFixed(1),
-                ),
-                icon: Icons.show_chart_rounded,
-              ),
-              InfoTableRow(
-                label: l10n.meshcoreRadioStatsTxAirtime,
-                value: _formatDuration(l10n, latest.txAirtime),
-                icon: Icons.upload_rounded,
-              ),
-              InfoTableRow(
-                label: l10n.meshcoreRadioStatsRxAirtime,
-                value: _formatDuration(l10n, latest.rxAirtime),
-                icon: Icons.download_rounded,
-              ),
-            ],
-          ),
+          child: InfoTable(rows: _buildRows(latest)),
         ),
         const SizedBox(height: AppTheme.spacing8),
         _ResetNote(label: l10n.meshcoreRadioStatsAirtimeResetNote),
+        if (_visibleErrorFlags() != null) ...[
+          const SizedBox(height: AppTheme.spacing4),
+          _ErrorFlagsHelper(label: l10n.meshcoreRadioStatsErrorFlagsHelper),
+        ],
       ],
     );
+  }
+
+  /// Build the InfoTable rows: 5 RADIO rows from D35-A, plus CORE
+  /// rows (uptime + firmware TX queue) when CORE data has landed.
+  /// Error flags row appends only when the value is non-zero.
+  List<InfoTableRow> _buildRows(MeshCoreRadioStats latest) {
+    final rows = <InfoTableRow>[
+      InfoTableRow(
+        label: l10n.meshcoreRadioStatsNoiseFloor,
+        value: l10n.meshcoreRadioStatsDbm(latest.noiseFloorDbm),
+        icon: Icons.graphic_eq_rounded,
+      ),
+      InfoTableRow(
+        label: l10n.meshcoreRadioStatsLastRssi,
+        value: l10n.meshcoreRadioStatsDbm(latest.lastRssiDbm),
+        icon: Icons.signal_cellular_alt_rounded,
+      ),
+      InfoTableRow(
+        label: l10n.meshcoreRadioStatsLastSnr,
+        value: l10n.meshcoreRadioStatsDb(latest.snrDb.toStringAsFixed(1)),
+        icon: Icons.show_chart_rounded,
+      ),
+      InfoTableRow(
+        label: l10n.meshcoreRadioStatsTxAirtime,
+        value: _formatDuration(l10n, latest.txAirtime),
+        icon: Icons.upload_rounded,
+      ),
+      InfoTableRow(
+        label: l10n.meshcoreRadioStatsRxAirtime,
+        value: _formatDuration(l10n, latest.rxAirtime),
+        icon: Icons.download_rounded,
+      ),
+    ];
+    final coreLatest = core.latest;
+    if (coreLatest != null) {
+      rows.addAll([
+        InfoTableRow(
+          label: l10n.meshcoreRadioStatsUptime,
+          value: _formatDuration(l10n, coreLatest.uptime),
+          icon: Icons.timer_rounded,
+        ),
+        InfoTableRow(
+          label: l10n.meshcoreRadioStatsFirmwareQueue,
+          value: '${coreLatest.queueLength}',
+          icon: Icons.queue_rounded,
+        ),
+      ]);
+      final hex = _visibleErrorFlags();
+      if (hex != null) {
+        rows.add(
+          InfoTableRow(
+            label: l10n.meshcoreRadioStatsFirmwareErrorFlags,
+            value: l10n.meshcoreRadioStatsErrorFlagsHex(hex),
+            icon: Icons.error_outline_rounded,
+          ),
+        );
+      }
+    }
+    return rows;
+  }
+
+  /// Returns the 4-character zero-padded uppercase hex string for the
+  /// CORE error flags when they are non-zero; otherwise `null` so the
+  /// row + helper text are hidden. Per D35-B-A spec: bits are NOT
+  /// labelled; the value is opaque support-report material only.
+  String? _visibleErrorFlags() {
+    final coreLatest = core.latest;
+    if (coreLatest == null) return null;
+    if (coreLatest.errorFlags == 0) return null;
+    return coreLatest.errorFlags
+        .toRadixString(16)
+        .padLeft(4, '0')
+        .toUpperCase();
   }
 
   static String _formatDuration(AppLocalizations l10n, Duration d) {
@@ -230,6 +280,37 @@ class _ResetNote extends StatelessWidget {
         Expanded(
           child: Text(
             label,
+            style: TextStyle(
+              color: context.textTertiary,
+              fontFamily: AppTheme.fontFamily,
+              fontSize: 11,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// D35-B-A: helper paragraph rendered under the error-flags row when
+/// the value is non-zero. Clarifies the value is opaque and only
+/// useful for support reports; the per-bit semantics are not exposed
+/// by the firmware so this client never invents labels.
+class _ErrorFlagsHelper extends StatelessWidget {
+  final String label;
+  const _ErrorFlagsHelper({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(Icons.help_outline_rounded, size: 12, color: context.textTertiary),
+        const SizedBox(width: AppTheme.spacing8),
+        Expanded(
+          child: Text(
+            label,
+            key: const ValueKey('meshcore-radio-stats-error-flags-helper'),
             style: TextStyle(
               color: context.textTertiary,
               fontFamily: AppTheme.fontFamily,

@@ -8208,7 +8208,26 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get meshcoreRadioStatsAirtimeResetNote =>
-      'Os totais de airtime só são zerados quando o rádio é desligado e ligado novamente.';
+      'Airtime e uptime só são zerados quando o rádio é desligado e ligado novamente.';
+
+  @override
+  String get meshcoreRadioStatsUptime => 'Uptime';
+
+  @override
+  String get meshcoreRadioStatsFirmwareQueue => 'Fila TX do firmware';
+
+  @override
+  String get meshcoreRadioStatsFirmwareErrorFlags =>
+      'Flags de erro do firmware';
+
+  @override
+  String meshcoreRadioStatsErrorFlagsHex(String value) {
+    return '0x$value';
+  }
+
+  @override
+  String get meshcoreRadioStatsErrorFlagsHelper =>
+      'Flags internas do firmware. Inclua este valor ao abrir um chamado de suporte.';
 
   @override
   String get meshcoreRadioStatsStale => 'Dados desatualizados, reconectando…';

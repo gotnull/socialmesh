@@ -11005,9 +11005,32 @@
     "@meshcoreRadioStatsRxAirtime": {
         "description": "D35-A - row label for cumulative RX airtime since the radio booted."
     },
-    "meshcoreRadioStatsAirtimeResetNote": "Airtime totals reset only on a radio power cycle.",
+    "meshcoreRadioStatsAirtimeResetNote": "Airtime and uptime reset only on a radio power cycle.",
     "@meshcoreRadioStatsAirtimeResetNote": {
-        "description": "D35-A - inline note clarifying that the firmware does not expose a reset action for TX/RX airtime."
+        "description": "D35-A / updated D35-B-A - inline note clarifying that the firmware does not expose a reset action for TX/RX airtime; D35-B-A extended this to also cover uptime."
+    },
+    "meshcoreRadioStatsUptime": "Uptime",
+    "@meshcoreRadioStatsUptime": {
+        "description": "D35-B-A - row label for the firmware uptime since power-on."
+    },
+    "meshcoreRadioStatsFirmwareQueue": "Firmware TX queue",
+    "@meshcoreRadioStatsFirmwareQueue": {
+        "description": "D35-B-A - row label for outbound LoRa packets pending transmission. Distinct from the D28 inbound drain heartbeat card."
+    },
+    "meshcoreRadioStatsFirmwareErrorFlags": "Firmware error flags",
+    "@meshcoreRadioStatsFirmwareErrorFlags": {
+        "description": "D35-B-A - row label for the firmware-internal error-flag accumulator. Surfaces only when non-zero; bits are NOT named in the firmware source so the value is shown as opaque hex."
+    },
+    "meshcoreRadioStatsErrorFlagsHex": "0x{value}",
+    "@meshcoreRadioStatsErrorFlagsHex": {
+        "description": "D35-B-A - opaque-hex formatter for the firmware error-flag accumulator. Caller passes a 4-character zero-padded uppercase hex string (e.g. '0042').",
+        "placeholders": {
+            "value": {"type": "String"}
+        }
+    },
+    "meshcoreRadioStatsErrorFlagsHelper": "Firmware-internal flags. Include this value when filing a support report.",
+    "@meshcoreRadioStatsErrorFlagsHelper": {
+        "description": "D35-B-A - tooltip / inline helper text under the error-flags row, clarifying the value is opaque and only useful in support reports."
     },
     "meshcoreRadioStatsStale": "Stale data, reconnecting…",
     "@meshcoreRadioStatsStale": {

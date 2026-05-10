@@ -216,6 +216,100 @@ class MeshCoreRadioStats {
       'tx=${txAirtime.inSeconds}s, rx=${rxAirtime.inSeconds}s)';
 }
 
+/// D35-B-A: parsed `RESP_CODE_STATS` (0x18) payload for the CORE subtype.
+///
+/// The companion firmware exposes this on `CMD_GET_STATS` (0x38) with the
+/// second byte set to `STATS_TYPE_CORE` (0). Wire layout (11 bytes):
+///
+/// ```
+/// offset  field            type      notes
+/// 0       resp_code        u8 = 0x18 RESP_CODE_STATS
+/// 1       stats_type       u8 = 0    STATS_TYPE_CORE
+/// 2-3     battery_mv       u16 LE    millivolts
+/// 4-7     uptime_secs      u32 LE    seconds since power-on
+/// 8-9     error_flags      u16 LE    firmware-internal flags accumulator
+/// 10      queue_len        u8        outbound LoRa TX queue depth
+/// ```
+///
+/// Resets:
+///   - uptime resets on power cycle AND soft reboot.
+///   - battery, error flags, queue length reset on power cycle.
+/// The firmware does NOT expose a host command to clear any of these.
+///
+/// Privacy:
+///   - The CORE response carries no peer identity, no message content,
+///     no path bytes, no PSKs.
+///   - `errorFlags` is a u16 accumulator with NO named bit constants in
+///     the firmware source. The UI never invents per-bit labels; it
+///     surfaces the value as opaque hex when non-zero, intended only
+///     for inclusion in support reports.
+class MeshCoreCoreStats {
+  /// Battery voltage in millivolts. Parsed for completeness but the
+  /// companion-radio Tools card does NOT render this row, since
+  /// `meshCoreBatteryProvider` already exposes battery via
+  /// `getBattAndStorage`. The field is preserved here so a future
+  /// fallback path could rely on it without re-parsing.
+  final int batteryMillivolts;
+
+  /// Time since the radio's last power-on. Resets on soft reboot too.
+  final Duration uptime;
+
+  /// Firmware-internal error flags. Bits are NOT documented in the
+  /// companion-radio firmware source; treat as opaque. The UI shows
+  /// this as a hex value only when non-zero.
+  final int errorFlags;
+
+  /// Number of packets pending outbound LoRa transmission. Distinct
+  /// from D28's `_QueueStatusCard` (which tracks the inbound
+  /// `next_message_ready` drain heartbeat).
+  final int queueLength;
+
+  /// Wall-clock time the snapshot was received. Used by the provider
+  /// to flag stale data when transport drops mid-poll.
+  final DateTime fetchedAt;
+
+  const MeshCoreCoreStats({
+    required this.batteryMillivolts,
+    required this.uptime,
+    required this.errorFlags,
+    required this.queueLength,
+    required this.fetchedAt,
+  });
+
+  /// Parse a CORE-subtype stats payload. Returns `null` on:
+  ///   - wrong length (must be exactly 11 bytes),
+  ///   - wrong discriminator (`payload[0] != 0x18`),
+  ///   - wrong subtype (`payload[1] != 0`).
+  ///
+  /// `now` lets tests inject a deterministic `fetchedAt`. Production
+  /// callers omit it; the parser falls back to `DateTime.now()`.
+  static MeshCoreCoreStats? parse(Uint8List payload, {DateTime? now}) {
+    if (payload.length != 11) return null;
+    if (payload[0] != 0x18) return null;
+    if (payload[1] != 0) return null;
+
+    final byteData = ByteData.sublistView(payload);
+    final batteryMv = byteData.getUint16(2, Endian.little);
+    final uptimeSecs = byteData.getUint32(4, Endian.little);
+    final errFlags = byteData.getUint16(8, Endian.little);
+    final queueLen = byteData.getUint8(10);
+
+    return MeshCoreCoreStats(
+      batteryMillivolts: batteryMv,
+      uptime: Duration(seconds: uptimeSecs),
+      errorFlags: errFlags,
+      queueLength: queueLen,
+      fetchedAt: now ?? DateTime.now(),
+    );
+  }
+
+  @override
+  String toString() =>
+      'MeshCoreCoreStats(uptime=${uptime.inSeconds}s, '
+      'q=$queueLength, err_flags=0x'
+      '${errorFlags.toRadixString(16).padLeft(4, '0')})';
+}
+
 /// D28 Part C: one hop in a parsed `PUSH_CODE_TRACE_DATA` (0x89) response.
 class MeshCoreTraceHop {
   /// Single-byte hop identifier (typically the first byte of the

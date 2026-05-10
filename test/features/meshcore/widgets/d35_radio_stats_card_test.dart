@@ -181,9 +181,9 @@ void main() {
     expect(find.text('42 s'), findsOneWidget);
     expect(find.text('1 h 18 m'), findsOneWidget);
 
-    // Reset note.
+    // Reset note. D35-B-A extended this copy to also mention uptime.
     expect(
-      find.text('Airtime totals reset only on a radio power cycle.'),
+      find.text('Airtime and uptime reset only on a radio power cycle.'),
       findsOneWidget,
     );
 

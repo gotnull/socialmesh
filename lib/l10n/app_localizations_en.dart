@@ -8134,7 +8134,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meshcoreRadioStatsAirtimeResetNote =>
-      'Airtime totals reset only on a radio power cycle.';
+      'Airtime and uptime reset only on a radio power cycle.';
+
+  @override
+  String get meshcoreRadioStatsUptime => 'Uptime';
+
+  @override
+  String get meshcoreRadioStatsFirmwareQueue => 'Firmware TX queue';
+
+  @override
+  String get meshcoreRadioStatsFirmwareErrorFlags => 'Firmware error flags';
+
+  @override
+  String meshcoreRadioStatsErrorFlagsHex(String value) {
+    return '0x$value';
+  }
+
+  @override
+  String get meshcoreRadioStatsErrorFlagsHelper =>
+      'Firmware-internal flags. Include this value when filing a support report.';
 
   @override
   String get meshcoreRadioStatsStale => 'Stale data, reconnecting…';

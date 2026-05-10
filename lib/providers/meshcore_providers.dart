@@ -1953,3 +1953,126 @@ final meshCoreRadioStatsProvider =
     NotifierProvider<MeshCoreRadioStatsNotifier, MeshCoreRadioStatsSnapshot>(
       MeshCoreRadioStatsNotifier.new,
     );
+
+// ---------------------------------------------------------------------------
+// D35-B-A: Companion radio CORE stats provider (uptime, queue, err flags).
+// ---------------------------------------------------------------------------
+
+/// Immutable wrapper carrying the latest [MeshCoreCoreStats] plus the
+/// connection / staleness signals the Tools card renders.
+///
+/// Mirrors the shape of [MeshCoreRadioStatsSnapshot]; CORE stats are
+/// polled on a slower cadence (5 s) so the staleness window is
+/// proportionally larger (15 s).
+class MeshCoreCoreStatsSnapshot {
+  final MeshCoreCoreStats? latest;
+  final bool isStale;
+  final bool isConnected;
+
+  const MeshCoreCoreStatsSnapshot({
+    required this.latest,
+    required this.isStale,
+    required this.isConnected,
+  });
+
+  const MeshCoreCoreStatsSnapshot.disconnected()
+    : latest = null,
+      isStale = false,
+      isConnected = false;
+}
+
+/// D35-B-A: CORE poll cadence and staleness threshold.
+///
+/// CORE values change slowly (uptime ticks once per second; queue
+/// length is bursty but typically drains within a second; error
+/// flags rarely flip). Polling every 5 s keeps wire chatter minimal.
+/// The 15 s stale threshold catches a transport blip after roughly
+/// three missed polls, leaving slack for the firmware to recover
+/// without flapping the UI.
+const Duration _kCoreStatsPollInterval = Duration(seconds: 5);
+const Duration _kCoreStatsStaleAfter = Duration(seconds: 15);
+
+/// Riverpod 3.x notifier polling `getCoreStats()` at 0.2 Hz while
+/// subscribed. The firmware request bypasses the D34a chat rate
+/// limiter, so the poll loop does not compete for the 1024 B / 60 s
+/// text budget. In-memory only.
+class MeshCoreCoreStatsNotifier extends Notifier<MeshCoreCoreStatsSnapshot> {
+  Timer? _ticker;
+  bool _inFlight = false;
+
+  @override
+  MeshCoreCoreStatsSnapshot build() {
+    ref.onDispose(() {
+      _ticker?.cancel();
+      _ticker = null;
+    });
+
+    final session = ref.watch(meshCoreSessionProvider);
+    _ticker?.cancel();
+    if (session == null) {
+      return const MeshCoreCoreStatsSnapshot.disconnected();
+    }
+
+    Future.microtask(_pollOnce);
+
+    _ticker = Timer.periodic(_kCoreStatsPollInterval, (_) => _pollOnce());
+
+    return const MeshCoreCoreStatsSnapshot(
+      latest: null,
+      isStale: false,
+      isConnected: true,
+    );
+  }
+
+  Future<void> _pollOnce() async {
+    if (_inFlight) return;
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null) {
+      state = const MeshCoreCoreStatsSnapshot.disconnected();
+      return;
+    }
+
+    _inFlight = true;
+    try {
+      final stats = await session.getCoreStats();
+      final stillConnected = ref.read(meshCoreSessionProvider) != null;
+      if (!stillConnected) {
+        state = const MeshCoreCoreStatsSnapshot.disconnected();
+        return;
+      }
+      if (stats == null) {
+        final prev = state.latest;
+        state = MeshCoreCoreStatsSnapshot(
+          latest: prev,
+          isStale: prev != null,
+          isConnected: true,
+        );
+        return;
+      }
+      state = MeshCoreCoreStatsSnapshot(
+        latest: stats,
+        isStale: false,
+        isConnected: true,
+      );
+    } finally {
+      _inFlight = false;
+    }
+  }
+
+  /// Force-refresh from the live session. Used by tests and any UI
+  /// that wants a fresh snapshot without waiting for the 5 s tick.
+  Future<void> refreshNow() => _pollOnce();
+
+  /// Recompute the stale flag against [now]. Mirrors the helper on
+  /// [MeshCoreRadioStatsNotifier].
+  bool isStaleAt(DateTime now) {
+    final latest = state.latest;
+    if (latest == null) return false;
+    return now.difference(latest.fetchedAt) > _kCoreStatsStaleAfter;
+  }
+}
+
+final meshCoreCoreStatsProvider =
+    NotifierProvider<MeshCoreCoreStatsNotifier, MeshCoreCoreStatsSnapshot>(
+      MeshCoreCoreStatsNotifier.new,
+    );
