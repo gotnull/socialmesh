@@ -15499,6 +15499,36 @@ abstract class AppLocalizations {
   /// **'Leave Channel'**
   String get meshcoreLeaveChannel;
 
+  /// Channel options action label to silence push notifications for a channel
+  ///
+  /// In en, this message translates to:
+  /// **'Mute Channel'**
+  String get meshcoreMuteChannel;
+
+  /// Channel options action label to re-enable push notifications for a previously muted channel
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute Channel'**
+  String get meshcoreUnmuteChannel;
+
+  /// Success snackbar after muting a channel
+  ///
+  /// In en, this message translates to:
+  /// **'Muted {channelName}'**
+  String meshcoreChannelMuted(String channelName);
+
+  /// Success snackbar after unmuting a channel
+  ///
+  /// In en, this message translates to:
+  /// **'Unmuted {channelName}'**
+  String meshcoreChannelUnmuted(String channelName);
+
+  /// Accessibility label for the notifications-off icon shown on a muted channel tile
+  ///
+  /// In en, this message translates to:
+  /// **'Channel notifications muted'**
+  String get meshcoreChannelMutedA11yLabel;
+
   /// Confirm dialog message for leaving a channel
   ///
   /// In en, this message translates to:

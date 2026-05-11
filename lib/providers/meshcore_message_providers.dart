@@ -1050,6 +1050,12 @@ class MeshCoreConversationsNotifier
   }
 
   /// D30 Part A: dispatch the channel notification.
+  /// D37-A: per-channel mute gates the system notification. The in-app
+  /// chat persistence path (above this call site) is unconditional —
+  /// muted channels still receive and store messages; only the system
+  /// notification is suppressed. Storage / provider read failures
+  /// fail-open (deliver the notification) so the user never misses a
+  /// message because of a SharedPreferences read error.
   void _maybeNotifyChannelMessage({
     required String senderName,
     required String channelName,
@@ -1063,6 +1069,27 @@ class MeshCoreConversationsNotifier
         final settings = await ref.read(settingsServiceProvider.future);
         if (!settings.notificationsEnabled) return;
         if (!settings.channelMessageNotificationsEnabled) return;
+        // D37-A: per-channel mute gate. Read defensively — a failure to
+        // read the muted set must NOT silently drop the notification.
+        bool muted = false;
+        try {
+          muted = ref
+              .read(meshCoreChannelMutedSetProvider)
+              .contains(channelIndex);
+        } catch (e) {
+          AppLogging.meshcore(
+            'event=channel.notification.mute_check.failed '
+            'idx=$channelIndex reason=${e.runtimeType}',
+            error: true,
+          );
+        }
+        if (muted) {
+          AppLogging.meshcore(
+            'event=channel.notification.skipped reason=muted '
+            'idx=$channelIndex',
+          );
+          return;
+        }
         await NotificationService().showMeshCoreChannelMessageNotification(
           senderName: senderName.isNotEmpty ? senderName : 'MeshCore',
           channelName: channelName.isNotEmpty ? channelName : 'Channel',

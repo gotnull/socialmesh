@@ -23,6 +23,7 @@ import '../services/meshcore/meshcore_send_rate_limiter.dart';
 import '../services/meshcore/protocol/meshcore_capture.dart';
 import '../services/meshcore/protocol/meshcore_messages.dart';
 import '../services/meshcore/protocol/meshcore_session.dart';
+import '../services/meshcore/storage/meshcore_channel_prefs_store.dart';
 import 'app_providers.dart';
 import 'connection_providers.dart';
 
@@ -1051,6 +1052,175 @@ final meshCoreChannelsProvider =
     NotifierProvider<MeshCoreChannelsNotifier, MeshCoreChannelsState>(
       MeshCoreChannelsNotifier.new,
     );
+
+// ---------------------------------------------------------------------------
+// D37-A: MeshCore channel preferences (mute)
+// ---------------------------------------------------------------------------
+
+/// 8-char hex prefix of the connected device's public key.
+///
+/// Used as the per-device key for [MeshCoreChannelPrefsStore]. Empty
+/// string when no MeshCore device is identified yet — the store treats
+/// the empty key as "no-op" so writes never land in a global keyspace.
+///
+/// Logging note: only this 8-char prefix is ever logged downstream;
+/// the full 32-byte pubkey is intentionally never written to logs by
+/// the channel-prefs surface.
+String meshCoreSelfPubKeyPrefix(MeshCoreSelfInfo? info) {
+  if (info == null) return '';
+  final bytes = info.pubKey;
+  if (bytes.isEmpty) return '';
+  final hex = bytes
+      .take(4)
+      .map((b) => b.toRadixString(16).padLeft(2, '0'))
+      .join();
+  return hex;
+}
+
+/// Reactive provider exposing the connected device's 8-char pubkey
+/// prefix (or empty string when no device is identified).
+final meshCoreSelfPubKeyPrefixProvider = Provider<String>((ref) {
+  final info = ref.watch(meshCoreSelfInfoProvider).selfInfo;
+  return meshCoreSelfPubKeyPrefix(info);
+});
+
+/// Process-wide [MeshCoreChannelPrefsStore]. Tests override this with a
+/// `SharedPreferences.setMockInitialValues`-backed instance.
+final meshCoreChannelPrefsStoreProvider = Provider<MeshCoreChannelPrefsStore>((
+  ref,
+) {
+  return MeshCoreChannelPrefsStore();
+});
+
+/// D37-A: per-device channel preferences (muted set + reserved hidden/
+/// order). Notifier-shaped so widgets can `ref.watch` directly.
+///
+/// Lifecycle:
+///   - `build()` reads the current pubkey prefix; when it flips
+///     (connect, reconnect to a different device, disconnect), the
+///     notifier re-loads from the store.
+///   - Empty prefix → state remains [MeshCoreChannelPrefs.empty] and
+///     all mutate paths are no-ops.
+///   - On a successful mutate, the persisted blob is the source of
+///     truth: we re-read it to update state so a concurrent write
+///     elsewhere can't be silently overwritten.
+///
+/// Logging discipline (verified by `d37a_channel_prefs_redaction_test.dart`):
+///   - Only `idx=<int>` and the 8-char pubkey-prefix appear in events.
+///   - Never the channel name, never the PSK, never the channel code,
+///     never the full pubkey.
+class MeshCoreChannelPrefsNotifier extends Notifier<MeshCoreChannelPrefs> {
+  String _lastLoadedPrefix = '';
+  bool _disposed = false;
+
+  @override
+  MeshCoreChannelPrefs build() {
+    _disposed = false;
+    final prefix = ref.watch(meshCoreSelfPubKeyPrefixProvider);
+    if (prefix.isEmpty) {
+      _lastLoadedPrefix = '';
+      // Defer reset off-build so we don't write to `state` before it's
+      // initialised.
+      Future<void>(() {
+        if (_disposed) return;
+        if (state.mutedChannelIndices.isEmpty &&
+            state.hiddenChannelIndices.isEmpty &&
+            state.orderedChannelIndices.isEmpty) {
+          return;
+        }
+        state = MeshCoreChannelPrefs.empty;
+      });
+    } else if (prefix != _lastLoadedPrefix) {
+      _lastLoadedPrefix = prefix;
+      Future<void>(_loadFor(prefix));
+    }
+    ref.onDispose(() {
+      _disposed = true;
+    });
+    return MeshCoreChannelPrefs.empty;
+  }
+
+  Future<void> Function() _loadFor(String prefix) {
+    return () async {
+      if (_disposed) return;
+      try {
+        final store = ref.read(meshCoreChannelPrefsStoreProvider);
+        final loaded = await store.load(prefix);
+        if (_disposed) return;
+        // Defensive: the pubkey may have flipped while we were
+        // awaiting. Only write state if the prefix is still current.
+        if (ref.read(meshCoreSelfPubKeyPrefixProvider) != prefix) return;
+        state = loaded;
+      } catch (e) {
+        if (_disposed) return;
+        AppLogging.meshcore(
+          'event=channel.prefs.load.failed reason=${e.runtimeType}',
+          error: true,
+        );
+      }
+    };
+  }
+
+  /// True iff slot [channelIndex] is currently muted.
+  bool isMuted(int channelIndex) =>
+      state.mutedChannelIndices.contains(channelIndex);
+
+  /// Persist mute on slot [channelIndex]. Idempotent. No-op when no
+  /// device is identified.
+  Future<void> mute(int channelIndex) async {
+    final prefix = ref.read(meshCoreSelfPubKeyPrefixProvider);
+    if (prefix.isEmpty) return;
+    if (state.mutedChannelIndices.contains(channelIndex)) return;
+    final store = ref.read(meshCoreChannelPrefsStoreProvider);
+    try {
+      final updated = await store.mute(prefix, channelIndex);
+      if (_disposed) return;
+      if (ref.read(meshCoreSelfPubKeyPrefixProvider) != prefix) return;
+      state = updated;
+      AppLogging.meshcore(
+        'event=channel.muted idx=$channelIndex device=$prefix',
+      );
+    } catch (e) {
+      AppLogging.meshcore(
+        'event=channel.mute.failed idx=$channelIndex reason=${e.runtimeType}',
+        error: true,
+      );
+    }
+  }
+
+  /// Persist un-mute on slot [channelIndex]. Idempotent.
+  Future<void> unmute(int channelIndex) async {
+    final prefix = ref.read(meshCoreSelfPubKeyPrefixProvider);
+    if (prefix.isEmpty) return;
+    if (!state.mutedChannelIndices.contains(channelIndex)) return;
+    final store = ref.read(meshCoreChannelPrefsStoreProvider);
+    try {
+      final updated = await store.unmute(prefix, channelIndex);
+      if (_disposed) return;
+      if (ref.read(meshCoreSelfPubKeyPrefixProvider) != prefix) return;
+      state = updated;
+      AppLogging.meshcore(
+        'event=channel.unmuted idx=$channelIndex device=$prefix',
+      );
+    } catch (e) {
+      AppLogging.meshcore(
+        'event=channel.unmute.failed idx=$channelIndex '
+        'reason=${e.runtimeType}',
+        error: true,
+      );
+    }
+  }
+}
+
+final meshCoreChannelPrefsProvider =
+    NotifierProvider<MeshCoreChannelPrefsNotifier, MeshCoreChannelPrefs>(
+      MeshCoreChannelPrefsNotifier.new,
+    );
+
+/// Read-only convenience: the current muted set.
+final meshCoreChannelMutedSetProvider = Provider<Set<int>>((ref) {
+  return ref.watch(meshCoreChannelPrefsProvider).mutedChannelIndices;
+});
 
 /// Provider for the MeshCore debug capture (null if not MeshCore or release build).
 ///

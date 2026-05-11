@@ -1010,6 +1010,9 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
   }
 
   void _showChannelOptions(MeshCoreChannel channel) {
+    final isMuted = ref
+        .read(meshCoreChannelMutedSetProvider)
+        .contains(channel.index);
     AppBottomSheet.showActions<void>(
       context: context,
       header: Align(
@@ -1035,6 +1038,15 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
               ),
             );
           },
+        ),
+        BottomSheetAction(
+          icon: isMuted
+              ? Icons.notifications_active_rounded
+              : Icons.notifications_off_rounded,
+          label: isMuted
+              ? context.l10n.meshcoreUnmuteChannel
+              : context.l10n.meshcoreMuteChannel,
+          onTap: () => _toggleChannelMute(channel, currentlyMuted: isMuted),
         ),
         BottomSheetAction(
           icon: Icons.edit_rounded,
@@ -1070,6 +1082,34 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
         ),
       ],
     );
+  }
+
+  /// D37-A: toggle the local mute preference for [channel]. The state
+  /// update goes through the notifier so the channel-tile overlay icon
+  /// and the next long-press menu both pick up the new state. Snackbar
+  /// confirms either side of the toggle. No PSK / channel-code / full
+  /// pubkey reaches the snackbar or log line — only the display name
+  /// (already user-visible) and the slot index.
+  Future<void> _toggleChannelMute(
+    MeshCoreChannel channel, {
+    required bool currentlyMuted,
+  }) async {
+    final notifier = ref.read(meshCoreChannelPrefsProvider.notifier);
+    if (currentlyMuted) {
+      await notifier.unmute(channel.index);
+      if (!mounted) return;
+      showSuccessSnackBar(
+        context,
+        context.l10n.meshcoreChannelUnmuted(channel.displayName),
+      );
+    } else {
+      await notifier.mute(channel.index);
+      if (!mounted) return;
+      showSuccessSnackBar(
+        context,
+        context.l10n.meshcoreChannelMuted(channel.displayName),
+      );
+    }
   }
 
   void _confirmLeaveChannel(MeshCoreChannel channel) async {
@@ -1137,6 +1177,11 @@ class _ChannelCard extends ConsumerWidget {
         .firstWhere((_) => true, orElse: () => null);
     final lastMessageText = conversation?.lastMessageText;
     final unreadCount = conversation?.unreadCount ?? 0;
+    // D37-A: muted-channel indicator (notifications suppressed; in-app
+    // delivery unaffected).
+    final isMuted = ref
+        .watch(meshCoreChannelMutedSetProvider)
+        .contains(channel.index);
 
     return BouncyTap(
       onTap: () {
@@ -1246,6 +1291,18 @@ class _ChannelCard extends ConsumerWidget {
                             ),
                           ),
                         ),
+                        if (isMuted) ...[
+                          const SizedBox(width: AppTheme.spacing8),
+                          Semantics(
+                            container: true,
+                            label: context.l10n.meshcoreChannelMutedA11yLabel,
+                            child: Icon(
+                              Icons.notifications_off_rounded,
+                              size: 14,
+                              color: context.textTertiary,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ],

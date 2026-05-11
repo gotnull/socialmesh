@@ -8742,6 +8742,25 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreLeaveChannel => 'Leave Channel';
 
   @override
+  String get meshcoreMuteChannel => 'Mute Channel';
+
+  @override
+  String get meshcoreUnmuteChannel => 'Unmute Channel';
+
+  @override
+  String meshcoreChannelMuted(String channelName) {
+    return 'Muted $channelName';
+  }
+
+  @override
+  String meshcoreChannelUnmuted(String channelName) {
+    return 'Unmuted $channelName';
+  }
+
+  @override
+  String get meshcoreChannelMutedA11yLabel => 'Channel notifications muted';
+
+  @override
   String meshcoreLeaveChannelMessage(String channelName) {
     return 'Are you sure you want to leave $channelName?';
   }

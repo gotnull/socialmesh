@@ -8836,6 +8836,25 @@ class AppLocalizationsIt extends AppLocalizations {
   String get meshcoreLeaveChannel => 'Abbandona Canale';
 
   @override
+  String get meshcoreMuteChannel => 'Silenzia Canale';
+
+  @override
+  String get meshcoreUnmuteChannel => 'Riattiva Canale';
+
+  @override
+  String meshcoreChannelMuted(String channelName) {
+    return '$channelName silenziato';
+  }
+
+  @override
+  String meshcoreChannelUnmuted(String channelName) {
+    return '$channelName riattivato';
+  }
+
+  @override
+  String get meshcoreChannelMutedA11yLabel => 'Notifiche del canale silenziate';
+
+  @override
   String meshcoreLeaveChannelMessage(String channelName) {
     return 'Vuoi davvero abbandonare $channelName?';
   }

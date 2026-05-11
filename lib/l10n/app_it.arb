@@ -19901,6 +19901,36 @@
   "@meshcoreLeaveChannel": {
     "description": "Channel options destructive action label"
   },
+  "meshcoreMuteChannel": "Silenzia Canale",
+  "@meshcoreMuteChannel": {
+    "description": "Channel options action label to silence push notifications for a channel"
+  },
+  "meshcoreUnmuteChannel": "Riattiva Canale",
+  "@meshcoreUnmuteChannel": {
+    "description": "Channel options action label to re-enable push notifications for a previously muted channel"
+  },
+  "meshcoreChannelMuted": "{channelName} silenziato",
+  "@meshcoreChannelMuted": {
+    "description": "Success snackbar after muting a channel",
+    "placeholders": {
+      "channelName": {
+        "type": "String"
+      }
+    }
+  },
+  "meshcoreChannelUnmuted": "{channelName} riattivato",
+  "@meshcoreChannelUnmuted": {
+    "description": "Success snackbar after unmuting a channel",
+    "placeholders": {
+      "channelName": {
+        "type": "String"
+      }
+    }
+  },
+  "meshcoreChannelMutedA11yLabel": "Notifiche del canale silenziate",
+  "@meshcoreChannelMutedA11yLabel": {
+    "description": "Accessibility label for the notifications-off icon shown on a muted channel tile"
+  },
   "meshcoreLeaveChannelMessage": "Vuoi davvero abbandonare {channelName}?",
   "@meshcoreLeaveChannelMessage": {
     "description": "Confirm dialog message for leaving a channel",
