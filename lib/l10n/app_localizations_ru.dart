@@ -8907,6 +8907,36 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreRadioApplyConfirmAction => 'Apply settings';
 
   @override
+  String get meshcorePathOverlayShowOnMap => 'Show on map';
+
+  @override
+  String get meshcorePathOverlayShowOnMapSubtitle =>
+      'Draw the path as a route overlay';
+
+  @override
+  String get meshcorePathOverlayClear => 'Clear path';
+
+  @override
+  String get meshcorePathOverlayNoData => 'No path data to show on map';
+
+  @override
+  String get meshcorePathOverlayHopSheetTitle => 'Path hop';
+
+  @override
+  String get meshcorePathOverlayHopLabelHeader => 'Hop';
+
+  @override
+  String meshcorePathOverlayHopLabelValue(String label) {
+    return 'Hop $label';
+  }
+
+  @override
+  String get meshcorePathOverlayHopName => 'Contact';
+
+  @override
+  String get meshcorePathOverlayUnknownHop => 'Unknown hop';
+
+  @override
   String meshcoreLeaveChannelMessage(String channelName) {
     return 'Are you sure you want to leave $channelName?';
   }

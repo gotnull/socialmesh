@@ -41,6 +41,7 @@ import '../../../models/meshcore_contact.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../contact_l10n.dart';
+import 'meshcore_map_screen.dart';
 import 'meshcore_neighbors_sheet.dart';
 import 'meshcore_path_history_sheet.dart';
 import 'meshcore_tools_screen.dart' show showMeshCoreTracePathSheet;
@@ -237,6 +238,9 @@ class MeshCoreContactDetailScreen extends ConsumerWidget {
         // saved paths. Tap opens the history sheet; the sheet itself
         // handles activation confirmation, View, and Delete.
         _PathHistoryTile(contact: c),
+        // D42-A: Show on map tile. Hidden when the contact has no
+        // usable path data (flood path or all hops unresolved).
+        _ShowOnMapTile(contact: c),
         // D36-A: Neighbours query is repeater-only. The chat-type
         // contacts can't be queried this way (they aren't repeaters)
         // so the tile is hidden entirely; we don't show a greyed-out
@@ -467,5 +471,55 @@ class _PathHistoryTile extends ConsumerWidget {
       subtitle: l10n.meshcorePathHistoryTileSubtitle(entries.length),
       onTap: () => showMeshCorePathHistorySheet(context, contact: contact),
     );
+  }
+}
+
+/// D42-A: Show-on-map tile in the Contact Detail actions section.
+/// Hidden when the contact has no usable path data:
+///   - flood route (pathLength == -1 with no override),
+///   - direct route AND no contact location AND no self location,
+///   - all hops unresolved AND no endpoint coords.
+///
+/// Tap builds the overlay via [meshCorePathOverlayProvider] then
+/// pushes the map. Snackbar fallback when no coordinate data
+/// resolves at activation time.
+class _ShowOnMapTile extends ConsumerWidget {
+  final MeshCoreContact contact;
+  const _ShowOnMapTile({required this.contact});
+
+  bool _isFloodOnly() {
+    if (contact.pathOverride != null) {
+      return contact.pathOverride! < 0;
+    }
+    return contact.pathLength < 0;
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Flood routes have no fixed path - hide the tile entirely.
+    if (_isFloodOnly()) return const SizedBox.shrink();
+    final l10n = context.l10n;
+    return SettingsTile(
+      key: const ValueKey('meshcore-contact-detail-show-on-map'),
+      icon: Icons.map_outlined,
+      iconColor: context.accentColor,
+      title: l10n.meshcorePathOverlayShowOnMap,
+      subtitle: l10n.meshcorePathOverlayShowOnMapSubtitle,
+      onTap: () => _activate(context, ref),
+    );
+  }
+
+  void _activate(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final ok = ref
+        .read(meshCorePathOverlayProvider.notifier)
+        .setActive(contact);
+    if (!ok) {
+      showInfoSnackBar(context, l10n.meshcorePathOverlayNoData);
+      return;
+    }
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const MeshCoreMapScreen()));
   }
 }

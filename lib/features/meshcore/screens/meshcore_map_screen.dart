@@ -24,6 +24,7 @@ import '../../../core/widgets/primary_gradient_button.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../utils/snackbar.dart';
 import '../../../models/meshcore_contact.dart';
+import '../../../models/meshcore_path_overlay.dart';
 import '../contact_l10n.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_providers.dart';
@@ -93,11 +94,42 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
     return zoom.clamp(4.0, 15.0);
   }
 
+  /// D42-A: tracks the overlay we last auto-fitted to, so a single
+  /// activation triggers one map-camera move rather than repeating
+  /// on every rebuild.
+  MeshCorePathOverlay? _lastFittedOverlay;
+
   @override
   Widget build(BuildContext context) {
     final linkStatus = ref.watch(linkStatusProvider);
     final isConnected = linkStatus.isConnected;
     final contactsState = ref.watch(meshCoreContactsProvider);
+    // D42-A: path overlay drives the polyline + hop markers.
+    final pathOverlay = ref.watch(meshCorePathOverlayProvider);
+
+    // Auto-fit map bounds when the overlay flips to a new value.
+    if (!identical(pathOverlay, _lastFittedOverlay)) {
+      _lastFittedOverlay = pathOverlay;
+      if (pathOverlay != null) {
+        final pts = pathOverlay.drawablePoints();
+        if (pts.length >= 2) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            try {
+              _mapController.fitCamera(
+                CameraFit.bounds(
+                  bounds: LatLngBounds.fromPoints(pts),
+                  padding: const EdgeInsets.all(AppTheme.spacing48),
+                ),
+              );
+            } catch (_) {
+              // fitCamera throws on degenerate bounds (single point);
+              // safe to ignore - drawablePoints already filters to >=2.
+            }
+          });
+        }
+      }
+    }
 
     // Filter contacts with finite location
     final contactsWithLocation = contactsState.contacts
@@ -201,6 +233,15 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
       physics: const NeverScrollableScrollPhysics(),
       actions: [
         const MeshCoreDeviceStatusButton(),
+        // D42-A: Clear-path action only visible when an overlay is set.
+        if (pathOverlay != null)
+          IconButton(
+            key: const ValueKey('meshcore-map-path-overlay-clear'),
+            icon: const Icon(Icons.timeline_outlined),
+            onPressed: () =>
+                ref.read(meshCorePathOverlayProvider.notifier).clear(),
+            tooltip: context.l10n.meshcorePathOverlayClear,
+          ),
         IconButton(
           icon: const Icon(Icons.filter_list),
           onPressed: () => _showFilterDialog(context),
@@ -275,6 +316,31 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
                             ),
                           ),
                         ],
+                      ),
+                    // D42-A: path overlay polyline + hop markers.
+                    // Uses a distinct accent + thicker stroke so it
+                    // does not collide with the measurement polyline's
+                    // warning-yellow dotted style.
+                    if (pathOverlay != null &&
+                        pathOverlay.drawablePoints().length >= 2)
+                      PolylineLayer(
+                        key: const ValueKey('meshcore-map-path-overlay-line'),
+                        polylines: [
+                          Polyline(
+                            points: pathOverlay.drawablePoints(),
+                            strokeWidth: 4,
+                            color: context.accentColor,
+                          ),
+                        ],
+                      ),
+                    if (pathOverlay != null)
+                      MarkerLayer(
+                        key: const ValueKey(
+                          'meshcore-map-path-overlay-markers',
+                        ),
+                        markers: finiteMarkers(
+                          _buildPathOverlayMarkers(pathOverlay),
+                        ),
                       ),
                     // Measurement markers
                     if (_measureStart != null && isFiniteLatLng(_measureStart))
@@ -492,6 +558,80 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
         titlePrefix: '',
         titleKeyword: context.l10n.meshcoreNoContactsWithLocation,
         titleSuffix: '',
+      ),
+    );
+  }
+
+  /// D42-A: build the per-hop markers for the active path overlay.
+  /// Only hops with a known position render a marker; unknown hops
+  /// are surfaced via the overlay row sub-sheet (see
+  /// [_showPathOverlayHopSheet]), never with a fabricated marker.
+  List<Marker> _buildPathOverlayMarkers(MeshCorePathOverlay overlay) {
+    final markers = <Marker>[];
+    for (final hop in overlay.hops) {
+      final ll = hop.latLng;
+      if (ll == null) continue;
+      markers.add(
+        Marker(
+          key: ValueKey('meshcore-map-path-hop-${hop.label}'),
+          point: ll,
+          width: 32,
+          height: 32,
+          child: GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              _showPathOverlayHopSheet(hop);
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: context.accentColor,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.black, width: 2),
+              ),
+              child: Center(
+                child: Text(
+                  hop.label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    return markers;
+  }
+
+  /// D42-A: minimal hop info sheet. Shows the hop's 2-char label and
+  /// the matched contact's display name when present. Never a full
+  /// pubkey, never the raw byte run.
+  Future<void> _showPathOverlayHopSheet(MeshCorePathOverlayHop hop) {
+    final l10n = context.l10n;
+    return AppBottomSheet.show<void>(
+      context: context,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionTitle(title: l10n.meshcorePathOverlayHopSheetTitle),
+          const SizedBox(height: AppTheme.spacing12),
+          InfoTable(
+            rows: [
+              InfoTableRow(
+                label: l10n.meshcorePathOverlayHopLabelHeader,
+                value: l10n.meshcorePathOverlayHopLabelValue(hop.label),
+              ),
+              InfoTableRow(
+                label: l10n.meshcorePathOverlayHopName,
+                value: hop.displayName ?? l10n.meshcorePathOverlayUnknownHop,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

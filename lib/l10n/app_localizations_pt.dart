@@ -8994,6 +8994,37 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreRadioApplyConfirmAction => 'Aplicar configurações';
 
   @override
+  String get meshcorePathOverlayShowOnMap => 'Mostrar no mapa';
+
+  @override
+  String get meshcorePathOverlayShowOnMapSubtitle =>
+      'Desenhar a rota como overlay no mapa';
+
+  @override
+  String get meshcorePathOverlayClear => 'Limpar rota';
+
+  @override
+  String get meshcorePathOverlayNoData =>
+      'Nenhum dado de rota para mostrar no mapa';
+
+  @override
+  String get meshcorePathOverlayHopSheetTitle => 'Hop da rota';
+
+  @override
+  String get meshcorePathOverlayHopLabelHeader => 'Hop';
+
+  @override
+  String meshcorePathOverlayHopLabelValue(String label) {
+    return 'Hop $label';
+  }
+
+  @override
+  String get meshcorePathOverlayHopName => 'Contato';
+
+  @override
+  String get meshcorePathOverlayUnknownHop => 'Hop desconhecido';
+
+  @override
   String meshcoreLeaveChannelMessage(String channelName) {
     return 'Tem certeza que deseja sair de $channelName?';
   }

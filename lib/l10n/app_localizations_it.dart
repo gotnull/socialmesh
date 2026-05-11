@@ -9004,6 +9004,37 @@ class AppLocalizationsIt extends AppLocalizations {
   String get meshcoreRadioApplyConfirmAction => 'Applica impostazioni';
 
   @override
+  String get meshcorePathOverlayShowOnMap => 'Mostra sulla mappa';
+
+  @override
+  String get meshcorePathOverlayShowOnMapSubtitle =>
+      'Disegna il percorso come overlay sulla mappa';
+
+  @override
+  String get meshcorePathOverlayClear => 'Cancella percorso';
+
+  @override
+  String get meshcorePathOverlayNoData =>
+      'Nessun dato di percorso da mostrare sulla mappa';
+
+  @override
+  String get meshcorePathOverlayHopSheetTitle => 'Hop del percorso';
+
+  @override
+  String get meshcorePathOverlayHopLabelHeader => 'Hop';
+
+  @override
+  String meshcorePathOverlayHopLabelValue(String label) {
+    return 'Hop $label';
+  }
+
+  @override
+  String get meshcorePathOverlayHopName => 'Contatto';
+
+  @override
+  String get meshcorePathOverlayUnknownHop => 'Hop sconosciuto';
+
+  @override
   String meshcoreLeaveChannelMessage(String channelName) {
     return 'Vuoi davvero abbandonare $channelName?';
   }

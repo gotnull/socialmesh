@@ -20107,6 +20107,47 @@
   "@meshcoreRadioApplyConfirmAction": {
     "description": "D40 - confirm-before-apply sheet primary button label"
   },
+  "meshcorePathOverlayShowOnMap": "Mostra sulla mappa",
+  "@meshcorePathOverlayShowOnMap": {
+    "description": "D42-A - Contact Detail tile + path-history row action that draws the path as an overlay on the map"
+  },
+  "meshcorePathOverlayShowOnMapSubtitle": "Disegna il percorso come overlay sulla mappa",
+  "@meshcorePathOverlayShowOnMapSubtitle": {
+    "description": "D42-A - Contact Detail Show-on-map tile subtitle"
+  },
+  "meshcorePathOverlayClear": "Cancella percorso",
+  "@meshcorePathOverlayClear": {
+    "description": "D42-A - map app-bar action that removes the active path overlay"
+  },
+  "meshcorePathOverlayNoData": "Nessun dato di percorso da mostrare sulla mappa",
+  "@meshcorePathOverlayNoData": {
+    "description": "D42-A - snackbar shown when activation cannot resolve any coordinate data"
+  },
+  "meshcorePathOverlayHopSheetTitle": "Hop del percorso",
+  "@meshcorePathOverlayHopSheetTitle": {
+    "description": "D42-A - hop info sub-sheet title"
+  },
+  "meshcorePathOverlayHopLabelHeader": "Hop",
+  "@meshcorePathOverlayHopLabelHeader": {
+    "description": "D42-A - InfoTable row label for the hop's 2-char hex byte"
+  },
+  "meshcorePathOverlayHopLabelValue": "Hop {label}",
+  "@meshcorePathOverlayHopLabelValue": {
+    "description": "D42-A - InfoTable row value rendering the hop byte as Hop XX",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "meshcorePathOverlayHopName": "Contatto",
+  "@meshcorePathOverlayHopName": {
+    "description": "D42-A - InfoTable row label for the matched contact display name"
+  },
+  "meshcorePathOverlayUnknownHop": "Hop sconosciuto",
+  "@meshcorePathOverlayUnknownHop": {
+    "description": "D42-A - hop info fallback when no contact matched the hop byte"
+  },
   "meshcoreLeaveChannelMessage": "Vuoi davvero abbandonare {channelName}?",
   "@meshcoreLeaveChannelMessage": {
     "description": "Confirm dialog message for leaving a channel",

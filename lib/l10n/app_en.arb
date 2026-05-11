@@ -12000,6 +12000,47 @@
     "@meshcoreRadioApplyConfirmAction": {
         "description": "D40 - confirm-before-apply sheet primary button label"
     },
+    "meshcorePathOverlayShowOnMap": "Show on map",
+    "@meshcorePathOverlayShowOnMap": {
+        "description": "D42-A - Contact Detail tile + path-history row action that draws the path as an overlay on the map"
+    },
+    "meshcorePathOverlayShowOnMapSubtitle": "Draw the path as a route overlay",
+    "@meshcorePathOverlayShowOnMapSubtitle": {
+        "description": "D42-A - Contact Detail Show-on-map tile subtitle"
+    },
+    "meshcorePathOverlayClear": "Clear path",
+    "@meshcorePathOverlayClear": {
+        "description": "D42-A - map app-bar action that removes the active path overlay"
+    },
+    "meshcorePathOverlayNoData": "No path data to show on map",
+    "@meshcorePathOverlayNoData": {
+        "description": "D42-A - snackbar shown when activation cannot resolve any coordinate data"
+    },
+    "meshcorePathOverlayHopSheetTitle": "Path hop",
+    "@meshcorePathOverlayHopSheetTitle": {
+        "description": "D42-A - hop info sub-sheet title"
+    },
+    "meshcorePathOverlayHopLabelHeader": "Hop",
+    "@meshcorePathOverlayHopLabelHeader": {
+        "description": "D42-A - InfoTable row label for the hop's 2-char hex byte"
+    },
+    "meshcorePathOverlayHopLabelValue": "Hop {label}",
+    "@meshcorePathOverlayHopLabelValue": {
+        "description": "D42-A - InfoTable row value rendering the hop byte as Hop XX",
+        "placeholders": {
+            "label": {
+                "type": "String"
+            }
+        }
+    },
+    "meshcorePathOverlayHopName": "Contact",
+    "@meshcorePathOverlayHopName": {
+        "description": "D42-A - InfoTable row label for the matched contact display name"
+    },
+    "meshcorePathOverlayUnknownHop": "Unknown hop",
+    "@meshcorePathOverlayUnknownHop": {
+        "description": "D42-A - hop info fallback when no contact matched the hop byte"
+    },
     "meshcoreLeaveChannelMessage": "Are you sure you want to leave {channelName}?",
     "@meshcoreLeaveChannelMessage": {
         "description": "Confirm dialog message for leaving a channel",

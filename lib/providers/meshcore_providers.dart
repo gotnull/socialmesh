@@ -16,6 +16,7 @@ import '../core/transport.dart';
 import '../models/mesh_device.dart';
 import '../models/meshcore_contact.dart';
 import '../models/meshcore_channel.dart';
+import '../models/meshcore_path_overlay.dart';
 import '../services/meshcore/connection_coordinator.dart';
 import '../services/meshcore/meshcore_adapter.dart';
 import '../services/meshcore/meshcore_detector.dart';
@@ -1519,6 +1520,81 @@ final meshCorePathHistoryProvider =
       List<MeshCorePathHistoryEntry>,
       String
     >(MeshCorePathHistoryNotifier.new);
+
+// ---------------------------------------------------------------------------
+// D42-A: map path overlay (app-local, ephemeral, single at a time)
+// ---------------------------------------------------------------------------
+
+/// Holds the currently-rendered path overlay on `MeshCoreMapScreen`,
+/// or `null` when no overlay is active. Replaced atomically by every
+/// new `setActive` / `setFromHistory`; cleared via `clear()`.
+///
+/// Lifecycle:
+///   - Ephemeral - never persisted.
+///   - No background discovery, no auto-overlay on connect.
+///   - Replaced (not stacked) on each new set call.
+///
+/// Logging:
+///   - `event=path_overlay.shown source=<active|history> hop_count=<int>`
+///   - `event=path_overlay.cleared`
+///   - No path bytes, no full pubkeys, no message text.
+class MeshCorePathOverlayNotifier extends Notifier<MeshCorePathOverlay?> {
+  @override
+  MeshCorePathOverlay? build() => null;
+
+  /// Build an overlay from the contact's live firmware path
+  /// (preferring `pathOverrideBytes` when set). Returns `true` iff
+  /// the overlay carries at least two drawable points (origin →
+  /// target via known hops). Returns `false` and leaves state
+  /// untouched when the path is flood or no coordinate data
+  /// resolved.
+  bool setActive(MeshCoreContact contact) {
+    final contacts = ref.read(meshCoreContactsProvider).contacts;
+    final selfInfo = ref.read(meshCoreSelfInfoProvider).selfInfo;
+    final overlay = MeshCorePathOverlay.fromContact(
+      target: contact,
+      contacts: contacts,
+      selfInfo: selfInfo,
+    );
+    return _apply(overlay);
+  }
+
+  /// Build an overlay from a saved path-history hop-byte sequence.
+  /// Returns `true` iff the overlay is drawable.
+  bool setFromHistory(MeshCoreContact contact, Uint8List hopBytes) {
+    final contacts = ref.read(meshCoreContactsProvider).contacts;
+    final selfInfo = ref.read(meshCoreSelfInfoProvider).selfInfo;
+    final overlay = MeshCorePathOverlay.fromHistory(
+      target: contact,
+      contacts: contacts,
+      selfInfo: selfInfo,
+      hopBytes: hopBytes,
+    );
+    return _apply(overlay);
+  }
+
+  /// Remove the active overlay.
+  void clear() {
+    if (state == null) return;
+    state = null;
+    AppLogging.meshcore('event=path_overlay.cleared');
+  }
+
+  bool _apply(MeshCorePathOverlay? overlay) {
+    if (overlay == null || !overlay.hasDrawableData) return false;
+    state = overlay;
+    AppLogging.meshcore(
+      'event=path_overlay.shown source=${overlay.source.wire} '
+      'hop_count=${overlay.totalHopCount}',
+    );
+    return true;
+  }
+}
+
+final meshCorePathOverlayProvider =
+    NotifierProvider<MeshCorePathOverlayNotifier, MeshCorePathOverlay?>(
+      MeshCorePathOverlayNotifier.new,
+    );
 
 /// Provider for the MeshCore debug capture (null if not MeshCore or release build).
 ///

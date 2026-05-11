@@ -28,6 +28,7 @@ import '../../../models/meshcore_contact.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../services/meshcore/storage/meshcore_path_history_store.dart';
 import '../../../utils/snackbar.dart';
+import 'meshcore_map_screen.dart';
 
 /// 7-day threshold for the "stale" chip on a saved path row. Paths
 /// older than this still activate, but the row warns first.
@@ -295,6 +296,12 @@ class _PathHistoryRow extends ConsumerWidget {
           label: l10n.meshcorePathHistoryViewBytesAction,
           onTap: () => _openViewSheet(context),
         ),
+        // D42-A: surface the saved path on the map.
+        BottomSheetAction(
+          icon: Icons.map_outlined,
+          label: l10n.meshcorePathOverlayShowOnMap,
+          onTap: () => _showOnMap(context, ref),
+        ),
         BottomSheetAction(
           icon: Icons.delete_rounded,
           label: l10n.meshcorePathHistoryDeleteAction,
@@ -303,6 +310,23 @@ class _PathHistoryRow extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  /// D42-A: set the path overlay from this saved entry's bytes and
+  /// push the map. Snackbar fallback when no coordinate data resolves.
+  Future<void> _showOnMap(BuildContext context, WidgetRef ref) async {
+    final l10n = context.l10n;
+    final ok = ref
+        .read(meshCorePathOverlayProvider.notifier)
+        .setFromHistory(contact, entry.bytes);
+    if (!context.mounted) return;
+    if (!ok) {
+      showInfoSnackBar(context, l10n.meshcorePathOverlayNoData);
+      return;
+    }
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const MeshCoreMapScreen()));
   }
 
   Future<void> _delete(BuildContext context, WidgetRef ref) async {

@@ -15733,6 +15733,60 @@ abstract class AppLocalizations {
   /// **'Apply settings'**
   String get meshcoreRadioApplyConfirmAction;
 
+  /// D42-A - Contact Detail tile + path-history row action that draws the path as an overlay on the map
+  ///
+  /// In en, this message translates to:
+  /// **'Show on map'**
+  String get meshcorePathOverlayShowOnMap;
+
+  /// D42-A - Contact Detail Show-on-map tile subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Draw the path as a route overlay'**
+  String get meshcorePathOverlayShowOnMapSubtitle;
+
+  /// D42-A - map app-bar action that removes the active path overlay
+  ///
+  /// In en, this message translates to:
+  /// **'Clear path'**
+  String get meshcorePathOverlayClear;
+
+  /// D42-A - snackbar shown when activation cannot resolve any coordinate data
+  ///
+  /// In en, this message translates to:
+  /// **'No path data to show on map'**
+  String get meshcorePathOverlayNoData;
+
+  /// D42-A - hop info sub-sheet title
+  ///
+  /// In en, this message translates to:
+  /// **'Path hop'**
+  String get meshcorePathOverlayHopSheetTitle;
+
+  /// D42-A - InfoTable row label for the hop's 2-char hex byte
+  ///
+  /// In en, this message translates to:
+  /// **'Hop'**
+  String get meshcorePathOverlayHopLabelHeader;
+
+  /// D42-A - InfoTable row value rendering the hop byte as Hop XX
+  ///
+  /// In en, this message translates to:
+  /// **'Hop {label}'**
+  String meshcorePathOverlayHopLabelValue(String label);
+
+  /// D42-A - InfoTable row label for the matched contact display name
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get meshcorePathOverlayHopName;
+
+  /// D42-A - hop info fallback when no contact matched the hop byte
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown hop'**
+  String get meshcorePathOverlayUnknownHop;
+
   /// Confirm dialog message for leaving a channel
   ///
   /// In en, this message translates to:
