@@ -359,6 +359,23 @@ class _MeshCoreRadioSettingsSheetState
     if (_saving) return;
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
+    // D40: confirm before applying radio settings. setRadioParams +
+    // setRadioTxPower can briefly reconfigure the radio and drop the
+    // active link; the user should know that before tapping Apply.
+    // Inserted BEFORE the _saving flag flip so a Cancel does not
+    // leave the button disabled, and BEFORE the wire path so no
+    // CMD_SET_RADIO_PARAMS / CMD_SET_TX_POWER frames are emitted on
+    // a cancel.
+    final preL10n = context.l10n;
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: preL10n.meshcoreRadioApplyConfirmTitle,
+      message: preL10n.meshcoreRadioApplyConfirmMessage,
+      confirmLabel: preL10n.meshcoreRadioApplyConfirmAction,
+    );
+    if (confirmed != true) return;
+    if (!mounted) return;
+
     final session = ref.read(meshCoreSessionProvider);
     final l10n = context.l10n;
     if (session == null) {

@@ -15715,6 +15715,24 @@ abstract class AppLocalizations {
   /// **'{n} hop bytes'**
   String meshcorePathHistoryViewHopCount(int n);
 
+  /// D40 - confirm-before-apply sheet title shown on the MeshCore radio settings Apply button
+  ///
+  /// In en, this message translates to:
+  /// **'Apply radio settings?'**
+  String get meshcoreRadioApplyConfirmTitle;
+
+  /// D40 - confirm-before-apply sheet message body
+  ///
+  /// In en, this message translates to:
+  /// **'Applying radio settings reconfigures the radio and may briefly disconnect the app. The device may reboot or become unavailable for a short time.'**
+  String get meshcoreRadioApplyConfirmMessage;
+
+  /// D40 - confirm-before-apply sheet primary button label
+  ///
+  /// In en, this message translates to:
+  /// **'Apply settings'**
+  String get meshcoreRadioApplyConfirmAction;
+
   /// Confirm dialog message for leaving a channel
   ///
   /// In en, this message translates to:

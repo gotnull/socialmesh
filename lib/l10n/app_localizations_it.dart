@@ -8993,6 +8993,17 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get meshcoreRadioApplyConfirmTitle =>
+      'Applicare le impostazioni radio?';
+
+  @override
+  String get meshcoreRadioApplyConfirmMessage =>
+      'Applicare le impostazioni radio riconfigura la radio e può disconnettere brevemente l\'app. Il dispositivo potrebbe riavviarsi o diventare temporaneamente non disponibile.';
+
+  @override
+  String get meshcoreRadioApplyConfirmAction => 'Applica impostazioni';
+
+  @override
   String meshcoreLeaveChannelMessage(String channelName) {
     return 'Vuoi davvero abbandonare $channelName?';
   }

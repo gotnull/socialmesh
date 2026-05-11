@@ -8900,6 +8900,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get meshcoreRadioApplyConfirmTitle => 'Apply radio settings?';
+
+  @override
+  String get meshcoreRadioApplyConfirmMessage =>
+      'Applying radio settings reconfigures the radio and may briefly disconnect the app. The device may reboot or become unavailable for a short time.';
+
+  @override
+  String get meshcoreRadioApplyConfirmAction => 'Apply settings';
+
+  @override
   String meshcoreLeaveChannelMessage(String channelName) {
     return 'Are you sure you want to leave $channelName?';
   }

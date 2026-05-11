@@ -20095,6 +20095,18 @@
       }
     }
   },
+  "meshcoreRadioApplyConfirmTitle": "Aplicar configurações de rádio?",
+  "@meshcoreRadioApplyConfirmTitle": {
+    "description": "D40 - confirm-before-apply sheet title shown on the MeshCore radio settings Apply button"
+  },
+  "meshcoreRadioApplyConfirmMessage": "Aplicar as configurações reconfigura o rádio e pode desconectar o app brevemente. O dispositivo pode reiniciar ou ficar indisponível por um curto período.",
+  "@meshcoreRadioApplyConfirmMessage": {
+    "description": "D40 - confirm-before-apply sheet message body"
+  },
+  "meshcoreRadioApplyConfirmAction": "Aplicar configurações",
+  "@meshcoreRadioApplyConfirmAction": {
+    "description": "D40 - confirm-before-apply sheet primary button label"
+  },
   "meshcoreLeaveChannelMessage": "Tem certeza que deseja sair de {channelName}?",
   "@meshcoreLeaveChannelMessage": {
     "description": "Confirm dialog message for leaving a channel",
