@@ -103,7 +103,7 @@ dependencies:
   cloud_firestore: ^6.2.0
   cloud_functions: ^6.0.7
   google_sign_in: ^7.2.0
-  sign_in_with_apple: ^7.0.1
+  sign_in_with_apple: ^8.0.0
   crypto: ^3.0.6
   flutter_box_transform: ^0.4.7
   flutter_inappwebview: ^6.1.5
