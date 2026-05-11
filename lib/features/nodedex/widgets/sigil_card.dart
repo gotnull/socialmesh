@@ -16,6 +16,7 @@
 // 2. Static capture via RepaintBoundary for PNG sharing
 
 import 'dart:math' as math;
+import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -191,6 +192,9 @@ class SigilCard extends StatelessWidget {
   /// Whether to animate the sigil (false for image capture).
   final bool animated;
 
+  /// Whether text and identity details should subtly reveal on focus.
+  final bool revealInfo;
+
   /// Card width. Height is derived from the 5:7 aspect ratio.
   final double width;
 
@@ -206,6 +210,7 @@ class SigilCard extends StatelessWidget {
     this.firmwareVersion,
     this.role,
     this.animated = true,
+    this.revealInfo = false,
     this.width = 320,
   });
 
@@ -235,6 +240,7 @@ class SigilCard extends StatelessWidget {
         firmwareVersion: firmwareVersion,
         role: role,
         animated: animated,
+        revealInfo: revealInfo,
       ),
     );
   }
@@ -258,6 +264,7 @@ class _CardBody extends StatelessWidget {
   final String? firmwareVersion;
   final String? role;
   final bool animated;
+  final bool revealInfo;
 
   const _CardBody({
     required this.width,
@@ -273,6 +280,7 @@ class _CardBody extends StatelessWidget {
     this.firmwareVersion,
     this.role,
     required this.animated,
+    required this.revealInfo,
   });
 
   @override
@@ -332,11 +340,15 @@ class _CardBody extends StatelessWidget {
               Column(
                 children: [
                   // Trait banner at top
-                  _TraitBanner(
-                    trait: traitResult.primary,
-                    rarity: rarity,
-                    role: role,
-                    scale: s,
+                  _CardInfoReveal(
+                    enabled: revealInfo,
+                    order: 0,
+                    child: _TraitBanner(
+                      trait: traitResult.primary,
+                      rarity: rarity,
+                      role: role,
+                      scale: s,
+                    ),
                   ),
 
                   // Sigil hero area — large and dramatic
@@ -353,11 +365,15 @@ class _CardBody extends StatelessWidget {
                   ),
 
                   // Name + hex ID
-                  _NamePlate(
-                    displayName: displayName,
-                    hexId: hexId,
-                    traitColor: traitResult.primary.color,
-                    scale: s,
+                  _CardInfoReveal(
+                    enabled: revealInfo,
+                    order: 1,
+                    child: _NamePlate(
+                      displayName: displayName,
+                      hexId: hexId,
+                      traitColor: traitResult.primary.color,
+                      scale: s,
+                    ),
                   ),
 
                   // Ornament divider
@@ -366,21 +382,33 @@ class _CardBody extends StatelessWidget {
                   // Device identity info
                   Expanded(
                     flex: 5,
-                    child: _DeviceInfoGrid(
-                      sigil: sigil,
-                      rarity: rarity,
-                      hardwareModel: hardwareModel,
-                      role: role,
-                      firmwareVersion: firmwareVersion,
-                      scale: s,
+                    child: _CardInfoReveal(
+                      enabled: revealInfo,
+                      order: 2,
+                      child: _DeviceInfoGrid(
+                        sigil: sigil,
+                        rarity: rarity,
+                        hardwareModel: hardwareModel,
+                        role: role,
+                        firmwareVersion: firmwareVersion,
+                        scale: s,
+                      ),
                     ),
                   ),
 
                   // Palette dots
-                  _PaletteLine(sigil: sigil, scale: s),
+                  _CardInfoReveal(
+                    enabled: revealInfo,
+                    order: 3,
+                    child: _PaletteLine(sigil: sigil, scale: s),
+                  ),
 
                   // Brand footer
-                  _BrandFooter(entry: entry, rarity: rarity, scale: s),
+                  _CardInfoReveal(
+                    enabled: revealInfo,
+                    order: 4,
+                    child: _BrandFooter(entry: entry, rarity: rarity, scale: s),
+                  ),
                 ],
               ),
 
@@ -413,6 +441,79 @@ class _CardBody extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _CardInfoReveal extends StatefulWidget {
+  final bool enabled;
+  final int order;
+  final Widget child;
+
+  const _CardInfoReveal({
+    required this.enabled,
+    required this.order,
+    required this.child,
+  });
+
+  @override
+  State<_CardInfoReveal> createState() => _CardInfoRevealState();
+}
+
+class _CardInfoRevealState extends State<_CardInfoReveal>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 340),
+    );
+    _controller.value = 1.0;
+  }
+
+  @override
+  void didUpdateWidget(_CardInfoReveal oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.enabled && !oldWidget.enabled) {
+      _controller.forward(from: 0.0);
+    } else if (!widget.enabled) {
+      _controller.value = 1.0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.enabled) return widget.child;
+
+    final start = (widget.order * 0.055).clamp(0.0, 0.28).toDouble();
+    final end = (start + 0.68).clamp(start, 1.0).toDouble();
+
+    return AnimatedBuilder(
+      animation: _controller,
+      child: widget.child,
+      builder: (context, child) {
+        final t = Interval(
+          start,
+          end,
+          curve: Curves.easeOutCubic,
+        ).transform(_controller.value);
+        return Opacity(
+          opacity: lerpDouble(0.72, 1.0, t)!,
+          child: Transform.translate(
+            offset: Offset(0, lerpDouble(5.0, 0.0, t)!),
+            child: child,
+          ),
+        );
+      },
     );
   }
 }

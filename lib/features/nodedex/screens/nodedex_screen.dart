@@ -106,6 +106,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
     final searchQuery = ref.watch(nodeDexSearchProvider);
     final viewMode = ref.watch(albumViewModeProvider);
     final reduceMotion = ref.watch(reduceMotionEnabledProvider);
+    final galleryEntryCount = ref.watch(albumCardCountProvider);
 
     // Separate own device from other entries.
     final myEntry = myNodeNum != null
@@ -134,6 +135,23 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
           resizeToAvoidBottomInset: false,
           title: context.l10n.nodedexTitle,
           actions: [
+            IconButton(
+              icon: const Icon(Icons.view_carousel_outlined),
+              tooltip: context.l10n.nodedexCardGalleryTooltip,
+              onPressed: galleryEntryCount == 0
+                  ? null
+                  : () {
+                      AppLogging.nodeDex(
+                        'Card gallery opened from app bar: '
+                        '$galleryEntryCount cards',
+                      );
+                      showCardGallery(
+                        context: context,
+                        initialIndex: 0,
+                        animate: !reduceMotion,
+                      );
+                    },
+            ),
             // Primary IconButton: view mode toggle (list ↔ album).
             // Per CLAUDE.md, the rest goes into AppBarOverflowMenu.
             _ViewModeToggle(

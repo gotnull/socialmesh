@@ -11547,6 +11547,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get nodedexCloseGallerySemanticLabel => 'Chiudi galleria';
 
   @override
+  String get nodedexCardGalleryTooltip => 'Card Gallery';
+
+  @override
   String get nodedexCoSeenCompactLabel => 'Co-visti';
 
   @override

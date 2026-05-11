@@ -15614,6 +15614,10 @@
     "@nodedexCloseGallerySemanticLabel": {
         "description": "Label in node management"
     },
+    "nodedexCardGalleryTooltip": "Card Gallery",
+    "@nodedexCardGalleryTooltip": {
+        "description": "Tooltip for the NodeDex app bar button that opens the swipeable card gallery"
+    },
     "nodedexCoSeenCompactLabel": "Historical links",
     "@nodedexCoSeenCompactLabel": {
         "description": "Label in node management"

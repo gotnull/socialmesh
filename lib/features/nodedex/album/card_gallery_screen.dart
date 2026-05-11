@@ -87,9 +87,8 @@ void showCardGallery({
 }) {
   Navigator.of(context).push(
     PageRouteBuilder<void>(
-      opaque: false,
-      barrierColor: Colors.black87,
-      barrierDismissible: true,
+      opaque: true,
+      barrierDismissible: false,
       transitionDuration: const Duration(milliseconds: 350),
       reverseTransitionDuration: const Duration(milliseconds: 250),
       pageBuilder: (context, animation, secondaryAnimation) {
@@ -187,6 +186,15 @@ class _CardGalleryScreenState extends ConsumerState<CardGalleryScreen> {
     Navigator.of(context).pop();
   }
 
+  void _toggleCurrentCard(NodeDexEntry entry) {
+    ref.read(cardFlipStateProvider.notifier).toggleFlip(entry.nodeNum);
+    AppLogging.nodeDex(
+      'Card gallery app-bar flip toggled: '
+      '!${entry.nodeNum.toRadixString(16).toUpperCase()}',
+    );
+    HapticFeedback.lightImpact();
+  }
+
   @override
   Widget build(BuildContext context) {
     final entries = ref.watch(albumFlatEntriesProvider);
@@ -203,7 +211,7 @@ class _CardGalleryScreenState extends ConsumerState<CardGalleryScreen> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color(0xFF02030A),
         body: GestureDetector(
           // Swipe down to dismiss.
           onVerticalDragEnd: (details) {
@@ -220,6 +228,7 @@ class _CardGalleryScreenState extends ConsumerState<CardGalleryScreen> {
                   currentIndex: safePage,
                   totalCount: totalCards,
                   onClose: _dismiss,
+                  onFlip: () => _toggleCurrentCard(currentEntry),
                 ),
 
                 // Card PageView.
@@ -234,6 +243,7 @@ class _CardGalleryScreenState extends ConsumerState<CardGalleryScreen> {
                         entry: entries[index],
                         pageController: _pageController,
                         pageIndex: index,
+                        isFocused: index == safePage,
                         animate: widget.animate,
                       );
                     },
@@ -245,6 +255,7 @@ class _CardGalleryScreenState extends ConsumerState<CardGalleryScreen> {
                   entry: currentEntry,
                   currentIndex: safePage,
                   totalCount: totalCards,
+                  animate: widget.animate,
                 ),
               ],
             ),
@@ -268,12 +279,14 @@ class _GalleryPage extends ConsumerWidget {
   final NodeDexEntry entry;
   final PageController pageController;
   final int pageIndex;
+  final bool isFocused;
   final bool animate;
 
   const _GalleryPage({
     required this.entry,
     required this.pageController,
     required this.pageIndex,
+    required this.isFocused,
     required this.animate,
   });
 
@@ -314,10 +327,18 @@ class _GalleryPage extends ConsumerWidget {
         final distance = pageOffset.abs().clamp(0.0, 1.0);
 
         // Scale: focused cards are full size, off-cards recede gently.
-        final scale = lerpDouble(1.0, 0.88, distance)!;
+        final scale = lerpDouble(
+          1.0,
+          AlbumConstants.galleryUnfocusedScale,
+          distance,
+        )!;
 
         // Opacity: off-cards dim but remain legible for context.
-        final opacity = lerpDouble(1.0, 0.5, distance)!;
+        final opacity = lerpDouble(
+          1.0,
+          AlbumConstants.galleryUnfocusedOpacity,
+          distance,
+        )!;
 
         // 3D Y-axis rotation: subtle tilt away (~8 degrees max).
         // Cards feel like they're on a carousel, not a spinning wheel.
@@ -379,6 +400,7 @@ class _GalleryPage extends ConsumerWidget {
                             role: role,
                             firmwareVersion: firmwareVersion,
                             animated: animate,
+                            revealInfo: animate && isFocused,
                             width: cardWidth,
                           ),
 
@@ -419,11 +441,13 @@ class _GalleryTopBar extends StatelessWidget {
   final int currentIndex;
   final int totalCount;
   final VoidCallback onClose;
+  final VoidCallback onFlip;
 
   const _GalleryTopBar({
     required this.currentIndex,
     required this.totalCount,
     required this.onClose,
+    required this.onFlip,
   });
 
   @override
@@ -469,13 +493,10 @@ class _GalleryTopBar extends StatelessWidget {
 
           const Spacer(),
 
-          // Flip hint button.
+          // Flip current card.
           _GlassButton(
             icon: Icons.flip_rounded,
-            onTap: () {
-              HapticFeedback.lightImpact();
-              // Hint — visual only, actual flip is on card tap.
-            },
+            onTap: onFlip,
             semanticLabel: context.l10n.nodedexTapCardToFlipSemanticLabel,
           ),
         ],
@@ -496,11 +517,13 @@ class _GalleryBottomBar extends ConsumerWidget {
   final NodeDexEntry entry;
   final int currentIndex;
   final int totalCount;
+  final bool animate;
 
   const _GalleryBottomBar({
     required this.entry,
     required this.currentIndex,
     required this.totalCount,
+    required this.animate,
   });
 
   @override
@@ -515,99 +538,119 @@ class _GalleryBottomBar extends ConsumerWidget {
         '!${entry.nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
     final displayName = entry.localNickname ?? entry.lastKnownName ?? hexId;
 
+    final content = Column(
+      key: ValueKey(entry.nodeNum),
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Page indicator dots (only for small collections).
+        if (totalCount <= AlbumConstants.galleryMaxDots) ...[
+          _PageIndicatorDots(
+            currentIndex: currentIndex,
+            totalCount: totalCount,
+            activeColor: rarity.borderColor,
+          ),
+          const SizedBox(height: AppTheme.spacing8),
+        ],
+
+        // Node info row.
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Trait dot.
+            if (trait != NodeTrait.unknown) ...[
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: trait.color,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: trait.color.withValues(alpha: 0.4),
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing6),
+            ],
+
+            // Name.
+            Flexible(
+              child: Text(
+                displayName,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white.withValues(alpha: 0.9),
+                  letterSpacing: 0.3,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+
+            const SizedBox(width: AppTheme.spacing8),
+
+            // Rarity badge.
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: rarity.borderColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(AppTheme.radius4),
+                border: Border.all(
+                  color: rarity.borderColor.withValues(alpha: 0.3),
+                  width: 0.5,
+                ),
+              ),
+              child: Text(
+                rarity.label,
+                style: TextStyle(
+                  fontSize: 8,
+                  fontWeight: FontWeight.w800,
+                  color: rarity.borderColor,
+                  letterSpacing: 1.0,
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: AppTheme.spacing4),
+
+        // Hint text.
+        Text(
+          context.l10n.nodedexGalleryHint,
+          style: TextStyle(
+            fontSize: 10,
+            color: Colors.white.withValues(alpha: 0.35),
+            letterSpacing: 0.3,
+          ),
+        ),
+      ],
+    );
+
     return Container(
       height: AlbumConstants.galleryBottomBarHeight,
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Page indicator dots (only for small collections).
-          if (totalCount <= AlbumConstants.galleryMaxDots) ...[
-            _PageIndicatorDots(
-              currentIndex: currentIndex,
-              totalCount: totalCount,
-              activeColor: rarity.borderColor,
-            ),
-            const SizedBox(height: AppTheme.spacing8),
-          ],
-
-          // Node info row.
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Trait dot.
-              if (trait != NodeTrait.unknown) ...[
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: trait.color,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: trait.color.withValues(alpha: 0.4),
-                        blurRadius: 4,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppTheme.spacing6),
-              ],
-
-              // Name.
-              Flexible(
-                child: Text(
-                  displayName,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white.withValues(alpha: 0.9),
-                    letterSpacing: 0.3,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-
-              const SizedBox(width: AppTheme.spacing8),
-
-              // Rarity badge.
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: rarity.borderColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(AppTheme.radius4),
-                  border: Border.all(
-                    color: rarity.borderColor.withValues(alpha: 0.3),
-                    width: 0.5,
-                  ),
-                ),
-                child: Text(
-                  rarity.label,
-                  style: TextStyle(
-                    fontSize: 8,
-                    fontWeight: FontWeight.w800,
-                    color: rarity.borderColor,
-                    letterSpacing: 1.0,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: AppTheme.spacing4),
-
-          // Hint text.
-          Text(
-            context.l10n.nodedexGalleryHint,
-            style: TextStyle(
-              fontSize: 10,
-              color: Colors.white.withValues(alpha: 0.35),
-              letterSpacing: 0.3,
-            ),
-          ),
-        ],
-      ),
+      child: animate
+          ? AnimatedSwitcher(
+              duration: const Duration(milliseconds: 220),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (child, animation) {
+                final offset = Tween<Offset>(
+                  begin: const Offset(0, 0.18),
+                  end: Offset.zero,
+                ).animate(animation);
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(position: offset, child: child),
+                );
+              },
+              child: content,
+            )
+          : content,
     );
   }
 }

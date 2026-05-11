@@ -11432,6 +11432,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get nodedexCloseGallerySemanticLabel => 'Close gallery';
 
   @override
+  String get nodedexCardGalleryTooltip => 'Card Gallery';
+
+  @override
   String get nodedexCoSeenCompactLabel => 'Co-seen';
 
   @override

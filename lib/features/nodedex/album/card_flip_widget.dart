@@ -200,35 +200,67 @@ class _CardFlipWidgetState extends ConsumerState<CardFlipWidget>
         child: AnimatedBuilder(
           animation: _animation,
           builder: (context, _) {
-            final angle = _animation.value * math.pi;
-            final showBack = angle > math.pi / 2;
+            final value = _animation.value.clamp(0.0, 1.0);
+            final frontAngle = value * math.pi;
+            final backAngle = (value - 1.0) * math.pi;
+            final showFront = value <= 0.5;
 
-            // Build the transform matrix with perspective.
-            final transform = Matrix4.identity()
-              ..setEntry(3, 2, AlbumConstants.flipPerspective)
-              ..rotateY(angle);
-
-            // For the back side, counter-rotate so text is not mirrored.
-            final backTransform = Matrix4.identity()
-              ..setEntry(3, 2, AlbumConstants.flipPerspective)
-              ..rotateY(angle - math.pi);
-
-            return Transform(
-              transform: showBack ? backTransform : transform,
-              alignment: Alignment.center,
-              child: showBack
-                  ? _CardBack(
-                      entry: widget.entry,
-                      traitResult: widget.traitResult,
-                      patinaResult: widget.patinaResult,
-                      displayName: widget.displayName,
-                      hexId: widget.hexId,
-                      width: widget.width,
-                      height: height,
-                    )
-                  : widget.front,
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                _FlipFace(
+                  visible: showFront,
+                  angle: frontAngle,
+                  child: widget.front,
+                ),
+                _FlipFace(
+                  visible: !showFront,
+                  angle: backAngle,
+                  child: _CardBack(
+                    entry: widget.entry,
+                    traitResult: widget.traitResult,
+                    patinaResult: widget.patinaResult,
+                    displayName: widget.displayName,
+                    hexId: widget.hexId,
+                    width: widget.width,
+                    height: height,
+                  ),
+                ),
+              ],
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class _FlipFace extends StatelessWidget {
+  final bool visible;
+  final double angle;
+  final Widget child;
+
+  const _FlipFace({
+    required this.visible,
+    required this.angle,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      ignoring: !visible,
+      child: Visibility(
+        visible: visible,
+        maintainState: true,
+        maintainAnimation: true,
+        maintainSize: true,
+        child: Transform(
+          alignment: Alignment.center,
+          transform: Matrix4.identity()
+            ..setEntry(3, 2, AlbumConstants.flipPerspective)
+            ..rotateY(angle),
+          child: child,
         ),
       ),
     );

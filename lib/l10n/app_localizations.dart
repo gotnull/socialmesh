@@ -20227,6 +20227,12 @@ abstract class AppLocalizations {
   /// **'Close gallery'**
   String get nodedexCloseGallerySemanticLabel;
 
+  /// Tooltip for the NodeDex app bar button that opens the swipeable card gallery
+  ///
+  /// In en, this message translates to:
+  /// **'Card Gallery'**
+  String get nodedexCardGalleryTooltip;
+
   /// Label in node management
   ///
   /// In en, this message translates to:

@@ -176,13 +176,13 @@ class AlbumConstants {
   // ---------------------------------------------------------------------------
 
   /// Fraction of screen width the focused card occupies in gallery.
-  static const double galleryViewportFraction = 0.85;
+  static const double galleryViewportFraction = 0.74;
 
   /// Scale factor for non-focused cards in the gallery.
-  static const double galleryUnfocusedScale = 0.9;
+  static const double galleryUnfocusedScale = 0.92;
 
   /// Opacity for non-focused cards in the gallery.
-  static const double galleryUnfocusedOpacity = 0.6;
+  static const double galleryUnfocusedOpacity = 0.72;
 
   /// Height of the gallery bottom info bar.
   static const double galleryBottomBarHeight = 72.0;
@@ -201,14 +201,15 @@ class AlbumConstants {
   // ---------------------------------------------------------------------------
 
   /// Duration of the card flip animation.
-  static const Duration flipDuration = Duration(milliseconds: 380);
+  static const Duration flipDuration = Duration(milliseconds: 520);
 
-  /// Curve for the card flip animation — fast start, springy settle.
-  static const Curve flipCurve = Curves.easeOutBack;
+  /// Curve for the card flip animation.
+  ///
+  /// Avoids overshoot so the card never rotates past its target face.
+  static const Curve flipCurve = Curves.easeInOutCubic;
 
   /// Perspective value for the 3D flip transform.
-  /// Slightly stronger perspective for more dramatic depth.
-  static const double flipPerspective = 0.0025;
+  static const double flipPerspective = 0.0014;
 
   // ---------------------------------------------------------------------------
   // Holographic effect
