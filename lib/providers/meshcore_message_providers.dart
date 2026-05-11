@@ -1056,6 +1056,12 @@ class MeshCoreConversationsNotifier
   /// notification is suppressed. Storage / provider read failures
   /// fail-open (deliver the notification) so the user never misses a
   /// message because of a SharedPreferences read error.
+  /// D37-B-A: hide is intentionally NOT consulted here. A hidden
+  /// channel still notifies unless it is also muted. Mute is the only
+  /// notification suppression input; hide only affects the channels-
+  /// screen visibility. Keeping the two axes orthogonal preserves the
+  /// user's mental model and prevents silent message loss for users
+  /// who hide a channel to declutter without intending to silence it.
   void _maybeNotifyChannelMessage({
     required String senderName,
     required String channelName,

@@ -39,7 +39,7 @@ class MeshCoreChannelsScreen extends ConsumerStatefulWidget {
       _MeshCoreChannelsScreenState();
 }
 
-enum _MeshCoreChannelFilter { all, public, private }
+enum _MeshCoreChannelFilter { all, public, private, hidden }
 
 class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
     with LifecycleSafeMixin<MeshCoreChannelsScreen> {
@@ -69,7 +69,20 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
     final allChannels = channelsState.channels
         .where((c) => c.name.isNotEmpty || !c.isDefaultPsk)
         .toList();
-    var channels = _applyFilter(allChannels);
+    final hiddenSet = ref.watch(meshCoreChannelHiddenSetProvider);
+    // D37-B-A: if the user is sitting on the Hidden filter and the set
+    // empties (last unhide), fall back to All so they don't stare at
+    // an "empty Hidden" placeholder forever.
+    if (_activeFilter == _MeshCoreChannelFilter.hidden && hiddenSet.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (_activeFilter == _MeshCoreChannelFilter.hidden &&
+            ref.read(meshCoreChannelHiddenSetProvider).isEmpty) {
+          setState(() => _activeFilter = _MeshCoreChannelFilter.all);
+        }
+      });
+    }
+    var channels = _applyFilter(allChannels, hiddenSet);
     if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase();
       channels = channels
@@ -171,7 +184,12 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
             ? _buildDisconnectedState()
             : channelsState.isLoading && allChannels.isEmpty
             ? _buildLoadingState()
-            : channels.isEmpty
+            : allChannels.isEmpty
+            // D37-B-A: only fall through to the empty-state CTA when
+            // the user genuinely has no channels at all. If the current
+            // filter is just emptied (e.g. user hides their only
+            // visible channel from the All filter), keep the chip row
+            // mounted so the Hidden chip stays reachable for recovery.
             ? _buildEmptyState(deviceName)
             : _buildChannelsList(
                 channels,
@@ -182,14 +200,25 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
     );
   }
 
-  List<MeshCoreChannel> _applyFilter(List<MeshCoreChannel> channels) {
+  /// D37-B-A: All / Public / Private always exclude hidden channels;
+  /// the Hidden filter returns only hidden channels.
+  List<MeshCoreChannel> _applyFilter(
+    List<MeshCoreChannel> channels,
+    Set<int> hiddenSet,
+  ) {
     switch (_activeFilter) {
       case _MeshCoreChannelFilter.all:
-        return channels;
+        return channels.where((c) => !hiddenSet.contains(c.index)).toList();
       case _MeshCoreChannelFilter.public:
-        return channels.where((channel) => channel.isPublic).toList();
+        return channels
+            .where((c) => c.isPublic && !hiddenSet.contains(c.index))
+            .toList();
       case _MeshCoreChannelFilter.private:
-        return channels.where((channel) => !channel.isPublic).toList();
+        return channels
+            .where((c) => !c.isPublic && !hiddenSet.contains(c.index))
+            .toList();
+      case _MeshCoreChannelFilter.hidden:
+        return channels.where((c) => hiddenSet.contains(c.index)).toList();
     }
   }
 
@@ -270,8 +299,18 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
     List<MeshCoreChannel> allChannels,
     bool isLoading,
   ) {
-    final publicCount = allChannels.where((channel) => channel.isPublic).length;
-    final privateCount = allChannels.length - publicCount;
+    // D37-B-A: All / Public / Private counts exclude hidden channels;
+    // the Hidden chip is only shown when at least one channel is
+    // hidden so the chip row stays compact for first-time users.
+    final hiddenSet = ref.watch(meshCoreChannelHiddenSetProvider);
+    final visibleChannels = allChannels
+        .where((c) => !hiddenSet.contains(c.index))
+        .toList();
+    final publicCount = visibleChannels.where((c) => c.isPublic).length;
+    final privateCount = visibleChannels.length - publicCount;
+    final hiddenCount = allChannels
+        .where((c) => hiddenSet.contains(c.index))
+        .length;
     final textScaler = MediaQuery.textScalerOf(context);
 
     return RefreshIndicator(
@@ -291,11 +330,12 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                 allChannels.length,
                 publicCount,
                 privateCount,
+                hiddenCount,
               ]),
               filterChips: [
                 StatusFilterChip(
                   label: context.l10n.channelsFilterAll,
-                  count: allChannels.length,
+                  count: visibleChannels.length,
                   isSelected: _activeFilter == _MeshCoreChannelFilter.all,
                   onTap: () => setState(
                     () => _activeFilter = _MeshCoreChannelFilter.all,
@@ -321,6 +361,17 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                     () => _activeFilter = _MeshCoreChannelFilter.private,
                   ),
                 ),
+                if (hiddenCount > 0)
+                  StatusFilterChip(
+                    label: context.l10n.meshcoreFilterHidden,
+                    count: hiddenCount,
+                    isSelected: _activeFilter == _MeshCoreChannelFilter.hidden,
+                    icon: Icons.visibility_off_rounded,
+                    color: AccentColors.slate,
+                    onTap: () => setState(
+                      () => _activeFilter = _MeshCoreChannelFilter.hidden,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -1013,6 +1064,9 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
     final isMuted = ref
         .read(meshCoreChannelMutedSetProvider)
         .contains(channel.index);
+    final isHidden = ref
+        .read(meshCoreChannelHiddenSetProvider)
+        .contains(channel.index);
     AppBottomSheet.showActions<void>(
       context: context,
       header: Align(
@@ -1049,6 +1103,15 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
           onTap: () => _toggleChannelMute(channel, currentlyMuted: isMuted),
         ),
         BottomSheetAction(
+          icon: isHidden
+              ? Icons.visibility_rounded
+              : Icons.visibility_off_rounded,
+          label: isHidden
+              ? context.l10n.meshcoreUnhideChannel
+              : context.l10n.meshcoreHideChannel,
+          onTap: () => _toggleChannelHide(channel, currentlyHidden: isHidden),
+        ),
+        BottomSheetAction(
           icon: Icons.edit_rounded,
           label: context.l10n.meshcoreChannelEditTitleEdit,
           onTap: () => _openCanonicalChannelEditSheet(existing: channel),
@@ -1082,6 +1145,34 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
         ),
       ],
     );
+  }
+
+  /// D37-B-A: toggle the local hide preference for [channel]. Hide is
+  /// independent of mute — hidden channels still receive notifications
+  /// unless the channel is also muted. Snackbar confirms either side
+  /// of the toggle. No PSK / channel-code / full pubkey reaches the
+  /// snackbar or log line — only the display name (already user-
+  /// visible) and the slot index.
+  Future<void> _toggleChannelHide(
+    MeshCoreChannel channel, {
+    required bool currentlyHidden,
+  }) async {
+    final notifier = ref.read(meshCoreChannelPrefsProvider.notifier);
+    if (currentlyHidden) {
+      await notifier.unhide(channel.index);
+      if (!mounted) return;
+      showSuccessSnackBar(
+        context,
+        context.l10n.meshcoreChannelUnhidden(channel.displayName),
+      );
+    } else {
+      await notifier.hide(channel.index);
+      if (!mounted) return;
+      showSuccessSnackBar(
+        context,
+        context.l10n.meshcoreChannelHidden(channel.displayName),
+      );
+    }
   }
 
   /// D37-A: toggle the local mute preference for [channel]. The state

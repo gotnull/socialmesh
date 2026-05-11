@@ -8764,6 +8764,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshcoreChannelMutedA11yLabel => 'Channel notifications muted';
 
   @override
+  String get meshcoreHideChannel => 'Hide Channel';
+
+  @override
+  String get meshcoreUnhideChannel => 'Unhide Channel';
+
+  @override
+  String meshcoreChannelHidden(String channelName) {
+    return 'Hidden $channelName';
+  }
+
+  @override
+  String meshcoreChannelUnhidden(String channelName) {
+    return 'Unhidden $channelName';
+  }
+
+  @override
+  String get meshcoreFilterHidden => 'Hidden';
+
+  @override
+  String get meshcoreNoHiddenChannels => 'No hidden channels';
+
+  @override
   String meshcoreLeaveChannelMessage(String channelName) {
     return 'Are you sure you want to leave $channelName?';
   }

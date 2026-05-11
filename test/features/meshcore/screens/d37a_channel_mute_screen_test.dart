@@ -10,8 +10,10 @@
 //     the notifications_off overlay icon AND surfaces Unmute (not
 //     Mute) on long-press.
 //   - The muted-tile overlay icon carries the canonical a11y label.
-//   - Hide / Archive / Reorder / Pin Channel / Sort UI must NOT appear
-//     in D37-A; those slices are reserved for D37-B and D37-C.
+//   - Reorder / Pin Channel / Sort UI must NOT surface from the D37-A
+//     mute path; those slices are reserved for D37-C and later.
+//     (Hide is permitted post-D37-B-A; the dedicated D37-B test file
+//     pins its semantics.)
 //   - Pre-existing channel-options actions (Open / Edit / Share /
 //     Leave) remain reachable so D37-A does not regress D29 / D31 /
 //     D34d flows.
@@ -276,8 +278,12 @@ void main() {
     );
   });
 
-  testWidgets('Hide / Archive / Reorder / Pin Channel / Sort UI is NOT present '
-      'in D37-A (deferred to D37-B / D37-C)', (tester) async {
+  // Post-D37-B-A: Hide is now a legitimate D37-B action. This test
+  // continues to pin that Reorder / Pin Channel / Sort UI does NOT
+  // surface from the D37-A mute path (those slices are reserved for
+  // D37-C and later).
+  testWidgets('Reorder / Pin Channel / Sort UI is NOT introduced by the '
+      'D37-A mute path', (tester) async {
     tester.view.physicalSize = const Size(1080, 4000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -289,13 +295,7 @@ void main() {
     await tester.longPress(find.text('TestChannel'));
     await _settle(tester);
 
-    for (final banned in const [
-      'Hide',
-      'Archive',
-      'Reorder',
-      'Pin Channel',
-      'Sort',
-    ]) {
+    for (final banned in const ['Reorder', 'Pin Channel', 'Sort']) {
       expect(
         find.text(banned),
         findsNothing,

@@ -11824,6 +11824,40 @@
     "@meshcoreChannelMutedA11yLabel": {
         "description": "Accessibility label for the notifications-off icon shown on a muted channel tile"
     },
+    "meshcoreHideChannel": "Hide Channel",
+    "@meshcoreHideChannel": {
+        "description": "Channel options action label to hide a channel from the default channels list"
+    },
+    "meshcoreUnhideChannel": "Unhide Channel",
+    "@meshcoreUnhideChannel": {
+        "description": "Channel options action label to restore a hidden channel to the default channels list"
+    },
+    "meshcoreChannelHidden": "Hidden {channelName}",
+    "@meshcoreChannelHidden": {
+        "description": "Success snackbar after hiding a channel",
+        "placeholders": {
+            "channelName": {
+                "type": "String"
+            }
+        }
+    },
+    "meshcoreChannelUnhidden": "Unhidden {channelName}",
+    "@meshcoreChannelUnhidden": {
+        "description": "Success snackbar after unhiding a channel",
+        "placeholders": {
+            "channelName": {
+                "type": "String"
+            }
+        }
+    },
+    "meshcoreFilterHidden": "Hidden",
+    "@meshcoreFilterHidden": {
+        "description": "Filter chip label for showing hidden channels"
+    },
+    "meshcoreNoHiddenChannels": "No hidden channels",
+    "@meshcoreNoHiddenChannels": {
+        "description": "Placeholder shown when the Hidden filter is active but no channels are hidden (also surfaces in a brief frame before the auto-fallback to All takes effect)"
+    },
     "meshcoreLeaveChannelMessage": "Are you sure you want to leave {channelName}?",
     "@meshcoreLeaveChannelMessage": {
         "description": "Confirm dialog message for leaving a channel",

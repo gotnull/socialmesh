@@ -15529,6 +15529,42 @@ abstract class AppLocalizations {
   /// **'Channel notifications muted'**
   String get meshcoreChannelMutedA11yLabel;
 
+  /// Channel options action label to hide a channel from the default channels list
+  ///
+  /// In en, this message translates to:
+  /// **'Hide Channel'**
+  String get meshcoreHideChannel;
+
+  /// Channel options action label to restore a hidden channel to the default channels list
+  ///
+  /// In en, this message translates to:
+  /// **'Unhide Channel'**
+  String get meshcoreUnhideChannel;
+
+  /// Success snackbar after hiding a channel
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden {channelName}'**
+  String meshcoreChannelHidden(String channelName);
+
+  /// Success snackbar after unhiding a channel
+  ///
+  /// In en, this message translates to:
+  /// **'Unhidden {channelName}'**
+  String meshcoreChannelUnhidden(String channelName);
+
+  /// Filter chip label for showing hidden channels
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden'**
+  String get meshcoreFilterHidden;
+
+  /// Placeholder shown when the Hidden filter is active but no channels are hidden (also surfaces in a brief frame before the auto-fallback to All takes effect)
+  ///
+  /// In en, this message translates to:
+  /// **'No hidden channels'**
+  String get meshcoreNoHiddenChannels;
+
   /// Confirm dialog message for leaving a channel
   ///
   /// In en, this message translates to:

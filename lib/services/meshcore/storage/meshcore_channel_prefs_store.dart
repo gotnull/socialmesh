@@ -31,9 +31,10 @@
 //     "order":  []                   // reserved for D37-C
 //   }
 //
-// D37-A only reads/writes `muted`. `hidden` and `order` are written as
-// empty arrays so the v0 blob is recognisable by future slices without
-// requiring a migration step.
+// D37-A consumes `muted`; D37-B-A also consumes `hidden`. `order`
+// remains reserved (D37-C). Mute and hide are independent: a channel
+// can be muted-only, hidden-only, both, or neither. The notification
+// gate consults muted only; hide only affects channel-list visibility.
 
 import 'dart:async';
 import 'dart:convert';
@@ -45,7 +46,9 @@ class MeshCoreChannelPrefs {
   /// Slot indices the user has muted (system notifications suppressed).
   final Set<int> mutedChannelIndices;
 
-  /// Reserved for D37-B (hide). Always empty in D37-A.
+  /// D37-B-A: slot indices the user has hidden from the default
+  /// channels list. Hide is independent of mute; the notification
+  /// gate consults muted only.
   final Set<int> hiddenChannelIndices;
 
   /// Reserved for D37-C (reorder). Always empty in D37-A.
@@ -227,6 +230,40 @@ class MeshCoreChannelPrefsStore {
     if (!current.mutedChannelIndices.contains(channelIndex)) return current;
     final next = current.copyWith(
       mutedChannelIndices: {...current.mutedChannelIndices}
+        ..remove(channelIndex),
+    );
+    await save(devicePubKeyPrefix, next);
+    return next;
+  }
+
+  /// D37-B-A: add a single channel index to the hidden set and persist.
+  /// Hide is independent of mute — a channel can be hidden + muted,
+  /// hidden + unmuted, muted + visible, or neither. Hide only affects
+  /// the channel list's default visibility; it never gates
+  /// notifications or in-app message persistence. Idempotent.
+  Future<MeshCoreChannelPrefs> hide(
+    String devicePubKeyPrefix,
+    int channelIndex,
+  ) async {
+    final current = await load(devicePubKeyPrefix);
+    if (current.hiddenChannelIndices.contains(channelIndex)) return current;
+    final next = current.copyWith(
+      hiddenChannelIndices: {...current.hiddenChannelIndices, channelIndex},
+    );
+    await save(devicePubKeyPrefix, next);
+    return next;
+  }
+
+  /// D37-B-A: remove a single channel index from the hidden set and
+  /// persist. Idempotent.
+  Future<MeshCoreChannelPrefs> unhide(
+    String devicePubKeyPrefix,
+    int channelIndex,
+  ) async {
+    final current = await load(devicePubKeyPrefix);
+    if (!current.hiddenChannelIndices.contains(channelIndex)) return current;
+    final next = current.copyWith(
+      hiddenChannelIndices: {...current.hiddenChannelIndices}
         ..remove(channelIndex),
     );
     await save(devicePubKeyPrefix, next);

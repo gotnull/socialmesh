@@ -8847,6 +8847,28 @@ class AppLocalizationsPt extends AppLocalizations {
       'Notificações do canal silenciadas';
 
   @override
+  String get meshcoreHideChannel => 'Ocultar Canal';
+
+  @override
+  String get meshcoreUnhideChannel => 'Mostrar Canal';
+
+  @override
+  String meshcoreChannelHidden(String channelName) {
+    return '$channelName ocultado';
+  }
+
+  @override
+  String meshcoreChannelUnhidden(String channelName) {
+    return '$channelName restaurado';
+  }
+
+  @override
+  String get meshcoreFilterHidden => 'Ocultos';
+
+  @override
+  String get meshcoreNoHiddenChannels => 'Nenhum canal oculto';
+
+  @override
   String meshcoreLeaveChannelMessage(String channelName) {
     return 'Tem certeza que deseja sair de $channelName?';
   }

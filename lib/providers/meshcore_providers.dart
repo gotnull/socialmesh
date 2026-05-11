@@ -1210,6 +1210,59 @@ class MeshCoreChannelPrefsNotifier extends Notifier<MeshCoreChannelPrefs> {
       );
     }
   }
+
+  /// D37-B-A: true iff slot [channelIndex] is currently hidden from
+  /// the default channels list.
+  bool isHidden(int channelIndex) =>
+      state.hiddenChannelIndices.contains(channelIndex);
+
+  /// D37-B-A: persist hide on slot [channelIndex]. Idempotent. No-op
+  /// when no device is identified. Hide is independent of mute and
+  /// does NOT gate notifications — the notification gate consults
+  /// the muted set only.
+  Future<void> hide(int channelIndex) async {
+    final prefix = ref.read(meshCoreSelfPubKeyPrefixProvider);
+    if (prefix.isEmpty) return;
+    if (state.hiddenChannelIndices.contains(channelIndex)) return;
+    final store = ref.read(meshCoreChannelPrefsStoreProvider);
+    try {
+      final updated = await store.hide(prefix, channelIndex);
+      if (_disposed) return;
+      if (ref.read(meshCoreSelfPubKeyPrefixProvider) != prefix) return;
+      state = updated;
+      AppLogging.meshcore(
+        'event=channel.hidden idx=$channelIndex device=$prefix',
+      );
+    } catch (e) {
+      AppLogging.meshcore(
+        'event=channel.hide.failed idx=$channelIndex reason=${e.runtimeType}',
+        error: true,
+      );
+    }
+  }
+
+  /// D37-B-A: persist unhide on slot [channelIndex]. Idempotent.
+  Future<void> unhide(int channelIndex) async {
+    final prefix = ref.read(meshCoreSelfPubKeyPrefixProvider);
+    if (prefix.isEmpty) return;
+    if (!state.hiddenChannelIndices.contains(channelIndex)) return;
+    final store = ref.read(meshCoreChannelPrefsStoreProvider);
+    try {
+      final updated = await store.unhide(prefix, channelIndex);
+      if (_disposed) return;
+      if (ref.read(meshCoreSelfPubKeyPrefixProvider) != prefix) return;
+      state = updated;
+      AppLogging.meshcore(
+        'event=channel.unhidden idx=$channelIndex device=$prefix',
+      );
+    } catch (e) {
+      AppLogging.meshcore(
+        'event=channel.unhide.failed idx=$channelIndex '
+        'reason=${e.runtimeType}',
+        error: true,
+      );
+    }
+  }
 }
 
 final meshCoreChannelPrefsProvider =
@@ -1220,6 +1273,11 @@ final meshCoreChannelPrefsProvider =
 /// Read-only convenience: the current muted set.
 final meshCoreChannelMutedSetProvider = Provider<Set<int>>((ref) {
   return ref.watch(meshCoreChannelPrefsProvider).mutedChannelIndices;
+});
+
+/// Read-only convenience: the current hidden set (D37-B-A).
+final meshCoreChannelHiddenSetProvider = Provider<Set<int>>((ref) {
+  return ref.watch(meshCoreChannelPrefsProvider).hiddenChannelIndices;
 });
 
 /// Provider for the MeshCore debug capture (null if not MeshCore or release build).
