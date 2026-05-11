@@ -16,6 +16,18 @@ class MeshCoreContactStore {
   static const String _key = 'meshcore_contacts';
   static const String _unreadPrefix = 'meshcore_unread_';
 
+  /// D38-A: per-channel unread count keyspace.
+  ///
+  /// Shape: `meshcore_channel_unread_<devicePubKeyPrefix>_<idx>`.
+  /// Device-scoped because the firmware slot index is positional —
+  /// two radios share `slot 0 = "Public"`, so without the device
+  /// prefix the unread count would bleed across radios.
+  ///
+  /// Key by channel **slot index** only. Never by channel name (user-
+  /// editable), PSK (secret), or channel code (carries the PSK). This
+  /// mirrors the D37-A/B/C prefs-store keying discipline.
+  static const String _channelUnreadPrefix = 'meshcore_channel_unread_';
+
   SharedPreferences? _prefs;
 
   MeshCoreContactStore();
@@ -92,10 +104,11 @@ class MeshCoreContactStore {
   Future<void> clearAll() async {
     await init();
     await _preferences.remove(_key);
-    // Clear all unread counts
+    // Clear all unread counts (contacts + D38-A channel-unread keys).
     final keys = _preferences.getKeys();
     for (final key in keys) {
-      if (key.startsWith(_unreadPrefix)) {
+      if (key.startsWith(_unreadPrefix) ||
+          key.startsWith(_channelUnreadPrefix)) {
         await _preferences.remove(key);
       }
     }
@@ -129,6 +142,80 @@ class MeshCoreContactStore {
   /// Clear unread count for a contact.
   Future<void> clearUnreadCount(String publicKeyHex) async {
     await setUnreadCount(publicKeyHex, 0);
+  }
+
+  /// D38-A: build the SharedPreferences key for a per-channel unread
+  /// counter. Empty [devicePubKeyPrefix] yields an empty string so
+  /// the caller can fast-path away from any read/write before
+  /// touching the keyspace.
+  String _channelUnreadKey(String devicePubKeyPrefix, int channelIndex) {
+    if (devicePubKeyPrefix.isEmpty) return '';
+    return '$_channelUnreadPrefix${devicePubKeyPrefix.toLowerCase()}_'
+        '$channelIndex';
+  }
+
+  /// D38-A: load the persisted unread count for channel slot
+  /// [channelIndex] on the device identified by [devicePubKeyPrefix].
+  /// Returns 0 on missing key, empty prefix, or corrupt value.
+  Future<int> getChannelUnreadCount(
+    String devicePubKeyPrefix,
+    int channelIndex,
+  ) async {
+    if (devicePubKeyPrefix.isEmpty) return 0;
+    await init();
+    final key = _channelUnreadKey(devicePubKeyPrefix, channelIndex);
+    try {
+      return _preferences.getInt(key) ?? 0;
+    } catch (_) {
+      // SharedPreferences stores the wrong type at this key (e.g. a
+      // string written by an older build). Treat as zero rather than
+      // throw - the user must never lose channel access because of a
+      // stale serialised value.
+      return 0;
+    }
+  }
+
+  /// D38-A: set the persisted unread count for channel slot
+  /// [channelIndex]. Writing 0 (or any non-positive value) removes the
+  /// key so the SharedPreferences keyspace stays compact.
+  Future<void> setChannelUnreadCount(
+    String devicePubKeyPrefix,
+    int channelIndex,
+    int count,
+  ) async {
+    if (devicePubKeyPrefix.isEmpty) return;
+    await init();
+    final key = _channelUnreadKey(devicePubKeyPrefix, channelIndex);
+    if (count <= 0) {
+      await _preferences.remove(key);
+    } else {
+      await _preferences.setInt(key, count);
+    }
+  }
+
+  /// D38-A: increment the persisted unread count by 1 and return the
+  /// new value. No-op on empty prefix.
+  Future<int> incrementChannelUnreadCount(
+    String devicePubKeyPrefix,
+    int channelIndex,
+  ) async {
+    if (devicePubKeyPrefix.isEmpty) return 0;
+    final current = await getChannelUnreadCount(
+      devicePubKeyPrefix,
+      channelIndex,
+    );
+    final updated = current + 1;
+    await setChannelUnreadCount(devicePubKeyPrefix, channelIndex, updated);
+    return updated;
+  }
+
+  /// D38-A: clear the persisted unread count for channel slot
+  /// [channelIndex].
+  Future<void> clearChannelUnreadCount(
+    String devicePubKeyPrefix,
+    int channelIndex,
+  ) async {
+    await setChannelUnreadCount(devicePubKeyPrefix, channelIndex, 0);
   }
 
   Map<String, dynamic> _toJson(MeshCoreContact contact) {

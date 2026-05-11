@@ -1425,6 +1425,47 @@ class MeshCoreConversationsNotifier
         return b.lastMessageTime!.compareTo(a.lastMessageTime!);
       });
 
+      // D38-A: rebuild channel conversation entries from the live
+      // MeshCore channel list + the on-disk message store. Channel
+      // unread badges and last-message previews must survive an app
+      // restart - prior to this slice both were ephemeral.
+      //
+      // Channel entries are appended after the (time-sorted) contact
+      // entries. The channels SCREEN looks up entries by id, not by
+      // iteration order, so the D37-C user-defined channel order is
+      // unaffected - this list is just a conversation cache.
+      final pubKeyPrefix = ref.read(meshCoreSelfPubKeyPrefixProvider);
+      final channelEntries = ref.read(meshCoreChannelsProvider).channels;
+      for (final channel in channelEntries) {
+        try {
+          final messages = await _messageStore.loadChannelMessages(
+            channel.index,
+          );
+          final lastMessage = messages.isNotEmpty ? messages.last : null;
+          final unread = await _contactStore.getChannelUnreadCount(
+            pubKeyPrefix,
+            channel.index,
+          );
+          conversations.add(
+            MeshCoreConversation(
+              id: 'channel_${channel.index}',
+              name: channel.displayName,
+              isChannel: true,
+              channelIndex: channel.index,
+              lastMessageText: lastMessage?.text,
+              lastMessageTime: lastMessage?.timestamp,
+              unreadCount: unread,
+            ),
+          );
+        } catch (e) {
+          AppLogging.meshcore(
+            'event=conversations.channel.rebuild.failed '
+            'idx=${channel.index} reason=${e.runtimeType}',
+            error: true,
+          );
+        }
+      }
+
       // D28: preserve queue-status fields (heartbeatActive, last-drain
       // metadata) across the full-load reset. Pre-D28 this dropped them
       // back to defaults, which would clobber the heartbeat-active flag
@@ -1511,6 +1552,27 @@ class MeshCoreConversationsNotifier
         }
       });
     }
+
+    // D38-A: persist per-channel unread to SharedPreferences so the
+    // badge survives an app restart. Channels are NOT propagated to
+    // the contacts notifier (channels live on a different tab; the
+    // aggregate "Unread N" Contacts chip must remain channel-blind).
+    if (incrementUnread && isChannel && channelIndex != null) {
+      Future.microtask(() async {
+        try {
+          await _contactStore.init();
+          final prefix = ref.read(meshCoreSelfPubKeyPrefixProvider);
+          if (prefix.isEmpty) return;
+          await _contactStore.incrementChannelUnreadCount(prefix, channelIndex);
+        } catch (e) {
+          AppLogging.meshcore(
+            'event=unread.propagate.failed scope=channel '
+            'idx=$channelIndex reason=${e.runtimeType}',
+            error: true,
+          );
+        }
+      });
+    }
   }
 
   void _markPendingAsDelivered() {
@@ -1561,6 +1623,31 @@ class MeshCoreConversationsNotifier
           error: true,
         );
       }
+      return;
+    }
+
+    // D38-A: channel id. Parse the slot index safely and clear the
+    // persisted per-channel unread counter so the badge stays at zero
+    // across an app restart.
+    final idx = int.tryParse(conversationId.substring('channel_'.length));
+    if (idx == null) {
+      AppLogging.meshcore(
+        'event=mark_read.channel.id_parse.failed',
+        error: true,
+      );
+      return;
+    }
+    try {
+      await _contactStore.init();
+      final prefix = ref.read(meshCoreSelfPubKeyPrefixProvider);
+      if (prefix.isEmpty) return;
+      await _contactStore.clearChannelUnreadCount(prefix, idx);
+    } catch (e) {
+      AppLogging.meshcore(
+        'event=mark_read.channel.store_clear.failed '
+        'idx=$idx reason=${e.runtimeType}',
+        error: true,
+      );
     }
   }
 
