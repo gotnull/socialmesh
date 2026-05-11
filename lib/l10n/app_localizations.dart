@@ -14725,6 +14725,96 @@ abstract class AppLocalizations {
   /// **'Couldn\'t apply force direct to {contactName}'**
   String meshcorePathOverrideForceDirectFailed(String contactName);
 
+  /// D36-A - tile label on the repeater contact detail screen that opens the neighbours sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Neighbours'**
+  String get meshcoreNeighborsTileTitle;
+
+  /// D36-A - subtitle on the Neighbours tile, explaining the query target.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeater\'s adjacent peers'**
+  String get meshcoreNeighborsTileSubtitle;
+
+  /// D36-A - bottom-sheet title above the neighbours list. {repeaterName} is the resolved display name of the queried repeater.
+  ///
+  /// In en, this message translates to:
+  /// **'Neighbours - {repeaterName}'**
+  String meshcoreNeighborsSheetTitle(String repeaterName);
+
+  /// D36-A - manual refresh action label inside the neighbours sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get meshcoreNeighborsRefresh;
+
+  /// D36-A - placeholder shown while the binary request is in flight.
+  ///
+  /// In en, this message translates to:
+  /// **'Querying repeater…'**
+  String get meshcoreNeighborsLoading;
+
+  /// D36-A - empty-state placeholder when no neighbours have been fetched yet (idle status).
+  ///
+  /// In en, this message translates to:
+  /// **'No data available'**
+  String get meshcoreNeighborsNoData;
+
+  /// D36-A - failure copy when the async push never arrives within the timeout window.
+  ///
+  /// In en, this message translates to:
+  /// **'Request timed out. The repeater did not respond.'**
+  String get meshcoreNeighborsTimeout;
+
+  /// D36-A - failure copy when no MeshCore session is connected.
+  ///
+  /// In en, this message translates to:
+  /// **'No active MeshCore session.'**
+  String get meshcoreNeighborsNoSession;
+
+  /// D36-A - failure copy when the response body fails the length/discriminator checks.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not parse the repeater\'s response.'**
+  String get meshcoreNeighborsParseFailed;
+
+  /// D36-A - cooling copy shown when the 10 s per-repeater cooldown is active. {seconds} is the remaining cooldown rounded up.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again in {seconds}s'**
+  String meshcoreNeighborsCooling(int seconds);
+
+  /// D36-A - relative-time copy under each neighbour row. {timeAgo} is a pre-formatted duration string (e.g. '1 m 23 s').
+  ///
+  /// In en, this message translates to:
+  /// **'heard {timeAgo} ago'**
+  String meshcoreNeighborsHeardAgo(String timeAgo);
+
+  /// D36-A - SNR badge value formatter. {value} is a pre-formatted dB string (one decimal place).
+  ///
+  /// In en, this message translates to:
+  /// **'SNR {value} dB'**
+  String meshcoreNeighborsSnrDb(String value);
+
+  /// D36-A - footer text showing how many neighbour rows were included vs the total the repeater reports.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing {n} of {m} neighbours'**
+  String meshcoreNeighborsShowing(int n, int m);
+
+  /// D36-A - footer label with the HH:MM:SS of the last successful refresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Last refreshed {time}'**
+  String meshcoreNeighborsLastRefreshed(String time);
+
+  /// D36-A - row label fallback when the 4-byte pubkey prefix has zero bytes (no match possible and prefix is empty).
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown neighbour'**
+  String get meshcoreNeighborsUnknown;
+
   /// D29 - explanatory copy for the share-channel action; surfaces the PSK warning.
   ///
   /// In en, this message translates to:

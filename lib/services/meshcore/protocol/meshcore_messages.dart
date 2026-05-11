@@ -429,6 +429,113 @@ class MeshCorePacketsStats {
       'rx_err=$recvErrors)';
 }
 
+/// D36-A: one neighbour entry in a `MeshCoreNeighborsResponse`.
+///
+/// Each record is 9 bytes on the wire:
+///   [0..3]  pubkey_prefix    raw 4-byte prefix of the neighbour's pubkey
+///   [4..7]  last_heard_secs  u32 LE, seconds since the repeater last heard
+///   [8]     snr_raw          i8, quarter-dB (raw / 4.0 = dB)
+///
+/// Privacy: only the 4-byte prefix is exposed. The UI must NEVER
+/// reconstruct or display a full 32-byte pubkey from this record;
+/// the prefix is sufficient to match against the local contact
+/// roster and to render a short fingerprint when no match exists.
+class MeshCoreNeighbor {
+  /// 4-byte prefix of the neighbour's pubkey.
+  final Uint8List pubKeyPrefix;
+
+  /// Time since the target repeater last heard this neighbour.
+  final Duration lastHeard;
+
+  /// Last-known SNR encoded as the firmware's raw int8 quarter-dB
+  /// value. Use [snrDb] for the human-readable conversion.
+  final int snrQuarter;
+
+  const MeshCoreNeighbor({
+    required this.pubKeyPrefix,
+    required this.lastHeard,
+    required this.snrQuarter,
+  });
+
+  /// SNR in dB (raw quarter-dB / 4.0). Negative values are typical.
+  double get snrDb => snrQuarter / 4.0;
+
+  @override
+  String toString() =>
+      'MeshCoreNeighbor(prefix=4B last=${lastHeard.inSeconds}s '
+      'snr_q=$snrQuarter)';
+}
+
+/// D36-A: parsed `PUSH_CODE_BINARY_RESPONSE` (0x8C) payload for the
+/// `getNeighbours` request type (0x06).
+///
+/// Wire layout (variable length):
+///   [0..1]  reported_count   u16 LE   total neighbours the repeater knows
+///   [2..3]  results_count    u16 LE   rows actually included in this response
+///   [4..]   N × neighbour_record (9 bytes each, see [MeshCoreNeighbor])
+///
+/// `reportedCount` may exceed `results.length` when the request asked
+/// for fewer rows than the repeater has (we cap at 15 by spec); the
+/// UI surfaces this as a "Showing N of M" footer.
+class MeshCoreNeighborsResponse {
+  /// Total number of neighbours the target repeater says it has.
+  final int reportedCount;
+
+  /// Parsed records actually included in this response.
+  final List<MeshCoreNeighbor> results;
+
+  /// Wall-clock time the response was received.
+  final DateTime fetchedAt;
+
+  const MeshCoreNeighborsResponse({
+    required this.reportedCount,
+    required this.results,
+    required this.fetchedAt,
+  });
+
+  /// Parse a neighbours-response payload. Returns `null` on:
+  ///   - payload < 4 bytes (no count headers),
+  ///   - tail length != resultsCount × 9 (mismatch between declared
+  ///     and actual record count).
+  ///
+  /// `now` lets tests inject a deterministic `fetchedAt`. Production
+  /// callers omit it; the parser falls back to `DateTime.now()`.
+  static MeshCoreNeighborsResponse? parse(Uint8List payload, {DateTime? now}) {
+    if (payload.length < 4) return null;
+    final byteData = ByteData.sublistView(payload);
+    final reportedCount = byteData.getUint16(0, Endian.little);
+    final resultsCount = byteData.getUint16(2, Endian.little);
+    final expectedTail = resultsCount * 9;
+    if (payload.length - 4 != expectedTail) return null;
+
+    final results = <MeshCoreNeighbor>[];
+    for (var i = 0; i < resultsCount; i++) {
+      final base = 4 + i * 9;
+      final prefix = Uint8List.fromList(payload.sublist(base, base + 4));
+      final lastHeardSecs = byteData.getUint32(base + 4, Endian.little);
+      final snrRaw = byteData.getInt8(base + 8);
+      results.add(
+        MeshCoreNeighbor(
+          pubKeyPrefix: prefix,
+          lastHeard: Duration(seconds: lastHeardSecs),
+          snrQuarter: snrRaw,
+        ),
+      );
+    }
+
+    return MeshCoreNeighborsResponse(
+      reportedCount: reportedCount,
+      results: List.unmodifiable(results),
+      fetchedAt: now ?? DateTime.now(),
+    );
+  }
+
+  @override
+  String toString() =>
+      'MeshCoreNeighborsResponse(reported=$reportedCount '
+      'results=${results.length})';
+}
+
 /// D28 Part C: one hop in a parsed `PUSH_CODE_TRACE_DATA` (0x89) response.
 class MeshCoreTraceHop {
   /// Single-byte hop identifier (typically the first byte of the

@@ -314,6 +314,28 @@ class MeshCoreStatsType {
   static const int packets = 2;
 }
 
+/// D36-A: request-type byte placed at the head of the `requestBytes`
+/// payload for `CMD_SEND_BINARY_REQ` (0x32). The firmware on the
+/// remote peer dispatches on this byte to decide how to interpret
+/// the rest of the request body.
+///
+/// Only [getNeighbours] is consumed by SocialMesh today. Other
+/// request types may exist in the broader MeshCore ecosystem
+/// (telemetry, page-fetch, etc.); adding any of them requires its
+/// own session-helper wrapper and recon. The single-flight binary
+/// request helper is intentionally narrow and not exposed as a
+/// generic binary-RPC surface.
+class MeshCoreBinaryReqType {
+  MeshCoreBinaryReqType._();
+
+  /// "List adjacent peers heard by the target repeater." Followed by
+  /// `[reserved:u8][max:u8][offset_hi:u8][offset_lo:u8][order_by:u8]
+  /// [key_prefix_len:u8]`. The repeater responds asynchronously via
+  /// `PUSH_CODE_BINARY_RESPONSE` (0x8C) with a tag matching the
+  /// `RESP_CODE_SENT` (0x06) acknowledgement.
+  static const int getNeighbours = 0x06;
+}
+
 /// MeshCore push codes (async device -> app, 0x80+).
 class MeshCorePushCodes {
   MeshCorePushCodes._();

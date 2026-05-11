@@ -8389,6 +8389,65 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get meshcoreNeighborsTileTitle => 'Vizinhos';
+
+  @override
+  String get meshcoreNeighborsTileSubtitle => 'Pares adjacentes ao repetidor';
+
+  @override
+  String meshcoreNeighborsSheetTitle(String repeaterName) {
+    return 'Vizinhos - $repeaterName';
+  }
+
+  @override
+  String get meshcoreNeighborsRefresh => 'Atualizar';
+
+  @override
+  String get meshcoreNeighborsLoading => 'Consultando repetidor…';
+
+  @override
+  String get meshcoreNeighborsNoData => 'Nenhum dado disponível';
+
+  @override
+  String get meshcoreNeighborsTimeout =>
+      'Tempo esgotado. O repetidor não respondeu.';
+
+  @override
+  String get meshcoreNeighborsNoSession => 'Nenhuma sessão MeshCore ativa.';
+
+  @override
+  String get meshcoreNeighborsParseFailed =>
+      'Não foi possível interpretar a resposta do repetidor.';
+
+  @override
+  String meshcoreNeighborsCooling(int seconds) {
+    return 'Tente novamente em ${seconds}s';
+  }
+
+  @override
+  String meshcoreNeighborsHeardAgo(String timeAgo) {
+    return 'ouvido há $timeAgo';
+  }
+
+  @override
+  String meshcoreNeighborsSnrDb(String value) {
+    return 'SNR $value dB';
+  }
+
+  @override
+  String meshcoreNeighborsShowing(int n, int m) {
+    return 'Mostrando $n de $m vizinhos';
+  }
+
+  @override
+  String meshcoreNeighborsLastRefreshed(String time) {
+    return 'Última atualização $time';
+  }
+
+  @override
+  String get meshcoreNeighborsUnknown => 'Vizinho desconhecido';
+
+  @override
   String get meshcoreShareChannelSubtitle =>
       'Compartilhe nome e PSK com outro dispositivo. Qualquer pessoa com este código pode entrar.';
 

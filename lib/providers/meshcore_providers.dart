@@ -2204,3 +2204,230 @@ final meshCorePacketsStatsProvider =
       MeshCorePacketsStatsNotifier,
       MeshCorePacketsStatsSnapshot
     >(MeshCorePacketsStatsNotifier.new);
+
+// ---------------------------------------------------------------------------
+// D36-A: Neighbours / repeater query provider (per-repeater family).
+//
+// One Notifier instance per target repeater public-key hex. State is
+// tiny (status + last response + last error + cooldown timestamp) and
+// holds NO timers or stream subscriptions, so the family does not
+// leak resources even without `.autoDispose`. The 10 s per-repeater
+// cooldown is enforced inside `requestRefresh()`.
+// ---------------------------------------------------------------------------
+
+/// Status surface for the neighbours request lifecycle. The UI maps
+/// each value to a distinct sheet state (loading spinner, success
+/// rows, error hint, cooldown countdown).
+enum MeshCoreNeighborsStatus {
+  /// No request has been issued yet for this repeater.
+  idle,
+
+  /// A request is in flight. The UI shows a spinner.
+  loading,
+
+  /// A response has landed; [MeshCoreNeighborsState.lastResponse] is
+  /// populated.
+  success,
+
+  /// A request failed (timeout, transport drop, parse failure,
+  /// single-flight rejection, or no MeshCore session). The UI shows
+  /// [MeshCoreNeighborsState.lastError] copy.
+  failure,
+
+  /// The 10 s per-repeater cooldown is active. The UI shows a
+  /// "Try again in Ns" message; refresh is disabled until
+  /// [MeshCoreNeighborsState.cooldownUntil].
+  cooling,
+}
+
+/// Immutable per-repeater state for the neighbours sheet.
+///
+/// Privacy: holds the parsed response only (4-byte prefixes, no full
+/// pubkeys). Errors are typed (enum-like strings); never raw payload
+/// bytes.
+class MeshCoreNeighborsState {
+  final MeshCoreNeighborsStatus status;
+  final MeshCoreNeighborsResponse? lastResponse;
+  final String? lastError;
+  final DateTime? cooldownUntil;
+
+  const MeshCoreNeighborsState({
+    required this.status,
+    this.lastResponse,
+    this.lastError,
+    this.cooldownUntil,
+  });
+
+  const MeshCoreNeighborsState.idle()
+    : status = MeshCoreNeighborsStatus.idle,
+      lastResponse = null,
+      lastError = null,
+      cooldownUntil = null;
+
+  MeshCoreNeighborsState copyWith({
+    MeshCoreNeighborsStatus? status,
+    MeshCoreNeighborsResponse? lastResponse,
+    String? lastError,
+    DateTime? cooldownUntil,
+    bool clearLastError = false,
+    bool clearCooldown = false,
+  }) {
+    return MeshCoreNeighborsState(
+      status: status ?? this.status,
+      lastResponse: lastResponse ?? this.lastResponse,
+      lastError: clearLastError ? null : (lastError ?? this.lastError),
+      cooldownUntil: clearCooldown
+          ? null
+          : (cooldownUntil ?? this.cooldownUntil),
+    );
+  }
+}
+
+/// D36-A: 10 s per-repeater cooldown. Mirrors the airtime-safety
+/// constraint from the recon: a manual refresh sends ~155 B OTA, so
+/// rate-limiting at the UI layer prevents refresh-mashing from
+/// hammering the channel.
+const Duration _kNeighborsCooldown = Duration(seconds: 10);
+
+/// D36-A: hardcoded `getNeighbours` request payload. The bytes after
+/// the request-type byte (`0x06`) match meshcore-open's pinned shape
+/// and cap the response at 15 neighbours.
+///
+///   [0x06, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x04]
+///   req_type   reserved   max=15    offset_hi  offset_lo  order_by  key_prefix_len=4
+const List<int> _kNeighborsRequestBytes = [
+  0x06,
+  0x00,
+  0x0F,
+  0x00,
+  0x00,
+  0x00,
+  0x04,
+];
+
+class MeshCoreNeighborsNotifier extends Notifier<MeshCoreNeighborsState> {
+  MeshCoreNeighborsNotifier(this.publicKeyHex);
+
+  /// Target repeater public-key hex; injected via the family-provider
+  /// constructor tear-off.
+  final String publicKeyHex;
+
+  @override
+  MeshCoreNeighborsState build() => const MeshCoreNeighborsState.idle();
+
+  /// Trigger a fresh neighbours query against the repeater whose
+  /// public-key hex matches this notifier's family argument.
+  ///
+  /// Behaviour:
+  ///   - Enforces a 10 s per-repeater cooldown. A second call within
+  ///     the window transitions to `cooling` and returns without
+  ///     sending bytes.
+  ///   - Requires a live MeshCore session and a matching contact in
+  ///     the live contact list (we read the 32-byte pubkey from
+  ///     `meshCoreContactsProvider` rather than re-parsing the hex
+  ///     ourselves).
+  ///   - The session helper `sendBinaryRequest` has its own
+  ///     single-flight guard; concurrent calls (e.g. user mashes
+  ///     refresh on two different repeaters at once) will return
+  ///     null for the second one and transition that family entry
+  ///     to `failure`.
+  Future<void> requestRefresh() async {
+    final now = DateTime.now();
+    final cooldown = state.cooldownUntil;
+    if (cooldown != null && now.isBefore(cooldown)) {
+      state = state.copyWith(
+        status: MeshCoreNeighborsStatus.cooling,
+        clearLastError: true,
+      );
+      return;
+    }
+
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null) {
+      state = state.copyWith(
+        status: MeshCoreNeighborsStatus.failure,
+        lastError: 'no_session',
+      );
+      return;
+    }
+
+    final contacts = ref.read(meshCoreContactsProvider).contacts;
+    final contact = contacts
+        .where((c) => c.publicKeyHex == publicKeyHex)
+        .firstOrNull;
+    if (contact == null) {
+      state = state.copyWith(
+        status: MeshCoreNeighborsStatus.failure,
+        lastError: 'contact_missing',
+      );
+      return;
+    }
+
+    state = state.copyWith(
+      status: MeshCoreNeighborsStatus.loading,
+      clearLastError: true,
+      clearCooldown: true,
+    );
+
+    final responseBytes = await session.sendBinaryRequest(
+      recipientPubKey: contact.publicKey,
+      requestBytes: Uint8List.fromList(_kNeighborsRequestBytes),
+    );
+
+    final cooldownEnd = DateTime.now().add(_kNeighborsCooldown);
+
+    if (responseBytes == null) {
+      state = state.copyWith(
+        status: MeshCoreNeighborsStatus.failure,
+        lastError: 'timeout',
+        cooldownUntil: cooldownEnd,
+      );
+      return;
+    }
+
+    final parsed = MeshCoreNeighborsResponse.parse(responseBytes);
+    if (parsed == null) {
+      state = state.copyWith(
+        status: MeshCoreNeighborsStatus.failure,
+        lastError: 'parse_failed',
+        cooldownUntil: cooldownEnd,
+      );
+      return;
+    }
+
+    state = state.copyWith(
+      status: MeshCoreNeighborsStatus.success,
+      lastResponse: parsed,
+      clearLastError: true,
+      cooldownUntil: cooldownEnd,
+    );
+  }
+
+  /// Clear the cooling flag if the cooldown timestamp has elapsed.
+  /// The UI calls this on every rebuild so a sheet that stays open
+  /// past the cooldown transitions from `cooling` back to whatever
+  /// status preceded it. Returns the resolved current status.
+  MeshCoreNeighborsStatus visibleStatus(DateTime now) {
+    if (state.status != MeshCoreNeighborsStatus.cooling) {
+      return state.status;
+    }
+    final until = state.cooldownUntil;
+    if (until == null || now.isAfter(until)) {
+      // Cooldown elapsed; return to idle/success depending on what
+      // we have buffered.
+      final next = state.lastResponse == null
+          ? MeshCoreNeighborsStatus.idle
+          : MeshCoreNeighborsStatus.success;
+      state = state.copyWith(status: next);
+      return next;
+    }
+    return MeshCoreNeighborsStatus.cooling;
+  }
+}
+
+final meshCoreNeighborsProvider =
+    NotifierProvider.family<
+      MeshCoreNeighborsNotifier,
+      MeshCoreNeighborsState,
+      String
+    >(MeshCoreNeighborsNotifier.new);

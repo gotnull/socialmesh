@@ -11239,6 +11239,85 @@
             "contactName": {"type": "String"}
         }
     },
+    "meshcoreNeighborsTileTitle": "Neighbours",
+    "@meshcoreNeighborsTileTitle": {
+        "description": "D36-A - tile label on the repeater contact detail screen that opens the neighbours sheet."
+    },
+    "meshcoreNeighborsTileSubtitle": "Repeater's adjacent peers",
+    "@meshcoreNeighborsTileSubtitle": {
+        "description": "D36-A - subtitle on the Neighbours tile, explaining the query target."
+    },
+    "meshcoreNeighborsSheetTitle": "Neighbours - {repeaterName}",
+    "@meshcoreNeighborsSheetTitle": {
+        "description": "D36-A - bottom-sheet title above the neighbours list. {repeaterName} is the resolved display name of the queried repeater.",
+        "placeholders": {
+            "repeaterName": {"type": "String"}
+        }
+    },
+    "meshcoreNeighborsRefresh": "Refresh",
+    "@meshcoreNeighborsRefresh": {
+        "description": "D36-A - manual refresh action label inside the neighbours sheet."
+    },
+    "meshcoreNeighborsLoading": "Querying repeater…",
+    "@meshcoreNeighborsLoading": {
+        "description": "D36-A - placeholder shown while the binary request is in flight."
+    },
+    "meshcoreNeighborsNoData": "No data available",
+    "@meshcoreNeighborsNoData": {
+        "description": "D36-A - empty-state placeholder when no neighbours have been fetched yet (idle status)."
+    },
+    "meshcoreNeighborsTimeout": "Request timed out. The repeater did not respond.",
+    "@meshcoreNeighborsTimeout": {
+        "description": "D36-A - failure copy when the async push never arrives within the timeout window."
+    },
+    "meshcoreNeighborsNoSession": "No active MeshCore session.",
+    "@meshcoreNeighborsNoSession": {
+        "description": "D36-A - failure copy when no MeshCore session is connected."
+    },
+    "meshcoreNeighborsParseFailed": "Could not parse the repeater's response.",
+    "@meshcoreNeighborsParseFailed": {
+        "description": "D36-A - failure copy when the response body fails the length/discriminator checks."
+    },
+    "meshcoreNeighborsCooling": "Try again in {seconds}s",
+    "@meshcoreNeighborsCooling": {
+        "description": "D36-A - cooling copy shown when the 10 s per-repeater cooldown is active. {seconds} is the remaining cooldown rounded up.",
+        "placeholders": {
+            "seconds": {"type": "int"}
+        }
+    },
+    "meshcoreNeighborsHeardAgo": "heard {timeAgo} ago",
+    "@meshcoreNeighborsHeardAgo": {
+        "description": "D36-A - relative-time copy under each neighbour row. {timeAgo} is a pre-formatted duration string (e.g. '1 m 23 s').",
+        "placeholders": {
+            "timeAgo": {"type": "String"}
+        }
+    },
+    "meshcoreNeighborsSnrDb": "SNR {value} dB",
+    "@meshcoreNeighborsSnrDb": {
+        "description": "D36-A - SNR badge value formatter. {value} is a pre-formatted dB string (one decimal place).",
+        "placeholders": {
+            "value": {"type": "String"}
+        }
+    },
+    "meshcoreNeighborsShowing": "Showing {n} of {m} neighbours",
+    "@meshcoreNeighborsShowing": {
+        "description": "D36-A - footer text showing how many neighbour rows were included vs the total the repeater reports.",
+        "placeholders": {
+            "n": {"type": "int"},
+            "m": {"type": "int"}
+        }
+    },
+    "meshcoreNeighborsLastRefreshed": "Last refreshed {time}",
+    "@meshcoreNeighborsLastRefreshed": {
+        "description": "D36-A - footer label with the HH:MM:SS of the last successful refresh.",
+        "placeholders": {
+            "time": {"type": "String"}
+        }
+    },
+    "meshcoreNeighborsUnknown": "Unknown neighbour",
+    "@meshcoreNeighborsUnknown": {
+        "description": "D36-A - row label fallback when the 4-byte pubkey prefix has zero bytes (no match possible and prefix is empty)."
+    },
     "meshcoreShareChannelSubtitle": "Share name and PSK with another device. Anyone with this code can join.",
     "@meshcoreShareChannelSubtitle": {
         "description": "D29 - explanatory copy for the share-channel action; surfaces the PSK warning."

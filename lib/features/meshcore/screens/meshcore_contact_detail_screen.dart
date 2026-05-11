@@ -41,6 +41,7 @@ import '../../../models/meshcore_contact.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../contact_l10n.dart';
+import 'meshcore_neighbors_sheet.dart';
 import 'meshcore_tools_screen.dart' show showMeshCoreTracePathSheet;
 
 /// MeshCore-only read-only contact detail screen.
@@ -231,6 +232,19 @@ class MeshCoreContactDetailScreen extends ConsumerWidget {
           subtitle: l10n.meshcorePathOverrideSubtitle,
           onTap: () => _openPathOverrideSheet(context, ref, c),
         ),
+        // D36-A: Neighbours query is repeater-only. The chat-type
+        // contacts can't be queried this way (they aren't repeaters)
+        // so the tile is hidden entirely; we don't show a greyed-out
+        // disabled variant.
+        if (c.type == MeshCoreAdvType.repeater)
+          SettingsTile(
+            key: const ValueKey('meshcore-contact-detail-neighbors'),
+            icon: Icons.hub_rounded,
+            iconColor: context.accentColor,
+            title: l10n.meshcoreNeighborsTileTitle,
+            subtitle: l10n.meshcoreNeighborsTileSubtitle,
+            onTap: () => showMeshCoreNeighborsSheet(context, repeater: c),
+          ),
         SettingsTile(
           key: const ValueKey('meshcore-contact-detail-reset-path'),
           icon: Icons.refresh_rounded,

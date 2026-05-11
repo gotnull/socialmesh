@@ -229,6 +229,13 @@ class MeshCoreSession {
   /// Optional capture for debugging (enabled via setCapture).
   MeshCoreFrameCapture? _capture;
 
+  /// D36-A: single-flight guard for `sendBinaryRequest`. The firmware
+  /// only tracks one pending binary request at a time; concurrent
+  /// callers would lose correlation when a second SENT ack overwrites
+  /// the first tag. This flag rejects the second call early, before
+  /// any bytes hit the wire.
+  bool _binaryRequestInFlight = false;
+
   /// Creates a new MeshCore session over the given transport.
   ///
   /// The session immediately starts listening to the transport's rawRxStream
@@ -1062,6 +1069,179 @@ class MeshCoreSession {
       'rx_err=${stats.recvErrors}',
     );
     return stats;
+  }
+
+  /// D36-A: send a binary request to a target peer (typically a
+  /// repeater) over LoRa via `CMD_SEND_BINARY_REQ` (0x32) and await
+  /// the asynchronous `PUSH_CODE_BINARY_RESPONSE` (0x8C) reply with a
+  /// firmware-assigned correlation tag.
+  ///
+  /// Wire shapes:
+  /// ```
+  /// outbound:  [0x32][recipientPubKey: 32 B][requestBytes: variable]
+  ///
+  /// sync ACK:  [0x06 RESP_CODE_SENT][route_type:u8][tag:u32 LE]
+  ///            [est_timeout_ms:u32 LE]
+  ///
+  /// async push: [0x8C PUSH_CODE_BINARY_RESPONSE][reserved:u8]
+  ///             [tag:u32 LE][response_data: variable]
+  /// ```
+  ///
+  /// The host does NOT supply the tag — the firmware allocates it and
+  /// echoes it in the SENT ack. We extract the tag from the ack and
+  /// match against subsequent push frames; non-matching pushes are
+  /// ignored.
+  ///
+  /// Returns the `response_data` (push payload from offset 6 onward)
+  /// on success, or `null` on:
+  ///   - single-flight rejection (a previous binary request is still
+  ///     pending; the firmware can only track one tag at a time),
+  ///   - no SENT ack within the inner 3 s ACK window,
+  ///   - no matching push within [timeout],
+  ///   - transport drop / parse failure.
+  ///
+  /// Bypasses `MeshCoreSendRateLimiter`: this is a host-side
+  /// management RPC, not a chat-bound text send. Pinned by a session
+  /// regression test asserting `ChatTrafficSnapshot.currentWindow`
+  /// counters do NOT bump across `sendBinaryRequest` calls.
+  ///
+  /// Privacy: logs `target=<8B fingerprint>` only; never the full
+  /// pubkey or the request/response payload bytes.
+  ///
+  /// The helper is intentionally narrow. D36-A's neighbours feature
+  /// is the only caller; future binary-request features (telemetry,
+  /// etc.) MUST add their own dedicated wrapper with its own recon
+  /// rather than reusing this method as a generic binary-RPC tunnel.
+  Future<Uint8List?> sendBinaryRequest({
+    required Uint8List recipientPubKey,
+    required Uint8List requestBytes,
+    Duration timeout = const Duration(seconds: 10),
+  }) async {
+    if (recipientPubKey.length != meshCorePubKeySize) {
+      throw ArgumentError.value(
+        recipientPubKey.length,
+        'recipientPubKey.length',
+        'must be exactly $meshCorePubKeySize bytes',
+      );
+    }
+
+    if (_binaryRequestInFlight) {
+      AppLogging.meshcore(
+        'event=binary_request.rejected reason=in_flight '
+        'target=${AppLogging.publicKeyFingerprint(recipientPubKey)}',
+        error: true,
+      );
+      return null;
+    }
+    _binaryRequestInFlight = true;
+
+    final builder = BytesBuilder();
+    builder.add(recipientPubKey);
+    builder.add(requestBytes);
+    final outboundPayload = builder.toBytes();
+
+    final completer = Completer<Uint8List?>();
+    final pendingPushes = <(int, Uint8List)>[];
+    int? expectedTag;
+
+    StreamSubscription<MeshCoreFrame>? pushSub;
+    pushSub = frameStream.listen((frame) {
+      if (frame.command != MeshCorePushCodes.binaryResponse) return;
+      // `frame.payload` is everything after the wire opcode byte:
+      //   payload[0]    = reserved
+      //   payload[1..5] = tag (u32 LE)
+      //   payload[5..]  = response_data
+      if (frame.payload.length < 5) return;
+      final pushTag = ByteData.sublistView(
+        frame.payload,
+      ).getUint32(1, Endian.little);
+      final data = Uint8List.fromList(frame.payload.sublist(5));
+      if (expectedTag == null) {
+        // SENT ack hasn't landed yet; buffer the push so we can
+        // match it once the tag is known. Handles the race where
+        // the remote peer replies before our local ACK round-trip
+        // completes.
+        pendingPushes.add((pushTag, data));
+        return;
+      }
+      if (pushTag == expectedTag && !completer.isCompleted) {
+        completer.complete(data);
+      }
+    });
+
+    try {
+      final ack = await sendAndWait(
+        MeshCoreCommands.sendBinaryReq,
+        payload: outboundPayload,
+        expectedResponse: MeshCoreResponses.sent,
+        timeout: const Duration(seconds: 3),
+      );
+
+      // `ack.payload` is everything after the 0x06 wire opcode:
+      //   payload[0]    = route_type
+      //   payload[1..5] = tag (u32 LE)
+      //   payload[5..9] = est_timeout_ms (u32 LE)
+      if (ack == null || ack.payload.length < 9) {
+        AppLogging.meshcore(
+          'event=binary_request.no_ack '
+          'target=${AppLogging.publicKeyFingerprint(recipientPubKey)}',
+          error: true,
+        );
+        return null;
+      }
+
+      final tag = ByteData.sublistView(ack.payload).getUint32(1, Endian.little);
+      final estTimeoutMs = ByteData.sublistView(
+        ack.payload,
+      ).getUint32(5, Endian.little);
+      expectedTag = tag;
+
+      AppLogging.meshcore(
+        'event=binary_request.ack_received '
+        'tag=0x${tag.toRadixString(16).padLeft(8, '0')} '
+        'est_timeout_ms=$estTimeoutMs',
+      );
+
+      // Drain any pushes that arrived before the ACK.
+      for (final (t, d) in pendingPushes) {
+        if (t == tag && !completer.isCompleted) {
+          completer.complete(d);
+          break;
+        }
+      }
+
+      final response = await completer.future.timeout(
+        timeout,
+        onTimeout: () => null,
+      );
+      if (response == null) {
+        AppLogging.meshcore(
+          'event=binary_request.timeout '
+          'target=${AppLogging.publicKeyFingerprint(recipientPubKey)} '
+          'tag=0x${tag.toRadixString(16).padLeft(8, '0')}',
+          error: true,
+        );
+        return null;
+      }
+
+      AppLogging.meshcore(
+        'event=binary_request.response_received '
+        'tag=0x${tag.toRadixString(16).padLeft(8, '0')} '
+        'bytes=${response.length}',
+      );
+      return response;
+    } catch (e) {
+      AppLogging.meshcore(
+        'event=binary_request.failed '
+        'target=${AppLogging.publicKeyFingerprint(recipientPubKey)} '
+        'reason=${e.runtimeType}',
+        error: true,
+      );
+      return null;
+    } finally {
+      await pushSub.cancel();
+      _binaryRequestInFlight = false;
+    }
   }
 
   /// Check device connectivity using battery request.

@@ -8308,6 +8308,65 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get meshcoreNeighborsTileTitle => 'Neighbours';
+
+  @override
+  String get meshcoreNeighborsTileSubtitle => 'Repeater\'s adjacent peers';
+
+  @override
+  String meshcoreNeighborsSheetTitle(String repeaterName) {
+    return 'Neighbours - $repeaterName';
+  }
+
+  @override
+  String get meshcoreNeighborsRefresh => 'Refresh';
+
+  @override
+  String get meshcoreNeighborsLoading => 'Querying repeater…';
+
+  @override
+  String get meshcoreNeighborsNoData => 'No data available';
+
+  @override
+  String get meshcoreNeighborsTimeout =>
+      'Request timed out. The repeater did not respond.';
+
+  @override
+  String get meshcoreNeighborsNoSession => 'No active MeshCore session.';
+
+  @override
+  String get meshcoreNeighborsParseFailed =>
+      'Could not parse the repeater\'s response.';
+
+  @override
+  String meshcoreNeighborsCooling(int seconds) {
+    return 'Try again in ${seconds}s';
+  }
+
+  @override
+  String meshcoreNeighborsHeardAgo(String timeAgo) {
+    return 'heard $timeAgo ago';
+  }
+
+  @override
+  String meshcoreNeighborsSnrDb(String value) {
+    return 'SNR $value dB';
+  }
+
+  @override
+  String meshcoreNeighborsShowing(int n, int m) {
+    return 'Showing $n of $m neighbours';
+  }
+
+  @override
+  String meshcoreNeighborsLastRefreshed(String time) {
+    return 'Last refreshed $time';
+  }
+
+  @override
+  String get meshcoreNeighborsUnknown => 'Unknown neighbour';
+
+  @override
   String get meshcoreShareChannelSubtitle =>
       'Share name and PSK with another device. Anyone with this code can join.';
 
