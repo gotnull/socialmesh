@@ -18,7 +18,7 @@ dependencies:
   riverpod_annotation: ^4.0.0
 
   # BLE Communication
-  flutter_blue_plus: ^2.2.1
+  flutter_blue_plus: ^2.3.2
   nordic_dfu: ^7.1.2
 
   # USB Serial Communication
