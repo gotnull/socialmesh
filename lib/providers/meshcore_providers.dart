@@ -24,6 +24,7 @@ import '../services/meshcore/protocol/meshcore_capture.dart';
 import '../services/meshcore/protocol/meshcore_messages.dart';
 import '../services/meshcore/protocol/meshcore_session.dart';
 import '../services/meshcore/storage/meshcore_channel_prefs_store.dart';
+import '../services/meshcore/storage/meshcore_path_history_store.dart';
 import 'app_providers.dart';
 import 'connection_providers.dart';
 
@@ -686,6 +687,16 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
       pathOverride: hopBytes.length,
       pathOverrideBytes: Uint8List.fromList(hopBytes),
     );
+    // D39-A: record the hop bytes in this contact's app-local path
+    // history (source: trace). Dedup + LRU eviction live in the
+    // history store. Skips silently on hopBytes.isEmpty - a direct
+    // route is a mode, not a path. Failures are logged by the
+    // notifier and do NOT mask the firmware write's success.
+    if (hopBytes.isNotEmpty) {
+      await ref
+          .read(meshCorePathHistoryProvider(publicKeyHex).notifier)
+          .record(hopBytes, MeshCorePathSource.trace);
+    }
     return true;
   }
 
@@ -1315,6 +1326,199 @@ final meshCoreChannelHiddenSetProvider = Provider<Set<int>>((ref) {
 final meshCoreChannelOrderProvider = Provider<List<int>>((ref) {
   return ref.watch(meshCoreChannelPrefsProvider).orderedChannelIndices;
 });
+
+// ---------------------------------------------------------------------------
+// D39-A: per-contact path history (app-local)
+// ---------------------------------------------------------------------------
+
+/// Process-wide [MeshCorePathHistoryStore]. Tests override with a
+/// `SharedPreferences.setMockInitialValues`-backed instance.
+final meshCorePathHistoryStoreProvider = Provider<MeshCorePathHistoryStore>((
+  ref,
+) {
+  return MeshCorePathHistoryStore();
+});
+
+/// 8-char hex prefix of a contact's 32-byte ed25519 public key.
+///
+/// Used as the per-contact key for [MeshCorePathHistoryStore]. Mirrors
+/// the canonical SocialMesh log fingerprint
+/// (`MeshCoreContact.shortPubKeyHex`'s 8-head). Returns the empty
+/// string when [publicKeyHex] is too short.
+String meshCoreContactPubKeyPrefix(String publicKeyHex) {
+  if (publicKeyHex.length < 8) return '';
+  return publicKeyHex.substring(0, 8).toLowerCase();
+}
+
+/// Per-contact path-history notifier (family).
+///
+/// Lifecycle:
+///   - `build()` reads the current device pubkey prefix; when it
+///     flips (connect / device swap / disconnect), the notifier
+///     re-loads from the store.
+///   - When either prefix is empty, state stays empty and all
+///     mutate paths are no-ops.
+///
+/// Logging discipline:
+///   - Path bytes are NEVER written to AppLogging.
+///   - Lines carry `path_len=<int>` and `source=<wire>` only.
+class MeshCorePathHistoryNotifier
+    extends Notifier<List<MeshCorePathHistoryEntry>> {
+  MeshCorePathHistoryNotifier(this.publicKeyHex);
+
+  /// Target contact's 64-char public-key hex; injected via the family
+  /// tear-off.
+  final String publicKeyHex;
+
+  bool _disposed = false;
+  String _lastLoadedDevice = '';
+
+  @override
+  List<MeshCorePathHistoryEntry> build() {
+    _disposed = false;
+    ref.onDispose(() => _disposed = true);
+
+    final device = ref.watch(meshCoreSelfPubKeyPrefixProvider);
+    final contactPrefix = meshCoreContactPubKeyPrefix(publicKeyHex);
+    if (device.isEmpty || contactPrefix.isEmpty) {
+      _lastLoadedDevice = '';
+      return const <MeshCorePathHistoryEntry>[];
+    }
+    if (device != _lastLoadedDevice) {
+      _lastLoadedDevice = device;
+      Future<void>(() async {
+        if (_disposed) return;
+        try {
+          final store = ref.read(meshCorePathHistoryStoreProvider);
+          final loaded = await store.load(device, contactPrefix);
+          if (_disposed) return;
+          if (ref.read(meshCoreSelfPubKeyPrefixProvider) != device) return;
+          state = loaded;
+        } catch (e) {
+          if (_disposed) return;
+          AppLogging.meshcore(
+            'event=path_history.load.failed reason=${e.runtimeType}',
+            error: true,
+          );
+        }
+      });
+    }
+    return const <MeshCorePathHistoryEntry>[];
+  }
+
+  /// Record [bytes] under this notifier's contact, sourced from a
+  /// successful Trace Path save. Dedup + LRU eviction happen at the
+  /// store layer. No-op on empty prefix.
+  Future<void> record(Uint8List bytes, MeshCorePathSource source) async {
+    final device = ref.read(meshCoreSelfPubKeyPrefixProvider);
+    final contactPrefix = meshCoreContactPubKeyPrefix(publicKeyHex);
+    if (device.isEmpty || contactPrefix.isEmpty) return;
+    if (bytes.isEmpty || bytes.length > kMeshCorePathHistoryMaxPathBytes) {
+      return;
+    }
+    final store = ref.read(meshCorePathHistoryStoreProvider);
+    try {
+      final pre = state.length;
+      final updated = await store.record(
+        devicePubKeyPrefix: device,
+        contactPubKeyPrefix: contactPrefix,
+        bytes: bytes,
+        source: source,
+        now: DateTime.now(),
+      );
+      if (_disposed) return;
+      if (ref.read(meshCoreSelfPubKeyPrefixProvider) != device) return;
+      state = updated;
+      AppLogging.meshcore(
+        'event=path_history.recorded source=${source.wire} '
+        'path_len=${bytes.length}',
+      );
+      if (pre >= kMeshCorePathHistoryMaxEntriesPerContact &&
+          updated.length == kMeshCorePathHistoryMaxEntriesPerContact) {
+        AppLogging.meshcore('event=path_history.evicted reason=lru');
+      }
+    } catch (e) {
+      AppLogging.meshcore(
+        'event=path_history.record.failed reason=${e.runtimeType}',
+        error: true,
+      );
+    }
+  }
+
+  /// Activate the saved entry identified by [entryId]: write its
+  /// path bytes to firmware via the existing
+  /// [MeshCoreContactsNotifier.setContactPathFromTrace] helper, and
+  /// on success bump the entry's `lastUsedAt`.
+  ///
+  /// Returns `false` when the entry is missing, the firmware write
+  /// fails, or no device is identified.
+  Future<bool> activate(String entryId) async {
+    final device = ref.read(meshCoreSelfPubKeyPrefixProvider);
+    final contactPrefix = meshCoreContactPubKeyPrefix(publicKeyHex);
+    if (device.isEmpty || contactPrefix.isEmpty) return false;
+    final entry = state.firstWhere(
+      (e) => e.id == entryId,
+      orElse: () => _missingEntry,
+    );
+    if (identical(entry, _missingEntry)) return false;
+    final ok = await ref
+        .read(meshCoreContactsProvider.notifier)
+        .setContactPathFromTrace(
+          publicKeyHex: publicKeyHex,
+          hopBytes: entry.bytes,
+        );
+    if (!ok) return false;
+    // setContactPathFromTrace records-or-touches the entry by exact
+    // bytes via this notifier's `record()`, so `lastUsedAt` is
+    // already up to date. Nothing else to do.
+    AppLogging.meshcore(
+      'event=path_history.activated path_len=${entry.bytes.length}',
+    );
+    return true;
+  }
+
+  /// Delete the saved entry identified by [entryId]. App-local only;
+  /// firmware's active path override is unaffected.
+  Future<void> delete(String entryId) async {
+    final device = ref.read(meshCoreSelfPubKeyPrefixProvider);
+    final contactPrefix = meshCoreContactPubKeyPrefix(publicKeyHex);
+    if (device.isEmpty || contactPrefix.isEmpty) return;
+    final store = ref.read(meshCorePathHistoryStoreProvider);
+    try {
+      final updated = await store.delete(
+        devicePubKeyPrefix: device,
+        contactPubKeyPrefix: contactPrefix,
+        entryId: entryId,
+      );
+      if (_disposed) return;
+      if (ref.read(meshCoreSelfPubKeyPrefixProvider) != device) return;
+      state = updated;
+      AppLogging.meshcore('event=path_history.deleted');
+    } catch (e) {
+      AppLogging.meshcore(
+        'event=path_history.delete.failed reason=${e.runtimeType}',
+        error: true,
+      );
+    }
+  }
+
+  static final MeshCorePathHistoryEntry _missingEntry =
+      MeshCorePathHistoryEntry(
+        id: '__missing__',
+        bytes: Uint8List(0),
+        len: 0,
+        source: MeshCorePathSource.trace,
+        createdAt: DateTime.fromMillisecondsSinceEpoch(0),
+        lastUsedAt: DateTime.fromMillisecondsSinceEpoch(0),
+      );
+}
+
+final meshCorePathHistoryProvider =
+    NotifierProvider.family<
+      MeshCorePathHistoryNotifier,
+      List<MeshCorePathHistoryEntry>,
+      String
+    >(MeshCorePathHistoryNotifier.new);
 
 /// Provider for the MeshCore debug capture (null if not MeshCore or release build).
 ///

@@ -19969,6 +19969,132 @@
   "@meshcoreChannelDragHandleA11yLabel": {
     "description": "Accessibility label for the drag-handle icon used to reorder MeshCore channels in the channels list"
   },
+  "meshcorePathHistoryTileTitle": "Cronologia Percorsi",
+  "@meshcorePathHistoryTileTitle": {
+    "description": "Contact detail tile title that opens the saved path history sheet"
+  },
+  "meshcorePathHistoryTileSubtitle": "{count} percorsi salvati",
+  "@meshcorePathHistoryTileSubtitle": {
+    "description": "Contact detail tile subtitle showing the saved path count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "meshcorePathHistoryTitle": "Cronologia percorsi",
+  "@meshcorePathHistoryTitle": {
+    "description": "Path history sheet section title"
+  },
+  "meshcorePathHistoryFooter": "Ripristina Auto non elimina la cronologia salvata. I percorsi salvati possono diventare obsoleti quando la mesh cambia.",
+  "@meshcorePathHistoryFooter": {
+    "description": "Path history sheet footer copy"
+  },
+  "meshcorePathHistoryEmpty": "Nessun percorso salvato.",
+  "@meshcorePathHistoryEmpty": {
+    "description": "Path history sheet empty-state placeholder"
+  },
+  "meshcorePathHistoryHopCount": "{count, plural, =0{Percorso diretto} =1{1 hop} other{{count} hop}}",
+  "@meshcorePathHistoryHopCount": {
+    "description": "Path history row header showing the hop count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "meshcorePathHistoryAgeJustNow": "adesso",
+  "@meshcorePathHistoryAgeJustNow": {
+    "description": "Path history row age label for entries under 60 seconds old"
+  },
+  "meshcorePathHistoryAgeMinutes": "{n, plural, =1{1 minuto fa} other{{n} minuti fa}}",
+  "@meshcorePathHistoryAgeMinutes": {
+    "description": "Path history row age label in minutes",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "meshcorePathHistoryAgeHours": "{n, plural, =1{1 ora fa} other{{n} ore fa}}",
+  "@meshcorePathHistoryAgeHours": {
+    "description": "Path history row age label in hours",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "meshcorePathHistoryAgeDays": "{n, plural, =1{1 giorno fa} other{{n} giorni fa}}",
+  "@meshcorePathHistoryAgeDays": {
+    "description": "Path history row age label in days",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "meshcorePathHistorySourceTrace": "Trace",
+  "@meshcorePathHistorySourceTrace": {
+    "description": "Path history source badge for entries saved from a Trace Path result"
+  },
+  "meshcorePathHistorySourceManual": "Manuale",
+  "@meshcorePathHistorySourceManual": {
+    "description": "Path history source badge for entries entered manually"
+  },
+  "meshcorePathHistoryActiveBadge": "Attivo",
+  "@meshcorePathHistoryActiveBadge": {
+    "description": "Path history badge shown when a saved path matches the contact's current firmware path"
+  },
+  "meshcorePathHistoryStaleBadge": "Obsoleto",
+  "@meshcorePathHistoryStaleBadge": {
+    "description": "Path history badge shown when a saved path was last used more than 7 days ago"
+  },
+  "meshcorePathHistoryActivateConfirmTitle": "Attivare questo percorso?",
+  "@meshcorePathHistoryActivateConfirmTitle": {
+    "description": "Activation confirmation sheet title"
+  },
+  "meshcorePathHistoryActivateConfirmMessage": "I percorsi obsoleti possono perdere messaggi se la rotta è cambiata.",
+  "@meshcorePathHistoryActivateConfirmMessage": {
+    "description": "Activation confirmation sheet warning copy"
+  },
+  "meshcorePathHistoryActivateConfirmAction": "Attiva",
+  "@meshcorePathHistoryActivateConfirmAction": {
+    "description": "Activation confirmation sheet primary button label"
+  },
+  "meshcorePathHistoryActivateSuccess": "Percorso attivato",
+  "@meshcorePathHistoryActivateSuccess": {
+    "description": "Success snackbar after activating a saved path"
+  },
+  "meshcorePathHistoryActivateFailed": "Impossibile attivare il percorso",
+  "@meshcorePathHistoryActivateFailed": {
+    "description": "Error snackbar after a failed path activation"
+  },
+  "meshcorePathHistoryViewBytesAction": "Mostra byte del percorso",
+  "@meshcorePathHistoryViewBytesAction": {
+    "description": "Long-press row action label opening the path bytes hex view"
+  },
+  "meshcorePathHistoryDeleteAction": "Elimina percorso",
+  "@meshcorePathHistoryDeleteAction": {
+    "description": "Long-press row action label deleting the saved path"
+  },
+  "meshcorePathHistoryDeleted": "Percorso eliminato",
+  "@meshcorePathHistoryDeleted": {
+    "description": "Success snackbar after deleting a saved path"
+  },
+  "meshcorePathHistoryViewTitle": "Byte del percorso",
+  "@meshcorePathHistoryViewTitle": {
+    "description": "View-bytes sub-sheet section title"
+  },
+  "meshcorePathHistoryViewHopCount": "{n} byte hop",
+  "@meshcorePathHistoryViewHopCount": {
+    "description": "View-bytes sub-sheet hop count footer",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "meshcoreLeaveChannelMessage": "Vuoi davvero abbandonare {channelName}?",
   "@meshcoreLeaveChannelMessage": {
     "description": "Confirm dialog message for leaving a channel",

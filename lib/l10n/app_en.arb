@@ -11862,6 +11862,132 @@
     "@meshcoreChannelDragHandleA11yLabel": {
         "description": "Accessibility label for the drag-handle icon used to reorder MeshCore channels in the channels list"
     },
+    "meshcorePathHistoryTileTitle": "Path History",
+    "@meshcorePathHistoryTileTitle": {
+        "description": "Contact detail tile title that opens the saved path history sheet"
+    },
+    "meshcorePathHistoryTileSubtitle": "{count} saved paths",
+    "@meshcorePathHistoryTileSubtitle": {
+        "description": "Contact detail tile subtitle showing the saved path count",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshcorePathHistoryTitle": "Path history",
+    "@meshcorePathHistoryTitle": {
+        "description": "Path history sheet section title"
+    },
+    "meshcorePathHistoryFooter": "Reset to Auto does not delete saved history. Saved paths may become stale as the mesh changes.",
+    "@meshcorePathHistoryFooter": {
+        "description": "Path history sheet footer copy"
+    },
+    "meshcorePathHistoryEmpty": "No saved paths.",
+    "@meshcorePathHistoryEmpty": {
+        "description": "Path history sheet empty-state placeholder"
+    },
+    "meshcorePathHistoryHopCount": "{count, plural, =0{Direct route} =1{1 hop} other{{count} hops}}",
+    "@meshcorePathHistoryHopCount": {
+        "description": "Path history row header showing the hop count",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshcorePathHistoryAgeJustNow": "just now",
+    "@meshcorePathHistoryAgeJustNow": {
+        "description": "Path history row age label for entries under 60 seconds old"
+    },
+    "meshcorePathHistoryAgeMinutes": "{n, plural, =1{1 minute ago} other{{n} minutes ago}}",
+    "@meshcorePathHistoryAgeMinutes": {
+        "description": "Path history row age label in minutes",
+        "placeholders": {
+            "n": {
+                "type": "int"
+            }
+        }
+    },
+    "meshcorePathHistoryAgeHours": "{n, plural, =1{1 hour ago} other{{n} hours ago}}",
+    "@meshcorePathHistoryAgeHours": {
+        "description": "Path history row age label in hours",
+        "placeholders": {
+            "n": {
+                "type": "int"
+            }
+        }
+    },
+    "meshcorePathHistoryAgeDays": "{n, plural, =1{1 day ago} other{{n} days ago}}",
+    "@meshcorePathHistoryAgeDays": {
+        "description": "Path history row age label in days",
+        "placeholders": {
+            "n": {
+                "type": "int"
+            }
+        }
+    },
+    "meshcorePathHistorySourceTrace": "Trace",
+    "@meshcorePathHistorySourceTrace": {
+        "description": "Path history source badge for entries saved from a Trace Path result"
+    },
+    "meshcorePathHistorySourceManual": "Manual",
+    "@meshcorePathHistorySourceManual": {
+        "description": "Path history source badge for entries entered manually (reserved; not produced in D39-A)"
+    },
+    "meshcorePathHistoryActiveBadge": "Active",
+    "@meshcorePathHistoryActiveBadge": {
+        "description": "Path history badge shown when a saved path matches the contact's current firmware path"
+    },
+    "meshcorePathHistoryStaleBadge": "Stale",
+    "@meshcorePathHistoryStaleBadge": {
+        "description": "Path history badge shown when a saved path was last used more than 7 days ago"
+    },
+    "meshcorePathHistoryActivateConfirmTitle": "Activate this path?",
+    "@meshcorePathHistoryActivateConfirmTitle": {
+        "description": "Activation confirmation sheet title"
+    },
+    "meshcorePathHistoryActivateConfirmMessage": "Stale paths can drop messages if the route has changed.",
+    "@meshcorePathHistoryActivateConfirmMessage": {
+        "description": "Activation confirmation sheet warning copy"
+    },
+    "meshcorePathHistoryActivateConfirmAction": "Activate",
+    "@meshcorePathHistoryActivateConfirmAction": {
+        "description": "Activation confirmation sheet primary button label"
+    },
+    "meshcorePathHistoryActivateSuccess": "Path activated",
+    "@meshcorePathHistoryActivateSuccess": {
+        "description": "Success snackbar after activating a saved path"
+    },
+    "meshcorePathHistoryActivateFailed": "Failed to activate path",
+    "@meshcorePathHistoryActivateFailed": {
+        "description": "Error snackbar after a failed path activation"
+    },
+    "meshcorePathHistoryViewBytesAction": "View path bytes",
+    "@meshcorePathHistoryViewBytesAction": {
+        "description": "Long-press row action label opening the path bytes hex view"
+    },
+    "meshcorePathHistoryDeleteAction": "Delete path",
+    "@meshcorePathHistoryDeleteAction": {
+        "description": "Long-press row action label deleting the saved path"
+    },
+    "meshcorePathHistoryDeleted": "Path deleted",
+    "@meshcorePathHistoryDeleted": {
+        "description": "Success snackbar after deleting a saved path"
+    },
+    "meshcorePathHistoryViewTitle": "Path bytes",
+    "@meshcorePathHistoryViewTitle": {
+        "description": "View-bytes sub-sheet section title"
+    },
+    "meshcorePathHistoryViewHopCount": "{n} hop bytes",
+    "@meshcorePathHistoryViewHopCount": {
+        "description": "View-bytes sub-sheet hop count footer",
+        "placeholders": {
+            "n": {
+                "type": "int"
+            }
+        }
+    },
     "meshcoreLeaveChannelMessage": "Are you sure you want to leave {channelName}?",
     "@meshcoreLeaveChannelMessage": {
         "description": "Confirm dialog message for leaving a channel",

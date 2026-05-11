@@ -42,6 +42,7 @@ import '../../../providers/meshcore_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../contact_l10n.dart';
 import 'meshcore_neighbors_sheet.dart';
+import 'meshcore_path_history_sheet.dart';
 import 'meshcore_tools_screen.dart' show showMeshCoreTracePathSheet;
 
 /// MeshCore-only read-only contact detail screen.
@@ -232,6 +233,10 @@ class MeshCoreContactDetailScreen extends ConsumerWidget {
           subtitle: l10n.meshcorePathOverrideSubtitle,
           onTap: () => _openPathOverrideSheet(context, ref, c),
         ),
+        // D39-A: Path History tile. Hidden when the contact has no
+        // saved paths. Tap opens the history sheet; the sheet itself
+        // handles activation confirmation, View, and Delete.
+        _PathHistoryTile(contact: c),
         // D36-A: Neighbours query is repeater-only. The chat-type
         // contacts can't be queried this way (they aren't repeaters)
         // so the tile is hidden entirely; we don't show a greyed-out
@@ -438,4 +443,29 @@ Future<void> openMeshCoreContactDetail(
       builder: (_) => MeshCoreContactDetailScreen(initialContact: contact),
     ),
   );
+}
+
+/// D39-A: Path History tile in the Contact Detail actions section.
+/// Subscribes to the per-contact path-history notifier and renders
+/// the tile only when at least one entry exists.
+class _PathHistoryTile extends ConsumerWidget {
+  final MeshCoreContact contact;
+  const _PathHistoryTile({required this.contact});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final entries = ref.watch(
+      meshCorePathHistoryProvider(contact.publicKeyHex),
+    );
+    if (entries.isEmpty) return const SizedBox.shrink();
+    return SettingsTile(
+      key: const ValueKey('meshcore-contact-detail-path-history'),
+      icon: Icons.history_rounded,
+      iconColor: context.accentColor,
+      title: l10n.meshcorePathHistoryTileTitle,
+      subtitle: l10n.meshcorePathHistoryTileSubtitle(entries.length),
+      onTap: () => showMeshCorePathHistorySheet(context, contact: contact),
+    );
+  }
 }

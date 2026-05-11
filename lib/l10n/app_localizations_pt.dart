@@ -8872,6 +8872,117 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreChannelDragHandleA11yLabel => 'Reordenar canal';
 
   @override
+  String get meshcorePathHistoryTileTitle => 'Histórico de Rotas';
+
+  @override
+  String meshcorePathHistoryTileSubtitle(int count) {
+    return '$count rotas salvas';
+  }
+
+  @override
+  String get meshcorePathHistoryTitle => 'Histórico de rotas';
+
+  @override
+  String get meshcorePathHistoryFooter =>
+      'Redefinir para Auto não exclui o histórico salvo. Rotas salvas podem se tornar obsoletas conforme a mesh muda.';
+
+  @override
+  String get meshcorePathHistoryEmpty => 'Nenhuma rota salva.';
+
+  @override
+  String meshcorePathHistoryHopCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hops',
+      one: '1 hop',
+      zero: 'Rota direta',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshcorePathHistoryAgeJustNow => 'agora';
+
+  @override
+  String meshcorePathHistoryAgeMinutes(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'há $n minutos',
+      one: 'há 1 minuto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshcorePathHistoryAgeHours(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'há $n horas',
+      one: 'há 1 hora',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshcorePathHistoryAgeDays(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'há $n dias',
+      one: 'há 1 dia',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshcorePathHistorySourceTrace => 'Trace';
+
+  @override
+  String get meshcorePathHistorySourceManual => 'Manual';
+
+  @override
+  String get meshcorePathHistoryActiveBadge => 'Ativa';
+
+  @override
+  String get meshcorePathHistoryStaleBadge => 'Obsoleta';
+
+  @override
+  String get meshcorePathHistoryActivateConfirmTitle => 'Ativar esta rota?';
+
+  @override
+  String get meshcorePathHistoryActivateConfirmMessage =>
+      'Rotas obsoletas podem perder mensagens se a rota mudou.';
+
+  @override
+  String get meshcorePathHistoryActivateConfirmAction => 'Ativar';
+
+  @override
+  String get meshcorePathHistoryActivateSuccess => 'Rota ativada';
+
+  @override
+  String get meshcorePathHistoryActivateFailed => 'Falha ao ativar a rota';
+
+  @override
+  String get meshcorePathHistoryViewBytesAction => 'Ver bytes da rota';
+
+  @override
+  String get meshcorePathHistoryDeleteAction => 'Excluir rota';
+
+  @override
+  String get meshcorePathHistoryDeleted => 'Rota excluída';
+
+  @override
+  String get meshcorePathHistoryViewTitle => 'Bytes da rota';
+
+  @override
+  String meshcorePathHistoryViewHopCount(int n) {
+    return '$n bytes de hop';
+  }
+
+  @override
   String meshcoreLeaveChannelMessage(String channelName) {
     return 'Tem certeza que deseja sair de $channelName?';
   }

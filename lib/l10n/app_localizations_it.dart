@@ -8880,6 +8880,119 @@ class AppLocalizationsIt extends AppLocalizations {
   String get meshcoreChannelDragHandleA11yLabel => 'Riordina canale';
 
   @override
+  String get meshcorePathHistoryTileTitle => 'Cronologia Percorsi';
+
+  @override
+  String meshcorePathHistoryTileSubtitle(int count) {
+    return '$count percorsi salvati';
+  }
+
+  @override
+  String get meshcorePathHistoryTitle => 'Cronologia percorsi';
+
+  @override
+  String get meshcorePathHistoryFooter =>
+      'Ripristina Auto non elimina la cronologia salvata. I percorsi salvati possono diventare obsoleti quando la mesh cambia.';
+
+  @override
+  String get meshcorePathHistoryEmpty => 'Nessun percorso salvato.';
+
+  @override
+  String meshcorePathHistoryHopCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hop',
+      one: '1 hop',
+      zero: 'Percorso diretto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshcorePathHistoryAgeJustNow => 'adesso';
+
+  @override
+  String meshcorePathHistoryAgeMinutes(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n minuti fa',
+      one: '1 minuto fa',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshcorePathHistoryAgeHours(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n ore fa',
+      one: '1 ora fa',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshcorePathHistoryAgeDays(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n giorni fa',
+      one: '1 giorno fa',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshcorePathHistorySourceTrace => 'Trace';
+
+  @override
+  String get meshcorePathHistorySourceManual => 'Manuale';
+
+  @override
+  String get meshcorePathHistoryActiveBadge => 'Attivo';
+
+  @override
+  String get meshcorePathHistoryStaleBadge => 'Obsoleto';
+
+  @override
+  String get meshcorePathHistoryActivateConfirmTitle =>
+      'Attivare questo percorso?';
+
+  @override
+  String get meshcorePathHistoryActivateConfirmMessage =>
+      'I percorsi obsoleti possono perdere messaggi se la rotta è cambiata.';
+
+  @override
+  String get meshcorePathHistoryActivateConfirmAction => 'Attiva';
+
+  @override
+  String get meshcorePathHistoryActivateSuccess => 'Percorso attivato';
+
+  @override
+  String get meshcorePathHistoryActivateFailed =>
+      'Impossibile attivare il percorso';
+
+  @override
+  String get meshcorePathHistoryViewBytesAction => 'Mostra byte del percorso';
+
+  @override
+  String get meshcorePathHistoryDeleteAction => 'Elimina percorso';
+
+  @override
+  String get meshcorePathHistoryDeleted => 'Percorso eliminato';
+
+  @override
+  String get meshcorePathHistoryViewTitle => 'Byte del percorso';
+
+  @override
+  String meshcorePathHistoryViewHopCount(int n) {
+    return '$n byte hop';
+  }
+
+  @override
   String meshcoreLeaveChannelMessage(String channelName) {
     return 'Vuoi davvero abbandonare $channelName?';
   }

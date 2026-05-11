@@ -8786,6 +8786,117 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreChannelDragHandleA11yLabel => 'Reorder channel';
 
   @override
+  String get meshcorePathHistoryTileTitle => 'Path History';
+
+  @override
+  String meshcorePathHistoryTileSubtitle(int count) {
+    return '$count saved paths';
+  }
+
+  @override
+  String get meshcorePathHistoryTitle => 'Path history';
+
+  @override
+  String get meshcorePathHistoryFooter =>
+      'Reset to Auto does not delete saved history. Saved paths may become stale as the mesh changes.';
+
+  @override
+  String get meshcorePathHistoryEmpty => 'No saved paths.';
+
+  @override
+  String meshcorePathHistoryHopCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hops',
+      one: '1 hop',
+      zero: 'Direct route',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshcorePathHistoryAgeJustNow => 'just now';
+
+  @override
+  String meshcorePathHistoryAgeMinutes(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n minutes ago',
+      one: '1 minute ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshcorePathHistoryAgeHours(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n hours ago',
+      one: '1 hour ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshcorePathHistoryAgeDays(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n days ago',
+      one: '1 day ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshcorePathHistorySourceTrace => 'Trace';
+
+  @override
+  String get meshcorePathHistorySourceManual => 'Manual';
+
+  @override
+  String get meshcorePathHistoryActiveBadge => 'Active';
+
+  @override
+  String get meshcorePathHistoryStaleBadge => 'Stale';
+
+  @override
+  String get meshcorePathHistoryActivateConfirmTitle => 'Activate this path?';
+
+  @override
+  String get meshcorePathHistoryActivateConfirmMessage =>
+      'Stale paths can drop messages if the route has changed.';
+
+  @override
+  String get meshcorePathHistoryActivateConfirmAction => 'Activate';
+
+  @override
+  String get meshcorePathHistoryActivateSuccess => 'Path activated';
+
+  @override
+  String get meshcorePathHistoryActivateFailed => 'Failed to activate path';
+
+  @override
+  String get meshcorePathHistoryViewBytesAction => 'View path bytes';
+
+  @override
+  String get meshcorePathHistoryDeleteAction => 'Delete path';
+
+  @override
+  String get meshcorePathHistoryDeleted => 'Path deleted';
+
+  @override
+  String get meshcorePathHistoryViewTitle => 'Path bytes';
+
+  @override
+  String meshcorePathHistoryViewHopCount(int n) {
+    return '$n hop bytes';
+  }
+
+  @override
   String meshcoreLeaveChannelMessage(String channelName) {
     return 'Are you sure you want to leave $channelName?';
   }

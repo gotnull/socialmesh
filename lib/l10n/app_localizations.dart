@@ -15571,6 +15571,150 @@ abstract class AppLocalizations {
   /// **'Reorder channel'**
   String get meshcoreChannelDragHandleA11yLabel;
 
+  /// Contact detail tile title that opens the saved path history sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Path History'**
+  String get meshcorePathHistoryTileTitle;
+
+  /// Contact detail tile subtitle showing the saved path count
+  ///
+  /// In en, this message translates to:
+  /// **'{count} saved paths'**
+  String meshcorePathHistoryTileSubtitle(int count);
+
+  /// Path history sheet section title
+  ///
+  /// In en, this message translates to:
+  /// **'Path history'**
+  String get meshcorePathHistoryTitle;
+
+  /// Path history sheet footer copy
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to Auto does not delete saved history. Saved paths may become stale as the mesh changes.'**
+  String get meshcorePathHistoryFooter;
+
+  /// Path history sheet empty-state placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'No saved paths.'**
+  String get meshcorePathHistoryEmpty;
+
+  /// Path history row header showing the hop count
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Direct route} =1{1 hop} other{{count} hops}}'**
+  String meshcorePathHistoryHopCount(int count);
+
+  /// Path history row age label for entries under 60 seconds old
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get meshcorePathHistoryAgeJustNow;
+
+  /// Path history row age label in minutes
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 minute ago} other{{n} minutes ago}}'**
+  String meshcorePathHistoryAgeMinutes(int n);
+
+  /// Path history row age label in hours
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 hour ago} other{{n} hours ago}}'**
+  String meshcorePathHistoryAgeHours(int n);
+
+  /// Path history row age label in days
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 day ago} other{{n} days ago}}'**
+  String meshcorePathHistoryAgeDays(int n);
+
+  /// Path history source badge for entries saved from a Trace Path result
+  ///
+  /// In en, this message translates to:
+  /// **'Trace'**
+  String get meshcorePathHistorySourceTrace;
+
+  /// Path history source badge for entries entered manually (reserved; not produced in D39-A)
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get meshcorePathHistorySourceManual;
+
+  /// Path history badge shown when a saved path matches the contact's current firmware path
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get meshcorePathHistoryActiveBadge;
+
+  /// Path history badge shown when a saved path was last used more than 7 days ago
+  ///
+  /// In en, this message translates to:
+  /// **'Stale'**
+  String get meshcorePathHistoryStaleBadge;
+
+  /// Activation confirmation sheet title
+  ///
+  /// In en, this message translates to:
+  /// **'Activate this path?'**
+  String get meshcorePathHistoryActivateConfirmTitle;
+
+  /// Activation confirmation sheet warning copy
+  ///
+  /// In en, this message translates to:
+  /// **'Stale paths can drop messages if the route has changed.'**
+  String get meshcorePathHistoryActivateConfirmMessage;
+
+  /// Activation confirmation sheet primary button label
+  ///
+  /// In en, this message translates to:
+  /// **'Activate'**
+  String get meshcorePathHistoryActivateConfirmAction;
+
+  /// Success snackbar after activating a saved path
+  ///
+  /// In en, this message translates to:
+  /// **'Path activated'**
+  String get meshcorePathHistoryActivateSuccess;
+
+  /// Error snackbar after a failed path activation
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to activate path'**
+  String get meshcorePathHistoryActivateFailed;
+
+  /// Long-press row action label opening the path bytes hex view
+  ///
+  /// In en, this message translates to:
+  /// **'View path bytes'**
+  String get meshcorePathHistoryViewBytesAction;
+
+  /// Long-press row action label deleting the saved path
+  ///
+  /// In en, this message translates to:
+  /// **'Delete path'**
+  String get meshcorePathHistoryDeleteAction;
+
+  /// Success snackbar after deleting a saved path
+  ///
+  /// In en, this message translates to:
+  /// **'Path deleted'**
+  String get meshcorePathHistoryDeleted;
+
+  /// View-bytes sub-sheet section title
+  ///
+  /// In en, this message translates to:
+  /// **'Path bytes'**
+  String get meshcorePathHistoryViewTitle;
+
+  /// View-bytes sub-sheet hop count footer
+  ///
+  /// In en, this message translates to:
+  /// **'{n} hop bytes'**
+  String meshcorePathHistoryViewHopCount(int n);
+
   /// Confirm dialog message for leaving a channel
   ///
   /// In en, this message translates to:
