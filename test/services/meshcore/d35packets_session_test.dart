@@ -234,6 +234,58 @@ void main() {
       }
     });
 
+    test('D35-FIX-A: concurrent getPacketsStats() returns null without '
+        'throwing StateError on the shared 0x18 response slot', () async {
+      final tx = _RecordingTransport();
+      addTearDown(tx.dispose);
+      final session = MeshCoreSession(tx);
+      addTearDown(session.dispose);
+
+      final first = session.getPacketsStats();
+      await Future<void>.delayed(Duration.zero);
+
+      final second = await session.getPacketsStats();
+      expect(
+        second,
+        isNull,
+        reason:
+            'concurrent getPacketsStats() while a stats request is in '
+            'flight must return null, not throw',
+      );
+
+      tx.inject(
+        MeshCoreFrame(
+          command: MeshCoreResponses.stats,
+          payload: _packetsBody(),
+        ).toBytes(),
+      );
+      final firstStats = await first;
+      expect(firstStats, isNotNull);
+    });
+
+    test('D35-FIX-A: getPacketsStats() while getRadioStats() is in '
+        'flight returns null without throwing', () async {
+      final tx = _RecordingTransport();
+      addTearDown(tx.dispose);
+      final session = MeshCoreSession(tx);
+      addTearDown(session.dispose);
+
+      final radioFut = session.getRadioStats();
+      await Future<void>.delayed(Duration.zero);
+
+      final packetsResult = await session.getPacketsStats();
+      expect(packetsResult, isNull);
+
+      tx.inject(
+        MeshCoreFrame(
+          command: MeshCoreResponses.stats,
+          payload: _radioBody(),
+        ).toBytes(),
+      );
+      final radioStats = await radioFut;
+      expect(radioStats, isNotNull);
+    });
+
     test('RADIO + CORE + PACKETS interleaved: each helper returns its '
         'own subtype data and rejects the others', () async {
       final tx = _RecordingTransport();

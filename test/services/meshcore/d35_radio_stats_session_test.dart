@@ -157,6 +157,56 @@ void main() {
       },
     );
 
+    test('D35-FIX-A: concurrent getRadioStats() returns null without '
+        'throwing StateError on the shared 0x18 response slot', () async {
+      final tx = _RecordingTransport();
+      addTearDown(tx.dispose);
+      final session = MeshCoreSession(tx);
+      addTearDown(session.dispose);
+
+      // First call: register the waiter for response 0x18 but do not
+      // resolve it yet.
+      final first = session.getRadioStats();
+      await Future<void>.delayed(Duration.zero);
+
+      // Second call while the first is still in flight. Without the
+      // session-level guard this would throw
+      // `StateError: Single-flight violation: waiter already registered
+      // for 0x18` because both calls target the same response code.
+      final second = await session.getRadioStats();
+      expect(
+        second,
+        isNull,
+        reason:
+            'concurrent getRadioStats() while a stats request is in '
+            'flight must return null, not throw or queue',
+      );
+
+      // Resolve the first call so the test does not leak.
+      tx.inject(
+        MeshCoreFrame(
+          command: MeshCoreResponses.stats,
+          payload: _radioPayload().sublist(1),
+        ).toBytes(),
+      );
+      final firstStats = await first;
+      expect(firstStats, isNotNull);
+
+      // After the first resolves, the guard clears and a fresh poll
+      // succeeds.
+      final third = session.getRadioStats();
+      await Future<void>.delayed(Duration.zero);
+      tx.inject(
+        MeshCoreFrame(
+          command: MeshCoreResponses.stats,
+          payload: _radioPayload(noise: -90).sublist(1),
+        ).toBytes(),
+      );
+      final thirdStats = await third;
+      expect(thirdStats, isNotNull);
+      expect(thirdStats!.noiseFloorDbm, -90);
+    });
+
     test('repeated polls do NOT consume the D34a chat budget - '
         'ChatTrafficSnapshot.currentWindowSentBytes stays 0', () async {
       final tx = _RecordingTransport();

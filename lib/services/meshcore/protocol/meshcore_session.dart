@@ -236,6 +236,16 @@ class MeshCoreSession {
   /// any bytes hit the wire.
   bool _binaryRequestInFlight = false;
 
+  /// D35-FIX-A: single-flight guard for `CMD_GET_STATS` requests
+  /// (RADIO / CORE / PACKETS subtypes). All three subtypes share the
+  /// same response opcode `RESP_CODE_STATS (0x18)`, so concurrent
+  /// `sendAndWait` calls would race on the per-response-code
+  /// `_pendingResponses[0x18]` slot and throw `StateError:
+  /// Single-flight violation`. The per-notifier `_inFlight` guards in
+  /// the providers are subtype-local; this flag coordinates across
+  /// every stats helper at the session boundary.
+  bool _statsRequestInFlight = false;
+
   /// Creates a new MeshCore session over the given transport.
   ///
   /// The session immediately starts listening to the transport's rawRxStream
@@ -903,12 +913,23 @@ class MeshCoreSession {
   Future<MeshCoreRadioStats?> getRadioStats({
     Duration timeout = const Duration(seconds: 3),
   }) async {
-    final response = await sendAndWait(
-      MeshCoreCommands.getStats,
-      payload: Uint8List.fromList([MeshCoreStatsType.radio]),
-      expectedResponse: MeshCoreResponses.stats,
-      timeout: timeout,
-    );
+    if (_statsRequestInFlight) {
+      AppLogging.meshcore('event=radio_stats.skipped reason=stats_in_flight');
+      return null;
+    }
+    _statsRequestInFlight = true;
+
+    final MeshCoreFrame? response;
+    try {
+      response = await sendAndWait(
+        MeshCoreCommands.getStats,
+        payload: Uint8List.fromList([MeshCoreStatsType.radio]),
+        expectedResponse: MeshCoreResponses.stats,
+        timeout: timeout,
+      );
+    } finally {
+      _statsRequestInFlight = false;
+    }
 
     if (response == null) {
       AppLogging.meshcore('event=radio_stats.timeout');
@@ -967,12 +988,23 @@ class MeshCoreSession {
   Future<MeshCoreCoreStats?> getCoreStats({
     Duration timeout = const Duration(seconds: 3),
   }) async {
-    final response = await sendAndWait(
-      MeshCoreCommands.getStats,
-      payload: Uint8List.fromList([MeshCoreStatsType.core]),
-      expectedResponse: MeshCoreResponses.stats,
-      timeout: timeout,
-    );
+    if (_statsRequestInFlight) {
+      AppLogging.meshcore('event=core_stats.skipped reason=stats_in_flight');
+      return null;
+    }
+    _statsRequestInFlight = true;
+
+    final MeshCoreFrame? response;
+    try {
+      response = await sendAndWait(
+        MeshCoreCommands.getStats,
+        payload: Uint8List.fromList([MeshCoreStatsType.core]),
+        expectedResponse: MeshCoreResponses.stats,
+        timeout: timeout,
+      );
+    } finally {
+      _statsRequestInFlight = false;
+    }
 
     if (response == null) {
       AppLogging.meshcore('event=core_stats.timeout');
@@ -1028,12 +1060,23 @@ class MeshCoreSession {
   Future<MeshCorePacketsStats?> getPacketsStats({
     Duration timeout = const Duration(seconds: 3),
   }) async {
-    final response = await sendAndWait(
-      MeshCoreCommands.getStats,
-      payload: Uint8List.fromList([MeshCoreStatsType.packets]),
-      expectedResponse: MeshCoreResponses.stats,
-      timeout: timeout,
-    );
+    if (_statsRequestInFlight) {
+      AppLogging.meshcore('event=packets_stats.skipped reason=stats_in_flight');
+      return null;
+    }
+    _statsRequestInFlight = true;
+
+    final MeshCoreFrame? response;
+    try {
+      response = await sendAndWait(
+        MeshCoreCommands.getStats,
+        payload: Uint8List.fromList([MeshCoreStatsType.packets]),
+        expectedResponse: MeshCoreResponses.stats,
+        timeout: timeout,
+      );
+    } finally {
+      _statsRequestInFlight = false;
+    }
 
     if (response == null) {
       AppLogging.meshcore('event=packets_stats.timeout');

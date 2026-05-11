@@ -209,6 +209,73 @@ void main() {
       }
     });
 
+    test('D35-FIX-A: concurrent getCoreStats() returns null without '
+        'throwing StateError on the shared 0x18 response slot', () async {
+      final tx = _RecordingTransport();
+      addTearDown(tx.dispose);
+      final session = MeshCoreSession(tx);
+      addTearDown(session.dispose);
+
+      final first = session.getCoreStats();
+      await Future<void>.delayed(Duration.zero);
+
+      final second = await session.getCoreStats();
+      expect(
+        second,
+        isNull,
+        reason:
+            'concurrent getCoreStats() while a stats request is in '
+            'flight must return null, not throw',
+      );
+
+      tx.inject(
+        MeshCoreFrame(
+          command: MeshCoreResponses.stats,
+          payload: _coreBody(),
+        ).toBytes(),
+      );
+      final firstStats = await first;
+      expect(firstStats, isNotNull);
+    });
+
+    test('D35-FIX-A: getCoreStats() while getRadioStats() is in flight '
+        'returns null - pins the production crash on shared 0x18', () async {
+      // Production stack:
+      //   _registerWaiter:488  ← sendAndWait:587
+      //     ← getCoreStats:970 ← _pollOnce:2037 ← Timer.periodic:2018
+      // RADIO poll at 1 Hz and CORE poll at 0.2 Hz both register a
+      // waiter on response code 0x18; the second registration threw
+      // `StateError: Single-flight violation`.
+      final tx = _RecordingTransport();
+      addTearDown(tx.dispose);
+      final session = MeshCoreSession(tx);
+      addTearDown(session.dispose);
+
+      // Start RADIO first, do not resolve.
+      final radioFut = session.getRadioStats();
+      await Future<void>.delayed(Duration.zero);
+
+      // Concurrent CORE poll: must return null silently.
+      final coreResult = await session.getCoreStats();
+      expect(
+        coreResult,
+        isNull,
+        reason:
+            'getCoreStats() while RADIO is in flight must return null - '
+            'this is the production crash regression',
+      );
+
+      // Resolve RADIO.
+      tx.inject(
+        MeshCoreFrame(
+          command: MeshCoreResponses.stats,
+          payload: _radioBody(),
+        ).toBytes(),
+      );
+      final radioStats = await radioFut;
+      expect(radioStats, isNotNull);
+    });
+
     test('RADIO + CORE interleaved: each helper returns its own subtype '
         'data and rejects the other', () async {
       final tx = _RecordingTransport();
