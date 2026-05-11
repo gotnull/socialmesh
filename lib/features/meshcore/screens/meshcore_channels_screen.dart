@@ -25,6 +25,7 @@ import '../../../providers/meshcore_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../../navigation/meshcore_shell.dart';
 import '../widgets/meshcore_channel_edit_sheet.dart';
+import '../widgets/meshcore_channel_order.dart';
 import 'meshcore_chat_screen.dart';
 import 'meshcore_qr_scanner_screen.dart';
 
@@ -82,7 +83,14 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
         }
       });
     }
-    var channels = _applyFilter(allChannels, hiddenSet);
+    // D37-C-A: overlay the user's manual reorder onto the firmware
+    // slot-index order. The order list is applied BEFORE filtering so
+    // both the visible subset and the underlying full list reflect the
+    // user's preferred sequence. Search applies last and is read-only
+    // (reorder is disabled while the search query is non-empty).
+    final userOrder = ref.watch(meshCoreChannelOrderProvider);
+    final fullOrdered = applyChannelOrder(allChannels, userOrder);
+    var channels = _applyFilter(fullOrdered, hiddenSet);
     if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase();
       channels = channels
@@ -193,6 +201,7 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
             ? _buildEmptyState(deviceName)
             : _buildChannelsList(
                 channels,
+                fullOrdered,
                 allChannels,
                 channelsState.isLoading,
               ),
@@ -296,6 +305,7 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
 
   Widget _buildChannelsList(
     List<MeshCoreChannel> channels,
+    List<MeshCoreChannel> fullOrdered,
     List<MeshCoreChannel> allChannels,
     bool isLoading,
   ) {
@@ -382,21 +392,52 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
               AppTheme.spacing16,
               AppTheme.spacing16,
             ),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                final channel = channels[index];
-                return _ChannelCard(
-                  channel: channel,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          MeshCoreChatScreen.channel(channel: channel),
+            // D37-C-A: reorder is enabled only when the user is not
+            // searching. A partial result has no meaningful order.
+            sliver: _searchQuery.isEmpty
+                ? SliverReorderableList(
+                    itemCount: channels.length,
+                    onReorder: (oldIndex, newIndex) => _onReorderVisible(
+                      channels,
+                      fullOrdered,
+                      oldIndex,
+                      newIndex,
                     ),
+                    itemBuilder: (context, index) {
+                      final channel = channels[index];
+                      return _ChannelCard(
+                        // ReorderableDragStartListener requires the
+                        // child to carry a stable Key matching the
+                        // SliverReorderableList item key.
+                        key: ValueKey('channel-${channel.index}'),
+                        channel: channel,
+                        reorderEnabled: true,
+                        reorderIndex: index,
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                MeshCoreChatScreen.channel(channel: channel),
+                          ),
+                        ),
+                        onLongPress: () => _showChannelOptions(channel),
+                      );
+                    },
+                  )
+                : SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final channel = channels[index];
+                      return _ChannelCard(
+                        channel: channel,
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                MeshCoreChatScreen.channel(channel: channel),
+                          ),
+                        ),
+                        onLongPress: () => _showChannelOptions(channel),
+                      );
+                    }, childCount: channels.length),
                   ),
-                  onLongPress: () => _showChannelOptions(channel),
-                );
-              }, childCount: channels.length),
-            ),
           ),
           if (isLoading)
             SliverToBoxAdapter(
@@ -1147,6 +1188,32 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
     );
   }
 
+  /// D37-C-A: handle the `onReorder` callback from the visible
+  /// (filtered) SliverReorderableList. Translates the drag indices
+  /// into a new full-order list and pushes it to the prefs notifier.
+  /// Channels outside the active filter never move.
+  void _onReorderVisible(
+    List<MeshCoreChannel> visible,
+    List<MeshCoreChannel> fullOrdered,
+    int oldIndex,
+    int newIndex,
+  ) {
+    // Standard Flutter onReorder fixup: when moving an item forward,
+    // newIndex is reported as the index AFTER the destination slot.
+    var fixedNewIndex = newIndex;
+    if (oldIndex < fixedNewIndex) fixedNewIndex -= 1;
+    if (oldIndex == fixedNewIndex) return;
+
+    final nextOrder = computeReorderedFullList(
+      full: fullOrdered,
+      visible: visible,
+      oldVisibleIndex: oldIndex,
+      newVisibleIndex: fixedNewIndex,
+    );
+    ref.read(meshCoreChannelPrefsProvider.notifier).setOrder(nextOrder);
+    HapticFeedback.selectionClick();
+  }
+
   /// D37-B-A: toggle the local hide preference for [channel]. Hide is
   /// independent of mute — hidden channels still receive notifications
   /// unless the channel is also muted. Snackbar confirms either side
@@ -1251,10 +1318,23 @@ class _ChannelCard extends ConsumerWidget {
   final VoidCallback onTap;
   final VoidCallback onLongPress;
 
+  /// D37-C-A: when true, render a `drag_handle` icon at the trailing
+  /// edge wrapped in [ReorderableDragStartListener] so the user can
+  /// initiate a manual reorder. When false, fall back to the chevron.
+  final bool reorderEnabled;
+
+  /// D37-C-A: zero-based position of this tile inside the visible
+  /// SliverReorderableList. Required by [ReorderableDragStartListener].
+  /// Ignored when [reorderEnabled] is false.
+  final int reorderIndex;
+
   const _ChannelCard({
+    super.key,
     required this.channel,
     required this.onTap,
     required this.onLongPress,
+    this.reorderEnabled = false,
+    this.reorderIndex = 0,
   });
 
   @override
@@ -1420,7 +1500,30 @@ class _ChannelCard extends ConsumerWidget {
                 ),
                 const SizedBox(width: AppTheme.spacing6),
               ],
-              Icon(Icons.chevron_right_rounded, color: context.textTertiary),
+              // D37-C-A: trailing edge - drag handle when reorder is
+              // enabled, chevron otherwise. The drag handle is wrapped
+              // in ReorderableDragStartListener so only that icon
+              // initiates a drag; the rest of the tile keeps its
+              // tap / long-press semantics.
+              if (reorderEnabled)
+                ReorderableDragStartListener(
+                  index: reorderIndex,
+                  child: Semantics(
+                    container: true,
+                    label: context.l10n.meshcoreChannelDragHandleA11yLabel,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing4,
+                      ),
+                      child: Icon(
+                        Icons.drag_handle_rounded,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                Icon(Icons.chevron_right_rounded, color: context.textTertiary),
             ],
           ),
         ),

@@ -15565,6 +15565,12 @@ abstract class AppLocalizations {
   /// **'No hidden channels'**
   String get meshcoreNoHiddenChannels;
 
+  /// Accessibility label for the drag-handle icon used to reorder MeshCore channels in the channels list
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder channel'**
+  String get meshcoreChannelDragHandleA11yLabel;
+
   /// Confirm dialog message for leaving a channel
   ///
   /// In en, this message translates to:

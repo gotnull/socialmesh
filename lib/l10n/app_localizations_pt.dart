@@ -8869,6 +8869,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreNoHiddenChannels => 'Nenhum canal oculto';
 
   @override
+  String get meshcoreChannelDragHandleA11yLabel => 'Reordenar canal';
+
+  @override
   String meshcoreLeaveChannelMessage(String channelName) {
     return 'Tem certeza que deseja sair de $channelName?';
   }

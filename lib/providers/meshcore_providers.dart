@@ -1263,6 +1263,35 @@ class MeshCoreChannelPrefsNotifier extends Notifier<MeshCoreChannelPrefs> {
       );
     }
   }
+
+  /// D37-C-A: replace the user-defined channel render order. The store
+  /// dedupes and drops out-of-range entries; this notifier method just
+  /// forwards the call and reflects the persisted result in state.
+  /// Setting order does NOT mutate the muted or hidden sets.
+  ///
+  /// Log surface is intentionally count-only — the actual index list
+  /// is not surfaced to AppLogging so log readers can't reconstruct
+  /// the user's channel curation.
+  Future<void> setOrder(List<int> order) async {
+    final prefix = ref.read(meshCoreSelfPubKeyPrefixProvider);
+    if (prefix.isEmpty) return;
+    final store = ref.read(meshCoreChannelPrefsStoreProvider);
+    try {
+      final updated = await store.setOrder(prefix, order);
+      if (_disposed) return;
+      if (ref.read(meshCoreSelfPubKeyPrefixProvider) != prefix) return;
+      state = updated;
+      AppLogging.meshcore(
+        'event=channel.order.set '
+        'count=${updated.orderedChannelIndices.length} device=$prefix',
+      );
+    } catch (e) {
+      AppLogging.meshcore(
+        'event=channel.order.set.failed reason=${e.runtimeType}',
+        error: true,
+      );
+    }
+  }
 }
 
 final meshCoreChannelPrefsProvider =
@@ -1278,6 +1307,13 @@ final meshCoreChannelMutedSetProvider = Provider<Set<int>>((ref) {
 /// Read-only convenience: the current hidden set (D37-B-A).
 final meshCoreChannelHiddenSetProvider = Provider<Set<int>>((ref) {
   return ref.watch(meshCoreChannelPrefsProvider).hiddenChannelIndices;
+});
+
+/// Read-only convenience: the current user-defined channel render
+/// order (D37-C-A). Listed slot indices render first in this order;
+/// unlisted channels render after, in firmware slot-index order.
+final meshCoreChannelOrderProvider = Provider<List<int>>((ref) {
+  return ref.watch(meshCoreChannelPrefsProvider).orderedChannelIndices;
 });
 
 /// Provider for the MeshCore debug capture (null if not MeshCore or release build).

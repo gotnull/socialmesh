@@ -31,10 +31,11 @@
 //     "order":  []                   // reserved for D37-C
 //   }
 //
-// D37-A consumes `muted`; D37-B-A also consumes `hidden`. `order`
-// remains reserved (D37-C). Mute and hide are independent: a channel
-// can be muted-only, hidden-only, both, or neither. The notification
-// gate consults muted only; hide only affects channel-list visibility.
+// D37-A consumes `muted`; D37-B-A also consumes `hidden`; D37-C-A
+// also consumes `order`. The three axes are independent: a channel
+// can be in any combination of {muted, hidden, ordered-or-not}.
+// The notification gate consults muted only; hide only affects
+// channel-list visibility; order only affects render position.
 
 import 'dart:async';
 import 'dart:convert';
@@ -51,7 +52,9 @@ class MeshCoreChannelPrefs {
   /// gate consults muted only.
   final Set<int> hiddenChannelIndices;
 
-  /// Reserved for D37-C (reorder). Always empty in D37-A.
+  /// D37-C-A: user-defined channel render order. Listed indices render
+  /// first in this exact order; unlisted channels render after, in
+  /// firmware slot-index order. Independent of mute and hide.
   final List<int> orderedChannelIndices;
 
   const MeshCoreChannelPrefs({
@@ -266,6 +269,45 @@ class MeshCoreChannelPrefsStore {
       hiddenChannelIndices: {...current.hiddenChannelIndices}
         ..remove(channelIndex),
     );
+    await save(devicePubKeyPrefix, next);
+    return next;
+  }
+
+  /// D37-C-A: replace the user-defined channel order list atomically.
+  ///
+  /// The order list is rendered first by the channels screen; channels
+  /// not listed here render after, in firmware slot-index order. The
+  /// muted and hidden sets are preserved.
+  ///
+  /// Dedup + sanitise on write:
+  ///   - duplicate slot indices are dropped (first occurrence wins),
+  ///   - negative or > 255 entries are dropped,
+  ///   - any other non-int entry is impossible to reach here (statically
+  ///     typed `List<int>`), so no runtime type check.
+  ///
+  /// Idempotent — passing the same order back is a cheap no-op.
+  Future<MeshCoreChannelPrefs> setOrder(
+    String devicePubKeyPrefix,
+    List<int> order,
+  ) async {
+    final sanitised = <int>[];
+    final seen = <int>{};
+    for (final idx in order) {
+      if (idx < 0 || idx > 255) continue;
+      if (!seen.add(idx)) continue;
+      sanitised.add(idx);
+    }
+    final current = await load(devicePubKeyPrefix);
+    final unchanged =
+        current.orderedChannelIndices.length == sanitised.length &&
+        () {
+          for (var i = 0; i < sanitised.length; i++) {
+            if (current.orderedChannelIndices[i] != sanitised[i]) return false;
+          }
+          return true;
+        }();
+    if (unchanged) return current;
+    final next = current.copyWith(orderedChannelIndices: sanitised);
     await save(devicePubKeyPrefix, next);
     return next;
   }

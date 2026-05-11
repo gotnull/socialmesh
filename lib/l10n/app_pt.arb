@@ -19965,6 +19965,10 @@
   "@meshcoreNoHiddenChannels": {
     "description": "Placeholder shown when the Hidden filter is active but no channels are hidden"
   },
+  "meshcoreChannelDragHandleA11yLabel": "Reordenar canal",
+  "@meshcoreChannelDragHandleA11yLabel": {
+    "description": "Accessibility label for the drag-handle icon used to reorder MeshCore channels in the channels list"
+  },
   "meshcoreLeaveChannelMessage": "Tem certeza que deseja sair de {channelName}?",
   "@meshcoreLeaveChannelMessage": {
     "description": "Confirm dialog message for leaving a channel",
