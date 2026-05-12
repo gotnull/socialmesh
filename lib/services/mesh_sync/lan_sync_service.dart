@@ -223,27 +223,38 @@ class LanSyncService {
     _broadcast = BonsoirBroadcast(service: service);
     await _broadcast!.initialize();
 
-    // Monitor broadcast registration events.
-    _broadcastSubscription = _broadcast!.eventStream?.listen((event) {
-      switch (event) {
-        case BonsoirBroadcastStartedEvent():
-          AppLogging.meshFeed(
-            'LAN-SYNC: broadcast REGISTERED on ${service.type} '
-            'port=${service.port}',
-          );
-        case BonsoirBroadcastNameAlreadyExistsEvent():
-          AppLogging.meshFeed(
-            'LAN-SYNC: broadcast name collision \u2014 '
-            'renamed to ${event.service.name}',
-          );
-        case BonsoirBroadcastStoppedEvent():
-          AppLogging.meshFeed('LAN-SYNC: broadcast STOPPED');
-        default:
-          AppLogging.meshFeed(
-            'LAN-SYNC: broadcast event: ${event.runtimeType}',
-          );
-      }
-    });
+    // Monitor broadcast registration events. onError catches native
+    // DNSServiceRef failures (e.g. -65569 DefunctConnection on network
+    // teardown) that would otherwise bubble to PlatformDispatcher.onError.
+    // Crashlytics [F bonsoir-broadcast].
+    _broadcastSubscription = _broadcast!.eventStream?.listen(
+      (event) {
+        switch (event) {
+          case BonsoirBroadcastStartedEvent():
+            AppLogging.meshFeed(
+              'LAN-SYNC: broadcast REGISTERED on ${service.type} '
+              'port=${service.port}',
+            );
+          case BonsoirBroadcastNameAlreadyExistsEvent():
+            AppLogging.meshFeed(
+              'LAN-SYNC: broadcast name collision: '
+              'renamed to ${event.service.name}',
+            );
+          case BonsoirBroadcastStoppedEvent():
+            AppLogging.meshFeed('LAN-SYNC: broadcast STOPPED');
+          default:
+            AppLogging.meshFeed(
+              'LAN-SYNC: broadcast event: ${event.runtimeType}',
+            );
+        }
+      },
+      onError: (Object e, StackTrace st) {
+        AppLogging.meshFeed(
+          '[F bonsoir-broadcast] broadcast stream error '
+          '(likely network change / DefunctConnection): $e',
+        );
+      },
+    );
 
     await _broadcast!.start();
 
@@ -261,28 +272,38 @@ class LanSyncService {
     await _discovery!.initialize();
     await _discovery!.start();
 
-    _discoverySubscription = _discovery!.eventStream?.listen((event) {
-      switch (event) {
-        case BonsoirDiscoveryStartedEvent():
-          AppLogging.meshFeed(
-            'LAN-SYNC: discovery browse ACTIVE for $lanSyncServiceType',
-          );
-        case BonsoirDiscoveryServiceFoundEvent():
-          _onPeerFound(event.service);
-        case BonsoirDiscoveryServiceResolvedEvent():
-          _onPeerResolved(event.service);
-        case BonsoirDiscoveryServiceResolveFailedEvent():
-          AppLogging.meshFeed('LAN-SYNC: service resolve FAILED');
-        case BonsoirDiscoveryServiceLostEvent():
-          _onPeerLost(event.service);
-        case BonsoirDiscoveryStoppedEvent():
-          AppLogging.meshFeed('LAN-SYNC: discovery STOPPED');
-        default:
-          AppLogging.meshFeed(
-            'LAN-SYNC: discovery event: ${event.runtimeType}',
-          );
-      }
-    });
+    // onError catches native DNSServiceRef failures so they do not bubble
+    // to PlatformDispatcher.onError. Crashlytics [F bonsoir-lansync].
+    _discoverySubscription = _discovery!.eventStream?.listen(
+      (event) {
+        switch (event) {
+          case BonsoirDiscoveryStartedEvent():
+            AppLogging.meshFeed(
+              'LAN-SYNC: discovery browse ACTIVE for $lanSyncServiceType',
+            );
+          case BonsoirDiscoveryServiceFoundEvent():
+            _onPeerFound(event.service);
+          case BonsoirDiscoveryServiceResolvedEvent():
+            _onPeerResolved(event.service);
+          case BonsoirDiscoveryServiceResolveFailedEvent():
+            AppLogging.meshFeed('LAN-SYNC: service resolve FAILED');
+          case BonsoirDiscoveryServiceLostEvent():
+            _onPeerLost(event.service);
+          case BonsoirDiscoveryStoppedEvent():
+            AppLogging.meshFeed('LAN-SYNC: discovery STOPPED');
+          default:
+            AppLogging.meshFeed(
+              'LAN-SYNC: discovery event: ${event.runtimeType}',
+            );
+        }
+      },
+      onError: (Object e, StackTrace st) {
+        AppLogging.meshFeed(
+          '[F bonsoir-lansync] discovery stream error '
+          '(likely network change / DefunctConnection): $e',
+        );
+      },
+    );
 
     AppLogging.meshFeed('LAN-SYNC: discovery started for $lanSyncServiceType');
   }

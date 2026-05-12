@@ -110,7 +110,22 @@ class MeshtasticMdnsDiscovery {
 
     await _discovery!.initialize();
 
-    _subscription = _discovery!.eventStream?.listen(_handleEvent);
+    // Bonsoir surfaces native DNSServiceRef failures (e.g. -65569
+    // DefunctConnection on Wi-Fi teardown, sleep/wake) as stream errors.
+    // Without an onError handler they bubble to PlatformDispatcher.onError
+    // and funnel into AppErrorHandler. Catch + clean up so a subsequent
+    // startDiscovery() can rebuild the connection. Crashlytics
+    // [F bonsoir-mdns].
+    _subscription = _discovery!.eventStream?.listen(
+      _handleEvent,
+      onError: (Object e, StackTrace st) {
+        AppLogging.protocol(
+          '[F bonsoir-mdns] discovery stream error '
+          '(likely network change / DefunctConnection): $e',
+        );
+        unawaited(stopDiscovery());
+      },
+    );
 
     await _discovery!.start();
   }
