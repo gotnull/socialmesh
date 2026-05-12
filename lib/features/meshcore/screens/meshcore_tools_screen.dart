@@ -25,6 +25,7 @@ import '../../../utils/snackbar.dart';
 import '../../../models/meshcore_contact.dart';
 import '../../navigation/meshcore_shell.dart';
 import '../contact_l10n.dart';
+import '../../debug/app_log_screen.dart';
 import '../widgets/meshcore_chat_traffic_card.dart';
 import '../widgets/meshcore_radio_stats_card.dart';
 import 'meshcore_discovery_screen.dart';
@@ -165,6 +166,22 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
               subtitle: context.l10n.meshcoreFrameLogToolSubtitle,
               trailing: _chevron(context),
               onTap: _openFrameLog,
+            ),
+            // D44: App Debug Log viewer. Routes to the shared
+            // `AppLogScreen` which renders the in-memory AppLogger
+            // ring buffer (1000 entries, level + search filters,
+            // export-and-share via the existing safe debug-export
+            // helper). MeshCore-side log events emitted via
+            // `AppLogging.meshcore` are bridged into the ring buffer
+            // by the global sink installed in `main.dart`.
+            SettingsTile(
+              key: const ValueKey('meshcore-tools-app-debug-log'),
+              icon: Icons.bug_report_outlined,
+              iconColor: AccentColors.blue,
+              title: context.l10n.meshcoreAppDebugLogTool,
+              subtitle: context.l10n.meshcoreAppDebugLogToolSubtitle,
+              trailing: _chevron(context),
+              onTap: _openAppDebugLog,
             ),
             // D28 Part D: queue status card (heartbeat + last-drain
             // outcome + in-progress badge). Sits above the manual
@@ -663,6 +680,16 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
     Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => const MeshCoreFrameLogScreen()),
     );
+  }
+
+  /// D44: open the shared `AppLogScreen` over the in-memory AppLogger
+  /// ring buffer. The screen already provides search + level filters
+  /// + safe export, so this entry point is purely navigation.
+  void _openAppDebugLog() {
+    HapticFeedback.lightImpact();
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const AppLogScreen()));
   }
 
   /// D28 Part C: open the Trace Path picker bottom sheet.

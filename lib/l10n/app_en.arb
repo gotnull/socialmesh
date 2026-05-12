@@ -12041,6 +12041,14 @@
     "@meshcorePathOverlayUnknownHop": {
         "description": "D42-A - hop info fallback when no contact matched the hop byte"
     },
+    "meshcoreAppDebugLogTool": "App Debug Log",
+    "@meshcoreAppDebugLogTool": {
+        "description": "D44 - MeshCore Tools tile title that opens the shared AppLogScreen ring-buffer viewer"
+    },
+    "meshcoreAppDebugLogToolSubtitle": "View recent app diagnostics",
+    "@meshcoreAppDebugLogToolSubtitle": {
+        "description": "D44 - MeshCore Tools tile subtitle"
+    },
     "meshcoreLeaveChannelMessage": "Are you sure you want to leave {channelName}?",
     "@meshcoreLeaveChannelMessage": {
         "description": "Confirm dialog message for leaving a channel",

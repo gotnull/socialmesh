@@ -8937,6 +8937,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcorePathOverlayUnknownHop => 'Unknown hop';
 
   @override
+  String get meshcoreAppDebugLogTool => 'App Debug Log';
+
+  @override
+  String get meshcoreAppDebugLogToolSubtitle => 'View recent app diagnostics';
+
+  @override
   String meshcoreLeaveChannelMessage(String channelName) {
     return 'Are you sure you want to leave $channelName?';
   }

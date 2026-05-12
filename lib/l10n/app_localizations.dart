@@ -15787,6 +15787,18 @@ abstract class AppLocalizations {
   /// **'Unknown hop'**
   String get meshcorePathOverlayUnknownHop;
 
+  /// D44 - MeshCore Tools tile title that opens the shared AppLogScreen ring-buffer viewer
+  ///
+  /// In en, this message translates to:
+  /// **'App Debug Log'**
+  String get meshcoreAppDebugLogTool;
+
+  /// D44 - MeshCore Tools tile subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'View recent app diagnostics'**
+  String get meshcoreAppDebugLogToolSubtitle;
+
   /// Confirm dialog message for leaving a channel
   ///
   /// In en, this message translates to:

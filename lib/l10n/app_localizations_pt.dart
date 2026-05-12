@@ -9025,6 +9025,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcorePathOverlayUnknownHop => 'Hop desconhecido';
 
   @override
+  String get meshcoreAppDebugLogTool => 'Log de Depuração';
+
+  @override
+  String get meshcoreAppDebugLogToolSubtitle =>
+      'Ver diagnóstico recente do app';
+
+  @override
   String meshcoreLeaveChannelMessage(String channelName) {
     return 'Tem certeza que deseja sair de $channelName?';
   }
