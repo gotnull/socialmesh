@@ -1449,7 +1449,7 @@ abstract class AppLocalizations {
   /// Warning snackbar when user tries to schedule but node already has a flight
   ///
   /// In en, this message translates to:
-  /// **'{nodeName} already has a flight ({flightNumber} — {status})'**
+  /// **'{nodeName} already has a flight ({flightNumber} - {status})'**
   String aetherNodeAlreadyHasFlight(
     String nodeName,
     String flightNumber,
@@ -1804,7 +1804,7 @@ abstract class AppLocalizations {
   /// Route info error when distance exceeds aircraft range
   ///
   /// In en, this message translates to:
-  /// **'{distance} — exceeds maximum aircraft range'**
+  /// **'{distance} - exceeds maximum aircraft range'**
   String aetherScheduleRouteExceedsRange(int distance);
 
   /// Success snackbar when route data is found after search
@@ -1822,7 +1822,7 @@ abstract class AppLocalizations {
   /// Route info error when airports are too close
   ///
   /// In en, this message translates to:
-  /// **'{departure} and {arrival} are {distance} km apart — too close for a commercial flight'**
+  /// **'{departure} and {arrival} are {distance} km apart - too close for a commercial flight'**
   String aetherScheduleRouteTooClose(
     String departure,
     String arrival,
@@ -1964,13 +1964,13 @@ abstract class AppLocalizations {
   /// Warning snackbar when airports are too close together
   ///
   /// In en, this message translates to:
-  /// **'{departure} and {arrival} are only {distance} km apart — no commercial routes exist'**
+  /// **'{departure} and {arrival} are only {distance} km apart - no commercial routes exist'**
   String aetherScheduleTooClose(String departure, String arrival, int distance);
 
   /// Warning snackbar when airports are too far apart
   ///
   /// In en, this message translates to:
-  /// **'{departure} to {arrival} is {distance} — exceeds maximum aircraft range'**
+  /// **'{departure} to {arrival} is {distance} - exceeds maximum aircraft range'**
   String aetherScheduleTooFar(String departure, String arrival, int distance);
 
   /// Tooltip for the validate flight inline button
@@ -3811,7 +3811,7 @@ abstract class AppLocalizations {
   /// Hint text when no conditions are set
   ///
   /// In en, this message translates to:
-  /// **'No conditions — always runs'**
+  /// **'No conditions - always runs'**
   String get automationEditorNoConditions;
 
   /// Button label for removing the ELSE branch
@@ -4489,7 +4489,7 @@ abstract class AppLocalizations {
   /// Success snackbar after manual run — clarifies conditions were bypassed
   ///
   /// In en, this message translates to:
-  /// **'Ran \"{name}\" — conditions bypassed, THEN executed'**
+  /// **'Ran \"{name}\" - conditions bypassed, THEN executed'**
   String automationScreenRunSuccess(String name);
 
   /// Loading snackbar while running an automation
@@ -8467,13 +8467,13 @@ abstract class AppLocalizations {
   /// Snackbar shown when a node-required screen is auto-popped because the device disconnected mid-session.
   ///
   /// In en, this message translates to:
-  /// **'Disconnected from your node — reconnect to continue.'**
+  /// **'Disconnected from your node - reconnect to continue.'**
   String get requiresConnectionGuardDisconnected;
 
   /// Inline banner shown on a node-required screen during the grace window after a brief transport disconnect, while auto-reconnect is attempting recovery. If reconnection fails within ~10s the user is popped back with the existing requiresConnectionGuardDisconnected snackbar.
   ///
   /// In en, this message translates to:
-  /// **'Disconnected — reconnecting…'**
+  /// **'Disconnected - reconnecting…'**
   String get requiresConnectionGuardReconnectingBanner;
 
   /// Label for the Device Management menu tile in the enterprise drawer section.
@@ -9139,7 +9139,7 @@ abstract class AppLocalizations {
   /// Description shown for binary/hex file preview
   ///
   /// In en, this message translates to:
-  /// **'Binary file — save to open with an external app'**
+  /// **'Binary file - save to open with an external app'**
   String get fileTransferBinaryFileHint;
 
   /// Confirmation dialog confirm button
@@ -9505,7 +9505,7 @@ abstract class AppLocalizations {
   /// Transfer card status — inbound offer waiting for user acceptance
   ///
   /// In en, this message translates to:
-  /// **'Incoming file — tap to review'**
+  /// **'Incoming file - tap to review'**
   String get fileTransferStatusOfferPending;
 
   /// Transfer card status — outbound transfer in progress
@@ -9571,7 +9571,7 @@ abstract class AppLocalizations {
   /// Transfer fail reason — airtime rate limiter fired
   ///
   /// In en, this message translates to:
-  /// **'Rate limited — try again later'**
+  /// **'Rate limited - try again later'**
   String get fileTransferFailReasonRateLimited;
 
   /// Transfer fail reason — SHA-256 mismatch
@@ -9679,7 +9679,7 @@ abstract class AppLocalizations {
   /// Error snackbar for oversized files (interpolated)
   ///
   /// In en, this message translates to:
-  /// **'{filename} is {fileSize} KB — mesh transfer limit is {limit} KB.'**
+  /// **'{filename} is {fileSize} KB - mesh transfer limit is {limit} KB.'**
   String fileTransferFileTooLarge(
     String filename,
     String fileSize,
@@ -11729,7 +11729,7 @@ abstract class AppLocalizations {
   /// Message shown when incident is in a terminal state (closed/cancelled). Placeholder: state
   ///
   /// In en, this message translates to:
-  /// **'This incident is {state} — no further actions available.'**
+  /// **'This incident is {state} - no further actions available.'**
   String incidentTerminalStateMessage(String state);
 
   /// Empty state text when there are no transitions to display
@@ -11741,7 +11741,7 @@ abstract class AppLocalizations {
   /// Label shown on terminal state entries in the transition timeline
   ///
   /// In en, this message translates to:
-  /// **'Final state — no further transitions'**
+  /// **'Final state - no further transitions'**
   String get incidentTimelineFinalState;
 
   /// Badge label on timeline entries that were superseded by conflict resolution
@@ -16094,7 +16094,7 @@ abstract class AppLocalizations {
   /// D26 — Error snackbar when the firmware rejects setDeviceTime because device time is already ahead of the phone (firmware is forward-only)
   ///
   /// In en, this message translates to:
-  /// **'Device clock is already ahead — sync skipped'**
+  /// **'Device clock is already ahead - sync skipped'**
   String get meshcoreSyncTimeRejected;
 
   /// Settings tile title for location
@@ -18080,7 +18080,7 @@ abstract class AppLocalizations {
   /// Explanation of hop count shown in a bottom sheet.
   ///
   /// In en, this message translates to:
-  /// **'The number of times this message was relayed by other nodes before reaching you. \'Direct\' means no relay — the sender was in direct radio range.'**
+  /// **'The number of times this message was relayed by other nodes before reaching you. \'Direct\' means no relay - the sender was in direct radio range.'**
   String get messagingTechInfoExplainHopsBody;
 
   /// Title for the bottom sheet explaining SNR.
@@ -18104,7 +18104,7 @@ abstract class AppLocalizations {
   /// Explanation of RSSI shown in a bottom sheet.
   ///
   /// In en, this message translates to:
-  /// **'Received Signal Strength Indicator — how strong the radio signal was when it arrived. Closer to 0 is stronger. Typical range: -120 dBm (very weak) to -40 dBm (very strong).'**
+  /// **'Received Signal Strength Indicator - how strong the radio signal was when it arrived. Closer to 0 is stronger. Typical range: -120 dBm (very weak) to -40 dBm (very strong).'**
   String get messagingTechInfoExplainRssiBody;
 
   /// Title for the bottom sheet explaining transport type.
@@ -21512,7 +21512,7 @@ abstract class AppLocalizations {
   /// Text displayed in node management
   ///
   /// In en, this message translates to:
-  /// **'Nothing to export — NodeDex is empty'**
+  /// **'Nothing to export - NodeDex is empty'**
   String get nodedexExportNothingToExport;
 
   /// Text displayed in node management
@@ -24306,7 +24306,7 @@ abstract class AppLocalizations {
   /// Description of the dashboard and telemetry features
   ///
   /// In en, this message translates to:
-  /// **'Live battery levels, signal strength, node counts — all in one view.\nBuild the dashboard that fits how you work.'**
+  /// **'Live battery levels, signal strength, node counts - all in one view.\nBuild the dashboard that fits how you work.'**
   String get onboardingDashboardDescription;
 
   /// Title for the customizable dashboard page
@@ -24432,7 +24432,7 @@ abstract class AppLocalizations {
   /// Ico advisor speech explaining NodeDex sigils, rarity, and patina
   ///
   /// In en, this message translates to:
-  /// **'Legendary, Epic, Rare — every node you encounter earns its place in your collection. The more you explore, the richer your NodeDex becomes.'**
+  /// **'Legendary, Epic, Rare - every node you encounter earns its place in your collection. The more you explore, the richer your NodeDex becomes.'**
   String get onboardingNodedexAdvisor;
 
   /// Demo node name in the NodeDex showcase
@@ -24570,7 +24570,7 @@ abstract class AppLocalizations {
   /// Ico advisor speech explaining the Signals differentiator
   ///
   /// In en, this message translates to:
-  /// **'Think of Signals like ephemeral stories — but over radio. No cloud, no server. They exist only on the mesh, only for as long as you choose.'**
+  /// **'Think of Signals like ephemeral stories - but over radio. No cloud, no server. They exist only on the mesh, only for as long as you choose.'**
   String get onboardingSignalsAdvisor;
 
   /// Description of the ephemeral Signals feature
@@ -24594,7 +24594,7 @@ abstract class AppLocalizations {
   /// Ico advisor speech for the welcome page introducing itself
   ///
   /// In en, this message translates to:
-  /// **'I\'m Ico. I\'ll walk you through a mesh radio platform built for the real world — where cell towers don\'t reach.'**
+  /// **'I\'m Ico. I\'ll walk you through a mesh radio platform built for the real world - where cell towers don\'t reach.'**
   String get onboardingWelcomeAdvisor;
 
   /// Description for the welcome onboarding page
@@ -24924,7 +24924,7 @@ abstract class AppLocalizations {
   /// UI text: presence quiet mesh
   ///
   /// In en, this message translates to:
-  /// **'Mesh is quiet right now — nodes appear as they come online.'**
+  /// **'Mesh is quiet right now - nodes appear as they come online.'**
   String get presenceQuietMesh;
 
   /// UI text: presence recent activity
@@ -25530,7 +25530,7 @@ abstract class AppLocalizations {
   /// Text displayed in user profile
   ///
   /// In en, this message translates to:
-  /// **'Cloud services starting up — try again shortly'**
+  /// **'Cloud services starting up - try again shortly'**
   String get profileCloudStartingUp;
 
   /// Text displayed in user profile
@@ -25866,7 +25866,7 @@ abstract class AppLocalizations {
   /// Text displayed in user profile
   ///
   /// In en, this message translates to:
-  /// **'Sync timed out — try again'**
+  /// **'Sync timed out - try again'**
   String get profileSyncTimedOut;
 
   /// Text in user profile Parameters: {email}.
@@ -26262,7 +26262,7 @@ abstract class AppLocalizations {
   /// UI text: reachability scoring model content
   ///
   /// In en, this message translates to:
-  /// **'Opportunistic Mesh Reach Likelihood Model (v1) — BETA\n\nA heuristic scoring model that estimates likelihood of reaching a node based on observed RF metrics and packet history. This score represents likelihood, not reachability. Meshtastic forwards packets opportunistically without routing. A high score does not guarantee delivery.'**
+  /// **'Opportunistic Mesh Reach Likelihood Model (v1) - BETA\n\nA heuristic scoring model that estimates likelihood of reaching a node based on observed RF metrics and packet history. This score represents likelihood, not reachability. Meshtastic forwards packets opportunistically without routing. A high score does not guarantee delivery.'**
   String get reachabilityScoringModelContent;
 
   /// Screen or section title
@@ -26370,7 +26370,7 @@ abstract class AppLocalizations {
   /// Reset-aware pairing hint shown during region setup when the saved BLE pairing no longer matches the rebooted radio. Avoids implying any phone-side fault.
   ///
   /// In en, this message translates to:
-  /// **'Pairing needs to be refreshed. The radio may have cleared its Bluetooth identity after the region change — forget the device in Bluetooth Settings and pair again.'**
+  /// **'Pairing needs to be refreshed. The radio may have cleared its Bluetooth identity after the region change - forget the device in Bluetooth Settings and pair again.'**
   String get regionSelectionPairingHintMessage;
 
   /// Reset-aware pairing-invalidation message shown during region setup. Frames the cause as a radio-side identity reset, not a phone-side failure.
@@ -27678,7 +27678,7 @@ abstract class AppLocalizations {
   /// Short inline error shown when the saved BLE pairing no longer matches the device after a factory reset, region reset, or BLE identity reset on the radio side. Avoids implying any phone-side fault.
   ///
   /// In en, this message translates to:
-  /// **'Pairing needs to be refreshed — the radio\'s Bluetooth identity has changed. Forget the device in Bluetooth Settings and pair again.'**
+  /// **'Pairing needs to be refreshed - the radio\'s Bluetooth identity has changed. Forget the device in Bluetooth Settings and pair again.'**
   String get scannerPairingInvalidatedError;
 
   /// Title of the recovery card shown when the saved BLE pairing no longer matches the device. Reset-aware wording — does not blame the phone.
@@ -31914,7 +31914,7 @@ abstract class AppLocalizations {
   /// Text displayed in social features
   ///
   /// In en, this message translates to:
-  /// **'Likes, comments, follows — all in one place.\nPost something to get started.'**
+  /// **'Likes, comments, follows - all in one place.\nPost something to get started.'**
   String get socialActivityTagline2;
 
   /// Text displayed in social features
@@ -36402,7 +36402,7 @@ abstract class AppLocalizations {
   /// Hint shown when a traceroute has zero hops (direct link).
   ///
   /// In en, this message translates to:
-  /// **'Direct connection — no intermediate hops'**
+  /// **'Direct connection - no intermediate hops'**
   String get telemetryTracerouteDirectConnection;
 
   /// Empty-state subtitle for the traceroute screen.
@@ -38646,7 +38646,7 @@ abstract class AppLocalizations {
   /// Warning for rate-limited location sharing
   ///
   /// In en, this message translates to:
-  /// **'Location was shared recently — please wait before sharing again'**
+  /// **'Location was shared recently - please wait before sharing again'**
   String get widgetBuilderLocationSharedRecently;
 
   /// Success snackbar when location shared with specific node
@@ -40928,13 +40928,13 @@ abstract class AppLocalizations {
   /// UI text: content moderation removed with reason Parameters: {reason} = error/status message.
   ///
   /// In en, this message translates to:
-  /// **'Content removed — {reason}'**
+  /// **'Content removed - {reason}'**
   String contentModerationRemovedWithReason(String reason);
 
   /// UI text: content moderation removed generic
   ///
   /// In en, this message translates to:
-  /// **'Content removed — your content violated our Community Guidelines.'**
+  /// **'Content removed - your content violated our Community Guidelines.'**
   String get contentModerationRemovedGeneric;
 
   /// UI text: content moderation learn more
@@ -41432,7 +41432,7 @@ abstract class AppLocalizations {
   /// UI text: action sheet traceroute sent Parameters: {target}.
   ///
   /// In en, this message translates to:
-  /// **'Traceroute sent to {target} — check Traceroute History for results'**
+  /// **'Traceroute sent to {target} - check Traceroute History for results'**
   String actionSheetTracerouteSent(String target);
 
   /// Error message Parameters: {error} = error/status message.
@@ -41444,31 +41444,31 @@ abstract class AppLocalizations {
   /// Text displayed in premium features
   ///
   /// In en, this message translates to:
-  /// **'Preview Mode — Upgrade to create automations'**
+  /// **'Preview Mode - Upgrade to create automations'**
   String get premiumPreviewAutomations;
 
   /// Text displayed in premium features
   ///
   /// In en, this message translates to:
-  /// **'Preview Mode — Upgrade to connect services'**
+  /// **'Preview Mode - Upgrade to connect services'**
   String get premiumPreviewIfttt;
 
   /// Text displayed in premium features
   ///
   /// In en, this message translates to:
-  /// **'Preview Mode — Upgrade to build widgets'**
+  /// **'Preview Mode - Upgrade to build widgets'**
   String get premiumPreviewWidgets;
 
   /// Text displayed in premium features
   ///
   /// In en, this message translates to:
-  /// **'Preview Mode — Upgrade to access full library'**
+  /// **'Preview Mode - Upgrade to access full library'**
   String get premiumPreviewRingtones;
 
   /// Text displayed in premium features
   ///
   /// In en, this message translates to:
-  /// **'Preview Mode — Upgrade to unlock all colors'**
+  /// **'Preview Mode - Upgrade to unlock all colors'**
   String get premiumPreviewThemes;
 
   /// Text displayed in premium features
@@ -41546,7 +41546,7 @@ abstract class AppLocalizations {
   /// Hint shown when Google Play billing fails to load on Android.
   ///
   /// In en, this message translates to:
-  /// **'Google Play unavailable on this device — try alternative payment.'**
+  /// **'Google Play unavailable on this device - try alternative payment.'**
   String get googlePlayUnavailable;
 
   /// Title of the bottom sheet that hands the user off to Buy Me a Coffee with their reference code.
@@ -42710,7 +42710,7 @@ abstract class AppLocalizations {
   /// Restore result when the store has a PaymentPendingError receipt that RevenueCat cannot yet accept
   ///
   /// In en, this message translates to:
-  /// **'Your purchase is still being processed by the store. This can take up to 72 hours — please try again later.'**
+  /// **'Your purchase is still being processed by the store. This can take up to 72 hours - please try again later.'**
   String get restorePurchasesPending;
 
   /// Screen or section title
@@ -44546,19 +44546,19 @@ abstract class AppLocalizations {
   /// Text displayed in cloud sync
   ///
   /// In en, this message translates to:
-  /// **'NodeDex — encounters, tags, notes'**
+  /// **'NodeDex - encounters, tags, notes'**
   String get cloudSyncNodeDex;
 
   /// Text displayed in cloud sync
   ///
   /// In en, this message translates to:
-  /// **'Automations — rules and triggers'**
+  /// **'Automations - rules and triggers'**
   String get cloudSyncAutomations;
 
   /// Text displayed in cloud sync
   ///
   /// In en, this message translates to:
-  /// **'Custom Widgets — layouts and data'**
+  /// **'Custom Widgets - layouts and data'**
   String get cloudSyncWidgets;
 
   /// Text displayed in cloud sync
@@ -45205,19 +45205,19 @@ abstract class AppLocalizations {
   /// Description of the Mesh destination mode
   ///
   /// In en, this message translates to:
-  /// **'Show your whole mesh — node count and overall link health.'**
+  /// **'Show your whole mesh - node count and overall link health.'**
   String get bgConnLiveActivityDestMeshDesc;
 
   /// Description of the Best peer destination mode
   ///
   /// In en, this message translates to:
-  /// **'Show the strongest peer — auto-tracks the best signal.'**
+  /// **'Show the strongest peer - auto-tracks the best signal.'**
   String get bgConnLiveActivityDestBestPeerDesc;
 
   /// Description of the Active DM destination mode
   ///
   /// In en, this message translates to:
-  /// **'Show your most-recent DM partner — switches as you chat.'**
+  /// **'Show your most-recent DM partner - switches as you chat.'**
   String get bgConnLiveActivityDestActivePeerDesc;
 
   /// Screen or section title
@@ -47635,25 +47635,25 @@ abstract class AppLocalizations {
   /// Text displayed in account management
   ///
   /// In en, this message translates to:
-  /// **'NodeDex — encounters, tags, notes'**
+  /// **'NodeDex - encounters, tags, notes'**
   String get accountSubFeatureNodedex;
 
   /// Text displayed in account management
   ///
   /// In en, this message translates to:
-  /// **'Automations — rules and triggers'**
+  /// **'Automations - rules and triggers'**
   String get accountSubFeatureAutomations;
 
   /// Text displayed in account management
   ///
   /// In en, this message translates to:
-  /// **'Custom Widgets — layouts and data'**
+  /// **'Custom Widgets - layouts and data'**
   String get accountSubFeatureWidgets;
 
   /// Text displayed in account management
   ///
   /// In en, this message translates to:
-  /// **'Backup — restore after reinstall or new phone'**
+  /// **'Backup - restore after reinstall or new phone'**
   String get accountSubFeatureBackup;
 
   /// Text displayed in account management
@@ -50189,7 +50189,7 @@ abstract class AppLocalizations {
   /// Duty cycle = regulatory limit on radio transmission time (e.g., 10% means transmit max 10% of the time). MQTT floods can exceed this.
   ///
   /// In en, this message translates to:
-  /// **'Your region has a {percent}% duty cycle. MQTT is not advised when you are duty cycle restricted — the extra traffic will quickly overwhelm your LoRa mesh.'**
+  /// **'Your region has a {percent}% duty cycle. MQTT is not advised when you are duty cycle restricted - the extra traffic will quickly overwhelm your LoRa mesh.'**
   String mqttConfigDutyCycleWarning(String percent);
 
   /// MQTT = internet message broker protocol that bridges the local mesh radio network to the internet.
@@ -51803,7 +51803,7 @@ abstract class AppLocalizations {
   /// Text in admin panel Parameters: {seconds} = time duration.
   ///
   /// In en, this message translates to:
-  /// **'Cancel — sending in {seconds}...'**
+  /// **'Cancel - sending in {seconds}...'**
   String adminBroadcastCountdownCancel(int seconds);
 
   /// Text displayed in admin panel
@@ -53189,7 +53189,7 @@ abstract class AppLocalizations {
   /// Text displayed in admin panel
   ///
   /// In en, this message translates to:
-  /// **'Anonymous report — replies cannot be delivered.'**
+  /// **'Anonymous report - replies cannot be delivered.'**
   String get adminBugReportsAnonNotice;
 
   /// Empty state message in admin panel
@@ -54623,7 +54623,7 @@ abstract class AppLocalizations {
   /// Text displayed in global layer / MQTT
   ///
   /// In en, this message translates to:
-  /// **'Under the hood, this uses an MQTT broker — a standard internet messaging server. You do not need to know how MQTT works to use the Global Layer.'**
+  /// **'Under the hood, this uses an MQTT broker - a standard internet messaging server. You do not need to know how MQTT works to use the Global Layer.'**
   String get globalLayerMqttNote;
 
   /// Text displayed in global layer / MQTT
@@ -55577,7 +55577,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step nodes_status
   ///
   /// In en, this message translates to:
-  /// **'**Green dot** means **Online** (heard recently). **Yellow** means **Seen recently**. **Gray** means **Offline**. LoRa has no offline signal—status is inferred.'**
+  /// **'**Green dot** means **Online** (heard recently). **Yellow** means **Seen recently**. **Gray** means **Offline**. LoRa has no offline signal-status is inferred.'**
   String get helpNodesStatusBubble;
 
   /// Help bubble text for step nodes_info
@@ -55931,19 +55931,19 @@ abstract class AppLocalizations {
   /// Help bubble text for step create_intro
   ///
   /// In en, this message translates to:
-  /// **'Time to **Go Active**! A signal is an ephemeral broadcast — it lives on the mesh for a set time, then fades away. Let me walk you through it.'**
+  /// **'Time to **Go Active**! A signal is an ephemeral broadcast - it lives on the mesh for a set time, then fades away. Let me walk you through it.'**
   String get helpCreateIntroBubble;
 
   /// Help bubble text for step create_text
   ///
   /// In en, this message translates to:
-  /// **'Type your message in the main field — up to **280 characters**. The circular counter in the corner shows how many you have left.'**
+  /// **'Type your message in the main field - up to **280 characters**. The circular counter in the corner shows how many you have left.'**
   String get helpCreateTextBubble;
 
   /// Help bubble text for step create_image
   ///
   /// In en, this message translates to:
-  /// **'Tap the **image icon** to attach a photo. Images are uploaded via cloud when you are online — they are not available in mesh-only mode.'**
+  /// **'Tap the **image icon** to attach a photo. Images are uploaded via cloud when you are online - they are not available in mesh-only mode.'**
   String get helpCreateImageBubble;
 
   /// Help bubble text for step create_location
@@ -55955,13 +55955,13 @@ abstract class AppLocalizations {
   /// Help bubble text for step create_ttl
   ///
   /// In en, this message translates to:
-  /// **'The **timer icon** sets your TTL — how long the signal stays alive. Choose from **15 minutes** up to **24 hours**. Shorter times work great for quick check-ins.'**
+  /// **'The **timer icon** sets your TTL - how long the signal stays alive. Choose from **15 minutes** up to **24 hours**. Shorter times work great for quick check-ins.'**
   String get helpCreateTtlBubble;
 
   /// Help bubble text for step create_intent
   ///
   /// In en, this message translates to:
-  /// **'Pick a **Presence Intent** to tell the mesh what you are up to — exploring, monitoring, helping, or just listening. It adds context without extra words.'**
+  /// **'Pick a **Presence Intent** to tell the mesh what you are up to - exploring, monitoring, helping, or just listening. It adds context without extra words.'**
   String get helpCreateIntentBubble;
 
   /// Help bubble text for step create_status
@@ -56123,7 +56123,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step settings_cloud
   ///
   /// In en, this message translates to:
-  /// **'**Cloud Sync** is a premium subscription that syncs your **NodeDex**, **automations**, **widgets**, and **profile** across all your devices. It also serves as your **backup** — if you ever delete the app or switch phones, Cloud Sync restores everything. Without it, all data lives only on this device and is lost if the app is removed.'**
+  /// **'**Cloud Sync** is a premium subscription that syncs your **NodeDex**, **automations**, **widgets**, and **profile** across all your devices. It also serves as your **backup** - if you ever delete the app or switch phones, Cloud Sync restores everything. Without it, all data lives only on this device and is lost if the app is removed.'**
   String get helpSettingsCloudBubble;
 
   /// Help bubble text for step profile_intro
@@ -56147,7 +56147,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step profile_cloud
   ///
   /// In en, this message translates to:
-  /// **'**Cloud Sync** is a premium feature that backs up your profile, NodeDex, automations, and widgets to the cloud. It protects your data — if you delete the app or get a new phone, everything **restores automatically** when you sign back in. Without it, your data exists only on this device.'**
+  /// **'**Cloud Sync** is a premium feature that backs up your profile, NodeDex, automations, and widgets to the cloud. It protects your data - if you delete the app or get a new phone, everything **restores automatically** when you sign back in. Without it, your data exists only on this device.'**
   String get helpProfileCloudBubble;
 
   /// Help bubble text for step mesh3d_intro
@@ -56279,7 +56279,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step presence_active
   ///
   /// In en, this message translates to:
-  /// **'**Online** nodes (green) were heard within the last 2 hours — matching the Meshtastic firmware definition of online.'**
+  /// **'**Online** nodes (green) were heard within the last 2 hours - matching the Meshtastic firmware definition of online.'**
   String get helpPresenceActiveBubble;
 
   /// Help bubble text for step presence_recent
@@ -56417,19 +56417,19 @@ abstract class AppLocalizations {
   /// Help bubble text for step nodedex_intro
   ///
   /// In en, this message translates to:
-  /// **'Welcome to the **NodeDex** — your personal mesh field journal! Every node you discover is recorded here with a unique **Sigil** and personality **Trait**.'**
+  /// **'Welcome to the **NodeDex** - your personal mesh field journal! Every node you discover is recorded here with a unique **Sigil** and personality **Trait**.'**
   String get helpNodedexIntroBubble;
 
   /// Help bubble text for step nodedex_sigils
   ///
   /// In en, this message translates to:
-  /// **'Each node gets a **procedural Sigil** — a geometric glyph generated from its identity. No two nodes share the same sigil. Think of it as a visual fingerprint for the mesh!'**
+  /// **'Each node gets a **procedural Sigil** - a geometric glyph generated from its identity. No two nodes share the same sigil. Think of it as a visual fingerprint for the mesh!'**
   String get helpNodedexSigilsBubble;
 
   /// Help bubble text for step nodedex_traits
   ///
   /// In en, this message translates to:
-  /// **'Nodes earn **Traits** based on real behavior — **Wanderer** moves between regions, **Beacon** is always online, **Ghost** is rarely seen, **Sentinel** holds a fixed position, **Relay** forwards traffic.'**
+  /// **'Nodes earn **Traits** based on real behavior - **Wanderer** moves between regions, **Beacon** is always online, **Ghost** is rarely seen, **Sentinel** holds a fixed position, **Relay** forwards traffic.'**
   String get helpNodedexTraitsBubble;
 
   /// Help bubble text for step nodedex_filters
@@ -56441,49 +56441,49 @@ abstract class AppLocalizations {
   /// Help bubble text for step nodedex_field_journal
   ///
   /// In en, this message translates to:
-  /// **'As you observe more nodes, your **field journal** fills in — each node earns a **Patina score** and **identity overlay** based on real encounters. The more you observe, the richer the detail!'**
+  /// **'As you observe more nodes, your **field journal** fills in - each node earns a **Patina score** and **identity overlay** based on real encounters. The more you observe, the richer the detail!'**
   String get helpNodedexFieldJournalBubble;
 
   /// Help bubble text for step nodedex_album_mode
   ///
   /// In en, this message translates to:
-  /// **'Tap the **view toggle** in the app bar to switch to **Album mode** — a collector-style card grid grouped by trait, rarity, or region. Each card shows the node\'s sigil with a holographic shimmer based on rarity!'**
+  /// **'Tap the **view toggle** in the app bar to switch to **Album mode** - a collector-style card grid grouped by trait, rarity, or region. Each card shows the node\'s sigil with a holographic shimmer based on rarity!'**
   String get helpNodedexAlbumModeBubble;
 
   /// Help bubble text for step nodedex_atmosphere
   ///
   /// In en, this message translates to:
-  /// **'Notice the subtle **ambient particles** behind the screen? That is the **Elemental Atmosphere** — rain, embers, mist, and starlight driven by your real mesh data. More nodes and activity means more atmosphere!'**
+  /// **'Notice the subtle **ambient particles** behind the screen? That is the **Elemental Atmosphere** - rain, embers, mist, and starlight driven by your real mesh data. More nodes and activity means more atmosphere!'**
   String get helpNodedexAtmosphereBubble;
 
   /// Help bubble text for step nodedex_cloud_sync
   ///
   /// In en, this message translates to:
-  /// **'Your NodeDex is stored locally in SQLite and survives app restarts — but **not** app deletion. If you uninstall the app or switch phones, your local NodeDex is gone. With a **Cloud Sync** subscription, your entire journal — sigils, encounters, social tags, notes, and co-seen links — backs up to the cloud and **restores automatically** on any device you sign into.'**
+  /// **'Your NodeDex is stored locally in SQLite and survives app restarts - but **not** app deletion. If you uninstall the app or switch phones, your local NodeDex is gone. With a **Cloud Sync** subscription, your entire journal - sigils, encounters, social tags, notes, and co-seen links - backs up to the cloud and **restores automatically** on any device you sign into.'**
   String get helpNodedexCloudSyncBubble;
 
   /// Help bubble text for step nodedex_export
   ///
   /// In en, this message translates to:
-  /// **'Use the **menu** to **export** your NodeDex as a JSON file for backup, or **import** one from another device. Your field journal travels with you — even without Cloud Sync!'**
+  /// **'Use the **menu** to **export** your NodeDex as a JSON file for backup, or **import** one from another device. Your field journal travels with you - even without Cloud Sync!'**
   String get helpNodedexExportBubble;
 
   /// Help bubble text for step nodedex_sigil
   ///
   /// In en, this message translates to:
-  /// **'This is the node\'s **Sigil** — a unique procedural glyph generated from its identity. No two nodes share the same sigil. It\'s like a visual fingerprint!'**
+  /// **'This is the node\'s **Sigil** - a unique procedural glyph generated from its identity. No two nodes share the same sigil. It\'s like a visual fingerprint!'**
   String get helpNodedexSigilBubble;
 
   /// Help bubble text for step nodedex_trait
   ///
   /// In en, this message translates to:
-  /// **'The **Trait** is an inferred personality based on how this node behaves — movement patterns, signal consistency, encounter frequency. Confidence grows with more data.'**
+  /// **'The **Trait** is an inferred personality based on how this node behaves - movement patterns, signal consistency, encounter frequency. Confidence grows with more data.'**
   String get helpNodedexTraitBubble;
 
   /// Help bubble text for step nodedex_auto_summary
   ///
   /// In en, this message translates to:
-  /// **'**Auto-Summary** computes insights from encounter history — time-of-day distribution, observation streaks, and busiest-day patterns. Everything updates automatically as new encounters arrive.'**
+  /// **'**Auto-Summary** computes insights from encounter history - time-of-day distribution, observation streaks, and busiest-day patterns. Everything updates automatically as new encounters arrive.'**
   String get helpNodedexAutoSummaryBubble;
 
   /// Help bubble text for step nodedex_observation_timeline
@@ -56501,19 +56501,19 @@ abstract class AppLocalizations {
   /// Help bubble text for step nodedex_signal
   ///
   /// In en, this message translates to:
-  /// **'**Signal Records** track the best and most recent SNR and RSSI values. These help you understand link quality — higher SNR and less negative RSSI mean stronger signals.'**
+  /// **'**Signal Records** track the best and most recent SNR and RSSI values. These help you understand link quality - higher SNR and less negative RSSI mean stronger signals.'**
   String get helpNodedexSignalBubble;
 
   /// Help bubble text for step nodedex_social_tag
   ///
   /// In en, this message translates to:
-  /// **'The **Social Tag** is a label you assign to categorize this node — friend, relay, base station, or anything else. It\'s your personal metadata, never shared over the mesh.'**
+  /// **'The **Social Tag** is a label you assign to categorize this node - friend, relay, base station, or anything else. It\'s your personal metadata, never shared over the mesh.'**
   String get helpNodedexSocialTagBubble;
 
   /// Help bubble text for step nodedex_note
   ///
   /// In en, this message translates to:
-  /// **'**Your Note** is a free-text field for anything you want to remember about this node. Location hints, operator name, antenna type — whatever helps you.'**
+  /// **'**Your Note** is a free-text field for anything you want to remember about this node. Location hints, operator name, antenna type - whatever helps you.'**
   String get helpNodedexNoteBubble;
 
   /// Help bubble text for step nodedex_regions
@@ -56531,31 +56531,31 @@ abstract class AppLocalizations {
   /// Help bubble text for step nodedex_activity_timeline
   ///
   /// In en, this message translates to:
-  /// **'The **Activity Timeline** is a unified chronological feed of everything observed about this node — encounters, messages, presence changes, signals, and milestones.'**
+  /// **'The **Activity Timeline** is a unified chronological feed of everything observed about this node - encounters, messages, presence changes, signals, and milestones.'**
   String get helpNodedexActivityTimelineBubble;
 
   /// Help bubble text for step nodedex_coseen
   ///
   /// In en, this message translates to:
-  /// **'**Co-Seen Links** show nodes frequently observed in the same session as this one. Tap any link to see the full relationship — shared encounters, message counts, and connection strength.'**
+  /// **'**Co-Seen Links** show nodes frequently observed in the same session as this one. Tap any link to see the full relationship - shared encounters, message counts, and connection strength.'**
   String get helpNodedexCoseenBubble;
 
   /// Help bubble text for step nodedex_device
   ///
   /// In en, this message translates to:
-  /// **'**Device Info** shows live telemetry — battery level, hardware model, firmware version, and uptime. This data comes from the node directly and updates in real time.'**
+  /// **'**Device Info** shows live telemetry - battery level, hardware model, firmware version, and uptime. This data comes from the node directly and updates in real time.'**
   String get helpNodedexDeviceBubble;
 
   /// Help bubble text for step album_intro
   ///
   /// In en, this message translates to:
-  /// **'Welcome to the **Collector Album** — a card-collector view of your NodeDex! Every discovered node becomes a collectible card with its sigil, trait, and rarity tier.'**
+  /// **'Welcome to the **Collector Album** - a card-collector view of your NodeDex! Every discovered node becomes a collectible card with its sigil, trait, and rarity tier.'**
   String get helpAlbumIntroBubble;
 
   /// Help bubble text for step album_cover
   ///
   /// In en, this message translates to:
-  /// **'The **Album Cover** is your dashboard — it shows your **Explorer Title**, total nodes, encounters, regions explored, and a rarity breakdown bar. Watch your collection grow!'**
+  /// **'The **Album Cover** is your dashboard - it shows your **Explorer Title**, total nodes, encounters, regions explored, and a rarity breakdown bar. Watch your collection grow!'**
   String get helpAlbumCoverBubble;
 
   /// Help bubble text for step album_grouping
@@ -56573,37 +56573,37 @@ abstract class AppLocalizations {
   /// Help bubble text for step album_interactions
   ///
   /// In en, this message translates to:
-  /// **'**Tap** a card to open the node\'s full profile. **Long-press** to open the **Card Gallery** — a full-screen carousel where you can swipe through cards and tap to flip them over for stats!'**
+  /// **'**Tap** a card to open the node\'s full profile. **Long-press** to open the **Card Gallery** - a full-screen carousel where you can swipe through cards and tap to flip them over for stats!'**
   String get helpAlbumInteractionsBubble;
 
   /// Help bubble text for step album_gallery
   ///
   /// In en, this message translates to:
-  /// **'In the **Card Gallery**, swipe left and right to browse cards. **Tap** a card to flip it — the back shows discovery stats, signal records, encounter count, and patina score. Swipe down to dismiss.'**
+  /// **'In the **Card Gallery**, swipe left and right to browse cards. **Tap** a card to flip it - the back shows discovery stats, signal records, encounter count, and patina score. Swipe down to dismiss.'**
   String get helpAlbumGalleryBubble;
 
   /// Help bubble text for step album_holographic
   ///
   /// In en, this message translates to:
-  /// **'Higher-rarity cards shimmer with a **holographic effect** — the rarer the card, the brighter the glow. This effect respects your **reduce-motion** setting and uses an optimized painter for grid thumbnails.'**
+  /// **'Higher-rarity cards shimmer with a **holographic effect** - the rarer the card, the brighter the glow. This effect respects your **reduce-motion** setting and uses an optimized painter for grid thumbnails.'**
   String get helpAlbumHolographicBubble;
 
   /// Help bubble text for step album_persistence
   ///
   /// In en, this message translates to:
-  /// **'Your album view preference and grouping choice are **saved automatically**. With **Cloud Sync**, your entire collection — sigils, encounters, tags, notes — backs up and syncs across all your devices. Delete the app, get a new phone — your collection is safe and restores on sign-in.'**
+  /// **'Your album view preference and grouping choice are **saved automatically**. With **Cloud Sync**, your entire collection - sigils, encounters, tags, notes - backs up and syncs across all your devices. Delete the app, get a new phone - your collection is safe and restores on sign-in.'**
   String get helpAlbumPersistenceBubble;
 
   /// Help bubble text for step constellation_intro
   ///
   /// In en, this message translates to:
-  /// **'Welcome to the **Constellation** — a star-map of your mesh network! Nodes appear as stars, and lines between them show **co-seen relationships** — nodes observed in the same session.'**
+  /// **'Welcome to the **Constellation** - a star-map of your mesh network! Nodes appear as stars, and lines between them show **co-seen relationships** - nodes observed in the same session.'**
   String get helpConstellationIntroBubble;
 
   /// Help bubble text for step constellation_layout
   ///
   /// In en, this message translates to:
-  /// **'The layout is **force-directed** — nodes that are frequently co-seen cluster together, while isolated nodes drift to the edges. The graph stabilizes after a moment so nothing shifts while you explore.'**
+  /// **'The layout is **force-directed** - nodes that are frequently co-seen cluster together, while isolated nodes drift to the edges. The graph stabilizes after a moment so nothing shifts while you explore.'**
   String get helpConstellationLayoutBubble;
 
   /// Help bubble text for step constellation_interactions
@@ -56627,31 +56627,31 @@ abstract class AppLocalizations {
   /// Help bubble text for step constellation_atmosphere
   ///
   /// In en, this message translates to:
-  /// **'The constellation has its own **Elemental Atmosphere** — subtle starlight and mist particles behind the graph, driven by your real mesh data. It never obstructs the visualization.'**
+  /// **'The constellation has its own **Elemental Atmosphere** - subtle starlight and mist particles behind the graph, driven by your real mesh data. It never obstructs the visualization.'**
   String get helpConstellationAtmosphereBubble;
 
   /// Help bubble text for step constellation_data
   ///
   /// In en, this message translates to:
-  /// **'Co-seen data is built **automatically** from your encounters. The more sessions you observe, the richer the constellation becomes. All relationship data is stored locally — but is **lost if you delete the app**. With **Cloud Sync**, your entire constellation backs up and restores on any device you sign into.'**
+  /// **'Co-seen data is built **automatically** from your encounters. The more sessions you observe, the richer the constellation becomes. All relationship data is stored locally - but is **lost if you delete the app**. With **Cloud Sync**, your entire constellation backs up and restores on any device you sign into.'**
   String get helpConstellationDataBubble;
 
   /// Help bubble text for step cloud_sync_intro
   ///
   /// In en, this message translates to:
-  /// **'**Cloud Sync** is a premium subscription that keeps your mesh data synchronized across all your devices — and serves as your **backup**. Without it, all data lives only on-device and is permanently lost if you delete the app or lose your phone.'**
+  /// **'**Cloud Sync** is a premium subscription that keeps your mesh data synchronized across all your devices - and serves as your **backup**. Without it, all data lives only on-device and is permanently lost if you delete the app or lose your phone.'**
   String get helpCloudSyncIntroBubble;
 
   /// Help bubble text for step cloud_sync_what_syncs
   ///
   /// In en, this message translates to:
-  /// **'Cloud Sync backs up your **NodeDex** (sigils, encounters, social tags, notes, co-seen links), **automations**, **custom widgets**, and **profile**. Reinstall the app, switch phones, or sign in on a second device — your entire mesh identity restores automatically.'**
+  /// **'Cloud Sync backs up your **NodeDex** (sigils, encounters, social tags, notes, co-seen links), **automations**, **custom widgets**, and **profile**. Reinstall the app, switch phones, or sign in on a second device - your entire mesh identity restores automatically.'**
   String get helpCloudSyncWhatSyncsBubble;
 
   /// Help bubble text for step cloud_sync_offline_first
   ///
   /// In en, this message translates to:
-  /// **'The app is **offline-first**. Changes are saved locally to SQLite immediately and queued in an **outbox**. When you are online, the outbox drains to the cloud automatically — no manual sync needed.'**
+  /// **'The app is **offline-first**. Changes are saved locally to SQLite immediately and queued in an **outbox**. When you are online, the outbox drains to the cloud automatically - no manual sync needed.'**
   String get helpCloudSyncOfflineFirstBubble;
 
   /// Help bubble text for step cloud_sync_conflict
@@ -56669,13 +56669,13 @@ abstract class AppLocalizations {
   /// Help bubble text for step cloud_sync_without
   ///
   /// In en, this message translates to:
-  /// **'Without Cloud Sync, all your data stays on-device only. It survives app restarts, but **not** app deletion or a phone reset. You can **export** your NodeDex as JSON for manual backup. Cloud Sync automates this and adds cross-device restore — but the app works fully offline without it.'**
+  /// **'Without Cloud Sync, all your data stays on-device only. It survives app restarts, but **not** app deletion or a phone reset. You can **export** your NodeDex as JSON for manual backup. Cloud Sync automates this and adds cross-device restore - but the app works fully offline without it.'**
   String get helpCloudSyncWithoutBubble;
 
   /// Help bubble text for step aether_intro
   ///
   /// In en, this message translates to:
-  /// **'**Aether** lets you track Meshtastic nodes at altitude! At 35,000 ft, LoRa signals can reach **400+ km** — far beyond typical ground-level range.'**
+  /// **'**Aether** lets you track Meshtastic nodes at altitude! At 35,000 ft, LoRa signals can reach **400+ km** - far beyond typical ground-level range.'**
   String get helpAetherIntroBubble;
 
   /// Help bubble text for step aether_schedule
@@ -56699,7 +56699,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step aether_leaderboard
   ///
   /// In en, this message translates to:
-  /// **'The **leaderboard is global and persistent** — stored in the cloud, not on your device. Rankings survive app reinstalls and are visible to the entire SocialMesh community. Top 3 get gold, silver, and bronze!'**
+  /// **'The **leaderboard is global and persistent** - stored in the cloud, not on your device. Rankings survive app reinstalls and are visible to the entire SocialMesh community. Top 3 get gold, silver, and bronze!'**
   String get helpAetherLeaderboardBubble;
 
   /// Help bubble text for step aether_tips
@@ -56723,7 +56723,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step tak_affiliations
   ///
   /// In en, this message translates to:
-  /// **'Every entity is colored by **standard affiliation** — blue for friendly, red for hostile, green for neutral, yellow for unknown. The icon changes by dimension too: ground, air, sea, or space.'**
+  /// **'Every entity is colored by **standard affiliation** - blue for friendly, red for hostile, green for neutral, yellow for unknown. The icon changes by dimension too: ground, air, sea, or space.'**
   String get helpTakAffiliationsBubble;
 
   /// Help bubble text for step tak_filter
@@ -56735,7 +56735,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step tak_detail
   ///
   /// In en, this message translates to:
-  /// **'Tap any entity to open its **detail screen** — full CoT fields, coordinates, speed, course, and raw XML. Use the map icon to jump straight to its position on the map.'**
+  /// **'Tap any entity to open its **detail screen** - full CoT fields, coordinates, speed, course, and raw XML. Use the map icon to jump straight to its position on the map.'**
   String get helpTakDetailBubble;
 
   /// Help bubble text for step tak_tracking
@@ -56759,7 +56759,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step radio_licence
   ///
   /// In en, this message translates to:
-  /// **'Some regions require an **amateur radio licence** before you can transmit. Check with your local regulatory authority — for example, ACMA in Australia or FCC in the US.'**
+  /// **'Some regions require an **amateur radio licence** before you can transmit. Check with your local regulatory authority - for example, ACMA in Australia or FCC in the US.'**
   String get helpRadioLicenceBubble;
 
   /// Help bubble text for step radio_interference
@@ -56777,7 +56777,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step use_intro
   ///
   /// In en, this message translates to:
-  /// **'SocialMesh is a powerful tool — automations, signals, and mesh messaging give you a lot of capability. With that comes responsibility!'**
+  /// **'SocialMesh is a powerful tool - automations, signals, and mesh messaging give you a lot of capability. With that comes responsibility!'**
   String get helpUseIntroBubble;
 
   /// Help bubble text for step use_lawful
@@ -56807,7 +56807,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step responsibility_intro
   ///
   /// In en, this message translates to:
-  /// **'SocialMesh is designed to be **privacy-first**. Your messages and data stay on your device — we do not store them on any server.'**
+  /// **'SocialMesh is designed to be **privacy-first**. Your messages and data stay on your device - we do not store them on any server.'**
   String get helpResponsibilityIntroBubble;
 
   /// Help bubble text for step responsibility_signals
@@ -56837,7 +56837,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step ft_intro
   ///
   /// In en, this message translates to:
-  /// **'**File Transfers** let you send small files — text, configs, coordinates — directly over LoRa radio. No internet, no servers.'**
+  /// **'**File Transfers** let you send small files - text, configs, coordinates - directly over LoRa radio. No internet, no servers.'**
   String get helpFtIntroBubble;
 
   /// Help bubble text for step ft_how
@@ -56855,7 +56855,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step ft_limit
   ///
   /// In en, this message translates to:
-  /// **'Files are capped at **8 KB**. LoRa is a slow, shared, low-power radio — a single transfer can occupy the channel for up to a minute at long-range settings.'**
+  /// **'Files are capped at **8 KB**. LoRa is a slow, shared, low-power radio - a single transfer can occupy the channel for up to a minute at long-range settings.'**
   String get helpFtLimitBubble;
 
   /// Help bubble text for step ft_beta
@@ -56891,7 +56891,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step ftl_duty
   ///
   /// In en, this message translates to:
-  /// **'EU868 and similar bands impose a **1% duty cycle** — your radio can only transmit for 36 seconds per hour. At SF12, one 8 KB transfer nearly exhausts that entire budget.'**
+  /// **'EU868 and similar bands impose a **1% duty cycle** - your radio can only transmit for 36 seconds per hour. At SF12, one 8 KB transfer nearly exhausts that entire budget.'**
   String get helpFtlDutyBubble;
 
   /// Help bubble text for step ftl_cap
@@ -56909,7 +56909,7 @@ abstract class AppLocalizations {
   /// Section help text for sigil in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'A unique procedural glyph generated from this node\'s identity. The shape, symmetry, and color palette are deterministic — the same node always produces the same sigil. Think of it as a visual fingerprint.'**
+  /// **'A unique procedural glyph generated from this node\'s identity. The shape, symmetry, and color palette are deterministic - the same node always produces the same sigil. Think of it as a visual fingerprint.'**
   String get helpNodeDexSectionSigil;
 
   /// Section help text for trait in nodeDexSectionHelp
@@ -56975,7 +56975,7 @@ abstract class AppLocalizations {
   /// Section help text for coseen in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'Nodes that are frequently observed in the same session as this node. A higher count means these nodes tend to appear together — they may be co-located, part of the same deployment, or carried by the same person. Tap any link to see the full edge detail including shared encounter history and message activity.'**
+  /// **'Nodes that are frequently observed in the same session as this node. A higher count means these nodes tend to appear together - they may be co-located, part of the same deployment, or carried by the same person. Tap any link to see the full edge detail including shared encounter history and message activity.'**
   String get helpNodeDexSectionCoseen;
 
   /// Section help text for device in nodeDexSectionHelp
@@ -56987,13 +56987,13 @@ abstract class AppLocalizations {
   /// Section help text for trait_evidence in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'The observations that most strongly support the primary trait assigned above. Each bullet is a concrete signal drawn from encounter history — co-seen connections, tenure, mobility, signal consistency, and timing. These are the inputs that drove the confidence score.'**
+  /// **'The observations that most strongly support the primary trait assigned above. Each bullet is a concrete signal drawn from encounter history - co-seen connections, tenure, mobility, signal consistency, and timing. These are the inputs that drove the confidence score.'**
   String get helpNodeDexSectionTraitEvidence;
 
   /// Section help text for additional_traits in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'Other behavioral archetypes that also scored for this node, ranked by confidence. A node rarely fits a single archetype perfectly — secondary traits reveal nuance, like an Anchor that also acts as a Beacon, or a Drifter with Sentinel-like stretches.'**
+  /// **'Other behavioral archetypes that also scored for this node, ranked by confidence. A node rarely fits a single archetype perfectly - secondary traits reveal nuance, like an Anchor that also acts as a Beacon, or a Drifter with Sentinel-like stretches.'**
   String get helpNodeDexSectionAdditionalTraits;
 
   /// Info-sheet copy for the Companion card when the selected node is the user's own node. Explains that the companion is local-first.
@@ -57017,13 +57017,13 @@ abstract class AppLocalizations {
   /// Section help text for field_note in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'A short, deterministic journal entry generated from this node\'s identity and primary trait — like a naturalist\'s field observation. The same node always produces the same note; it never changes, and it never travels over the mesh.'**
+  /// **'A short, deterministic journal entry generated from this node\'s identity and primary trait - like a naturalist\'s field observation. The same node always produces the same note; it never changes, and it never travels over the mesh.'**
   String get helpNodeDexSectionFieldNote;
 
   /// Section help text for radio_compatibility in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'Compares your local radio\'s current preset and frequency against the values stamped on this node\'s last observation. Use this to spot mismatches that prevent direct RF reachability — for example, a node observed on a long-range preset while your radio is on short-range.'**
+  /// **'Compares your local radio\'s current preset and frequency against the values stamped on this node\'s last observation. Use this to spot mismatches that prevent direct RF reachability - for example, a node observed on a long-range preset while your radio is on short-range.'**
   String get helpNodeDexSectionRadioCompatibility;
 
   /// Help sheet title for the Radio Compatibility section
@@ -57059,13 +57059,13 @@ abstract class AppLocalizations {
   /// Section help text for album_patina in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'Patina is a composite score reflecting how deeply you have observed a node — encounter frequency, signal quality, co-seen connections, and time since first discovery all contribute. Higher patina means richer visual detail on the card.'**
+  /// **'Patina is a composite score reflecting how deeply you have observed a node - encounter frequency, signal quality, co-seen connections, and time since first discovery all contribute. Higher patina means richer visual detail on the card.'**
   String get helpNodeDexSectionAlbumPatina;
 
   /// Section help text for album_cloud_sync in nodeDexSectionHelp
   ///
   /// In en, this message translates to:
-  /// **'With a Cloud Sync subscription, your entire NodeDex album backs up to the cloud and syncs across devices — sigils, encounters, social tags, notes, co-seen links, and collection progress. If you delete the app or get a new phone, everything restores when you sign back in. Without Cloud Sync, your collection exists only on this device and is lost if the app is removed. You can still export/import as JSON for manual backups.'**
+  /// **'With a Cloud Sync subscription, your entire NodeDex album backs up to the cloud and syncs across devices - sigils, encounters, social tags, notes, co-seen links, and collection progress. If you delete the app or get a new phone, everything restores when you sign back in. Without Cloud Sync, your collection exists only on this device and is lost if the app is removed. You can still export/import as JSON for manual backups.'**
   String get helpNodeDexSectionAlbumCloudSync;
 
   /// Section help text for status in takSectionHelp
@@ -57215,7 +57215,7 @@ abstract class AppLocalizations {
   /// What's new description for Reachability feature
   ///
   /// In en, this message translates to:
-  /// **'Estimate how likely you are to reach each node on your mesh — without sending a single test packet.\n\nReachability passively observes traffic flowing through the network and assigns High, Medium, or Low confidence to every node. Find it in the drawer menu under Mesh.'**
+  /// **'Estimate how likely you are to reach each node on your mesh - without sending a single test packet.\n\nReachability passively observes traffic flowing through the network and assigns High, Medium, or Low confidence to every node. Find it in the drawer menu under Mesh.'**
   String get whatsNewReachabilityDescription;
 
   /// What's new subtitle for version 1.10.0
@@ -57233,7 +57233,7 @@ abstract class AppLocalizations {
   /// What's new description for World Map feature
   ///
   /// In en, this message translates to:
-  /// **'See the entire global Meshtastic network on a single map. Every dot is a node sharing its location — zoom, pan, and tap to explore node details, hardware info, and last-seen times.\n\nNo connection required. The World Map pulls live data from the SocialMesh backend so you can explore the mesh anywhere.'**
+  /// **'See the entire global Meshtastic network on a single map. Every dot is a node sharing its location - zoom, pan, and tap to explore node details, hardware info, and last-seen times.\n\nNo connection required. The World Map pulls live data from the SocialMesh backend so you can explore the mesh anywhere.'**
   String get whatsNewWorldMapDescription;
 
   /// What's new subtitle for version 1.10.1
@@ -57251,7 +57251,7 @@ abstract class AppLocalizations {
   /// What's new description for Presence feature
   ///
   /// In en, this message translates to:
-  /// **'See who is active on your mesh at a glance. Presence shows real-time node activity with intent indicators — whether someone is monitoring, mobile, or at a fixed base station.\n\nFilter by activity level, search by name, and tap any node to see their full profile. Find it in the drawer under Social.'**
+  /// **'See who is active on your mesh at a glance. Presence shows real-time node activity with intent indicators - whether someone is monitoring, mobile, or at a fixed base station.\n\nFilter by activity level, search by name, and tap any node to see their full profile. Find it in the drawer under Social.'**
   String get whatsNewPresenceDescription;
 
   /// What's new subtitle for version 1.11.0
@@ -57269,7 +57269,7 @@ abstract class AppLocalizations {
   /// What's new description for Signals feature
   ///
   /// In en, this message translates to:
-  /// **'Broadcast ephemeral moments to your mesh. Signals are short-lived posts — share text, a photo, or your location with a TTL from 15 minutes up to 24 hours.\n\nNearby signals appear first with proximity badges showing hop count. When they fade, they are gone. True off-grid, ephemeral content.'**
+  /// **'Broadcast ephemeral moments to your mesh. Signals are short-lived posts - share text, a photo, or your location with a TTL from 15 minutes up to 24 hours.\n\nNearby signals appear first with proximity badges showing hop count. When they fade, they are gone. True off-grid, ephemeral content.'**
   String get whatsNewSignalsDescription;
 
   /// What's new subtitle for version 1.13.0
@@ -57287,7 +57287,7 @@ abstract class AppLocalizations {
   /// What's new description for NodeDex feature
   ///
   /// In en, this message translates to:
-  /// **'A living field journal of the mesh world. Every node you discover is automatically recorded with a unique procedural Sigil and a personality Trait derived from real behavior.\n\nFind it in the drawer menu under Social. Filter by trait, search by name or hex ID, and tap any entry to explore its full profile — signal history, discovery timeline, and more.'**
+  /// **'A living field journal of the mesh world. Every node you discover is automatically recorded with a unique procedural Sigil and a personality Trait derived from real behavior.\n\nFind it in the drawer menu under Social. Filter by trait, search by name or hex ID, and tap any entry to explore its full profile - signal history, discovery timeline, and more.'**
   String get whatsNewNodeDexDescription;
 
   /// What's new subtitle for version 1.15.0
@@ -57341,7 +57341,7 @@ abstract class AppLocalizations {
   /// What's new description for Translation Pack feature
   ///
   /// In en, this message translates to:
-  /// **'Translate any mesh message on demand with smart caching and privacy controls. Includes a managed translation allowance, or bring your own OpenAI API key for extended use.\n\nLong-press any message and tap Translate to see the result inline — with smart caching so repeated translations are instant. Now included in the Complete Pack.'**
+  /// **'Translate any mesh message on demand with smart caching and privacy controls. Includes a managed translation allowance, or bring your own OpenAI API key for extended use.\n\nLong-press any message and tap Translate to see the result inline - with smart caching so repeated translations are instant. Now included in the Complete Pack.'**
   String get whatsNewTranslationPackDescription;
 
   /// Notification title for new node discovery
@@ -57909,13 +57909,13 @@ abstract class AppLocalizations {
   /// Error message in automations
   ///
   /// In en, this message translates to:
-  /// **'Webhooks not configured — enable webhooks and set an IFTTT key or custom URL in settings'**
+  /// **'Webhooks not configured - enable webhooks and set an IFTTT key or custom URL in settings'**
   String get automationErrorIftttNotConfigured;
 
   /// Error message in automations
   ///
   /// In en, this message translates to:
-  /// **'Webhook request failed — check network connection'**
+  /// **'Webhook request failed - check network connection'**
   String get automationErrorWebhookFailed;
 
   /// Error message in automations
@@ -58113,7 +58113,7 @@ abstract class AppLocalizations {
   /// Label indicating manual execution bypassed conditions and forced THEN
   ///
   /// In en, this message translates to:
-  /// **'THEN branch forced — conditions not evaluated'**
+  /// **'THEN branch forced - conditions not evaluated'**
   String get automationHistoryDetailManualBypass;
 
   /// Expanded detail note explaining manual run differs from automatic
@@ -58467,7 +58467,7 @@ abstract class AppLocalizations {
   /// Global Layer wizard step 1 body: high-level description of the feature.
   ///
   /// In en, this message translates to:
-  /// **'Your mesh radio connects nearby devices over radio waves — no internet needed. The Global Layer extends that reach by bridging your local mesh to a server (called a broker) over the internet.\n\nThink of it as a portal: messages from your mesh can travel through the portal to reach other meshes connected to the same broker, anywhere in the world.'**
+  /// **'Your mesh radio connects nearby devices over radio waves - no internet needed. The Global Layer extends that reach by bridging your local mesh to a server (called a broker) over the internet.\n\nThink of it as a portal: messages from your mesh can travel through the portal to reach other meshes connected to the same broker, anywhere in the world.'**
   String get globalLayerCopyExplainBody;
 
   /// Explains what Global Layer does: bridges local mesh to internet.
@@ -58491,7 +58491,7 @@ abstract class AppLocalizations {
   /// Wizard step body for MQTT broker configuration.
   ///
   /// In en, this message translates to:
-  /// **'Pick a broker to connect through. Most users should start with the official Meshtastic server — it works out of the box with no setup required.'**
+  /// **'Pick a broker to connect through. Most users should start with the official Meshtastic server - it works out of the box with no setup required.'**
   String get globalLayerCopyBrokerBody;
 
   /// Wizard step title for MQTT topic selection.
@@ -58641,7 +58641,7 @@ abstract class AppLocalizations {
   /// Note about the Mosquitto test broker (e.g. public, no auth).
   ///
   /// In en, this message translates to:
-  /// **'Test broker — not for production use. May have downtime.'**
+  /// **'Test broker - not for production use. May have downtime.'**
   String get mqttBrokerMosquittoNote;
 
   /// Name for the custom/self-hosted MQTT broker option.
@@ -58797,7 +58797,7 @@ abstract class AppLocalizations {
   /// Text displayed in global layer / MQTT
   ///
   /// In en, this message translates to:
-  /// **'No credentials — using anonymous access.'**
+  /// **'No credentials - using anonymous access.'**
   String get globalLayerWizardAnonymousAccess;
 
   /// Text displayed in global layer / MQTT
@@ -59193,7 +59193,7 @@ abstract class AppLocalizations {
   /// Message when a command is rejected because the app is not in the foreground.
   ///
   /// In en, this message translates to:
-  /// **'Action cancelled — app is in background'**
+  /// **'Action cancelled - app is in background'**
   String get lifecycleActionCancelledBackground;
 
   /// Error message when a command requires network and it is unavailable.
@@ -59409,19 +59409,19 @@ abstract class AppLocalizations {
   /// Error shown when a DM send fails because the global SIP airtime budget (1024 bytes / 60s) is exhausted. Distinct from per-peer rate limiting — this is the shared mesh budget.
   ///
   /// In en, this message translates to:
-  /// **'Sending paused — mesh bandwidth limit reached. Try again shortly.'**
+  /// **'Sending paused - mesh bandwidth limit reached. Try again shortly.'**
   String get sipDmBudgetExhausted;
 
   /// Error shown when a DM send fails because the local user has blocked the recipient. Surfaces the unblock path (SIP Hub Blocked section) so the user can recover from the state if they hit it accidentally.
   ///
   /// In en, this message translates to:
-  /// **'You\'ve blocked this node — unblock from SIP Hub to send messages again.'**
+  /// **'You\'ve blocked this node - unblock from SIP Hub to send messages again.'**
   String get sipDmPeerBlocked;
 
   /// Error shown when a DM send fails because the per-peer × per-kind token bucket (text 6/60s, sketch 2/60s, reaction 6/60s) ran out. Distinct from sipDmBudgetExhausted, which is the global airtime cap.
   ///
   /// In en, this message translates to:
-  /// **'Sending too fast — slow down for a moment.'**
+  /// **'Sending too fast - slow down for a moment.'**
   String get sipDmPeerRateLimited;
 
   /// Message when trying to send on a closed session.
@@ -59481,7 +59481,7 @@ abstract class AppLocalizations {
   /// Body of the DM overflow Block confirmation. Calls out that history is preserved (different from Remove).
   ///
   /// In en, this message translates to:
-  /// **'Future messages and handshake requests from this node will be silently dropped. They won\'t be notified. Your existing conversation history stays on this device — use Remove conversation to clear it.'**
+  /// **'Future messages and handshake requests from this node will be silently dropped. They won\'t be notified. Your existing conversation history stays on this device - use Remove conversation to clear it.'**
   String get sipDmBlockConfirmBody;
 
   /// Destructive confirm button label inside the DM Block confirmation sheet.
@@ -59547,7 +59547,7 @@ abstract class AppLocalizations {
   /// Confirmation snackbar shown after the user resets the secure session.
   ///
   /// In en, this message translates to:
-  /// **'Secure session reset — next message will renegotiate keys'**
+  /// **'Secure session reset - next message will renegotiate keys'**
   String get sipDmActionResetSnack;
 
   /// Tab label inside the DM composer that opens the SIP Play game picker. Shown only when the peer advertises dmPlayV1.
@@ -59739,7 +59739,7 @@ abstract class AppLocalizations {
   /// Title on a SIP Play bubble for an inbound offer awaiting Accept / Decline. {game} is the localised game name.
   ///
   /// In en, this message translates to:
-  /// **'{game} — they want to play'**
+  /// **'{game} - they want to play'**
   String sipPlayOfferIncomingTitle(String game);
 
   /// Accept button on an inbound SIP Play offer bubble.
@@ -59889,7 +59889,7 @@ abstract class AppLocalizations {
   /// Body copy under the Signal panel title explaining the no-audio-on-the-wire model.
   ///
   /// In en, this message translates to:
-  /// **'A short musical phrase or a Morse message — synthesized locally on both sides.'**
+  /// **'A short musical phrase or a Morse message - synthesized locally on both sides.'**
   String get sipSignalPanelSubtitle;
 
   /// Sub-mode label for the musical-phrase composer.
@@ -59985,7 +59985,7 @@ abstract class AppLocalizations {
   /// Composer footer when the encoded envelope exceeds maxEnvelopeBytes. Send is disabled in this state.
   ///
   /// In en, this message translates to:
-  /// **'Signal • {bytes} B — too large to send'**
+  /// **'Signal • {bytes} B - too large to send'**
   String sipSignalSizeOverBudget(int bytes);
 
   /// Badge shown above the tone pads when the phrase has reached its hard cap. Note pads are disabled but Clear / Preview / Send remain active.
@@ -60009,7 +60009,7 @@ abstract class AppLocalizations {
   /// Helper line below the tap-Morse keypad explaining the input model.
   ///
   /// In en, this message translates to:
-  /// **'Tap dots and dashes — Letter finalises a glyph, Space adds a word gap.'**
+  /// **'Tap dots and dashes - Letter finalises a glyph, Space adds a word gap.'**
   String get sipSignalMorseTapHint;
 
   /// Placeholder shown above the tap-Morse keypad before any input.
@@ -60063,7 +60063,7 @@ abstract class AppLocalizations {
   /// Inline notice when the tap-Morse input contains tokens not in the international Morse table.
   ///
   /// In en, this message translates to:
-  /// **'Unknown sequences are shown as ? — they\'re skipped on send.'**
+  /// **'Unknown sequences are shown as ? - they\'re skipped on send.'**
   String get sipSignalMorseTapInvalidNote;
 
   /// Label for the example button that loads the iconic 5-note 'Close Encounters of the Third Kind' motif into the Tone phrase composer.
@@ -60117,7 +60117,7 @@ abstract class AppLocalizations {
   /// Inline notice shown when the user types unsupported characters.
   ///
   /// In en, this message translates to:
-  /// **'Some characters won\'t be sent — only A–Z, 0–9, space, and . , ? ! / @ are allowed.'**
+  /// **'Some characters won\'t be sent - only A–Z, 0–9, space, and . , ? ! / @ are allowed.'**
   String get sipSignalMorseUnsupportedNote;
 
   /// Section label inside an inbound Signal bubble for the musical-phrase variant.
@@ -60141,7 +60141,7 @@ abstract class AppLocalizations {
   /// Hint shown above the SIP Ink canvas explaining the airtime constraint.
   ///
   /// In en, this message translates to:
-  /// **'Draw a quick sketch — kept tiny so it fits on the mesh.'**
+  /// **'Draw a quick sketch - kept tiny so it fits on the mesh.'**
   String get sipInkComposerHint;
 
   /// Hint replacing sipInkComposerHint when the user has drawn past the SIP Ink budget — explains that overflow strokes are visible but will be dropped on send.
@@ -60201,7 +60201,7 @@ abstract class AppLocalizations {
   /// Error shown when a sketch can't be reduced to fit the airtime budget.
   ///
   /// In en, this message translates to:
-  /// **'Sketch can\'t fit on the mesh — simplify your strokes.'**
+  /// **'Sketch can\'t fit on the mesh - simplify your strokes.'**
   String get sipInkBlocked;
 
   /// Button label to open an ephemeral DM with a peer.
@@ -60501,7 +60501,7 @@ abstract class AppLocalizations {
   /// Body of the Block confirmation sheet shown on the SIP Hub incoming handshake request card.
   ///
   /// In en, this message translates to:
-  /// **'Future messages and handshake requests from this node will be silently dropped. They won\'t be notified — they\'ll see your node as unreachable. You can unblock from Trust & Safety settings later.'**
+  /// **'Future messages and handshake requests from this node will be silently dropped. They won\'t be notified - they\'ll see your node as unreachable. You can unblock from Trust & Safety settings later.'**
   String get sipHubBlockConfirmBody;
 
   /// Destructive confirm button label inside the Block confirmation sheet.
@@ -60693,7 +60693,7 @@ abstract class AppLocalizations {
   /// Body of the compatibility educational tile.
   ///
   /// In en, this message translates to:
-  /// **'Nearby radios must use compatible channel and preset settings to hear you. Move your group together when changing — solo changes can hide you from peers.'**
+  /// **'Nearby radios must use compatible channel and preset settings to hear you. Move your group together when changing - solo changes can hide you from peers.'**
   String get meshCapacityEducationCompatBody;
 
   /// Label for the reason-code row in the snapshot detail table.
@@ -60807,7 +60807,7 @@ abstract class AppLocalizations {
   /// Empty-state tagline shown when the local mesh has no RF evidence yet (variant 2).
   ///
   /// In en, this message translates to:
-  /// **'MQTT-only nodes don\'t count — only direct RF observations do.'**
+  /// **'MQTT-only nodes don\'t count - only direct RF observations do.'**
   String get meshCapacityQuietMeshTagline2;
 
   /// Empty-state tagline shown when the local mesh has no RF evidence yet (variant 3).
@@ -61149,7 +61149,7 @@ abstract class AppLocalizations {
   /// SIP Hub animated scanning state tagline 3. Two lines separated by \n; explains background discovery.
   ///
   /// In en, this message translates to:
-  /// **'Peers show up automatically when their discovery beacons\nreach your node — no need to tap anything to find them.'**
+  /// **'Peers show up automatically when their discovery beacons\nreach your node - no need to tap anything to find them.'**
   String get sipHubScanningTagline3;
 
   /// SIP Hub animated scanning state tagline 4. Two lines separated by \n; offers a tip when the area is quiet.
@@ -61191,7 +61191,7 @@ abstract class AppLocalizations {
   /// Help bubble: SIP Hub handshake step.
   ///
   /// In en, this message translates to:
-  /// **'Once you see a peer, tap **Handshake** to exchange identity. After the handshake you can open an **end-to-end encrypted** ephemeral DM — no servers, no accounts.'**
+  /// **'Once you see a peer, tap **Handshake** to exchange identity. After the handshake you can open an **end-to-end encrypted** ephemeral DM - no servers, no accounts.'**
   String get helpSipHubHandshakeBubble;
 
   /// Help bubble: SIP Hub privacy step.
@@ -62391,19 +62391,19 @@ abstract class AppLocalizations {
   /// Animated scanning state tagline 2.
   ///
   /// In en, this message translates to:
-  /// **'Tap Scan to send a rollcall — wakes up nearby peers'**
+  /// **'Tap Scan to send a rollcall - wakes up nearby peers'**
   String get meshExplorerScanningTagline2;
 
   /// Animated scanning state tagline 3.
   ///
   /// In en, this message translates to:
-  /// **'Peers appear anonymously — handshake to identify them'**
+  /// **'Peers appear anonymously - handshake to identify them'**
   String get meshExplorerScanningTagline3;
 
   /// Animated scanning state tagline 4.
   ///
   /// In en, this message translates to:
-  /// **'Radio range matters — try moving closer to the mesh'**
+  /// **'Radio range matters - try moving closer to the mesh'**
   String get meshExplorerScanningTagline4;
 
   /// Help overflow menu item label for the Mesh Explorer screen.
@@ -62427,7 +62427,7 @@ abstract class AppLocalizations {
   /// Help bubble: Mesh Explorer intro step.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to **Mesh Explorer**! This shows all SocialMesh-capable peers currently in radio range. Anonymous peers appear instantly — no handshake needed.'**
+  /// **'Welcome to **Mesh Explorer**! This shows all SocialMesh-capable peers currently in radio range. Anonymous peers appear instantly - no handshake needed.'**
   String get helpMeshExplorerIntroBubble;
 
   /// Help bubble: Mesh Explorer peers step.
@@ -62439,7 +62439,7 @@ abstract class AppLocalizations {
   /// Help bubble: Mesh Explorer services step.
   ///
   /// In en, this message translates to:
-  /// **'The **Services** section shows what nearby peers are offering — Bulletin Boards, Profiles, and more. Tap a service tile to interact with it.'**
+  /// **'The **Services** section shows what nearby peers are offering - Bulletin Boards, Profiles, and more. Tap a service tile to interact with it.'**
   String get helpMeshExplorerServicesBubble;
 
   /// Help bubble: Mesh Explorer scan step.
@@ -62475,13 +62475,13 @@ abstract class AppLocalizations {
   /// Notification body when it is the local user's turn in a SIP Play game. {gameName} is a localised game name like 'Tic-Tac-Toe' or 'Connect Four'.
   ///
   /// In en, this message translates to:
-  /// **'{gameName} — tap to play your move.'**
+  /// **'{gameName} - tap to play your move.'**
   String notificationSipPlayTurnBody(String gameName);
 
   /// Notification body for SIP Play turn when the gameType is unknown/unsupported on this build (forward-compat placeholder).
   ///
   /// In en, this message translates to:
-  /// **'It\'s your move — tap to play.'**
+  /// **'It\'s your move - tap to play.'**
   String get notificationSipPlayTurnBodyUnknownGame;
 
   /// Notification channel name for SIP Play turn-notifications.
@@ -63993,7 +63993,7 @@ abstract class AppLocalizations {
   /// Subtitle explaining that terrain elevation is being used as a fallback for antenna altitude.
   ///
   /// In en, this message translates to:
-  /// **'No GPS altitude — ground level assumed for one or both points.'**
+  /// **'No GPS altitude - ground level assumed for one or both points.'**
   String get mapTerrainProfileUsingTerrainAltitudeSubtitle;
 
   /// Label showing how many elevation samples were loaded.
@@ -64149,7 +64149,7 @@ abstract class AppLocalizations {
   /// LOS result explanation when clearance is below the Fresnel threshold.
   ///
   /// In en, this message translates to:
-  /// **'Marginal clearance ({clearance}m) — below the recommended {required}m Fresnel clearance. Terrain/obstacles not considered.'**
+  /// **'Marginal clearance ({clearance}m) - below the recommended {required}m Fresnel clearance. Terrain/obstacles not considered.'**
   String losExplanationMarginal(String clearance, String required);
 
   /// Tooltip for card view mode toggle
@@ -64179,25 +64179,25 @@ abstract class AppLocalizations {
   /// Legend entry for green active status dot
   ///
   /// In en, this message translates to:
-  /// **'Active — heard recently'**
+  /// **'Active - heard recently'**
   String get nodesScreenLegendStatusActive;
 
   /// Legend entry for yellow fading status dot
   ///
   /// In en, this message translates to:
-  /// **'Fading — not heard for a while'**
+  /// **'Fading - not heard for a while'**
   String get nodesScreenLegendStatusFading;
 
   /// Legend entry for grey stale status dot
   ///
   /// In en, this message translates to:
-  /// **'Stale — last heard long ago'**
+  /// **'Stale - last heard long ago'**
   String get nodesScreenLegendStatusStale;
 
   /// Legend entry for dim unknown status dot
   ///
   /// In en, this message translates to:
-  /// **'Unknown — never heard directly'**
+  /// **'Unknown - never heard directly'**
   String get nodesScreenLegendStatusUnknown;
 
   /// Legend entry for 4-bar signal
@@ -64221,7 +64221,7 @@ abstract class AppLocalizations {
   /// Legend entry for 0-hop direct connection
   ///
   /// In en, this message translates to:
-  /// **'Direct — no hops'**
+  /// **'Direct - no hops'**
   String get nodesScreenLegendHopsDirect;
 
   /// Legend entry for 1-hop node
@@ -64437,7 +64437,7 @@ abstract class AppLocalizations {
   /// Snackbar message when the user releases the PTT button too quickly
   ///
   /// In en, this message translates to:
-  /// **'Recording too short — hold longer'**
+  /// **'Recording too short - hold longer'**
   String get voiceMessageTooShort;
 
   /// Snackbar message after a voice message is successfully transmitted
@@ -65583,7 +65583,7 @@ abstract class AppLocalizations {
   /// Error message when translation rate limit is exceeded
   ///
   /// In en, this message translates to:
-  /// **'Too many translations — try again shortly'**
+  /// **'Too many translations - try again shortly'**
   String get translateRateLimited;
 
   /// Error message when the target or source language is not supported
@@ -65613,7 +65613,7 @@ abstract class AppLocalizations {
   /// Banner text for translation premium preview mode
   ///
   /// In en, this message translates to:
-  /// **'Preview Mode — Upgrade to translate messages'**
+  /// **'Preview Mode - Upgrade to translate messages'**
   String get premiumPreviewTranslation;
 
   /// Headline for translation pack premium sheet
@@ -65625,7 +65625,7 @@ abstract class AppLocalizations {
   /// Description for translation pack premium sheet
   ///
   /// In en, this message translates to:
-  /// **'Unlock on-demand message translation with smart caching and privacy controls — includes managed allowance, or bring your own API key'**
+  /// **'Unlock on-demand message translation with smart caching and privacy controls - includes managed allowance, or bring your own API key'**
   String get premiumDescTranslation;
 
   /// Subtitle for translation pack upsell sheet
@@ -65655,7 +65655,7 @@ abstract class AppLocalizations {
   /// Translation pack benefit description - auto detect
   ///
   /// In en, this message translates to:
-  /// **'Automatically detects the source language — no manual selection needed'**
+  /// **'Automatically detects the source language - no manual selection needed'**
   String get premiumBenefitAutoDetectDesc;
 
   /// Translation pack benefit title - smart cache
@@ -65673,7 +65673,7 @@ abstract class AppLocalizations {
   /// Error message when managed translation quota is exhausted
   ///
   /// In en, this message translates to:
-  /// **'Managed translation allowance used — switch to your own OpenAI API key in settings'**
+  /// **'Managed translation allowance used - switch to your own OpenAI API key in settings'**
   String get translateQuotaExhausted;
 
   /// Error message when strict privacy blocks managed provider
@@ -65691,7 +65691,7 @@ abstract class AppLocalizations {
   /// Error message when BYO provider selected but no key set
   ///
   /// In en, this message translates to:
-  /// **'BYO API key required — configure in settings'**
+  /// **'BYO API key required - configure in settings'**
   String get translateByoKeyMissing;
 
   /// Error message when content is not eligible for translation
@@ -65715,7 +65715,7 @@ abstract class AppLocalizations {
   /// Updated Complete Pack subtitle now that translation is included
   ///
   /// In en, this message translates to:
-  /// **'Every feature, one price — including translation'**
+  /// **'Every feature, one price - including translation'**
   String get subscriptionCompletePackSubtitleWithTranslation;
 
   /// Title for the translation settings screen
@@ -65739,7 +65739,7 @@ abstract class AppLocalizations {
   /// Description for managed provider mode
   ///
   /// In en, this message translates to:
-  /// **'Managed OpenAI translation — included allowance'**
+  /// **'Managed OpenAI translation - included allowance'**
   String get translationSettingsProviderManagedDesc;
 
   /// Option label for BYO provider mode
@@ -65751,7 +65751,7 @@ abstract class AppLocalizations {
   /// Description for BYO provider mode
   ///
   /// In en, this message translates to:
-  /// **'Use your own OpenAI API key — unlimited'**
+  /// **'Use your own OpenAI API key - unlimited'**
   String get translationSettingsProviderByoDesc;
 
   /// Option label for disabled provider mode
@@ -65793,7 +65793,7 @@ abstract class AppLocalizations {
   /// Description for private privacy mode
   ///
   /// In en, this message translates to:
-  /// **'Cache channels only — DM translations are not stored'**
+  /// **'Cache channels only - DM translations are not stored'**
   String get translationSettingsPrivacyPrivateDesc;
 
   /// Option label for strict privacy mode
@@ -65805,7 +65805,7 @@ abstract class AppLocalizations {
   /// Description for strict privacy mode
   ///
   /// In en, this message translates to:
-  /// **'BYO provider only — no caching, no managed server'**
+  /// **'BYO provider only - no caching, no managed server'**
   String get translationSettingsPrivacyStrictDesc;
 
   /// Label for the BYO API key entry field
@@ -66225,7 +66225,7 @@ abstract class AppLocalizations {
   /// Error when airtime budget is exhausted
   ///
   /// In en, this message translates to:
-  /// **'Sending paused — mesh bandwidth limit reached. Try again shortly.'**
+  /// **'Sending paused - mesh bandwidth limit reached. Try again shortly.'**
   String get meshConversationBudgetExhausted;
 
   /// Message when a DM session is closed
@@ -66321,7 +66321,7 @@ abstract class AppLocalizations {
   /// Description for retrying phase
   ///
   /// In en, this message translates to:
-  /// **'Retrying automatically — no action needed.'**
+  /// **'Retrying automatically - no action needed.'**
   String get deliveryPhaseRetryingDesc;
 
   /// Delivery phase: resuming previous transfer
@@ -66393,13 +66393,13 @@ abstract class AppLocalizations {
   /// Hint that the user can leave and delivery continues
   ///
   /// In en, this message translates to:
-  /// **'Safe to close — delivery continues in the background'**
+  /// **'Safe to close - delivery continues in the background'**
   String get deliverySafeToClose;
 
   /// Hint that user can navigate away
   ///
   /// In en, this message translates to:
-  /// **'You can leave — transfer will continue'**
+  /// **'You can leave - transfer will continue'**
   String get deliverySafeToLeave;
 
   /// Multi-part transfer progress
@@ -67197,7 +67197,7 @@ abstract class AppLocalizations {
   /// Description for the condition branching automation feature in What's New.
   ///
   /// In en, this message translates to:
-  /// **'Automations now support structured condition trees with IF / THEN / ELSE logic. Build complex rules that branch based on multiple conditions — battery level, node status, time of day, and more.\n\nEach run shows exactly which branch was taken and why, with a detailed execution history you can inspect anytime.'**
+  /// **'Automations now support structured condition trees with IF / THEN / ELSE logic. Build complex rules that branch based on multiple conditions - battery level, node status, time of day, and more.\n\nEach run shows exactly which branch was taken and why, with a detailed execution history you can inspect anytime.'**
   String get whatsNewAutomationBranchingDescription;
 
   /// CTA button label to open the Automations screen from What's New.
@@ -67215,7 +67215,7 @@ abstract class AppLocalizations {
   /// Description for the reaction grouping improvement in What's New.
   ///
   /// In en, this message translates to:
-  /// **'Message reactions are now grouped by emoji — if five people send a thumbs-up, you see one compact chip instead of five. Long-press any reaction to see every sender.\n\nReactions also wrap to the next line instead of overflowing off-screen, keeping the conversation tidy.'**
+  /// **'Message reactions are now grouped by emoji - if five people send a thumbs-up, you see one compact chip instead of five. Long-press any reaction to see every sender.\n\nReactions also wrap to the next line instead of overflowing off-screen, keeping the conversation tidy.'**
   String get whatsNewReactionGroupingDescription;
 
   /// Subtitle for the What's New popup for version 1.36.0.
@@ -67233,7 +67233,7 @@ abstract class AppLocalizations {
   /// Description for the Device Shop feature in What's New.
   ///
   /// In en, this message translates to:
-  /// **'Browse Meshtastic-compatible hardware from official partners and trusted sellers — all in one place. Filter by category, sort by price or new arrivals, and tap through to the seller\'s store to buy.\n\nPurchases happen on the seller\'s site; SocialMesh never handles payment, shipping, or returns. Find it in the drawer menu under Tools.'**
+  /// **'Browse Meshtastic-compatible hardware from official partners and trusted sellers - all in one place. Filter by category, sort by price or new arrivals, and tap through to the seller\'s store to buy.\n\nPurchases happen on the seller\'s site; SocialMesh never handles payment, shipping, or returns. Find it in the drawer menu under Tools.'**
   String get whatsNewDeviceShopDescription;
 
   /// CTA button label to open the Device Shop screen from What's New.
@@ -67599,7 +67599,7 @@ abstract class AppLocalizations {
   /// Body of the second onboarding card — explains the status line + pulsing-button cue.
   ///
   /// In en, this message translates to:
-  /// **'Above your pet, a single status line says exactly what it needs and names the button to tap — Charge when hungry, Resonate when lonely, Stabilise when messy, Purge when sick, Dim at bedtime. The matching button also pulses so you can\'t miss it.'**
+  /// **'Above your pet, a single status line says exactly what it needs and names the button to tap - Charge when hungry, Resonate when lonely, Stabilise when messy, Purge when sick, Dim at bedtime. The matching button also pulses so you can\'t miss it.'**
   String get petOnboardingPage2Body;
 
   /// Title of the third onboarding card.
@@ -67611,7 +67611,7 @@ abstract class AppLocalizations {
   /// Body of the third onboarding card.
   ///
   /// In en, this message translates to:
-  /// **'Tap Inspect to see energy, mood, stability and recent events. Your pet won\'t time-out if you miss a day, but consistent care earns it a better branch — open the help sheet anytime for the full action guide.'**
+  /// **'Tap Inspect to see energy, mood, stability and recent events. Your pet won\'t time-out if you miss a day, but consistent care earns it a better branch - open the help sheet anytime for the full action guide.'**
   String get petOnboardingPage3Body;
 
   /// Next button on onboarding cards.
@@ -67647,7 +67647,7 @@ abstract class AppLocalizations {
   /// Intro paragraph above the action list on the Pet help sheet.
   ///
   /// In en, this message translates to:
-  /// **'Each action does one specific thing. When the pet beeps for attention (pulsing icon), tap the matching action — Feed for hunger, Play for loneliness, Clean for a mess, Sleep for bedtime, or Medicine for sickness — and the beep clears automatically.'**
+  /// **'Each action does one specific thing. When the pet beeps for attention (pulsing icon), tap the matching action - Feed for hunger, Play for loneliness, Clean for a mess, Sleep for bedtime, or Medicine for sickness - and the beep clears automatically.'**
   String get petGuideSheetIntro;
 
   /// Help-sheet body text for the Charge action.
@@ -67659,7 +67659,7 @@ abstract class AppLocalizations {
   /// Help-sheet body text for the Surge action.
   ///
   /// In en, this message translates to:
-  /// **'Overfeeds. Long-press Feed for +5 energy, but adds instability — too many overfeeds can make the pet sick. Answers a Hungry call.'**
+  /// **'Overfeeds. Long-press Feed for +5 energy, but adds instability - too many overfeeds can make the pet sick. Answers a Hungry call.'**
   String get petActionSurgeDescription;
 
   /// Help-sheet body text for the Resonate action.
@@ -67839,37 +67839,37 @@ abstract class AppLocalizations {
   /// Attention call banner copy.
   ///
   /// In en, this message translates to:
-  /// **'Low on energy — Feed or Overfeed to answer.'**
+  /// **'Low on energy - Feed or Overfeed to answer.'**
   String get petCallBannerHungry;
 
   /// Attention call banner copy.
   ///
   /// In en, this message translates to:
-  /// **'Wants attention — Play to answer.'**
+  /// **'Wants attention - Play to answer.'**
   String get petCallBannerLonely;
 
   /// Attention call banner copy.
   ///
   /// In en, this message translates to:
-  /// **'Feeling unwell — Medicine to answer.'**
+  /// **'Feeling unwell - Medicine to answer.'**
   String get petCallBannerSick;
 
   /// Attention call banner copy.
   ///
   /// In en, this message translates to:
-  /// **'Made a mess — Clean to remove.'**
+  /// **'Made a mess - Clean to remove.'**
   String get petCallBannerHygiene;
 
   /// Attention call banner copy.
   ///
   /// In en, this message translates to:
-  /// **'It\'s almost time to rest — Sleep to answer.'**
+  /// **'It\'s almost time to rest - Sleep to answer.'**
   String get petCallBannerBedtime;
 
   /// Attention call banner copy.
   ///
   /// In en, this message translates to:
-  /// **'Restless — Play to answer.'**
+  /// **'Restless - Play to answer.'**
   String get petCallBannerBoredom;
 
   /// Title of the Inspect bottom sheet.
@@ -68157,7 +68157,7 @@ abstract class AppLocalizations {
   /// Dormant-state description.
   ///
   /// In en, this message translates to:
-  /// **'Begin a new lineage — your next pet inherits a fresh seed tied to this node.'**
+  /// **'Begin a new lineage - your next pet inherits a fresh seed tied to this node.'**
   String get petDormantDescription;
 
   /// Title of the pet/companion section on a peer's NodeDex detail screen.
@@ -68295,67 +68295,67 @@ abstract class AppLocalizations {
   /// Status-line message when the pet is sick (passive sickness, no attention call yet).
   ///
   /// In en, this message translates to:
-  /// **'Sick — tap [[Purge]] to heal.'**
+  /// **'Sick - tap [[Purge]] to heal.'**
   String get petAdvisorySick;
 
   /// Status-line message when an active attention call is firing for low energy.
   ///
   /// In en, this message translates to:
-  /// **'Hungry — tap [[Charge]] to feed.'**
+  /// **'Hungry - tap [[Charge]] to feed.'**
   String get petAdvisoryCallHungry;
 
   /// Status-line message when an active attention call is firing for low mood.
   ///
   /// In en, this message translates to:
-  /// **'Lonely — tap [[Resonate]] to play.'**
+  /// **'Lonely - tap [[Resonate]] to play.'**
   String get petAdvisoryCallLonely;
 
   /// Status-line message when an active attention call is firing because the pet is sick.
   ///
   /// In en, this message translates to:
-  /// **'Sick — tap [[Purge]] to heal.'**
+  /// **'Sick - tap [[Purge]] to heal.'**
   String get petAdvisoryCallSick;
 
   /// Status-line message when an active attention call is firing for accumulated hygiene artefacts.
   ///
   /// In en, this message translates to:
-  /// **'Messy — tap [[Stabilise]] to clean up.'**
+  /// **'Messy - tap [[Stabilise]] to clean up.'**
   String get petAdvisoryCallHygiene;
 
   /// Status-line message when an active attention call is firing during the sleep window.
   ///
   /// In en, this message translates to:
-  /// **'Bedtime — tap [[Dim]] to tuck in.'**
+  /// **'Bedtime - tap [[Dim]] to tuck in.'**
   String get petAdvisoryCallBedtime;
 
   /// Status-line message when an active attention call is firing for generic boredom.
   ///
   /// In en, this message translates to:
-  /// **'Bored — tap [[Resonate]] to engage.'**
+  /// **'Bored - tap [[Resonate]] to engage.'**
   String get petAdvisoryCallBoredom;
 
   /// Status-line message when hygiene artefacts have reached the sickness threshold but the pet isn't sick yet.
   ///
   /// In en, this message translates to:
-  /// **'Getting messy — tap [[Stabilise]] before they get sick.'**
+  /// **'Getting messy - tap [[Stabilise]] before they get sick.'**
   String get petAdvisoryHygieneImminent;
 
   /// Status-line warning when energy is below the call threshold but no call has fired yet.
   ///
   /// In en, this message translates to:
-  /// **'Energy low — tap [[Charge]] soon.'**
+  /// **'Energy low - tap [[Charge]] soon.'**
   String get petAdvisoryEnergyLow;
 
   /// Status-line warning when mood is below the call threshold but no call has fired yet.
   ///
   /// In en, this message translates to:
-  /// **'Mood low — tap [[Resonate]] soon.'**
+  /// **'Mood low - tap [[Resonate]] soon.'**
   String get petAdvisoryMoodLow;
 
   /// Status-line nudge when there's at least one hygiene artefact but below the sickness threshold.
   ///
   /// In en, this message translates to:
-  /// **'Small mess — tap [[Stabilise]] when you can.'**
+  /// **'Small mess - tap [[Stabilise]] when you can.'**
   String get petAdvisoryHygieneMild;
 
   /// Status-line message when the pet is asleep. No action.
@@ -68367,7 +68367,7 @@ abstract class AppLocalizations {
   /// Status-line hint during the sleep window when the pet is awake.
   ///
   /// In en, this message translates to:
-  /// **'Bedtime — tap [[Dim]] to tuck in.'**
+  /// **'Bedtime - tap [[Dim]] to tuck in.'**
   String get petAdvisoryBedtime;
 
   /// Status-line message when the pet has no active needs.
@@ -68421,7 +68421,7 @@ abstract class AppLocalizations {
   /// Banner subtitle for the Luminous branch.
   ///
   /// In en, this message translates to:
-  /// **'Pristine care paid off — your creature has taken its brightest form.'**
+  /// **'Pristine care paid off - your creature has taken its brightest form.'**
   String get petBranchBannerSubtitleLuminous;
 
   /// Banner title for the Steady branch.
@@ -68457,7 +68457,7 @@ abstract class AppLocalizations {
   /// Banner subtitle for the Dimmed branch.
   ///
   /// In en, this message translates to:
-  /// **'Neglect has dimmed your creature — it may still be revived with steady care.'**
+  /// **'Neglect has dimmed your creature - it may still be revived with steady care.'**
   String get petBranchBannerSubtitleDimmed;
 
   /// Banner title for the adult→elder transition.
@@ -68583,7 +68583,7 @@ abstract class AppLocalizations {
   /// Shown inside the current stage's section when nothing has happened yet.
   ///
   /// In en, this message translates to:
-  /// **'Quiet stretch — no events yet.'**
+  /// **'Quiet stretch - no events yet.'**
   String get petTimelineQuietCurrent;
 
   /// Multiplier pill for grouped minor events, e.g. 3× for three charges within the grouping window.
@@ -68685,7 +68685,7 @@ abstract class AppLocalizations {
   /// Expanded detail for the re-sigilled event.
   ///
   /// In en, this message translates to:
-  /// **'Re-sigilled — a new creature begins.'**
+  /// **'Re-sigilled - a new creature begins.'**
   String get petTimelineDetailReSigilled;
 
   /// Expanded detail for sickness-onset events.
@@ -68799,37 +68799,37 @@ abstract class AppLocalizations {
   /// Attention call body for hungry reason.
   ///
   /// In en, this message translates to:
-  /// **'Low energy — tap Charge.'**
+  /// **'Low energy - tap Charge.'**
   String get notificationPetAttentionHungryBody;
 
   /// Attention call body for lonely reason.
   ///
   /// In en, this message translates to:
-  /// **'Mood is drifting — tap Resonate.'**
+  /// **'Mood is drifting - tap Resonate.'**
   String get notificationPetAttentionLonelyBody;
 
   /// Attention call body for sick reason.
   ///
   /// In en, this message translates to:
-  /// **'Feeling unwell — tap Purge.'**
+  /// **'Feeling unwell - tap Purge.'**
   String get notificationPetAttentionSickBody;
 
   /// Attention call body for hygiene reason.
   ///
   /// In en, this message translates to:
-  /// **'Field needs stabilising — tap Stabilise.'**
+  /// **'Field needs stabilising - tap Stabilise.'**
   String get notificationPetAttentionHygieneBody;
 
   /// Attention call body for bedtime reason.
   ///
   /// In en, this message translates to:
-  /// **'Almost bedtime — tap Dim.'**
+  /// **'Almost bedtime - tap Dim.'**
   String get notificationPetAttentionBedtimeBody;
 
   /// Attention call body for boredom reason.
   ///
   /// In en, this message translates to:
-  /// **'Restless — tap Resonate.'**
+  /// **'Restless - tap Resonate.'**
   String get notificationPetAttentionBoredomBody;
 
   /// Title for the Reticulum tunnel diagnostics screen.
@@ -69585,31 +69585,31 @@ abstract class AppLocalizations {
   /// Counter: fragments rejected because the 2-byte header could not be parsed.
   ///
   /// In en, this message translates to:
-  /// **'Dropped — decode error'**
+  /// **'Dropped - decode error'**
   String get reticulumDiagDroppedDecodeError;
 
   /// Counter: partial frames dropped after the inactivity TTL elapsed.
   ///
   /// In en, this message translates to:
-  /// **'Dropped — inactivity timeout'**
+  /// **'Dropped - inactivity timeout'**
   String get reticulumDiagDroppedTimeoutInactivity;
 
   /// Counter: partial frames dropped after the absolute TTL elapsed.
   ///
   /// In en, this message translates to:
-  /// **'Dropped — absolute TTL'**
+  /// **'Dropped - absolute TTL'**
   String get reticulumDiagDroppedTimeoutAbsolute;
 
   /// Counter: buffers evicted because of concurrent-buffer or fragment-count caps.
   ///
   /// In en, this message translates to:
-  /// **'Dropped — overflow'**
+  /// **'Dropped - overflow'**
   String get reticulumDiagDroppedOverflow;
 
   /// Counter: frames dropped because their assembled body would exceed the size cap.
   ///
   /// In en, this message translates to:
-  /// **'Dropped — oversize'**
+  /// **'Dropped - oversize'**
   String get reticulumDiagDroppedOversize;
 
   /// Counter: fragment retransmissions silently overwritten.
@@ -69717,7 +69717,7 @@ abstract class AppLocalizations {
   /// Placeholder shown for last error when none has occurred.
   ///
   /// In en, this message translates to:
-  /// **'—'**
+  /// **'-'**
   String get reticulumBridgeNoLastError;
 
   /// Section header for the host and port input fields.
@@ -69771,19 +69771,19 @@ abstract class AppLocalizations {
   /// Counter for frames dropped because the TCP socket was not connected.
   ///
   /// In en, this message translates to:
-  /// **'Dropped — no connection'**
+  /// **'Dropped - no connection'**
   String get reticulumBridgeDroppedNoConnection;
 
   /// Counter for frames dropped by the bounded outbound queue.
   ///
   /// In en, this message translates to:
-  /// **'Dropped — queue full'**
+  /// **'Dropped - queue full'**
   String get reticulumBridgeDroppedBackpressure;
 
   /// Counter for frames dropped because encode/write failed.
   ///
   /// In en, this message translates to:
-  /// **'Dropped — framing error'**
+  /// **'Dropped - framing error'**
   String get reticulumBridgeDroppedFramingError;
 
   /// Lifetime count of failed TCP connect attempts.
@@ -70239,7 +70239,7 @@ abstract class AppLocalizations {
   /// Empty-state body when the centre node has no NodeDex entry.
   ///
   /// In en, this message translates to:
-  /// **'No NodeDex entry yet for this node — open Constellation again once an encounter is recorded.'**
+  /// **'No NodeDex entry yet for this node - open Constellation again once an encounter is recorded.'**
   String get nodedexConstellationEmptyMissing;
 
   /// Empty-state body when the active filter removed every card.
@@ -70793,6 +70793,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Operations'**
   String get navigationOperations;
+
+  /// Presence badge on node cards when the node is currently active.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get presenceStatusActive;
+
+  /// Presence badge on node cards when the node is stale (not heard for a long while).
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive'**
+  String get presenceStatusInactive;
+
+  /// Presence badge on node cards when the activity state cannot be inferred.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get presenceStatusUnknown;
+
+  /// Presence badge on node cards when the node was heard less than 30 seconds ago.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get presenceSeenJustNow;
+
+  /// Presence badge on node cards. {ago} is a short duration like '5m', '2h', or '3d'.
+  ///
+  /// In en, this message translates to:
+  /// **'Seen {ago} ago'**
+  String presenceSeenAgo(String ago);
+
+  /// Tooltip shown next to inferred presence badges to explain why status is approximate.
+  ///
+  /// In en, this message translates to:
+  /// **'LoRa mesh has no offline signal. Status is inferred.'**
+  String get presenceInferenceTooltip;
 }
 
 class _AppLocalizationsDelegate

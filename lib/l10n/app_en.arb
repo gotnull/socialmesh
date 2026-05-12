@@ -946,7 +946,7 @@
     "@aetherMenuSettings": {
         "description": "Overflow menu item to open the settings screen"
     },
-    "aetherNodeAlreadyHasFlight": "{nodeName} already has a flight ({flightNumber} — {status})",
+    "aetherNodeAlreadyHasFlight": "{nodeName} already has a flight ({flightNumber} - {status})",
     "@aetherNodeAlreadyHasFlight": {
         "description": "Warning snackbar when user tries to schedule but node already has a flight",
         "placeholders": {
@@ -1235,7 +1235,7 @@
     "@aetherScheduleResponsibilityTooltip": {
         "description": "Tooltip for the legal/responsibility icon button"
     },
-    "aetherScheduleRouteExceedsRange": "{distance} — exceeds maximum aircraft range",
+    "aetherScheduleRouteExceedsRange": "{distance} - exceeds maximum aircraft range",
     "@aetherScheduleRouteExceedsRange": {
         "description": "Route info error when distance exceeds aircraft range",
         "placeholders": {
@@ -1257,7 +1257,7 @@
     "@aetherScheduleRouteSameAirport": {
         "description": "Route info error when departure equals arrival"
     },
-    "aetherScheduleRouteTooClose": "{departure} and {arrival} are {distance} km apart — too close for a commercial flight",
+    "aetherScheduleRouteTooClose": "{departure} and {arrival} are {distance} km apart - too close for a commercial flight",
     "@aetherScheduleRouteTooClose": {
         "description": "Route info error when airports are too close",
         "placeholders": {
@@ -1360,7 +1360,7 @@
     "@aetherScheduleToLabel": {
         "description": "Label for the arrival airport field"
     },
-    "aetherScheduleTooClose": "{departure} and {arrival} are only {distance} km apart — no commercial routes exist",
+    "aetherScheduleTooClose": "{departure} and {arrival} are only {distance} km apart - no commercial routes exist",
     "@aetherScheduleTooClose": {
         "description": "Warning snackbar when airports are too close together",
         "placeholders": {
@@ -1375,7 +1375,7 @@
             }
         }
     },
-    "aetherScheduleTooFar": "{departure} to {arrival} is {distance} — exceeds maximum aircraft range",
+    "aetherScheduleTooFar": "{departure} to {arrival} is {distance} - exceeds maximum aircraft range",
     "@aetherScheduleTooFar": {
         "description": "Warning snackbar when airports are too far apart",
         "placeholders": {
@@ -2749,7 +2749,7 @@
     "@automationEditorIfDescription": {
         "description": "Flow connector text before conditions"
     },
-    "automationEditorNoConditions": "No conditions — always runs",
+    "automationEditorNoConditions": "No conditions - always runs",
     "@automationEditorNoConditions": {
         "description": "Hint text when no conditions are set"
     },
@@ -3344,7 +3344,7 @@
             }
         }
     },
-    "automationScreenRunSuccess": "Ran \"{name}\" — conditions bypassed, THEN executed",
+    "automationScreenRunSuccess": "Ran \"{name}\" - conditions bypassed, THEN executed",
     "@automationScreenRunSuccess": {
         "description": "Success snackbar after manual run — clarifies conditions were bypassed",
         "placeholders": {
@@ -6273,11 +6273,11 @@
     "@drawerBadgeTryIt": {
         "description": "Badge label for premium features available to try in the drawer."
     },
-    "requiresConnectionGuardDisconnected": "Disconnected from your node — reconnect to continue.",
+    "requiresConnectionGuardDisconnected": "Disconnected from your node - reconnect to continue.",
     "@requiresConnectionGuardDisconnected": {
         "description": "Snackbar shown when a node-required screen is auto-popped because the device disconnected mid-session."
     },
-    "requiresConnectionGuardReconnectingBanner": "Disconnected — reconnecting…",
+    "requiresConnectionGuardReconnectingBanner": "Disconnected - reconnecting…",
     "@requiresConnectionGuardReconnectingBanner": {
         "description": "Inline banner shown on a node-required screen during the grace window after a brief transport disconnect, while auto-reconnect is attempting recovery. If reconnection fails within ~10s the user is popped back with the existing requiresConnectionGuardDisconnected snackbar."
     },
@@ -6767,7 +6767,7 @@
             }
         }
     },
-    "fileTransferBinaryFileHint": "Binary file — save to open with an external app",
+    "fileTransferBinaryFileHint": "Binary file - save to open with an external app",
     "@fileTransferBinaryFileHint": {
         "description": "Description shown for binary/hex file preview"
     },
@@ -7076,7 +7076,7 @@
     "@fileTransferStatusOfferSent": {
         "description": "Transfer card status — offer sent to remote node"
     },
-    "fileTransferStatusOfferPending": "Incoming file — tap to review",
+    "fileTransferStatusOfferPending": "Incoming file - tap to review",
     "@fileTransferStatusOfferPending": {
         "description": "Transfer card status — inbound offer waiting for user acceptance"
     },
@@ -7130,7 +7130,7 @@
     "@fileTransferFailReasonInvalid": {
         "description": "Transfer fail reason — malformed chunk data"
     },
-    "fileTransferFailReasonRateLimited": "Rate limited — try again later",
+    "fileTransferFailReasonRateLimited": "Rate limited - try again later",
     "@fileTransferFailReasonRateLimited": {
         "description": "Transfer fail reason — airtime rate limiter fired"
     },
@@ -7240,7 +7240,7 @@
     "@fileTransferFileEmpty": {
         "description": "Warning snackbar for empty files"
     },
-    "fileTransferFileTooLarge": "{filename} is {fileSize} KB — mesh transfer limit is {limit} KB.",
+    "fileTransferFileTooLarge": "{filename} is {fileSize} KB - mesh transfer limit is {limit} KB.",
     "@fileTransferFileTooLarge": {
         "description": "Error snackbar for oversized files (interpolated)",
         "placeholders": {
@@ -8924,7 +8924,7 @@
             }
         }
     },
-    "incidentTerminalStateMessage": "This incident is {state} — no further actions available.",
+    "incidentTerminalStateMessage": "This incident is {state} - no further actions available.",
     "@incidentTerminalStateMessage": {
         "description": "Message shown when incident is in a terminal state (closed/cancelled). Placeholder: state",
         "placeholders": {
@@ -8937,7 +8937,7 @@
     "@incidentTimelineEmpty": {
         "description": "Empty state text when there are no transitions to display"
     },
-    "incidentTimelineFinalState": "Final state — no further transitions",
+    "incidentTimelineFinalState": "Final state - no further transitions",
     "@incidentTimelineFinalState": {
         "description": "Label shown on terminal state entries in the transition timeline"
     },
@@ -10201,7 +10201,7 @@
     },
     "meshcoreChannelCodeCopied": "Channel code copied",
     "@meshcoreChannelCodeCopied": {
-        "description": "Success snackbar after copying channel code"
+        "description": "D29 - clipboard-copy confirmation for channel share."
     },
     "meshcoreChannelCreated": "Channel \"{channelName}\" created",
     "@meshcoreChannelCreated": {
@@ -10284,7 +10284,10 @@
     "@meshcoreChannelEditAddedSuccess": {
         "description": "Snackbar confirming a new channel slot was written to the radio",
         "placeholders": {
-            "name": {"type": "String", "example": "Public"}
+            "name": {
+                "type": "String",
+                "example": "Public"
+            }
         }
     },
     "meshcoreChannelEditCodeImportFailed": "Could not parse channel code",
@@ -10415,7 +10418,10 @@
     "@meshcoreChannelEditSavedSuccess": {
         "description": "Snackbar confirming an existing channel slot was edited",
         "placeholders": {
-            "name": {"type": "String", "example": "Public"}
+            "name": {
+                "type": "String",
+                "example": "Public"
+            }
         }
     },
     "meshcoreChannelEditSaving": "Saving…",
@@ -10438,7 +10444,10 @@
     "@meshcoreChannelEditSlotSubtitle": {
         "description": "Subtitle on the slot tile / row in the slot picker",
         "placeholders": {
-            "index": {"type": "int", "example": "0"}
+            "index": {
+                "type": "int",
+                "example": "0"
+            }
         }
     },
     "meshcoreChannelEditTitleAdd": "Add channel",
@@ -10465,7 +10474,10 @@
     "@meshcoreChatComposerReplyingTo": {
         "description": "D33 — header line of the composer reply chip; {name} is the target sender's display name (or 'You' for own outbound messages)",
         "placeholders": {
-            "name": {"type": "String", "example": "Bob"}
+            "name": {
+                "type": "String",
+                "example": "Bob"
+            }
         }
     },
     "meshcoreChatComposerCancelReply": "Cancel reply",
@@ -10484,7 +10496,10 @@
     "@meshcoreChatReplyRateLimited": {
         "description": "D33 — snackbar shown when MeshCoreSendRateLimiter rejects a reply (or any text) send. {seconds} is the suggested retry delay rounded to whole seconds.",
         "placeholders": {
-            "seconds": {"type": "int", "example": "12"}
+            "seconds": {
+                "type": "int",
+                "example": "12"
+            }
         }
     },
     "meshcoreChatActionRetry": "Retry",
@@ -10703,14 +10718,18 @@
     "@meshcoreContactAddFailed": {
         "description": "D29 - error snackbar when CMD_ADD_UPDATE_CONTACT (0x09) fails (timeout / RESP_CODE_ERR).",
         "placeholders": {
-            "contactName": {"type": "String"}
+            "contactName": {
+                "type": "String"
+            }
         }
     },
     "meshcoreContactRemoveFailed": "Couldn't remove {contactName}. The radio rejected the request.",
     "@meshcoreContactRemoveFailed": {
         "description": "D29 - error snackbar when CMD_REMOVE_CONTACT (0x0F) fails.",
         "placeholders": {
-            "contactName": {"type": "String"}
+            "contactName": {
+                "type": "String"
+            }
         }
     },
     "meshcoreResetPath": "Reset Path",
@@ -10889,21 +10908,27 @@
     "@meshcoreDiscoveryAddContactSuccess": {
         "description": "D34b-A1 - success snackbar after a heard node is imported. {contactName} is the node's display name.",
         "placeholders": {
-            "contactName": {"type": "String"}
+            "contactName": {
+                "type": "String"
+            }
         }
     },
     "meshcoreDiscoveryAddContactFailed": "Could not add {contactName}",
     "@meshcoreDiscoveryAddContactFailed": {
         "description": "D34b-A1 - failure snackbar after the import flow returns false. {contactName} is the node's display name.",
         "placeholders": {
-            "contactName": {"type": "String"}
+            "contactName": {
+                "type": "String"
+            }
         }
     },
     "meshcoreDiscoveryLastHeard": "{timeAgo} ago",
     "@meshcoreDiscoveryLastHeard": {
         "description": "D34b-A1 - relative-time label appended to a discovered node's metadata row. {timeAgo} is a short shape like '5m', '2h', or 'just now'.",
         "placeholders": {
-            "timeAgo": {"type": "String"}
+            "timeAgo": {
+                "type": "String"
+            }
         }
     },
     "meshcoreDiscoveryJustNow": "just now",
@@ -10962,23 +10987,33 @@
     "@meshcoreChatTrafficUsage": {
         "description": "D34a - progress-bar label showing 'used / capacity bytes' (e.g. '642 / 1024 B').",
         "placeholders": {
-            "used": {"type": "int"},
-            "capacity": {"type": "int"}
+            "used": {
+                "type": "int"
+            },
+            "capacity": {
+                "type": "int"
+            }
         }
     },
     "meshcoreChatTrafficByteCount": "{bytes} B ({count})",
     "@meshcoreChatTrafficByteCount": {
         "description": "D34a - per-kind row value showing total bytes plus parenthesised send count (e.g. '412 B (3)').",
         "placeholders": {
-            "bytes": {"type": "int"},
-            "count": {"type": "int"}
+            "bytes": {
+                "type": "int"
+            },
+            "count": {
+                "type": "int"
+            }
         }
     },
     "meshcoreChatTrafficBytes": "{bytes} B",
     "@meshcoreChatTrafficBytes": {
         "description": "D34a - generic 'N B' value formatter (peak window usage, remaining budget).",
         "placeholders": {
-            "bytes": {"type": "int"}
+            "bytes": {
+                "type": "int"
+            }
         }
     },
     "meshcoreRadioStatsTitle": "Companion radio",
@@ -11025,7 +11060,9 @@
     "@meshcoreRadioStatsErrorFlagsHex": {
         "description": "D35-B-A - opaque-hex formatter for the firmware error-flag accumulator. Caller passes a 4-character zero-padded uppercase hex string (e.g. '0042').",
         "placeholders": {
-            "value": {"type": "String"}
+            "value": {
+                "type": "String"
+            }
         }
     },
     "meshcoreRadioStatsErrorFlagsHelper": "Firmware-internal flags. Include this value when filing a support report.",
@@ -11076,7 +11113,9 @@
     "@meshcoreRadioStatsPacketsCount": {
         "description": "D35-PACKETS-A - formatter for a packet-counter integer value. Caller passes a pre-formatted thousands-grouped string (e.g. '1,247').",
         "placeholders": {
-            "value": {"type": "String"}
+            "value": {
+                "type": "String"
+            }
         }
     },
     "meshcoreRadioStatsStale": "Stale data, reconnecting…",
@@ -11095,37 +11134,51 @@
     "@meshcoreRadioStatsDbm": {
         "description": "D35-A - dBm value formatter for noise floor and RSSI rows.",
         "placeholders": {
-            "value": {"type": "int"}
+            "value": {
+                "type": "int"
+            }
         }
     },
     "meshcoreRadioStatsDb": "{value} dB",
     "@meshcoreRadioStatsDb": {
         "description": "D35-A - dB value formatter for SNR row (one decimal place; pass the formatted string).",
         "placeholders": {
-            "value": {"type": "String"}
+            "value": {
+                "type": "String"
+            }
         }
     },
     "meshcoreRadioStatsDurationHm": "{hours} h {minutes} m",
     "@meshcoreRadioStatsDurationHm": {
         "description": "D35-A - duration formatter used for hours+minutes airtime totals.",
         "placeholders": {
-            "hours": {"type": "int"},
-            "minutes": {"type": "int"}
+            "hours": {
+                "type": "int"
+            },
+            "minutes": {
+                "type": "int"
+            }
         }
     },
     "meshcoreRadioStatsDurationMs": "{minutes} m {seconds} s",
     "@meshcoreRadioStatsDurationMs": {
         "description": "D35-A - duration formatter used for minutes+seconds airtime totals (under one hour).",
         "placeholders": {
-            "minutes": {"type": "int"},
-            "seconds": {"type": "int"}
+            "minutes": {
+                "type": "int"
+            },
+            "seconds": {
+                "type": "int"
+            }
         }
     },
     "meshcoreRadioStatsDurationSeconds": "{seconds} s",
     "@meshcoreRadioStatsDurationSeconds": {
         "description": "D35-A - duration formatter used for seconds-only airtime totals (under one minute).",
         "placeholders": {
-            "seconds": {"type": "int"}
+            "seconds": {
+                "type": "int"
+            }
         }
     },
     "meshcoreTracePathSavePathHelper": "Saved paths can become stale as the mesh re-routes. Reset the path to return to auto.",
@@ -11140,14 +11193,18 @@
     "@meshcoreTracePathSaveAsContactPathSuccess": {
         "description": "D34c-A - success snackbar after the trace path saves to the contact via 0x09. {contactName} is the contact's display name.",
         "placeholders": {
-            "contactName": {"type": "String"}
+            "contactName": {
+                "type": "String"
+            }
         }
     },
     "meshcoreTracePathSaveAsContactPathFailed": "Could not save path for {contactName}",
     "@meshcoreTracePathSaveAsContactPathFailed": {
         "description": "D34c-A - failure snackbar after the trace-path save flow. {contactName} is the contact's display name.",
         "placeholders": {
-            "contactName": {"type": "String"}
+            "contactName": {
+                "type": "String"
+            }
         }
     },
     "meshcoreResetPathSubtitle": "Let MeshCore rediscover the best route.",
@@ -11158,14 +11215,18 @@
     "@meshcoreResetPathSuccess": {
         "description": "D29 - success snackbar after CMD_RESET_PATH (0x0D) ACK.",
         "placeholders": {
-            "contactName": {"type": "String"}
+            "contactName": {
+                "type": "String"
+            }
         }
     },
     "meshcoreResetPathFailed": "Couldn't reset path for {contactName}",
     "@meshcoreResetPathFailed": {
         "description": "D29 - error snackbar when CMD_RESET_PATH (0x0D) fails.",
         "placeholders": {
-            "contactName": {"type": "String"}
+            "contactName": {
+                "type": "String"
+            }
         }
     },
     "meshcorePathOverrideTitle": "Path override",
@@ -11204,7 +11265,9 @@
     "@meshcorePathOverrideForceDirectConfirmMessage": {
         "description": "D34c-B-A - confirmation body for Force Direct, naming the contact and explaining the failure mode.",
         "placeholders": {
-            "contactName": {"type": "String"}
+            "contactName": {
+                "type": "String"
+            }
         }
     },
     "meshcorePathOverrideConfirmApply": "Force direct",
@@ -11215,28 +11278,36 @@
     "@meshcorePathOverrideForceFloodSuccess": {
         "description": "D34c-B-A - success snackbar after Force Flood is written.",
         "placeholders": {
-            "contactName": {"type": "String"}
+            "contactName": {
+                "type": "String"
+            }
         }
     },
     "meshcorePathOverrideForceFloodFailed": "Couldn't apply force flood to {contactName}",
     "@meshcorePathOverrideForceFloodFailed": {
         "description": "D34c-B-A - error snackbar after Force Flood write fails.",
         "placeholders": {
-            "contactName": {"type": "String"}
+            "contactName": {
+                "type": "String"
+            }
         }
     },
     "meshcorePathOverrideForceDirectSuccess": "Force direct applied to {contactName}",
     "@meshcorePathOverrideForceDirectSuccess": {
         "description": "D34c-B-A - success snackbar after Force Direct is written.",
         "placeholders": {
-            "contactName": {"type": "String"}
+            "contactName": {
+                "type": "String"
+            }
         }
     },
     "meshcorePathOverrideForceDirectFailed": "Couldn't apply force direct to {contactName}",
     "@meshcorePathOverrideForceDirectFailed": {
         "description": "D34c-B-A - error snackbar after Force Direct write fails.",
         "placeholders": {
-            "contactName": {"type": "String"}
+            "contactName": {
+                "type": "String"
+            }
         }
     },
     "meshcoreNeighborsTileTitle": "Neighbours",
@@ -11251,7 +11322,9 @@
     "@meshcoreNeighborsSheetTitle": {
         "description": "D36-A - bottom-sheet title above the neighbours list. {repeaterName} is the resolved display name of the queried repeater.",
         "placeholders": {
-            "repeaterName": {"type": "String"}
+            "repeaterName": {
+                "type": "String"
+            }
         }
     },
     "meshcoreNeighborsRefresh": "Refresh",
@@ -11282,36 +11355,48 @@
     "@meshcoreNeighborsCooling": {
         "description": "D36-A - cooling copy shown when the 10 s per-repeater cooldown is active. {seconds} is the remaining cooldown rounded up.",
         "placeholders": {
-            "seconds": {"type": "int"}
+            "seconds": {
+                "type": "int"
+            }
         }
     },
     "meshcoreNeighborsHeardAgo": "heard {timeAgo} ago",
     "@meshcoreNeighborsHeardAgo": {
         "description": "D36-A - relative-time copy under each neighbour row. {timeAgo} is a pre-formatted duration string (e.g. '1 m 23 s').",
         "placeholders": {
-            "timeAgo": {"type": "String"}
+            "timeAgo": {
+                "type": "String"
+            }
         }
     },
     "meshcoreNeighborsSnrDb": "SNR {value} dB",
     "@meshcoreNeighborsSnrDb": {
         "description": "D36-A - SNR badge value formatter. {value} is a pre-formatted dB string (one decimal place).",
         "placeholders": {
-            "value": {"type": "String"}
+            "value": {
+                "type": "String"
+            }
         }
     },
     "meshcoreNeighborsShowing": "Showing {n} of {m} neighbours",
     "@meshcoreNeighborsShowing": {
         "description": "D36-A - footer text showing how many neighbour rows were included vs the total the repeater reports.",
         "placeholders": {
-            "n": {"type": "int"},
-            "m": {"type": "int"}
+            "n": {
+                "type": "int"
+            },
+            "m": {
+                "type": "int"
+            }
         }
     },
     "meshcoreNeighborsLastRefreshed": "Last refreshed {time}",
     "@meshcoreNeighborsLastRefreshed": {
         "description": "D36-A - footer label with the HH:MM:SS of the last successful refresh.",
         "placeholders": {
-            "time": {"type": "String"}
+            "time": {
+                "type": "String"
+            }
         }
     },
     "meshcoreNeighborsUnknown": "Unknown neighbour",
@@ -11334,10 +11419,6 @@
     "@meshcoreImportChannelHint": {
         "description": "D29 - placeholder hint text in the channel-code import field."
     },
-    "meshcoreChannelCodeCopied": "Channel code copied",
-    "@meshcoreChannelCodeCopied": {
-        "description": "D29 - clipboard-copy confirmation for channel share."
-    },
     "meshcoreInvalidChannelCode": "Invalid channel code",
     "@meshcoreInvalidChannelCode": {
         "description": "D29 - error when a pasted channel code fails parseChannelCode validation."
@@ -11346,14 +11427,18 @@
     "@meshcoreChannelImported": {
         "description": "D29 - success snackbar after a channel is added via import.",
         "placeholders": {
-            "name": {"type": "String"}
+            "name": {
+                "type": "String"
+            }
         }
     },
     "meshcoreChannelImportFailed": "Couldn't import channel '{name}'",
     "@meshcoreChannelImportFailed": {
         "description": "D29 - error snackbar when channel import wire write fails.",
         "placeholders": {
-            "name": {"type": "String"}
+            "name": {
+                "type": "String"
+            }
         }
     },
     "meshcoreContactUnknownName": "Unknown",
@@ -12297,7 +12382,7 @@
     "@meshcoreFailedToSetLocation": {
         "description": "D26 — Error snackbar when the radio rejects a setAdvertLatLon command"
     },
-    "meshcoreSyncTimeRejected": "Device clock is already ahead — sync skipped",
+    "meshcoreSyncTimeRejected": "Device clock is already ahead - sync skipped",
     "@meshcoreSyncTimeRejected": {
         "description": "D26 — Error snackbar when the firmware rejects setDeviceTime because device time is already ahead of the phone (firmware is forward-only)"
     },
@@ -13245,7 +13330,7 @@
     },
     "meshcoreTracePathTitle": "Trace Path",
     "@meshcoreTracePathTitle": {
-        "description": "D28 - Bottom-sheet title for the trace path picker."
+        "description": "Sheet title for trace path"
     },
     "meshcoreTracePathPickContact": "Pick a contact to trace through.",
     "@meshcoreTracePathPickContact": {
@@ -13302,10 +13387,6 @@
     "meshcoreTracePathClose": "Close",
     "@meshcoreTracePathClose": {
         "description": "D28 - Close button on the trace result sheet."
-    },
-    "meshcoreTracePathTitle": "Trace Path",
-    "@meshcoreTracePathTitle": {
-        "description": "Sheet title for trace path"
     },
     "meshcoreTxPowerLabel": "TX Power",
     "@meshcoreTxPowerLabel": {
@@ -13847,7 +13928,7 @@
     "@messagingTechInfoExplainHopsTitle": {
         "description": "Title for the bottom sheet explaining hop count."
     },
-    "messagingTechInfoExplainHopsBody": "The number of times this message was relayed by other nodes before reaching you. 'Direct' means no relay — the sender was in direct radio range.",
+    "messagingTechInfoExplainHopsBody": "The number of times this message was relayed by other nodes before reaching you. 'Direct' means no relay - the sender was in direct radio range.",
     "@messagingTechInfoExplainHopsBody": {
         "description": "Explanation of hop count shown in a bottom sheet."
     },
@@ -13863,7 +13944,7 @@
     "@messagingTechInfoExplainRssiTitle": {
         "description": "Title for the bottom sheet explaining RSSI."
     },
-    "messagingTechInfoExplainRssiBody": "Received Signal Strength Indicator — how strong the radio signal was when it arrived. Closer to 0 is stronger. Typical range: -120 dBm (very weak) to -40 dBm (very strong).",
+    "messagingTechInfoExplainRssiBody": "Received Signal Strength Indicator - how strong the radio signal was when it arrived. Closer to 0 is stronger. Typical range: -120 dBm (very weak) to -40 dBm (very strong).",
     "@messagingTechInfoExplainRssiBody": {
         "description": "Explanation of RSSI shown in a bottom sheet."
     },
@@ -16790,7 +16871,7 @@
         },
         "description": "Error message in node management Parameters: {error} = error/status message."
     },
-    "nodedexExportNothingToExport": "Nothing to export — NodeDex is empty",
+    "nodedexExportNothingToExport": "Nothing to export - NodeDex is empty",
     "@nodedexExportNothingToExport": {
         "description": "Text displayed in node management"
     },
@@ -19134,7 +19215,7 @@
     "@onboardingDashboardAdvisor": {
         "description": "Ico advisor speech about dashboard customization"
     },
-    "onboardingDashboardDescription": "Live battery levels, signal strength, node counts — all in one view.\nBuild the dashboard that fits how you work.",
+    "onboardingDashboardDescription": "Live battery levels, signal strength, node counts - all in one view.\nBuild the dashboard that fits how you work.",
     "@onboardingDashboardDescription": {
         "description": "Description of the dashboard and telemetry features"
     },
@@ -19218,7 +19299,7 @@
     "@onboardingHardwareTitle": {
         "description": "Title for the compatible devices page"
     },
-    "onboardingNodedexAdvisor": "Legendary, Epic, Rare — every node you encounter earns its place in your collection. The more you explore, the richer your NodeDex becomes.",
+    "onboardingNodedexAdvisor": "Legendary, Epic, Rare - every node you encounter earns its place in your collection. The more you explore, the richer your NodeDex becomes.",
     "@onboardingNodedexAdvisor": {
         "description": "Ico advisor speech explaining NodeDex sigils, rarity, and patina"
     },
@@ -19320,7 +19401,7 @@
             }
         }
     },
-    "onboardingSignalsAdvisor": "Think of Signals like ephemeral stories — but over radio. No cloud, no server. They exist only on the mesh, only for as long as you choose.",
+    "onboardingSignalsAdvisor": "Think of Signals like ephemeral stories - but over radio. No cloud, no server. They exist only on the mesh, only for as long as you choose.",
     "@onboardingSignalsAdvisor": {
         "description": "Ico advisor speech explaining the Signals differentiator"
     },
@@ -19336,7 +19417,7 @@
     "@onboardingSkipButton": {
         "description": "Skip button to jump to the last onboarding page"
     },
-    "onboardingWelcomeAdvisor": "I'm Ico. I'll walk you through a mesh radio platform built for the real world — where cell towers don't reach.",
+    "onboardingWelcomeAdvisor": "I'm Ico. I'll walk you through a mesh radio platform built for the real world - where cell towers don't reach.",
     "@onboardingWelcomeAdvisor": {
         "description": "Ico advisor speech for the welcome page introducing itself"
     },
@@ -19574,7 +19655,7 @@
     "@presenceNodeSingular": {
         "description": "UI text: presence node singular"
     },
-    "presenceQuietMesh": "Mesh is quiet right now — nodes appear as they come online.",
+    "presenceQuietMesh": "Mesh is quiet right now - nodes appear as they come online.",
     "@presenceQuietMesh": {
         "description": "UI text: presence quiet mesh"
     },
@@ -20061,7 +20142,7 @@
     "@profileCloudBackup": {
         "description": "Text displayed in user profile"
     },
-    "profileCloudStartingUp": "Cloud services starting up — try again shortly",
+    "profileCloudStartingUp": "Cloud services starting up - try again shortly",
     "@profileCloudStartingUp": {
         "description": "Text displayed in user profile"
     },
@@ -20308,7 +20389,7 @@
     "@profileSyncTempUnavailable2": {
         "description": "Text displayed in user profile"
     },
-    "profileSyncTimedOut": "Sync timed out — try again",
+    "profileSyncTimedOut": "Sync timed out - try again",
     "@profileSyncTimedOut": {
         "description": "Text displayed in user profile"
     },
@@ -20630,7 +20711,7 @@
         },
         "description": "UI text: reachability score percent Parameters: {percentage}."
     },
-    "reachabilityScoringModelContent": "Opportunistic Mesh Reach Likelihood Model (v1) — BETA\n\nA heuristic scoring model that estimates likelihood of reaching a node based on observed RF metrics and packet history. This score represents likelihood, not reachability. Meshtastic forwards packets opportunistically without routing. A high score does not guarantee delivery.",
+    "reachabilityScoringModelContent": "Opportunistic Mesh Reach Likelihood Model (v1) - BETA\n\nA heuristic scoring model that estimates likelihood of reaching a node based on observed RF metrics and packet history. This score represents likelihood, not reachability. Meshtastic forwards packets opportunistically without routing. A high score does not guarantee delivery.",
     "@reachabilityScoringModelContent": {
         "description": "UI text: reachability scoring model content"
     },
@@ -20702,7 +20783,7 @@
     "@regionSelectionOpenBluetoothSettingsError": {
         "description": "Error message shown to the user"
     },
-    "regionSelectionPairingHintMessage": "Pairing needs to be refreshed. The radio may have cleared its Bluetooth identity after the region change — forget the device in Bluetooth Settings and pair again.",
+    "regionSelectionPairingHintMessage": "Pairing needs to be refreshed. The radio may have cleared its Bluetooth identity after the region change - forget the device in Bluetooth Settings and pair again.",
     "@regionSelectionPairingHintMessage": {
         "description": "Reset-aware pairing hint shown during region setup when the saved BLE pairing no longer matches the rebooted radio. Avoids implying any phone-side fault."
     },
@@ -21744,7 +21825,7 @@
             }
         }
     },
-    "scannerPairingInvalidatedError": "Pairing needs to be refreshed — the radio's Bluetooth identity has changed. Forget the device in Bluetooth Settings and pair again.",
+    "scannerPairingInvalidatedError": "Pairing needs to be refreshed - the radio's Bluetooth identity has changed. Forget the device in Bluetooth Settings and pair again.",
     "@scannerPairingInvalidatedError": {
         "description": "Short inline error shown when the saved BLE pairing no longer matches the device after a factory reset, region reset, or BLE identity reset on the radio side. Avoids implying any phone-side fault."
     },
@@ -24885,7 +24966,7 @@
     "@socialActivityTagline1": {
         "description": "Text displayed in social features"
     },
-    "socialActivityTagline2": "Likes, comments, follows — all in one place.\nPost something to get started.",
+    "socialActivityTagline2": "Likes, comments, follows - all in one place.\nPost something to get started.",
     "@socialActivityTagline2": {
         "description": "Text displayed in social features"
     },
@@ -28489,7 +28570,7 @@
     "@telemetryTracerouteCleared": {
         "description": "Snackbar message after traceroute data is cleared."
     },
-    "telemetryTracerouteDirectConnection": "Direct connection — no intermediate hops",
+    "telemetryTracerouteDirectConnection": "Direct connection - no intermediate hops",
     "@telemetryTracerouteDirectConnection": {
         "description": "Hint shown when a traceroute has zero hops (direct link)."
     },
@@ -30095,7 +30176,7 @@
     "@widgetBuilderLocationSharedMesh": {
         "description": "Success snackbar after broadcast share"
     },
-    "widgetBuilderLocationSharedRecently": "Location was shared recently — please wait before sharing again",
+    "widgetBuilderLocationSharedRecently": "Location was shared recently - please wait before sharing again",
     "@widgetBuilderLocationSharedRecently": {
         "description": "Warning for rate-limited location sharing"
     },
@@ -31840,7 +31921,7 @@
     "@contentModerationSuggestiveContent": {
         "description": "UI text: content moderation suggestive content"
     },
-    "contentModerationRemovedWithReason": "Content removed — {reason}",
+    "contentModerationRemovedWithReason": "Content removed - {reason}",
     "@contentModerationRemovedWithReason": {
         "placeholders": {
             "reason": {
@@ -31849,7 +31930,7 @@
         },
         "description": "UI text: content moderation removed with reason Parameters: {reason} = error/status message."
     },
-    "contentModerationRemovedGeneric": "Content removed — your content violated our Community Guidelines.",
+    "contentModerationRemovedGeneric": "Content removed - your content violated our Community Guidelines.",
     "@contentModerationRemovedGeneric": {
         "description": "UI text: content moderation removed generic"
     },
@@ -32212,7 +32293,7 @@
     "@actionSheetTrace": {
         "description": "UI text: action sheet trace"
     },
-    "actionSheetTracerouteSent": "Traceroute sent to {target} — check Traceroute History for results",
+    "actionSheetTracerouteSent": "Traceroute sent to {target} - check Traceroute History for results",
     "@actionSheetTracerouteSent": {
         "placeholders": {
             "target": {
@@ -32230,23 +32311,23 @@
         },
         "description": "Error message Parameters: {error} = error/status message."
     },
-    "premiumPreviewAutomations": "Preview Mode — Upgrade to create automations",
+    "premiumPreviewAutomations": "Preview Mode - Upgrade to create automations",
     "@premiumPreviewAutomations": {
         "description": "Text displayed in premium features"
     },
-    "premiumPreviewIfttt": "Preview Mode — Upgrade to connect services",
+    "premiumPreviewIfttt": "Preview Mode - Upgrade to connect services",
     "@premiumPreviewIfttt": {
         "description": "Text displayed in premium features"
     },
-    "premiumPreviewWidgets": "Preview Mode — Upgrade to build widgets",
+    "premiumPreviewWidgets": "Preview Mode - Upgrade to build widgets",
     "@premiumPreviewWidgets": {
         "description": "Text displayed in premium features"
     },
-    "premiumPreviewRingtones": "Preview Mode — Upgrade to access full library",
+    "premiumPreviewRingtones": "Preview Mode - Upgrade to access full library",
     "@premiumPreviewRingtones": {
         "description": "Text displayed in premium features"
     },
-    "premiumPreviewThemes": "Preview Mode — Upgrade to unlock all colors",
+    "premiumPreviewThemes": "Preview Mode - Upgrade to unlock all colors",
     "@premiumPreviewThemes": {
         "description": "Text displayed in premium features"
     },
@@ -32308,7 +32389,7 @@
     "@alternativePaymentSubtitle": {
         "description": "Subtitle under the Alternative payment row explaining the off-store path."
     },
-    "googlePlayUnavailable": "Google Play unavailable on this device — try alternative payment.",
+    "googlePlayUnavailable": "Google Play unavailable on this device - try alternative payment.",
     "@googlePlayUnavailable": {
         "description": "Hint shown when Google Play billing fails to load on Android."
     },
@@ -33154,7 +33235,7 @@
     "@restorePurchasesNone": {
         "description": "UI text: restore purchases none"
     },
-    "restorePurchasesPending": "Your purchase is still being processed by the store. This can take up to 72 hours — please try again later.",
+    "restorePurchasesPending": "Your purchase is still being processed by the store. This can take up to 72 hours - please try again later.",
     "@restorePurchasesPending": {
         "description": "Restore result when the store has a PaymentPendingError receipt that RevenueCat cannot yet accept"
     },
@@ -34473,15 +34554,15 @@
     "@cloudSyncDescription": {
         "description": "Description text in cloud sync"
     },
-    "cloudSyncNodeDex": "NodeDex — encounters, tags, notes",
+    "cloudSyncNodeDex": "NodeDex - encounters, tags, notes",
     "@cloudSyncNodeDex": {
         "description": "Text displayed in cloud sync"
     },
-    "cloudSyncAutomations": "Automations — rules and triggers",
+    "cloudSyncAutomations": "Automations - rules and triggers",
     "@cloudSyncAutomations": {
         "description": "Text displayed in cloud sync"
     },
-    "cloudSyncWidgets": "Custom Widgets — layouts and data",
+    "cloudSyncWidgets": "Custom Widgets - layouts and data",
     "@cloudSyncWidgets": {
         "description": "Text displayed in cloud sync"
     },
@@ -34984,15 +35065,15 @@
     "@bgConnLiveActivityDestActivePeer": {
         "description": "Live Activity destination mode: show the most-recent DM partner"
     },
-    "bgConnLiveActivityDestMeshDesc": "Show your whole mesh — node count and overall link health.",
+    "bgConnLiveActivityDestMeshDesc": "Show your whole mesh - node count and overall link health.",
     "@bgConnLiveActivityDestMeshDesc": {
         "description": "Description of the Mesh destination mode"
     },
-    "bgConnLiveActivityDestBestPeerDesc": "Show the strongest peer — auto-tracks the best signal.",
+    "bgConnLiveActivityDestBestPeerDesc": "Show the strongest peer - auto-tracks the best signal.",
     "@bgConnLiveActivityDestBestPeerDesc": {
         "description": "Description of the Best peer destination mode"
     },
-    "bgConnLiveActivityDestActivePeerDesc": "Show your most-recent DM partner — switches as you chat.",
+    "bgConnLiveActivityDestActivePeerDesc": "Show your most-recent DM partner - switches as you chat.",
     "@bgConnLiveActivityDestActivePeerDesc": {
         "description": "Description of the Active DM destination mode"
     },
@@ -36700,19 +36781,19 @@
     "@accountSubWontRenew": {
         "description": "Text displayed in account management"
     },
-    "accountSubFeatureNodedex": "NodeDex — encounters, tags, notes",
+    "accountSubFeatureNodedex": "NodeDex - encounters, tags, notes",
     "@accountSubFeatureNodedex": {
         "description": "Text displayed in account management"
     },
-    "accountSubFeatureAutomations": "Automations — rules and triggers",
+    "accountSubFeatureAutomations": "Automations - rules and triggers",
     "@accountSubFeatureAutomations": {
         "description": "Text displayed in account management"
     },
-    "accountSubFeatureWidgets": "Custom Widgets — layouts and data",
+    "accountSubFeatureWidgets": "Custom Widgets - layouts and data",
     "@accountSubFeatureWidgets": {
         "description": "Text displayed in account management"
     },
-    "accountSubFeatureBackup": "Backup — restore after reinstall or new phone",
+    "accountSubFeatureBackup": "Backup - restore after reinstall or new phone",
     "@accountSubFeatureBackup": {
         "description": "Text displayed in account management"
     },
@@ -38563,7 +38644,7 @@
     "@mqttConfigSave": {
         "description": "Text displayed in MQTT configuration"
     },
-    "mqttConfigDutyCycleWarning": "Your region has a {percent}% duty cycle. MQTT is not advised when you are duty cycle restricted — the extra traffic will quickly overwhelm your LoRa mesh.",
+    "mqttConfigDutyCycleWarning": "Your region has a {percent}% duty cycle. MQTT is not advised when you are duty cycle restricted - the extra traffic will quickly overwhelm your LoRa mesh.",
     "@mqttConfigDutyCycleWarning": {
         "description": "Duty cycle = regulatory limit on radio transmission time (e.g., 10% means transmit max 10% of the time). MQTT floods can exceed this.",
         "placeholders": {
@@ -39743,7 +39824,7 @@
     "@adminBroadcastTestHint": {
         "description": "Hint text for an input field in admin panel"
     },
-    "adminBroadcastCountdownCancel": "Cancel — sending in {seconds}...",
+    "adminBroadcastCountdownCancel": "Cancel - sending in {seconds}...",
     "@adminBroadcastCountdownCancel": {
         "placeholders": {
             "seconds": {
@@ -40758,7 +40839,7 @@
     "@adminBugReportsSend": {
         "description": "Text displayed in admin panel"
     },
-    "adminBugReportsAnonNotice": "Anonymous report — replies cannot be delivered.",
+    "adminBugReportsAnonNotice": "Anonymous report - replies cannot be delivered.",
     "@adminBugReportsAnonNotice": {
         "description": "Text displayed in admin panel"
     },
@@ -41894,7 +41975,7 @@
     "@globalLayerEnable": {
         "description": "Text displayed in global layer / MQTT"
     },
-    "globalLayerMqttNote": "Under the hood, this uses an MQTT broker — a standard internet messaging server. You do not need to know how MQTT works to use the Global Layer.",
+    "globalLayerMqttNote": "Under the hood, this uses an MQTT broker - a standard internet messaging server. You do not need to know how MQTT works to use the Global Layer.",
     "@globalLayerMqttNote": {
         "description": "Text displayed in global layer / MQTT"
     },
@@ -42566,7 +42647,7 @@
     "@helpNodesIntroBubble": {
         "description": "Help bubble text for step nodes_intro"
     },
-    "helpNodesStatusBubble": "**Green dot** means **Online** (heard recently). **Yellow** means **Seen recently**. **Gray** means **Offline**. LoRa has no offline signal—status is inferred.",
+    "helpNodesStatusBubble": "**Green dot** means **Online** (heard recently). **Yellow** means **Seen recently**. **Gray** means **Offline**. LoRa has no offline signal-status is inferred.",
     "@helpNodesStatusBubble": {
         "description": "Help bubble text for step nodes_status"
     },
@@ -42802,15 +42883,15 @@
     "@helpSignalsPrivacyBubble": {
         "description": "Help bubble text for step signals_privacy"
     },
-    "helpCreateIntroBubble": "Time to **Go Active**! A signal is an ephemeral broadcast — it lives on the mesh for a set time, then fades away. Let me walk you through it.",
+    "helpCreateIntroBubble": "Time to **Go Active**! A signal is an ephemeral broadcast - it lives on the mesh for a set time, then fades away. Let me walk you through it.",
     "@helpCreateIntroBubble": {
         "description": "Help bubble text for step create_intro"
     },
-    "helpCreateTextBubble": "Type your message in the main field — up to **280 characters**. The circular counter in the corner shows how many you have left.",
+    "helpCreateTextBubble": "Type your message in the main field - up to **280 characters**. The circular counter in the corner shows how many you have left.",
     "@helpCreateTextBubble": {
         "description": "Help bubble text for step create_text"
     },
-    "helpCreateImageBubble": "Tap the **image icon** to attach a photo. Images are uploaded via cloud when you are online — they are not available in mesh-only mode.",
+    "helpCreateImageBubble": "Tap the **image icon** to attach a photo. Images are uploaded via cloud when you are online - they are not available in mesh-only mode.",
     "@helpCreateImageBubble": {
         "description": "Help bubble text for step create_image"
     },
@@ -42818,11 +42899,11 @@
     "@helpCreateLocationBubble": {
         "description": "Help bubble text for step create_location"
     },
-    "helpCreateTtlBubble": "The **timer icon** sets your TTL — how long the signal stays alive. Choose from **15 minutes** up to **24 hours**. Shorter times work great for quick check-ins.",
+    "helpCreateTtlBubble": "The **timer icon** sets your TTL - how long the signal stays alive. Choose from **15 minutes** up to **24 hours**. Shorter times work great for quick check-ins.",
     "@helpCreateTtlBubble": {
         "description": "Help bubble text for step create_ttl"
     },
-    "helpCreateIntentBubble": "Pick a **Presence Intent** to tell the mesh what you are up to — exploring, monitoring, helping, or just listening. It adds context without extra words.",
+    "helpCreateIntentBubble": "Pick a **Presence Intent** to tell the mesh what you are up to - exploring, monitoring, helping, or just listening. It adds context without extra words.",
     "@helpCreateIntentBubble": {
         "description": "Help bubble text for step create_intent"
     },
@@ -42930,7 +43011,7 @@
     "@helpSettingsAppBubble": {
         "description": "Help bubble text for step settings_app"
     },
-    "helpSettingsCloudBubble": "**Cloud Sync** is a premium subscription that syncs your **NodeDex**, **automations**, **widgets**, and **profile** across all your devices. It also serves as your **backup** — if you ever delete the app or switch phones, Cloud Sync restores everything. Without it, all data lives only on this device and is lost if the app is removed.",
+    "helpSettingsCloudBubble": "**Cloud Sync** is a premium subscription that syncs your **NodeDex**, **automations**, **widgets**, and **profile** across all your devices. It also serves as your **backup** - if you ever delete the app or switch phones, Cloud Sync restores everything. Without it, all data lives only on this device and is lost if the app is removed.",
     "@helpSettingsCloudBubble": {
         "description": "Help bubble text for step settings_cloud"
     },
@@ -42946,7 +43027,7 @@
     "@helpProfileShareBubble": {
         "description": "Help bubble text for step profile_share"
     },
-    "helpProfileCloudBubble": "**Cloud Sync** is a premium feature that backs up your profile, NodeDex, automations, and widgets to the cloud. It protects your data — if you delete the app or get a new phone, everything **restores automatically** when you sign back in. Without it, your data exists only on this device.",
+    "helpProfileCloudBubble": "**Cloud Sync** is a premium feature that backs up your profile, NodeDex, automations, and widgets to the cloud. It protects your data - if you delete the app or get a new phone, everything **restores automatically** when you sign back in. Without it, your data exists only on this device.",
     "@helpProfileCloudBubble": {
         "description": "Help bubble text for step profile_cloud"
     },
@@ -43034,7 +43115,7 @@
     "@helpPresenceIntroBubble": {
         "description": "Help bubble text for step presence_intro"
     },
-    "helpPresenceActiveBubble": "**Online** nodes (green) were heard within the last 2 hours — matching the Meshtastic firmware definition of online.",
+    "helpPresenceActiveBubble": "**Online** nodes (green) were heard within the last 2 hours - matching the Meshtastic firmware definition of online.",
     "@helpPresenceActiveBubble": {
         "description": "Help bubble text for step presence_active"
     },
@@ -43126,15 +43207,15 @@
     "@helpTracerouteTipsBubble": {
         "description": "Help bubble text for step traceroute_tips"
     },
-    "helpNodedexIntroBubble": "Welcome to the **NodeDex** — your personal mesh field journal! Every node you discover is recorded here with a unique **Sigil** and personality **Trait**.",
+    "helpNodedexIntroBubble": "Welcome to the **NodeDex** - your personal mesh field journal! Every node you discover is recorded here with a unique **Sigil** and personality **Trait**.",
     "@helpNodedexIntroBubble": {
         "description": "Help bubble text for step nodedex_intro"
     },
-    "helpNodedexSigilsBubble": "Each node gets a **procedural Sigil** — a geometric glyph generated from its identity. No two nodes share the same sigil. Think of it as a visual fingerprint for the mesh!",
+    "helpNodedexSigilsBubble": "Each node gets a **procedural Sigil** - a geometric glyph generated from its identity. No two nodes share the same sigil. Think of it as a visual fingerprint for the mesh!",
     "@helpNodedexSigilsBubble": {
         "description": "Help bubble text for step nodedex_sigils"
     },
-    "helpNodedexTraitsBubble": "Nodes earn **Traits** based on real behavior — **Wanderer** moves between regions, **Beacon** is always online, **Ghost** is rarely seen, **Sentinel** holds a fixed position, **Relay** forwards traffic.",
+    "helpNodedexTraitsBubble": "Nodes earn **Traits** based on real behavior - **Wanderer** moves between regions, **Beacon** is always online, **Ghost** is rarely seen, **Sentinel** holds a fixed position, **Relay** forwards traffic.",
     "@helpNodedexTraitsBubble": {
         "description": "Help bubble text for step nodedex_traits"
     },
@@ -43142,35 +43223,35 @@
     "@helpNodedexFiltersBubble": {
         "description": "Help bubble text for step nodedex_filters"
     },
-    "helpNodedexFieldJournalBubble": "As you observe more nodes, your **field journal** fills in — each node earns a **Patina score** and **identity overlay** based on real encounters. The more you observe, the richer the detail!",
+    "helpNodedexFieldJournalBubble": "As you observe more nodes, your **field journal** fills in - each node earns a **Patina score** and **identity overlay** based on real encounters. The more you observe, the richer the detail!",
     "@helpNodedexFieldJournalBubble": {
         "description": "Help bubble text for step nodedex_field_journal"
     },
-    "helpNodedexAlbumModeBubble": "Tap the **view toggle** in the app bar to switch to **Album mode** — a collector-style card grid grouped by trait, rarity, or region. Each card shows the node's sigil with a holographic shimmer based on rarity!",
+    "helpNodedexAlbumModeBubble": "Tap the **view toggle** in the app bar to switch to **Album mode** - a collector-style card grid grouped by trait, rarity, or region. Each card shows the node's sigil with a holographic shimmer based on rarity!",
     "@helpNodedexAlbumModeBubble": {
         "description": "Help bubble text for step nodedex_album_mode"
     },
-    "helpNodedexAtmosphereBubble": "Notice the subtle **ambient particles** behind the screen? That is the **Elemental Atmosphere** — rain, embers, mist, and starlight driven by your real mesh data. More nodes and activity means more atmosphere!",
+    "helpNodedexAtmosphereBubble": "Notice the subtle **ambient particles** behind the screen? That is the **Elemental Atmosphere** - rain, embers, mist, and starlight driven by your real mesh data. More nodes and activity means more atmosphere!",
     "@helpNodedexAtmosphereBubble": {
         "description": "Help bubble text for step nodedex_atmosphere"
     },
-    "helpNodedexCloudSyncBubble": "Your NodeDex is stored locally in SQLite and survives app restarts — but **not** app deletion. If you uninstall the app or switch phones, your local NodeDex is gone. With a **Cloud Sync** subscription, your entire journal — sigils, encounters, social tags, notes, and co-seen links — backs up to the cloud and **restores automatically** on any device you sign into.",
+    "helpNodedexCloudSyncBubble": "Your NodeDex is stored locally in SQLite and survives app restarts - but **not** app deletion. If you uninstall the app or switch phones, your local NodeDex is gone. With a **Cloud Sync** subscription, your entire journal - sigils, encounters, social tags, notes, and co-seen links - backs up to the cloud and **restores automatically** on any device you sign into.",
     "@helpNodedexCloudSyncBubble": {
         "description": "Help bubble text for step nodedex_cloud_sync"
     },
-    "helpNodedexExportBubble": "Use the **menu** to **export** your NodeDex as a JSON file for backup, or **import** one from another device. Your field journal travels with you — even without Cloud Sync!",
+    "helpNodedexExportBubble": "Use the **menu** to **export** your NodeDex as a JSON file for backup, or **import** one from another device. Your field journal travels with you - even without Cloud Sync!",
     "@helpNodedexExportBubble": {
         "description": "Help bubble text for step nodedex_export"
     },
-    "helpNodedexSigilBubble": "This is the node's **Sigil** — a unique procedural glyph generated from its identity. No two nodes share the same sigil. It's like a visual fingerprint!",
+    "helpNodedexSigilBubble": "This is the node's **Sigil** - a unique procedural glyph generated from its identity. No two nodes share the same sigil. It's like a visual fingerprint!",
     "@helpNodedexSigilBubble": {
         "description": "Help bubble text for step nodedex_sigil"
     },
-    "helpNodedexTraitBubble": "The **Trait** is an inferred personality based on how this node behaves — movement patterns, signal consistency, encounter frequency. Confidence grows with more data.",
+    "helpNodedexTraitBubble": "The **Trait** is an inferred personality based on how this node behaves - movement patterns, signal consistency, encounter frequency. Confidence grows with more data.",
     "@helpNodedexTraitBubble": {
         "description": "Help bubble text for step nodedex_trait"
     },
-    "helpNodedexAutoSummaryBubble": "**Auto-Summary** computes insights from encounter history — time-of-day distribution, observation streaks, and busiest-day patterns. Everything updates automatically as new encounters arrive.",
+    "helpNodedexAutoSummaryBubble": "**Auto-Summary** computes insights from encounter history - time-of-day distribution, observation streaks, and busiest-day patterns. Everything updates automatically as new encounters arrive.",
     "@helpNodedexAutoSummaryBubble": {
         "description": "Help bubble text for step nodedex_auto_summary"
     },
@@ -43182,15 +43263,15 @@
     "@helpNodedexDiscoveryBubble": {
         "description": "Help bubble text for step nodedex_discovery"
     },
-    "helpNodedexSignalBubble": "**Signal Records** track the best and most recent SNR and RSSI values. These help you understand link quality — higher SNR and less negative RSSI mean stronger signals.",
+    "helpNodedexSignalBubble": "**Signal Records** track the best and most recent SNR and RSSI values. These help you understand link quality - higher SNR and less negative RSSI mean stronger signals.",
     "@helpNodedexSignalBubble": {
         "description": "Help bubble text for step nodedex_signal"
     },
-    "helpNodedexSocialTagBubble": "The **Social Tag** is a label you assign to categorize this node — friend, relay, base station, or anything else. It's your personal metadata, never shared over the mesh.",
+    "helpNodedexSocialTagBubble": "The **Social Tag** is a label you assign to categorize this node - friend, relay, base station, or anything else. It's your personal metadata, never shared over the mesh.",
     "@helpNodedexSocialTagBubble": {
         "description": "Help bubble text for step nodedex_social_tag"
     },
-    "helpNodedexNoteBubble": "**Your Note** is a free-text field for anything you want to remember about this node. Location hints, operator name, antenna type — whatever helps you.",
+    "helpNodedexNoteBubble": "**Your Note** is a free-text field for anything you want to remember about this node. Location hints, operator name, antenna type - whatever helps you.",
     "@helpNodedexNoteBubble": {
         "description": "Help bubble text for step nodedex_note"
     },
@@ -43202,23 +43283,23 @@
     "@helpNodedexEncountersBubble": {
         "description": "Help bubble text for step nodedex_encounters"
     },
-    "helpNodedexActivityTimelineBubble": "The **Activity Timeline** is a unified chronological feed of everything observed about this node — encounters, messages, presence changes, signals, and milestones.",
+    "helpNodedexActivityTimelineBubble": "The **Activity Timeline** is a unified chronological feed of everything observed about this node - encounters, messages, presence changes, signals, and milestones.",
     "@helpNodedexActivityTimelineBubble": {
         "description": "Help bubble text for step nodedex_activity_timeline"
     },
-    "helpNodedexCoseenBubble": "**Co-Seen Links** show nodes frequently observed in the same session as this one. Tap any link to see the full relationship — shared encounters, message counts, and connection strength.",
+    "helpNodedexCoseenBubble": "**Co-Seen Links** show nodes frequently observed in the same session as this one. Tap any link to see the full relationship - shared encounters, message counts, and connection strength.",
     "@helpNodedexCoseenBubble": {
         "description": "Help bubble text for step nodedex_coseen"
     },
-    "helpNodedexDeviceBubble": "**Device Info** shows live telemetry — battery level, hardware model, firmware version, and uptime. This data comes from the node directly and updates in real time.",
+    "helpNodedexDeviceBubble": "**Device Info** shows live telemetry - battery level, hardware model, firmware version, and uptime. This data comes from the node directly and updates in real time.",
     "@helpNodedexDeviceBubble": {
         "description": "Help bubble text for step nodedex_device"
     },
-    "helpAlbumIntroBubble": "Welcome to the **Collector Album** — a card-collector view of your NodeDex! Every discovered node becomes a collectible card with its sigil, trait, and rarity tier.",
+    "helpAlbumIntroBubble": "Welcome to the **Collector Album** - a card-collector view of your NodeDex! Every discovered node becomes a collectible card with its sigil, trait, and rarity tier.",
     "@helpAlbumIntroBubble": {
         "description": "Help bubble text for step album_intro"
     },
-    "helpAlbumCoverBubble": "The **Album Cover** is your dashboard — it shows your **Explorer Title**, total nodes, encounters, regions explored, and a rarity breakdown bar. Watch your collection grow!",
+    "helpAlbumCoverBubble": "The **Album Cover** is your dashboard - it shows your **Explorer Title**, total nodes, encounters, regions explored, and a rarity breakdown bar. Watch your collection grow!",
     "@helpAlbumCoverBubble": {
         "description": "Help bubble text for step album_cover"
     },
@@ -43230,27 +43311,27 @@
     "@helpAlbumRarityBubble": {
         "description": "Help bubble text for step album_rarity"
     },
-    "helpAlbumInteractionsBubble": "**Tap** a card to open the node's full profile. **Long-press** to open the **Card Gallery** — a full-screen carousel where you can swipe through cards and tap to flip them over for stats!",
+    "helpAlbumInteractionsBubble": "**Tap** a card to open the node's full profile. **Long-press** to open the **Card Gallery** - a full-screen carousel where you can swipe through cards and tap to flip them over for stats!",
     "@helpAlbumInteractionsBubble": {
         "description": "Help bubble text for step album_interactions"
     },
-    "helpAlbumGalleryBubble": "In the **Card Gallery**, swipe left and right to browse cards. **Tap** a card to flip it — the back shows discovery stats, signal records, encounter count, and patina score. Swipe down to dismiss.",
+    "helpAlbumGalleryBubble": "In the **Card Gallery**, swipe left and right to browse cards. **Tap** a card to flip it - the back shows discovery stats, signal records, encounter count, and patina score. Swipe down to dismiss.",
     "@helpAlbumGalleryBubble": {
         "description": "Help bubble text for step album_gallery"
     },
-    "helpAlbumHolographicBubble": "Higher-rarity cards shimmer with a **holographic effect** — the rarer the card, the brighter the glow. This effect respects your **reduce-motion** setting and uses an optimized painter for grid thumbnails.",
+    "helpAlbumHolographicBubble": "Higher-rarity cards shimmer with a **holographic effect** - the rarer the card, the brighter the glow. This effect respects your **reduce-motion** setting and uses an optimized painter for grid thumbnails.",
     "@helpAlbumHolographicBubble": {
         "description": "Help bubble text for step album_holographic"
     },
-    "helpAlbumPersistenceBubble": "Your album view preference and grouping choice are **saved automatically**. With **Cloud Sync**, your entire collection — sigils, encounters, tags, notes — backs up and syncs across all your devices. Delete the app, get a new phone — your collection is safe and restores on sign-in.",
+    "helpAlbumPersistenceBubble": "Your album view preference and grouping choice are **saved automatically**. With **Cloud Sync**, your entire collection - sigils, encounters, tags, notes - backs up and syncs across all your devices. Delete the app, get a new phone - your collection is safe and restores on sign-in.",
     "@helpAlbumPersistenceBubble": {
         "description": "Help bubble text for step album_persistence"
     },
-    "helpConstellationIntroBubble": "Welcome to the **Constellation** — a star-map of your mesh network! Nodes appear as stars, and lines between them show **co-seen relationships** — nodes observed in the same session.",
+    "helpConstellationIntroBubble": "Welcome to the **Constellation** - a star-map of your mesh network! Nodes appear as stars, and lines between them show **co-seen relationships** - nodes observed in the same session.",
     "@helpConstellationIntroBubble": {
         "description": "Help bubble text for step constellation_intro"
     },
-    "helpConstellationLayoutBubble": "The layout is **force-directed** — nodes that are frequently co-seen cluster together, while isolated nodes drift to the edges. The graph stabilizes after a moment so nothing shifts while you explore.",
+    "helpConstellationLayoutBubble": "The layout is **force-directed** - nodes that are frequently co-seen cluster together, while isolated nodes drift to the edges. The graph stabilizes after a moment so nothing shifts while you explore.",
     "@helpConstellationLayoutBubble": {
         "description": "Help bubble text for step constellation_layout"
     },
@@ -43266,23 +43347,23 @@
     "@helpConstellationSearchBubble": {
         "description": "Help bubble text for step constellation_search"
     },
-    "helpConstellationAtmosphereBubble": "The constellation has its own **Elemental Atmosphere** — subtle starlight and mist particles behind the graph, driven by your real mesh data. It never obstructs the visualization.",
+    "helpConstellationAtmosphereBubble": "The constellation has its own **Elemental Atmosphere** - subtle starlight and mist particles behind the graph, driven by your real mesh data. It never obstructs the visualization.",
     "@helpConstellationAtmosphereBubble": {
         "description": "Help bubble text for step constellation_atmosphere"
     },
-    "helpConstellationDataBubble": "Co-seen data is built **automatically** from your encounters. The more sessions you observe, the richer the constellation becomes. All relationship data is stored locally — but is **lost if you delete the app**. With **Cloud Sync**, your entire constellation backs up and restores on any device you sign into.",
+    "helpConstellationDataBubble": "Co-seen data is built **automatically** from your encounters. The more sessions you observe, the richer the constellation becomes. All relationship data is stored locally - but is **lost if you delete the app**. With **Cloud Sync**, your entire constellation backs up and restores on any device you sign into.",
     "@helpConstellationDataBubble": {
         "description": "Help bubble text for step constellation_data"
     },
-    "helpCloudSyncIntroBubble": "**Cloud Sync** is a premium subscription that keeps your mesh data synchronized across all your devices — and serves as your **backup**. Without it, all data lives only on-device and is permanently lost if you delete the app or lose your phone.",
+    "helpCloudSyncIntroBubble": "**Cloud Sync** is a premium subscription that keeps your mesh data synchronized across all your devices - and serves as your **backup**. Without it, all data lives only on-device and is permanently lost if you delete the app or lose your phone.",
     "@helpCloudSyncIntroBubble": {
         "description": "Help bubble text for step cloud_sync_intro"
     },
-    "helpCloudSyncWhatSyncsBubble": "Cloud Sync backs up your **NodeDex** (sigils, encounters, social tags, notes, co-seen links), **automations**, **custom widgets**, and **profile**. Reinstall the app, switch phones, or sign in on a second device — your entire mesh identity restores automatically.",
+    "helpCloudSyncWhatSyncsBubble": "Cloud Sync backs up your **NodeDex** (sigils, encounters, social tags, notes, co-seen links), **automations**, **custom widgets**, and **profile**. Reinstall the app, switch phones, or sign in on a second device - your entire mesh identity restores automatically.",
     "@helpCloudSyncWhatSyncsBubble": {
         "description": "Help bubble text for step cloud_sync_what_syncs"
     },
-    "helpCloudSyncOfflineFirstBubble": "The app is **offline-first**. Changes are saved locally to SQLite immediately and queued in an **outbox**. When you are online, the outbox drains to the cloud automatically — no manual sync needed.",
+    "helpCloudSyncOfflineFirstBubble": "The app is **offline-first**. Changes are saved locally to SQLite immediately and queued in an **outbox**. When you are online, the outbox drains to the cloud automatically - no manual sync needed.",
     "@helpCloudSyncOfflineFirstBubble": {
         "description": "Help bubble text for step cloud_sync_offline_first"
     },
@@ -43294,11 +43375,11 @@
     "@helpCloudSyncSubscriptionBubble": {
         "description": "Help bubble text for step cloud_sync_subscription"
     },
-    "helpCloudSyncWithoutBubble": "Without Cloud Sync, all your data stays on-device only. It survives app restarts, but **not** app deletion or a phone reset. You can **export** your NodeDex as JSON for manual backup. Cloud Sync automates this and adds cross-device restore — but the app works fully offline without it.",
+    "helpCloudSyncWithoutBubble": "Without Cloud Sync, all your data stays on-device only. It survives app restarts, but **not** app deletion or a phone reset. You can **export** your NodeDex as JSON for manual backup. Cloud Sync automates this and adds cross-device restore - but the app works fully offline without it.",
     "@helpCloudSyncWithoutBubble": {
         "description": "Help bubble text for step cloud_sync_without"
     },
-    "helpAetherIntroBubble": "**Aether** lets you track Meshtastic nodes at altitude! At 35,000 ft, LoRa signals can reach **400+ km** — far beyond typical ground-level range.",
+    "helpAetherIntroBubble": "**Aether** lets you track Meshtastic nodes at altitude! At 35,000 ft, LoRa signals can reach **400+ km** - far beyond typical ground-level range.",
     "@helpAetherIntroBubble": {
         "description": "Help bubble text for step aether_intro"
     },
@@ -43314,7 +43395,7 @@
     "@helpAetherReportsBubble": {
         "description": "Help bubble text for step aether_reports"
     },
-    "helpAetherLeaderboardBubble": "The **leaderboard is global and persistent** — stored in the cloud, not on your device. Rankings survive app reinstalls and are visible to the entire SocialMesh community. Top 3 get gold, silver, and bronze!",
+    "helpAetherLeaderboardBubble": "The **leaderboard is global and persistent** - stored in the cloud, not on your device. Rankings survive app reinstalls and are visible to the entire SocialMesh community. Top 3 get gold, silver, and bronze!",
     "@helpAetherLeaderboardBubble": {
         "description": "Help bubble text for step aether_leaderboard"
     },
@@ -43330,7 +43411,7 @@
     "@helpTakConnectBubble": {
         "description": "Help bubble text for step tak_connect"
     },
-    "helpTakAffiliationsBubble": "Every entity is colored by **standard affiliation** — blue for friendly, red for hostile, green for neutral, yellow for unknown. The icon changes by dimension too: ground, air, sea, or space.",
+    "helpTakAffiliationsBubble": "Every entity is colored by **standard affiliation** - blue for friendly, red for hostile, green for neutral, yellow for unknown. The icon changes by dimension too: ground, air, sea, or space.",
     "@helpTakAffiliationsBubble": {
         "description": "Help bubble text for step tak_affiliations"
     },
@@ -43338,7 +43419,7 @@
     "@helpTakFilterBubble": {
         "description": "Help bubble text for step tak_filter"
     },
-    "helpTakDetailBubble": "Tap any entity to open its **detail screen** — full CoT fields, coordinates, speed, course, and raw XML. Use the map icon to jump straight to its position on the map.",
+    "helpTakDetailBubble": "Tap any entity to open its **detail screen** - full CoT fields, coordinates, speed, course, and raw XML. Use the map icon to jump straight to its position on the map.",
     "@helpTakDetailBubble": {
         "description": "Help bubble text for step tak_detail"
     },
@@ -43354,7 +43435,7 @@
     "@helpRadioResponsibilityBubble": {
         "description": "Help bubble text for step radio_responsibility"
     },
-    "helpRadioLicenceBubble": "Some regions require an **amateur radio licence** before you can transmit. Check with your local regulatory authority — for example, ACMA in Australia or FCC in the US.",
+    "helpRadioLicenceBubble": "Some regions require an **amateur radio licence** before you can transmit. Check with your local regulatory authority - for example, ACMA in Australia or FCC in the US.",
     "@helpRadioLicenceBubble": {
         "description": "Help bubble text for step radio_licence"
     },
@@ -43366,7 +43447,7 @@
     "@helpRadioTermsLinkBubble": {
         "description": "Help bubble text for step radio_terms_link"
     },
-    "helpUseIntroBubble": "SocialMesh is a powerful tool — automations, signals, and mesh messaging give you a lot of capability. With that comes responsibility!",
+    "helpUseIntroBubble": "SocialMesh is a powerful tool - automations, signals, and mesh messaging give you a lot of capability. With that comes responsibility!",
     "@helpUseIntroBubble": {
         "description": "Help bubble text for step use_intro"
     },
@@ -43386,7 +43467,7 @@
     "@helpUseTermsLinkBubble": {
         "description": "Help bubble text for step use_terms_link"
     },
-    "helpResponsibilityIntroBubble": "SocialMesh is designed to be **privacy-first**. Your messages and data stay on your device — we do not store them on any server.",
+    "helpResponsibilityIntroBubble": "SocialMesh is designed to be **privacy-first**. Your messages and data stay on your device - we do not store them on any server.",
     "@helpResponsibilityIntroBubble": {
         "description": "Help bubble text for step responsibility_intro"
     },
@@ -43406,7 +43487,7 @@
     "@helpResponsibilityTermsLinkBubble": {
         "description": "Help bubble text for step responsibility_terms_link"
     },
-    "helpFtIntroBubble": "**File Transfers** let you send small files — text, configs, coordinates — directly over LoRa radio. No internet, no servers.",
+    "helpFtIntroBubble": "**File Transfers** let you send small files - text, configs, coordinates - directly over LoRa radio. No internet, no servers.",
     "@helpFtIntroBubble": {
         "description": "Help bubble text for step ft_intro"
     },
@@ -43418,7 +43499,7 @@
     "@helpFtNackBubble": {
         "description": "Help bubble text for step ft_nack"
     },
-    "helpFtLimitBubble": "Files are capped at **8 KB**. LoRa is a slow, shared, low-power radio — a single transfer can occupy the channel for up to a minute at long-range settings.",
+    "helpFtLimitBubble": "Files are capped at **8 KB**. LoRa is a slow, shared, low-power radio - a single transfer can occupy the channel for up to a minute at long-range settings.",
     "@helpFtLimitBubble": {
         "description": "Help bubble text for step ft_limit"
     },
@@ -43442,7 +43523,7 @@
     "@helpFtlMathBubble": {
         "description": "Help bubble text for step ftl_math"
     },
-    "helpFtlDutyBubble": "EU868 and similar bands impose a **1% duty cycle** — your radio can only transmit for 36 seconds per hour. At SF12, one 8 KB transfer nearly exhausts that entire budget.",
+    "helpFtlDutyBubble": "EU868 and similar bands impose a **1% duty cycle** - your radio can only transmit for 36 seconds per hour. At SF12, one 8 KB transfer nearly exhausts that entire budget.",
     "@helpFtlDutyBubble": {
         "description": "Help bubble text for step ftl_duty"
     },
@@ -43454,7 +43535,7 @@
     "@helpFtlUsbBubble": {
         "description": "Help bubble text for step ftl_usb"
     },
-    "helpNodeDexSectionSigil": "A unique procedural glyph generated from this node's identity. The shape, symmetry, and color palette are deterministic — the same node always produces the same sigil. Think of it as a visual fingerprint.",
+    "helpNodeDexSectionSigil": "A unique procedural glyph generated from this node's identity. The shape, symmetry, and color palette are deterministic - the same node always produces the same sigil. Think of it as a visual fingerprint.",
     "@helpNodeDexSectionSigil": {
         "description": "Section help text for sigil in nodeDexSectionHelp"
     },
@@ -43498,7 +43579,7 @@
     "@helpNodeDexSectionActivityTimeline": {
         "description": "Section help text for activity_timeline in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionCoseen": "Nodes that are frequently observed in the same session as this node. A higher count means these nodes tend to appear together — they may be co-located, part of the same deployment, or carried by the same person. Tap any link to see the full edge detail including shared encounter history and message activity.",
+    "helpNodeDexSectionCoseen": "Nodes that are frequently observed in the same session as this node. A higher count means these nodes tend to appear together - they may be co-located, part of the same deployment, or carried by the same person. Tap any link to see the full edge detail including shared encounter history and message activity.",
     "@helpNodeDexSectionCoseen": {
         "description": "Section help text for coseen in nodeDexSectionHelp"
     },
@@ -43506,11 +43587,11 @@
     "@helpNodeDexSectionDevice": {
         "description": "Section help text for device in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionTraitEvidence": "The observations that most strongly support the primary trait assigned above. Each bullet is a concrete signal drawn from encounter history — co-seen connections, tenure, mobility, signal consistency, and timing. These are the inputs that drove the confidence score.",
+    "helpNodeDexSectionTraitEvidence": "The observations that most strongly support the primary trait assigned above. Each bullet is a concrete signal drawn from encounter history - co-seen connections, tenure, mobility, signal consistency, and timing. These are the inputs that drove the confidence score.",
     "@helpNodeDexSectionTraitEvidence": {
         "description": "Section help text for trait_evidence in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionAdditionalTraits": "Other behavioral archetypes that also scored for this node, ranked by confidence. A node rarely fits a single archetype perfectly — secondary traits reveal nuance, like an Anchor that also acts as a Beacon, or a Drifter with Sentinel-like stretches.",
+    "helpNodeDexSectionAdditionalTraits": "Other behavioral archetypes that also scored for this node, ranked by confidence. A node rarely fits a single archetype perfectly - secondary traits reveal nuance, like an Anchor that also acts as a Beacon, or a Drifter with Sentinel-like stretches.",
     "@helpNodeDexSectionAdditionalTraits": {
         "description": "Section help text for additional_traits in nodeDexSectionHelp"
     },
@@ -43526,11 +43607,11 @@
     "@helpNodeDexSectionMrrpServices": {
         "description": "Section help text for mrrp_services in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionFieldNote": "A short, deterministic journal entry generated from this node's identity and primary trait — like a naturalist's field observation. The same node always produces the same note; it never changes, and it never travels over the mesh.",
+    "helpNodeDexSectionFieldNote": "A short, deterministic journal entry generated from this node's identity and primary trait - like a naturalist's field observation. The same node always produces the same note; it never changes, and it never travels over the mesh.",
     "@helpNodeDexSectionFieldNote": {
         "description": "Section help text for field_note in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionRadioCompatibility": "Compares your local radio's current preset and frequency against the values stamped on this node's last observation. Use this to spot mismatches that prevent direct RF reachability — for example, a node observed on a long-range preset while your radio is on short-range.",
+    "helpNodeDexSectionRadioCompatibility": "Compares your local radio's current preset and frequency against the values stamped on this node's last observation. Use this to spot mismatches that prevent direct RF reachability - for example, a node observed on a long-range preset while your radio is on short-range.",
     "@helpNodeDexSectionRadioCompatibility": {
         "description": "Section help text for radio_compatibility in nodeDexSectionHelp"
     },
@@ -43554,11 +43635,11 @@
     "@helpNodeDexSectionAlbumHolographic": {
         "description": "Section help text for album_holographic in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionAlbumPatina": "Patina is a composite score reflecting how deeply you have observed a node — encounter frequency, signal quality, co-seen connections, and time since first discovery all contribute. Higher patina means richer visual detail on the card.",
+    "helpNodeDexSectionAlbumPatina": "Patina is a composite score reflecting how deeply you have observed a node - encounter frequency, signal quality, co-seen connections, and time since first discovery all contribute. Higher patina means richer visual detail on the card.",
     "@helpNodeDexSectionAlbumPatina": {
         "description": "Section help text for album_patina in nodeDexSectionHelp"
     },
-    "helpNodeDexSectionAlbumCloudSync": "With a Cloud Sync subscription, your entire NodeDex album backs up to the cloud and syncs across devices — sigils, encounters, social tags, notes, co-seen links, and collection progress. If you delete the app or get a new phone, everything restores when you sign back in. Without Cloud Sync, your collection exists only on this device and is lost if the app is removed. You can still export/import as JSON for manual backups.",
+    "helpNodeDexSectionAlbumCloudSync": "With a Cloud Sync subscription, your entire NodeDex album backs up to the cloud and syncs across devices - sigils, encounters, social tags, notes, co-seen links, and collection progress. If you delete the app or get a new phone, everything restores when you sign back in. Without Cloud Sync, your collection exists only on this device and is lost if the app is removed. You can still export/import as JSON for manual backups.",
     "@helpNodeDexSectionAlbumCloudSync": {
         "description": "Section help text for album_cloud_sync in nodeDexSectionHelp"
     },
@@ -43691,7 +43772,7 @@
     "@whatsNewReachabilityTitle": {
         "description": "What's new feature title: Reachability"
     },
-    "whatsNewReachabilityDescription": "Estimate how likely you are to reach each node on your mesh — without sending a single test packet.\n\nReachability passively observes traffic flowing through the network and assigns High, Medium, or Low confidence to every node. Find it in the drawer menu under Mesh.",
+    "whatsNewReachabilityDescription": "Estimate how likely you are to reach each node on your mesh - without sending a single test packet.\n\nReachability passively observes traffic flowing through the network and assigns High, Medium, or Low confidence to every node. Find it in the drawer menu under Mesh.",
     "@whatsNewReachabilityDescription": {
         "description": "What's new description for Reachability feature"
     },
@@ -43703,7 +43784,7 @@
     "@whatsNewWorldMapTitle": {
         "description": "What's new feature title: World Map"
     },
-    "whatsNewWorldMapDescription": "See the entire global Meshtastic network on a single map. Every dot is a node sharing its location — zoom, pan, and tap to explore node details, hardware info, and last-seen times.\n\nNo connection required. The World Map pulls live data from the SocialMesh backend so you can explore the mesh anywhere.",
+    "whatsNewWorldMapDescription": "See the entire global Meshtastic network on a single map. Every dot is a node sharing its location - zoom, pan, and tap to explore node details, hardware info, and last-seen times.\n\nNo connection required. The World Map pulls live data from the SocialMesh backend so you can explore the mesh anywhere.",
     "@whatsNewWorldMapDescription": {
         "description": "What's new description for World Map feature"
     },
@@ -43715,7 +43796,7 @@
     "@whatsNewPresenceTitle": {
         "description": "What's new feature title: Presence"
     },
-    "whatsNewPresenceDescription": "See who is active on your mesh at a glance. Presence shows real-time node activity with intent indicators — whether someone is monitoring, mobile, or at a fixed base station.\n\nFilter by activity level, search by name, and tap any node to see their full profile. Find it in the drawer under Social.",
+    "whatsNewPresenceDescription": "See who is active on your mesh at a glance. Presence shows real-time node activity with intent indicators - whether someone is monitoring, mobile, or at a fixed base station.\n\nFilter by activity level, search by name, and tap any node to see their full profile. Find it in the drawer under Social.",
     "@whatsNewPresenceDescription": {
         "description": "What's new description for Presence feature"
     },
@@ -43727,7 +43808,7 @@
     "@whatsNewSignalsTitle": {
         "description": "What's new feature title: Signals"
     },
-    "whatsNewSignalsDescription": "Broadcast ephemeral moments to your mesh. Signals are short-lived posts — share text, a photo, or your location with a TTL from 15 minutes up to 24 hours.\n\nNearby signals appear first with proximity badges showing hop count. When they fade, they are gone. True off-grid, ephemeral content.",
+    "whatsNewSignalsDescription": "Broadcast ephemeral moments to your mesh. Signals are short-lived posts - share text, a photo, or your location with a TTL from 15 minutes up to 24 hours.\n\nNearby signals appear first with proximity badges showing hop count. When they fade, they are gone. True off-grid, ephemeral content.",
     "@whatsNewSignalsDescription": {
         "description": "What's new description for Signals feature"
     },
@@ -43739,7 +43820,7 @@
     "@whatsNewNodeDexTitle": {
         "description": "What's new feature title: NodeDex"
     },
-    "whatsNewNodeDexDescription": "A living field journal of the mesh world. Every node you discover is automatically recorded with a unique procedural Sigil and a personality Trait derived from real behavior.\n\nFind it in the drawer menu under Social. Filter by trait, search by name or hex ID, and tap any entry to explore its full profile — signal history, discovery timeline, and more.",
+    "whatsNewNodeDexDescription": "A living field journal of the mesh world. Every node you discover is automatically recorded with a unique procedural Sigil and a personality Trait derived from real behavior.\n\nFind it in the drawer menu under Social. Filter by trait, search by name or hex ID, and tap any entry to explore its full profile - signal history, discovery timeline, and more.",
     "@whatsNewNodeDexDescription": {
         "description": "What's new description for NodeDex feature"
     },
@@ -43775,7 +43856,7 @@
     "@whatsNewTranslationPackTitle": {
         "description": "What's new feature title: Translation Pack"
     },
-    "whatsNewTranslationPackDescription": "Translate any mesh message on demand with smart caching and privacy controls. Includes a managed translation allowance, or bring your own OpenAI API key for extended use.\n\nLong-press any message and tap Translate to see the result inline — with smart caching so repeated translations are instant. Now included in the Complete Pack.",
+    "whatsNewTranslationPackDescription": "Translate any mesh message on demand with smart caching and privacy controls. Includes a managed translation allowance, or bring your own OpenAI API key for extended use.\n\nLong-press any message and tap Translate to see the result inline - with smart caching so repeated translations are instant. Now included in the Complete Pack.",
     "@whatsNewTranslationPackDescription": {
         "description": "What's new description for Translation Pack feature"
     },
@@ -44211,11 +44292,11 @@
     "@automationErrorNoWebhookEvent": {
         "description": "Error message in automations"
     },
-    "automationErrorIftttNotConfigured": "Webhooks not configured — enable webhooks and set an IFTTT key or custom URL in settings",
+    "automationErrorIftttNotConfigured": "Webhooks not configured - enable webhooks and set an IFTTT key or custom URL in settings",
     "@automationErrorIftttNotConfigured": {
         "description": "Error message in automations"
     },
-    "automationErrorWebhookFailed": "Webhook request failed — check network connection",
+    "automationErrorWebhookFailed": "Webhook request failed - check network connection",
     "@automationErrorWebhookFailed": {
         "description": "Error message in automations"
     },
@@ -44377,7 +44458,7 @@
     "@automationHistoryDetailError": {
         "description": "Label for error message in history detail view"
     },
-    "automationHistoryDetailManualBypass": "THEN branch forced — conditions not evaluated",
+    "automationHistoryDetailManualBypass": "THEN branch forced - conditions not evaluated",
     "@automationHistoryDetailManualBypass": {
         "description": "Label indicating manual execution bypassed conditions and forced THEN"
     },
@@ -44702,7 +44783,7 @@
     "@globalLayerCopyExplainTitle": {
         "description": "Global Layer wizard step 1 title: explains what the Global Layer feature is."
     },
-    "globalLayerCopyExplainBody": "Your mesh radio connects nearby devices over radio waves — no internet needed. The Global Layer extends that reach by bridging your local mesh to a server (called a broker) over the internet.\n\nThink of it as a portal: messages from your mesh can travel through the portal to reach other meshes connected to the same broker, anywhere in the world.",
+    "globalLayerCopyExplainBody": "Your mesh radio connects nearby devices over radio waves - no internet needed. The Global Layer extends that reach by bridging your local mesh to a server (called a broker) over the internet.\n\nThink of it as a portal: messages from your mesh can travel through the portal to reach other meshes connected to the same broker, anywhere in the world.",
     "@globalLayerCopyExplainBody": {
         "description": "Global Layer wizard step 1 body: high-level description of the feature."
     },
@@ -44718,7 +44799,7 @@
     "@globalLayerCopyBrokerTitle": {
         "description": "Wizard step title for MQTT broker configuration."
     },
-    "globalLayerCopyBrokerBody": "Pick a broker to connect through. Most users should start with the official Meshtastic server — it works out of the box with no setup required.",
+    "globalLayerCopyBrokerBody": "Pick a broker to connect through. Most users should start with the official Meshtastic server - it works out of the box with no setup required.",
     "@globalLayerCopyBrokerBody": {
         "description": "Wizard step body for MQTT broker configuration."
     },
@@ -44818,7 +44899,7 @@
     "@mqttBrokerMosquittoDescription": {
         "description": "Description of the Eclipse Mosquitto test MQTT broker."
     },
-    "mqttBrokerMosquittoNote": "Test broker — not for production use. May have downtime.",
+    "mqttBrokerMosquittoNote": "Test broker - not for production use. May have downtime.",
     "@mqttBrokerMosquittoNote": {
         "description": "Note about the Mosquitto test broker (e.g. public, no auth)."
     },
@@ -44935,7 +45016,7 @@
     "@globalLayerWizardCredentialsAccepted": {
         "description": "Text displayed in global layer / MQTT"
     },
-    "globalLayerWizardAnonymousAccess": "No credentials — using anonymous access.",
+    "globalLayerWizardAnonymousAccess": "No credentials - using anonymous access.",
     "@globalLayerWizardAnonymousAccess": {
         "description": "Text displayed in global layer / MQTT"
     },
@@ -45202,7 +45283,7 @@
     "@lifecycleActionCancelledBackground": {
         "description": "Message when a command is rejected because the app is not in the foreground."
     },
-    "lifecycleActionCancelledBackground": "Action cancelled — app is in background",
+    "lifecycleActionCancelledBackground": "Action cancelled - app is in background",
     "@commandErrorCheckInternet": {
         "description": "Error message when a command requires network and it is unavailable."
     },
@@ -45369,15 +45450,15 @@
     "@sipDmEmptyDescription": {
         "description": "Description for the DM empty state."
     },
-    "sipDmBudgetExhausted": "Sending paused — mesh bandwidth limit reached. Try again shortly.",
+    "sipDmBudgetExhausted": "Sending paused - mesh bandwidth limit reached. Try again shortly.",
     "@sipDmBudgetExhausted": {
         "description": "Error shown when a DM send fails because the global SIP airtime budget (1024 bytes / 60s) is exhausted. Distinct from per-peer rate limiting — this is the shared mesh budget."
     },
-    "sipDmPeerBlocked": "You've blocked this node — unblock from SIP Hub to send messages again.",
+    "sipDmPeerBlocked": "You've blocked this node - unblock from SIP Hub to send messages again.",
     "@sipDmPeerBlocked": {
         "description": "Error shown when a DM send fails because the local user has blocked the recipient. Surfaces the unblock path (SIP Hub Blocked section) so the user can recover from the state if they hit it accidentally."
     },
-    "sipDmPeerRateLimited": "Sending too fast — slow down for a moment.",
+    "sipDmPeerRateLimited": "Sending too fast - slow down for a moment.",
     "@sipDmPeerRateLimited": {
         "description": "Error shown when a DM send fails because the per-peer × per-kind token bucket (text 6/60s, sketch 2/60s, reaction 6/60s) ran out. Distinct from sipDmBudgetExhausted, which is the global airtime cap."
     },
@@ -45423,7 +45504,7 @@
     "@sipDmBlockConfirmTitle": {
         "description": "Title of the confirmation sheet for the Block action in the DM overflow menu."
     },
-    "sipDmBlockConfirmBody": "Future messages and handshake requests from this node will be silently dropped. They won't be notified. Your existing conversation history stays on this device — use Remove conversation to clear it.",
+    "sipDmBlockConfirmBody": "Future messages and handshake requests from this node will be silently dropped. They won't be notified. Your existing conversation history stays on this device - use Remove conversation to clear it.",
     "@sipDmBlockConfirmBody": {
         "description": "Body of the DM overflow Block confirmation. Calls out that history is preserved (different from Remove)."
     },
@@ -45467,7 +45548,7 @@
     "@sipDmActionUnmutedSnack": {
         "description": "Confirmation snackbar shown after the user unmutes this peer."
     },
-    "sipDmActionResetSnack": "Secure session reset — next message will renegotiate keys",
+    "sipDmActionResetSnack": "Secure session reset - next message will renegotiate keys",
     "@sipDmActionResetSnack": {
         "description": "Confirmation snackbar shown after the user resets the secure session."
     },
@@ -45600,7 +45681,7 @@
             }
         }
     },
-    "sipPlayOfferIncomingTitle": "{game} — they want to play",
+    "sipPlayOfferIncomingTitle": "{game} - they want to play",
     "@sipPlayOfferIncomingTitle": {
         "description": "Title on a SIP Play bubble for an inbound offer awaiting Accept / Decline. {game} is the localised game name.",
         "placeholders": {
@@ -45705,7 +45786,7 @@
     "@sipSignalPanelTitle": {
         "description": "Header inside the Signal composer panel."
     },
-    "sipSignalPanelSubtitle": "A short musical phrase or a Morse message — synthesized locally on both sides.",
+    "sipSignalPanelSubtitle": "A short musical phrase or a Morse message - synthesized locally on both sides.",
     "@sipSignalPanelSubtitle": {
         "description": "Body copy under the Signal panel title explaining the no-audio-on-the-wire model."
     },
@@ -45775,7 +45856,7 @@
             }
         }
     },
-    "sipSignalSizeOverBudget": "Signal • {bytes} B — too large to send",
+    "sipSignalSizeOverBudget": "Signal • {bytes} B - too large to send",
     "@sipSignalSizeOverBudget": {
         "description": "Composer footer when the encoded envelope exceeds maxEnvelopeBytes. Send is disabled in this state.",
         "placeholders": {
@@ -45807,7 +45888,7 @@
     "@sipSignalMorseInputType": {
         "description": "Toggle label for the type-text Morse input mode (TextField helper)."
     },
-    "sipSignalMorseTapHint": "Tap dots and dashes — Letter finalises a glyph, Space adds a word gap.",
+    "sipSignalMorseTapHint": "Tap dots and dashes - Letter finalises a glyph, Space adds a word gap.",
     "@sipSignalMorseTapHint": {
         "description": "Helper line below the tap-Morse keypad explaining the input model."
     },
@@ -45843,7 +45924,7 @@
     "@sipSignalMorseTapBackspace": {
         "description": "Label for the tap-Morse backspace key — removes the most recent symbol or separator."
     },
-    "sipSignalMorseTapInvalidNote": "Unknown sequences are shown as ? — they're skipped on send.",
+    "sipSignalMorseTapInvalidNote": "Unknown sequences are shown as ? - they're skipped on send.",
     "@sipSignalMorseTapInvalidNote": {
         "description": "Inline notice when the tap-Morse input contains tokens not in the international Morse table."
     },
@@ -45879,7 +45960,7 @@
     "@sipSignalMorsePlaceholder": {
         "description": "Placeholder for the Morse text input."
     },
-    "sipSignalMorseUnsupportedNote": "Some characters won't be sent — only A–Z, 0–9, space, and . , ? ! / @ are allowed.",
+    "sipSignalMorseUnsupportedNote": "Some characters won't be sent - only A–Z, 0–9, space, and . , ? ! / @ are allowed.",
     "@sipSignalMorseUnsupportedNote": {
         "description": "Inline notice shown when the user types unsupported characters."
     },
@@ -45895,7 +45976,7 @@
     "@sipSignalBubbleMalformed": {
         "description": "Fallback bubble title when an inbound Signal envelope fails to decode. State is informational only — never crashes ingest."
     },
-    "sipInkComposerHint": "Draw a quick sketch — kept tiny so it fits on the mesh.",
+    "sipInkComposerHint": "Draw a quick sketch - kept tiny so it fits on the mesh.",
     "@sipInkComposerHint": {
         "description": "Hint shown above the SIP Ink canvas explaining the airtime constraint."
     },
@@ -45955,7 +46036,7 @@
     "@sipInkUnsupportedSketch": {
         "description": "Fallback caption shown in place of a SIP Ink sketch bubble when the payload can't be decoded."
     },
-    "sipInkBlocked": "Sketch can't fit on the mesh — simplify your strokes.",
+    "sipInkBlocked": "Sketch can't fit on the mesh - simplify your strokes.",
     "@sipInkBlocked": {
         "description": "Error shown when a sketch can't be reduced to fit the airtime budget."
     },
@@ -46196,7 +46277,7 @@
     "@sipHubBlockConfirmTitle": {
         "description": "Title of the confirmation sheet shown when the user taps Block on an incoming handshake request."
     },
-    "sipHubBlockConfirmBody": "Future messages and handshake requests from this node will be silently dropped. They won't be notified — they'll see your node as unreachable. You can unblock from Trust & Safety settings later.",
+    "sipHubBlockConfirmBody": "Future messages and handshake requests from this node will be silently dropped. They won't be notified - they'll see your node as unreachable. You can unblock from Trust & Safety settings later.",
     "@sipHubBlockConfirmBody": {
         "description": "Body of the Block confirmation sheet shown on the SIP Hub incoming handshake request card."
     },
@@ -46324,7 +46405,7 @@
     "@meshCapacityEducationCompatTitle": {
         "description": "Title of the compatibility educational tile."
     },
-    "meshCapacityEducationCompatBody": "Nearby radios must use compatible channel and preset settings to hear you. Move your group together when changing — solo changes can hide you from peers.",
+    "meshCapacityEducationCompatBody": "Nearby radios must use compatible channel and preset settings to hear you. Move your group together when changing - solo changes can hide you from peers.",
     "@meshCapacityEducationCompatBody": {
         "description": "Body of the compatibility educational tile."
     },
@@ -46400,7 +46481,7 @@
     "@meshCapacityQuietMeshTagline1": {
         "description": "Empty-state tagline shown when the local mesh has no RF evidence yet (variant 1)."
     },
-    "meshCapacityQuietMeshTagline2": "MQTT-only nodes don't count — only direct RF observations do.",
+    "meshCapacityQuietMeshTagline2": "MQTT-only nodes don't count - only direct RF observations do.",
     "@meshCapacityQuietMeshTagline2": {
         "description": "Empty-state tagline shown when the local mesh has no RF evidence yet (variant 2)."
     },
@@ -46666,7 +46747,7 @@
     "@sipHubScanningTagline2": {
         "description": "SIP Hub animated scanning state tagline 2. Two lines separated by \\n; prompts the user to take an action."
     },
-    "sipHubScanningTagline3": "Peers show up automatically when their discovery beacons\nreach your node — no need to tap anything to find them.",
+    "sipHubScanningTagline3": "Peers show up automatically when their discovery beacons\nreach your node - no need to tap anything to find them.",
     "@sipHubScanningTagline3": {
         "description": "SIP Hub animated scanning state tagline 3. Two lines separated by \\n; explains background discovery."
     },
@@ -46694,7 +46775,7 @@
     "@helpSipHubScanBubble": {
         "description": "Help bubble: SIP Hub scan step."
     },
-    "helpSipHubHandshakeBubble": "Once you see a peer, tap **Handshake** to exchange identity. After the handshake you can open an **end-to-end encrypted** ephemeral DM — no servers, no accounts.",
+    "helpSipHubHandshakeBubble": "Once you see a peer, tap **Handshake** to exchange identity. After the handshake you can open an **end-to-end encrypted** ephemeral DM - no servers, no accounts.",
     "@helpSipHubHandshakeBubble": {
         "description": "Help bubble: SIP Hub handshake step."
     },
@@ -47652,15 +47733,15 @@
     "@meshExplorerScanningTagline1": {
         "description": "Animated scanning state tagline 1."
     },
-    "meshExplorerScanningTagline2": "Tap Scan to send a rollcall — wakes up nearby peers",
+    "meshExplorerScanningTagline2": "Tap Scan to send a rollcall - wakes up nearby peers",
     "@meshExplorerScanningTagline2": {
         "description": "Animated scanning state tagline 2."
     },
-    "meshExplorerScanningTagline3": "Peers appear anonymously — handshake to identify them",
+    "meshExplorerScanningTagline3": "Peers appear anonymously - handshake to identify them",
     "@meshExplorerScanningTagline3": {
         "description": "Animated scanning state tagline 3."
     },
-    "meshExplorerScanningTagline4": "Radio range matters — try moving closer to the mesh",
+    "meshExplorerScanningTagline4": "Radio range matters - try moving closer to the mesh",
     "@meshExplorerScanningTagline4": {
         "description": "Animated scanning state tagline 4."
     },
@@ -47676,7 +47757,7 @@
     "@helpMeshExplorerOverviewDescription": {
         "description": "Help topic description for the Mesh Explorer screen."
     },
-    "helpMeshExplorerIntroBubble": "Welcome to **Mesh Explorer**! This shows all SocialMesh-capable peers currently in radio range. Anonymous peers appear instantly — no handshake needed.",
+    "helpMeshExplorerIntroBubble": "Welcome to **Mesh Explorer**! This shows all SocialMesh-capable peers currently in radio range. Anonymous peers appear instantly - no handshake needed.",
     "@helpMeshExplorerIntroBubble": {
         "description": "Help bubble: Mesh Explorer intro step."
     },
@@ -47684,7 +47765,7 @@
     "@helpMeshExplorerPeersBubble": {
         "description": "Help bubble: Mesh Explorer peers step."
     },
-    "helpMeshExplorerServicesBubble": "The **Services** section shows what nearby peers are offering — Bulletin Boards, Profiles, and more. Tap a service tile to interact with it.",
+    "helpMeshExplorerServicesBubble": "The **Services** section shows what nearby peers are offering - Bulletin Boards, Profiles, and more. Tap a service tile to interact with it.",
     "@helpMeshExplorerServicesBubble": {
         "description": "Help bubble: Mesh Explorer services step."
     },
@@ -47708,7 +47789,7 @@
     "@notificationSipPlayTurnTitle": {
         "description": "Notification title when the opponent has moved in a SIP Play game and it is now the local user's turn."
     },
-    "notificationSipPlayTurnBody": "{gameName} — tap to play your move.",
+    "notificationSipPlayTurnBody": "{gameName} - tap to play your move.",
     "@notificationSipPlayTurnBody": {
         "description": "Notification body when it is the local user's turn in a SIP Play game. {gameName} is a localised game name like 'Tic-Tac-Toe' or 'Connect Four'.",
         "placeholders": {
@@ -47718,7 +47799,7 @@
             }
         }
     },
-    "notificationSipPlayTurnBodyUnknownGame": "It's your move — tap to play.",
+    "notificationSipPlayTurnBodyUnknownGame": "It's your move - tap to play.",
     "@notificationSipPlayTurnBodyUnknownGame": {
         "description": "Notification body for SIP Play turn when the gameType is unknown/unsupported on this build (forward-compat placeholder)."
     },
@@ -48843,7 +48924,7 @@
     "@mapTerrainProfileUsingTerrainAltitude": {
         "description": "Info note shown when terrain elevation is used as a fallback altitude for the LOS overlay because no GPS altitude is available."
     },
-    "mapTerrainProfileUsingTerrainAltitudeSubtitle": "No GPS altitude — ground level assumed for one or both points.",
+    "mapTerrainProfileUsingTerrainAltitudeSubtitle": "No GPS altitude - ground level assumed for one or both points.",
     "@mapTerrainProfileUsingTerrainAltitudeSubtitle": {
         "description": "Subtitle explaining that terrain elevation is being used as a fallback for antenna altitude."
     },
@@ -49014,7 +49095,7 @@
             }
         }
     },
-    "losExplanationMarginal": "Marginal clearance ({clearance}m) — below the recommended {required}m Fresnel clearance. Terrain/obstacles not considered.",
+    "losExplanationMarginal": "Marginal clearance ({clearance}m) - below the recommended {required}m Fresnel clearance. Terrain/obstacles not considered.",
     "@losExplanationMarginal": {
         "description": "LOS result explanation when clearance is below the Fresnel threshold.",
         "placeholders": {
@@ -49047,19 +49128,19 @@
     "@nodesScreenLegendTitle": {
         "description": "Title for the nodes screen icon legend bottom sheet"
     },
-    "nodesScreenLegendStatusActive": "Active — heard recently",
+    "nodesScreenLegendStatusActive": "Active - heard recently",
     "@nodesScreenLegendStatusActive": {
         "description": "Legend entry for green active status dot"
     },
-    "nodesScreenLegendStatusFading": "Fading — not heard for a while",
+    "nodesScreenLegendStatusFading": "Fading - not heard for a while",
     "@nodesScreenLegendStatusFading": {
         "description": "Legend entry for yellow fading status dot"
     },
-    "nodesScreenLegendStatusStale": "Stale — last heard long ago",
+    "nodesScreenLegendStatusStale": "Stale - last heard long ago",
     "@nodesScreenLegendStatusStale": {
         "description": "Legend entry for grey stale status dot"
     },
-    "nodesScreenLegendStatusUnknown": "Unknown — never heard directly",
+    "nodesScreenLegendStatusUnknown": "Unknown - never heard directly",
     "@nodesScreenLegendStatusUnknown": {
         "description": "Legend entry for dim unknown status dot"
     },
@@ -49075,7 +49156,7 @@
     "@nodesScreenLegendSignalWeak": {
         "description": "Legend entry for 1-bar signal"
     },
-    "nodesScreenLegendHopsDirect": "Direct — no hops",
+    "nodesScreenLegendHopsDirect": "Direct - no hops",
     "@nodesScreenLegendHopsDirect": {
         "description": "Legend entry for 0-hop direct connection"
     },
@@ -49219,7 +49300,7 @@
     "@voiceMessageRecordingHint": {
         "description": "Hint text shown on the press-to-talk record button before recording starts"
     },
-    "voiceMessageTooShort": "Recording too short — hold longer",
+    "voiceMessageTooShort": "Recording too short - hold longer",
     "@voiceMessageTooShort": {
         "description": "Snackbar message when the user releases the PTT button too quickly"
     },
@@ -50065,7 +50146,7 @@
     "@translateFailed": {
         "description": "Error message when translation fails"
     },
-    "translateRateLimited": "Too many translations — try again shortly",
+    "translateRateLimited": "Too many translations - try again shortly",
     "@translateRateLimited": {
         "description": "Error message when translation rate limit is exceeded"
     },
@@ -50091,7 +50172,7 @@
             }
         }
     },
-    "premiumPreviewTranslation": "Preview Mode — Upgrade to translate messages",
+    "premiumPreviewTranslation": "Preview Mode - Upgrade to translate messages",
     "@premiumPreviewTranslation": {
         "description": "Banner text for translation premium preview mode"
     },
@@ -50099,7 +50180,7 @@
     "@premiumHeadlineTranslation": {
         "description": "Headline for translation pack premium sheet"
     },
-    "premiumDescTranslation": "Unlock on-demand message translation with smart caching and privacy controls — includes managed allowance, or bring your own API key",
+    "premiumDescTranslation": "Unlock on-demand message translation with smart caching and privacy controls - includes managed allowance, or bring your own API key",
     "@premiumDescTranslation": {
         "description": "Description for translation pack premium sheet"
     },
@@ -50119,7 +50200,7 @@
     "@premiumBenefitAutoDetect": {
         "description": "Translation pack benefit title - auto detect"
     },
-    "premiumBenefitAutoDetectDesc": "Automatically detects the source language — no manual selection needed",
+    "premiumBenefitAutoDetectDesc": "Automatically detects the source language - no manual selection needed",
     "@premiumBenefitAutoDetectDesc": {
         "description": "Translation pack benefit description - auto detect"
     },
@@ -50131,7 +50212,7 @@
     "@premiumBenefitSmartCacheDesc": {
         "description": "Translation pack benefit description - smart cache"
     },
-    "translateQuotaExhausted": "Managed translation allowance used — switch to your own OpenAI API key in settings",
+    "translateQuotaExhausted": "Managed translation allowance used - switch to your own OpenAI API key in settings",
     "@translateQuotaExhausted": {
         "description": "Error message when managed translation quota is exhausted"
     },
@@ -50143,7 +50224,7 @@
     "@translateProviderDisabled": {
         "description": "Error message when translation provider is disabled"
     },
-    "translateByoKeyMissing": "BYO API key required — configure in settings",
+    "translateByoKeyMissing": "BYO API key required - configure in settings",
     "@translateByoKeyMissing": {
         "description": "Error message when BYO provider selected but no key set"
     },
@@ -50159,7 +50240,7 @@
     "@subscriptionTranslationWithAllowance": {
         "description": "Outcome-driven benefit line for translation in bundle card"
     },
-    "subscriptionCompletePackSubtitleWithTranslation": "Every feature, one price — including translation",
+    "subscriptionCompletePackSubtitleWithTranslation": "Every feature, one price - including translation",
     "@subscriptionCompletePackSubtitleWithTranslation": {
         "description": "Updated Complete Pack subtitle now that translation is included"
     },
@@ -50175,7 +50256,7 @@
     "@translationSettingsProviderManaged": {
         "description": "Option label for SocialMesh-managed provider mode"
     },
-    "translationSettingsProviderManagedDesc": "Managed OpenAI translation — included allowance",
+    "translationSettingsProviderManagedDesc": "Managed OpenAI translation - included allowance",
     "@translationSettingsProviderManagedDesc": {
         "description": "Description for managed provider mode"
     },
@@ -50183,7 +50264,7 @@
     "@translationSettingsProviderByo": {
         "description": "Option label for BYO provider mode"
     },
-    "translationSettingsProviderByoDesc": "Use your own OpenAI API key — unlimited",
+    "translationSettingsProviderByoDesc": "Use your own OpenAI API key - unlimited",
     "@translationSettingsProviderByoDesc": {
         "description": "Description for BYO provider mode"
     },
@@ -50211,7 +50292,7 @@
     "@translationSettingsPrivacyPrivate": {
         "description": "Option label for private privacy mode"
     },
-    "translationSettingsPrivacyPrivateDesc": "Cache channels only — DM translations are not stored",
+    "translationSettingsPrivacyPrivateDesc": "Cache channels only - DM translations are not stored",
     "@translationSettingsPrivacyPrivateDesc": {
         "description": "Description for private privacy mode"
     },
@@ -50219,7 +50300,7 @@
     "@translationSettingsPrivacyStrict": {
         "description": "Option label for strict privacy mode"
     },
-    "translationSettingsPrivacyStrictDesc": "BYO provider only — no caching, no managed server",
+    "translationSettingsPrivacyStrictDesc": "BYO provider only - no caching, no managed server",
     "@translationSettingsPrivacyStrictDesc": {
         "description": "Description for strict privacy mode"
     },
@@ -50560,7 +50641,7 @@
     "@meshConversationInputHint": {
         "description": "Placeholder text in the message input"
     },
-    "meshConversationBudgetExhausted": "Sending paused — mesh bandwidth limit reached. Try again shortly.",
+    "meshConversationBudgetExhausted": "Sending paused - mesh bandwidth limit reached. Try again shortly.",
     "@meshConversationBudgetExhausted": {
         "description": "Error when airtime budget is exhausted"
     },
@@ -50624,7 +50705,7 @@
     "@deliveryPhaseRetrying": {
         "description": "Delivery phase: automatic retry"
     },
-    "deliveryPhaseRetryingDesc": "Retrying automatically — no action needed.",
+    "deliveryPhaseRetryingDesc": "Retrying automatically - no action needed.",
     "@deliveryPhaseRetryingDesc": {
         "description": "Description for retrying phase"
     },
@@ -50678,11 +50759,11 @@
             }
         }
     },
-    "deliverySafeToClose": "Safe to close — delivery continues in the background",
+    "deliverySafeToClose": "Safe to close - delivery continues in the background",
     "@deliverySafeToClose": {
         "description": "Hint that the user can leave and delivery continues"
     },
-    "deliverySafeToLeave": "You can leave — transfer will continue",
+    "deliverySafeToLeave": "You can leave - transfer will continue",
     "@deliverySafeToLeave": {
         "description": "Hint that user can navigate away"
     },
@@ -51310,7 +51391,7 @@
     "@whatsNewAutomationBranchingTitle": {
         "description": "Title for the condition branching automation feature in What's New."
     },
-    "whatsNewAutomationBranchingDescription": "Automations now support structured condition trees with IF / THEN / ELSE logic. Build complex rules that branch based on multiple conditions — battery level, node status, time of day, and more.\n\nEach run shows exactly which branch was taken and why, with a detailed execution history you can inspect anytime.",
+    "whatsNewAutomationBranchingDescription": "Automations now support structured condition trees with IF / THEN / ELSE logic. Build complex rules that branch based on multiple conditions - battery level, node status, time of day, and more.\n\nEach run shows exactly which branch was taken and why, with a detailed execution history you can inspect anytime.",
     "@whatsNewAutomationBranchingDescription": {
         "description": "Description for the condition branching automation feature in What's New."
     },
@@ -51322,7 +51403,7 @@
     "@whatsNewReactionGroupingTitle": {
         "description": "Title for the reaction grouping improvement in What's New."
     },
-    "whatsNewReactionGroupingDescription": "Message reactions are now grouped by emoji — if five people send a thumbs-up, you see one compact chip instead of five. Long-press any reaction to see every sender.\n\nReactions also wrap to the next line instead of overflowing off-screen, keeping the conversation tidy.",
+    "whatsNewReactionGroupingDescription": "Message reactions are now grouped by emoji - if five people send a thumbs-up, you see one compact chip instead of five. Long-press any reaction to see every sender.\n\nReactions also wrap to the next line instead of overflowing off-screen, keeping the conversation tidy.",
     "@whatsNewReactionGroupingDescription": {
         "description": "Description for the reaction grouping improvement in What's New."
     },
@@ -51334,7 +51415,7 @@
     "@whatsNewDeviceShopTitle": {
         "description": "Title for the Device Shop feature in What's New."
     },
-    "whatsNewDeviceShopDescription": "Browse Meshtastic-compatible hardware from official partners and trusted sellers — all in one place. Filter by category, sort by price or new arrivals, and tap through to the seller's store to buy.\n\nPurchases happen on the seller's site; SocialMesh never handles payment, shipping, or returns. Find it in the drawer menu under Tools.",
+    "whatsNewDeviceShopDescription": "Browse Meshtastic-compatible hardware from official partners and trusted sellers - all in one place. Filter by category, sort by price or new arrivals, and tap through to the seller's store to buy.\n\nPurchases happen on the seller's site; SocialMesh never handles payment, shipping, or returns. Find it in the drawer menu under Tools.",
     "@whatsNewDeviceShopDescription": {
         "description": "Description for the Device Shop feature in What's New."
     },
@@ -51588,7 +51669,7 @@
     "@petOnboardingPage2Title": {
         "description": "Title of the second onboarding card — introduces the plain-language advisory line above the pet."
     },
-    "petOnboardingPage2Body": "Above your pet, a single status line says exactly what it needs and names the button to tap — Charge when hungry, Resonate when lonely, Stabilise when messy, Purge when sick, Dim at bedtime. The matching button also pulses so you can't miss it.",
+    "petOnboardingPage2Body": "Above your pet, a single status line says exactly what it needs and names the button to tap - Charge when hungry, Resonate when lonely, Stabilise when messy, Purge when sick, Dim at bedtime. The matching button also pulses so you can't miss it.",
     "@petOnboardingPage2Body": {
         "description": "Body of the second onboarding card — explains the status line + pulsing-button cue."
     },
@@ -51596,7 +51677,7 @@
     "@petOnboardingPage3Title": {
         "description": "Title of the third onboarding card."
     },
-    "petOnboardingPage3Body": "Tap Inspect to see energy, mood, stability and recent events. Your pet won't time-out if you miss a day, but consistent care earns it a better branch — open the help sheet anytime for the full action guide.",
+    "petOnboardingPage3Body": "Tap Inspect to see energy, mood, stability and recent events. Your pet won't time-out if you miss a day, but consistent care earns it a better branch - open the help sheet anytime for the full action guide.",
     "@petOnboardingPage3Body": {
         "description": "Body of the third onboarding card."
     },
@@ -51620,7 +51701,7 @@
     "@petGuideSheetTitle": {
         "description": "Title of the help sheet that explains every pet care action."
     },
-    "petGuideSheetIntro": "Each action does one specific thing. When the pet beeps for attention (pulsing icon), tap the matching action — Feed for hunger, Play for loneliness, Clean for a mess, Sleep for bedtime, or Medicine for sickness — and the beep clears automatically.",
+    "petGuideSheetIntro": "Each action does one specific thing. When the pet beeps for attention (pulsing icon), tap the matching action - Feed for hunger, Play for loneliness, Clean for a mess, Sleep for bedtime, or Medicine for sickness - and the beep clears automatically.",
     "@petGuideSheetIntro": {
         "description": "Intro paragraph above the action list on the Pet help sheet."
     },
@@ -51628,7 +51709,7 @@
     "@petActionChargeDescription": {
         "description": "Help-sheet body text for the Charge action."
     },
-    "petActionSurgeDescription": "Overfeeds. Long-press Feed for +5 energy, but adds instability — too many overfeeds can make the pet sick. Answers a Hungry call.",
+    "petActionSurgeDescription": "Overfeeds. Long-press Feed for +5 energy, but adds instability - too many overfeeds can make the pet sick. Answers a Hungry call.",
     "@petActionSurgeDescription": {
         "description": "Help-sheet body text for the Surge action."
     },
@@ -51753,27 +51834,27 @@
             }
         }
     },
-    "petCallBannerHungry": "Low on energy — Feed or Overfeed to answer.",
+    "petCallBannerHungry": "Low on energy - Feed or Overfeed to answer.",
     "@petCallBannerHungry": {
         "description": "Attention call banner copy."
     },
-    "petCallBannerLonely": "Wants attention — Play to answer.",
+    "petCallBannerLonely": "Wants attention - Play to answer.",
     "@petCallBannerLonely": {
         "description": "Attention call banner copy."
     },
-    "petCallBannerSick": "Feeling unwell — Medicine to answer.",
+    "petCallBannerSick": "Feeling unwell - Medicine to answer.",
     "@petCallBannerSick": {
         "description": "Attention call banner copy."
     },
-    "petCallBannerHygiene": "Made a mess — Clean to remove.",
+    "petCallBannerHygiene": "Made a mess - Clean to remove.",
     "@petCallBannerHygiene": {
         "description": "Attention call banner copy."
     },
-    "petCallBannerBedtime": "It's almost time to rest — Sleep to answer.",
+    "petCallBannerBedtime": "It's almost time to rest - Sleep to answer.",
     "@petCallBannerBedtime": {
         "description": "Attention call banner copy."
     },
-    "petCallBannerBoredom": "Restless — Play to answer.",
+    "petCallBannerBoredom": "Restless - Play to answer.",
     "@petCallBannerBoredom": {
         "description": "Attention call banner copy."
     },
@@ -51965,7 +52046,7 @@
     "@petDormantTitle": {
         "description": "Dormant-state headline on the Pet home screen."
     },
-    "petDormantDescription": "Begin a new lineage — your next pet inherits a fresh seed tied to this node.",
+    "petDormantDescription": "Begin a new lineage - your next pet inherits a fresh seed tied to this node.",
     "@petDormantDescription": {
         "description": "Dormant-state description."
     },
@@ -52075,47 +52156,47 @@
     "@petAdvisoryEgg": {
         "description": "Status-line message while the pet is still an egg. No action yet."
     },
-    "petAdvisorySick": "Sick — tap [[Purge]] to heal.",
+    "petAdvisorySick": "Sick - tap [[Purge]] to heal.",
     "@petAdvisorySick": {
         "description": "Status-line message when the pet is sick (passive sickness, no attention call yet)."
     },
-    "petAdvisoryCallHungry": "Hungry — tap [[Charge]] to feed.",
+    "petAdvisoryCallHungry": "Hungry - tap [[Charge]] to feed.",
     "@petAdvisoryCallHungry": {
         "description": "Status-line message when an active attention call is firing for low energy."
     },
-    "petAdvisoryCallLonely": "Lonely — tap [[Resonate]] to play.",
+    "petAdvisoryCallLonely": "Lonely - tap [[Resonate]] to play.",
     "@petAdvisoryCallLonely": {
         "description": "Status-line message when an active attention call is firing for low mood."
     },
-    "petAdvisoryCallSick": "Sick — tap [[Purge]] to heal.",
+    "petAdvisoryCallSick": "Sick - tap [[Purge]] to heal.",
     "@petAdvisoryCallSick": {
         "description": "Status-line message when an active attention call is firing because the pet is sick."
     },
-    "petAdvisoryCallHygiene": "Messy — tap [[Stabilise]] to clean up.",
+    "petAdvisoryCallHygiene": "Messy - tap [[Stabilise]] to clean up.",
     "@petAdvisoryCallHygiene": {
         "description": "Status-line message when an active attention call is firing for accumulated hygiene artefacts."
     },
-    "petAdvisoryCallBedtime": "Bedtime — tap [[Dim]] to tuck in.",
+    "petAdvisoryCallBedtime": "Bedtime - tap [[Dim]] to tuck in.",
     "@petAdvisoryCallBedtime": {
         "description": "Status-line message when an active attention call is firing during the sleep window."
     },
-    "petAdvisoryCallBoredom": "Bored — tap [[Resonate]] to engage.",
+    "petAdvisoryCallBoredom": "Bored - tap [[Resonate]] to engage.",
     "@petAdvisoryCallBoredom": {
         "description": "Status-line message when an active attention call is firing for generic boredom."
     },
-    "petAdvisoryHygieneImminent": "Getting messy — tap [[Stabilise]] before they get sick.",
+    "petAdvisoryHygieneImminent": "Getting messy - tap [[Stabilise]] before they get sick.",
     "@petAdvisoryHygieneImminent": {
         "description": "Status-line message when hygiene artefacts have reached the sickness threshold but the pet isn't sick yet."
     },
-    "petAdvisoryEnergyLow": "Energy low — tap [[Charge]] soon.",
+    "petAdvisoryEnergyLow": "Energy low - tap [[Charge]] soon.",
     "@petAdvisoryEnergyLow": {
         "description": "Status-line warning when energy is below the call threshold but no call has fired yet."
     },
-    "petAdvisoryMoodLow": "Mood low — tap [[Resonate]] soon.",
+    "petAdvisoryMoodLow": "Mood low - tap [[Resonate]] soon.",
     "@petAdvisoryMoodLow": {
         "description": "Status-line warning when mood is below the call threshold but no call has fired yet."
     },
-    "petAdvisoryHygieneMild": "Small mess — tap [[Stabilise]] when you can.",
+    "petAdvisoryHygieneMild": "Small mess - tap [[Stabilise]] when you can.",
     "@petAdvisoryHygieneMild": {
         "description": "Status-line nudge when there's at least one hygiene artefact but below the sickness threshold."
     },
@@ -52123,7 +52204,7 @@
     "@petAdvisoryResting": {
         "description": "Status-line message when the pet is asleep. No action."
     },
-    "petAdvisoryBedtime": "Bedtime — tap [[Dim]] to tuck in.",
+    "petAdvisoryBedtime": "Bedtime - tap [[Dim]] to tuck in.",
     "@petAdvisoryBedtime": {
         "description": "Status-line hint during the sleep window when the pet is awake."
     },
@@ -52159,7 +52240,7 @@
     "@petBranchBannerTitleLuminous": {
         "description": "Banner title shown when the adolescent→adult transition resolves the Luminous branch."
     },
-    "petBranchBannerSubtitleLuminous": "Pristine care paid off — your creature has taken its brightest form.",
+    "petBranchBannerSubtitleLuminous": "Pristine care paid off - your creature has taken its brightest form.",
     "@petBranchBannerSubtitleLuminous": {
         "description": "Banner subtitle for the Luminous branch."
     },
@@ -52183,7 +52264,7 @@
     "@petBranchBannerTitleDimmed": {
         "description": "Banner title for the Dimmed (neglect) branch."
     },
-    "petBranchBannerSubtitleDimmed": "Neglect has dimmed your creature — it may still be revived with steady care.",
+    "petBranchBannerSubtitleDimmed": "Neglect has dimmed your creature - it may still be revived with steady care.",
     "@petBranchBannerSubtitleDimmed": {
         "description": "Banner subtitle for the Dimmed branch."
     },
@@ -52277,7 +52358,7 @@
     "@petTimelineNowPill": {
         "description": "Small pill next to the current stage heading on the timeline."
     },
-    "petTimelineQuietCurrent": "Quiet stretch — no events yet.",
+    "petTimelineQuietCurrent": "Quiet stretch - no events yet.",
     "@petTimelineQuietCurrent": {
         "description": "Shown inside the current stage's section when nothing has happened yet."
     },
@@ -52401,7 +52482,7 @@
     "@petTimelineDetailDormantEntered": {
         "description": "Expanded detail for the dormant-entered event."
     },
-    "petTimelineDetailReSigilled": "Re-sigilled — a new creature begins.",
+    "petTimelineDetailReSigilled": "Re-sigilled - a new creature begins.",
     "@petTimelineDetailReSigilled": {
         "description": "Expanded detail for the re-sigilled event."
     },
@@ -52482,27 +52563,27 @@
     "@notificationPetAttentionTitle": {
         "description": "Notification title for an active attention call."
     },
-    "notificationPetAttentionHungryBody": "Low energy — tap Charge.",
+    "notificationPetAttentionHungryBody": "Low energy - tap Charge.",
     "@notificationPetAttentionHungryBody": {
         "description": "Attention call body for hungry reason."
     },
-    "notificationPetAttentionLonelyBody": "Mood is drifting — tap Resonate.",
+    "notificationPetAttentionLonelyBody": "Mood is drifting - tap Resonate.",
     "@notificationPetAttentionLonelyBody": {
         "description": "Attention call body for lonely reason."
     },
-    "notificationPetAttentionSickBody": "Feeling unwell — tap Purge.",
+    "notificationPetAttentionSickBody": "Feeling unwell - tap Purge.",
     "@notificationPetAttentionSickBody": {
         "description": "Attention call body for sick reason."
     },
-    "notificationPetAttentionHygieneBody": "Field needs stabilising — tap Stabilise.",
+    "notificationPetAttentionHygieneBody": "Field needs stabilising - tap Stabilise.",
     "@notificationPetAttentionHygieneBody": {
         "description": "Attention call body for hygiene reason."
     },
-    "notificationPetAttentionBedtimeBody": "Almost bedtime — tap Dim.",
+    "notificationPetAttentionBedtimeBody": "Almost bedtime - tap Dim.",
     "@notificationPetAttentionBedtimeBody": {
         "description": "Attention call body for bedtime reason."
     },
-    "notificationPetAttentionBoredomBody": "Restless — tap Resonate.",
+    "notificationPetAttentionBoredomBody": "Restless - tap Resonate.",
     "@notificationPetAttentionBoredomBody": {
         "description": "Attention call body for boredom reason."
     },
@@ -53039,23 +53120,23 @@
     "@reticulumDiagSuccessRate": {
         "description": "Frames emitted divided by total reassembly attempts."
     },
-    "reticulumDiagDroppedDecodeError": "Dropped — decode error",
+    "reticulumDiagDroppedDecodeError": "Dropped - decode error",
     "@reticulumDiagDroppedDecodeError": {
         "description": "Counter: fragments rejected because the 2-byte header could not be parsed."
     },
-    "reticulumDiagDroppedTimeoutInactivity": "Dropped — inactivity timeout",
+    "reticulumDiagDroppedTimeoutInactivity": "Dropped - inactivity timeout",
     "@reticulumDiagDroppedTimeoutInactivity": {
         "description": "Counter: partial frames dropped after the inactivity TTL elapsed."
     },
-    "reticulumDiagDroppedTimeoutAbsolute": "Dropped — absolute TTL",
+    "reticulumDiagDroppedTimeoutAbsolute": "Dropped - absolute TTL",
     "@reticulumDiagDroppedTimeoutAbsolute": {
         "description": "Counter: partial frames dropped after the absolute TTL elapsed."
     },
-    "reticulumDiagDroppedOverflow": "Dropped — overflow",
+    "reticulumDiagDroppedOverflow": "Dropped - overflow",
     "@reticulumDiagDroppedOverflow": {
         "description": "Counter: buffers evicted because of concurrent-buffer or fragment-count caps."
     },
-    "reticulumDiagDroppedOversize": "Dropped — oversize",
+    "reticulumDiagDroppedOversize": "Dropped - oversize",
     "@reticulumDiagDroppedOversize": {
         "description": "Counter: frames dropped because their assembled body would exceed the size cap."
     },
@@ -53127,7 +53208,7 @@
     "@reticulumBridgeLastErrorLabel": {
         "description": "Row label for the message of the most recent connect / write failure."
     },
-    "reticulumBridgeNoLastError": "—",
+    "reticulumBridgeNoLastError": "-",
     "@reticulumBridgeNoLastError": {
         "description": "Placeholder shown for last error when none has occurred."
     },
@@ -53163,15 +53244,15 @@
     "@reticulumBridgeForwarded": {
         "description": "Lifetime count of frames successfully written to rnsd."
     },
-    "reticulumBridgeDroppedNoConnection": "Dropped — no connection",
+    "reticulumBridgeDroppedNoConnection": "Dropped - no connection",
     "@reticulumBridgeDroppedNoConnection": {
         "description": "Counter for frames dropped because the TCP socket was not connected."
     },
-    "reticulumBridgeDroppedBackpressure": "Dropped — queue full",
+    "reticulumBridgeDroppedBackpressure": "Dropped - queue full",
     "@reticulumBridgeDroppedBackpressure": {
         "description": "Counter for frames dropped by the bounded outbound queue."
     },
-    "reticulumBridgeDroppedFramingError": "Dropped — framing error",
+    "reticulumBridgeDroppedFramingError": "Dropped - framing error",
     "@reticulumBridgeDroppedFramingError": {
         "description": "Counter for frames dropped because encode/write failed."
     },
@@ -53509,7 +53590,7 @@
     "@nodedexConstellationEmptyTitle": {
         "description": "Empty-state title shown when there isn't enough data to render the Constellation."
     },
-    "nodedexConstellationEmptyMissing": "No NodeDex entry yet for this node — open Constellation again once an encounter is recorded.",
+    "nodedexConstellationEmptyMissing": "No NodeDex entry yet for this node - open Constellation again once an encounter is recorded.",
     "@nodedexConstellationEmptyMissing": {
         "description": "Empty-state body when the centre node has no NodeDex entry."
     },
@@ -53894,5 +53975,35 @@
     "navigationOperations": "Operations",
     "@navigationOperations": {
         "description": "Drawer label for the Operations screen, where passive participation objectives are listed. Slots into the Discover section alongside NodeDex and Mesh Feed."
+    },
+    "presenceStatusActive": "Active",
+    "@presenceStatusActive": {
+        "description": "Presence badge on node cards when the node is currently active."
+    },
+    "presenceStatusInactive": "Inactive",
+    "@presenceStatusInactive": {
+        "description": "Presence badge on node cards when the node is stale (not heard for a long while)."
+    },
+    "presenceStatusUnknown": "Unknown",
+    "@presenceStatusUnknown": {
+        "description": "Presence badge on node cards when the activity state cannot be inferred."
+    },
+    "presenceSeenJustNow": "Just now",
+    "@presenceSeenJustNow": {
+        "description": "Presence badge on node cards when the node was heard less than 30 seconds ago."
+    },
+    "presenceSeenAgo": "Seen {ago} ago",
+    "@presenceSeenAgo": {
+        "description": "Presence badge on node cards. {ago} is a short duration like '5m', '2h', or '3d'.",
+        "placeholders": {
+            "ago": {
+                "type": "String",
+                "example": "5m"
+            }
+        }
+    },
+    "presenceInferenceTooltip": "LoRa mesh has no offline signal. Status is inferred.",
+    "@presenceInferenceTooltip": {
+        "description": "Tooltip shown next to inferred presence badges to explain why status is approximate."
     }
 }

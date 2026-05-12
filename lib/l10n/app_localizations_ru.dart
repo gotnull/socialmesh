@@ -40776,4 +40776,25 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get navigationOperations => 'Операции';
+
+  @override
+  String get presenceStatusActive => 'Активен';
+
+  @override
+  String get presenceStatusInactive => 'Неактивен';
+
+  @override
+  String get presenceStatusUnknown => 'Неизвестно';
+
+  @override
+  String get presenceSeenJustNow => 'Только что';
+
+  @override
+  String presenceSeenAgo(String ago) {
+    return 'Был активен $ago назад';
+  }
+
+  @override
+  String get presenceInferenceTooltip =>
+      'В LoRa-сети нет офлайн-сигнала. Статус определяется по последней активности.';
 }

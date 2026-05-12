@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'dart:ui';
+
+import '../l10n/app_localizations.dart';
 import '../models/presence_confidence.dart';
 
-const String kPresenceInferenceTooltip =
-    'LoRa mesh has no offline signal. Status is inferred.'; // lint-allow: hardcoded-string
+AppLocalizations _l10n() =>
+    lookupAppLocalizations(PlatformDispatcher.instance.locale);
+
+String get kPresenceInferenceTooltip => _l10n().presenceInferenceTooltip;
 
 String formatSeenAgo(Duration? age) {
-  if (age == null) return 'unknown';
-  if (age.inSeconds < 30) return 'just now'; // lint-allow: hardcoded-string
+  if (age == null) return '';
+  if (age.inSeconds < 30) return '';
   if (age.inMinutes < 1) return '${age.inSeconds}s';
   if (age.inMinutes < 60) return '${age.inMinutes}m';
   if (age.inHours < 24) return '${age.inHours}h';
@@ -15,15 +20,18 @@ String formatSeenAgo(Duration? age) {
 }
 
 String presenceStatusText(PresenceConfidence confidence, Duration? age) {
+  final l10n = _l10n();
   switch (confidence) {
     case PresenceConfidence.active:
-      return 'Active';
+      return l10n.presenceStatusActive;
     case PresenceConfidence.fading:
-      return 'Seen ${formatSeenAgo(age)} ago'; // lint-allow: hardcoded-string
+      final ago = formatSeenAgo(age);
+      if (ago.isEmpty) return l10n.presenceSeenJustNow;
+      return l10n.presenceSeenAgo(ago);
     case PresenceConfidence.stale:
-      return 'Inactive';
+      return l10n.presenceStatusInactive;
     case PresenceConfidence.unknown:
-      return 'Unknown';
+      return l10n.presenceStatusUnknown;
   }
 }
 

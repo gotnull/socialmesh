@@ -740,7 +740,7 @@ class AppLocalizationsPt extends AppLocalizations {
     String flightNumber,
     String status,
   ) {
-    return '$nodeName já tem um voo ($flightNumber — $status)';
+    return '$nodeName já tem um voo ($flightNumber - $status)';
   }
 
   @override
@@ -954,7 +954,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String aetherScheduleRouteExceedsRange(int distance) {
-    return '$distance — excede o alcance máximo da aeronave';
+    return '$distance - excede o alcance máximo da aeronave';
   }
 
   @override
@@ -971,7 +971,7 @@ class AppLocalizationsPt extends AppLocalizations {
     String arrival,
     int distance,
   ) {
-    return '$departure e $arrival estão a $distance km de distância — muito perto para um voo comercial';
+    return '$departure e $arrival estão a $distance km de distância - muito perto para um voo comercial';
   }
 
   @override
@@ -1049,12 +1049,12 @@ class AppLocalizationsPt extends AppLocalizations {
     String arrival,
     int distance,
   ) {
-    return '$departure e $arrival estão a apenas $distance km de distância — não existem rotas comerciais';
+    return '$departure e $arrival estão a apenas $distance km de distância - não existem rotas comerciais';
   }
 
   @override
   String aetherScheduleTooFar(String departure, String arrival, int distance) {
-    return 'De $departure a $arrival são $distance — excede o alcance máximo da aeronave';
+    return 'De $departure a $arrival são $distance - excede o alcance máximo da aeronave';
   }
 
   @override
@@ -2103,98 +2103,100 @@ class AppLocalizationsPt extends AppLocalizations {
   String get automationConditionWithinGeofence => 'Dentro do geofence';
 
   @override
-  String get automationEditorAddCondition => 'Add Condition';
+  String get automationEditorAddCondition => 'Adicionar Condição';
 
   @override
-  String get automationEditorAddElseActions => 'Add ELSE actions';
+  String get automationEditorAddElseActions => 'Adicionar ações SENÃO';
 
   @override
-  String get automationEditorConditionsAll => 'All conditions must be true';
+  String get automationEditorConditionsAll =>
+      'Todas as condições têm de ser verdadeiras';
 
   @override
-  String get automationEditorElse => 'ELSE';
+  String get automationEditorElse => 'SENÃO';
 
   @override
-  String get automationEditorElseDescription => 'otherwise do...';
+  String get automationEditorElseDescription => 'caso contrário fazer...';
 
   @override
-  String get automationEditorIf => 'IF';
+  String get automationEditorIf => 'SE';
 
   @override
-  String get automationEditorIfDescription => 'only if...';
+  String get automationEditorIfDescription => 'apenas se...';
 
   @override
-  String get automationEditorNoConditions => 'No conditions — always runs';
+  String get automationEditorNoConditions => 'Sem condições - executa sempre';
 
   @override
-  String get automationEditorRemoveElse => 'Remove ELSE';
+  String get automationEditorRemoveElse => 'Remover SENÃO';
 
   @override
-  String get automationEditorSelectConditionType => 'Select Condition Type';
+  String get automationEditorSelectConditionType =>
+      'Selecionar Tipo de Condição';
 
   @override
   String get automationEditorValidateElseActions =>
-      'ELSE branch must have at least one action, or remove the ELSE section';
+      'O ramo SENÃO deve ter pelo menos uma ação, ou remova a secção SENÃO';
 
   @override
   String get automationEditorValidateThenActions =>
-      'Please add at least one THEN action';
+      'Adicione pelo menos uma ação ENTÃO';
 
   @override
   String automationImportElseActions(int count) {
-    return 'ELSE Actions ($count)';
+    return 'Ações SENÃO ($count)';
   }
 
   @override
   String automationImportThenActions(int count) {
-    return 'THEN Actions ($count)';
+    return 'Ações ENTÃO ($count)';
   }
 
   @override
   String automationSummaryElse(String actions) {
-    return 'else $actions';
+    return 'senão $actions';
   }
 
   @override
   String automationSummaryIf(String conditions) {
-    return 'if $conditions';
+    return 'se $conditions';
   }
 
   @override
   String automationSummaryThen(String actions) {
-    return 'then $actions';
+    return 'então $actions';
   }
 
   @override
   String automationSummaryWhen(String trigger) {
-    return 'When $trigger';
+    return 'Quando $trigger';
   }
 
   @override
-  String get automationCardBranchThen => 'THEN';
+  String get automationCardBranchThen => 'ENTÃO';
 
   @override
-  String get automationCardBranchElse => 'ELSE';
+  String get automationCardBranchElse => 'SENÃO';
 
   @override
   String automationCardConditionCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count conditions',
-      one: '1 condition',
+      other: '$count condições',
+      one: '1 condição',
     );
     return '$_temp0';
   }
 
   @override
   String automationConditionConfigBatteryThreshold(int threshold) {
-    return 'Battery threshold: $threshold%';
+    return 'Limiar de bateria: $threshold%';
   }
 
   @override
   String automationConditionConfigDays(String days) {
-    return 'Days: $days';
+    return 'Dias: $days';
   }
 
   @override
@@ -3279,17 +3281,17 @@ class AppLocalizationsPt extends AppLocalizations {
       'Usa a chave Meshtastic padrão. Outros usuários com configurações padrão podem interceptar mensagens.';
 
   @override
-  String get channelWizardDefaultKeyWarningTitle => 'Default Key Warning';
+  String get channelWizardDefaultKeyWarningTitle => 'Aviso de Chave Padrão';
 
   @override
   String get channelWizardDefaultKeyWarningBody =>
-      'The shared default key is publicly known. Anyone with a Meshtastic device using default settings can read messages on this channel.\n\nThis is fine for public community channels, but not recommended for private conversations.';
+      'A chave padrão partilhada é publicamente conhecida. Qualquer pessoa com um dispositivo Meshtastic a usar as definições padrão pode ler mensagens neste canal.\n\nIsto é aceitável para canais comunitários públicos, mas não é recomendado para conversas privadas.';
 
   @override
-  String get channelWizardDefaultKeyKeep => 'Keep Default Key';
+  String get channelWizardDefaultKeyKeep => 'Manter Chave Padrão';
 
   @override
-  String get channelWizardDefaultKeyUpgrade => 'Upgrade to Private Key';
+  String get channelWizardDefaultKeyUpgrade => 'Atualizar para Chave Privada';
 
   @override
   String get channelWizardContinueButton => 'Continuar';
@@ -3694,7 +3696,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nodeInfoViewDetails => 'Ver Detalhes';
 
   @override
-  String get nodeInfoOpenInNodeDex => 'Open in NodeDex';
+  String get nodeInfoOpenInNodeDex => 'Abrir no NodeDex';
 
   @override
   String get nodeInfoViewHistory => 'Histórico de Traceroute';
@@ -3738,43 +3740,42 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get nodeInfoLegendTitle => 'Action Legend';
+  String get nodeInfoLegendTitle => 'Legenda de Ações';
 
   @override
   String get nodeInfoLegendPosition =>
-      'Request the node\'s current GPS position over the mesh.';
+      'Solicitar a posição GPS atual do nó pela rede mesh.';
 
   @override
   String get nodeInfoLegendMessage =>
-      'Open a direct message conversation with this node.';
+      'Abrir uma conversa de mensagem direta com este nó.';
 
   @override
   String get nodeInfoLegendShare =>
-      'Share this node\'s coordinates as a link via the system share sheet.';
+      'Partilhar as coordenadas deste nó como ligação através da folha de partilha do sistema.';
 
   @override
   String get nodeInfoLegendCopy =>
-      'Copy the node\'s GPS coordinates to the clipboard.';
+      'Copiar as coordenadas GPS do nó para a área de transferência.';
 
   @override
   String get nodeInfoLegendTraceroute =>
-      'Send a traceroute packet to discover the route to this node.';
+      'Enviar um pacote de traceroute para descobrir a rota até este nó.';
 
   @override
   String get nodeInfoLegendViewDetails =>
-      'Open the full detail screen for this node.';
+      'Abrir o ecrã de detalhes completos deste nó.';
 
   @override
-  String get nodeInfoLegendHistory =>
-      'View the traceroute history for this node.';
+  String get nodeInfoLegendHistory => 'Ver o histórico de traceroute deste nó.';
 
   @override
   String get nodeInfoLegendTrack =>
-      'Toggle the node\'s position track polyline on the map.';
+      'Ativar/desativar a polilinha de rastreio de posição do nó no mapa.';
 
   @override
   String get nodeInfoLegendPositionLog =>
-      'View the full position log for this node.';
+      'Ver o registo de posições completo deste nó.';
 
   @override
   String get bindingSelectorNoResults => 'Nenhuma variável encontrada';
@@ -4290,14 +4291,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'Integração Team Awareness Kit. Conecta sistemas Meshtastic e TAK.';
 
   @override
-  String get deviceConfigRoleTakTracker => 'TAK Tracker';
+  String get deviceConfigRoleTakTracker => 'Rastreador TAK';
 
   @override
   String get deviceConfigRoleTakTrackerDesc =>
       'Combinação dos modos TAK e Tracker.';
 
   @override
-  String get deviceConfigRoleTracker => 'Tracker';
+  String get deviceConfigRoleTracker => 'Rastreador';
 
   @override
   String get deviceConfigRoleTrackerDesc =>
@@ -4357,7 +4358,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get deviceConfigSectionRebroadcastMode => 'Modo de retransmissão';
 
   @override
-  String get deviceConfigSectionSerial => 'Serial';
+  String get deviceConfigSectionSerial => 'Série';
 
   @override
   String get deviceConfigSectionTimezone => 'Fuso horário';
@@ -4622,11 +4623,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get deviceShopContactUs => 'Fale Conosco';
 
   @override
-  String get deviceShopContactEmailSubject => 'Device Shop seller inquiry';
+  String get deviceShopContactEmailSubject =>
+      'Pedido de vendedor na Loja de Dispositivos';
 
   @override
   String get deviceShopContactEmailBody =>
-      'Hi SocialMesh team,\n\nI am interested in becoming a seller in the Device Shop.\n\nCompany name:\nWebsite:\nProduct types:\nRegion(s):\n\nAdditional details:\n';
+      'Olá equipa SocialMesh,\n\nTenho interesse em tornar-me vendedor na Loja de Dispositivos.\n\nNome da empresa:\nSite:\nTipos de produtos:\nRegião(ões):\n\nDetalhes adicionais:\n';
 
   @override
   String get deviceShopErrorLoadingProducts => 'Erro ao carregar produtos';
@@ -4635,17 +4637,17 @@ class AppLocalizationsPt extends AppLocalizations {
   String get deviceShopFavoritesTooltip => 'Favoritos';
 
   @override
-  String get deviceShopRemoveFavoriteTitle => 'Remove from Favorites?';
+  String get deviceShopRemoveFavoriteTitle => 'Remover dos Favoritos?';
 
   @override
   String get deviceShopRemoveFavoriteMessage =>
-      'This product will be removed from your favorites.';
+      'Este produto será removido dos seus favoritos.';
 
   @override
   String get deviceShopFeatured => 'Destaques';
 
   @override
-  String get deviceShopFilterAll => 'All';
+  String get deviceShopFilterAll => 'Todos';
 
   @override
   String get deviceShopHelpTooltip => 'Ajuda';
@@ -4658,7 +4660,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get deviceShopMarketplaceInfoTitle => 'Informações do Marketplace';
 
   @override
-  String get deviceShopInStock => 'In Stock';
+  String get deviceShopInStock => 'Em Stock';
 
   @override
   String get deviceShopNewArrivals => 'Novidades';
@@ -4776,7 +4778,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get drawerAdminDashboard => 'Painel Admin';
 
   @override
-  String get drawerAdminSectionHeader => 'ADMIN';
+  String get drawerAdminSectionHeader => 'ADMINISTRAÇÃO';
 
   @override
   String get drawerBadgeNew => 'NOVO';
@@ -4789,11 +4791,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get requiresConnectionGuardDisconnected =>
-      'Disconnected from your node — reconnect to continue.';
+      'Desligado do seu nó - reconecte-se para continuar.';
 
   @override
   String get requiresConnectionGuardReconnectingBanner =>
-      'Desconectado — reconectando…';
+      'Desconectado - reconectando…';
 
   @override
   String get drawerEnterpriseDeviceManagement =>
@@ -4834,16 +4836,18 @@ class AppLocalizationsPt extends AppLocalizations {
   String get drawerNodeOnline => 'Online';
 
   @override
-  String get emailLauncherChooseApp => 'Choose email app';
+  String get emailLauncherChooseApp => 'Escolher aplicação de e-mail';
 
   @override
-  String get emailLauncherNoAppsInstalled => 'No email app installed';
+  String get emailLauncherNoAppsInstalled =>
+      'Nenhuma aplicação de e-mail instalada';
 
   @override
-  String get emailLauncherUnableToOpen => 'Unable to open email client';
+  String get emailLauncherUnableToOpen =>
+      'Não é possível abrir o cliente de e-mail';
 
   @override
-  String get emailLauncherDefaultBadge => 'Default';
+  String get emailLauncherDefaultBadge => 'Predefinição';
 
   @override
   String get explorerTitleCartographer => 'Cartógrafo';
@@ -5129,7 +5133,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get fileTransferActionDelete => 'Excluir';
 
   @override
-  String get fileTransferActionInfo => 'Info';
+  String get fileTransferActionInfo => 'Informação';
 
   @override
   String get fileTransferActionReject => 'Rejeitar';
@@ -5162,7 +5166,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get fileTransferBinaryFileHint =>
-      'Arquivo binário — salve para abrir com um app externo';
+      'Arquivo binário - salve para abrir com um app externo';
 
   @override
   String get fileTransferCancelConfirm => 'Cancelar transferência';
@@ -5373,88 +5377,91 @@ class AppLocalizationsPt extends AppLocalizations {
   String get fileTransferDirectionSent => 'Enviado';
 
   @override
-  String get fileTransferStatusPreparing => 'Preparing…';
+  String get fileTransferStatusPreparing => 'A preparar…';
 
   @override
-  String get fileTransferStatusOfferSent => 'Offer sent, waiting…';
+  String get fileTransferStatusOfferSent => 'Oferta enviada, a aguardar…';
 
   @override
-  String get fileTransferStatusOfferPending => 'Incoming file — tap to review';
+  String get fileTransferStatusOfferPending =>
+      'Ficheiro recebido - toque para rever';
 
   @override
   String fileTransferStatusSending(String pct) {
-    return 'Sending $pct%';
+    return 'A enviar $pct%';
   }
 
   @override
   String fileTransferStatusReceiving(String pct) {
-    return 'Receiving $pct%';
+    return 'A receber $pct%';
   }
 
   @override
-  String get fileTransferStatusRecovering => 'Recovering missing chunks…';
+  String get fileTransferStatusRecovering => 'A recuperar fragmentos em falta…';
 
   @override
-  String get fileTransferStatusComplete => 'Complete';
+  String get fileTransferStatusComplete => 'Concluído';
 
   @override
-  String get fileTransferStatusCancelled => 'Cancelled';
+  String get fileTransferStatusCancelled => 'Cancelado';
 
   @override
-  String get fileTransferStatusAwaitingAccept => 'Awaiting Accept';
+  String get fileTransferStatusAwaitingAccept => 'A aguardar aceitação';
 
   @override
-  String get fileTransferStatusFailed => 'Failed';
+  String get fileTransferStatusFailed => 'Falhou';
 
   @override
   String get fileTransferFailReasonOversized =>
-      'File too large for mesh transfer';
+      'Ficheiro demasiado grande para transferência pela mesh';
 
   @override
-  String get fileTransferFailReasonTimeout => 'Transfer timed out';
+  String get fileTransferFailReasonTimeout => 'Transferência esgotou o tempo';
 
   @override
-  String get fileTransferFailReasonInvalid => 'Invalid data received';
+  String get fileTransferFailReasonInvalid => 'Dados inválidos recebidos';
 
   @override
   String get fileTransferFailReasonRateLimited =>
-      'Rate limited — try again later';
+      'Limite de taxa atingido - tente mais tarde';
 
   @override
-  String get fileTransferFailReasonHashMismatch => 'File verification failed';
+  String get fileTransferFailReasonHashMismatch =>
+      'Verificação do ficheiro falhou';
 
   @override
-  String get fileTransferFailReasonMaxRetries => 'Max retries exceeded';
+  String get fileTransferFailReasonMaxRetries =>
+      'Número máximo de tentativas excedido';
 
   @override
-  String get fileTransferFailReasonExpired => 'Transfer expired';
+  String get fileTransferFailReasonExpired => 'Transferência expirada';
 
   @override
   String fileTransferMetaNodeTo(String nodeName) {
-    return 'to $nodeName';
+    return 'para $nodeName';
   }
 
   @override
   String fileTransferMetaNodeFrom(String nodeName) {
-    return 'from $nodeName';
+    return 'de $nodeName';
   }
 
   @override
-  String get fileTransferTimeJustNow => 'just now';
+  String get fileTransferTimeJustNow => 'agora mesmo';
 
   @override
   String fileTransferTimeMinutesAgo(int count) {
-    return '${count}m ago';
+    return 'há ${count}m';
   }
 
   @override
   String fileTransferTimeHoursAgo(int count) {
-    return '${count}h ago';
+    return 'há ${count}h';
   }
 
   @override
   String fileTransferTimeDaysAgo(int count) {
-    return '${count}d ago';
+    return 'há ${count}d';
   }
 
   @override
@@ -5463,7 +5470,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get fileTransferVoiceBadge => 'Voice';
+  String get fileTransferVoiceBadge => 'Voz';
 
   @override
   String get fileTransferEmptyDescriptionContacts =>
@@ -5493,7 +5500,7 @@ class AppLocalizationsPt extends AppLocalizations {
     String fileSize,
     String limit,
   ) {
-    return '$filename tem $fileSize KB — o limite mesh é $limit KB.';
+    return '$filename tem $fileSize KB - o limite mesh é $limit KB.';
   }
 
   @override
@@ -5718,80 +5725,81 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get archiveContentsHeader => 'Contents';
+  String get archiveContentsHeader => 'Conteúdo';
 
   @override
   String archiveEntryCount(int count) {
-    return '$count files';
+    return '$count ficheiros';
   }
 
   @override
   String archiveSummaryImages(int count) {
-    return '$count images';
+    return '$count imagens';
   }
 
   @override
   String archiveSummaryVoice(int count) {
-    return '$count voice';
+    return '$count voz';
   }
 
   @override
   String archiveSummaryText(int count) {
-    return '$count text';
+    return '$count texto';
   }
 
   @override
   String archiveSummaryOther(int count) {
-    return '$count other';
+    return '$count outros';
   }
 
   @override
   String archiveSummaryUnsupported(int count) {
-    return '$count unsupported';
+    return '$count não suportado';
   }
 
   @override
-  String get archiveActionPreview => 'Preview';
+  String get archiveActionPreview => 'Pré-visualizar';
 
   @override
-  String get archiveActionPlay => 'Play';
+  String get archiveActionPlay => 'Reproduzir';
 
   @override
-  String get archiveActionSave => 'Save';
+  String get archiveActionSave => 'Guardar';
 
   @override
-  String get archiveStatusSupported => 'Supported';
+  String get archiveStatusSupported => 'Suportado';
 
   @override
-  String get archiveStatusUnsupported => 'Unsupported';
+  String get archiveStatusUnsupported => 'Não suportado';
 
   @override
-  String get archiveStatusTooLarge => 'Too large';
+  String get archiveStatusTooLarge => 'Demasiado grande';
 
   @override
-  String get archiveStatusBlocked => 'Blocked';
+  String get archiveStatusBlocked => 'Bloqueado';
 
   @override
-  String get archiveStatusNested => 'Nested archive';
+  String get archiveStatusNested => 'Arquivo aninhado';
 
   @override
   String get archiveRejectEncrypted =>
-      'This archive is encrypted or password-protected and cannot be inspected.';
+      'Este arquivo está encriptado ou protegido por palavra-passe e não pode ser inspecionado.';
 
   @override
-  String get archiveRejectCorrupt => 'This archive is corrupt or unreadable.';
+  String get archiveRejectCorrupt =>
+      'Este arquivo está corrompido ou não é legível.';
 
   @override
   String get archiveRejectTooManyEntries =>
-      'This archive contains too many files and cannot be inspected.';
+      'Este arquivo contém demasiados ficheiros e não pode ser inspecionado.';
 
   @override
   String get archiveRejectTotalSizeTooLarge =>
-      'The total uncompressed size of this archive exceeds the safety limit.';
+      'O tamanho total descomprimido deste arquivo excede o limite de segurança.';
 
   @override
   String get archiveRejectSaveHint =>
-      'You can still save the archive file as-is.';
+      'Pode guardar o ficheiro de arquivo tal como está.';
 
   @override
   String get firmwareUpdateAvailable => 'Atualização disponível';
@@ -5889,46 +5897,46 @@ class AppLocalizationsPt extends AppLocalizations {
   String get firmwareUpdateWifi => 'WiFi';
 
   @override
-  String get firmwareDfuDownloading => 'Downloading firmware…';
+  String get firmwareDfuDownloading => 'A transferir firmware…';
 
   @override
   String firmwareDfuDownloadProgress(String percent) {
-    return 'Downloading: $percent%';
+    return 'A transferir: $percent%';
   }
 
   @override
-  String get firmwareDfuEnteringBootloader => 'Entering DFU mode…';
+  String get firmwareDfuEnteringBootloader => 'A entrar em modo DFU…';
 
   @override
-  String get firmwareDfuTransferring => 'Updating firmware…';
+  String get firmwareDfuTransferring => 'A atualizar firmware…';
 
   @override
   String firmwareDfuProgress(int percent) {
-    return '$percent% complete';
+    return '$percent% concluído';
   }
 
   @override
-  String get firmwareDfuComplete => 'Firmware updated successfully!';
+  String get firmwareDfuComplete => 'Firmware atualizado com sucesso!';
 
   @override
-  String get firmwareDfuFailed => 'Firmware update failed';
+  String get firmwareDfuFailed => 'Falha na atualização de firmware';
 
   @override
   String get firmwareDfuDeviceWillRestart =>
-      'Your device will restart to apply the update.';
+      'O seu dispositivo irá reiniciar para aplicar a atualização.';
 
   @override
   String get firmwareDfuDoNotDisconnect =>
-      'Do not disconnect your device during the update.';
+      'Não desligue o seu dispositivo durante a atualização.';
 
   @override
-  String get firmwareDfuStartUpdate => 'Start Update';
+  String get firmwareDfuStartUpdate => 'Iniciar Atualização';
 
   @override
-  String get firmwareDfuRetry => 'Retry';
+  String get firmwareDfuRetry => 'Tentar novamente';
 
   @override
-  String get firmwareDfuInAppSupported => 'In-App Update Available';
+  String get firmwareDfuInAppSupported => 'Atualização na App Disponível';
 
   @override
   String firmwareDfuSpeed(String speed) {
@@ -5937,7 +5945,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get firmwareDfuNoFirmwareFound =>
-      'No firmware file found for this device model.';
+      'Nenhum ficheiro de firmware encontrado para este modelo de dispositivo.';
 
   @override
   String get firmwareArchitectureNrf52 => 'nRF52840';
@@ -5946,68 +5954,70 @@ class AppLocalizationsPt extends AppLocalizations {
   String get firmwareArchitectureEsp32 => 'ESP32';
 
   @override
-  String get firmwareArchitectureUnknown => 'Unknown';
+  String get firmwareArchitectureUnknown => 'Desconhecido';
 
   @override
-  String get firmwareUpdateMethodInApp => 'In-App Update';
+  String get firmwareUpdateMethodInApp => 'Atualização na App';
 
   @override
-  String get firmwareUpdateSectionDeviceInfo => 'Device Info';
+  String get firmwareUpdateSectionDeviceInfo => 'Informações do Dispositivo';
 
   @override
-  String get firmwareMethodInfoTitle => 'How your device updates';
+  String get firmwareMethodInfoTitle => 'Como o seu dispositivo atualiza';
 
   @override
-  String get firmwareMethodInfoBleHeading => 'In-App Update (Bluetooth DFU)';
+  String get firmwareMethodInfoBleHeading =>
+      'Atualização na App (Bluetooth DFU)';
 
   @override
   String get firmwareMethodInfoBleBody =>
-      'Your device uses Nordic Device Firmware Update over Bluetooth. When a new release is available, tap Start Update and the app downloads the firmware, reboots the device into bootloader mode, and flashes it wirelessly. Keep the device nearby and plugged in until the transfer finishes.';
+      'O seu dispositivo usa a Atualização de Firmware Nordic por Bluetooth. Quando uma nova versão estiver disponível, toque em Iniciar Atualização e a app transfere o firmware, reinicia o dispositivo no modo bootloader e instala-o sem fios. Mantenha o dispositivo próximo e ligado até a transferência terminar.';
 
   @override
   String get firmwareMethodInfoWebHeading => 'Web Flasher (USB)';
 
   @override
   String get firmwareMethodInfoWebBody =>
-      'This chipset flashes over USB using the Meshtastic Web Flasher. Connect the device with a data-capable USB cable and open the Web Flasher in Chrome or Edge on a desktop browser. In-app wireless updates are not supported on this architecture.';
+      'Este chipset instala por USB usando o Meshtastic Web Flasher. Ligue o dispositivo com um cabo USB com capacidade de dados e abra o Web Flasher no Chrome ou Edge num browser de computador. As atualizações sem fios na app não são suportadas nesta arquitetura.';
 
   @override
-  String get firmwareMethodInfoMtoolsHeading => 'Alternative: MTools BLE';
+  String get firmwareMethodInfoMtoolsHeading => 'Alternativa: MTools BLE';
 
   @override
   String get firmwareMethodInfoMtoolsBody =>
-      'MTools BLE is a third-party iOS/Android app that also performs Nordic DFU over Bluetooth. Use it if the in-app updater fails or if you prefer its workflow. Tapping the button below opens your app store to install MTools BLE and copies the firmware download URL to your clipboard.';
+      'MTools BLE é uma app iOS/Android de terceiros que também realiza Nordic DFU por Bluetooth. Use-a se o atualizador integrado falhar ou se preferir o seu fluxo de trabalho. Tocar no botão abaixo abre a sua loja de apps para instalar MTools BLE e copia o URL de transferência do firmware para a área de transferência.';
 
   @override
   String get firmwareMethodInfoMtoolsAction =>
-      'Install MTools BLE & copy firmware URL';
+      'Instalar MTools BLE e copiar URL do firmware';
 
   @override
   String get firmwareMethodInfoMtoolsNoAsset =>
-      'No firmware asset is available for this device yet. Pull to refresh and try again.';
+      'Nenhum recurso de firmware disponível para este dispositivo ainda. Puxe para atualizar e tente novamente.';
 
   @override
-  String get firmwareMethodInfoUrlCopied => 'Firmware URL copied to clipboard';
+  String get firmwareMethodInfoUrlCopied =>
+      'URL do firmware copiado para a área de transferência';
 
   @override
   String get firmwareUpdateMethodWebFlasher => 'Web Flasher';
 
   @override
-  String get firmwareArchitecture => 'Architecture';
+  String get firmwareArchitecture => 'Arquitetura';
 
   @override
-  String get firmwareUpdateMethod => 'Update Method';
+  String get firmwareUpdateMethod => 'Método de Atualização';
 
   @override
-  String get firmwareDfuConfirmTitle => 'Start Firmware Update?';
+  String get firmwareDfuConfirmTitle => 'Iniciar Atualização de Firmware?';
 
   @override
   String firmwareDfuConfirmBody(String version) {
-    return 'This will update your device to version $version. The device will restart during the update.\n\nDo not disconnect or turn off your device until the update completes.';
+    return 'Isto irá atualizar o seu dispositivo para a versão $version. O dispositivo irá reiniciar durante a atualização.\n\nNão desligue nem desligue o seu dispositivo até a atualização estar concluída.';
   }
 
   @override
-  String get firmwareDfuConfirmStart => 'Start Update';
+  String get firmwareDfuConfirmStart => 'Iniciar Atualização';
 
   @override
   String get globeEmptyDescription =>
@@ -6669,7 +6679,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String incidentTerminalStateMessage(String state) {
-    return 'Este incidente está $state — nenhuma ação disponível.';
+    return 'Este incidente está $state - nenhuma ação disponível.';
   }
 
   @override
@@ -6677,7 +6687,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get incidentTimelineFinalState =>
-      'Estado final — nenhuma transição possível';
+      'Estado final - nenhuma transição possível';
 
   @override
   String get incidentTimelineSuperseded => 'substituído';
@@ -8211,7 +8221,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Airtime e uptime só são zerados quando o rádio é desligado e ligado novamente.';
 
   @override
-  String get meshcoreRadioStatsUptime => 'Uptime';
+  String get meshcoreRadioStatsUptime => 'Tempo ativo';
 
   @override
   String get meshcoreRadioStatsFirmwareQueue => 'Fila TX do firmware';
@@ -8484,20 +8494,21 @@ class AppLocalizationsPt extends AppLocalizations {
       'Deve corresponder a todos os outros rádios da sua mesh.';
 
   @override
-  String get meshcoreRadioSettingsRegionSectionHeader => 'REGION';
+  String get meshcoreRadioSettingsRegionSectionHeader => 'REGIÃO';
 
   @override
-  String get meshcoreRadioSettingsRegionTileTitle => 'Region preset';
+  String get meshcoreRadioSettingsRegionTileTitle => 'Predefinição de região';
 
   @override
-  String get meshcoreRadioSettingsRegionPickerTitle => 'Choose region preset';
+  String get meshcoreRadioSettingsRegionPickerTitle =>
+      'Escolher predefinição de região';
 
   @override
-  String get meshcoreRadioSettingsRegionCustom => 'Custom';
+  String get meshcoreRadioSettingsRegionCustom => 'Personalizado';
 
   @override
   String get meshcoreRadioSettingsRegionCustomSubtitle =>
-      'Keep your current values';
+      'Manter os valores atuais';
 
   @override
   String get meshcoreRadioSettingsFreqSectionHeader =>
@@ -8662,22 +8673,23 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreDisconnect => 'Desconectar';
 
   @override
-  String get meshcoreDrainQueueTool => 'Drain Message Queue';
+  String get meshcoreDrainQueueTool => 'Esvaziar Fila de Mensagens';
 
   @override
   String get meshcoreDrainQueueToolSubtitle =>
-      'Manually pull next pending message from the radio';
+      'Extrair manualmente a próxima mensagem pendente do rádio';
 
   @override
   String get meshcoreDrainQueueResultMessage =>
-      'Pulled a pending message from the radio';
+      'Mensagem pendente extraída do rádio';
 
   @override
   String get meshcoreDrainQueueResultEmpty =>
-      'No pending messages on the radio';
+      'Sem mensagens pendentes no rádio';
 
   @override
-  String get meshcoreDrainQueueFailed => 'Failed to drain message queue';
+  String get meshcoreDrainQueueFailed =>
+      'Falha ao esvaziar a fila de mensagens';
 
   @override
   String get meshcoreDisconnectedChannelsDescription =>
@@ -8938,7 +8950,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get meshcorePathHistorySourceTrace => 'Trace';
+  String get meshcorePathHistorySourceTrace => 'Rastreio';
 
   @override
   String get meshcorePathHistorySourceManual => 'Manual';
@@ -9011,11 +9023,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcorePathOverlayHopSheetTitle => 'Hop da rota';
 
   @override
-  String get meshcorePathOverlayHopLabelHeader => 'Hop';
+  String get meshcorePathOverlayHopLabelHeader => 'Salto';
 
   @override
   String meshcorePathOverlayHopLabelValue(String label) {
-    return 'Hop $label';
+    return 'Salto $label';
   }
 
   @override
@@ -9153,37 +9165,37 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreLocationInfoLabel => 'Localização';
 
   @override
-  String get meshcoreApplying => 'Applying…';
+  String get meshcoreApplying => 'A aplicar…';
 
   @override
-  String get meshcoreLocationSheetTitle => 'Set node location';
+  String get meshcoreLocationSheetTitle => 'Definir localização do nó';
 
   @override
   String get meshcoreLocationSheetPrivacyHint =>
-      'Your location may be broadcast to nearby nodes in your next advertisement.';
+      'A sua localização pode ser difundida para nós próximos no próximo anúncio.';
 
   @override
   String get meshcoreLocationLatLabel => 'Latitude';
 
   @override
-  String get meshcoreLocationLatHint => '-90 to 90';
+  String get meshcoreLocationLatHint => '-90 a 90';
 
   @override
   String get meshcoreLocationLatRangeError =>
-      'Latitude must be between -90 and 90';
+      'A latitude deve estar entre -90 e 90';
 
   @override
   String get meshcoreLocationLonLabel => 'Longitude';
 
   @override
-  String get meshcoreLocationLonHint => '-180 to 180';
+  String get meshcoreLocationLonHint => '-180 a 180';
 
   @override
   String get meshcoreLocationLonRangeError =>
-      'Longitude must be between -180 and 180';
+      'A longitude deve estar entre -180 e 180';
 
   @override
-  String get meshcoreLocationApplyAction => 'Apply';
+  String get meshcoreLocationApplyAction => 'Aplicar';
 
   @override
   String get meshcoreLocationClearAction => 'Limpar';
@@ -9196,17 +9208,17 @@ class AppLocalizationsPt extends AppLocalizations {
       'Localização indisponível. Verifique as permissões e tente novamente.';
 
   @override
-  String get meshcoreLocationUpdated => 'Location updated';
+  String get meshcoreLocationUpdated => 'Localização atualizada';
 
   @override
-  String get meshcoreLocationCleared => 'Location cleared';
+  String get meshcoreLocationCleared => 'Localização apagada';
 
   @override
-  String get meshcoreFailedToSetLocation => 'Failed to set location';
+  String get meshcoreFailedToSetLocation => 'Falha ao definir localização';
 
   @override
   String get meshcoreSyncTimeRejected =>
-      'Device clock is already ahead — sync skipped';
+      'O relógio do dispositivo já está adiantado - sincronização ignorada';
 
   @override
   String get meshcoreLocationSetting => 'Localização';
@@ -10032,7 +10044,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get messageContextMenuStatusDeliveredRelayOnly =>
-      'Acknowledged by another node';
+      'Confirmado por outro nó';
 
   @override
   String messageContextMenuStatusFailed(String error) {
@@ -10169,7 +10181,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String messagingComposerTooLong(int used, int max) {
-    return 'Message is too long for the mesh ($used/$max bytes).';
+    return 'A mensagem é demasiado longa para a malha ($used/$max bytes).';
   }
 
   @override
@@ -10271,17 +10283,17 @@ class AppLocalizationsPt extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'messages',
-      one: 'message',
+      other: 'mensagens',
+      one: 'mensagem',
     );
-    return '$count $_temp0 found';
+    return '$count $_temp0 encontradas';
   }
 
   @override
   String get messagingSearchMessages => 'Pesquisar mensagens';
 
   @override
-  String get messagingJumpToLatest => 'Jump to latest';
+  String get messagingJumpToLatest => 'Ir para o mais recente';
 
   @override
   String get messagingSectionActive => 'Online';
@@ -10311,15 +10323,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get messagingSourceTapback => 'Tapback';
 
   @override
-  String get messagingTechInfoDirectHop => 'Direct';
+  String get messagingTechInfoDirectHop => 'Direto';
 
   @override
   String messagingTechInfoHops(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'hops',
-      one: 'hop',
+      other: 'saltos',
+      one: 'salto',
     );
     return '$count $_temp0';
   }
@@ -10328,7 +10340,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get messagingTechInfoMqtt => 'MQTT';
 
   @override
-  String get messagingTechInfoRadio => 'Radio';
+  String get messagingTechInfoRadio => 'Rádio';
 
   @override
   String messagingTechInfoRssi(int value) {
@@ -10342,58 +10354,58 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String messagingTechInfoNodeId(String nodeHex) {
-    return 'Node !$nodeHex';
+    return 'Nó !$nodeHex';
   }
 
   @override
   String messagingTechInfoPacketId(int packetId) {
-    return 'Packet #$packetId';
+    return 'Pacote #$packetId';
   }
 
   @override
-  String get messagingTechInfoNoRadioData => 'No radio data';
+  String get messagingTechInfoNoRadioData => 'Sem dados de rádio';
 
   @override
-  String get messagingTechInfoExplainHopsTitle => 'Hop Count';
+  String get messagingTechInfoExplainHopsTitle => 'Contagem de Saltos';
 
   @override
   String get messagingTechInfoExplainHopsBody =>
-      'The number of times this message was relayed by other nodes before reaching you. \'Direct\' means no relay — the sender was in direct radio range.';
+      'O número de vezes que esta mensagem foi retransmitida por outros nós antes de chegar até si. \'Direto\' significa sem retransmissão - o remetente estava em alcance de rádio direto.';
 
   @override
-  String get messagingTechInfoExplainSnrTitle => 'Signal-to-Noise Ratio (SNR)';
+  String get messagingTechInfoExplainSnrTitle => 'Relação Sinal-Ruído (SNR)';
 
   @override
   String get messagingTechInfoExplainSnrBody =>
-      'Measures how clearly the radio signal was received compared to background noise. Higher is better. Typical range: -20 dB (very weak) to +15 dB (excellent).';
+      'Mede a clareza com que o sinal de rádio foi recebido em comparação com o ruído de fundo. Maior é melhor. Intervalo típico: -20 dB (muito fraco) a +15 dB (excelente).';
 
   @override
-  String get messagingTechInfoExplainRssiTitle => 'Signal Strength (RSSI)';
+  String get messagingTechInfoExplainRssiTitle => 'Intensidade do Sinal (RSSI)';
 
   @override
   String get messagingTechInfoExplainRssiBody =>
-      'Received Signal Strength Indicator — how strong the radio signal was when it arrived. Closer to 0 is stronger. Typical range: -120 dBm (very weak) to -40 dBm (very strong).';
+      'Indicador de Intensidade do Sinal Recebido (RSSI) - a força do sinal de rádio no momento em que chegou. Mais próximo de 0 é mais forte. Intervalo típico: -120 dBm (muito fraco) a -40 dBm (muito forte).';
 
   @override
-  String get messagingTechInfoExplainTransportTitle => 'Transport';
+  String get messagingTechInfoExplainTransportTitle => 'Transporte';
 
   @override
   String get messagingTechInfoExplainTransportBody =>
-      'How this message reached you. \'Radio\' means it travelled entirely over the mesh radio network. \'MQTT\' means it passed through an internet gateway at some point.';
+      'Como esta mensagem chegou até si. \'Rádio\' significa que viajou inteiramente pela rede de rádio mesh. \'MQTT\' significa que passou por um gateway de internet em algum momento.';
 
   @override
-  String get messagingTechInfoExplainNodeIdTitle => 'Sender Node ID';
+  String get messagingTechInfoExplainNodeIdTitle => 'ID do Nó Remetente';
 
   @override
   String get messagingTechInfoExplainNodeIdBody =>
-      'The unique hardware identifier of the node that sent this message, shown in hexadecimal.';
+      'O identificador de hardware único do nó que enviou esta mensagem, apresentado em hexadecimal.';
 
   @override
-  String get messagingTechInfoExplainPacketIdTitle => 'Packet ID';
+  String get messagingTechInfoExplainPacketIdTitle => 'ID do Pacote';
 
   @override
   String get messagingTechInfoExplainPacketIdBody =>
-      'The unique identifier for this radio packet, assigned by the sending node. Useful for debugging delivery issues.';
+      'O identificador único deste pacote de rádio, atribuído pelo nó emissor. Útil para depurar problemas de entrega.';
 
   @override
   String get messagingStartConversation => 'Iniciar a conversa';
@@ -10402,34 +10414,34 @@ class AppLocalizationsPt extends AppLocalizations {
   String get messagingUnknownNode => 'Nó desconhecido';
 
   @override
-  String get timelineFilterLabel => 'Filter';
+  String get timelineFilterLabel => 'Filtrar';
 
   @override
   String get timelineToday => 'Hoje';
 
   @override
-  String get timelineWeek => 'Week';
+  String get timelineWeek => 'Semana';
 
   @override
-  String get timelineMonth => 'Month';
+  String get timelineMonth => 'Mês';
 
   @override
-  String get timelineYear => 'Year';
+  String get timelineYear => 'Ano';
 
   @override
-  String get timelinePriorityLow => 'Low';
+  String get timelinePriorityLow => 'Baixa';
 
   @override
-  String get timelinePriorityMedium => 'Medium';
+  String get timelinePriorityMedium => 'Média';
 
   @override
-  String get timelinePriorityHigh => 'High';
+  String get timelinePriorityHigh => 'Alta';
 
   @override
-  String get timelinePriorityDone => 'Done';
+  String get timelinePriorityDone => 'Concluído';
 
   @override
-  String get timelineBreakTime => 'Break time';
+  String get timelineBreakTime => 'Hora de pausa';
 
   @override
   String timelineDuration(String hours, String minutes) {
@@ -10499,7 +10511,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get navigationIftttIntegration => 'Integração IFTTT';
 
   @override
-  String get navigationTranslationPack => 'Translation Pack';
+  String get navigationTranslationPack => 'Pacote de tradução';
 
   @override
   String get navigationMap => 'Mapa';
@@ -10526,198 +10538,199 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nodeboardTitle => 'NodeBoard';
 
   @override
-  String get nodeboardMyBoards => 'My Boards';
+  String get nodeboardMyBoards => 'Os Meus Quadros';
 
   @override
-  String get nodeboardDiscover => 'Discover';
+  String get nodeboardDiscover => 'Descobrir';
 
   @override
-  String get nodeboardCreateBoard => 'Create Board';
+  String get nodeboardCreateBoard => 'Criar Quadro';
 
   @override
-  String get nodeboardEmptyMyBoards => 'You haven\'t created any boards yet';
+  String get nodeboardEmptyMyBoards => 'Ainda não criou nenhum quadro';
 
   @override
   String get nodeboardEmptyMyBoardsDescription =>
-      'Create your first personal BBS and share it with the mesh';
+      'Crie o seu primeiro BBS pessoal e partilhe-o com a mesh';
 
   @override
-  String get nodeboardEmptyDiscover => 'No public boards found';
+  String get nodeboardEmptyDiscover => 'Nenhum quadro público encontrado';
 
   @override
   String get nodeboardEmptyDiscoverDescription =>
-      'Be the first to create a board';
+      'Seja o primeiro a criar um quadro';
 
   @override
-  String get nodeboardEmptyThreads => 'No threads yet';
+  String get nodeboardEmptyThreads => 'Sem tópicos ainda';
 
   @override
-  String get nodeboardEmptyThreadsDescription => 'Start the conversation';
+  String get nodeboardEmptyThreadsDescription => 'Inicie a conversa';
 
   @override
-  String get nodeboardWizardTitle => 'Create NodeBoard';
+  String get nodeboardWizardTitle => 'Criar NodeBoard';
 
   @override
-  String get nodeboardWizardStepName => 'Name & Identity';
+  String get nodeboardWizardStepName => 'Nome e Identidade';
 
   @override
-  String get nodeboardWizardStepTagline => 'Tagline & Description';
+  String get nodeboardWizardStepTagline => 'Slogan e Descrição';
 
   @override
-  String get nodeboardWizardStepSections => 'Sections';
+  String get nodeboardWizardStepSections => 'Secções';
 
   @override
-  String get nodeboardWizardStepTheme => 'Theme';
+  String get nodeboardWizardStepTheme => 'Tema';
 
   @override
-  String get nodeboardWizardStepWelcome => 'Welcome & Splash';
+  String get nodeboardWizardStepWelcome => 'Boas-vindas e Splash';
 
   @override
-  String get nodeboardWizardStepReview => 'Review';
+  String get nodeboardWizardStepReview => 'Revisão';
 
   @override
-  String get nodeboardBoardTitle => 'Board Title';
+  String get nodeboardBoardTitle => 'Título do Quadro';
 
   @override
-  String get nodeboardSysopName => 'Sysop Name';
+  String get nodeboardSysopName => 'Nome do SysOp';
 
   @override
-  String get nodeboardSlug => 'Board URL Slug';
+  String get nodeboardSlug => 'Slug do URL do Quadro';
 
   @override
-  String get nodeboardTagline => 'Tagline';
+  String get nodeboardTagline => 'Slogan';
 
   @override
-  String get nodeboardDescription => 'Description';
+  String get nodeboardDescription => 'Descrição';
 
   @override
-  String get nodeboardWelcomeText => 'Welcome Text';
+  String get nodeboardWelcomeText => 'Texto de Boas-vindas';
 
   @override
-  String get nodeboardAnsiSplash => 'ASCII/ANSI Splash';
+  String get nodeboardAnsiSplash => 'Splash ASCII/ANSI';
 
   @override
-  String get nodeboardVisibilityPublic => 'Public';
+  String get nodeboardVisibilityPublic => 'Público';
 
   @override
-  String get nodeboardVisibilityUnlisted => 'Unlisted';
+  String get nodeboardVisibilityUnlisted => 'Não listado';
 
   @override
-  String get nodeboardVisibilityPrivate => 'Private';
+  String get nodeboardVisibilityPrivate => 'Privado';
 
   @override
   String get nodeboardSysop => 'SysOp';
 
   @override
   String nodeboardThreadCount(int count) {
-    return '$count threads';
+    return '$count tópicos';
   }
 
   @override
   String nodeboardReplyCount(int count) {
-    return '$count replies';
+    return '$count respostas';
   }
 
   @override
-  String get nodeboardTerminalMode => 'Terminal Mode';
+  String get nodeboardTerminalMode => 'Modo Terminal';
 
   @override
-  String get nodeboardNativeMode => 'Native Mode';
+  String get nodeboardNativeMode => 'Modo Nativo';
 
   @override
-  String get nodeboardReplyHint => 'Write a reply...';
+  String get nodeboardReplyHint => 'Escrever uma resposta...';
 
   @override
-  String get nodeboardThreadLocked => 'This thread is locked';
+  String get nodeboardThreadLocked => 'Este tópico está bloqueado';
 
   @override
-  String get nodeboardPinned => 'Pinned';
+  String get nodeboardPinned => 'Fixado';
 
   @override
-  String get nodeboardLocked => 'Locked';
+  String get nodeboardLocked => 'Bloqueado';
 
   @override
-  String get nodeboardNext => 'Next';
+  String get nodeboardNext => 'Seguinte';
 
   @override
-  String get nodeboardBack => 'Back';
+  String get nodeboardBack => 'Voltar';
 
   @override
-  String get nodeboardCreateBoardAction => 'Create Board';
+  String get nodeboardCreateBoardAction => 'Criar Quadro';
 
   @override
-  String get nodeboardLoadError => 'Failed to load';
+  String get nodeboardLoadError => 'Falha ao carregar';
 
   @override
-  String get nodeboardBoardNotFound => 'Board not found';
+  String get nodeboardBoardNotFound => 'Quadro não encontrado';
 
   @override
-  String get nodeboardThreadNotFound => 'Thread not found';
+  String get nodeboardThreadNotFound => 'Tópico não encontrado';
 
   @override
-  String get nodeboardEditBoard => 'Edit Board';
+  String get nodeboardEditBoard => 'Editar Quadro';
 
   @override
-  String get nodeboardShareBoard => 'Share Board';
+  String get nodeboardShareBoard => 'Partilhar Quadro';
 
   @override
   String nodeboardSectionCount(int count) {
-    return '$count sections';
+    return '$count secções';
   }
 
   @override
-  String get nodeboardNoSections => 'No sections yet';
+  String get nodeboardNoSections => 'Sem secções ainda';
 
   @override
-  String get nodeboardReplyFailed => 'Failed to send reply';
+  String get nodeboardReplyFailed => 'Falha ao enviar resposta';
 
   @override
-  String get nodeboardNewThread => 'New Thread';
+  String get nodeboardNewThread => 'Novo Tópico';
 
   @override
-  String get nodeboardCreateFirstBoard => 'Create Your First Board';
+  String get nodeboardCreateFirstBoard => 'Crie o Seu Primeiro Quadro';
 
   @override
-  String get nodeboardWelcomeSectionTitle => 'Welcome';
+  String get nodeboardWelcomeSectionTitle => 'Boas-vindas';
 
   @override
-  String get nodeboardSectionsSectionTitle => 'Sections';
+  String get nodeboardSectionsSectionTitle => 'Secções';
 
   @override
-  String get nodeboardThreadsSectionTitle => 'Threads';
+  String get nodeboardThreadsSectionTitle => 'Tópicos';
 
   @override
-  String get nodeboardShareCopied => 'Share link copied to clipboard';
+  String get nodeboardShareCopied => 'Ligação de partilha copiada';
 
   @override
-  String get nodeboardComposerComingSoon => 'Thread composer coming soon';
+  String get nodeboardComposerComingSoon =>
+      'Compositor de tópicos brevemente disponível';
 
   @override
-  String get nodeboardJustNow => 'just now';
+  String get nodeboardJustNow => 'agora mesmo';
 
   @override
   String nodeboardMinutesAgo(int count) {
-    return '${count}m ago';
+    return 'há ${count}m';
   }
 
   @override
   String nodeboardHoursAgo(int count) {
-    return '${count}h ago';
+    return 'há ${count}h';
   }
 
   @override
   String nodeboardDaysAgo(int count) {
-    return '${count}d ago';
+    return 'há ${count}d';
   }
 
   @override
   String nodeboardMonthsAgo(int count) {
-    return '${count}mo ago';
+    return 'há $count meses';
   }
 
   @override
   String nodeboardYearsAgo(int count) {
-    return '${count}y ago';
+    return 'há ${count}a';
   }
 
   @override
@@ -11240,7 +11253,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get nodeDetailLabelAirUtilTx => 'Air Util TX';
+  String get nodeDetailLabelAirUtilTx => 'Util. de Ar TX';
 
   @override
   String get nodeDetailLabelAltitude => 'Altitude';
@@ -11380,7 +11393,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nodeDetailMenuTracerouteHistory => 'Histórico de Traceroute';
 
   @override
-  String get nodeDetailMenuViewInNodeDex => 'View in NodeDex';
+  String get nodeDetailMenuViewInNodeDex => 'Ver no NodeDex';
 
   @override
   String get nodeDetailMessageButton => 'Mensagem';
@@ -11499,7 +11512,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nodeDetailSectionRadio => 'Rádio';
 
   @override
-  String get nodeDetailSectionTelemetry => 'Telemetry';
+  String get nodeDetailSectionTelemetry => 'Telemetria';
 
   @override
   String get nodeDetailSectionTraffic => 'Gerenciamento de tráfego';
@@ -11566,7 +11579,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String nodeDetailTracerouteSent(String name) {
-    return 'Traceroute enviado para $name — verifique o histórico de traceroute para resultados';
+    return 'Traceroute enviado para $name - verifique o histórico de traceroute para resultados';
   }
 
   @override
@@ -11728,7 +11741,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nodeIntelligenceMobilityStationary => 'Estacionário';
 
   @override
-  String get nodeIntelligenceMobilityTracker => 'Tracker';
+  String get nodeIntelligenceMobilityTracker => 'Rastreador';
 
   @override
   String nodeIntelligenceNeighborCount(int count) {
@@ -11788,7 +11801,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nodedexAgeNewToday => 'novo hoje';
 
   @override
-  String get nodedexAirUtilTxLabel => 'Air Util TX';
+  String get nodedexAirUtilTxLabel => 'Util. de Ar TX';
 
   @override
   String get nodedexBatteryLabel => 'Bateria';
@@ -11885,7 +11898,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nodedexCloseGallerySemanticLabel => 'Fechar galeria';
 
   @override
-  String get nodedexCardGalleryTooltip => 'Card Gallery';
+  String get nodedexCardGalleryTooltip => 'Galeria de Cartões';
 
   @override
   String get nodedexCoSeenCompactLabel => 'Co-vistos';
@@ -12372,7 +12385,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get nodedexExportNothingToExport =>
-      'Nada para exportar — o NodeDex está vazio';
+      'Nada para exportar - o NodeDex está vazio';
 
   @override
   String get nodedexExportShareSubject => 'Exportação NodeDex SocialMesh';
@@ -12706,16 +12719,16 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String nodedexObservedOnPreset(String preset) {
-    return 'Observed on: $preset';
+    return 'Observado em: $preset';
   }
 
   @override
   String nodedexLastObservedOnPreset(String preset) {
-    return 'Last observed on $preset';
+    return 'Último avistamento em $preset';
   }
 
   @override
-  String get nodedexFilterRadioPreset => 'Radio Preset';
+  String get nodedexFilterRadioPreset => 'Predefinição de Rádio';
 
   @override
   String get nodedexRadioPresetUnknown => 'Desconhecido';
@@ -12729,10 +12742,11 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get nodedexFilterRadioPresetAll => 'All Presets';
+  String get nodedexFilterRadioPresetAll => 'Todas as Predefinições';
 
   @override
-  String get nodedexRadioPresetSheetTitle => 'Filter by Radio Preset';
+  String get nodedexRadioPresetSheetTitle =>
+      'Filtrar por Predefinição de Rádio';
 
   @override
   String get nodedexFirmwareLabel => 'Firmware';
@@ -12792,7 +12806,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nodedexHelpDiscoveryStats => 'Estatísticas de descoberta';
 
   @override
-  String get nodedexHelpInfoDefault => 'Info';
+  String get nodedexHelpInfoDefault => 'Informação';
 
   @override
   String get nodedexHelpNote => 'Nota';
@@ -13124,7 +13138,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nodedexObservationTimelineTitle => 'Linha do tempo de observações';
 
   @override
-  String get nodedexTraitEvidenceTitle => 'Trait Evidence';
+  String get nodedexTraitEvidenceTitle => 'Evidência de Característica';
 
   @override
   String nodedexObservedDate(String date) {
@@ -14034,7 +14048,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get onboardingConnectDescription =>
-      'Pareie seu dispositivo Meshtastic para começar.\nBluetooth ou USB — você escolhe.';
+      'Pareie seu dispositivo Meshtastic para começar.\nBluetooth ou USB - você escolhe.';
 
   @override
   String get onboardingConnectDeviceButton => 'Conectar dispositivo';
@@ -14047,7 +14061,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get onboardingDashboardAdvisor =>
-      'Widgets, mapas, estatísticas — organize como preferir. Sua mesh, sua visão, seu controle.';
+      'Widgets, mapas, estatísticas - organize como preferir. Sua mesh, sua visão, seu controle.';
 
   @override
   String get onboardingDashboardDescription =>
@@ -14121,7 +14135,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get onboardingNodedexAdvisor =>
-      'Cada nó recebe um sigil único, um nível de raridade e uma pátina que se aprofunda a cada encontro. Colecione todos — seu NodeDex é sua história na mesh.';
+      'Cada nó recebe um sigil único, um nível de raridade e uma pátina que se aprofunda a cada encontro. Colecione todos - seu NodeDex é sua história na mesh.';
 
   @override
   String get onboardingNodedexBaseCamp => 'Nó acampamento base';
@@ -14146,7 +14160,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get onboardingNodedexSummitRelay => 'Relay de cume';
 
   @override
-  String get onboardingNodedexTitle => 'NodeDex — Álbum de colecionador';
+  String get onboardingNodedexTitle => 'NodeDex - Álbum de colecionador';
 
   @override
   String get onboardingNodedexTrailMarker => 'Marcador de trilha';
@@ -14204,7 +14218,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get onboardingSignalsDescription =>
-      'Transmissões efêmeras pela mesh.\nCompartilhe presença, fotos e localização — depois deixe desaparecer.';
+      'Transmissões efêmeras pela mesh.\nCompartilhe presença, fotos e localização - depois deixe desaparecer.';
 
   @override
   String get onboardingSignalsTitle => 'Sinais';
@@ -14239,20 +14253,20 @@ class AppLocalizationsPt extends AppLocalizations {
   String get onboardingWidgetSnrDb => 'SNR dB';
 
   @override
-  String get openLinkTitle => 'Open link?';
+  String get openLinkTitle => 'Abrir ligação?';
 
   @override
   String get openLinkDescription =>
-      'This link was received in a message. Verify the destination before continuing.';
+      'Esta ligação foi recebida numa mensagem. Verifique o destino antes de continuar.';
 
   @override
-  String get openLinkOpenAction => 'Open';
+  String get openLinkOpenAction => 'Abrir';
 
   @override
-  String get openLinkCancelAction => 'Cancel';
+  String get openLinkCancelAction => 'Cancelar';
 
   @override
-  String get openLinkLaunchFailed => 'Could not open link';
+  String get openLinkLaunchFailed => 'Não foi possível abrir a ligação';
 
   @override
   String get paxCounterAboutSubtitle =>
@@ -14396,7 +14410,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get presenceQuietMesh =>
-      'A mesh está silenciosa — os nós aparecerão quando estiverem online.';
+      'A mesh está silenciosa - os nós aparecerão quando estiverem online.';
 
   @override
   String get presenceRecentActivity => 'Atividade recente';
@@ -14643,7 +14657,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get productDetailSignInFavorites => 'Faça login para salvar favoritos';
 
   @override
-  String get productDetailSignInReview => 'Sign in to write a review';
+  String get productDetailSignInReview =>
+      'Inicie sessão para escrever uma avaliação';
 
   @override
   String productDetailSoldCount(int count) {
@@ -14744,7 +14759,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get profileCloudStartingUp =>
-      'Serviços na nuvem iniciando — tente novamente em breve';
+      'Serviços na nuvem iniciando - tente novamente em breve';
 
   @override
   String get profileContinueApple => 'Continuar com Apple';
@@ -14840,7 +14855,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get profileLinkedAccounts => 'Contas vinculadas';
 
   @override
-  String get profileLinksSection => 'Links';
+  String get profileLinksSection => 'Ligações';
 
   @override
   String get profileMastodonHint => '@utilizador@instancia.social';
@@ -14932,7 +14947,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Sincronização na nuvem temporariamente indisponível';
 
   @override
-  String get profileSyncTimedOut => 'Sincronização expirou — tente novamente';
+  String get profileSyncTimedOut => 'Sincronização expirou - tente novamente';
 
   @override
   String profileSynced(String email) {
@@ -15032,11 +15047,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get qrScannerChannelDefaultKeyRecommendation =>
-      'Tap \"Edit First\" to generate a secure encryption key before importing.';
+      'Toque em \"Editar Primeiro\" para gerar uma chave de encriptação segura antes de importar.';
 
   @override
   String get qrScannerChannelDefaultKeyWarning =>
-      'This channel uses the default encryption key, which is publicly known and provides no real security.';
+      'Este canal utiliza a chave de encriptação predefinida, que é publicamente conhecida e não oferece segurança real.';
 
   @override
   String get qrScannerChannelSyncNotice =>
@@ -15063,7 +15078,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get qrScannerImportedChannelName => 'Importado';
 
   @override
-  String get qrScannerMaxChannels => 'Máximo de 8 canais — exclua um primeiro';
+  String get qrScannerMaxChannels => 'Máximo de 8 canais - exclua um primeiro';
 
   @override
   String qrScannerNodeAddedToFavorites(String name) {
@@ -15164,7 +15179,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get reachabilityScoringModelContent =>
-      'Modelo Oportunístico de Probabilidade de Alcance Mesh (v1) — BETA\n\nUm modelo heurístico que estima a probabilidade de alcançar um nó com base em métricas RF observadas e histórico de pacotes. Esta pontuação representa probabilidade, não alcançabilidade. O Meshtastic encaminha pacotes de forma oportunística sem roteamento. Uma pontuação alta não garante a entrega.';
+      'Modelo Oportunístico de Probabilidade de Alcance Mesh (v1) - BETA\n\nUm modelo heurístico que estima a probabilidade de alcançar um nó com base em métricas RF observadas e histórico de pacotes. Esta pontuação representa probabilidade, não alcançabilidade. O Meshtastic encaminha pacotes de forma oportunística sem roteamento. Uma pontuação alta não garante a entrega.';
 
   @override
   String get reachabilityScoringModelTitle => 'Modelo de Pontuação';
@@ -15225,7 +15240,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get regionSelectionPairingHintMessage =>
-      'O pareamento precisa ser atualizado. O rádio pode ter limpado sua identidade Bluetooth após a mudança de região — esqueça o dispositivo nas Configurações de Bluetooth e pareie novamente.';
+      'O pareamento precisa ser atualizado. O rádio pode ter limpado sua identidade Bluetooth após a mudança de região - esqueça o dispositivo nas Configurações de Bluetooth e pareie novamente.';
 
   @override
   String get regionSelectionPairingInvalidation =>
@@ -15961,7 +15976,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get scannerPairingInvalidatedError =>
-      'O pareamento precisa ser atualizado — a identidade Bluetooth do rádio mudou. Esqueça o dispositivo nas Configurações de Bluetooth e pareie novamente.';
+      'O pareamento precisa ser atualizado - a identidade Bluetooth do rádio mudou. Esqueça o dispositivo nas Configurações de Bluetooth e pareie novamente.';
 
   @override
   String get scannerPairingRefreshTitle =>
@@ -15980,7 +15995,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get scannerPinRequiredError =>
-      'Falha na conexão — tente novamente e insira o PIN quando solicitado';
+      'Falha na conexão - tente novamente e insira o PIN quando solicitado';
 
   @override
   String get scannerProtocolMeshCore => 'MeshCore';
@@ -16570,11 +16585,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsSearchIftttPackTitle => 'Pacote IFTTT';
 
   @override
-  String get settingsSearchTranslationPackTitle => 'Translation Pack';
+  String get settingsSearchTranslationPackTitle => 'Pacote de Tradução';
 
   @override
   String get settingsSearchTranslationPackSubtitle =>
-      'One-tap message translation';
+      'Tradução de mensagens com um toque';
 
   @override
   String get settingsSearchLikesSubtitle =>
@@ -17099,18 +17114,18 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsLocationServicesDisabled =>
-      'Location services are disabled. Enable them in your device settings.';
+      'Os serviços de localização estão desativados. Ative-os nas definições do dispositivo.';
 
   @override
   String get settingsLocationPermissionDenied =>
-      'Location permission denied. Grant location access to share your position.';
+      'Permissão de localização negada. Conceda acesso à localização para partilhar a sua posição.';
 
   @override
   String get settingsLocationPermissionPermanentlyDenied =>
-      'Location permission permanently denied. Enable in your device settings.';
+      'Permissão de localização permanentemente negada. Ative nas definições do dispositivo.';
 
   @override
-  String get settingsLocationOpenSettings => 'Open Settings';
+  String get settingsLocationOpenSettings => 'Abrir Definições';
 
   @override
   String get settingsTilePushNotificationsSubtitle =>
@@ -17855,13 +17870,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get signalLegendFiveMin => '< 5 min';
 
   @override
-  String get signalLegendOverTwoHrs => '> 2 hrs';
+  String get signalLegendOverTwoHrs => '> 2 h';
 
   @override
   String get signalLegendThirtyMin => '< 30 min';
 
   @override
-  String get signalLegendTwoHrs => '< 2 hrs';
+  String get signalLegendTwoHrs => '< 2 h';
 
   @override
   String get signalLetOthersKnowIntent => 'Diga aos outros por que está ativo';
@@ -18381,7 +18396,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get socialActivityTagline2 =>
-      'Curtidas, comentários, seguidores — tudo em um só lugar.\nPublique algo para começar.';
+      'Curtidas, comentários, seguidores - tudo em um só lugar.\nPublique algo para começar.';
 
   @override
   String get socialActivityTagline3 =>
@@ -19529,10 +19544,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get socialSuspendedAppealBody =>
-      'Hi,\n\nI would like to appeal my account suspension.\n\nPlease review my case.\n\nThank you.';
+      'Olá,\n\nGostaria de recorrer da suspensão da minha conta.\n\nPor favor, reveja o meu caso.\n\nObrigado.';
 
   @override
-  String get socialSuspendedAppealSubject => 'Account Suspension Appeal';
+  String get socialSuspendedAppealSubject => 'Recurso de Suspensão de Conta';
 
   @override
   String get socialSuspendedContactSupport =>
@@ -20063,7 +20078,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String takEventSpeedFormat(String kmh, String knots) {
-    return '$kmh km/h ($knots kn)';
+    return '$kmh km/h ($knots nós)';
   }
 
   @override
@@ -20170,7 +20185,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get takScreenFilterAll => 'Todos';
 
   @override
-  String get takScreenHelpTitleDefault => 'Info';
+  String get takScreenHelpTitleDefault => 'Informação';
 
   @override
   String get takScreenHelpTitleFilters => 'Filtros';
@@ -20660,12 +20675,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String telemetryDeviceMetricsAirUtil(String percent) {
-    return 'Air $percent%';
+    return 'Ar $percent%';
   }
 
   @override
   String telemetryDeviceMetricsChannelUtil(String percent) {
-    return 'Ch $percent%';
+    return 'Canal $percent%';
   }
 
   @override
@@ -20745,19 +20760,19 @@ class AppLocalizationsPt extends AppLocalizations {
   String get telemetryEnvironmentLegendTemperature => 'Temperatura';
 
   @override
-  String get telemetryEnvironmentLegendPressure => 'Pressure';
+  String get telemetryEnvironmentLegendPressure => 'Pressão';
 
   @override
-  String get telemetryEnvironmentLegendGas => 'Gas';
+  String get telemetryEnvironmentLegendGas => 'Gás';
 
   @override
   String get telemetryEnvironmentLegendIaq => 'IAQ';
 
   @override
-  String get telemetryEnvironmentLegendLight => 'Light';
+  String get telemetryEnvironmentLegendLight => 'Luz';
 
   @override
-  String get telemetryEnvironmentLegendWind => 'Wind';
+  String get telemetryEnvironmentLegendWind => 'Vento';
 
   @override
   String get telemetryEnvironmentNoMetrics => 'Nenhuma métrica ambiental';
@@ -20794,10 +20809,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get telemetryHubSubtitle =>
-      'Device, environment, air quality, position and sensor logs';
+      'Registos de dispositivo, ambiente, qualidade do ar, posição e sensores';
 
   @override
-  String get telemetryHubTitle => 'Telemetry';
+  String get telemetryHubTitle => 'Telemetria';
 
   @override
   String get telemetryMetricsWillAppear =>
@@ -20959,7 +20974,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get telemetryTracerouteDirectConnection =>
-      'Conexão direta — sem hops intermediários';
+      'Conexão direta - sem hops intermediários';
 
   @override
   String get telemetryTracerouteEmptyHint =>
@@ -21646,38 +21661,39 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get widgetBuilderBindingHardwareModelDistribution =>
-      'Hardware Model Distribution';
+      'Distribuição por Modelo de Hardware';
 
   @override
   String get widgetBuilderBindingHardwareModelDistributionDesc =>
-      'Node count grouped by hardware model';
+      'Contagem de nós agrupada por modelo de hardware';
 
   @override
-  String get widgetBuilderBindingRoleDistribution => 'Role Distribution';
+  String get widgetBuilderBindingRoleDistribution => 'Distribuição por Função';
 
   @override
   String get widgetBuilderBindingRoleDistributionDesc =>
-      'Node count grouped by device role';
+      'Contagem de nós agrupada por função do dispositivo';
 
   @override
-  String get widgetBuilderDistributionTemplate => 'Distribution';
+  String get widgetBuilderDistributionTemplate => 'Distribuição';
 
   @override
   String get widgetBuilderDistributionTemplateDesc =>
-      'Hardware model or role breakdown across your mesh';
+      'Distribuição por modelo de hardware ou função na sua malha';
 
   @override
-  String get widgetBuilderDistributionEmpty => 'No hardware data available';
+  String get widgetBuilderDistributionEmpty =>
+      'Sem dados de hardware disponíveis';
 
   @override
   String get widgetBuilderDistributionEmptyHint =>
-      'Connect to the mesh to see device distribution';
+      'Ligue-se à malha para ver a distribuição de dispositivos';
 
   @override
-  String get widgetBuilderDistributionUnknown => 'Unknown';
+  String get widgetBuilderDistributionUnknown => 'Desconhecido';
 
   @override
-  String get widgetBuilderDistributionOther => 'Other';
+  String get widgetBuilderDistributionOther => 'Outro';
 
   @override
   String get widgetBuilderBindingUptime => 'Tempo ativo';
@@ -22201,7 +22217,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get widgetBuilderLocationSharedRecently =>
-      'Localização compartilhada recentemente — aguarde antes de compartilhar novamente';
+      'Localização compartilhada recentemente - aguarde antes de compartilhar novamente';
 
   @override
   String widgetBuilderLocationSharedWithNode(String name) {
@@ -22498,7 +22514,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get widgetBuilderSectionEmergency => 'EMERGÊNCIA';
 
   @override
-  String get widgetBuilderSectionLayout => 'Layout';
+  String get widgetBuilderSectionLayout => 'Esquema';
 
   @override
   String get widgetBuilderSectionMessaging => 'MENSAGENS';
@@ -23482,12 +23498,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String contentModerationRemovedWithReason(String reason) {
-    return 'Conteúdo removido — $reason';
+    return 'Conteúdo removido - $reason';
   }
 
   @override
   String get contentModerationRemovedGeneric =>
-      'Conteúdo removido — seu conteúdo violou nossas diretrizes da comunidade.';
+      'Conteúdo removido - seu conteúdo violou nossas diretrizes da comunidade.';
 
   @override
   String get contentModerationLearnMore => 'Saiba mais';
@@ -23761,7 +23777,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String actionSheetTracerouteSent(String target) {
-    return 'Traceroute enviado para $target — verifique o Histórico de traceroute para resultados';
+    return 'Traceroute enviado para $target - verifique o Histórico de traceroute para resultados';
   }
 
   @override
@@ -23771,23 +23787,23 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get premiumPreviewAutomations =>
-      'Modo prévia — Atualize para criar automações';
+      'Modo prévia - Atualize para criar automações';
 
   @override
   String get premiumPreviewIfttt =>
-      'Modo prévia — Atualize para conectar serviços';
+      'Modo prévia - Atualize para conectar serviços';
 
   @override
   String get premiumPreviewWidgets =>
-      'Modo prévia — Atualize para criar widgets';
+      'Modo prévia - Atualize para criar widgets';
 
   @override
   String get premiumPreviewRingtones =>
-      'Modo prévia — Atualize para acessar a biblioteca completa';
+      'Modo prévia - Atualize para acessar a biblioteca completa';
 
   @override
   String get premiumPreviewThemes =>
-      'Modo prévia — Atualize para desbloquear todas as cores';
+      'Modo prévia - Atualize para desbloquear todas as cores';
 
   @override
   String get premiumUpgrade => 'Atualizar';
@@ -23833,7 +23849,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get googlePlayUnavailable =>
-      'Google Play indisponível neste dispositivo — tente o pagamento alternativo.';
+      'Google Play indisponível neste dispositivo - tente o pagamento alternativo.';
 
   @override
   String get buyMeACoffeeHandoffTitle => 'Pagar via Buy Me a Coffee';
@@ -24326,7 +24342,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get storeForwardTitle => 'Store & Forward';
+  String get storeForwardTitle => 'Armazenar e Reencaminhar';
 
   @override
   String get storeForwardSaveSuccess => 'Configuração Store & Forward salva';
@@ -24464,7 +24480,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get subscriptionFallbackIfttt => 'IFTTT';
 
   @override
-  String get subscriptionFallbackTranslationPack => 'Translation Pack';
+  String get subscriptionFallbackTranslationPack => 'Pacote de tradução';
 
   @override
   String get geofenceLocating => 'Localizando...';
@@ -24508,7 +24524,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get restorePurchasesPending =>
-      'Your purchase is still being processed by the store. This can take up to 72 hours — please try again later.';
+      'A sua compra ainda está a ser processada pela loja. Isto pode demorar até 72 horas - por favor, tente novamente mais tarde.';
 
   @override
   String get bluetoothTitle => 'Bluetooth';
@@ -24739,17 +24755,18 @@ class AppLocalizationsPt extends AppLocalizations {
   String get subscriptionAppIntegrations => 'Mais de 700 integrações de apps';
 
   @override
-  String get subscriptionTranslateMessages => 'One-tap message translation';
+  String get subscriptionTranslateMessages =>
+      'Tradução de mensagens com um toque';
 
   @override
-  String get subscriptionNewAddon => 'New Add-on';
+  String get subscriptionNewAddon => 'Novo add-on';
 
   @override
   String get subscriptionFeaturedTranslationSubtitle =>
-      'On-demand translation with smart caching, privacy controls, and BYO provider support';
+      'Tradução a pedido com cache inteligente, controlos de privacidade e suporte BYO';
 
   @override
-  String get subscriptionGetTranslation => 'Get';
+  String get subscriptionGetTranslation => 'Obter';
 
   @override
   String get subscriptionBestValue =>
@@ -24760,7 +24777,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String subscriptionSavePercent(String percent) {
-    return 'SAVE $percent%';
+    return 'POUPE $percent%';
   }
 
   @override
@@ -25120,7 +25137,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get appearanceLanguageSystemDefault => 'Padrão do sistema';
 
   @override
-  String get appearanceLanguageEnglish => 'English';
+  String get appearanceLanguageEnglish => 'Inglês';
 
   @override
   String get appearanceLanguageItalian => 'Italiano';
@@ -25525,13 +25542,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Sincronize seus dados mesh entre dispositivos. Seus dados locais sempre permanecem gratuitos e acessíveis.';
 
   @override
-  String get cloudSyncNodeDex => 'NodeDex — encontros, tags, notas';
+  String get cloudSyncNodeDex => 'NodeDex - encontros, tags, notas';
 
   @override
-  String get cloudSyncAutomations => 'Automações — regras e gatilhos';
+  String get cloudSyncAutomations => 'Automações - regras e gatilhos';
 
   @override
-  String get cloudSyncWidgets => 'Widgets personalizados — layouts e dados';
+  String get cloudSyncWidgets => 'Widgets personalizados - layouts e dados';
 
   @override
   String get cloudSyncOfflineNote => 'Funciona totalmente offline sem ele';
@@ -25868,24 +25885,24 @@ class AppLocalizationsPt extends AppLocalizations {
       'Mostra o status da conexão com contagem de nós e hora da última mensagem';
 
   @override
-  String get bgConnSectionLiveActivity => 'LIVE ACTIVITY';
+  String get bgConnSectionLiveActivity => 'ATIVIDADE AO VIVO';
 
   @override
-  String get bgConnLiveActivityTitle => 'Dynamic Island & Lock Screen';
+  String get bgConnLiveActivityTitle => 'Dynamic Island e Ecrã de Bloqueio';
 
   @override
   String get bgConnLiveActivitySubtitle =>
-      'Show device connection status on the Dynamic Island and Lock Screen';
+      'Mostrar o estado da ligação do dispositivo na Dynamic Island e no Ecrã de Bloqueio';
 
   @override
-  String get bgConnLiveActivityDisableTitle => 'End Live Activity?';
+  String get bgConnLiveActivityDisableTitle => 'Encerrar Live Activity?';
 
   @override
   String get bgConnLiveActivityDisableBody =>
-      'The current Dynamic Island activity will be ended immediately. Connection status will no longer appear on your Lock Screen.';
+      'A atividade atual da Dynamic Island será encerrada imediatamente. O estado da ligação deixará de aparecer no Ecrã de Bloqueio.';
 
   @override
-  String get bgConnLiveActivityDisableConfirm => 'End Activity';
+  String get bgConnLiveActivityDisableConfirm => 'Encerrar Atividade';
 
   @override
   String get bgConnLiveActivityDestTitle => 'Destino';
@@ -25901,15 +25918,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get bgConnLiveActivityDestMeshDesc =>
-      'Mostre toda a sua mesh — contagem de nós e saúde geral do enlace.';
+      'Mostre toda a sua mesh - contagem de nós e saúde geral do enlace.';
 
   @override
   String get bgConnLiveActivityDestBestPeerDesc =>
-      'Mostre o peer mais forte — segue automaticamente o melhor sinal.';
+      'Mostre o peer mais forte - segue automaticamente o melhor sinal.';
 
   @override
   String get bgConnLiveActivityDestActivePeerDesc =>
-      'Mostre o último parceiro de DM — muda enquanto você conversa.';
+      'Mostre o último parceiro de DM - muda enquanto você conversa.';
 
   @override
   String get linkedDevicesTitle => 'Dispositivos vinculados';
@@ -26323,16 +26340,18 @@ class AppLocalizationsPt extends AppLocalizations {
   String get radioConfigPresetShortSlowDesc => 'Curto alcance, confiável';
 
   @override
-  String get radioConfigPresetShortTurbo => 'Short Turbo';
+  String get radioConfigPresetShortTurbo => 'Curto Turbo';
 
   @override
-  String get radioConfigPresetShortTurboDesc => 'Short range with turbo speed';
+  String get radioConfigPresetShortTurboDesc =>
+      'Curto alcance com velocidade turbo';
 
   @override
-  String get radioConfigPresetLongTurbo => 'Long Turbo';
+  String get radioConfigPresetLongTurbo => 'Longo Turbo';
 
   @override
-  String get radioConfigPresetLongTurboDesc => 'Long range with turbo speed';
+  String get radioConfigPresetLongTurboDesc =>
+      'Longo alcance com velocidade turbo';
 
   @override
   String get radioConfigPresetLiteFast => 'Lite Rápido';
@@ -27265,18 +27284,18 @@ class AppLocalizationsPt extends AppLocalizations {
       'Sua assinatura não será renovada. Você pode reassinar a qualquer momento.';
 
   @override
-  String get accountSubFeatureNodedex => 'NodeDex — encontros, tags, notas';
+  String get accountSubFeatureNodedex => 'NodeDex - encontros, tags, notas';
 
   @override
-  String get accountSubFeatureAutomations => 'Automações — regras e gatilhos';
+  String get accountSubFeatureAutomations => 'Automações - regras e gatilhos';
 
   @override
   String get accountSubFeatureWidgets =>
-      'Widgets personalizados — layouts e dados';
+      'Widgets personalizados - layouts e dados';
 
   @override
   String get accountSubFeatureBackup =>
-      'Backup — restaure após reinstalação ou novo celular';
+      'Backup - restaure após reinstalação ou novo celular';
 
   @override
   String get accountSubFeatureOffline =>
@@ -27453,7 +27472,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get accountSubBadgeUnavailable => 'Indisponível';
 
   @override
-  String get accountSubBadgeOn => 'ON';
+  String get accountSubBadgeOn => 'ATIVO';
 
   @override
   String get accountSubSyncSyncing => 'Sincronizando';
@@ -27807,58 +27826,62 @@ class AppLocalizationsPt extends AppLocalizations {
   String get dataExportSnrNotAvailable => 'N/D';
 
   @override
-  String get dataExportCompleteWarningTitle => 'Save your export safely';
+  String get dataExportCompleteWarningTitle =>
+      'Guarde a sua exportação em segurança';
 
   @override
   String get dataExportCompleteWarningBody =>
-      'This file contains every direct message you\'ve sent and received, all node positions, and the full node list. Anyone with the file can read your messages and see where you\'ve been. Save it to a secure location.';
+      'Este ficheiro contém todas as mensagens diretas que enviou e recebeu, todas as posições dos nós e a lista completa de nós. Qualquer pessoa com o ficheiro pode ler as suas mensagens e ver onde esteve. Guarde-o num local seguro.';
 
   @override
-  String get dataExportCompleteWarningContinueBtn => 'Export everything';
+  String get dataExportCompleteWarningContinueBtn => 'Exportar tudo';
 
   @override
-  String get dataExportCompleteWarningCancelBtn => 'Cancel';
+  String get dataExportCompleteWarningCancelBtn => 'Cancelar';
 
   @override
-  String get dataExportSectionDeviceConfig => 'Device Configuration';
+  String get dataExportSectionDeviceConfig => 'Configuração do Dispositivo';
 
   @override
-  String get dataExportDeviceConfigBackupTitle => 'Backup Device Config';
+  String get dataExportDeviceConfigBackupTitle =>
+      'Cópia de Segurança da Configuração do Dispositivo';
 
   @override
   String get dataExportDeviceConfigBackupSubtitle =>
-      'Channels, LoRa, modules, owner';
+      'Canais, LoRa, módulos, proprietário';
 
   @override
-  String get dataExportDeviceConfigRestoreTitle => 'Restore Device Config';
+  String get dataExportDeviceConfigRestoreTitle =>
+      'Restaurar Configuração do Dispositivo';
 
   @override
   String get dataExportDeviceConfigRestoreSubtitle =>
-      'Apply a saved backup to this device';
+      'Aplicar uma cópia de segurança guardada a este dispositivo';
 
   @override
   String get dataExportDeviceConfigFormatJson => 'JSON';
 
   @override
-  String get dataExportDeviceConfigFormatImport => 'IMPORT';
+  String get dataExportDeviceConfigFormatImport => 'IMPORTAR';
 
   @override
   String get dataExportDeviceConfigBackupWarningTitle =>
-      'Save your backup safely';
+      'Guarde a sua cópia de segurança em segurança';
 
   @override
   String get dataExportDeviceConfigBackupWarningBody =>
-      'This file contains your channel keys (PSKs) and device settings. Anyone with the file can decrypt your channel traffic. Save it to a secure location.';
+      'Este ficheiro contém as suas chaves de canal (PSKs) e configurações do dispositivo. Qualquer pessoa com o ficheiro pode desencriptar o tráfego do seu canal. Guarde-o num local seguro.';
 
   @override
-  String get dataExportDeviceConfigBackupContinueBtn => 'Export backup';
+  String get dataExportDeviceConfigBackupContinueBtn =>
+      'Exportar cópia de segurança';
 
   @override
-  String get dataExportDeviceConfigBackupCancelBtn => 'Cancel';
+  String get dataExportDeviceConfigBackupCancelBtn => 'Cancelar';
 
   @override
   String get dataExportDeviceConfigBackupNotConnected =>
-      'Connect to a device before backing up its config.';
+      'Ligue a um dispositivo antes de fazer cópia de segurança da sua configuração.';
 
   @override
   String dataExportDeviceConfigBackupPartial(int count) {
@@ -27869,58 +27892,60 @@ class AppLocalizationsPt extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString sections were unavailable',
-      one: '1 section was unavailable',
+      other: '$countString secções não estavam disponíveis',
+      one: '1 secção não estava disponível',
     );
-    return 'Backup saved. $_temp0 and not included.';
+    return 'Cópia de segurança guardada. $_temp0 e não foi incluída.';
   }
 
   @override
   String dataExportDeviceConfigBackupFailed(String error) {
-    return 'Failed to capture device config: $error';
+    return 'Falha ao capturar a configuração do dispositivo: $error';
   }
 
   @override
   String get dataExportDeviceConfigBackupShareSubject =>
-      'SocialMesh Device Config Backup';
+      'Cópia de Segurança da Configuração do Dispositivo SocialMesh';
 
   @override
-  String get dataExportDeviceConfigRestoreSheetTitle => 'Restore Device Config';
+  String get dataExportDeviceConfigRestoreSheetTitle =>
+      'Restaurar Configuração do Dispositivo';
 
   @override
   String get dataExportDeviceConfigRestoreSheetBody =>
-      'Choose which sections to apply to this device. Each section is sent to the device separately and may trigger a reboot.';
+      'Escolha quais as secções a aplicar a este dispositivo. Cada secção é enviada ao dispositivo separadamente e pode desencadear um reinício.';
 
   @override
-  String get dataExportDeviceConfigRestoreToggleChannels => 'Channels';
+  String get dataExportDeviceConfigRestoreToggleChannels => 'Canais';
 
   @override
-  String get dataExportDeviceConfigRestoreToggleRadio => 'Radio settings';
+  String get dataExportDeviceConfigRestoreToggleRadio => 'Definições de rádio';
 
   @override
-  String get dataExportDeviceConfigRestoreToggleModules => 'Module configs';
+  String get dataExportDeviceConfigRestoreToggleModules =>
+      'Configurações de módulos';
 
   @override
-  String get dataExportDeviceConfigRestoreToggleOwner => 'Owner name';
+  String get dataExportDeviceConfigRestoreToggleOwner => 'Nome do proprietário';
 
   @override
-  String get dataExportDeviceConfigRestoreApplyBtn => 'Apply restore';
+  String get dataExportDeviceConfigRestoreApplyBtn => 'Aplicar restauro';
 
   @override
   String get dataExportDeviceConfigRestoreNodeMismatch =>
-      'This backup is from a different node. Channels and owner will be applied as-is.';
+      'Esta cópia de segurança é de um nó diferente. Canais e proprietário serão aplicados tal como estão.';
 
   @override
   String get dataExportDeviceConfigRestoreInvalidFile =>
-      'That file is not a valid SocialMesh device config backup.';
+      'Este ficheiro não é uma cópia de segurança de configuração de dispositivo SocialMesh válida.';
 
   @override
   String get dataExportDeviceConfigRestoreEmpty =>
-      'The backup file contains no sections to restore.';
+      'O ficheiro de cópia de segurança não contém secções para restaurar.';
 
   @override
   String get dataExportDeviceConfigRestoreNotConnected =>
-      'Connect to a device before restoring its config.';
+      'Ligue a um dispositivo antes de restaurar a sua configuração.';
 
   @override
   String dataExportDeviceConfigRestoreSummary(int applied, int total) {
@@ -27931,7 +27956,7 @@ class AppLocalizationsPt extends AppLocalizations {
         intl.NumberFormat.decimalPattern(localeName);
     final String totalString = totalNumberFormat.format(total);
 
-    return 'Applied $appliedString of $totalString.';
+    return 'Aplicadas $appliedString de $totalString.';
   }
 
   @override
@@ -27950,21 +27975,21 @@ class AppLocalizationsPt extends AppLocalizations {
         intl.NumberFormat.decimalPattern(localeName);
     final String failedString = failedNumberFormat.format(failed);
 
-    return 'Applied $appliedString of $totalString. $failedString failed.';
+    return 'Aplicadas $appliedString de $totalString. $failedString falhadas.';
   }
 
   @override
   String get dataExportDeviceConfigRestoreNoSelection =>
-      'Select at least one section to restore.';
+      'Selecione pelo menos uma secção para restaurar.';
 
   @override
   String dataExportDeviceConfigRestoreFromMetadata(String metadata) {
-    return 'From: $metadata';
+    return 'De: $metadata';
   }
 
   @override
   String dataExportDeviceConfigRestoreCreatedAt(String date) {
-    return 'Saved: $date';
+    return 'Guardado: $date';
   }
 
   @override
@@ -27976,8 +28001,8 @@ class AppLocalizationsPt extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString channels',
-      one: '1 channel',
+      other: '$countString canais',
+      one: '1 canal',
     );
     return '$_temp0';
   }
@@ -27991,17 +28016,18 @@ class AppLocalizationsPt extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString modules',
-      one: '1 module',
+      other: '$countString módulos',
+      one: '1 módulo',
     );
     return '$_temp0';
   }
 
   @override
-  String get dataExportDeviceConfigRestoreRadioPresent => 'Included';
+  String get dataExportDeviceConfigRestoreRadioPresent => 'Incluído';
 
   @override
-  String get dataExportDeviceConfigRestoreRadioMissing => 'Not in backup';
+  String get dataExportDeviceConfigRestoreRadioMissing =>
+      'Não está na cópia de segurança';
 
   @override
   String get deviceMgmtTitle => 'Gerenciamento do dispositivo';
@@ -28763,7 +28789,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String mqttConfigDutyCycleWarning(String percent) {
-    return 'Sua região tem um duty cycle de $percent%. MQTT não é recomendado com restrições de duty cycle — o tráfego extra sobrecarregará rapidamente sua rede LoRa.';
+    return 'Sua região tem um duty cycle de $percent%. MQTT não é recomendado com restrições de duty cycle - o tráfego extra sobrecarregará rapidamente sua rede LoRa.';
   }
 
   @override
@@ -28788,14 +28814,14 @@ class AppLocalizationsPt extends AppLocalizations {
   String get mqttConfigSaveAnyway => 'Salvar mesmo assim';
 
   @override
-  String get mqttConfigSaveConfirmTitle => 'Save MQTT config?';
+  String get mqttConfigSaveConfirmTitle => 'Guardar configuração MQTT?';
 
   @override
   String get mqttConfigSaveConfirmMessage =>
-      'After the config is saved, the node will reboot.';
+      'Após guardar a configuração, o nó irá reiniciar.';
 
   @override
-  String get mqttConfigSaveConfirmCta => 'Save and Reboot';
+  String get mqttConfigSaveConfirmCta => 'Guardar e Reiniciar';
 
   @override
   String get mqttConfigSectionServer => 'SERVIDOR';
@@ -28863,19 +28889,19 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get mqttConfigMapReportConsentHeader =>
-      'Consent to share unencrypted node data via MQTT';
+      'Consentimento para partilhar dados não encriptados do nó via MQTT';
 
   @override
   String get mqttConfigMapReportConsentBody1 =>
-      'By enabling this feature, you acknowledge and expressly consent to the transmission of your device\'s real-time geographic location over the MQTT protocol without encryption. This location data may be used for purposes such as live map reporting, device tracking, and related telemetry functions.';
+      'Ao ativar esta funcionalidade, reconhece e consente expressamente na transmissão da localização geográfica em tempo real do seu dispositivo através do protocolo MQTT sem encriptação. Estes dados de localização podem ser utilizados para fins como relatórios de mapa em direto, rastreamento de dispositivos e funções de telemetria relacionadas.';
 
   @override
   String get mqttConfigMapReportConsentBody2 =>
-      'Please be advised that because the map report is not encrypted, your data may be stored and displayed permanently by third parties. SocialMesh does not assume responsibility for any such storage, display, or disclosure of this data.';
+      'Tenha em atenção que, como o relatório de mapa não está encriptado, os seus dados podem ser armazenados e exibidos permanentemente por terceiros. O SocialMesh não assume responsabilidade por qualquer armazenamento, exibição ou divulgação desses dados.';
 
   @override
   String get mqttConfigMapReportOptInLabel =>
-      'I have read and understand the above. I voluntarily consent to the unencrypted transmission of my node data via MQTT.';
+      'Li e compreendo o acima exposto. Consinto voluntariamente na transmissão não encriptada dos dados do meu nó via MQTT.';
 
   @override
   String get mqttConfigMapReportSettingsHeader =>
@@ -28925,70 +28951,71 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get mqttProxySectionDiagnostics => 'CLIENT PROXY STATUS';
+  String get mqttProxySectionDiagnostics => 'ESTADO DO PROXY DO CLIENTE';
 
   @override
-  String get mqttProxyStatusLabel => 'Status';
+  String get mqttProxyStatusLabel => 'Estado';
 
   @override
-  String get mqttProxyStatusConnected => 'Connected';
+  String get mqttProxyStatusConnected => 'Ligado';
 
   @override
-  String get mqttProxyStatusDisconnected => 'Disconnected';
+  String get mqttProxyStatusDisconnected => 'Desligado';
 
   @override
   String get mqttProxyBroker => 'Broker';
 
   @override
-  String get mqttProxyPort => 'Port';
+  String get mqttProxyPort => 'Porta';
 
   @override
   String get mqttProxyTls => 'TLS';
 
   @override
-  String get mqttProxyAuth => 'Auth';
+  String get mqttProxyAuth => 'Autenticação';
 
   @override
-  String get mqttProxyTopic => 'Topic';
+  String get mqttProxyTopic => 'Tópico';
 
   @override
-  String get mqttProxyPublished => 'Published';
+  String get mqttProxyPublished => 'Publicado';
 
   @override
-  String get mqttProxyRelayed => 'Relayed';
+  String get mqttProxyRelayed => 'Retransmitido';
 
   @override
-  String get mqttProxyLastError => 'Last Error';
+  String get mqttProxyLastError => 'Último Erro';
 
   @override
-  String get mqttProxyReconnects => 'Reconnects';
+  String get mqttProxyReconnects => 'Reconexões';
 
   @override
-  String get mqttProxyEnabled => 'Enabled';
+  String get mqttProxyEnabled => 'Ativado';
 
   @override
-  String get mqttProxyDisabled => 'Disabled';
+  String get mqttProxyDisabled => 'Desativado';
 
   @override
-  String get mqttProxyConfigured => 'Configured';
+  String get mqttProxyConfigured => 'Configurado';
 
   @override
-  String get mqttProxyNone => 'None';
+  String get mqttProxyNone => 'Nenhum';
 
   @override
-  String get mqttProxyNoneLabel => '–';
+  String get mqttProxyNoneLabel => '-';
 
   @override
-  String get mqttProxyLastConnectAttempt => 'Last Attempt';
+  String get mqttProxyLastConnectAttempt => 'Última Tentativa';
 
   @override
-  String get mqttProxyLastConnectedAt => 'Last Connected';
+  String get mqttProxyLastConnectedAt => 'Última Ligação';
 
   @override
-  String get mqttProxyCopyDiagnostics => 'Copy Diagnostics';
+  String get mqttProxyCopyDiagnostics => 'Copiar Diagnóstico';
 
   @override
-  String get mqttProxyDiagnosticsCopied => 'Diagnostics copied to clipboard';
+  String get mqttProxyDiagnosticsCopied =>
+      'Diagnóstico copiado para a área de transferência';
 
   @override
   String get mqttProxyBannerNotConnectedTitle => 'Proxy MQTT não conectado';
@@ -29068,15 +29095,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get mqttProxyReasonMapReportingConsent =>
-      'Map reporting consent required';
+      'Consentimento de relatório de mapa necessário';
 
   @override
   String get mqttProxyBannerConsentRequiredTitle =>
-      'Map reporting consent required';
+      'Consentimento de relatório de mapa necessário';
 
   @override
   String get mqttProxyBannerConsentRequiredHint =>
-      'Tick the consent checkbox under Map Reporting to authorize the unencrypted broadcast of your location, then save.';
+      'Marque a caixa de consentimento em Relatório de Mapa para autorizar a transmissão não encriptada da sua localização, depois guarde.';
 
   @override
   String get securityConfigTitle => 'Segurança';
@@ -29138,7 +29165,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Faça backup da chave privada em armazenamento seguro para recuperação. As chaves são salvas no keychain do dispositivo com sincronização iCloud.';
 
   @override
-  String get securityConfigBackupBtn => 'Backup';
+  String get securityConfigBackupBtn => 'Cópia de segurança';
 
   @override
   String get securityConfigRestoreBtn => 'Restaurar';
@@ -29408,7 +29435,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get adminPanelTitle => 'Admin';
+  String get adminPanelTitle => 'Administração';
 
   @override
   String get adminPanelSectionShop => 'GERENCIAMENTO DA LOJA';
@@ -29681,7 +29708,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String adminBroadcastCountdownCancel(int seconds) {
-    return 'Cancelar — enviando em $seconds...';
+    return 'Cancelar - enviando em $seconds...';
   }
 
   @override
@@ -30192,19 +30219,19 @@ class AppLocalizationsPt extends AppLocalizations {
   String get adminPurchasesMemberSince => 'Membro Desde';
 
   @override
-  String get adminPurchasesSectionRegionPricing => 'Region & Pricing';
+  String get adminPurchasesSectionRegionPricing => 'Região e preços';
 
   @override
-  String get adminPurchasesCountry => 'Country';
+  String get adminPurchasesCountry => 'País';
 
   @override
-  String get adminPurchasesCurrency => 'Currency';
+  String get adminPurchasesCurrency => 'Moeda';
 
   @override
-  String get adminPurchasesPriceLocal => 'Price (local)';
+  String get adminPurchasesPriceLocal => 'Preço (local)';
 
   @override
-  String get adminPurchasesPriceUsd => 'Price (USD)';
+  String get adminPurchasesPriceUsd => 'Preço (USD)';
 
   @override
   String adminPurchasesUsdValue(String amount) {
@@ -30212,19 +30239,19 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get adminPurchasesTax => 'Tax';
+  String get adminPurchasesTax => 'Imposto';
 
   @override
-  String get adminPurchasesStoreCommission => 'Store commission';
+  String get adminPurchasesStoreCommission => 'Comissão da loja';
 
   @override
-  String get adminPurchasesOfferCode => 'Offer code';
+  String get adminPurchasesOfferCode => 'Código de oferta';
 
   @override
-  String get adminPurchasesFamilyShare => 'Family Share';
+  String get adminPurchasesFamilyShare => 'Partilha familiar';
 
   @override
-  String get adminPurchasesYes => 'Yes';
+  String get adminPurchasesYes => 'Sim';
 
   @override
   String get adminPurchasesSectionPurchases => 'Compras';
@@ -30283,7 +30310,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get adminQrStyleNeonGlow => 'Neon Glow';
+  String get adminQrStyleNeonGlow => 'Brilho neon';
 
   @override
   String get adminQrStyleFrostedGlass => 'Vidro Fosco';
@@ -30440,7 +30467,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get adminBugReportsAnonNotice =>
-      'Relatório anônimo — as respostas não podem ser entregues.';
+      'Relatório anônimo - as respostas não podem ser entregues.';
 
   @override
   String get adminBugReportsEmptyFilter =>
@@ -30737,7 +30764,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get globalLayerBrokerHeader => 'Broker';
 
   @override
-  String get globalLayerHostLabel => 'Host';
+  String get globalLayerHostLabel => 'Servidor';
 
   @override
   String get globalLayerPortLabel => 'Porta';
@@ -30820,7 +30847,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get globalLayerOutboundLabel => 'Saída';
 
   @override
-  String get globalLayerThroughputLabel => 'Throughput';
+  String get globalLayerThroughputLabel => 'Débito';
 
   @override
   String get globalLayerSessionLabel => 'Sessão';
@@ -30858,7 +30885,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Receber mensagens do broker';
 
   @override
-  String get globalLayerStatusOn => 'ON';
+  String get globalLayerStatusOn => 'ATIVO';
 
   @override
   String get globalLayerStatusOff => 'DESLIGADO';
@@ -31257,7 +31284,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get globalLayerMqttNote =>
-      'Internamente, isso usa um broker MQTT — um servidor de mensagens padrão da internet. Você não precisa saber como o MQTT funciona para usar o Global Layer.';
+      'Internamente, isso usa um broker MQTT - um servidor de mensagens padrão da internet. Você não precisa saber como o MQTT funciona para usar o Global Layer.';
 
   @override
   String get globalLayerNext => 'Próximo';
@@ -31792,7 +31819,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpRoutingRouterRoleBubble =>
-      'Nós **ROUTER** são os super-heróis da rede mesh — retransmitem mensagens para todos! Nós **CLIENT** apenas enviam/recebem suas próprias mensagens.';
+      'Nós **ROUTER** são os super-heróis da rede mesh - retransmitem mensagens para todos! Nós **CLIENT** apenas enviam/recebem suas próprias mensagens.';
 
   @override
   String get helpRoutingStoreForwardBubble =>
@@ -31804,7 +31831,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpNodesStatusBubble =>
-      '**Ponto verde** significa **Online** (ouvido recentemente). **Amarelo** significa **Visto recentemente**. **Cinza** significa **Offline**. LoRa não tem sinal offline — o status é inferido.';
+      '**Ponto verde** significa **Online** (ouvido recentemente). **Amarelo** significa **Visto recentemente**. **Cinza** significa **Offline**. LoRa não tem sinal offline - o status é inferido.';
 
   @override
   String get helpNodesInfoBubble =>
@@ -31976,7 +32003,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpDashboardWidgetsBubble =>
-      'Cada card é um **widget**. Eles mostram dados em tempo real da sua rede mesh — níveis de bateria, mensagens, clima e mais!';
+      'Cada card é um **widget**. Eles mostram dados em tempo real da sua rede mesh - níveis de bateria, mensagens, clima e mais!';
 
   @override
   String get helpDashboardReorderBubble =>
@@ -31996,7 +32023,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpBuilderBindingsBubble =>
-      'A mágica está nas **vinculações de dados**! Conecte qualquer elemento a dados mesh em tempo real — bateria, GPS, temperatura, intensidade do sinal!';
+      'A mágica está nas **vinculações de dados**! Conecte qualquer elemento a dados mesh em tempo real - bateria, GPS, temperatura, intensidade do sinal!';
 
   @override
   String get helpBuilderPreviewBubble =>
@@ -32008,7 +32035,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpMarketplaceBrowseBubble =>
-      'Explore por **categoria** — encontre displays de status, gráficos, medidores ou designs criativos. Toque em qualquer widget para pré-visualizar!';
+      'Explore por **categoria** - encontre displays de status, gráficos, medidores ou designs criativos. Toque em qualquer widget para pré-visualizar!';
 
   @override
   String get helpMarketplaceInstallBubble =>
@@ -32020,15 +32047,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpSignalsIntroBubble =>
-      'Bem-vindo aos **Sinais**! Transmita momentos para sua rede mesh. Os sinais são **efêmeros** — você escolhe quanto duram, de **15 minutos** até **24 horas**.';
+      'Bem-vindo aos **Sinais**! Transmita momentos para sua rede mesh. Os sinais são **efêmeros** - você escolhe quanto duram, de **15 minutos** até **24 horas**.';
 
   @override
   String get helpSignalsCreateBubble =>
-      'Toque no ícone do **sensor** para ficar ativo! Adicione texto, uma foto ou sua localização. Escolha seu TTL — tempos mais curtos são ótimos para check-ins rápidos.';
+      'Toque no ícone do **sensor** para ficar ativo! Adicione texto, uma foto ou sua localização. Escolha seu TTL - tempos mais curtos são ótimos para check-ins rápidos.';
 
   @override
   String get helpSignalsProximityBubble =>
-      'Os sinais mostram **emblemas de proximidade** — quantos saltos de distância do remetente. Sinais **Próximos** (0-1 saltos) aparecem primeiro!';
+      'Os sinais mostram **emblemas de proximidade** - quantos saltos de distância do remetente. Sinais **Próximos** (0-1 saltos) aparecem primeiro!';
 
   @override
   String get helpSignalsFiltersBubble =>
@@ -32036,19 +32063,19 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpSignalsPrivacyBubble =>
-      'Os sinais são **mesh-first** — viajam pela rede de rádio. Quando desaparecem, se foram. Conteúdo efêmero real, off-grid!';
+      'Os sinais são **mesh-first** - viajam pela rede de rádio. Quando desaparecem, se foram. Conteúdo efêmero real, off-grid!';
 
   @override
   String get helpCreateIntroBubble =>
-      'Hora de **Ficar ativo**! Um sinal é uma transmissão efêmera — vive na rede mesh por um tempo determinado, depois desaparece. Vou te mostrar como funciona.';
+      'Hora de **Ficar ativo**! Um sinal é uma transmissão efêmera - vive na rede mesh por um tempo determinado, depois desaparece. Vou te mostrar como funciona.';
 
   @override
   String get helpCreateTextBubble =>
-      'Digite sua mensagem no campo principal — até **280 caracteres**. O contador circular no canto mostra quantos restam.';
+      'Digite sua mensagem no campo principal - até **280 caracteres**. O contador circular no canto mostra quantos restam.';
 
   @override
   String get helpCreateImageBubble =>
-      'Toque no ícone de **imagem** para anexar uma foto. As imagens são enviadas via nuvem quando você está online — não estão disponíveis no modo somente mesh.';
+      'Toque no ícone de **imagem** para anexar uma foto. As imagens são enviadas via nuvem quando você está online - não estão disponíveis no modo somente mesh.';
 
   @override
   String get helpCreateLocationBubble =>
@@ -32056,11 +32083,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpCreateTtlBubble =>
-      'O ícone do **timer** define seu TTL — quanto tempo o sinal fica ativo. Escolha de **15 minutos** até **24 horas**. Tempos mais curtos são ótimos para check-ins rápidos.';
+      'O ícone do **timer** define seu TTL - quanto tempo o sinal fica ativo. Escolha de **15 minutos** até **24 horas**. Tempos mais curtos são ótimos para check-ins rápidos.';
 
   @override
   String get helpCreateIntentBubble =>
-      'Escolha um **Intento de presença** para dizer à rede mesh o que você está fazendo — explorando, monitorando, ajudando ou apenas ouvindo. Adiciona contexto sem palavras extras.';
+      'Escolha um **Intento de presença** para dizer à rede mesh o que você está fazendo - explorando, monitorando, ajudando ou apenas ouvindo. Adiciona contexto sem palavras extras.';
 
   @override
   String get helpCreateStatusBubble =>
@@ -32104,7 +32131,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpWorldDataBubble =>
-      'Os dados vêm do **MQTT** — nós que optaram por compartilhar sua posição publicamente. Seus nós locais também aparecem!';
+      'Os dados vêm do **MQTT** - nós que optaram por compartilhar sua posição publicamente. Seus nós locais também aparecem!';
 
   @override
   String get helpWorldFiltersBubble =>
@@ -32160,7 +32187,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpSettingsDeviceBubble =>
-      'As **configurações do dispositivo** permitem configurar seu rádio Meshtastic — nome, região, níveis de potência e módulos!';
+      'As **configurações do dispositivo** permitem configurar seu rádio Meshtastic - nome, região, níveis de potência e módulos!';
 
   @override
   String get helpSettingsAppBubble =>
@@ -32168,7 +32195,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpSettingsCloudBubble =>
-      '**Cloud Sync** é uma assinatura premium que sincroniza seu **NodeDex**, **automações**, **widgets** e **perfil** em todos os seus dispositivos. Também serve como **backup** — se você apagar o app ou trocar de celular, o Cloud Sync restaura tudo. Sem ele, todos os dados ficam apenas neste dispositivo e são perdidos se o app for removido.';
+      '**Cloud Sync** é uma assinatura premium que sincroniza seu **NodeDex**, **automações**, **widgets** e **perfil** em todos os seus dispositivos. Também serve como **backup** - se você apagar o app ou trocar de celular, o Cloud Sync restaura tudo. Sem ele, todos os dados ficam apenas neste dispositivo e são perdidos se o app for removido.';
 
   @override
   String get helpProfileIntroBubble =>
@@ -32184,7 +32211,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpProfileCloudBubble =>
-      '**Cloud Sync** é um recurso premium que faz backup do seu perfil, NodeDex, automações e widgets na nuvem. Protege seus dados — se você apagar o app ou trocar de celular, tudo é **restaurado automaticamente** quando você fizer login novamente. Sem ele, seus dados existem apenas neste dispositivo.';
+      '**Cloud Sync** é um recurso premium que faz backup do seu perfil, NodeDex, automações e widgets na nuvem. Protege seus dados - se você apagar o app ou trocar de celular, tudo é **restaurado automaticamente** quando você fizer login novamente. Sem ele, seus dados existem apenas neste dispositivo.';
 
   @override
   String get helpMesh3dIntroBubble =>
@@ -32212,11 +32239,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpGlobeArcsBubble =>
-      'Observe os **arcos de conexão** — eles mostram caminhos de mensagens viajando pela mesh em tempo real!';
+      'Observe os **arcos de conexão** - eles mostram caminhos de mensagens viajando pela mesh em tempo real!';
 
   @override
   String get helpTimelineIntroBubble =>
-      'A **Timeline** mostra tudo acontecendo na sua mesh. Mensagens, mudanças de nós, telemetria — tudo em ordem!';
+      'A **Timeline** mostra tudo acontecendo na sua mesh. Mensagens, mudanças de nós, telemetria - tudo em ordem!';
 
   @override
   String get helpTimelineFilterBubble =>
@@ -32248,7 +32275,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpOfflineManageBubble =>
-      'Gerencie seus downloads aqui — veja o armazenamento usado e **exclua** regiões antigas que não precisa mais.';
+      'Gerencie seus downloads aqui - veja o armazenamento usado e **exclua** regiões antigas que não precisa mais.';
 
   @override
   String get helpRadioIntroBubble =>
@@ -32272,7 +32299,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpPresenceActiveBubble =>
-      'Nós **online** (verde) foram ouvidos nas últimas 2 horas — correspondendo à definição de online do firmware Meshtastic.';
+      'Nós **online** (verde) foram ouvidos nas últimas 2 horas - correspondendo à definição de online do firmware Meshtastic.';
 
   @override
   String get helpPresenceRecentBubble =>
@@ -32292,7 +32319,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpReachabilityBetaBubble =>
-      'Isto está em **BETA** — não enviamos pacotes de teste! Tudo é estimado a partir de mensagens que vemos fluindo pela mesh.';
+      'Isto está em **BETA** - não enviamos pacotes de teste! Tudo é estimado a partir de mensagens que vemos fluindo pela mesh.';
 
   @override
   String get helpReachabilityHighBubble =>
@@ -32364,15 +32391,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpNodedexIntroBubble =>
-      'Bem-vindo ao **NodeDex** — seu diário de campo da mesh! Cada nó descoberto é registrado aqui com um **Sigil** único e um **Traço** de personalidade.';
+      'Bem-vindo ao **NodeDex** - seu diário de campo da mesh! Cada nó descoberto é registrado aqui com um **Sigil** único e um **Traço** de personalidade.';
 
   @override
   String get helpNodedexSigilsBubble =>
-      'Cada nó tem um **Sigil procedural** — um glifo geométrico gerado a partir de sua identidade. Nenhum nó compartilha o mesmo sigil. Pense nele como uma impressão digital visual da mesh!';
+      'Cada nó tem um **Sigil procedural** - um glifo geométrico gerado a partir de sua identidade. Nenhum nó compartilha o mesmo sigil. Pense nele como uma impressão digital visual da mesh!';
 
   @override
   String get helpNodedexTraitsBubble =>
-      'Os nós ganham **Traços** baseados no comportamento real — **Andarilho** se move entre regiões, **Farol** está sempre online, **Fantasma** é raramente visto, **Sentinela** mantém posição fixa, **Relay** encaminha tráfego.';
+      'Os nós ganham **Traços** baseados no comportamento real - **Andarilho** se move entre regiões, **Farol** está sempre online, **Fantasma** é raramente visto, **Sentinela** mantém posição fixa, **Relay** encaminha tráfego.';
 
   @override
   String get helpNodedexFiltersBubble =>
@@ -32380,35 +32407,35 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpNodedexFieldJournalBubble =>
-      'Conforme você observa mais nós, seu **diário de campo** se preenche — cada nó ganha uma **pontuação Patina** e um **overlay de identidade** baseado em encontros reais. Quanto mais observar, mais ricos os detalhes!';
+      'Conforme você observa mais nós, seu **diário de campo** se preenche - cada nó ganha uma **pontuação Patina** e um **overlay de identidade** baseado em encontros reais. Quanto mais observar, mais ricos os detalhes!';
 
   @override
   String get helpNodedexAlbumModeBubble =>
-      'Toque no **alternador de visualização** na barra do app para mudar para o **modo Álbum** — uma grade de cards colecionáveis agrupados por traço, raridade ou região. Cada card mostra o sigil do nó com um brilho holográfico baseado na raridade!';
+      'Toque no **alternador de visualização** na barra do app para mudar para o **modo Álbum** - uma grade de cards colecionáveis agrupados por traço, raridade ou região. Cada card mostra o sigil do nó com um brilho holográfico baseado na raridade!';
 
   @override
   String get helpNodedexAtmosphereBubble =>
-      'Notou as sutis **partículas ambientais** atrás da tela? É a **Atmosfera Elemental** — chuva, brasas, névoa e luz estelar guiadas pelos seus dados mesh reais. Mais nós e atividade significam mais atmosfera!';
+      'Notou as sutis **partículas ambientais** atrás da tela? É a **Atmosfera Elemental** - chuva, brasas, névoa e luz estelar guiadas pelos seus dados mesh reais. Mais nós e atividade significam mais atmosfera!';
 
   @override
   String get helpNodedexCloudSyncBubble =>
-      'Seu NodeDex é armazenado localmente em SQLite e sobrevive a reinicializações do app — mas **não** à desinstalação. Se você desinstalar o app ou trocar de celular, o NodeDex local é perdido. Com uma assinatura **Cloud Sync**, todo o diário — sigils, encontros, tags sociais, notas e links co-seen — é salvo na nuvem e **restaurado automaticamente** em qualquer dispositivo em que você fizer login.';
+      'Seu NodeDex é armazenado localmente em SQLite e sobrevive a reinicializações do app - mas **não** à desinstalação. Se você desinstalar o app ou trocar de celular, o NodeDex local é perdido. Com uma assinatura **Cloud Sync**, todo o diário - sigils, encontros, tags sociais, notas e links co-seen - é salvo na nuvem e **restaurado automaticamente** em qualquer dispositivo em que você fizer login.';
 
   @override
   String get helpNodedexExportBubble =>
-      'Use o **menu** para **exportar** seu NodeDex como arquivo JSON para backup, ou **importar** um de outro dispositivo. Seu diário de campo viaja com você — mesmo sem Cloud Sync!';
+      'Use o **menu** para **exportar** seu NodeDex como arquivo JSON para backup, ou **importar** um de outro dispositivo. Seu diário de campo viaja com você - mesmo sem Cloud Sync!';
 
   @override
   String get helpNodedexSigilBubble =>
-      'Este é o **Sigil** do nó — um glifo procedural único gerado a partir de sua identidade. Nenhum nó compartilha o mesmo sigil. É como uma impressão digital visual!';
+      'Este é o **Sigil** do nó - um glifo procedural único gerado a partir de sua identidade. Nenhum nó compartilha o mesmo sigil. É como uma impressão digital visual!';
 
   @override
   String get helpNodedexTraitBubble =>
-      'O **Traço** é uma personalidade inferida do comportamento do nó — padrões de movimento, consistência de sinal, frequência de encontros. A confiança cresce com mais dados.';
+      'O **Traço** é uma personalidade inferida do comportamento do nó - padrões de movimento, consistência de sinal, frequência de encontros. A confiança cresce com mais dados.';
 
   @override
   String get helpNodedexAutoSummaryBubble =>
-      'O **Resumo automático** calcula insights do histórico de encontros — distribuição por horário, sequências de observação e padrões dos dias mais movimentados. Tudo se atualiza automaticamente com novos encontros.';
+      'O **Resumo automático** calcula insights do histórico de encontros - distribuição por horário, sequências de observação e padrões dos dias mais movimentados. Tudo se atualiza automaticamente com novos encontros.';
 
   @override
   String get helpNodedexObservationTimelineBubble =>
@@ -32420,15 +32447,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpNodedexSignalBubble =>
-      'Os **registros de sinal** rastreiam os melhores e mais recentes valores de SNR e RSSI. Ajudam a entender a qualidade do link — SNR mais alto e RSSI menos negativo significam sinais mais fortes.';
+      'Os **registros de sinal** rastreiam os melhores e mais recentes valores de SNR e RSSI. Ajudam a entender a qualidade do link - SNR mais alto e RSSI menos negativo significam sinais mais fortes.';
 
   @override
   String get helpNodedexSocialTagBubble =>
-      'A **Tag social** é um rótulo que você atribui para categorizar este nó — amigo, relay, estação base ou qualquer outra coisa. São seus metadados pessoais, nunca compartilhados na mesh.';
+      'A **Tag social** é um rótulo que você atribui para categorizar este nó - amigo, relay, estação base ou qualquer outra coisa. São seus metadados pessoais, nunca compartilhados na mesh.';
 
   @override
   String get helpNodedexNoteBubble =>
-      'Sua **nota** é um campo de texto livre para qualquer coisa que você queira lembrar sobre este nó. Dicas de localização, nome do operador, tipo de antena — o que for útil.';
+      'Sua **nota** é um campo de texto livre para qualquer coisa que você queira lembrar sobre este nó. Dicas de localização, nome do operador, tipo de antena - o que for útil.';
 
   @override
   String get helpNodedexRegionsBubble =>
@@ -32440,23 +32467,23 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpNodedexActivityTimelineBubble =>
-      'A **Timeline de atividades** é um feed cronológico unificado de tudo observado sobre este nó — encontros, mensagens, mudanças de presença, sinais e marcos.';
+      'A **Timeline de atividades** é um feed cronológico unificado de tudo observado sobre este nó - encontros, mensagens, mudanças de presença, sinais e marcos.';
 
   @override
   String get helpNodedexCoseenBubble =>
-      'Os **Links co-seen** mostram nós frequentemente observados na mesma sessão que este. Toque em qualquer link para ver o relacionamento completo — encontros compartilhados, contagem de mensagens e força da conexão.';
+      'Os **Links co-seen** mostram nós frequentemente observados na mesma sessão que este. Toque em qualquer link para ver o relacionamento completo - encontros compartilhados, contagem de mensagens e força da conexão.';
 
   @override
   String get helpNodedexDeviceBubble =>
-      'As **informações do dispositivo** mostram telemetria em tempo real — nível de bateria, modelo de hardware, versão de firmware e uptime. Esses dados vêm diretamente do nó e se atualizam em tempo real.';
+      'As **informações do dispositivo** mostram telemetria em tempo real - nível de bateria, modelo de hardware, versão de firmware e uptime. Esses dados vêm diretamente do nó e se atualizam em tempo real.';
 
   @override
   String get helpAlbumIntroBubble =>
-      'Bem-vindo ao **Álbum de coleção** — uma visualização de cards colecionáveis do seu NodeDex! Cada nó descoberto se torna um card com sigil, traço e nível de raridade.';
+      'Bem-vindo ao **Álbum de coleção** - uma visualização de cards colecionáveis do seu NodeDex! Cada nó descoberto se torna um card com sigil, traço e nível de raridade.';
 
   @override
   String get helpAlbumCoverBubble =>
-      'A **capa do álbum** é seu painel — mostra seu **título de Explorador**, total de nós, encontros, regiões exploradas e barra de distribuição de raridade. Veja sua coleção crescer!';
+      'A **capa do álbum** é seu painel - mostra seu **título de Explorador**, total de nós, encontros, regiões exploradas e barra de distribuição de raridade. Veja sua coleção crescer!';
 
   @override
   String get helpAlbumGroupingBubble =>
@@ -32468,27 +32495,27 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpAlbumInteractionsBubble =>
-      '**Toque** em um card para abrir o perfil completo do nó. **Pressione longo** para abrir a **Galeria de cards** — um carrossel em tela cheia onde você pode deslizar entre cards e tocar para virá-los e ver estatísticas!';
+      '**Toque** em um card para abrir o perfil completo do nó. **Pressione longo** para abrir a **Galeria de cards** - um carrossel em tela cheia onde você pode deslizar entre cards e tocar para virá-los e ver estatísticas!';
 
   @override
   String get helpAlbumGalleryBubble =>
-      'Na **Galeria de cards**, deslize para a esquerda e direita para navegar. **Toque** em um card para virá-lo — o verso mostra estatísticas de descoberta, registros de sinal, contagem de encontros e pontuação patina. Deslize para baixo para fechar.';
+      'Na **Galeria de cards**, deslize para a esquerda e direita para navegar. **Toque** em um card para virá-lo - o verso mostra estatísticas de descoberta, registros de sinal, contagem de encontros e pontuação patina. Deslize para baixo para fechar.';
 
   @override
   String get helpAlbumHolographicBubble =>
-      'Cards de maior raridade brilham com um **efeito holográfico** — quanto mais raro o card, mais intenso o brilho. Este efeito respeita a configuração **reduzir movimento** e usa um painter otimizado para miniaturas na grade.';
+      'Cards de maior raridade brilham com um **efeito holográfico** - quanto mais raro o card, mais intenso o brilho. Este efeito respeita a configuração **reduzir movimento** e usa um painter otimizado para miniaturas na grade.';
 
   @override
   String get helpAlbumPersistenceBubble =>
-      'Sua preferência de visualização do álbum e escolha de agrupamento são **salvas automaticamente**. Com **Cloud Sync**, toda a coleção — sigils, encontros, tags, notas — é salva e sincronizada em todos os seus dispositivos. Apague o app, troque de celular — sua coleção está segura e restaura ao fazer login.';
+      'Sua preferência de visualização do álbum e escolha de agrupamento são **salvas automaticamente**. Com **Cloud Sync**, toda a coleção - sigils, encontros, tags, notas - é salva e sincronizada em todos os seus dispositivos. Apague o app, troque de celular - sua coleção está segura e restaura ao fazer login.';
 
   @override
   String get helpConstellationIntroBubble =>
-      'Bem-vindo à **Constelação** — um mapa estelar da sua rede mesh! Os nós aparecem como estrelas, e as linhas entre eles mostram **relações co-seen** — nós observados na mesma sessão.';
+      'Bem-vindo à **Constelação** - um mapa estelar da sua rede mesh! Os nós aparecem como estrelas, e as linhas entre eles mostram **relações co-seen** - nós observados na mesma sessão.';
 
   @override
   String get helpConstellationLayoutBubble =>
-      'O layout é **dirigido por forças** — nós frequentemente co-seen se agrupam, enquanto nós isolados se afastam para as bordas. O grafo estabiliza após um momento para que nada se mova enquanto você explora.';
+      'O layout é **dirigido por forças** - nós frequentemente co-seen se agrupam, enquanto nós isolados se afastam para as bordas. O grafo estabiliza após um momento para que nada se mova enquanto você explora.';
 
   @override
   String get helpConstellationInteractionsBubble =>
@@ -32504,23 +32531,23 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpConstellationAtmosphereBubble =>
-      'A constelação tem sua própria **Atmosfera Elemental** — sutis partículas estelares e névoa atrás do grafo, guiadas pelos seus dados mesh reais. Nunca obstrui a visualização.';
+      'A constelação tem sua própria **Atmosfera Elemental** - sutis partículas estelares e névoa atrás do grafo, guiadas pelos seus dados mesh reais. Nunca obstrui a visualização.';
 
   @override
   String get helpConstellationDataBubble =>
-      'Os dados co-seen são construídos **automaticamente** a partir dos seus encontros. Quanto mais sessões observar, mais rica a constelação se torna. Todos os dados relacionais são armazenados localmente — mas são **perdidos se você apagar o app**. Com **Cloud Sync**, toda a constelação é salva e restaurada em qualquer dispositivo em que você fizer login.';
+      'Os dados co-seen são construídos **automaticamente** a partir dos seus encontros. Quanto mais sessões observar, mais rica a constelação se torna. Todos os dados relacionais são armazenados localmente - mas são **perdidos se você apagar o app**. Com **Cloud Sync**, toda a constelação é salva e restaurada em qualquer dispositivo em que você fizer login.';
 
   @override
   String get helpCloudSyncIntroBubble =>
-      '**Cloud Sync** é uma assinatura premium que mantém seus dados mesh sincronizados em todos os dispositivos — e serve como **backup**. Sem ele, todos os dados ficam apenas no dispositivo e são perdidos permanentemente se você apagar o app ou perder o celular.';
+      '**Cloud Sync** é uma assinatura premium que mantém seus dados mesh sincronizados em todos os dispositivos - e serve como **backup**. Sem ele, todos os dados ficam apenas no dispositivo e são perdidos permanentemente se você apagar o app ou perder o celular.';
 
   @override
   String get helpCloudSyncWhatSyncsBubble =>
-      'O Cloud Sync faz backup do seu **NodeDex** (sigils, encontros, tags sociais, notas, links co-seen), **automações**, **widgets personalizados** e **perfil**. Reinstale o app, troque de celular ou faça login em um segundo dispositivo — toda a sua identidade mesh é restaurada automaticamente.';
+      'O Cloud Sync faz backup do seu **NodeDex** (sigils, encontros, tags sociais, notas, links co-seen), **automações**, **widgets personalizados** e **perfil**. Reinstale o app, troque de celular ou faça login em um segundo dispositivo - toda a sua identidade mesh é restaurada automaticamente.';
 
   @override
   String get helpCloudSyncOfflineFirstBubble =>
-      'O app é **offline-first**. As alterações são salvas localmente no SQLite imediatamente e enfileiradas em uma **outbox**. Quando você estiver online, a outbox é esvaziada automaticamente para a nuvem — sem sincronização manual necessária.';
+      'O app é **offline-first**. As alterações são salvas localmente no SQLite imediatamente e enfileiradas em uma **outbox**. Quando você estiver online, a outbox é esvaziada automaticamente para a nuvem - sem sincronização manual necessária.';
 
   @override
   String get helpCloudSyncConflictBubble =>
@@ -32532,11 +32559,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpCloudSyncWithoutBubble =>
-      'Sem o Cloud Sync, todos os seus dados ficam apenas no dispositivo. Sobrevivem a reinicializações do app, mas **não** à desinstalação ou reset do celular. Você pode **exportar** o NodeDex como JSON para backup manual. O Cloud Sync automatiza isso e adiciona restauração multi-dispositivo — mas o app funciona totalmente offline sem ele.';
+      'Sem o Cloud Sync, todos os seus dados ficam apenas no dispositivo. Sobrevivem a reinicializações do app, mas **não** à desinstalação ou reset do celular. Você pode **exportar** o NodeDex como JSON para backup manual. O Cloud Sync automatiza isso e adiciona restauração multi-dispositivo - mas o app funciona totalmente offline sem ele.';
 
   @override
   String get helpAetherIntroBubble =>
-      '**Aether** permite rastrear nós Meshtastic em altitude! A 10.000 m, sinais LoRa podem alcançar **mais de 400 km** — muito além do alcance típico ao nível do solo.';
+      '**Aether** permite rastrear nós Meshtastic em altitude! A 10.000 m, sinais LoRa podem alcançar **mais de 400 km** - muito além do alcance típico ao nível do solo.';
 
   @override
   String get helpAetherScheduleBubble =>
@@ -32552,7 +32579,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpAetherLeaderboardBubble =>
-      'O **ranking é global e permanente** — armazenado na nuvem, não no seu dispositivo. As posições sobrevivem a reinstalações do app e são visíveis para toda a comunidade SocialMesh. Os 3 primeiros recebem ouro, prata e bronze!';
+      'O **ranking é global e permanente** - armazenado na nuvem, não no seu dispositivo. As posições sobrevivem a reinstalações do app e são visíveis para toda a comunidade SocialMesh. Os 3 primeiros recebem ouro, prata e bronze!';
 
   @override
   String get helpAetherTipsBubble =>
@@ -32568,7 +32595,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpTakAffiliationsBubble =>
-      'Cada entidade é colorida pela **afiliação padrão** — azul para amigo, vermelho para hostil, verde para neutro, amarelo para desconhecido. O ícone muda por dimensão também: terra, ar, mar ou espaço.';
+      'Cada entidade é colorida pela **afiliação padrão** - azul para amigo, vermelho para hostil, verde para neutro, amarelo para desconhecido. O ícone muda por dimensão também: terra, ar, mar ou espaço.';
 
   @override
   String get helpTakFilterBubble =>
@@ -32576,7 +32603,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpTakDetailBubble =>
-      'Toque em qualquer entidade para abrir a **tela de detalhes** — campos CoT completos, coordenadas, velocidade, curso e XML bruto. Use o ícone do mapa para ir direto à sua posição no mapa.';
+      'Toque em qualquer entidade para abrir a **tela de detalhes** - campos CoT completos, coordenadas, velocidade, curso e XML bruto. Use o ícone do mapa para ir direto à sua posição no mapa.';
 
   @override
   String get helpTakTrackingBubble =>
@@ -32592,7 +32619,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpRadioLicenceBubble =>
-      'Algumas regiões exigem uma **licença de radioamador** antes de poder transmitir. Verifique com sua autoridade reguladora local — ex. ACMA na Austrália ou FCC nos EUA.';
+      'Algumas regiões exigem uma **licença de radioamador** antes de poder transmitir. Verifique com sua autoridade reguladora local - ex. ACMA na Austrália ou FCC nos EUA.';
 
   @override
   String get helpRadioInterferenceBubble =>
@@ -32604,7 +32631,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpUseIntroBubble =>
-      'SocialMesh é uma ferramenta poderosa — automações, sinais e mensagens mesh dão muita capacidade. Com isso vem a responsabilidade!';
+      'SocialMesh é uma ferramenta poderosa - automações, sinais e mensagens mesh dão muita capacidade. Com isso vem a responsabilidade!';
 
   @override
   String get helpUseLawfulBubble =>
@@ -32624,7 +32651,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpResponsibilityIntroBubble =>
-      'SocialMesh é projetado para ser **privacidade em primeiro lugar**. Suas mensagens e dados ficam no seu dispositivo — não os armazenamos em nenhum servidor.';
+      'SocialMesh é projetado para ser **privacidade em primeiro lugar**. Suas mensagens e dados ficam no seu dispositivo - não os armazenamos em nenhum servidor.';
 
   @override
   String get helpResponsibilitySignalsBubble =>
@@ -32644,7 +32671,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpFtIntroBubble =>
-      'A **Transferência de arquivos** permite enviar pequenos arquivos — texto, configs, coordenadas — diretamente via rádio LoRa. Sem internet, sem servidores.';
+      'A **Transferência de arquivos** permite enviar pequenos arquivos - texto, configs, coordenadas - diretamente via rádio LoRa. Sem internet, sem servidores.';
 
   @override
   String get helpFtHowBubble =>
@@ -32656,7 +32683,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpFtLimitBubble =>
-      'Os arquivos são limitados a **8 KB**. LoRa é um rádio lento, compartilhado e de baixa potência — uma única transferência pode ocupar o canal por até um minuto em configurações de longo alcance.';
+      'Os arquivos são limitados a **8 KB**. LoRa é um rádio lento, compartilhado e de baixa potência - uma única transferência pode ocupar o canal por até um minuto em configurações de longo alcance.';
 
   @override
   String get helpFtBetaBubble =>
@@ -32680,7 +32707,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpFtlDutyBubble =>
-      'EU868 e bandas similares impõem um **duty cycle de 1%** — seu rádio só pode transmitir por 36 segundos por hora. Em SF12, uma transferência de 8 KB quase esgota todo esse orçamento.';
+      'EU868 e bandas similares impõem um **duty cycle de 1%** - seu rádio só pode transmitir por 36 segundos por hora. Em SF12, uma transferência de 8 KB quase esgota todo esse orçamento.';
 
   @override
   String get helpFtlCapBubble =>
@@ -32744,27 +32771,27 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpNodeDexSectionTraitEvidence =>
-      'The observations that most strongly support the primary trait assigned above. Each bullet is a concrete signal drawn from encounter history — co-seen connections, tenure, mobility, signal consistency, and timing. These are the inputs that drove the confidence score.';
+      'As observações que mais fortemente suportam o traço primário atribuído acima. Cada ponto é um sinal concreto retirado do histórico de encontros - ligações co-vistas, posse, mobilidade, consistência de sinal e temporização. Estas são as entradas que impulsionaram a pontuação de confiança.';
 
   @override
   String get helpNodeDexSectionAdditionalTraits =>
-      'Other behavioral archetypes that also scored for this node, ranked by confidence. A node rarely fits a single archetype perfectly — secondary traits reveal nuance, like an Anchor that also acts as a Beacon, or a Drifter with Sentinel-like stretches.';
+      'Outros arquétipos comportamentais que também pontuaram para este nó, ordenados por confiança. Um nó raramente se enquadra perfeitamente num único arquétipo - os traços secundários revelam nuances, como uma Âncora que também age como Baliza, ou um Errante com períodos semelhantes a Sentinela.';
 
   @override
   String get helpNodeDexSectionPetCompanionSelf =>
-      'Your NodePet lives with your node and evolves locally from your care and mesh activity.';
+      'O seu NodePet vive com o seu nó e evolui localmente a partir dos seus cuidados e atividade na mesh.';
 
   @override
   String get helpNodeDexSectionPetCompanionRemote =>
-      'If this node shares a companion summary, it can appear here. Full companion state stays local to its owner.';
+      'Se este nó partilhar um resumo de companheiro, pode aparecer aqui. O estado completo do companheiro fica local ao seu proprietário.';
 
   @override
   String get helpNodeDexSectionMrrpServices =>
-      'MRRP (Mesh Request-Response Protocol) services this node advertises. Each service ID represents a capability the node exposes over the mesh, such as a message board, profile exchange, or meetup coordination. Tap any ID to learn more about that specific service.';
+      'Serviços MRRP (Mesh Request-Response Protocol) que este nó anuncia. Cada ID de serviço representa uma capacidade que o nó expõe pela mesh, como um quadro de mensagens, troca de perfis ou coordenação de encontros. Toque em qualquer ID para saber mais sobre esse serviço específico.';
 
   @override
   String get helpNodeDexSectionFieldNote =>
-      'A short, deterministic journal entry generated from this node\'s identity and primary trait — like a naturalist\'s field observation. The same node always produces the same note; it never changes, and it never travels over the mesh.';
+      'Uma entrada de diário curta e determinística gerada a partir da identidade e traço primário deste nó - como uma observação de campo de um naturalista. O mesmo nó produz sempre a mesma nota; nunca muda e nunca viaja pela mesh.';
 
   @override
   String get helpNodeDexSectionRadioCompatibility =>
@@ -32895,7 +32922,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get whatsNewReachabilityDescription =>
-      'Estime a probabilidade de alcançar cada nó na mesh — sem enviar um único pacote de teste.\n\nA alcançabilidade observa passivamente o tráfego na rede e atribui confiança Alta, Média ou Baixa a cada nó. Encontre no menu sob Mesh.';
+      'Estime a probabilidade de alcançar cada nó na mesh - sem enviar um único pacote de teste.\n\nA alcançabilidade observa passivamente o tráfego na rede e atribui confiança Alta, Média ou Baixa a cada nó. Encontre no menu sob Mesh.';
 
   @override
   String get whatsNewVersion1100Subtitle => 'Versão 1.10.0';
@@ -32905,7 +32932,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get whatsNewWorldMapDescription =>
-      'Veja toda a rede Meshtastic global em um único mapa. Cada ponto é um nó compartilhando sua localização — amplie, navegue e toque para explorar detalhes do nó, info de hardware e último contato.\n\nSem necessidade de conexão. O Mapa Mundial usa dados em tempo real do backend SocialMesh para explorar a mesh em qualquer lugar.';
+      'Veja toda a rede Meshtastic global em um único mapa. Cada ponto é um nó compartilhando sua localização - amplie, navegue e toque para explorar detalhes do nó, info de hardware e último contato.\n\nSem necessidade de conexão. O Mapa Mundial usa dados em tempo real do backend SocialMesh para explorar a mesh em qualquer lugar.';
 
   @override
   String get whatsNewVersion1101Subtitle => 'Versão 1.10.1';
@@ -32915,7 +32942,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get whatsNewPresenceDescription =>
-      'Veja quem está ativo na mesh de relance. Presença mostra atividade de nós em tempo real com indicadores de intenção — se alguém está monitorando, em movimento ou em uma estação base fixa.\n\nFiltre por nível de atividade, pesquise por nome e toque em qualquer nó para ver o perfil completo. Encontre no menu sob Social.';
+      'Veja quem está ativo na mesh de relance. Presença mostra atividade de nós em tempo real com indicadores de intenção - se alguém está monitorando, em movimento ou em uma estação base fixa.\n\nFiltre por nível de atividade, pesquise por nome e toque em qualquer nó para ver o perfil completo. Encontre no menu sob Social.';
 
   @override
   String get whatsNewVersion1110Subtitle => 'Versão 1.11.0';
@@ -32925,7 +32952,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get whatsNewSignalsDescription =>
-      'Transmita momentos efêmeros para sua rede mesh. Sinais são posts de curta duração — compartilhe texto, uma foto ou sua localização com um TTL de 15 minutos até 24 horas.\n\nSinais próximos aparecem primeiro com badges de proximidade mostrando a contagem de hops. Quando desaparecem, se foram. Conteúdo efêmero, verdadeiramente off-grid.';
+      'Transmita momentos efêmeros para sua rede mesh. Sinais são posts de curta duração - compartilhe texto, uma foto ou sua localização com um TTL de 15 minutos até 24 horas.\n\nSinais próximos aparecem primeiro com badges de proximidade mostrando a contagem de hops. Quando desaparecem, se foram. Conteúdo efêmero, verdadeiramente off-grid.';
 
   @override
   String get whatsNewVersion1130Subtitle => 'Versão 1.13.0';
@@ -32935,7 +32962,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get whatsNewNodeDexDescription =>
-      'Um diário de campo vivo do mundo mesh. Cada nó que você descobre é registrado automaticamente com um Sigil procedural único e um Traço de personalidade derivado do comportamento real.\n\nEncontre no menu lateral em Social. Filtre por traço, pesquise por nome ou ID hexadecimal e toque em qualquer entrada para explorar o perfil completo — histórico de sinal, cronologia de descoberta e mais.';
+      'Um diário de campo vivo do mundo mesh. Cada nó que você descobre é registrado automaticamente com um Sigil procedural único e um Traço de personalidade derivado do comportamento real.\n\nEncontre no menu lateral em Social. Filtre por traço, pesquise por nome ou ID hexadecimal e toque em qualquer entrada para explorar o perfil completo - histórico de sinal, cronologia de descoberta e mais.';
 
   @override
   String get whatsNewVersion1150Subtitle => 'Versão 1.15.0';
@@ -32958,14 +32985,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'Conecte sua rede mesh ao ecossistema Team Awareness Kit (TAK). O SocialMesh agora se conecta a um TAK Gateway via WebSocket e transmite entidades Cursor-on-Target ao vivo no seu mapa.\n\nCada entidade é colorida por afiliação padrão e recebe um ícone específico por dimensão. Filtre por afiliação, pesquise indicativos, rastreie entidades com toque longo e toque em qualquer marcador para detalhes CoT completos. Encontre no menu lateral em Mesh.';
 
   @override
-  String get whatsNewVersion1270Subtitle => 'Version 1.27.0';
+  String get whatsNewVersion1270Subtitle => 'Versão 1.27.0';
 
   @override
-  String get whatsNewTranslationPackTitle => 'Translation Pack';
+  String get whatsNewTranslationPackTitle => 'Pacote de Tradução';
 
   @override
   String get whatsNewTranslationPackDescription =>
-      'Translate any mesh message on demand with smart caching and privacy controls. Includes a managed translation allowance, or bring your own OpenAI API key for extended use.\n\nLong-press any message and tap Translate to see the result inline — with smart caching so repeated translations are instant. Now included in the Complete Pack.';
+      'Traduza qualquer mensagem da rede mesh a pedido com cache inteligente e controlos de privacidade. Inclui um crédito de tradução gerido, ou traga a sua própria chave de API OpenAI para uso alargado.\n\nPrima longamente qualquer mensagem e toque em Traduzir para ver o resultado em linha, com cache inteligente para que traduções repetidas sejam instantâneas. Agora incluído no Pacote Completo.';
 
   @override
   String get notificationNewNodeTitle => 'Novo nó descoberto';
@@ -32980,8 +33007,8 @@ class AppLocalizationsPt extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count new nodes discovered',
-      one: '1 new node discovered',
+      other: '$count novos nós descobertos',
+      one: '1 novo nó descoberto',
     );
     return '$_temp0';
   }
@@ -33128,7 +33155,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get flowNodeAnd => 'E';
 
   @override
-  String get flowNodeOr => 'OR';
+  String get flowNodeOr => 'OU';
 
   @override
   String get flowNodeNot => 'NÃO';
@@ -33295,11 +33322,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get automationErrorIftttNotConfigured =>
-      'IFTTT não configurado — ative o IFTTT e defina a chave webhook nas configurações';
+      'IFTTT não configurado - ative o IFTTT e defina a chave webhook nas configurações';
 
   @override
   String get automationErrorWebhookFailed =>
-      'Falha na requisição webhook — verifique a conexão de rede';
+      'Falha na requisição webhook - verifique a conexão de rede';
 
   @override
   String get automationErrorSendMsgFailed => 'Falha ao enviar mensagem';
@@ -33377,144 +33404,147 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get automationHistoryOutcomeThen => 'Ran THEN branch';
+  String get automationHistoryOutcomeThen => 'Executou ramo ENTÃO';
 
   @override
-  String get automationHistoryOutcomeElse => 'Ran ELSE branch';
+  String get automationHistoryOutcomeElse => 'Executou ramo SENÃO';
 
   @override
-  String get automationHistoryOutcomeExecuted => 'Executed';
+  String get automationHistoryOutcomeExecuted => 'Executado';
 
   @override
-  String get automationHistoryOutcomeManual => 'Ran THEN manually';
+  String get automationHistoryOutcomeManual => 'Executou ENTÃO manualmente';
 
   @override
-  String get automationHistoryOutcomeFailed => 'Failed';
+  String get automationHistoryOutcomeFailed => 'Falhou';
 
   @override
-  String get automationHistoryOutcomeSkippedNoElse => 'Did not run';
+  String get automationHistoryOutcomeSkippedNoElse => 'Não executado';
 
   @override
-  String get automationHistoryOutcomeSkippedThrottled => 'Skipped (cooldown)';
+  String get automationHistoryOutcomeSkippedThrottled =>
+      'Ignorado (período de espera)';
 
   @override
-  String get automationHistoryOutcomeSkippedDisabled => 'Skipped (disabled)';
+  String get automationHistoryOutcomeSkippedDisabled => 'Ignorado (desativado)';
 
   @override
   String get automationHistoryOutcomeSkippedFiltered =>
-      'Skipped (not eligible)';
+      'Ignorado (não elegível)';
 
   @override
-  String get automationHistoryDetailTrigger => 'Trigger';
+  String get automationHistoryDetailTrigger => 'Gatilho';
 
   @override
-  String get automationHistoryDetailBranch => 'Branch';
+  String get automationHistoryDetailBranch => 'Ramo';
 
   @override
-  String get automationHistoryDetailConditions => 'Conditions';
+  String get automationHistoryDetailConditions => 'Condições';
 
   @override
-  String get automationHistoryDetailActions => 'Actions';
+  String get automationHistoryDetailActions => 'Ações';
 
   @override
-  String get automationHistoryDetailError => 'Error';
+  String get automationHistoryDetailError => 'Erro';
 
   @override
   String get automationHistoryDetailManualBypass =>
-      'THEN branch forced — conditions not evaluated';
+      'Ramo ENTÃO forçado - condições não avaliadas';
 
   @override
   String get automationHistoryDetailManualNote =>
-      'Automatic execution may select a different branch based on conditions.';
+      'A execução automática pode selecionar um ramo diferente com base nas condições.';
 
   @override
-  String get automationHistoryEmpty => 'No automation activity yet';
+  String get automationHistoryEmpty => 'Ainda não há atividade de automação';
 
   @override
-  String get automationHistoryActionSuccess => 'Succeeded';
+  String get automationHistoryActionSuccess => 'Bem-sucedida';
 
   @override
   String automationHistoryActionFailed(String error) {
-    return 'Failed: $error';
+    return 'Falhou: $error';
   }
 
   @override
   String automationHistoryActionCount(int success, int total) {
-    return '$success of $total actions succeeded';
+    return '$success de $total ações bem-sucedidas';
   }
 
   @override
   String automationConditionPassed(String condition) {
-    return 'Passed: $condition';
+    return 'Passou: $condition';
   }
 
   @override
   String automationConditionFailed(String condition) {
-    return 'Failed: $condition';
+    return 'Falhou: $condition';
   }
 
   @override
   String automationConditionAllPassed(int count) {
-    return 'All $count conditions passed';
+    return 'Todas as $count condições passaram';
   }
 
   @override
   String automationConditionSomeFailed(int failed, int total) {
-    return '$failed of $total conditions failed';
+    return '$failed de $total condições falharam';
   }
 
   @override
   String automationConditionSomeMatched(int matched, int total) {
-    return '$matched of $total conditions matched';
+    return '$matched de $total condições corresponderam';
   }
 
   @override
-  String get automationConditionNoneMatched => 'No conditions matched';
+  String get automationConditionNoneMatched => 'Nenhuma condição correspondeu';
 
   @override
-  String get automationConditionNotPassed => 'NOT condition passed';
+  String get automationConditionNotPassed => 'A condição NÃO passou';
 
   @override
-  String get automationConditionNotFailed => 'NOT condition failed';
+  String get automationConditionNotFailed => 'A condição NÃO falhou';
 
   @override
-  String get automationSkipDisabled => 'Automation is disabled';
+  String get automationSkipDisabled => 'A automação está desativada';
 
   @override
-  String get automationSkipTriggerMismatch => 'Trigger event did not match';
+  String get automationSkipTriggerMismatch =>
+      'O evento de gatilho não correspondeu';
 
   @override
-  String get automationSkipThrottled => 'Skipped due to cooldown';
+  String get automationSkipThrottled => 'Ignorado devido ao período de espera';
 
   @override
-  String get automationSkipNodeFilter => 'Node did not match filter';
+  String get automationSkipNodeFilter => 'O nó não correspondeu ao filtro';
 
   @override
   String get automationSkipBatteryThreshold =>
-      'Battery level did not reach threshold';
+      'O nível de bateria não atingiu o limiar';
 
   @override
   String get automationSkipKeywordNotMatched =>
-      'Message did not contain keyword';
+      'A mensagem não continha a palavra-chave';
 
   @override
   String get automationSkipSignalThreshold =>
-      'Signal level did not reach threshold';
+      'O nível de sinal não atingiu o limiar';
 
   @override
-  String get automationSkipChannelFilter => 'Channel did not match filter';
+  String get automationSkipChannelFilter =>
+      'O canal não correspondeu ao filtro';
 
   @override
   String get automationSkipConditionFailed =>
-      'Condition failed and no ELSE actions set';
+      'Condição falhou e não há ações SENÃO definidas';
 
   @override
   String automationCardLastRun(String outcome) {
-    return 'Last: $outcome';
+    return 'Última: $outcome';
   }
 
   @override
-  String get automationCardLastRunManual => 'Last: Manual test';
+  String get automationCardLastRunManual => 'Última: Teste manual';
 
   @override
   String get authErrorGoogleSignInCancelled => 'Login do Google cancelado';
@@ -33574,17 +33604,17 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String countdownAwaitingAccept(String filename) {
-    return 'Awaiting accept for $filename';
+    return 'À espera de aceitação de $filename';
   }
 
   @override
   String countdownSendingFile(String filename) {
-    return 'Sending $filename';
+    return 'A enviar $filename';
   }
 
   @override
   String countdownReceivingFile(String filename) {
-    return 'Receiving $filename';
+    return 'A receber $filename';
   }
 
   @override
@@ -33647,7 +33677,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get globalLayerCopyExplainBody =>
-      'Seu rádio mesh conecta dispositivos próximos por ondas de rádio — sem precisar de internet. A Camada Global estende esse alcance conectando sua rede mesh local a um servidor (chamado broker) pela internet.\n\nPense nela como um portal: mensagens da sua mesh podem viajar através do portal para alcançar outras redes mesh conectadas ao mesmo broker, em qualquer lugar do mundo.';
+      'Seu rádio mesh conecta dispositivos próximos por ondas de rádio - sem precisar de internet. A Camada Global estende esse alcance conectando sua rede mesh local a um servidor (chamado broker) pela internet.\n\nPense nela como um portal: mensagens da sua mesh podem viajar através do portal para alcançar outras redes mesh conectadas ao mesmo broker, em qualquer lugar do mundo.';
 
   @override
   String get globalLayerCopyExplainWhatItDoes =>
@@ -33662,7 +33692,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get globalLayerCopyBrokerBody =>
-      'Escolha um broker para se conectar. A maioria dos usuários deve começar com o servidor oficial Meshtastic — funciona imediatamente sem necessidade de configuração.';
+      'Escolha um broker para se conectar. A maioria dos usuários deve começar com o servidor oficial Meshtastic - funciona imediatamente sem necessidade de configuração.';
 
   @override
   String get globalLayerCopyTopicsTitle => 'Escolha o que compartilhar';
@@ -33751,7 +33781,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get mqttBrokerMosquittoNote =>
-      'Broker de teste — não para uso em produção. Pode ter indisponibilidade.';
+      'Broker de teste - não para uso em produção. Pode ter indisponibilidade.';
 
   @override
   String get mqttBrokerCustomName => 'Broker personalizado';
@@ -33849,7 +33879,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get globalLayerWizardAnonymousAccess =>
-      'Sem credenciais — usando acesso anônimo.';
+      'Sem credenciais - usando acesso anônimo.';
 
   @override
   String get globalLayerWizardSubscribeVerified =>
@@ -33928,7 +33958,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get globalLayerSummaryAuthAnonymous => 'Anônimo';
 
   @override
-  String get globalLayerSummaryRoot => 'Root';
+  String get globalLayerSummaryRoot => 'Raiz';
 
   @override
   String get globalLayerSummaryTopicsEnabled => 'Ativados';
@@ -33946,7 +33976,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get globalLayerSummaryInboundGlobal => 'Global de entrada';
 
   @override
-  String get globalLayerSummaryOn => 'ON';
+  String get globalLayerSummaryOn => 'ATIVO';
 
   @override
   String get globalLayerSummaryOff => 'DESLIGADO';
@@ -34063,7 +34093,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get lifecycleActionCancelledBackground =>
-      'Ação cancelada — o app está em segundo plano';
+      'Ação cancelada - o app está em segundo plano';
 
   @override
   String get commandErrorCheckInternet =>
@@ -34183,7 +34213,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sipDmSendButton => 'Enviar';
 
   @override
-  String get sipDmJumpToLatest => 'Jump to latest';
+  String get sipDmJumpToLatest => 'Ir para o mais recente';
 
   @override
   String get sipDmEmptyState => 'Sem mensagens ainda';
@@ -34198,18 +34228,18 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get sipDmPeerBlocked =>
-      'Você bloqueou este nó — desbloqueie no SIP Hub para enviar mensagens novamente.';
+      'Você bloqueou este nó - desbloqueie no SIP Hub para enviar mensagens novamente.';
 
   @override
   String get sipDmPeerRateLimited =>
-      'Enviando rápido demais — diminua o ritmo por um momento.';
+      'Enviando rápido demais - diminua o ritmo por um momento.';
 
   @override
   String get sipDmSessionClosed => 'Esta sessão foi encerrada.';
 
   @override
   String sipDmTextTooLong(int maxBytes) {
-    return 'Message is too long. Trim it to fit the $maxBytes-byte limit.';
+    return 'A mensagem é demasiado longa. Reduza-a para caber no limite de $maxBytes bytes.';
   }
 
   @override
@@ -34235,7 +34265,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get sipDmBlockConfirmBody =>
-      'Mensagens futuras e pedidos de handshake deste nó serão descartados silenciosamente. Eles não serão notificados. Seu histórico de conversas existente permanece neste dispositivo — use Remover conversa para apagá-lo.';
+      'Mensagens futuras e pedidos de handshake deste nó serão descartados silenciosamente. Eles não serão notificados. Seu histórico de conversas existente permanece neste dispositivo - use Remover conversa para apagá-lo.';
 
   @override
   String get sipDmBlockConfirmAction => 'Bloquear';
@@ -34272,177 +34302,178 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get sipDmActionResetSnack =>
-      'Sessão segura reiniciada — a próxima mensagem negociará chaves novas';
+      'Sessão segura reiniciada - a próxima mensagem negociará chaves novas';
 
   @override
-  String get sipPlayComposerLabel => 'Play';
+  String get sipPlayComposerLabel => 'Jogar';
 
   @override
-  String get sipPlayPanelCardSending => 'Sending offer…';
+  String get sipPlayPanelCardSending => 'A enviar oferta…';
 
   @override
   String get sipPlayDuplicateOfferBlocked =>
-      'A game offer is already in progress';
+      'Já existe uma oferta de jogo em curso';
 
   @override
   String get sipPlayPeerUnsupported =>
       'A aplicação deste utilizador ainda não suporta jogos.';
 
   @override
-  String get sipPlayLifecycleSent => 'Offer sent';
+  String get sipPlayLifecycleSent => 'Oferta enviada';
 
   @override
-  String get sipPlayLifecycleAccepted => 'Offer accepted';
+  String get sipPlayLifecycleAccepted => 'Oferta aceite';
 
   @override
-  String get sipPlayLifecycleDeclined => 'Offer declined';
+  String get sipPlayLifecycleDeclined => 'Oferta recusada';
 
   @override
-  String get sipPlayLifecycleExpired => 'Offer expired';
+  String get sipPlayLifecycleExpired => 'Oferta expirada';
 
   @override
-  String get sipPlayPanelTitle => 'Play a game';
+  String get sipPlayPanelTitle => 'Jogar um jogo';
 
   @override
   String get sipPlayPanelSubtitle =>
-      'Tiny turn-based games sent as mesh-safe moves.';
+      'Pequenos jogos por turnos enviados como jogadas seguras na rede mesh.';
 
   @override
-  String get sipPlayPanelTttSupporting => 'Send only tiny moves over the mesh.';
+  String get sipPlayPanelTttSupporting =>
+      'Envie apenas pequenas jogadas pela rede mesh.';
 
   @override
-  String get sipPlayPanelTttSizeBadge => 'Tiny moves • ~7 bytes';
+  String get sipPlayPanelTttSizeBadge => 'Jogadas pequenas • ~7 bytes';
 
   @override
   String get sipPlayPanelC4Supporting =>
-      'Drop discs into a column. First to four-in-a-row wins.';
+      'Largue discos numa coluna. Quem fizer quatro em linha primeiro ganha.';
 
   @override
-  String get sipPlayPanelC4SizeBadge => 'Tiny moves • ~7 bytes';
+  String get sipPlayPanelC4SizeBadge => 'Jogadas pequenas • ~7 bytes';
 
   @override
-  String get sipPlayPanelGameInProgressTitle => 'Game in progress';
+  String get sipPlayPanelGameInProgressTitle => 'Jogo em curso';
 
   @override
   String get sipPlayPanelGameInProgressBody =>
-      'Scroll to your active game in the conversation, or start another.';
+      'Percorra a conversa até ao jogo ativo, ou inicie outro.';
 
   @override
-  String get sipPlayPanelGameInProgressJump => 'Jump to game';
+  String get sipPlayPanelGameInProgressJump => 'Ir para o jogo';
 
   @override
-  String get sipDmOverflowSectionPreferences => 'PREFERENCES';
+  String get sipDmOverflowSectionPreferences => 'PREFERÊNCIAS';
 
   @override
-  String get sipDmOverflowSectionSafety => 'SAFETY';
+  String get sipDmOverflowSectionSafety => 'SEGURANÇA';
 
   @override
-  String get sipDmOverflowSectionSession => 'SESSION';
+  String get sipDmOverflowSectionSession => 'SESSÃO';
 
   @override
-  String get sipDmOverflowSectionData => 'DATA';
+  String get sipDmOverflowSectionData => 'DADOS';
 
   @override
-  String get sipPlayPickerTitle => 'Choose a game';
+  String get sipPlayPickerTitle => 'Escolha um jogo';
 
   @override
   String get sipPlayPickerSubtitle =>
-      'Tap a game to send an offer to this conversation. Both sides need to accept before play starts.';
+      'Toque num jogo para enviar uma oferta a esta conversa. Ambos os lados têm de aceitar antes de o jogo começar.';
 
   @override
-  String get sipPlayGameTicTacToe => 'Tic-Tac-Toe';
+  String get sipPlayGameTicTacToe => 'Jogo do Galo';
 
   @override
   String get sipPlayGameTicTacToeDescription =>
-      'Classic 3x3. You place X if you offered, O if you accepted.';
+      'Clássico 3x3. Joga com X se fez a oferta, com O se a aceitou.';
 
   @override
-  String get sipPlayGameConnectFour => 'Connect Four';
+  String get sipPlayGameConnectFour => '4 em Linha';
 
   @override
   String get sipPlayGameConnectFourDescription =>
-      '6x7 grid. Drop discs into a column. First to four-in-a-row wins.';
+      'Grelha 6x7. Largue discos numa coluna. Quem fizer quatro em linha primeiro ganha.';
 
   @override
-  String get sipPlayUnsupportedGame => 'Unsupported game';
+  String get sipPlayUnsupportedGame => 'Jogo não suportado';
 
   @override
   String get sipPlayUnsupportedGameBody =>
-      'This conversation includes a game your build doesn\'t recognize. The original sender\'s app may be newer.';
+      'Esta conversa inclui um jogo que a sua versão não reconhece. A aplicação do remetente original pode ser mais recente.';
 
   @override
-  String get sipPlayMalformedTitle => 'Game data unreadable';
+  String get sipPlayMalformedTitle => 'Dados do jogo ilegíveis';
 
   @override
   String sipPlayOfferOutgoingTitle(String game) {
-    return 'You offered $game';
+    return 'Propôs $game';
   }
 
   @override
   String sipPlayOfferIncomingTitle(String game) {
-    return '$game — they want to play';
+    return '$game - querem jogar consigo';
   }
 
   @override
-  String get sipPlayOfferAccept => 'Accept';
+  String get sipPlayOfferAccept => 'Aceitar';
 
   @override
-  String get sipPlayOfferDecline => 'Decline';
+  String get sipPlayOfferDecline => 'Recusar';
 
   @override
-  String get sipPlayResign => 'Resign';
+  String get sipPlayResign => 'Desistir';
 
   @override
-  String get sipPlayResignConfirmTitle => 'Resign this game?';
+  String get sipPlayResignConfirmTitle => 'Desistir deste jogo?';
 
   @override
   String get sipPlayResignConfirmBody =>
-      'Resigning ends the game. The other player wins. You can offer a new game any time.';
+      'Desistir termina o jogo. O outro jogador ganha. Pode propor um novo jogo a qualquer momento.';
 
   @override
-  String get sipPlayResignConfirmAction => 'Resign';
+  String get sipPlayResignConfirmAction => 'Desistir';
 
   @override
-  String get sipPlayResignConfirmCancel => 'Cancel';
+  String get sipPlayResignConfirmCancel => 'Cancelar';
 
   @override
-  String get sipPlayStatusYourTurn => 'Your turn';
+  String get sipPlayStatusYourTurn => 'A sua vez';
 
   @override
-  String get sipPlayStatusTheirTurn => 'Their turn';
+  String get sipPlayStatusTheirTurn => 'Vez do adversário';
 
   @override
-  String get sipPlayStatusYouWon => 'You won';
+  String get sipPlayStatusYouWon => 'Ganhou';
 
   @override
-  String get sipPlayStatusTheyWon => 'They won';
+  String get sipPlayStatusTheyWon => 'Ganharam';
 
   @override
-  String get sipPlayStatusDraw => 'Draw';
+  String get sipPlayStatusDraw => 'Empate';
 
   @override
-  String get sipPlayStatusYouResigned => 'You resigned';
+  String get sipPlayStatusYouResigned => 'Desistiu';
 
   @override
-  String get sipPlayStatusTheyResigned => 'They resigned';
+  String get sipPlayStatusTheyResigned => 'Desistiram';
 
   @override
-  String get sipPlayStatusYouDeclined => 'You declined the offer';
+  String get sipPlayStatusYouDeclined => 'Recusou a oferta';
 
   @override
-  String get sipPlayStatusTheyDeclined => 'They declined the offer';
+  String get sipPlayStatusTheyDeclined => 'Recusaram a oferta';
 
   @override
-  String get sipDmComposerModeText => 'Text';
+  String get sipDmComposerModeText => 'Texto';
 
   @override
-  String get sipDmComposerModeSketch => 'Sketch';
+  String get sipDmComposerModeSketch => 'Esboço';
 
   @override
-  String get sipDmComposerModePlay => 'Play';
+  String get sipDmComposerModePlay => 'Jogar';
 
   @override
-  String get sipDmComposerModeSignal => 'Signal';
+  String get sipDmComposerModeSignal => 'Sinal';
 
   @override
   String get sipDmComposerSheetTitle => 'Compor';
@@ -34455,53 +34486,53 @@ class AppLocalizationsPt extends AppLocalizations {
       'A verificar capacidades do par…';
 
   @override
-  String get sipSignalPanelTitle => 'Send a signal';
+  String get sipSignalPanelTitle => 'Enviar um sinal';
 
   @override
   String get sipSignalPanelSubtitle =>
-      'A short musical phrase or a Morse message — synthesized locally on both sides.';
+      'Uma frase musical curta ou uma mensagem Morse - sintetizada localmente em ambos os lados.';
 
   @override
-  String get sipSignalSubModeTone => 'Tone';
+  String get sipSignalSubModeTone => 'Tom';
 
   @override
   String get sipSignalSubModeMorse => 'Morse';
 
   @override
-  String get sipSignalToneEmpty => 'Tap pads to compose a phrase';
+  String get sipSignalToneEmpty => 'Toque nas teclas para compor uma frase';
 
   @override
-  String get sipSignalToneInstrument => 'Instrument';
+  String get sipSignalToneInstrument => 'Instrumento';
 
   @override
-  String get sipSignalInstrumentSine => 'Sine';
+  String get sipSignalInstrumentSine => 'Sinusoidal';
 
   @override
-  String get sipSignalInstrumentBell => 'Bell';
+  String get sipSignalInstrumentBell => 'Sino';
 
   @override
-  String get sipSignalInstrumentPluck => 'Pluck';
+  String get sipSignalInstrumentPluck => 'Dedilhado';
 
   @override
-  String get sipSignalInstrumentChirp => 'Chirp';
+  String get sipSignalInstrumentChirp => 'Gorjeio';
 
   @override
-  String get sipSignalActionClear => 'Clear';
+  String get sipSignalActionClear => 'Limpar';
 
   @override
-  String get sipSignalActionPreview => 'Preview';
+  String get sipSignalActionPreview => 'Pré-visualizar';
 
   @override
-  String get sipSignalActionSend => 'Send';
+  String get sipSignalActionSend => 'Enviar';
 
   @override
-  String get sipSignalReplay => 'Replay';
+  String get sipSignalReplay => 'Repetir';
 
   @override
-  String get sipSignalToneSizeBadge => 'Tiny signal • ~20–32 bytes';
+  String get sipSignalToneSizeBadge => 'Sinal pequeno • ~20–32 bytes';
 
   @override
-  String get sipSignalMorseSizeBadge => 'Tiny Morse • ~20–60 bytes';
+  String get sipSignalMorseSizeBadge => 'Morse pequeno • ~20–60 bytes';
 
   @override
   String sipSignalSizeBytes(int bytes) {
@@ -34510,7 +34541,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String sipSignalSizeOverBudget(int bytes) {
-    return 'Sinal • $bytes B — grande demais para enviar';
+    return 'Sinal • $bytes B - grande demais para enviar';
   }
 
   @override
@@ -34526,7 +34557,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get sipSignalMorseTapHint =>
-      'Toque pontos e traços — Letra finaliza um símbolo, Espaço adiciona uma pausa entre palavras.';
+      'Toque pontos e traços - Letra finaliza um símbolo, Espaço adiciona uma pausa entre palavras.';
 
   @override
   String get sipSignalMorseTapEmpty =>
@@ -34555,7 +34586,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get sipSignalMorseTapInvalidNote =>
-      'Sequências desconhecidas aparecem como ? — são ignoradas no envio.';
+      'Sequências desconhecidas aparecem como ? - são ignoradas no envio.';
 
   @override
   String get sipSignalToneExampleCloseEncounters => 'Contatos imediatos';
@@ -34577,35 +34608,35 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get sipSignalMorseHint =>
-      'Type up to 40 characters. A–Z, 0–9, space, and . , ? ! / @ are supported.';
+      'Escreva até 40 caracteres. São suportados A–Z, 0–9, espaço e . , ? ! / @.';
 
   @override
-  String get sipSignalMorsePlaceholder => 'Type your message…';
+  String get sipSignalMorsePlaceholder => 'Escreva a sua mensagem…';
 
   @override
   String get sipSignalMorseUnsupportedNote =>
-      'Some characters won\'t be sent — only A–Z, 0–9, space, and . , ? ! / @ are allowed.';
+      'Alguns caracteres não serão enviados - apenas A–Z, 0–9, espaço e . , ? ! / @ são permitidos.';
 
   @override
-  String get sipSignalBubblePhraseLabel => 'Phrase';
+  String get sipSignalBubblePhraseLabel => 'Frase';
 
   @override
   String get sipSignalBubbleMorseLabel => 'Morse';
 
   @override
-  String get sipSignalBubbleMalformed => 'Signal can\'t be read';
+  String get sipSignalBubbleMalformed => 'Não é possível ler o sinal';
 
   @override
   String get sipInkComposerHint =>
-      'Draw a quick sketch — kept tiny so it fits on the mesh.';
+      'Desenhe um esboço rápido - mantido pequeno para caber na rede mesh.';
 
   @override
   String get sipInkComposerHintOver =>
-      'Strokes past the dashed line won\'t fit on the mesh and won\'t be sent.';
+      'Os traços além da linha a tracejado não cabem na rede mesh e não serão enviados.';
 
   @override
   String sipInkPointBudget(int points, int maxPoints) {
-    return '$points / $maxPoints points';
+    return '$points / $maxPoints pontos';
   }
 
   @override
@@ -34614,26 +34645,27 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get sipInkClear => 'Clear';
+  String get sipInkClear => 'Limpar';
 
   @override
-  String get sipInkUndo => 'Undo';
+  String get sipInkUndo => 'Desfazer';
 
   @override
-  String get sipInkSend => 'Send';
+  String get sipInkSend => 'Enviar';
 
   @override
-  String get sipDmInkReplyPlaceholder => '🎨 Sketch';
+  String get sipDmInkReplyPlaceholder => '🎨 Esboço';
 
   @override
-  String get sipInkUnsupportedPeer => 'This peer can\'t receive sketches yet.';
+  String get sipInkUnsupportedPeer =>
+      'Este par ainda não consegue receber esboços.';
 
   @override
-  String get sipInkUnsupportedSketch => 'Unsupported sketch';
+  String get sipInkUnsupportedSketch => 'Esboço não suportado';
 
   @override
   String get sipInkBlocked =>
-      'Sketch can\'t fit on the mesh — simplify your strokes.';
+      'O esboço não cabe na rede mesh - simplifique os traços.';
 
   @override
   String get sipDmOpenAction => 'Abrir DM';
@@ -34691,24 +34723,24 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sipPeerDetailCapabilities => 'Capacidades';
 
   @override
-  String get sipPeerDetailDeviceUnknown => 'Unknown';
+  String get sipPeerDetailDeviceUnknown => 'Desconhecido';
 
   @override
-  String get sipPeerDetailDevicePhone => 'Phone';
+  String get sipPeerDetailDevicePhone => 'Telemóvel';
 
   @override
   String get sipPeerDetailDeviceTablet => 'Tablet';
 
   @override
-  String get sipPeerDetailDeviceDesktop => 'Desktop';
+  String get sipPeerDetailDeviceDesktop => 'Computador';
 
   @override
   String sipPeerDetailDeviceType(int code) {
-    return 'Type $code';
+    return 'Tipo $code';
   }
 
   @override
-  String get sipPeerDetailExpertToggle => 'Technical details';
+  String get sipPeerDetailExpertToggle => 'Detalhes técnicos';
 
   @override
   String get sipCountersTitle => 'Contadores de Debug SIP';
@@ -34753,29 +34785,29 @@ class AppLocalizationsPt extends AppLocalizations {
       'Tráfego de entrada descartado silenciosamente';
 
   @override
-  String get sipHubSectionYourServices => 'Your Services';
+  String get sipHubSectionYourServices => 'Os Seus Serviços';
 
   @override
-  String get sipHubCreateServiceCta => 'Create Service';
+  String get sipHubCreateServiceCta => 'Criar Serviço';
 
   @override
-  String get sipHubPeerDetailOverlayLink => 'Overlay link v0.2';
+  String get sipHubPeerDetailOverlayLink => 'Ligação overlay v0.2';
 
   @override
-  String get sipHubPeerDetailOverlayResource => 'Overlay resource v0.2';
+  String get sipHubPeerDetailOverlayResource => 'Recurso overlay v0.2';
 
   @override
-  String get sipHubPeerDetailOverlaySecure => 'Overlay secure v0.3';
+  String get sipHubPeerDetailOverlaySecure => 'Overlay seguro v0.3';
 
   @override
-  String get sipHubPeerDetailOpenChat => 'Open chat';
+  String get sipHubPeerDetailOpenChat => 'Abrir conversa';
 
   @override
-  String get sipHubPeerServicesHeader => 'Services';
+  String get sipHubPeerServicesHeader => 'Serviços';
 
   @override
   String sipHubPeerServiceVersionLine(int major, int minor, int bytes) {
-    return 'v$major.$minor · ${bytes}B metadata';
+    return 'v$major.$minor · ${bytes}B de metadados';
   }
 
   @override
@@ -34812,7 +34844,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get sipHubBlockConfirmBody =>
-      'Mensagens futuras e pedidos de handshake deste nó serão descartados silenciosamente. Eles não serão notificados — verão seu nó como inacessível. Você pode desbloqueá-lo depois nas configurações de Segurança.';
+      'Mensagens futuras e pedidos de handshake deste nó serão descartados silenciosamente. Eles não serão notificados - verão seu nó como inacessível. Você pode desbloqueá-lo depois nas configurações de Segurança.';
 
   @override
   String get sipHubBlockConfirmAction => 'Bloquear';
@@ -34917,7 +34949,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get meshCapacityEducationCompatBody =>
-      'Rádios próximos devem usar configurações de canal e preset compatíveis para te ouvir. Mova seu grupo junto ao mudar — mudanças solo podem te esconder de pares.';
+      'Rádios próximos devem usar configurações de canal e preset compatíveis para te ouvir. Mova seu grupo junto ao mudar - mudanças solo podem te esconder de pares.';
 
   @override
   String get meshCapacityReasonLabel => 'Motivo';
@@ -34984,7 +35016,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get meshCapacityQuietMeshTagline2 =>
-      'Nós apenas via MQTT não contam — só observações diretas via rádio.';
+      'Nós apenas via MQTT não contam - só observações diretas via rádio.';
 
   @override
   String get meshCapacityQuietMeshTagline3 =>
@@ -35051,8 +35083,8 @@ class AppLocalizationsPt extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count hops',
-      one: '1 hop',
+      other: '$count saltos',
+      one: '1 salto',
     );
     return '$_temp0';
   }
@@ -35239,7 +35271,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get sipHubScanningTagline3 =>
-      'Os pares aparecem automaticamente quando os seus beacons\nchegam ao teu nó — não precisas de tocar em nada para os encontrar.';
+      'Os pares aparecem automaticamente quando os seus beacons\nchegam ao teu nó - não precisas de tocar em nada para os encontrar.';
 
   @override
   String get sipHubScanningTagline4 =>
@@ -35265,7 +35297,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpSipHubHandshakeBubble =>
-      'Quando vir um par, toque em **Handshake** para trocar identidade. Após o handshake pode abrir um **DM encriptado de ponta a ponta** — sem servidores, sem contas.';
+      'Quando vir um par, toque em **Handshake** para trocar identidade. Após o handshake pode abrir um **DM encriptado de ponta a ponta** - sem servidores, sem contas.';
 
   @override
   String get helpSipHubPrivacyBubble =>
@@ -35714,7 +35746,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get mrrpHarnessFixtureFuzz => 'Casos Fuzz';
 
   @override
-  String get mrrpHarnessFixtureReplay => 'Replay';
+  String get mrrpHarnessFixtureReplay => 'Repetir';
 
   @override
   String get mrrpHarnessFixtureReplayAll => 'Replay Tudo';
@@ -35942,15 +35974,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get meshExplorerScanningTagline2 =>
-      'Toque em Pesquisar para enviar uma chamada — ativa pares próximos';
+      'Toque em Pesquisar para enviar uma chamada - ativa pares próximos';
 
   @override
   String get meshExplorerScanningTagline3 =>
-      'Os pares aparecem anonimamente — faça handshake para identificá-los';
+      'Os pares aparecem anonimamente - faça handshake para identificá-los';
 
   @override
   String get meshExplorerScanningTagline4 =>
-      'O alcance do rádio importa — tente aproximar-se da mesh';
+      'O alcance do rádio importa - tente aproximar-se da mesh';
 
   @override
   String get meshExplorerHelp => 'Ajuda';
@@ -35964,7 +35996,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpMeshExplorerIntroBubble =>
-      'Bem-vindo ao **Mesh Explorer**! Aqui são mostrados todos os pares com capacidade SocialMesh atualmente ao alcance do rádio. Pares anónimos aparecem instantaneamente — sem necessidade de handshake.';
+      'Bem-vindo ao **Mesh Explorer**! Aqui são mostrados todos os pares com capacidade SocialMesh atualmente ao alcance do rádio. Pares anónimos aparecem instantaneamente - sem necessidade de handshake.';
 
   @override
   String get helpMeshExplorerPeersBubble =>
@@ -35972,7 +36004,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get helpMeshExplorerServicesBubble =>
-      'A secção **Serviços** mostra o que os pares próximos estão a oferecer — Quadros de Avisos, Perfis e mais. Toque num bloco de serviço para interagir.';
+      'A secção **Serviços** mostra o que os pares próximos estão a oferecer - Quadros de Avisos, Perfis e mais. Toque num bloco de serviço para interagir.';
 
   @override
   String get helpMeshExplorerScanBubble =>
@@ -35993,12 +36025,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String notificationSipPlayTurnBody(String gameName) {
-    return '$gameName — toque para jogar.';
+    return '$gameName - toque para jogar.';
   }
 
   @override
   String get notificationSipPlayTurnBodyUnknownGame =>
-      'É a sua vez — toque para jogar.';
+      'É a sua vez - toque para jogar.';
 
   @override
   String get notificationChannelSipPlay => 'Turnos de jogo';
@@ -36081,7 +36113,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshExplorerHopCountFar => '3+ saltos';
 
   @override
-  String get meshExplorerHopCountUnknown => 'Nearby';
+  String get meshExplorerHopCountUnknown => 'Próximo';
 
   @override
   String meshExplorerServiceCount(int count) {
@@ -36242,62 +36274,62 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshExplorerHandshakeInProgress => 'Em progresso…';
 
   @override
-  String get meshExplorerHandshakeAccept => 'Accept';
+  String get meshExplorerHandshakeAccept => 'Aceitar';
 
   @override
-  String get meshExplorerHandshakeDecline => 'Decline';
+  String get meshExplorerHandshakeDecline => 'Recusar';
 
   @override
-  String get meshExplorerHandshakeReceived => 'Handshake request received';
+  String get meshExplorerHandshakeReceived => 'Pedido de handshake recebido';
 
   @override
-  String get meshExplorerStatusConnected => 'Connected to mesh';
+  String get meshExplorerStatusConnected => 'Ligado à mesh';
 
   @override
   String meshExplorerStatusPeersAndServices(int peers, int services) {
-    return '$peers nearby · $services live';
+    return '$peers próximos · $services ao vivo';
   }
 
   @override
-  String get meshExplorerSectionLiveNow => 'Live now';
+  String get meshExplorerSectionLiveNow => 'Ao vivo agora';
 
   @override
-  String get meshExplorerSectionNearbyPeers => 'Nearby';
+  String get meshExplorerSectionNearbyPeers => 'Próximos';
 
   @override
-  String get meshExplorerCardOpen => 'Open';
+  String get meshExplorerCardOpen => 'Abrir';
 
   @override
-  String get meshExplorerCardLive => 'LIVE';
+  String get meshExplorerCardLive => 'AO VIVO';
 
   @override
-  String get meshExplorerFreshnessJustNow => 'Just now';
+  String get meshExplorerFreshnessJustNow => 'Agora mesmo';
 
   @override
   String meshExplorerFreshnessMinutes(int count) {
-    return '${count}m ago';
+    return 'há ${count}m';
   }
 
   @override
   String meshExplorerFreshnessHours(int count) {
-    return '${count}h ago';
+    return 'há ${count}h';
   }
 
   @override
-  String get meshExplorerEmptyTitle => 'Discover the mesh';
+  String get meshExplorerEmptyTitle => 'Descubra a mesh';
 
   @override
   String get meshExplorerEmptyBody =>
-      'Things shared by nearby people will show up here. Updates, questions, checklists, alerts, and readings all travel over the local mesh.';
+      'As coisas partilhadas por pessoas próximas aparecerão aqui. Atualizações, perguntas, listas de verificação, alertas e leituras circulam pela mesh local.';
 
   @override
-  String get meshExplorerEmptyAction => 'Share something';
+  String get meshExplorerEmptyAction => 'Partilhar algo';
 
   @override
-  String get meshExplorerCreateLabel => 'Create';
+  String get meshExplorerCreateLabel => 'Criar';
 
   @override
-  String get meshExplorerNotConnectedAction => 'Connect a radio';
+  String get meshExplorerNotConnectedAction => 'Ligar um rádio';
 
   @override
   String get meshServicesDrawerLabel => 'Os Meus Serviços';
@@ -36323,91 +36355,91 @@ class AppLocalizationsPt extends AppLocalizations {
       'Escolha o que pretende partilhar na mesh';
 
   @override
-  String get meshServicesTypeFeed => 'Updates';
+  String get meshServicesTypeFeed => 'Atualizações';
 
   @override
   String get meshServicesTypeFeedDescription =>
-      'Posts and updates people nearby can open and read';
+      'Publicações e atualizações que pessoas próximas podem abrir e ler';
 
   @override
-  String get meshServicesTypeList => 'Checklists';
+  String get meshServicesTypeList => 'Listas de verificação';
 
   @override
   String get meshServicesTypeListDescription =>
-      'Lists, checklists, or supplies people nearby can work through together';
+      'Listas ou materiais que pessoas próximas podem gerir em conjunto';
 
   @override
-  String get meshServicesTypePoll => 'Questions';
+  String get meshServicesTypePoll => 'Perguntas';
 
   @override
   String get meshServicesTypePollDescription =>
-      'Ask nearby people to pick an answer';
+      'Peça a pessoas próximas para escolherem uma resposta';
 
   @override
-  String get meshServicesTypeSignal => 'Alerts';
+  String get meshServicesTypeSignal => 'Alertas';
 
   @override
   String get meshServicesTypeSignalDescription =>
-      'Short-lived alerts or beacons that stand out nearby';
+      'Alertas de curta duração ou beacons que se destacam nas proximidades';
 
   @override
-  String get meshServicesTypeSensor => 'Readings';
+  String get meshServicesTypeSensor => 'Leituras';
 
   @override
   String get meshServicesTypeSensorDescription =>
-      'Live measurements or telemetry people nearby can check';
+      'Medições ou telemetria ao vivo que pessoas próximas podem consultar';
 
   @override
-  String get meshServicesTypeGame => 'Games';
+  String get meshServicesTypeGame => 'Jogos';
 
   @override
   String get meshServicesTypeGameDescription =>
-      'Two-peer games playable over mesh';
+      'Jogos entre dois utilizadores pela mesh';
 
   @override
-  String get meshServicesIntentGame => 'Play a game';
+  String get meshServicesIntentGame => 'Jogar um jogo';
 
   @override
   String get meshServicesIntentGameDescription =>
-      'Invite a peer to a quick game over the mesh.';
+      'Convide um utilizador para um jogo rápido pela mesh.';
 
   @override
-  String get meshServicesIntentFeed => 'Post an update';
+  String get meshServicesIntentFeed => 'Publicar atualização';
 
   @override
   String get meshServicesIntentFeedDescription =>
-      'Share news, status, or a notice people nearby can open.';
+      'Partilhe notícias, estado ou um aviso que pessoas próximas possam abrir.';
 
   @override
-  String get meshServicesIntentList => 'Create a checklist';
+  String get meshServicesIntentList => 'Criar lista de verificação';
 
   @override
   String get meshServicesIntentListDescription =>
-      'Organize items, jobs, or supplies people nearby can work through together.';
+      'Organize itens, tarefas ou materiais que pessoas próximas possam gerir em conjunto.';
 
   @override
-  String get meshServicesIntentPoll => 'Ask a question';
+  String get meshServicesIntentPoll => 'Fazer uma pergunta';
 
   @override
   String get meshServicesIntentPollDescription =>
-      'Put a multiple-choice question out to nearby people.';
+      'Coloque uma pergunta de escolha múltipla a pessoas próximas.';
 
   @override
-  String get meshServicesIntentSignal => 'Send an alert';
+  String get meshServicesIntentSignal => 'Enviar um alerta';
 
   @override
   String get meshServicesIntentSignalDescription =>
-      'Broadcast a short-lived alert, check-in, or beacon nearby.';
+      'Transmita um alerta de curta duração, check-in ou beacon nas proximidades.';
 
   @override
-  String get meshServicesIntentSensor => 'Share a reading';
+  String get meshServicesIntentSensor => 'Partilhar uma leitura';
 
   @override
   String get meshServicesIntentSensorDescription =>
-      'Publish a live reading, measurement, or status from a device.';
+      'Publique uma leitura, medição ou estado ao vivo de um dispositivo.';
 
   @override
-  String get meshServicesVisibilityOpen => 'Nearby';
+  String get meshServicesVisibilityOpen => 'Próximo';
 
   @override
   String get meshServicesTemplateBoard => 'Quadro de Avisos';
@@ -36518,54 +36550,56 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get serviceDetailMeshUnavailable =>
-      'Mesh network is not available right now.';
+      'A rede mesh não está disponível neste momento.';
 
   @override
   String serviceDetailActionSuccess(String actionName) {
-    return '$actionName completed successfully.';
+    return '$actionName concluído com sucesso.';
   }
 
   @override
   String serviceDetailActionFailed(String actionName) {
-    return '$actionName could not be completed.';
+    return '$actionName não pôde ser concluído.';
   }
 
   @override
   String get meshServicesInteractionFailed =>
-      'Could not update this share right now.';
+      'Não foi possível atualizar esta partilha agora.';
 
   @override
-  String get serviceDetailFetchingInstances => 'Loading what\'s being shared…';
+  String get serviceDetailFetchingInstances =>
+      'A carregar o que está a ser partilhado…';
 
   @override
   String get serviceDetailFetchFailed =>
-      'Could not reach this service. The peer may be out of range.';
+      'Não foi possível aceder a este serviço. O par pode estar fora de alcance.';
 
   @override
   String serviceDetailFetchFailedRetried(int attempts) {
-    return 'Could not reach this service after $attempts attempts. The peer may be out of range.';
+    return 'Não foi possível aceder a este serviço após $attempts tentativas. O par pode estar fora de alcance.';
   }
 
   @override
-  String get serviceDetailNoInstances => 'No active instances';
+  String get serviceDetailNoInstances => 'Sem instâncias ativas';
 
   @override
   String get serviceDetailNoInstancesBody =>
-      'This peer is not hosting any active services right now.';
+      'Este par não está a alojar nenhum serviço ativo neste momento.';
 
   @override
-  String get serviceDetailInstanceDescription => 'Description';
+  String get serviceDetailInstanceDescription => 'Descrição';
 
   @override
   String serviceDetailInstanceExpires(String time) {
-    return 'Ends in $time';
+    return 'Termina em $time';
   }
 
   @override
-  String get serviceDetailInstanceNoExpiry => 'Stays live until removed';
+  String get serviceDetailInstanceNoExpiry =>
+      'Permanece ativo até ser removido';
 
   @override
-  String get serviceDetailInstanceExpired => 'Expired';
+  String get serviceDetailInstanceExpired => 'Expirado';
 
   @override
   String get meshServicesFieldTitle => 'Título';
@@ -36613,21 +36647,21 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshServicesPublishSuccess => 'Serviço publicado';
 
   @override
-  String get meshServicesCreatedHeadline => 'Your share is live';
+  String get meshServicesCreatedHeadline => 'A sua partilha está ativa';
 
   @override
   String get meshServicesCreatedDescription =>
-      'People nearby can now discover it and open the full details.';
+      'As pessoas próximas já o podem descobrir e abrir os detalhes completos.';
 
   @override
   String get meshServicesCreatedMeshHint =>
-      'Sharing works best when other radios are active nearby.';
+      'A partilha funciona melhor quando outros rádios estão ativos nas proximidades.';
 
   @override
-  String get meshServicesCreatedViewServices => 'See my shares';
+  String get meshServicesCreatedViewServices => 'Ver as minhas partilhas';
 
   @override
-  String get meshServicesCreatedCreateAnother => 'Share another';
+  String get meshServicesCreatedCreateAnother => 'Partilhar outro';
 
   @override
   String get meshServicesStatusActive => 'Ativo';
@@ -36677,109 +36711,110 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshGamesTitle => 'Mesh Games';
 
   @override
-  String get meshGamesTabLabel => 'Games';
+  String get meshGamesTabLabel => 'Jogos';
 
   @override
-  String get meshGamesEmptyTitle => 'No games yet';
+  String get meshGamesEmptyTitle => 'Ainda sem jogos';
 
   @override
-  String get meshGamesEmptyTagline => 'Invite a peer to a quick match';
+  String get meshGamesEmptyTagline =>
+      'Convide um utilizador para uma partida rápida';
 
   @override
-  String get meshGamesNewGame => 'New Game';
+  String get meshGamesNewGame => 'Novo jogo';
 
   @override
-  String get meshGamesNewGameTitle => 'Start a New Game';
+  String get meshGamesNewGameTitle => 'Iniciar um novo jogo';
 
   @override
-  String get meshGamesTypeRps => 'Rock Paper Scissors';
+  String get meshGamesTypeRps => 'Pedra Papel Tesoura';
 
   @override
   String get meshGamesTypeRpsDescription =>
-      'Best of one. Both players reveal at the same time.';
+      'Uma ronda. Ambos os jogadores revelam ao mesmo tempo.';
 
   @override
-  String get meshGamesTypeTicTacToe => 'Tic Tac Toe';
+  String get meshGamesTypeTicTacToe => 'Jogo do Galo';
 
   @override
   String get meshGamesTypeTicTacToeDescription =>
-      'Three in a row. Take turns marking the grid.';
+      'Três em linha. Joguem à vez marcando a grelha.';
 
   @override
-  String get meshGamesTypeUnknown => 'Game';
+  String get meshGamesTypeUnknown => 'Jogo';
 
   @override
-  String get meshGamesStatusYourTurn => 'Your turn';
+  String get meshGamesStatusYourTurn => 'A sua vez';
 
   @override
-  String get meshGamesStatusWaiting => 'Waiting';
+  String get meshGamesStatusWaiting => 'À espera';
 
   @override
-  String get meshGamesStatusYouWon => 'You won';
+  String get meshGamesStatusYouWon => 'Ganhou';
 
   @override
-  String get meshGamesStatusYouLost => 'You lost';
+  String get meshGamesStatusYouLost => 'Perdeu';
 
   @override
-  String get meshGamesStatusDraw => 'Draw';
+  String get meshGamesStatusDraw => 'Empate';
 
   @override
-  String get meshGamesStatusCompleted => 'Completed';
+  String get meshGamesStatusCompleted => 'Concluído';
 
   @override
-  String get meshGamesStatusAbandoned => 'Abandoned';
+  String get meshGamesStatusAbandoned => 'Abandonado';
 
   @override
-  String get meshGamesStatusStale => 'Syncing…';
+  String get meshGamesStatusStale => 'A sincronizar…';
 
   @override
-  String get meshGamesStatusActive => 'Active';
+  String get meshGamesStatusActive => 'Ativo';
 
   @override
-  String get meshGamesActionResync => 'Resync';
+  String get meshGamesActionResync => 'Ressincronizar';
 
   @override
-  String get meshGamesActionAbandon => 'Abandon';
+  String get meshGamesActionAbandon => 'Abandonar';
 
   @override
-  String get meshGamesAbandonConfirmTitle => 'Abandon this game?';
+  String get meshGamesAbandonConfirmTitle => 'Abandonar este jogo?';
 
   @override
   String get meshGamesAbandonConfirmMessage =>
-      'The other player will be notified.';
+      'O outro jogador será notificado.';
 
   @override
-  String get meshGamesOpponentLabel => 'Opponent';
+  String get meshGamesOpponentLabel => 'Adversário';
 
   @override
-  String get meshGamesYouLabel => 'You';
+  String get meshGamesYouLabel => 'Você';
 
   @override
   String get meshGamesVsSeparator => 'vs';
 
   @override
-  String get meshGamesOpponentPickerTitle => 'Pick an opponent';
+  String get meshGamesOpponentPickerTitle => 'Escolher adversário';
 
   @override
-  String get meshGamesOpponentMissing => 'No peers available';
+  String get meshGamesOpponentMissing => 'Nenhum utilizador disponível';
 
   @override
-  String get meshGamesSendFailed => 'Couldn\'t send move';
+  String get meshGamesSendFailed => 'Não foi possível enviar a jogada';
 
   @override
-  String get meshGamesRpsRock => 'Rock';
+  String get meshGamesRpsRock => 'Pedra';
 
   @override
-  String get meshGamesRpsPaper => 'Paper';
+  String get meshGamesRpsPaper => 'Papel';
 
   @override
-  String get meshGamesRpsScissors => 'Scissors';
+  String get meshGamesRpsScissors => 'Tesoura';
 
   @override
-  String get meshGamesRpsPickPrompt => 'Pick your throw';
+  String get meshGamesRpsPickPrompt => 'Escolha a sua jogada';
 
   @override
-  String get meshGamesRpsRevealTitle => 'Reveal';
+  String get meshGamesRpsRevealTitle => 'Revelar';
 
   @override
   String get meshGamesTttMarkX => 'X';
@@ -36788,7 +36823,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshGamesTttMarkO => 'O';
 
   @override
-  String get meshGamesTttTapPrompt => 'Tap a cell to place your mark';
+  String get meshGamesTttTapPrompt =>
+      'Toque numa célula para colocar a sua marca';
 
   @override
   String meshGamesRevision(int revision) {
@@ -36871,11 +36907,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get mapTerrainProfileUsingTerrainAltitude =>
-      'Using terrain elevation for LOS';
+      'A utilizar elevação do terreno para LOS';
 
   @override
   String get mapTerrainProfileUsingTerrainAltitudeSubtitle =>
-      'No GPS altitude — ground level assumed for one or both points.';
+      'Sem altitude GPS - nível do solo assumido para um ou ambos os pontos.';
 
   @override
   String mapTerrainProfileSampleCount(int count) {
@@ -36883,10 +36919,10 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get mapTerrainProfile3DToggle => '3D view';
+  String get mapTerrainProfile3DToggle => 'Vista 3D';
 
   @override
-  String get mapTerrainProfile2DToggle => '2D chart';
+  String get mapTerrainProfile2DToggle => 'Gráfico 2D';
 
   @override
   String mapTerrainLosVerdict(String verdict) {
@@ -36902,20 +36938,20 @@ class AppLocalizationsPt extends AppLocalizations {
   String get mapTerrainRetry => 'Tentar novamente';
 
   @override
-  String get mapTerrainAntennaHeightTitle => 'Antenna height above ground';
+  String get mapTerrainAntennaHeightTitle => 'Altura da antena acima do solo';
 
   @override
   String get mapTerrainAntennaHeightSubtitle =>
-      'Set antenna height above ground level for points without GPS altitude to improve LOS accuracy.';
+      'Definir altura da antena acima do nível do solo para pontos sem altitude GPS, para melhorar a precisão LOS.';
 
   @override
   String mapTerrainAntennaHeightPointLabel(String prefix, String name) {
-    return 'Point $prefix: $name';
+    return 'Ponto $prefix: $name';
   }
 
   @override
   String mapTerrainAntennaHeightGroundLevel(int altitude) {
-    return 'Ground: ${altitude}m AMSL';
+    return 'Solo: ${altitude}m AMSL';
   }
 
   @override
@@ -36980,177 +37016,184 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String losExplanationMarginal(String clearance, String required) {
-    return 'Folga marginal (${clearance}m) — abaixo dos ${required}m recomendados de folga Fresnel. Terreno/obstáculos não considerados.';
+    return 'Folga marginal (${clearance}m) - abaixo dos ${required}m recomendados de folga Fresnel. Terreno/obstáculos não considerados.';
   }
 
   @override
-  String get nodesScreenViewModeCards => 'Card View';
+  String get nodesScreenViewModeCards => 'Vista em Cartões';
 
   @override
-  String get nodesScreenViewModeCompact => 'Compact View';
+  String get nodesScreenViewModeCompact => 'Vista Compacta';
 
   @override
   String nodesScreenUptimeLabel(String uptime) {
-    return 'Up $uptime';
+    return 'Ativo $uptime';
   }
 
   @override
-  String get nodesScreenLegendTitle => 'Icon Legend';
+  String get nodesScreenLegendTitle => 'Legenda de Ícones';
 
   @override
-  String get nodesScreenLegendStatusActive => 'Active — heard recently';
+  String get nodesScreenLegendStatusActive => 'Ativo - ouvido recentemente';
 
   @override
-  String get nodesScreenLegendStatusFading => 'Fading — not heard for a while';
+  String get nodesScreenLegendStatusFading =>
+      'A desaparecer - não ouvido há algum tempo';
 
   @override
-  String get nodesScreenLegendStatusStale => 'Stale — last heard long ago';
+  String get nodesScreenLegendStatusStale =>
+      'Desatualizado - último aviso há muito tempo';
 
   @override
-  String get nodesScreenLegendStatusUnknown => 'Unknown — never heard directly';
+  String get nodesScreenLegendStatusUnknown =>
+      'Desconhecido - nunca ouvido diretamente';
 
   @override
-  String get nodesScreenLegendSignalStrong => 'Strong signal (≥ −70 dBm)';
+  String get nodesScreenLegendSignalStrong => 'Sinal forte (≥ -70 dBm)';
 
   @override
-  String get nodesScreenLegendSignalMedium => 'Medium signal (−70 to −85 dBm)';
+  String get nodesScreenLegendSignalMedium => 'Sinal médio (-70 a -85 dBm)';
 
   @override
-  String get nodesScreenLegendSignalWeak => 'Weak signal (< −85 dBm)';
+  String get nodesScreenLegendSignalWeak => 'Sinal fraco (< -85 dBm)';
 
   @override
-  String get nodesScreenLegendHopsDirect => 'Direct — no hops';
+  String get nodesScreenLegendHopsDirect => 'Direto - sem saltos';
 
   @override
-  String get nodesScreenLegendHops1 => '1 hop away';
+  String get nodesScreenLegendHops1 => '1 salto de distância';
 
   @override
-  String get nodesScreenLegendHops2 => '2 hops away';
+  String get nodesScreenLegendHops2 => '2 saltos de distância';
 
   @override
-  String get nodesScreenLegendHops3 => '3 hops away';
+  String get nodesScreenLegendHops3 => '3 saltos de distância';
 
   @override
-  String get nodesScreenLegendHops4Plus => '4+ hops away';
+  String get nodesScreenLegendHops4Plus => '4+ saltos de distância';
 
   @override
-  String get nodesScreenLegendTransportRf => 'Radio frequency (RF)';
+  String get nodesScreenLegendTransportRf => 'Frequência de rádio (RF)';
 
   @override
   String get nodesScreenLegendTransportMqtt => 'Internet (MQTT)';
 
   @override
-  String get nodesScreenLegendBatteryGood => 'Battery good (≥ 50%)';
+  String get nodesScreenLegendBatteryGood => 'Bateria boa (≥ 50%)';
 
   @override
-  String get nodesScreenLegendBatteryLow => 'Battery low (20–49%)';
+  String get nodesScreenLegendBatteryLow => 'Bateria baixa (20-49%)';
 
   @override
-  String get nodesScreenLegendBatteryCritical => 'Battery critical (< 20%)';
+  String get nodesScreenLegendBatteryCritical => 'Bateria crítica (< 20%)';
 
   @override
-  String get nodesScreenLegendSectionStatus => 'Status';
+  String get nodesScreenLegendSectionStatus => 'Estado';
 
   @override
-  String get nodesScreenLegendSectionSignal => 'Signal Strength';
+  String get nodesScreenLegendSectionSignal => 'Força do Sinal';
 
   @override
-  String get nodesScreenLegendSectionHops => 'Hop Count';
+  String get nodesScreenLegendSectionHops => 'Contagem de Saltos';
 
   @override
-  String get nodesScreenLegendSectionTransport => 'Transport';
+  String get nodesScreenLegendSectionTransport => 'Transporte';
 
   @override
-  String get nodesScreenLegendSectionBattery => 'Battery';
+  String get nodesScreenLegendSectionBattery => 'Bateria';
 
   @override
-  String get servicePresentationBoardTitle => 'Bulletin Board';
+  String get servicePresentationBoardTitle => 'Quadro de Avisos';
 
   @override
-  String get servicePresentationBoardSubtitle => 'Local mesh posts';
+  String get servicePresentationBoardSubtitle => 'Publicações na malha local';
 
   @override
-  String get servicePresentationBoardAction => 'Open Board';
+  String get servicePresentationBoardAction => 'Abrir Quadro';
 
   @override
-  String get servicePresentationProfileTitle => 'Peer Profile';
+  String get servicePresentationProfileTitle => 'Perfil do Par';
 
   @override
-  String get servicePresentationProfileSubtitle => 'Shared identity info';
+  String get servicePresentationProfileSubtitle =>
+      'Informação de identidade partilhada';
 
   @override
-  String get servicePresentationProfileAction => 'View Profile';
+  String get servicePresentationProfileAction => 'Ver Perfil';
 
   @override
-  String get servicePresentationMeetupTitle => 'Coordination';
+  String get servicePresentationMeetupTitle => 'Coordenação';
 
   @override
-  String get servicePresentationMeetupSubtitle => 'Rendezvous tokens';
+  String get servicePresentationMeetupSubtitle => 'Tokens de encontro';
 
   @override
-  String get servicePresentationMeetupAction => 'Details';
+  String get servicePresentationMeetupAction => 'Detalhes';
 
   @override
-  String get servicePresentationSignalsTitle => 'Signals';
+  String get servicePresentationSignalsTitle => 'Sinais';
 
   @override
   String get servicePresentationSignalsSubtitle =>
-      'Anonymous status broadcasts';
+      'Transmissões de estado anónimas';
 
   @override
-  String get servicePresentationSignalsAction => 'View';
+  String get servicePresentationSignalsAction => 'Ver';
 
   @override
-  String get servicePresentationMeshServicesTitle => 'Mesh Services';
+  String get servicePresentationMeshServicesTitle => 'Serviços Mesh';
 
   @override
-  String get servicePresentationMeshServicesSubtitle => 'User-created services';
+  String get servicePresentationMeshServicesSubtitle =>
+      'Serviços criados por utilizadores';
 
   @override
-  String get servicePresentationMeshServicesAction => 'Browse';
+  String get servicePresentationMeshServicesAction => 'Explorar';
 
   @override
-  String get servicePresentationFallbackTitle => 'Service';
+  String get servicePresentationFallbackTitle => 'Serviço';
 
   @override
-  String get servicePresentationFallbackSubtitle => 'Available nearby';
+  String get servicePresentationFallbackSubtitle =>
+      'Disponível nas proximidades';
 
   @override
-  String get servicePresentationFallbackAction => 'Details';
+  String get servicePresentationFallbackAction => 'Detalhes';
 
   @override
-  String get voiceMessageSendButton => 'Voice';
+  String get voiceMessageSendButton => 'Voz';
 
   @override
-  String get voiceMessageRecording => 'Recording…';
+  String get voiceMessageRecording => 'A gravar…';
 
   @override
-  String get voiceMessageRecordingHint => 'Hold to record';
+  String get voiceMessageRecordingHint => 'Mantenha premido para gravar';
 
   @override
-  String get voiceMessageTooShort => 'Recording too short — hold longer';
+  String get voiceMessageTooShort =>
+      'Gravação demasiado curta - mantenha premido por mais tempo';
 
   @override
-  String get voiceMessageSent => 'Voice message sent';
+  String get voiceMessageSent => 'Mensagem de voz enviada';
 
   @override
-  String get voiceMessageFailed => 'Voice message could not be sent';
+  String get voiceMessageFailed => 'Não foi possível enviar a mensagem de voz';
 
   @override
   String get voiceMessagePermissionDenied =>
-      'Microphone access is required to send voice messages';
+      'O acesso ao microfone é necessário para enviar mensagens de voz';
 
   @override
-  String get voiceMessagePermissionSettings => 'Open Settings';
+  String get voiceMessagePermissionSettings => 'Abrir Definições';
 
   @override
-  String get voiceMessagePlay => 'Play voice message';
+  String get voiceMessagePlay => 'Reproduzir mensagem de voz';
 
   @override
-  String get voiceMessageStop => 'Stop playback';
+  String get voiceMessageStop => 'Parar reprodução';
 
   @override
-  String get voiceMessagePause => 'Pause';
+  String get voiceMessagePause => 'Pausar';
 
   @override
   String voiceMessageDuration(int seconds) {
@@ -37158,66 +37201,66 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get voiceMessageAutoStopped => 'Maximum recording length reached';
+  String get voiceMessageAutoStopped => 'Duração máxima de gravação atingida';
 
   @override
-  String get voiceRecordingTapToStop => 'Tap to stop recording';
+  String get voiceRecordingTapToStop => 'Toque para parar a gravação';
 
   @override
-  String get voiceRecordingStopButton => 'Stop';
+  String get voiceRecordingStopButton => 'Parar';
 
   @override
   String get voiceRecordingLive => 'REC';
 
   @override
   String voiceRecordingMaxSeconds(String seconds) {
-    return 'of ${seconds}s max';
+    return 'de ${seconds}s máx.';
   }
 
   @override
-  String get voiceRecordingCancelButton => 'Cancel';
+  String get voiceRecordingCancelButton => 'Cancelar';
 
   @override
-  String get voiceRecordingDiscardTitle => 'Discard recording?';
+  String get voiceRecordingDiscardTitle => 'Descartar gravação?';
 
   @override
-  String get voiceRecordingDiscardMessage => 'Your recording will be lost.';
+  String get voiceRecordingDiscardMessage => 'A sua gravação será perdida.';
 
   @override
-  String get voiceRecordingDiscardConfirm => 'Discard';
+  String get voiceRecordingDiscardConfirm => 'Descartar';
 
   @override
-  String get voiceRecordingRetakeButton => 'Retake';
+  String get voiceRecordingRetakeButton => 'Repetir';
 
   @override
-  String get voiceRecordingSendButton => 'Send';
+  String get voiceRecordingSendButton => 'Enviar';
 
   @override
-  String get voiceRecordingReadyToSend => 'Ready to send';
+  String get voiceRecordingReadyToSend => 'Pronto para enviar';
 
   @override
-  String get voiceRecordingTapToPreview => 'Tap to preview';
+  String get voiceRecordingTapToPreview => 'Toque para pré-visualizar';
 
   @override
-  String get voiceRecordingTapToRecord => 'Tap to record';
+  String get voiceRecordingTapToRecord => 'Toque para gravar';
 
   @override
-  String get voiceRecordingPaused => 'PAUSED';
+  String get voiceRecordingPaused => 'PAUSADO';
 
   @override
-  String get voiceRecordingPauseButton => 'Pause';
+  String get voiceRecordingPauseButton => 'Pausar';
 
   @override
-  String get voiceRecordingResumeButton => 'Resume';
+  String get voiceRecordingResumeButton => 'Retomar';
 
   @override
-  String get voiceQualityExtended => 'Extended';
+  String get voiceQualityExtended => 'Alargada';
 
   @override
   String get voiceQualityStandard => 'Standard';
 
   @override
-  String get voiceQualityHigh => 'High quality';
+  String get voiceQualityHigh => 'Alta qualidade';
 
   @override
   String voiceQualityDuration(String seconds) {
@@ -37225,80 +37268,80 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get voiceQualityPickerTitle => 'Voice quality';
+  String get voiceQualityPickerTitle => 'Qualidade de voz';
 
   @override
-  String get voiceAttachmentCardTitle => 'Voice message';
+  String get voiceAttachmentCardTitle => 'Mensagem de voz';
 
   @override
-  String get voiceAttachmentAnalysing => 'Analysing…';
+  String get voiceAttachmentAnalysing => 'A analisar…';
 
   @override
-  String get voiceAttachmentPlaybackFailed => 'Playback failed';
+  String get voiceAttachmentPlaybackFailed => 'Falha na reprodução';
 
   @override
   String get voiceAttachmentMono => 'Mono';
 
   @override
-  String get voiceAttachmentPause => 'Pause';
+  String get voiceAttachmentPause => 'Pausar';
 
   @override
-  String get fileTransferContactsSendVoice => 'Voice';
+  String get fileTransferContactsSendVoice => 'Voz';
 
   @override
-  String get stlSigningTitle => 'Trust Layer Signing';
+  String get stlSigningTitle => 'Assinatura da Camada de Confiança';
 
   @override
   String get stlSigningSubtitle =>
-      'Sign outbound transfers with your identity key';
+      'Assinar transferências enviadas com a sua chave de identidade';
 
   @override
-  String get stlSignatureValid => 'Signature verified';
+  String get stlSignatureValid => 'Assinatura verificada';
 
   @override
-  String get stlSignatureInvalid => 'Invalid signature';
+  String get stlSignatureInvalid => 'Assinatura inválida';
 
   @override
-  String get tracerouteShowOnMap => 'Show on Map';
+  String get tracerouteShowOnMap => 'Mostrar no Mapa';
 
   @override
-  String get tracerouteMapTitle => 'Traceroute Map';
+  String get tracerouteMapTitle => 'Mapa de Traceroute';
 
   @override
-  String get tracerouteShowRouteOnly => 'Show route only';
+  String get tracerouteShowRouteOnly => 'Mostrar apenas a rota';
 
   @override
-  String get tracerouteShowAllNodes => 'Show all nodes';
+  String get tracerouteShowAllNodes => 'Mostrar todos os nós';
 
   @override
-  String get mapControlsHeadingUp => 'Heading up';
+  String get mapControlsHeadingUp => 'Orientação acima';
 
   @override
   String get mapCompassUnavailable =>
-      'Compass sensor not available on this device';
+      'Sensor de bússola não disponível neste dispositivo';
 
   @override
   String get takBridgeSectionTitle => 'Mesh Bridge';
 
   @override
-  String get takBridgeEnableToggle => 'Enable TAK Mesh Bridge';
+  String get takBridgeEnableToggle => 'Ativar TAK Mesh Bridge';
 
   @override
   String get takBridgeEnableSubtitle =>
-      'Run an on-device TAK server for direct ATAK/iTAK connections over mesh';
+      'Executar um servidor TAK no dispositivo para ligações diretas ATAK/iTAK via mesh';
 
   @override
-  String get takBridgeServerPort => 'Server Port';
+  String get takBridgeServerPort => 'Porta do Servidor';
 
   @override
-  String get takBridgeStatusRunning => 'Running';
+  String get takBridgeStatusRunning => 'Em execução';
 
   @override
-  String get takBridgeStatusStopped => 'Stopped';
+  String get takBridgeStatusStopped => 'Parado';
 
   @override
   String takBridgeConnectedClients(int count) {
-    return '$count connected';
+    return '$count ligados';
   }
 
   @override
@@ -37308,407 +37351,409 @@ class AppLocalizationsPt extends AppLocalizations {
   String get takBridgePacketsOutbound => 'TAK → Mesh';
 
   @override
-  String get takBridgeExportPackage => 'Export Data Package';
+  String get takBridgeExportPackage => 'Exportar Pacote de Dados';
 
   @override
   String get takBridgeExportPackageSubtitle =>
-      'Generate connection package for ATAK/iTAK clients';
+      'Gerar pacote de ligação para clientes ATAK/iTAK';
 
   @override
-  String get takBridgeStatsTitle => 'Bridge Statistics';
+  String get takBridgeStatsTitle => 'Estatísticas da Bridge';
 
   @override
-  String get takBridgeClientsTitle => 'Connected Clients';
+  String get takBridgeClientsTitle => 'Clientes Ligados';
 
   @override
-  String get takBridgeNoClients => 'No TAK clients connected';
+  String get takBridgeNoClients => 'Sem clientes TAK ligados';
 
   @override
   String takBridgeClientDuration(String duration) {
-    return 'Connected $duration';
+    return 'Ligado $duration';
   }
 
   @override
-  String get takIdentityRegistryTitle => 'Identity Registry';
+  String get takIdentityRegistryTitle => 'Registo de Identidades';
 
   @override
-  String get takIdentityNoEntries => 'No identity mappings recorded';
+  String get takIdentityNoEntries => 'Sem mapeamentos de identidade registados';
 
   @override
-  String get takIdentityMeshNode => 'Mesh Node';
+  String get takIdentityMeshNode => 'Nó Mesh';
 
   @override
-  String get takIdentityTakClient => 'TAK Client';
+  String get takIdentityTakClient => 'Cliente TAK';
 
   @override
-  String get takIdentityOverrideCallsign => 'Override Callsign';
+  String get takIdentityOverrideCallsign => 'Substituir Indicativo';
 
   @override
-  String get takIdentityOverrideHint => 'Enter custom callsign';
+  String get takIdentityOverrideHint => 'Introduzir indicativo personalizado';
 
   @override
   String get takScreenBridgeOnlyTitle => 'TAK Mesh Bridge';
 
   @override
   String get takScreenBridgeOnlyDescription =>
-      'Use TAK Settings to configure and start the mesh bridge for ATAK/iTAK clients.';
+      'Utilize as Definições TAK para configurar e iniciar a mesh bridge para clientes ATAK/iTAK.';
 
   @override
-  String get takScreenBridgeOnlyOpenSettings => 'Open TAK Settings';
+  String get takScreenBridgeOnlyOpenSettings => 'Abrir Definições TAK';
 
   @override
-  String get takVideoTitle => 'Live Streams';
+  String get takVideoTitle => 'Transmissões ao Vivo';
 
   @override
-  String get takVideoGoLive => 'Go Live';
+  String get takVideoGoLive => 'Transmitir ao Vivo';
 
   @override
-  String get takVideoStreamName => 'Stream Name';
+  String get takVideoStreamName => 'Nome da Transmissão';
 
   @override
-  String get takVideoCallsign => 'Callsign';
+  String get takVideoCallsign => 'Indicativo';
 
   @override
-  String get takVideoStartStream => 'Start Streaming';
+  String get takVideoStartStream => 'Iniciar Transmissão';
 
   @override
-  String get takVideoStopStream => 'Stop Streaming';
+  String get takVideoStopStream => 'Parar Transmissão';
 
   @override
-  String get takVideoEndStream => 'End Stream';
+  String get takVideoEndStream => 'Terminar Transmissão';
 
   @override
-  String get takVideoPreparing => 'Preparing camera...';
+  String get takVideoPreparing => 'A preparar câmara...';
 
   @override
-  String get takVideoRegistering => 'Registering stream...';
+  String get takVideoRegistering => 'A registar transmissão...';
 
   @override
-  String get takVideoLive => 'LIVE';
+  String get takVideoLive => 'AO VIVO';
 
   @override
-  String get takVideoReconnecting => 'Reconnecting...';
+  String get takVideoReconnecting => 'A reconectar...';
 
   @override
-  String get takVideoFailed => 'Stream failed';
+  String get takVideoFailed => 'Transmissão falhou';
 
   @override
-  String get takVideoEnded => 'Stream ended';
+  String get takVideoEnded => 'Transmissão terminada';
 
   @override
-  String get takVideoIdle => 'Ready to stream';
+  String get takVideoIdle => 'Pronto para transmitir';
 
   @override
-  String get takVideoEmptyTitle => 'No Live Streams';
+  String get takVideoEmptyTitle => 'Sem Transmissões ao Vivo';
 
   @override
   String get takVideoEmptyDescription =>
-      'There are no active video streams at the moment.';
+      'Não existem transmissões de vídeo ativas neste momento.';
 
   @override
-  String get takVideoRefresh => 'Refresh';
+  String get takVideoRefresh => 'Atualizar';
 
   @override
-  String get takVideoLoading => 'Loading streams...';
+  String get takVideoLoading => 'A carregar transmissões...';
 
   @override
   String takVideoStreamCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count live streams',
-      one: '1 live stream',
+      other: '$count transmissões ao vivo',
+      one: '1 transmissão ao vivo',
     );
     return '$_temp0';
   }
 
   @override
-  String get takVideoWatchStream => 'Watch Stream';
+  String get takVideoWatchStream => 'Ver Transmissão';
 
   @override
-  String get takVideoPlayerTitle => 'Live Stream';
+  String get takVideoPlayerTitle => 'Transmissão ao Vivo';
 
   @override
-  String get takVideoPlayerLoading => 'Loading stream...';
+  String get takVideoPlayerLoading => 'A carregar transmissão...';
 
   @override
-  String get takVideoPlayerEnded => 'Stream has ended';
+  String get takVideoPlayerEnded => 'A transmissão terminou';
 
   @override
-  String get takVideoPlayerError => 'Playback error';
+  String get takVideoPlayerError => 'Erro de reprodução';
 
   @override
   String get takVideoPermissionRequired =>
-      'Camera and microphone permissions are required to stream.';
+      'São necessárias permissões de câmara e microfone para transmitir.';
 
   @override
-  String get takVideoAuthRequired => 'Sign in to use video streaming.';
+  String get takVideoAuthRequired =>
+      'Inicie sessão para utilizar a transmissão de vídeo.';
 
   @override
   String takVideoStreamBy(String callsign) {
-    return 'by $callsign';
+    return 'por $callsign';
   }
 
   @override
-  String get takVideoRetry => 'Retry';
+  String get takVideoRetry => 'Tentar novamente';
 
   @override
-  String get takVideoNewStream => 'New Stream';
+  String get takVideoNewStream => 'Nova Transmissão';
 
   @override
-  String get deviceSheetNetwork => 'Network (TCP)';
+  String get deviceSheetNetwork => 'Rede (TCP)';
 
   @override
-  String get networkSectionTitle => 'Network';
+  String get networkSectionTitle => 'Rede';
 
   @override
-  String get networkSavedEndpoints => 'Saved Endpoints';
+  String get networkSavedEndpoints => 'Endpoints guardados';
 
   @override
-  String get networkNoSavedEndpoints => 'No saved endpoints';
+  String get networkNoSavedEndpoints => 'Sem endpoints guardados';
 
   @override
   String get networkNoSavedEndpointsDescription =>
-      'Add an endpoint to connect to a Meshtastic device over the network.';
+      'Adicione um endpoint para ligar a um dispositivo Meshtastic pela rede.';
 
   @override
-  String get networkAddEndpoint => 'Add Endpoint';
+  String get networkAddEndpoint => 'Adicionar endpoint';
 
   @override
-  String get networkHost => 'Host';
+  String get networkHost => 'Servidor';
 
   @override
-  String get networkHostHint => 'IP address or hostname';
+  String get networkHostHint => 'Endereço IP ou nome do servidor';
 
   @override
-  String get networkPort => 'Port';
+  String get networkPort => 'Porta';
 
   @override
-  String get networkEndpointName => 'Name (optional)';
+  String get networkEndpointName => 'Nome (opcional)';
 
   @override
-  String get networkEndpointNameHint => 'e.g. Living Room Node';
+  String get networkEndpointNameHint => 'ex.: Nó da sala';
 
   @override
   String networkConnecting(String address) {
-    return 'Connecting to $address...';
+    return 'A ligar a $address...';
   }
 
   @override
   String networkConnectionFailed(String address) {
-    return 'Connection to $address failed';
+    return 'Ligação a $address falhou';
   }
 
   @override
-  String get networkDnsResolutionFailed => 'Could not resolve hostname';
+  String get networkDnsResolutionFailed =>
+      'Não foi possível resolver o nome do servidor';
 
   @override
-  String get networkConnectionTimeout => 'Connection timed out';
+  String get networkConnectionTimeout => 'Tempo de ligação esgotado';
 
   @override
-  String get networkConnectionRefused => 'Connection refused';
+  String get networkConnectionRefused => 'Ligação recusada';
 
   @override
-  String get networkHostRequired => 'Host is required';
+  String get networkHostRequired => 'O servidor é obrigatório';
 
   @override
-  String get networkPortInvalid => 'Port must be between 1 and 65535';
+  String get networkPortInvalid => 'A porta deve estar entre 1 e 65535';
 
   @override
-  String get networkDeleteEndpoint => 'Delete Endpoint';
+  String get networkDeleteEndpoint => 'Eliminar endpoint';
 
   @override
   String networkDeleteEndpointConfirm(String address) {
-    return 'Remove $address from saved endpoints?';
+    return 'Remover $address dos endpoints guardados?';
   }
 
   @override
   String networkLastUsed(String time) {
-    return 'Last used $time';
+    return 'Última utilização $time';
   }
 
   @override
   String get scannerTabBluetooth => 'Bluetooth';
 
   @override
-  String get scannerTabNetwork => 'Network';
+  String get scannerTabNetwork => 'Rede';
 
   @override
-  String get mdnsDiscoveredRadios => 'Wi-Fi Radios';
+  String get mdnsDiscoveredRadios => 'Rádios Wi-Fi';
 
   @override
-  String get mdnsNoDevicesFound => 'No Wi-Fi radios found';
+  String get mdnsNoDevicesFound => 'Nenhum rádio Wi-Fi encontrado';
 
   @override
   String get mdnsNoDevicesDescription =>
-      'Meshtastic devices with WiFi enabled will appear here automatically.';
+      'Dispositivos Meshtastic com Wi-Fi ativo aparecerão aqui automaticamente.';
 
   @override
-  String get mdnsConnecting => 'Connecting…';
+  String get mdnsConnecting => 'A ligar…';
 
   @override
   String get mdnsTransportTcp => 'TCP';
 
   @override
-  String get mdnsScanning => 'Scanning…';
+  String get mdnsScanning => 'A pesquisar…';
 
   @override
-  String get settingsNetworkEndpointsTitle => 'Network Endpoints';
+  String get settingsNetworkEndpointsTitle => 'Pontos de Acesso de Rede';
 
   @override
-  String get settingsTileNetworkEndpointsTitle => 'Network Endpoints';
+  String get settingsTileNetworkEndpointsTitle => 'Pontos de Acesso de Rede';
 
   @override
   String get settingsTileNetworkEndpointsSubtitle =>
-      'Manage saved TCP endpoints and discover Wi-Fi radios';
+      'Gerir pontos TCP guardados e descobrir rádios Wi-Fi';
 
   @override
-  String get navigationMeshIncidents => 'Mesh Incidents';
+  String get navigationMeshIncidents => 'Incidentes na mesh';
 
   @override
-  String get meshIncidentListTitle => 'Mesh Incidents';
+  String get meshIncidentListTitle => 'Incidentes na mesh';
 
   @override
-  String get meshIncidentDetailTitle => 'Incident Detail';
+  String get meshIncidentDetailTitle => 'Detalhe do incidente';
 
   @override
-  String get meshIncidentComposerTitle => 'Report Incident';
+  String get meshIncidentComposerTitle => 'Reportar incidente';
 
   @override
-  String get meshIncidentComposerUpdateTitle => 'Update Incident';
+  String get meshIncidentComposerUpdateTitle => 'Atualizar incidente';
 
   @override
-  String get meshIncidentComposerCorrectionTitle => 'Correct Report';
+  String get meshIncidentComposerCorrectionTitle => 'Corrigir relatório';
 
   @override
-  String get meshIncidentEmptyTitle => 'No Mesh Incidents';
+  String get meshIncidentEmptyTitle => 'Sem incidentes na mesh';
 
   @override
   String get meshIncidentEmptyDescription =>
-      'Incident reports from the mesh network will appear here. Tap the button to create a new report.';
+      'Os relatórios de incidentes da rede mesh aparecerão aqui. Toque no botão para criar um novo relatório.';
 
   @override
-  String get meshIncidentEmptyTagline1 => 'Report incidents across the mesh';
+  String get meshIncidentEmptyTagline1 => 'Reporte incidentes pela mesh';
 
   @override
-  String get meshIncidentEmptyTagline2 => 'Coordinate responses in real-time';
+  String get meshIncidentEmptyTagline2 => 'Coordene respostas em tempo real';
 
   @override
-  String get meshIncidentEmptyTagline3 => 'Track situation awareness off-grid';
+  String get meshIncidentEmptyTagline3 => 'Acompanhe a situação sem ligação';
 
   @override
-  String get meshIncidentCreateButton => 'Create Report';
+  String get meshIncidentCreateButton => 'Criar relatório';
 
   @override
-  String get meshIncidentSendButton => 'Send Report';
+  String get meshIncidentSendButton => 'Enviar relatório';
 
   @override
-  String get meshIncidentSendUpdateButton => 'Send Update';
+  String get meshIncidentSendUpdateButton => 'Enviar atualização';
 
   @override
-  String get meshIncidentSendCorrectionButton => 'Send Correction';
+  String get meshIncidentSendCorrectionButton => 'Enviar correção';
 
   @override
-  String get meshIncidentClassificationLabel => 'Classification';
+  String get meshIncidentClassificationLabel => 'Classificação';
 
   @override
-  String get meshIncidentPriorityLabel => 'Priority';
+  String get meshIncidentPriorityLabel => 'Prioridade';
 
   @override
-  String get meshIncidentConfidenceLabel => 'Confidence';
+  String get meshIncidentConfidenceLabel => 'Confiança';
 
   @override
-  String get meshIncidentRoleLabel => 'Your Role';
+  String get meshIncidentRoleLabel => 'O seu papel';
 
   @override
-  String get meshIncidentBodyLabel => 'Summary';
+  String get meshIncidentBodyLabel => 'Resumo';
 
   @override
-  String get meshIncidentBodyHint => 'Describe the situation concisely';
+  String get meshIncidentBodyHint => 'Descreva a situação de forma concisa';
 
   @override
-  String get meshIncidentBodyRequired => 'Summary is required';
+  String get meshIncidentBodyRequired => 'O resumo é obrigatório';
 
   @override
-  String get meshIncidentLocationLabel => 'Include Location';
+  String get meshIncidentLocationLabel => 'Incluir localização';
 
   @override
-  String get meshIncidentConfidenceUnconfirmed => 'Unconfirmed';
+  String get meshIncidentConfidenceUnconfirmed => 'Não confirmado';
 
   @override
-  String get meshIncidentConfidenceProbable => 'Probable';
+  String get meshIncidentConfidenceProbable => 'Provável';
 
   @override
-  String get meshIncidentConfidenceConfirmed => 'Confirmed';
+  String get meshIncidentConfidenceConfirmed => 'Confirmado';
 
   @override
-  String get meshIncidentRoleObserver => 'Observer';
+  String get meshIncidentRoleObserver => 'Observador';
 
   @override
-  String get meshIncidentRoleOperator => 'Operator';
+  String get meshIncidentRoleOperator => 'Operador';
 
   @override
   String get meshIncidentRoleSupervisor => 'Supervisor';
 
   @override
-  String get meshIncidentRoleAdmin => 'Admin';
+  String get meshIncidentRoleAdmin => 'Administrador';
 
   @override
-  String get meshIncidentStatusReported => 'Reported';
+  String get meshIncidentStatusReported => 'Reportado';
 
   @override
-  String get meshIncidentStatusActive => 'Active';
+  String get meshIncidentStatusActive => 'Ativo';
 
   @override
-  String get meshIncidentStatusContained => 'Contained';
+  String get meshIncidentStatusContained => 'Contido';
 
   @override
-  String get meshIncidentStatusResolved => 'Resolved';
+  String get meshIncidentStatusResolved => 'Resolvido';
 
   @override
-  String get meshIncidentStatusCancelled => 'Cancelled';
+  String get meshIncidentStatusCancelled => 'Cancelado';
 
   @override
-  String get meshIncidentUpdateTypeInitial => 'Initial Report';
+  String get meshIncidentUpdateTypeInitial => 'Relatório inicial';
 
   @override
-  String get meshIncidentUpdateTypeUpdate => 'Update';
+  String get meshIncidentUpdateTypeUpdate => 'Atualização';
 
   @override
-  String get meshIncidentUpdateTypeCorrection => 'Correction';
+  String get meshIncidentUpdateTypeCorrection => 'Correção';
 
   @override
-  String get meshIncidentUpdateTypeClosure => 'Closure';
+  String get meshIncidentUpdateTypeClosure => 'Encerramento';
 
   @override
   String meshIncidentCaseId(String caseId) {
-    return 'Case $caseId';
+    return 'Caso $caseId';
   }
 
   @override
   String meshIncidentReportCount(int count) {
-    return '$count reports';
+    return '$count relatórios';
   }
 
   @override
   String meshIncidentContributors(int count) {
-    return '$count contributors';
+    return '$count colaboradores';
   }
 
   @override
-  String get meshIncidentTimelineTitle => 'Timeline';
+  String get meshIncidentTimelineTitle => 'Linha temporal';
 
   @override
-  String get meshIncidentSuperseded => 'Superseded';
+  String get meshIncidentSuperseded => 'Substituído';
 
   @override
-  String get meshIncidentCorrectionBadge => 'Correction';
+  String get meshIncidentCorrectionBadge => 'Correção';
 
   @override
-  String get meshIncidentSentSuccess => 'Report sent over mesh';
+  String get meshIncidentSentSuccess => 'Relatório enviado pela mesh';
 
   @override
-  String get meshIncidentSendFailed => 'Failed to send report';
+  String get meshIncidentSendFailed => 'Falha ao enviar relatório';
 
   @override
   String meshIncidentPayloadSize(int bytes) {
@@ -37717,258 +37762,266 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String meshIncidentFromNode(String nodeId) {
-    return 'Node $nodeId';
+    return 'Nó $nodeId';
   }
 
   @override
-  String get meshIncidentCloseCase => 'Close Case';
+  String get meshIncidentCloseCase => 'Fechar caso';
 
   @override
-  String get meshIncidentAddUpdate => 'Add Update';
+  String get meshIncidentAddUpdate => 'Adicionar atualização';
 
   @override
-  String get meshIncidentCorrectReport => 'Correct Report';
+  String get meshIncidentCorrectReport => 'Corrigir relatório';
 
   @override
-  String get meshIncidentHandoffTitle => 'Handoff Summary';
+  String get meshIncidentHandoffTitle => 'Resumo de transferência';
 
   @override
-  String get meshIncidentLocationCoarse => 'Approx. location';
+  String get meshIncidentLocationCoarse => 'Localização aproximada';
 
   @override
-  String get translateAction => 'Translate';
+  String get translateAction => 'Traduzir';
 
   @override
-  String get translateLabel => 'Translated';
+  String get translateLabel => 'Traduzido';
 
   @override
-  String get translateLoading => 'Translating…';
+  String get translateLoading => 'A traduzir…';
 
   @override
-  String get translateAuthRequired => 'Sign in or add an API key to translate';
+  String get translateAuthRequired =>
+      'Inicie sessão ou adicione uma chave API para traduzir';
 
   @override
-  String get translateFailed => 'Translation failed';
+  String get translateFailed => 'Tradução falhou';
 
   @override
   String get translateRateLimited =>
-      'Too many translations — try again shortly';
+      'Demasiadas traduções - tente novamente em breve';
 
   @override
   String get translateUnsupportedLanguage =>
-      'Language not supported for translation';
+      'Idioma não suportado para tradução';
 
   @override
-  String get translateRetry => 'Retry';
+  String get translateRetry => 'Tentar novamente';
 
   @override
-  String get translateRequiresInternet => 'Translation requires internet';
+  String get translateRequiresInternet =>
+      'A tradução requer ligação à internet';
 
   @override
   String translateFromLanguage(String language) {
-    return 'Translated from $language';
+    return 'Traduzido de $language';
   }
 
   @override
   String get premiumPreviewTranslation =>
-      'Preview Mode — Upgrade to translate messages';
+      'Modo de Pré-visualização - Atualize para traduzir mensagens';
 
   @override
-  String get premiumHeadlineTranslation => 'Translate Messages';
+  String get premiumHeadlineTranslation => 'Traduzir Mensagens';
 
   @override
   String get premiumDescTranslation =>
-      'Unlock on-demand message translation with smart caching and privacy controls — includes managed allowance, or bring your own API key';
+      'Desbloqueie a tradução de mensagens a pedido com cache inteligente e controlos de privacidade - inclui crédito gerido ou use a sua própria chave de API';
 
   @override
   String get premiumSubtitleTranslation =>
-      'Break language barriers on your mesh network';
+      'Quebre barreiras linguísticas na sua rede mesh';
 
   @override
-  String get premiumBenefitInstantTranslation => 'One-Tap Translation';
+  String get premiumBenefitInstantTranslation => 'Tradução com Um Toque';
 
   @override
   String get premiumBenefitInstantTranslationDesc =>
-      'Translate any message in channels or DMs with a single tap';
+      'Traduza qualquer mensagem em canais ou DMs com um único toque';
 
   @override
-  String get premiumBenefitAutoDetect => 'Auto-Detect Language';
+  String get premiumBenefitAutoDetect => 'Deteção Automática de Idioma';
 
   @override
   String get premiumBenefitAutoDetectDesc =>
-      'Automatically detects the source language — no manual selection needed';
+      'Deteta automaticamente o idioma de origem sem necessidade de seleção manual';
 
   @override
-  String get premiumBenefitSmartCache => 'Smart Caching';
+  String get premiumBenefitSmartCache => 'Cache Inteligente';
 
   @override
   String get premiumBenefitSmartCacheDesc =>
-      'Translations are cached locally so you only pay for each message once';
+      'As traduções são guardadas localmente para que pague apenas uma vez por cada mensagem';
 
   @override
   String get translateQuotaExhausted =>
-      'Managed translation allowance used — switch to your own OpenAI API key in settings';
+      'Limite de tradução gerida esgotado - mude para a sua própria chave API OpenAI nas definições';
 
   @override
   String get translatePrivacyBlocked =>
-      'Strict privacy mode blocks managed OpenAI translation';
+      'O modo de privacidade restrito bloqueia a tradução OpenAI gerida';
 
   @override
-  String get translateProviderDisabled => 'Translation provider is disabled';
+  String get translateProviderDisabled =>
+      'O fornecedor de tradução está desativado';
 
   @override
   String get translateByoKeyMissing =>
-      'BYO API key required — configure in settings';
+      'Chave API própria necessária - configure nas definições';
 
   @override
-  String get translateContentIneligible => 'This content cannot be translated';
+  String get translateContentIneligible =>
+      'Este conteúdo não pode ser traduzido';
 
   @override
   String get subscriptionFeaturedTranslationSubtitleRefactored =>
-      'On-demand translation with smart caching, privacy controls, and BYO provider support';
+      'Tradução a pedido com cache inteligente, controlos de privacidade e suporte BYO';
 
   @override
   String get subscriptionTranslationWithAllowance =>
-      'Instant message translation';
+      'Tradução instantânea de mensagens';
 
   @override
   String get subscriptionCompletePackSubtitleWithTranslation =>
-      'Every feature, one price — including translation';
+      'Todas as funcionalidades, um preço - incluindo tradução';
 
   @override
-  String get translationSettingsTitle => 'Translation';
+  String get translationSettingsTitle => 'Tradução';
 
   @override
-  String get translationSettingsProviderModeLabel => 'Provider Mode';
+  String get translationSettingsProviderModeLabel => 'Modo de Fornecedor';
 
   @override
-  String get translationSettingsProviderManaged => 'Managed';
+  String get translationSettingsProviderManaged => 'Gerido';
 
   @override
   String get translationSettingsProviderManagedDesc =>
-      'Managed OpenAI translation — included allowance';
+      'Tradução OpenAI gerida - crédito incluído';
 
   @override
-  String get translationSettingsProviderByo => 'Bring Your Own Key';
+  String get translationSettingsProviderByo => 'Use a Sua Própria Chave';
 
   @override
   String get translationSettingsProviderByoDesc =>
-      'Use your own OpenAI API key — unlimited';
+      'Use a sua própria chave de API OpenAI - ilimitado';
 
   @override
-  String get translationSettingsProviderDisabled => 'Disabled';
+  String get translationSettingsProviderDisabled => 'Desativado';
 
   @override
   String get translationSettingsProviderDisabledDesc =>
-      'Translation is turned off';
+      'A tradução está desligada';
 
   @override
-  String get translationSettingsPrivacyModeLabel => 'Privacy Mode';
+  String get translationSettingsPrivacyModeLabel => 'Modo de Privacidade';
 
   @override
-  String get translationSettingsPrivacyStandard => 'Standard';
+  String get translationSettingsPrivacyStandard => 'Padrão';
 
   @override
   String get translationSettingsPrivacyStandardDesc =>
-      'Cache translations locally for fast reuse';
+      'Guardar traduções localmente para reutilização rápida';
 
   @override
-  String get translationSettingsPrivacyPrivate => 'Private';
+  String get translationSettingsPrivacyPrivate => 'Privado';
 
   @override
   String get translationSettingsPrivacyPrivateDesc =>
-      'Cache channels only — DM translations are not stored';
+      'Apenas canais em cache - as traduções de DMs não são guardadas';
 
   @override
-  String get translationSettingsPrivacyStrict => 'Strict';
+  String get translationSettingsPrivacyStrict => 'Rigoroso';
 
   @override
   String get translationSettingsPrivacyStrictDesc =>
-      'BYO provider only — no caching, no managed server';
+      'Apenas fornecedor BYO - sem cache, sem servidor gerido';
 
   @override
-  String get translationSettingsByoKeyLabel => 'API Key';
+  String get translationSettingsByoKeyLabel => 'Chave de API';
 
   @override
-  String get translationSettingsByoKeyHint => 'Enter your OpenAI API key';
+  String get translationSettingsByoKeyHint =>
+      'Introduza a sua chave de API OpenAI';
 
   @override
-  String get translationSettingsByoKeySaved => 'API key saved securely';
+  String get translationSettingsByoKeySaved =>
+      'Chave de API guardada em segurança';
 
   @override
-  String get translationSettingsByoKeyRemoved => 'API key removed';
+  String get translationSettingsByoKeyRemoved => 'Chave de API removida';
 
   @override
-  String get translationSettingsByoKeyStored => 'Key stored';
+  String get translationSettingsByoKeyStored => 'Chave guardada';
 
   @override
-  String get translationSettingsByoKeyNone => 'No key set';
+  String get translationSettingsByoKeyNone => 'Nenhuma chave definida';
 
   @override
-  String get translationSettingsByoKeyRemove => 'Remove Key';
+  String get translationSettingsByoKeyRemove => 'Remover Chave';
 
   @override
-  String get translationSettingsByoKeyRemoveConfirmTitle => 'Remove API Key?';
+  String get translationSettingsByoKeyRemoveConfirmTitle =>
+      'Remover Chave de API?';
 
   @override
   String get translationSettingsByoKeyRemoveConfirmMessage =>
-      'Your OpenAI API key will be permanently deleted from this device. You can add a new key at any time.';
+      'A sua chave de API OpenAI será eliminada permanentemente deste dispositivo. Pode adicionar uma nova chave a qualquer momento.';
 
   @override
-  String get translationSettingsQuotaLabel => 'Managed Allowance';
+  String get translationSettingsQuotaLabel => 'Crédito Gerido';
 
   @override
   String translationSettingsQuotaRemaining(int used, int limit) {
-    return '$used of $limit characters used';
+    return '$used de $limit caracteres utilizados';
   }
 
   @override
   String translationSettingsQuotaResetsAt(String date) {
-    return 'Resets $date';
+    return 'Reinicia a $date';
   }
 
   @override
-  String get translationSettingsClearCache => 'Clear Translation Cache';
+  String get translationSettingsClearCache => 'Limpar Cache de Tradução';
 
   @override
-  String get translationSettingsCacheCleared => 'Translation cache cleared';
+  String get translationSettingsCacheCleared => 'Cache de tradução limpa';
 
   @override
-  String get translationSettingsSearchTitle => 'Translation Settings';
+  String get translationSettingsSearchTitle => 'Definições de Tradução';
 
   @override
   String get translationSettingsSearchSubtitle =>
-      'Provider mode, privacy, API key, cache';
+      'Modo de fornecedor, privacidade, chave de API, cache';
 
   @override
   String get translationSettingsClearCacheConfirm =>
-      'Clear all cached translations? This cannot be undone.';
+      'Limpar todas as traduções em cache? Esta ação não pode ser desfeita.';
 
   @override
-  String get translationSettingsClearCacheConfirmAction => 'Clear Cache';
+  String get translationSettingsClearCacheConfirmAction => 'Limpar Cache';
 
   @override
-  String get translationSettingsByoTestConnection => 'Test OpenAI Connection';
+  String get translationSettingsByoTestConnection => 'Testar Ligação OpenAI';
 
   @override
-  String get translationSettingsByoTestSuccess => 'OpenAI API key is valid';
+  String get translationSettingsByoTestSuccess =>
+      'A chave de API OpenAI é válida';
 
   @override
-  String get translationSettingsByoTestFailed => 'Invalid OpenAI API key';
+  String get translationSettingsByoTestFailed => 'Chave de API OpenAI inválida';
 
   @override
-  String get translationSettingsByoTestTesting => 'Testing…';
+  String get translationSettingsByoTestTesting => 'A testar…';
 
   @override
-  String get translationSettingsQuotaOpenSettings => 'Open Settings';
+  String get translationSettingsQuotaOpenSettings => 'Abrir Definições';
 
   @override
   String avatarStackCoSeenLabel(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count recent co-seen nodes',
-      one: '1 recent co-seen node',
+      other: '$count nós co-vistos recentes',
+      one: '1 nó co-visto recente',
     );
     return '$_temp0';
   }
@@ -37983,656 +38036,661 @@ class AppLocalizationsPt extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '+$count more',
-      one: '+1 more',
+      other: '+$count mais',
+      one: '+1 mais',
     );
     return '$_temp0';
   }
 
   @override
-  String get nodedexCoSeenCardTitle => 'Recent Co-Seen';
+  String get nodedexCoSeenCardTitle => 'Co-vistos Recentemente';
 
   @override
   String nodedexCoSeenCardSubtitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count nodes heard with this node recently',
-      one: '1 node heard with this node recently',
+      other: '$count nós ouvidos com este nó recentemente',
+      one: '1 nó ouvido com este nó recentemente',
     );
     return '$_temp0';
   }
 
   @override
-  String get nodedexCoSeenCardViewAll => 'View recent links';
+  String get nodedexCoSeenCardViewAll => 'Ver ligações recentes';
 
   @override
-  String get nearbyTitle => 'Nearby';
+  String get nearbyTitle => 'Por Perto';
 
   @override
-  String get nearbySubtitle => 'People and devices on the mesh';
+  String get nearbySubtitle => 'Pessoas e dispositivos na mesh';
 
   @override
-  String get nearbyScanButton => 'Look for people';
+  String get nearbyScanButton => 'Procurar pessoas';
 
   @override
-  String get nearbyScanningLabel => 'Looking for people nearby…';
+  String get nearbyScanningLabel => 'À procura de pessoas próximas…';
 
   @override
   String nearbyScanCooldownLabel(int seconds) {
-    return 'Scan again in ${seconds}s';
+    return 'Procurar novamente em ${seconds}s';
   }
 
   @override
-  String get nearbyPersonAnonymous => 'Mesh User';
+  String get nearbyPersonAnonymous => 'Utilizador da Mesh';
 
   @override
-  String get nearbyStatusNow => 'Nearby now';
+  String get nearbyStatusNow => 'Por perto agora';
 
   @override
   String nearbyStatusMinutesAgo(int count) {
-    return 'Seen $count min ago';
+    return 'Visto há $count min';
   }
 
   @override
   String nearbyStatusHoursAgo(int count) {
-    return 'Seen ${count}h ago';
+    return 'Visto há ${count}h';
   }
 
   @override
-  String get nearbyEmptyTitle => 'No one nearby yet';
+  String get nearbyEmptyTitle => 'Ninguém por perto ainda';
 
   @override
   String get nearbyEmptyDescription =>
-      'Tap “Look for people” to find other SocialMesh users on the mesh';
+      'Toque em \"Procurar pessoas\" para encontrar outros utilizadores SocialMesh na mesh';
 
   @override
-  String get nearbyEmptyTagline1 => 'Listening for nearby users…';
+  String get nearbyEmptyTagline1 => 'À escuta de utilizadores próximos…';
 
   @override
-  String get nearbyEmptyTagline2 => 'Tap Look for people to send a signal…';
+  String get nearbyEmptyTagline2 =>
+      'Toque em Procurar pessoas para enviar um sinal…';
 
   @override
-  String get nearbyEmptyTagline3 => 'Others will appear here when found…';
+  String get nearbyEmptyTagline3 =>
+      'Outros aparecerão aqui quando encontrados…';
 
   @override
-  String get nearbyEmptyTagline4 => 'Keep the app open to discover more…';
+  String get nearbyEmptyTagline4 =>
+      'Mantenha a app aberta para descobrir mais…';
 
   @override
-  String get nearbyDevicePhone => 'Phone';
+  String get nearbyDevicePhone => 'Telemóvel';
 
   @override
   String get nearbyDeviceTablet => 'Tablet';
 
   @override
-  String get nearbyDeviceDesktop => 'Desktop';
+  String get nearbyDeviceDesktop => 'Computador';
 
   @override
-  String get nearbyDeviceUnknown => 'Device';
+  String get nearbyDeviceUnknown => 'Dispositivo';
 
   @override
-  String get nearbySectionPeople => 'People';
+  String get nearbySectionPeople => 'Pessoas';
 
   @override
-  String get nearbySectionConversations => 'Conversations';
+  String get nearbySectionConversations => 'Conversas';
 
   @override
-  String get nearbySectionRequests => 'Connection requests';
+  String get nearbySectionRequests => 'Pedidos de ligação';
 
   @override
-  String get connectionRequestConnect => 'Connect';
+  String get connectionRequestConnect => 'Ligar';
 
   @override
-  String get connectionStateConnecting => 'Connecting…';
+  String get connectionStateConnecting => 'A ligar…';
 
   @override
-  String get connectionStateConnected => 'Connected';
+  String get connectionStateConnected => 'Ligado';
 
   @override
-  String get connectionStatePending => 'Request sent';
+  String get connectionStatePending => 'Pedido enviado';
 
   @override
-  String get connectionStateDeclined => 'Declined';
+  String get connectionStateDeclined => 'Recusado';
 
   @override
-  String get connectionStateFailed => 'Could not connect';
+  String get connectionStateFailed => 'Não foi possível ligar';
 
   @override
-  String get connectionStateTimedOut => 'No response';
+  String get connectionStateTimedOut => 'Sem resposta';
 
   @override
   String connectionIncomingTitle(String name) {
-    return '$name wants to connect';
+    return '$name quer ligar-se';
   }
 
   @override
-  String get connectionAcceptButton => 'Accept';
+  String get connectionAcceptButton => 'Aceitar';
 
   @override
-  String get connectionDeclineButton => 'Decline';
+  String get connectionDeclineButton => 'Recusar';
 
   @override
-  String get contactExchangeTitle => 'Share contact card';
+  String get contactExchangeTitle => 'Partilhar cartão de contacto';
 
   @override
   String get contactExchangeDescription =>
-      'Exchange identity with a nearby person so you can message each other';
+      'Troque identidade com uma pessoa próxima para poderem enviar mensagens entre si';
 
   @override
-  String get contactExchangeShareButton => 'Share my contact';
+  String get contactExchangeShareButton => 'Partilhar o meu contacto';
 
   @override
-  String get contactExchangeShared => 'Contact shared';
+  String get contactExchangeShared => 'Contacto partilhado';
 
   @override
-  String get meshConversationTitle => 'Mesh message';
+  String get meshConversationTitle => 'Mensagem mesh';
 
   @override
   String meshConversationExpiry(String time) {
-    return 'Expires in $time';
+    return 'Expira em $time';
   }
 
   @override
-  String get meshConversationPinned => 'Pinned';
+  String get meshConversationPinned => 'Fixada';
 
   @override
-  String get meshConversationInputHint => 'Message…';
+  String get meshConversationInputHint => 'Mensagem…';
 
   @override
   String get meshConversationBudgetExhausted =>
-      'Sending paused — mesh bandwidth limit reached. Try again shortly.';
+      'Envio pausado - limite de largura de banda da mesh atingido. Tente novamente em breve.';
 
   @override
-  String get meshConversationClosed => 'This conversation has ended.';
+  String get meshConversationClosed => 'Esta conversa terminou.';
 
   @override
-  String get meshConversationReadyToChat => 'Ready to chat';
+  String get meshConversationReadyToChat => 'Pronto para conversar';
 
   @override
-  String get deliveryPhasePreparing => 'Preparing';
+  String get deliveryPhasePreparing => 'A preparar';
 
   @override
   String get deliveryPhasePreparingDesc =>
-      'Getting your data ready to send over the mesh.';
+      'A preparar os seus dados para enviar pela mesh.';
 
   @override
-  String get deliveryPhaseSending => 'Sending';
+  String get deliveryPhaseSending => 'A enviar';
 
   @override
-  String get deliveryPhaseSendingDesc => 'Sending to the mesh network.';
+  String get deliveryPhaseSendingDesc => 'A enviar para a rede mesh.';
 
   @override
-  String get deliveryPhaseSentToMesh => 'Sent to mesh';
+  String get deliveryPhaseSentToMesh => 'Enviado para a mesh';
 
   @override
   String get deliveryPhaseSentToMeshDesc =>
-      'Your data is on the mesh and being relayed.';
+      'Os seus dados estão na mesh e a ser retransmitidos.';
 
   @override
-  String get deliveryPhaseWaitingForPath => 'Waiting for path';
+  String get deliveryPhaseWaitingForPath => 'À espera de rota';
 
   @override
   String get deliveryPhaseWaitingForPathDesc =>
-      'The mesh hasn\'t found a route yet. Delivery will continue automatically.';
+      'A mesh ainda não encontrou uma rota. A entrega continuará automaticamente.';
 
   @override
-  String get deliveryPhaseDelivering => 'Delivering';
+  String get deliveryPhaseDelivering => 'A entregar';
 
   @override
   String get deliveryPhaseDeliveringDesc =>
-      'Your data is being relayed through the mesh.';
+      'Os seus dados estão a ser retransmitidos pela mesh.';
 
   @override
-  String get deliveryPhasePartiallyDelivered => 'Partially delivered';
+  String get deliveryPhasePartiallyDelivered => 'Parcialmente entregue';
 
   @override
   String get deliveryPhasePartiallyDeliveredDesc =>
-      'Some parts arrived. The rest will resume when the connection improves.';
+      'Algumas partes chegaram. O resto será retomado quando a ligação melhorar.';
 
   @override
-  String get deliveryPhaseRetrying => 'Retrying';
+  String get deliveryPhaseRetrying => 'A tentar novamente';
 
   @override
   String get deliveryPhaseRetryingDesc =>
-      'Retrying automatically — no action needed.';
+      'A tentar novamente automaticamente - nenhuma ação necessária.';
 
   @override
-  String get deliveryPhaseResuming => 'Resuming';
+  String get deliveryPhaseResuming => 'A retomar';
 
   @override
-  String get deliveryPhaseResumingDesc => 'Picking up where it left off.';
+  String get deliveryPhaseResumingDesc => 'A continuar de onde parou.';
 
   @override
-  String get deliveryPhaseDelivered => 'Delivered';
+  String get deliveryPhaseDelivered => 'Entregue';
 
   @override
-  String get deliveryPhaseDeliveredDesc =>
-      'Everything arrived at its destination.';
+  String get deliveryPhaseDeliveredDesc => 'Tudo chegou ao destino.';
 
   @override
-  String get deliveryPhaseVerified => 'Verified';
+  String get deliveryPhaseVerified => 'Verificado';
 
   @override
   String get deliveryPhaseVerifiedDesc =>
-      'Everything arrived correctly and has been verified.';
+      'Tudo chegou corretamente e foi verificado.';
 
   @override
-  String get deliveryPhaseNeedsAttention => 'Needs attention';
+  String get deliveryPhaseNeedsAttention => 'Necessita de atenção';
 
   @override
   String get deliveryPhaseNeedsAttentionDesc =>
-      'Something needs your attention to continue.';
+      'Algo necessita da sua atenção para continuar.';
 
   @override
-  String get deliveryPhaseFailed => 'Failed';
+  String get deliveryPhaseFailed => 'Falhado';
 
   @override
   String get deliveryPhaseFailedDesc =>
-      'The request timed out before a response was received.';
+      'O pedido expirou antes de receber uma resposta.';
 
   @override
   String deliveryPhaseFailedDescRetried(int attempts) {
-    return 'The request timed out after $attempts attempts.';
+    return 'O pedido expirou após $attempts tentativas.';
   }
 
   @override
   String get deliverySafeToClose =>
-      'Safe to close — delivery continues in the background';
+      'Pode fechar - a entrega continua em segundo plano';
 
   @override
-  String get deliverySafeToLeave => 'You can leave — transfer will continue';
+  String get deliverySafeToLeave => 'Pode sair - a transferência continuará';
 
   @override
   String deliveryProgressParts(int current, int total) {
-    return '$current of $total parts';
+    return '$current de $total partes';
   }
 
   @override
-  String get deliveryExpertToggle => 'Show delivery details';
+  String get deliveryExpertToggle => 'Mostrar detalhes de entrega';
 
   @override
-  String get guidedFlowNext => 'Next';
+  String get guidedFlowNext => 'Seguinte';
 
   @override
-  String get guidedFlowBack => 'Back';
+  String get guidedFlowBack => 'Voltar';
 
   @override
-  String get guidedFlowDone => 'Done';
+  String get guidedFlowDone => 'Concluído';
 
   @override
-  String get guidedFlowCreate => 'Create';
+  String get guidedFlowCreate => 'Criar';
 
   @override
-  String get guidedFlowContinue => 'Write it';
+  String get guidedFlowContinue => 'Escrever';
 
   @override
-  String get guidedFlowCancel => 'Cancel';
+  String get guidedFlowCancel => 'Cancelar';
 
   @override
-  String get serviceWizardTitle => 'Share with the mesh';
+  String get serviceWizardTitle => 'Partilhar com a malha';
 
   @override
-  String get serviceWizardStepWhat => 'Intent';
+  String get serviceWizardStepWhat => 'Intenção';
 
   @override
-  String get serviceWizardStepPreset => 'Template';
+  String get serviceWizardStepPreset => 'Modelo';
 
   @override
-  String get serviceWizardStepWho => 'Who';
+  String get serviceWizardStepWho => 'Quem';
 
   @override
-  String get serviceWizardStepDetails => 'Details';
+  String get serviceWizardStepDetails => 'Detalhes';
 
   @override
-  String get serviceWizardStepReview => 'Preview';
+  String get serviceWizardStepReview => 'Pré-visualização';
 
   @override
-  String get serviceWizardWhatTitle => 'What are you sharing?';
+  String get serviceWizardWhatTitle => 'O que está a partilhar?';
 
   @override
   String get serviceWizardWhatSubtitle =>
-      'Start with the kind of thing you want to put out nearby.';
+      'Comece com o tipo de coisa que quer disponibilizar nas proximidades.';
 
   @override
-  String get serviceWizardPresetTitle => 'Choose a starting point';
+  String get serviceWizardPresetTitle => 'Escolha um ponto de partida';
 
   @override
   String get serviceWizardPresetSubtitle =>
-      'Templates give you a head start without changing what the share can do.';
+      'Os modelos dão-lhe uma vantagem inicial sem alterar o que a partilha pode fazer.';
 
   @override
-  String get serviceWizardPresetGeneric => 'Start from scratch';
+  String get serviceWizardPresetGeneric => 'Começar do zero';
 
   @override
   String get serviceWizardPresetGenericDescription =>
-      'Use the basic layout and shape it yourself.';
+      'Utilize o esquema básico e molde-o você mesmo.';
 
   @override
-  String get serviceWizardWhoTitle => 'Who can see it?';
+  String get serviceWizardWhoTitle => 'Quem pode ver?';
 
   @override
   String get serviceWizardWhoSubtitle =>
-      'Choose who will be able to discover and use your service';
+      'Escolha quem poderá descobrir e utilizar o seu serviço';
 
   @override
-  String get serviceWizardAudienceAnyone => 'Anyone nearby';
+  String get serviceWizardAudienceAnyone => 'Qualquer pessoa nas proximidades';
 
   @override
   String get serviceWizardAudienceAnyoneDesc =>
-      'Anyone on the mesh can discover and use this';
+      'Qualquer pessoa na malha pode descobrir e utilizar isto';
 
   @override
-  String get serviceWizardAudienceContacts => 'Approved contacts only';
+  String get serviceWizardAudienceContacts => 'Apenas contactos aprovados';
 
   @override
   String get serviceWizardAudienceContactsDesc =>
-      'Only people you\'ve exchanged contacts with';
+      'Apenas pessoas com quem trocou contactos';
 
   @override
-  String get serviceWizardReviewTitle => 'Before you write';
+  String get serviceWizardReviewTitle => 'Antes de escrever';
 
   @override
   String get serviceWizardReviewSubtitle =>
-      'This is the shape of the share you\'re about to compose.';
+      'Esta é a forma da partilha que está prestes a compor.';
 
   @override
-  String get serviceWizardReviewType => 'You\'re sharing';
+  String get serviceWizardReviewType => 'Está a partilhar';
 
   @override
-  String get serviceWizardReviewPreset => 'Starting point';
+  String get serviceWizardReviewPreset => 'Ponto de partida';
 
   @override
-  String get serviceWizardReviewAudience => 'Audience';
+  String get serviceWizardReviewAudience => 'Audiência';
 
   @override
   String get serviceWizardReviewMeshHint =>
-      'People nearby will discover the headline first, then open the full details.';
+      'As pessoas nas proximidades verão primeiro o título, depois abrirão os detalhes completos.';
 
   @override
-  String get meshServicesPreviewCardTitle => 'Live preview';
+  String get meshServicesPreviewCardTitle => 'Pré-visualização ao vivo';
 
   @override
   String get meshServicesPreviewCardDescription =>
-      'This is the kind of card nearby people will open.';
+      'Este é o tipo de cartão que pessoas próximas irão abrir.';
 
   @override
-  String get meshServicesPreviewPlaceholder => 'Your headline will show here';
+  String get meshServicesPreviewPlaceholder => 'O seu título aparecerá aqui';
 
   @override
   String get meshServicesPreviewNoDetails =>
-      'Add a few details so people nearby know what this is.';
+      'Adicione alguns detalhes para que pessoas próximas saibam o que é isto.';
 
   @override
-  String get meshServicesAdvancedDetails => 'Sharing details';
+  String get meshServicesAdvancedDetails => 'Detalhes da partilha';
 
   @override
   String get meshServicesAdvancedDurationHint =>
-      'You can change how long this stays visible on the mesh.';
+      'Pode alterar por quanto tempo isto fica visível na mesh.';
 
   @override
-  String get serviceDetailHeaderEyebrow => 'Shared nearby';
+  String get serviceDetailHeaderEyebrow => 'Partilhado nas proximidades';
 
   @override
   String get serviceDetailHeaderBody =>
-      'Open the items this nearby radio is sharing right now.';
+      'Abra os itens que este rádio próximo está a partilhar agora.';
 
   @override
-  String get serviceDetailSectionLiveNow => 'Shared right now';
+  String get serviceDetailSectionLiveNow => 'Partilhado agora';
 
   @override
-  String get meshServicesNetworkDetails => 'Network details';
+  String get meshServicesNetworkDetails => 'Detalhes da rede';
 
   @override
   String meshServicesNetworkNode(String nodeId) {
-    return 'From node $nodeId';
+    return 'Do nó $nodeId';
   }
 
   @override
   String meshServicesNetworkServiceType(String serviceType) {
-    return 'Share type: $serviceType';
+    return 'Tipo de partilha: $serviceType';
   }
 
   @override
   String meshServicesNetworkServiceId(String serviceId) {
-    return 'Service ID: $serviceId';
+    return 'ID do serviço: $serviceId';
   }
 
   @override
-  String get meshServicesSharedByAnonymous => 'Shared by someone nearby';
+  String get meshServicesSharedByAnonymous => 'Partilhado por alguém próximo';
 
   @override
   String meshServicesSharedByPerson(String name) {
-    return 'Shared by $name';
+    return 'Partilhado por $name';
   }
 
   @override
   String meshServicesVisibleFor(String time) {
-    return 'Visible for $time';
+    return 'Visível por $time';
   }
 
   @override
-  String get meshServicesEyebrowFeed => 'Nearby update';
+  String get meshServicesEyebrowFeed => 'Atualização próxima';
 
   @override
-  String get meshServicesEyebrowList => 'Shared checklist';
+  String get meshServicesEyebrowList => 'Lista partilhada';
 
   @override
-  String get meshServicesEyebrowPoll => 'Nearby question';
+  String get meshServicesEyebrowPoll => 'Pergunta próxima';
 
   @override
-  String get meshServicesEyebrowSignal => 'Active alert';
+  String get meshServicesEyebrowSignal => 'Alerta ativo';
 
   @override
-  String get meshServicesEyebrowSensor => 'Live reading';
+  String get meshServicesEyebrowSensor => 'Leitura ao vivo';
 
   @override
-  String get meshServicesEyebrowGame => 'Mesh game';
+  String get meshServicesEyebrowGame => 'Jogo mesh';
 
   @override
-  String get meshServicesOpenFeedAction => 'Read update';
+  String get meshServicesOpenFeedAction => 'Ler atualização';
 
   @override
-  String get meshServicesOpenListAction => 'Open checklist';
+  String get meshServicesOpenListAction => 'Abrir lista';
 
   @override
-  String get meshServicesOpenPollAction => 'Answer question';
+  String get meshServicesOpenPollAction => 'Responder à pergunta';
 
   @override
-  String get meshServicesOpenSignalAction => 'View alert';
+  String get meshServicesOpenSignalAction => 'Ver alerta';
 
   @override
-  String get meshServicesOpenGameAction => 'Open game';
+  String get meshServicesOpenGameAction => 'Abrir jogo';
 
   @override
-  String get meshServicesGameComposeLead => 'Invite a peer to a quick game.';
+  String get meshServicesGameComposeLead =>
+      'Convide um utilizador para um jogo rápido.';
 
   @override
-  String get meshServicesGameRemoteHint => 'Tap to open the game board.';
+  String get meshServicesGameRemoteHint =>
+      'Toque para abrir o tabuleiro de jogo.';
 
   @override
-  String get meshServicesOpenSensorAction => 'Check reading';
+  String get meshServicesOpenSensorAction => 'Ver leitura';
 
   @override
   String meshServicesItemsCount(int count) {
-    return '$count items';
+    return '$count itens';
   }
 
   @override
   String meshServicesChoicesCount(int count) {
-    return '$count choices';
+    return '$count opções';
   }
 
   @override
   String meshServicesListProgress(int done, int total) {
-    return '$done of $total done';
+    return '$done de $total concluídos';
   }
 
   @override
   String meshServicesMoreItemsCount(int count) {
-    return '$count more items';
+    return 'mais $count itens';
   }
 
   @override
-  String get meshServicesPollNoVotes => 'No votes yet';
+  String get meshServicesPollNoVotes => 'Ainda sem votos';
 
   @override
   String meshServicesPollVotesCount(int count) {
-    return '$count votes';
+    return '$count votos';
   }
 
   @override
   String get meshServicesSignalKindCheckIn => 'Check-in';
 
   @override
-  String get meshServicesSignalKindNeedHelp => 'Need help';
+  String get meshServicesSignalKindNeedHelp => 'Preciso de ajuda';
 
   @override
-  String get meshServicesSignalKindHazard => 'Hazard';
+  String get meshServicesSignalKindHazard => 'Perigo';
 
   @override
-  String get meshServicesSignalKindMeetHere => 'Meet here';
+  String get meshServicesSignalKindMeetHere => 'Encontro aqui';
 
   @override
-  String get meshServicesSignalKindRelayActive => 'Relay active';
+  String get meshServicesSignalKindRelayActive => 'Relay ativo';
 
   @override
-  String get meshServicesSignalActiveLabel => 'Active now';
+  String get meshServicesSignalActiveLabel => 'Ativo agora';
 
   @override
-  String get meshServicesFieldSensorName => 'Reading name';
+  String get meshServicesFieldSensorName => 'Nome da leitura';
 
   @override
-  String get meshServicesFieldSensorValue => 'Reading';
+  String get meshServicesFieldSensorValue => 'Leitura';
 
   @override
   String get meshServicesSensorValueHint => '23.4';
 
   @override
-  String get meshServicesMinSensorValue => 'Add a reading before sharing.';
+  String get meshServicesMinSensorValue =>
+      'Adicione uma leitura antes de partilhar.';
 
   @override
-  String get meshServicesFieldSensorUnit => 'Unit';
+  String get meshServicesFieldSensorUnit => 'Unidade';
 
   @override
   String get meshServicesSensorUnitHint => '°C, %, m';
 
   @override
-  String get meshServicesFieldSensorSource => 'Source';
+  String get meshServicesFieldSensorSource => 'Fonte';
 
   @override
-  String get meshServicesSensorSourceHint => 'Trail marker, station, or node';
+  String get meshServicesSensorSourceHint => 'Marco de trilho, estação ou nó';
 
   @override
-  String get meshServicesSensorUnknownValue => 'No reading yet';
+  String get meshServicesSensorUnknownValue => 'Ainda sem leitura';
 
   @override
   String meshServicesSensorUpdatedLabel(String time) {
-    return 'Updated $time';
+    return 'Atualizado $time';
   }
 
   @override
-  String get serviceWizardCompletionHeadline => 'Your service is live';
+  String get serviceWizardCompletionHeadline => 'O seu serviço está ativo';
 
   @override
   String get serviceWizardCompletionDescription =>
-      'Other mesh users can now discover and interact with your service. You can manage it from My Services.';
+      'Outros utilizadores da malha podem agora descobrir e interagir com o seu serviço. Pode geri-lo em Os Meus Serviços.';
 
   @override
-  String get serviceWizardCompletionViewServices => 'View my services';
+  String get serviceWizardCompletionViewServices => 'Ver os meus serviços';
 
   @override
-  String get serviceWizardCompletionCreateAnother => 'Create another';
+  String get serviceWizardCompletionCreateAnother => 'Criar outro';
 
   @override
-  String get peerDetailLastSeenJustNow => 'Just now';
+  String get peerDetailLastSeenJustNow => 'Agora mesmo';
 
   @override
-  String get peerDetailCapabilities => 'What they support';
+  String get peerDetailCapabilities => 'O que suportam';
 
   @override
-  String get peerDetailCapIdentity => 'Identity & secure connection';
+  String get peerDetailCapIdentity => 'Identidade e ligação segura';
 
   @override
-  String get peerDetailCapExchange => 'Contact exchange';
+  String get peerDetailCapExchange => 'Troca de contactos';
 
   @override
-  String get peerDetailDeviceType => 'Device type';
+  String get peerDetailDeviceType => 'Tipo de dispositivo';
 
   @override
-  String get nearbyAutoScanEnabled => 'Auto-discovery on';
+  String get nearbyAutoScanEnabled => 'Descoberta automática ativada';
 
   @override
-  String get nearbyAutoScanDisabled => 'Auto-discovery off';
+  String get nearbyAutoScanDisabled => 'Descoberta automática desativada';
 
   @override
-  String get disclosureBasic => 'Simple view';
+  String get disclosureBasic => 'Vista simples';
 
   @override
-  String get disclosureCurious => 'More detail';
+  String get disclosureCurious => 'Mais detalhe';
 
   @override
-  String get disclosureExpert => 'Full diagnostics';
+  String get disclosureExpert => 'Diagnósticos completos';
 
   @override
-  String get messagingWeekView => 'Week View';
+  String get messagingWeekView => 'Vista Semanal';
 
   @override
-  String get messageTimelineTitle => 'Message Activity';
+  String get messageTimelineTitle => 'Atividade de Mensagens';
 
   @override
-  String get messageTimelineEmpty => 'No message activity this week';
+  String get messageTimelineEmpty => 'Sem atividade de mensagens esta semana';
 
   @override
   String get messageTimelineEmptyDescription =>
-      'Messages and channel activity will appear here as they happen';
+      'As mensagens e a atividade dos canais aparecerão aqui à medida que acontecem';
 
   @override
-  String get messageTimelineShowAll => 'Show all activity';
+  String get messageTimelineShowAll => 'Mostrar toda a atividade';
 
   @override
-  String get messageTimelineFilterDm => 'Direct';
+  String get messageTimelineFilterDm => 'Direto';
 
   @override
-  String get messageTimelineFilterChannel => 'Channels';
+  String get messageTimelineFilterChannel => 'Canais';
 
   @override
-  String get messageTimelineFilterAll => 'All';
+  String get messageTimelineFilterAll => 'Todos';
 
   @override
   String messageTimelineSessionMessages(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count messages',
-      one: '1 message',
+      other: '$count mensagens',
+      one: '1 mensagem',
     );
     return '$_temp0';
   }
 
   @override
   String messageTimelineChannelPrefix(String name) {
-    return 'Ch: $name';
+    return 'Canal: $name';
   }
 
   @override
   String messageTimelineDmWith(String name) {
-    return 'DM with $name';
+    return 'DM com $name';
   }
 
   @override
-  String get messageTimelineDetailType => 'Type';
+  String get messageTimelineDetailType => 'Tipo';
 
   @override
-  String get messageTimelineDetailTypeDm => 'Direct message';
+  String get messageTimelineDetailTypeDm => 'Mensagem direta';
 
   @override
-  String get messageTimelineDetailTypeChannel => 'Channel';
+  String get messageTimelineDetailTypeChannel => 'Canal';
 
   @override
-  String get messageTimelineDetailTime => 'Time';
+  String get messageTimelineDetailTime => 'Hora';
 
   @override
-  String get messageTimelineDetailDuration => 'Duration';
+  String get messageTimelineDetailDuration => 'Duração';
 
   @override
   String messageTimelineDetailDurationMinutes(int count) {
@@ -38640,48 +38698,48 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get messageTimelineDetailMessages => 'Messages';
+  String get messageTimelineDetailMessages => 'Mensagens';
 
   @override
-  String get messageTimelineDetailParticipants => 'Participants';
+  String get messageTimelineDetailParticipants => 'Participantes';
 
   @override
-  String get messageTimelineDetailOpenChat => 'Open conversation';
+  String get messageTimelineDetailOpenChat => 'Abrir conversa';
 
   @override
-  String get subscriptionGroupPersonalisation => 'Personalisation';
+  String get subscriptionGroupPersonalisation => 'Personalização';
 
   @override
-  String get subscriptionGroupAutomation => 'Automation';
+  String get subscriptionGroupAutomation => 'Automação';
 
   @override
-  String get subscriptionGroupDashboard => 'Dashboard';
+  String get subscriptionGroupDashboard => 'Painel';
 
   @override
-  String get subscriptionGroupCommunication => 'Communication';
+  String get subscriptionGroupCommunication => 'Comunicação';
 
   @override
   String get subscriptionLifetimeReinforcement =>
-      'One-time purchase · Lifetime access · No subscription';
+      'Compra única · Acesso vitalício · Sem subscrição';
 
   @override
-  String get subscriptionStarterPack => 'Starter Pack';
+  String get subscriptionStarterPack => 'Pacote inicial';
 
   @override
-  String get subscriptionStarterPackSubtitle => 'Themes + Widgets';
+  String get subscriptionStarterPackSubtitle => 'Temas + Widgets';
 
   @override
-  String get subscriptionStarterComingSoon => 'Coming Soon';
+  String get subscriptionStarterComingSoon => 'Em breve';
 
   @override
-  String get subscriptionPopularBadge => 'MOST POPULAR';
+  String get subscriptionPopularBadge => 'MAIS POPULAR';
 
   @override
-  String get tapbackDetailSheetTitle => 'Reactions';
+  String get tapbackDetailSheetTitle => 'Reações';
 
   @override
   String tapbackDetailSenderCount(int count) {
-    return '$count reactions';
+    return '$count reações';
   }
 
   @override
@@ -38690,188 +38748,190 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get whatsNewVersion1300Subtitle => 'Version 1.30.0';
+  String get whatsNewVersion1300Subtitle => 'Versão 1.30.0';
 
   @override
-  String get whatsNewAutomationBranchingTitle => 'IF / THEN / ELSE Automations';
+  String get whatsNewAutomationBranchingTitle =>
+      'Automações SE / ENTÃO / SENÃO';
 
   @override
   String get whatsNewAutomationBranchingDescription =>
-      'Automations now support structured condition trees with IF / THEN / ELSE logic. Build complex rules that branch based on multiple conditions — battery level, node status, time of day, and more.\n\nEach run shows exactly which branch was taken and why, with a detailed execution history you can inspect anytime.';
+      'As automações suportam agora árvores de condições estruturadas com lógica SE / ENTÃO / SENÃO. Crie regras complexas que ramificam com base em múltiplas condições: nível de bateria, estado do nó, hora do dia e muito mais.\n\nCada execução mostra exatamente qual ramo foi seguido e porquê, com um histórico de execução detalhado que pode consultar a qualquer momento.';
 
   @override
-  String get whatsNewCtaOpenAutomations => 'Open Automations';
+  String get whatsNewCtaOpenAutomations => 'Abrir Automações';
 
   @override
-  String get whatsNewReactionGroupingTitle => 'Grouped Reactions';
+  String get whatsNewReactionGroupingTitle => 'Reações Agrupadas';
 
   @override
   String get whatsNewReactionGroupingDescription =>
-      'Message reactions are now grouped by emoji — if five people send a thumbs-up, you see one compact chip instead of five. Long-press any reaction to see every sender.\n\nReactions also wrap to the next line instead of overflowing off-screen, keeping the conversation tidy.';
+      'As reações às mensagens estão agora agrupadas por emoji: se cinco pessoas enviarem um polegar para cima, vê um chip compacto em vez de cinco. Prima longamente qualquer reação para ver todos os remetentes.\n\nAs reações também passam para a linha seguinte em vez de saírem do ecrã, mantendo a conversa organizada.';
 
   @override
-  String get whatsNewVersion1360Subtitle => 'Version 1.36.0';
+  String get whatsNewVersion1360Subtitle => 'Versão 1.36.0';
 
   @override
-  String get whatsNewDeviceShopTitle => 'Device Shop';
+  String get whatsNewDeviceShopTitle => 'Loja de Dispositivos';
 
   @override
   String get whatsNewDeviceShopDescription =>
-      'Browse Meshtastic-compatible hardware from official partners and trusted sellers — all in one place. Filter by category, sort by price or new arrivals, and tap through to the seller\'s store to buy.\n\nPurchases happen on the seller\'s site; SocialMesh never handles payment, shipping, or returns. Find it in the drawer menu under Tools.';
+      'Navegue por hardware compatível com Meshtastic de parceiros oficiais e vendedores de confiança, tudo num só lugar. Filtre por categoria, ordene por preço ou novidades e aceda à loja do vendedor para comprar.\n\nAs compras são realizadas no site do vendedor; o SocialMesh nunca processa pagamentos, envios ou devoluções. Encontre-o no menu lateral em Ferramentas.';
 
   @override
-  String get whatsNewCtaOpenDeviceShop => 'Open Device Shop';
+  String get whatsNewCtaOpenDeviceShop => 'Abrir Loja de Dispositivos';
 
   @override
   String get meshFeedTitle => 'Mesh Feed';
 
   @override
-  String get meshFeedSearchHint => 'Search posts';
+  String get meshFeedSearchHint => 'Pesquisar publicações';
 
   @override
   String get meshFeedDrawerLabel => 'Mesh Feed';
 
   @override
-  String get meshFeedEmptyTitle => 'No posts yet';
+  String get meshFeedEmptyTitle => 'Ainda sem publicações';
 
   @override
   String get meshFeedEmptyDescription =>
-      'Posts from nearby mesh peers will appear here. Create the first post to start the conversation.';
+      'As publicações de utilizadores mesh próximos aparecerão aqui. Crie a primeira publicação para iniciar a conversa.';
 
   @override
-  String get meshFeedEmptyAction => 'Create Post';
+  String get meshFeedEmptyAction => 'Criar publicação';
 
   @override
-  String get meshFeedEmptyTitlePrefix => 'No ';
+  String get meshFeedEmptyTitlePrefix => 'Sem ';
 
   @override
-  String get meshFeedEmptyTitleKeyword => 'posts';
+  String get meshFeedEmptyTitleKeyword => 'publicações';
 
   @override
-  String get meshFeedEmptyTitleSuffix => ' on the mesh';
+  String get meshFeedEmptyTitleSuffix => ' na mesh';
 
   @override
-  String get meshFeedEmptyTagline1 => 'Be the first to broadcast';
+  String get meshFeedEmptyTagline1 => 'Seja o primeiro a transmitir';
 
   @override
-  String get meshFeedEmptyTagline2 => 'Share something with the mesh';
+  String get meshFeedEmptyTagline2 => 'Partilhe algo com a mesh';
 
   @override
-  String get meshFeedEmptyTagline3 => 'Posts propagate peer to peer';
+  String get meshFeedEmptyTagline3 =>
+      'As publicações propagam-se entre utilizadores';
 
   @override
-  String get meshFeedEmptyTagline4 => 'No internet required';
+  String get meshFeedEmptyTagline4 => 'Sem internet necessária';
 
   @override
-  String get meshFeedComposeHint => 'Share something with the mesh…';
+  String get meshFeedComposeHint => 'Partilhe algo com a mesh…';
 
   @override
-  String get meshFeedPostButton => 'Post';
+  String get meshFeedPostButton => 'Publicar';
 
   @override
-  String get meshFeedTtlLabel => 'Expires in';
+  String get meshFeedTtlLabel => 'Expira em';
 
   @override
-  String get meshFeedTtl1h => '1 hour';
+  String get meshFeedTtl1h => '1 hora';
 
   @override
-  String get meshFeedTtl6h => '6 hours';
+  String get meshFeedTtl6h => '6 horas';
 
   @override
-  String get meshFeedTtl24h => '24 hours';
+  String get meshFeedTtl24h => '24 horas';
 
   @override
-  String get meshFeedTtl3d => '3 days';
+  String get meshFeedTtl3d => '3 dias';
 
   @override
-  String get meshFeedTtl7d => '7 days';
+  String get meshFeedTtl7d => '7 dias';
 
   @override
-  String get meshFeedProvenanceLocal => 'Your post';
+  String get meshFeedProvenanceLocal => 'A sua publicação';
 
   @override
-  String get meshFeedProvenanceNearby => 'Nearby';
+  String get meshFeedProvenanceNearby => 'Próximo';
 
   @override
-  String get meshFeedProvenanceRelayed => 'Relayed';
+  String get meshFeedProvenanceRelayed => 'Retransmitido';
 
   @override
-  String get meshFeedProvenanceSynced => 'Synced';
+  String get meshFeedProvenanceSynced => 'Sincronizado';
 
   @override
-  String get meshFeedMultiTransportTooltip => 'Seen on multiple transports';
+  String get meshFeedMultiTransportTooltip => 'Visto em vários transportes';
 
   @override
-  String get meshFeedExpiresSoon => 'Expires soon';
+  String get meshFeedExpiresSoon => 'Expira em breve';
 
   @override
   String meshFeedPostCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count posts',
-      one: '1 post',
-      zero: 'No posts',
+      other: '$count publicações',
+      one: '1 publicação',
+      zero: 'Sem publicações',
     );
     return '$_temp0';
   }
 
   @override
-  String get meshFeedTrustUnknown => 'Unknown';
+  String get meshFeedTrustUnknown => 'Desconhecido';
 
   @override
-  String get meshFeedTrustObserved => 'Observed';
+  String get meshFeedTrustObserved => 'Observado';
 
   @override
   String get meshFeedTrustFamiliar => 'Familiar';
 
   @override
-  String get meshFeedTrustTrusted => 'Trusted';
+  String get meshFeedTrustTrusted => 'Confiável';
 
   @override
-  String get meshFeedTrustEstablished => 'Established';
+  String get meshFeedTrustEstablished => 'Estabelecido';
 
   @override
-  String get meshFeedFilterAll => 'All';
+  String get meshFeedFilterAll => 'Todas';
 
   @override
-  String get meshFeedFilterTrusted => 'Trusted';
+  String get meshFeedFilterTrusted => 'Confiáveis';
 
   @override
-  String get meshFeedFilterNearby => 'Nearby';
+  String get meshFeedFilterNearby => 'Próximas';
 
   @override
-  String get meshFeedFilterLocal => 'My Posts';
+  String get meshFeedFilterLocal => 'As minhas publicações';
 
   @override
-  String get meshFeedSortRanked => 'Ranked';
+  String get meshFeedSortRanked => 'Por relevância';
 
   @override
-  String get meshFeedSortNewest => 'Newest';
+  String get meshFeedSortNewest => 'Mais recentes';
 
   @override
-  String get meshFeedPostCreated => 'Post created';
+  String get meshFeedPostCreated => 'Publicação criada';
 
   @override
-  String get meshFeedPostFailed => 'Failed to create post';
+  String get meshFeedPostFailed => 'Falha ao criar publicação';
 
   @override
   String get meshFeedBetaLabel => 'BETA';
 
   @override
   String meshFeedPropagationNote(int maxBytes) {
-    return 'Posts propagate via mesh radio and local sync. LoRa posts are limited to $maxBytes bytes.';
+    return 'As publicações propagam-se via rádio mesh e sincronização local. As publicações LoRa estão limitadas a $maxBytes bytes.';
   }
 
   @override
-  String get meshFeedComposeTitle => 'Create Post';
+  String get meshFeedComposeTitle => 'Criar publicação';
 
   @override
-  String get meshFeedEmptyFilterTitle => 'No matching posts';
+  String get meshFeedEmptyFilterTitle => 'Nenhuma publicação correspondente';
 
   @override
   String get meshFeedEmptyFilterDescription =>
-      'Try changing the filter to see more posts.';
+      'Tente alterar o filtro para ver mais publicações.';
 
   @override
   String get petDrawerLabel => 'NodePet';
@@ -38880,408 +38940,409 @@ class AppLocalizationsPt extends AppLocalizations {
   String get petScreenTitle => 'NodePet';
 
   @override
-  String get petActionCharge => 'Feed';
+  String get petActionCharge => 'Alimentar';
 
   @override
-  String get petActionSurge => 'Overfeed';
+  String get petActionSurge => 'Sobrealimentar';
 
   @override
-  String get petActionResonate => 'Play';
+  String get petActionResonate => 'Brincar';
 
   @override
-  String get petActionStabilise => 'Clean';
+  String get petActionStabilise => 'Limpar';
 
   @override
-  String get petActionPurge => 'Medicine';
+  String get petActionPurge => 'Medicamento';
 
   @override
-  String get petActionDim => 'Sleep';
+  String get petActionDim => 'Dormir';
 
   @override
-  String get petActionInspect => 'Status';
+  String get petActionInspect => 'Estado';
 
   @override
-  String get petActionReSigil => 'Revive';
+  String get petActionReSigil => 'Reviver';
 
   @override
-  String get petOnboardingPage1Title => 'Meet your pet';
+  String get petOnboardingPage1Title => 'Conheça o seu pet';
 
   @override
   String get petOnboardingPage1Body =>
-      'A digital companion that hatches from your node\'s signature and grows over time. The better you care for it, the healthier it stays.';
+      'Um companheiro digital que eclode da assinatura do seu nó e cresce com o tempo. Quanto melhor cuidar dele, mais saudável se mantém.';
 
   @override
-  String get petOnboardingPage2Title => 'The status line tells you what to do';
+  String get petOnboardingPage2Title => 'A linha de estado diz-lhe o que fazer';
 
   @override
   String get petOnboardingPage2Body =>
-      'Above your pet, a single status line says exactly what it needs and names the button to tap — Charge when hungry, Resonate when lonely, Stabilise when messy, Purge when sick, Dim at bedtime. The matching button also pulses so you can\'t miss it.';
+      'Acima do seu pet, uma única linha de estado indica exatamente o que precisa e nomeia o botão a tocar - Alimentar para fome, Ressonar para solidão, Estabilizar para sujidade, Purgar quando doente, Apagar à hora de dormir. O botão correspondente também pulsa para não o perder.';
 
   @override
-  String get petOnboardingPage3Title => 'Check in anytime';
+  String get petOnboardingPage3Title => 'Verifique quando quiser';
 
   @override
   String get petOnboardingPage3Body =>
-      'Tap Inspect to see energy, mood, stability and recent events. Your pet won\'t time-out if you miss a day, but consistent care earns it a better branch — open the help sheet anytime for the full action guide.';
+      'Toque em Inspecionar para ver energia, humor, estabilidade e eventos recentes. O seu pet não expirará se falhar um dia, mas cuidados consistentes dão-lhe um melhor ramo - abra a folha de ajuda a qualquer momento para o guia completo de ações.';
 
   @override
-  String get petOnboardingNext => 'Next';
+  String get petOnboardingNext => 'Seguinte';
 
   @override
-  String get petOnboardingSkip => 'Skip';
+  String get petOnboardingSkip => 'Saltar';
 
   @override
-  String get petOnboardingFinish => 'Got it';
+  String get petOnboardingFinish => 'Percebido';
 
   @override
-  String get petOnboardingHelpHint => 'Full action guide';
+  String get petOnboardingHelpHint => 'Guia completo de ações';
 
   @override
-  String get petGuideSheetTitle => 'Action Guide';
+  String get petGuideSheetTitle => 'Guia de Ações';
 
   @override
   String get petGuideSheetIntro =>
-      'Each action does one specific thing. When the pet beeps for attention (pulsing icon), tap the matching action — Feed for hunger, Play for loneliness, Clean for a mess, Sleep for bedtime, or Medicine for sickness — and the beep clears automatically.';
+      'Cada ação faz uma coisa específica. Quando o pet apita para chamar atenção (ícone a pulsar), toque na ação correspondente - Alimentar para fome, Brincar para solidão, Limpar para sujidade, Dormir para hora de dormir ou Medicamento para doença - e o apito desaparece automaticamente.';
 
   @override
   String get petActionChargeDescription =>
-      'Feeds the pet. +3 energy. Answers a Hungry call.';
+      'Alimenta o pet. +3 energia. Responde a um pedido de Fome.';
 
   @override
   String get petActionSurgeDescription =>
-      'Overfeeds. Long-press Feed for +5 energy, but adds instability — too many overfeeds can make the pet sick. Answers a Hungry call.';
+      'Sobrealimenta. Pressão longa em Alimentar para +5 energia, mas acrescenta instabilidade - demasiadas sobrealimentações podem deixar o pet doente. Responde a um pedido de Fome.';
 
   @override
   String get petActionResonateDescription =>
-      'Plays with the pet. +3 mood. Answers a Lonely call.';
+      'Brinca com o pet. +3 humor. Responde a um pedido de Solidão.';
 
   @override
   String get petActionStabiliseDescription =>
-      'Cleans up. Removes the distortion artefact on the field. +2 stability. Answers a Hygiene call.';
+      'Limpa o campo. Remove o artefacto de distorção do campo. +2 estabilidade. Responde a um pedido de Higiene.';
 
   @override
   String get petActionPurgeDescription =>
-      'Medicine. Removes sickness and drops instability. Only valid while the pet is sick.';
+      'Medicamento. Remove a doença e reduz a instabilidade. Apenas válido enquanto o pet está doente.';
 
   @override
   String get petActionDimDescription =>
-      'Puts the pet to sleep. Only valid inside the sleep window (or when the pet is yawning). Answers a Bedtime call.';
+      'Coloca o pet a dormir. Apenas válido dentro da janela de sono (ou quando o pet está a bocajar). Responde a um pedido de Hora de Dormir.';
 
   @override
   String get petActionInspectDescription =>
-      'Opens a read-only status sheet showing identity, stats, and recent events. No stat change.';
+      'Abre uma ficha de estado só de leitura com identidade, estatísticas e eventos recentes. Sem alteração de estatísticas.';
 
   @override
   String get petActionReSigilDescription =>
-      'Revives a dormant pet with a fresh sigil. Only available after the pet has gone dormant.';
+      'Revive um pet adormecido com um novo sigilo. Apenas disponível depois de o pet entrar em dormência.';
 
   @override
-  String get petStageEgg => 'Egg';
+  String get petStageEgg => 'Ovo';
 
   @override
-  String get petStageJuvenile => 'Juvenile';
+  String get petStageJuvenile => 'Juvenil';
 
   @override
-  String get petStageAdolescent => 'Adolescent';
+  String get petStageAdolescent => 'Adolescente';
 
   @override
-  String get petStageAdult => 'Adult';
+  String get petStageAdult => 'Adulto';
 
   @override
-  String get petStageElder => 'Elder';
+  String get petStageElder => 'Idoso';
 
   @override
-  String get petStageDormant => 'Dormant';
+  String get petStageDormant => 'Dormente';
 
   @override
-  String get petBranchUnborn => 'Unborn';
+  String get petBranchUnborn => 'Não nascido';
 
   @override
-  String get petBranchLuminous => 'Luminous';
+  String get petBranchLuminous => 'Luminoso';
 
   @override
-  String get petBranchSteady => 'Steady';
+  String get petBranchSteady => 'Estável';
 
   @override
-  String get petBranchVolatile => 'Volatile';
+  String get petBranchVolatile => 'Volátil';
 
   @override
-  String get petBranchDimmed => 'Dimmed';
+  String get petBranchDimmed => 'Apagado';
 
   @override
-  String get petStatEnergy => 'Energy';
+  String get petStatEnergy => 'Energia';
 
   @override
-  String get petStatMood => 'Mood';
+  String get petStatMood => 'Humor';
 
   @override
-  String get petStatStability => 'Stability';
+  String get petStatStability => 'Estabilidade';
 
   @override
-  String get petMoodContent => 'Content';
+  String get petMoodContent => 'Contente';
 
   @override
-  String get petMoodHungry => 'Low energy';
+  String get petMoodHungry => 'Pouca energia';
 
   @override
-  String get petMoodSad => 'Low mood';
+  String get petMoodSad => 'Humor baixo';
 
   @override
-  String get petMoodSick => 'Unwell';
+  String get petMoodSick => 'Indisposto';
 
   @override
-  String get petMoodSleeping => 'Sleeping';
+  String get petMoodSleeping => 'A dormir';
 
   @override
-  String get petMoodCalling => 'Calling';
+  String get petMoodCalling => 'A chamar';
 
   @override
-  String get petNoOwnerTitle => 'No paired node';
+  String get petNoOwnerTitle => 'Nenhum nó associado';
 
   @override
   String get petNoOwnerDescription =>
-      'Connect a Meshtastic or MeshCore device to bind a pet to your node.';
+      'Ligue um dispositivo Meshtastic ou MeshCore para associar um pet ao seu nó.';
 
   @override
   String petAgeDaysLabel(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count days old',
-      one: '1 day old',
-      zero: 'Today',
+      other: '$count dias de idade',
+      one: '1 dia de idade',
+      zero: 'Hoje',
     );
     return '$_temp0';
   }
 
   @override
   String get petCallBannerHungry =>
-      'Low on energy — Feed or Overfeed to answer.';
+      'Com pouca energia - Alimente ou Sobrealimente para responder.';
 
   @override
-  String get petCallBannerLonely => 'Wants attention — Play to answer.';
+  String get petCallBannerLonely => 'Quer atenção - Brinque para responder.';
 
   @override
-  String get petCallBannerSick => 'Feeling unwell — Medicine to answer.';
+  String get petCallBannerSick =>
+      'A sentir-se mal - Medicamento para responder.';
 
   @override
-  String get petCallBannerHygiene => 'Made a mess — Clean to remove.';
+  String get petCallBannerHygiene => 'Fez sujidade - Limpe para remover.';
 
   @override
   String get petCallBannerBedtime =>
-      'It\'s almost time to rest — Sleep to answer.';
+      'Está quase na hora de descansar - Durma para responder.';
 
   @override
-  String get petCallBannerBoredom => 'Restless — Play to answer.';
+  String get petCallBannerBoredom => 'Inquieto - Brinque para responder.';
 
   @override
-  String get petInspectTitle => 'Status';
+  String get petInspectTitle => 'Estado';
 
   @override
-  String get petInspectSectionIdentity => 'Identity';
+  String get petInspectSectionIdentity => 'Identidade';
 
   @override
-  String get petInspectSectionStats => 'Stats';
+  String get petInspectSectionStats => 'Estatísticas';
 
   @override
-  String get petInspectSectionRecent => 'Recent';
+  String get petInspectSectionRecent => 'Recente';
 
   @override
-  String get petInspectRowDnaSeed => 'DNA seed';
+  String get petInspectRowDnaSeed => 'Semente de DNA';
 
   @override
-  String get petInspectRowOwnerNode => 'Owner node';
+  String get petInspectRowOwnerNode => 'Nó proprietário';
 
   @override
-  String get petInspectRowStage => 'Stage';
+  String get petInspectRowStage => 'Fase';
 
   @override
-  String get petInspectRowBranch => 'Branch';
+  String get petInspectRowBranch => 'Ramo';
 
   @override
-  String get petInspectRowHatched => 'Hatched';
+  String get petInspectRowHatched => 'Eclodido';
 
   @override
-  String get petInspectRowInStage => 'In stage';
+  String get petInspectRowInStage => 'Na fase';
 
   @override
-  String get petDnaViewerTitle => 'DNA Blueprint';
+  String get petDnaViewerTitle => 'Planta de DNA';
 
   @override
-  String get petDnaViewerOpenAction => 'View DNA blueprint';
+  String get petDnaViewerOpenAction => 'Ver planta de DNA';
 
   @override
-  String get petDnaSectionIdentity => 'Identity';
+  String get petDnaSectionIdentity => 'Identidade';
 
   @override
-  String get petDnaSectionDecoded => 'Decoded traits';
+  String get petDnaSectionDecoded => 'Traços descodificados';
 
   @override
-  String get petDnaTraitSymmetry => 'Symmetry';
+  String get petDnaTraitSymmetry => 'Simetria';
 
   @override
-  String get petDnaTraitOrbitals => 'Orbital complexity';
+  String get petDnaTraitOrbitals => 'Complexidade orbital';
 
   @override
-  String get petDnaTraitResonance => 'Resonance';
+  String get petDnaTraitResonance => 'Ressonância';
 
   @override
-  String get petDnaTraitStrands => 'Strand configuration';
+  String get petDnaTraitStrands => 'Configuração de cadeias';
 
   @override
-  String get petDnaTraitVolatility => 'Volatility markers';
+  String get petDnaTraitVolatility => 'Marcadores de volatilidade';
 
   @override
-  String get petDnaTraitAnomaly => 'Anomaly';
+  String get petDnaTraitAnomaly => 'Anomalia';
 
   @override
-  String get petDnaTraitSignatureRotation => 'Signature rotation';
+  String get petDnaTraitSignatureRotation => 'Rotação de assinatura';
 
   @override
-  String get petDnaAnomalyPresent => 'Present';
+  String get petDnaAnomalyPresent => 'Presente';
 
   @override
-  String get petDnaAnomalyAbsent => 'Stable';
+  String get petDnaAnomalyAbsent => 'Estável';
 
   @override
   String get petInspectDeviceLocalNote =>
-      'Pet state currently stays on this device. Cross-device migration is coming later.';
+      'O estado do pet fica atualmente neste dispositivo. A migração entre dispositivos chegará mais tarde.';
 
   @override
-  String get petEventHatched => 'Hatched';
+  String get petEventHatched => 'Eclodido';
 
   @override
-  String get petEventCharged => 'Fed';
+  String get petEventCharged => 'Alimentado';
 
   @override
-  String get petEventSurged => 'Overfed';
+  String get petEventSurged => 'Sobrealimentado';
 
   @override
-  String get petEventResonated => 'Played';
+  String get petEventResonated => 'Brincou';
 
   @override
-  String get petEventStabilised => 'Cleaned';
+  String get petEventStabilised => 'Limpo';
 
   @override
-  String get petEventSynced => 'Answered';
+  String get petEventSynced => 'Respondido';
 
   @override
-  String get petEventPurged => 'Gave medicine';
+  String get petEventPurged => 'Medicamento dado';
 
   @override
-  String get petEventDimmed => 'Put to sleep';
+  String get petEventDimmed => 'Posto a dormir';
 
   @override
-  String get petEventInspected => 'Checked status';
+  String get petEventInspected => 'Estado verificado';
 
   @override
-  String get petEventHygieneArtefactAppeared => 'Stale field formed';
+  String get petEventHygieneArtefactAppeared => 'Campo obsoleto formado';
 
   @override
-  String get petEventSicknessOnset => 'Fell sick';
+  String get petEventSicknessOnset => 'Adoeceu';
 
   @override
-  String get petEventSicknessRecovered => 'Recovered';
+  String get petEventSicknessRecovered => 'Recuperado';
 
   @override
-  String get petEventSleepEntered => 'Fell asleep';
+  String get petEventSleepEntered => 'Adormeceu';
 
   @override
-  String get petEventSleepExited => 'Woke up';
+  String get petEventSleepExited => 'Acordou';
 
   @override
-  String get petEventCallStarted => 'Called for you';
+  String get petEventCallStarted => 'Chamou por si';
 
   @override
-  String get petEventCallAnswered => 'Call answered';
+  String get petEventCallAnswered => 'Chamada respondida';
 
   @override
-  String get petEventCallMissed => 'Call missed';
+  String get petEventCallMissed => 'Chamada perdida';
 
   @override
-  String get petEventMistakeRecorded => 'Care gap';
+  String get petEventMistakeRecorded => 'Falha de cuidado';
 
   @override
-  String get petEventStageAdvanced => 'Evolved';
+  String get petEventStageAdvanced => 'Evoluído';
 
   @override
-  String get petEventBranchResolved => 'Branch revealed';
+  String get petEventBranchResolved => 'Ramo revelado';
 
   @override
-  String get petEventDormantEntered => 'Gone dormant';
+  String get petEventDormantEntered => 'Entrou em dormência';
 
   @override
-  String get petEventReSigilled => 'Revived';
+  String get petEventReSigilled => 'Revivido';
 
   @override
-  String get petDormantTitle => 'The sigil has gone quiet';
+  String get petDormantTitle => 'O sigilo ficou em silêncio';
 
   @override
   String get petDormantDescription =>
-      'Begin a new lineage — your next pet inherits a fresh seed tied to this node.';
+      'Inicie uma nova linhagem - o seu próximo pet herda uma semente nova ligada a este nó.';
 
   @override
-  String get petCompanionSectionTitle => 'Companion';
+  String get petCompanionSectionTitle => 'Companheiro';
 
   @override
   String get petCompanionRemoteNoObservation =>
-      'No companion seen from this node yet.';
+      'Nenhum companheiro visto a partir deste nó ainda.';
 
   @override
   String get petCompanionRemoteNotSharing =>
-      'This node isn\'t sharing its companion.';
+      'Este nó não está a partilhar o seu companheiro.';
 
   @override
   String petCompanionObservedRelative(String age) {
-    return 'Observed $age ago';
+    return 'Observado há $age';
   }
 
   @override
   String petCompanionLastSeen(String age) {
-    return 'Last seen $age ago';
+    return 'Visto pela última vez há $age';
   }
 
   @override
-  String get petCompanionOpenAction => 'Open NodePet';
+  String get petCompanionOpenAction => 'Abrir NodePet';
 
   @override
-  String get petCompanionSelfYours => 'Your companion';
+  String get petCompanionSelfYours => 'O seu companheiro';
 
   @override
-  String get petCompanionSelfNoPet => 'Your companion hasn\'t hatched yet.';
+  String get petCompanionSelfNoPet => 'O seu companheiro ainda não eclodiu.';
 
   @override
-  String get petLiveStateActive => 'Active';
+  String get petLiveStateActive => 'Ativo';
 
   @override
-  String get petLiveStateCalm => 'Calm';
+  String get petLiveStateCalm => 'Calmo';
 
   @override
-  String get petLiveStateIdle => 'Idle';
+  String get petLiveStateIdle => 'Inativo';
 
   @override
-  String get petLiveStateSleepy => 'Sleepy';
+  String get petLiveStateSleepy => 'Sonolento';
 
   @override
-  String get petLiveStateDormant => 'Dormant';
+  String get petLiveStateDormant => 'Dormente';
 
   @override
-  String get petDnaSectionAlleles => 'RESONANCE ALLELES';
+  String get petDnaSectionAlleles => 'ALELOS DE RESSONÂNCIA';
 
   @override
-  String get petDnaAlleleDominant => 'Dominant';
+  String get petDnaAlleleDominant => 'Dominante';
 
   @override
   String get petAlleleAurora => 'Aurora';
 
   @override
-  String get petAlleleTether => 'Tether';
+  String get petAlleleTether => 'Vínculo';
 
   @override
-  String get petAlleleGale => 'Gale';
+  String get petAlleleGale => 'Vendaval';
 
   @override
-  String get petAlleleCalm => 'Calm';
+  String get petAlleleCalm => 'Calmo';
 
   @override
   String petDnaAlleleRatioValue(String letter, int percent) {
@@ -39290,177 +39351,185 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get petAdvisoryDormant =>
-      'Your pet\'s journey has ended. Tap [[Re-sigil]] to begin anew.';
+      'A jornada do seu pet terminou. Toque em [[Re-sigil]] para recomeçar.';
 
   @override
-  String get petAdvisoryEgg => 'Preparing to hatch…';
+  String get petAdvisoryEgg => 'A preparar para eclodir…';
 
   @override
-  String get petAdvisorySick => 'Sick — tap [[Purge]] to heal.';
+  String get petAdvisorySick => 'Doente - toque em [[Purge]] para curar.';
 
   @override
-  String get petAdvisoryCallHungry => 'Hungry — tap [[Charge]] to feed.';
+  String get petAdvisoryCallHungry =>
+      'Com fome - toque em [[Charge]] para alimentar.';
 
   @override
-  String get petAdvisoryCallLonely => 'Lonely — tap [[Resonate]] to play.';
+  String get petAdvisoryCallLonely =>
+      'Sozinho - toque em [[Resonate]] para brincar.';
 
   @override
-  String get petAdvisoryCallSick => 'Sick — tap [[Purge]] to heal.';
+  String get petAdvisoryCallSick => 'Doente - toque em [[Purge]] para curar.';
 
   @override
-  String get petAdvisoryCallHygiene => 'Messy — tap [[Stabilise]] to clean up.';
+  String get petAdvisoryCallHygiene =>
+      'Sujo - toque em [[Stabilise]] para limpar.';
 
   @override
-  String get petAdvisoryCallBedtime => 'Bedtime — tap [[Dim]] to tuck in.';
+  String get petAdvisoryCallBedtime =>
+      'Hora de dormir - toque em [[Dim]] para deitar.';
 
   @override
-  String get petAdvisoryCallBoredom => 'Bored — tap [[Resonate]] to engage.';
+  String get petAdvisoryCallBoredom =>
+      'Entediado - toque em [[Resonate]] para interagir.';
 
   @override
   String get petAdvisoryHygieneImminent =>
-      'Getting messy — tap [[Stabilise]] before they get sick.';
+      'A ficar sujo - toque em [[Stabilise]] antes de adoecer.';
 
   @override
-  String get petAdvisoryEnergyLow => 'Energy low — tap [[Charge]] soon.';
+  String get petAdvisoryEnergyLow =>
+      'Energia baixa - toque em [[Charge]] brevemente.';
 
   @override
-  String get petAdvisoryMoodLow => 'Mood low — tap [[Resonate]] soon.';
+  String get petAdvisoryMoodLow =>
+      'Humor baixo - toque em [[Resonate]] brevemente.';
 
   @override
   String get petAdvisoryHygieneMild =>
-      'Small mess — tap [[Stabilise]] when you can.';
+      'Pequena sujidade - toque em [[Stabilise]] quando puder.';
 
   @override
-  String get petAdvisoryResting => 'Resting peacefully.';
+  String get petAdvisoryResting => 'A descansar tranquilamente.';
 
   @override
-  String get petAdvisoryBedtime => 'Bedtime — tap [[Dim]] to tuck in.';
+  String get petAdvisoryBedtime =>
+      'Hora de dormir - toque em [[Dim]] para deitar.';
 
   @override
-  String get petAdvisoryThriving => 'Thriving.';
+  String get petAdvisoryThriving => 'A prosperar.';
 
   @override
-  String get petRecentTimelineEmptyTitle => 'No events yet';
+  String get petRecentTimelineEmptyTitle => 'Sem eventos ainda';
 
   @override
   String get petRecentTimelineEmptySubtitle =>
-      'Care actions and milestones will appear here as you interact with your pet.';
+      'Ações de cuidado e marcos aparecerão aqui à medida que interagir com o seu pet.';
 
   @override
-  String get petRecentTimelineDayToday => 'TODAY';
+  String get petRecentTimelineDayToday => 'HOJE';
 
   @override
-  String get petRecentTimelineDayYesterday => 'YESTERDAY';
+  String get petRecentTimelineDayYesterday => 'ONTEM';
 
   @override
-  String get petHatchBannerTitle => 'Hatched';
+  String get petHatchBannerTitle => 'Eclodido';
 
   @override
   String get petHatchBannerSubtitle =>
-      'Your sigil creature has emerged. Keep caring for it to shape its evolution.';
+      'A sua criatura de sigilo emergiu. Continue a cuidar dela para moldar a sua evolução.';
 
   @override
-  String get petBranchBannerTitleLuminous => 'Evolved: Luminous';
+  String get petBranchBannerTitleLuminous => 'Evoluído: Luminoso';
 
   @override
   String get petBranchBannerSubtitleLuminous =>
-      'Pristine care paid off — your creature has taken its brightest form.';
+      'O cuidado pristino valeu a pena - a sua criatura atingiu a sua forma mais brilhante.';
 
   @override
-  String get petBranchBannerTitleSteady => 'Evolved: Steady';
+  String get petBranchBannerTitleSteady => 'Evoluído: Estável';
 
   @override
   String get petBranchBannerSubtitleSteady =>
-      'Balanced care has settled your creature into a calm, resilient form.';
+      'O cuidado equilibrado estabeleceu a sua criatura numa forma calma e resiliente.';
 
   @override
-  String get petBranchBannerTitleVolatile => 'Evolved: Volatile';
+  String get petBranchBannerTitleVolatile => 'Evoluído: Volátil';
 
   @override
   String get petBranchBannerSubtitleVolatile =>
-      'Heavy surges have shaped a restless, energetic form.';
+      'Surtos intensos moldaram uma forma inquieta e enérgica.';
 
   @override
-  String get petBranchBannerTitleDimmed => 'Evolved: Dimmed';
+  String get petBranchBannerTitleDimmed => 'Evoluído: Apagado';
 
   @override
   String get petBranchBannerSubtitleDimmed =>
-      'Neglect has dimmed your creature — it may still be revived with steady care.';
+      'A negligência apagou a sua criatura - ainda pode ser revivida com cuidado constante.';
 
   @override
-  String get petElderBannerTitle => 'Matured';
+  String get petElderBannerTitle => 'Amadurecido';
 
   @override
-  String get petElderBannerSubtitle =>
-      'Your creature has entered its elder phase.';
+  String get petElderBannerSubtitle => 'A sua criatura entrou na fase idosa.';
 
   @override
-  String get petDormantBannerTitle => 'Gone dormant';
+  String get petDormantBannerTitle => 'Entrou em dormência';
 
   @override
   String get petDormantBannerSubtitle =>
-      'The sigil has quieted. Re-sigil to begin a new lineage.';
+      'O sigilo silenciou. Re-sigile para iniciar uma nova linhagem.';
 
   @override
-  String get petReasonFullyCharged => 'Already full';
+  String get petReasonFullyCharged => 'Já está cheio';
 
   @override
-  String get petReasonMoodAlreadyFull => 'Already happy';
+  String get petReasonMoodAlreadyFull => 'Já está feliz';
 
   @override
-  String get petReasonStabilityAlreadyFull => 'Already steady';
+  String get petReasonStabilityAlreadyFull => 'Já está estável';
 
   @override
-  String get petReasonNothingToClean => 'Field is clean';
+  String get petReasonNothingToClean => 'O campo está limpo';
 
   @override
-  String get petReasonAlreadyAsleep => 'Already resting';
+  String get petReasonAlreadyAsleep => 'Já está a descansar';
 
   @override
-  String get petReasonAsleep => 'Resting right now';
+  String get petReasonAsleep => 'A descansar agora';
 
   @override
-  String get petReasonEgg => 'Still unhatched';
+  String get petReasonEgg => 'Ainda não eclodiu';
 
   @override
-  String get petReasonDormant => 'Your sigil has gone quiet';
+  String get petReasonDormant => 'O seu sigilo ficou em silêncio';
 
   @override
-  String get petReasonNotSick => 'Not unwell';
+  String get petReasonNotSick => 'Não está indisposto';
 
   @override
-  String get petReasonNotBedtime => 'Not bedtime yet';
+  String get petReasonNotBedtime => 'Ainda não é hora de dormir';
 
   @override
-  String get petReasonNotDormant => 'Pet is still alive';
+  String get petReasonNotDormant => 'O pet ainda está vivo';
 
   @override
-  String get petTimelineScreenTitle => 'Lifecycle';
+  String get petTimelineScreenTitle => 'Ciclo de vida';
 
   @override
   String petTimelineEventCountPill(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count events',
-      one: '1 event',
+      other: '$count eventos',
+      one: '1 evento',
     );
     return '$_temp0';
   }
 
   @override
-  String get petTimelineOriginTitle => 'DNA forged';
+  String get petTimelineOriginTitle => 'DNA forjado';
 
   @override
   String petTimelineOriginDominant(String allele) {
-    return '$allele-dominant';
+    return '$allele-dominante';
   }
 
   @override
-  String get petTimelineNowPill => 'NOW';
+  String get petTimelineNowPill => 'AGORA';
 
   @override
-  String get petTimelineQuietCurrent => 'Quiet stretch — no events yet.';
+  String get petTimelineQuietCurrent =>
+      'Período tranquilo - sem eventos ainda.';
 
   @override
   String petTimelineGroupedCount(int count) {
@@ -39469,15 +39538,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String petTimelineUpcomingLabel(String stageName) {
-    return 'Next: $stageName';
+    return 'Seguinte: $stageName';
   }
 
   @override
-  String get petTimelineUpcomingImminent => 'imminent';
+  String get petTimelineUpcomingImminent => 'iminente';
 
   @override
   String petTimelineUpcomingIn(String duration) {
-    return 'in $duration';
+    return 'em $duration';
   }
 
   @override
@@ -39506,428 +39575,433 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get petTimelineDurationImminent => 'moments';
+  String get petTimelineDurationImminent => 'momentos';
 
   @override
-  String get petTimelineEmptyTitle => 'No pet yet';
+  String get petTimelineEmptyTitle => 'Sem pet ainda';
 
   @override
   String get petTimelineEmptySubtitle =>
-      'Pair a device to begin your pet\'s story.';
+      'Associe um dispositivo para iniciar a história do seu pet.';
 
   @override
   String get petTimelineDetailHatched =>
-      'Your pet emerged from its sigil and began its life cycle.';
+      'O seu pet emergiu do sigilo e iniciou o seu ciclo de vida.';
 
   @override
   String petTimelineDetailStageAdvanced(String stageName) {
-    return 'Advanced into $stageName.';
+    return 'Avançou para $stageName.';
   }
 
   @override
   String petTimelineDetailBranchResolved(String branchName) {
-    return 'Branch resolved as $branchName based on care patterns.';
+    return 'Ramo resolvido como $branchName com base nos padrões de cuidado.';
   }
 
   @override
   String get petTimelineDetailDormantEntered =>
-      'Entered dormancy. Its journey is complete.';
+      'Entrou em dormência. A sua jornada está completa.';
 
   @override
   String get petTimelineDetailReSigilled =>
-      'Re-sigilled — a new creature begins.';
+      'Re-sigilado - uma nova criatura começa.';
 
   @override
   String get petTimelineDetailSicknessOnset =>
-      'Fell ill. Use Purge to recover.';
+      'Adoeceu. Use Purgar para recuperar.';
 
   @override
-  String get petTimelineDetailSicknessRecovered => 'Recovered from sickness.';
+  String get petTimelineDetailSicknessRecovered => 'Recuperou da doença.';
 
   @override
-  String get petTimelineDetailPurged => 'Received medical care.';
+  String get petTimelineDetailPurged => 'Recebeu cuidados médicos.';
 
   @override
   String get petTimelineDetailCallMissed =>
-      'A call for attention went unanswered.';
+      'Um pedido de atenção ficou sem resposta.';
 
   @override
   String get petTimelineDetailMistakeRecorded =>
-      'A lapse in care was recorded against the stage accumulator.';
+      'Uma falha no cuidado foi registada no acumulador de fase.';
 
   @override
   String get notificationChannelPetMilestones =>
-      'Hatch, evolution, and dormant moments for your NodePet.';
+      'Momentos de eclosão, evolução e dormência para o seu NodePet.';
 
   @override
   String get notificationChannelPetCare =>
-      'Attention calls and sickness alerts for your NodePet.';
+      'Chamadas de atenção e alertas de doença para o seu NodePet.';
 
   @override
-  String get notificationPetHatchedTitle => 'Your pet hatched';
+  String get notificationPetHatchedTitle => 'O seu pet eclodiu';
 
   @override
   String get notificationPetHatchedBody =>
-      'Open NodePet to meet your sigil creature.';
+      'Abra o NodePet para conhecer a sua criatura sigil.';
 
   @override
-  String get notificationPetEvolvedTitle => 'Your pet evolved';
+  String get notificationPetEvolvedTitle => 'O seu pet evoluiu';
 
   @override
   String notificationPetEvolvedBody(String branch) {
-    return 'New stage settled into the $branch branch.';
+    return 'Nova fase estabelecida no ramo $branch.';
   }
 
   @override
-  String get notificationPetMaturedTitle => 'Your pet is an elder';
+  String get notificationPetMaturedTitle => 'O seu pet é um ancião';
 
   @override
   String get notificationPetMaturedBody =>
-      'Open NodePet to see your pet\'s elder form.';
+      'Abra o NodePet para ver a forma anciã do seu pet.';
 
   @override
-  String get notificationPetDormantTitle => 'Your pet has gone dormant';
+  String get notificationPetDormantTitle => 'O seu pet entrou em dormência';
 
   @override
   String get notificationPetDormantBody =>
-      'Open NodePet and Re-sigil to begin a new lineage.';
+      'Abra o NodePet e faça Re-sigil para iniciar uma nova linhagem.';
 
   @override
-  String get notificationPetSickTitle => 'Your pet is unwell';
+  String get notificationPetSickTitle => 'O seu pet está doente';
 
   @override
   String get notificationPetSickBody =>
-      'Open NodePet and Purge to help it recover.';
+      'Abra o NodePet e faça Purgar para o ajudar a recuperar.';
 
   @override
-  String get notificationPetAttentionTitle => 'Your pet needs attention';
+  String get notificationPetAttentionTitle => 'O seu pet precisa de atenção';
 
   @override
-  String get notificationPetAttentionHungryBody => 'Low energy — tap Charge.';
+  String get notificationPetAttentionHungryBody =>
+      'Pouca energia - toque em Carregar.';
 
   @override
   String get notificationPetAttentionLonelyBody =>
-      'Mood is drifting — tap Resonate.';
+      'Humor à deriva - toque em Ressoar.';
 
   @override
-  String get notificationPetAttentionSickBody => 'Feeling unwell — tap Purge.';
+  String get notificationPetAttentionSickBody =>
+      'A sentir-se mal - toque em Purgar.';
 
   @override
   String get notificationPetAttentionHygieneBody =>
-      'Field needs stabilising — tap Stabilise.';
+      'Campo a precisar de estabilização - toque em Estabilizar.';
 
   @override
-  String get notificationPetAttentionBedtimeBody => 'Almost bedtime — tap Dim.';
+  String get notificationPetAttentionBedtimeBody =>
+      'Quase hora de dormir - toque em Esmorecer.';
 
   @override
-  String get notificationPetAttentionBoredomBody => 'Restless — tap Resonate.';
+  String get notificationPetAttentionBoredomBody =>
+      'Agitado - toque em Ressoar.';
 
   @override
-  String get reticulumDiagTitle => 'Reticulum Tunnel';
+  String get reticulumDiagTitle => 'Túnel Reticulum';
 
   @override
   String get reticulumDiagExperimental => 'Experimental';
 
   @override
   String get reticulumDiagDescription =>
-      'SocialMesh observes RNS traffic on the mesh; behavior may be incomplete while the wire format is being characterized.';
+      'O SocialMesh observa tráfego RNS na malha; o comportamento pode ser incompleto enquanto o formato de transmissão está a ser caracterizado.';
 
   @override
-  String get reticulumDiagSectionOverview => 'OVERVIEW';
+  String get reticulumDiagSectionOverview => 'VISÃO GERAL';
 
   @override
-  String get reticulumDiagFragmentCount => 'Fragments observed';
+  String get reticulumDiagFragmentCount => 'Fragmentos observados';
 
   @override
-  String get reticulumDiagLastSeen => 'Last seen';
+  String get reticulumDiagLastSeen => 'Visto pela última vez';
 
   @override
-  String get reticulumDiagDistinctSources => 'Distinct sources';
+  String get reticulumDiagDistinctSources => 'Fontes distintas';
 
   @override
-  String get reticulumDiagAvgFragmentSize => 'Avg fragment size';
+  String get reticulumDiagAvgFragmentSize => 'Tamanho médio de fragmento';
 
   @override
-  String get reticulumDiagFragmentsPerSecond => 'Fragments/sec (60s)';
+  String get reticulumDiagFragmentsPerSecond => 'Fragmentos/s (60s)';
 
   @override
-  String get reticulumDiagNeverSeen => 'Never';
+  String get reticulumDiagNeverSeen => 'Nunca';
 
   @override
-  String get reticulumDiagSectionCapture => 'CAPTURE';
+  String get reticulumDiagSectionCapture => 'CAPTURA';
 
   @override
-  String get reticulumDiagCaptureEnable => 'Capture to disk';
+  String get reticulumDiagCaptureEnable => 'Capturar para disco';
 
   @override
   String get reticulumDiagCaptureEnableSubtitle =>
-      'Append every fragment to a binary file for offline analysis';
+      'Guardar cada fragmento num ficheiro binário para análise offline';
 
   @override
-  String get reticulumDiagCaptureCurrentFile => 'Current file';
+  String get reticulumDiagCaptureCurrentFile => 'Ficheiro atual';
 
   @override
-  String get reticulumDiagCaptureNoActiveFile => 'No active capture';
+  String get reticulumDiagCaptureNoActiveFile => 'Sem captura ativa';
 
   @override
-  String get reticulumDiagCaptureBytes => 'Bytes in current file';
+  String get reticulumDiagCaptureBytes => 'Bytes no ficheiro atual';
 
   @override
-  String get reticulumDiagShareCaptures => 'Share captures';
+  String get reticulumDiagShareCaptures => 'Partilhar capturas';
 
   @override
-  String get reticulumDiagShareNoFiles => 'No capture files yet';
+  String get reticulumDiagShareNoFiles => 'Ainda não há ficheiros de captura';
 
   @override
-  String get reticulumDiagSectionReplay => 'REPLAY';
+  String get reticulumDiagSectionReplay => 'REPRODUÇÃO';
 
   @override
-  String get reticulumDiagOpenReplay => 'Open replay tool';
+  String get reticulumDiagOpenReplay => 'Abrir ferramenta de reprodução';
 
   @override
   String get reticulumDiagOpenReplaySubtitle =>
-      'Re-feed a captured file through the live decode path';
+      'Reprocessar um ficheiro capturado pelo caminho de descodificação ao vivo';
 
   @override
-  String get reticulumDiagEmptyTitlePrefix => 'No ';
+  String get reticulumDiagEmptyTitlePrefix => 'Nenhum ';
 
   @override
-  String get reticulumDiagEmptyTitleKeyword => 'RNS traffic';
+  String get reticulumDiagEmptyTitleKeyword => 'tráfego RNS';
 
   @override
-  String get reticulumDiagEmptyTitleSuffix => ' observed yet';
+  String get reticulumDiagEmptyTitleSuffix => ' observado ainda';
 
   @override
   String get reticulumDiagEmptyTagline1 =>
-      'Listening for fragmented Reticulum frames on port 76.';
+      'A escutar tramas Reticulum fragmentadas na porta 76.';
 
   @override
   String get reticulumDiagEmptyTagline2 =>
-      'Bring this app within range of an RNS-bridged node.';
+      'Aproxime esta aplicação de um nó com ponte RNS.';
 
   @override
   String get reticulumDiagEmptyTagline3 =>
-      'Fragments are decoded but never reassembled in this build.';
+      'Os fragmentos são descodificados mas nunca remontados nesta versão.';
 
   @override
   String reticulumDiagSourceFragments(int count) {
-    return '$count fragments';
+    return '$count fragmentos';
   }
 
   @override
-  String get reticulumReplayTitle => 'Replay capture';
+  String get reticulumReplayTitle => 'Reproduzir captura';
 
   @override
-  String get reticulumReplaySectionFile => 'FILE';
+  String get reticulumReplaySectionFile => 'FICHEIRO';
 
   @override
-  String get reticulumReplayPickFile => 'Choose capture file';
+  String get reticulumReplayPickFile => 'Escolher ficheiro de captura';
 
   @override
-  String get reticulumReplayNoFilesAvailable => 'No capture files available';
+  String get reticulumReplayNoFilesAvailable =>
+      'Não há ficheiros de captura disponíveis';
 
   @override
-  String get reticulumReplayFileLabel => 'Capture';
+  String get reticulumReplayFileLabel => 'Captura';
 
   @override
-  String get reticulumReplayRecords => 'Records';
+  String get reticulumReplayRecords => 'Registos';
 
   @override
-  String get reticulumReplaySectionMode => 'MODE';
+  String get reticulumReplaySectionMode => 'MODO';
 
   @override
-  String get reticulumReplayModeRealtime => 'Realtime';
+  String get reticulumReplayModeRealtime => 'Tempo real';
 
   @override
-  String get reticulumReplayModeAccelerated => 'Accelerated';
+  String get reticulumReplayModeAccelerated => 'Acelerado';
 
   @override
-  String get reticulumReplayModeStep => 'Step';
+  String get reticulumReplayModeStep => 'Passo a passo';
 
   @override
-  String get reticulumReplaySpeedLabel => 'Speed multiplier';
+  String get reticulumReplaySpeedLabel => 'Multiplicador de velocidade';
 
   @override
-  String get reticulumReplaySectionControls => 'CONTROLS';
+  String get reticulumReplaySectionControls => 'CONTROLOS';
 
   @override
-  String get reticulumReplayStart => 'Start';
+  String get reticulumReplayStart => 'Iniciar';
 
   @override
-  String get reticulumReplayPause => 'Pause';
+  String get reticulumReplayPause => 'Pausar';
 
   @override
-  String get reticulumReplayResume => 'Resume';
+  String get reticulumReplayResume => 'Retomar';
 
   @override
-  String get reticulumReplayStop => 'Stop';
+  String get reticulumReplayStop => 'Parar';
 
   @override
-  String get reticulumReplayStep => 'Step once';
+  String get reticulumReplayStep => 'Avançar um passo';
 
   @override
-  String get reticulumReplaySectionStatus => 'STATUS';
+  String get reticulumReplaySectionStatus => 'ESTADO';
 
   @override
   String reticulumReplayProgress(int current, int total) {
-    return 'Record $current of $total';
+    return 'Registo $current de $total';
   }
 
   @override
   String get reticulumReplayInvalidFile =>
-      'Selected file is not a valid SMRC v1 capture';
+      'O ficheiro selecionado não é uma captura SMRC v1 válida';
 
   @override
-  String get reticulumReplayLoadError => 'Failed to load capture';
+  String get reticulumReplayLoadError => 'Falha ao carregar captura';
 
   @override
-  String get settingsReticulumTunnelTitle => 'Reticulum Tunnel';
+  String get settingsReticulumTunnelTitle => 'Túnel Reticulum';
 
   @override
   String get settingsReticulumTunnelSubtitle =>
-      'Observe + capture port-76 RNS fragments';
+      'Observar e capturar fragmentos RNS na porta 76';
 
   @override
   String get nodeDexRnsActivityBadge => 'RNS';
 
   @override
-  String get nodeDexRnsActivityCount => 'RNS fragments';
+  String get nodeDexRnsActivityCount => 'Fragmentos RNS';
 
   @override
-  String get nodeDexRnsActivityLastSeen => 'RNS last seen';
+  String get nodeDexRnsActivityLastSeen => 'RNS visto pela última vez';
 
   @override
-  String get reticulumDiagOpenLibrary => 'Open capture library';
+  String get reticulumDiagOpenLibrary => 'Abrir biblioteca de capturas';
 
   @override
   String get reticulumDiagOpenLibrarySubtitle =>
-      'Browse, label, and import captures';
+      'Navegar, etiquetar e importar capturas';
 
   @override
-  String get reticulumLibraryTitle => 'Capture Library';
+  String get reticulumLibraryTitle => 'Biblioteca de Capturas';
 
   @override
-  String get reticulumLibrarySectionCaptures => 'CAPTURES';
+  String get reticulumLibrarySectionCaptures => 'CAPTURAS';
 
   @override
-  String get reticulumLibraryEmptyTitlePrefix => 'No ';
+  String get reticulumLibraryEmptyTitlePrefix => 'Sem ';
 
   @override
-  String get reticulumLibraryEmptyTitleKeyword => 'captures';
+  String get reticulumLibraryEmptyTitleKeyword => 'capturas';
 
   @override
-  String get reticulumLibraryEmptyTitleSuffix => ' yet';
+  String get reticulumLibraryEmptyTitleSuffix => ' ainda';
 
   @override
   String get reticulumLibraryEmptyTagline1 =>
-      'No SMRC capture files have been recorded or imported.';
+      'Nenhum ficheiro de captura SMRC foi gravado ou importado.';
 
   @override
   String get reticulumLibraryEmptyTagline2 =>
-      'Toggle \'Capture to disk\' on the diagnostics screen to start recording.';
+      'Ative \'Capturar para disco\' no ecrã de diagnósticos para começar a gravar.';
 
   @override
   String get reticulumLibraryEmptyTagline3 =>
-      'Or import a .bin capture from another SocialMesh device.';
+      'Ou importe uma captura .bin de outro dispositivo SocialMesh.';
 
   @override
-  String get reticulumLibraryImport => 'Import .bin file';
+  String get reticulumLibraryImport => 'Importar ficheiro .bin';
 
   @override
-  String get reticulumLibraryRefresh => 'Refresh';
+  String get reticulumLibraryRefresh => 'Atualizar';
 
   @override
   String get reticulumLibraryKindHarness => 'HARNESS';
 
   @override
-  String get reticulumLibraryKindReal => 'REAL CANDIDATE';
+  String get reticulumLibraryKindReal => 'CANDIDATO REAL';
 
   @override
-  String get reticulumLibraryKindInvalid => 'INVALID';
+  String get reticulumLibraryKindInvalid => 'INVÁLIDO';
 
   @override
-  String get reticulumLibraryKindUnsupported => 'UNSUPPORTED';
+  String get reticulumLibraryKindUnsupported => 'NÃO SUPORTADO';
 
   @override
   String reticulumLibraryRecords(int count) {
-    return '$count records';
+    return '$count registos';
   }
 
   @override
   String reticulumLibrarySources(int count) {
-    return '$count sources';
+    return '$count fontes';
   }
 
   @override
-  String get reticulumLibraryNoTimestamp => 'No timestamp';
+  String get reticulumLibraryNoTimestamp => 'Sem carimbo de data/hora';
 
   @override
   String reticulumLibraryImportSuccess(String filename) {
-    return 'Imported $filename';
+    return 'Importado $filename';
   }
 
   @override
   String reticulumLibraryImportDuplicate(String filename) {
-    return 'Already in library: $filename';
+    return 'Já está na biblioteca: $filename';
   }
 
   @override
   String get reticulumLibraryImportInvalid =>
-      'File is not a valid SMRC capture';
+      'O ficheiro não é uma captura SMRC válida';
 
   @override
-  String get reticulumLibraryImportUnsupported => 'Unsupported SMRC version';
+  String get reticulumLibraryImportUnsupported => 'Versão SMRC não suportada';
 
   @override
-  String get reticulumLibraryImportError => 'Import failed';
+  String get reticulumLibraryImportError => 'Importação falhou';
 
   @override
-  String get reticulumDetailTitle => 'Capture detail';
+  String get reticulumDetailTitle => 'Detalhe da captura';
 
   @override
-  String get reticulumDetailSectionSummary => 'SUMMARY';
+  String get reticulumDetailSectionSummary => 'RESUMO';
 
   @override
-  String get reticulumDetailFilename => 'Filename';
+  String get reticulumDetailFilename => 'Nome do ficheiro';
 
   @override
-  String get reticulumDetailKind => 'Kind';
+  String get reticulumDetailKind => 'Tipo';
 
   @override
-  String get reticulumDetailRecordCount => 'Records';
+  String get reticulumDetailRecordCount => 'Registos';
 
   @override
-  String get reticulumDetailFirstSeen => 'First seen';
+  String get reticulumDetailFirstSeen => 'Visto pela primeira vez';
 
   @override
-  String get reticulumDetailLastSeen => 'Last seen';
+  String get reticulumDetailLastSeen => 'Visto pela última vez';
 
   @override
-  String get reticulumDetailDistinctSources => 'Distinct sources';
+  String get reticulumDetailDistinctSources => 'Fontes distintas';
 
   @override
-  String get reticulumDetailContainsHarness => 'Contains harness magic';
+  String get reticulumDetailContainsHarness => 'Contém magia de harness';
 
   @override
   String get reticulumDetailChecksum => 'SHA-256';
 
   @override
-  String get reticulumDetailCreatedAt => 'Created at';
+  String get reticulumDetailCreatedAt => 'Criado em';
 
   @override
-  String get reticulumDetailClassifiedAt => 'Classified at';
+  String get reticulumDetailClassifiedAt => 'Classificado em';
 
   @override
-  String get reticulumDetailSectionProvenance => 'PROVENANCE';
+  String get reticulumDetailSectionProvenance => 'PROVENIÊNCIA';
 
   @override
-  String get reticulumDetailSource => 'Source';
+  String get reticulumDetailSource => 'Fonte';
 
   @override
   String get reticulumDetailSourceLocal => 'Local';
 
   @override
-  String get reticulumDetailSourceShared => 'Shared';
+  String get reticulumDetailSourceShared => 'Partilhado';
 
   @override
   String get reticulumDetailSourceAirdrop => 'AirDrop';
@@ -39936,415 +40010,422 @@ class AppLocalizationsPt extends AppLocalizations {
   String get reticulumDetailSourceManual => 'Manual';
 
   @override
-  String get reticulumDetailDeviceModel => 'Device model';
+  String get reticulumDetailDeviceModel => 'Modelo do dispositivo';
 
   @override
-  String get reticulumDetailDeviceModelHint => 'e.g. Heltec V3';
+  String get reticulumDetailDeviceModelHint => 'ex.: Heltec V3';
 
   @override
-  String get reticulumDetailFirmwareVersion => 'Firmware version';
+  String get reticulumDetailFirmwareVersion => 'Versão do firmware';
 
   @override
-  String get reticulumDetailFirmwareVersionHint => 'e.g. 2.5.5.f8c10b8';
+  String get reticulumDetailFirmwareVersionHint => 'ex.: 2.5.5.f8c10b8';
 
   @override
-  String get reticulumDetailRegion => 'Region';
+  String get reticulumDetailRegion => 'Região';
 
   @override
-  String get reticulumDetailRegionHint => 'e.g. ANZ';
+  String get reticulumDetailRegionHint => 'ex.: ANZ';
 
   @override
-  String get reticulumDetailChannelIndex => 'Channel index';
+  String get reticulumDetailChannelIndex => 'Índice do canal';
 
   @override
-  String get reticulumDetailChannelIndexHint => '0–7';
+  String get reticulumDetailChannelIndexHint => '0-7';
 
   @override
-  String get reticulumDetailNotes => 'Notes';
+  String get reticulumDetailNotes => 'Notas';
 
   @override
-  String get reticulumDetailNotesHint => 'Where, when, why';
+  String get reticulumDetailNotesHint => 'Onde, quando, porquê';
 
   @override
-  String get reticulumDetailSave => 'Save';
+  String get reticulumDetailSave => 'Guardar';
 
   @override
-  String get reticulumDetailSaveSuccess => 'Saved';
+  String get reticulumDetailSaveSuccess => 'Guardado';
 
   @override
-  String get reticulumDetailShare => 'Share capture';
+  String get reticulumDetailShare => 'Partilhar captura';
 
   @override
-  String get reticulumDetailDelete => 'Delete capture';
+  String get reticulumDetailDelete => 'Eliminar captura';
 
   @override
-  String get reticulumDetailDeleteConfirm => 'Delete this capture?';
+  String get reticulumDetailDeleteConfirm => 'Eliminar esta captura?';
 
   @override
   String get reticulumDetailDeleteConfirmDescription =>
-      'The capture file and its metadata sidecar are removed permanently.';
+      'O ficheiro de captura e o seu sidecar de metadados são removidos permanentemente.';
 
   @override
-  String get reticulumDetailDeleteConfirmAction => 'Delete';
+  String get reticulumDetailDeleteConfirmAction => 'Eliminar';
 
   @override
-  String get reticulumDetailDeleteCancel => 'Cancel';
+  String get reticulumDetailDeleteCancel => 'Cancelar';
 
   @override
-  String get reticulumDetailTrue => 'Yes';
+  String get reticulumDetailTrue => 'Sim';
 
   @override
-  String get reticulumDetailFalse => 'No';
+  String get reticulumDetailFalse => 'Não';
 
   @override
-  String get reticulumDetailNoneSet => 'Not set';
+  String get reticulumDetailNoneSet => 'Não definido';
 
   @override
-  String get reticulumDiagSectionReassembly => 'REASSEMBLY';
+  String get reticulumDiagSectionReassembly => 'REMONTAGEM';
 
   @override
-  String get reticulumDiagReassemblyEnable => 'Reassemble fragments';
+  String get reticulumDiagReassemblyEnable => 'Remontar fragmentos';
 
   @override
   String get reticulumDiagReassemblyEnableSubtitle =>
-      'Combine fragments into whole RNS frames in memory';
+      'Combinar fragmentos em tramas RNS completas em memória';
 
   @override
   String get reticulumDiagReassemblyDisabledHint =>
-      'Enable to start counting frames; raw fragments still flow into capture and the overview above.';
+      'Ative para começar a contar tramas; os fragmentos brutos continuam a fluir para a captura e para a visão geral acima.';
 
   @override
-  String get reticulumDiagFramesReassembled => 'Frames reassembled';
+  String get reticulumDiagFramesReassembled => 'Tramas remontadas';
 
   @override
-  String get reticulumDiagFramesPerSecond => 'Frames/sec (60s)';
+  String get reticulumDiagFramesPerSecond => 'Tramas/s (60s)';
 
   @override
-  String get reticulumDiagAvgFragmentsPerFrame => 'Avg fragments per frame';
+  String get reticulumDiagAvgFragmentsPerFrame =>
+      'Média de fragmentos por trama';
 
   @override
-  String get reticulumDiagSuccessRate => 'Success rate %';
+  String get reticulumDiagSuccessRate => 'Taxa de sucesso %';
 
   @override
-  String get reticulumDiagDroppedDecodeError => 'Dropped — decode error';
+  String get reticulumDiagDroppedDecodeError =>
+      'Descartado - erro de descodificação';
 
   @override
   String get reticulumDiagDroppedTimeoutInactivity =>
-      'Dropped — inactivity timeout';
+      'Descartado - timeout por inatividade';
 
   @override
-  String get reticulumDiagDroppedTimeoutAbsolute => 'Dropped — absolute TTL';
+  String get reticulumDiagDroppedTimeoutAbsolute => 'Descartado - TTL absoluto';
 
   @override
-  String get reticulumDiagDroppedOverflow => 'Dropped — overflow';
+  String get reticulumDiagDroppedOverflow => 'Descartado - overflow';
 
   @override
-  String get reticulumDiagDroppedOversize => 'Dropped — oversize';
+  String get reticulumDiagDroppedOversize => 'Descartado - tamanho excessivo';
 
   @override
-  String get reticulumDiagDuplicateFragments => 'Duplicate fragments';
+  String get reticulumDiagDuplicateFragments => 'Fragmentos duplicados';
 
   @override
-  String get reticulumDiagActiveBuffers => 'Active buffers';
+  String get reticulumDiagActiveBuffers => 'Buffers ativos';
 
   @override
-  String get reticulumDiagBufferedBytes => 'Buffered bytes';
+  String get reticulumDiagBufferedBytes => 'Bytes em buffer';
 
   @override
-  String get settingsReticulumBridgeTitle => 'Reticulum Bridge';
+  String get settingsReticulumBridgeTitle => 'Ponte Reticulum';
 
   @override
   String get settingsReticulumBridgeSubtitle =>
-      'Forward reassembled RNS frames to a local rnsd over TCP';
+      'Encaminhar tramas RNS remontadas para um rnsd local via TCP';
 
   @override
-  String get reticulumBridgeTitle => 'Reticulum Bridge';
+  String get reticulumBridgeTitle => 'Ponte Reticulum';
 
   @override
   String get reticulumBridgeDescription =>
-      'Forward reassembled RNS frames to a local rnsd over TCP. The bridge stays disconnected until reassembly is enabled.';
+      'Encaminhar tramas RNS remontadas para um rnsd local via TCP. A ponte permanece desligada até a remontagem estar ativa.';
 
   @override
   String get reticulumBridgeRequiresReassembly =>
-      'Enable reassembly first to start forwarding.';
+      'Ative a remontagem primeiro para iniciar o encaminhamento.';
 
   @override
-  String get reticulumBridgeSectionConnection => 'CONNECTION';
+  String get reticulumBridgeSectionConnection => 'LIGAÇÃO';
 
   @override
-  String get reticulumBridgeEnable => 'Enable bridge';
+  String get reticulumBridgeEnable => 'Ativar ponte';
 
   @override
   String get reticulumBridgeEnableSubtitle =>
-      'Open a TCP connection to rnsd while reassembly is on';
+      'Abrir uma ligação TCP ao rnsd enquanto a remontagem estiver ativa';
 
   @override
-  String get reticulumBridgeStatusLabel => 'Status';
+  String get reticulumBridgeStatusLabel => 'Estado';
 
   @override
-  String get reticulumBridgeStatusDisconnected => 'Disconnected';
+  String get reticulumBridgeStatusDisconnected => 'Desligado';
 
   @override
-  String get reticulumBridgeStatusConnecting => 'Connecting…';
+  String get reticulumBridgeStatusConnecting => 'A ligar…';
 
   @override
-  String get reticulumBridgeStatusConnected => 'Connected';
+  String get reticulumBridgeStatusConnected => 'Ligado';
 
   @override
-  String get reticulumBridgeStatusError => 'Error';
+  String get reticulumBridgeStatusError => 'Erro';
 
   @override
-  String get reticulumBridgeLastErrorLabel => 'Last error';
+  String get reticulumBridgeLastErrorLabel => 'Último erro';
 
   @override
-  String get reticulumBridgeNoLastError => '—';
+  String get reticulumBridgeNoLastError => '-';
 
   @override
-  String get reticulumBridgeSectionEndpoint => 'ENDPOINT';
+  String get reticulumBridgeSectionEndpoint => 'PONTO DE ACESSO';
 
   @override
   String get reticulumBridgeHostLabel => 'Host';
 
   @override
-  String get reticulumBridgeHostHint => 'rnsd host or IP';
+  String get reticulumBridgeHostHint => 'host ou IP do rnsd';
 
   @override
-  String get reticulumBridgePortLabel => 'Port';
+  String get reticulumBridgePortLabel => 'Porta';
 
   @override
   String get reticulumBridgePortHint => '4242';
 
   @override
-  String get reticulumBridgeSaveAndConnect => 'Save & connect';
+  String get reticulumBridgeSaveAndConnect => 'Guardar e ligar';
 
   @override
-  String get reticulumBridgeSectionCounters => 'COUNTERS';
+  String get reticulumBridgeSectionCounters => 'CONTADORES';
 
   @override
-  String get reticulumBridgeForwarded => 'Frames forwarded';
+  String get reticulumBridgeForwarded => 'Tramas encaminhadas';
 
   @override
-  String get reticulumBridgeDroppedNoConnection => 'Dropped — no connection';
+  String get reticulumBridgeDroppedNoConnection => 'Descartado - sem ligação';
 
   @override
-  String get reticulumBridgeDroppedBackpressure => 'Dropped — queue full';
+  String get reticulumBridgeDroppedBackpressure => 'Descartado - fila cheia';
 
   @override
-  String get reticulumBridgeDroppedFramingError => 'Dropped — framing error';
+  String get reticulumBridgeDroppedFramingError =>
+      'Descartado - erro de enquadramento';
 
   @override
-  String get reticulumBridgeConnectErrors => 'Connect errors';
+  String get reticulumBridgeConnectErrors => 'Erros de ligação';
 
   @override
-  String get reticulumBridgeQueueDepthLabel => 'Queue depth';
+  String get reticulumBridgeQueueDepthLabel => 'Profundidade da fila';
 
   @override
-  String get reticulumBridgeDropPolicyLabel => 'Drop policy';
+  String get reticulumBridgeDropPolicyLabel => 'Política de descarte';
 
   @override
-  String get reticulumBridgeDropPolicyValue => 'Drop newest when full';
+  String get reticulumBridgeDropPolicyValue =>
+      'Descartar mais recente quando cheio';
 
   @override
-  String get reticulumBridgeSectionUptime => 'UPTIME';
+  String get reticulumBridgeSectionUptime => 'TEMPO ATIVO';
 
   @override
-  String get reticulumBridgeCurrentSession => 'Current session';
+  String get reticulumBridgeCurrentSession => 'Sessão atual';
 
   @override
-  String get reticulumBridgeTotalUptime => 'Total uptime';
+  String get reticulumBridgeTotalUptime => 'Tempo ativo total';
 
   @override
-  String get reticulumBridgeRxOnlyTitle => 'RX-only';
+  String get reticulumBridgeRxOnlyTitle => 'Apenas RX';
 
   @override
   String get reticulumBridgeRxOnlyMessage =>
-      'SocialMesh forwards reassembled RNS frames received over the air. No RNS frames are ever transmitted onto LoRa.';
+      'O SocialMesh encaminha tramas RNS remontadas recebidas pelo ar. Nenhuma trama RNS é transmitida via LoRa.';
 
   @override
-  String get reticulumBridgeLastForwardLabel => 'Last forwarded';
+  String get reticulumBridgeLastForwardLabel => 'Último encaminhamento';
 
   @override
-  String get reticulumBridgeNeverForwarded => 'Never';
+  String get reticulumBridgeNeverForwarded => 'Nunca';
 
   @override
-  String get reticulumBridgeRetryInLabel => 'Next retry in';
+  String get reticulumBridgeRetryInLabel => 'Próxima tentativa em';
 
   @override
-  String get reticulumBridgeBackoffAttemptLabel => 'Backoff attempt';
+  String get reticulumBridgeBackoffAttemptLabel => 'Tentativa de backoff';
 
   @override
-  String get reticulumBridgeConsecutiveErrorsLabel => 'Consecutive errors';
+  String get reticulumBridgeConsecutiveErrorsLabel => 'Erros consecutivos';
 
   @override
-  String get reticulumBridgeAutoDisabledTitle => 'Bridge auto-disabled';
+  String get reticulumBridgeAutoDisabledTitle =>
+      'Ponte desativada automaticamente';
 
   @override
   String get reticulumBridgeAutoDisabledMessage =>
-      'Too many consecutive connect failures. Tap re-enable to try again, or check the host and port.';
+      'Demasiadas falhas de ligação consecutivas. Toque em reativar para tentar novamente, ou verifique o host e a porta.';
 
   @override
-  String get reticulumBridgeReEnable => 'Re-enable';
+  String get reticulumBridgeReEnable => 'Reativar';
 
   @override
-  String get reticulumBridgeSectionSessionLog => 'SESSION LOG';
+  String get reticulumBridgeSectionSessionLog => 'REGISTO DE SESSÃO';
 
   @override
-  String get reticulumBridgeSessionLogEmpty => 'No bridge events yet.';
+  String get reticulumBridgeSessionLogEmpty => 'Ainda não há eventos de ponte.';
 
   @override
-  String get reticulumBridgeCopyDiagnostics => 'Copy diagnostics';
+  String get reticulumBridgeCopyDiagnostics => 'Copiar diagnósticos';
 
   @override
-  String get reticulumBridgeCopiedSnack => 'Diagnostics copied to clipboard';
+  String get reticulumBridgeCopiedSnack =>
+      'Diagnósticos copiados para a área de transferência';
 
   @override
-  String get settingsRnsCompanionTitle => 'RNS Services (Companion)';
+  String get settingsRnsCompanionTitle => 'Serviços RNS (Companion)';
 
   @override
   String get settingsRnsCompanionSubtitle =>
-      'Browse RNS / NomadNet content via the local companion service';
+      'Navegar em conteúdo RNS / NomadNet via o serviço companion local';
 
   @override
-  String get rnsCompanionServicesTitle => 'RNS Services';
+  String get rnsCompanionServicesTitle => 'Serviços RNS';
 
   @override
-  String get rnsCompanionPagesTitle => 'Pages';
+  String get rnsCompanionPagesTitle => 'Páginas';
 
   @override
-  String get rnsCompanionReaderTitle => 'Page';
+  String get rnsCompanionReaderTitle => 'Página';
 
   @override
   String get rnsCompanionConnectionHint =>
-      'Requires rns_companion running on your computer at the configured URL.';
+      'Requer o rns_companion em execução no seu computador no URL configurado.';
 
   @override
   String get rnsCompanionExperimental => 'Experimental';
 
   @override
-  String get rnsCompanionEmptyTitle => 'No services';
+  String get rnsCompanionEmptyTitle => 'Sem serviços';
 
   @override
   String get rnsCompanionEmptyHint =>
-      'The companion is reachable but has no services yet.';
+      'O companion está acessível mas ainda não tem serviços.';
 
   @override
-  String get rnsCompanionEmptyTagline1 => 'browse';
+  String get rnsCompanionEmptyTagline1 => 'navegar';
 
   @override
-  String get rnsCompanionEmptyTagline2 => 'discover';
+  String get rnsCompanionEmptyTagline2 => 'descobrir';
 
   @override
-  String get rnsCompanionEmptyTagline3 => 'read';
+  String get rnsCompanionEmptyTagline3 => 'ler';
 
   @override
-  String get rnsCompanionEmptyAction => 'Reload';
+  String get rnsCompanionEmptyAction => 'Recarregar';
 
   @override
-  String get rnsCompanionPagesEmpty => 'This service has no pages yet.';
+  String get rnsCompanionPagesEmpty => 'Este serviço ainda não tem páginas.';
 
   @override
-  String get rnsCompanionRetry => 'Retry';
+  String get rnsCompanionRetry => 'Tentar novamente';
 
   @override
-  String get rnsCompanionServiceDestinationLabel => 'Destination';
+  String get rnsCompanionServiceDestinationLabel => 'Destino';
 
   @override
-  String get rnsCompanionServiceTypeLabel => 'Type';
+  String get rnsCompanionServiceTypeLabel => 'Tipo';
 
   @override
-  String get rnsCompanionServiceLastSeenLabel => 'Last seen';
+  String get rnsCompanionServiceLastSeenLabel => 'Visto pela última vez';
 
   @override
-  String get rnsCompanionPageUpdatedLabel => 'Updated';
+  String get rnsCompanionPageUpdatedLabel => 'Atualizado';
 
   @override
   String get rnsCompanionErrorConnection =>
-      'Cannot reach companion. Is the service running on your computer?';
+      'Não é possível contactar o companion. O serviço está em execução no seu computador?';
 
   @override
-  String get rnsCompanionErrorTimeout => 'Companion took too long to respond.';
+  String get rnsCompanionErrorTimeout =>
+      'O companion demorou demasiado tempo a responder.';
 
   @override
   String get rnsCompanionErrorParse =>
-      'Companion sent a response we couldn\'t read.';
+      'O companion enviou uma resposta que não foi possível ler.';
 
   @override
-  String get rnsCompanionErrorNotFound => 'Not found.';
+  String get rnsCompanionErrorNotFound => 'Não encontrado.';
 
   @override
   String get rnsCompanionErrorGeneric =>
-      'Something went wrong talking to the companion.';
+      'Ocorreu um erro ao comunicar com o companion.';
 
   @override
-  String get rnsCompanionSettingsTitle => 'Companion Settings';
+  String get rnsCompanionSettingsTitle => 'Definições do Companion';
 
   @override
   String get rnsCompanionSettingsSectionEndpoint => 'ENDPOINT';
 
   @override
-  String get rnsCompanionSettingsHostLabel => 'Host';
+  String get rnsCompanionSettingsHostLabel => 'Servidor';
 
   @override
-  String get rnsCompanionSettingsHostHint => 'laptop IP or hostname';
+  String get rnsCompanionSettingsHostHint => 'IP ou nome do portátil';
 
   @override
-  String get rnsCompanionSettingsPortLabel => 'Port';
+  String get rnsCompanionSettingsPortLabel => 'Porta';
 
   @override
   String get rnsCompanionSettingsPortHint => '8787';
 
   @override
-  String get rnsCompanionSettingsSave => 'Save';
+  String get rnsCompanionSettingsSave => 'Guardar';
 
   @override
-  String get rnsCompanionSettingsSavedSnack => 'Companion endpoint saved';
+  String get rnsCompanionSettingsSavedSnack => 'Endpoint do companion guardado';
 
   @override
   String get rnsCompanionSettingsHint =>
-      'Tip: bind your companion server to 0.0.0.0 so the phone can reach it on your LAN.';
+      'Dica: vincule o servidor companion a 0.0.0.0 para que o telemóvel o alcance na sua rede local.';
 
   @override
-  String get rnsCompanionStatusChecking => 'Checking…';
+  String get rnsCompanionStatusChecking => 'A verificar…';
 
   @override
-  String get rnsCompanionStatusConnected => 'Connected';
+  String get rnsCompanionStatusConnected => 'Ligado';
 
   @override
   String rnsCompanionStatusConnectedWithVersion(String version) {
-    return 'Connected · v$version';
+    return 'Ligado · v$version';
   }
 
   @override
   String rnsCompanionStatusConnectedWithMode(String version, String mode) {
-    return 'Connected · v$version · $mode';
+    return 'Ligado · v$version · $mode';
   }
 
   @override
-  String get rnsCompanionLastAnnounceLabel => 'Last announce';
+  String get rnsCompanionLastAnnounceLabel => 'Último anúncio';
 
   @override
-  String get rnsCompanionLastAnnounceNever => 'no announces yet';
+  String get rnsCompanionLastAnnounceNever => 'ainda sem anúncios';
 
   @override
-  String get rnsCompanionLastAnnounceJustNow => 'just now';
+  String get rnsCompanionLastAnnounceJustNow => 'agora mesmo';
 
   @override
   String rnsCompanionLastAnnounceSeconds(int n) {
-    return '${n}s ago';
+    return 'há ${n}s';
   }
 
   @override
   String rnsCompanionLastAnnounceMinutes(int n) {
-    return '${n}m ago';
+    return 'há ${n}min';
   }
 
   @override
   String rnsCompanionLastAnnounceHours(int n) {
-    return '${n}h ago';
+    return 'há ${n}h';
   }
 
   @override
-  String get rnsCompanionStatusUnreachable => 'Unreachable';
+  String get rnsCompanionStatusUnreachable => 'Inacessível';
 
   @override
   String get nodedexConstellationTitle => 'Constelação';
@@ -40378,7 +40459,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get nodedexConstellationEmptyMissing =>
-      'Sem registo NodeDex para este nó — reabra a constelação após um novo encontro.';
+      'Sem registo NodeDex para este nó - reabra a constelação após um novo encontro.';
 
   @override
   String get nodedexConstellationEmptyFiltered =>
@@ -40560,7 +40641,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get operationDetailRewardsSection => 'RECOMPENSAS';
 
   @override
-  String get operationDetailStatusSection => 'STATUS';
+  String get operationDetailStatusSection => 'ESTADO';
 
   @override
   String get operationDetailStatusCategoryLabel => 'Categoria';
@@ -40606,7 +40687,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get operationStateCompleted => 'Concluída';
 
   @override
-  String get operationFirstContactTitle => 'First Contact';
+  String get operationFirstContactTitle => 'Primeiro Contacto';
 
   @override
   String get operationFirstContactDescription =>
@@ -40619,7 +40700,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get operationFirstContactRewardLabel => 'Distintivo First Contact';
 
   @override
-  String get operationSignalHunterTitle => 'Signal Hunter';
+  String get operationSignalHunterTitle => 'Caçador de Sinais';
 
   @override
   String get operationSignalHunterDescription =>
@@ -40645,7 +40726,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get operationPathfinderRewardLabel => 'Título Pathfinder';
 
   @override
-  String get operationLongRangeObserverTitle => 'Long Range Observer';
+  String get operationLongRangeObserverTitle => 'Observador de Longo Alcance';
 
   @override
   String get operationLongRangeObserverDescription =>
@@ -40655,7 +40736,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get operationLongRangeObserverObjective => 'Observe um nó distante';
 
   @override
-  String get operationNightWatchTitle => 'Night Watch';
+  String get operationNightWatchTitle => 'Guarda Noturna';
 
   @override
   String get operationNightWatchDescription =>
@@ -40665,7 +40746,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get operationNightWatchObjective => 'Mantenha uma conexão ativa';
 
   @override
-  String get operationMultiHopObserverTitle => 'Multi-hop Observer';
+  String get operationMultiHopObserverTitle => 'Observador Multi-salto';
 
   @override
   String get operationMultiHopObserverDescription =>
@@ -40675,7 +40756,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get operationMultiHopObserverObjective => 'Observe uma rota multi-hop';
 
   @override
-  String get operationMapCoverageTitle => 'Map Coverage';
+  String get operationMapCoverageTitle => 'Cobertura do Mapa';
 
   @override
   String get operationMapCoverageDescription =>
@@ -40686,4 +40767,25 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get navigationOperations => 'Operações';
+
+  @override
+  String get presenceStatusActive => 'Ativo';
+
+  @override
+  String get presenceStatusInactive => 'Inativo';
+
+  @override
+  String get presenceStatusUnknown => 'Desconhecido';
+
+  @override
+  String get presenceSeenJustNow => 'Visto agora';
+
+  @override
+  String presenceSeenAgo(String ago) {
+    return 'Visto há $ago';
+  }
+
+  @override
+  String get presenceInferenceTooltip =>
+      'A rede LoRa não tem sinal offline. O estado é inferido.';
 }

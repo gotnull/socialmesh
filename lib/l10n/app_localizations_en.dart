@@ -729,7 +729,7 @@ class AppLocalizationsEn extends AppLocalizations {
     String flightNumber,
     String status,
   ) {
-    return '$nodeName already has a flight ($flightNumber — $status)';
+    return '$nodeName already has a flight ($flightNumber - $status)';
   }
 
   @override
@@ -940,7 +940,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String aetherScheduleRouteExceedsRange(int distance) {
-    return '$distance — exceeds maximum aircraft range';
+    return '$distance - exceeds maximum aircraft range';
   }
 
   @override
@@ -957,7 +957,7 @@ class AppLocalizationsEn extends AppLocalizations {
     String arrival,
     int distance,
   ) {
-    return '$departure and $arrival are $distance km apart — too close for a commercial flight';
+    return '$departure and $arrival are $distance km apart - too close for a commercial flight';
   }
 
   @override
@@ -1034,12 +1034,12 @@ class AppLocalizationsEn extends AppLocalizations {
     String arrival,
     int distance,
   ) {
-    return '$departure and $arrival are only $distance km apart — no commercial routes exist';
+    return '$departure and $arrival are only $distance km apart - no commercial routes exist';
   }
 
   @override
   String aetherScheduleTooFar(String departure, String arrival, int distance) {
-    return '$departure to $arrival is $distance — exceeds maximum aircraft range';
+    return '$departure to $arrival is $distance - exceeds maximum aircraft range';
   }
 
   @override
@@ -2102,7 +2102,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get automationEditorIfDescription => 'only if...';
 
   @override
-  String get automationEditorNoConditions => 'No conditions — always runs';
+  String get automationEditorNoConditions => 'No conditions - always runs';
 
   @override
   String get automationEditorRemoveElse => 'Remove ELSE';
@@ -2518,7 +2518,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String automationScreenRunSuccess(String name) {
-    return 'Ran \"$name\" — conditions bypassed, THEN executed';
+    return 'Ran \"$name\" - conditions bypassed, THEN executed';
   }
 
   @override
@@ -4747,11 +4747,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requiresConnectionGuardDisconnected =>
-      'Disconnected from your node — reconnect to continue.';
+      'Disconnected from your node - reconnect to continue.';
 
   @override
   String get requiresConnectionGuardReconnectingBanner =>
-      'Disconnected — reconnecting…';
+      'Disconnected - reconnecting…';
 
   @override
   String get drawerEnterpriseDeviceManagement => 'Device Management';
@@ -5115,7 +5115,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fileTransferBinaryFileHint =>
-      'Binary file — save to open with an external app';
+      'Binary file - save to open with an external app';
 
   @override
   String get fileTransferCancelConfirm => 'Cancel Transfer';
@@ -5329,7 +5329,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fileTransferStatusOfferSent => 'Offer sent, waiting…';
 
   @override
-  String get fileTransferStatusOfferPending => 'Incoming file — tap to review';
+  String get fileTransferStatusOfferPending => 'Incoming file - tap to review';
 
   @override
   String fileTransferStatusSending(String pct) {
@@ -5368,7 +5368,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fileTransferFailReasonRateLimited =>
-      'Rate limited — try again later';
+      'Rate limited - try again later';
 
   @override
   String get fileTransferFailReasonHashMismatch => 'File verification failed';
@@ -5443,7 +5443,7 @@ class AppLocalizationsEn extends AppLocalizations {
     String fileSize,
     String limit,
   ) {
-    return '$filename is $fileSize KB — mesh transfer limit is $limit KB.';
+    return '$filename is $fileSize KB - mesh transfer limit is $limit KB.';
   }
 
   @override
@@ -6615,7 +6615,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String incidentTerminalStateMessage(String state) {
-    return 'This incident is $state — no further actions available.';
+    return 'This incident is $state - no further actions available.';
   }
 
   @override
@@ -6623,7 +6623,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get incidentTimelineFinalState =>
-      'Final state — no further transitions';
+      'Final state - no further transitions';
 
   @override
   String get incidentTimelineSuperseded => 'superseded';
@@ -9120,7 +9120,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meshcoreSyncTimeRejected =>
-      'Device clock is already ahead — sync skipped';
+      'Device clock is already ahead - sync skipped';
 
   @override
   String get meshcoreLocationSetting => 'Location';
@@ -10253,7 +10253,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get messagingTechInfoExplainHopsBody =>
-      'The number of times this message was relayed by other nodes before reaching you. \'Direct\' means no relay — the sender was in direct radio range.';
+      'The number of times this message was relayed by other nodes before reaching you. \'Direct\' means no relay - the sender was in direct radio range.';
 
   @override
   String get messagingTechInfoExplainSnrTitle => 'Signal-to-Noise Ratio (SNR)';
@@ -10267,7 +10267,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get messagingTechInfoExplainRssiBody =>
-      'Received Signal Strength Indicator — how strong the radio signal was when it arrived. Closer to 0 is stronger. Typical range: -120 dBm (very weak) to -40 dBm (very strong).';
+      'Received Signal Strength Indicator - how strong the radio signal was when it arrived. Closer to 0 is stronger. Typical range: -120 dBm (very weak) to -40 dBm (very strong).';
 
   @override
   String get messagingTechInfoExplainTransportTitle => 'Transport';
@@ -12260,7 +12260,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nodedexExportNothingToExport =>
-      'Nothing to export — NodeDex is empty';
+      'Nothing to export - NodeDex is empty';
 
   @override
   String get nodedexExportShareSubject => 'SocialMesh NodeDex Export';
@@ -13929,7 +13929,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingDashboardDescription =>
-      'Live battery levels, signal strength, node counts — all in one view.\nBuild the dashboard that fits how you work.';
+      'Live battery levels, signal strength, node counts - all in one view.\nBuild the dashboard that fits how you work.';
 
   @override
   String get onboardingDashboardTitle => 'See Everything at a Glance';
@@ -13998,7 +13998,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingNodedexAdvisor =>
-      'Legendary, Epic, Rare — every node you encounter earns its place in your collection. The more you explore, the richer your NodeDex becomes.';
+      'Legendary, Epic, Rare - every node you encounter earns its place in your collection. The more you explore, the richer your NodeDex becomes.';
 
   @override
   String get onboardingNodedexBaseCamp => 'Base Camp Node';
@@ -14077,7 +14077,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingSignalsAdvisor =>
-      'Think of Signals like ephemeral stories — but over radio. No cloud, no server. They exist only on the mesh, only for as long as you choose.';
+      'Think of Signals like ephemeral stories - but over radio. No cloud, no server. They exist only on the mesh, only for as long as you choose.';
 
   @override
   String get onboardingSignalsDescription =>
@@ -14091,7 +14091,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingWelcomeAdvisor =>
-      'I\'m Ico. I\'ll walk you through a mesh radio platform built for the real world — where cell towers don\'t reach.';
+      'I\'m Ico. I\'ll walk you through a mesh radio platform built for the real world - where cell towers don\'t reach.';
 
   @override
   String get onboardingWelcomeDescription =>
@@ -14273,7 +14273,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get presenceQuietMesh =>
-      'Mesh is quiet right now — nodes appear as they come online.';
+      'Mesh is quiet right now - nodes appear as they come online.';
 
   @override
   String get presenceRecentActivity => 'Recent Activity';
@@ -14618,7 +14618,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileCloudStartingUp =>
-      'Cloud services starting up — try again shortly';
+      'Cloud services starting up - try again shortly';
 
   @override
   String get profileContinueApple => 'Continue with Apple';
@@ -14804,7 +14804,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Cloud sync temporarily unavailable';
 
   @override
-  String get profileSyncTimedOut => 'Sync timed out — try again';
+  String get profileSyncTimedOut => 'Sync timed out - try again';
 
   @override
   String profileSynced(String email) {
@@ -15036,7 +15036,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reachabilityScoringModelContent =>
-      'Opportunistic Mesh Reach Likelihood Model (v1) — BETA\n\nA heuristic scoring model that estimates likelihood of reaching a node based on observed RF metrics and packet history. This score represents likelihood, not reachability. Meshtastic forwards packets opportunistically without routing. A high score does not guarantee delivery.';
+      'Opportunistic Mesh Reach Likelihood Model (v1) - BETA\n\nA heuristic scoring model that estimates likelihood of reaching a node based on observed RF metrics and packet history. This score represents likelihood, not reachability. Meshtastic forwards packets opportunistically without routing. A high score does not guarantee delivery.';
 
   @override
   String get reachabilityScoringModelTitle => 'Scoring Model';
@@ -15097,7 +15097,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get regionSelectionPairingHintMessage =>
-      'Pairing needs to be refreshed. The radio may have cleared its Bluetooth identity after the region change — forget the device in Bluetooth Settings and pair again.';
+      'Pairing needs to be refreshed. The radio may have cleared its Bluetooth identity after the region change - forget the device in Bluetooth Settings and pair again.';
 
   @override
   String get regionSelectionPairingInvalidation =>
@@ -15827,7 +15827,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scannerPairingInvalidatedError =>
-      'Pairing needs to be refreshed — the radio\'s Bluetooth identity has changed. Forget the device in Bluetooth Settings and pair again.';
+      'Pairing needs to be refreshed - the radio\'s Bluetooth identity has changed. Forget the device in Bluetooth Settings and pair again.';
 
   @override
   String get scannerPairingRefreshTitle => 'Pairing needs to be refreshed';
@@ -18204,7 +18204,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socialActivityTagline2 =>
-      'Likes, comments, follows — all in one place.\nPost something to get started.';
+      'Likes, comments, follows - all in one place.\nPost something to get started.';
 
   @override
   String get socialActivityTagline3 =>
@@ -20759,7 +20759,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get telemetryTracerouteDirectConnection =>
-      'Direct connection — no intermediate hops';
+      'Direct connection - no intermediate hops';
 
   @override
   String get telemetryTracerouteEmptyHint =>
@@ -21977,7 +21977,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get widgetBuilderLocationSharedRecently =>
-      'Location was shared recently — please wait before sharing again';
+      'Location was shared recently - please wait before sharing again';
 
   @override
   String widgetBuilderLocationSharedWithNode(String name) {
@@ -23244,12 +23244,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String contentModerationRemovedWithReason(String reason) {
-    return 'Content removed — $reason';
+    return 'Content removed - $reason';
   }
 
   @override
   String get contentModerationRemovedGeneric =>
-      'Content removed — your content violated our Community Guidelines.';
+      'Content removed - your content violated our Community Guidelines.';
 
   @override
   String get contentModerationLearnMore => 'Learn More';
@@ -23522,7 +23522,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String actionSheetTracerouteSent(String target) {
-    return 'Traceroute sent to $target — check Traceroute History for results';
+    return 'Traceroute sent to $target - check Traceroute History for results';
   }
 
   @override
@@ -23532,22 +23532,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get premiumPreviewAutomations =>
-      'Preview Mode — Upgrade to create automations';
+      'Preview Mode - Upgrade to create automations';
 
   @override
   String get premiumPreviewIfttt =>
-      'Preview Mode — Upgrade to connect services';
+      'Preview Mode - Upgrade to connect services';
 
   @override
-  String get premiumPreviewWidgets => 'Preview Mode — Upgrade to build widgets';
+  String get premiumPreviewWidgets => 'Preview Mode - Upgrade to build widgets';
 
   @override
   String get premiumPreviewRingtones =>
-      'Preview Mode — Upgrade to access full library';
+      'Preview Mode - Upgrade to access full library';
 
   @override
   String get premiumPreviewThemes =>
-      'Preview Mode — Upgrade to unlock all colors';
+      'Preview Mode - Upgrade to unlock all colors';
 
   @override
   String get premiumUpgrade => 'Upgrade';
@@ -23593,7 +23593,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get googlePlayUnavailable =>
-      'Google Play unavailable on this device — try alternative payment.';
+      'Google Play unavailable on this device - try alternative payment.';
 
   @override
   String get buyMeACoffeeHandoffTitle => 'Pay via Buy Me a Coffee';
@@ -24259,7 +24259,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get restorePurchasesPending =>
-      'Your purchase is still being processed by the store. This can take up to 72 hours — please try again later.';
+      'Your purchase is still being processed by the store. This can take up to 72 hours - please try again later.';
 
   @override
   String get bluetoothTitle => 'Bluetooth';
@@ -25265,13 +25265,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sync your mesh data across devices. Your local data always stays free and accessible.';
 
   @override
-  String get cloudSyncNodeDex => 'NodeDex — encounters, tags, notes';
+  String get cloudSyncNodeDex => 'NodeDex - encounters, tags, notes';
 
   @override
-  String get cloudSyncAutomations => 'Automations — rules and triggers';
+  String get cloudSyncAutomations => 'Automations - rules and triggers';
 
   @override
-  String get cloudSyncWidgets => 'Custom Widgets — layouts and data';
+  String get cloudSyncWidgets => 'Custom Widgets - layouts and data';
 
   @override
   String get cloudSyncOfflineNote => 'Works fully offline without it';
@@ -25639,15 +25639,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bgConnLiveActivityDestMeshDesc =>
-      'Show your whole mesh — node count and overall link health.';
+      'Show your whole mesh - node count and overall link health.';
 
   @override
   String get bgConnLiveActivityDestBestPeerDesc =>
-      'Show the strongest peer — auto-tracks the best signal.';
+      'Show the strongest peer - auto-tracks the best signal.';
 
   @override
   String get bgConnLiveActivityDestActivePeerDesc =>
-      'Show your most-recent DM partner — switches as you chat.';
+      'Show your most-recent DM partner - switches as you chat.';
 
   @override
   String get linkedDevicesTitle => 'Linked Devices';
@@ -26982,17 +26982,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your subscription won\'t renew. You can resubscribe anytime.';
 
   @override
-  String get accountSubFeatureNodedex => 'NodeDex — encounters, tags, notes';
+  String get accountSubFeatureNodedex => 'NodeDex - encounters, tags, notes';
 
   @override
-  String get accountSubFeatureAutomations => 'Automations — rules and triggers';
+  String get accountSubFeatureAutomations => 'Automations - rules and triggers';
 
   @override
-  String get accountSubFeatureWidgets => 'Custom Widgets — layouts and data';
+  String get accountSubFeatureWidgets => 'Custom Widgets - layouts and data';
 
   @override
   String get accountSubFeatureBackup =>
-      'Backup — restore after reinstall or new phone';
+      'Backup - restore after reinstall or new phone';
 
   @override
   String get accountSubFeatureOffline => 'Works fully offline without it';
@@ -28466,7 +28466,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String mqttConfigDutyCycleWarning(String percent) {
-    return 'Your region has a $percent% duty cycle. MQTT is not advised when you are duty cycle restricted — the extra traffic will quickly overwhelm your LoRa mesh.';
+    return 'Your region has a $percent% duty cycle. MQTT is not advised when you are duty cycle restricted - the extra traffic will quickly overwhelm your LoRa mesh.';
   }
 
   @override
@@ -29369,7 +29369,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String adminBroadcastCountdownCancel(int seconds) {
-    return 'Cancel — sending in $seconds...';
+    return 'Cancel - sending in $seconds...';
   }
 
   @override
@@ -30126,7 +30126,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminBugReportsAnonNotice =>
-      'Anonymous report — replies cannot be delivered.';
+      'Anonymous report - replies cannot be delivered.';
 
   @override
   String get adminBugReportsEmptyFilter => 'No reports match your filter.';
@@ -30936,7 +30936,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get globalLayerMqttNote =>
-      'Under the hood, this uses an MQTT broker — a standard internet messaging server. You do not need to know how MQTT works to use the Global Layer.';
+      'Under the hood, this uses an MQTT broker - a standard internet messaging server. You do not need to know how MQTT works to use the Global Layer.';
 
   @override
   String get globalLayerNext => 'Next';
@@ -31478,7 +31478,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpNodesStatusBubble =>
-      '**Green dot** means **Online** (heard recently). **Yellow** means **Seen recently**. **Gray** means **Offline**. LoRa has no offline signal—status is inferred.';
+      '**Green dot** means **Online** (heard recently). **Yellow** means **Seen recently**. **Gray** means **Offline**. LoRa has no offline signal-status is inferred.';
 
   @override
   String get helpNodesInfoBubble =>
@@ -31714,15 +31714,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpCreateIntroBubble =>
-      'Time to **Go Active**! A signal is an ephemeral broadcast — it lives on the mesh for a set time, then fades away. Let me walk you through it.';
+      'Time to **Go Active**! A signal is an ephemeral broadcast - it lives on the mesh for a set time, then fades away. Let me walk you through it.';
 
   @override
   String get helpCreateTextBubble =>
-      'Type your message in the main field — up to **280 characters**. The circular counter in the corner shows how many you have left.';
+      'Type your message in the main field - up to **280 characters**. The circular counter in the corner shows how many you have left.';
 
   @override
   String get helpCreateImageBubble =>
-      'Tap the **image icon** to attach a photo. Images are uploaded via cloud when you are online — they are not available in mesh-only mode.';
+      'Tap the **image icon** to attach a photo. Images are uploaded via cloud when you are online - they are not available in mesh-only mode.';
 
   @override
   String get helpCreateLocationBubble =>
@@ -31730,11 +31730,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpCreateTtlBubble =>
-      'The **timer icon** sets your TTL — how long the signal stays alive. Choose from **15 minutes** up to **24 hours**. Shorter times work great for quick check-ins.';
+      'The **timer icon** sets your TTL - how long the signal stays alive. Choose from **15 minutes** up to **24 hours**. Shorter times work great for quick check-ins.';
 
   @override
   String get helpCreateIntentBubble =>
-      'Pick a **Presence Intent** to tell the mesh what you are up to — exploring, monitoring, helping, or just listening. It adds context without extra words.';
+      'Pick a **Presence Intent** to tell the mesh what you are up to - exploring, monitoring, helping, or just listening. It adds context without extra words.';
 
   @override
   String get helpCreateStatusBubble =>
@@ -31842,7 +31842,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpSettingsCloudBubble =>
-      '**Cloud Sync** is a premium subscription that syncs your **NodeDex**, **automations**, **widgets**, and **profile** across all your devices. It also serves as your **backup** — if you ever delete the app or switch phones, Cloud Sync restores everything. Without it, all data lives only on this device and is lost if the app is removed.';
+      '**Cloud Sync** is a premium subscription that syncs your **NodeDex**, **automations**, **widgets**, and **profile** across all your devices. It also serves as your **backup** - if you ever delete the app or switch phones, Cloud Sync restores everything. Without it, all data lives only on this device and is lost if the app is removed.';
 
   @override
   String get helpProfileIntroBubble =>
@@ -31858,7 +31858,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpProfileCloudBubble =>
-      '**Cloud Sync** is a premium feature that backs up your profile, NodeDex, automations, and widgets to the cloud. It protects your data — if you delete the app or get a new phone, everything **restores automatically** when you sign back in. Without it, your data exists only on this device.';
+      '**Cloud Sync** is a premium feature that backs up your profile, NodeDex, automations, and widgets to the cloud. It protects your data - if you delete the app or get a new phone, everything **restores automatically** when you sign back in. Without it, your data exists only on this device.';
 
   @override
   String get helpMesh3dIntroBubble =>
@@ -31946,7 +31946,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpPresenceActiveBubble =>
-      '**Online** nodes (green) were heard within the last 2 hours — matching the Meshtastic firmware definition of online.';
+      '**Online** nodes (green) were heard within the last 2 hours - matching the Meshtastic firmware definition of online.';
 
   @override
   String get helpPresenceRecentBubble =>
@@ -32038,15 +32038,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpNodedexIntroBubble =>
-      'Welcome to the **NodeDex** — your personal mesh field journal! Every node you discover is recorded here with a unique **Sigil** and personality **Trait**.';
+      'Welcome to the **NodeDex** - your personal mesh field journal! Every node you discover is recorded here with a unique **Sigil** and personality **Trait**.';
 
   @override
   String get helpNodedexSigilsBubble =>
-      'Each node gets a **procedural Sigil** — a geometric glyph generated from its identity. No two nodes share the same sigil. Think of it as a visual fingerprint for the mesh!';
+      'Each node gets a **procedural Sigil** - a geometric glyph generated from its identity. No two nodes share the same sigil. Think of it as a visual fingerprint for the mesh!';
 
   @override
   String get helpNodedexTraitsBubble =>
-      'Nodes earn **Traits** based on real behavior — **Wanderer** moves between regions, **Beacon** is always online, **Ghost** is rarely seen, **Sentinel** holds a fixed position, **Relay** forwards traffic.';
+      'Nodes earn **Traits** based on real behavior - **Wanderer** moves between regions, **Beacon** is always online, **Ghost** is rarely seen, **Sentinel** holds a fixed position, **Relay** forwards traffic.';
 
   @override
   String get helpNodedexFiltersBubble =>
@@ -32054,35 +32054,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpNodedexFieldJournalBubble =>
-      'As you observe more nodes, your **field journal** fills in — each node earns a **Patina score** and **identity overlay** based on real encounters. The more you observe, the richer the detail!';
+      'As you observe more nodes, your **field journal** fills in - each node earns a **Patina score** and **identity overlay** based on real encounters. The more you observe, the richer the detail!';
 
   @override
   String get helpNodedexAlbumModeBubble =>
-      'Tap the **view toggle** in the app bar to switch to **Album mode** — a collector-style card grid grouped by trait, rarity, or region. Each card shows the node\'s sigil with a holographic shimmer based on rarity!';
+      'Tap the **view toggle** in the app bar to switch to **Album mode** - a collector-style card grid grouped by trait, rarity, or region. Each card shows the node\'s sigil with a holographic shimmer based on rarity!';
 
   @override
   String get helpNodedexAtmosphereBubble =>
-      'Notice the subtle **ambient particles** behind the screen? That is the **Elemental Atmosphere** — rain, embers, mist, and starlight driven by your real mesh data. More nodes and activity means more atmosphere!';
+      'Notice the subtle **ambient particles** behind the screen? That is the **Elemental Atmosphere** - rain, embers, mist, and starlight driven by your real mesh data. More nodes and activity means more atmosphere!';
 
   @override
   String get helpNodedexCloudSyncBubble =>
-      'Your NodeDex is stored locally in SQLite and survives app restarts — but **not** app deletion. If you uninstall the app or switch phones, your local NodeDex is gone. With a **Cloud Sync** subscription, your entire journal — sigils, encounters, social tags, notes, and co-seen links — backs up to the cloud and **restores automatically** on any device you sign into.';
+      'Your NodeDex is stored locally in SQLite and survives app restarts - but **not** app deletion. If you uninstall the app or switch phones, your local NodeDex is gone. With a **Cloud Sync** subscription, your entire journal - sigils, encounters, social tags, notes, and co-seen links - backs up to the cloud and **restores automatically** on any device you sign into.';
 
   @override
   String get helpNodedexExportBubble =>
-      'Use the **menu** to **export** your NodeDex as a JSON file for backup, or **import** one from another device. Your field journal travels with you — even without Cloud Sync!';
+      'Use the **menu** to **export** your NodeDex as a JSON file for backup, or **import** one from another device. Your field journal travels with you - even without Cloud Sync!';
 
   @override
   String get helpNodedexSigilBubble =>
-      'This is the node\'s **Sigil** — a unique procedural glyph generated from its identity. No two nodes share the same sigil. It\'s like a visual fingerprint!';
+      'This is the node\'s **Sigil** - a unique procedural glyph generated from its identity. No two nodes share the same sigil. It\'s like a visual fingerprint!';
 
   @override
   String get helpNodedexTraitBubble =>
-      'The **Trait** is an inferred personality based on how this node behaves — movement patterns, signal consistency, encounter frequency. Confidence grows with more data.';
+      'The **Trait** is an inferred personality based on how this node behaves - movement patterns, signal consistency, encounter frequency. Confidence grows with more data.';
 
   @override
   String get helpNodedexAutoSummaryBubble =>
-      '**Auto-Summary** computes insights from encounter history — time-of-day distribution, observation streaks, and busiest-day patterns. Everything updates automatically as new encounters arrive.';
+      '**Auto-Summary** computes insights from encounter history - time-of-day distribution, observation streaks, and busiest-day patterns. Everything updates automatically as new encounters arrive.';
 
   @override
   String get helpNodedexObservationTimelineBubble =>
@@ -32094,15 +32094,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpNodedexSignalBubble =>
-      '**Signal Records** track the best and most recent SNR and RSSI values. These help you understand link quality — higher SNR and less negative RSSI mean stronger signals.';
+      '**Signal Records** track the best and most recent SNR and RSSI values. These help you understand link quality - higher SNR and less negative RSSI mean stronger signals.';
 
   @override
   String get helpNodedexSocialTagBubble =>
-      'The **Social Tag** is a label you assign to categorize this node — friend, relay, base station, or anything else. It\'s your personal metadata, never shared over the mesh.';
+      'The **Social Tag** is a label you assign to categorize this node - friend, relay, base station, or anything else. It\'s your personal metadata, never shared over the mesh.';
 
   @override
   String get helpNodedexNoteBubble =>
-      '**Your Note** is a free-text field for anything you want to remember about this node. Location hints, operator name, antenna type — whatever helps you.';
+      '**Your Note** is a free-text field for anything you want to remember about this node. Location hints, operator name, antenna type - whatever helps you.';
 
   @override
   String get helpNodedexRegionsBubble =>
@@ -32114,23 +32114,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpNodedexActivityTimelineBubble =>
-      'The **Activity Timeline** is a unified chronological feed of everything observed about this node — encounters, messages, presence changes, signals, and milestones.';
+      'The **Activity Timeline** is a unified chronological feed of everything observed about this node - encounters, messages, presence changes, signals, and milestones.';
 
   @override
   String get helpNodedexCoseenBubble =>
-      '**Co-Seen Links** show nodes frequently observed in the same session as this one. Tap any link to see the full relationship — shared encounters, message counts, and connection strength.';
+      '**Co-Seen Links** show nodes frequently observed in the same session as this one. Tap any link to see the full relationship - shared encounters, message counts, and connection strength.';
 
   @override
   String get helpNodedexDeviceBubble =>
-      '**Device Info** shows live telemetry — battery level, hardware model, firmware version, and uptime. This data comes from the node directly and updates in real time.';
+      '**Device Info** shows live telemetry - battery level, hardware model, firmware version, and uptime. This data comes from the node directly and updates in real time.';
 
   @override
   String get helpAlbumIntroBubble =>
-      'Welcome to the **Collector Album** — a card-collector view of your NodeDex! Every discovered node becomes a collectible card with its sigil, trait, and rarity tier.';
+      'Welcome to the **Collector Album** - a card-collector view of your NodeDex! Every discovered node becomes a collectible card with its sigil, trait, and rarity tier.';
 
   @override
   String get helpAlbumCoverBubble =>
-      'The **Album Cover** is your dashboard — it shows your **Explorer Title**, total nodes, encounters, regions explored, and a rarity breakdown bar. Watch your collection grow!';
+      'The **Album Cover** is your dashboard - it shows your **Explorer Title**, total nodes, encounters, regions explored, and a rarity breakdown bar. Watch your collection grow!';
 
   @override
   String get helpAlbumGroupingBubble =>
@@ -32142,27 +32142,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpAlbumInteractionsBubble =>
-      '**Tap** a card to open the node\'s full profile. **Long-press** to open the **Card Gallery** — a full-screen carousel where you can swipe through cards and tap to flip them over for stats!';
+      '**Tap** a card to open the node\'s full profile. **Long-press** to open the **Card Gallery** - a full-screen carousel where you can swipe through cards and tap to flip them over for stats!';
 
   @override
   String get helpAlbumGalleryBubble =>
-      'In the **Card Gallery**, swipe left and right to browse cards. **Tap** a card to flip it — the back shows discovery stats, signal records, encounter count, and patina score. Swipe down to dismiss.';
+      'In the **Card Gallery**, swipe left and right to browse cards. **Tap** a card to flip it - the back shows discovery stats, signal records, encounter count, and patina score. Swipe down to dismiss.';
 
   @override
   String get helpAlbumHolographicBubble =>
-      'Higher-rarity cards shimmer with a **holographic effect** — the rarer the card, the brighter the glow. This effect respects your **reduce-motion** setting and uses an optimized painter for grid thumbnails.';
+      'Higher-rarity cards shimmer with a **holographic effect** - the rarer the card, the brighter the glow. This effect respects your **reduce-motion** setting and uses an optimized painter for grid thumbnails.';
 
   @override
   String get helpAlbumPersistenceBubble =>
-      'Your album view preference and grouping choice are **saved automatically**. With **Cloud Sync**, your entire collection — sigils, encounters, tags, notes — backs up and syncs across all your devices. Delete the app, get a new phone — your collection is safe and restores on sign-in.';
+      'Your album view preference and grouping choice are **saved automatically**. With **Cloud Sync**, your entire collection - sigils, encounters, tags, notes - backs up and syncs across all your devices. Delete the app, get a new phone - your collection is safe and restores on sign-in.';
 
   @override
   String get helpConstellationIntroBubble =>
-      'Welcome to the **Constellation** — a star-map of your mesh network! Nodes appear as stars, and lines between them show **co-seen relationships** — nodes observed in the same session.';
+      'Welcome to the **Constellation** - a star-map of your mesh network! Nodes appear as stars, and lines between them show **co-seen relationships** - nodes observed in the same session.';
 
   @override
   String get helpConstellationLayoutBubble =>
-      'The layout is **force-directed** — nodes that are frequently co-seen cluster together, while isolated nodes drift to the edges. The graph stabilizes after a moment so nothing shifts while you explore.';
+      'The layout is **force-directed** - nodes that are frequently co-seen cluster together, while isolated nodes drift to the edges. The graph stabilizes after a moment so nothing shifts while you explore.';
 
   @override
   String get helpConstellationInteractionsBubble =>
@@ -32178,23 +32178,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpConstellationAtmosphereBubble =>
-      'The constellation has its own **Elemental Atmosphere** — subtle starlight and mist particles behind the graph, driven by your real mesh data. It never obstructs the visualization.';
+      'The constellation has its own **Elemental Atmosphere** - subtle starlight and mist particles behind the graph, driven by your real mesh data. It never obstructs the visualization.';
 
   @override
   String get helpConstellationDataBubble =>
-      'Co-seen data is built **automatically** from your encounters. The more sessions you observe, the richer the constellation becomes. All relationship data is stored locally — but is **lost if you delete the app**. With **Cloud Sync**, your entire constellation backs up and restores on any device you sign into.';
+      'Co-seen data is built **automatically** from your encounters. The more sessions you observe, the richer the constellation becomes. All relationship data is stored locally - but is **lost if you delete the app**. With **Cloud Sync**, your entire constellation backs up and restores on any device you sign into.';
 
   @override
   String get helpCloudSyncIntroBubble =>
-      '**Cloud Sync** is a premium subscription that keeps your mesh data synchronized across all your devices — and serves as your **backup**. Without it, all data lives only on-device and is permanently lost if you delete the app or lose your phone.';
+      '**Cloud Sync** is a premium subscription that keeps your mesh data synchronized across all your devices - and serves as your **backup**. Without it, all data lives only on-device and is permanently lost if you delete the app or lose your phone.';
 
   @override
   String get helpCloudSyncWhatSyncsBubble =>
-      'Cloud Sync backs up your **NodeDex** (sigils, encounters, social tags, notes, co-seen links), **automations**, **custom widgets**, and **profile**. Reinstall the app, switch phones, or sign in on a second device — your entire mesh identity restores automatically.';
+      'Cloud Sync backs up your **NodeDex** (sigils, encounters, social tags, notes, co-seen links), **automations**, **custom widgets**, and **profile**. Reinstall the app, switch phones, or sign in on a second device - your entire mesh identity restores automatically.';
 
   @override
   String get helpCloudSyncOfflineFirstBubble =>
-      'The app is **offline-first**. Changes are saved locally to SQLite immediately and queued in an **outbox**. When you are online, the outbox drains to the cloud automatically — no manual sync needed.';
+      'The app is **offline-first**. Changes are saved locally to SQLite immediately and queued in an **outbox**. When you are online, the outbox drains to the cloud automatically - no manual sync needed.';
 
   @override
   String get helpCloudSyncConflictBubble =>
@@ -32206,11 +32206,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpCloudSyncWithoutBubble =>
-      'Without Cloud Sync, all your data stays on-device only. It survives app restarts, but **not** app deletion or a phone reset. You can **export** your NodeDex as JSON for manual backup. Cloud Sync automates this and adds cross-device restore — but the app works fully offline without it.';
+      'Without Cloud Sync, all your data stays on-device only. It survives app restarts, but **not** app deletion or a phone reset. You can **export** your NodeDex as JSON for manual backup. Cloud Sync automates this and adds cross-device restore - but the app works fully offline without it.';
 
   @override
   String get helpAetherIntroBubble =>
-      '**Aether** lets you track Meshtastic nodes at altitude! At 35,000 ft, LoRa signals can reach **400+ km** — far beyond typical ground-level range.';
+      '**Aether** lets you track Meshtastic nodes at altitude! At 35,000 ft, LoRa signals can reach **400+ km** - far beyond typical ground-level range.';
 
   @override
   String get helpAetherScheduleBubble =>
@@ -32226,7 +32226,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpAetherLeaderboardBubble =>
-      'The **leaderboard is global and persistent** — stored in the cloud, not on your device. Rankings survive app reinstalls and are visible to the entire SocialMesh community. Top 3 get gold, silver, and bronze!';
+      'The **leaderboard is global and persistent** - stored in the cloud, not on your device. Rankings survive app reinstalls and are visible to the entire SocialMesh community. Top 3 get gold, silver, and bronze!';
 
   @override
   String get helpAetherTipsBubble =>
@@ -32242,7 +32242,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpTakAffiliationsBubble =>
-      'Every entity is colored by **standard affiliation** — blue for friendly, red for hostile, green for neutral, yellow for unknown. The icon changes by dimension too: ground, air, sea, or space.';
+      'Every entity is colored by **standard affiliation** - blue for friendly, red for hostile, green for neutral, yellow for unknown. The icon changes by dimension too: ground, air, sea, or space.';
 
   @override
   String get helpTakFilterBubble =>
@@ -32250,7 +32250,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpTakDetailBubble =>
-      'Tap any entity to open its **detail screen** — full CoT fields, coordinates, speed, course, and raw XML. Use the map icon to jump straight to its position on the map.';
+      'Tap any entity to open its **detail screen** - full CoT fields, coordinates, speed, course, and raw XML. Use the map icon to jump straight to its position on the map.';
 
   @override
   String get helpTakTrackingBubble =>
@@ -32266,7 +32266,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpRadioLicenceBubble =>
-      'Some regions require an **amateur radio licence** before you can transmit. Check with your local regulatory authority — for example, ACMA in Australia or FCC in the US.';
+      'Some regions require an **amateur radio licence** before you can transmit. Check with your local regulatory authority - for example, ACMA in Australia or FCC in the US.';
 
   @override
   String get helpRadioInterferenceBubble =>
@@ -32278,7 +32278,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpUseIntroBubble =>
-      'SocialMesh is a powerful tool — automations, signals, and mesh messaging give you a lot of capability. With that comes responsibility!';
+      'SocialMesh is a powerful tool - automations, signals, and mesh messaging give you a lot of capability. With that comes responsibility!';
 
   @override
   String get helpUseLawfulBubble =>
@@ -32298,7 +32298,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpResponsibilityIntroBubble =>
-      'SocialMesh is designed to be **privacy-first**. Your messages and data stay on your device — we do not store them on any server.';
+      'SocialMesh is designed to be **privacy-first**. Your messages and data stay on your device - we do not store them on any server.';
 
   @override
   String get helpResponsibilitySignalsBubble =>
@@ -32318,7 +32318,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpFtIntroBubble =>
-      '**File Transfers** let you send small files — text, configs, coordinates — directly over LoRa radio. No internet, no servers.';
+      '**File Transfers** let you send small files - text, configs, coordinates - directly over LoRa radio. No internet, no servers.';
 
   @override
   String get helpFtHowBubble =>
@@ -32330,7 +32330,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpFtLimitBubble =>
-      'Files are capped at **8 KB**. LoRa is a slow, shared, low-power radio — a single transfer can occupy the channel for up to a minute at long-range settings.';
+      'Files are capped at **8 KB**. LoRa is a slow, shared, low-power radio - a single transfer can occupy the channel for up to a minute at long-range settings.';
 
   @override
   String get helpFtBetaBubble =>
@@ -32354,7 +32354,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpFtlDutyBubble =>
-      'EU868 and similar bands impose a **1% duty cycle** — your radio can only transmit for 36 seconds per hour. At SF12, one 8 KB transfer nearly exhausts that entire budget.';
+      'EU868 and similar bands impose a **1% duty cycle** - your radio can only transmit for 36 seconds per hour. At SF12, one 8 KB transfer nearly exhausts that entire budget.';
 
   @override
   String get helpFtlCapBubble =>
@@ -32366,7 +32366,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpNodeDexSectionSigil =>
-      'A unique procedural glyph generated from this node\'s identity. The shape, symmetry, and color palette are deterministic — the same node always produces the same sigil. Think of it as a visual fingerprint.';
+      'A unique procedural glyph generated from this node\'s identity. The shape, symmetry, and color palette are deterministic - the same node always produces the same sigil. Think of it as a visual fingerprint.';
 
   @override
   String get helpNodeDexSectionTrait =>
@@ -32410,7 +32410,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpNodeDexSectionCoseen =>
-      'Nodes that are frequently observed in the same session as this node. A higher count means these nodes tend to appear together — they may be co-located, part of the same deployment, or carried by the same person. Tap any link to see the full edge detail including shared encounter history and message activity.';
+      'Nodes that are frequently observed in the same session as this node. A higher count means these nodes tend to appear together - they may be co-located, part of the same deployment, or carried by the same person. Tap any link to see the full edge detail including shared encounter history and message activity.';
 
   @override
   String get helpNodeDexSectionDevice =>
@@ -32418,11 +32418,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpNodeDexSectionTraitEvidence =>
-      'The observations that most strongly support the primary trait assigned above. Each bullet is a concrete signal drawn from encounter history — co-seen connections, tenure, mobility, signal consistency, and timing. These are the inputs that drove the confidence score.';
+      'The observations that most strongly support the primary trait assigned above. Each bullet is a concrete signal drawn from encounter history - co-seen connections, tenure, mobility, signal consistency, and timing. These are the inputs that drove the confidence score.';
 
   @override
   String get helpNodeDexSectionAdditionalTraits =>
-      'Other behavioral archetypes that also scored for this node, ranked by confidence. A node rarely fits a single archetype perfectly — secondary traits reveal nuance, like an Anchor that also acts as a Beacon, or a Drifter with Sentinel-like stretches.';
+      'Other behavioral archetypes that also scored for this node, ranked by confidence. A node rarely fits a single archetype perfectly - secondary traits reveal nuance, like an Anchor that also acts as a Beacon, or a Drifter with Sentinel-like stretches.';
 
   @override
   String get helpNodeDexSectionPetCompanionSelf =>
@@ -32438,11 +32438,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpNodeDexSectionFieldNote =>
-      'A short, deterministic journal entry generated from this node\'s identity and primary trait — like a naturalist\'s field observation. The same node always produces the same note; it never changes, and it never travels over the mesh.';
+      'A short, deterministic journal entry generated from this node\'s identity and primary trait - like a naturalist\'s field observation. The same node always produces the same note; it never changes, and it never travels over the mesh.';
 
   @override
   String get helpNodeDexSectionRadioCompatibility =>
-      'Compares your local radio\'s current preset and frequency against the values stamped on this node\'s last observation. Use this to spot mismatches that prevent direct RF reachability — for example, a node observed on a long-range preset while your radio is on short-range.';
+      'Compares your local radio\'s current preset and frequency against the values stamped on this node\'s last observation. Use this to spot mismatches that prevent direct RF reachability - for example, a node observed on a long-range preset while your radio is on short-range.';
 
   @override
   String get nodedexHelpRadioCompatibility => 'Radio compatibility';
@@ -32465,11 +32465,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpNodeDexSectionAlbumPatina =>
-      'Patina is a composite score reflecting how deeply you have observed a node — encounter frequency, signal quality, co-seen connections, and time since first discovery all contribute. Higher patina means richer visual detail on the card.';
+      'Patina is a composite score reflecting how deeply you have observed a node - encounter frequency, signal quality, co-seen connections, and time since first discovery all contribute. Higher patina means richer visual detail on the card.';
 
   @override
   String get helpNodeDexSectionAlbumCloudSync =>
-      'With a Cloud Sync subscription, your entire NodeDex album backs up to the cloud and syncs across devices — sigils, encounters, social tags, notes, co-seen links, and collection progress. If you delete the app or get a new phone, everything restores when you sign back in. Without Cloud Sync, your collection exists only on this device and is lost if the app is removed. You can still export/import as JSON for manual backups.';
+      'With a Cloud Sync subscription, your entire NodeDex album backs up to the cloud and syncs across devices - sigils, encounters, social tags, notes, co-seen links, and collection progress. If you delete the app or get a new phone, everything restores when you sign back in. Without Cloud Sync, your collection exists only on this device and is lost if the app is removed. You can still export/import as JSON for manual backups.';
 
   @override
   String get helpTakSectionStatus =>
@@ -32568,7 +32568,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewReachabilityDescription =>
-      'Estimate how likely you are to reach each node on your mesh — without sending a single test packet.\n\nReachability passively observes traffic flowing through the network and assigns High, Medium, or Low confidence to every node. Find it in the drawer menu under Mesh.';
+      'Estimate how likely you are to reach each node on your mesh - without sending a single test packet.\n\nReachability passively observes traffic flowing through the network and assigns High, Medium, or Low confidence to every node. Find it in the drawer menu under Mesh.';
 
   @override
   String get whatsNewVersion1100Subtitle => 'Version 1.10.0';
@@ -32578,7 +32578,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewWorldMapDescription =>
-      'See the entire global Meshtastic network on a single map. Every dot is a node sharing its location — zoom, pan, and tap to explore node details, hardware info, and last-seen times.\n\nNo connection required. The World Map pulls live data from the SocialMesh backend so you can explore the mesh anywhere.';
+      'See the entire global Meshtastic network on a single map. Every dot is a node sharing its location - zoom, pan, and tap to explore node details, hardware info, and last-seen times.\n\nNo connection required. The World Map pulls live data from the SocialMesh backend so you can explore the mesh anywhere.';
 
   @override
   String get whatsNewVersion1101Subtitle => 'Version 1.10.1';
@@ -32588,7 +32588,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewPresenceDescription =>
-      'See who is active on your mesh at a glance. Presence shows real-time node activity with intent indicators — whether someone is monitoring, mobile, or at a fixed base station.\n\nFilter by activity level, search by name, and tap any node to see their full profile. Find it in the drawer under Social.';
+      'See who is active on your mesh at a glance. Presence shows real-time node activity with intent indicators - whether someone is monitoring, mobile, or at a fixed base station.\n\nFilter by activity level, search by name, and tap any node to see their full profile. Find it in the drawer under Social.';
 
   @override
   String get whatsNewVersion1110Subtitle => 'Version 1.11.0';
@@ -32598,7 +32598,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewSignalsDescription =>
-      'Broadcast ephemeral moments to your mesh. Signals are short-lived posts — share text, a photo, or your location with a TTL from 15 minutes up to 24 hours.\n\nNearby signals appear first with proximity badges showing hop count. When they fade, they are gone. True off-grid, ephemeral content.';
+      'Broadcast ephemeral moments to your mesh. Signals are short-lived posts - share text, a photo, or your location with a TTL from 15 minutes up to 24 hours.\n\nNearby signals appear first with proximity badges showing hop count. When they fade, they are gone. True off-grid, ephemeral content.';
 
   @override
   String get whatsNewVersion1130Subtitle => 'Version 1.13.0';
@@ -32608,7 +32608,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewNodeDexDescription =>
-      'A living field journal of the mesh world. Every node you discover is automatically recorded with a unique procedural Sigil and a personality Trait derived from real behavior.\n\nFind it in the drawer menu under Social. Filter by trait, search by name or hex ID, and tap any entry to explore its full profile — signal history, discovery timeline, and more.';
+      'A living field journal of the mesh world. Every node you discover is automatically recorded with a unique procedural Sigil and a personality Trait derived from real behavior.\n\nFind it in the drawer menu under Social. Filter by trait, search by name or hex ID, and tap any entry to explore its full profile - signal history, discovery timeline, and more.';
 
   @override
   String get whatsNewVersion1150Subtitle => 'Version 1.15.0';
@@ -32638,7 +32638,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewTranslationPackDescription =>
-      'Translate any mesh message on demand with smart caching and privacy controls. Includes a managed translation allowance, or bring your own OpenAI API key for extended use.\n\nLong-press any message and tap Translate to see the result inline — with smart caching so repeated translations are instant. Now included in the Complete Pack.';
+      'Translate any mesh message on demand with smart caching and privacy controls. Includes a managed translation allowance, or bring your own OpenAI API key for extended use.\n\nLong-press any message and tap Translate to see the result inline - with smart caching so repeated translations are instant. Now included in the Complete Pack.';
 
   @override
   String get notificationNewNodeTitle => 'New Node Discovered';
@@ -32964,11 +32964,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get automationErrorIftttNotConfigured =>
-      'Webhooks not configured — enable webhooks and set an IFTTT key or custom URL in settings';
+      'Webhooks not configured - enable webhooks and set an IFTTT key or custom URL in settings';
 
   @override
   String get automationErrorWebhookFailed =>
-      'Webhook request failed — check network connection';
+      'Webhook request failed - check network connection';
 
   @override
   String get automationErrorSendMsgFailed => 'Failed to send message';
@@ -33088,7 +33088,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get automationHistoryDetailManualBypass =>
-      'THEN branch forced — conditions not evaluated';
+      'THEN branch forced - conditions not evaluated';
 
   @override
   String get automationHistoryDetailManualNote =>
@@ -33312,7 +33312,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get globalLayerCopyExplainBody =>
-      'Your mesh radio connects nearby devices over radio waves — no internet needed. The Global Layer extends that reach by bridging your local mesh to a server (called a broker) over the internet.\n\nThink of it as a portal: messages from your mesh can travel through the portal to reach other meshes connected to the same broker, anywhere in the world.';
+      'Your mesh radio connects nearby devices over radio waves - no internet needed. The Global Layer extends that reach by bridging your local mesh to a server (called a broker) over the internet.\n\nThink of it as a portal: messages from your mesh can travel through the portal to reach other meshes connected to the same broker, anywhere in the world.';
 
   @override
   String get globalLayerCopyExplainWhatItDoes =>
@@ -33327,7 +33327,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get globalLayerCopyBrokerBody =>
-      'Pick a broker to connect through. Most users should start with the official Meshtastic server — it works out of the box with no setup required.';
+      'Pick a broker to connect through. Most users should start with the official Meshtastic server - it works out of the box with no setup required.';
 
   @override
   String get globalLayerCopyTopicsTitle => 'Choose What to Share';
@@ -33416,7 +33416,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mqttBrokerMosquittoNote =>
-      'Test broker — not for production use. May have downtime.';
+      'Test broker - not for production use. May have downtime.';
 
   @override
   String get mqttBrokerCustomName => 'Custom Broker';
@@ -33514,7 +33514,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get globalLayerWizardAnonymousAccess =>
-      'No credentials — using anonymous access.';
+      'No credentials - using anonymous access.';
 
   @override
   String get globalLayerWizardSubscribeVerified =>
@@ -33723,7 +33723,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lifecycleActionCancelledBackground =>
-      'Action cancelled — app is in background';
+      'Action cancelled - app is in background';
 
   @override
   String get commandErrorCheckInternet => 'Check your internet connection';
@@ -33852,15 +33852,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sipDmBudgetExhausted =>
-      'Sending paused — mesh bandwidth limit reached. Try again shortly.';
+      'Sending paused - mesh bandwidth limit reached. Try again shortly.';
 
   @override
   String get sipDmPeerBlocked =>
-      'You\'ve blocked this node — unblock from SIP Hub to send messages again.';
+      'You\'ve blocked this node - unblock from SIP Hub to send messages again.';
 
   @override
   String get sipDmPeerRateLimited =>
-      'Sending too fast — slow down for a moment.';
+      'Sending too fast - slow down for a moment.';
 
   @override
   String get sipDmSessionClosed => 'This conversation has ended.';
@@ -33893,7 +33893,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sipDmBlockConfirmBody =>
-      'Future messages and handshake requests from this node will be silently dropped. They won\'t be notified. Your existing conversation history stays on this device — use Remove conversation to clear it.';
+      'Future messages and handshake requests from this node will be silently dropped. They won\'t be notified. Your existing conversation history stays on this device - use Remove conversation to clear it.';
 
   @override
   String get sipDmBlockConfirmAction => 'Block';
@@ -33930,7 +33930,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sipDmActionResetSnack =>
-      'Secure session reset — next message will renegotiate keys';
+      'Secure session reset - next message will renegotiate keys';
 
   @override
   String get sipPlayComposerLabel => 'Play';
@@ -34038,7 +34038,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String sipPlayOfferIncomingTitle(String game) {
-    return '$game — they want to play';
+    return '$game - they want to play';
   }
 
   @override
@@ -34116,7 +34116,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sipSignalPanelSubtitle =>
-      'A short musical phrase or a Morse message — synthesized locally on both sides.';
+      'A short musical phrase or a Morse message - synthesized locally on both sides.';
 
   @override
   String get sipSignalSubModeTone => 'Tone';
@@ -34167,7 +34167,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String sipSignalSizeOverBudget(int bytes) {
-    return 'Signal • $bytes B — too large to send';
+    return 'Signal • $bytes B - too large to send';
   }
 
   @override
@@ -34183,7 +34183,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sipSignalMorseTapHint =>
-      'Tap dots and dashes — Letter finalises a glyph, Space adds a word gap.';
+      'Tap dots and dashes - Letter finalises a glyph, Space adds a word gap.';
 
   @override
   String get sipSignalMorseTapEmpty => 'Decoded message will appear here.';
@@ -34211,7 +34211,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sipSignalMorseTapInvalidNote =>
-      'Unknown sequences are shown as ? — they\'re skipped on send.';
+      'Unknown sequences are shown as ? - they\'re skipped on send.';
 
   @override
   String get sipSignalToneExampleCloseEncounters => 'Close Encounters';
@@ -34240,7 +34240,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sipSignalMorseUnsupportedNote =>
-      'Some characters won\'t be sent — only A–Z, 0–9, space, and . , ? ! / @ are allowed.';
+      'Some characters won\'t be sent - only A–Z, 0–9, space, and . , ? ! / @ are allowed.';
 
   @override
   String get sipSignalBubblePhraseLabel => 'Phrase';
@@ -34253,7 +34253,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sipInkComposerHint =>
-      'Draw a quick sketch — kept tiny so it fits on the mesh.';
+      'Draw a quick sketch - kept tiny so it fits on the mesh.';
 
   @override
   String get sipInkComposerHintOver =>
@@ -34289,7 +34289,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sipInkBlocked =>
-      'Sketch can\'t fit on the mesh — simplify your strokes.';
+      'Sketch can\'t fit on the mesh - simplify your strokes.';
 
   @override
   String get sipDmOpenAction => 'Open DM';
@@ -34467,7 +34467,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sipHubBlockConfirmBody =>
-      'Future messages and handshake requests from this node will be silently dropped. They won\'t be notified — they\'ll see your node as unreachable. You can unblock from Trust & Safety settings later.';
+      'Future messages and handshake requests from this node will be silently dropped. They won\'t be notified - they\'ll see your node as unreachable. You can unblock from Trust & Safety settings later.';
 
   @override
   String get sipHubBlockConfirmAction => 'Block';
@@ -34572,7 +34572,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meshCapacityEducationCompatBody =>
-      'Nearby radios must use compatible channel and preset settings to hear you. Move your group together when changing — solo changes can hide you from peers.';
+      'Nearby radios must use compatible channel and preset settings to hear you. Move your group together when changing - solo changes can hide you from peers.';
 
   @override
   String get meshCapacityReasonLabel => 'Reason';
@@ -34635,7 +34635,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meshCapacityQuietMeshTagline2 =>
-      'MQTT-only nodes don\'t count — only direct RF observations do.';
+      'MQTT-only nodes don\'t count - only direct RF observations do.';
 
   @override
   String get meshCapacityQuietMeshTagline3 =>
@@ -34889,7 +34889,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sipHubScanningTagline3 =>
-      'Peers show up automatically when their discovery beacons\nreach your node — no need to tap anything to find them.';
+      'Peers show up automatically when their discovery beacons\nreach your node - no need to tap anything to find them.';
 
   @override
   String get sipHubScanningTagline4 =>
@@ -34915,7 +34915,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpSipHubHandshakeBubble =>
-      'Once you see a peer, tap **Handshake** to exchange identity. After the handshake you can open an **end-to-end encrypted** ephemeral DM — no servers, no accounts.';
+      'Once you see a peer, tap **Handshake** to exchange identity. After the handshake you can open an **end-to-end encrypted** ephemeral DM - no servers, no accounts.';
 
   @override
   String get helpSipHubPrivacyBubble =>
@@ -35592,15 +35592,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meshExplorerScanningTagline2 =>
-      'Tap Scan to send a rollcall — wakes up nearby peers';
+      'Tap Scan to send a rollcall - wakes up nearby peers';
 
   @override
   String get meshExplorerScanningTagline3 =>
-      'Peers appear anonymously — handshake to identify them';
+      'Peers appear anonymously - handshake to identify them';
 
   @override
   String get meshExplorerScanningTagline4 =>
-      'Radio range matters — try moving closer to the mesh';
+      'Radio range matters - try moving closer to the mesh';
 
   @override
   String get meshExplorerHelp => 'Help';
@@ -35614,7 +35614,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpMeshExplorerIntroBubble =>
-      'Welcome to **Mesh Explorer**! This shows all SocialMesh-capable peers currently in radio range. Anonymous peers appear instantly — no handshake needed.';
+      'Welcome to **Mesh Explorer**! This shows all SocialMesh-capable peers currently in radio range. Anonymous peers appear instantly - no handshake needed.';
 
   @override
   String get helpMeshExplorerPeersBubble =>
@@ -35622,7 +35622,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpMeshExplorerServicesBubble =>
-      'The **Services** section shows what nearby peers are offering — Bulletin Boards, Profiles, and more. Tap a service tile to interact with it.';
+      'The **Services** section shows what nearby peers are offering - Bulletin Boards, Profiles, and more. Tap a service tile to interact with it.';
 
   @override
   String get helpMeshExplorerScanBubble =>
@@ -35643,12 +35643,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String notificationSipPlayTurnBody(String gameName) {
-    return '$gameName — tap to play your move.';
+    return '$gameName - tap to play your move.';
   }
 
   @override
   String get notificationSipPlayTurnBodyUnknownGame =>
-      'It\'s your move — tap to play.';
+      'It\'s your move - tap to play.';
 
   @override
   String get notificationChannelSipPlay => 'Game Turns';
@@ -36522,7 +36522,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mapTerrainProfileUsingTerrainAltitudeSubtitle =>
-      'No GPS altitude — ground level assumed for one or both points.';
+      'No GPS altitude - ground level assumed for one or both points.';
 
   @override
   String mapTerrainProfileSampleCount(int count) {
@@ -36627,7 +36627,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String losExplanationMarginal(String clearance, String required) {
-    return 'Marginal clearance (${clearance}m) — below the recommended ${required}m Fresnel clearance. Terrain/obstacles not considered.';
+    return 'Marginal clearance (${clearance}m) - below the recommended ${required}m Fresnel clearance. Terrain/obstacles not considered.';
   }
 
   @override
@@ -36645,16 +36645,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nodesScreenLegendTitle => 'Icon Legend';
 
   @override
-  String get nodesScreenLegendStatusActive => 'Active — heard recently';
+  String get nodesScreenLegendStatusActive => 'Active - heard recently';
 
   @override
-  String get nodesScreenLegendStatusFading => 'Fading — not heard for a while';
+  String get nodesScreenLegendStatusFading => 'Fading - not heard for a while';
 
   @override
-  String get nodesScreenLegendStatusStale => 'Stale — last heard long ago';
+  String get nodesScreenLegendStatusStale => 'Stale - last heard long ago';
 
   @override
-  String get nodesScreenLegendStatusUnknown => 'Unknown — never heard directly';
+  String get nodesScreenLegendStatusUnknown => 'Unknown - never heard directly';
 
   @override
   String get nodesScreenLegendSignalStrong => 'Strong signal (≥ −70 dBm)';
@@ -36666,7 +36666,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nodesScreenLegendSignalWeak => 'Weak signal (< −85 dBm)';
 
   @override
-  String get nodesScreenLegendHopsDirect => 'Direct — no hops';
+  String get nodesScreenLegendHopsDirect => 'Direct - no hops';
 
   @override
   String get nodesScreenLegendHops1 => '1 hop away';
@@ -36775,7 +36775,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceMessageRecordingHint => 'Hold to record';
 
   @override
-  String get voiceMessageTooShort => 'Recording too short — hold longer';
+  String get voiceMessageTooShort => 'Recording too short - hold longer';
 
   @override
   String get voiceMessageSent => 'Voice message sent';
@@ -37399,7 +37399,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get translateRateLimited =>
-      'Too many translations — try again shortly';
+      'Too many translations - try again shortly';
 
   @override
   String get translateUnsupportedLanguage =>
@@ -37418,14 +37418,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get premiumPreviewTranslation =>
-      'Preview Mode — Upgrade to translate messages';
+      'Preview Mode - Upgrade to translate messages';
 
   @override
   String get premiumHeadlineTranslation => 'Translate Messages';
 
   @override
   String get premiumDescTranslation =>
-      'Unlock on-demand message translation with smart caching and privacy controls — includes managed allowance, or bring your own API key';
+      'Unlock on-demand message translation with smart caching and privacy controls - includes managed allowance, or bring your own API key';
 
   @override
   String get premiumSubtitleTranslation =>
@@ -37443,7 +37443,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get premiumBenefitAutoDetectDesc =>
-      'Automatically detects the source language — no manual selection needed';
+      'Automatically detects the source language - no manual selection needed';
 
   @override
   String get premiumBenefitSmartCache => 'Smart Caching';
@@ -37454,7 +37454,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get translateQuotaExhausted =>
-      'Managed translation allowance used — switch to your own OpenAI API key in settings';
+      'Managed translation allowance used - switch to your own OpenAI API key in settings';
 
   @override
   String get translatePrivacyBlocked =>
@@ -37465,7 +37465,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get translateByoKeyMissing =>
-      'BYO API key required — configure in settings';
+      'BYO API key required - configure in settings';
 
   @override
   String get translateContentIneligible => 'This content cannot be translated';
@@ -37480,7 +37480,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subscriptionCompletePackSubtitleWithTranslation =>
-      'Every feature, one price — including translation';
+      'Every feature, one price - including translation';
 
   @override
   String get translationSettingsTitle => 'Translation';
@@ -37493,14 +37493,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get translationSettingsProviderManagedDesc =>
-      'Managed OpenAI translation — included allowance';
+      'Managed OpenAI translation - included allowance';
 
   @override
   String get translationSettingsProviderByo => 'Bring Your Own Key';
 
   @override
   String get translationSettingsProviderByoDesc =>
-      'Use your own OpenAI API key — unlimited';
+      'Use your own OpenAI API key - unlimited';
 
   @override
   String get translationSettingsProviderDisabled => 'Disabled';
@@ -37524,14 +37524,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get translationSettingsPrivacyPrivateDesc =>
-      'Cache channels only — DM translations are not stored';
+      'Cache channels only - DM translations are not stored';
 
   @override
   String get translationSettingsPrivacyStrict => 'Strict';
 
   @override
   String get translationSettingsPrivacyStrictDesc =>
-      'BYO provider only — no caching, no managed server';
+      'BYO provider only - no caching, no managed server';
 
   @override
   String get translationSettingsByoKeyLabel => 'API Key';
@@ -37787,7 +37787,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meshConversationBudgetExhausted =>
-      'Sending paused — mesh bandwidth limit reached. Try again shortly.';
+      'Sending paused - mesh bandwidth limit reached. Try again shortly.';
 
   @override
   String get meshConversationClosed => 'This conversation has ended.';
@@ -37841,7 +37841,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deliveryPhaseRetryingDesc =>
-      'Retrying automatically — no action needed.';
+      'Retrying automatically - no action needed.';
 
   @override
   String get deliveryPhaseResuming => 'Resuming';
@@ -37884,10 +37884,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deliverySafeToClose =>
-      'Safe to close — delivery continues in the background';
+      'Safe to close - delivery continues in the background';
 
   @override
-  String get deliverySafeToLeave => 'You can leave — transfer will continue';
+  String get deliverySafeToLeave => 'You can leave - transfer will continue';
 
   @override
   String deliveryProgressParts(int current, int total) {
@@ -38344,7 +38344,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewAutomationBranchingDescription =>
-      'Automations now support structured condition trees with IF / THEN / ELSE logic. Build complex rules that branch based on multiple conditions — battery level, node status, time of day, and more.\n\nEach run shows exactly which branch was taken and why, with a detailed execution history you can inspect anytime.';
+      'Automations now support structured condition trees with IF / THEN / ELSE logic. Build complex rules that branch based on multiple conditions - battery level, node status, time of day, and more.\n\nEach run shows exactly which branch was taken and why, with a detailed execution history you can inspect anytime.';
 
   @override
   String get whatsNewCtaOpenAutomations => 'Open Automations';
@@ -38354,7 +38354,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewReactionGroupingDescription =>
-      'Message reactions are now grouped by emoji — if five people send a thumbs-up, you see one compact chip instead of five. Long-press any reaction to see every sender.\n\nReactions also wrap to the next line instead of overflowing off-screen, keeping the conversation tidy.';
+      'Message reactions are now grouped by emoji - if five people send a thumbs-up, you see one compact chip instead of five. Long-press any reaction to see every sender.\n\nReactions also wrap to the next line instead of overflowing off-screen, keeping the conversation tidy.';
 
   @override
   String get whatsNewVersion1360Subtitle => 'Version 1.36.0';
@@ -38364,7 +38364,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsNewDeviceShopDescription =>
-      'Browse Meshtastic-compatible hardware from official partners and trusted sellers — all in one place. Filter by category, sort by price or new arrivals, and tap through to the seller\'s store to buy.\n\nPurchases happen on the seller\'s site; SocialMesh never handles payment, shipping, or returns. Find it in the drawer menu under Tools.';
+      'Browse Meshtastic-compatible hardware from official partners and trusted sellers - all in one place. Filter by category, sort by price or new arrivals, and tap through to the seller\'s store to buy.\n\nPurchases happen on the seller\'s site; SocialMesh never handles payment, shipping, or returns. Find it in the drawer menu under Tools.';
 
   @override
   String get whatsNewCtaOpenDeviceShop => 'Open Device Shop';
@@ -38562,14 +38562,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get petOnboardingPage2Body =>
-      'Above your pet, a single status line says exactly what it needs and names the button to tap — Charge when hungry, Resonate when lonely, Stabilise when messy, Purge when sick, Dim at bedtime. The matching button also pulses so you can\'t miss it.';
+      'Above your pet, a single status line says exactly what it needs and names the button to tap - Charge when hungry, Resonate when lonely, Stabilise when messy, Purge when sick, Dim at bedtime. The matching button also pulses so you can\'t miss it.';
 
   @override
   String get petOnboardingPage3Title => 'Check in anytime';
 
   @override
   String get petOnboardingPage3Body =>
-      'Tap Inspect to see energy, mood, stability and recent events. Your pet won\'t time-out if you miss a day, but consistent care earns it a better branch — open the help sheet anytime for the full action guide.';
+      'Tap Inspect to see energy, mood, stability and recent events. Your pet won\'t time-out if you miss a day, but consistent care earns it a better branch - open the help sheet anytime for the full action guide.';
 
   @override
   String get petOnboardingNext => 'Next';
@@ -38588,7 +38588,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get petGuideSheetIntro =>
-      'Each action does one specific thing. When the pet beeps for attention (pulsing icon), tap the matching action — Feed for hunger, Play for loneliness, Clean for a mess, Sleep for bedtime, or Medicine for sickness — and the beep clears automatically.';
+      'Each action does one specific thing. When the pet beeps for attention (pulsing icon), tap the matching action - Feed for hunger, Play for loneliness, Clean for a mess, Sleep for bedtime, or Medicine for sickness - and the beep clears automatically.';
 
   @override
   String get petActionChargeDescription =>
@@ -38596,7 +38596,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get petActionSurgeDescription =>
-      'Overfeeds. Long-press Feed for +5 energy, but adds instability — too many overfeeds can make the pet sick. Answers a Hungry call.';
+      'Overfeeds. Long-press Feed for +5 energy, but adds instability - too many overfeeds can make the pet sick. Answers a Hungry call.';
 
   @override
   String get petActionResonateDescription =>
@@ -38703,23 +38703,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get petCallBannerHungry =>
-      'Low on energy — Feed or Overfeed to answer.';
+      'Low on energy - Feed or Overfeed to answer.';
 
   @override
-  String get petCallBannerLonely => 'Wants attention — Play to answer.';
+  String get petCallBannerLonely => 'Wants attention - Play to answer.';
 
   @override
-  String get petCallBannerSick => 'Feeling unwell — Medicine to answer.';
+  String get petCallBannerSick => 'Feeling unwell - Medicine to answer.';
 
   @override
-  String get petCallBannerHygiene => 'Made a mess — Clean to remove.';
+  String get petCallBannerHygiene => 'Made a mess - Clean to remove.';
 
   @override
   String get petCallBannerBedtime =>
-      'It\'s almost time to rest — Sleep to answer.';
+      'It\'s almost time to rest - Sleep to answer.';
 
   @override
-  String get petCallBannerBoredom => 'Restless — Play to answer.';
+  String get petCallBannerBoredom => 'Restless - Play to answer.';
 
   @override
   String get petInspectTitle => 'Status';
@@ -38865,7 +38865,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get petDormantDescription =>
-      'Begin a new lineage — your next pet inherits a fresh seed tied to this node.';
+      'Begin a new lineage - your next pet inherits a fresh seed tied to this node.';
 
   @override
   String get petCompanionSectionTitle => 'Companion';
@@ -38943,45 +38943,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get petAdvisoryEgg => 'Preparing to hatch…';
 
   @override
-  String get petAdvisorySick => 'Sick — tap [[Purge]] to heal.';
+  String get petAdvisorySick => 'Sick - tap [[Purge]] to heal.';
 
   @override
-  String get petAdvisoryCallHungry => 'Hungry — tap [[Charge]] to feed.';
+  String get petAdvisoryCallHungry => 'Hungry - tap [[Charge]] to feed.';
 
   @override
-  String get petAdvisoryCallLonely => 'Lonely — tap [[Resonate]] to play.';
+  String get petAdvisoryCallLonely => 'Lonely - tap [[Resonate]] to play.';
 
   @override
-  String get petAdvisoryCallSick => 'Sick — tap [[Purge]] to heal.';
+  String get petAdvisoryCallSick => 'Sick - tap [[Purge]] to heal.';
 
   @override
-  String get petAdvisoryCallHygiene => 'Messy — tap [[Stabilise]] to clean up.';
+  String get petAdvisoryCallHygiene => 'Messy - tap [[Stabilise]] to clean up.';
 
   @override
-  String get petAdvisoryCallBedtime => 'Bedtime — tap [[Dim]] to tuck in.';
+  String get petAdvisoryCallBedtime => 'Bedtime - tap [[Dim]] to tuck in.';
 
   @override
-  String get petAdvisoryCallBoredom => 'Bored — tap [[Resonate]] to engage.';
+  String get petAdvisoryCallBoredom => 'Bored - tap [[Resonate]] to engage.';
 
   @override
   String get petAdvisoryHygieneImminent =>
-      'Getting messy — tap [[Stabilise]] before they get sick.';
+      'Getting messy - tap [[Stabilise]] before they get sick.';
 
   @override
-  String get petAdvisoryEnergyLow => 'Energy low — tap [[Charge]] soon.';
+  String get petAdvisoryEnergyLow => 'Energy low - tap [[Charge]] soon.';
 
   @override
-  String get petAdvisoryMoodLow => 'Mood low — tap [[Resonate]] soon.';
+  String get petAdvisoryMoodLow => 'Mood low - tap [[Resonate]] soon.';
 
   @override
   String get petAdvisoryHygieneMild =>
-      'Small mess — tap [[Stabilise]] when you can.';
+      'Small mess - tap [[Stabilise]] when you can.';
 
   @override
   String get petAdvisoryResting => 'Resting peacefully.';
 
   @override
-  String get petAdvisoryBedtime => 'Bedtime — tap [[Dim]] to tuck in.';
+  String get petAdvisoryBedtime => 'Bedtime - tap [[Dim]] to tuck in.';
 
   @override
   String get petAdvisoryThriving => 'Thriving.';
@@ -39011,7 +39011,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get petBranchBannerSubtitleLuminous =>
-      'Pristine care paid off — your creature has taken its brightest form.';
+      'Pristine care paid off - your creature has taken its brightest form.';
 
   @override
   String get petBranchBannerTitleSteady => 'Evolved: Steady';
@@ -39032,7 +39032,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get petBranchBannerSubtitleDimmed =>
-      'Neglect has dimmed your creature — it may still be revived with steady care.';
+      'Neglect has dimmed your creature - it may still be revived with steady care.';
 
   @override
   String get petElderBannerTitle => 'Matured';
@@ -39107,7 +39107,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get petTimelineNowPill => 'NOW';
 
   @override
-  String get petTimelineQuietCurrent => 'Quiet stretch — no events yet.';
+  String get petTimelineQuietCurrent => 'Quiet stretch - no events yet.';
 
   @override
   String petTimelineGroupedCount(int count) {
@@ -39182,7 +39182,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get petTimelineDetailReSigilled =>
-      'Re-sigilled — a new creature begins.';
+      'Re-sigilled - a new creature begins.';
 
   @override
   String get petTimelineDetailSicknessOnset =>
@@ -39250,24 +39250,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationPetAttentionTitle => 'Your pet needs attention';
 
   @override
-  String get notificationPetAttentionHungryBody => 'Low energy — tap Charge.';
+  String get notificationPetAttentionHungryBody => 'Low energy - tap Charge.';
 
   @override
   String get notificationPetAttentionLonelyBody =>
-      'Mood is drifting — tap Resonate.';
+      'Mood is drifting - tap Resonate.';
 
   @override
-  String get notificationPetAttentionSickBody => 'Feeling unwell — tap Purge.';
+  String get notificationPetAttentionSickBody => 'Feeling unwell - tap Purge.';
 
   @override
   String get notificationPetAttentionHygieneBody =>
-      'Field needs stabilising — tap Stabilise.';
+      'Field needs stabilising - tap Stabilise.';
 
   @override
-  String get notificationPetAttentionBedtimeBody => 'Almost bedtime — tap Dim.';
+  String get notificationPetAttentionBedtimeBody => 'Almost bedtime - tap Dim.';
 
   @override
-  String get notificationPetAttentionBoredomBody => 'Restless — tap Resonate.';
+  String get notificationPetAttentionBoredomBody => 'Restless - tap Resonate.';
 
   @override
   String get reticulumDiagTitle => 'Reticulum Tunnel';
@@ -39673,20 +39673,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reticulumDiagSuccessRate => 'Success rate %';
 
   @override
-  String get reticulumDiagDroppedDecodeError => 'Dropped — decode error';
+  String get reticulumDiagDroppedDecodeError => 'Dropped - decode error';
 
   @override
   String get reticulumDiagDroppedTimeoutInactivity =>
-      'Dropped — inactivity timeout';
+      'Dropped - inactivity timeout';
 
   @override
-  String get reticulumDiagDroppedTimeoutAbsolute => 'Dropped — absolute TTL';
+  String get reticulumDiagDroppedTimeoutAbsolute => 'Dropped - absolute TTL';
 
   @override
-  String get reticulumDiagDroppedOverflow => 'Dropped — overflow';
+  String get reticulumDiagDroppedOverflow => 'Dropped - overflow';
 
   @override
-  String get reticulumDiagDroppedOversize => 'Dropped — oversize';
+  String get reticulumDiagDroppedOversize => 'Dropped - oversize';
 
   @override
   String get reticulumDiagDuplicateFragments => 'Duplicate fragments';
@@ -39744,7 +39744,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reticulumBridgeLastErrorLabel => 'Last error';
 
   @override
-  String get reticulumBridgeNoLastError => '—';
+  String get reticulumBridgeNoLastError => '-';
 
   @override
   String get reticulumBridgeSectionEndpoint => 'ENDPOINT';
@@ -39771,13 +39771,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reticulumBridgeForwarded => 'Frames forwarded';
 
   @override
-  String get reticulumBridgeDroppedNoConnection => 'Dropped — no connection';
+  String get reticulumBridgeDroppedNoConnection => 'Dropped - no connection';
 
   @override
-  String get reticulumBridgeDroppedBackpressure => 'Dropped — queue full';
+  String get reticulumBridgeDroppedBackpressure => 'Dropped - queue full';
 
   @override
-  String get reticulumBridgeDroppedFramingError => 'Dropped — framing error';
+  String get reticulumBridgeDroppedFramingError => 'Dropped - framing error';
 
   @override
   String get reticulumBridgeConnectErrors => 'Connect errors';
@@ -40025,7 +40025,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nodedexConstellationEmptyMissing =>
-      'No NodeDex entry yet for this node — open Constellation again once an encounter is recorded.';
+      'No NodeDex entry yet for this node - open Constellation again once an encounter is recorded.';
 
   @override
   String get nodedexConstellationEmptyFiltered =>
@@ -40332,4 +40332,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navigationOperations => 'Operations';
+
+  @override
+  String get presenceStatusActive => 'Active';
+
+  @override
+  String get presenceStatusInactive => 'Inactive';
+
+  @override
+  String get presenceStatusUnknown => 'Unknown';
+
+  @override
+  String get presenceSeenJustNow => 'Just now';
+
+  @override
+  String presenceSeenAgo(String ago) {
+    return 'Seen $ago ago';
+  }
+
+  @override
+  String get presenceInferenceTooltip =>
+      'LoRa mesh has no offline signal. Status is inferred.';
 }

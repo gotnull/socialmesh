@@ -11771,5 +11771,11 @@
     "worldMeshTimeJustNow": "только что",
     "worldMeshTimeMinutesAgo": "{minutes} мин назад",
     "worldMeshTitle": "Мировая карта",
-    "worldMeshUptimeLabel": "Время работы: {uptime}"
+    "worldMeshUptimeLabel": "Время работы: {uptime}",
+    "presenceStatusActive": "Активен",
+    "presenceStatusInactive": "Неактивен",
+    "presenceStatusUnknown": "Неизвестно",
+    "presenceSeenJustNow": "Только что",
+    "presenceSeenAgo": "Был активен {ago} назад",
+    "presenceInferenceTooltip": "В LoRa-сети нет офлайн-сигнала. Статус определяется по последней активности."
 }
