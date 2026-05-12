@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 
 import '../../../core/constants.dart';
 import '../../../core/logging.dart';
+import '../../../core/net/safe_http_request.dart';
 import '../models/nodeboard.dart';
 import '../models/nodeboard_enums.dart';
 import '../models/nodeboard_reply.dart';
@@ -35,19 +36,43 @@ class NodeBoardApiService {
   static const Duration _httpTimeout = Duration(seconds: 15);
 
   Future<http.Response> _get(Uri url, {Map<String, String>? headers}) =>
-      _client.get(url, headers: headers).timeout(_httpTimeout);
+      _safe(() => _client.get(url, headers: headers).timeout(_httpTimeout));
 
   Future<http.Response> _post(
     Uri url, {
     Map<String, String>? headers,
     Object? body,
-  }) => _client.post(url, headers: headers, body: body).timeout(_httpTimeout);
+  }) => _safe(
+    () => _client.post(url, headers: headers, body: body).timeout(_httpTimeout),
+  );
 
   Future<http.Response> _patch(
     Uri url, {
     Map<String, String>? headers,
     Object? body,
-  }) => _client.patch(url, headers: headers, body: body).timeout(_httpTimeout);
+  }) => _safe(
+    () =>
+        _client.patch(url, headers: headers, body: body).timeout(_httpTimeout),
+  );
+
+  // Single funnel for the three verbs. Socket-level escapes (DNS,
+  // ECONNREFUSED, reset by peer) and timeouts get caught here, logged
+  // once, and converted to a NodeBoardApiException with statusCode=0 so
+  // existing callers that already handle NodeBoardApiException pick up
+  // network failures naturally. Stops the [B aedf754f] IOClient.send
+  // funnel from leaking to PlatformDispatcher.onError.
+  Future<http.Response> _safe(Future<http.Response> Function() send) async {
+    final result = await safeHttpRequest<http.Response>(
+      surface: 'nodeboard',
+      send: send,
+      decode: (response) => response,
+    );
+    return switch (result) {
+      HttpSuccess<http.Response>(value: final r) => r,
+      HttpFailure<http.Response>(reason: final reason) =>
+        throw NodeBoardApiException(0, 'Network error: ${reason.name}'),
+    };
+  }
 
   Future<Map<String, String>> _writeHeaders() async {
     final token = await _getIdToken();
