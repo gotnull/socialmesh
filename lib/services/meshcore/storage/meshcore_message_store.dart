@@ -338,6 +338,110 @@ class MeshCoreMessageStore {
   }
 
   // ---------------------------------------------------------------------------
+  // D43-A1: windowed loads for paging older history
+  // ---------------------------------------------------------------------------
+
+  // Load older messages for a contact partition with a compound cursor.
+  //
+  // Cursor semantics:
+  //   - `before == null` returns the newest [limit] messages.
+  //   - `before != null` requires [beforeId]; throws [ArgumentError]
+  //     otherwise.
+  //   - With both supplied, a record qualifies iff
+  //       `timestamp < before` OR
+  //       `(timestamp == before AND id < beforeId)`.
+  //     Strict-less, so the boundary record is never re-included.
+  //
+  // Result is ordered ascending by `(timestamp, id)` so callers can
+  // prepend directly to their chat render list. [limit] is clamped to
+  // the partition cap.
+  Future<List<MeshCoreStoredMessage>> loadContactMessagesBefore(
+    String contactKeyHex, {
+    DateTime? before,
+    String? beforeId,
+    int limit = 50,
+  }) async {
+    _assertCursorShape(before: before, beforeId: beforeId);
+    final clamped = _clampLimit(limit);
+    final all = await loadContactMessages(contactKeyHex);
+    return _windowBefore(
+      all,
+      before: before,
+      beforeId: beforeId,
+      limit: clamped,
+    );
+  }
+
+  // Load older messages for a channel partition. Mirrors
+  // [loadContactMessagesBefore] for the channel-indexed key space.
+  Future<List<MeshCoreStoredMessage>> loadChannelMessagesBefore(
+    int channelIndex, {
+    DateTime? before,
+    String? beforeId,
+    int limit = 50,
+  }) async {
+    _assertCursorShape(before: before, beforeId: beforeId);
+    final clamped = _clampLimit(limit);
+    final all = await loadChannelMessages(channelIndex);
+    return _windowBefore(
+      all,
+      before: before,
+      beforeId: beforeId,
+      limit: clamped,
+    );
+  }
+
+  void _assertCursorShape({DateTime? before, String? beforeId}) {
+    if (before != null && beforeId == null) {
+      throw ArgumentError(
+        'beforeId is required when before is non-null (compound cursor)',
+      );
+    }
+  }
+
+  int _clampLimit(int limit) {
+    if (limit <= 0) return 0;
+    return limit > _maxMessagesPerConversation
+        ? _maxMessagesPerConversation
+        : limit;
+  }
+
+  List<MeshCoreStoredMessage> _windowBefore(
+    List<MeshCoreStoredMessage> all, {
+    required DateTime? before,
+    required String? beforeId,
+    required int limit,
+  }) {
+    if (limit == 0) return const [];
+    // Sort ascending defensively. The on-disk JSON order is not
+    // guaranteed sorted until the 500-row trim writes a sort back,
+    // and `addContactMessage` / `addChannelMessage` simply append on
+    // the no-trim path.
+    final sorted = [...all]
+      ..sort((a, b) {
+        final t = a.timestamp.compareTo(b.timestamp);
+        return t != 0 ? t : a.id.compareTo(b.id);
+      });
+    Iterable<MeshCoreStoredMessage> filtered;
+    if (before == null) {
+      filtered = sorted;
+    } else {
+      filtered = sorted.where((m) {
+        final t = m.timestamp.compareTo(before);
+        if (t < 0) return true;
+        if (t > 0) return false;
+        return m.id.compareTo(beforeId!) < 0;
+      });
+    }
+    final list = filtered.toList();
+    if (list.length <= limit) return list;
+    // Take the newest [limit] rows from the qualifying set so the
+    // returned slice is the "most-recent older page" the chat screen
+    // wants for "load older messages".
+    return list.sublist(list.length - limit);
+  }
+
+  // ---------------------------------------------------------------------------
   // D33: deterministic MMF backfill for pre-D33 records
   // ---------------------------------------------------------------------------
 
