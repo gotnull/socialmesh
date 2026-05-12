@@ -609,18 +609,6 @@ class AppFeatureFlags {
     }
   }
 
-  /// Whether the in-app language selector is shown in Appearance & Accessibility.
-  /// Set `LANGUAGE_SELECTOR_ENABLED=true` in `.env` to enable.
-  /// Default: false — translations are handled by the OS locale automatically.
-  static bool get isLanguageSelectorEnabled {
-    try {
-      final raw = dotenv.env['LANGUAGE_SELECTOR_ENABLED']?.toLowerCase().trim();
-      return raw == 'true' || raw == '1';
-    } catch (_) {
-      return false;
-    }
-  }
-
   /// Whether the Mesh Explorer public-facing discovery experience is enabled.
   /// Set `MESH_EXPLORER_ENABLED=true` in `.env` to enable.
   /// Requires both [isSipEnabled] and [isMrrpEnabled] to be true.

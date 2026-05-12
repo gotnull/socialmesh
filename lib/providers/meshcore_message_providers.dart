@@ -1661,3 +1661,318 @@ final meshCoreConversationsProvider =
     NotifierProvider<MeshCoreConversationsNotifier, MeshCoreConversationsState>(
       MeshCoreConversationsNotifier.new,
     );
+
+// ---------------------------------------------------------------------------
+// D43-A2: per-conversation chat history provider (paged window)
+// ---------------------------------------------------------------------------
+
+/// Compound cursor used by the chat history notifier to track the
+/// oldest currently-loaded message. Pairs with the D43-A1 store
+/// paging API (`loadContactMessagesBefore` / `loadChannelMessagesBefore`).
+typedef MeshCoreChatHistoryCursor = ({DateTime timestamp, String id});
+
+/// Family key for [meshCoreChatHistoryProvider]. Sealed so callers can
+/// pattern-match on the conversation kind without leaking the
+/// `channel_<n>` string-encoding the dead `MessageHistoryParams`
+/// shape required.
+sealed class MeshCoreChatHistoryKey {
+  const MeshCoreChatHistoryKey();
+}
+
+class MeshCoreChatContactKey extends MeshCoreChatHistoryKey {
+  final String pubKeyHex;
+  const MeshCoreChatContactKey(this.pubKeyHex);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MeshCoreChatContactKey && other.pubKeyHex == pubKeyHex;
+
+  @override
+  int get hashCode => Object.hash(MeshCoreChatContactKey, pubKeyHex);
+}
+
+class MeshCoreChatChannelKey extends MeshCoreChatHistoryKey {
+  final int channelIndex;
+  const MeshCoreChatChannelKey(this.channelIndex);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MeshCoreChatChannelKey && other.channelIndex == channelIndex;
+
+  @override
+  int get hashCode => Object.hash(MeshCoreChatChannelKey, channelIndex);
+}
+
+/// Immutable window state for a single conversation's chat history.
+///
+/// [messages] is ALWAYS in ascending `(timestamp, id)` order — the
+/// shape the chat screen renders bottom-up.
+///
+/// [oldestCursor] is a derived view of `messages.firstOrNull` and is
+/// used as the strict-less compound cursor for the next [loadOlder]
+/// call. It is never persisted as a separate field so the cursor
+/// cannot drift out of sync with the loaded list.
+class MeshCoreChatHistoryState {
+  final List<MeshCoreMessage> messages;
+  final bool isInitialLoading;
+  final bool isLoadingOlder;
+
+  /// `true` while another older page may still exist. Flips to
+  /// `false` the moment a load returns fewer than the page size,
+  /// whether that is the real bottom of history or the 500-cap trim
+  /// wall — the provider cannot distinguish.
+  final bool hasMore;
+
+  /// Last error surface for the chat screen. Cleared on the next
+  /// successful load.
+  final String? lastError;
+
+  const MeshCoreChatHistoryState({
+    this.messages = const [],
+    this.isInitialLoading = false,
+    this.isLoadingOlder = false,
+    this.hasMore = true,
+    this.lastError,
+  });
+
+  const MeshCoreChatHistoryState.initial()
+    : messages = const [],
+      isInitialLoading = false,
+      isLoadingOlder = false,
+      hasMore = true,
+      lastError = null;
+
+  MeshCoreChatHistoryCursor? get oldestCursor {
+    if (messages.isEmpty) return null;
+    final m = messages.first;
+    return (timestamp: m.timestamp, id: m.id);
+  }
+
+  MeshCoreChatHistoryState copyWith({
+    List<MeshCoreMessage>? messages,
+    bool? isInitialLoading,
+    bool? isLoadingOlder,
+    bool? hasMore,
+    String? lastError,
+    bool clearError = false,
+  }) {
+    return MeshCoreChatHistoryState(
+      messages: messages ?? this.messages,
+      isInitialLoading: isInitialLoading ?? this.isInitialLoading,
+      isLoadingOlder: isLoadingOlder ?? this.isLoadingOlder,
+      hasMore: hasMore ?? this.hasMore,
+      lastError: clearError ? null : (lastError ?? this.lastError),
+    );
+  }
+}
+
+/// D43 page size. Matches the spec — small enough to keep JSON parse
+/// + filter cheap, large enough that the median user never pages.
+const int _kMeshCoreChatHistoryPageSize = 50;
+
+/// Default bound for [MeshCoreChatHistoryNotifier.loadUntilContains].
+const int _kMeshCoreChatHistoryDefaultMaxPages = 10;
+
+/// Per-conversation chat history notifier.
+///
+/// Owns the in-memory window for one contact or channel conversation.
+/// Reads through the D43-A1 store paging API; never writes to the
+/// store — persistence stays on `MeshCoreConversationsNotifier` and
+/// the chat screen's existing dual-write paths.
+///
+/// All mutators preserve the ascending-order invariant. Inbound and
+/// outbound message appends dedupe by stable id so a re-delivery or
+/// double-handler call cannot stack two bubbles for the same logical
+/// message.
+class MeshCoreChatHistoryNotifier extends Notifier<MeshCoreChatHistoryState> {
+  MeshCoreChatHistoryNotifier(this.key);
+
+  final MeshCoreChatHistoryKey key;
+  final MeshCoreMessageStore _store = MeshCoreMessageStore();
+
+  @override
+  MeshCoreChatHistoryState build() => const MeshCoreChatHistoryState.initial();
+
+  /// Load the newest page. Idempotent: a second call replaces the
+  /// window with a fresh load.
+  Future<void> loadInitial() async {
+    state = state.copyWith(isInitialLoading: true, clearError: true);
+    try {
+      final stored = await _loadPage(before: null, beforeId: null);
+      final messages = stored.map(_storedToMessage).toList();
+      state = MeshCoreChatHistoryState(
+        messages: messages,
+        isInitialLoading: false,
+        isLoadingOlder: false,
+        hasMore: stored.length == _kMeshCoreChatHistoryPageSize,
+        lastError: null,
+      );
+    } catch (e) {
+      AppLogging.meshcore(
+        'event=provider.error scope=chat_history.load_initial '
+        'reason=${e.runtimeType}',
+        error: true,
+      );
+      state = state.copyWith(isInitialLoading: false, lastError: e.toString());
+    }
+  }
+
+  /// Page older. No-op when already loading, when no cursor exists
+  /// (empty window), or when [MeshCoreChatHistoryState.hasMore] is
+  /// false.
+  Future<void> loadOlder() async {
+    if (state.isInitialLoading || state.isLoadingOlder) return;
+    if (!state.hasMore) return;
+    final cursor = state.oldestCursor;
+    if (cursor == null) return;
+
+    state = state.copyWith(isLoadingOlder: true, clearError: true);
+    try {
+      final stored = await _loadPage(
+        before: cursor.timestamp,
+        beforeId: cursor.id,
+      );
+      if (stored.isEmpty) {
+        state = state.copyWith(isLoadingOlder: false, hasMore: false);
+        return;
+      }
+      final older = stored.map(_storedToMessage).toList();
+      final merged = <MeshCoreMessage>[...older, ...state.messages];
+      state = state.copyWith(
+        messages: merged,
+        isLoadingOlder: false,
+        hasMore: stored.length == _kMeshCoreChatHistoryPageSize,
+      );
+    } catch (e) {
+      AppLogging.meshcore(
+        'event=provider.error scope=chat_history.load_older '
+        'reason=${e.runtimeType}',
+        error: true,
+      );
+      state = state.copyWith(isLoadingOlder: false, lastError: e.toString());
+    }
+  }
+
+  /// Append an inbound message at the tail. Dedupe by id — repeat
+  /// deliveries of the same logical message are ignored.
+  ///
+  /// Tail-append preserves today's chat-screen behaviour (an inbound
+  /// with a slightly out-of-order timestamp lands visually at the
+  /// bottom). Sorting on append would be a separate quality fix and
+  /// is not part of D43.
+  void appendInbound(MeshCoreMessage m) => _appendDedup(m);
+
+  /// Append an outbound (pending) message at the tail. Dedupe by id —
+  /// idempotent for retried sends that reuse the same stable id.
+  void appendOutbound(MeshCoreMessage m) => _appendDedup(m);
+
+  /// Replace a single message's delivery status in place. No-op if
+  /// the id is not in the loaded window.
+  void updateMessageStatus(String id, MeshCoreMessageDeliveryStatus status) {
+    final idx = state.messages.indexWhere((m) => m.id == id);
+    if (idx < 0) return;
+    final updated = state.messages[idx].copyWith(status: status);
+    final next = [...state.messages];
+    next[idx] = updated;
+    state = state.copyWith(messages: next);
+  }
+
+  /// Remove a message from the loaded window. No-op if absent.
+  ///
+  /// Caller is responsible for the store-side delete (the chat
+  /// screen's existing `_messageStore.deleteContactMessage` /
+  /// `deleteChannelMessage` paths). Skipping the store delete will
+  /// cause the message to reappear on the next [loadOlder].
+  void deleteLocal(String id) {
+    final filtered = state.messages.where((m) => m.id != id).toList();
+    if (filtered.length == state.messages.length) return;
+    state = state.copyWith(messages: filtered);
+  }
+
+  /// Page older repeatedly until [id] appears in the loaded window
+  /// or [maxPages] iterations elapse. Returns true iff [id] is in
+  /// the window when the call returns.
+  ///
+  /// Used by the quote-jump path: a tap on a reply preview needs to
+  /// scroll to the source message, which may be older than the
+  /// currently-loaded page. The [maxPages] bound prevents an
+  /// infinite loop if `hasMore` somehow stays true on a degenerate
+  /// store.
+  Future<bool> loadUntilContains(
+    String id, {
+    int maxPages = _kMeshCoreChatHistoryDefaultMaxPages,
+  }) async {
+    if (state.messages.any((m) => m.id == id)) return true;
+    for (int i = 0; i < maxPages; i++) {
+      if (!state.hasMore) break;
+      await loadOlder();
+      if (state.messages.any((m) => m.id == id)) return true;
+    }
+    return false;
+  }
+
+  void _appendDedup(MeshCoreMessage m) {
+    if (state.messages.any((existing) => existing.id == m.id)) return;
+    state = state.copyWith(messages: [...state.messages, m]);
+  }
+
+  Future<List<MeshCoreStoredMessage>> _loadPage({
+    required DateTime? before,
+    required String? beforeId,
+  }) {
+    final k = key;
+    switch (k) {
+      case MeshCoreChatContactKey():
+        return _store.loadContactMessagesBefore(
+          k.pubKeyHex,
+          before: before,
+          beforeId: beforeId,
+          limit: _kMeshCoreChatHistoryPageSize,
+        );
+      case MeshCoreChatChannelKey():
+        return _store.loadChannelMessagesBefore(
+          k.channelIndex,
+          before: before,
+          beforeId: beforeId,
+          limit: _kMeshCoreChatHistoryPageSize,
+        );
+    }
+  }
+}
+
+MeshCoreMessage _storedToMessage(MeshCoreStoredMessage stored) {
+  return MeshCoreMessage(
+    id: stored.id,
+    text: stored.text,
+    timestamp: stored.timestamp,
+    isOutgoing: stored.isOutgoing,
+    status: _storedStatusToDelivery(stored.status),
+    senderKey: stored.senderKey,
+    pathLength: stored.pathLength,
+    snrQuarter: stored.snrQuarter,
+    mmf: stored.mmf,
+    replyToMmf: stored.replyToMmf,
+  );
+}
+
+MeshCoreMessageDeliveryStatus _storedStatusToDelivery(MeshCoreMessageStatus s) {
+  switch (s) {
+    case MeshCoreMessageStatus.pending:
+      return MeshCoreMessageDeliveryStatus.pending;
+    case MeshCoreMessageStatus.sent:
+      return MeshCoreMessageDeliveryStatus.sent;
+    case MeshCoreMessageStatus.delivered:
+      return MeshCoreMessageDeliveryStatus.delivered;
+    case MeshCoreMessageStatus.failed:
+      return MeshCoreMessageDeliveryStatus.failed;
+  }
+}
+
+final meshCoreChatHistoryProvider =
+    NotifierProvider.family<
+      MeshCoreChatHistoryNotifier,
+      MeshCoreChatHistoryState,
+      MeshCoreChatHistoryKey
+    >(MeshCoreChatHistoryNotifier.new);

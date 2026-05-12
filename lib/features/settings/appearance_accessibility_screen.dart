@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/constants.dart';
-
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
@@ -182,10 +180,7 @@ class _AppearanceAccessibilityScreenState
   Widget build(BuildContext context) {
     final prefs = ref.watch(accessibilityPreferencesProvider);
     final hasCustomSettings = ref.watch(hasCustomAccessibilitySettingsProvider);
-    final showLanguageSelector = AppFeatureFlags.isLanguageSelectorEnabled;
-    final currentLocale = showLanguageSelector
-        ? ref.watch(localeProvider)
-        : null;
+    final currentLocale = ref.watch(localeProvider);
 
     return GlassScaffold(
       title: context.l10n.appearanceTitle,
@@ -209,19 +204,16 @@ class _AppearanceAccessibilityScreenState
 
               const SizedBox(height: AppTheme.spacing24),
 
-              // Language Section (gated by feature flag)
-              if (showLanguageSelector) ...[
-                _SectionHeader(
-                  title: context.l10n.appearanceLanguage,
-                  icon: Icons.language_rounded,
-                ),
-                const SizedBox(height: AppTheme.spacing8),
-                _LanguageSelector(
-                  currentLocale: currentLocale,
-                  onChanged: (locale) => _updateLocale(locale),
-                ),
-                const SizedBox(height: AppTheme.spacing24),
-              ],
+              _SectionHeader(
+                title: context.l10n.appearanceLanguage,
+                icon: Icons.language_rounded,
+              ),
+              const SizedBox(height: AppTheme.spacing8),
+              _LanguageSelector(
+                currentLocale: currentLocale,
+                onChanged: (locale) => _updateLocale(locale),
+              ),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Font Mode Section
               _SectionHeader(
