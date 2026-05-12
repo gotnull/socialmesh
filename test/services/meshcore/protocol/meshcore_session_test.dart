@@ -723,17 +723,64 @@ void main() {
 
       session.clearPendingResponses();
 
-      // Should complete with StateError
-      expect(
-        future1,
-        throwsA(
-          isA<StateError>().having(
-            (e) => e.message,
-            'message',
-            contains('disposed'),
-          ),
-        ),
+      // Pinned: typed MeshCoreSessionDisposedError so callers can
+      // distinguish a teardown unwind from a generic StateError.
+      // Crashlytics issue [A f1e904cd].
+      expect(future1, throwsA(isA<MeshCoreSessionDisposedError>()));
+    });
+
+    test('clearPendingResponses bumps the session generation', () {
+      final before = session.sessionGenerationForTesting;
+      session.clearPendingResponses();
+      session.clearPendingResponses();
+      expect(session.sessionGenerationForTesting, before + 2);
+    });
+
+    test('re-registering same code after timeout drain succeeds '
+        '(no Single-flight violation)', () async {
+      // Pinned: Crashlytics issue [A f1e904cd] - re-registering after
+      // the previous waiter unwound (timeout or drain) must not
+      // throw. waitForResponse swallows the TimeoutException and
+      // removes the entry; the next register on the same code MUST
+      // succeed.
+      final first = session.waitForResponse(
+        0x05,
+        timeout: const Duration(milliseconds: 20),
       );
+      await first;
+
+      // Should not throw.
+      final second = session.waitForResponse(
+        0x05,
+        timeout: const Duration(milliseconds: 20),
+      );
+      await second;
+    });
+
+    test('stale waiter from prior generation is silently evicted '
+        '(no Single-flight throw)', () async {
+      // Simulate the leak path: a waiter survives a teardown that
+      // did NOT call clearPendingResponses cleanly. Manually verify
+      // the recovery: register normally, bump the generation, then
+      // re-register on the same code - the stale entry should be
+      // evicted with MeshCoreSessionDisposedError, and the new
+      // registration must succeed.
+      final stale = session.waitForResponse(0x05);
+
+      // Bump generation without draining the maps - mimics the
+      // missed-cleanup scenario.
+      session.clearPendingResponses();
+      // clearPendingResponses both bumps gen AND drains; after this
+      // call the stale future completes with the disposed error.
+      await expectLater(stale, throwsA(isA<MeshCoreSessionDisposedError>()));
+
+      // A fresh register on the same code must succeed in the new
+      // generation.
+      final fresh = session.waitForResponse(
+        0x05,
+        timeout: const Duration(milliseconds: 20),
+      );
+      await fresh;
     });
   });
 

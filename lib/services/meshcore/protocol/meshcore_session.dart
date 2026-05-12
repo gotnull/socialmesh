@@ -87,12 +87,36 @@ class MeshCoreStatusFrame {
       'MeshCoreStatusFrame(status=${isOk ? "OK" : "ERR:$statusCode"})';
 }
 
+/// Thrown when a pending waiter is drained because the session was
+/// torn down (transport disconnect, reconnect, or explicit dispose).
+/// Callers should treat this as a recoverable cancellation - retry on
+/// the next session.
+class MeshCoreSessionDisposedError implements Exception {
+  final String message;
+  const MeshCoreSessionDisposedError([this.message = 'Session disposed']);
+
+  @override
+  String toString() => 'MeshCoreSessionDisposedError: $message';
+}
+
+/// Plain waiter entry (no predicate). The [generation] is the
+/// `_sessionGeneration` value at register time and is the basis for
+/// distinguishing "live concurrent collision" (loud, throws) from
+/// "stale waiter from previous session" (recoverable, replaces).
+class _PendingWaiter {
+  final Completer<MeshCoreFrame> completer;
+  final int generation;
+
+  _PendingWaiter(this.completer, this.generation);
+}
+
 /// Helper class for waiters with validation predicates.
 class _ValidatedWaiter {
   final Completer<MeshCoreFrame> completer;
   final bool Function(MeshCoreFrame) predicate;
+  final int generation;
 
-  _ValidatedWaiter(this.completer, this.predicate);
+  _ValidatedWaiter(this.completer, this.predicate, this.generation);
 }
 
 /// Abstract interface for MeshCore transport layer.
@@ -215,12 +239,25 @@ class MeshCoreSession {
   ///
   /// Single-flight policy: only one waiter per response code.
   /// This prevents mis-association when multiple requests are in flight.
-  final Map<int, Completer<MeshCoreFrame>> _pendingResponses = {};
+  final Map<int, _PendingWaiter> _pendingResponses = {};
 
   /// Pending response completers with validation predicates.
   ///
   /// These waiters only complete when both code matches AND predicate returns true.
   final Map<int, _ValidatedWaiter> _validatedWaiters = {};
+
+  // Monotonic counter of how many times the session has been torn down
+  // (via clearPendingResponses / dispose / transport disconnect that
+  // drains the maps). Each waiter is tagged with the generation it was
+  // registered under so _registerWaiter can distinguish a live
+  // concurrent collision (same generation - loud throw) from a stale
+  // waiter that survived a missed teardown (older generation -
+  // recoverable replace + log).
+  int _sessionGeneration = 0;
+
+  /// Test-only: current session generation. Used by Cluster A tests to
+  /// pin generation-bump-on-clear behaviour.
+  int get sessionGenerationForTesting => _sessionGeneration;
 
   /// Stream controller for status/ACK frames (code 0x01).
   final StreamController<MeshCoreStatusFrame> _statusController =
@@ -381,9 +418,9 @@ class MeshCoreSession {
         }
       } else {
         // Fall back to simple waiters (no predicate)
-        final completer = _pendingResponses.remove(frame.command);
-        if (completer != null && !completer.isCompleted) {
-          completer.complete(frame);
+        final waiter = _pendingResponses.remove(frame.command);
+        if (waiter != null && !waiter.completer.isCompleted) {
+          waiter.completer.complete(frame);
         }
       }
     }
@@ -492,9 +529,19 @@ class MeshCoreSession {
       );
     }
 
-    // Enforce single-flight: only one waiter per response code
+    _evictStaleWaiterIfAny(responseCode);
+
+    // After eviction, any remaining entry is from the CURRENT generation
+    // and therefore a live concurrent collision. Keep the loud throw so
+    // a real bug stays visible. Crashlytics issue [A f1e904cd].
     if (_pendingResponses.containsKey(responseCode) ||
         _validatedWaiters.containsKey(responseCode)) {
+      AppLogging.meshcore(
+        '[A f1e904cd] single-flight collision (live) '
+        'code=0x${responseCode.toRadixString(16)} '
+        'gen=$_sessionGeneration',
+        error: true,
+      );
       throw StateError(
         'Single-flight violation: waiter already registered for '
         '0x${responseCode.toRadixString(16)}. '
@@ -503,8 +550,48 @@ class MeshCoreSession {
     }
 
     final completer = Completer<MeshCoreFrame>();
-    _pendingResponses[responseCode] = completer;
+    _pendingResponses[responseCode] = _PendingWaiter(
+      completer,
+      _sessionGeneration,
+    );
     return completer;
+  }
+
+  // Stale-waiter recovery. If an entry exists for [responseCode] but
+  // was registered under an older generation, it survived a teardown
+  // that should have drained it - missed cleanup path, not a live
+  // collision. Complete it with MeshCoreSessionDisposedError so its
+  // awaiter unwinds cleanly, remove from maps, and let _registerWaiter
+  // proceed. Logged at info (not error) since this is recoverable.
+  void _evictStaleWaiterIfAny(int responseCode) {
+    final pending = _pendingResponses[responseCode];
+    if (pending != null && pending.generation != _sessionGeneration) {
+      AppLogging.meshcore(
+        '[A f1e904cd] evicting stale pending waiter '
+        'code=0x${responseCode.toRadixString(16)} '
+        'staleGen=${pending.generation} currentGen=$_sessionGeneration',
+      );
+      if (!pending.completer.isCompleted) {
+        pending.completer.completeError(
+          const MeshCoreSessionDisposedError('Stale waiter from prior session'),
+        );
+      }
+      _pendingResponses.remove(responseCode);
+    }
+    final validated = _validatedWaiters[responseCode];
+    if (validated != null && validated.generation != _sessionGeneration) {
+      AppLogging.meshcore(
+        '[A f1e904cd] evicting stale validated waiter '
+        'code=0x${responseCode.toRadixString(16)} '
+        'staleGen=${validated.generation} currentGen=$_sessionGeneration',
+      );
+      if (!validated.completer.isCompleted) {
+        validated.completer.completeError(
+          const MeshCoreSessionDisposedError('Stale waiter from prior session'),
+        );
+      }
+      _validatedWaiters.remove(responseCode);
+    }
   }
 
   /// Register a waiter with a validation predicate.
@@ -529,9 +616,17 @@ class MeshCoreSession {
       );
     }
 
-    // Enforce single-flight
+    _evictStaleWaiterIfAny(responseCode);
+
+    // Enforce single-flight: see _registerWaiter for the same rationale.
     if (_pendingResponses.containsKey(responseCode) ||
         _validatedWaiters.containsKey(responseCode)) {
+      AppLogging.meshcore(
+        '[A f1e904cd] single-flight collision (live, validated) '
+        'code=0x${responseCode.toRadixString(16)} '
+        'gen=$_sessionGeneration',
+        error: true,
+      );
       throw StateError(
         'Single-flight violation: waiter already registered for '
         '0x${responseCode.toRadixString(16)}. '
@@ -540,7 +635,11 @@ class MeshCoreSession {
     }
 
     final completer = Completer<MeshCoreFrame>();
-    _validatedWaiters[responseCode] = _ValidatedWaiter(completer, predicate);
+    _validatedWaiters[responseCode] = _ValidatedWaiter(
+      completer,
+      predicate,
+      _sessionGeneration,
+    );
     return completer;
   }
 
@@ -2144,18 +2243,22 @@ class MeshCoreSession {
         : MeshCoreSessionState.disconnected;
   }
 
-  /// Clear all pending response waiters.
+  /// Clear all pending response waiters. Bumps `_sessionGeneration`
+  /// so any waiter that survives this drain (via a missed cleanup path)
+  /// can later be recognized as stale and evicted by `_registerWaiter`
+  /// instead of triggering the live-collision throw.
   void clearPendingResponses() {
-    for (final completer in _pendingResponses.values) {
-      if (!completer.isCompleted) {
-        completer.completeError(StateError('Session disposed'));
+    _sessionGeneration++;
+    for (final waiter in _pendingResponses.values) {
+      if (!waiter.completer.isCompleted) {
+        waiter.completer.completeError(const MeshCoreSessionDisposedError());
       }
     }
     _pendingResponses.clear();
 
     for (final waiter in _validatedWaiters.values) {
       if (!waiter.completer.isCompleted) {
-        waiter.completer.completeError(StateError('Session disposed'));
+        waiter.completer.completeError(const MeshCoreSessionDisposedError());
       }
     }
     _validatedWaiters.clear();
