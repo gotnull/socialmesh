@@ -66,9 +66,13 @@ void main() {
       await transport.pollOnce();
     });
 
-    test('send throws StateError when not connected', () {
+    test('send throws TransportSendError when not connected '
+        '(pre-write guard, callers can catch typed exception)', () {
       final transport = NetworkTransport(host: '127.0.0.1', port: 4403);
-      expect(() => transport.send([1, 2, 3]), throwsA(isA<StateError>()));
+      expect(
+        () => transport.send([1, 2, 3]),
+        throwsA(isA<TransportSendError>()),
+      );
     });
 
     test('connect to unreachable host transitions to error', () async {

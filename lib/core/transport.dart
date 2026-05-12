@@ -58,6 +58,22 @@ enum DeviceConnectionState {
 /// an address-like identity (host:port) and reconnect directly to it.
 enum TransportReconnectMode { scanBased, directEndpoint }
 
+/// Typed exception thrown by [DeviceTransport.send] when the transport
+/// is in a state that prevents the write (not connected, missing TX
+/// characteristic). Mid-send disconnect failures are NOT thrown -
+/// those transition state and return normally so the caller observes
+/// the disconnect via [DeviceTransport.stateStream] rather than via
+/// an exception that previously bubbled to PlatformDispatcher.onError.
+/// Crashlytics issues [D 7894c78d] (NetworkTransport) + [D 5dd688f9]
+/// (BleTransport).
+class TransportSendError implements Exception {
+  final String message;
+  const TransportSendError(this.message);
+
+  @override
+  String toString() => 'TransportSendError: $message';
+}
+
 /// Abstract transport interface
 abstract class DeviceTransport {
   /// Get the transport type

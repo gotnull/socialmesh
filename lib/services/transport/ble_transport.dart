@@ -1226,11 +1226,11 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
   @override
   Future<void> send(List<int> data) async {
     if (_state != DeviceConnectionState.connected) {
-      throw Exception('Not connected');
+      throw const TransportSendError('Not connected');
     }
 
     if (_txCharacteristic == null) {
-      throw Exception('TX characteristic not available');
+      throw const TransportSendError('TX characteristic not available');
     }
 
     try {
@@ -1249,26 +1249,37 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
 
       AppLogging.ble('Sent successfully');
     } catch (e) {
-      AppLogging.ble('⚠️ Send error: $e');
-
-      // Check if this is a disconnection error and update state accordingly
+      // Mid-send failures classify into two buckets:
+      //   1. Disconnect mid-send: device dropped during the write.
+      //      Clean up state (callers observe via stateStream) and
+      //      swallow the exception - rethrowing here funnels through
+      //      PlatformDispatcher.onError as [D 5dd688f9].
+      //   2. Other write errors (encoding, MTU mismatch): rethrow as
+      //      TransportSendError so callers can distinguish from the
+      //      pre-send guard throws above.
       final errorStr = e.toString().toLowerCase();
-      if (errorStr.contains('disconnect') ||
+      final looksLikeDisconnect =
+          errorStr.contains('disconnect') ||
           errorStr.contains('not connected') ||
           errorStr.contains('connection') ||
           errorStr.contains('invalid') ||
-          errorStr.contains('peripheral')) {
-        AppLogging.ble('⚠️ Device appears to have disconnected during send');
-        // Trigger disconnection cleanup if device disconnected mid-send
+          errorStr.contains('peripheral');
+
+      if (looksLikeDisconnect) {
+        AppLogging.ble(
+          '[D 5dd688f9] BleTransport: device disconnected during send: $e',
+        );
         if (_state == DeviceConnectionState.connected) {
           _txCharacteristic = null;
           _rxCharacteristic = null;
           _device = null;
           _updateState(DeviceConnectionState.disconnected);
         }
+        return;
       }
 
-      rethrow;
+      AppLogging.ble('⚠️ Send error (non-disconnect): $e');
+      throw TransportSendError('BleTransport write failed: $e');
     }
   }
 

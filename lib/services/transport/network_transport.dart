@@ -179,19 +179,24 @@ class NetworkTransport implements DeviceTransport {
   @override
   Future<void> send(List<int> data) async {
     if (_socket == null || _state != DeviceConnectionState.connected) {
-      throw StateError('NetworkTransport: Not connected');
+      throw const TransportSendError('NetworkTransport: Not connected');
     }
     try {
       _socket!.add(data);
-    } on StateError {
-      // Socket was closed between the null-check and the add call.
-      AppLogging.protocol('NetworkTransport: Socket closed during send');
+    } on StateError catch (e) {
+      // TOCTOU: socket was closed between the pre-write null-check and
+      // the add() call. We already transition state on the way out -
+      // callers learn via stateStream. Swallow instead of crashing on
+      // an unhandled StateError funneling to PlatformDispatcher.onError.
+      AppLogging.protocol(
+        '[D 7894c78d] NetworkTransport: socket closed during send: $e',
+      );
       _handleSocketClose();
-      rethrow;
     } on SocketException catch (e) {
-      AppLogging.protocol('NetworkTransport: Send error: $e');
+      AppLogging.protocol(
+        '[D 7894c78d] NetworkTransport: SocketException during send: $e',
+      );
       _handleSocketClose();
-      rethrow;
     }
   }
 
