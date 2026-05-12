@@ -202,7 +202,7 @@ void main() {
       );
       final newer = _contact(
         firstByte: 0x11,
-        lat: 99.0,
+        lat: 89.0,
         lng: 88.0,
         name: 'NEW',
         lastSeen: DateTime(2026, 12, 31),
@@ -219,7 +219,7 @@ void main() {
         contacts: [older, newer, target],
         selfInfo: null,
       )!;
-      expect(overlay.hops.single.latLng, LatLng(99.0, 88.0));
+      expect(overlay.hops.single.latLng, LatLng(89.0, 88.0));
       expect(overlay.hops.single.displayName, 'NEW');
     });
 
@@ -395,6 +395,112 @@ void main() {
         selfInfo: null,
       )!;
       expect(overlay.originLatLng, isNull);
+    });
+  });
+
+  // Pinned: flutter_map's Crs.checkLatLng throws fatally on NaN / out-of-range
+  // input. The overlay constructs LatLng for both hops and target from
+  // MeshCoreContact fields, which are not pre-validated at the model layer.
+  // These tests pin the per-call boundary that prevents the crash.
+  group('hop + target LatLng validation (flutter_map crash boundary)', () {
+    test('builds null hop for MeshCore contact with no-fix sentinel (0,0): '
+        'domain-specific, not a global LatLng rule', () {
+      final hop = _contact(firstByte: 0x11, lat: 0.0, lng: 0.0);
+      final target = _contact(
+        firstByte: 0x99,
+        lat: 50.0,
+        lng: 60.0,
+        pathLength: 1,
+        path: Uint8List.fromList([0x11]),
+      );
+      final overlay = MeshCorePathOverlay.fromContact(
+        target: target,
+        contacts: [hop, target],
+        selfInfo: _selfInfo(lat: 1.0, lng: 1.0),
+      )!;
+      expect(overlay.hops.single.latLng, isNull);
+      expect(overlay.knownHopCount, 0);
+    });
+
+    test('builds null hop when contact latitude/longitude is NaN', () {
+      final hop = _contact(firstByte: 0x11, lat: double.nan, lng: 20.0);
+      final target = _contact(
+        firstByte: 0x99,
+        lat: 50.0,
+        lng: 60.0,
+        pathLength: 1,
+        path: Uint8List.fromList([0x11]),
+      );
+      final overlay = MeshCorePathOverlay.fromContact(
+        target: target,
+        contacts: [hop, target],
+        selfInfo: _selfInfo(lat: 1.0, lng: 1.0),
+      )!;
+      expect(overlay.hops.single.latLng, isNull);
+    });
+
+    test('builds null hop when latitude is out of range', () {
+      final hop = _contact(firstByte: 0x11, lat: 95.0, lng: 20.0);
+      final target = _contact(
+        firstByte: 0x99,
+        lat: 50.0,
+        lng: 60.0,
+        pathLength: 1,
+        path: Uint8List.fromList([0x11]),
+      );
+      final overlay = MeshCorePathOverlay.fromContact(
+        target: target,
+        contacts: [hop, target],
+        selfInfo: _selfInfo(lat: 1.0, lng: 1.0),
+      )!;
+      expect(overlay.hops.single.latLng, isNull);
+    });
+
+    test('builds null targetLatLng when target has no-fix sentinel (0,0)', () {
+      final target = _contact(
+        firstByte: 0x99,
+        lat: 0.0,
+        lng: 0.0,
+        pathLength: 0,
+      );
+      final overlay = MeshCorePathOverlay.fromContact(
+        target: target,
+        contacts: const [],
+        selfInfo: _selfInfo(lat: 1.0, lng: 1.0),
+      )!;
+      expect(overlay.targetLatLng, isNull);
+    });
+
+    test('builds null targetLatLng when target latitude is NaN', () {
+      final target = _contact(
+        firstByte: 0x99,
+        lat: double.nan,
+        lng: 60.0,
+        pathLength: 0,
+      );
+      final overlay = MeshCorePathOverlay.fromContact(
+        target: target,
+        contacts: const [],
+        selfInfo: _selfInfo(lat: 1.0, lng: 1.0),
+      )!;
+      expect(overlay.targetLatLng, isNull);
+    });
+
+    test('builds valid LatLng hop for in-range finite coordinates', () {
+      final hop = _contact(firstByte: 0x11, lat: 12.34, lng: 56.78);
+      final target = _contact(
+        firstByte: 0x99,
+        lat: 50.0,
+        lng: 60.0,
+        pathLength: 1,
+        path: Uint8List.fromList([0x11]),
+      );
+      final overlay = MeshCorePathOverlay.fromContact(
+        target: target,
+        contacts: [hop, target],
+        selfInfo: _selfInfo(lat: 1.0, lng: 1.0),
+      )!;
+      expect(overlay.hops.single.latLng, LatLng(12.34, 56.78));
     });
   });
 }

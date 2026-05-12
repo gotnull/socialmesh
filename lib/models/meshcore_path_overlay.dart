@@ -25,6 +25,7 @@ import 'dart:typed_data';
 
 import 'package:latlong2/latlong.dart';
 
+import '../core/safe_lat_lng.dart';
 import '../services/meshcore/protocol/meshcore_messages.dart';
 import 'meshcore_contact.dart';
 
@@ -243,7 +244,7 @@ class MeshCorePathOverlay {
           byte: b,
           label: _hex2(b),
           latLng: match != null
-              ? LatLng(match.latitude!, match.longitude!)
+              ? _meshcoreLatLng(match.latitude, match.longitude)
               : null,
           displayName: match?.displayName.isNotEmpty == true
               ? match!.displayName
@@ -253,9 +254,7 @@ class MeshCorePathOverlay {
     }
 
     final origin = _selfLatLng(selfInfo);
-    final targetLatLng = target.hasLocation
-        ? LatLng(target.latitude!, target.longitude!)
-        : null;
+    final targetLatLng = _meshcoreLatLng(target.latitude, target.longitude);
 
     return MeshCorePathOverlay(
       originLatLng: origin,
@@ -274,14 +273,18 @@ class MeshCorePathOverlay {
     if (rawLat == null || rawLng == null) return null;
     // SELF_INFO encodes lat/lon as int32 in 1e7 scale (matches
     // `MeshCoreContactInfo.latitudeDegrees` / `longitudeDegrees`).
-    final lat = rawLat / 1e7;
-    final lng = rawLng / 1e7;
-    if (!lat.isFinite || !lng.isFinite) return null;
-    // The "no location" sentinel in MeshCore advertisements is
-    // (0, 0). Treat exact zero as unknown so we don't draw a polyline
-    // through Null Island.
-    if (lat == 0.0 && lng == 0.0) return null;
-    return LatLng(lat, lng);
+    return _meshcoreLatLng(rawLat / 1e7, rawLng / 1e7);
+  }
+
+  // MeshCore-specific LatLng guard. Domain rule, NOT a global LatLng
+  // policy: the firmware encodes "no GPS fix" as (0, 0), so we map
+  // exact-zero to null to avoid drawing a polyline through Null Island.
+  // All other validation (NaN, in-range) is delegated to safeLatLng.
+  static LatLng? _meshcoreLatLng(num? lat, num? lng) {
+    final ll = safeLatLng(lat, lng);
+    if (ll == null) return null;
+    if (ll.latitude == 0.0 && ll.longitude == 0.0) return null;
+    return ll;
   }
 
   static String _hex2(int byte) =>
