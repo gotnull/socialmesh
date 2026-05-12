@@ -23,6 +23,7 @@ import '../meshcore_send_rate_limiter.dart';
 import 'meshcore_capture.dart';
 import 'meshcore_codec.dart';
 import 'meshcore_frame.dart';
+import 'meshcore_cayenne_lpp.dart';
 import 'meshcore_messages.dart';
 
 /// Exception thrown when parsing a MeshCore response fails.
@@ -1257,6 +1258,7 @@ class MeshCoreSession {
   Future<Uint8List?> sendBinaryRequest({
     required Uint8List recipientPubKey,
     required Uint8List requestBytes,
+    int expectedResponseCode = MeshCorePushCodes.binaryResponse,
     Duration timeout = const Duration(seconds: 10),
   }) async {
     if (recipientPubKey.length != meshCorePubKeySize) {
@@ -1286,9 +1288,31 @@ class MeshCoreSession {
     final pendingPushes = <(int, Uint8List)>[];
     int? expectedTag;
 
+    // D41-A: telemetry responses (`PUSH_CODE_TELEMETRY_RESPONSE 0x8B`)
+    // use a DIFFERENT wire layout from generic binary responses. The
+    // firmware emits `[opcode][reserved=0][6-byte pubkey prefix][lpp]`
+    // there (no tag in the push). Correlate by pubkey prefix instead.
+    // Single-flight is already enforced at the session level so there
+    // is never more than one telemetry round-trip in flight to
+    // confuse.
+    final bool isTelemetry =
+        expectedResponseCode == MeshCorePushCodes.telemetryResponse;
+
     StreamSubscription<MeshCoreFrame>? pushSub;
     pushSub = frameStream.listen((frame) {
-      if (frame.command != MeshCorePushCodes.binaryResponse) return;
+      if (frame.command != expectedResponseCode) return;
+      if (isTelemetry) {
+        // Layout: [reserved:u8][pubkey_prefix:6 B][lpp_payload:...]
+        if (frame.payload.length < 7) return;
+        for (int i = 0; i < 6; i++) {
+          if (frame.payload[1 + i] != recipientPubKey[i]) return;
+        }
+        final data = Uint8List.fromList(frame.payload.sublist(7));
+        if (!completer.isCompleted) {
+          completer.complete(data);
+        }
+        return;
+      }
       // `frame.payload` is everything after the wire opcode byte:
       //   payload[0]    = reserved
       //   payload[1..5] = tag (u32 LE)
@@ -1384,6 +1408,48 @@ class MeshCoreSession {
       await pushSub.cancel();
       _binaryRequestInFlight = false;
     }
+  }
+
+  /// D41-A: request a contact's Cayenne LPP telemetry over LoRa via
+  /// the existing `sendBinaryRequest` plumbing.
+  ///
+  /// Wire request:
+  ///   `[CMD_SEND_BINARY_REQ 0x32][recipientPubKey:32 B]`
+  ///   `[REQ_TYPE_GET_TELEMETRY_DATA 0x03][permission_mask 0x00]`
+  ///
+  /// Wire response:
+  ///   `[PUSH_CODE_TELEMETRY_RESPONSE 0x8B][reserved 0]`
+  ///   `[pubkey_prefix:6 B][cayenne_lpp_tlv:...]`
+  ///
+  /// `permission_mask = 0x00` asks the responder for everything its
+  /// `telemetry_mode_*` flags allow. The responder may omit channels
+  /// at its own discretion; we surface whatever arrives.
+  ///
+  /// Returns `null` on:
+  ///   - empty / missing `recipientPubKey` (asserts in debug),
+  ///   - single-flight rejection (another binary request in flight),
+  ///   - ACK timeout (no `RESP_CODE_SENT` from local radio),
+  ///   - response timeout (no matching `0x8B` push within [timeout]).
+  ///
+  /// On success returns a `MeshCoreTelemetryResponse` carrying the
+  /// parsed Cayenne LPP readings. The LPP parser tolerates trailing
+  /// truncation and unknown-but-known-size types; a malformed
+  /// payload returns a response with whatever readings parsed cleanly
+  /// before the issue (never throws to the caller).
+  Future<MeshCoreTelemetryResponse?> requestTelemetry(
+    Uint8List recipientPubKey, {
+    Duration timeout = const Duration(seconds: 30),
+  }) async {
+    final response = await sendBinaryRequest(
+      recipientPubKey: recipientPubKey,
+      requestBytes: Uint8List.fromList(const [0x03, 0x00]),
+      expectedResponseCode: MeshCorePushCodes.telemetryResponse,
+      timeout: timeout,
+    );
+    if (response == null) {
+      return null;
+    }
+    return parseCayenneLpp(response, fetchedAt: DateTime.now());
   }
 
   /// Check device connectivity using battery request.

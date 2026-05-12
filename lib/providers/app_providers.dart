@@ -2117,14 +2117,31 @@ Future<void> clearDeviceDataBeforeConnect(
   }
 
   // Capture every synchronous notifier reference before any await
-  // below. If the caller is a widget that unmounts mid-clear, ref
-  // becomes invalid and a later ref.read would throw - the
-  // notifier handles we already hold remain usable because they bind
-  // to the ProviderContainer, not to ref. Crashlytics [E 4dfe564d].
-  final messageCount = ref.read(messagesProvider).length;
-  final nodesNotifier = clearNodeData ? ref.read(nodesProvider.notifier) : null;
-  final channelsNotifier = ref.read(channelsProvider.notifier);
-  final newNodesNotifier = ref.read(newNodesCountProvider.notifier);
+  // below. If the caller is a widget that has already unmounted by
+  // the time we get here (Scanner navigating away mid-connect), the
+  // very first ref.read throws synchronously. Wrap the whole capture
+  // block and bail; the awaited storage clears below have their own
+  // try/catch and will short-circuit naturally on the disposed-ref
+  // path. Crashlytics [E 4dfe564d] regressed on 1.39.0+174 because the
+  // first attempt only handled mid-clear invalidation; this second
+  // attempt handles before-capture invalidation too.
+  final int messageCount;
+  final NodesNotifier? nodesNotifier;
+  final ChannelsNotifier channelsNotifier;
+  final NewNodesCountNotifier newNodesNotifier;
+  try {
+    messageCount = ref.read(messagesProvider).length;
+    nodesNotifier = clearNodeData ? ref.read(nodesProvider.notifier) : null;
+    channelsNotifier = ref.read(channelsProvider.notifier);
+    newNodesNotifier = ref.read(newNodesCountProvider.notifier);
+  } catch (e) {
+    AppLogging.app(
+      '[E 4dfe564d] clearDeviceDataBeforeConnect: caller ref invalidated '
+      'before sync capture (Scanner likely unmounted mid-connect); '
+      'skipping clear: $e',
+    );
+    return;
+  }
 
   AppLogging.app(
     '🧹 Clearing device data before new connection '

@@ -15799,6 +15799,130 @@ abstract class AppLocalizations {
   /// **'View recent app diagnostics'**
   String get meshcoreAppDebugLogToolSubtitle;
 
+  /// D41-A - Contact Detail tile title opening the per-contact telemetry sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Telemetry'**
+  String get meshcoreTelemetryTileTitle;
+
+  /// D41-A - Contact Detail tile subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Battery, sensors, location'**
+  String get meshcoreTelemetryTileSubtitle;
+
+  /// D41-A - telemetry sheet section title
+  ///
+  /// In en, this message translates to:
+  /// **'Telemetry - {contactName}'**
+  String meshcoreTelemetrySheetTitle(String contactName);
+
+  /// D41-A - manual refresh IconButton tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh telemetry'**
+  String get meshcoreTelemetryRefresh;
+
+  /// D41-A - in-flight hint while waiting for the response push
+  ///
+  /// In en, this message translates to:
+  /// **'Requesting telemetry…'**
+  String get meshcoreTelemetryRequesting;
+
+  /// D41-A - shown when the contact responds but provides zero readings
+  ///
+  /// In en, this message translates to:
+  /// **'No telemetry available'**
+  String get meshcoreTelemetryEmpty;
+
+  /// D41-A - shown on request failure / timeout
+  ///
+  /// In en, this message translates to:
+  /// **'Telemetry request timed out'**
+  String get meshcoreTelemetryTimeout;
+
+  /// D41-A - shown while the 10s per-contact cooldown is active
+  ///
+  /// In en, this message translates to:
+  /// **'Try again in {seconds}s'**
+  String meshcoreTelemetryCoolingSeconds(int seconds);
+
+  /// D41-A - section title for Cayenne LPP channel 1 (TELEM_CHANNEL_SELF)
+  ///
+  /// In en, this message translates to:
+  /// **'Device'**
+  String get meshcoreTelemetryChannelDevice;
+
+  /// D41-A - section title for Cayenne LPP channels other than 1
+  ///
+  /// In en, this message translates to:
+  /// **'Aux {channel}'**
+  String meshcoreTelemetryChannelAux(int channel);
+
+  /// D41-A - voltage reading row label
+  ///
+  /// In en, this message translates to:
+  /// **'Battery'**
+  String get meshcoreTelemetryRowBatteryLabel;
+
+  /// D41-A - voltage reading row value
+  ///
+  /// In en, this message translates to:
+  /// **'{volts} V'**
+  String meshcoreTelemetryRowBatteryValue(String volts);
+
+  /// D41-A - temperature reading row label
+  ///
+  /// In en, this message translates to:
+  /// **'Temperature'**
+  String get meshcoreTelemetryRowTemperatureLabel;
+
+  /// D41-A - temperature reading row value
+  ///
+  /// In en, this message translates to:
+  /// **'{celsius} °C'**
+  String meshcoreTelemetryRowTemperatureValue(String celsius);
+
+  /// D41-A - humidity reading row label
+  ///
+  /// In en, this message translates to:
+  /// **'Humidity'**
+  String get meshcoreTelemetryRowHumidityLabel;
+
+  /// D41-A - humidity reading row value
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} %'**
+  String meshcoreTelemetryRowHumidityValue(String percent);
+
+  /// D41-A - barometric pressure reading row label
+  ///
+  /// In en, this message translates to:
+  /// **'Pressure'**
+  String get meshcoreTelemetryRowPressureLabel;
+
+  /// D41-A - barometric pressure reading row value
+  ///
+  /// In en, this message translates to:
+  /// **'{hPa} hPa'**
+  String meshcoreTelemetryRowPressureValue(String hPa);
+
+  /// D41-A - GPS reading row label
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get meshcoreTelemetryRowLocationLabel;
+
+  /// D41-A - GPS reading row value
+  ///
+  /// In en, this message translates to:
+  /// **'{lat}, {lon} ({altitudeMeters} m)'**
+  String meshcoreTelemetryRowLocationValue(
+    String lat,
+    String lon,
+    int altitudeMeters,
+  );
+
   /// Confirm dialog message for leaving a channel
   ///
   /// In en, this message translates to:

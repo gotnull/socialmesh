@@ -44,6 +44,7 @@ import '../contact_l10n.dart';
 import 'meshcore_map_screen.dart';
 import 'meshcore_neighbors_sheet.dart';
 import 'meshcore_path_history_sheet.dart';
+import 'meshcore_telemetry_sheet.dart';
 import 'meshcore_tools_screen.dart' show showMeshCoreTracePathSheet;
 
 /// MeshCore-only read-only contact detail screen.
@@ -241,6 +242,17 @@ class MeshCoreContactDetailScreen extends ConsumerWidget {
         // D42-A: Show on map tile. Hidden when the contact has no
         // usable path data (flood path or all hops unresolved).
         _ShowOnMapTile(contact: c),
+        // D41-A: Telemetry tile. Always visible for chat and
+        // repeater contacts; the sheet handles the no-data /
+        // timeout / cooling states internally.
+        SettingsTile(
+          key: const ValueKey('meshcore-contact-detail-telemetry'),
+          icon: Icons.sensors_rounded,
+          iconColor: context.accentColor,
+          title: l10n.meshcoreTelemetryTileTitle,
+          subtitle: l10n.meshcoreTelemetryTileSubtitle,
+          onTap: () => showMeshCoreTelemetrySheet(context, contact: c),
+        ),
         // D36-A: Neighbours query is repeater-only. The chat-type
         // contacts can't be queried this way (they aren't repeaters)
         // so the tile is hidden entirely; we don't show a greyed-out

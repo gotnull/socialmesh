@@ -20156,6 +20156,132 @@
   "@meshcoreAppDebugLogToolSubtitle": {
     "description": "D44 - MeshCore Tools tile subtitle"
   },
+  "meshcoreTelemetryTileTitle": "Telemetria",
+  "@meshcoreTelemetryTileTitle": {
+    "description": "D41-A - Contact Detail tile title opening the per-contact telemetry sheet"
+  },
+  "meshcoreTelemetryTileSubtitle": "Bateria, sensores, localização",
+  "@meshcoreTelemetryTileSubtitle": {
+    "description": "D41-A - Contact Detail tile subtitle"
+  },
+  "meshcoreTelemetrySheetTitle": "Telemetria - {contactName}",
+  "@meshcoreTelemetrySheetTitle": {
+    "description": "D41-A - telemetry sheet section title",
+    "placeholders": {
+      "contactName": {
+        "type": "String"
+      }
+    }
+  },
+  "meshcoreTelemetryRefresh": "Atualizar telemetria",
+  "@meshcoreTelemetryRefresh": {
+    "description": "D41-A - manual refresh IconButton tooltip"
+  },
+  "meshcoreTelemetryRequesting": "Solicitando telemetria…",
+  "@meshcoreTelemetryRequesting": {
+    "description": "D41-A - in-flight hint while waiting for the response push"
+  },
+  "meshcoreTelemetryEmpty": "Sem telemetria disponível",
+  "@meshcoreTelemetryEmpty": {
+    "description": "D41-A - shown when the contact responds but provides zero readings"
+  },
+  "meshcoreTelemetryTimeout": "Solicitação de telemetria expirou",
+  "@meshcoreTelemetryTimeout": {
+    "description": "D41-A - shown on request failure / timeout"
+  },
+  "meshcoreTelemetryCoolingSeconds": "Tente novamente em {seconds}s",
+  "@meshcoreTelemetryCoolingSeconds": {
+    "description": "D41-A - shown while the 10s per-contact cooldown is active",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "meshcoreTelemetryChannelDevice": "Dispositivo",
+  "@meshcoreTelemetryChannelDevice": {
+    "description": "D41-A - section title for Cayenne LPP channel 1 (TELEM_CHANNEL_SELF)"
+  },
+  "meshcoreTelemetryChannelAux": "Aux {channel}",
+  "@meshcoreTelemetryChannelAux": {
+    "description": "D41-A - section title for Cayenne LPP channels other than 1",
+    "placeholders": {
+      "channel": {
+        "type": "int"
+      }
+    }
+  },
+  "meshcoreTelemetryRowBatteryLabel": "Bateria",
+  "@meshcoreTelemetryRowBatteryLabel": {
+    "description": "D41-A - voltage reading row label"
+  },
+  "meshcoreTelemetryRowBatteryValue": "{volts} V",
+  "@meshcoreTelemetryRowBatteryValue": {
+    "description": "D41-A - voltage reading row value",
+    "placeholders": {
+      "volts": {
+        "type": "String"
+      }
+    }
+  },
+  "meshcoreTelemetryRowTemperatureLabel": "Temperatura",
+  "@meshcoreTelemetryRowTemperatureLabel": {
+    "description": "D41-A - temperature reading row label"
+  },
+  "meshcoreTelemetryRowTemperatureValue": "{celsius} °C",
+  "@meshcoreTelemetryRowTemperatureValue": {
+    "description": "D41-A - temperature reading row value",
+    "placeholders": {
+      "celsius": {
+        "type": "String"
+      }
+    }
+  },
+  "meshcoreTelemetryRowHumidityLabel": "Umidade",
+  "@meshcoreTelemetryRowHumidityLabel": {
+    "description": "D41-A - humidity reading row label"
+  },
+  "meshcoreTelemetryRowHumidityValue": "{percent} %",
+  "@meshcoreTelemetryRowHumidityValue": {
+    "description": "D41-A - humidity reading row value",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "meshcoreTelemetryRowPressureLabel": "Pressão",
+  "@meshcoreTelemetryRowPressureLabel": {
+    "description": "D41-A - barometric pressure reading row label"
+  },
+  "meshcoreTelemetryRowPressureValue": "{hPa} hPa",
+  "@meshcoreTelemetryRowPressureValue": {
+    "description": "D41-A - barometric pressure reading row value",
+    "placeholders": {
+      "hPa": {
+        "type": "String"
+      }
+    }
+  },
+  "meshcoreTelemetryRowLocationLabel": "Localização",
+  "@meshcoreTelemetryRowLocationLabel": {
+    "description": "D41-A - GPS reading row label"
+  },
+  "meshcoreTelemetryRowLocationValue": "{lat}, {lon} ({altitudeMeters} m)",
+  "@meshcoreTelemetryRowLocationValue": {
+    "description": "D41-A - GPS reading row value",
+    "placeholders": {
+      "lat": {
+        "type": "String"
+      },
+      "lon": {
+        "type": "String"
+      },
+      "altitudeMeters": {
+        "type": "int"
+      }
+    }
+  },
   "meshcoreLeaveChannelMessage": "Tem certeza que deseja sair de {channelName}?",
   "@meshcoreLeaveChannelMessage": {
     "description": "Confirm dialog message for leaving a channel",

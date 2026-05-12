@@ -17,6 +17,7 @@ import '../models/mesh_device.dart';
 import '../models/meshcore_contact.dart';
 import '../models/meshcore_channel.dart';
 import '../models/meshcore_path_overlay.dart';
+import '../services/meshcore/protocol/meshcore_cayenne_lpp.dart';
 import '../services/meshcore/connection_coordinator.dart';
 import '../services/meshcore/meshcore_adapter.dart';
 import '../services/meshcore/meshcore_detector.dart';
@@ -2982,3 +2983,213 @@ final meshCoreNeighborsProvider =
       MeshCoreNeighborsState,
       String
     >(MeshCoreNeighborsNotifier.new);
+
+// ---------------------------------------------------------------------------
+// D41-A: per-contact Cayenne LPP telemetry
+// ---------------------------------------------------------------------------
+
+/// Per-contact telemetry request status. Mirrors the shape of
+/// [MeshCoreNeighborsStatus] so the sheet UX stays consistent.
+enum MeshCoreTelemetryStatus {
+  /// No request has been issued yet for this contact.
+  idle,
+
+  /// A request is in flight. The UI shows a spinner.
+  requesting,
+
+  /// A response landed; [MeshCoreTelemetryState.lastResponse] is set.
+  success,
+
+  /// Request failed (timeout, parse failure, single-flight, no
+  /// session, no contact). UI shows [MeshCoreTelemetryState.lastError]
+  /// copy.
+  failure,
+
+  /// The 10 s per-contact cooldown is active.
+  cooling,
+}
+
+/// Immutable per-contact state for the telemetry sheet.
+///
+/// Privacy: holds the parsed response only (decoded units). Errors
+/// are typed (enum-like strings); never raw payload bytes.
+class MeshCoreTelemetryState {
+  final MeshCoreTelemetryStatus status;
+  final MeshCoreTelemetryResponse? lastResponse;
+  final String? lastError;
+  final DateTime? cooldownUntil;
+
+  const MeshCoreTelemetryState({
+    required this.status,
+    this.lastResponse,
+    this.lastError,
+    this.cooldownUntil,
+  });
+
+  const MeshCoreTelemetryState.idle()
+    : status = MeshCoreTelemetryStatus.idle,
+      lastResponse = null,
+      lastError = null,
+      cooldownUntil = null;
+
+  MeshCoreTelemetryState copyWith({
+    MeshCoreTelemetryStatus? status,
+    MeshCoreTelemetryResponse? lastResponse,
+    String? lastError,
+    DateTime? cooldownUntil,
+    bool clearLastError = false,
+    bool clearCooldown = false,
+  }) {
+    return MeshCoreTelemetryState(
+      status: status ?? this.status,
+      lastResponse: lastResponse ?? this.lastResponse,
+      lastError: clearLastError ? null : (lastError ?? this.lastError),
+      cooldownUntil: clearCooldown
+          ? null
+          : (cooldownUntil ?? this.cooldownUntil),
+    );
+  }
+}
+
+/// D41-A: 10 s per-contact cooldown. Matches the D36-A neighbours
+/// rate-limiter on the same airtime-safety grounds: a manual refresh
+/// hits the firmware queue + (potentially) the LoRa channel; rate-
+/// limiting the UI prevents refresh-mashing.
+const Duration _kTelemetryCooldown = Duration(seconds: 10);
+
+class MeshCoreTelemetryNotifier extends Notifier<MeshCoreTelemetryState> {
+  MeshCoreTelemetryNotifier(this.publicKeyHex);
+
+  /// Target contact public-key hex; injected via the family
+  /// constructor tear-off.
+  final String publicKeyHex;
+
+  @override
+  MeshCoreTelemetryState build() => const MeshCoreTelemetryState.idle();
+
+  /// Trigger a fresh telemetry query against this notifier's family
+  /// argument. Cooldown / no-session / no-contact / timeout paths
+  /// transition the state without throwing.
+  ///
+  /// Logging surface (privacy-redacted; pubkey appears only as the
+  /// canonical 8-byte fingerprint):
+  ///   - `event=telemetry.request.sent pubkey=<8B fingerprint>`
+  ///   - `event=telemetry.response.received pubkey=<8B> reading_count=<int>`
+  ///   - `event=telemetry.request.timeout pubkey=<8B>`
+  ///   - `event=telemetry.request.cooling reason=cooldown pubkey=<8B>`
+  ///   - never the actual telemetry values; never the raw LPP bytes.
+  Future<void> requestRefresh() async {
+    final now = DateTime.now();
+    final cooldown = state.cooldownUntil;
+    if (cooldown != null && now.isBefore(cooldown)) {
+      state = state.copyWith(
+        status: MeshCoreTelemetryStatus.cooling,
+        clearLastError: true,
+      );
+      AppLogging.meshcore(
+        'event=telemetry.request.cooling reason=cooldown '
+        'pubkey=${_pubkeyFingerprintHex(publicKeyHex)}',
+      );
+      return;
+    }
+
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null) {
+      state = state.copyWith(
+        status: MeshCoreTelemetryStatus.failure,
+        lastError: 'no_session',
+      );
+      return;
+    }
+
+    final contacts = ref.read(meshCoreContactsProvider).contacts;
+    final contact = contacts
+        .where((c) => c.publicKeyHex == publicKeyHex)
+        .firstOrNull;
+    if (contact == null) {
+      state = state.copyWith(
+        status: MeshCoreTelemetryStatus.failure,
+        lastError: 'contact_missing',
+      );
+      return;
+    }
+
+    state = state.copyWith(
+      status: MeshCoreTelemetryStatus.requesting,
+      clearLastError: true,
+      clearCooldown: true,
+    );
+    AppLogging.meshcore(
+      'event=telemetry.request.sent '
+      'pubkey=${AppLogging.publicKeyFingerprint(contact.publicKey)}',
+    );
+
+    final response = await session.requestTelemetry(contact.publicKey);
+
+    final cooldownEnd = DateTime.now().add(_kTelemetryCooldown);
+
+    if (response == null) {
+      AppLogging.meshcore(
+        'event=telemetry.request.timeout '
+        'pubkey=${AppLogging.publicKeyFingerprint(contact.publicKey)}',
+        error: true,
+      );
+      state = state.copyWith(
+        status: MeshCoreTelemetryStatus.failure,
+        lastError: 'timeout',
+        cooldownUntil: cooldownEnd,
+      );
+      return;
+    }
+
+    AppLogging.meshcore(
+      'event=telemetry.response.received '
+      'pubkey=${AppLogging.publicKeyFingerprint(contact.publicKey)} '
+      'reading_count=${response.readings.length}',
+    );
+
+    state = state.copyWith(
+      status: MeshCoreTelemetryStatus.success,
+      lastResponse: response,
+      clearLastError: true,
+      cooldownUntil: cooldownEnd,
+    );
+  }
+
+  /// Compute the visible status: transitions `cooling` back to a
+  /// resolved status (idle or success depending on whether a prior
+  /// response is buffered) once the cooldown timestamp has elapsed.
+  /// Rewrites the underlying state so the sheet rebuild picks up the
+  /// transition without a second `requestRefresh` call.
+  MeshCoreTelemetryStatus visibleStatus(DateTime now) {
+    if (state.status != MeshCoreTelemetryStatus.cooling) {
+      return state.status;
+    }
+    final until = state.cooldownUntil;
+    if (until == null || now.isAfter(until)) {
+      final next = state.lastResponse == null
+          ? MeshCoreTelemetryStatus.idle
+          : MeshCoreTelemetryStatus.success;
+      state = state.copyWith(status: next);
+      return next;
+    }
+    return MeshCoreTelemetryStatus.cooling;
+  }
+}
+
+/// Compose an 8-char hex fingerprint from a 64-char pubkey hex
+/// string for log lines. Mirrors `AppLogging.publicKeyFingerprint`'s
+/// shape but operates on the hex form we have on hand here.
+String _pubkeyFingerprintHex(String publicKeyHex) {
+  if (publicKeyHex.length < 8) return publicKeyHex;
+  return '4B:${publicKeyHex.substring(0, 4).toLowerCase()}'
+      // lint-allow: hardcoded-string — diagnostic log payload
+      '…${publicKeyHex.substring(publicKeyHex.length - 4).toLowerCase()}';
+}
+
+final meshCoreTelemetryProvider =
+    NotifierProvider.family<
+      MeshCoreTelemetryNotifier,
+      MeshCoreTelemetryState,
+      String
+    >(MeshCoreTelemetryNotifier.new);

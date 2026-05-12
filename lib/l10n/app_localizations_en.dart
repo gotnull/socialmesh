@@ -8946,6 +8946,86 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshcoreAppDebugLogToolSubtitle => 'View recent app diagnostics';
 
   @override
+  String get meshcoreTelemetryTileTitle => 'Telemetry';
+
+  @override
+  String get meshcoreTelemetryTileSubtitle => 'Battery, sensors, location';
+
+  @override
+  String meshcoreTelemetrySheetTitle(String contactName) {
+    return 'Telemetry - $contactName';
+  }
+
+  @override
+  String get meshcoreTelemetryRefresh => 'Refresh telemetry';
+
+  @override
+  String get meshcoreTelemetryRequesting => 'Requesting telemetry…';
+
+  @override
+  String get meshcoreTelemetryEmpty => 'No telemetry available';
+
+  @override
+  String get meshcoreTelemetryTimeout => 'Telemetry request timed out';
+
+  @override
+  String meshcoreTelemetryCoolingSeconds(int seconds) {
+    return 'Try again in ${seconds}s';
+  }
+
+  @override
+  String get meshcoreTelemetryChannelDevice => 'Device';
+
+  @override
+  String meshcoreTelemetryChannelAux(int channel) {
+    return 'Aux $channel';
+  }
+
+  @override
+  String get meshcoreTelemetryRowBatteryLabel => 'Battery';
+
+  @override
+  String meshcoreTelemetryRowBatteryValue(String volts) {
+    return '$volts V';
+  }
+
+  @override
+  String get meshcoreTelemetryRowTemperatureLabel => 'Temperature';
+
+  @override
+  String meshcoreTelemetryRowTemperatureValue(String celsius) {
+    return '$celsius °C';
+  }
+
+  @override
+  String get meshcoreTelemetryRowHumidityLabel => 'Humidity';
+
+  @override
+  String meshcoreTelemetryRowHumidityValue(String percent) {
+    return '$percent %';
+  }
+
+  @override
+  String get meshcoreTelemetryRowPressureLabel => 'Pressure';
+
+  @override
+  String meshcoreTelemetryRowPressureValue(String hPa) {
+    return '$hPa hPa';
+  }
+
+  @override
+  String get meshcoreTelemetryRowLocationLabel => 'Location';
+
+  @override
+  String meshcoreTelemetryRowLocationValue(
+    String lat,
+    String lon,
+    int altitudeMeters,
+  ) {
+    return '$lat, $lon ($altitudeMeters m)';
+  }
+
+  @override
   String meshcoreLeaveChannelMessage(String channelName) {
     return 'Are you sure you want to leave $channelName?';
   }
