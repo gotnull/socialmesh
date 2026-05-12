@@ -1549,6 +1549,11 @@ class MeshCorePathOverlayNotifier extends Notifier<MeshCorePathOverlay?> {
   /// untouched when the path is flood or no coordinate data
   /// resolved.
   bool setActive(MeshCoreContact contact) {
+    // Notifier may be disposed if the caller fires from a teardown
+    // path (route exit, provider container reset). Bail before any
+    // ref.read / state = ... runs - those throw on disposed.
+    // Crashlytics [E 88594eb8] + [E a0f48e9c].
+    if (!ref.mounted) return false;
     final contacts = ref.read(meshCoreContactsProvider).contacts;
     final selfInfo = ref.read(meshCoreSelfInfoProvider).selfInfo;
     final overlay = MeshCorePathOverlay.fromContact(
@@ -1562,6 +1567,7 @@ class MeshCorePathOverlayNotifier extends Notifier<MeshCorePathOverlay?> {
   /// Build an overlay from a saved path-history hop-byte sequence.
   /// Returns `true` iff the overlay is drawable.
   bool setFromHistory(MeshCoreContact contact, Uint8List hopBytes) {
+    if (!ref.mounted) return false;
     final contacts = ref.read(meshCoreContactsProvider).contacts;
     final selfInfo = ref.read(meshCoreSelfInfoProvider).selfInfo;
     final overlay = MeshCorePathOverlay.fromHistory(
@@ -1575,6 +1581,7 @@ class MeshCorePathOverlayNotifier extends Notifier<MeshCorePathOverlay?> {
 
   /// Remove the active overlay.
   void clear() {
+    if (!ref.mounted) return;
     if (state == null) return;
     state = null;
     AppLogging.meshcore('event=path_overlay.cleared');

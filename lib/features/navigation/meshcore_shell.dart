@@ -233,8 +233,17 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
 
   @override
   void dispose() {
-    // Clear scaffold key on dispose
-    ref.read(meshCoreShellScaffoldKeyProvider.notifier).setKey(null);
+    // The provider that owns the scaffold key can itself be torn down
+    // before this State's dispose runs (route tree teardown order is
+    // not deterministic). Guard the ref.read so a disposed-provider
+    // throw does not crash the route exit. Crashlytics [E c2ba2914].
+    try {
+      ref.read(meshCoreShellScaffoldKeyProvider.notifier).setKey(null);
+    } catch (e) {
+      AppLogging.app(
+        '[E c2ba2914] meshcore_shell dispose: scaffoldKey clear skipped: $e',
+      );
+    }
     super.dispose();
   }
 

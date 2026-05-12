@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../logging.dart';
 import '../theme.dart';
 import '../../utils/snackbar.dart';
 
@@ -111,10 +112,23 @@ mixin LifecycleSafeMixin<T extends ConsumerStatefulWidget> on ConsumerState<T> {
 
   /// Safely calls setState only if the widget is still mounted.
   /// Returns true if setState was called, false if skipped.
+  ///
+  /// The framework can deactivate the element between the mounted
+  /// check and the setState call (an event tail-running through route
+  /// teardown lands in this window). Swallow the
+  /// "setState called after dispose" throw locally - this mixin is
+  /// the project's silent-safety wrapper, and routing the throw back
+  /// to Crashlytics would rebuild the noise the wrapper was designed
+  /// to remove. Crashlytics [E 0cbe012b].
   bool safeSetState(VoidCallback fn) {
     if (!mounted) return false;
-    setState(fn);
-    return true;
+    try {
+      setState(fn);
+      return true;
+    } catch (e) {
+      AppLogging.app('[E 0cbe012b] safeSetState swallowed: $e');
+      return false;
+    }
   }
 
   /// Safely pops the navigator only if mounted.
@@ -290,10 +304,17 @@ mixin StatefulLifecycleSafeMixin<T extends StatefulWidget> on State<T> {
   bool get canUpdateUI => mounted;
 
   /// Safely calls setState only if the widget is still mounted.
+  /// See LifecycleSafeMixin.safeSetState for the deactivated-element
+  /// rationale - both mixins must mirror each other.
   bool safeSetState(VoidCallback fn) {
     if (!mounted) return false;
-    setState(fn);
-    return true;
+    try {
+      setState(fn);
+      return true;
+    } catch (e) {
+      AppLogging.app('[E 0cbe012b] safeSetState swallowed: $e');
+      return false;
+    }
   }
 
   /// Safely pops the navigator only if mounted.

@@ -2115,7 +2115,17 @@ Future<void> clearDeviceDataBeforeConnect(
     );
     clearNodeData = true;
   }
+
+  // Capture every synchronous notifier reference before any await
+  // below. If the caller is a widget that unmounts mid-clear, ref
+  // becomes invalid and a later ref.read would throw - the
+  // notifier handles we already hold remain usable because they bind
+  // to the ProviderContainer, not to ref. Crashlytics [E 4dfe564d].
   final messageCount = ref.read(messagesProvider).length;
+  final nodesNotifier = clearNodeData ? ref.read(nodesProvider.notifier) : null;
+  final channelsNotifier = ref.read(channelsProvider.notifier);
+  final newNodesNotifier = ref.read(newNodesCountProvider.notifier);
+
   AppLogging.app(
     '🧹 Clearing device data before new connection '
     '(preserving $messageCount messages${clearNodeData ? '' : ' and nodes'})...',
@@ -2135,14 +2145,12 @@ Future<void> clearDeviceDataBeforeConnect(
   // by nodeNum when the device re-sends its NodeDB after reconnection.
   // Pass clearNodeData: true only when switching to a new device or
   // explicitly forgetting the current one.
-  if (clearNodeData) {
-    ref.read(nodesProvider.notifier).clearNodes();
-  }
-  ref.read(channelsProvider.notifier).clearChannels();
+  nodesNotifier?.clearNodes();
+  channelsNotifier.clearChannels();
 
   // Reset new-nodes badge counter so it doesn't accumulate across reconnections.
   // Without this, every reconnect re-discovers the same nodes and inflates the count.
-  ref.read(newNodesCountProvider.notifier).reset();
+  newNodesNotifier.reset();
 
   // Clear persistent storage — each wrapped in try/catch because the
   // databases may be in an inconsistent state after account deletion

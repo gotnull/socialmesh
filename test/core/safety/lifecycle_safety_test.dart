@@ -50,6 +50,43 @@ void main() {
       expect(setStateCalled, isFalse);
     });
 
+    testWidgets('safeSetState swallows exceptions thrown from the callback or '
+        'from the framework (deactivated-element race) - pins [E 0cbe012b]', (
+      tester,
+    ) async {
+      bool? rethrown;
+      bool? returnValue;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: _TestLifecycleWidget(
+              onTap: (state) async {
+                try {
+                  returnValue = state.safeSetState(() {
+                    // Simulate the framework throwing during setState
+                    // (e.g. setState called on a deactivated element):
+                    // the wrapper must swallow + return false instead
+                    // of propagating to PlatformDispatcher.onError.
+                    throw StateError('setState called after dispose');
+                  });
+                  rethrown = false;
+                } catch (_) {
+                  rethrown = true;
+                }
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(ElevatedButton));
+      await tester.pumpAndSettle();
+
+      expect(rethrown, isFalse);
+      expect(returnValue, isFalse);
+    });
+
     testWidgets('safeNavigatorPop does not throw when disposed', (
       tester,
     ) async {
