@@ -947,6 +947,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
       whatsNewBadgeKey: 'nodedex',
       children: [
         DrawerMenuItem(
+          id: 'nodedex_map',
           icon: Icons.map_outlined,
           label: l10n.nodedexMapTooltip,
           onOpen: openNodeDexMap,
@@ -1269,10 +1270,12 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
     final hasChildren = item.hasChildren;
     final isExpanded = _expandedDrawerItems.contains(item.label);
 
-    // Customizable means the item has a stable id AND it's a top-level
-    // entry (not a child). Children and id-less items can't be hidden
-    // or reordered.
-    final canCustomize = item.id != null && !isChild;
+    // Customizable means the item carries a stable id. Top-level
+    // items with ids can be both hidden and reordered; children with
+    // ids can be hidden (the reorder UI is suppressed for them by
+    // DrawerMenuTile because they never live inside the section
+    // SliverReorderableList).
+    final canCustomize = item.id != null;
     final tile = DrawerMenuTile(
       icon: item.icon,
       label: item.label,

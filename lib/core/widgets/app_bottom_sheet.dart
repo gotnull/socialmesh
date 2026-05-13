@@ -214,60 +214,68 @@ class AppBottomSheet extends StatelessWidget {
   }) {
     return show<bool>(
       context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
+      // Builder gives the action buttons a context that lives inside the
+      // sheet's route subtree. Capturing the caller's `context` was unsafe:
+      // when the underlying screen unmounted (system back, programmatic
+      // nav) while the sheet was still up, the tap fired
+      // `Navigator.of(deadContext)` and `StatefulElement.state!` threw.
+      // Crashlytics ec04559d.
+      child: Builder(
+        builder: (sheetContext) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: sheetContext.textPrimary,
+              ),
             ),
-          ),
-          const SizedBox(height: AppTheme.spacing12),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
-          ),
-          const SizedBox(height: AppTheme.spacing24),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: BorderSide(color: SemanticColors.divider),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radius12),
-                    ),
-                  ),
-                  child: Text(cancelLabel),
-                ),
+            const SizedBox(height: AppTheme.spacing12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
+                color: sheetContext.textSecondary,
               ),
-              SizedBox(width: AppTheme.spacing12),
-              Expanded(
-                child: FilledButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: isDestructive
-                        ? AppTheme.errorRed
-                        : context.accentColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+            ),
+            const SizedBox(height: AppTheme.spacing24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(sheetContext, false),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(color: SemanticColors.divider),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
+                      ),
                     ),
+                    child: Text(cancelLabel),
                   ),
-                  child: Text(confirmLabel),
                 ),
-              ),
-            ],
-          ),
-        ],
+                SizedBox(width: AppTheme.spacing12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => Navigator.pop(sheetContext, true),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: isDestructive
+                          ? AppTheme.errorRed
+                          : sheetContext.accentColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
+                      ),
+                    ),
+                    child: Text(confirmLabel),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -283,29 +291,32 @@ class AppBottomSheet extends StatelessWidget {
     return show<T>(
       context: context,
       padding: const EdgeInsets.fromLTRB(AppTheme.spacing0, 0, 0, 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 0, 24, 16),
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: context.textPrimary,
+      // Sheet-local context (see showConfirm above for the rationale).
+      child: Builder(
+        builder: (sheetContext) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 0, 24, 16),
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: sheetContext.textPrimary,
+                ),
               ),
             ),
-          ),
-          Divider(height: 1, color: context.border),
-          ...items.map(
-            (item) => InkWell(
-              onTap: () => Navigator.pop(context, item),
-              child: itemBuilder(item, item == selectedItem),
+            Divider(height: 1, color: sheetContext.border),
+            ...items.map(
+              (item) => InkWell(
+                onTap: () => Navigator.pop(sheetContext, item),
+                child: itemBuilder(item, item == selectedItem),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -85,6 +85,68 @@ void main() {
       // 'b' hidden, others in default order (no global reorder).
       expect(result.map((e) => e.id), ['a', 'c']);
     });
+
+    test('hides a child without hiding its parent', () {
+      final child = _item('child1', label: 'Sub one');
+      final parent = DrawerMenuItem(
+        id: 'parent',
+        icon: Icons.circle,
+        label: 'Parent',
+        children: [
+          child,
+          _item('child2', label: 'Sub two'),
+        ],
+      );
+      final result = applyDrawerCustomization(
+        [parent],
+        const DrawerCustomizationState(
+          hiddenIds: {'child1'},
+          customOrder: null,
+        ),
+      );
+      expect(result.length, 1);
+      expect(result.first.id, 'parent');
+      expect(result.first.children!.map((c) => c.id), ['child2']);
+    });
+
+    test('returns the original parent instance when no child is filtered', () {
+      final parent = DrawerMenuItem(
+        id: 'parent',
+        icon: Icons.circle,
+        label: 'Parent',
+        children: [_item('child1'), _item('child2')],
+      );
+      final result = applyDrawerCustomization(
+        [parent],
+        const DrawerCustomizationState(
+          hiddenIds: {'unrelated'},
+          customOrder: null,
+        ),
+      );
+      // identical (not just equal) — the helper hands back the
+      // original DrawerMenuItem when the subtree was unchanged so
+      // const-Widget identity survives downstream.
+      expect(identical(result.first, parent), true);
+    });
+
+    test('hidden parent shadows hidden child filter (children skipped)', () {
+      final parent = DrawerMenuItem(
+        id: 'parent',
+        icon: Icons.circle,
+        label: 'Parent',
+        children: [_item('child1')],
+      );
+      final result = applyDrawerCustomization(
+        [parent],
+        const DrawerCustomizationState(
+          hiddenIds: {'parent', 'child1'},
+          customOrder: null,
+        ),
+      );
+      // Parent hidden means the whole subtree is gone; no need to
+      // visit children.
+      expect(result, isEmpty);
+    });
   });
 
   group('deriveSectionMembership', () {
@@ -315,6 +377,7 @@ void main() {
       const expectedIds = [
         'signals',
         'nodedex',
+        'nodedex_map',
         'nodeboard',
         'operations',
         'presence',
@@ -368,6 +431,7 @@ void main() {
       const expectedIds = [
         'signals',
         'nodedex',
+        'nodedex_map',
         'nodeboard',
         'operations',
         'presence',

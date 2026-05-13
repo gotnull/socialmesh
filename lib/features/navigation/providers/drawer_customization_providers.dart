@@ -156,9 +156,30 @@ List<DrawerMenuItem> applyDrawerCustomization(
   List<DrawerMenuItem> defaultList,
   DrawerCustomizationState state,
 ) {
-  return defaultList
-      .where((item) => !(item.id != null && state.hiddenIds.contains(item.id)))
-      .toList(growable: false);
+  final result = <DrawerMenuItem>[];
+  for (final item in defaultList) {
+    if (item.id != null && state.hiddenIds.contains(item.id)) {
+      continue;
+    }
+    if (item.children == null) {
+      result.add(item);
+      continue;
+    }
+    // Filter sub-items so children with their own stable ids can be
+    // hidden independently of their parent (e.g. hiding "NodeDex Map"
+    // without hiding NodeDex itself). If nothing was filtered, we
+    // hand the original instance back so the const-Widget identity
+    // is preserved for unchanged subtrees.
+    final retainedChildren = item.children!
+        .where((c) => !(c.id != null && state.hiddenIds.contains(c.id)))
+        .toList(growable: false);
+    if (retainedChildren.length == item.children!.length) {
+      result.add(item);
+    } else {
+      result.add(item.copyWith(children: retainedChildren));
+    }
+  }
+  return result;
 }
 
 /// Resolves the section membership of every item in [defaultList] by

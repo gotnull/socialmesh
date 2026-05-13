@@ -80,6 +80,29 @@ class DrawerMenuItem {
     this.children,
     this.onOpen,
   });
+
+  // Used by [applyDrawerCustomization] to swap in a filtered
+  // children list. Only [children] is parameterised today because
+  // that's the only field the customization filter rewrites; extend
+  // as needed when new mutators land.
+  DrawerMenuItem copyWith({List<DrawerMenuItem>? children}) {
+    return DrawerMenuItem(
+      icon: icon,
+      label: label,
+      id: id,
+      screen: screen,
+      tabIndex: tabIndex,
+      premiumFeature: premiumFeature,
+      sectionHeader: sectionHeader,
+      iconColor: iconColor,
+      requiresConnection: requiresConnection,
+      badgeProviderKey: badgeProviderKey,
+      whatsNewBadgeKey: whatsNewBadgeKey,
+      requestsTakMode: requestsTakMode,
+      children: children ?? this.children,
+      onOpen: onOpen,
+    );
+  }
 }
 
 /// Helper class for grouping drawer menu items into sections.
@@ -415,7 +438,7 @@ class DrawerMenuTile extends StatelessWidget {
               // tile in main_shell. Wins precedence over all other
               // trailing variants because in edit mode the user is
               // reordering / hiding, not navigating.
-              if (editMode) ...[
+              if (editMode && !isChild) ...[
                 const SizedBox(width: AppTheme.spacing8),
                 Icon(
                   Icons.drag_handle,

@@ -504,6 +504,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 }
               }
               await settingsService.setProvidePhoneLocation(value);
+              if (!context.mounted) return;
               ref.invalidate(settingsServiceProvider);
             },
           ),

@@ -330,12 +330,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AccentColors.teal,
-                        AccentColors.teal.withValues(alpha: 0.7),
-                      ],
-                    ),
+                    color: AccentColors.teal,
                     borderRadius: BorderRadius.circular(AppTheme.radius14),
                   ),
                   child: const Icon(

@@ -690,4 +690,50 @@ void main() {
       expect(service.consecutiveFailures, 0);
     });
   });
+
+  // -----------------------------------------------------------------------
+  // Transport-error containment in _governedTick
+  // -----------------------------------------------------------------------
+
+  group('_governedTick transport-error containment', () {
+    test(
+      'transport throw inside the tick does not escape the future',
+      () async {
+        final protocol = _ThrowingProtocolService();
+        final governor = PhonePositionGovernor(
+          protocol,
+          isLocationSharingEnabled: () => true,
+        );
+        final service = _TestableLocationService(
+          protocol,
+          fakePosition: _fakePosition(),
+          governor: governor,
+          isLocationSharingEnabled: () => true,
+        );
+
+        final result = await service.publishWithReason(
+          PositionPublishReason.timerTick,
+        );
+
+        expect(result, PublishDecision.blockedNoPosition);
+        expect(protocol.sendPositionCalls, 1);
+      },
+    );
+  });
+}
+
+class _ThrowingProtocolService extends ProtocolService {
+  int sendPositionCalls = 0;
+
+  _ThrowingProtocolService() : super(_FakeTransport());
+
+  @override
+  Future<void> sendPosition({
+    required double latitude,
+    required double longitude,
+    int? altitude,
+  }) async {
+    sendPositionCalls++;
+    throw const TransportSendError('NetworkTransport: Not connected');
+  }
 }

@@ -3241,37 +3241,64 @@ class _MapScreenState extends ConsumerState<MapScreen>
       return null;
     }
 
-    // Forward path: local → hop1 → hop2 → ... → target
+    // Forward path: local → hop1 → hop2 → ... → target.
+    //
+    // Each entry is the logical adjacency in route order; nulls
+    // mark hops that did not report a position. tracerouteSegmentsFor
+    // turns the sequence into a list of segments tagged as
+    // dashed/solid so each leg is rendered with a pattern that
+    // honestly reflects how much of it the device actually verified.
     final forwardHops = log.hops.where((h) => !h.back).toList();
-    final forwardPoints = <LatLng>[
-      if (localPosition != null) localPosition,
-      ...forwardHops.map(positionOf).whereType<LatLng>(),
-      if (targetPosition != null) targetPosition,
+    final forwardRoute = <LatLng?>[
+      localPosition,
+      ...forwardHops.map(positionOf),
+      targetPosition,
     ];
-    if (forwardPoints.length >= 2) {
+    final forwardSegments = tracerouteSegmentsFor(forwardRoute);
+
+    // When the request never came back (`response == false`), the
+    // forward path is conceptually unverified end-to-end — treat
+    // every segment as dashed regardless of which hops we managed
+    // to geolocate, and skip the return path entirely.
+    final unverified = !log.response;
+    for (final segment in forwardSegments) {
+      final dashed = segment.dashed || unverified;
       polylines.add(
         Polyline(
-          points: forwardPoints,
+          points: segment.points,
           color: AccentColors.teal,
           strokeWidth: 3.5,
+          pattern: dashed
+              ? StrokePattern.dashed(segments: const [12, 8])
+              : const StrokePattern.solid(),
         ),
       );
     }
 
-    // Return path: target → hop1 → hop2 → ... → local
+    if (unverified) {
+      return polylines;
+    }
+
+    // Return path: target → hop1 → hop2 → ... → local. Verified legs
+    // stay dotted (the established return-direction visual); gaps
+    // upgrade to dashed so the user can tell which legs were
+    // confirmed and which were bridged.
     final returnHops = log.hops.where((h) => h.back).toList();
-    final returnPoints = <LatLng>[
-      if (targetPosition != null) targetPosition,
-      ...returnHops.map(positionOf).whereType<LatLng>(),
-      if (localPosition != null) localPosition,
+    final returnRoute = <LatLng?>[
+      targetPosition,
+      ...returnHops.map(positionOf),
+      localPosition,
     ];
-    if (returnPoints.length >= 2) {
+    final returnSegments = tracerouteSegmentsFor(returnRoute);
+    for (final segment in returnSegments) {
       polylines.add(
         Polyline(
-          points: returnPoints,
+          points: segment.points,
           color: AccentColors.purple.withValues(alpha: 0.8),
           strokeWidth: 3.0,
-          pattern: const StrokePattern.dotted(spacingFactor: 1.5),
+          pattern: segment.dashed
+              ? StrokePattern.dashed(segments: const [12, 8])
+              : const StrokePattern.dotted(spacingFactor: 1.5),
         ),
       );
     }
@@ -3723,6 +3750,45 @@ class _NodeWithPosition {
 ///
 /// Top-level so widget tests can pin the contract without spinning up
 /// the full map.
+/// Splits a traceroute's logical route (a sequence of nullable
+/// [LatLng]s — null where a hop did not report a position) into a
+/// list of contiguous polyline segments.
+///
+/// A segment is solid when both endpoints are adjacent known points
+/// in the route. It is dashed when the renderer had to bridge over
+/// one or more hops with no known position — the dashed pattern
+/// signals "we know A and we know D but the in-between hops did not
+/// report a location, so the line you see is inferred rather than
+/// measured."
+///
+/// Returns an empty list when fewer than two known points are
+/// present. The helper is pure so widget tests can pin the
+/// dashed/solid contract without spinning up the map.
+List<({List<LatLng> points, bool dashed})> tracerouteSegmentsFor(
+  List<LatLng?> route,
+) {
+  final segments = <({List<LatLng> points, bool dashed})>[];
+  LatLng? last;
+  bool crossedGap = false;
+
+  for (final point in route) {
+    if (point == null) {
+      // Only count a missing position as a gap when we already have
+      // a tail — leading nulls aren't a gap, they just push the
+      // route start forward.
+      if (last != null) crossedGap = true;
+      continue;
+    }
+    if (last != null) {
+      segments.add((points: [last, point], dashed: crossedGap));
+    }
+    last = point;
+    crossedGap = false;
+  }
+
+  return segments;
+}
+
 String nodeMarkerLabel(MeshNode node) {
   final shortName = node.shortName;
   if (shortName != null && shortName.isNotEmpty) {

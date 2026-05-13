@@ -140,6 +140,21 @@ class NetworkTransport implements DeviceTransport {
         cancelOnError: false,
       );
 
+      // Write-side errors (e.g. EPIPE on `_socket.add`) are delivered
+      // asynchronously through the IOSink, NOT to the read subscription's
+      // onError above. Install a permanent listener on `done` so async
+      // write failures clean up state instead of escaping to
+      // PlatformDispatcher.onError. Crashlytics 7894c78d.
+      unawaited(
+        _socket!.done.then<void>(
+          (_) {},
+          onError: (Object e) {
+            AppLogging.protocol('NetworkTransport: write pipeline error: $e');
+            _handleSocketClose();
+          },
+        ),
+      );
+
       _setState(DeviceConnectionState.connected);
       _startHeartbeat();
       AppLogging.protocol('NetworkTransport: Connected to $host:$port');

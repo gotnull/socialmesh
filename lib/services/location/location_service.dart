@@ -334,7 +334,12 @@ class LocationService {
         return PublishDecision.blockedNoPosition;
       }
 
-      return _governor.requestPublish(
+      // `return await` is required (not `return`): `return aFuture` from
+      // an async function chains the rejection past the surrounding catch,
+      // so transport errors (TransportSendError, async broken-pipe
+      // SocketException) escape as unhandled zone errors to
+      // PlatformDispatcher.onError. Crashlytics 7894c78d.
+      return await _governor.requestPublish(
         latitude: position.latitude,
         longitude: position.longitude,
         altitude: position.altitude.toInt(),
