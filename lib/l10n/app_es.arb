@@ -4454,6 +4454,8 @@
     "drawerCustomizeReset": "Restablecer",
     "drawerCustomizeHiddenSectionTitle": "ELEMENTOS OCULTOS",
     "drawerCustomizeRestoreItem": "Mostrar",
+    "bottomNavReorderBannerTitle": "Arrastra para reordenar pestañas",
+    "bottomNavReorderBannerDone": "Listo",
     "drawerRemoveItemLabel": "Ocultar {item}",
     "mapTracerouteNoGpsTitle": "Sin datos de GPS para esta ruta",
     "mapTracerouteNoGpsSubtitle": "Ningún salto de este traceroute reportó posición. El mapa está centrado en tu ubicación - vuelve a abrir la ruta cuando un salto reporte GPS.",

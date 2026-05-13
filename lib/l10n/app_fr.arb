@@ -4454,6 +4454,8 @@
     "drawerCustomizeReset": "Réinitialiser",
     "drawerCustomizeHiddenSectionTitle": "ÉLÉMENTS MASQUÉS",
     "drawerCustomizeRestoreItem": "Afficher",
+    "bottomNavReorderBannerTitle": "Glissez pour réorganiser les onglets",
+    "bottomNavReorderBannerDone": "Terminé",
     "drawerRemoveItemLabel": "Masquer {item}",
     "mapTracerouteNoGpsTitle": "Pas de données GPS pour cette route",
     "mapTracerouteNoGpsSubtitle": "Aucun saut de cette traceroute n'a signalé de position. La carte est centrée sur votre position - rouvrez la route lorsqu'un saut signalera le GPS.",

@@ -4454,6 +4454,8 @@
     "drawerCustomizeReset": "Zurücksetzen",
     "drawerCustomizeHiddenSectionTitle": "AUSGEBLENDETE EINTRÄGE",
     "drawerCustomizeRestoreItem": "Anzeigen",
+    "bottomNavReorderBannerTitle": "Zum Umsortieren ziehen",
+    "bottomNavReorderBannerDone": "Fertig",
     "drawerRemoveItemLabel": "{item} ausblenden",
     "mapTracerouteNoGpsTitle": "Keine GPS-Daten für diese Route",
     "mapTracerouteNoGpsSubtitle": "Keiner der Hops dieser Traceroute hat eine Position gemeldet. Die Karte ist auf deine Position zentriert - öffne die Route erneut, sobald ein Hop GPS meldet.",

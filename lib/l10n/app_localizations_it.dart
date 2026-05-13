@@ -7371,6 +7371,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get drawerCustomizeRestoreItem => 'Mostra';
 
   @override
+  String get bottomNavReorderBannerTitle => 'Trascina per riordinare le schede';
+
+  @override
+  String get bottomNavReorderBannerDone => 'Fine';
+
+  @override
   String drawerRemoveItemLabel(String item) {
     return 'Nascondi $item';
   }

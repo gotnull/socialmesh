@@ -12897,6 +12897,18 @@ abstract class AppLocalizations {
   /// **'Show'**
   String get drawerCustomizeRestoreItem;
 
+  /// Title shown in the explanatory banner above the bottom navigation bar while the user is in reorder edit mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder tabs'**
+  String get bottomNavReorderBannerTitle;
+
+  /// Label on the button in the bottom-nav reorder banner that exits edit mode without changing the active tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get bottomNavReorderBannerDone;
+
   /// Accessibility label for the per-item remove button in edit mode.
   ///
   /// In en, this message translates to:

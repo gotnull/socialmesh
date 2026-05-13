@@ -7,11 +7,18 @@ import '../../../core/widgets/animations.dart';
 
 /// Data class for bottom navigation items.
 class NavItem {
+  /// Stable string identifier for customization (user-chosen
+  /// ordering). Persisted via SharedPreferences in
+  /// `bottomTabOrder` — once shipped, the id is a release contract
+  /// and must never be renamed. See
+  /// `bottom_tab_providers.dart` for the canonical id list.
+  final String id;
   final IconData icon;
   final IconData activeIcon;
   final String label;
 
   const NavItem({
+    required this.id,
     required this.icon,
     required this.activeIcon,
     required this.label,

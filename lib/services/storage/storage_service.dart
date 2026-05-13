@@ -409,6 +409,36 @@ class SettingsService {
     return null;
   }
 
+  // Bottom-tab customization: user-chosen order of bottom-nav tabs.
+  //
+  // List<String> of bottom-tab ids (`messages`, `map`, `nodes`,
+  // `dashboard`) in the user's preferred order, persisted via JSON.
+  // `null` means use the default order. Items missing from a stored
+  // order (e.g. a new tab added in a future release) fall back to
+  // their default position via the renderer's reconciliation step.
+  Future<void> setBottomTabOrder(List<String>? ids) async {
+    if (ids == null) {
+      await _preferences.remove('bottom_tab_order');
+    } else {
+      await _preferences.setString('bottom_tab_order', jsonEncode(ids));
+    }
+  }
+
+  List<String>? get bottomTabOrder {
+    final raw = _preferences.getString('bottom_tab_order');
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is List) {
+        return decoded.whereType<String>().toList(growable: false);
+      }
+    } catch (_) {
+      // Corrupt entry — fall back to default ordering rather than
+      // crash. Matches drawerItemOrder's fallback semantics.
+    }
+    return null;
+  }
+
   // Notification: Direct Messages
   Future<void> setDirectMessageNotificationsEnabled(bool enabled) async {
     await _preferences.setBool('dm_notifications_enabled', enabled);

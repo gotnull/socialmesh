@@ -7360,6 +7360,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get drawerCustomizeRestoreItem => 'Показать';
 
   @override
+  String get bottomNavReorderBannerTitle =>
+      'Перетащите, чтобы изменить порядок вкладок';
+
+  @override
+  String get bottomNavReorderBannerDone => 'Готово';
+
+  @override
   String drawerRemoveItemLabel(String item) {
     return 'Скрыть $item';
   }

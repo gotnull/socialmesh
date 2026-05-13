@@ -37443,6 +37443,8 @@
   "drawerCustomizeReset": "Ripristina",
   "drawerCustomizeHiddenSectionTitle": "ELEMENTI NASCOSTI",
   "drawerCustomizeRestoreItem": "Mostra",
+  "bottomNavReorderBannerTitle": "Trascina per riordinare le schede",
+  "bottomNavReorderBannerDone": "Fine",
   "drawerRemoveItemLabel": "Nascondi {item}",
   "mapTracerouteNoGpsTitle": "Nessun dato GPS per questa route",
   "mapTracerouteNoGpsSubtitle": "Nessun hop di questa traceroute ha riportato una posizione. La mappa è centrata sulla tua posizione - riapri la route quando un hop riporterà il GPS.",

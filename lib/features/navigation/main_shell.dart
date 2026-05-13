@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/countdown_banner.dart';
+import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/requires_connection_guard.dart';
 import '../../core/widgets/top_status_banner.dart';
 import '../../core/widgets/user_avatar.dart';
@@ -86,6 +87,7 @@ import '../../providers/whats_new_providers.dart';
 import '../../core/whats_new/whats_new_sheet.dart';
 import 'widgets/drawer_admin_section.dart';
 import 'widgets/drawer_enterprise_section.dart';
+import 'providers/bottom_tab_providers.dart';
 import 'providers/drawer_customization_providers.dart';
 import 'widgets/drawer_customize_button.dart';
 import 'widgets/drawer_menu_tile.dart';
@@ -423,28 +425,57 @@ class _MainShellState extends ConsumerState<MainShell> {
     super.dispose();
   }
 
-  List<NavItem> _buildNavItems(AppLocalizations l10n) => [
-    NavItem(
+  /// Default-order bottom-nav items, keyed by stable id. The user's
+  /// chosen order (persisted as a list of ids) is resolved by
+  /// [bottomTabOrderProvider]; the renderer in [_buildBottomNavRow]
+  /// looks each resolved id up in this map. Index 0..3 of the legacy
+  /// `mainShellIndexProvider` always refers to a LOGICAL tab
+  /// (Messages=0, Map=1, Nodes=2, Dashboard=3) regardless of physical
+  /// position, so badge wiring and the `defaultLandingTab` setting
+  /// continue to work without semantic shifts.
+  Map<String, NavItem> _buildNavItemsById(AppLocalizations l10n) => {
+    bottomTabIdMessages: NavItem(
+      id: bottomTabIdMessages,
       icon: Icons.chat_bubble_outline,
       activeIcon: Icons.chat_bubble,
       label: l10n.navigationMessages,
     ),
-    NavItem(
+    bottomTabIdMap: NavItem(
+      id: bottomTabIdMap,
       icon: Icons.map_outlined,
       activeIcon: Icons.map,
       label: l10n.navigationMap,
     ),
-    NavItem(
+    bottomTabIdNodes: NavItem(
+      id: bottomTabIdNodes,
       icon: Icons.people_outline,
       activeIcon: Icons.people,
       label: l10n.navigationNodes,
     ),
-    NavItem(
+    bottomTabIdDashboard: NavItem(
+      id: bottomTabIdDashboard,
       icon: Icons.dashboard_outlined,
       activeIcon: Icons.dashboard,
       label: l10n.navigationDashboard,
     ),
-  ];
+  };
+
+  // The logical tab index for a given id. Stays in lockstep with
+  // `_buildNavItemsById` so `_buildScreen` / badge wiring / the
+  // `defaultLandingTab` setting all keep talking in logical indices.
+  int _logicalIndexForId(String id) {
+    switch (id) {
+      case bottomTabIdMessages:
+        return 0;
+      case bottomTabIdMap:
+        return 1;
+      case bottomTabIdNodes:
+        return 2;
+      case bottomTabIdDashboard:
+        return 3;
+    }
+    return 0;
+  }
 
   Widget _buildScreen(int index) {
     // Scanner is the sole destination when disconnected — no inline
@@ -799,6 +830,14 @@ class _MainShellState extends ConsumerState<MainShell> {
           // so it is visible regardless of which tab/screen is active
           // without obstructing app bar content (search fields, filters, etc.).
           if (ref.watch(hasActiveCountdownsProvider)) const CountdownBanner(),
+          // Reorder edit-mode banner — sits in the same stacked slot
+          // as the countdown banner so it shares the visual rhythm
+          // ("things that hover just above the bottom nav"). Renders
+          // only while the user is in reorder mode and offers an
+          // explicit Done exit that does NOT also change the active
+          // tab (tap-on-tab still doubles as exit+select).
+          if (ref.watch(bottomNavEditModeProvider))
+            const _BottomNavEditBanner(),
           Container(
             decoration: BoxDecoration(
               color: theme.scaffoldBackgroundColor,
@@ -830,50 +869,301 @@ class _MainShellState extends ConsumerState<MainShell> {
   }
 
   Widget _buildBottomNavRow(AppLocalizations l10n) {
-    final navItems = _buildNavItems(l10n);
-    return Row(
-      children: List.generate(navItems.length, (index) {
-        final item = navItems[index];
-        final isSelected = ref.watch(mainShellIndexProvider) == index;
+    final navItemsById = _buildNavItemsById(l10n);
+    final resolvedOrder =
+        ref.watch(bottomTabOrderProvider).value ?? defaultBottomTabOrder;
+    final editMode = ref.watch(bottomNavEditModeProvider);
+    final currentLogicalIndex = ref.watch(mainShellIndexProvider);
 
-        // Calculate badge count for each tab
-        int badgeCount = 0;
-        if (index == 0) {
-          // Messages tab - show unread count
-          badgeCount = ref.watch(unreadMessagesCountProvider);
-        } else if (index == 2) {
-          // Nodes tab - show new-nodes count UNLESS the user has muted
-          // the badge for large-mesh quiet operation. The underlying
-          // newNodesCountProvider still tracks discoveries; only the
-          // visual surface is suppressed.
-          final hideBadge =
-              ref.watch(settingsServiceProvider).value?.hideNewNodesBadge ??
-              false;
-          badgeCount = hideBadge ? 0 : ref.watch(newNodesCountProvider);
-        } else if (index == 3) {
-          // Dashboard tab - no badge needed
-          badgeCount = 0;
-        }
+    // Builds the NavBarItem widget for a tab at the given physical
+    // position. The same widget renders in both modes so the visual
+    // identity is preserved across the edit transition.
+    Widget buildTab(int physicalPosition) {
+      final tabId = resolvedOrder[physicalPosition];
+      final item = navItemsById[tabId];
+      if (item == null) {
+        // Unknown id (shouldn't happen because the provider already
+        // reconciles against the default set, but be defensive
+        // against future Phase 2 tab additions colliding with an
+        // older render path).
+        return const SizedBox.shrink();
+      }
+      final logicalIndex = _logicalIndexForId(tabId);
+      final isSelected = currentLogicalIndex == logicalIndex;
 
-        return Expanded(
-          child: NavBarItem(
-            icon: isSelected ? item.activeIcon : item.icon,
-            label: item.label,
-            isSelected: isSelected,
-            badgeCount: badgeCount,
-            showWarningBadge: false,
-            showReconnectingBadge: false,
-            onTap: () {
-              ref.haptics.tabChange();
-              // Clear new nodes badge when navigating to Nodes tab
-              if (index == 2) {
-                ref.read(newNodesCountProvider.notifier).reset();
-              }
-              ref.read(mainShellIndexProvider.notifier).setIndex(index);
+      // Badge wiring stays keyed off the LOGICAL tab identity so a
+      // reorder never swaps badges between tabs.
+      int badgeCount = 0;
+      if (tabId == bottomTabIdMessages) {
+        badgeCount = ref.watch(unreadMessagesCountProvider);
+      } else if (tabId == bottomTabIdNodes) {
+        final hideBadge =
+            ref.watch(settingsServiceProvider).value?.hideNewNodesBadge ??
+            false;
+        badgeCount = hideBadge ? 0 : ref.watch(newNodesCountProvider);
+      }
+
+      return NavBarItem(
+        icon: isSelected ? item.activeIcon : item.icon,
+        label: item.label,
+        isSelected: isSelected,
+        badgeCount: badgeCount,
+        showWarningBadge: false,
+        showReconnectingBadge: false,
+        onTap: () {
+          ref.haptics.tabChange();
+          // Tap in edit mode performs BOTH actions: exit edit mode
+          // and select the tapped tab. Guarantees a single-tap exit
+          // path so the user never gets stuck.
+          if (editMode) {
+            ref.read(bottomNavEditModeProvider.notifier).exit();
+          }
+          if (logicalIndex == 2) {
+            ref.read(newNodesCountProvider.notifier).reset();
+          }
+          ref.read(mainShellIndexProvider.notifier).setIndex(logicalIndex);
+        },
+      );
+    }
+
+    if (!editMode) {
+      // Non-edit mode keeps the canonical `Row(Expanded NavBarItem)`
+      // layout. Long-press anywhere on a tab enters edit mode.
+      return Row(
+        children: List.generate(resolvedOrder.length, (physicalPosition) {
+          return Expanded(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onLongPress: () {
+                HapticFeedback.mediumImpact();
+                ref.read(bottomNavEditModeProvider.notifier).enter();
+              },
+              child: buildTab(physicalPosition),
+            ),
+          );
+        }),
+      );
+    }
+
+    // Edit mode uses ReorderableListView so unselected tabs slide
+    // smoothly out of the way to make space for the moved tab, the
+    // same animation behaviour as the drawer's SliverReorderableList.
+    //
+    // Layout caveats (both regressed first cuts of this feature):
+    //   * ReorderableListView is a scrollable, so it does NOT
+    //     support intrinsic height measurement. Wrapping in
+    //     IntrinsicHeight collapses the row to zero cross-axis
+    //     size and the tabs disappear entirely.
+    //   * `shrinkWrap: true` with no explicit cross-axis bound also
+    //     misbehaves: the scrollable measures itself against the
+    //     ancestor Column's incoming constraints, which are
+    //     unbounded in the bottom-nav slot, and the resulting
+    //     viewport tries to consume infinite height — pushing
+    //     siblings (including the AppBar) off-screen.
+    //
+    // Both of those failure modes manifest as "tabs gone" or
+    // "AppBar disappeared" reports. The reliable shape is a
+    // LayoutBuilder for cross-axis-aware tab widths plus a fixed
+    // SizedBox height matching the NavBarItem's natural rendered
+    // size in non-edit mode (so toggling between modes is a no-op
+    // visually).
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final tabWidth = constraints.maxWidth / resolvedOrder.length;
+        return SizedBox(
+          // Matches the rendered height of `NavBarItem` in non-edit
+          // mode (icon 24 + spacer 4 + label ~16 + vertical padding
+          // 16 = ~60). 64 leaves a small buffer for the ±0.025-rad
+          // wiggle rotation so the tile corners don't get clipped.
+          height: 64,
+          child: ReorderableListView.builder(
+            scrollDirection: Axis.horizontal,
+            buildDefaultDragHandles: false,
+            physics: const NeverScrollableScrollPhysics(),
+            proxyDecorator: (child, index, animation) {
+              // Strip the default Material elevation shadow so the
+              // dragged tab reads as a lifted version of itself
+              // rather than a card with a chunky drop shadow.
+              return Material(
+                color: Colors.transparent,
+                elevation: 0,
+                child: child,
+              );
+            },
+            itemCount: resolvedOrder.length,
+            itemBuilder: (context, position) {
+              final tabId = resolvedOrder[position];
+              return ReorderableDelayedDragStartListener(
+                key: ValueKey(tabId),
+                index: position,
+                child: SizedBox(
+                  width: tabWidth,
+                  child: _BottomTabWiggle(
+                    tabId: tabId,
+                    child: buildTab(position),
+                  ),
+                ),
+              );
+            },
+            onReorder: (oldIndex, newIndex) {
+              HapticFeedback.selectionClick();
+              ref
+                  .read(bottomTabOrderProvider.notifier)
+                  .reorder(oldIndex, newIndex);
             },
           ),
         );
-      }),
+      },
+    );
+  }
+}
+
+/// Continuous gentle wiggle to signal "tabs are draggable" while in
+/// edit mode. Each tab uses a slot-derived phase offset so the row
+/// doesn't sway in unison (which would read as a single object
+/// rotating rather than a set of movable tiles).
+class _BottomTabWiggle extends StatefulWidget {
+  final String tabId;
+  final Widget child;
+
+  const _BottomTabWiggle({required this.tabId, required this.child});
+
+  @override
+  State<_BottomTabWiggle> createState() => _BottomTabWiggleState();
+}
+
+class _BottomTabWiggleState extends State<_BottomTabWiggle>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _rotation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+    );
+    // Phase offset derived from the id's hashCode so adjacent tabs
+    // are visibly out of phase regardless of order.
+    final phase = (widget.tabId.hashCode % 2 == 0) ? 0.0 : 0.5;
+    _rotation = Tween<double>(begin: -0.025, end: 0.025).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Interval(phase, 1.0, curve: Curves.easeInOut),
+        reverseCurve: Interval(phase, 1.0, curve: Curves.easeInOut),
+      ),
+    );
+    _controller.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _rotation,
+      builder: (context, child) =>
+          Transform.rotate(angle: _rotation.value, child: child),
+      child: widget.child,
+    );
+  }
+}
+
+/// Slim banner that renders directly above the bottom nav row while
+/// the user is in reorder edit mode. Provides:
+///   * a leading icon + "Drag to reorder tabs" copy so the affordance
+///     is unambiguous (the wiggle alone is easy to miss);
+///   * a "Done" button that exits edit mode WITHOUT touching the
+///     active tab (tap-on-tab still doubles as exit+select, so users
+///     have both flows: navigate-and-exit OR exit-in-place).
+///
+/// Sits in the same stacked slot as the countdown banner so they
+/// share the visual rhythm of "things that hover above the bottom
+/// nav." Only mounted while [bottomNavEditModeProvider] is true,
+/// which both keeps the layout shift bounded and lets us skip a
+/// dedicated AnimationController (Flutter's implicit mount/unmount
+/// handles the transition).
+class _BottomNavEditBanner extends ConsumerWidget {
+  const _BottomNavEditBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accentColor = context.accentColor;
+    // EdgeFade on the top edge softly blends the banner into the
+    // screen content sitting above it — the same trick the scrollable
+    // chip rows use against the surrounding card. Without it the
+    // banner reads as a hard horizontal slab dropped on top of the
+    // body; with it the banner feels anchored to the bottom nav.
+    return EdgeFade(
+      edges: const {EdgeFadePosition.top},
+      fadeSize: 16,
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: context.surface.withValues(alpha: 0.92),
+          border: Border(
+            bottom: BorderSide(
+              color: context.border.withValues(alpha: 0.3),
+              width: 0.5,
+            ),
+          ),
+        ),
+        child: SafeArea(
+          top: false,
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing16,
+              AppTheme.spacing8,
+              AppTheme.spacing8,
+              AppTheme.spacing8,
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.swap_horiz, size: 18, color: accentColor),
+                const SizedBox(width: AppTheme.spacing8),
+                Expanded(
+                  child: Text(
+                    context.l10n.bottomNavReorderBannerTitle,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: context.textPrimary,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    HapticFeedback.selectionClick();
+                    ref.read(bottomNavEditModeProvider.notifier).exit();
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: accentColor,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing12,
+                      vertical: AppTheme.spacing4,
+                    ),
+                    minimumSize: const Size(0, 32),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    context.l10n.bottomNavReorderBannerDone,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

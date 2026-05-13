@@ -9831,6 +9831,14 @@
     "@drawerCustomizeRestoreItem": {
         "description": "Button in the customize sheet that restores a single hidden drawer item back to the sidebar."
     },
+    "bottomNavReorderBannerTitle": "Drag to reorder tabs",
+    "@bottomNavReorderBannerTitle": {
+        "description": "Title shown in the explanatory banner above the bottom navigation bar while the user is in reorder edit mode."
+    },
+    "bottomNavReorderBannerDone": "Done",
+    "@bottomNavReorderBannerDone": {
+        "description": "Label on the button in the bottom-nav reorder banner that exits edit mode without changing the active tab."
+    },
     "drawerRemoveItemLabel": "Hide {item}",
     "@drawerRemoveItemLabel": {
         "description": "Accessibility label for the per-item remove button in edit mode.",

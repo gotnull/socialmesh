@@ -7432,6 +7432,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get drawerCustomizeRestoreItem => 'Afficher';
 
   @override
+  String get bottomNavReorderBannerTitle =>
+      'Glissez pour réorganiser les onglets';
+
+  @override
+  String get bottomNavReorderBannerDone => 'Terminé';
+
+  @override
   String drawerRemoveItemLabel(String item) {
     return 'Masquer $item';
   }

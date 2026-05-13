@@ -2952,9 +2952,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
       child: _ClusterListSheet(
         nodes: nodes,
         onNodeSelected: (node) {
-          Navigator.of(context).pop();
-          if (!mounted) return;
-          setState(() {
+          // The cluster-marker context captured by this closure can
+          // unmount between sheet open and node tap (filter change,
+          // position refresh), so use the State's mounted-checked
+          // pop helper rather than Navigator.of on the stale context.
+          if (!safeNavigatorPop()) return;
+          safeSetState(() {
             _selectedNode = node;
             _selectedTakEntity = null;
           });

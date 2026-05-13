@@ -7406,6 +7406,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get drawerCustomizeRestoreItem => 'Mostrar';
 
   @override
+  String get bottomNavReorderBannerTitle => 'Arrastra para reordenar pestañas';
+
+  @override
+  String get bottomNavReorderBannerDone => 'Listo';
+
+  @override
   String drawerRemoveItemLabel(String item) {
     return 'Ocultar $item';
   }

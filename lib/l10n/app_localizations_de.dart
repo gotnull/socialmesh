@@ -7389,6 +7389,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get drawerCustomizeRestoreItem => 'Anzeigen';
 
   @override
+  String get bottomNavReorderBannerTitle => 'Zum Umsortieren ziehen';
+
+  @override
+  String get bottomNavReorderBannerDone => 'Fertig';
+
+  @override
   String drawerRemoveItemLabel(String item) {
     return '$item ausblenden';
   }

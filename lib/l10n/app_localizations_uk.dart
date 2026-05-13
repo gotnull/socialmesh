@@ -7373,6 +7373,13 @@ class AppLocalizationsUk extends AppLocalizations {
   String get drawerCustomizeRestoreItem => 'Показати';
 
   @override
+  String get bottomNavReorderBannerTitle =>
+      'Перетягніть, щоб упорядкувати вкладки';
+
+  @override
+  String get bottomNavReorderBannerDone => 'Готово';
+
+  @override
   String drawerRemoveItemLabel(String item) {
     return 'Приховати $item';
   }

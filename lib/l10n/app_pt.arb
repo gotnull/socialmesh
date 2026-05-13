@@ -37443,6 +37443,8 @@
   "drawerCustomizeReset": "Redefinir",
   "drawerCustomizeHiddenSectionTitle": "ITENS OCULTOS",
   "drawerCustomizeRestoreItem": "Mostrar",
+  "bottomNavReorderBannerTitle": "Arraste para reordenar as abas",
+  "bottomNavReorderBannerDone": "Concluído",
   "drawerRemoveItemLabel": "Ocultar {item}",
   "mapTracerouteNoGpsTitle": "Sem dados de GPS para esta rota",
   "mapTracerouteNoGpsSubtitle": "Nenhum dos saltos desta traceroute reportou posição. O mapa está centralizado na sua localização - reabra a rota quando algum salto reportar GPS.",

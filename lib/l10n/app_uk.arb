@@ -4454,6 +4454,8 @@
     "drawerCustomizeReset": "Скинути",
     "drawerCustomizeHiddenSectionTitle": "ПРИХОВАНІ ЕЛЕМЕНТИ",
     "drawerCustomizeRestoreItem": "Показати",
+    "bottomNavReorderBannerTitle": "Перетягніть, щоб упорядкувати вкладки",
+    "bottomNavReorderBannerDone": "Готово",
     "drawerRemoveItemLabel": "Приховати {item}",
     "mapTracerouteNoGpsTitle": "Немає GPS-даних для цього маршруту",
     "mapTracerouteNoGpsSubtitle": "Жоден з вузлів цього traceroute не повідомив координати. Карту центровано на вашому місцезнаходженні - відкрийте маршрут знову, коли який-небудь вузол повідомить GPS.",
