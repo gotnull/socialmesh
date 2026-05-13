@@ -106,10 +106,19 @@ void main() {
       },
     );
 
-    test('classification stays in the InfoTable; note moves out', () {
-      // Sprint 8 structural fix. Short key/value data (classification)
-      // belongs in InfoTable; long-form prose (note) belongs in its own
-      // sibling section with full-width left-aligned prose body.
+    test('classification stays in the InfoTable; note moves out of the '
+        'right-aligned 5:6 cell', () {
+      // The original structural fix moved long-form note prose out of
+      // the 5:6 two-column InfoTableRow layout (where it was crammed
+      // into a right-aligned mono value cell). The implementation has
+      // since been generalised: the InfoTable primitive now supports
+      // a `fullWidthContent` mode that renders an uppercase header
+      // row + a full-width prose body in place of the 5:6 cells.
+      // Note uses that mode; classification keeps the original 5:6
+      // layout. The structural guarantee is the same regardless of
+      // whether prose lives in a sibling widget or a full-width
+      // InfoTableRow: prose must NOT render in the right-aligned
+      // value cell.
       expect(
         source.contains('InfoTable(') &&
             source.contains('InfoTableRow(') &&
@@ -121,14 +130,19 @@ void main() {
             'Identity / Radio sections.',
       );
       expect(
-        source.contains('_NodeDexNoteSection('),
+        source.contains('fullWidthContent:'),
         true,
         reason:
-            'Note must be rendered through the dedicated _NodeDexNoteSection '
-            'sibling widget, NOT as an InfoTableRow, so prose wraps '
-            'full-width and the edit affordance lives on the section title '
-            'rather than a chunky Edit pill stacked under a right-aligned '
-            'value cell.',
+            'The Note row must use the InfoTable `fullWidthContent` slot '
+            'so prose renders as a full-width block with its own header. '
+            'Stuffing prose into `value` / `valueWidget` regresses to the '
+            'right-aligned-mono-squeeze layout that was explicitly '
+            'rejected in the structural fix.',
+      );
+      expect(
+        source.contains('nodeDetailNodeDexNoteLabel'),
+        true,
+        reason: 'Note row must reference the Note label ARB key.',
       );
     });
 
@@ -155,20 +169,13 @@ void main() {
       );
     });
 
-    test('note section uses canonical SectionTitle + helpSheet + pencil', () {
-      // Sprint 8 structural pin. The Note sibling section must use the
-      // canonical SectionTitle subheader primitive (12pt uppercase
-      // letter-spaced), wire up the NodeDex help-sheet body with the
-      // shared "note" helpKey so copy stays consistent with the
-      // standalone NodeDex Note card, and surface its edit affordance as
-      // an inline pencil button on the SectionTitle trailing slot.
-      expect(
-        source.contains('SectionTitle('),
-        true,
-        reason:
-            'Note section header must use the canonical SectionTitle '
-            'primitive, not a hand-rolled Row + Text.',
-      );
+    test('note row carries canonical helpSheet + pencil affordances', () {
+      // The InfoTable primitive now renders the uppercase SectionTitle
+      // header internally for full-width rows; what the call site is
+      // responsible for is wiring the helpSheetBuilder (so copy stays
+      // consistent with the standalone NodeDex Note card via the
+      // shared 'note' helpKey) and the headerTrailing pencil
+      // affordance.
       expect(
         source.contains("NodeDexHelpSheetBody(helpKey: 'note')"),
         true,
@@ -177,11 +184,21 @@ void main() {
             'copy stays consistent with the standalone NodeDex note card.',
       );
       expect(
-        source.contains('_NoteSectionPencilButton('),
+        source.contains('helpSheetBuilder:'),
+        true,
+        reason:
+            'Note InfoTableRow must wire helpSheetBuilder so the (i) icon '
+            'renders on the full-width header line.',
+      );
+      expect(
+        source.contains('headerTrailing:') &&
+            source.contains('_NoteSectionPencilButton('),
         true,
         reason:
             'Edit affordance must be the small inline pencil button on the '
-            'SectionTitle trailing slot, not a body-stacked Edit pill.',
+            'InfoTableRow headerTrailing slot (which the InfoTable primitive '
+            'renders in the full-width header row), not a body-stacked '
+            'Edit pill.',
       );
     });
 

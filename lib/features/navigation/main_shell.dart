@@ -12,7 +12,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/countdown_banner.dart';
-import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/requires_connection_guard.dart';
 import '../../core/widgets/top_status_banner.dart';
 import '../../core/widgets/user_avatar.dart';
@@ -816,6 +815,24 @@ class _MainShellState extends ConsumerState<MainShell> {
                         bottom: 0,
                         child: AetherFlightDetectedOverlay(),
                       ),
+                    // Bottom-nav reorder banner. Renders here, INSIDE
+                    // the body Stack, so its transparent top edge
+                    // reveals actual body content underneath — which
+                    // is the only way to get the chip-row-style soft
+                    // fade in a Scaffold without `extendBody: true`
+                    // (the bottomNavigationBar slot has no body
+                    // content behind it, so placing the banner
+                    // there paints onto an empty region and the
+                    // fade is invisible). The banner sits flush
+                    // with the bottom of the body area, which is
+                    // directly above the bottom-nav row's top edge.
+                    if (ref.watch(bottomNavEditModeProvider))
+                      const Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: _BottomNavEditBanner(),
+                      ),
                   ],
                 ),
               ),
@@ -830,14 +847,14 @@ class _MainShellState extends ConsumerState<MainShell> {
           // so it is visible regardless of which tab/screen is active
           // without obstructing app bar content (search fields, filters, etc.).
           if (ref.watch(hasActiveCountdownsProvider)) const CountdownBanner(),
-          // Reorder edit-mode banner — sits in the same stacked slot
-          // as the countdown banner so it shares the visual rhythm
-          // ("things that hover just above the bottom nav"). Renders
-          // only while the user is in reorder mode and offers an
-          // explicit Done exit that does NOT also change the active
-          // tab (tap-on-tab still doubles as exit+select).
-          if (ref.watch(bottomNavEditModeProvider))
-            const _BottomNavEditBanner(),
+          // NOTE: The reorder edit-mode banner used to live HERE in
+          // the bottomNavigationBar Column, but the bottomNavigationBar
+          // slot has no body content behind it, so the banner's
+          // transparent top edge couldn't fade into anything visible.
+          // It now renders inside the body Stack (search for
+          // `_BottomNavEditBanner` above), positioned at the bottom
+          // of the body area, where the body's own painted content
+          // shows through the fade.
           Container(
             decoration: BoxDecoration(
               color: theme.scaffoldBackgroundColor,
@@ -1082,85 +1099,109 @@ class _BottomTabWiggleState extends State<_BottomTabWiggle>
 ///     active tab (tap-on-tab still doubles as exit+select, so users
 ///     have both flows: navigate-and-exit OR exit-in-place).
 ///
-/// Sits in the same stacked slot as the countdown banner so they
-/// share the visual rhythm of "things that hover above the bottom
-/// nav." Only mounted while [bottomNavEditModeProvider] is true,
-/// which both keeps the layout shift bounded and lets us skip a
-/// dedicated AnimationController (Flutter's implicit mount/unmount
-/// handles the transition).
+/// Mounted INSIDE the body Stack (not in the bottomNavigationBar
+/// slot) and positioned flush against the body's bottom edge, so
+/// the banner's transparent top edge reveals the actual body
+/// content beneath it. This is the chip-row-style soft fade
+/// behaviour the user expects: the body content visually fades into
+/// the banner's surface tint as you scan downward.
+///
+/// Two earlier attempts that did NOT work, kept here as a warning
+/// to future-me:
+///   * `EdgeFade.top` wrapping the banner — paints scaffold-bg ON
+///     TOP of the banner from a sibling Positioned. In the
+///     bottomNavigationBar slot there is nothing painted behind
+///     the banner, so the fade darkens an already-dark top edge
+///     without producing a visible blend.
+///   * Internal `context.background -> context.surface` gradient
+///     while still mounted in the bottomNavigationBar slot. The
+///     body screens paint their own backgrounds (gradients,
+///     glassy cards), so even a perfect match to
+///     `scaffoldBackgroundColor` produces a visible seam against
+///     the body's painted content.
+///
+/// The only working shape is to mount inside the body Stack so the
+/// banner overlays real body content and a transparent-to-surface
+/// gradient genuinely fades from "see-through" to "banner".
 class _BottomNavEditBanner extends ConsumerWidget {
   const _BottomNavEditBanner();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final accentColor = context.accentColor;
-    // EdgeFade on the top edge softly blends the banner into the
-    // screen content sitting above it — the same trick the scrollable
-    // chip rows use against the surrounding card. Without it the
-    // banner reads as a hard horizontal slab dropped on top of the
-    // body; with it the banner feels anchored to the bottom nav.
-    return EdgeFade(
-      edges: const {EdgeFadePosition.top},
-      fadeSize: 16,
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: context.surface.withValues(alpha: 0.92),
-          border: Border(
-            bottom: BorderSide(
-              color: context.border.withValues(alpha: 0.3),
-              width: 0.5,
-            ),
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            // Fully transparent at the top so body content shows
+            // through the topmost pixel row — that body content is
+            // the actual screen the user was looking at when they
+            // entered edit mode.
+            context.surface.withValues(alpha: 0),
+            context.surface.withValues(alpha: 0.96),
+          ],
+          // The fade completes by ~65% of the banner so the bottom
+          // third is a flat solid colour that visually continues
+          // into the nav-row container below.
+          stops: const [0.0, 0.65],
+        ),
+        border: Border(
+          bottom: BorderSide(
+            color: context.border.withValues(alpha: 0.3),
+            width: 0.5,
           ),
         ),
-        child: SafeArea(
-          top: false,
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppTheme.spacing16,
-              AppTheme.spacing8,
-              AppTheme.spacing8,
-              AppTheme.spacing8,
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.swap_horiz, size: 18, color: accentColor),
-                const SizedBox(width: AppTheme.spacing8),
-                Expanded(
-                  child: Text(
-                    context.l10n.bottomNavReorderBannerTitle,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: context.textPrimary,
-                    ),
+      ),
+      child: SafeArea(
+        top: false,
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppTheme.spacing16,
+            AppTheme.spacing8,
+            AppTheme.spacing8,
+            AppTheme.spacing8,
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.swap_horiz, size: 18, color: accentColor),
+              const SizedBox(width: AppTheme.spacing8),
+              Expanded(
+                child: Text(
+                  context.l10n.bottomNavReorderBannerTitle,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: context.textPrimary,
                   ),
                 ),
-                TextButton(
-                  onPressed: () {
-                    HapticFeedback.selectionClick();
-                    ref.read(bottomNavEditModeProvider.notifier).exit();
-                  },
-                  style: TextButton.styleFrom(
-                    foregroundColor: accentColor,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.spacing12,
-                      vertical: AppTheme.spacing4,
-                    ),
-                    minimumSize: const Size(0, 32),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              TextButton(
+                onPressed: () {
+                  HapticFeedback.selectionClick();
+                  ref.read(bottomNavEditModeProvider.notifier).exit();
+                },
+                style: TextButton.styleFrom(
+                  foregroundColor: accentColor,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing12,
+                    vertical: AppTheme.spacing4,
                   ),
-                  child: Text(
-                    context.l10n.bottomNavReorderBannerDone,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  minimumSize: const Size(0, 32),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  context.l10n.bottomNavReorderBannerDone,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

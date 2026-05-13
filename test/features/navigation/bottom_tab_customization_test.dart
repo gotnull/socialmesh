@@ -404,10 +404,16 @@ void main() {
       // Tap-on-tab exits edit mode AND selects that tab, which is
       // useful for "I'm done reordering AND I want to switch tabs".
       // For the "I'm done reordering BUT want to stay on the current
-      // tab" path the user needs an explicit Done affordance. The
-      // banner mounts in the bottom-nav slot directly above the row
-      // (same Column as the CountdownBanner) and is gated by
-      // bottomNavEditModeProvider.
+      // tab" path the user needs an explicit Done affordance.
+      //
+      // The banner is mounted INSIDE the body Stack (positioned
+      // flush against the body's bottom edge) so its transparent
+      // top edge reveals real body content — that is the only
+      // shape that produces a visible chip-row-style soft fade.
+      // Mounting it in the bottomNavigationBar slot was the first
+      // cut and did not fade (no body content behind the slot).
+      // Pinning the body-Stack mount here so future refactors do
+      // not regress back to the no-fade arrangement.
       expect(
         source.contains('_BottomNavEditBanner'),
         true,
@@ -419,12 +425,17 @@ void main() {
       final flat = source.replaceAll(RegExp(r'\s+'), ' ');
       expect(
         flat.contains(
-          'if (ref.watch(bottomNavEditModeProvider)) const _BottomNavEditBanner()',
+          'if (ref.watch(bottomNavEditModeProvider)) const Positioned( '
+          'left: 0, right: 0, bottom: 0, child: _BottomNavEditBanner()',
         ),
         true,
         reason:
-            'The banner must be gated by bottomNavEditModeProvider so it '
-            'appears only while reorder is active.',
+            'The banner must mount as a Positioned overlay inside the '
+            'body Stack (bottom: 0), gated by bottomNavEditModeProvider, '
+            'so the transparent top edge reveals real body content for '
+            'the visual fade. Mounting it in the bottomNavigationBar '
+            'Column instead removes the body content behind the banner '
+            'and the fade becomes invisible.',
       );
       expect(
         flat.contains('ref.read(bottomNavEditModeProvider.notifier).exit();'),
