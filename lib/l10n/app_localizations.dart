@@ -5628,6 +5628,18 @@ abstract class AppLocalizations {
   /// **'Delete Channel'**
   String get channelOptionsDeleteTitle;
 
+  /// Progress message shown while a channel-disable request is in flight to the device.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting channel…'**
+  String get channelOptionsDeleting;
+
+  /// Confirmation message shown after a channel has been successfully removed from the device.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel deleted'**
+  String get channelOptionsDeleted;
+
   /// Text displayed in channel configuration
   ///
   /// In en, this message translates to:
@@ -5933,6 +5945,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{bits} bits'**
   String channelWizardKeyBits(int bits);
+
+  /// Title of the confirm sheet shown when the user tries to leave the create-channel wizard with unsaved changes.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard channel?'**
+  String get channelWizardDiscardTitle;
+
+  /// Body of the discard-changes confirm sheet in the create-channel wizard.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll lose the name, privacy level, and encryption key you\'ve set up. This can\'t be undone.'**
+  String get channelWizardDiscardMessage;
+
+  /// Confirm button label on the discard-changes sheet in the create-channel wizard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get channelWizardDiscardConfirm;
+
+  /// Cancel button label on the discard-changes sheet in the create-channel wizard.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get channelWizardDiscardCancel;
+
+  /// Error shown when the typed encryption key cannot be decoded as base64 on the Advanced Options step.
+  ///
+  /// In en, this message translates to:
+  /// **'Encryption key must be valid base64.'**
+  String get channelWizardKeyInvalidBase64;
+
+  /// Error shown when the typed encryption key decodes to the wrong number of bytes. Parameters: {expected} = required key size, {actual} = decoded key size.
+  ///
+  /// In en, this message translates to:
+  /// **'Encryption key must be {expected} bytes ({actual} entered).'**
+  String channelWizardKeyWrongLength(int expected, int actual);
 
   /// Text displayed in channel configuration
   ///
@@ -24124,12 +24172,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not classified yet'**
   String get nodeDetailNodeDexNotClassified;
-
-  /// Placeholder shown in the note row when the user has not written a note for the node.
-  ///
-  /// In en, this message translates to:
-  /// **'No note yet'**
-  String get nodeDetailNodeDexNoNote;
 
   /// Label on the inline action chip rendered in the Classification row when the node has no social tag. Tapping opens the social-tag selector.
   ///

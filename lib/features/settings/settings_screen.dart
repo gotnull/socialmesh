@@ -2204,12 +2204,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                 ),
                             child: Ink(
                               decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    context.accentColor,
-                                    context.accentColor.withOpacity(0.8),
-                                  ],
-                                ),
+                                color: context.accentColor,
                                 borderRadius: BorderRadius.circular(
                                   AppTheme.radius8,
                                 ),

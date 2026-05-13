@@ -3195,6 +3195,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get channelOptionsDeleteTitle => 'Elimina canale';
 
   @override
+  String get channelOptionsDeleting => 'Eliminazione canale…';
+
+  @override
+  String get channelOptionsDeleted => 'Canale eliminato';
+
+  @override
   String get channelOptionsEdit => 'Modifica canale';
 
   @override
@@ -3365,6 +3371,28 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String channelWizardKeyBits(int bits) {
     return '$bits bit';
+  }
+
+  @override
+  String get channelWizardDiscardTitle => 'Annullare il canale?';
+
+  @override
+  String get channelWizardDiscardMessage =>
+      'Andranno persi nome, livello di privacy e chiave di crittografia. Operazione non annullabile.';
+
+  @override
+  String get channelWizardDiscardConfirm => 'Annulla';
+
+  @override
+  String get channelWizardDiscardCancel => 'Continua a modificare';
+
+  @override
+  String get channelWizardKeyInvalidBase64 =>
+      'La chiave di crittografia deve essere base64 valido.';
+
+  @override
+  String channelWizardKeyWrongLength(int expected, int actual) {
+    return 'La chiave di crittografia deve essere di $expected byte ($actual inseriti).';
   }
 
   @override
@@ -13991,9 +14019,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get nodeDetailNodeDexNotClassified => 'Non ancora classificato';
-
-  @override
-  String get nodeDetailNodeDexNoNote => 'Nessuna nota';
 
   @override
   String get nodeDetailNodeDexClassifyCta => 'Classifica';

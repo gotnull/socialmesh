@@ -5,14 +5,20 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-/// Source-level pins for Sprint 2's NodeDex preview card on Node Details.
-///
-/// The feedback was: "Avoid burying NodeDex behind Overflow > View NodeDex
-/// only" and "Make classification/tagging accessible from Node Details"
-/// and "Make notes accessible from Node Details". The implementation
-/// adds a preview card between the Identity card and the Radio card
-/// that reads `nodeDexEntryProvider` (no parallel state) and surfaces
-/// the social tag + note + a prominent "Open" CTA.
+// Source-level pins for the NodeDex preview card on Node Details.
+//
+// Sprint 2 introduced this card to surface NodeDex content (social tag
+// + note) directly on Node Details so the user does not have to dig
+// through Overflow > View NodeDex. The card reads
+// nodeDexEntryProvider (no parallel state) and surfaces the social
+// tag + note + a prominent "Open" CTA.
+//
+// Sprint 8 restructured the Note: it moved out of the InfoTable into
+// a sibling _NodeDexNoteSection so long-form prose wraps naturally
+// at full width and the edit affordance lives on the SectionTitle
+// header rather than stacking under a right-aligned cell. Tests are
+// updated to pin the new structure without losing the classification
+// guarantees from Sprint 2.
 void main() {
   group('NodeDex preview card on Node Details', () {
     final detailFile = File('lib/features/nodes/node_detail_screen.dart');
@@ -49,7 +55,7 @@ void main() {
       );
     });
 
-    test('reads nodeDexEntryProvider — no parallel state', () {
+    test('reads nodeDexEntryProvider, no parallel state', () {
       expect(
         source.contains('ref.watch(nodeDexEntryProvider(node.nodeNum))'),
         true,
@@ -58,7 +64,7 @@ void main() {
             'screen so edits propagate everywhere without a copy.',
       );
       // The card must not introduce its own local social-tag or note
-      // state — those are owned by NodeDexNotifier.
+      // state. Those are owned by NodeDexNotifier.
       expect(
         source.contains('TextEditingController(text: entry?.userNote'),
         false,
@@ -100,22 +106,29 @@ void main() {
       },
     );
 
-    test('body uses InfoTable like the surrounding sections', () {
-      // Visual consistency: the NodeDex preview shares the same bordered,
-      // zebra-striped table layout as the Identity / Radio / Device
-      // Metrics sections instead of hand-rolled SizedBox(width:100)+Text
-      // rows. The previous layout wrapped the "Classification" label
-      // mid-word on narrow viewports.
+    test('classification stays in the InfoTable; note moves out', () {
+      // Sprint 8 structural fix. Short key/value data (classification)
+      // belongs in InfoTable; long-form prose (note) belongs in its own
+      // sibling section with full-width left-aligned prose body.
       expect(
         source.contains('InfoTable(') &&
             source.contains('InfoTableRow(') &&
-            source.contains('nodeDetailNodeDexClassificationLabel') &&
-            source.contains('nodeDetailNodeDexNoteLabel'),
+            source.contains('nodeDetailNodeDexClassificationLabel'),
         true,
         reason:
-            'NodeDex preview body must be an InfoTable with InfoTableRow '
-            'entries (label + value + tappable onTap), matching the '
-            'Identity / Radio sections directly above and below it.',
+            'Classification must remain an InfoTableRow so the empty / '
+            'classified states share visual language with the surrounding '
+            'Identity / Radio sections.',
+      );
+      expect(
+        source.contains('_NodeDexNoteSection('),
+        true,
+        reason:
+            'Note must be rendered through the dedicated _NodeDexNoteSection '
+            'sibling widget, NOT as an InfoTableRow, so prose wraps '
+            'full-width and the edit affordance lives on the section title '
+            'rather than a chunky Edit pill stacked under a right-aligned '
+            'value cell.',
       );
     });
 
@@ -137,8 +150,38 @@ void main() {
         source.contains('valueWidget:'),
         true,
         reason:
-            'InfoTableRow.valueWidget is what lets the classification + note '
-            'rows host a chip / action button instead of plain text.',
+            'InfoTableRow.valueWidget is what lets the classification row '
+            'host a chip / action button instead of plain text.',
+      );
+    });
+
+    test('note section uses canonical SectionTitle + helpSheet + pencil', () {
+      // Sprint 8 structural pin. The Note sibling section must use the
+      // canonical SectionTitle subheader primitive (12pt uppercase
+      // letter-spaced), wire up the NodeDex help-sheet body with the
+      // shared "note" helpKey so copy stays consistent with the
+      // standalone NodeDex Note card, and surface its edit affordance as
+      // an inline pencil button on the SectionTitle trailing slot.
+      expect(
+        source.contains('SectionTitle('),
+        true,
+        reason:
+            'Note section header must use the canonical SectionTitle '
+            'primitive, not a hand-rolled Row + Text.',
+      );
+      expect(
+        source.contains("NodeDexHelpSheetBody(helpKey: 'note')"),
+        true,
+        reason:
+            'Note help affordance must reuse the NodeDex helpKey "note" so '
+            'copy stays consistent with the standalone NodeDex note card.',
+      );
+      expect(
+        source.contains('_NoteSectionPencilButton('),
+        true,
+        reason:
+            'Edit affordance must be the small inline pencil button on the '
+            'SectionTitle trailing slot, not a body-stacked Edit pill.',
       );
     });
 
@@ -148,6 +191,7 @@ void main() {
         '[NodeDexPreview] classify sheet opened',
         '[NodeDexPreview] classify tap with no entry',
         '[NodeDexPreview] tag applied',
+        '[NodeDexPreview] note editor opened',
       ];
       for (final marker in required) {
         expect(
@@ -160,7 +204,7 @@ void main() {
 
     test('overflow menu entrypoint is retained as a redundant path', () {
       // The feedback was to make NodeDex MORE accessible, not to remove
-      // the existing overflow entrypoint — keep it as a discoverable
+      // the existing overflow entrypoint. Keep it as a discoverable
       // fallback for power users.
       expect(
         source.contains("value: 'nodedex'"),
@@ -172,15 +216,19 @@ void main() {
     });
 
     test('ARB keys exist for every preview-card label', () {
+      // Sprint 8 dropped nodeDetailNodeDexNoNote from the required set:
+      // the empty state is now a "+ Add note" chip rather than a "No
+      // note yet" placeholder string, so the key is no longer
+      // referenced by the preview card.
       const requiredKeys = [
         'nodeDetailNodeDexSectionTitle',
         'nodeDetailNodeDexOpenCta',
         'nodeDetailNodeDexClassificationLabel',
         'nodeDetailNodeDexNoteLabel',
         'nodeDetailNodeDexNotClassified',
-        'nodeDetailNodeDexNoNote',
         'nodeDetailNodeDexClassifyCta',
         'nodeDetailNodeDexAddNoteCta',
+        'nodedexNoteEdit',
       ];
       for (final key in requiredKeys) {
         expect(

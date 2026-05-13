@@ -31,6 +31,13 @@ class ChannelKeyField extends StatefulWidget {
   /// Whether to show the generate button
   final bool showGenerateButton;
 
+  // Optional external controller. When provided, the parent owns the
+  // lifecycle and can read the current text directly — required for the
+  // create-channel wizard so a manually-typed key persists into the
+  // wizard draft even if the user taps Continue without first tapping
+  // the inline check button.
+  final TextEditingController? controller;
+
   const ChannelKeyField({
     super.key,
     required this.keyBase64,
@@ -39,6 +46,7 @@ class ChannelKeyField extends StatefulWidget {
     this.editable = true,
     this.accentColor,
     this.showGenerateButton = true,
+    this.controller,
   });
 
   @override
@@ -46,7 +54,9 @@ class ChannelKeyField extends StatefulWidget {
 }
 
 class _ChannelKeyFieldState extends State<ChannelKeyField> {
-  late TextEditingController _keyController;
+  TextEditingController? _ownedController;
+  TextEditingController get _keyController =>
+      widget.controller ?? _ownedController!;
   bool _showKey = false;
   bool _isEditingKey = false;
   String? _keyValidationError;
@@ -55,22 +65,31 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
   @override
   void initState() {
     super.initState();
-    _keyController = TextEditingController(text: widget.keyBase64);
-    _validateAndDetectKey(widget.keyBase64);
+    if (widget.controller == null) {
+      _ownedController = TextEditingController(text: widget.keyBase64);
+    } else if (widget.controller!.text.isEmpty && widget.keyBase64.isNotEmpty) {
+      widget.controller!.text = widget.keyBase64;
+    }
+    _validateAndDetectKey(_keyController.text);
   }
 
   @override
   void didUpdateWidget(ChannelKeyField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.keyBase64 != widget.keyBase64 && !_isEditingKey) {
-      _keyController.text = widget.keyBase64;
+    // Only sync from keyBase64 when we own the controller — when the
+    // parent owns it, the parent is the source of truth and must not be
+    // overwritten on rebuild (this was the wizard regression).
+    if (_ownedController != null &&
+        oldWidget.keyBase64 != widget.keyBase64 &&
+        !_isEditingKey) {
+      _ownedController!.text = widget.keyBase64;
       _validateAndDetectKey(widget.keyBase64);
     }
   }
 
   @override
   void dispose() {
-    _keyController.dispose();
+    _ownedController?.dispose();
     super.dispose();
   }
 
@@ -144,11 +163,11 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
         decoration: BoxDecoration(
           color: context.card,
           borderRadius: BorderRadius.circular(AppTheme.radius12),
-          border: Border.all(
-            color: _keyValidationError != null
-                ? AppTheme.errorRed.withAlpha(128)
-                : context.border,
-          ),
+          // Outer card keeps its neutral border. The error state is
+          // shown by the inner input box and the validation message
+          // only — matching the inner radius avoids a double red ring
+          // with mismatched corners.
+          border: Border.all(color: context.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -253,6 +272,13 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                   ? TextField(
                       maxLength: 64,
                       controller: _keyController,
+                      // AES-256 base64 is 44 chars and wraps on iPhone
+                      // width — let the field grow to two lines so the
+                      // entire key is visible while editing.
+                      maxLines: 2,
+                      minLines: 1,
+                      keyboardType: TextInputType.visiblePassword,
+                      textInputAction: TextInputAction.done,
                       style: TextStyle(
                         fontSize: 14,
                         color: context.textPrimary,
@@ -389,20 +415,13 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                     ),
                     if (widget.showGenerateButton) ...[
                       const SizedBox(width: AppTheme.spacing4),
-                      // Regenerate
+                      // Regenerate — no snackbar; the field visibly
+                      // updates with the new key, which is its own
+                      // confirmation.
                       _buildActionButton(
                         icon: Icons.refresh,
                         label: context.l10n.channelKeyGenerate,
-                        onPressed: !_isEditingKey
-                            ? () {
-                                _generateRandomKey();
-                                showSuccessSnackBar(
-                                  context,
-                                  context.l10n.channelKeyNewGenerated,
-                                  duration: const Duration(seconds: 1),
-                                );
-                              }
-                            : null,
+                        onPressed: !_isEditingKey ? _generateRandomKey : null,
                         isEnabled: !_isEditingKey,
                       ),
                     ],

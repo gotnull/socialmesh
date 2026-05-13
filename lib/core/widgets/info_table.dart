@@ -76,7 +76,16 @@ class InfoTable extends StatelessWidget {
                             right: BorderSide(color: context.border, width: 1),
                           ),
                         ),
+                        // Top-align label content. When the value cell
+                        // wraps to multiple lines or stacks a chip /
+                        // button under the value text, the row's
+                        // IntrinsicHeight grows and a centered label
+                        // would float in the middle of empty space.
+                        // Top-aligned keeps the label level with the
+                        // value's first line, which is the standard
+                        // spec-sheet / data-table convention.
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (item.icon != null) ...[
                               Icon(
@@ -108,7 +117,10 @@ class InfoTable extends StatelessWidget {
                           horizontal: 16,
                           vertical: 14,
                         ),
-                        alignment: Alignment.centerRight,
+                        // Top-right (not center-right) so multi-line
+                        // values and value+chip stacks share a top
+                        // baseline with the label cell on the left.
+                        alignment: Alignment.topRight,
                         child:
                             item.valueWidget ??
                             Text(

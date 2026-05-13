@@ -22,6 +22,7 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../core/widgets/qr_share_sheet.dart';
+import '../../core/widgets/section_header.dart';
 import '../../models/mesh_models.dart';
 import '../../models/telemetry_log.dart';
 import '../../providers/app_providers.dart';
@@ -39,6 +40,7 @@ import '../nodedex/screens/nodedex_detail_screen.dart';
 import '../nodedex/services/sigil_generator.dart';
 import '../nodedex/services/trait_engine.dart';
 import '../nodedex/widgets/node_note_edit_sheet.dart';
+import '../nodedex/widgets/section_info_button.dart';
 import '../nodedex/widgets/sigil_card_sheet.dart';
 import '../nodedex/widgets/trait_badge.dart';
 import '../telemetry/air_quality_log_screen.dart';
@@ -937,6 +939,9 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
             ),
           ),
           const SizedBox(height: AppTheme.spacing10),
+          // Classification stays in the InfoTable: it's a short
+          // right-aligned key/value with a "+ Classify" empty-state
+          // chip, which is exactly what InfoTable is for.
           InfoTable(
             rows: [
               InfoTableRow(
@@ -953,50 +958,27 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                       ),
                 onTap: openClassifySheet,
               ),
-              InfoTableRow(
-                icon: Icons.notes,
-                label: context.l10n.nodeDetailNodeDexNoteLabel,
-                value: hasNote
-                    ? notePreview
-                    : context.l10n.nodeDetailNodeDexNoNote,
-                valueWidget: hasNote
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            notePreview,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: context.textPrimary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            textAlign: TextAlign.right,
-                          ),
-                          const SizedBox(height: AppTheme.spacing6),
-                          _NodeDexActionChip(
-                            icon: Icons.edit_outlined,
-                            label: context.l10n.nodedexNoteEdit,
-                          ),
-                        ],
-                      )
-                    : _NodeDexActionChip(
-                        icon: Icons.add,
-                        label: context.l10n.nodeDetailNodeDexAddNoteCta,
-                      ),
-                onTap: () {
-                  AppLogging.nodes(
-                    '[NodeDexPreview] note editor opened nodeNum=${node.nodeNum} '
-                    'hasNote=$hasNote',
-                  );
-                  NodeNoteEditSheet.show(
-                    context: context,
-                    nodeNum: node.nodeNum,
-                    initialNote: entry?.userNote,
-                  );
-                },
-              ),
             ],
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          // Note is long-form prose, so it lives OUTSIDE the
+          // InfoTable as its own sibling section. SectionTitle gives
+          // us the canonical icon + label + (i) help + small trailing
+          // pencil affordance; the body is full-width left-aligned
+          // text (or the "+ Add note" empty-state chip).
+          _NodeDexNoteSection(
+            note: notePreview,
+            onEditTap: () {
+              AppLogging.nodes(
+                '[NodeDexPreview] note editor opened nodeNum=${node.nodeNum} '
+                'hasNote=$hasNote',
+              );
+              NodeNoteEditSheet.show(
+                context: context,
+                nodeNum: node.nodeNum,
+                initialNote: entry?.userNote,
+              );
+            },
           ),
         ],
       ),
@@ -2128,6 +2110,107 @@ class _NodeDexActionChip extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Sibling prose section under the NodeDex InfoTable on Node
+/// Details. Long-form notes do not belong inside an InfoTable cell
+/// (narrow column, right-aligned, monospace, awkward affordance
+/// stacking) so they live here as a full-width left-aligned prose
+/// block with the canonical SectionTitle header. The header carries
+/// the (i) help affordance (same helpKey as the standalone NodeDex
+/// note card) and a small inline pencil button for editing when a
+/// note exists; the empty state surfaces a "+ Add note" chip in the
+/// body, matching the visual language of "+ Classify" on the
+/// classification row above.
+class _NodeDexNoteSection extends StatelessWidget {
+  final String? note;
+  final VoidCallback onEditTap;
+
+  const _NodeDexNoteSection({required this.note, required this.onEditTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final hasNote = note != null && note!.isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionTitle(
+          title: context.l10n.nodeDetailNodeDexNoteLabel,
+          leadingIcon: Icons.notes,
+          helpSheetBuilder: (ctx) =>
+              const NodeDexHelpSheetBody(helpKey: 'note'),
+          trailing: hasNote ? _NoteSectionPencilButton(onTap: onEditTap) : null,
+        ),
+        if (hasNote)
+          Text(
+            note!,
+            style: TextStyle(
+              fontSize: 14,
+              color: context.textPrimary,
+              height: 1.5,
+            ),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.only(top: AppTheme.spacing4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  onEditTap();
+                },
+                child: _NodeDexActionChip(
+                  icon: Icons.add,
+                  label: context.l10n.nodeDetailNodeDexAddNoteCta,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Small inline pencil button rendered on the Note SectionTitle row
+/// in the Node Details preview when a note exists. Matches the
+/// shape, size, and tinting of the standalone NodeDex note card's
+/// pencil so the same affordance reads consistently across both
+/// surfaces.
+class _NoteSectionPencilButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _NoteSectionPencilButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: context.l10n.nodedexNoteEdit,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        child: Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: context.accentColor.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
+          ),
+          child: Icon(
+            Icons.edit_outlined,
+            size: 16,
+            color: context.accentColor,
+          ),
+        ),
       ),
     );
   }

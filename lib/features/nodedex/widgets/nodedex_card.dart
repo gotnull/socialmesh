@@ -7,9 +7,18 @@
 // MUST render through this widget so heading style, padding, and
 // decoration stay identical across the screen.
 //
-// Heading row contains only the leading icon, title, and optional (i)
-// help icon — never trailing actions. Action buttons or count chips go
-// into [trailing], which renders below the heading right-aligned.
+// Two trailing slots, with different visual weights:
+//   * [headingTrailing] renders INSIDE the heading row, after the
+//     (i) help icon. Use for small inline icon-only secondary
+//     actions (pencil to edit, refresh, etc). Keep it visually
+//     comparable to the (i) icon so the title row stays balanced.
+//   * [trailing] renders BELOW the heading, right-aligned, on its
+//     own row. Use for chunky action chips, count badges, or any
+//     widget that would look cramped inside the title row.
+//
+// Pick at most one. Mixing both pushes the user into "which is the
+// edit affordance" mode, which is the exact UX we are trying to
+// avoid.
 
 import 'package:flutter/material.dart';
 
@@ -21,6 +30,7 @@ class NodeDexCard extends StatelessWidget {
   final String title;
   final IconData icon;
   final String? helpKey;
+  final Widget? headingTrailing;
   final Widget? trailing;
   final Widget child;
 
@@ -29,6 +39,7 @@ class NodeDexCard extends StatelessWidget {
     required this.title,
     required this.icon,
     this.helpKey,
+    this.headingTrailing,
     this.trailing,
     required this.child,
   });
@@ -55,6 +66,7 @@ class NodeDexCard extends StatelessWidget {
             helpSheetBuilder: helpKey == null
                 ? null
                 : (ctx) => NodeDexHelpSheetBody(helpKey: helpKey!),
+            trailing: headingTrailing,
           ),
           if (trailing != null)
             Padding(

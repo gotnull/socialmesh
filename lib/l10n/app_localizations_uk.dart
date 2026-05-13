@@ -3189,6 +3189,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String get channelOptionsDeleteTitle => 'Видалити канал';
 
   @override
+  String get channelOptionsDeleting => 'Видалення каналу…';
+
+  @override
+  String get channelOptionsDeleted => 'Канал видалено';
+
+  @override
   String get channelOptionsEdit => 'Редагувати канал';
 
   @override
@@ -3362,6 +3368,28 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String channelWizardKeyBits(int bits) {
     return '$bits біт';
+  }
+
+  @override
+  String get channelWizardDiscardTitle => 'Скасувати створення каналу?';
+
+  @override
+  String get channelWizardDiscardMessage =>
+      'Ім\'я, рівень конфіденційності та ключ шифрування буде втрачено. Цю дію не можна скасувати.';
+
+  @override
+  String get channelWizardDiscardConfirm => 'Скасувати';
+
+  @override
+  String get channelWizardDiscardCancel => 'Продовжити редагування';
+
+  @override
+  String get channelWizardKeyInvalidBase64 =>
+      'Ключ шифрування має бути коректним base64.';
+
+  @override
+  String channelWizardKeyWrongLength(int expected, int actual) {
+    return 'Ключ шифрування має бути довжиною $expected байт (введено $actual).';
   }
 
   @override
@@ -13995,9 +14023,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get nodeDetailNodeDexNotClassified => 'Ще не класифіковано';
-
-  @override
-  String get nodeDetailNodeDexNoNote => 'Немає нотатки';
 
   @override
   String get nodeDetailNodeDexClassifyCta => 'Класифікувати';

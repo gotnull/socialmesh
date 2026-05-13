@@ -1696,64 +1696,122 @@ class _UserNoteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasNote = entry.userNote != null && entry.userNote!.trim().isNotEmpty;
+
     return NodeDexCard(
       title: context.l10n.nodedexNoteTitle,
       icon: Icons.edit_note,
       helpKey: 'note',
-      trailing: GestureDetector(
-        onTap: () {
-          HapticFeedback.selectionClick();
-          onEditTap();
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppTheme.spacing10,
-            vertical: AppTheme.spacing5,
-          ),
-          decoration: BoxDecoration(
-            color: context.accentColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(AppTheme.radius12),
-          ),
-          child: Text(
-            entry.userNote != null
-                ? context.l10n.nodedexNoteEdit
-                : context.l10n.nodedexNoteAdd,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: context.accentColor,
-            ),
-          ),
-        ),
-      ),
-      child: _UserNotePlaceholder(entry: entry),
+      // Pencil sits on the title row when a note already exists so
+      // the edit affordance is small and unobtrusive. The empty state
+      // gets a more discoverable inline chip in the body instead so a
+      // first-time user sees a clear "Add note" call to action rather
+      // than a single pencil icon they may not recognise.
+      headingTrailing: hasNote ? _NotePencilButton(onTap: onEditTap) : null,
+      child: hasNote
+          ? Text(
+              entry.userNote!,
+              style: TextStyle(
+                fontSize: 14,
+                color: context.textPrimary,
+                height: 1.5,
+              ),
+            )
+          : _NoteEmptyState(onAddTap: onEditTap),
     );
   }
 }
 
-class _UserNotePlaceholder extends StatelessWidget {
-  final NodeDexEntry entry;
-  const _UserNotePlaceholder({required this.entry});
+/// Small inline pencil button rendered on the Note title row when a
+/// note is present. 28x28 tap target, faintly accent-tinted
+/// background so it reads as an affordance without competing with
+/// the body prose.
+class _NotePencilButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _NotePencilButton({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return entry.userNote != null && entry.userNote!.trim().isNotEmpty
-        ? Text(
-            entry.userNote!,
-            style: TextStyle(
-              fontSize: 14,
-              color: context.textPrimary,
-              height: 1.5,
+    return Semantics(
+      button: true,
+      label: context.l10n.nodedexNoteEdit,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        child: Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: context.accentColor.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
+          ),
+          child: Icon(
+            Icons.edit_outlined,
+            size: 16,
+            color: context.accentColor,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Empty-state chip rendered in the body when no note exists.
+/// Mirrors the "+ Classify" affordance on the classification row so
+/// the two empty states read as siblings instead of competing
+/// primitives.
+class _NoteEmptyState extends StatelessWidget {
+  final VoidCallback onAddTap;
+  const _NoteEmptyState({required this.onAddTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Semantics(
+        button: true,
+        label: context.l10n.nodedexNoteAdd,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {
+            HapticFeedback.selectionClick();
+            onAddTap();
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.spacing12,
+              vertical: AppTheme.spacing6,
             ),
-          )
-        : Text(
-            context.l10n.nodedexNoNoteYet,
-            style: TextStyle(
-              fontSize: 13,
-              color: context.textTertiary,
-              fontStyle: FontStyle.italic,
+            decoration: BoxDecoration(
+              color: context.accentColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
+              border: Border.all(
+                color: context.accentColor.withValues(alpha: 0.4),
+                width: 1,
+              ),
             ),
-          );
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.add, size: 14, color: context.accentColor),
+                const SizedBox(width: AppTheme.spacing6),
+                Text(
+                  context.l10n.nodedexNoteAdd,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: context.accentColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

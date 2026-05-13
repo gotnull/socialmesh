@@ -4184,6 +4184,14 @@
     "@channelOptionsDeleteTitle": {
         "description": "Title for the channel configuration screen"
     },
+    "channelOptionsDeleting": "Deleting channel…",
+    "@channelOptionsDeleting": {
+        "description": "Progress message shown while a channel-disable request is in flight to the device."
+    },
+    "channelOptionsDeleted": "Channel deleted",
+    "@channelOptionsDeleted": {
+        "description": "Confirmation message shown after a channel has been successfully removed from the device."
+    },
     "channelOptionsEdit": "Edit Channel",
     "@channelOptionsEdit": {
         "description": "Text displayed in channel configuration"
@@ -4415,6 +4423,38 @@
             }
         },
         "description": "Text in channel configuration Parameters: {bits}."
+    },
+    "channelWizardDiscardTitle": "Discard channel?",
+    "@channelWizardDiscardTitle": {
+        "description": "Title of the confirm sheet shown when the user tries to leave the create-channel wizard with unsaved changes."
+    },
+    "channelWizardDiscardMessage": "You'll lose the name, privacy level, and encryption key you've set up. This can't be undone.",
+    "@channelWizardDiscardMessage": {
+        "description": "Body of the discard-changes confirm sheet in the create-channel wizard."
+    },
+    "channelWizardDiscardConfirm": "Discard",
+    "@channelWizardDiscardConfirm": {
+        "description": "Confirm button label on the discard-changes sheet in the create-channel wizard."
+    },
+    "channelWizardDiscardCancel": "Keep editing",
+    "@channelWizardDiscardCancel": {
+        "description": "Cancel button label on the discard-changes sheet in the create-channel wizard."
+    },
+    "channelWizardKeyInvalidBase64": "Encryption key must be valid base64.",
+    "@channelWizardKeyInvalidBase64": {
+        "description": "Error shown when the typed encryption key cannot be decoded as base64 on the Advanced Options step."
+    },
+    "channelWizardKeyWrongLength": "Encryption key must be {expected} bytes ({actual} entered).",
+    "@channelWizardKeyWrongLength": {
+        "placeholders": {
+            "expected": {
+                "type": "int"
+            },
+            "actual": {
+                "type": "int"
+            }
+        },
+        "description": "Error shown when the typed encryption key decodes to the wrong number of bytes. Parameters: {expected} = required key size, {actual} = decoded key size."
     },
     "channelWizardKeySizeAes128": "AES-128",
     "@channelWizardKeySizeAes128": {
@@ -19085,10 +19125,6 @@
     "nodeDetailNodeDexNotClassified": "Not classified yet",
     "@nodeDetailNodeDexNotClassified": {
         "description": "Placeholder shown in the classification row when the node has no social tag."
-    },
-    "nodeDetailNodeDexNoNote": "No note yet",
-    "@nodeDetailNodeDexNoNote": {
-        "description": "Placeholder shown in the note row when the user has not written a note for the node."
     },
     "nodeDetailNodeDexClassifyCta": "Classify",
     "@nodeDetailNodeDexClassifyCta": {

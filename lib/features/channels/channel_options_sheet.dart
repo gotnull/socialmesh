@@ -221,12 +221,27 @@ Future<void> _deleteChannel(
     role: 'DISABLED',
   );
 
+  // Show an in-flight loading snackbar so the user sees that the
+  // delete is being sent — without it the row only disappears once
+  // the device round-trip completes, which can take a second or two.
+  final messenger = ScaffoldMessenger.maybeOf(context);
+  showLoadingSnackBar(
+    context,
+    context.l10n.channelOptionsDeleting,
+    duration: const Duration(seconds: 15),
+  );
+
   try {
     final protocol = ref.read(protocolServiceProvider);
     final channelsNotifier = ref.read(channelsProvider.notifier);
     await protocol.setChannel(disabledChannel);
     channelsNotifier.removeChannel(channel.index);
+    messenger?.hideCurrentSnackBar();
+    if (context.mounted) {
+      showSuccessSnackBar(context, context.l10n.channelOptionsDeleted);
+    }
   } catch (e) {
+    messenger?.hideCurrentSnackBar();
     if (context.mounted) {
       showErrorSnackBar(
         context,

@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/legal/legal_constants.dart';
+import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 
 import '../../core/theme.dart';
@@ -207,8 +208,12 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
   bool _downlinkEnabled = false;
   bool _positionEnabled = false;
 
-  // Key management
+  // Key management — controller is wizard-owned so the manual-entry
+  // text can be committed into _generatedKey before navigating to
+  // Review or saving the channel.
+  final _keyController = TextEditingController();
   List<int> _generatedKey = [];
+  String? _keyCommitError;
 
   // Saving state
   bool _isSaving = false;
@@ -217,17 +222,70 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
   @override
   void initState() {
     super.initState();
-    _generateKey();
+    _generateKey(source: 'init');
+    // Rebuild the Continue button as the user types so it tracks key
+    // validity in real time and stays disabled on invalid base64.
+    _keyController.addListener(_onKeyControllerChanged);
   }
 
   @override
   void dispose() {
+    _keyController.removeListener(_onKeyControllerChanged);
     _nameController.dispose();
+    _keyController.dispose();
     _pageController.dispose();
     super.dispose();
   }
 
-  void _generateKey() {
+  void _onKeyControllerChanged() {
+    if (!mounted) return;
+    setState(() {
+      // Clear any stale commit error once the user resumes typing —
+      // the live validity check in canProceed takes over.
+      if (_keyCommitError != null) _keyCommitError = null;
+    });
+  }
+
+  bool _isEncryptionKeyValid() {
+    if (!_keyFieldVisible) return true;
+    final expected = _privacyLevel.keySize.bytes;
+    if (expected <= 1) return true;
+    final decoded = ChannelKeyUtils.base64ToKey(_keyController.text.trim());
+    return decoded != null && decoded.length == expected;
+  }
+
+  bool get _isDirty {
+    if (_saveComplete) return false;
+    if (_nameController.text.trim().isNotEmpty) return true;
+    if (_currentStep > 0) return true;
+    if (_uplinkEnabled || _downlinkEnabled || _positionEnabled) return true;
+    return false;
+  }
+
+  Future<bool> _confirmDiscardChanges() async {
+    if (!_isDirty) return true;
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: context.l10n.channelWizardDiscardTitle,
+      message: context.l10n.channelWizardDiscardMessage,
+      confirmLabel: context.l10n.channelWizardDiscardConfirm,
+      cancelLabel: context.l10n.channelWizardDiscardCancel,
+      isDestructive: true,
+    );
+    return confirmed == true;
+  }
+
+  Future<void> _handleCloseTap() async {
+    FocusScope.of(context).unfocus();
+    if (_isSaving) return;
+    final navigator = Navigator.of(context);
+    final shouldClose = await _confirmDiscardChanges();
+    if (shouldClose && mounted) {
+      navigator.pop();
+    }
+  }
+
+  void _generateKey({String source = 'generated'}) {
     final keySize = _privacyLevel.keySize;
     if (keySize.bytes == 0) {
       _generatedKey = [];
@@ -237,6 +295,80 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
       final random = Random.secure();
       _generatedKey = List.generate(keySize.bytes, (_) => random.nextInt(256));
     }
+    _keyController.text = ChannelKeyUtils.keyToBase64(_generatedKey);
+    _keyCommitError = null;
+    AppLogging.channels(
+      'wizard key commit: source=$source byteLength=${_generatedKey.length} '
+      'valid=true pskFp=${AppLogging.pskFingerprint(_generatedKey)}',
+    );
+  }
+
+  /// Trim/validate the live text in the key controller and persist it
+  /// into the wizard draft. Returns false (and sets [_keyCommitError])
+  /// when the controller text is not valid base64 for the current
+  /// privacy level — callers must block navigation in that case.
+  ///
+  /// Steps that don't render a key field (Open, Shared, or any
+  /// privacy level whose key size is < 16 bytes) commit a fixed value
+  /// derived from the privacy level itself and always succeed.
+  bool _commitEncryptionKeyFromController() {
+    final expectedBytes = _privacyLevel.keySize.bytes;
+    if (expectedBytes == 0) {
+      _generatedKey = [];
+      _keyController.text = '';
+      _keyCommitError = null;
+      AppLogging.channels(
+        'wizard key commit: source=none expectedBytes=0 valid=true',
+      );
+      return true;
+    }
+    if (expectedBytes == 1) {
+      _generatedKey = [1];
+      _keyController.text = 'AQ==';
+      _keyCommitError = null;
+      AppLogging.channels(
+        'wizard key commit: source=default expectedBytes=1 valid=true',
+      );
+      return true;
+    }
+    final raw = _keyController.text.trim();
+    final decoded = ChannelKeyUtils.base64ToKey(raw);
+    if (decoded == null) {
+      safeSetState(() {
+        _keyCommitError = context.l10n.channelWizardKeyInvalidBase64;
+      });
+      AppLogging.channels(
+        'wizard key commit FAILED: source=manual reason=invalid_base64 '
+        'expectedBytes=$expectedBytes valid=false',
+      );
+      return false;
+    }
+    if (decoded.length != expectedBytes) {
+      safeSetState(() {
+        _keyCommitError = context.l10n.channelWizardKeyWrongLength(
+          expectedBytes,
+          decoded.length,
+        );
+      });
+      AppLogging.channels(
+        'wizard key commit FAILED: source=manual reason=wrong_length '
+        'expectedBytes=$expectedBytes actualBytes=${decoded.length} valid=false',
+      );
+      return false;
+    }
+    final normalized = ChannelKeyUtils.keyToBase64(decoded);
+    safeSetState(() {
+      _generatedKey = decoded;
+      _keyCommitError = null;
+      if (_keyController.text != normalized) {
+        _keyController.text = normalized;
+      }
+    });
+    AppLogging.channels(
+      'wizard key commit: source=manual byteLength=${decoded.length} '
+      'valid=true pskFp=${AppLogging.pskFingerprint(_generatedKey)}',
+    );
+    return true;
   }
 
   void _nextStep() {
@@ -246,14 +378,30 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
         _showDefaultKeyWarning();
         return;
       }
+      // Leaving the Advanced Options step: commit whatever the user
+      // currently has in the encryption-key field so Review sees the
+      // exact bytes that will end up on the channel.
+      if (_currentStep == 2 && _keyFieldVisible) {
+        if (!_commitEncryptionKeyFromController()) {
+          showErrorSnackBar(
+            context,
+            _keyCommitError ?? context.l10n.channelWizardKeyInvalidBase64,
+          );
+          return;
+        }
+      }
       _proceedToNextStep();
     }
   }
 
+  bool get _keyFieldVisible =>
+      _privacyLevel == PrivacyLevel.private ||
+      _privacyLevel == PrivacyLevel.maximum;
+
   void _proceedToNextStep() {
-    // Regenerate key when privacy level changes
+    // Regenerate key when privacy level changes (entering options step)
     if (_currentStep == 1) {
-      _generateKey();
+      _generateKey(source: 'privacy_changed');
     }
     setState(() {
       _currentStep++;
@@ -353,6 +501,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
 
   void _previousStep() {
     if (_currentStep > 0) {
+      FocusScope.of(context).unfocus();
       setState(() {
         _currentStep--;
       });
@@ -464,6 +613,17 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
   Future<void> _saveChannel() async {
     if (_isSaving) return;
 
+    // Safety net: if the user somehow reached Review without leaving
+    // step 3 through _nextStep (programmatic jump, future shortcut),
+    // re-commit the key field before sending the channel.
+    if (_keyFieldVisible && !_commitEncryptionKeyFromController()) {
+      showErrorSnackBar(
+        context,
+        _keyCommitError ?? context.l10n.channelWizardKeyInvalidBase64,
+      );
+      return;
+    }
+
     // Check connection state before saving
     final connectionState = ref.read(connectionStateProvider);
     final isConnected = connectionState.maybeWhen(
@@ -493,6 +653,11 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
         uplink: _uplinkEnabled,
         downlink: _downlinkEnabled,
         positionPrecision: _positionEnabled ? 32 : 0,
+      );
+
+      AppLogging.channels(
+        'wizard create channel: index=${channel.index} '
+        'pskFp=${AppLogging.pskFingerprint(channel.psk)}',
       );
 
       await protocol.setChannel(channel);
@@ -544,12 +709,28 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
     final theme = Theme.of(context);
     final stepHelp = _WizardStepHelp.steps[_currentStep];
 
+    return PopScope(
+      canPop: !_isDirty || _saveComplete,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        if (_isSaving) return;
+        final navigator = Navigator.of(context);
+        final shouldClose = await _confirmDiscardChanges();
+        if (shouldClose && mounted) {
+          navigator.pop();
+        }
+      },
+      child: _buildScaffold(theme, stepHelp),
+    );
+  }
+
+  Widget _buildScaffold(ThemeData theme, _WizardStepHelp stepHelp) {
     return GlassScaffold.body(
       hasScrollBody: true,
       title: context.l10n.channelWizardScreenTitle,
       leading: IconButton(
         icon: const Icon(Icons.close),
-        onPressed: () => Navigator.pop(context),
+        onPressed: _handleCloseTap,
       ),
       actions: [
         IconButton(
@@ -689,8 +870,11 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
                 borderRadius: BorderRadius.circular(AppTheme.radius12),
                 borderSide: BorderSide(color: context.accentColor, width: 2),
               ),
-              counterStyle: TextStyle(color: context.textSecondary),
-              counterText: '',
+              counterStyle: TextStyle(
+                color: context.textSecondary,
+                fontFamily: AppTheme.fontFamily,
+                fontSize: 12,
+              ),
             ),
             onChanged: (_) => setState(() {}),
           ),
@@ -914,22 +1098,38 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
           ),
           const SizedBox(height: AppTheme.spacing32),
           // Encryption key section (only for private/maximum)
-          if (_privacyLevel == PrivacyLevel.private ||
-              _privacyLevel == PrivacyLevel.maximum) ...[
+          if (_keyFieldVisible) ...[
             const SizedBox(height: AppTheme.spacing12),
             ChannelKeyField(
-              keyBase64: ChannelKeyUtils.keyToBase64(_generatedKey),
+              controller: _keyController,
+              keyBase64: _keyController.text,
               onKeyChanged: (newKey) {
                 final decoded = ChannelKeyUtils.base64ToKey(newKey);
-                if (decoded != null) {
+                if (decoded != null &&
+                    decoded.length == _privacyLevel.keySize.bytes) {
                   setState(() {
                     _generatedKey = decoded;
+                    _keyCommitError = null;
                   });
+                  AppLogging.channels(
+                    'wizard key commit: source=field_change '
+                    'byteLength=${decoded.length} valid=true '
+                    'pskFp=${AppLogging.pskFingerprint(_generatedKey)}',
+                  );
                 }
               },
               expectedKeyBytes: _privacyLevel.keySize.bytes,
               accentColor: _privacyLevel.color,
             ),
+            if (_keyCommitError != null) ...[
+              const SizedBox(height: AppTheme.spacing8),
+              Text(
+                _keyCommitError!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppTheme.errorRed,
+                ),
+              ),
+            ],
             const SizedBox(height: AppTheme.spacing24),
           ],
           // Position setting (doesn't require MQTT)
@@ -1305,6 +1505,10 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
 
   Widget _buildKeyRow(ThemeData theme) {
     final keyBase64 = ChannelKeyUtils.keyToBase64(_generatedKey);
+    AppLogging.channels(
+      'wizard review key: byteLength=${_generatedKey.length} '
+      'pskFp=${AppLogging.pskFingerprint(_generatedKey)}',
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1336,9 +1540,18 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
   }
 
   Widget _buildNavigationButtons() {
-    final canProceed = _currentStep == 0
-        ? _nameController.text.trim().isNotEmpty
-        : true;
+    bool canProceed;
+    switch (_currentStep) {
+      case 0:
+        canProceed = _nameController.text.trim().isNotEmpty;
+        break;
+      case 2:
+      case 3:
+        canProceed = _isEncryptionKeyValid();
+        break;
+      default:
+        canProceed = true;
+    }
 
     return BottomActionBar(
       horizontalPadding: AppTheme.spacing24,
