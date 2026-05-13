@@ -15920,7 +15920,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get scannerDetailAddress => 'Indirizzo';
 
   @override
-  String get scannerDetailBluetoothLowEnergy => 'Bluetooth Low Energy';
+  String get scannerDetailBluetoothLowEnergy => 'BLE';
 
   @override
   String get scannerDetailConnectionType => 'Tipo di Connessione';
@@ -25160,6 +25160,18 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get appearanceLanguagePortuguese => 'Português';
+
+  @override
+  String get appearanceLanguageGerman => 'Tedesco';
+
+  @override
+  String get appearanceLanguageSpanish => 'Spagnolo';
+
+  @override
+  String get appearanceLanguageFrench => 'Francese';
+
+  @override
+  String get appearanceLanguageUkrainian => 'Ucraino';
 
   @override
   String get helpCategoryGettingStarted => 'Per iniziare';

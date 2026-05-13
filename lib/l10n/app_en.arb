@@ -21726,7 +21726,7 @@
     "@scannerDetailAddress": {
         "description": "Column header in the device details table."
     },
-    "scannerDetailBluetoothLowEnergy": "Bluetooth Low Energy",
+    "scannerDetailBluetoothLowEnergy": "BLE",
     "@scannerDetailBluetoothLowEnergy": {
         "description": "Connection type value for BLE devices in the device details table."
     },
@@ -34044,6 +34044,22 @@
     },
     "appearanceLanguagePortuguese": "Portuguese",
     "@appearanceLanguagePortuguese": {
+        "description": "Text displayed in appearance settings"
+    },
+    "appearanceLanguageGerman": "German",
+    "@appearanceLanguageGerman": {
+        "description": "Text displayed in appearance settings"
+    },
+    "appearanceLanguageSpanish": "Spanish",
+    "@appearanceLanguageSpanish": {
+        "description": "Text displayed in appearance settings"
+    },
+    "appearanceLanguageFrench": "French",
+    "@appearanceLanguageFrench": {
+        "description": "Text displayed in appearance settings"
+    },
+    "appearanceLanguageUkrainian": "Ukrainian",
+    "@appearanceLanguageUkrainian": {
         "description": "Text displayed in appearance settings"
     },
     "helpCategoryGettingStarted": "Getting Started",

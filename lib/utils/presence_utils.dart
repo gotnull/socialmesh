@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-import 'dart:ui';
-
 import '../l10n/app_localizations.dart';
+import '../l10n/l10n_utils.dart';
 import '../models/presence_confidence.dart';
 
-AppLocalizations _l10n() =>
-    lookupAppLocalizations(PlatformDispatcher.instance.locale);
+AppLocalizations _l10n() => safeL10n();
 
 String get kPresenceInferenceTooltip => _l10n().presenceInferenceTooltip;
 

@@ -1062,6 +1062,14 @@ class _LanguageSelector extends StatelessWidget {
         return context.l10n.appearanceLanguageRussian;
       case 'pt':
         return context.l10n.appearanceLanguagePortuguese;
+      case 'de':
+        return context.l10n.appearanceLanguageGerman;
+      case 'es':
+        return context.l10n.appearanceLanguageSpanish;
+      case 'fr':
+        return context.l10n.appearanceLanguageFrench;
+      case 'uk':
+        return context.l10n.appearanceLanguageUkrainian;
       default:
         return locale.languageCode;
     }
