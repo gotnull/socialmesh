@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import '../theme.dart';
 import 'app_bottom_sheet.dart';
 
@@ -17,6 +18,24 @@ class InfoTableRow {
   /// callers always have a textual semantic for tests / accessibility.
   final Widget? valueWidget;
 
+  /// When set, the row renders as a single full-width section: an
+  /// uppercase header (icon + label + optional help + optional
+  /// [headerTrailing] right-aligned), followed by [fullWidthContent]
+  /// occupying the entire card width. Use this for paragraph-style
+  /// content (notes, descriptions) that would be cramped in the 5:6
+  /// two-column layout.
+  final Widget? fullWidthContent;
+
+  /// Right-aligned widget rendered in the header row of a full-width
+  /// section (typically a small edit/pencil affordance). Ignored when
+  /// [fullWidthContent] is null.
+  final Widget? headerTrailing;
+
+  /// Optional contextual help builder rendered as an info-icon next
+  /// to the label on full-width rows. Tapping opens the builder's
+  /// widget in an AppBottomSheet.
+  final WidgetBuilder? helpSheetBuilder;
+
   const InfoTableRow({
     required this.label,
     required this.value,
@@ -24,6 +43,9 @@ class InfoTableRow {
     this.iconColor,
     this.onTap,
     this.valueWidget,
+    this.fullWidthContent,
+    this.headerTrailing,
+    this.helpSheetBuilder,
   });
 }
 
@@ -31,36 +53,30 @@ class InfoTableRow {
 class InfoTable extends StatelessWidget {
   final List<InfoTableRow> rows;
 
-  const InfoTable({super.key, required this.rows});
+  /// Whether to render the outer card border + rounded clip. Default
+  /// true (the standalone look used across the app). Set false when
+  /// the InfoTable is embedded inside another card surface whose
+  /// border already provides the visual outline (e.g. NodeDex
+  /// detail's classification/note section).
+  final bool showBorder;
+
+  const InfoTable({super.key, required this.rows, this.showBorder = true});
 
   @override
   Widget build(BuildContext context) {
     // Get accent color once for all rows
     final accentColor = context.accentColor;
 
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-        border: Border.all(color: context.border),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppTheme.radius11),
-        child: Column(
-          children: rows.asMap().entries.map((entry) {
-            final index = entry.key;
-            final item = entry.value;
-            final isOdd = index % 2 == 1;
+    final body = Column(
+      children: rows.asMap().entries.map((entry) {
+        final index = entry.key;
+        final item = entry.value;
+        final isOdd = index % 2 == 1;
+        final isFullWidth = item.fullWidthContent != null;
 
-            final rowContainer = Container(
-              decoration: BoxDecoration(
-                color: isOdd ? context.cardAlt : context.background,
-                border: Border(
-                  bottom: index < rows.length - 1
-                      ? BorderSide(color: context.border, width: 1)
-                      : BorderSide.none,
-                ),
-              ),
-              child: IntrinsicHeight(
+        final Widget rowBody = isFullWidth
+            ? _FullWidthRow(item: item)
+            : IntrinsicHeight(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -76,14 +92,13 @@ class InfoTable extends StatelessWidget {
                             right: BorderSide(color: context.border, width: 1),
                           ),
                         ),
-                        // Top-align label content. When the value cell
-                        // wraps to multiple lines or stacks a chip /
-                        // button under the value text, the row's
-                        // IntrinsicHeight grows and a centered label
-                        // would float in the middle of empty space.
-                        // Top-aligned keeps the label level with the
-                        // value's first line, which is the standard
-                        // spec-sheet / data-table convention.
+                        // Top-align label content. When the value
+                        // cell wraps to multiple lines or stacks a
+                        // chip / button under the value text, the
+                        // row's IntrinsicHeight grows and a
+                        // centered label would float in the middle
+                        // of empty space. Top-aligned keeps the
+                        // label level with the value's first line.
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -101,7 +116,6 @@ class InfoTable extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: context.textTertiary,
-
                                   fontWeight: FontWeight.w400,
                                 ),
                               ),
@@ -136,19 +150,116 @@ class InfoTable extends StatelessWidget {
                     ),
                   ],
                 ),
-              ),
-            );
-
-            if (item.onTap != null) {
-              return Material(
-                type: MaterialType.transparency,
-                child: InkWell(onTap: item.onTap, child: rowContainer),
               );
-            }
 
-            return rowContainer;
-          }).toList(),
-        ),
+        final rowContainer = Container(
+          decoration: BoxDecoration(
+            color: isOdd ? context.cardAlt : context.background,
+            border: Border(
+              bottom: index < rows.length - 1
+                  ? BorderSide(color: context.border, width: 1)
+                  : BorderSide.none,
+            ),
+          ),
+          child: rowBody,
+        );
+
+        if (item.onTap != null) {
+          return Material(
+            type: MaterialType.transparency,
+            child: InkWell(onTap: item.onTap, child: rowContainer),
+          );
+        }
+
+        return rowContainer;
+      }).toList(),
+    );
+
+    if (!showBorder) {
+      // Embedded mode: zebra stripes + inner row dividers, no outer
+      // border or rounded clip. The parent surface provides the
+      // visual outline.
+      return body;
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(color: context.border),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppTheme.radius11),
+        child: body,
+      ),
+    );
+  }
+}
+
+/// Renders a full-width [InfoTableRow]: uppercase header (icon +
+/// label + optional help (i) + optional trailing right-aligned) over
+/// the row's [fullWidthContent] body. Kept private so callers always
+/// go through [InfoTable] with [InfoTableRow.fullWidthContent] set.
+class _FullWidthRow extends StatelessWidget {
+  final InfoTableRow item;
+
+  const _FullWidthRow({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              if (item.icon != null) ...[
+                Icon(
+                  item.icon,
+                  size: 14,
+                  color: item.iconColor ?? context.textTertiary,
+                ),
+                const SizedBox(width: AppTheme.spacing8),
+              ],
+              Text(
+                item.label.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: context.textTertiary,
+                  letterSpacing: 1,
+                ),
+              ),
+              if (item.helpSheetBuilder != null) ...[
+                const SizedBox(width: AppTheme.spacing4),
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    AppBottomSheet.show<void>(
+                      context: context,
+                      child: Builder(builder: item.helpSheetBuilder!),
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppTheme.spacing4),
+                    child: Icon(
+                      Icons.info_outline,
+                      size: 14,
+                      color: context.textTertiary.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ),
+              ],
+              if (item.headerTrailing != null) ...[
+                const Spacer(),
+                item.headerTrailing!,
+              ],
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          item.fullWidthContent!,
+        ],
       ),
     );
   }

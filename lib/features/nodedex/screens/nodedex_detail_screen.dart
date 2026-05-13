@@ -35,6 +35,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/info_table.dart';
 
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/ico_help_system.dart';
@@ -492,26 +493,17 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               ),
             ),
 
-          // Social tag
+          // Classification + Note — rendered as full-width rows in
+          // one InfoTable so both share a single card outline and
+          // form one cohesive identity block.
           SliverToBoxAdapter(
             child: _DetailEntrance(
               index: 11,
               reduceMotion: reduceMotion,
-              child: _SocialTagCard(
+              child: _ClassificationAndNoteCard(
                 entry: entry,
                 onEditTag: () => _showTagSelector(context, entry),
-              ),
-            ),
-          ),
-
-          // User note
-          SliverToBoxAdapter(
-            child: _DetailEntrance(
-              index: 12,
-              reduceMotion: reduceMotion,
-              child: _UserNoteCard(
-                entry: entry,
-                onEditTap: () {
+                onEditNote: () {
                   AppLogging.nodeDex(
                     'Note editor opened for node ${widget.nodeNum} '
                     '(hasNote=${entry.userNote != null})',
@@ -1645,79 +1637,110 @@ class _SignalRecordsCard extends StatelessWidget {
 // Social Tag Card
 // =============================================================================
 
-class _SocialTagCard extends StatelessWidget {
+/// Combined Classification + Note card. Mirrors the exact InfoTable
+/// structure from Node Details (classification = 2-column row with
+/// SocialTagBadge / "+ Classify" chip in the value cell, note =
+/// full-width row below). Passes [InfoTable.showBorder] = false so
+/// the outer border is dropped — NodeDex detail's sliver column
+/// already provides ambient padding between sections.
+class _ClassificationAndNoteCard extends StatelessWidget {
   final NodeDexEntry entry;
   final VoidCallback onEditTag;
+  final VoidCallback onEditNote;
 
-  const _SocialTagCard({required this.entry, required this.onEditTag});
+  const _ClassificationAndNoteCard({
+    required this.entry,
+    required this.onEditTag,
+    required this.onEditNote,
+  });
 
   @override
   Widget build(BuildContext context) {
     final tag = entry.socialTag;
-    return NodeDexCard(
-      title: context.l10n.nodedexClassificationTitle,
-      icon: Icons.label_outline,
-      helpKey: 'social_tag',
-      child: tag != null
-          ? SocialTagOption(tag: tag, isSelected: true, onTap: onEditTag)
-          : Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onEditTag,
-                borderRadius: BorderRadius.circular(AppTheme.radius12),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: AppTheme.spacing4,
+    final hasNote = entry.userNote != null && entry.userNote!.trim().isNotEmpty;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: InfoTable(
+        rows: [
+          InfoTableRow(
+            icon: Icons.label_outline,
+            label: context.l10n.nodedexClassificationTitle,
+            value: tag != null
+                ? tag.name
+                : context.l10n.nodeDetailNodeDexNotClassified,
+            valueWidget: tag != null
+                ? SocialTagBadge(tag: tag)
+                : _ClassifyActionChip(
+                    label: context.l10n.nodeDetailNodeDexClassifyCta,
                   ),
-                  child: Text(
-                    context.l10n.nodedexNoClassification,
+            onTap: onEditTag,
+          ),
+          InfoTableRow(
+            icon: Icons.edit_note,
+            label: context.l10n.nodedexNoteTitle,
+            value: entry.userNote ?? '',
+            helpSheetBuilder: (ctx) =>
+                const NodeDexHelpSheetBody(helpKey: 'note'),
+            // Pencil sits on the header row when a note already
+            // exists. The empty state shows a discoverable
+            // "+ Add note" chip in the body instead.
+            headerTrailing: hasNote
+                ? _NotePencilButton(onTap: onEditNote)
+                : null,
+            fullWidthContent: hasNote
+                ? Text(
+                    entry.userNote!,
                     style: TextStyle(
-                      fontSize: 13,
-                      color: context.textTertiary,
-                      fontStyle: FontStyle.italic,
+                      fontSize: 14,
+                      color: context.textPrimary,
+                      height: 1.5,
                     ),
-                  ),
-                ),
-              ),
-            ),
+                  )
+                : _NoteEmptyState(onAddTap: onEditNote),
+          ),
+        ],
+      ),
     );
   }
 }
 
-// =============================================================================
-// User Note Card
-// =============================================================================
+/// Compact "+ Classify" chip rendered in the classification row's
+/// value cell when no tag is set. Mirrors the chip used on Node
+/// Details so both screens read identically.
+class _ClassifyActionChip extends StatelessWidget {
+  final String label;
 
-class _UserNoteCard extends StatelessWidget {
-  final NodeDexEntry entry;
-  final VoidCallback onEditTap;
-
-  const _UserNoteCard({required this.entry, required this.onEditTap});
+  const _ClassifyActionChip({required this.label});
 
   @override
   Widget build(BuildContext context) {
-    final hasNote = entry.userNote != null && entry.userNote!.trim().isNotEmpty;
-
-    return NodeDexCard(
-      title: context.l10n.nodedexNoteTitle,
-      icon: Icons.edit_note,
-      helpKey: 'note',
-      // Pencil sits on the title row when a note already exists so
-      // the edit affordance is small and unobtrusive. The empty state
-      // gets a more discoverable inline chip in the body instead so a
-      // first-time user sees a clear "Add note" call to action rather
-      // than a single pencil icon they may not recognise.
-      headingTrailing: hasNote ? _NotePencilButton(onTap: onEditTap) : null,
-      child: hasNote
-          ? Text(
-              entry.userNote!,
-              style: TextStyle(
-                fontSize: 14,
-                color: context.textPrimary,
-                height: 1.5,
-              ),
-            )
-          : _NoteEmptyState(onAddTap: onEditTap),
+    final color = context.accentColor;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing10,
+        vertical: AppTheme.spacing5,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(AppTheme.radius14),
+        border: Border.all(color: color.withValues(alpha: 0.25), width: 0.5),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.add, size: 13, color: color),
+          const SizedBox(width: AppTheme.spacing5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
