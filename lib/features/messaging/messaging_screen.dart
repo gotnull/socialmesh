@@ -336,7 +336,13 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
       //    PrimaryScrollController.
       // Without this, a short list (e.g. few contacts) causes cards to
       // stick behind the pinned search header with no way to scroll down.
-      physics: widget.embedded ? const ClampingScrollPhysics() : null,
+      // Inner scrollable owns the bounce now that the outer
+      // messages container is pinned with ClampingScrollPhysics.
+      // Keeps the pinned search/filter chips fixed below the tabs
+      // while the contact list bounces on its own overscroll.
+      physics: widget.embedded
+          ? const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
+          : null,
       primary: !widget.embedded,
       slivers: [
         SliverPersistentHeader(

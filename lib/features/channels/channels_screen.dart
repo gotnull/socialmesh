@@ -92,15 +92,14 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
     final textScaler = MediaQuery.textScalerOf(context);
 
     final bodyContent = CustomScrollView(
-      // When embedded inside a TabBarView that is itself inside
-      // GlassScaffold's outer CustomScrollView, the inner scroll must:
-      //  - use ClampingScrollPhysics to avoid bounce-fighting with the
-      //    outer BouncingScrollPhysics (kGlassScrollPhysics),
-      //  - set primary: false so it doesn't compete for the
-      //    PrimaryScrollController.
-      // Without this, a short list (e.g. few channels) causes cards to
-      // stick behind the pinned search header with no way to scroll down.
-      physics: widget.embedded ? const ClampingScrollPhysics() : null,
+      // Inner scrollable owns the bounce. The outer GlassScaffold
+      // (messages container) is pinned with ClampingScrollPhysics so
+      // the pinned search/filter chips never slide out from under the
+      // tabs. `primary: false` keeps the inner from competing for the
+      // PrimaryScrollController.
+      physics: widget.embedded
+          ? const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
+          : null,
       primary: !widget.embedded,
       slivers: [
         SliverPersistentHeader(

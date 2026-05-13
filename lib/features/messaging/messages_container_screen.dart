@@ -124,6 +124,12 @@ class _MessagesContainerScreenState
       stepKeys: const {},
       child: GlassScaffold(
         resizeToAvoidBottomInset: false,
+        // Freeze the outer scrollview. Each tab body is its own
+        // CustomScrollView; allowing the outer to bounce would drag
+        // the inner viewport (including the pinned search/filter
+        // chips) out from under the app bar+tabs. Inner scrollables
+        // own the bounce now.
+        physics: const ClampingScrollPhysics(),
         leading: const HamburgerMenuButton(),
         centerTitle: true,
         title: context.l10n.messagesContainerTitle,
