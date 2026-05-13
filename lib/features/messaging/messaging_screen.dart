@@ -50,7 +50,9 @@ import '../../services/haptic_service.dart';
 import '../settings/canned_responses_screen.dart';
 import '../settings/device_management_screen.dart';
 import '../settings/translation_settings_screen.dart';
+import '../nodes/node_quick_actions_sheet.dart';
 import '../nodes/nodes_screen.dart';
+import '../nodes/role_filter.dart';
 import '../navigation/main_shell.dart';
 import 'conversation_timeline.dart';
 import 'widgets/message_context_menu.dart';
@@ -128,6 +130,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
   ContactFilter _currentFilter = ContactFilter.all;
+  String _activeRoleFilter = roleFilterAll;
   bool _showSectionHeaders = true;
 
   @override
@@ -138,6 +141,18 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
 
   void _dismissKeyboard() {
     FocusScope.of(context).unfocus();
+  }
+
+  Future<void> _openContactQuickActions(_Contact contact) async {
+    final node = ref.read(nodesProvider)[contact.nodeNum];
+    if (node == null) {
+      AppLogging.nodes(
+        '[QuickActions] contact long-press ignored - no node for '
+        'nodeNum=${contact.nodeNum}',
+      );
+      return;
+    }
+    await showNodeQuickActionsSheet(context, ref, node);
   }
 
   @override
@@ -288,6 +303,16 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
         break;
     }
 
+    // Then filter by role — orthogonal to the presence/favorites
+    // dimension above. Looks up the live MeshNode by nodeNum so we
+    // don't have to copy role onto _Contact.
+    if (_activeRoleFilter != roleFilterAll) {
+      filteredContacts = filteredContacts.where((c) {
+        final node = nodes[c.nodeNum];
+        return node?.role == _activeRoleFilter;
+      }).toList();
+    }
+
     // Then filter by search
     if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase();
@@ -381,6 +406,17 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
                     setState(() => _currentFilter = ContactFilter.favorites),
               ),
             ],
+          ),
+        ),
+        // Role filter chip row (orthogonal to the presence chips above).
+        // Hides itself entirely when only one role is present in the
+        // mesh, so small-mesh users see no extra chrome.
+        SliverToBoxAdapter(
+          child: RoleFilterChipRow(
+            nodes: nodes.values,
+            selectedRole: _activeRoleFilter,
+            source: 'contacts',
+            onRoleSelected: (role) => setState(() => _activeRoleFilter = role),
           ),
         ),
         // Contacts list (or empty state)
@@ -520,6 +556,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
                       ),
                     );
                   },
+                  onLongPress: () => _openContactQuickActions(contact),
                 ),
               );
             }, childCount: contacts.length),
@@ -571,6 +608,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
                     ),
                   );
                 },
+                onLongPress: () => _openContactQuickActions(contact),
               ),
             );
           }, childCount: nonEmptySections[sectionIndex].contacts.length),
@@ -676,8 +714,13 @@ class _Contact {
 class _ContactTile extends StatelessWidget {
   final _Contact contact;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
-  const _ContactTile({required this.contact, required this.onTap});
+  const _ContactTile({
+    required this.contact,
+    required this.onTap,
+    this.onLongPress,
+  });
 
   Color _blendColor(BuildContext context) {
     if (contact.isFavorite) return AppTheme.warningYellow;
@@ -809,6 +852,7 @@ class _ContactTile extends StatelessWidget {
 
     return BouncyTap(
       onTap: onTap,
+      onLongPress: onLongPress,
       scaleFactor: 0.98,
       child: Opacity(
         opacity: cardOpacity,

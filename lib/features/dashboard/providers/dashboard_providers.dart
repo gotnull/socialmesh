@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/logging.dart';
 import '../models/dashboard_widget_config.dart';
 
 /// Provider for dashboard widget configurations
@@ -24,6 +25,45 @@ class DashboardEditModeNotifier extends Notifier<bool> {
 final dashboardEditModeProvider =
     NotifierProvider<DashboardEditModeNotifier, bool>(
       DashboardEditModeNotifier.new,
+    );
+
+/// Tracks whether the pack-owner "you have N unused widgets" discovery
+/// card has been acknowledged. Once dismissed (by tap or by entering
+/// edit mode), the card stays hidden across launches so the customized
+/// dashboard isn't perpetually crowded by the same prompt.
+///
+/// The non-owner upsell card is a separate paywall surface and is NOT
+/// gated by this flag.
+class DashboardDiscoveryAckNotifier extends AsyncNotifier<bool> {
+  static const String _storageKey = 'dashboard_widget_discovery_dismissed_at';
+
+  @override
+  Future<bool> build() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_storageKey) != null;
+  }
+
+  Future<void> dismiss({required String reason}) async {
+    if (state.value == true) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_storageKey, DateTime.now().toIso8601String());
+    state = const AsyncData(true);
+    AppLogging.widgets('[Dashboard] discovery card dismissed reason=$reason');
+  }
+
+  /// Test / settings-reset hook. Clears the persisted acknowledgement so
+  /// the card can resurface (e.g. after a "reset onboarding" action).
+  Future<void> reset() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_storageKey);
+    state = const AsyncData(false);
+    AppLogging.widgets('[Dashboard] discovery card ack reset');
+  }
+}
+
+final dashboardDiscoveryAckProvider =
+    AsyncNotifierProvider<DashboardDiscoveryAckNotifier, bool>(
+      DashboardDiscoveryAckNotifier.new,
     );
 
 /// Notifier to manage dashboard widget configurations

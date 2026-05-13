@@ -13,6 +13,18 @@ class DrawerMenuItem {
   final IconData icon;
   final String label;
 
+  /// Stable string identifier for customization (hide / reorder) state.
+  ///
+  /// Items with `id == null` are NOT customizable — they always render
+  /// in their default position and cannot be hidden. Used for the few
+  /// drawer entries that must always be reachable (currently none, but
+  /// reserved for future safety-critical entries).
+  ///
+  /// The ID is intentionally decoupled from [label] (which is
+  /// localized) and from the screen's runtime type (which can be
+  /// renamed). Pin it once and treat it as a release contract.
+  final String? id;
+
   /// Screen to push when tapped. Null when [tabIndex] is used instead.
   final Widget? screen;
 
@@ -55,6 +67,7 @@ class DrawerMenuItem {
   const DrawerMenuItem({
     required this.icon,
     required this.label,
+    this.id,
     this.screen,
     this.tabIndex,
     this.premiumFeature,
@@ -121,6 +134,20 @@ class DrawerMenuTile extends StatelessWidget {
   /// used for sub-items beneath an expanded parent.
   final bool isChild;
 
+  /// When true, the tile renders in drawer edit mode: a red minus
+  /// badge appears on the icon, the trailing region renders a drag
+  /// handle (visual cue — actual reorder lives at the parent), and
+  /// [onTap] is suppressed in favour of [onRemove].
+  final bool editMode;
+
+  /// Called when the user taps the minus badge in edit mode. Caller
+  /// should hide the item via the customization provider.
+  final VoidCallback? onRemove;
+
+  /// Accessibility label for the remove badge when in edit mode. Pass
+  /// the localized "Hide {item}" copy.
+  final String? removeSemanticsLabel;
+
   const DrawerMenuTile({
     super.key,
     required this.icon,
@@ -138,6 +165,9 @@ class DrawerMenuTile extends StatelessWidget {
     this.isExpanded = false,
     this.onChevronTap,
     this.isChild = false,
+    this.editMode = false,
+    this.onRemove,
+    this.removeSemanticsLabel,
   });
 
   @override
@@ -156,8 +186,12 @@ class DrawerMenuTile extends StatelessWidget {
     final labelFontSize = isChild ? 14.0 : 15.0;
     final tileVerticalPadding = isChild ? 10.0 : 14.0;
 
+    // In edit mode, tapping the tile body is a no-op — the user
+    // interacts via the explicit minus badge / drag handle. Long-press
+    // (handled by the parent via a higher-level GestureDetector) stays
+    // open as the entry point.
     final tile = BouncyTap(
-      onTap: onTap,
+      onTap: editMode ? null : onTap,
       enabled: !isDisabled,
       scaleFactor: 0.98,
       child: AnimatedContainer(
@@ -184,6 +218,39 @@ class DrawerMenuTile extends StatelessWidget {
           opacity: isDisabled ? disabledAlpha : 1.0,
           child: Row(
             children: [
+              // Edit-mode remove control. Renders as a leading column
+              // to the left of the icon — mirrors the drag-handle's
+              // placement on the right so the user sees a clear
+              // "remove ← icon → reorder" affordance pair instead of
+              // a badge overlapping the icon glyph.
+              if (editMode && onRemove != null) ...[
+                Semantics(
+                  button: true,
+                  label: removeSemanticsLabel ?? 'Hide',
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: onRemove,
+                    child: Container(
+                      width: 22,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        color: AccentColors.red,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: theme.scaffoldBackgroundColor,
+                          width: 2,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.remove,
+                        color: Colors.white,
+                        size: 14,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppTheme.spacing12),
+              ],
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 padding: EdgeInsets.all(iconPadding),
@@ -242,7 +309,9 @@ class DrawerMenuTile extends StatelessWidget {
                         ),
                       ),
                     // NEW dot indicator on icon (shown when no count badge)
-                    if (showNewChip && (badgeCount == null || badgeCount! <= 0))
+                    if (showNewChip &&
+                        (badgeCount == null || badgeCount! <= 0) &&
+                        !editMode)
                       Positioned(
                         right: -3,
                         top: -3,
@@ -340,7 +409,20 @@ class DrawerMenuTile extends StatelessWidget {
               // convention for "this expands inline" — flipped 180° to
               // expand_less when open. Intentionally distinct from
               // `Icons.chevron_right` which means "tap to navigate".
-              if (hasChildren) ...[
+              // Edit-mode drag handle. Visual cue only — the actual
+              // drag is initiated by the parent's
+              // ReorderableDelayedDragStartListener which wraps the
+              // tile in main_shell. Wins precedence over all other
+              // trailing variants because in edit mode the user is
+              // reordering / hiding, not navigating.
+              if (editMode) ...[
+                const SizedBox(width: AppTheme.spacing8),
+                Icon(
+                  Icons.drag_handle,
+                  size: 22,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+                ),
+              ] else if (hasChildren) ...[
                 const SizedBox(width: AppTheme.spacing8),
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,

@@ -9468,9 +9468,9 @@
     "@mapHideConnectionLines": {
         "description": "Text displayed in map view"
     },
-    "mapHideHeatmap": "Hide heatmap",
+    "mapHideHeatmap": "Hide node halos",
     "@mapHideHeatmap": {
-        "description": "Text displayed in map view"
+        "description": "Map menu action that toggles off the translucent rings drawn around each node's position. Historically labelled 'heatmap'; the actual rendering is a fixed-radius position halo, not a density heatmap, so the copy is clearer."
     },
     "mapHidePositionHistory": "Hide position history",
     "@mapHidePositionHistory": {
@@ -9717,9 +9717,96 @@
     "@mapShowConnectionLines": {
         "description": "Text displayed in map view"
     },
-    "mapShowHeatmap": "Show heatmap",
+    "mapShowHeatmap": "Show node halos",
     "@mapShowHeatmap": {
-        "description": "Text displayed in map view"
+        "description": "Map menu action that toggles on the translucent rings drawn around each node's position. The radius is fixed (it does not reflect signal strength or density), so the label is 'halos' rather than 'heatmap'."
+    },
+    "mapShowClusterMarkers": "Cluster markers",
+    "@mapShowClusterMarkers": {
+        "description": "Map menu toggle that groups dense node markers into a count badge. Opt-in; off by default."
+    },
+    "mapHideClusterMarkers": "Hide cluster markers",
+    "@mapHideClusterMarkers": {
+        "description": "Map menu action to disable marker clustering (return to individual node markers)."
+    },
+    "mapClusterTapToListTitle": "{count, plural, =1{1 node here}other{{count} nodes here}}",
+    "@mapClusterTapToListTitle": {
+        "description": "Title of the bottom sheet shown when tapping a cluster on the map.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "mapClusterTapToListSubtitle": "Tap a node to open its info card, or pinch in to expand the cluster.",
+    "@mapClusterTapToListSubtitle": {
+        "description": "Subtitle explaining how to interact with the cluster contents sheet."
+    },
+    "drawerCustomizeTooltip": "Customize sidebar. Long-press any item to enter edit mode.",
+    "@drawerCustomizeTooltip": {
+        "description": "Tooltip on the customize-drawer button next to Settings."
+    },
+    "drawerCustomizeDone": "Done",
+    "@drawerCustomizeDone": {
+        "description": "Pill button that exits drawer edit mode."
+    },
+    "drawerCustomizeSheetTitle": "Customize sidebar",
+    "@drawerCustomizeSheetTitle": {
+        "description": "Title of the bottom sheet shown when the customize button is tapped."
+    },
+    "drawerCustomizeSheetExplainer": "Long-press any sidebar item to enter edit mode. Tap the red minus to hide an item, or drag the handle to reorder. Tap Done to save.",
+    "@drawerCustomizeSheetExplainer": {
+        "description": "Brief explainer text in the customize-sidebar sheet."
+    },
+    "drawerCustomizeSummaryHidden": "{count,plural, =1{1 item hidden}other{{count} items hidden}}",
+    "@drawerCustomizeSummaryHidden": {
+        "description": "Summary line showing how many items the user has hidden.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "drawerCustomizeSummaryReordered": "Custom item order applied",
+    "@drawerCustomizeSummaryReordered": {
+        "description": "Summary line shown when the user has reordered drawer items."
+    },
+    "drawerCustomizeSummaryDefault": "Default order, nothing hidden",
+    "@drawerCustomizeSummaryDefault": {
+        "description": "Summary line shown when no drawer modifications exist."
+    },
+    "drawerCustomizeEnterEdit": "Edit",
+    "@drawerCustomizeEnterEdit": {
+        "description": "Button in the customize sheet that opens edit mode."
+    },
+    "drawerCustomizeReset": "Reset",
+    "@drawerCustomizeReset": {
+        "description": "Button in the customize sheet that resets all customization."
+    },
+    "drawerCustomizeHiddenSectionTitle": "HIDDEN ITEMS",
+    "@drawerCustomizeHiddenSectionTitle": {
+        "description": "Section title in the customize sheet listing hidden drawer items the user can restore individually."
+    },
+    "drawerCustomizeRestoreItem": "Show",
+    "@drawerCustomizeRestoreItem": {
+        "description": "Button in the customize sheet that restores a single hidden drawer item back to the sidebar."
+    },
+    "drawerRemoveItemLabel": "Hide {item}",
+    "@drawerRemoveItemLabel": {
+        "description": "Accessibility label for the per-item remove button in edit mode.",
+        "placeholders": {
+            "item": {
+                "type": "String"
+            }
+        }
+    },
+    "mapTracerouteNoGpsTitle": "No GPS data for this route",
+    "@mapTracerouteNoGpsTitle": {
+        "description": "Banner shown on the map when 'Show on Map' was tapped for a traceroute whose hops report no valid GPS coordinates."
+    },
+    "mapTracerouteNoGpsSubtitle": "None of the hops on this traceroute reported a position. The map is centered on your location instead — open the route again once any hop reports GPS.",
+    "@mapTracerouteNoGpsSubtitle": {
+        "description": "Subtitle for the no-GPS traceroute banner. Explains the fallback behaviour so the user is not confused by a blank map."
     },
     "mapShowPositionHistory": "Show position history",
     "@mapShowPositionHistory": {
@@ -16123,14 +16210,6 @@
     "@nodedexChannelUtilLabel": {
         "description": "Channel Utilization = the percentage of time any radio traffic was detected on the frequency."
     },
-    "nodedexClassificationChange": "Change",
-    "@nodedexClassificationChange": {
-        "description": "Text displayed in node management"
-    },
-    "nodedexClassificationClassify": "Classify",
-    "@nodedexClassificationClassify": {
-        "description": "Text displayed in node management"
-    },
     "nodedexClassificationLabel": "CLASSIFICATION",
     "@nodedexClassificationLabel": {
         "description": "Label in node management"
@@ -18906,6 +18985,195 @@
     "nodesScreenDisconnect": "Disconnect",
     "@nodesScreenDisconnect": {
         "description": "Long-press menu action to disconnect."
+    },
+    "roleFilterAll": "All roles",
+    "@roleFilterAll": {
+        "description": "Role filter chip that disables the role-based filter (shows every role)."
+    },
+    "roleClient": "Client",
+    "@roleClient": {
+        "description": "Meshtastic device role: standard client (a phone or handheld node)."
+    },
+    "roleClientMute": "Client Mute",
+    "@roleClientMute": {
+        "description": "Meshtastic device role: a client that does not rebroadcast packets."
+    },
+    "roleRouter": "Router",
+    "@roleRouter": {
+        "description": "Meshtastic device role: a node dedicated to forwarding mesh traffic."
+    },
+    "roleRouterClient": "Router Client",
+    "@roleRouterClient": {
+        "description": "Meshtastic device role (deprecated): combined router + client behaviour."
+    },
+    "roleRepeater": "Repeater",
+    "@roleRepeater": {
+        "description": "Meshtastic device role (deprecated): infrastructure repeater node."
+    },
+    "roleTracker": "Tracker",
+    "@roleTracker": {
+        "description": "Meshtastic device role: position-broadcasting tracker (no chat)."
+    },
+    "roleSensor": "Sensor",
+    "@roleSensor": {
+        "description": "Meshtastic device role: telemetry sensor node."
+    },
+    "roleTak": "TAK",
+    "@roleTak": {
+        "description": "Meshtastic device role: Team Awareness Kit endpoint."
+    },
+    "roleClientHidden": "Client Hidden",
+    "@roleClientHidden": {
+        "description": "Meshtastic device role: client that hides its presence from the network."
+    },
+    "roleLostAndFound": "Lost and Found",
+    "@roleLostAndFound": {
+        "description": "Meshtastic device role: lost-and-found beacon."
+    },
+    "roleTakTracker": "TAK Tracker",
+    "@roleTakTracker": {
+        "description": "Meshtastic device role: TAK-shaped tracker."
+    },
+    "roleRouterLate": "Router Late",
+    "@roleRouterLate": {
+        "description": "Meshtastic device role: router that defers rebroadcast to reduce noise."
+    },
+    "roleClientBase": "Client Base",
+    "@roleClientBase": {
+        "description": "Meshtastic device role: home-station client."
+    },
+    "settingsTileHideNewNodesBadgeTitle": "Hide new-nodes badge",
+    "@settingsTileHideNewNodesBadgeTitle": {
+        "description": "Settings tile that suppresses the new-nodes count badge on the bottom nav."
+    },
+    "settingsTileHideNewNodesBadgeSubtitle": "Silence the bottom-nav badge that counts newly discovered nodes. Useful on dense mesh networks where the count never stops climbing.",
+    "@settingsTileHideNewNodesBadgeSubtitle": {
+        "description": "Subtitle explaining the hide-new-nodes-badge toggle."
+    },
+    "settingsSectionLargeMesh": "Large mesh",
+    "@settingsSectionLargeMesh": {
+        "description": "Settings section header grouping options aimed at high-density mesh users."
+    },
+    "settingsSectionNavigation": "Navigation",
+    "@settingsSectionNavigation": {
+        "description": "Settings section header for app-launch + bottom-nav preferences."
+    },
+    "settingsTileLandingTabTitle": "Tab on launch",
+    "@settingsTileLandingTabTitle": {
+        "description": "Settings tile title for the cold-start landing tab picker."
+    },
+    "settingsTileLandingTabSubtitle": "Choose which tab the app opens on cold start. Applies the next time you launch SocialMesh.",
+    "@settingsTileLandingTabSubtitle": {
+        "description": "Subtitle explaining that the landing tab picker takes effect on next launch, not immediately."
+    },
+    "nodeDetailNodeDexSectionTitle": "NodeDex",
+    "@nodeDetailNodeDexSectionTitle": {
+        "description": "Section header above the NodeDex preview card on the Node Details screen."
+    },
+    "nodeDetailNodeDexOpenCta": "Open",
+    "@nodeDetailNodeDexOpenCta": {
+        "description": "Trailing CTA on the NodeDex preview section header that opens the full NodeDex detail screen."
+    },
+    "nodeDetailNodeDexClassificationLabel": "Classification",
+    "@nodeDetailNodeDexClassificationLabel": {
+        "description": "Label for the social-tag row on the NodeDex preview card."
+    },
+    "nodeDetailNodeDexNoteLabel": "Note",
+    "@nodeDetailNodeDexNoteLabel": {
+        "description": "Label for the user-note row on the NodeDex preview card."
+    },
+    "nodeDetailNodeDexNotClassified": "Not classified yet",
+    "@nodeDetailNodeDexNotClassified": {
+        "description": "Placeholder shown in the classification row when the node has no social tag."
+    },
+    "nodeDetailNodeDexNoNote": "No note yet",
+    "@nodeDetailNodeDexNoNote": {
+        "description": "Placeholder shown in the note row when the user has not written a note for the node."
+    },
+    "nodeDetailNodeDexClassifyCta": "Classify",
+    "@nodeDetailNodeDexClassifyCta": {
+        "description": "Label on the inline action chip rendered in the Classification row when the node has no social tag. Tapping opens the social-tag selector."
+    },
+    "nodeDetailNodeDexAddNoteCta": "Add note",
+    "@nodeDetailNodeDexAddNoteCta": {
+        "description": "Label on the inline action chip rendered in the Note row when the node has no user note yet. Tapping opens the full NodeDex screen where the note can be edited."
+    },
+    "quickActionSubtitleNodeNum": "Node !{nodeId}",
+    "@quickActionSubtitleNodeNum": {
+        "description": "Subtitle of the node quick-action sheet header when no presence subtitle is available. Shows the hex node id.",
+        "placeholders": {
+            "nodeId": {
+                "type": "String"
+            }
+        }
+    },
+    "quickActionViewDetails": "View node details",
+    "@quickActionViewDetails": {
+        "description": "Quick-action menu item that opens the node details screen."
+    },
+    "quickActionViewInNodeDex": "View in NodeDex",
+    "@quickActionViewInNodeDex": {
+        "description": "Quick-action menu item that opens the NodeDex profile for the node."
+    },
+    "quickActionFavorite": "Add to favorites",
+    "@quickActionFavorite": {
+        "description": "Quick-action menu item to favorite a node."
+    },
+    "quickActionUnfavorite": "Remove from favorites",
+    "@quickActionUnfavorite": {
+        "description": "Quick-action menu item to unfavorite a node."
+    },
+    "quickActionMute": "Mute node",
+    "@quickActionMute": {
+        "description": "Quick-action menu item to mute (ignore) a node."
+    },
+    "quickActionUnmute": "Unmute node",
+    "@quickActionUnmute": {
+        "description": "Quick-action menu item to unmute (unignore) a node."
+    },
+    "quickActionSendTraceroute": "Send traceroute",
+    "@quickActionSendTraceroute": {
+        "description": "Quick-action menu item to send a traceroute to the node."
+    },
+    "quickActionTracerouteCooldown": "Cooldown {seconds}s",
+    "@quickActionTracerouteCooldown": {
+        "description": "Quick-action subtitle when traceroute is still on cooldown.",
+        "placeholders": {
+            "seconds": {
+                "type": "int"
+            }
+        }
+    },
+    "quickActionFavoriteFailed": "Could not update favorite: {error}",
+    "@quickActionFavoriteFailed": {
+        "description": "Error snackbar when toggling favorite fails.",
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "quickActionMuteFailed": "Could not update mute: {error}",
+    "@quickActionMuteFailed": {
+        "description": "Error snackbar when toggling mute fails.",
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "quickActionTracerouteFailed": "Traceroute failed: {error}",
+    "@quickActionTracerouteFailed": {
+        "description": "Error snackbar when sending a traceroute from the quick-action sheet fails.",
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "quickActionDisconnect": "Disconnect device",
+    "@quickActionDisconnect": {
+        "description": "Quick-action menu item to disconnect the connected device (shown only on the user's own node)."
     },
     "nodesScreenDistanceKilometers": "{km} km away",
     "@nodesScreenDistanceKilometers": {
@@ -28574,6 +28842,10 @@
     "@telemetryTracerouteDirectConnection": {
         "description": "Hint shown when a traceroute has zero hops (direct link)."
     },
+    "telemetryTracerouteNoResponse": "No response - the target node did not reply",
+    "@telemetryTracerouteNoResponse": {
+        "description": "Status row shown on a traceroute history card when no response was received."
+    },
     "telemetryTracerouteEmptyHint": "Send a traceroute from a node to see network paths",
     "@telemetryTracerouteEmptyHint": {
         "description": "Empty-state subtitle for the traceroute screen."
@@ -36525,6 +36797,19 @@
     "ringtoneSectionBuiltIn": "BUILT-IN PRESETS",
     "@ringtoneSectionBuiltIn": {
         "description": "UI text: ringtone section built in"
+    },
+    "ringtoneShowAllBuiltIn": "Show all {count} built-in tones",
+    "@ringtoneShowAllBuiltIn": {
+        "description": "Expansion footer on the built-in ringtone presets list. Tapping reveals the full set; the curated 10 are shown by default.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "ringtoneShowFewerBuiltIn": "Show fewer",
+    "@ringtoneShowFewerBuiltIn": {
+        "description": "Collapse footer that re-hides the non-featured built-in ringtone presets."
     },
     "ringtoneSectionCustom": "CUSTOM PRESETS",
     "@ringtoneSectionCustom": {

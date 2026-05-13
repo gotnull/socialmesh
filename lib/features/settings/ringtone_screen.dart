@@ -2,6 +2,9 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../../core/logging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/l10n/l10n_extension.dart';
@@ -575,6 +578,15 @@ class RingtoneScreen extends ConsumerStatefulWidget {
 
 class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
     with LifecycleSafeMixin<RingtoneScreen> {
+  /// Number of built-in tones shown by default before the user expands
+  /// the full list. The first 10 entries of [_builtInPresets] are the
+  /// hand-ordered classics (Meshtastic Default, Nokia, Mario, Zelda,
+  /// utility alerts) — past 10 the list becomes alphabetical band
+  /// names which feel like library content. Hiding them by default
+  /// reduces choice overload without removing any of the existing
+  /// 40 entries — every tone stays reachable via the "Show all" footer.
+  static const int _featuredBuiltInCount = 10;
+
   final _rtttlController = TextEditingController();
   final _rtttlPlayer = RtttlPlayer();
   final _libraryService = RtttlLibraryService();
@@ -585,6 +597,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
   bool _showingCustom = false;
   int _playingPresetIndex = -1;
   bool _playingCustomPreset = false;
+  bool _showAllBuiltIns = false;
   String? _validationError;
   StreamSubscription<String>? _ringtoneSubscription;
 
@@ -1664,166 +1677,246 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                         ],
                       ),
                       SizedBox(height: AppTheme.spacing12),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: context.card,
-                          borderRadius: BorderRadius.circular(
-                            AppTheme.radius12,
-                          ),
-                        ),
-                        child: Column(
-                          children: _builtInPresets.asMap().entries.map((
-                            entry,
-                          ) {
-                            final index = entry.key;
-                            final preset = entry.value;
-                            final isSelected =
-                                !_showingCustom &&
-                                _selectedPresetIndex == index;
-                            final isPlaying =
-                                !_playingCustomPreset &&
-                                _playingPresetIndex == index;
+                      // Slice the 40-entry built-in list: show the first
+                      // [_featuredBuiltInCount] classics by default,
+                      // collapse the rest behind a "Show all" footer.
+                      // Hidden tones remain reachable via [_selectPreset]
+                      // and the existing selection persistence (so a
+                      // user who previously picked tone #25 still sees
+                      // their selection survive — they just won't see
+                      // the rest of the list until they expand it).
+                      Builder(
+                        builder: (_) {
+                          final visiblePresets = _showAllBuiltIns
+                              ? _builtInPresets
+                              : _builtInPresets
+                                    .take(_featuredBuiltInCount)
+                                    .toList();
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: context.card,
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius12,
+                              ),
+                            ),
+                            child: Column(
+                              children: visiblePresets.asMap().entries.map((
+                                entry,
+                              ) {
+                                final index = entry.key;
+                                final preset = entry.value;
+                                final isSelected =
+                                    !_showingCustom &&
+                                    _selectedPresetIndex == index;
+                                final isPlaying =
+                                    !_playingCustomPreset &&
+                                    _playingPresetIndex == index;
 
-                            return Column(
-                              children: [
-                                InkWell(
-                                  onTap: () => _selectPreset(preset, index),
-                                  borderRadius: index == 0
-                                      ? const BorderRadius.vertical(
-                                          top: Radius.circular(12),
-                                        )
-                                      : index == _builtInPresets.length - 1
-                                      ? const BorderRadius.vertical(
-                                          bottom: Radius.circular(12),
-                                        )
-                                      : BorderRadius.zero,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 12,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        // Music icon
-                                        Container(
-                                          width: 40,
-                                          height: 40,
-                                          decoration: BoxDecoration(
-                                            color: isSelected
-                                                ? context.accentColor
-                                                      .withValues(alpha: 0.15)
-                                                : context.background,
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          child: Icon(
-                                            isSelected
-                                                ? Icons.music_note
-                                                : Icons.music_note_outlined,
-                                            color: isSelected
-                                                ? context.accentColor
-                                                : context.textSecondary,
-                                            size: 20,
-                                          ),
+                                return Column(
+                                  children: [
+                                    InkWell(
+                                      onTap: () => _selectPreset(preset, index),
+                                      borderRadius: index == 0
+                                          ? const BorderRadius.vertical(
+                                              top: Radius.circular(12),
+                                            )
+                                          : index == _builtInPresets.length - 1
+                                          ? const BorderRadius.vertical(
+                                              bottom: Radius.circular(12),
+                                            )
+                                          : BorderRadius.zero,
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 12,
                                         ),
-                                        SizedBox(width: AppTheme.spacing12),
-                                        // Title and description
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                preset.name,
-                                                style: TextStyle(
-                                                  color: isSelected
-                                                      ? context.accentColor
-                                                      : context.textPrimary,
-                                                  fontWeight: isSelected
-                                                      ? FontWeight.w600
-                                                      : FontWeight.w500,
-
-                                                  fontSize: 15,
-                                                ),
+                                        child: Row(
+                                          children: [
+                                            // Music icon
+                                            Container(
+                                              width: 40,
+                                              height: 40,
+                                              decoration: BoxDecoration(
+                                                color: isSelected
+                                                    ? context.accentColor
+                                                          .withValues(
+                                                            alpha: 0.15,
+                                                          )
+                                                    : context.background,
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                      AppTheme.radius8,
+                                                    ),
                                               ),
-                                              SizedBox(
-                                                height: AppTheme.spacing2,
-                                              ),
-                                              Text(
-                                                preset.description,
-                                                style: TextStyle(
-                                                  color: context.textSecondary,
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        SizedBox(width: AppTheme.spacing8),
-                                        // Play button
-                                        SizedBox(
-                                          width: 40,
-                                          height: 40,
-                                          child: Material(
-                                            color: isPlaying
-                                                ? AppTheme.errorRed.withValues(
-                                                    alpha: 0.15,
-                                                  )
-                                                : context.background,
-                                            borderRadius: BorderRadius.circular(
-                                              20,
-                                            ),
-                                            child: InkWell(
-                                              onTap: () =>
-                                                  _playPreset(preset, index),
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                    AppTheme.radius20,
-                                                  ),
                                               child: Icon(
-                                                isPlaying
-                                                    ? Icons.stop
-                                                    : Icons.play_arrow,
-                                                color: isPlaying
-                                                    ? AppTheme.errorRed
+                                                isSelected
+                                                    ? Icons.music_note
+                                                    : Icons.music_note_outlined,
+                                                color: isSelected
+                                                    ? context.accentColor
                                                     : context.textSecondary,
                                                 size: 20,
                                               ),
                                             ),
-                                          ),
-                                        ),
-                                        SizedBox(width: AppTheme.spacing8),
-                                        // Selected indicator
-                                        SizedBox(
-                                          width: 24,
-                                          child: isSelected
-                                              ? Icon(
-                                                  Icons.check_circle,
-                                                  color: context.accentColor,
-                                                  size: 22,
-                                                )
-                                              : Icon(
-                                                  Icons.chevron_right,
-                                                  color: context.textTertiary,
-                                                  size: 22,
+                                            SizedBox(width: AppTheme.spacing12),
+                                            // Title and description
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    preset.name,
+                                                    style: TextStyle(
+                                                      color: isSelected
+                                                          ? context.accentColor
+                                                          : context.textPrimary,
+                                                      fontWeight: isSelected
+                                                          ? FontWeight.w600
+                                                          : FontWeight.w500,
+
+                                                      fontSize: 15,
+                                                    ),
+                                                  ),
+                                                  SizedBox(
+                                                    height: AppTheme.spacing2,
+                                                  ),
+                                                  Text(
+                                                    preset.description,
+                                                    style: TextStyle(
+                                                      color:
+                                                          context.textSecondary,
+                                                      fontSize: 12,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            SizedBox(width: AppTheme.spacing8),
+                                            // Play button
+                                            SizedBox(
+                                              width: 40,
+                                              height: 40,
+                                              child: Material(
+                                                color: isPlaying
+                                                    ? AppTheme.errorRed
+                                                          .withValues(
+                                                            alpha: 0.15,
+                                                          )
+                                                    : context.background,
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                      AppTheme.radius20,
+                                                    ),
+                                                child: InkWell(
+                                                  onTap: () => _playPreset(
+                                                    preset,
+                                                    index,
+                                                  ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                        AppTheme.radius20,
+                                                      ),
+                                                  child: Icon(
+                                                    isPlaying
+                                                        ? Icons.stop
+                                                        : Icons.play_arrow,
+                                                    color: isPlaying
+                                                        ? AppTheme.errorRed
+                                                        : context.textSecondary,
+                                                    size: 20,
+                                                  ),
                                                 ),
+                                              ),
+                                            ),
+                                            SizedBox(width: AppTheme.spacing8),
+                                            // Selected indicator
+                                            SizedBox(
+                                              width: 24,
+                                              child: isSelected
+                                                  ? Icon(
+                                                      Icons.check_circle,
+                                                      color:
+                                                          context.accentColor,
+                                                      size: 22,
+                                                    )
+                                                  : Icon(
+                                                      Icons.chevron_right,
+                                                      color:
+                                                          context.textTertiary,
+                                                      size: 22,
+                                                    ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
+                                      ),
                                     ),
+                                    if (index < visiblePresets.length - 1)
+                                      Divider(
+                                        height: 1,
+                                        indent: 68,
+                                        color: context.border,
+                                      ),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
+                          );
+                        },
+                      ),
+                      // "Show all / Show fewer" expansion footer. Only
+                      // renders when there are entries past the
+                      // featured slice. Tapping flips state in place;
+                      // no scroll position reset, no provider churn.
+                      if (_builtInPresets.length > _featuredBuiltInCount) ...[
+                        SizedBox(height: AppTheme.spacing8),
+                        InkWell(
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            AppLogging.settings(
+                              '[Ringtone] showAllBuiltIns toggled to '
+                              '${!_showAllBuiltIns}',
+                            );
+                            safeSetState(
+                              () => _showAllBuiltIns = !_showAllBuiltIns,
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  _showAllBuiltIns
+                                      ? Icons.expand_less
+                                      : Icons.expand_more,
+                                  color: context.accentColor,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: AppTheme.spacing8),
+                                Text(
+                                  _showAllBuiltIns
+                                      ? context.l10n.ringtoneShowFewerBuiltIn
+                                      : context.l10n.ringtoneShowAllBuiltIn(
+                                          _builtInPresets.length,
+                                        ),
+                                  style: TextStyle(
+                                    color: context.accentColor,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                if (index < _builtInPresets.length - 1)
-                                  Divider(
-                                    height: 1,
-                                    indent: 68,
-                                    color: context.border,
-                                  ),
                               ],
-                            );
-                          }).toList(),
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                       SizedBox(height: AppTheme.spacing24),
 
                       // Custom presets section

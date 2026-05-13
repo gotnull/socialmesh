@@ -7085,7 +7085,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get mapHideConnectionLines => 'Скрыть линии связи';
 
   @override
-  String get mapHideHeatmap => 'Скрыть тепловую карту';
+  String get mapHideHeatmap => 'Скрыть ореолы узлов';
 
   @override
   String get mapHidePositionHistory => 'Скрыть историю положений';
@@ -7263,7 +7263,85 @@ class AppLocalizationsRu extends AppLocalizations {
   String get mapShowConnectionLines => 'Показать линии связи';
 
   @override
-  String get mapShowHeatmap => 'Показать тепловую карту';
+  String get mapShowHeatmap => 'Показать ореолы узлов';
+
+  @override
+  String get mapShowClusterMarkers => 'Сгруппировать метки';
+
+  @override
+  String get mapHideClusterMarkers => 'Отключить группировку';
+
+  @override
+  String mapClusterTapToListTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count узлов здесь',
+      one: '1 узел здесь',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get mapClusterTapToListSubtitle =>
+      'Нажмите на узел, чтобы открыть карточку, или сведите пальцами, чтобы развернуть группу.';
+
+  @override
+  String get drawerCustomizeTooltip =>
+      'Настроить боковую панель. Удерживайте любой пункт для входа в режим редактирования.';
+
+  @override
+  String get drawerCustomizeDone => 'Готово';
+
+  @override
+  String get drawerCustomizeSheetTitle => 'Настройка боковой панели';
+
+  @override
+  String get drawerCustomizeSheetExplainer =>
+      'Удерживайте любой пункт боковой панели для входа в режим редактирования. Нажмите красный минус, чтобы скрыть, или перетащите ручку, чтобы переупорядочить. Нажмите Готово для сохранения.';
+
+  @override
+  String drawerCustomizeSummaryHidden(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count пунктов скрыто',
+      one: '1 пункт скрыт',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get drawerCustomizeSummaryReordered =>
+      'Применён пользовательский порядок';
+
+  @override
+  String get drawerCustomizeSummaryDefault =>
+      'Стандартный порядок, ничего не скрыто';
+
+  @override
+  String get drawerCustomizeEnterEdit => 'Изменить';
+
+  @override
+  String get drawerCustomizeReset => 'Сбросить';
+
+  @override
+  String get drawerCustomizeHiddenSectionTitle => 'СКРЫТЫЕ ЭЛЕМЕНТЫ';
+
+  @override
+  String get drawerCustomizeRestoreItem => 'Показать';
+
+  @override
+  String drawerRemoveItemLabel(String item) {
+    return 'Скрыть $item';
+  }
+
+  @override
+  String get mapTracerouteNoGpsTitle => 'Нет GPS-данных для этого маршрута';
+
+  @override
+  String get mapTracerouteNoGpsSubtitle =>
+      'Ни один из узлов этого traceroute не сообщил координаты. Карта центрирована на вашем местоположении - откройте маршрут снова, когда какой-либо узел сообщит GPS.';
 
   @override
   String get mapShowPositionHistory => 'Показать историю положений';
@@ -11869,12 +11947,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get nodedexChannelUtilLabel => 'Загрузка канала';
 
   @override
-  String get nodedexClassificationChange => 'Изменить';
-
-  @override
-  String get nodedexClassificationClassify => 'Классифицировать';
-
-  @override
   String get nodedexClassificationLabel => 'КЛАССИФИКАЦИЯ';
 
   @override
@@ -13825,6 +13897,141 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get nodesScreenDisconnect => 'Отключить';
+
+  @override
+  String get roleFilterAll => 'Все роли';
+
+  @override
+  String get roleClient => 'Клиент';
+
+  @override
+  String get roleClientMute => 'Клиент без ретрансляции';
+
+  @override
+  String get roleRouter => 'Маршрутизатор';
+
+  @override
+  String get roleRouterClient => 'Маршрутизатор-клиент';
+
+  @override
+  String get roleRepeater => 'Ретранслятор';
+
+  @override
+  String get roleTracker => 'Трекер';
+
+  @override
+  String get roleSensor => 'Сенсор';
+
+  @override
+  String get roleTak => 'TAK';
+
+  @override
+  String get roleClientHidden => 'Скрытый клиент';
+
+  @override
+  String get roleLostAndFound => 'Поиск и находки';
+
+  @override
+  String get roleTakTracker => 'TAK-трекер';
+
+  @override
+  String get roleRouterLate => 'Маршрутизатор с задержкой';
+
+  @override
+  String get roleClientBase => 'Клиент-база';
+
+  @override
+  String get settingsTileHideNewNodesBadgeTitle => 'Скрыть счётчик новых узлов';
+
+  @override
+  String get settingsTileHideNewNodesBadgeSubtitle =>
+      'Отключает счётчик в нижней панели, который показывает количество новых узлов. Полезно в больших mesh-сетях, где счётчик постоянно растёт.';
+
+  @override
+  String get settingsSectionLargeMesh => 'Большая сеть';
+
+  @override
+  String get settingsSectionNavigation => 'Навигация';
+
+  @override
+  String get settingsTileLandingTabTitle => 'Вкладка при запуске';
+
+  @override
+  String get settingsTileLandingTabSubtitle =>
+      'Выберите, какая вкладка открывается при запуске приложения. Применяется при следующем запуске SocialMesh.';
+
+  @override
+  String get nodeDetailNodeDexSectionTitle => 'NodeDex';
+
+  @override
+  String get nodeDetailNodeDexOpenCta => 'Открыть';
+
+  @override
+  String get nodeDetailNodeDexClassificationLabel => 'Классификация';
+
+  @override
+  String get nodeDetailNodeDexNoteLabel => 'Заметка';
+
+  @override
+  String get nodeDetailNodeDexNotClassified => 'Ещё не классифицирован';
+
+  @override
+  String get nodeDetailNodeDexNoNote => 'Нет заметки';
+
+  @override
+  String get nodeDetailNodeDexClassifyCta => 'Классифицировать';
+
+  @override
+  String get nodeDetailNodeDexAddNoteCta => 'Добавить заметку';
+
+  @override
+  String quickActionSubtitleNodeNum(String nodeId) {
+    return 'Узел !$nodeId';
+  }
+
+  @override
+  String get quickActionViewDetails => 'Показать сведения об узле';
+
+  @override
+  String get quickActionViewInNodeDex => 'Открыть в NodeDex';
+
+  @override
+  String get quickActionFavorite => 'Добавить в избранное';
+
+  @override
+  String get quickActionUnfavorite => 'Убрать из избранного';
+
+  @override
+  String get quickActionMute => 'Отключить уведомления';
+
+  @override
+  String get quickActionUnmute => 'Включить уведомления';
+
+  @override
+  String get quickActionSendTraceroute => 'Отправить traceroute';
+
+  @override
+  String quickActionTracerouteCooldown(int seconds) {
+    return 'Ожидание $secondsс';
+  }
+
+  @override
+  String quickActionFavoriteFailed(String error) {
+    return 'Не удалось обновить избранное: $error';
+  }
+
+  @override
+  String quickActionMuteFailed(String error) {
+    return 'Не удалось обновить отключение: $error';
+  }
+
+  @override
+  String quickActionTracerouteFailed(String error) {
+    return 'Не удалось выполнить traceroute: $error';
+  }
+
+  @override
+  String get quickActionDisconnect => 'Отключить устройство';
 
   @override
   String nodesScreenDistanceKilometers(String km) {
@@ -20977,6 +21184,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Прямое соединение - без промежуточных узлов';
 
   @override
+  String get telemetryTracerouteNoResponse =>
+      'Нет ответа - целевой узел не ответил';
+
+  @override
   String get telemetryTracerouteEmptyHint =>
       'Отправьте traceroute с узла, чтобы увидеть пути в сети';
 
@@ -27106,6 +27317,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get ringtoneSectionBuiltIn => 'ВСТРОЕННЫЕ ПРЕСЕТЫ';
+
+  @override
+  String ringtoneShowAllBuiltIn(int count) {
+    return 'Показать все $count встроенных мелодий';
+  }
+
+  @override
+  String get ringtoneShowFewerBuiltIn => 'Показать меньше';
 
   @override
   String get ringtoneSectionCustom => 'ПОЛЬЗОВАТЕЛЬСКИЕ ПРЕСЕТЫ';

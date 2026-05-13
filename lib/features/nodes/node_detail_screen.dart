@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/l10n/l10n_extension.dart';
+import '../../core/logging.dart';
 import '../../utils/time_format.dart';
 import '../../utils/timestamp_validation.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -37,7 +38,9 @@ import '../nodedex/providers/nodedex_providers.dart';
 import '../nodedex/screens/nodedex_detail_screen.dart';
 import '../nodedex/services/sigil_generator.dart';
 import '../nodedex/services/trait_engine.dart';
+import '../nodedex/widgets/node_note_edit_sheet.dart';
 import '../nodedex/widgets/sigil_card_sheet.dart';
+import '../nodedex/widgets/trait_badge.dart';
 import '../telemetry/air_quality_log_screen.dart';
 import '../telemetry/detection_sensor_log_screen.dart';
 import '../telemetry/device_metrics_log_screen.dart';
@@ -45,6 +48,7 @@ import '../telemetry/environment_metrics_log_screen.dart';
 import '../telemetry/pax_counter_log_screen.dart';
 import '../telemetry/position_log_screen.dart';
 import '../telemetry/traceroute_log_screen.dart';
+import 'node_actions.dart';
 
 /// Navigates to the node detail screen. Can be called from any screen.
 void showNodeDetails(BuildContext context, MeshNode node, bool isMyNode) {
@@ -213,159 +217,32 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
 
   Future<void> _toggleFavorite(BuildContext context, MeshNode node) async {
     if (_isTogglingFavorite) return;
-
     safeSetState(() => _isTogglingFavorite = true);
-
-    final protocol = ref.read(protocolServiceProvider);
-    final nodesNotifier = ref.read(nodesProvider.notifier);
-    final deviceFavorites = ref.read(deviceFavoritesProvider).value;
-
     try {
-      if (node.isFavorite) {
-        await protocol.removeFavoriteNode(node.nodeNum);
-        await deviceFavorites?.removeFavorite(node.nodeNum);
-        if (!mounted) return;
-        nodesNotifier.addOrUpdateNode(node.copyWith(isFavorite: false));
-        if (context.mounted) {
-          showSuccessSnackBar(
-            context,
-            context.l10n.nodeDetailRemovedFromFavorites(node.displayName),
-          );
-        }
-      } else {
-        await protocol.setFavoriteNode(node.nodeNum);
-        await deviceFavorites?.addFavorite(node.nodeNum);
-        if (!mounted) return;
-        nodesNotifier.addOrUpdateNode(node.copyWith(isFavorite: true));
-        if (context.mounted) {
-          showSuccessSnackBar(
-            context,
-            context.l10n.nodeDetailAddedToFavorites(node.displayName),
-          );
-        }
-      }
-    } catch (e) {
-      if (context.mounted) {
-        showErrorSnackBar(
-          context,
-          context.l10n.nodeDetailFavoriteError(e.toString()),
-        );
-      }
+      await toggleNodeFavorite(context, ref, node);
     } finally {
-      safeSetState(() => _isTogglingFavorite = false);
+      if (mounted) safeSetState(() => _isTogglingFavorite = false);
     }
   }
 
   Future<void> _toggleIgnored(BuildContext context, MeshNode node) async {
     if (_isTogglingMute) return;
-
-    final connectionState = ref.read(connectionStateProvider);
-    final isConnected = connectionState.maybeWhen(
-      data: (state) => state == DeviceConnectionState.connected,
-      orElse: () => false,
-    );
-
-    if (!isConnected) {
-      showErrorSnackBar(context, context.l10n.nodeDetailMuteNotConnected);
-      return;
-    }
-
     safeSetState(() => _isTogglingMute = true);
-
-    final protocol = ref.read(protocolServiceProvider);
-    final nodesNotifier = ref.read(nodesProvider.notifier);
-    final deviceFavorites = ref.read(deviceFavoritesProvider).value;
-
     try {
-      if (node.isIgnored) {
-        await protocol.removeIgnoredNode(node.nodeNum);
-        await deviceFavorites?.removeIgnored(node.nodeNum);
-        if (!mounted) return;
-        nodesNotifier.addOrUpdateNode(node.copyWith(isIgnored: false));
-        if (context.mounted) {
-          showSuccessSnackBar(
-            context,
-            context.l10n.nodeDetailUnmuted(node.displayName),
-          );
-        }
-      } else {
-        await protocol.setIgnoredNode(node.nodeNum);
-        await deviceFavorites?.addIgnored(node.nodeNum);
-        if (!mounted) return;
-        nodesNotifier.addOrUpdateNode(node.copyWith(isIgnored: true));
-        if (context.mounted) {
-          showSuccessSnackBar(
-            context,
-            context.l10n.nodeDetailMuted(node.displayName),
-          );
-        }
-      }
-    } catch (e) {
-      if (context.mounted) {
-        showErrorSnackBar(
-          context,
-          context.l10n.nodeDetailMuteError(e.toString()),
-        );
-      }
+      await toggleNodeMute(context, ref, node);
     } finally {
-      safeSetState(() => _isTogglingMute = false);
+      if (mounted) safeSetState(() => _isTogglingMute = false);
     }
   }
 
   Future<void> _sendTraceroute(BuildContext context, MeshNode node) async {
-    final cooldownRemaining = ref
-        .read(countdownProvider.notifier)
-        .tracerouteRemaining(node.nodeNum);
-    if (_isSendingTraceroute || cooldownRemaining > 0) return;
-
-    final connectionState = ref.read(connectionStateProvider);
-    final isConnected = connectionState.maybeWhen(
-      data: (state) => state == DeviceConnectionState.connected,
-      orElse: () => false,
-    );
-
-    if (!isConnected) {
-      showErrorSnackBar(context, context.l10n.nodeDetailTracerouteNotConnected);
-      return;
-    }
-
+    if (_isSendingTraceroute) return;
     safeSetState(() => _isSendingTraceroute = true);
-
-    final protocol = ref.read(protocolServiceProvider);
-    final displayName = node.displayName;
-
+    _lastTracerouteSentAt = DateTime.now();
     try {
-      _lastTracerouteSentAt = DateTime.now();
-      await protocol.sendTraceroute(node.nodeNum);
-
-      if (!mounted) return;
-
-      safeSetState(() => _isSendingTraceroute = false);
-
-      ref
-          .read(countdownProvider.notifier)
-          .startTracerouteCountdown(node.nodeNum);
-
-      if (context.mounted) {
-        showSuccessSnackBar(
-          context,
-          context.l10n.nodeDetailTracerouteSent(displayName),
-        );
-      }
-    } catch (e) {
-      safeSetState(() => _isSendingTraceroute = false);
-      if (context.mounted) {
-        // Readiness gate (Step 6c): friendlier text when blocked by the
-        // not-yet-operational protocol; otherwise fall through to the
-        // generic traceroute error.
-        if (maybeShowTxBlockedSnackBar(context, e)) {
-          return;
-        }
-        showErrorSnackBar(
-          context,
-          context.l10n.nodeDetailTracerouteError(e.toString()),
-        );
-      }
+      await sendNodeTraceroute(context, ref, node);
+    } finally {
+      if (mounted) safeSetState(() => _isSendingTraceroute = false);
     }
   }
 
@@ -944,6 +821,185 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
             value: node.nodeStatus!,
           ),
       ],
+    );
+  }
+
+  /// NodeDex preview card.
+  ///
+  /// Surfaces the user's SocialMesh-specific node intelligence (social
+  /// tag + free-form note) directly on Node Details so the user does not
+  /// have to dig through Overflow > View in NodeDex. The card reads
+  /// [nodeDexEntryProvider] — no parallel local state — and dispatches
+  /// edits straight to [NodeDexNotifier.setSocialTag]. The full editor
+  /// (notes, encounters, classification history) still lives on
+  /// NodeDexDetailScreen, reachable via the prominent "Open" trailing
+  /// CTA or by tapping anywhere on the card body.
+  Widget _buildNodeDexPreviewCard(BuildContext context, MeshNode node) {
+    final entry = ref.watch(nodeDexEntryProvider(node.nodeNum));
+
+    void openFullNodeDex() {
+      AppLogging.nodes(
+        '[NodeDexPreview] open full NodeDex nodeNum=${node.nodeNum} '
+        'hasEntry=${entry != null}',
+      );
+      Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => NodeDexDetailScreen(nodeNum: node.nodeNum),
+        ),
+      );
+    }
+
+    Future<void> openClassifySheet() async {
+      if (entry == null) {
+        AppLogging.nodes(
+          '[NodeDexPreview] classify tap with no entry - routing to NodeDex '
+          'nodeNum=${node.nodeNum}',
+        );
+        openFullNodeDex();
+        return;
+      }
+      AppLogging.nodes(
+        '[NodeDexPreview] classify sheet opened nodeNum=${node.nodeNum} '
+        'currentTag=${entry.socialTag?.name ?? 'none'}',
+      );
+      // Pre-capture the notifier so the post-await callback does not
+      // touch ref after the State's BuildContext could be stale, and
+      // route the pop through a sheet-local context (Builder).
+      final tagNotifier = ref.read(nodeDexProvider.notifier);
+      await AppBottomSheet.show<void>(
+        context: context,
+        child: Builder(
+          builder: (sheetContext) => SocialTagSelector(
+            currentTag: entry.socialTag,
+            onTagSelected: (tag) {
+              Navigator.pop(sheetContext);
+              tagNotifier.setSocialTag(node.nodeNum, tag);
+              AppLogging.nodes(
+                '[NodeDexPreview] tag applied nodeNum=${node.nodeNum} '
+                'tag=${tag?.name ?? 'cleared'}',
+              );
+            },
+          ),
+        ),
+      );
+    }
+
+    final socialTag = entry?.socialTag;
+    final notePreview = entry?.userNote?.trim();
+    final hasNote = notePreview != null && notePreview.isNotEmpty;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: openFullNodeDex,
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing4),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.auto_awesome,
+                    size: 16,
+                    color: context.accentColor,
+                  ),
+                  const SizedBox(width: AppTheme.spacing8),
+                  Text(
+                    context.l10n.nodeDetailNodeDexSectionTitle.toUpperCase(),
+                    style: TextStyle(
+                      color: context.textTertiary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    context.l10n.nodeDetailNodeDexOpenCta.toUpperCase(),
+                    style: TextStyle(
+                      color: context.accentColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing4),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 12,
+                    color: context.accentColor,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing10),
+          InfoTable(
+            rows: [
+              InfoTableRow(
+                icon: Icons.label_outline,
+                label: context.l10n.nodeDetailNodeDexClassificationLabel,
+                value: socialTag != null
+                    ? socialTag.displayLabel(context.l10n)
+                    : context.l10n.nodeDetailNodeDexNotClassified,
+                valueWidget: socialTag != null
+                    ? SocialTagBadge(tag: socialTag)
+                    : _NodeDexActionChip(
+                        icon: Icons.add,
+                        label: context.l10n.nodeDetailNodeDexClassifyCta,
+                      ),
+                onTap: openClassifySheet,
+              ),
+              InfoTableRow(
+                icon: Icons.notes,
+                label: context.l10n.nodeDetailNodeDexNoteLabel,
+                value: hasNote
+                    ? notePreview
+                    : context.l10n.nodeDetailNodeDexNoNote,
+                valueWidget: hasNote
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            notePreview,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: context.textPrimary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            textAlign: TextAlign.right,
+                          ),
+                          const SizedBox(height: AppTheme.spacing6),
+                          _NodeDexActionChip(
+                            icon: Icons.edit_outlined,
+                            label: context.l10n.nodedexNoteEdit,
+                          ),
+                        ],
+                      )
+                    : _NodeDexActionChip(
+                        icon: Icons.add,
+                        label: context.l10n.nodeDetailNodeDexAddNoteCta,
+                      ),
+                onTap: () {
+                  AppLogging.nodes(
+                    '[NodeDexPreview] note editor opened nodeNum=${node.nodeNum} '
+                    'hasNote=$hasNote',
+                  );
+                  NodeNoteEditSheet.show(
+                    context: context,
+                    nodeNum: node.nodeNum,
+                    initialNote: entry?.userNote,
+                  );
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -1696,6 +1752,9 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
         // ── Identity card ──
         SliverToBoxAdapter(child: _buildIdentityCard(context, node)),
 
+        // ── NodeDex preview (classification + note + open CTA) ──
+        SliverToBoxAdapter(child: _buildNodeDexPreviewCard(context, node)),
+
         // ── Radio card ──
         SliverToBoxAdapter(child: _buildRadioCard(context, node)),
 
@@ -2028,6 +2087,48 @@ class _QuickStatChip extends StatelessWidget {
         onTap!();
       },
       child: chip,
+    );
+  }
+}
+
+/// Inline pill rendered in the NodeDex preview row when no value is set yet
+/// (no social tag, no note). Mirrors [SocialTagBadge]'s non-compact shape so
+/// classified + unclassified rows stay in the same visual family. Tap is
+/// handled by the enclosing [InfoTable] row's `onTap`.
+class _NodeDexActionChip extends StatelessWidget {
+  const _NodeDexActionChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = context.accentColor;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing10,
+        vertical: AppTheme.spacing5,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(AppTheme.radius14),
+        border: Border.all(color: color.withValues(alpha: 0.25), width: 0.5),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: AppTheme.spacing5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

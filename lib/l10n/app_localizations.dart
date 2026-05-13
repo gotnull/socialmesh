@@ -12430,10 +12430,10 @@ abstract class AppLocalizations {
   /// **'Hide connection lines'**
   String get mapHideConnectionLines;
 
-  /// Text displayed in map view
+  /// Map menu action that toggles off the translucent rings drawn around each node's position. Historically labelled 'heatmap'; the actual rendering is a fixed-radius position halo, not a density heatmap, so the copy is clearer.
   ///
   /// In en, this message translates to:
-  /// **'Hide heatmap'**
+  /// **'Hide node halos'**
   String get mapHideHeatmap;
 
   /// Text displayed in map view
@@ -12753,11 +12753,119 @@ abstract class AppLocalizations {
   /// **'Show connection lines'**
   String get mapShowConnectionLines;
 
-  /// Text displayed in map view
+  /// Map menu action that toggles on the translucent rings drawn around each node's position. The radius is fixed (it does not reflect signal strength or density), so the label is 'halos' rather than 'heatmap'.
   ///
   /// In en, this message translates to:
-  /// **'Show heatmap'**
+  /// **'Show node halos'**
   String get mapShowHeatmap;
+
+  /// Map menu toggle that groups dense node markers into a count badge. Opt-in; off by default.
+  ///
+  /// In en, this message translates to:
+  /// **'Cluster markers'**
+  String get mapShowClusterMarkers;
+
+  /// Map menu action to disable marker clustering (return to individual node markers).
+  ///
+  /// In en, this message translates to:
+  /// **'Hide cluster markers'**
+  String get mapHideClusterMarkers;
+
+  /// Title of the bottom sheet shown when tapping a cluster on the map.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 node here}other{{count} nodes here}}'**
+  String mapClusterTapToListTitle(int count);
+
+  /// Subtitle explaining how to interact with the cluster contents sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a node to open its info card, or pinch in to expand the cluster.'**
+  String get mapClusterTapToListSubtitle;
+
+  /// Tooltip on the customize-drawer button next to Settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize sidebar. Long-press any item to enter edit mode.'**
+  String get drawerCustomizeTooltip;
+
+  /// Pill button that exits drawer edit mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get drawerCustomizeDone;
+
+  /// Title of the bottom sheet shown when the customize button is tapped.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize sidebar'**
+  String get drawerCustomizeSheetTitle;
+
+  /// Brief explainer text in the customize-sidebar sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press any sidebar item to enter edit mode. Tap the red minus to hide an item, or drag the handle to reorder. Tap Done to save.'**
+  String get drawerCustomizeSheetExplainer;
+
+  /// Summary line showing how many items the user has hidden.
+  ///
+  /// In en, this message translates to:
+  /// **'{count,plural, =1{1 item hidden}other{{count} items hidden}}'**
+  String drawerCustomizeSummaryHidden(int count);
+
+  /// Summary line shown when the user has reordered drawer items.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom item order applied'**
+  String get drawerCustomizeSummaryReordered;
+
+  /// Summary line shown when no drawer modifications exist.
+  ///
+  /// In en, this message translates to:
+  /// **'Default order, nothing hidden'**
+  String get drawerCustomizeSummaryDefault;
+
+  /// Button in the customize sheet that opens edit mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get drawerCustomizeEnterEdit;
+
+  /// Button in the customize sheet that resets all customization.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get drawerCustomizeReset;
+
+  /// Section title in the customize sheet listing hidden drawer items the user can restore individually.
+  ///
+  /// In en, this message translates to:
+  /// **'HIDDEN ITEMS'**
+  String get drawerCustomizeHiddenSectionTitle;
+
+  /// Button in the customize sheet that restores a single hidden drawer item back to the sidebar.
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get drawerCustomizeRestoreItem;
+
+  /// Accessibility label for the per-item remove button in edit mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide {item}'**
+  String drawerRemoveItemLabel(String item);
+
+  /// Banner shown on the map when 'Show on Map' was tapped for a traceroute whose hops report no valid GPS coordinates.
+  ///
+  /// In en, this message translates to:
+  /// **'No GPS data for this route'**
+  String get mapTracerouteNoGpsTitle;
+
+  /// Subtitle for the no-GPS traceroute banner. Explains the fallback behaviour so the user is not confused by a blank map.
+  ///
+  /// In en, this message translates to:
+  /// **'None of the hops on this traceroute reported a position. The map is centered on your location instead — open the route again once any hop reports GPS.'**
+  String get mapTracerouteNoGpsSubtitle;
 
   /// Text displayed in map view
   ///
@@ -20701,18 +20809,6 @@ abstract class AppLocalizations {
   /// **'Channel Util'**
   String get nodedexChannelUtilLabel;
 
-  /// Text displayed in node management
-  ///
-  /// In en, this message translates to:
-  /// **'Change'**
-  String get nodedexClassificationChange;
-
-  /// Text displayed in node management
-  ///
-  /// In en, this message translates to:
-  /// **'Classify'**
-  String get nodedexClassificationClassify;
-
   /// Label in node management
   ///
   /// In en, this message translates to:
@@ -23878,6 +23974,252 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Disconnect'**
   String get nodesScreenDisconnect;
+
+  /// Role filter chip that disables the role-based filter (shows every role).
+  ///
+  /// In en, this message translates to:
+  /// **'All roles'**
+  String get roleFilterAll;
+
+  /// Meshtastic device role: standard client (a phone or handheld node).
+  ///
+  /// In en, this message translates to:
+  /// **'Client'**
+  String get roleClient;
+
+  /// Meshtastic device role: a client that does not rebroadcast packets.
+  ///
+  /// In en, this message translates to:
+  /// **'Client Mute'**
+  String get roleClientMute;
+
+  /// Meshtastic device role: a node dedicated to forwarding mesh traffic.
+  ///
+  /// In en, this message translates to:
+  /// **'Router'**
+  String get roleRouter;
+
+  /// Meshtastic device role (deprecated): combined router + client behaviour.
+  ///
+  /// In en, this message translates to:
+  /// **'Router Client'**
+  String get roleRouterClient;
+
+  /// Meshtastic device role (deprecated): infrastructure repeater node.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeater'**
+  String get roleRepeater;
+
+  /// Meshtastic device role: position-broadcasting tracker (no chat).
+  ///
+  /// In en, this message translates to:
+  /// **'Tracker'**
+  String get roleTracker;
+
+  /// Meshtastic device role: telemetry sensor node.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensor'**
+  String get roleSensor;
+
+  /// Meshtastic device role: Team Awareness Kit endpoint.
+  ///
+  /// In en, this message translates to:
+  /// **'TAK'**
+  String get roleTak;
+
+  /// Meshtastic device role: client that hides its presence from the network.
+  ///
+  /// In en, this message translates to:
+  /// **'Client Hidden'**
+  String get roleClientHidden;
+
+  /// Meshtastic device role: lost-and-found beacon.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost and Found'**
+  String get roleLostAndFound;
+
+  /// Meshtastic device role: TAK-shaped tracker.
+  ///
+  /// In en, this message translates to:
+  /// **'TAK Tracker'**
+  String get roleTakTracker;
+
+  /// Meshtastic device role: router that defers rebroadcast to reduce noise.
+  ///
+  /// In en, this message translates to:
+  /// **'Router Late'**
+  String get roleRouterLate;
+
+  /// Meshtastic device role: home-station client.
+  ///
+  /// In en, this message translates to:
+  /// **'Client Base'**
+  String get roleClientBase;
+
+  /// Settings tile that suppresses the new-nodes count badge on the bottom nav.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide new-nodes badge'**
+  String get settingsTileHideNewNodesBadgeTitle;
+
+  /// Subtitle explaining the hide-new-nodes-badge toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Silence the bottom-nav badge that counts newly discovered nodes. Useful on dense mesh networks where the count never stops climbing.'**
+  String get settingsTileHideNewNodesBadgeSubtitle;
+
+  /// Settings section header grouping options aimed at high-density mesh users.
+  ///
+  /// In en, this message translates to:
+  /// **'Large mesh'**
+  String get settingsSectionLargeMesh;
+
+  /// Settings section header for app-launch + bottom-nav preferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigation'**
+  String get settingsSectionNavigation;
+
+  /// Settings tile title for the cold-start landing tab picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Tab on launch'**
+  String get settingsTileLandingTabTitle;
+
+  /// Subtitle explaining that the landing tab picker takes effect on next launch, not immediately.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which tab the app opens on cold start. Applies the next time you launch SocialMesh.'**
+  String get settingsTileLandingTabSubtitle;
+
+  /// Section header above the NodeDex preview card on the Node Details screen.
+  ///
+  /// In en, this message translates to:
+  /// **'NodeDex'**
+  String get nodeDetailNodeDexSectionTitle;
+
+  /// Trailing CTA on the NodeDex preview section header that opens the full NodeDex detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get nodeDetailNodeDexOpenCta;
+
+  /// Label for the social-tag row on the NodeDex preview card.
+  ///
+  /// In en, this message translates to:
+  /// **'Classification'**
+  String get nodeDetailNodeDexClassificationLabel;
+
+  /// Label for the user-note row on the NodeDex preview card.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get nodeDetailNodeDexNoteLabel;
+
+  /// Placeholder shown in the classification row when the node has no social tag.
+  ///
+  /// In en, this message translates to:
+  /// **'Not classified yet'**
+  String get nodeDetailNodeDexNotClassified;
+
+  /// Placeholder shown in the note row when the user has not written a note for the node.
+  ///
+  /// In en, this message translates to:
+  /// **'No note yet'**
+  String get nodeDetailNodeDexNoNote;
+
+  /// Label on the inline action chip rendered in the Classification row when the node has no social tag. Tapping opens the social-tag selector.
+  ///
+  /// In en, this message translates to:
+  /// **'Classify'**
+  String get nodeDetailNodeDexClassifyCta;
+
+  /// Label on the inline action chip rendered in the Note row when the node has no user note yet. Tapping opens the full NodeDex screen where the note can be edited.
+  ///
+  /// In en, this message translates to:
+  /// **'Add note'**
+  String get nodeDetailNodeDexAddNoteCta;
+
+  /// Subtitle of the node quick-action sheet header when no presence subtitle is available. Shows the hex node id.
+  ///
+  /// In en, this message translates to:
+  /// **'Node !{nodeId}'**
+  String quickActionSubtitleNodeNum(String nodeId);
+
+  /// Quick-action menu item that opens the node details screen.
+  ///
+  /// In en, this message translates to:
+  /// **'View node details'**
+  String get quickActionViewDetails;
+
+  /// Quick-action menu item that opens the NodeDex profile for the node.
+  ///
+  /// In en, this message translates to:
+  /// **'View in NodeDex'**
+  String get quickActionViewInNodeDex;
+
+  /// Quick-action menu item to favorite a node.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to favorites'**
+  String get quickActionFavorite;
+
+  /// Quick-action menu item to unfavorite a node.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from favorites'**
+  String get quickActionUnfavorite;
+
+  /// Quick-action menu item to mute (ignore) a node.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute node'**
+  String get quickActionMute;
+
+  /// Quick-action menu item to unmute (unignore) a node.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute node'**
+  String get quickActionUnmute;
+
+  /// Quick-action menu item to send a traceroute to the node.
+  ///
+  /// In en, this message translates to:
+  /// **'Send traceroute'**
+  String get quickActionSendTraceroute;
+
+  /// Quick-action subtitle when traceroute is still on cooldown.
+  ///
+  /// In en, this message translates to:
+  /// **'Cooldown {seconds}s'**
+  String quickActionTracerouteCooldown(int seconds);
+
+  /// Error snackbar when toggling favorite fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update favorite: {error}'**
+  String quickActionFavoriteFailed(String error);
+
+  /// Error snackbar when toggling mute fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update mute: {error}'**
+  String quickActionMuteFailed(String error);
+
+  /// Error snackbar when sending a traceroute from the quick-action sheet fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Traceroute failed: {error}'**
+  String quickActionTracerouteFailed(String error);
+
+  /// Quick-action menu item to disconnect the connected device (shown only on the user's own node).
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect device'**
+  String get quickActionDisconnect;
 
   /// Distance label in kilometers on node card.
   ///
@@ -36413,6 +36755,12 @@ abstract class AppLocalizations {
   /// **'Direct connection - no intermediate hops'**
   String get telemetryTracerouteDirectConnection;
 
+  /// Status row shown on a traceroute history card when no response was received.
+  ///
+  /// In en, this message translates to:
+  /// **'No response - the target node did not reply'**
+  String get telemetryTracerouteNoResponse;
+
   /// Empty-state subtitle for the traceroute screen.
   ///
   /// In en, this message translates to:
@@ -47303,6 +47651,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'BUILT-IN PRESETS'**
   String get ringtoneSectionBuiltIn;
+
+  /// Expansion footer on the built-in ringtone presets list. Tapping reveals the full set; the curated 10 are shown by default.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all {count} built-in tones'**
+  String ringtoneShowAllBuiltIn(int count);
+
+  /// Collapse footer that re-hides the non-featured built-in ringtone presets.
+  ///
+  /// In en, this message translates to:
+  /// **'Show fewer'**
+  String get ringtoneShowFewerBuiltIn;
 
   /// UI text: ringtone section custom
   ///

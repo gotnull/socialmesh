@@ -98,7 +98,7 @@ void main() {
       );
 
       // Terminal state should show finality text
-      expect(find.text('Final state — no further transitions'), findsOneWidget);
+      expect(find.text('Final state - no further transitions'), findsOneWidget);
       // Lock icon
       expect(find.byIcon(Icons.lock_outline), findsOneWidget);
     });

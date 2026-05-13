@@ -114,16 +114,28 @@ void main() {
               'Owner discovery must be gated by an explicit boolean (so the '
               'card hides when count == 0 or in edit mode).',
         );
+        // Whitespace-agnostic match so the formatter can rewrap the
+        // multi-line conjunction without invalidating the pin.
+        final flattened = dashboardSource.replaceAll(RegExp(r'\s+'), ' ');
         expect(
-          dashboardSource.contains(
-            'hasWidgetPack && !_editMode && '
-            'unusedPremiumCount > 0',
+          flattened.contains(
+            'hasWidgetPack && !_editMode && unusedPremiumCount > 0',
           ),
           true,
           reason:
               'Owner discovery card visibility predicate must require '
               'ownership AND not-edit-mode AND at least one unused premium '
-              'widget — all three together.',
+              'widget — all three together. Tranche 1 added a fourth '
+              'conjunct (!discoveryDismissed) but the original three must '
+              'still appear in this order.',
+        );
+        expect(
+          flattened.contains('!discoveryDismissed'),
+          true,
+          reason:
+              'Tranche 1 added a persistent ack flag — visibility must '
+              'also gate on !discoveryDismissed so a customized dashboard '
+              'does not keep showing the discovery card.',
         );
       });
 

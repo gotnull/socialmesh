@@ -645,7 +645,7 @@ class SocialTagSelector extends StatelessWidget {
         const SizedBox(height: AppTheme.spacing16),
         ...NodeSocialTag.values.map((tag) {
           final isSelected = tag == currentTag;
-          return _SocialTagOption(
+          return SocialTagOption(
             tag: tag,
             isSelected: isSelected,
             onTap: () => onTagSelected(tag),
@@ -660,12 +660,19 @@ class SocialTagSelector extends StatelessWidget {
   }
 }
 
-class _SocialTagOption extends StatelessWidget {
+/// Full-width row rendering a single [NodeSocialTag] with its icon, name,
+/// and description. Used by [SocialTagSelector] for the selector sheet and
+/// by the NodeDex Classification card to render the currently-assigned tag
+/// as the same chip-shaped row. When [isSelected] is true the row paints
+/// in the tag's accent color (sky / emerald / orange / primaryPurple) with
+/// a trailing check icon.
+class SocialTagOption extends StatelessWidget {
   final NodeSocialTag tag;
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _SocialTagOption({
+  const SocialTagOption({
+    super.key,
     required this.tag,
     required this.isSelected,
     required this.onTap,

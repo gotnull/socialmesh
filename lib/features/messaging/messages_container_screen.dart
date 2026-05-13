@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'dart:async';
+
 import '../../core/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -64,11 +66,34 @@ class _MessagesContainerScreenState
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    // Restore the last sub-tab the user landed on. Large-mesh users
+    // typically live in Channels; persisting the index lets them avoid
+    // swiping back on every cold start. Read synchronously off the
+    // already-loaded settings service when present; fall back to 0 so
+    // first launches stay on Contacts.
+    final settings = ref.read(settingsServiceProvider).value;
+    final initialIndex = (settings?.messagesDefaultSubtab ?? 0).clamp(0, 1);
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: initialIndex,
+    );
+    _tabController.addListener(_persistTabIndexIfChanged);
+  }
+
+  void _persistTabIndexIfChanged() {
+    // TabController fires the listener on every index/indexIsChanging
+    // tick; we only persist when the index stabilises on a new value.
+    if (_tabController.indexIsChanging) return;
+    final settings = ref.read(settingsServiceProvider).value;
+    if (settings == null) return;
+    if (settings.messagesDefaultSubtab == _tabController.index) return;
+    unawaited(settings.setMessagesDefaultSubtab(_tabController.index));
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_persistTabIndexIfChanged);
     _tabController.dispose();
     super.dispose();
   }

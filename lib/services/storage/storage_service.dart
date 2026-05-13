@@ -306,6 +306,109 @@ class SettingsService {
   bool get newNodeNotificationsEnabled =>
       _preferences.getBool('new_node_notifications_enabled') ?? true;
 
+  // Display: hide the new-nodes nav badge.
+  // Decoupled from `newNodeNotificationsEnabled` on purpose — large-mesh
+  // users (1000+ nodes) want to silence the constantly-incrementing
+  // badge in the bottom nav without losing the underlying notification
+  // pipeline or new-node tracking. Default false (badge visible) so
+  // small-mesh users see no behaviour change.
+  Future<void> setHideNewNodesBadge(bool hidden) async {
+    await _preferences.setBool('hide_new_nodes_badge', hidden);
+  }
+
+  bool get hideNewNodesBadge =>
+      _preferences.getBool('hide_new_nodes_badge') ?? false;
+
+  // Messages: remembered sub-tab index.
+  // Persists which sub-tab (0 = Contacts, 1 = Channels) was last
+  // selected on MessagesContainerScreen. Large-mesh users typically
+  // live in Channels; restoring their last position avoids forcing
+  // them to swipe back every cold start. Default 0 keeps the existing
+  // contact-first behaviour for fresh installs.
+  Future<void> setMessagesDefaultSubtab(int index) async {
+    await _preferences.setInt('messages_default_subtab', index);
+  }
+
+  int get messagesDefaultSubtab =>
+      _preferences.getInt('messages_default_subtab') ?? 0;
+
+  // Bottom-nav: cold-start landing tab.
+  // Index into MainShell's hardcoded nav order
+  // (0=Messages, 1=Map, 2=Nodes, 3=Dashboard). Default 2 (Nodes)
+  // matches the historical app behaviour so fresh installs and
+  // upgraders see no change. The user can re-pick from Settings if
+  // they prefer Dashboard-first or Messages-first.
+  Future<void> setDefaultLandingTab(int index) async {
+    await _preferences.setInt('default_landing_tab', index);
+  }
+
+  int get defaultLandingTab => _preferences.getInt('default_landing_tab') ?? 2;
+
+  // Mesh map: cluster markers toggle.
+  // When true, the mesh map wraps node markers in a
+  // MarkerClusterLayerWidget so dense regions collapse to a count
+  // badge rather than 200+ overlapping circles. Opt-in (default
+  // false) because the visual feel is materially different and the
+  // tap behaviour shifts (a cluster zooms in or surfaces a list
+  // instead of opening the node info card).
+  Future<void> setMapClusterMarkers(bool enabled) async {
+    await _preferences.setBool('map_cluster_markers', enabled);
+  }
+
+  bool get mapClusterMarkers =>
+      _preferences.getBool('map_cluster_markers') ?? false;
+
+  // Drawer customization: hidden item IDs.
+  // List<String> of `DrawerMenuItem.id` values the user has hidden via
+  // the drawer long-press edit mode. Stored as a JSON array string so
+  // it survives SharedPreferences serialization cleanly. Empty default
+  // → full discovery for new installs.
+  Future<void> setDrawerHiddenItems(List<String> ids) async {
+    await _preferences.setString('drawer_hidden_items', jsonEncode(ids));
+  }
+
+  List<String> get drawerHiddenItems {
+    final raw = _preferences.getString('drawer_hidden_items');
+    if (raw == null || raw.isEmpty) return const <String>[];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is List) {
+        return decoded.whereType<String>().toList(growable: false);
+      }
+    } catch (_) {
+      // Corrupt entry — fall back to defaults silently rather than
+      // crash the drawer on bootstrap.
+    }
+    return const <String>[];
+  }
+
+  // Drawer customization: user-chosen item order.
+  // List<String> of `DrawerMenuItem.id` values in the user's preferred
+  // order. Items not in the list (newly added in a release, or
+  // intentionally id-less) fall back to their default position via the
+  // ordering algorithm in main_shell. `null` → use full default order.
+  Future<void> setDrawerItemOrder(List<String>? ids) async {
+    if (ids == null) {
+      await _preferences.remove('drawer_item_order');
+    } else {
+      await _preferences.setString('drawer_item_order', jsonEncode(ids));
+    }
+  }
+
+  List<String>? get drawerItemOrder {
+    final raw = _preferences.getString('drawer_item_order');
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is List) {
+        return decoded.whereType<String>().toList(growable: false);
+      }
+    } catch (_) {
+      // Corrupt entry — pretend it was unset rather than crash.
+    }
+    return null;
+  }
+
   // Notification: Direct Messages
   Future<void> setDirectMessageNotificationsEnabled(bool enabled) async {
     await _preferences.setBool('dm_notifications_enabled', enabled);

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -21,6 +22,7 @@ import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/ico_help_system.dart';
+import '../../core/widgets/status_banner.dart';
 import '../../core/widgets/map_controls.dart';
 import '../../core/widgets/map_node_drawer.dart';
 import '../../core/widgets/node_info_card.dart';
@@ -135,6 +137,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   final MapController _mapController = MapController();
   MeshNode? _selectedNode;
   bool _showHeatmap = false;
+  bool _clusterMarkers = false;
   bool _isRefreshing = false;
   double _currentZoom = 14.0;
   bool _showNodeList = false;
@@ -250,6 +253,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _showPositionHistory = settings.mapShowPositionHistory;
         _connectionMaxDistance = settings.mapConnectionMaxDistance;
         _showSatelliteLabels = settings.satelliteLabelsEnabled;
+        _clusterMarkers = settings.mapClusterMarkers;
       });
     }
   }
@@ -270,6 +274,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     await settings.setMapShowPositionHistory(_showPositionHistory);
     await settings.setMapConnectionMaxDistance(_connectionMaxDistance);
     await settings.setSatelliteLabelsEnabled(_showSatelliteLabels);
+    await settings.setMapClusterMarkers(_clusterMarkers);
   }
 
   /// Animate camera to a specific location with smooth easing
@@ -812,8 +817,15 @@ class _MapScreenState extends ConsumerState<MapScreen>
     // Calculate center point
     LatLng center = const LatLng(0, 0);
     double zoom = 2.0;
+    bool centerResolved = false;
 
-    // Traceroute mode: fit camera to hop bounds
+    // Traceroute mode: fit camera to hop bounds when the traceroute
+    // has at least two valid GPS points. When every hop reports 0,0
+    // (or no GPS data exists for the route), `_tracerouteBounds`
+    // returns null — in that case we MUST fall through to the
+    // standard user-position / nodes-with-position fallback, otherwise
+    // the camera lands at LatLng(0,0) (the Gulf of Guinea, "Africa
+    // fallback bug").
     if (widget.tracerouteLog != null) {
       final tracerouteBounds = _tracerouteBounds(
         widget.tracerouteLog!,
@@ -847,15 +859,30 @@ class _MapScreenState extends ConsumerState<MapScreen>
         } else {
           zoom = 6.0;
         }
+        centerResolved = true;
+      } else {
+        AppLogging.map(
+          '[MapScreen] traceroute bounds null - all hops at 0,0; '
+          'falling back to user / nodes-with-position chain',
+        );
       }
-    } else if (widget.locationOnlyMode &&
+    }
+
+    // True when the screen was opened from a traceroute card but the
+    // route has no usable GPS data (every hop reports 0,0 or has no
+    // position). Drives the persistent banner below — without it, the
+    // user sees an apparently-blank map with no explanation.
+    final tracerouteHasNoGps = widget.tracerouteLog != null && !centerResolved;
+
+    if (!centerResolved &&
+        widget.locationOnlyMode &&
         widget.initialLatitude != null &&
         widget.initialLongitude != null) {
       center =
           safeLatLng(widget.initialLatitude!, widget.initialLongitude!) ??
           center;
       zoom = 15.0;
-    } else if (nodesWithPosition.isNotEmpty) {
+    } else if (!centerResolved && nodesWithPosition.isNotEmpty) {
       final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
       final myNodeWithPos = nodesWithPosition
           .where((n) => n.node.nodeNum == myNodeNum)
@@ -956,6 +983,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   break;
                 case 'heatmap':
                   setState(() => _showHeatmap = !_showHeatmap);
+                  break;
+                case 'cluster_markers':
+                  setState(() => _clusterMarkers = !_clusterMarkers);
+                  unawaited(_saveMapLayerSettings());
+                  AppLogging.map('[MapScreen] clusterMarkers=$_clusterMarkers');
                   break;
                 case 'connections':
                   setState(() => _showConnectionLines = !_showConnectionLines);
@@ -1150,6 +1182,28 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         _showHeatmap
                             ? context.l10n.mapHideHeatmap
                             : context.l10n.mapShowHeatmap,
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'cluster_markers',
+                  child: Row(
+                    children: [
+                      Icon(
+                        _clusterMarkers
+                            ? Icons.bubble_chart
+                            : Icons.bubble_chart_outlined,
+                        size: 18,
+                        color: _clusterMarkers
+                            ? context.accentColor
+                            : context.textSecondary,
+                      ),
+                      SizedBox(width: AppTheme.spacing8),
+                      Text(
+                        _clusterMarkers
+                            ? context.l10n.mapHideClusterMarkers
+                            : context.l10n.mapShowClusterMarkers,
                       ),
                     ],
                   ),
@@ -1660,82 +1714,103 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           }),
                         ),
                       ),
-                      // Node markers - hide in location only mode
+                      // Node markers - hide in location only mode.
+                      // Markers are built once and consumed by either
+                      // the plain MarkerLayer or the
+                      // MarkerClusterLayerWidget depending on the
+                      // user's `clusterMarkers` setting. Each marker
+                      // keys on the nodeNum so the cluster tap-to-list
+                      // sheet can recover the underlying MeshNode.
                       if (!widget.locationOnlyMode)
-                        MarkerLayer(
-                          rotate: true,
-                          markers: finiteMarkers(
-                            ([...nodesWithPosition]..sort((a, b) {
-                                  // Own node renders last = on top
-                                  final aIsMe = a.node.nodeNum == myNodeNum;
-                                  final bIsMe = b.node.nodeNum == myNodeNum;
-                                  if (aIsMe != bIsMe) return aIsMe ? 1 : -1;
-                                  return 0;
-                                }))
-                                .map((n) {
-                                  final isMyNode = n.node.nodeNum == myNodeNum;
-                                  final isSelected =
-                                      _selectedNode?.nodeNum == n.node.nodeNum;
-                                  return Marker(
-                                    point: LatLng(n.latitude, n.longitude),
-                                    width: isMyNode
-                                        ? 56
-                                        : (isSelected ? 56 : 44),
-                                    height: isMyNode
-                                        ? 56
-                                        : (isSelected ? 56 : 44),
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        HapticFeedback.selectionClick();
-                                        if (_measureMode) {
-                                          _handleMeasureNodeTap(n);
-                                        } else {
-                                          setState(() {
-                                            _selectedNode = n.node;
-                                            _selectedTakEntity = null;
-                                          });
-                                        }
-                                      },
-                                      onLongPress: () {
-                                        HapticFeedback.heavyImpact();
+                        Builder(
+                          builder: (context) {
+                            final sortedNodes = [...nodesWithPosition]
+                              ..sort((a, b) {
+                                // Own node renders last = on top
+                                final aIsMe = a.node.nodeNum == myNodeNum;
+                                final bIsMe = b.node.nodeNum == myNodeNum;
+                                if (aIsMe != bIsMe) return aIsMe ? 1 : -1;
+                                return 0;
+                              });
+                            final markers = finiteMarkers(
+                              sortedNodes.map((n) {
+                                final isMyNode = n.node.nodeNum == myNodeNum;
+                                final isSelected =
+                                    _selectedNode?.nodeNum == n.node.nodeNum;
+                                return Marker(
+                                  key: ValueKey<int>(n.node.nodeNum),
+                                  point: LatLng(n.latitude, n.longitude),
+                                  width: isMyNode ? 56 : (isSelected ? 56 : 44),
+                                  height: isMyNode
+                                      ? 56
+                                      : (isSelected ? 56 : 44),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      HapticFeedback.selectionClick();
+                                      if (_measureMode) {
+                                        _handleMeasureNodeTap(n);
+                                      } else {
                                         setState(() {
-                                          _measureMode = true;
-                                          _measureStart = LatLng(
-                                            n.latitude,
-                                            n.longitude,
-                                          );
-                                          _measureEnd = null;
-                                          _measureNodeA = n.node;
-                                          _measureNodeB = null;
-                                          _measureTerrainPolylines = null;
-                                          _measureTerrainResult = null;
-                                          _selectedNode = null;
+                                          _selectedNode = n.node;
                                           _selectedTakEntity = null;
                                         });
-                                      },
-                                      child: widget.nodedexMode
-                                          ? NodeDexSigilMarker(
-                                              pin:
-                                                  nodedexPinsByNum[n
-                                                      .node
-                                                      .nodeNum]!,
-                                              isSelected: isSelected,
-                                              isStale: n.isStale,
-                                            )
-                                          : _NodeMarker(
-                                              node: n.node,
-                                              presence: presenceConfidenceFor(
-                                                presenceMap,
-                                                n.node,
-                                              ),
-                                              isMyNode: isMyNode,
-                                              isSelected: isSelected,
-                                              isStale: n.isStale,
+                                      }
+                                    },
+                                    onLongPress: () {
+                                      HapticFeedback.heavyImpact();
+                                      setState(() {
+                                        _measureMode = true;
+                                        _measureStart = LatLng(
+                                          n.latitude,
+                                          n.longitude,
+                                        );
+                                        _measureEnd = null;
+                                        _measureNodeA = n.node;
+                                        _measureNodeB = null;
+                                        _measureTerrainPolylines = null;
+                                        _measureTerrainResult = null;
+                                        _selectedNode = null;
+                                        _selectedTakEntity = null;
+                                      });
+                                    },
+                                    child: widget.nodedexMode
+                                        ? NodeDexSigilMarker(
+                                            pin:
+                                                nodedexPinsByNum[n
+                                                    .node
+                                                    .nodeNum]!,
+                                            isSelected: isSelected,
+                                            isStale: n.isStale,
+                                          )
+                                        : _NodeMarker(
+                                            node: n.node,
+                                            presence: presenceConfidenceFor(
+                                              presenceMap,
+                                              n.node,
                                             ),
-                                    ),
-                                  );
-                                }),
-                          ),
+                                            isMyNode: isMyNode,
+                                            isSelected: isSelected,
+                                            isStale: n.isStale,
+                                          ),
+                                  ),
+                                );
+                              }),
+                            ).toList(growable: false);
+
+                            if (!_clusterMarkers) {
+                              return MarkerLayer(
+                                rotate: true,
+                                markers: markers,
+                              );
+                            }
+                            return _buildClusterLayer(
+                              context: context,
+                              markers: markers,
+                              nodesByNum: {
+                                for (final n in sortedNodes) n.node.nodeNum: n,
+                              },
+                            );
+                          },
                         ),
                       // TAK movement trails for tracked entities
                       if (_showTakLayer &&
@@ -1891,6 +1966,23 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       ),
                     ],
                   ),
+                  // Traceroute "no GPS data" notice. The Africa-fallback
+                  // fix (Sprint 4) re-centers the camera on the user's
+                  // location when the route has zero valid hops, but
+                  // without this banner the user just sees a blank map
+                  // with no route line and no explanation. The banner
+                  // makes the empty state legible.
+                  if (tracerouteHasNoGps)
+                    Positioned(
+                      left: _mapPadding,
+                      right: _mapPadding + _controlSize + _controlSpacing,
+                      top: _mapPadding,
+                      child: StatusBanner.info(
+                        title: context.l10n.mapTracerouteNoGpsTitle,
+                        subtitle: context.l10n.mapTracerouteNoGpsSubtitle,
+                        icon: Icons.location_off_outlined,
+                      ),
+                    ),
                   // Filter bar - hide in location only mode
                   if (_showFilters && !widget.locationOnlyMode)
                     Positioned(
@@ -2763,6 +2855,118 @@ class _MapScreenState extends ConsumerState<MapScreen>
     HapticFeedback.lightImpact();
   }
 
+  /// Wraps the mesh-map node markers in a [MarkerClusterLayerWidget]
+  /// when the user has opted in via the map menu. Config mirrors the
+  /// World Map (`maxClusterRadius: 80`, animations tuned for large
+  /// node sets) so behaviour is consistent across the two map
+  /// surfaces. Tapping a cluster opens a bottom sheet listing the
+  /// underlying nodes — the user can pick one to select it (the
+  /// existing node-info card surfaces it) or pinch-zoom to expand
+  /// the cluster into individual markers.
+  Widget _buildClusterLayer({
+    required BuildContext context,
+    required List<Marker> markers,
+    required Map<int, _NodeWithPosition> nodesByNum,
+  }) {
+    final accentColor = context.accentColor;
+    return MarkerClusterLayerWidget(
+      options: MarkerClusterLayerOptions(
+        maxClusterRadius: 80,
+        size: const Size(44, 44),
+        alignment: Alignment.center,
+        padding: EdgeInsets.zero,
+        maxZoom: 15,
+        zoomToBoundsOnClick: false,
+        animationsOptions: const AnimationsOptions(
+          zoom: Duration.zero,
+          fitBound: Duration(milliseconds: 300),
+          centerMarker: Duration.zero,
+          spiderfy: Duration(milliseconds: 200),
+        ),
+        markers: markers,
+        builder: (context, clusterMarkers) {
+          final count = clusterMarkers.length;
+          final size = count > 100
+              ? 48.0
+              : count > 50
+              ? 44.0
+              : 40.0;
+          return GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () =>
+                _showClusterListSheet(context, clusterMarkers, nodesByNum),
+            child: Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: accentColor.withValues(alpha: 0.9),
+                border: Border.all(color: Colors.white, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  count > 999
+                      ? '${(count / 1000).toStringAsFixed(1)}k'
+                      : '$count',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// Opens a bottom sheet listing the nodes contained in a tapped
+  /// cluster. Tapping a row selects the node (which surfaces the
+  /// existing node info card) and dismisses the sheet.
+  Future<void> _showClusterListSheet(
+    BuildContext context,
+    List<Marker> clusterMarkers,
+    Map<int, _NodeWithPosition> nodesByNum,
+  ) async {
+    final nodes = <_NodeWithPosition>[];
+    for (final m in clusterMarkers) {
+      final key = m.key;
+      if (key is ValueKey<int>) {
+        final node = nodesByNum[key.value];
+        if (node != null) nodes.add(node);
+      }
+    }
+    if (nodes.isEmpty) return;
+    HapticFeedback.selectionClick();
+    await AppBottomSheet.show<void>(
+      context: context,
+      child: _ClusterListSheet(
+        nodes: nodes,
+        onNodeSelected: (node) {
+          Navigator.of(context).pop();
+          if (!mounted) return;
+          setState(() {
+            _selectedNode = node;
+            _selectedTakEntity = null;
+          });
+        },
+      ),
+    );
+  }
+
+  /// Bottom-sheet content listing nodes contained in a tapped cluster.
+  /// Header (count + interaction hint) followed by a scrollable list
+  /// of row tiles. Tapping a row invokes [onNodeSelected].
+
   Widget _buildEmptyState() {
     final nodes = ref.watch(nodesProvider);
     final totalNodes = nodes.length;
@@ -3400,6 +3604,100 @@ Color _presenceColor(BuildContext context, PresenceConfidence confidence) {
   }
 }
 
+/// Bottom-sheet content listing the nodes inside a tapped cluster on
+/// the mesh map. The sheet itself is presented by [AppBottomSheet.show]
+/// in `_showClusterListSheet`. Tapping a row delegates to
+/// [onNodeSelected] which closes the sheet and selects the node.
+class _ClusterListSheet extends StatelessWidget {
+  final List<_NodeWithPosition> nodes;
+  final ValueChanged<MeshNode> onNodeSelected;
+
+  const _ClusterListSheet({required this.nodes, required this.onNodeSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.bubble_chart, size: 22, color: context.accentColor),
+            const SizedBox(width: AppTheme.spacing12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.l10n.mapClusterTapToListTitle(nodes.length),
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: context.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spacing4),
+                  Text(
+                    context.l10n.mapClusterTapToListSubtitle,
+                    style: TextStyle(fontSize: 12, color: context.textTertiary),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppTheme.spacing16),
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.6,
+          ),
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: nodes.length,
+            separatorBuilder: (_, _) => Divider(
+              height: 1,
+              color: context.border.withValues(alpha: 0.3),
+            ),
+            itemBuilder: (context, index) {
+              final node = nodes[index].node;
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                leading: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: context.accentColor.withValues(alpha: 0.15),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    nodeMarkerLabel(node),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: context.accentColor,
+                    ),
+                  ),
+                ),
+                title: Text(
+                  node.displayName,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: context.textPrimary,
+                  ),
+                ),
+                onTap: () => onNodeSelected(node),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// Node with resolved position (current or cached)
 class _NodeWithPosition {
   final MeshNode node;
@@ -3413,6 +3711,30 @@ class _NodeWithPosition {
     required this.longitude,
     required this.isStale,
   });
+}
+
+/// Computes the label shown inside a map node marker.
+///
+/// Prefers the full shortName (capped to 4 chars per Meshtastic spec)
+/// so a node labelled "MYSO" reads as itself, not the single letter
+/// "M". Falls back to the last 4 hex digits of `nodeNum` when no
+/// shortName is set — that matches NodeDisplayNameResolver.shortHex's
+/// fallback shape and reads as a recognisable mesh identifier.
+///
+/// Top-level so widget tests can pin the contract without spinning up
+/// the full map.
+String nodeMarkerLabel(MeshNode node) {
+  final shortName = node.shortName;
+  if (shortName != null && shortName.isNotEmpty) {
+    // .characters is grapheme-cluster-aware (handles emoji + accents).
+    final clusters = shortName.characters;
+    final capped = clusters.length > 4 ? clusters.take(4).string : shortName;
+    return capped.toUpperCase();
+  }
+  // Last 4 hex digits — matches the canonical short-form id used
+  // elsewhere in the app for nodes without a self-reported name.
+  final hex = node.nodeNum.toRadixString(16).padLeft(8, '0');
+  return hex.substring(hex.length - 4).toUpperCase();
 }
 
 /// Custom marker widget for nodes
@@ -3491,18 +3813,26 @@ class _NodeMarkerState extends State<_NodeMarker>
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Text(
-            (widget.node.shortName?.isNotEmpty == true
-                ? widget.node.shortName!.characters.first.toUpperCase()
-                : widget.node.nodeNum
-                      .toRadixString(16)
-                      .characters
-                      .first
-                      .toUpperCase()),
-            style: TextStyle(
-              fontSize: widget.isSelected ? 16 : 14,
-              fontWeight: FontWeight.bold,
-              color: Colors.white.withValues(alpha: widget.isStale ? 0.7 : 1.0),
+          // Full shortName (Meshtastic spec: <=4 chars) instead of just
+          // the first character, so a node labelled e.g. "MYSO" reads
+          // as itself on the map rather than collapsing to "M".
+          // FittedBox keeps long shortnames or wide grapheme clusters
+          // from overflowing the marker circle on small zooms.
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                nodeMarkerLabel(widget.node),
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: widget.isSelected ? 16 : 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white.withValues(
+                    alpha: widget.isStale ? 0.7 : 1.0,
+                  ),
+                ),
+              ),
             ),
           ),
           // Stale indicator (small question mark overlay)

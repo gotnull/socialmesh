@@ -37,6 +37,7 @@ import '../../core/widgets/info_table.dart';
 import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/chip_selector.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/legal_document_sheet.dart';
 import '../../core/widgets/remote_admin_selector_sheet.dart';
@@ -2786,6 +2787,105 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ],
+
+                          const SizedBox(height: AppTheme.spacing16),
+
+                          // Navigation section: cold-start landing tab.
+                          // The bottom-nav order is fixed (Messages,
+                          // Map, Nodes, Dashboard); this picker only
+                          // chooses which tab the app boots into.
+                          // Changing it doesn't navigate now — the new
+                          // value is read once on the next launch by
+                          // MainShellIndexNotifier.build().
+                          _SectionHeader(
+                            title: context.l10n.settingsSectionNavigation,
+                          ),
+                          _SettingsTile(
+                            icon: Icons.tab_outlined,
+                            title: context.l10n.settingsTileLandingTabTitle,
+                            subtitle:
+                                context.l10n.settingsTileLandingTabSubtitle,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              AppTheme.spacing16,
+                              AppTheme.spacing4,
+                              AppTheme.spacing16,
+                              AppTheme.spacing12,
+                            ),
+                            child: ChipSelector<int>(
+                              value: settingsService.defaultLandingTab.clamp(
+                                0,
+                                3,
+                              ),
+                              options: [
+                                ChipOption(
+                                  value: 0,
+                                  label: context.l10n.navigationMessages,
+                                  icon: Icons.chat_bubble_outline,
+                                  color: AccentColors.green,
+                                ),
+                                ChipOption(
+                                  value: 1,
+                                  label: context.l10n.navigationMap,
+                                  icon: Icons.map_outlined,
+                                  color: AccentColors.cyan,
+                                ),
+                                ChipOption(
+                                  value: 2,
+                                  label: context.l10n.navigationNodes,
+                                  icon: Icons.people_outline,
+                                  color: AccentColors.purple,
+                                ),
+                                ChipOption(
+                                  value: 3,
+                                  label: context.l10n.navigationDashboard,
+                                  icon: Icons.dashboard_outlined,
+                                  color: AppTheme.primaryBlue,
+                                ),
+                              ],
+                              onChanged: (idx) async {
+                                HapticFeedback.selectionClick();
+                                await settingsService.setDefaultLandingTab(idx);
+                                AppLogging.settings(
+                                  '[Settings] defaultLandingTab=$idx',
+                                );
+                                safeSetState(() {});
+                              },
+                            ),
+                          ),
+
+                          const SizedBox(height: AppTheme.spacing16),
+
+                          // Large mesh section: knobs aimed at 1000+ node
+                          // deployments where the default visual feedback
+                          // becomes noisy. Decoupled from notification
+                          // toggles on purpose — these stay accessible
+                          // even when notifications are muted.
+                          _SectionHeader(
+                            title: context.l10n.settingsSectionLargeMesh,
+                          ),
+                          _SettingsTile(
+                            icon: Icons.notifications_paused_outlined,
+                            title:
+                                context.l10n.settingsTileHideNewNodesBadgeTitle,
+                            subtitle: context
+                                .l10n
+                                .settingsTileHideNewNodesBadgeSubtitle,
+                            trailing: ThemedSwitch(
+                              value: settingsService.hideNewNodesBadge,
+                              onChanged: (value) async {
+                                HapticFeedback.selectionClick();
+                                await settingsService.setHideNewNodesBadge(
+                                  value,
+                                );
+                                AppLogging.settings(
+                                  '[Settings] hideNewNodesBadge=$value',
+                                );
+                                safeSetState(() {});
+                              },
+                            ),
+                          ),
 
                           const SizedBox(height: AppTheme.spacing16),
 

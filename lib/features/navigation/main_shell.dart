@@ -86,6 +86,8 @@ import '../../providers/whats_new_providers.dart';
 import '../../core/whats_new/whats_new_sheet.dart';
 import 'widgets/drawer_admin_section.dart';
 import 'widgets/drawer_enterprise_section.dart';
+import 'providers/drawer_customization_providers.dart';
+import 'widgets/drawer_customize_button.dart';
 import 'widgets/drawer_menu_tile.dart';
 import 'widgets/drawer_node_header.dart';
 import 'widgets/drawer_sticky_header.dart';
@@ -129,10 +131,25 @@ final mainShellScaffoldKeyProvider =
       MainShellScaffoldKeyNotifier.new,
     );
 
-/// Provider for controlling the currently selected bottom tab in MainShell
+/// Provider for controlling the currently selected bottom tab in MainShell.
+///
+/// Cold-start lands on the user's configured `defaultLandingTab` (default 2
+/// = Nodes, matching the historical app behaviour). The setting is read
+/// once synchronously off the already-loaded SettingsService; if the
+/// service isn't ready yet, we fall back to the original default so the
+/// app never crashes on bootstrap.
 class MainShellIndexNotifier extends Notifier<int> {
+  static const int _legacyDefault = 2; // Nodes tab
+
   @override
-  int build() => 2; // start on Nodes tab
+  int build() {
+    final settings = ref.read(settingsServiceProvider).value;
+    final stored = settings?.defaultLandingTab ?? _legacyDefault;
+    // Clamp to the valid tab range so a stale persisted index from a
+    // hypothetical future build can't crash the controller. The nav has
+    // 4 tabs (0..3).
+    return stored.clamp(0, 3);
+  }
 
   void setIndex(int idx) {
     state = idx;
@@ -659,6 +676,16 @@ class _MainShellState extends ConsumerState<MainShell> {
       key: _scaffoldKey,
       drawer: const _MainDrawer(),
       drawerEdgeDragWidth: 40,
+      // When the drawer closes (swipe out, tap-out, back gesture, or
+      // any other dismiss path), force-exit the drawer's edit mode so
+      // the next open starts in normal mode. Without this the user
+      // would re-open mid-edit with the banner + minus badges still
+      // visible, which is jarring.
+      onDrawerChanged: (isOpen) {
+        if (!isOpen) {
+          ref.read(drawerEditModeProvider.notifier).exit();
+        }
+      },
       body: Column(
         children: [
           // Reconnection status banner — sits above content when
@@ -815,8 +842,14 @@ class _MainShellState extends ConsumerState<MainShell> {
           // Messages tab - show unread count
           badgeCount = ref.watch(unreadMessagesCountProvider);
         } else if (index == 2) {
-          // Nodes tab - show new nodes count
-          badgeCount = ref.watch(newNodesCountProvider);
+          // Nodes tab - show new-nodes count UNLESS the user has muted
+          // the badge for large-mesh quiet operation. The underlying
+          // newNodesCountProvider still tracks discoveries; only the
+          // visual surface is suppressed.
+          final hideBadge =
+              ref.watch(settingsServiceProvider).value?.hideNewNodesBadge ??
+              false;
+          badgeCount = hideBadge ? 0 : ref.watch(newNodesCountProvider);
         } else if (index == 3) {
           // Dashboard tab - no badge needed
           badgeCount = 0;
@@ -897,6 +930,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
 
   List<DrawerMenuItem> _buildDrawerMenuItems(AppLocalizations l10n) => [
     DrawerMenuItem(
+      id: 'signals',
       icon: Icons.sensors,
       label: l10n.navigationSignals,
       screen: SignalFeedScreen(key: signalFeedScreenKey),
@@ -904,6 +938,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
       iconColor: AccentColors.lavender,
     ),
     DrawerMenuItem(
+      id: 'nodedex',
       icon: Icons.auto_stories_outlined,
       label: l10n.navigationNodeDex,
       screen: const NodeDexScreen(),
@@ -922,6 +957,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
     ),
     if (AppFeatureFlags.isNodeBoardEnabled)
       DrawerMenuItem(
+        id: 'nodeboard',
         icon: Icons.dashboard_outlined,
         label: l10n.nodeboardDrawerLabel,
         screen: const NodeBoardListScreen(),
@@ -931,6 +967,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
       ),
     if (AppFeatureFlags.isOperationsEnabled)
       DrawerMenuItem(
+        id: 'operations',
         icon: Icons.flag_outlined,
         label: l10n.navigationOperations,
         screen: const OperationsScreen(),
@@ -939,6 +976,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
         whatsNewBadgeKey: 'operations',
       ),
     DrawerMenuItem(
+      id: 'presence',
       icon: Icons.people_alt_outlined,
       label: l10n.navigationPresence,
       screen: const PresenceScreen(),
@@ -946,6 +984,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
       requiresConnection: true,
     ),
     DrawerMenuItem(
+      id: 'world_map',
       icon: Icons.public,
       label: l10n.navigationWorldMap,
       screen: const WorldMeshScreen(),
@@ -954,6 +993,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
     ),
     if (AppFeatureFlags.isMeshExplorerEnabled)
       DrawerMenuItem(
+        id: 'mesh_explorer',
         icon: Icons.explore_outlined,
         label: l10n.meshExplorerDrawerLabel,
         screen: const MeshExplorerScreen(),
@@ -963,6 +1003,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
       ),
     if (AppFeatureFlags.isMeshCapacityEnabled)
       DrawerMenuItem(
+        id: 'mesh_capacity',
         icon: Icons.network_check,
         label: l10n.meshCapacityScreenTitle,
         screen: const MeshCapacityScreen(),
@@ -972,6 +1013,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
       ),
     if (AppFeatureFlags.isMeshFeedEnabled)
       DrawerMenuItem(
+        id: 'mesh_feed',
         icon: Icons.dynamic_feed_outlined,
         label: l10n.meshFeedDrawerLabel,
         screen: const MeshFeedScreen(),
@@ -980,6 +1022,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
       ),
     if (AppFeatureFlags.isSocialEnabled)
       DrawerMenuItem(
+        id: 'social',
         icon: Icons.forum_outlined,
         label: l10n.navigationSocial,
         screen: const SocialHubScreen(),
@@ -988,6 +1031,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
         requiresConnection: false,
       ),
     DrawerMenuItem(
+      id: 'activity',
       icon: Icons.favorite_border,
       label: l10n.navigationActivity,
       screen: const ActivityTimelineScreen(),
@@ -999,6 +1043,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
       badgeProviderKey: 'activity',
     ),
     DrawerMenuItem(
+      id: 'telemetry',
       icon: Icons.insights_outlined,
       label: l10n.navigationTelemetry,
       screen: const TelemetryHubScreen(),
@@ -1008,6 +1053,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
     ),
     if (AppFeatureFlags.isDeviceShopEnabled)
       DrawerMenuItem(
+        id: 'device_shop',
         icon: Icons.storefront_outlined,
         label: l10n.deviceShopTitle,
         screen: const DeviceShopScreen(),
@@ -1017,6 +1063,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
       ),
     if (AppFeatureFlags.isFileTransferEnabled)
       DrawerMenuItem(
+        id: 'file_transfers',
         icon: Icons.swap_vert,
         label: l10n.navigationFileTransfers,
         screen: const FileTransfersContainerScreen(),
@@ -1026,6 +1073,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
       ),
     if (AppFeatureFlags.isAetherEnabled)
       DrawerMenuItem(
+        id: 'aether',
         icon: Icons.flight_takeoff_outlined,
         label: l10n.navigationAether,
         screen: const AetherScreen(),
@@ -1036,6 +1084,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
     if (AppFeatureFlags.isTakGatewayEnabled ||
         AppFeatureFlags.isTakMeshBridgeEnabled)
       DrawerMenuItem(
+        id: 'tak_gateway',
         icon: Icons.gps_fixed,
         label: l10n.navigationTakGateway,
         screen: const TakScreen(),
@@ -1046,6 +1095,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
     if (AppFeatureFlags.isTakGatewayEnabled ||
         AppFeatureFlags.isTakMeshBridgeEnabled)
       DrawerMenuItem(
+        id: 'tak_map',
         icon: Icons.military_tech,
         label: l10n.navigationTakMap,
         tabIndex: 1,
@@ -1055,6 +1105,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
       ),
     if (AppFeatureFlags.isSipEnabled)
       DrawerMenuItem(
+        id: 'sip',
         icon: Icons.wifi_tethering,
         label: l10n.sipBadgeLabel,
         screen: const SipHubScreen(),
@@ -1064,6 +1115,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
       ),
     if (AppFeatureFlags.isMrrpHarnessEnabled && AppFeatureFlags.isMrrpEnabled)
       DrawerMenuItem(
+        id: 'mrrp_harness',
         icon: Icons.hub,
         label: l10n.mrrpHarnessDrawerLabel,
         screen: const MrrpHarnessHomeScreen(),
@@ -1072,6 +1124,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
       ),
     if (AppFeatureFlags.isMeshIncidentsEnabled)
       DrawerMenuItem(
+        id: 'mesh_incidents',
         icon: Icons.warning_amber_outlined,
         label: l10n.navigationMeshIncidents,
         screen: const MeshIncidentListScreen(),
@@ -1079,6 +1132,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
         requiresConnection: true,
       ),
     DrawerMenuItem(
+      id: 'timeline',
       icon: Icons.timeline,
       label: l10n.navigationTimeline,
       screen: const TimelineScreen(),
@@ -1086,18 +1140,21 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
       iconColor: AccentColors.indigo,
     ),
     DrawerMenuItem(
+      id: 'mesh_3d_view',
       icon: Icons.view_in_ar,
       label: l10n.navigationMesh3dView,
       screen: const Mesh3DScreen(),
       iconColor: AccentColors.cyan,
     ),
     DrawerMenuItem(
+      id: 'routes',
       icon: Icons.route,
       label: l10n.navigationRoutes,
       screen: const RoutesScreen(),
       iconColor: AccentColors.purple,
     ),
     DrawerMenuItem(
+      id: 'reachability',
       icon: Icons.wifi_find,
       label: l10n.navigationReachability,
       screen: const MeshReachabilityScreen(),
@@ -1105,6 +1162,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
       requiresConnection: true,
     ),
     DrawerMenuItem(
+      id: 'mesh_health',
       icon: Icons.monitor_heart_outlined,
       label: l10n.navigationMeshHealth,
       screen: const MeshHealthDashboard(),
@@ -1112,6 +1170,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
       requiresConnection: true,
     ),
     DrawerMenuItem(
+      id: 'device_logs',
       icon: Icons.terminal,
       label: l10n.navigationDeviceLogs,
       screen: const DeviceLogsScreen(),
@@ -1120,6 +1179,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
     ),
     if (AppFeatureFlags.isTranslationEnabled)
       DrawerMenuItem(
+        id: 'translation_pack',
         icon: Icons.translate_outlined,
         label: l10n.navigationTranslationPack,
         screen: const TranslationSettingsScreen(),
@@ -1129,6 +1189,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
         whatsNewBadgeKey: 'translation_pack',
       ),
     DrawerMenuItem(
+      id: 'theme_pack',
       icon: Icons.palette_outlined,
       label: l10n.navigationThemePack,
       screen: const ThemeSettingsScreen(),
@@ -1139,6 +1200,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
           : null,
     ),
     DrawerMenuItem(
+      id: 'ringtone_pack',
       icon: Icons.music_note_outlined,
       label: l10n.navigationRingtonePack,
       screen: const RingtoneScreen(),
@@ -1146,6 +1208,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
       iconColor: AccentColors.pink,
     ),
     DrawerMenuItem(
+      id: 'widgets',
       icon: Icons.widgets_outlined,
       label: l10n.navigationWidgets,
       screen: const WidgetBuilderScreen(),
@@ -1153,6 +1216,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
       iconColor: AccentColors.coral,
     ),
     DrawerMenuItem(
+      id: 'automations',
       icon: Icons.auto_awesome,
       label: l10n.navigationAutomations,
       screen: const AutomationsScreen(),
@@ -1160,6 +1224,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
       iconColor: AccentColors.yellow,
     ),
     DrawerMenuItem(
+      id: 'ifttt_integration',
       icon: Icons.webhook_outlined,
       label: l10n.navigationIftttIntegration,
       screen: const IftttConfigScreen(),
@@ -1175,6 +1240,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
     required Set<String> unseenBadgeKeys,
     bool isChild = false,
   }) {
+    final editMode = ref.watch(drawerEditModeProvider);
     final isPremium = item.premiumFeature != null;
     final hasAccess =
         !isPremium || ref.watch(hasFeatureProvider(item.premiumFeature!));
@@ -1203,7 +1269,11 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
     final hasChildren = item.hasChildren;
     final isExpanded = _expandedDrawerItems.contains(item.label);
 
-    return DrawerMenuTile(
+    // Customizable means the item has a stable id AND it's a top-level
+    // entry (not a child). Children and id-less items can't be hidden
+    // or reordered.
+    final canCustomize = item.id != null && !isChild;
+    final tile = DrawerMenuTile(
       icon: item.icon,
       label: item.label,
       isSelected: false,
@@ -1217,6 +1287,16 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
       isChild: isChild,
       hasChildren: hasChildren,
       isExpanded: isExpanded,
+      editMode: editMode && canCustomize,
+      removeSemanticsLabel: canCustomize
+          ? context.l10n.drawerRemoveItemLabel(item.label)
+          : null,
+      onRemove: editMode && canCustomize
+          ? () {
+              HapticFeedback.mediumImpact();
+              ref.read(drawerCustomizationProvider.notifier).hide(item.id!);
+            }
+          : null,
       onChevronTap: hasChildren
           ? () {
               ref.haptics.tabChange();
@@ -1266,6 +1346,23 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
               }
             },
     );
+
+    // Outer long-press detector — entry point to drawer edit mode for
+    // any customizable item. Once edit mode is active the inner
+    // DrawerMenuTile suppresses its own tap and surfaces the remove
+    // badge + drag handle instead. Non-customizable items still
+    // long-press into edit mode (so the user can discover the feature)
+    // but they themselves are not editable.
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onLongPress: editMode || isChild
+          ? null
+          : () {
+              HapticFeedback.mediumImpact();
+              ref.read(drawerEditModeProvider.notifier).enter();
+            },
+      child: tile,
+    );
   }
 
   List<Widget> _buildDrawerMenuSlivers(BuildContext context, ThemeData theme) {
@@ -1289,48 +1386,118 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
     slivers.add(const SliverPadding(padding: EdgeInsets.only(top: 8)));
 
     final l10n = context.l10n;
-    final drawerMenuItems = _buildDrawerMenuItems(l10n);
-    final sections = <DrawerMenuSection>[];
-    DrawerMenuSection? currentSection;
+    final editMode = ref.watch(drawerEditModeProvider);
+    final customization =
+        ref.watch(drawerCustomizationProvider).value ??
+        DrawerCustomizationState.empty;
+    final defaultItems = _buildDrawerMenuItems(l10n);
 
-    for (var i = 0; i < drawerMenuItems.length; i++) {
-      final item = drawerMenuItems[i];
+    // Section membership is intrinsic — derived from default position
+    // — not positional in the rendered list. This decoupling is the
+    // whole point of the reorder model: once a user moves an item,
+    // its section membership is preserved, so it can't end up
+    // visually orphaned in the section above.
+    final membership = deriveSectionMembership(defaultItems);
+    final visibleItems = applyDrawerCustomization(defaultItems, customization);
 
-      if (item.sectionHeader != null) {
-        if (currentSection != null) {
-          sections.add(currentSection);
-        }
-        currentSection = DrawerMenuSection(item.sectionHeader!, []);
-      }
-
-      if (currentSection != null) {
-        currentSection.items.add(DrawerMenuItemWithIndex(item, i));
-      } else {
-        if (sections.isEmpty || sections.last.title.isNotEmpty) {
-          sections.add(DrawerMenuSection('', []));
-        }
-        sections.last.items.add(DrawerMenuItemWithIndex(item, i));
-      }
+    // Bucket visible items by intrinsic section, then apply the
+    // user's intra-section custom order to each bucket.
+    final itemsBySection = <String, List<DrawerMenuItem>>{};
+    for (final item in visibleItems) {
+      final sectionId = item.id != null
+          ? (membership.sectionByItemId[item.id] ?? '')
+          : '';
+      (itemsBySection[sectionId] ??= <DrawerMenuItem>[]).add(item);
     }
+    final orderedBySection = <String, List<DrawerMenuItem>>{
+      for (final entry in itemsBySection.entries)
+        entry.key: applySectionOrder(entry.value, customization.customOrder),
+    };
 
-    if (currentSection != null) {
-      sections.add(currentSection);
-    }
+    for (
+      var sectionIndex = 0;
+      sectionIndex < membership.sectionTitlesInOrder.length;
+      sectionIndex++
+    ) {
+      final sectionTitle = membership.sectionTitlesInOrder[sectionIndex];
+      final isLastSection =
+          sectionIndex == membership.sectionTitlesInOrder.length - 1;
+      final sectionItems = orderedBySection[sectionTitle] ?? const [];
+      if (sectionItems.isEmpty) continue;
 
-    for (var sectionIndex = 0; sectionIndex < sections.length; sectionIndex++) {
-      final section = sections[sectionIndex];
-      final isLastSection = sectionIndex == sections.length - 1;
-
-      if (section.title.isNotEmpty) {
+      if (sectionTitle.isNotEmpty) {
         slivers.add(
           SliverPersistentHeader(
             pinned: true,
             delegate: DrawerStickyHeaderDelegate(
-              title: section.title,
+              title: sectionTitle,
               theme: theme,
             ),
           ),
         );
+      }
+
+      if (editMode) {
+        slivers.add(
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            sliver: SliverReorderableList(
+              itemCount: sectionItems.length,
+              onReorder: (oldIndex, newIndex) {
+                if (oldIndex < newIndex) newIndex -= 1;
+
+                final fromItem = sectionItems[oldIndex];
+                final fromId = fromItem.id;
+                if (fromId == null) return;
+
+                // Apply the local reorder to this section's items.
+                final newSectionOrder = [...sectionItems];
+                newSectionOrder.removeAt(oldIndex);
+                newSectionOrder.insert(
+                  newIndex.clamp(0, newSectionOrder.length),
+                  fromItem,
+                );
+
+                // Build the new flat customOrder by concatenating each
+                // section's items (in section order). This keeps
+                // intra-section ordering as the user just set it AND
+                // freezes the per-section snapshot for every other
+                // section so they don't drift on the next re-render.
+                final newGlobalIds = <String>[];
+                for (final st in membership.sectionTitlesInOrder) {
+                  final items = (st == sectionTitle)
+                      ? newSectionOrder
+                      : (orderedBySection[st] ?? const <DrawerMenuItem>[]);
+                  for (final item in items) {
+                    if (item.id != null) newGlobalIds.add(item.id!);
+                  }
+                }
+
+                ref
+                    .read(drawerCustomizationProvider.notifier)
+                    .setOrder(newGlobalIds);
+              },
+              itemBuilder: (context, index) {
+                final item = sectionItems[index];
+                final tile = _buildDrawerTile(
+                  item,
+                  context: context,
+                  isConnected: isConnected,
+                  unseenBadgeKeys: unseenBadgeKeys,
+                );
+                return ReorderableDelayedDragStartListener(
+                  key: ValueKey('drawer_edit_${item.id ?? item.label}'),
+                  index: index,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: AppTheme.spacing4),
+                    child: tile,
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+        continue;
       }
 
       slivers.add(
@@ -1338,9 +1505,8 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
-              final itemWithIndex = section.items[index];
-              final item = itemWithIndex.item;
-              final isLastInSection = index == section.items.length - 1;
+              final item = sectionItems[index];
+              final isLastInSection = index == sectionItems.length - 1;
 
               final parentTile = _buildDrawerTile(
                 item,
@@ -1383,7 +1549,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
                     ),
                 ],
               );
-            }, childCount: section.items.length),
+            }, childCount: sectionItems.length),
           ),
         ),
       );
@@ -1637,13 +1803,20 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
                 16,
                 16,
               ),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: _SettingsButton(
-                  onTap: () {
-                    navigateFromDrawer(context, const SettingsScreen());
-                  },
-                ),
+              child: Row(
+                children: [
+                  _SettingsButton(
+                    onTap: () {
+                      navigateFromDrawer(context, const SettingsScreen());
+                    },
+                  ),
+                  const SizedBox(width: AppTheme.spacing12),
+                  // Customize-sidebar entry point. Tap → summary sheet
+                  // with reset CTA. Long-press → enter edit mode
+                  // directly. In edit mode this widget renders as a
+                  // "Done" pill that exits.
+                  const DrawerCustomizeButton(),
+                ],
               ),
             ),
           ],

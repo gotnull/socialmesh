@@ -7081,7 +7081,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get mapHideConnectionLines => 'Ocultar linhas de conexão';
 
   @override
-  String get mapHideHeatmap => 'Ocultar mapa de calor';
+  String get mapHideHeatmap => 'Ocultar halos dos nós';
 
   @override
   String get mapHidePositionHistory => 'Ocultar histórico de posições';
@@ -7260,7 +7260,83 @@ class AppLocalizationsPt extends AppLocalizations {
   String get mapShowConnectionLines => 'Mostrar linhas de conexão';
 
   @override
-  String get mapShowHeatmap => 'Mostrar mapa de calor';
+  String get mapShowHeatmap => 'Mostrar halos dos nós';
+
+  @override
+  String get mapShowClusterMarkers => 'Agrupar marcadores';
+
+  @override
+  String get mapHideClusterMarkers => 'Desativar agrupamento';
+
+  @override
+  String mapClusterTapToListTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nós aqui',
+      one: '1 nó aqui',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get mapClusterTapToListSubtitle =>
+      'Toque em um nó para abrir o cartão de informações, ou aproxime os dedos para expandir o grupo.';
+
+  @override
+  String get drawerCustomizeTooltip =>
+      'Personalizar barra lateral. Mantenha pressionado qualquer item para entrar no modo de edição.';
+
+  @override
+  String get drawerCustomizeDone => 'Concluído';
+
+  @override
+  String get drawerCustomizeSheetTitle => 'Personalizar barra lateral';
+
+  @override
+  String get drawerCustomizeSheetExplainer =>
+      'Mantenha pressionado qualquer item da barra lateral para entrar no modo de edição. Toque no menos vermelho para ocultar, ou arraste a alça para reordenar. Toque em Concluído para salvar.';
+
+  @override
+  String drawerCustomizeSummaryHidden(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count itens ocultos',
+      one: '1 item oculto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get drawerCustomizeSummaryReordered => 'Ordem personalizada aplicada';
+
+  @override
+  String get drawerCustomizeSummaryDefault => 'Ordem padrão, nada oculto';
+
+  @override
+  String get drawerCustomizeEnterEdit => 'Editar';
+
+  @override
+  String get drawerCustomizeReset => 'Redefinir';
+
+  @override
+  String get drawerCustomizeHiddenSectionTitle => 'ITENS OCULTOS';
+
+  @override
+  String get drawerCustomizeRestoreItem => 'Mostrar';
+
+  @override
+  String drawerRemoveItemLabel(String item) {
+    return 'Ocultar $item';
+  }
+
+  @override
+  String get mapTracerouteNoGpsTitle => 'Sem dados de GPS para esta rota';
+
+  @override
+  String get mapTracerouteNoGpsSubtitle =>
+      'Nenhum dos saltos desta traceroute reportou posição. O mapa está centralizado na sua localização - reabra a rota quando algum salto reportar GPS.';
 
   @override
   String get mapShowPositionHistory => 'Mostrar histórico de posições';
@@ -11873,12 +11949,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nodedexChannelUtilLabel => 'Util. do canal';
 
   @override
-  String get nodedexClassificationChange => 'Alterar';
-
-  @override
-  String get nodedexClassificationClassify => 'Classificar';
-
-  @override
   String get nodedexClassificationLabel => 'CLASSIFICAÇÃO';
 
   @override
@@ -13833,6 +13903,141 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get nodesScreenDisconnect => 'Desconectar';
+
+  @override
+  String get roleFilterAll => 'Todas as funções';
+
+  @override
+  String get roleClient => 'Cliente';
+
+  @override
+  String get roleClientMute => 'Cliente silencioso';
+
+  @override
+  String get roleRouter => 'Roteador';
+
+  @override
+  String get roleRouterClient => 'Roteador-cliente';
+
+  @override
+  String get roleRepeater => 'Repetidor';
+
+  @override
+  String get roleTracker => 'Rastreador';
+
+  @override
+  String get roleSensor => 'Sensor';
+
+  @override
+  String get roleTak => 'TAK';
+
+  @override
+  String get roleClientHidden => 'Cliente oculto';
+
+  @override
+  String get roleLostAndFound => 'Achados e perdidos';
+
+  @override
+  String get roleTakTracker => 'Rastreador TAK';
+
+  @override
+  String get roleRouterLate => 'Roteador tardio';
+
+  @override
+  String get roleClientBase => 'Cliente base';
+
+  @override
+  String get settingsTileHideNewNodesBadgeTitle => 'Ocultar selo de novos nós';
+
+  @override
+  String get settingsTileHideNewNodesBadgeSubtitle =>
+      'Silencia o selo na barra inferior que conta os nós recém-descobertos. Útil em redes mesh densas onde a contagem nunca para de crescer.';
+
+  @override
+  String get settingsSectionLargeMesh => 'Mesh grande';
+
+  @override
+  String get settingsSectionNavigation => 'Navegação';
+
+  @override
+  String get settingsTileLandingTabTitle => 'Aba ao iniciar';
+
+  @override
+  String get settingsTileLandingTabSubtitle =>
+      'Escolha qual aba o app abre ao iniciar. Aplica-se no próximo lançamento do SocialMesh.';
+
+  @override
+  String get nodeDetailNodeDexSectionTitle => 'NodeDex';
+
+  @override
+  String get nodeDetailNodeDexOpenCta => 'Abrir';
+
+  @override
+  String get nodeDetailNodeDexClassificationLabel => 'Classificação';
+
+  @override
+  String get nodeDetailNodeDexNoteLabel => 'Nota';
+
+  @override
+  String get nodeDetailNodeDexNotClassified => 'Ainda não classificado';
+
+  @override
+  String get nodeDetailNodeDexNoNote => 'Sem nota';
+
+  @override
+  String get nodeDetailNodeDexClassifyCta => 'Classificar';
+
+  @override
+  String get nodeDetailNodeDexAddNoteCta => 'Adicionar nota';
+
+  @override
+  String quickActionSubtitleNodeNum(String nodeId) {
+    return 'Nó !$nodeId';
+  }
+
+  @override
+  String get quickActionViewDetails => 'Ver detalhes do nó';
+
+  @override
+  String get quickActionViewInNodeDex => 'Ver no NodeDex';
+
+  @override
+  String get quickActionFavorite => 'Adicionar aos favoritos';
+
+  @override
+  String get quickActionUnfavorite => 'Remover dos favoritos';
+
+  @override
+  String get quickActionMute => 'Silenciar nó';
+
+  @override
+  String get quickActionUnmute => 'Reativar nó';
+
+  @override
+  String get quickActionSendTraceroute => 'Enviar traceroute';
+
+  @override
+  String quickActionTracerouteCooldown(int seconds) {
+    return 'Aguarde ${seconds}s';
+  }
+
+  @override
+  String quickActionFavoriteFailed(String error) {
+    return 'Não foi possível atualizar favorito: $error';
+  }
+
+  @override
+  String quickActionMuteFailed(String error) {
+    return 'Não foi possível atualizar silenciamento: $error';
+  }
+
+  @override
+  String quickActionTracerouteFailed(String error) {
+    return 'Traceroute falhou: $error';
+  }
+
+  @override
+  String get quickActionDisconnect => 'Desconectar dispositivo';
 
   @override
   String nodesScreenDistanceKilometers(String km) {
@@ -20977,6 +21182,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Conexão direta - sem hops intermediários';
 
   @override
+  String get telemetryTracerouteNoResponse =>
+      'Sem resposta - o nó de destino não respondeu';
+
+  @override
   String get telemetryTracerouteEmptyHint =>
       'Envie um traceroute de um nó para ver os caminhos da rede';
 
@@ -27088,6 +27297,14 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get ringtoneSectionBuiltIn => 'PREDEFINIÇÕES INTEGRADAS';
+
+  @override
+  String ringtoneShowAllBuiltIn(int count) {
+    return 'Mostrar todos os $count toques integrados';
+  }
+
+  @override
+  String get ringtoneShowFewerBuiltIn => 'Mostrar menos';
 
   @override
   String get ringtoneSectionCustom => 'PREDEFINIÇÕES PERSONALIZADAS';

@@ -809,23 +809,44 @@ class _TraceRouteCard extends StatelessWidget {
               ),
             ),
 
-          // Hop counts
-          Wrap(
-            spacing: 12,
-            runSpacing: 8,
-            children: [
-              _HopCountChip(
-                label: context.l10n.telemetryTracerouteHopsForward,
-                count: log.hopsTowards,
-                color: AccentColors.teal,
-              ),
-              _HopCountChip(
-                label: context.l10n.telemetryTracerouteHopsBack,
-                count: log.hopsBack,
-                color: AccentColors.purple,
-              ),
-            ],
-          ),
+          // Hop counts (only meaningful when the target responded).
+          // Failed traceroutes report 0/0 here; rendering "0 hops" chips
+          // makes the card read like a successful direct connection. So
+          // suppress the chips and show an explicit failure status row.
+          if (log.response)
+            Wrap(
+              spacing: 12,
+              runSpacing: 8,
+              children: [
+                _HopCountChip(
+                  label: context.l10n.telemetryTracerouteHopsForward,
+                  count: log.hopsTowards,
+                  color: AccentColors.teal,
+                ),
+                _HopCountChip(
+                  label: context.l10n.telemetryTracerouteHopsBack,
+                  count: log.hopsBack,
+                  color: AccentColors.purple,
+                ),
+              ],
+            )
+          else
+            Row(
+              children: [
+                Icon(Icons.error_outline, size: 16, color: AppTheme.errorRed),
+                const SizedBox(width: AppTheme.spacing8),
+                Expanded(
+                  child: Text(
+                    context.l10n.telemetryTracerouteNoResponse,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.errorRed,
+                    ),
+                  ),
+                ),
+              ],
+            ),
 
           // Forward route path
           if (forwardHops.isNotEmpty) ...[

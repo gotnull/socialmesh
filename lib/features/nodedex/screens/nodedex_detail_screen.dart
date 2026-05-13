@@ -68,6 +68,7 @@ import '../widgets/radio_compatibility_card.dart';
 import '../../../core/widgets/section_header.dart';
 import '../widgets/nodedex_card.dart';
 import '../widgets/section_info_button.dart';
+import '../widgets/node_note_edit_sheet.dart';
 import '../widgets/sigil_card_sheet.dart';
 import '../widgets/sigil_painter.dart';
 import '../widgets/reticulum_activity_badge.dart';
@@ -92,8 +93,6 @@ class NodeDexDetailScreen extends ConsumerStatefulWidget {
 
 class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
     with LifecycleSafeMixin<NodeDexDetailScreen> {
-  late final TextEditingController _noteController;
-  bool _editingNote = false;
   // Tracks whether the self-presentation log has already fired for this screen
   // instance so the message only surfaces once per open, not on every rebuild.
   bool _loggedSelfPresentation = false;
@@ -101,7 +100,6 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
   @override
   void initState() {
     super.initState();
-    _noteController = TextEditingController();
     AppLogging.nodeDex(
       'Detail screen opened for node ${widget.nodeNum} '
       '(!${widget.nodeNum.toRadixString(16).toUpperCase()})',
@@ -111,7 +109,6 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
   @override
   void dispose() {
     AppLogging.nodeDex('Detail screen disposed for node ${widget.nodeNum}');
-    _noteController.dispose();
     super.dispose();
   }
 
@@ -514,22 +511,16 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
               reduceMotion: reduceMotion,
               child: _UserNoteCard(
                 entry: entry,
-                editing: _editingNote,
-                controller: _noteController,
-                onStartEditing: () {
+                onEditTap: () {
                   AppLogging.nodeDex(
-                    'Note editing started for node ${widget.nodeNum}',
+                    'Note editor opened for node ${widget.nodeNum} '
+                    '(hasNote=${entry.userNote != null})',
                   );
-                  setState(() {
-                    _editingNote = true;
-                    _noteController.text = entry.userNote ?? '';
-                  });
-                },
-                onSave: () => _saveNote(entry),
-                onCancel: () {
-                  setState(() {
-                    _editingNote = false;
-                  });
+                  NodeNoteEditSheet.show(
+                    context: context,
+                    nodeNum: widget.nodeNum,
+                    initialNote: entry.userNote,
+                  );
                 },
               ),
             ),
@@ -812,20 +803,6 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
         ],
       ),
     );
-  }
-
-  void _saveNote(NodeDexEntry entry) {
-    final text = _noteController.text.trim();
-    AppLogging.nodeDex(
-      'Note saved for node ${widget.nodeNum}: '
-      '${text.isEmpty ? '(cleared)' : '${text.length} chars'}',
-    );
-    ref
-        .read(nodeDexProvider.notifier)
-        .setUserNote(widget.nodeNum, text.isEmpty ? null : text);
-    setState(() {
-      _editingNote = false;
-    });
   }
 }
 
@@ -1676,38 +1653,31 @@ class _SocialTagCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tag = entry.socialTag;
     return NodeDexCard(
       title: context.l10n.nodedexClassificationTitle,
       icon: Icons.label_outline,
       helpKey: 'social_tag',
-      trailing: GestureDetector(
-        onTap: onEditTag,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: context.accentColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(AppTheme.radius12),
-          ),
-          child: Text(
-            entry.socialTag != null
-                ? context.l10n.nodedexClassificationChange
-                : context.l10n.nodedexClassificationClassify,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: context.accentColor,
-            ),
-          ),
-        ),
-      ),
-      child: entry.socialTag != null
-          ? SocialTagBadge(tag: entry.socialTag!, onTap: onEditTag)
-          : Text(
-              context.l10n.nodedexNoClassification,
-              style: TextStyle(
-                fontSize: 13,
-                color: context.textTertiary,
-                fontStyle: FontStyle.italic,
+      child: tag != null
+          ? SocialTagOption(tag: tag, isSelected: true, onTap: onEditTag)
+          : Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onEditTag,
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppTheme.spacing4,
+                  ),
+                  child: Text(
+                    context.l10n.nodedexNoClassification,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: context.textTertiary,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
               ),
             ),
     );
@@ -1720,172 +1690,43 @@ class _SocialTagCard extends StatelessWidget {
 
 class _UserNoteCard extends StatelessWidget {
   final NodeDexEntry entry;
-  final bool editing;
-  final TextEditingController controller;
-  final VoidCallback onStartEditing;
-  final VoidCallback onSave;
-  final VoidCallback onCancel;
+  final VoidCallback onEditTap;
 
-  const _UserNoteCard({
-    required this.entry,
-    required this.editing,
-    required this.controller,
-    required this.onStartEditing,
-    required this.onSave,
-    required this.onCancel,
-  });
+  const _UserNoteCard({required this.entry, required this.onEditTap});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        // Dismiss keyboard when tapping outside the text field
-        FocusScope.of(context).unfocus();
-      },
-      behavior: HitTestBehavior.translucent,
-      child: NodeDexCard(
-        title: context.l10n.nodedexNoteTitle,
-        icon: Icons.edit_note,
-        helpKey: 'note',
-        trailing: editing
-            ? Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      FocusScope.of(context).unfocus();
-                      onCancel();
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: context.textTertiary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      ),
-                      child: Text(
-                        context.l10n.nodedexNoteCancel,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: context.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppTheme.spacing8),
-                  GestureDetector(
-                    onTap: () {
-                      FocusScope.of(context).unfocus();
-                      onSave();
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: context.accentColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      ),
-                      child: Text(
-                        context.l10n.nodedexNoteSave,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: context.accentColor,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            : GestureDetector(
-                onTap: onStartEditing,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.accentColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppTheme.radius12),
-                  ),
-                  child: Text(
-                    entry.userNote != null
-                        ? context.l10n.nodedexNoteEdit
-                        : context.l10n.nodedexNoteAdd,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: context.accentColor,
-                    ),
-                  ),
-                ),
-              ),
-        child: editing
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  _NoteEditField(controller: controller),
-                  const SizedBox(height: AppTheme.spacing4),
-                  _CharCounter(controller: controller, max: 280),
-                ],
-              )
-            : _UserNotePlaceholder(entry: entry),
+    return NodeDexCard(
+      title: context.l10n.nodedexNoteTitle,
+      icon: Icons.edit_note,
+      helpKey: 'note',
+      trailing: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onEditTap();
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacing10,
+            vertical: AppTheme.spacing5,
+          ),
+          decoration: BoxDecoration(
+            color: context.accentColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+          ),
+          child: Text(
+            entry.userNote != null
+                ? context.l10n.nodedexNoteEdit
+                : context.l10n.nodedexNoteAdd,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: context.accentColor,
+            ),
+          ),
+        ),
       ),
-    );
-  }
-}
-
-class _NoteEditField extends StatelessWidget {
-  final TextEditingController controller;
-  const _NoteEditField({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      maxLines: 4,
-      maxLength: 280,
-      autofocus: true,
-      // Allow scroll to ensure field is visible above keyboard
-      scrollPadding: const EdgeInsets.all(AppTheme.spacing80),
-      onTapOutside: (_) {
-        FocusScope.of(context).unfocus();
-      },
-      style: TextStyle(fontSize: 14, color: context.textPrimary),
-      decoration: InputDecoration(
-        hintText: context.l10n.nodedexNoteHint,
-        hintStyle: TextStyle(fontSize: 14, color: context.textTertiary),
-        filled: true,
-        fillColor: context.background,
-        contentPadding: const EdgeInsets.all(AppTheme.spacing12),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radius12),
-          borderSide: BorderSide(
-            color: context.border.withValues(alpha: 0.3),
-            width: 0.5,
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radius12),
-          borderSide: BorderSide(
-            color: context.border.withValues(alpha: 0.3),
-            width: 0.5,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radius12),
-          borderSide: BorderSide(
-            color: context.accentColor.withValues(alpha: 0.5),
-            width: 1.0,
-          ),
-        ),
-        counterText: '',
-      ),
+      child: _UserNotePlaceholder(entry: entry),
     );
   }
 }

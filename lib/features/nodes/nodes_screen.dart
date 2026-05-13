@@ -3,7 +3,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:skeletonizer/skeletonizer.dart';
@@ -37,6 +36,8 @@ import '../aether/providers/aether_flight_matcher_provider.dart';
 import '../aether/widgets/aether_flight_match_card.dart';
 import '../navigation/main_shell.dart';
 import 'node_detail_screen.dart';
+import 'node_quick_actions_sheet.dart';
+import 'role_filter.dart';
 import 'widgets/nodes_legend_sheet.dart';
 
 class NodesScreen extends ConsumerStatefulWidget {
@@ -50,6 +51,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
     with LifecycleSafeMixin<NodesScreen> {
   String _searchQuery = '';
   NodeFilter _activeFilter = NodeFilter.all;
+  String _activeRoleFilter = roleFilterAll;
   NodeSortOrder _sortOrder = NodeSortOrder.lastHeard;
   bool _showSectionHeaders = true;
   bool _compactView = false;
@@ -128,6 +130,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
         presenceConfidence: presence,
         lastHeardAge: lastHeardAge,
         onTap: () => _showNodeDetails(context, node, isMyNode),
+        onLongPress: () => _showNodeLongPressMenu(context, node, isMyNode),
       );
     }
 
@@ -138,9 +141,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
       lastHeardAge: lastHeardAge,
       animationsEnabled: animationsEnabled,
       onTap: () => _showNodeDetails(context, node, isMyNode),
-      onLongPress: isMyNode
-          ? () => _showNodeLongPressMenu(context, node, isMyNode)
-          : null,
+      onLongPress: () => _showNodeLongPressMenu(context, node, isMyNode),
     );
   }
 
@@ -170,6 +171,11 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
 
     // Apply filter
     nodesList = _applyFilter(nodesList, myNodeNum, linkedNodeIds, presenceMap);
+
+    // Apply role filter — orthogonal to the presence filter; large-mesh
+    // users typically pair "Active" + "Client" to silence routers and
+    // repeaters from the contact-style list.
+    nodesList = applyRoleFilter(nodesList, _activeRoleFilter).toList();
 
     // Apply sort
     nodesList = _applySort(nodesList, myNodeNum);
@@ -427,6 +433,24 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                     ),
                   ),
                 ],
+              ),
+            ),
+            // Role filter chip row.
+            //
+            // Renders below the presence/sort filter header. Hides
+            // itself when only the "All roles" sentinel would show
+            // (e.g. tiny mesh with one role), so small-mesh users see
+            // no extra chrome. Counts are computed over the FULL node
+            // set (not the post-filter list) so the chips remain
+            // useful for jumping between roles without first widening
+            // the presence filter back to All.
+            SliverToBoxAdapter(
+              child: RoleFilterChipRow(
+                nodes: nodes.values,
+                selectedRole: _activeRoleFilter,
+                source: 'nodes_tab',
+                onRoleSelected: (role) =>
+                    setState(() => _activeRoleFilter = role),
               ),
             ),
             // Node list content
@@ -975,87 +999,17 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
     showNodeDetailsSheet(context, node, isMyNode);
   }
 
-  void _showNodeLongPressMenu(
+  Future<void> _showNodeLongPressMenu(
     BuildContext context,
     MeshNode node,
     bool isMyNode,
   ) {
-    // Only show menu for the connected device (myNode)
-    if (!isMyNode) return;
-
-    HapticFeedback.mediumImpact();
-
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: context.card,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 8,
-                ),
-                child: Row(
-                  children: [
-                    NodeAvatar(
-                      text: node.avatarName,
-                      color: context.accentColor,
-                      size: 40,
-                    ),
-                    SizedBox(width: AppTheme.spacing12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            node.displayName,
-                            style: TextStyle(
-                              color: context.textPrimary,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            context.l10n.nodesScreenConnectedDevice,
-                            style: TextStyle(
-                              color: context.accentColor,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Divider(color: context.border),
-              // Disconnect option
-              ListTile(
-                leading: Icon(Icons.link_off_rounded, color: AppTheme.errorRed),
-                title: Text(
-                  context.l10n.nodesScreenDisconnect,
-                  style: TextStyle(
-                    color: AppTheme.errorRed,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await _disconnectDevice();
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
+    return showNodeQuickActionsSheet(
+      context,
+      ref,
+      node,
+      isMyNode: isMyNode,
+      onDisconnect: _disconnectDevice,
     );
   }
 
@@ -1839,6 +1793,7 @@ class _CompactNodeTile extends StatelessWidget {
   final PresenceConfidence presenceConfidence;
   final Duration? lastHeardAge;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
   const _CompactNodeTile({
     required this.node,
@@ -1846,6 +1801,7 @@ class _CompactNodeTile extends StatelessWidget {
     required this.presenceConfidence,
     required this.lastHeardAge,
     required this.onTap,
+    this.onLongPress,
   });
 
   Color _statusColor(BuildContext context) {
@@ -1874,6 +1830,7 @@ class _CompactNodeTile extends StatelessWidget {
       opacity: opacity,
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: 16,

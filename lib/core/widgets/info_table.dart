@@ -12,12 +12,18 @@ class InfoTableRow {
   final Color? iconColor;
   final VoidCallback? onTap;
 
+  /// Optional widget rendered right-aligned in the value cell in place of
+  /// [value] (badges, chips, status pills). [value] is still required so
+  /// callers always have a textual semantic for tests / accessibility.
+  final Widget? valueWidget;
+
   const InfoTableRow({
     required this.label,
     required this.value,
     this.icon,
     this.iconColor,
     this.onTap,
+    this.valueWidget,
   });
 }
 
@@ -102,15 +108,18 @@ class InfoTable extends StatelessWidget {
                           horizontal: 16,
                           vertical: 14,
                         ),
-                        child: Text(
-                          item.value,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: context.textPrimary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          textAlign: TextAlign.right,
-                        ),
+                        alignment: Alignment.centerRight,
+                        child:
+                            item.valueWidget ??
+                            Text(
+                              item.value,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: context.textPrimary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
                       ),
                     ),
                   ],

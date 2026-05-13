@@ -210,8 +210,17 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
     // uses so the count and the picker's addable list never drift.
     final addedTypes = enabledWidgets.map((c) => c.type).toSet();
     final unusedPremiumCount = _unusedPremiumCount(addedTypes);
+    // Once a paid user has interacted with customization (tapped the
+    // discovery card OR entered edit mode at least once), the card stays
+    // hidden so it stops crowding the dashboard. The non-owner upsell
+    // card is a separate paywall surface and remains unaffected.
+    final discoveryDismissed =
+        ref.watch(dashboardDiscoveryAckProvider).value ?? false;
     final showOwnerDiscovery =
-        hasWidgetPack && !_editMode && unusedPremiumCount > 0;
+        hasWidgetPack &&
+        !_editMode &&
+        unusedPremiumCount > 0 &&
+        !discoveryDismissed;
     final showUpsell = !hasWidgetPack && !_editMode;
     // Sticky edit-mode add tile gating uses the visible widget list — hidden
     // persisted configs must not suppress the tile.
@@ -386,6 +395,9 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
               AppLogging.widgets(
                 '[Dashboard] Owner discovery card tapped → opening picker',
               );
+              ref
+                  .read(dashboardDiscoveryAckProvider.notifier)
+                  .dismiss(reason: 'card_tap');
               _showAddWidgetSheet(context);
             },
             borderRadius: BorderRadius.circular(AppTheme.radius16),
@@ -845,6 +857,9 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen>
             ),
             onTap: () {
               Navigator.pop(context);
+              ref
+                  .read(dashboardDiscoveryAckProvider.notifier)
+                  .dismiss(reason: 'edit_mode_entered');
               setState(() => _editMode = true);
             },
           ),
