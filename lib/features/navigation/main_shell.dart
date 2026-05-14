@@ -1143,10 +1143,14 @@ class _BottomNavEditBanner extends ConsumerWidget {
             context.surface.withValues(alpha: 0),
             context.surface.withValues(alpha: 0.96),
           ],
-          // The fade completes by ~65% of the banner so the bottom
-          // third is a flat solid colour that visually continues
-          // into the nav-row container below.
-          stops: const [0.0, 0.65],
+          // The fade completes within the top ~20% of the banner
+          // height so only the very top edge softly blends with
+          // the body content above. The remaining ~80% is a flat
+          // solid surface that hides the body content from view so
+          // the banner text + Done button read cleanly. Earlier
+          // values (0.55, 0.65) let body content bleed through the
+          // entire banner and made the text fight for legibility.
+          stops: const [0.0, 0.2],
         ),
         border: Border(
           bottom: BorderSide(
