@@ -21,6 +21,7 @@ import '../models/mesh_device.dart';
 import '../models/meshcore_contact.dart' hide parseContact;
 import '../models/meshcore_contact_import_preview.dart';
 import '../models/meshcore_auto_add_config.dart';
+import '../models/meshcore_auto_route_settings.dart';
 import '../models/meshcore_channel.dart';
 import '../models/meshcore_path_overlay.dart';
 import '../services/meshcore/protocol/meshcore_cayenne_lpp.dart';
@@ -32,6 +33,8 @@ import '../services/meshcore/protocol/meshcore_capture.dart';
 import '../services/meshcore/protocol/meshcore_contact_url.dart';
 import '../services/meshcore/protocol/meshcore_messages.dart';
 import '../services/meshcore/protocol/meshcore_session.dart';
+import '../services/meshcore/routing/meshcore_path_update_listener.dart';
+import '../services/meshcore/routing/meshcore_send_confirmation_router.dart';
 import '../services/meshcore/storage/meshcore_channel_prefs_store.dart';
 import '../services/meshcore/storage/meshcore_message_store.dart';
 import '../services/meshcore/storage/meshcore_path_history_store.dart';
@@ -182,6 +185,50 @@ final meshCoreSessionProvider = Provider<MeshCoreSession?>((ref) {
   final adapter = ref.watch(meshCoreAdapterProvider);
   return adapter?.session;
 });
+
+/// D48-A2: single delivery-ack router per active session. Re-created
+/// whenever the session changes (reconnect, swap to a different
+/// radio). Tests override with a router fed by a controllable stream.
+final meshCoreSendConfirmationRouterProvider =
+    Provider<MeshCoreSendConfirmationRouter?>((ref) {
+      final session = ref.watch(meshCoreSessionProvider);
+      if (session == null) return null;
+      final router = MeshCoreSendConfirmationRouter(
+        frameStream: session.frameStream,
+      );
+      ref.onDispose(router.dispose);
+      return router;
+    });
+
+/// D48-A3: passive path-history seeding listener.
+///
+/// Subscribes to `PUSH_CODE_PATH_UPDATED 0x81` on the active session's
+/// frame stream. On each push: extract the contact pubkey, issue
+/// `CMD_GET_CONTACT_BY_KEY 0x1E` to retrieve the freshly-learned
+/// path, and record it via the per-contact path-history notifier
+/// (D39 + D48-A1 store, source `inbound`).
+///
+/// Owned by the active session — recreated on reconnect / radio swap,
+/// disposed on session teardown.
+final meshCorePathUpdateListenerProvider =
+    Provider<MeshCorePathUpdateListener?>((ref) {
+      final session = ref.watch(meshCoreSessionProvider);
+      if (session == null) return null;
+      final listener = MeshCorePathUpdateListener(
+        session: session,
+        recorder:
+            ({
+              required String contactPubKeyHex,
+              required Uint8List pathBytes,
+            }) async {
+              await ref
+                  .read(meshCorePathHistoryProvider(contactPubKeyHex).notifier)
+                  .record(pathBytes, MeshCorePathSource.inbound);
+            },
+      );
+      ref.onDispose(listener.dispose);
+      return listener;
+    });
 
 // ---------------------------------------------------------------------------
 // MeshCore Self Info Provider
@@ -380,6 +427,10 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
     // Auto-fetch contacts when connected to MeshCore
     final linkStatus = ref.watch(linkStatusProvider);
     if (linkStatus.isMeshCore && linkStatus.isConnected) {
+      // D48-A3: eagerly bind the path-update listener so it begins
+      // subscribing to PUSH_CODE_PATH_UPDATED 0x81 the moment a
+      // session is up. The listener provider is otherwise lazy.
+      ref.watch(meshCorePathUpdateListenerProvider);
       // Defer loading to avoid build-phase side effects
       Future.microtask(() => _loadContacts());
     }
@@ -1584,6 +1635,11 @@ class MeshCorePathHistoryNotifier
       return;
     }
     final store = ref.read(meshCorePathHistoryStoreProvider);
+    // D48-A2: seed new entries with the user-configured
+    // `initialRouteWeight`. Existing entries are untouched (the store
+    // only consults `initialWeight` when inserting; updates use
+    // `recordPathSuccess` / `recordPathFailure`).
+    final autoRouteSettings = ref.read(meshCoreAutoRouteSettingsProvider);
     try {
       final pre = state.length;
       final updated = await store.record(
@@ -1592,6 +1648,7 @@ class MeshCorePathHistoryNotifier
         bytes: bytes,
         source: source,
         now: DateTime.now(),
+        initialWeight: autoRouteSettings.initialRouteWeight,
       );
       if (_disposed) return;
       if (ref.read(meshCoreSelfPubKeyPrefixProvider) != device) return;
@@ -3510,3 +3567,140 @@ final meshCoreAutoAddConfigProvider =
     NotifierProvider<MeshCoreAutoAddConfigNotifier, MeshCoreAutoAddConfigState>(
       MeshCoreAutoAddConfigNotifier.new,
     );
+
+// ---------------------------------------------------------------------------
+// D48-A1: app-side auto-route rotation settings (persisted)
+// ---------------------------------------------------------------------------
+
+/// Per-setting SharedPreferences keys. Bool / double primitives match
+/// the existing per-key prefs pattern (see
+/// `meshCoreShowBatteryVoltageProvider`).
+const String kMeshCoreAutoRouteEnabledPrefKey =
+    'meshcore_auto_route_rotation_enabled';
+const String kMeshCoreAutoRouteMaxWeightPrefKey =
+    'meshcore_auto_route_max_weight';
+const String kMeshCoreAutoRouteInitialWeightPrefKey =
+    'meshcore_auto_route_initial_weight';
+const String kMeshCoreAutoRouteSuccessIncrementPrefKey =
+    'meshcore_auto_route_success_increment';
+const String kMeshCoreAutoRouteFailureDecrementPrefKey =
+    'meshcore_auto_route_failure_decrement';
+const String kMeshCoreAutoRouteMaxRetriesPrefKey =
+    'meshcore_auto_route_max_retries';
+const String kMeshCoreAutoRouteRetryTimeoutSecondsPrefKey =
+    'meshcore_auto_route_retry_timeout_seconds';
+
+/// D48-A1: notifier for the auto-route rotation policy. Persists each
+/// field independently to SharedPreferences. All setter methods
+/// clamp the input to the documented range before writing — both the
+/// store and reactive state advance together so a listener never
+/// sees a value that wasn't written.
+///
+/// The rotation orchestrator that consumes these settings is wired
+/// in D48-A2; D48-A1 ships the settings surface only.
+class MeshCoreAutoRouteSettingsNotifier
+    extends Notifier<MeshCoreAutoRouteSettings> {
+  @override
+  MeshCoreAutoRouteSettings build() {
+    Future.microtask(_loadFromPrefs);
+    return const MeshCoreAutoRouteSettings.defaults();
+  }
+
+  Future<void> _loadFromPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      state = MeshCoreAutoRouteSettings(
+        enabled: prefs.getBool(kMeshCoreAutoRouteEnabledPrefKey) ?? false,
+        maxRouteWeight: MeshCoreAutoRouteSettings.clampWeight(
+          prefs.getDouble(kMeshCoreAutoRouteMaxWeightPrefKey) ??
+              MeshCoreAutoRouteSettings.defaultMaxRouteWeight,
+        ),
+        initialRouteWeight: MeshCoreAutoRouteSettings.clampWeight(
+          prefs.getDouble(kMeshCoreAutoRouteInitialWeightPrefKey) ??
+              MeshCoreAutoRouteSettings.defaultInitialRouteWeight,
+        ),
+        routeWeightSuccessIncrement: MeshCoreAutoRouteSettings.clampIncrement(
+          prefs.getDouble(kMeshCoreAutoRouteSuccessIncrementPrefKey) ??
+              MeshCoreAutoRouteSettings.defaultRouteWeightSuccessIncrement,
+        ),
+        routeWeightFailureDecrement: MeshCoreAutoRouteSettings.clampIncrement(
+          prefs.getDouble(kMeshCoreAutoRouteFailureDecrementPrefKey) ??
+              MeshCoreAutoRouteSettings.defaultRouteWeightFailureDecrement,
+        ),
+        maxRetries: MeshCoreAutoRouteSettings.clampMaxRetries(
+          prefs.getInt(kMeshCoreAutoRouteMaxRetriesPrefKey) ??
+              MeshCoreAutoRouteSettings.defaultMaxRetries,
+        ),
+        retryTimeoutSeconds: MeshCoreAutoRouteSettings.clampRetryTimeoutSeconds(
+          prefs.getInt(kMeshCoreAutoRouteRetryTimeoutSecondsPrefKey) ??
+              MeshCoreAutoRouteSettings.defaultRetryTimeoutSeconds,
+        ),
+      );
+    } catch (_) {
+      // Defaults already in state; silent recovery is fine here. A
+      // failed read implies a failed write will surface to the user
+      // when they touch the next slider.
+    }
+  }
+
+  Future<void> setEnabled(bool value) async {
+    if (state.enabled == value) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(kMeshCoreAutoRouteEnabledPrefKey, value);
+    state = state.copyWith(enabled: value);
+  }
+
+  Future<void> setMaxRouteWeight(double value) async {
+    final clamped = MeshCoreAutoRouteSettings.clampWeight(value);
+    if (state.maxRouteWeight == clamped) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(kMeshCoreAutoRouteMaxWeightPrefKey, clamped);
+    state = state.copyWith(maxRouteWeight: clamped);
+  }
+
+  Future<void> setInitialRouteWeight(double value) async {
+    final clamped = MeshCoreAutoRouteSettings.clampWeight(value);
+    if (state.initialRouteWeight == clamped) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(kMeshCoreAutoRouteInitialWeightPrefKey, clamped);
+    state = state.copyWith(initialRouteWeight: clamped);
+  }
+
+  Future<void> setRouteWeightSuccessIncrement(double value) async {
+    final clamped = MeshCoreAutoRouteSettings.clampIncrement(value);
+    if (state.routeWeightSuccessIncrement == clamped) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(kMeshCoreAutoRouteSuccessIncrementPrefKey, clamped);
+    state = state.copyWith(routeWeightSuccessIncrement: clamped);
+  }
+
+  Future<void> setRouteWeightFailureDecrement(double value) async {
+    final clamped = MeshCoreAutoRouteSettings.clampIncrement(value);
+    if (state.routeWeightFailureDecrement == clamped) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(kMeshCoreAutoRouteFailureDecrementPrefKey, clamped);
+    state = state.copyWith(routeWeightFailureDecrement: clamped);
+  }
+
+  Future<void> setMaxRetries(int value) async {
+    final clamped = MeshCoreAutoRouteSettings.clampMaxRetries(value);
+    if (state.maxRetries == clamped) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(kMeshCoreAutoRouteMaxRetriesPrefKey, clamped);
+    state = state.copyWith(maxRetries: clamped);
+  }
+
+  Future<void> setRetryTimeoutSeconds(int value) async {
+    final clamped = MeshCoreAutoRouteSettings.clampRetryTimeoutSeconds(value);
+    if (state.retryTimeoutSeconds == clamped) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(kMeshCoreAutoRouteRetryTimeoutSecondsPrefKey, clamped);
+    state = state.copyWith(retryTimeoutSeconds: clamped);
+  }
+}
+
+final meshCoreAutoRouteSettingsProvider =
+    NotifierProvider<
+      MeshCoreAutoRouteSettingsNotifier,
+      MeshCoreAutoRouteSettings
+    >(MeshCoreAutoRouteSettingsNotifier.new);

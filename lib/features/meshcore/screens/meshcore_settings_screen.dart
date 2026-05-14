@@ -19,6 +19,7 @@ import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/settings_primitives.dart';
 import '../../../core/widgets/status_banner.dart';
 import '../../../models/meshcore_auto_add_config.dart';
+import '../../../models/meshcore_auto_route_settings.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../services/meshcore/protocol/meshcore_messages.dart';
@@ -195,6 +196,11 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                   title: context.l10n.meshcoreAutoAddSectionTitle,
                 ),
                 _buildAutoAddSection(context, isConnected: isConnected),
+                SizedBox(height: AppTheme.spacing16),
+                SettingsSectionHeader(
+                  title: context.l10n.meshcoreAutoRouteSectionTitle,
+                ),
+                _buildAutoRouteSection(context),
                 SizedBox(height: AppTheme.spacing16),
                 SettingsSectionHeader(title: context.l10n.meshcoreActions),
                 // D29 cleanup: "Send Advertisement" used to live here AND
@@ -508,6 +514,198 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
           ),
         ),
       ],
+    );
+  }
+
+  /// D48-A1: auto-route rotation policy section. One toggle + four
+  /// sliders. The sliders are greyed (via `_maybeDisabled`) when the
+  /// master toggle is off — the values still display so the user
+  /// can see what the policy WILL be when they enable it.
+  ///
+  /// No firmware round-trip; settings persist to SharedPreferences
+  /// via the provider. The orchestrator that consumes these settings
+  /// lands in D48-A2.
+  Widget _buildAutoRouteSection(BuildContext context) {
+    final l10n = context.l10n;
+    final settings = ref.watch(meshCoreAutoRouteSettingsProvider);
+    final notifier = ref.read(meshCoreAutoRouteSettingsProvider.notifier);
+
+    String fmtWeight(double v) => v.toStringAsFixed(1);
+    String fmtIncrement(double v) => v.toStringAsFixed(2);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SettingsTile(
+          key: const ValueKey('meshcore-auto-route-enabled'),
+          icon: Icons.alt_route_rounded,
+          title: l10n.meshcoreAutoRouteEnabled,
+          subtitle: l10n.meshcoreAutoRouteEnabledSubtitle,
+          trailing: ThemedSwitch(
+            value: settings.enabled,
+            onChanged: notifier.setEnabled,
+          ),
+          onTap: () => notifier.setEnabled(!settings.enabled),
+        ),
+        _maybeDisabled(
+          enabled: settings.enabled,
+          child: _autoRouteSliderTile(
+            context: context,
+            keyId: 'meshcore-auto-route-max-weight',
+            title: l10n.meshcoreAutoRouteMaxWeight,
+            subtitle: l10n.meshcoreAutoRouteMaxWeightSubtitle,
+            value: settings.maxRouteWeight,
+            min: MeshCoreAutoRouteSettings.minWeight,
+            max: MeshCoreAutoRouteSettings.maxWeight,
+            divisions: 20,
+            displayValue: fmtWeight(settings.maxRouteWeight),
+            onChanged: notifier.setMaxRouteWeight,
+          ),
+        ),
+        _maybeDisabled(
+          enabled: settings.enabled,
+          child: _autoRouteSliderTile(
+            context: context,
+            keyId: 'meshcore-auto-route-initial-weight',
+            title: l10n.meshcoreAutoRouteInitialWeight,
+            subtitle: l10n.meshcoreAutoRouteInitialWeightSubtitle,
+            value: settings.initialRouteWeight,
+            min: MeshCoreAutoRouteSettings.minWeight,
+            max: MeshCoreAutoRouteSettings.maxWeight,
+            divisions: 20,
+            displayValue: fmtWeight(settings.initialRouteWeight),
+            onChanged: notifier.setInitialRouteWeight,
+          ),
+        ),
+        _maybeDisabled(
+          enabled: settings.enabled,
+          child: _autoRouteSliderTile(
+            context: context,
+            keyId: 'meshcore-auto-route-success-increment',
+            title: l10n.meshcoreAutoRouteSuccessIncrement,
+            subtitle: l10n.meshcoreAutoRouteSuccessIncrementSubtitle,
+            value: settings.routeWeightSuccessIncrement,
+            min: MeshCoreAutoRouteSettings.minIncrement,
+            max: MeshCoreAutoRouteSettings.maxIncrement,
+            divisions: 20,
+            displayValue: fmtIncrement(settings.routeWeightSuccessIncrement),
+            onChanged: notifier.setRouteWeightSuccessIncrement,
+          ),
+        ),
+        _maybeDisabled(
+          enabled: settings.enabled,
+          child: _autoRouteSliderTile(
+            context: context,
+            keyId: 'meshcore-auto-route-failure-decrement',
+            title: l10n.meshcoreAutoRouteFailureDecrement,
+            subtitle: l10n.meshcoreAutoRouteFailureDecrementSubtitle,
+            value: settings.routeWeightFailureDecrement,
+            min: MeshCoreAutoRouteSettings.minIncrement,
+            max: MeshCoreAutoRouteSettings.maxIncrement,
+            divisions: 20,
+            displayValue: fmtIncrement(settings.routeWeightFailureDecrement),
+            onChanged: notifier.setRouteWeightFailureDecrement,
+          ),
+        ),
+        _maybeDisabled(
+          enabled: settings.enabled,
+          child: _autoRouteSliderTile(
+            context: context,
+            keyId: 'meshcore-auto-route-max-retries',
+            title: l10n.meshcoreAutoRouteMaxRetries,
+            subtitle: l10n.meshcoreAutoRouteMaxRetriesSubtitle,
+            value: settings.maxRetries.toDouble(),
+            min: MeshCoreAutoRouteSettings.minMaxRetries.toDouble(),
+            max: MeshCoreAutoRouteSettings.maxMaxRetries.toDouble(),
+            divisions:
+                MeshCoreAutoRouteSettings.maxMaxRetries -
+                MeshCoreAutoRouteSettings.minMaxRetries,
+            displayValue: settings.maxRetries.toString(),
+            onChanged: (v) => notifier.setMaxRetries(v.round()),
+          ),
+        ),
+        _maybeDisabled(
+          enabled: settings.enabled,
+          child: _autoRouteSliderTile(
+            context: context,
+            keyId: 'meshcore-auto-route-retry-timeout',
+            title: l10n.meshcoreAutoRouteRetryTimeoutSeconds,
+            subtitle: l10n.meshcoreAutoRouteRetryTimeoutSecondsSubtitle,
+            value: settings.retryTimeoutSeconds.toDouble(),
+            min: MeshCoreAutoRouteSettings.minRetryTimeoutSeconds.toDouble(),
+            max: MeshCoreAutoRouteSettings.maxRetryTimeoutSeconds.toDouble(),
+            divisions:
+                MeshCoreAutoRouteSettings.maxRetryTimeoutSeconds -
+                MeshCoreAutoRouteSettings.minRetryTimeoutSeconds,
+            displayValue: settings.retryTimeoutSeconds.toString(),
+            onChanged: (v) => notifier.setRetryTimeoutSeconds(v.round()),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// D48-A1: per-slider tile shell. Reuses the canonical
+  /// `SettingsTile` shape with a custom `trailing` widget that
+  /// stacks the formatted current value above a Material `Slider`.
+  Widget _autoRouteSliderTile({
+    required BuildContext context,
+    required String keyId,
+    required String title,
+    required String subtitle,
+    required double value,
+    required double min,
+    required double max,
+    required int divisions,
+    required String displayValue,
+    required ValueChanged<double> onChanged,
+  }) {
+    final l10n = context.l10n;
+    return Padding(
+      key: ValueKey(keyId),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing16,
+        vertical: AppTheme.spacing4,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: context.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              Text(
+                l10n.meshcoreAutoRouteSliderValue(displayValue),
+                style: TextStyle(
+                  color: context.textSecondary,
+                  fontSize: 13,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
+          Slider(
+            value: value,
+            min: min,
+            max: max,
+            divisions: divisions,
+            onChanged: onChanged,
+          ),
+          Text(
+            subtitle,
+            style: TextStyle(color: context.textTertiary, fontSize: 12),
+          ),
+          const SizedBox(height: AppTheme.spacing4),
+        ],
+      ),
     );
   }
 

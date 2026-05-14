@@ -249,6 +249,8 @@ class _PathHistoryRow extends ConsumerWidget {
         return l10n.meshcorePathHistorySourceTrace as String;
       case MeshCorePathSource.manual:
         return l10n.meshcorePathHistorySourceManual as String;
+      case MeshCorePathSource.inbound:
+        return l10n.meshcorePathHistorySourceInbound as String;
     }
   }
 

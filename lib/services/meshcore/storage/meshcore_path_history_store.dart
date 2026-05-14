@@ -62,11 +62,14 @@ const int kMeshCorePathHistoryMaxEntriesPerContact = 20;
 /// rejected by the store at write time.
 const int kMeshCorePathHistoryMaxPathBytes = 64;
 
-/// Source of a recorded path. `trace` covers paths that arrived via
-/// a Trace Path result. `manual` is reserved for future user-typed
-/// N-hop paths and is accepted by the store today but no D39-A entry
-/// point produces one.
-enum MeshCorePathSource { trace, manual }
+/// Source of a recorded path.
+///   - `trace` — arrived via a user-triggered Trace Path save (D39-A).
+///   - `manual` — reserved for future user-typed N-hop paths. No
+///     D39-A entry point produces one yet.
+///   - `inbound` — recorded passively after the firmware emitted
+///     `PUSH_CODE_PATH_UPDATED 0x81` and we re-fetched the contact
+///     via `CMD_GET_CONTACT_BY_KEY 0x1E` (D48-A3).
+enum MeshCorePathSource { trace, manual, inbound }
 
 extension MeshCorePathSourceWire on MeshCorePathSource {
   String get wire {
@@ -75,14 +78,24 @@ extension MeshCorePathSourceWire on MeshCorePathSource {
         return 'trace';
       case MeshCorePathSource.manual:
         return 'manual';
+      case MeshCorePathSource.inbound:
+        return 'inbound';
     }
   }
 
   static MeshCorePathSource fromWire(String? raw) {
     if (raw == 'manual') return MeshCorePathSource.manual;
+    if (raw == 'inbound') return MeshCorePathSource.inbound;
     return MeshCorePathSource.trace;
   }
 }
+
+/// D48-A1: default starting weight for a newly-discovered path.
+/// Mirrors meshcore-open's `AppSettings.initialRouteWeight = 3.0`.
+/// Used by `fromJson` for legacy entries that pre-date D48 and don't
+/// carry a `routeWeight` field. New entries take the value from
+/// `MeshCoreAutoRouteSettings.initialRouteWeight` at insert time.
+const double kMeshCorePathHistoryDefaultRouteWeight = 3.0;
 
 /// A single saved path entry. Immutable; `copyWith` produces a new
 /// record for mutation paths (touch / dedup).
@@ -96,6 +109,18 @@ class MeshCorePathHistoryEntry {
   final String? label;
   final int successCount;
 
+  /// D48-A1: cumulative failures attributed to this path. Bumped by
+  /// the orchestrator's failure path; never decreases.
+  final int failureCount;
+
+  /// D48-A1: live route weight for ranking. Initialized at insert
+  /// time to `MeshCoreAutoRouteSettings.initialRouteWeight`, bumped
+  /// on success, decremented on failure. When ≤ 0 the rotation
+  /// orchestrator evicts the entry from the rotation pool (NOT from
+  /// the path-history store — the entry stays visible in the
+  /// history sheet).
+  final double routeWeight;
+
   MeshCorePathHistoryEntry({
     required this.id,
     required this.bytes,
@@ -105,6 +130,8 @@ class MeshCorePathHistoryEntry {
     required this.lastUsedAt,
     this.label,
     this.successCount = 0,
+    this.failureCount = 0,
+    this.routeWeight = kMeshCorePathHistoryDefaultRouteWeight,
   });
 
   MeshCorePathHistoryEntry copyWith({
@@ -117,6 +144,8 @@ class MeshCorePathHistoryEntry {
     String? label,
     bool clearLabel = false,
     int? successCount,
+    int? failureCount,
+    double? routeWeight,
   }) {
     return MeshCorePathHistoryEntry(
       id: id ?? this.id,
@@ -127,6 +156,8 @@ class MeshCorePathHistoryEntry {
       lastUsedAt: lastUsedAt ?? this.lastUsedAt,
       label: clearLabel ? null : (label ?? this.label),
       successCount: successCount ?? this.successCount,
+      failureCount: failureCount ?? this.failureCount,
+      routeWeight: routeWeight ?? this.routeWeight,
     );
   }
 
@@ -139,6 +170,8 @@ class MeshCorePathHistoryEntry {
     'lastUsedAt': lastUsedAt.millisecondsSinceEpoch,
     'label': label,
     'successCount': successCount,
+    'failureCount': failureCount,
+    'routeWeight': routeWeight,
   };
 
   static MeshCorePathHistoryEntry? fromJson(Object? raw) {
@@ -157,6 +190,8 @@ class MeshCorePathHistoryEntry {
         return null;
       }
       if (bytes.length != len) return null;
+      // D48-A1: legacy rows pre-date `failureCount` and `routeWeight`;
+      // fall through to 0 / default-weight so old data stays readable.
       return MeshCorePathHistoryEntry(
         id: id,
         bytes: Uint8List.fromList(bytes),
@@ -166,6 +201,10 @@ class MeshCorePathHistoryEntry {
         lastUsedAt: DateTime.fromMillisecondsSinceEpoch(lastUsedMs),
         label: raw['label'] as String?,
         successCount: (raw['successCount'] as int?) ?? 0,
+        failureCount: (raw['failureCount'] as int?) ?? 0,
+        routeWeight:
+            (raw['routeWeight'] as num?)?.toDouble() ??
+            kMeshCorePathHistoryDefaultRouteWeight,
       );
     } catch (_) {
       return null;
@@ -277,6 +316,7 @@ class MeshCorePathHistoryStore {
     required Uint8List bytes,
     required MeshCorePathSource source,
     required DateTime now,
+    double? initialWeight,
   }) async {
     if (devicePubKeyPrefix.isEmpty || contactPubKeyPrefix.isEmpty) {
       return const <MeshCorePathHistoryEntry>[];
@@ -300,6 +340,7 @@ class MeshCorePathHistoryStore {
         source: source,
         createdAt: now,
         lastUsedAt: now,
+        routeWeight: initialWeight ?? kMeshCorePathHistoryDefaultRouteWeight,
       );
       next = [entry, ...current];
     }
@@ -345,6 +386,74 @@ class MeshCorePathHistoryStore {
     final current = await load(devicePubKeyPrefix, contactPubKeyPrefix);
     final next = current.where((e) => e.id != entryId).toList();
     if (next.length == current.length) return current;
+    await save(devicePubKeyPrefix, contactPubKeyPrefix, next);
+    return next;
+  }
+
+  /// D48-A1: record a successful delivery on the saved path matching
+  /// [pathBytes] (by full-byte equality). Bumps `successCount` and
+  /// writes [newWeight] (caller is responsible for clamping per
+  /// `weightAfterSuccess` from the path-selector helper). Also
+  /// touches `lastUsedAt` to [now].
+  ///
+  /// No-op when no entry matches. Returns the post-save list.
+  Future<List<MeshCorePathHistoryEntry>> recordPathSuccess({
+    required String devicePubKeyPrefix,
+    required String contactPubKeyPrefix,
+    required Uint8List pathBytes,
+    required double newWeight,
+    required DateTime now,
+  }) async {
+    if (devicePubKeyPrefix.isEmpty || contactPubKeyPrefix.isEmpty) {
+      return const <MeshCorePathHistoryEntry>[];
+    }
+    final current = await load(devicePubKeyPrefix, contactPubKeyPrefix);
+    final idx = current.indexWhere((e) => _bytesEq(e.bytes, pathBytes));
+    if (idx < 0) return current;
+    final existing = current[idx];
+    final updated = existing.copyWith(
+      successCount: existing.successCount + 1,
+      routeWeight: newWeight,
+      lastUsedAt: now,
+    );
+    final next = List<MeshCorePathHistoryEntry>.from(current)..[idx] = updated;
+    next.sort(_byNewestUsageDesc);
+    await save(devicePubKeyPrefix, contactPubKeyPrefix, next);
+    return next;
+  }
+
+  /// D48-A1: record a failed delivery on the saved path matching
+  /// [pathBytes]. Bumps `failureCount` and writes [newWeight].
+  /// When [newWeight] is ≤ 0 the entry is REMOVED from the history
+  /// (rotation pool eviction = history eviction in D48-A1 — the
+  /// distinction is academic since there's no "show evicted in the
+  /// sheet but skip in the orchestrator" surface yet).
+  ///
+  /// No-op when no entry matches. Returns the post-save list.
+  Future<List<MeshCorePathHistoryEntry>> recordPathFailure({
+    required String devicePubKeyPrefix,
+    required String contactPubKeyPrefix,
+    required Uint8List pathBytes,
+    required double newWeight,
+  }) async {
+    if (devicePubKeyPrefix.isEmpty || contactPubKeyPrefix.isEmpty) {
+      return const <MeshCorePathHistoryEntry>[];
+    }
+    final current = await load(devicePubKeyPrefix, contactPubKeyPrefix);
+    final idx = current.indexWhere((e) => _bytesEq(e.bytes, pathBytes));
+    if (idx < 0) return current;
+    final existing = current[idx];
+    final List<MeshCorePathHistoryEntry> next;
+    if (newWeight <= 0) {
+      next = List<MeshCorePathHistoryEntry>.from(current)..removeAt(idx);
+    } else {
+      final updated = existing.copyWith(
+        failureCount: existing.failureCount + 1,
+        routeWeight: newWeight,
+      );
+      next = List<MeshCorePathHistoryEntry>.from(current)..[idx] = updated;
+    }
+    next.sort(_byNewestUsageDesc);
     await save(devicePubKeyPrefix, contactPubKeyPrefix, next);
     return next;
   }

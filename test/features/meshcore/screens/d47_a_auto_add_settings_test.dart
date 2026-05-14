@@ -163,10 +163,29 @@ void main() {
     );
     await _settle(tester);
 
-    final switches = tester.widgetList<ThemedSwitch>(find.byType(ThemedSwitch));
-    final values = switches.map((s) => s.value).toList();
-    // Order: chat, repeater, room, sensor, overwriteOldest.
-    expect(values, [true, false, true, false, true]);
+    // Scope the assertion to the 5 auto-add switches by walking the
+    // canonical ValueKeys; D48-A1 added a 6th `ThemedSwitch` for the
+    // auto-route master toggle further down the screen.
+    bool readSwitch(String keyId) {
+      final s = tester.widget<ThemedSwitch>(
+        find.descendant(
+          of: find.byKey(ValueKey(keyId)),
+          matching: find.byType(ThemedSwitch),
+        ),
+      );
+      return s.value;
+    }
+
+    expect(
+      [
+        readSwitch('meshcore-auto-add-chat'),
+        readSwitch('meshcore-auto-add-repeater'),
+        readSwitch('meshcore-auto-add-room'),
+        readSwitch('meshcore-auto-add-sensor'),
+        readSwitch('meshcore-auto-add-overwrite-oldest'),
+      ],
+      [true, false, true, false, true],
+    );
   });
 
   testWidgets(

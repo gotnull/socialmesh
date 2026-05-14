@@ -14350,6 +14350,47 @@
   "@meshcoreAutoAddSaveFailed": {
     "description": "D47-A - snackbar shown when CMD_SET_AUTO_ADD_CONFIG fails"
   },
+  "@meshcoreAutoRouteSectionTitle": {
+    "description": "D48-A1 - settings-screen section header for the auto-route rotation policy"
+  },
+  "@meshcoreAutoRouteEnabled": {
+    "description": "D48-A1 - toggle label for the master auto-route enable bit"
+  },
+  "@meshcoreAutoRouteEnabledSubtitle": {
+    "description": "D48-A1 - subtitle for the master toggle explaining the rotation behaviour"
+  },
+  "@meshcoreAutoRouteMaxWeight": {
+    "description": "D48-A1 - slider label for the per-path weight cap (range 0..10, default 5)"
+  },
+  "@meshcoreAutoRouteMaxWeightSubtitle": {
+    "description": "D48-A1 - subtitle for the max-route-weight slider"
+  },
+  "@meshcoreAutoRouteInitialWeight": {
+    "description": "D48-A1 - slider label for the starting weight of newly-discovered paths (range 0..10, default 3)"
+  },
+  "@meshcoreAutoRouteInitialWeightSubtitle": {
+    "description": "D48-A1 - subtitle for the initial-route-weight slider"
+  },
+  "@meshcoreAutoRouteSuccessIncrement": {
+    "description": "D48-A1 - slider label for the per-success weight increment (range 0..2, default 0.5)"
+  },
+  "@meshcoreAutoRouteSuccessIncrementSubtitle": {
+    "description": "D48-A1 - subtitle for the success-increment slider"
+  },
+  "@meshcoreAutoRouteFailureDecrement": {
+    "description": "D48-A1 - slider label for the per-failure weight decrement (range 0..2, default 0.2)"
+  },
+  "@meshcoreAutoRouteFailureDecrementSubtitle": {
+    "description": "D48-A1 - subtitle for the failure-decrement slider"
+  },
+  "@meshcoreAutoRouteSliderValue": {
+    "description": "D48-A1 - displayed value next to each slider; the value is already formatted by the caller",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "@meshcoreAdvertisementSent": {
     "description": "Success snackbar after sending advertisement"
   },
@@ -38181,6 +38222,22 @@
   "meshcoreAutoAddOverwriteOldestSubtitle": "Quando a lista de contatos estiver cheia, remover o mais antigo não favorito para abrir espaço",
   "meshcoreAutoAddLoadFailed": "Não foi possível carregar a configuração",
   "meshcoreAutoAddSaveFailed": "Não foi possível salvar a configuração",
+  "meshcoreAutoRouteSectionTitle": "Rotação automática de rota",
+  "meshcoreAutoRouteEnabled": "Ativar rotação automática de rota",
+  "meshcoreAutoRouteEnabledSubtitle": "Quando uma mensagem falha, tente novamente na próxima melhor rota salva antes de recorrer ao flood",
+  "meshcoreAutoRouteMaxWeight": "Peso máximo da rota",
+  "meshcoreAutoRouteMaxWeightSubtitle": "Limite superior da confiança que o app pode desenvolver em uma única rota",
+  "meshcoreAutoRouteInitialWeight": "Peso inicial da rota",
+  "meshcoreAutoRouteInitialWeightSubtitle": "Peso inicial para rotas recém-descobertas",
+  "meshcoreAutoRouteSuccessIncrement": "Bônus de sucesso",
+  "meshcoreAutoRouteSuccessIncrementSubtitle": "Quanto recompensar uma rota que entregou com sucesso",
+  "meshcoreAutoRouteFailureDecrement": "Penalidade por falha",
+  "meshcoreAutoRouteFailureDecrementSubtitle": "Quanto penalizar uma rota que falhou; chega a zero = removida",
+  "meshcoreAutoRouteMaxRetries": "Máximo de tentativas por mensagem",
+  "meshcoreAutoRouteMaxRetriesSubtitle": "Total de tentativas incluindo o envio inicial; a última recorre ao flood",
+  "meshcoreAutoRouteRetryTimeoutSeconds": "Tempo limite de retransmissão (segundos)",
+  "meshcoreAutoRouteRetryTimeoutSecondsSubtitle": "Quanto esperar pela confirmação de entrega antes de tentar outra rota",
+  "meshcoreAutoRouteSliderValue": "{value}",
   "meshcoreAdvertisementSent": "Anúncio enviado",
   "meshcoreAdvertisementSentTools": "Anúncio enviado",
   "meshcoreAnalysis": "Análise",
@@ -38577,6 +38634,7 @@
   "meshcorePathHistoryFooter": "Redefinir para Auto não exclui o histórico salvo. Rotas salvas podem se tornar obsoletas conforme a mesh muda.",
   "meshcorePathHistoryHopCount": "{count, plural, =0{Rota direta} =1{1 hop} other{{count} hops}}",
   "meshcorePathHistorySourceManual": "Manual",
+  "meshcorePathHistorySourceInbound": "Automático",
   "meshcorePathHistorySourceTrace": "Rastreio",
   "meshcorePathHistoryStaleBadge": "Obsoleta",
   "meshcorePathHistoryTileSubtitle": "{count} rotas salvas",

@@ -1537,6 +1537,93 @@ class MeshCoreSession {
     }
   }
 
+  /// D48-A3 / D29-B: fetch a single contact by its full 32-byte public
+  /// key via `CMD_GET_CONTACT_BY_KEY` (0x1E). The firmware responds
+  /// with one `RESP_CODE_CONTACT` (0x03) frame for the matching key,
+  /// or `RESP_CODE_ERR` (0x01) when the contact is not on the roster.
+  ///
+  /// Wire shapes:
+  /// ```
+  /// outbound: [0x1E][pub_key: 32 B]
+  /// success : [0x03][...contact frame...]   (one frame, NO endOfContacts)
+  /// error   : [0x01]                         (contact not known)
+  /// ```
+  ///
+  /// Returns the parsed contact on success, or `null` on:
+  ///   - firmware error (`RESP_CODE_ERR`),
+  ///   - timeout,
+  ///   - parse failure on the returned contact frame.
+  ///
+  /// Bypasses [_sendRateLimiter]: this is a host-side management RPC,
+  /// not a chat-bound text send.
+  ///
+  /// Privacy: logs only the 8-byte fingerprint, never the full key.
+  Future<MeshCoreContactInfo?> getContactByKey({
+    required Uint8List pubKey,
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    if (pubKey.length != meshCorePubKeySize) {
+      throw ArgumentError.value(
+        pubKey.length,
+        'pubKey.length',
+        'must be exactly $meshCorePubKeySize bytes',
+      );
+    }
+    AppLogging.meshcore(
+      'event=contact.get_by_key.started '
+      'target=${AppLogging.publicKeyFingerprint(pubKey)}',
+    );
+
+    // The CONTACT frame stream and the ERR frame stream both race
+    // against [timeout]. Whichever arrives first wins.
+    final completer = Completer<MeshCoreContactInfo?>();
+    late final StreamSubscription<MeshCoreFrame> sub;
+    sub = frameStream.listen((frame) {
+      if (completer.isCompleted) return;
+      if (frame.command == MeshCoreResponses.contact) {
+        final result = parseContact(frame.payload);
+        final parsed = result.value;
+        if (parsed == null) return;
+        // The firmware can stream multiple contacts in response to
+        // an unrelated CMD_GET_CONTACTS in flight; match by pubkey.
+        if (parsed.publicKey.length != pubKey.length) return;
+        var match = true;
+        for (var i = 0; i < pubKey.length; i++) {
+          if (parsed.publicKey[i] != pubKey[i]) {
+            match = false;
+            break;
+          }
+        }
+        if (!match) return;
+        completer.complete(parsed);
+      } else if (frame.command == MeshCoreResponses.err) {
+        completer.complete(null);
+      }
+    });
+
+    try {
+      await sendFrame(
+        MeshCoreFrame(
+          command: MeshCoreCommands.getContactByKey,
+          payload: Uint8List.fromList(pubKey),
+        ),
+      );
+      final result = await completer.future.timeout(
+        timeout,
+        onTimeout: () => null,
+      );
+      AppLogging.meshcore(
+        'event=contact.get_by_key.completed '
+        'target=${AppLogging.publicKeyFingerprint(pubKey)} '
+        'result=${result != null ? "ok" : "miss"}',
+        error: result == null,
+      );
+      return result;
+    } finally {
+      await sub.cancel();
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Channels
   // ---------------------------------------------------------------------------

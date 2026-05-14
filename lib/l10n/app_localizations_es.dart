@@ -7761,6 +7761,63 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshcoreAutoAddSaveFailed => 'Could not save auto-add config';
 
   @override
+  String get meshcoreAutoRouteSectionTitle => 'Auto-route rotation';
+
+  @override
+  String get meshcoreAutoRouteEnabled => 'Enable auto-route rotation';
+
+  @override
+  String get meshcoreAutoRouteEnabledSubtitle =>
+      'When a message fails, retry on the next-best saved path before falling back to flood';
+
+  @override
+  String get meshcoreAutoRouteMaxWeight => 'Max route weight';
+
+  @override
+  String get meshcoreAutoRouteMaxWeightSubtitle =>
+      'Upper limit on how confident the app can become about a single path';
+
+  @override
+  String get meshcoreAutoRouteInitialWeight => 'Initial route weight';
+
+  @override
+  String get meshcoreAutoRouteInitialWeightSubtitle =>
+      'Starting weight for newly-discovered paths';
+
+  @override
+  String get meshcoreAutoRouteSuccessIncrement => 'Success bonus';
+
+  @override
+  String get meshcoreAutoRouteSuccessIncrementSubtitle =>
+      'How much to reward a path that delivered successfully';
+
+  @override
+  String get meshcoreAutoRouteFailureDecrement => 'Failure penalty';
+
+  @override
+  String get meshcoreAutoRouteFailureDecrementSubtitle =>
+      'How much to penalize a path that failed; reaches zero = evicted';
+
+  @override
+  String get meshcoreAutoRouteMaxRetries => 'Max attempts per message';
+
+  @override
+  String get meshcoreAutoRouteMaxRetriesSubtitle =>
+      'Total attempts including the initial send; the last attempt falls back to flood';
+
+  @override
+  String get meshcoreAutoRouteRetryTimeoutSeconds => 'Retry timeout (seconds)';
+
+  @override
+  String get meshcoreAutoRouteRetryTimeoutSecondsSubtitle =>
+      'How long to wait for a delivery confirmation before retrying on another path';
+
+  @override
+  String meshcoreAutoRouteSliderValue(String value) {
+    return '$value';
+  }
+
+  @override
   String get meshcoreAdvertisementSent => 'Anuncio enviado';
 
   @override
@@ -9171,6 +9228,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshcorePathHistorySourceManual => 'Manual';
+
+  @override
+  String get meshcorePathHistorySourceInbound => 'Auto';
 
   @override
   String get meshcorePathHistoryActiveBadge => 'Activo';

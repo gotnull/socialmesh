@@ -33,6 +33,7 @@ import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../providers/meshcore_message_providers.dart';
 import '../../../services/meshcore/meshcore_send_rate_limiter.dart';
+import '../../../services/meshcore/routing/meshcore_auto_route_orchestrator.dart';
 import '../../../services/meshcore/protocol/meshcore_chat_meta_envelope.dart';
 import '../../../services/meshcore/protocol/meshcore_frame.dart';
 import '../../../services/meshcore/storage/meshcore_message_store.dart';
@@ -1069,6 +1070,84 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
           : (isContact
                 ? MeshCoreSendKind.plainContact
                 : MeshCoreSendKind.plainChannel);
+
+      // D48-A2: contact DMs go through the auto-route orchestrator
+      // when the user has opted in. The orchestrator owns the retry
+      // loop (per-attempt path rotation + delivery-ack matching);
+      // channels keep the single-shot flood-only path because they
+      // have no `out_path` to rotate.
+      final autoRouteSettings = ref.read(meshCoreAutoRouteSettingsProvider);
+      final selfInfo = ref.read(meshCoreSelfInfoProvider).selfInfo;
+      final confirmationRouter = ref.read(
+        meshCoreSendConfirmationRouterProvider,
+      );
+      final useAutoRoute =
+          isContact &&
+          autoRouteSettings.enabled &&
+          selfInfo != null &&
+          selfInfo.pubKey.isNotEmpty &&
+          confirmationRouter != null;
+
+      if (useAutoRoute) {
+        final orchestrator = MeshCoreAutoRouteOrchestrator(
+          session: session,
+          pathHistoryStore: ref.read(meshCorePathHistoryStoreProvider),
+          confirmationRouter: confirmationRouter,
+          settings: autoRouteSettings,
+          devicePubKey: selfInfo.pubKey,
+          contactPubKey: widget.contact!.publicKey,
+          contactAdvType: widget.contact!.type,
+          contactName: widget.contact!.name,
+        );
+        final outcome = await orchestrator.sendWithAutoRoute(
+          text: wireBody,
+          timestampSeconds: timestampS,
+          sendKind: sendKind,
+        );
+        if (outcome.delivered) {
+          if (mounted) {
+            _historyNotifier.updateMessageStatus(
+              message.id,
+              MeshCoreMessageDeliveryStatus.sent,
+            );
+            final updated = _historyState.messages.firstWhere(
+              (m) => m.id == message.id,
+              orElse: () =>
+                  message.copyWith(status: MeshCoreMessageDeliveryStatus.sent),
+            );
+            _persistMessage(updated);
+          }
+          AppLogging.meshcore(
+            'event=auto_route.message.delivered '
+            'attempts=${outcome.attempts} '
+            'trip_ms=${outcome.tripTime?.inMilliseconds}',
+          );
+          return;
+        }
+        _markMessageFailed(message.id);
+        AppLogging.meshcore(
+          'event=auto_route.message.failed '
+          'attempts=${outcome.attempts} '
+          'reason=${outcome.failureReason?.name}',
+          error: true,
+        );
+        if (mounted) {
+          if (outcome.failureReason ==
+              MeshCoreAutoRouteFailureReason.rateLimited) {
+            showErrorSnackBar(
+              context,
+              context.l10n.meshcoreChatReplyRateLimited(1),
+            );
+          } else {
+            showErrorSnackBar(
+              context,
+              context.l10n.meshcoreFailedToSendMessage,
+            );
+          }
+        }
+        return;
+      }
+
       final result = await session.sendTextMessage(
         command: frame.command,
         payload: frame.payload,

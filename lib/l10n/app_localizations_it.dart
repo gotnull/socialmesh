@@ -7730,6 +7730,67 @@ class AppLocalizationsIt extends AppLocalizations {
       'Impossibile salvare la configurazione';
 
   @override
+  String get meshcoreAutoRouteSectionTitle =>
+      'Rotazione automatica del percorso';
+
+  @override
+  String get meshcoreAutoRouteEnabled =>
+      'Abilita rotazione automatica del percorso';
+
+  @override
+  String get meshcoreAutoRouteEnabledSubtitle =>
+      'Quando un messaggio fallisce, riprova sul prossimo percorso salvato migliore prima di passare al flood';
+
+  @override
+  String get meshcoreAutoRouteMaxWeight => 'Peso massimo del percorso';
+
+  @override
+  String get meshcoreAutoRouteMaxWeightSubtitle =>
+      'Limite superiore sulla fiducia che l\'app può sviluppare verso un singolo percorso';
+
+  @override
+  String get meshcoreAutoRouteInitialWeight => 'Peso iniziale del percorso';
+
+  @override
+  String get meshcoreAutoRouteInitialWeightSubtitle =>
+      'Peso iniziale per i percorsi appena scoperti';
+
+  @override
+  String get meshcoreAutoRouteSuccessIncrement => 'Bonus di successo';
+
+  @override
+  String get meshcoreAutoRouteSuccessIncrementSubtitle =>
+      'Quanto premiare un percorso che ha consegnato con successo';
+
+  @override
+  String get meshcoreAutoRouteFailureDecrement => 'Penalità per fallimento';
+
+  @override
+  String get meshcoreAutoRouteFailureDecrementSubtitle =>
+      'Quanto penalizzare un percorso fallito; raggiunge zero = rimosso';
+
+  @override
+  String get meshcoreAutoRouteMaxRetries =>
+      'Numero massimo di tentativi per messaggio';
+
+  @override
+  String get meshcoreAutoRouteMaxRetriesSubtitle =>
+      'Tentativi totali inclusa la prima trasmissione; l\'ultimo tentativo torna al flood';
+
+  @override
+  String get meshcoreAutoRouteRetryTimeoutSeconds =>
+      'Timeout di ritrasmissione (secondi)';
+
+  @override
+  String get meshcoreAutoRouteRetryTimeoutSecondsSubtitle =>
+      'Quanto attendere una conferma di consegna prima di provare un altro percorso';
+
+  @override
+  String meshcoreAutoRouteSliderValue(String value) {
+    return '$value';
+  }
+
+  @override
   String get meshcoreAdvertisementSent => 'Annuncio inviato';
 
   @override
@@ -9132,6 +9193,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get meshcorePathHistorySourceManual => 'Manuale';
+
+  @override
+  String get meshcorePathHistorySourceInbound => 'Automatico';
 
   @override
   String get meshcorePathHistoryActiveBadge => 'Attivo';

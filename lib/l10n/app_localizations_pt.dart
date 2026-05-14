@@ -7716,6 +7716,64 @@ class AppLocalizationsPt extends AppLocalizations {
       'Não foi possível salvar a configuração';
 
   @override
+  String get meshcoreAutoRouteSectionTitle => 'Rotação automática de rota';
+
+  @override
+  String get meshcoreAutoRouteEnabled => 'Ativar rotação automática de rota';
+
+  @override
+  String get meshcoreAutoRouteEnabledSubtitle =>
+      'Quando uma mensagem falha, tente novamente na próxima melhor rota salva antes de recorrer ao flood';
+
+  @override
+  String get meshcoreAutoRouteMaxWeight => 'Peso máximo da rota';
+
+  @override
+  String get meshcoreAutoRouteMaxWeightSubtitle =>
+      'Limite superior da confiança que o app pode desenvolver em uma única rota';
+
+  @override
+  String get meshcoreAutoRouteInitialWeight => 'Peso inicial da rota';
+
+  @override
+  String get meshcoreAutoRouteInitialWeightSubtitle =>
+      'Peso inicial para rotas recém-descobertas';
+
+  @override
+  String get meshcoreAutoRouteSuccessIncrement => 'Bônus de sucesso';
+
+  @override
+  String get meshcoreAutoRouteSuccessIncrementSubtitle =>
+      'Quanto recompensar uma rota que entregou com sucesso';
+
+  @override
+  String get meshcoreAutoRouteFailureDecrement => 'Penalidade por falha';
+
+  @override
+  String get meshcoreAutoRouteFailureDecrementSubtitle =>
+      'Quanto penalizar uma rota que falhou; chega a zero = removida';
+
+  @override
+  String get meshcoreAutoRouteMaxRetries => 'Máximo de tentativas por mensagem';
+
+  @override
+  String get meshcoreAutoRouteMaxRetriesSubtitle =>
+      'Total de tentativas incluindo o envio inicial; a última recorre ao flood';
+
+  @override
+  String get meshcoreAutoRouteRetryTimeoutSeconds =>
+      'Tempo limite de retransmissão (segundos)';
+
+  @override
+  String get meshcoreAutoRouteRetryTimeoutSecondsSubtitle =>
+      'Quanto esperar pela confirmação de entrega antes de tentar outra rota';
+
+  @override
+  String meshcoreAutoRouteSliderValue(String value) {
+    return '$value';
+  }
+
+  @override
   String get meshcoreAdvertisementSent => 'Anúncio enviado';
 
   @override
@@ -9124,6 +9182,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get meshcorePathHistorySourceManual => 'Manual';
+
+  @override
+  String get meshcorePathHistorySourceInbound => 'Automático';
 
   @override
   String get meshcorePathHistoryActiveBadge => 'Ativa';

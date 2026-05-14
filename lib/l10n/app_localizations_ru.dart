@@ -7717,6 +7717,65 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreAutoAddSaveFailed => 'Не удалось сохранить настройки';
 
   @override
+  String get meshcoreAutoRouteSectionTitle => 'Автоматическая смена маршрута';
+
+  @override
+  String get meshcoreAutoRouteEnabled =>
+      'Включить автоматическую смену маршрута';
+
+  @override
+  String get meshcoreAutoRouteEnabledSubtitle =>
+      'При сбое сообщения повторить попытку по следующему лучшему сохранённому маршруту, прежде чем переходить к flood';
+
+  @override
+  String get meshcoreAutoRouteMaxWeight => 'Максимальный вес маршрута';
+
+  @override
+  String get meshcoreAutoRouteMaxWeightSubtitle =>
+      'Верхний предел доверия, которое приложение может выработать к одному маршруту';
+
+  @override
+  String get meshcoreAutoRouteInitialWeight => 'Начальный вес маршрута';
+
+  @override
+  String get meshcoreAutoRouteInitialWeightSubtitle =>
+      'Начальный вес для новых обнаруженных маршрутов';
+
+  @override
+  String get meshcoreAutoRouteSuccessIncrement => 'Бонус за успех';
+
+  @override
+  String get meshcoreAutoRouteSuccessIncrementSubtitle =>
+      'Насколько вознаграждать маршрут, успешно доставивший сообщение';
+
+  @override
+  String get meshcoreAutoRouteFailureDecrement => 'Штраф за сбой';
+
+  @override
+  String get meshcoreAutoRouteFailureDecrementSubtitle =>
+      'Насколько штрафовать сбойный маршрут; при нуле = удаляется';
+
+  @override
+  String get meshcoreAutoRouteMaxRetries => 'Макс. попыток на сообщение';
+
+  @override
+  String get meshcoreAutoRouteMaxRetriesSubtitle =>
+      'Всего попыток вместе с первой отправкой; последняя переходит на flood';
+
+  @override
+  String get meshcoreAutoRouteRetryTimeoutSeconds =>
+      'Таймаут повторной попытки (секунды)';
+
+  @override
+  String get meshcoreAutoRouteRetryTimeoutSecondsSubtitle =>
+      'Сколько ждать подтверждения доставки, прежде чем пробовать другой маршрут';
+
+  @override
+  String meshcoreAutoRouteSliderValue(String value) {
+    return '$value';
+  }
+
+  @override
   String get meshcoreAdvertisementSent => 'Объявление отправлено';
 
   @override
@@ -9120,6 +9179,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get meshcorePathHistorySourceManual => 'Вручную';
+
+  @override
+  String get meshcorePathHistorySourceInbound => 'Авто';
 
   @override
   String get meshcorePathHistoryActiveBadge => 'Активный';

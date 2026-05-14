@@ -10321,6 +10321,75 @@
     "@meshcoreAutoAddSaveFailed": {
         "description": "D47-A - snackbar shown when CMD_SET_AUTO_ADD_CONFIG fails"
     },
+    "meshcoreAutoRouteSectionTitle": "Auto-route rotation",
+    "@meshcoreAutoRouteSectionTitle": {
+        "description": "D48-A1 - settings-screen section header for the auto-route rotation policy"
+    },
+    "meshcoreAutoRouteEnabled": "Enable auto-route rotation",
+    "@meshcoreAutoRouteEnabled": {
+        "description": "D48-A1 - toggle label for the master auto-route enable bit"
+    },
+    "meshcoreAutoRouteEnabledSubtitle": "When a message fails, retry on the next-best saved path before falling back to flood",
+    "@meshcoreAutoRouteEnabledSubtitle": {
+        "description": "D48-A1 - subtitle for the master toggle explaining the rotation behaviour"
+    },
+    "meshcoreAutoRouteMaxWeight": "Max route weight",
+    "@meshcoreAutoRouteMaxWeight": {
+        "description": "D48-A1 - slider label for the per-path weight cap (range 0..10, default 5)"
+    },
+    "meshcoreAutoRouteMaxWeightSubtitle": "Upper limit on how confident the app can become about a single path",
+    "@meshcoreAutoRouteMaxWeightSubtitle": {
+        "description": "D48-A1 - subtitle for the max-route-weight slider"
+    },
+    "meshcoreAutoRouteInitialWeight": "Initial route weight",
+    "@meshcoreAutoRouteInitialWeight": {
+        "description": "D48-A1 - slider label for the starting weight of newly-discovered paths (range 0..10, default 3)"
+    },
+    "meshcoreAutoRouteInitialWeightSubtitle": "Starting weight for newly-discovered paths",
+    "@meshcoreAutoRouteInitialWeightSubtitle": {
+        "description": "D48-A1 - subtitle for the initial-route-weight slider"
+    },
+    "meshcoreAutoRouteSuccessIncrement": "Success bonus",
+    "@meshcoreAutoRouteSuccessIncrement": {
+        "description": "D48-A1 - slider label for the per-success weight increment (range 0..2, default 0.5)"
+    },
+    "meshcoreAutoRouteSuccessIncrementSubtitle": "How much to reward a path that delivered successfully",
+    "@meshcoreAutoRouteSuccessIncrementSubtitle": {
+        "description": "D48-A1 - subtitle for the success-increment slider"
+    },
+    "meshcoreAutoRouteFailureDecrement": "Failure penalty",
+    "@meshcoreAutoRouteFailureDecrement": {
+        "description": "D48-A1 - slider label for the per-failure weight decrement (range 0..2, default 0.2)"
+    },
+    "meshcoreAutoRouteFailureDecrementSubtitle": "How much to penalize a path that failed; reaches zero = evicted",
+    "@meshcoreAutoRouteFailureDecrementSubtitle": {
+        "description": "D48-A1 - subtitle for the failure-decrement slider"
+    },
+    "meshcoreAutoRouteMaxRetries": "Max attempts per message",
+    "@meshcoreAutoRouteMaxRetries": {
+        "description": "D48-A2 - slider label for the maximum attempt count (range 1..8, default 3); the last attempt is always flood"
+    },
+    "meshcoreAutoRouteMaxRetriesSubtitle": "Total attempts including the initial send; the last attempt falls back to flood",
+    "@meshcoreAutoRouteMaxRetriesSubtitle": {
+        "description": "D48-A2 - subtitle for the max-retries slider"
+    },
+    "meshcoreAutoRouteRetryTimeoutSeconds": "Retry timeout (seconds)",
+    "@meshcoreAutoRouteRetryTimeoutSeconds": {
+        "description": "D48-A2 - slider label for the per-attempt delivery-ack wait (range 3..30, default 8)"
+    },
+    "meshcoreAutoRouteRetryTimeoutSecondsSubtitle": "How long to wait for a delivery confirmation before retrying on another path",
+    "@meshcoreAutoRouteRetryTimeoutSecondsSubtitle": {
+        "description": "D48-A2 - subtitle for the retry-timeout slider"
+    },
+    "meshcoreAutoRouteSliderValue": "{value}",
+    "@meshcoreAutoRouteSliderValue": {
+        "description": "D48-A1 - displayed value next to each slider; the value is already formatted by the caller",
+        "placeholders": {
+            "value": {
+                "type": "String"
+            }
+        }
+    },
     "meshcoreAdvertisementSent": "Advertisement sent",
     "@meshcoreAdvertisementSent": {
         "description": "Success snackbar after sending advertisement"
@@ -12218,6 +12287,10 @@
     "meshcorePathHistorySourceManual": "Manual",
     "@meshcorePathHistorySourceManual": {
         "description": "Path history source badge for entries entered manually (reserved; not produced in D39-A)"
+    },
+    "meshcorePathHistorySourceInbound": "Auto",
+    "@meshcorePathHistorySourceInbound": {
+        "description": "D48-A3 - path history source badge for entries recorded passively after a PUSH_CODE_PATH_UPDATED 0x81 + CMD_GET_CONTACT_BY_KEY refresh"
     },
     "meshcorePathHistoryActiveBadge": "Active",
     "@meshcorePathHistoryActiveBadge": {

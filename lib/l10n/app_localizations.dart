@@ -13551,6 +13551,102 @@ abstract class AppLocalizations {
   /// **'Could not save auto-add config'**
   String get meshcoreAutoAddSaveFailed;
 
+  /// D48-A1 - settings-screen section header for the auto-route rotation policy
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-route rotation'**
+  String get meshcoreAutoRouteSectionTitle;
+
+  /// D48-A1 - toggle label for the master auto-route enable bit
+  ///
+  /// In en, this message translates to:
+  /// **'Enable auto-route rotation'**
+  String get meshcoreAutoRouteEnabled;
+
+  /// D48-A1 - subtitle for the master toggle explaining the rotation behaviour
+  ///
+  /// In en, this message translates to:
+  /// **'When a message fails, retry on the next-best saved path before falling back to flood'**
+  String get meshcoreAutoRouteEnabledSubtitle;
+
+  /// D48-A1 - slider label for the per-path weight cap (range 0..10, default 5)
+  ///
+  /// In en, this message translates to:
+  /// **'Max route weight'**
+  String get meshcoreAutoRouteMaxWeight;
+
+  /// D48-A1 - subtitle for the max-route-weight slider
+  ///
+  /// In en, this message translates to:
+  /// **'Upper limit on how confident the app can become about a single path'**
+  String get meshcoreAutoRouteMaxWeightSubtitle;
+
+  /// D48-A1 - slider label for the starting weight of newly-discovered paths (range 0..10, default 3)
+  ///
+  /// In en, this message translates to:
+  /// **'Initial route weight'**
+  String get meshcoreAutoRouteInitialWeight;
+
+  /// D48-A1 - subtitle for the initial-route-weight slider
+  ///
+  /// In en, this message translates to:
+  /// **'Starting weight for newly-discovered paths'**
+  String get meshcoreAutoRouteInitialWeightSubtitle;
+
+  /// D48-A1 - slider label for the per-success weight increment (range 0..2, default 0.5)
+  ///
+  /// In en, this message translates to:
+  /// **'Success bonus'**
+  String get meshcoreAutoRouteSuccessIncrement;
+
+  /// D48-A1 - subtitle for the success-increment slider
+  ///
+  /// In en, this message translates to:
+  /// **'How much to reward a path that delivered successfully'**
+  String get meshcoreAutoRouteSuccessIncrementSubtitle;
+
+  /// D48-A1 - slider label for the per-failure weight decrement (range 0..2, default 0.2)
+  ///
+  /// In en, this message translates to:
+  /// **'Failure penalty'**
+  String get meshcoreAutoRouteFailureDecrement;
+
+  /// D48-A1 - subtitle for the failure-decrement slider
+  ///
+  /// In en, this message translates to:
+  /// **'How much to penalize a path that failed; reaches zero = evicted'**
+  String get meshcoreAutoRouteFailureDecrementSubtitle;
+
+  /// D48-A2 - slider label for the maximum attempt count (range 1..8, default 3); the last attempt is always flood
+  ///
+  /// In en, this message translates to:
+  /// **'Max attempts per message'**
+  String get meshcoreAutoRouteMaxRetries;
+
+  /// D48-A2 - subtitle for the max-retries slider
+  ///
+  /// In en, this message translates to:
+  /// **'Total attempts including the initial send; the last attempt falls back to flood'**
+  String get meshcoreAutoRouteMaxRetriesSubtitle;
+
+  /// D48-A2 - slider label for the per-attempt delivery-ack wait (range 3..30, default 8)
+  ///
+  /// In en, this message translates to:
+  /// **'Retry timeout (seconds)'**
+  String get meshcoreAutoRouteRetryTimeoutSeconds;
+
+  /// D48-A2 - subtitle for the retry-timeout slider
+  ///
+  /// In en, this message translates to:
+  /// **'How long to wait for a delivery confirmation before retrying on another path'**
+  String get meshcoreAutoRouteRetryTimeoutSecondsSubtitle;
+
+  /// D48-A1 - displayed value next to each slider; the value is already formatted by the caller
+  ///
+  /// In en, this message translates to:
+  /// **'{value}'**
+  String meshcoreAutoRouteSliderValue(String value);
+
   /// Success snackbar after sending advertisement
   ///
   /// In en, this message translates to:
@@ -15914,6 +16010,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manual'**
   String get meshcorePathHistorySourceManual;
+
+  /// D48-A3 - path history source badge for entries recorded passively after a PUSH_CODE_PATH_UPDATED 0x81 + CMD_GET_CONTACT_BY_KEY refresh
+  ///
+  /// In en, this message translates to:
+  /// **'Auto'**
+  String get meshcorePathHistorySourceInbound;
 
   /// Path history badge shown when a saved path matches the contact's current firmware path
   ///
