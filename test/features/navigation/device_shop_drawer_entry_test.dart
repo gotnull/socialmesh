@@ -20,15 +20,9 @@ void main() {
       source = mainShellFile.readAsStringSync();
     });
 
-    test('adds Device Shop to the public drawer behind the feature flag', () {
+    test('adds Device Shop to the public drawer Tools section', () {
       expect(
-        source.contains('if (AppFeatureFlags.isDeviceShopEnabled)'),
-        true,
-        reason:
-            'Device Shop drawer access must be behind AppFeatureFlags.isDeviceShopEnabled.',
-      );
-      expect(
-        source.contains("label: l10n.deviceShopTitle"),
+        source.contains('label: l10n.deviceShopTitle'),
         true,
         reason: 'Drawer entry should reuse the localized Device Shop title.',
       );
