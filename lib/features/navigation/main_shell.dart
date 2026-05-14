@@ -1387,16 +1387,15 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
       iconColor: AccentColors.green,
       requiresConnection: false,
     ),
-    if (AppFeatureFlags.isDeviceShopEnabled)
-      DrawerMenuItem(
-        id: 'device_shop',
-        icon: Icons.storefront_outlined,
-        label: l10n.deviceShopTitle,
-        screen: const DeviceShopScreen(),
-        iconColor: AccentColors.cyan,
-        requiresConnection: false,
-        whatsNewBadgeKey: 'device_shop',
-      ),
+    DrawerMenuItem(
+      id: 'device_shop',
+      icon: Icons.storefront_outlined,
+      label: l10n.deviceShopTitle,
+      screen: const DeviceShopScreen(),
+      iconColor: AccentColors.cyan,
+      requiresConnection: false,
+      whatsNewBadgeKey: 'device_shop',
+    ),
     if (AppFeatureFlags.isFileTransferEnabled)
       DrawerMenuItem(
         id: 'file_transfers',
