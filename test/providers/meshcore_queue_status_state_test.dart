@@ -149,10 +149,16 @@ void main() {
 
         // Build the notifier (constructor wires the heartbeat).
         c.read(meshCoreConversationsProvider);
-        // `heartbeatActive` is published on the next event-loop turn
-        // (mirrors `_loadConversations`'s deferred state write); pump
-        // the loop a few times to give it space to land.
-        await Future<void>.delayed(const Duration(milliseconds: 10));
+        // `_publishHeartbeatActive` schedules a `Future<void>(...)` to
+        // write state on the NEXT event-loop turn (deferred so build's
+        // initial-state commit lands first; mirrors
+        // `_loadConversations`). A fixed sleep races with that posted
+        // Future under load (one of the FlutterTest IDE runs showed
+        // the failure mode). Poll-with-timeout drains the event loop
+        // until the expected state lands or we hit a generous bound.
+        await _pumpUntil(
+          () => c.read(meshCoreConversationsProvider).heartbeatActive,
+        );
 
         final state = c.read(meshCoreConversationsProvider);
         expect(state.heartbeatActive, isTrue);
@@ -164,9 +170,26 @@ void main() {
       addTearDown(c.dispose);
 
       c.read(meshCoreConversationsProvider);
-      await Future<void>.delayed(const Duration(milliseconds: 10));
+      await _pumpUntil(
+        () => !c.read(meshCoreConversationsProvider).heartbeatActive,
+      );
       final state = c.read(meshCoreConversationsProvider);
       expect(state.heartbeatActive, isFalse);
     });
   });
+}
+
+/// Poll an event-loop-bound condition by yielding to pending Futures.
+/// Returns once [predicate] is true or [timeout] elapses (the caller
+/// then re-checks state and fails the `expect` cleanly). Cheaper than
+/// a fixed delay and not racy under load.
+Future<void> _pumpUntil(
+  bool Function() predicate, {
+  Duration timeout = const Duration(milliseconds: 200),
+  Duration step = const Duration(milliseconds: 1),
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  while (!predicate() && DateTime.now().isBefore(deadline)) {
+    await Future<void>.delayed(step);
+  }
 }
