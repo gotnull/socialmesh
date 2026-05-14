@@ -38,16 +38,19 @@ class SmFeatureFlag {
   bool _sipEnabled;
   bool _mrrpEnabled;
   bool _mrrpHarnessEnabled;
-  bool _bleReceiveStallDetectionEnabled;
-  bool _bleReceiveStallRecoveryResubscribe;
+  final bool _bleReceiveStallDetectionEnabled;
+  final bool _bleReceiveStallRecoveryResubscribe;
   bool _bleReceiveStallRecoveryReconnect;
 
   /// Creates feature flags.
   ///
   /// Resolution order for each flag:
   /// 1. Explicit constructor argument (if provided).
-  /// 2. `.env` value (e.g. `SIP_ENABLED`, `BLE_RX_STALL_DETECTION`).
+  /// 2. `.env` value (e.g. `SIP_ENABLED`, `BLE_RX_STALL_RECOVERY_RECONNECT`).
   /// 3. Hardcoded default.
+  ///
+  /// The BLE stall detector and its resubscribe-recovery path are
+  /// production-on; only the constructor arg can flip them (for tests).
   SmFeatureFlag({
     bool? sipEnabled,
     bool? mrrpEnabled,
@@ -60,13 +63,9 @@ class SmFeatureFlag {
        _mrrpHarnessEnabled =
            mrrpHarnessEnabled ?? _parseBoolEnv('MRRP_HARNESS_ENABLED') ?? false,
        _bleReceiveStallDetectionEnabled =
-           bleReceiveStallDetectionEnabled ??
-           _parseBoolEnv('BLE_RX_STALL_DETECTION') ??
-           true,
+           bleReceiveStallDetectionEnabled ?? true,
        _bleReceiveStallRecoveryResubscribe =
-           bleReceiveStallRecoveryResubscribe ??
-           _parseBoolEnv('BLE_RX_STALL_RECOVERY_RESUBSCRIBE') ??
-           true,
+           bleReceiveStallRecoveryResubscribe ?? true,
        _bleReceiveStallRecoveryReconnect =
            bleReceiveStallRecoveryReconnect ??
            _parseBoolEnv('BLE_RX_STALL_RECOVERY_RECONNECT') ??
@@ -109,27 +108,19 @@ class SmFeatureFlag {
   /// inspects cached transport timestamps and emits a single severity-2
   /// `BLE_RX_STALL_SUSPECTED` warning per stall episode. Pure logging —
   /// no recovery side-effect on its own.
-  /// Default: true.
+  /// Default: true. Flip only via constructor arg in tests.
   bool get bleReceiveStallDetectionEnabled => _bleReceiveStallDetectionEnabled;
-
-  /// Set BLE receive-stall detection enabled state.
-  void setBleReceiveStallDetectionEnabled(bool value) =>
-      _bleReceiveStallDetectionEnabled = value;
 
   /// Whether the resubscribe recovery path runs when a stall is suspected.
   ///
   /// When true, the stall detector triggers
   /// `BleTransport.refreshNotifications()` once per stall episode. The
-  /// same code path is already exercised by the legacy 3-min health
-  /// check; this flag just allows triggering it earlier (and from a
-  /// path that survives `pauseRssiPolling`).
-  /// Default: true.
+  /// same code path is already exercised by the 3-min health check; this
+  /// flag just allows triggering it earlier (and from a path that
+  /// survives `pauseRssiPolling`).
+  /// Default: true. Flip only via constructor arg in tests.
   bool get bleReceiveStallRecoveryResubscribe =>
       _bleReceiveStallRecoveryResubscribe;
-
-  /// Set BLE receive-stall resubscribe-recovery enabled state.
-  void setBleReceiveStallRecoveryResubscribe(bool value) =>
-      _bleReceiveStallRecoveryResubscribe = value;
 
   /// Whether the hard-reconnect recovery path runs when a stall persists.
   ///
