@@ -1135,20 +1135,23 @@ class _BottomNavEditBanner extends ConsumerWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
+          // Three explicit stops ending at 1.0 instead of a two-
+          // stop list ending at 0.05. Functionally identical (fade
+          // from transparent to solid in the top ~5%, solid for
+          // the rest) but terminating at 1.0 is the conventional
+          // form `ui.Gradient.linear` validates against on every
+          // platform. A two-stop list `[0.0, 0.X]` that does not
+          // reach 1.0 crashed mid-paint in production (Crashlytics:
+          // LinearGradient.createShader -> new Gradient.linear,
+          // typically on the banner mount frame). Matching the RGB
+          // on both ends of the fade so the interpolation is
+          // alpha-only.
           colors: [
-            // Fully transparent at the top so body content shows
-            // through the topmost pixel row — that body content is
-            // the actual screen the user was looking at when they
-            // entered edit mode.
             context.surface.withValues(alpha: 0),
             context.surface.withValues(alpha: 0.96),
+            context.surface.withValues(alpha: 0.96),
           ],
-          // The fade completes within the top ~10% of the banner
-          // height so only the very top edge softly blends with
-          // the body content above. The remaining ~90% is a flat
-          // solid surface that hides the body content from view so
-          // the banner text + Done button read cleanly.
-          stops: const [0.0, 0.05],
+          stops: const [0.0, 0.05, 1.0],
         ),
         border: Border(
           bottom: BorderSide(
