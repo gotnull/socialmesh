@@ -14308,6 +14308,48 @@
   "@meshcoreAddContactButton": {
     "description": "Button label to add a contact"
   },
+  "@meshcoreAutoAddSectionTitle": {
+    "description": "D47-A - settings-screen section header for the per-device auto-add toggles"
+  },
+  "@meshcoreAutoAddSectionSubtitle": {
+    "description": "D47-A - settings-screen section subtitle explaining auto-add behaviour"
+  },
+  "@meshcoreAutoAddChat": {
+    "description": "D47-A - toggle label for the chat-contact auto-add flag (0x02)"
+  },
+  "@meshcoreAutoAddChatSubtitle": {
+    "description": "D47-A - toggle subtitle for the chat-contact auto-add flag"
+  },
+  "@meshcoreAutoAddRepeater": {
+    "description": "D47-A - toggle label for the repeater auto-add flag (0x04)"
+  },
+  "@meshcoreAutoAddRepeaterSubtitle": {
+    "description": "D47-A - toggle subtitle for the repeater auto-add flag"
+  },
+  "@meshcoreAutoAddRoomServer": {
+    "description": "D47-A - toggle label for the room-server auto-add flag (0x08)"
+  },
+  "@meshcoreAutoAddRoomServerSubtitle": {
+    "description": "D47-A - toggle subtitle for the room-server auto-add flag"
+  },
+  "@meshcoreAutoAddSensor": {
+    "description": "D47-A - toggle label for the sensor auto-add flag (0x10)"
+  },
+  "@meshcoreAutoAddSensorSubtitle": {
+    "description": "D47-A - toggle subtitle for the sensor auto-add flag"
+  },
+  "@meshcoreAutoAddOverwriteOldest": {
+    "description": "D47-A - toggle label for the overwrite-oldest flag (0x01)"
+  },
+  "@meshcoreAutoAddOverwriteOldestSubtitle": {
+    "description": "D47-A - toggle subtitle for the overwrite-oldest flag"
+  },
+  "@meshcoreAutoAddLoadFailed": {
+    "description": "D47-A - banner shown when CMD_GET_AUTO_ADD_CONFIG times out or returns an error"
+  },
+  "@meshcoreAutoAddSaveFailed": {
+    "description": "D47-A - snackbar shown when CMD_SET_AUTO_ADD_CONFIG fails"
+  },
   "@meshcoreAdvertisementSent": {
     "description": "Success snackbar after sending advertisement"
   },
@@ -38125,6 +38167,20 @@
   "meshcoreAdd": "Aggiungi",
   "meshcoreAddContact": "Aggiungi contatto",
   "meshcoreAddContactButton": "Aggiungi contatto",
+  "meshcoreAutoAddSectionTitle": "Aggiunta automatica contatti",
+  "meshcoreAutoAddSectionSubtitle": "Importa automaticamente i contatti rilevati dalla radio",
+  "meshcoreAutoAddChat": "Aggiungi automaticamente i contatti chat",
+  "meshcoreAutoAddChatSubtitle": "Aggiungi automaticamente i peer di tipo chat ai tuoi contatti",
+  "meshcoreAutoAddRepeater": "Aggiungi automaticamente i ripetitori",
+  "meshcoreAutoAddRepeaterSubtitle": "Aggiungi automaticamente i ripetitori vicini ai tuoi contatti",
+  "meshcoreAutoAddRoomServer": "Aggiungi automaticamente le stanze",
+  "meshcoreAutoAddRoomServerSubtitle": "Aggiungi automaticamente i server stanza vicini ai tuoi contatti",
+  "meshcoreAutoAddSensor": "Aggiungi automaticamente i sensori",
+  "meshcoreAutoAddSensorSubtitle": "Aggiungi automaticamente i sensori vicini ai tuoi contatti",
+  "meshcoreAutoAddOverwriteOldest": "Sovrascrivi il più vecchio quando pieno",
+  "meshcoreAutoAddOverwriteOldestSubtitle": "Quando la lista contatti è piena, rimuovi il più vecchio non preferito per fare spazio",
+  "meshcoreAutoAddLoadFailed": "Impossibile caricare la configurazione",
+  "meshcoreAutoAddSaveFailed": "Impossibile salvare la configurazione",
   "meshcoreAdvertisementSent": "Annuncio inviato",
   "meshcoreAdvertisementSentTools": "Annuncio inviato",
   "meshcoreAnalysis": "Analisi",

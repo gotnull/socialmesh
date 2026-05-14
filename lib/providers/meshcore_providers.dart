@@ -20,6 +20,7 @@ import '../models/mesh_device.dart';
 // here disambiguate cleanly.
 import '../models/meshcore_contact.dart' hide parseContact;
 import '../models/meshcore_contact_import_preview.dart';
+import '../models/meshcore_auto_add_config.dart';
 import '../models/meshcore_channel.dart';
 import '../models/meshcore_path_overlay.dart';
 import '../services/meshcore/protocol/meshcore_cayenne_lpp.dart';
@@ -3408,3 +3409,104 @@ final meshCoreTelemetryProvider =
       MeshCoreTelemetryState,
       String
     >(MeshCoreTelemetryNotifier.new);
+
+// ---------------------------------------------------------------------------
+// D47-A: per-device auto-add contact config
+// ---------------------------------------------------------------------------
+
+/// Notifier-held state for the auto-add config card.
+class MeshCoreAutoAddConfigState {
+  /// Most-recent value loaded from the firmware. Null until the
+  /// first successful [MeshCoreAutoAddConfigNotifier.refresh].
+  final MeshCoreAutoAddConfig? loaded;
+
+  /// True while a load or set is in flight.
+  final bool isLoading;
+
+  /// Last error encountered. Cleared on the next successful
+  /// load / write.
+  final String? lastError;
+
+  const MeshCoreAutoAddConfigState({
+    this.loaded,
+    this.isLoading = false,
+    this.lastError,
+  });
+
+  const MeshCoreAutoAddConfigState.initial()
+    : loaded = null,
+      isLoading = false,
+      lastError = null;
+
+  MeshCoreAutoAddConfigState copyWith({
+    MeshCoreAutoAddConfig? loaded,
+    bool? isLoading,
+    String? lastError,
+    bool clearError = false,
+  }) {
+    return MeshCoreAutoAddConfigState(
+      loaded: loaded ?? this.loaded,
+      isLoading: isLoading ?? this.isLoading,
+      lastError: clearError ? null : (lastError ?? this.lastError),
+    );
+  }
+}
+
+/// D47-A: per-device auto-add contact policy notifier.
+///
+/// Loads firmware state on demand (via `refresh()`). `update()` writes
+/// new config via `CMD_SET_AUTO_ADD_CONFIG 0x3A` and, on success,
+/// updates the local snapshot. The firmware itself drives the actual
+/// auto-promote on inbound advert match — the app owns only the
+/// policy toggles.
+class MeshCoreAutoAddConfigNotifier
+    extends Notifier<MeshCoreAutoAddConfigState> {
+  @override
+  MeshCoreAutoAddConfigState build() =>
+      const MeshCoreAutoAddConfigState.initial();
+
+  /// Pull the firmware's current config and replace [loaded]. On
+  /// failure leaves [loaded] alone and sets [lastError].
+  Future<void> refresh() async {
+    if (!ref.mounted) return;
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null) {
+      state = state.copyWith(lastError: 'no_session');
+      return;
+    }
+    state = state.copyWith(isLoading: true, clearError: true);
+    final config = await session.getAutoAddConfig();
+    if (!ref.mounted) return;
+    if (config == null) {
+      state = state.copyWith(isLoading: false, lastError: 'load_failed');
+      return;
+    }
+    state = MeshCoreAutoAddConfigState(loaded: config, isLoading: false);
+  }
+
+  /// Write [next] to the firmware. On success replaces [loaded] with
+  /// [next]; on failure leaves [loaded] untouched and sets
+  /// [lastError].
+  Future<bool> update(MeshCoreAutoAddConfig next) async {
+    if (!ref.mounted) return false;
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null) {
+      state = state.copyWith(lastError: 'no_session');
+      return false;
+    }
+    state = state.copyWith(isLoading: true, clearError: true);
+    final ok = await session.setAutoAddConfig(next);
+    if (!ref.mounted) return false;
+    if (!ok) {
+      state = state.copyWith(isLoading: false, lastError: 'set_failed');
+      return false;
+    }
+    state = MeshCoreAutoAddConfigState(loaded: next, isLoading: false);
+    return true;
+  }
+}
+
+final meshCoreAutoAddConfigProvider =
+    NotifierProvider<MeshCoreAutoAddConfigNotifier, MeshCoreAutoAddConfigState>(
+      MeshCoreAutoAddConfigNotifier.new,
+    );

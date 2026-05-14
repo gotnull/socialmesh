@@ -13467,6 +13467,90 @@ abstract class AppLocalizations {
   /// **'Add Contact'**
   String get meshcoreAddContactButton;
 
+  /// D47-A - settings-screen section header for the per-device auto-add toggles
+  ///
+  /// In en, this message translates to:
+  /// **'Contact auto-add'**
+  String get meshcoreAutoAddSectionTitle;
+
+  /// D47-A - settings-screen section subtitle explaining auto-add behaviour
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically import contacts the radio hears'**
+  String get meshcoreAutoAddSectionSubtitle;
+
+  /// D47-A - toggle label for the chat-contact auto-add flag (0x02)
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-add chat contacts'**
+  String get meshcoreAutoAddChat;
+
+  /// D47-A - toggle subtitle for the chat-contact auto-add flag
+  ///
+  /// In en, this message translates to:
+  /// **'Add nearby chat-type peers to your contacts automatically'**
+  String get meshcoreAutoAddChatSubtitle;
+
+  /// D47-A - toggle label for the repeater auto-add flag (0x04)
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-add repeaters'**
+  String get meshcoreAutoAddRepeater;
+
+  /// D47-A - toggle subtitle for the repeater auto-add flag
+  ///
+  /// In en, this message translates to:
+  /// **'Add nearby repeaters to your contacts automatically'**
+  String get meshcoreAutoAddRepeaterSubtitle;
+
+  /// D47-A - toggle label for the room-server auto-add flag (0x08)
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-add rooms'**
+  String get meshcoreAutoAddRoomServer;
+
+  /// D47-A - toggle subtitle for the room-server auto-add flag
+  ///
+  /// In en, this message translates to:
+  /// **'Add nearby room servers to your contacts automatically'**
+  String get meshcoreAutoAddRoomServerSubtitle;
+
+  /// D47-A - toggle label for the sensor auto-add flag (0x10)
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-add sensors'**
+  String get meshcoreAutoAddSensor;
+
+  /// D47-A - toggle subtitle for the sensor auto-add flag
+  ///
+  /// In en, this message translates to:
+  /// **'Add nearby sensors to your contacts automatically'**
+  String get meshcoreAutoAddSensorSubtitle;
+
+  /// D47-A - toggle label for the overwrite-oldest flag (0x01)
+  ///
+  /// In en, this message translates to:
+  /// **'Overwrite oldest when full'**
+  String get meshcoreAutoAddOverwriteOldest;
+
+  /// D47-A - toggle subtitle for the overwrite-oldest flag
+  ///
+  /// In en, this message translates to:
+  /// **'When the contact list is full, evict the oldest non-favourite to make room'**
+  String get meshcoreAutoAddOverwriteOldestSubtitle;
+
+  /// D47-A - banner shown when CMD_GET_AUTO_ADD_CONFIG times out or returns an error
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load auto-add config'**
+  String get meshcoreAutoAddLoadFailed;
+
+  /// D47-A - snackbar shown when CMD_SET_AUTO_ADD_CONFIG fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save auto-add config'**
+  String get meshcoreAutoAddSaveFailed;
+
   /// Success snackbar after sending advertisement
   ///
   /// In en, this message translates to:

@@ -7668,6 +7668,55 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreAddContactButton => 'Добавить контакт';
 
   @override
+  String get meshcoreAutoAddSectionTitle => 'Автодобавление контактов';
+
+  @override
+  String get meshcoreAutoAddSectionSubtitle =>
+      'Автоматически импортировать контакты, услышанные радио';
+
+  @override
+  String get meshcoreAutoAddChat => 'Автоматически добавлять чат-контакты';
+
+  @override
+  String get meshcoreAutoAddChatSubtitle =>
+      'Автоматически добавлять пиры чат-типа в ваши контакты';
+
+  @override
+  String get meshcoreAutoAddRepeater => 'Автоматически добавлять ретрансляторы';
+
+  @override
+  String get meshcoreAutoAddRepeaterSubtitle =>
+      'Автоматически добавлять ближайшие ретрансляторы в ваши контакты';
+
+  @override
+  String get meshcoreAutoAddRoomServer => 'Автоматически добавлять комнаты';
+
+  @override
+  String get meshcoreAutoAddRoomServerSubtitle =>
+      'Автоматически добавлять ближайшие серверы комнат в ваши контакты';
+
+  @override
+  String get meshcoreAutoAddSensor => 'Автоматически добавлять датчики';
+
+  @override
+  String get meshcoreAutoAddSensorSubtitle =>
+      'Автоматически добавлять ближайшие датчики в ваши контакты';
+
+  @override
+  String get meshcoreAutoAddOverwriteOldest =>
+      'Перезаписывать самые старые при заполнении';
+
+  @override
+  String get meshcoreAutoAddOverwriteOldestSubtitle =>
+      'Когда список контактов заполнен, удалять самый старый не-избранный, чтобы освободить место';
+
+  @override
+  String get meshcoreAutoAddLoadFailed => 'Не удалось загрузить настройки';
+
+  @override
+  String get meshcoreAutoAddSaveFailed => 'Не удалось сохранить настройки';
+
+  @override
   String get meshcoreAdvertisementSent => 'Объявление отправлено';
 
   @override

@@ -14,8 +14,11 @@ import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/info_table.dart';
 import '../../../core/widgets/primary_gradient_button.dart';
+import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/settings_primitives.dart';
+import '../../../core/widgets/status_banner.dart';
+import '../../../models/meshcore_auto_add_config.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../services/meshcore/protocol/meshcore_messages.dart';
@@ -187,6 +190,11 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                     trailing: _chevron(context),
                   ),
                 ),
+                SizedBox(height: AppTheme.spacing16),
+                SettingsSectionHeader(
+                  title: context.l10n.meshcoreAutoAddSectionTitle,
+                ),
+                _buildAutoAddSection(context, isConnected: isConnected),
                 SizedBox(height: AppTheme.spacing16),
                 SettingsSectionHeader(title: context.l10n.meshcoreActions),
                 // D29 cleanup: "Send Advertisement" used to live here AND
@@ -372,6 +380,134 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                 '${next ? "voltage" : "percentage"}',
               );
             },
+    );
+  }
+
+  /// D47-A: per-device auto-add policy section. Six rows total —
+  /// 4 type toggles, 1 eviction toggle, 1 error banner when the
+  /// firmware read fails. State is held in
+  /// [meshCoreAutoAddConfigProvider]; the initial read fires lazily
+  /// the first time the section paints with a live session (one-shot
+  /// per session-up).
+  Widget _buildAutoAddSection(
+    BuildContext context, {
+    required bool isConnected,
+  }) {
+    final l10n = context.l10n;
+    final state = ref.watch(meshCoreAutoAddConfigProvider);
+    final notifier = ref.read(meshCoreAutoAddConfigProvider.notifier);
+
+    // Lazy first-load: kick off `refresh()` on the next event-loop
+    // turn the first time the section paints with a live session +
+    // no cached config. Subsequent paints short-circuit through the
+    // loaded / lastError checks.
+    if (isConnected && state.loaded == null && !state.isLoading) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) notifier.refresh();
+      });
+    }
+
+    final config = state.loaded ?? const MeshCoreAutoAddConfig.off();
+
+    Future<void> drive(MeshCoreAutoAddConfig next) async {
+      final saveFailedMsg = l10n.meshcoreAutoAddSaveFailed;
+      final ok = await notifier.update(next);
+      if (!context.mounted) return;
+      if (!ok) {
+        showErrorSnackBar(context, saveFailedMsg);
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (state.lastError == 'load_failed')
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.spacing16,
+              vertical: AppTheme.spacing8,
+            ),
+            child: StatusBanner.warning(title: l10n.meshcoreAutoAddLoadFailed),
+          ),
+        _maybeDisabled(
+          enabled: isConnected,
+          child: SettingsTile(
+            key: const ValueKey('meshcore-auto-add-chat'),
+            icon: Icons.chat_bubble_outline_rounded,
+            title: l10n.meshcoreAutoAddChat,
+            subtitle: l10n.meshcoreAutoAddChatSubtitle,
+            trailing: ThemedSwitch(
+              value: config.autoAddChat,
+              onChanged: (v) => drive(config.copyWith(autoAddChat: v)),
+            ),
+            onTap: () =>
+                drive(config.copyWith(autoAddChat: !config.autoAddChat)),
+          ),
+        ),
+        _maybeDisabled(
+          enabled: isConnected,
+          child: SettingsTile(
+            key: const ValueKey('meshcore-auto-add-repeater'),
+            icon: Icons.cell_tower_rounded,
+            title: l10n.meshcoreAutoAddRepeater,
+            subtitle: l10n.meshcoreAutoAddRepeaterSubtitle,
+            trailing: ThemedSwitch(
+              value: config.autoAddRepeater,
+              onChanged: (v) => drive(config.copyWith(autoAddRepeater: v)),
+            ),
+            onTap: () => drive(
+              config.copyWith(autoAddRepeater: !config.autoAddRepeater),
+            ),
+          ),
+        ),
+        _maybeDisabled(
+          enabled: isConnected,
+          child: SettingsTile(
+            key: const ValueKey('meshcore-auto-add-room'),
+            icon: Icons.meeting_room_outlined,
+            title: l10n.meshcoreAutoAddRoomServer,
+            subtitle: l10n.meshcoreAutoAddRoomServerSubtitle,
+            trailing: ThemedSwitch(
+              value: config.autoAddRoomServer,
+              onChanged: (v) => drive(config.copyWith(autoAddRoomServer: v)),
+            ),
+            onTap: () => drive(
+              config.copyWith(autoAddRoomServer: !config.autoAddRoomServer),
+            ),
+          ),
+        ),
+        _maybeDisabled(
+          enabled: isConnected,
+          child: SettingsTile(
+            key: const ValueKey('meshcore-auto-add-sensor'),
+            icon: Icons.sensors_rounded,
+            title: l10n.meshcoreAutoAddSensor,
+            subtitle: l10n.meshcoreAutoAddSensorSubtitle,
+            trailing: ThemedSwitch(
+              value: config.autoAddSensor,
+              onChanged: (v) => drive(config.copyWith(autoAddSensor: v)),
+            ),
+            onTap: () =>
+                drive(config.copyWith(autoAddSensor: !config.autoAddSensor)),
+          ),
+        ),
+        _maybeDisabled(
+          enabled: isConnected,
+          child: SettingsTile(
+            key: const ValueKey('meshcore-auto-add-overwrite-oldest'),
+            icon: Icons.swap_horiz_rounded,
+            title: l10n.meshcoreAutoAddOverwriteOldest,
+            subtitle: l10n.meshcoreAutoAddOverwriteOldestSubtitle,
+            trailing: ThemedSwitch(
+              value: config.overwriteOldest,
+              onChanged: (v) => drive(config.copyWith(overwriteOldest: v)),
+            ),
+            onTap: () => drive(
+              config.copyWith(overwriteOldest: !config.overwriteOldest),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

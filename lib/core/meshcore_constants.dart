@@ -229,6 +229,17 @@ class MeshCoreCommands {
   /// Available on companion firmware v8 and newer; SocialMesh's
   /// pinned firmware (v1.15.0 / ver_code 11) is well past that gate.
   static const int getStats = 0x38;
+
+  /// D47-A: write per-device auto-add config. Wire payload:
+  /// `[0x3A][flags:1B]`. Firmware auto-promotes inbound adverts to
+  /// the contact roster when the corresponding type bit is set in
+  /// [flags]. See [MeshCoreAutoAddFlag] for the bit layout.
+  static const int setAutoAddConfig = 0x3A;
+
+  /// D47-A: read per-device auto-add config. Wire payload: `[0x3B]`.
+  /// Response: `RESP_CODE_AUTO_ADD_CONFIG (0x19)` with a single
+  /// flags byte.
+  static const int getAutoAddConfig = 0x3B;
 }
 
 /// MeshCore response codes (device -> app, 0x00-0x7F).
@@ -295,6 +306,11 @@ class MeshCoreResponses {
   /// echoes the requested subtype. Only the RADIO subtype payload
   /// is parsed today.
   static const int stats = 0x18;
+
+  /// D47-A: auto-add config payload returned by
+  /// `CMD_GET_AUTO_ADD_CONFIG (0x3B)`. Single byte of flag bits;
+  /// see [MeshCoreAutoAddFlag].
+  static const int autoAddConfig = 0x19;
 }
 
 /// D35-A: stats subtypes carried as the second byte of both the
@@ -317,6 +333,38 @@ class MeshCoreStatsType {
   /// RX/TX packet counters + flooded/direct breakdowns + reception
   /// errors. Reserved-only; not parsed in D35-A.
   static const int packets = 2;
+}
+
+/// D47-A: auto-add config flag bits carried as the single byte of
+/// the `CMD_SET_AUTO_ADD_CONFIG (0x3A)` payload and the
+/// `RESP_CODE_AUTO_ADD_CONFIG (0x19)` response payload.
+///
+/// Each set bit enables firmware auto-promotion of the matching
+/// contact type when an inbound advert (`PUSH_CODE_NEW_ADVERT 0x8A`)
+/// arrives. Auto-promotion is firmware-driven; the app owns only the
+/// policy toggle.
+///
+/// Reserved bits (`0x20`..`0x80`) are preserved on round-trip so a
+/// future firmware can introduce additional types without breaking
+/// our parser.
+class MeshCoreAutoAddFlag {
+  MeshCoreAutoAddFlag._();
+
+  /// Evict the oldest non-favorite contact when the firmware roster
+  /// is full and a new candidate qualifies.
+  static const int overwriteOldest = 0x01;
+
+  /// Auto-add chat / companion-type contacts.
+  static const int chat = 0x02;
+
+  /// Auto-add repeater-type contacts.
+  static const int repeater = 0x04;
+
+  /// Auto-add room-server-type contacts.
+  static const int roomServer = 0x08;
+
+  /// Auto-add sensor-type contacts.
+  static const int sensor = 0x10;
 }
 
 /// D36-A: request-type byte placed at the head of the `requestBytes`

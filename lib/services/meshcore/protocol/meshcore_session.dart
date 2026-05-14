@@ -19,6 +19,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 
 import '../../../core/logging.dart';
 import '../../../core/meshcore_constants.dart';
+import '../../../models/meshcore_auto_add_config.dart';
 import '../meshcore_send_rate_limiter.dart';
 import 'meshcore_capture.dart';
 import 'meshcore_codec.dart';
@@ -2098,6 +2099,73 @@ class MeshCoreSession {
     final ok = response != null;
     AppLogging.meshcore(
       'event=contact.import.${ok ? "succeeded" : "failed"}',
+      error: !ok,
+    );
+    return ok;
+  }
+
+  /// D47-A: read the firmware's current auto-add config via
+  /// `CMD_GET_AUTO_ADD_CONFIG 0x3B`.
+  ///
+  /// Wire request: `[0x3B]` (no payload).
+  /// Wire response: `RESP_CODE_AUTO_ADD_CONFIG 0x19` with a single
+  /// flags byte (see [MeshCoreAutoAddFlag]).
+  ///
+  /// Returns the parsed config on success, null on timeout / error,
+  /// short response, or empty payload.
+  Future<MeshCoreAutoAddConfig?> getAutoAddConfig({
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    AppLogging.meshcore('event=auto_add_config.load.attempted');
+    final response = await sendAndWait(
+      MeshCoreCommands.getAutoAddConfig,
+      expectedResponse: MeshCoreResponses.autoAddConfig,
+      timeout: timeout,
+    );
+    if (response == null) {
+      AppLogging.meshcore('event=auto_add_config.load.failed', error: true);
+      return null;
+    }
+    if (response.payload.isEmpty) {
+      AppLogging.meshcore(
+        'event=auto_add_config.load.malformed bytes=0',
+        error: true,
+      );
+      return null;
+    }
+    final config = MeshCoreAutoAddConfig.fromFlagsByte(response.payload[0]);
+    AppLogging.meshcore(
+      'event=auto_add_config.load.succeeded '
+      'flags=0x${config.toFlagsByte().toRadixString(16).padLeft(2, '0')}',
+    );
+    return config;
+  }
+
+  /// D47-A: write [config] to the firmware via
+  /// `CMD_SET_AUTO_ADD_CONFIG 0x3A`.
+  ///
+  /// Wire payload: `[0x3A][flags:1B]` (2 bytes total).
+  ///
+  /// Returns `true` on `RESP_CODE_OK`, false on `RESP_CODE_ERR` or
+  /// timeout.
+  Future<bool> setAutoAddConfig(
+    MeshCoreAutoAddConfig config, {
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    final flagsByte = config.toFlagsByte();
+    AppLogging.meshcore(
+      'event=auto_add_config.set.attempted '
+      'flags=0x${flagsByte.toRadixString(16).padLeft(2, '0')}',
+    );
+    final response = await sendAndWait(
+      MeshCoreCommands.setAutoAddConfig,
+      payload: Uint8List.fromList([flagsByte]),
+      expectedResponse: MeshCoreResponses.ok,
+      timeout: timeout,
+    );
+    final ok = response != null;
+    AppLogging.meshcore(
+      'event=auto_add_config.set.${ok ? "succeeded" : "failed"}',
       error: !ok,
     );
     return ok;

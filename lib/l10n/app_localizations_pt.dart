@@ -7663,6 +7663,59 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreAddContactButton => 'Adicionar contato';
 
   @override
+  String get meshcoreAutoAddSectionTitle =>
+      'Adicionar contatos automaticamente';
+
+  @override
+  String get meshcoreAutoAddSectionSubtitle =>
+      'Importar automaticamente os contatos detectados pelo rádio';
+
+  @override
+  String get meshcoreAutoAddChat =>
+      'Adicionar contatos de chat automaticamente';
+
+  @override
+  String get meshcoreAutoAddChatSubtitle =>
+      'Adicionar peers do tipo chat aos seus contatos automaticamente';
+
+  @override
+  String get meshcoreAutoAddRepeater => 'Adicionar repetidores automaticamente';
+
+  @override
+  String get meshcoreAutoAddRepeaterSubtitle =>
+      'Adicionar repetidores próximos aos seus contatos automaticamente';
+
+  @override
+  String get meshcoreAutoAddRoomServer => 'Adicionar salas automaticamente';
+
+  @override
+  String get meshcoreAutoAddRoomServerSubtitle =>
+      'Adicionar servidores de sala próximos aos seus contatos automaticamente';
+
+  @override
+  String get meshcoreAutoAddSensor => 'Adicionar sensores automaticamente';
+
+  @override
+  String get meshcoreAutoAddSensorSubtitle =>
+      'Adicionar sensores próximos aos seus contatos automaticamente';
+
+  @override
+  String get meshcoreAutoAddOverwriteOldest =>
+      'Sobrescrever o mais antigo quando cheio';
+
+  @override
+  String get meshcoreAutoAddOverwriteOldestSubtitle =>
+      'Quando a lista de contatos estiver cheia, remover o mais antigo não favorito para abrir espaço';
+
+  @override
+  String get meshcoreAutoAddLoadFailed =>
+      'Não foi possível carregar a configuração';
+
+  @override
+  String get meshcoreAutoAddSaveFailed =>
+      'Não foi possível salvar a configuração';
+
+  @override
   String get meshcoreAdvertisementSent => 'Anúncio enviado';
 
   @override

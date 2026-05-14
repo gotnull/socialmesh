@@ -52,12 +52,12 @@ void main() {
     await _settle(tester);
 
     // Each section is rendered via the canonical SettingsSectionHeader.
-    // D29 removed the standalone Debug section (Protocol Capture moved
-    // to Tools' Frame Log; the dedup pass landed alongside the rest of
-    // D29). Three section headers remain: Node Settings / Actions /
-    // About.
-    expect(find.byType(SettingsSectionHeader), findsNWidgets(3));
+    // D29 removed the standalone Debug section. D47-A added the
+    // "Contact auto-add" section. Four section headers now: Node
+    // Settings / Contact auto-add / Actions / About.
+    expect(find.byType(SettingsSectionHeader), findsNWidgets(4));
     expect(find.text(_l10n.meshcoreNodeSettings), findsOneWidget);
+    expect(find.text(_l10n.meshcoreAutoAddSectionTitle), findsOneWidget);
     expect(find.text(_l10n.meshcoreActions), findsOneWidget);
     expect(find.text(_l10n.meshcoreAbout), findsOneWidget);
   });

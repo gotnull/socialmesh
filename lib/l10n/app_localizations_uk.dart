@@ -7681,6 +7681,54 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreAddContactButton => 'Додати контакт';
 
   @override
+  String get meshcoreAutoAddSectionTitle => 'Contact auto-add';
+
+  @override
+  String get meshcoreAutoAddSectionSubtitle =>
+      'Automatically import contacts the radio hears';
+
+  @override
+  String get meshcoreAutoAddChat => 'Auto-add chat contacts';
+
+  @override
+  String get meshcoreAutoAddChatSubtitle =>
+      'Add nearby chat-type peers to your contacts automatically';
+
+  @override
+  String get meshcoreAutoAddRepeater => 'Auto-add repeaters';
+
+  @override
+  String get meshcoreAutoAddRepeaterSubtitle =>
+      'Add nearby repeaters to your contacts automatically';
+
+  @override
+  String get meshcoreAutoAddRoomServer => 'Auto-add rooms';
+
+  @override
+  String get meshcoreAutoAddRoomServerSubtitle =>
+      'Add nearby room servers to your contacts automatically';
+
+  @override
+  String get meshcoreAutoAddSensor => 'Auto-add sensors';
+
+  @override
+  String get meshcoreAutoAddSensorSubtitle =>
+      'Add nearby sensors to your contacts automatically';
+
+  @override
+  String get meshcoreAutoAddOverwriteOldest => 'Overwrite oldest when full';
+
+  @override
+  String get meshcoreAutoAddOverwriteOldestSubtitle =>
+      'When the contact list is full, evict the oldest non-favourite to make room';
+
+  @override
+  String get meshcoreAutoAddLoadFailed => 'Could not load auto-add config';
+
+  @override
+  String get meshcoreAutoAddSaveFailed => 'Could not save auto-add config';
+
+  @override
   String get meshcoreAdvertisementSent => 'Оголошення надіслано';
 
   @override
