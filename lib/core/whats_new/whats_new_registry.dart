@@ -343,32 +343,31 @@ class WhatsNewRegistry {
       ],
     ),
 
-    // v1.36.0 — Device Shop introduction (gated behind DEVICE_SHOP_ENABLED)
-    if (AppFeatureFlags.isDeviceShopEnabled)
-      WhatsNewPayload(
-        version: '1.36.0',
-        headline: "What's New in SocialMesh",
-        subtitle: 'Version 1.36.0',
-        items: [
-          WhatsNewItem(
-            id: 'device_shop_intro',
-            title: 'Device Shop',
-            description:
-                'Browse Meshtastic-compatible hardware from official partners '
-                'and trusted sellers — all in one place. Filter by category, '
-                'sort by price or new arrivals, and tap through to the '
-                "seller's store to buy.\n\n"
-                "Purchases happen on the seller's site; SocialMesh never "
-                'handles payment, shipping, or returns. Find it in the '
-                'drawer menu under Tools.',
-            icon: Icons.storefront_outlined,
-            iconColor: Color(0xFF06B6D4), // AccentColors.cyan
-            deepLinkRoute: '/device-shop',
-            badgeKey: 'device_shop',
-            ctaLabel: 'Open Device Shop',
-          ),
-        ],
-      ),
+    // v1.36.0 — Device Shop introduction
+    WhatsNewPayload(
+      version: '1.36.0',
+      headline: "What's New in SocialMesh",
+      subtitle: 'Version 1.36.0',
+      items: [
+        WhatsNewItem(
+          id: 'device_shop_intro',
+          title: 'Device Shop',
+          description:
+              'Browse Meshtastic-compatible hardware from official partners '
+              'and trusted sellers — all in one place. Filter by category, '
+              'sort by price or new arrivals, and tap through to the '
+              "seller's store to buy.\n\n"
+              "Purchases happen on the seller's site; SocialMesh never "
+              'handles payment, shipping, or returns. Find it in the '
+              'drawer menu under Tools.',
+          icon: Icons.storefront_outlined,
+          iconColor: Color(0xFF06B6D4), // AccentColors.cyan
+          deepLinkRoute: '/device-shop',
+          badgeKey: 'device_shop',
+          ctaLabel: 'Open Device Shop',
+        ),
+      ],
+    ),
   ];
 
   // ===========================================================================

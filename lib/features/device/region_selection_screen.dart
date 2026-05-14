@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import '../../core/safety/lifecycle_mixin.dart';
-import '../../core/safety/error_handler.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -113,11 +112,9 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
       '🌍 RegionSelection: initState — isInitialSetup=${widget.isInitialSetup}',
     );
 
-    // Pop-on-terminal listener. Only armed when the coordinator is
-    // active. listenManual is correct in initState (no state mutation
-    // until the listener fires).
-    final flowEnabled = ref.read(meshtasticOnboardingFlowFlagsProvider).enabled;
-    if (flowEnabled && widget.isInitialSetup) {
+    // Pop-on-terminal listener. listenManual is correct in initState
+    // (no state mutation until the listener fires).
+    if (widget.isInitialSetup) {
       _onboardingFlowTerminalSub = ref.listenManual<MeshtasticOnboardingState>(
         meshtasticOnboardingFlowProvider,
         (previous, next) {
@@ -249,44 +246,24 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
     );
 
     if (isInitialSetup) {
-      // Onboarding-flow gated path (default-on in debug). When the
-      // coordinator owns this flow, region writes/reboot/reconnect/
-      // readiness all happen via state machine listeners. The screen
-      // stays mounted while the coordinator transitions through
-      // writingRegion / awaitingReboot / awaitingReconnect /
+      // The coordinator owns this flow: region writes / reboot /
+      // reconnect / readiness all happen via state-machine listeners.
+      // The screen stays mounted while the coordinator transitions
+      // through writingRegion / awaitingReboot / awaitingReconnect /
       // awaitingReadiness, and is unmounted by `_AppRouter` when the
       // coordinator reaches OnboardingReady. No self-pop, no inline
       // applyRegion, no settings refresh dance.
-      final flowEnabled = ref
-          .read(meshtasticOnboardingFlowFlagsProvider)
-          .enabled;
-      if (flowEnabled) {
-        AppLogging.connection(
-          '🌍 RegionSelection: onboarding-flow active — '
-          'dispatching selectRegion(${_selectedRegion!.name}) '
-          'to coordinator',
-        );
-        ref
-            .read(meshtasticOnboardingFlowProvider.notifier)
-            .selectRegion(_selectedRegion!);
-        // Stay on screen — appShellProvider will route us out when
-        // the coordinator reaches OnboardingReady.
-        // _applying remains true so the overlay keeps showing.
-        return;
-      }
-
-      // ── LEGACY ONBOARDING / INITIAL SETUP FLOW ──
-      // Stay on screen so the user sees progress during the device reboot.
-      // After apply completes, persist regionConfigured, refresh the
-      // settings provider, then POP back to the caller (onboarding).
-      // The caller (_connectDevice) handles setOnboardingComplete +
-      // initialize() which advances through terms → MainShell.
-      await _applyAndPop(
-        settings: settings,
-        settingsRefresh: settingsRefresh,
-        regionNotifier: regionNotifier,
-        navigator: navigator,
+      AppLogging.connection(
+        '🌍 RegionSelection: dispatching '
+        'selectRegion(${_selectedRegion!.name}) to coordinator',
       );
+      ref
+          .read(meshtasticOnboardingFlowProvider.notifier)
+          .selectRegion(_selectedRegion!);
+      // Stay on screen — appShellProvider will route us out when
+      // the coordinator reaches OnboardingReady. _applying remains
+      // true so the overlay keeps showing.
+      return;
     } else {
       // ── NON-INITIAL FLOW (MainShell inline OR Settings push) ──
       // Persist regionConfigured FIRST so MainShell's inline guard
@@ -300,174 +277,6 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
         regionNotifier: regionNotifier,
         navigator: navigator,
       );
-    }
-  }
-
-  /// Hard ceiling for the entire apply-and-pop cycle. If the device
-  /// reboots but the reconnect never completes (BLE hiccup, background
-  /// connection race, etc.), we optimistically persist regionConfigured
-  /// and pop after this duration. The setRegion command was already sent
-  /// and the device accepted it (it rebooted), so the region IS applied
-  /// even if we can't confirm it via reconnect.
-  static const _applyHardTimeout = Duration(minutes: 1);
-
-  /// Initial-setup path: stay on screen during apply, then pop.
-  Future<void> _applyAndPop({
-    required SettingsService settings,
-    required SettingsRefreshNotifier settingsRefresh,
-    required RegionConfigNotifier regionNotifier,
-    required NavigatorState navigator,
-  }) async {
-    try {
-      final protocol = ref.read(protocolServiceProvider);
-      final currentDeviceRegion = protocol.currentRegion;
-      final alreadyApplied =
-          ref.read(regionConfigProvider).applyStatus ==
-              RegionApplyStatus.applied &&
-          ref.read(regionConfigProvider).regionChoice == _selectedRegion;
-      final regionAlreadySet = currentDeviceRegion == _selectedRegion;
-
-      AppLogging.connection(
-        '🌍 RegionSelection: _applyAndPop — '
-        'alreadyApplied=$alreadyApplied, regionAlreadySet=$regionAlreadySet, '
-        'currentDeviceRegion=${protocol.currentRegion?.name ?? "null"}, '
-        'selected=${_selectedRegion?.name ?? "null"}',
-      );
-
-      // During initial setup, always call applyRegion() even if the
-      // region already matches. This ensures the loading overlay shows
-      // consistently and we properly handle the device reboot cycle.
-      if (!alreadyApplied && !regionAlreadySet) {
-        // Show the global "Device rebooting — region apply" countdown
-        // banner so the user gets the same feedback as the
-        // settings-change region apply path (and as nodeDbReset /
-        // factoryReset). Without this, the post-reboot window shows a
-        // bare Nodes screen with no indication of why the radio is
-        // unreachable.
-        ref
-            .read(countdownProvider.notifier)
-            .startDeviceRebootCountdown(reason: 'region apply');
-        // Wrap in a hard timeout so the screen never stays stuck at
-        // "Applying..." forever. The inner applyRegion has its own 90s
-        // timeout on the reconnect confirmation, but if that completer
-        // deadlocks (e.g. background connection race disrupts the
-        // reconnect listener) the outer timeout guarantees we pop.
-        AppLogging.connection(
-          '🌍 RegionSelection: Calling applyRegion($_selectedRegion) — '
-          'will send setRegion command and await reconnect confirmation '
-          '(hard timeout=${_applyHardTimeout.inSeconds}s)',
-        );
-        await regionNotifier
-            .applyRegion(_selectedRegion!, reason: 'initial_setup')
-            .timeout(
-              _applyHardTimeout,
-              onTimeout: () {
-                AppLogging.connection(
-                  '⏱️ Region apply hard timeout (${_applyHardTimeout.inSeconds}s) — '
-                  'optimistically marking region as configured and falling through to pop',
-                );
-                AppErrorHandler.addBreadcrumb(
-                  'Region: hard timeout ${_applyHardTimeout.inSeconds}s ' // lint-allow: hardcoded-string
-                  '(region=$_selectedRegion, isInitialSetup=${widget.isInitialSetup})', // lint-allow: hardcoded-string
-                );
-                // Don't throw — fall through to the persist-and-pop below
-              },
-            );
-      }
-
-      // Persist region configured (settings object was captured before
-      // async, safe to call even if widget is disposing)
-      AppLogging.connection(
-        '🌍 RegionSelection: applyRegion completed — persisting regionConfigured=true',
-      );
-      await settings.setRegionConfigured(true);
-
-      if (!mounted) return;
-      settingsRefresh.refresh();
-
-      // Pop back to caller (onboarding _checkAndHandleRegion await)
-      AppLogging.connection(
-        '✅ Region apply complete — popping RegionSelectionScreen '
-        '(region=$_selectedRegion, isInitialSetup=${widget.isInitialSetup})',
-      );
-      navigator.pop();
-    } on Exception catch (e) {
-      // Check if the region was actually applied despite the error
-      final postErrorState = ref.read(regionConfigProvider);
-      final protocol = ref.read(protocolServiceProvider);
-      final regionConfirmed =
-          (postErrorState.applyStatus == RegionApplyStatus.applied &&
-              postErrorState.regionChoice == _selectedRegion) ||
-          protocol.currentRegion == _selectedRegion;
-
-      if (regionConfirmed) {
-        AppLogging.connection(
-          '✅ Region confirmed despite error — persisting and popping '
-          '(region=$_selectedRegion)',
-        );
-        await settings.setRegionConfigured(true);
-        if (!mounted) return;
-        settingsRefresh.refresh();
-        navigator.pop();
-        return;
-      }
-
-      // Timeout during initial setup = optimistic success.
-      // The setRegion command was sent, the device accepted it and
-      // rebooted (user can hear the reset), but the BLE reconnect
-      // never completed within the timeout window. The region IS
-      // applied — just persist and move on instead of stranding the
-      // user on an "Applying..." screen forever.
-      if (e is TimeoutException && widget.isInitialSetup) {
-        AppLogging.connection(
-          '⏱️ Region apply reconnect timed out during initial setup — '
-          'optimistically marking region as configured and popping '
-          '(region=$_selectedRegion)',
-        );
-        AppErrorHandler.addBreadcrumb(
-          'Region: reconnect timeout during initial setup ' // lint-allow: hardcoded-string
-          '(region=$_selectedRegion)', // lint-allow: hardcoded-string
-        );
-        await settings.setRegionConfigured(true);
-        if (!mounted) return;
-        settingsRefresh.refresh();
-        AppLogging.connection(
-          '✅ Optimistic timeout pop — dismissing RegionSelectionScreen now',
-        );
-        navigator.pop();
-        return;
-      }
-
-      // Unlock the UI so the user can retry
-      AppLogging.connection(
-        '🌍 RegionSelection: _applyAndPop error — unlocking UI for retry: $e',
-      );
-      safeSetState(() => _applying = false);
-
-      final connState = ref.read(conn.deviceConnectionProvider);
-      final pairingInvalidation = conn.isPairingInvalidationError(e);
-      if (connState.isTerminalInvalidated || pairingInvalidation) {
-        AppErrorHandler.addBreadcrumb(
-          'Region: pairing invalidation during apply ' // lint-allow: hardcoded-string
-          '(region=$_selectedRegion)', // lint-allow: hardcoded-string
-        );
-        if (mounted) {
-          navigator.pushNamed('/scanner');
-        }
-        return;
-      }
-
-      final message = e is TimeoutException
-          ? context.l10n.regionSelectionReconnectTimeout
-          : pairingInvalidation
-          ? context.l10n.regionSelectionPairingInvalidation
-          : context.l10n.regionSelectionSetRegionError(e.toString());
-
-      safeSetState(() {
-        _errorMessage = message;
-        _showPairingInvalidationHint = pairingInvalidation;
-      });
-      showErrorSnackBar(context, message);
     }
   }
 

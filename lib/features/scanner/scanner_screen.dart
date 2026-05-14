@@ -41,7 +41,6 @@ import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import 'widgets/connecting_animation.dart';
 import 'widgets/mdns_discovery_section.dart';
 import 'widgets/network_connection_section.dart';
-import '../device/region_selection_screen.dart';
 import '../onboarding/meshtastic_onboarding_flow.dart';
 import '../onboarding/meshtastic_onboarding_state.dart';
 
@@ -1673,7 +1672,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       conn.deviceConnectionProvider.notifier,
     );
     final autoReconnectNotifier = ref.read(autoReconnectStateProvider.notifier);
-    final appInitNotifier = ref.read(appInitProvider.notifier);
     final offlineQueue = ref.read(offlineQueueProvider);
 
     safeSetState(() {
@@ -1824,171 +1822,25 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       final appState = ref.read(appInitProvider);
       final isFromNeedsScanner = appState == AppInitState.needsScanner;
 
-      final regionState = ref.read(regionConfigProvider);
-      final sessionId = ref
-          .read(conn.deviceConnectionProvider)
-          .connectionSessionId;
-      final shouldShowRegionPicker =
-          needsRegionSetup &&
-          regionState.connectionSessionId == sessionId &&
-          regionState.applyStatus != RegionApplyStatus.applying &&
-          regionState.applyStatus != RegionApplyStatus.applied &&
-          regionState.applyStatus != RegionApplyStatus.failed;
-
-      // Onboarding-flow ownership: when the new coordinator is on,
-      // every post-connect navigation decision belongs to it. Scanner
-      // stops here. The coordinator's listeners will see the
-      // device-region stream emit UNSET (or set), drive
-      // RegionRequired -> WritingRegion -> AwaitingReboot -> ...
+      // Onboarding-flow ownership: every post-connect navigation decision
+      // belongs to the coordinator. Scanner stops here. The coordinator's
+      // listeners will see the device-region stream emit UNSET (or set),
+      // drive RegionRequired -> WritingRegion -> AwaitingReboot -> ...
       // and finally call setInitialized exactly once on Ready.
-      // _AppRouter then unmounts Scanner via appShellProvider.
-      final onboardingFlowEnabled = ref
-          .read(meshtasticOnboardingFlowFlagsProvider)
-          .enabled;
-      if (onboardingFlowEnabled) {
-        AppLogging.connection(
-          '📡 SCANNER: onboarding-flow active — '
-          'deferring post-connect navigation to coordinator '
-          '(needsRegionSetup=$needsRegionSetup, isFromNeedsScanner=$isFromNeedsScanner)',
-        );
-        // Manual-connect latch is cleared here so the auto-reconnect
-        // manager can take ownership of the reboot/reconnect cycle
-        // (the coordinator does not run a separate reconnect path).
-        if (manualSession != null) {
-          _clearManualConnectIfCurrent(
-            manualSession,
-            reason: 'onboarding_flow_handoff',
-          );
-        } else {
-          autoReconnectNotifier.setState(AutoReconnectState.idle);
-        }
-        return;
-      }
-
-      if (shouldShowRegionPicker) {
-        // Navigate to region selection using push (NOT pushReplacement).
-        // pushReplacement destroys Scanner from the nav stack, so when
-        // RegionSelectionScreen pops after apply, _AppRouter still has
-        // appInit == needsScanner → shows Scanner again → "No devices
-        // found" even though the device is connected. By using push and
-        // awaiting, Scanner stays in the stack and continues its normal
-        // post-connection flow (setInitialized / pushReplacementNamed)
-        // after RegionSelectionScreen pops.
-        //
-        // isInitialSetup must be true whenever the device has UNSET region,
-        // not just during onboarding. The apply-and-wait flow (with hard
-        // timeout) is required because the device will reboot after region
-        // is set and the user must stay on-screen until reconnect completes
-        // (or the timeout fires and pops optimistically).
-        //
-        // Use direct MaterialPageRoute to bypass route guard protection —
-        // the region save causes device reboot, which momentarily disconnects.
-        // Route guard would show "Device Required" screen during this brief
-        // disconnect.
-        AppLogging.connection(
-          '📡 SCANNER: Region UNSET — pushing RegionSelectionScreen '
-          '(isInitialSetup=true, isOnboarding=${widget.isOnboarding})',
-        );
-        // CRITICAL: Clear manualConnecting BEFORE pushing RegionSelection.
-        // The region apply causes a device reboot (expected disconnect).
-        // The autoReconnectManager needs to handle that reconnect, but it
-        // checks autoReconnectState and blocks when manualConnecting is
-        // set. Scanner's manual connection is done at this point — the
-        // device is paired, protocol configured, region is the only
-        // remaining step. Hand off reconnect responsibility to the
-        // auto-reconnect manager so the reboot-reconnect cycle works.
-        //
-        // Use the session-aware helper with reason=region_apply_handoff
-        // so this clear is distinguishable in logs from the
-        // post-promotion success clear (which fires below as an
-        // idempotent acknowledgment).
-        if (manualSession != null) {
-          _clearManualConnectIfCurrent(
-            manualSession,
-            reason: 'region_apply_handoff',
-          );
-        } else {
-          autoReconnectNotifier.setState(AutoReconnectState.idle);
-        }
-        AppLogging.connection(
-          'REGION_FLOW_STARTED isInitialSetup=true source=scanner_post_connect',
-        );
-        await Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (context) =>
-                const RegionSelectionScreen(isInitialSetup: true),
-          ),
-        );
-        // RegionSelectionScreen popped — region is now applied (or timed
-        // out optimistically). Promote to MainShell. The promotion is
-        // protected from `_handleDisconnect` re-entry by the
-        // `regionConfigProvider.applyStatus == applying` check at
-        // connection_providers.dart `_handleDisconnect` — the auth-fail
-        // / disconnect path will skip its setNeedsScanner() during
-        // the region apply window, so the call below cannot be stomped.
-        if (!mounted) return;
-        AppLogging.connection(
-          'REGION_FLOW_COMPLETED isInitialSetup=true '
-          'isFromNeedsScanner=$isFromNeedsScanner',
-        );
-        if (isFromNeedsScanner) {
-          appInitNotifier.setInitialized();
-          AppLogging.connection(
-            'MAIN_SHELL_PROMOTED source=scanner_post_region '
-            'method=appInit.setInitialized',
-          );
-        } else if (!widget.isInline) {
-          _navigateToMain();
-          AppLogging.connection(
-            'MAIN_SHELL_PROMOTED source=scanner_post_region '
-            'method=navigateToMain',
-          );
-        } else {
-          AppLogging.connection(
-            'MAIN_SHELL_PROMOTION_SKIPPED_ALREADY_DONE '
-            'reason=inline_mode',
-          );
-        }
-      } else if (needsRegionSetup) {
-        AppLogging.app(
-          'REGION_FLOW choose=${regionState.regionChoice?.name ?? "null"} session=$sessionId status=${regionState.applyStatus.name} reason=region_picker_suppressed',
-        );
-        // Keep user on main flow; require explicit reconnect to retry
-        if (isFromNeedsScanner) {
-          appInitNotifier.setInitialized();
-        } else if (!widget.isInline) {
-          _navigateToMain();
-        }
-      } else if (isFromNeedsScanner) {
-        // We're at the root level from needsScanner - update app state to initialized
-        // This will cause _AppRouter to show MainShell
-        appInitNotifier.setInitialized();
-      } else if (!widget.isInline) {
-        // Navigate to main app (only if not inline - inline will auto-rebuild)
-        _navigateToMain();
-      }
-      // If inline (shown within MainShell), don't navigate - just let the
-      // connection state change trigger MainShell to rebuild and show main content
-
-      // Reset auto-reconnect state to idle on successful manual connection.
-      // For manual paths (`isAutoReconnect=false`), gate this behind the
-      // session token so a stale success from an in-flight older attempt
-      // can't unlatch a newer one. Auto-reconnect paths bypass the
-      // session check (they didn't acquire one).
-      //
-      // In the region-UNSET branch above, the latch was already cleared
-      // with reason=region_apply_handoff. Calling the helper again here
-      // with the captured `manualSession` is intentionally idempotent:
-      // state is already idle, `_activeManualSession` is already null,
-      // so it logs MANUAL_CONNECT_SUCCEEDED + MANUAL_CONNECT_CLEARED
-      // reason=success as the post-promotion acknowledgment without
-      // mutating any state.
+      // `_AppRouter` then unmounts Scanner via `appShellProvider`.
+      AppLogging.connection(
+        '📡 SCANNER: deferring post-connect navigation to coordinator '
+        '(needsRegionSetup=$needsRegionSetup, '
+        'isFromNeedsScanner=$isFromNeedsScanner)',
+      );
+      // Clear the manual-connect latch so the auto-reconnect manager can
+      // take ownership of the reboot/reconnect cycle (the coordinator
+      // does not run a separate reconnect path).
       if (manualSession != null) {
-        AppLogging.connection(
-          'MANUAL_CONNECT_SUCCEEDED session=$manualSession '
-          'device=${device.id}',
+        _clearManualConnectIfCurrent(
+          manualSession,
+          reason: 'onboarding_flow_handoff',
         );
-        _clearManualConnectIfCurrent(manualSession, reason: 'success');
       } else {
         autoReconnectNotifier.setState(AutoReconnectState.idle);
       }
@@ -1996,7 +1848,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       // Ensure offline queue is initialized and process any pending messages
       offlineQueue.processQueueIfNeeded();
 
-      // Success - don't reset _connecting, let navigation handle the transition
+      // Success — don't reset _connecting, let the coordinator + appShell
+      // handle the transition out of Scanner.
       return;
     } catch (e, stack) {
       // Log error to Crashlytics ONLY for unexpected errors

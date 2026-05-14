@@ -507,31 +507,6 @@ void main() {
     );
   });
 
-  test('flag-off makes connect a no-op, state stays idle', () async {
-    final protocol = FakeOnboardingProtocolService();
-    final container = buildOnboardingTestContainer(
-      protocol: protocol,
-      flowEnabled: false,
-    );
-    addTearDown(container.dispose);
-
-    final device = testDevice();
-    container.read(meshtasticOnboardingFlowProvider.notifier).connect(device);
-    setConnectionState(
-      container,
-      state: DevicePairingState.connected,
-      device: device,
-    );
-    await pumpMicrotasks();
-    protocol.emitRegion(config_pbenum.Config_LoRaConfig_RegionCode.UNSET);
-    await pumpMicrotasks();
-
-    expect(
-      container.read(meshtasticOnboardingFlowProvider),
-      isA<OnboardingIdle>(),
-    );
-  });
-
   test('every terminal state reports isTerminal=true', () {
     expect(const OnboardingIdle().isTerminal, isFalse);
     expect(OnboardingConnecting(testDevice()).isTerminal, isFalse);

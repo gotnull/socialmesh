@@ -48,7 +48,6 @@ import '../../providers/connection_providers.dart'
 import '../../services/protocol/protocol_service.dart'
     show OperationalReadiness;
 import 'meshtastic_onboarding_state.dart';
-import 'onboarding_flow_flag.dart';
 
 /// Per-phase timeout windows. Picked to be generous enough to cover
 /// slow firmware (Heltec MeshPocket has been observed taking ~30s
@@ -93,11 +92,6 @@ class MeshtasticOnboardingFlow extends Notifier<MeshtasticOnboardingState> {
   StreamSubscription<OperationalReadiness>? _readinessSub;
   StreamSubscription<config_pbenum.Config_LoRaConfig_RegionCode>? _regionSub;
 
-  /// Flag-snapshot taken at build() time. The coordinator is inert
-  /// when the flag is off — `connect`/`selectRegion`/`cancel` become
-  /// no-ops so the legacy code paths run unchanged.
-  late bool _enabled;
-
   /// Test seam: lets a test inject custom timeouts. Defaults to
   /// [OnboardingFlowTimeouts.defaults] in production.
   OnboardingFlowTimeouts _timeouts = OnboardingFlowTimeouts.defaults;
@@ -109,8 +103,6 @@ class MeshtasticOnboardingFlow extends Notifier<MeshtasticOnboardingState> {
 
   @override
   MeshtasticOnboardingState build() {
-    _enabled = ref.read(meshtasticOnboardingFlowFlagsProvider).enabled;
-
     ref.onDispose(() {
       _phaseTimer?.cancel();
       _phaseTimer = null;
@@ -120,9 +112,7 @@ class MeshtasticOnboardingFlow extends Notifier<MeshtasticOnboardingState> {
       _regionSub = null;
     });
 
-    if (_enabled) {
-      _attachListeners();
-    }
+    _attachListeners();
 
     return const OnboardingIdle();
   }
@@ -184,11 +174,7 @@ class MeshtasticOnboardingFlow extends Notifier<MeshtasticOnboardingState> {
   /// [OnboardingConnecting], and lets the BLE work happen via the
   /// existing Scanner / DeviceConnectionNotifier pipeline. State
   /// progress is then driven by the listeners above.
-  ///
-  /// No-op when the feature flag is off — Scanner's legacy path
-  /// continues unchanged.
   void connect(DeviceInfo device) {
-    if (!_enabled) return;
     if (state is OnboardingConnecting &&
         (state as OnboardingConnecting).target.id == device.id) {
       // Already running for this device. Don't bump generation.
@@ -204,7 +190,6 @@ class MeshtasticOnboardingFlow extends Notifier<MeshtasticOnboardingState> {
   Future<void> selectRegion(
     config_pbenum.Config_LoRaConfig_RegionCode region,
   ) async {
-    if (!_enabled) return;
     final current = state;
     if (current is! OnboardingRegionRequired) {
       AppLogging.connection(
@@ -264,7 +249,6 @@ class MeshtasticOnboardingFlow extends Notifier<MeshtasticOnboardingState> {
   /// Transitions to [OnboardingCancelled] which the appShell mapper
   /// routes back to the scanner.
   void cancel({String reason = 'user'}) {
-    if (!_enabled) return;
     if (state is OnboardingIdle || state is OnboardingCancelled) return;
     _transitionTo(const OnboardingCancelled(), reason: 'cancel:$reason');
   }
@@ -580,12 +564,4 @@ class MeshtasticOnboardingFlow extends Notifier<MeshtasticOnboardingState> {
 final meshtasticOnboardingFlowProvider =
     NotifierProvider<MeshtasticOnboardingFlow, MeshtasticOnboardingState>(
       MeshtasticOnboardingFlow.new,
-    );
-
-/// Snapshot of [MeshtasticOnboardingFlowFlags] read once from the
-/// current `.env` environment. Override in tests via
-/// [overrideMeshtasticOnboardingFlowFlagsForTesting].
-final meshtasticOnboardingFlowFlagsProvider =
-    Provider<MeshtasticOnboardingFlowFlags>(
-      (_) => MeshtasticOnboardingFlowFlags.fromEnv(),
     );

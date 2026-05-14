@@ -13,7 +13,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/core/transport.dart';
 import 'package:socialmesh/features/onboarding/meshtastic_onboarding_flow.dart';
-import 'package:socialmesh/features/onboarding/onboarding_flow_flag.dart';
 import 'package:socialmesh/generated/meshtastic/config.pb.dart' as config_pb;
 import 'package:socialmesh/generated/meshtastic/config.pbenum.dart'
     as config_pbenum;
@@ -168,19 +167,11 @@ class _SilentTransport implements DeviceTransport {
 /// Build a ProviderContainer set up for the onboarding-flow tests.
 ProviderContainer buildOnboardingTestContainer({
   required FakeOnboardingProtocolService protocol,
-  bool flowEnabled = true,
   OnboardingFlowTimeouts? timeouts,
 }) {
   SharedPreferences.setMockInitialValues({});
   final container = ProviderContainer(
-    overrides: [
-      protocolServiceProvider.overrideWithValue(protocol),
-      meshtasticOnboardingFlowFlagsProvider.overrideWithValue(
-        flowEnabled
-            ? MeshtasticOnboardingFlowFlags.enabledForTests
-            : MeshtasticOnboardingFlowFlags.disabled,
-      ),
-    ],
+    overrides: [protocolServiceProvider.overrideWithValue(protocol)],
   );
   if (timeouts != null) {
     container

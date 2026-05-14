@@ -5,20 +5,11 @@
 /// and `meshtasticOnboardingFlowProvider` into a single canonical
 /// "what shell should the router render?" enum.
 ///
-/// **Why this exists**: prior to the onboarding-flow refactor,
-/// `_AppRouter` only watched `appInitProvider`, which meant Scanner
-/// owned the post-onboarding promotion to MainShell via
-/// `setInitialized()` plus a Navigator.push/pop dance into the
-/// region picker. That choreography stranded the user when any
-/// step in the chain glitched.
-///
-/// With this provider, `_AppRouter` becomes a pure renderer of the
-/// derived shell. The onboarding flow is the single source of truth
-/// for everything between "user tapped a device" and "MainShell
-/// is on screen". When the flag is off (or no onboarding is in
-/// flight), the provider falls through to legacy `appInitProvider`
-/// behaviour so existing routes (terms, age, scanner-on-first-launch)
-/// keep working unchanged.
+/// `_AppRouter` is a pure renderer of the derived shell. The onboarding
+/// flow is the single source of truth for everything between
+/// "user tapped a device" and "MainShell is on screen"; outside that
+/// window the provider falls through to `appInitProvider` for the legal
+/// gates (terms, age, scanner-on-first-launch).
 library;
 
 import 'package:flutter/foundation.dart';
@@ -107,10 +98,7 @@ final appShellProvider = Provider<AppShellResolution>((ref) {
       break;
   }
 
-  final flagsEnabled = ref.watch(meshtasticOnboardingFlowFlagsProvider).enabled;
-  final flow = flagsEnabled
-      ? ref.watch(meshtasticOnboardingFlowProvider)
-      : const OnboardingIdle();
+  final flow = ref.watch(meshtasticOnboardingFlowProvider);
 
   // `needsScanner` is a hard-reset signal (factory reset, manual
   // disconnect, scanner re-entry from banner). Stale completed-flow

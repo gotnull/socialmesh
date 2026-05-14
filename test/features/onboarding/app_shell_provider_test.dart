@@ -37,7 +37,7 @@ void main() {
 
   group('appShellProvider — onboarding-flow drives routing', () {
     test('OnboardingConnecting -> AppShell.scanner', () {
-      final container = _container(flowEnabled: true);
+      final container = _container();
       addTearDown(container.dispose);
       _setAppInit(container, AppInitState.needsScanner);
       container
@@ -48,7 +48,7 @@ void main() {
     });
 
     test('OnboardingCheckingConfig -> AppShell.scanner', () {
-      final container = _container(flowEnabled: true);
+      final container = _container();
       addTearDown(container.dispose);
       _setAppInit(container, AppInitState.needsScanner);
       container
@@ -59,7 +59,7 @@ void main() {
     });
 
     test('OnboardingRegionRequired -> AppShell.regionPicker', () {
-      final container = _container(flowEnabled: true);
+      final container = _container();
       addTearDown(container.dispose);
       _setAppInit(container, AppInitState.needsScanner);
       container
@@ -72,7 +72,7 @@ void main() {
     test(
       'OnboardingWritingRegion -> AppShell.regionPicker (stay on picker)',
       () {
-        final container = _container(flowEnabled: true);
+        final container = _container();
         addTearDown(container.dispose);
         _setAppInit(container, AppInitState.needsScanner);
         container
@@ -89,7 +89,7 @@ void main() {
     );
 
     test('OnboardingAwaitingReboot -> AppShell.regionPicker', () {
-      final container = _container(flowEnabled: true);
+      final container = _container();
       addTearDown(container.dispose);
       _setAppInit(container, AppInitState.needsScanner);
       container
@@ -105,7 +105,7 @@ void main() {
     });
 
     test('OnboardingAwaitingReconnect -> AppShell.regionPicker', () {
-      final container = _container(flowEnabled: true);
+      final container = _container();
       addTearDown(container.dispose);
       _setAppInit(container, AppInitState.needsScanner);
       container
@@ -121,7 +121,7 @@ void main() {
     });
 
     test('OnboardingAwaitingReadiness -> AppShell.regionPicker', () {
-      final container = _container(flowEnabled: true);
+      final container = _container();
       addTearDown(container.dispose);
       _setAppInit(container, AppInitState.needsScanner);
       container
@@ -139,7 +139,7 @@ void main() {
     test(
       'OnboardingReady promotes to AppShell.mainShell (when appInit==ready)',
       () {
-        final container = _container(flowEnabled: true);
+        final container = _container();
         addTearDown(container.dispose);
         _setAppInit(container, AppInitState.ready);
         container
@@ -151,7 +151,7 @@ void main() {
     );
 
     test('OnboardingFailed -> AppShell.scanner (recovery)', () {
-      final container = _container(flowEnabled: true);
+      final container = _container();
       addTearDown(container.dispose);
       _setAppInit(container, AppInitState.needsScanner);
       container
@@ -164,7 +164,7 @@ void main() {
     });
 
     test('OnboardingPairingInvalidated -> AppShell.scanner', () {
-      final container = _container(flowEnabled: true);
+      final container = _container();
       addTearDown(container.dispose);
       _setAppInit(container, AppInitState.needsScanner);
       container
@@ -175,7 +175,7 @@ void main() {
     });
 
     test('OnboardingCancelled -> AppShell.scanner', () {
-      final container = _container(flowEnabled: true);
+      final container = _container();
       addTearDown(container.dispose);
       _setAppInit(container, AppInitState.needsScanner);
       container
@@ -188,7 +188,7 @@ void main() {
 
   group('appShellProvider — boot lifecycle gates take precedence', () {
     test('AppInitState.initializing -> splash (overrides any flow state)', () {
-      final container = _container(flowEnabled: true);
+      final container = _container();
       addTearDown(container.dispose);
       _setAppInit(container, AppInitState.initializing);
       container
@@ -201,7 +201,7 @@ void main() {
     test(
       'AppInitState.needsAgeEligibility -> ageEligibility (overrides flow)',
       () {
-        final container = _container(flowEnabled: true);
+        final container = _container();
         addTearDown(container.dispose);
         _setAppInit(container, AppInitState.needsAgeEligibility);
         container
@@ -213,7 +213,7 @@ void main() {
     );
 
     test('AppInitState.error -> error (overrides flow)', () {
-      final container = _container(flowEnabled: true);
+      final container = _container();
       addTearDown(container.dispose);
       _setAppInit(container, AppInitState.error);
       container
@@ -223,35 +223,11 @@ void main() {
       expect(container.read(appShellProvider).shell, AppShell.error);
     });
   });
-
-  group('appShellProvider — flag OFF preserves legacy', () {
-    test(
-      'flag OFF + appInit==needsScanner -> scanner (ignores flow state)',
-      () {
-        final container = _container(flowEnabled: false);
-        addTearDown(container.dispose);
-        _setAppInit(container, AppInitState.needsScanner);
-        // Even if a stale flow state were somehow present, the flag-off
-        // guard must not consult it.
-        expect(container.read(appShellProvider).shell, AppShell.scanner);
-      },
-    );
-
-    test('flag OFF + appInit==ready -> mainShell', () {
-      final container = _container(flowEnabled: false);
-      addTearDown(container.dispose);
-      _setAppInit(container, AppInitState.ready);
-      expect(container.read(appShellProvider).shell, AppShell.mainShell);
-    });
-  });
 }
 
-ProviderContainer _container({required bool flowEnabled}) {
+ProviderContainer _container() {
   final protocol = FakeOnboardingProtocolService();
-  return buildOnboardingTestContainer(
-    protocol: protocol,
-    flowEnabled: flowEnabled,
-  );
+  return buildOnboardingTestContainer(protocol: protocol);
 }
 
 void _setAppInit(ProviderContainer container, AppInitState state) {
