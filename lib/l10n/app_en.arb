@@ -12984,6 +12984,86 @@
     "@meshcoreShareContact": {
         "description": "Contact options action label"
     },
+    "meshcoreContactUrlCopied": "Contact URL copied",
+    "@meshcoreContactUrlCopied": {
+        "description": "D46-A - snackbar after copying a contact's meshcore:// URL to the clipboard"
+    },
+    "meshcoreContactExportFailed": "Could not export contact",
+    "@meshcoreContactExportFailed": {
+        "description": "D46-A - error snackbar when CMD_EXPORT_CONTACT fails or times out"
+    },
+    "meshcoreBroadcastSelfContact": "Broadcast my contact",
+    "@meshcoreBroadcastSelfContact": {
+        "description": "D46-A - contact action that sends our own contact card zero-hop to nearby peers via CMD_SHARE_CONTACT"
+    },
+    "meshcoreSelfContactBroadcasted": "Your contact card sent",
+    "@meshcoreSelfContactBroadcasted": {
+        "description": "D46-A - success snackbar after CMD_SHARE_CONTACT succeeds"
+    },
+    "meshcoreSelfContactBroadcastFailed": "Could not broadcast contact card",
+    "@meshcoreSelfContactBroadcastFailed": {
+        "description": "D46-A - error snackbar when CMD_SHARE_CONTACT fails"
+    },
+    "meshcoreContactsAddFromClipboard": "Add from clipboard",
+    "@meshcoreContactsAddFromClipboard": {
+        "description": "D46-A - top-level contacts-screen overflow action that reads a meshcore:// URL from the clipboard and previews the parsed contact"
+    },
+    "meshcoreContactImportParseFailed": "Could not parse clipboard as a contact URL",
+    "@meshcoreContactImportParseFailed": {
+        "description": "D46-A - snackbar when clipboard content does not match meshcore:// or the legacy contact-code format"
+    },
+    "meshcoreContactImportConfirmTitle": "Add contact?",
+    "@meshcoreContactImportConfirmTitle": {
+        "description": "D46-A - contact-import confirmation sheet title"
+    },
+    "meshcoreContactImportConfirmAction": "Add contact",
+    "@meshcoreContactImportConfirmAction": {
+        "description": "D46-A - contact-import confirmation sheet primary button"
+    },
+    "meshcoreContactImportConfirmFormatFull": "Full (path + location)",
+    "@meshcoreContactImportConfirmFormatFull": {
+        "description": "D46-A - format label for a meshcore:// (canonical) import preview"
+    },
+    "meshcoreContactImportConfirmFormatLegacy": "Legacy (name only)",
+    "@meshcoreContactImportConfirmFormatLegacy": {
+        "description": "D46-A - format label for a legacy <pubkeyhex>:<name> import preview"
+    },
+    "meshcoreContactImported": "Contact added",
+    "@meshcoreContactImported": {
+        "description": "D46-A - success snackbar after CMD_IMPORT_CONTACT (or fallback CMD_ADD_UPDATE_CONTACT) succeeds"
+    },
+    "meshcoreContactImportFailed": "Could not add contact",
+    "@meshcoreContactImportFailed": {
+        "description": "D46-A - error snackbar when the firmware rejects the import"
+    },
+    "meshcoreContactImportRowName": "Name",
+    "@meshcoreContactImportRowName": {
+        "description": "D46-A - InfoTable row label for the parsed contact name on the confirmation sheet"
+    },
+    "meshcoreContactImportRowPubkey": "Pubkey",
+    "@meshcoreContactImportRowPubkey": {
+        "description": "D46-A - InfoTable row label for the parsed contact's 8-char pubkey fingerprint"
+    },
+    "meshcoreContactImportRowLastSeen": "Last seen",
+    "@meshcoreContactImportRowLastSeen": {
+        "description": "D46-A - InfoTable row label for the parsed contact's last-advert timestamp"
+    },
+    "meshcoreContactImportRowLocation": "Location",
+    "@meshcoreContactImportRowLocation": {
+        "description": "D46-A - InfoTable row label for the parsed contact's GPS coordinates"
+    },
+    "meshcoreContactImportRowFormat": "Format",
+    "@meshcoreContactImportRowFormat": {
+        "description": "D46-A - InfoTable row label for the import-format provenance (full vs legacy)"
+    },
+    "meshcoreContactImportLastSeenUnknown": "Unknown",
+    "@meshcoreContactImportLastSeenUnknown": {
+        "description": "D46-A - placeholder for legacy imports that did not carry a last-seen timestamp"
+    },
+    "meshcoreContactImportLocationUnknown": "Not shared",
+    "@meshcoreContactImportLocationUnknown": {
+        "description": "D46-A - placeholder for legacy imports that did not carry GPS coordinates"
+    },
     "meshcoreShareContactCodeInfo": "Share your contact code so others can message you",
     "@meshcoreShareContactCodeInfo": {
         "description": "QR share sheet info text for own contact code"

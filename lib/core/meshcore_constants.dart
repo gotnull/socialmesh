@@ -268,6 +268,11 @@ class MeshCoreResponses {
   /// No more messages in queue.
   static const int noMoreMessages = 0x0A;
 
+  /// D46-A: serialized contact-frame bytes returned by
+  /// `CMD_EXPORT_CONTACT (0x11)`. Payload is the 135..147-byte
+  /// canonical contact frame (`parseContact`-compatible).
+  static const int exportContact = 0x0B;
+
   /// Battery and storage info.
   static const int battAndStorage = 0x0C;
 

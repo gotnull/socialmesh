@@ -16,6 +16,7 @@ import '../../../models/meshcore_channel.dart';
 import '../../../models/meshcore_contact.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../utils/snackbar.dart';
+import 'meshcore_contact_import_sheet.dart';
 
 /// Enum for scan mode
 enum MeshCoreScanMode { contact, channel }
@@ -116,7 +117,31 @@ class _MeshCoreQrScannerScreenState
   }
 
   Future<void> _processContactCode(String code) async {
-    // Try parsing as contact code (pubKeyHex:name format)
+    // D46-A: try the canonical meshcore:// URL form first (also
+    // matches the legacy `<pubkeyhex>:<name>` text form). Hands off to
+    // the same confirmation sheet the clipboard-paste flow uses.
+    final preview = ref
+        .read(meshCoreContactsProvider.notifier)
+        .previewContactImport(code);
+    if (preview != null) {
+      if (!mounted) return;
+      final result = await showMeshCoreContactImportSheet(
+        context,
+        preview: preview,
+      );
+      if (!mounted) return;
+      if (result == true) {
+        showSuccessSnackBar(context, context.l10n.meshcoreContactImported);
+      } else if (result == false) {
+        showErrorSnackBar(context, context.l10n.meshcoreContactImportFailed);
+      }
+      safeNavigatorPop();
+      return;
+    }
+
+    // Pre-D46-A SocialMesh QR format `socialmesh://contact/<base64>`
+    // and `meshcore://contact/<base64>` — different from the canonical
+    // `meshcore://<hex>` shape; preserved one release for back-compat.
     final contact = parseContactCode(code);
     if (contact != null) {
       // Check if contact already exists

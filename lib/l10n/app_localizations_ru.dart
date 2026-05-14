@@ -9703,6 +9703,70 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreShareContact => 'Поделиться контактом';
 
   @override
+  String get meshcoreContactUrlCopied => 'URL контакта скопирован';
+
+  @override
+  String get meshcoreContactExportFailed => 'Не удалось экспортировать контакт';
+
+  @override
+  String get meshcoreBroadcastSelfContact => 'Передать мой контакт';
+
+  @override
+  String get meshcoreSelfContactBroadcasted => 'Карточка контакта отправлена';
+
+  @override
+  String get meshcoreSelfContactBroadcastFailed =>
+      'Не удалось передать карточку контакта';
+
+  @override
+  String get meshcoreContactsAddFromClipboard => 'Добавить из буфера обмена';
+
+  @override
+  String get meshcoreContactImportParseFailed =>
+      'Не удалось распознать буфер как URL контакта';
+
+  @override
+  String get meshcoreContactImportConfirmTitle => 'Добавить контакт?';
+
+  @override
+  String get meshcoreContactImportConfirmAction => 'Добавить контакт';
+
+  @override
+  String get meshcoreContactImportConfirmFormatFull =>
+      'Полный (маршрут + местоположение)';
+
+  @override
+  String get meshcoreContactImportConfirmFormatLegacy =>
+      'Устаревший (только имя)';
+
+  @override
+  String get meshcoreContactImported => 'Контакт добавлен';
+
+  @override
+  String get meshcoreContactImportFailed => 'Не удалось добавить контакт';
+
+  @override
+  String get meshcoreContactImportRowName => 'Имя';
+
+  @override
+  String get meshcoreContactImportRowPubkey => 'Публичный ключ';
+
+  @override
+  String get meshcoreContactImportRowLastSeen => 'Последний раз в сети';
+
+  @override
+  String get meshcoreContactImportRowLocation => 'Местоположение';
+
+  @override
+  String get meshcoreContactImportRowFormat => 'Формат';
+
+  @override
+  String get meshcoreContactImportLastSeenUnknown => 'Неизвестно';
+
+  @override
+  String get meshcoreContactImportLocationUnknown => 'Не указана';
+
+  @override
   String get meshcoreShareContactCodeInfo =>
       'Поделитесь своим кодом контакта, чтобы другие могли вам написать';
 

@@ -18,6 +18,7 @@ import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/qr_share_sheet.dart';
 import '../../../core/widgets/status_filter_chip.dart';
 import '../../../models/meshcore_contact.dart';
+import '../../../models/meshcore_contact_import_preview.dart';
 import '../contact_l10n.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_message_providers.dart';
@@ -26,6 +27,7 @@ import '../../../utils/snackbar.dart';
 import '../../navigation/meshcore_shell.dart';
 import 'meshcore_chat_screen.dart';
 import 'meshcore_contact_detail_screen.dart';
+import 'meshcore_contact_import_sheet.dart';
 import 'meshcore_qr_scanner_screen.dart';
 
 /// MeshCore Contacts screen.
@@ -94,6 +96,10 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
               switch (value) {
                 case 'add_contact':
                   _showAddContactOptions();
+                case 'add_from_clipboard':
+                  _addContactFromClipboard();
+                case 'broadcast_self':
+                  _broadcastSelfContact();
                 case 'discover':
                   _refreshContacts();
                 case 'my_code':
@@ -108,6 +114,24 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                 child: ListTile(
                   leading: const Icon(Icons.person_add_rounded),
                   title: Text(context.l10n.meshcoreAddContact),
+                  contentPadding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'add_from_clipboard',
+                child: ListTile(
+                  leading: const Icon(Icons.content_paste_rounded),
+                  title: Text(context.l10n.meshcoreContactsAddFromClipboard),
+                  contentPadding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'broadcast_self',
+                child: ListTile(
+                  leading: const Icon(Icons.broadcast_on_personal_outlined),
+                  title: Text(context.l10n.meshcoreBroadcastSelfContact),
                   contentPadding: EdgeInsets.zero,
                   visualDensity: VisualDensity.compact,
                 ),
@@ -544,14 +568,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
         BottomSheetAction(
           icon: Icons.share_rounded,
           label: context.l10n.meshcoreShareContact,
-          onTap: () {
-            final code = generateContactCode(contact);
-            Clipboard.setData(ClipboardData(text: code));
-            showSuccessSnackBar(
-              context,
-              context.l10n.meshcoreContactCodeCopied,
-            );
-          },
+          onTap: () => _shareContactUrl(contact),
         ),
         BottomSheetAction(
           icon: Icons.refresh_rounded,
@@ -571,6 +588,65 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
         ),
       ],
     );
+  }
+
+  /// D46-A: export a contact via `CMD_EXPORT_CONTACT 0x11`, encode as
+  /// `meshcore://<hex>`, write to clipboard. Snackbar fires on success
+  /// or failure.
+  Future<void> _shareContactUrl(MeshCoreContact contact) async {
+    final l10n = context.l10n;
+    final notifier = ref.read(meshCoreContactsProvider.notifier);
+    final url = await notifier.exportContactUrl(contact);
+    if (!mounted) return;
+    if (url == null) {
+      showErrorSnackBar(context, l10n.meshcoreContactExportFailed);
+      return;
+    }
+    await Clipboard.setData(ClipboardData(text: url));
+    if (!mounted) return;
+    showSuccessSnackBar(context, l10n.meshcoreContactUrlCopied);
+  }
+
+  /// D46-A: broadcast our own contact card zero-hop via
+  /// `CMD_SHARE_CONTACT 0x10`. Snackbar fires on success or failure.
+  Future<void> _broadcastSelfContact() async {
+    final l10n = context.l10n;
+    final notifier = ref.read(meshCoreContactsProvider.notifier);
+    final ok = await notifier.broadcastSelfContact();
+    if (!mounted) return;
+    if (ok) {
+      showSuccessSnackBar(context, l10n.meshcoreSelfContactBroadcasted);
+    } else {
+      showErrorSnackBar(context, l10n.meshcoreSelfContactBroadcastFailed);
+    }
+  }
+
+  /// D46-A: read the clipboard, parse as `meshcore://` (or legacy
+  /// `<pubkeyhex>:<name>`), open the confirmation sheet. The sheet
+  /// drives the commit through the provider on Confirm.
+  Future<void> _addContactFromClipboard() async {
+    final l10n = context.l10n;
+    final clip = await Clipboard.getData(Clipboard.kTextPlain);
+    if (!mounted) return;
+    final text = clip?.text ?? '';
+    final MeshCoreContactImportPreview? preview = ref
+        .read(meshCoreContactsProvider.notifier)
+        .previewContactImport(text);
+    if (!mounted) return;
+    if (preview == null) {
+      showErrorSnackBar(context, l10n.meshcoreContactImportParseFailed);
+      return;
+    }
+    final result = await showMeshCoreContactImportSheet(
+      context,
+      preview: preview,
+    );
+    if (!mounted || result == null) return;
+    if (result) {
+      showSuccessSnackBar(context, l10n.meshcoreContactImported);
+    } else {
+      showErrorSnackBar(context, l10n.meshcoreContactImportFailed);
+    }
   }
 
   Future<void> _confirmRemoveContact(MeshCoreContact contact) async {

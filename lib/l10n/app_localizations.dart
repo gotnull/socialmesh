@@ -16945,6 +16945,126 @@ abstract class AppLocalizations {
   /// **'Share Contact'**
   String get meshcoreShareContact;
 
+  /// D46-A - snackbar after copying a contact's meshcore:// URL to the clipboard
+  ///
+  /// In en, this message translates to:
+  /// **'Contact URL copied'**
+  String get meshcoreContactUrlCopied;
+
+  /// D46-A - error snackbar when CMD_EXPORT_CONTACT fails or times out
+  ///
+  /// In en, this message translates to:
+  /// **'Could not export contact'**
+  String get meshcoreContactExportFailed;
+
+  /// D46-A - contact action that sends our own contact card zero-hop to nearby peers via CMD_SHARE_CONTACT
+  ///
+  /// In en, this message translates to:
+  /// **'Broadcast my contact'**
+  String get meshcoreBroadcastSelfContact;
+
+  /// D46-A - success snackbar after CMD_SHARE_CONTACT succeeds
+  ///
+  /// In en, this message translates to:
+  /// **'Your contact card sent'**
+  String get meshcoreSelfContactBroadcasted;
+
+  /// D46-A - error snackbar when CMD_SHARE_CONTACT fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not broadcast contact card'**
+  String get meshcoreSelfContactBroadcastFailed;
+
+  /// D46-A - top-level contacts-screen overflow action that reads a meshcore:// URL from the clipboard and previews the parsed contact
+  ///
+  /// In en, this message translates to:
+  /// **'Add from clipboard'**
+  String get meshcoreContactsAddFromClipboard;
+
+  /// D46-A - snackbar when clipboard content does not match meshcore:// or the legacy contact-code format
+  ///
+  /// In en, this message translates to:
+  /// **'Could not parse clipboard as a contact URL'**
+  String get meshcoreContactImportParseFailed;
+
+  /// D46-A - contact-import confirmation sheet title
+  ///
+  /// In en, this message translates to:
+  /// **'Add contact?'**
+  String get meshcoreContactImportConfirmTitle;
+
+  /// D46-A - contact-import confirmation sheet primary button
+  ///
+  /// In en, this message translates to:
+  /// **'Add contact'**
+  String get meshcoreContactImportConfirmAction;
+
+  /// D46-A - format label for a meshcore:// (canonical) import preview
+  ///
+  /// In en, this message translates to:
+  /// **'Full (path + location)'**
+  String get meshcoreContactImportConfirmFormatFull;
+
+  /// D46-A - format label for a legacy <pubkeyhex>:<name> import preview
+  ///
+  /// In en, this message translates to:
+  /// **'Legacy (name only)'**
+  String get meshcoreContactImportConfirmFormatLegacy;
+
+  /// D46-A - success snackbar after CMD_IMPORT_CONTACT (or fallback CMD_ADD_UPDATE_CONTACT) succeeds
+  ///
+  /// In en, this message translates to:
+  /// **'Contact added'**
+  String get meshcoreContactImported;
+
+  /// D46-A - error snackbar when the firmware rejects the import
+  ///
+  /// In en, this message translates to:
+  /// **'Could not add contact'**
+  String get meshcoreContactImportFailed;
+
+  /// D46-A - InfoTable row label for the parsed contact name on the confirmation sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get meshcoreContactImportRowName;
+
+  /// D46-A - InfoTable row label for the parsed contact's 8-char pubkey fingerprint
+  ///
+  /// In en, this message translates to:
+  /// **'Pubkey'**
+  String get meshcoreContactImportRowPubkey;
+
+  /// D46-A - InfoTable row label for the parsed contact's last-advert timestamp
+  ///
+  /// In en, this message translates to:
+  /// **'Last seen'**
+  String get meshcoreContactImportRowLastSeen;
+
+  /// D46-A - InfoTable row label for the parsed contact's GPS coordinates
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get meshcoreContactImportRowLocation;
+
+  /// D46-A - InfoTable row label for the import-format provenance (full vs legacy)
+  ///
+  /// In en, this message translates to:
+  /// **'Format'**
+  String get meshcoreContactImportRowFormat;
+
+  /// D46-A - placeholder for legacy imports that did not carry a last-seen timestamp
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get meshcoreContactImportLastSeenUnknown;
+
+  /// D46-A - placeholder for legacy imports that did not carry GPS coordinates
+  ///
+  /// In en, this message translates to:
+  /// **'Not shared'**
+  String get meshcoreContactImportLocationUnknown;
+
   /// QR share sheet info text for own contact code
   ///
   /// In en, this message translates to:

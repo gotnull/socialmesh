@@ -9712,6 +9712,70 @@ class AppLocalizationsIt extends AppLocalizations {
   String get meshcoreShareContact => 'Condividi contatto';
 
   @override
+  String get meshcoreContactUrlCopied => 'URL contatto copiato';
+
+  @override
+  String get meshcoreContactExportFailed => 'Impossibile esportare il contatto';
+
+  @override
+  String get meshcoreBroadcastSelfContact => 'Trasmetti il mio contatto';
+
+  @override
+  String get meshcoreSelfContactBroadcasted => 'Scheda contatto inviata';
+
+  @override
+  String get meshcoreSelfContactBroadcastFailed =>
+      'Impossibile trasmettere la scheda contatto';
+
+  @override
+  String get meshcoreContactsAddFromClipboard => 'Aggiungi dagli appunti';
+
+  @override
+  String get meshcoreContactImportParseFailed =>
+      'Impossibile interpretare gli appunti come URL contatto';
+
+  @override
+  String get meshcoreContactImportConfirmTitle => 'Aggiungere contatto?';
+
+  @override
+  String get meshcoreContactImportConfirmAction => 'Aggiungi contatto';
+
+  @override
+  String get meshcoreContactImportConfirmFormatFull =>
+      'Completo (percorso + posizione)';
+
+  @override
+  String get meshcoreContactImportConfirmFormatLegacy => 'Legacy (solo nome)';
+
+  @override
+  String get meshcoreContactImported => 'Contatto aggiunto';
+
+  @override
+  String get meshcoreContactImportFailed =>
+      'Impossibile aggiungere il contatto';
+
+  @override
+  String get meshcoreContactImportRowName => 'Nome';
+
+  @override
+  String get meshcoreContactImportRowPubkey => 'Chiave pubblica';
+
+  @override
+  String get meshcoreContactImportRowLastSeen => 'Ultima volta';
+
+  @override
+  String get meshcoreContactImportRowLocation => 'Posizione';
+
+  @override
+  String get meshcoreContactImportRowFormat => 'Formato';
+
+  @override
+  String get meshcoreContactImportLastSeenUnknown => 'Sconosciuto';
+
+  @override
+  String get meshcoreContactImportLocationUnknown => 'Non condivisa';
+
+  @override
   String get meshcoreShareContactCodeInfo =>
       'Condividi il tuo codice contatto per farti scrivere';
 

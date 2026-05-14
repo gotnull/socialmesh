@@ -9699,6 +9699,72 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreShareContact => 'Compartilhar contato';
 
   @override
+  String get meshcoreContactUrlCopied => 'URL do contato copiada';
+
+  @override
+  String get meshcoreContactExportFailed =>
+      'Não foi possível exportar o contato';
+
+  @override
+  String get meshcoreBroadcastSelfContact => 'Transmitir meu contato';
+
+  @override
+  String get meshcoreSelfContactBroadcasted => 'Cartão de contato enviado';
+
+  @override
+  String get meshcoreSelfContactBroadcastFailed =>
+      'Não foi possível transmitir o cartão de contato';
+
+  @override
+  String get meshcoreContactsAddFromClipboard =>
+      'Adicionar da área de transferência';
+
+  @override
+  String get meshcoreContactImportParseFailed =>
+      'Não foi possível interpretar a área de transferência como URL de contato';
+
+  @override
+  String get meshcoreContactImportConfirmTitle => 'Adicionar contato?';
+
+  @override
+  String get meshcoreContactImportConfirmAction => 'Adicionar contato';
+
+  @override
+  String get meshcoreContactImportConfirmFormatFull =>
+      'Completo (rota + localização)';
+
+  @override
+  String get meshcoreContactImportConfirmFormatLegacy => 'Legado (apenas nome)';
+
+  @override
+  String get meshcoreContactImported => 'Contato adicionado';
+
+  @override
+  String get meshcoreContactImportFailed =>
+      'Não foi possível adicionar o contato';
+
+  @override
+  String get meshcoreContactImportRowName => 'Nome';
+
+  @override
+  String get meshcoreContactImportRowPubkey => 'Chave pública';
+
+  @override
+  String get meshcoreContactImportRowLastSeen => 'Visto pela última vez';
+
+  @override
+  String get meshcoreContactImportRowLocation => 'Localização';
+
+  @override
+  String get meshcoreContactImportRowFormat => 'Formato';
+
+  @override
+  String get meshcoreContactImportLastSeenUnknown => 'Desconhecido';
+
+  @override
+  String get meshcoreContactImportLocationUnknown => 'Não compartilhada';
+
+  @override
   String get meshcoreShareContactCodeInfo =>
       'Compartilhe seu código de contato para outros te enviarem mensagens';
 

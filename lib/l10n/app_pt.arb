@@ -16261,6 +16261,66 @@
   "@meshcoreShareContact": {
     "description": "Contact options action label"
   },
+  "@meshcoreContactUrlCopied": {
+    "description": "D46-A - snackbar after copying a contact's meshcore:// URL to the clipboard"
+  },
+  "@meshcoreContactExportFailed": {
+    "description": "D46-A - error snackbar when CMD_EXPORT_CONTACT fails or times out"
+  },
+  "@meshcoreBroadcastSelfContact": {
+    "description": "D46-A - contact action that sends our own contact card zero-hop to nearby peers via CMD_SHARE_CONTACT"
+  },
+  "@meshcoreSelfContactBroadcasted": {
+    "description": "D46-A - success snackbar after CMD_SHARE_CONTACT succeeds"
+  },
+  "@meshcoreSelfContactBroadcastFailed": {
+    "description": "D46-A - error snackbar when CMD_SHARE_CONTACT fails"
+  },
+  "@meshcoreContactsAddFromClipboard": {
+    "description": "D46-A - top-level contacts-screen overflow action that reads a meshcore:// URL from the clipboard and previews the parsed contact"
+  },
+  "@meshcoreContactImportParseFailed": {
+    "description": "D46-A - snackbar when clipboard content does not match meshcore:// or the legacy contact-code format"
+  },
+  "@meshcoreContactImportConfirmTitle": {
+    "description": "D46-A - contact-import confirmation sheet title"
+  },
+  "@meshcoreContactImportConfirmAction": {
+    "description": "D46-A - contact-import confirmation sheet primary button"
+  },
+  "@meshcoreContactImportConfirmFormatFull": {
+    "description": "D46-A - format label for a meshcore:// (canonical) import preview"
+  },
+  "@meshcoreContactImportConfirmFormatLegacy": {
+    "description": "D46-A - format label for a legacy <pubkeyhex>:<name> import preview"
+  },
+  "@meshcoreContactImported": {
+    "description": "D46-A - success snackbar after CMD_IMPORT_CONTACT (or fallback CMD_ADD_UPDATE_CONTACT) succeeds"
+  },
+  "@meshcoreContactImportFailed": {
+    "description": "D46-A - error snackbar when the firmware rejects the import"
+  },
+  "@meshcoreContactImportRowName": {
+    "description": "D46-A - InfoTable row label for the parsed contact name on the confirmation sheet"
+  },
+  "@meshcoreContactImportRowPubkey": {
+    "description": "D46-A - InfoTable row label for the parsed contact's 8-char pubkey fingerprint"
+  },
+  "@meshcoreContactImportRowLastSeen": {
+    "description": "D46-A - InfoTable row label for the parsed contact's last-advert timestamp"
+  },
+  "@meshcoreContactImportRowLocation": {
+    "description": "D46-A - InfoTable row label for the parsed contact's GPS coordinates"
+  },
+  "@meshcoreContactImportRowFormat": {
+    "description": "D46-A - InfoTable row label for the import-format provenance (full vs legacy)"
+  },
+  "@meshcoreContactImportLastSeenUnknown": {
+    "description": "D46-A - placeholder for legacy imports that did not carry a last-seen timestamp"
+  },
+  "@meshcoreContactImportLocationUnknown": {
+    "description": "D46-A - placeholder for legacy imports that did not carry GPS coordinates"
+  },
   "@meshcoreShareContactCodeInfo": {
     "description": "QR share sheet info text for own contact code"
   },
@@ -38639,6 +38699,26 @@
   "meshcoreShareChannel": "Compartilhar canal",
   "meshcoreShareChannelSubtitle": "Compartilhe nome e PSK com outro dispositivo. Qualquer pessoa com este código pode entrar.",
   "meshcoreShareContact": "Compartilhar contato",
+  "meshcoreContactUrlCopied": "URL do contato copiada",
+  "meshcoreContactExportFailed": "Não foi possível exportar o contato",
+  "meshcoreBroadcastSelfContact": "Transmitir meu contato",
+  "meshcoreSelfContactBroadcasted": "Cartão de contato enviado",
+  "meshcoreSelfContactBroadcastFailed": "Não foi possível transmitir o cartão de contato",
+  "meshcoreContactsAddFromClipboard": "Adicionar da área de transferência",
+  "meshcoreContactImportParseFailed": "Não foi possível interpretar a área de transferência como URL de contato",
+  "meshcoreContactImportConfirmTitle": "Adicionar contato?",
+  "meshcoreContactImportConfirmAction": "Adicionar contato",
+  "meshcoreContactImportConfirmFormatFull": "Completo (rota + localização)",
+  "meshcoreContactImportConfirmFormatLegacy": "Legado (apenas nome)",
+  "meshcoreContactImported": "Contato adicionado",
+  "meshcoreContactImportFailed": "Não foi possível adicionar o contato",
+  "meshcoreContactImportRowName": "Nome",
+  "meshcoreContactImportRowPubkey": "Chave pública",
+  "meshcoreContactImportRowLastSeen": "Visto pela última vez",
+  "meshcoreContactImportRowLocation": "Localização",
+  "meshcoreContactImportRowFormat": "Formato",
+  "meshcoreContactImportLastSeenUnknown": "Desconhecido",
+  "meshcoreContactImportLocationUnknown": "Não compartilhada",
   "meshcoreShareContactCodeInfo": "Compartilhe seu código de contato para outros te enviarem mensagens",
   "meshcoreShellAddChannelHint": "Use o menu para criar ou entrar em um canal",
   "meshcoreShellAddContactHint": "Use o botão + para adicionar um contato",

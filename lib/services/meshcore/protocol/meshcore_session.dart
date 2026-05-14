@@ -1979,6 +1979,130 @@ class MeshCoreSession {
     return ok;
   }
 
+  /// D46-A: broadcast OUR contact card to nearby peers via
+  /// `CMD_SHARE_CONTACT 0x10`. The firmware re-broadcasts its stored
+  /// self-advertisement zero-hop; receiving radios see this as a
+  /// normal advert (`pushCodeNewAdvert 0x8A`).
+  ///
+  /// Wire payload: `[0x10][selfPubKey:32B]` (33 bytes total). Caller
+  /// passes the LOCAL device's pubkey (from `MeshCoreSelfInfo`);
+  /// firmware uses it to identify which contact card to broadcast.
+  ///
+  /// Returns `true` on `RESP_CODE_OK`, `false` on `RESP_CODE_ERR` or
+  /// timeout. The receive side is asynchronous — there's no per-peer
+  /// confirmation that an advert was heard.
+  Future<bool> shareSelfContact(
+    Uint8List selfPubKey, {
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    if (selfPubKey.length != meshCorePubKeySize) {
+      throw ArgumentError.value(
+        selfPubKey.length,
+        'selfPubKey.length',
+        'must be exactly $meshCorePubKeySize bytes',
+      );
+    }
+    AppLogging.meshcore('event=contact.share.attempted');
+    final response = await sendAndWait(
+      MeshCoreCommands.shareContact,
+      payload: Uint8List.fromList(selfPubKey),
+      expectedResponse: MeshCoreResponses.ok,
+      timeout: timeout,
+    );
+    final ok = response != null;
+    AppLogging.meshcore(
+      'event=contact.share.${ok ? "succeeded" : "failed"}',
+      error: !ok,
+    );
+    return ok;
+  }
+
+  /// D46-A: export the 135..147-byte canonical contact frame for the
+  /// contact identified by [pubKey] via `CMD_EXPORT_CONTACT 0x11`.
+  ///
+  /// Wire payload: `[0x11][pubKey:32B]` (33 bytes total). Firmware
+  /// replies with `RESP_CODE_EXPORT_CONTACT (0x0B)` whose payload is
+  /// the contact frame ready to round-trip through
+  /// `CMD_IMPORT_CONTACT` on another radio.
+  ///
+  /// Returns the frame bytes on success, null on timeout, error, or
+  /// a short frame (< 135 bytes) that the firmware shouldn't have
+  /// emitted but we reject defensively.
+  Future<Uint8List?> exportContact(
+    Uint8List pubKey, {
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    if (pubKey.length != meshCorePubKeySize) {
+      throw ArgumentError.value(
+        pubKey.length,
+        'pubKey.length',
+        'must be exactly $meshCorePubKeySize bytes',
+      );
+    }
+    AppLogging.meshcore('event=contact.export.attempted');
+    final response = await sendAndWait(
+      MeshCoreCommands.exportContact,
+      payload: Uint8List.fromList(pubKey),
+      expectedResponse: MeshCoreResponses.exportContact,
+      timeout: timeout,
+    );
+    if (response == null) {
+      AppLogging.meshcore('event=contact.export.failed', error: true);
+      return null;
+    }
+    final payload = Uint8List.fromList(response.payload);
+    if (payload.length < 135 || payload.length > 147) {
+      AppLogging.meshcore(
+        'event=contact.export.malformed bytes=${payload.length}',
+        error: true,
+      );
+      return null;
+    }
+    AppLogging.meshcore(
+      'event=contact.export.succeeded bytes=${payload.length}',
+    );
+    return payload;
+  }
+
+  /// D46-A: push a contact frame into the firmware roster via
+  /// `CMD_IMPORT_CONTACT 0x12`. Caller is responsible for frame
+  /// validity (`MeshCoreContactUrl.decode` validates byte-range);
+  /// the firmware performs its own structural check and returns
+  /// `RESP_CODE_ERR` on rejection.
+  ///
+  /// Wire payload: `[0x12][frame:135..147B]`.
+  ///
+  /// Returns `true` on `RESP_CODE_OK`, `false` on `RESP_CODE_ERR`,
+  /// timeout, or an out-of-range frame (caught client-side before
+  /// hitting the wire).
+  Future<bool> importContact(
+    Uint8List contactFrame, {
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    if (contactFrame.length < 135 || contactFrame.length > 147) {
+      throw ArgumentError.value(
+        contactFrame.length,
+        'contactFrame.length',
+        'must be in 135..147 bytes',
+      );
+    }
+    AppLogging.meshcore(
+      'event=contact.import.attempted bytes=${contactFrame.length}',
+    );
+    final response = await sendAndWait(
+      MeshCoreCommands.importContact,
+      payload: Uint8List.fromList(contactFrame),
+      expectedResponse: MeshCoreResponses.ok,
+      timeout: timeout,
+    );
+    final ok = response != null;
+    AppLogging.meshcore(
+      'event=contact.import.${ok ? "succeeded" : "failed"}',
+      error: !ok,
+    );
+    return ok;
+  }
+
   /// D29 Part C: reset the firmware-side learned route for a contact
   /// (`CMD_RESET_PATH` 0x0D). After reset the radio's `out_path_len`
   /// for the contact is set to flood/unknown and re-discovered on the

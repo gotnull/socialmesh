@@ -14,7 +14,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/logging.dart';
 import '../core/transport.dart';
 import '../models/mesh_device.dart';
-import '../models/meshcore_contact.dart';
+// D46-A: `parseContact` is imported via meshcore_messages.dart below
+// (typed `ParseResult<MeshCoreContactInfo>`). The model-side weak
+// variant (`MeshCoreContact?` direct return) is hidden so callers
+// here disambiguate cleanly.
+import '../models/meshcore_contact.dart' hide parseContact;
+import '../models/meshcore_contact_import_preview.dart';
 import '../models/meshcore_channel.dart';
 import '../models/meshcore_path_overlay.dart';
 import '../services/meshcore/protocol/meshcore_cayenne_lpp.dart';
@@ -23,6 +28,7 @@ import '../services/meshcore/meshcore_adapter.dart';
 import '../services/meshcore/meshcore_detector.dart';
 import '../services/meshcore/meshcore_send_rate_limiter.dart';
 import '../services/meshcore/protocol/meshcore_capture.dart';
+import '../services/meshcore/protocol/meshcore_contact_url.dart';
 import '../services/meshcore/protocol/meshcore_messages.dart';
 import '../services/meshcore/protocol/meshcore_session.dart';
 import '../services/meshcore/storage/meshcore_channel_prefs_store.dart';
@@ -618,6 +624,163 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
     if (!ok) return false;
     await refresh();
     return true;
+  }
+
+  /// D46-A: broadcast OUR contact card to nearby peers via
+  /// `CMD_SHARE_CONTACT 0x10`. Pulls the local device's pubkey from
+  /// [meshCoreSelfInfoProvider] — the firmware uses it to identify
+  /// which self-advertisement to broadcast.
+  ///
+  /// Returns `true` on `RESP_CODE_OK`, `false` on no session, no
+  /// self-info loaded, firmware error, or timeout.
+  Future<bool> broadcastSelfContact() async {
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null) {
+      AppLogging.meshcore(
+        'event=contact.share.skipped reason=no_session',
+        error: true,
+      );
+      return false;
+    }
+    final selfInfo = ref.read(meshCoreSelfInfoProvider).selfInfo;
+    if (selfInfo == null || selfInfo.pubKey.isEmpty) {
+      AppLogging.meshcore(
+        'event=contact.share.skipped reason=no_self_info',
+        error: true,
+      );
+      return false;
+    }
+    return session.shareSelfContact(selfInfo.pubKey);
+  }
+
+  /// D46-A: export [contact] from firmware and return the canonical
+  /// `meshcore://<hex>` URL. Returns `null` on no session, firmware
+  /// error, malformed frame, or timeout.
+  Future<String?> exportContactUrl(MeshCoreContact contact) async {
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null) {
+      AppLogging.meshcore(
+        'event=contact.export.skipped reason=no_session',
+        error: true,
+      );
+      return null;
+    }
+    final frame = await session.exportContact(contact.publicKey);
+    if (frame == null) return null;
+    try {
+      return MeshCoreContactUrl.encode(frame);
+    } on ArgumentError {
+      // Session already validates the 135..147 byte range, but
+      // defence-in-depth: if a future firmware emits a longer frame,
+      // surface the failure rather than encode garbage.
+      AppLogging.meshcore(
+        'event=contact.export.encode_failed bytes=${frame.length}',
+        error: true,
+      );
+      return null;
+    }
+  }
+
+  /// D46-A: parse a `meshcore://<hex>` (or legacy `<pubkeyhex>:<name>`)
+  /// clipboard payload into a preview struct ready for the
+  /// confirmation sheet. Synchronous — no firmware round-trip.
+  ///
+  /// Returns `null` when the input matches neither format or is
+  /// otherwise unparseable.
+  MeshCoreContactImportPreview? previewContactImport(String text) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return null;
+
+    // Try modern format first.
+    final frame = MeshCoreContactUrl.decode(trimmed);
+    if (frame != null) {
+      final parseResult = parseContact(frame);
+      if (!parseResult.isSuccess) {
+        AppLogging.meshcore(
+          'event=contact.import.preview.failed reason=parse_modern',
+          error: true,
+        );
+        return null;
+      }
+      final info = parseResult.value!;
+      final contact = MeshCoreContact(
+        publicKey: info.publicKey,
+        name: info.name,
+        type: info.advType,
+        pathLength: info.pathLength,
+        path: info.pathBytes,
+        latitude: info.latitudeDegrees,
+        longitude: info.longitudeDegrees,
+        lastSeen: DateTime.fromMillisecondsSinceEpoch(info.lastMod * 1000),
+      );
+      return MeshCoreContactImportPreview(
+        format: MeshCoreContactImportFormat.modern,
+        contact: contact,
+        pubKeyFingerprint8: _firstNHex(info.publicKey, 8),
+        frameBytes: frame,
+      );
+    }
+
+    // Fall back to the legacy `<pubkeyhex>:<name>` form.
+    final legacy = parseLegacyContactCode(trimmed);
+    if (legacy == null) {
+      AppLogging.meshcore(
+        'event=contact.import.preview.failed reason=unrecognized_format',
+        error: true,
+      );
+      return null;
+    }
+    return MeshCoreContactImportPreview(
+      format: MeshCoreContactImportFormat.legacy,
+      contact: legacy,
+      pubKeyFingerprint8: _firstNHex(legacy.publicKey, 8),
+    );
+  }
+
+  /// D46-A: send a previewed contact to firmware. Routes through
+  /// `CMD_IMPORT_CONTACT 0x12` (full-frame) when the preview is
+  /// modern; otherwise falls through to the D29 `addUpdateContact`
+  /// path (the legacy text-form cannot round-trip the canonical
+  /// frame).
+  ///
+  /// Returns `true` on firmware acceptance + a successful contact
+  /// list refresh.
+  Future<bool> commitContactImport(MeshCoreContactImportPreview preview) async {
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null) {
+      AppLogging.meshcore(
+        'event=contact.import.commit.skipped reason=no_session',
+        error: true,
+      );
+      return false;
+    }
+    bool ok;
+    if (preview.isFullFrame) {
+      ok = await session.importContact(preview.frameBytes!);
+    } else {
+      ok = await session.addUpdateContact(
+        pubKey: preview.contact.publicKey,
+        advType: preview.contact.type,
+        name: preview.contact.name,
+        flags: 0,
+        pathLength: preview.contact.pathLength,
+        pathBytes: preview.contact.path,
+        latitude: preview.contact.latitude,
+        longitude: preview.contact.longitude,
+      );
+    }
+    if (!ok) return false;
+    await refresh();
+    return true;
+  }
+
+  static String _firstNHex(Uint8List bytes, int n) {
+    final take = bytes.length < (n ~/ 2) ? bytes.length : (n ~/ 2);
+    final sb = StringBuffer();
+    for (int i = 0; i < take; i++) {
+      sb.write(bytes[i].toRadixString(16).padLeft(2, '0'));
+    }
+    return sb.toString();
   }
 
   /// D34c-A: persist a successful trace's hop bytes back to the

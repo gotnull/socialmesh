@@ -9718,6 +9718,68 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreShareContact => 'Поділитися контактом';
 
   @override
+  String get meshcoreContactUrlCopied => 'Contact URL copied';
+
+  @override
+  String get meshcoreContactExportFailed => 'Could not export contact';
+
+  @override
+  String get meshcoreBroadcastSelfContact => 'Broadcast my contact';
+
+  @override
+  String get meshcoreSelfContactBroadcasted => 'Your contact card sent';
+
+  @override
+  String get meshcoreSelfContactBroadcastFailed =>
+      'Could not broadcast contact card';
+
+  @override
+  String get meshcoreContactsAddFromClipboard => 'Add from clipboard';
+
+  @override
+  String get meshcoreContactImportParseFailed =>
+      'Could not parse clipboard as a contact URL';
+
+  @override
+  String get meshcoreContactImportConfirmTitle => 'Add contact?';
+
+  @override
+  String get meshcoreContactImportConfirmAction => 'Add contact';
+
+  @override
+  String get meshcoreContactImportConfirmFormatFull => 'Full (path + location)';
+
+  @override
+  String get meshcoreContactImportConfirmFormatLegacy => 'Legacy (name only)';
+
+  @override
+  String get meshcoreContactImported => 'Contact added';
+
+  @override
+  String get meshcoreContactImportFailed => 'Could not add contact';
+
+  @override
+  String get meshcoreContactImportRowName => 'Name';
+
+  @override
+  String get meshcoreContactImportRowPubkey => 'Pubkey';
+
+  @override
+  String get meshcoreContactImportRowLastSeen => 'Last seen';
+
+  @override
+  String get meshcoreContactImportRowLocation => 'Location';
+
+  @override
+  String get meshcoreContactImportRowFormat => 'Format';
+
+  @override
+  String get meshcoreContactImportLastSeenUnknown => 'Unknown';
+
+  @override
+  String get meshcoreContactImportLocationUnknown => 'Not shared';
+
+  @override
   String get meshcoreShareContactCodeInfo =>
       'Поділіться своїм контактним кодом, щоб інші могли вам написати';
 

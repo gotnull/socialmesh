@@ -255,14 +255,31 @@ MeshCoreContact? parseContact(Uint8List payload) {
   );
 }
 
-/// Generate contact code for sharing (base64 of public key + name).
+/// D46-A: legacy SocialMesh-only `<pubkeyhex>:<name>` contact-code
+/// format. Pre-D46-A this was the primary share path; superseded by
+/// the canonical `meshcore://<hex>` URL form in
+/// `lib/services/meshcore/protocol/meshcore_contact_url.dart`.
+///
+/// Still used by:
+///   - the discovery screen's "copy code" affordance (a heard advert
+///     isn't yet in the firmware roster, so `CMD_EXPORT_CONTACT` is
+///     not available — the stub-only legacy form is the honest
+///     fallback).
+///   - the typed-contact-code paste sheet on the contacts screen
+///     (one-release backwards-compat for users with saved codes).
+///
+/// New paths should prefer `MeshCoreContactUrl.encode` +
+/// `meshCoreContactsProvider.exportContactUrl` for share, and
+/// `previewContactImport` for import.
 String generateContactCode(MeshCoreContact contact) {
-  // Simple format: pubKey:name
-  // Could be encoded as QR or shared as text
   return '${contact.publicKeyHex}:${contact.name}';
 }
 
-/// Parse contact code from scanned/entered value.
+/// D46-A: paired legacy parser. See [generateContactCode] for the
+/// deprecation note. New code paths should call `previewContactImport`
+/// on `meshCoreContactsProvider` — it accepts both `meshcore://<hex>`
+/// and the legacy `<pubkeyhex>:<name>` form and surfaces a typed
+/// preview suitable for a confirmation sheet.
 MeshCoreContact? parseContactCode(String code) {
   final parts = code.split(':');
   if (parts.length < 2) return null;
