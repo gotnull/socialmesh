@@ -108,6 +108,7 @@ class AppLogging {
   static bool? _mqttProxyLoggingEnabled;
   static bool? _meshcoreLoggingEnabled;
   static bool? _meshcoreLoggingLocationEnabled;
+  static bool? _platformLoggingEnabled;
   static bool? _forceEmptyStates;
   static Logger? _bleLogger;
   static Logger? _mapLogger;
@@ -1001,6 +1002,23 @@ class AppLogging {
     );
   }
 
+  /// Platform capability resolution + multi-platform diagnostics. Sparse,
+  /// transition-based events: capability bundle resolved at boot, transport
+  /// fallback decisions when the requested transport is unsupported on the
+  /// current host, desktop SQLite ffi init, web/desktop guard hits.
+  ///
+  /// Enabled by default so multi-platform misconfigurations are visible in
+  /// device logs. Override with PLATFORM_LOGGING_ENABLED=false.
+  static bool get platformLoggingEnabled {
+    _platformLoggingEnabled ??=
+        _safeGetEnv('PLATFORM_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    return _platformLoggingEnabled!;
+  }
+
+  static void platform(String message) {
+    if (platformLoggingEnabled) debugPrint('Platform: $message');
+  }
+
   /// Short fingerprint for a public-key byte string suitable for log
   /// lines. Format: `<lenB:first4…last4hex>`. Empty/null renders as
   /// `0B:none`. Keys ≤8 bytes are emitted in full hex (still safe — too
@@ -1129,6 +1147,7 @@ class AppLogging {
     _mqttProxyLoggingEnabled = null;
     _meshcoreLoggingEnabled = null;
     _meshcoreLoggingLocationEnabled = null;
+    _platformLoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }

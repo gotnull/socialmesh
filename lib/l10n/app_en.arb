@@ -22225,6 +22225,34 @@
             }
         }
     },
+    "scannerUnsupportedBleTitle": "BLE not available",
+    "@scannerUnsupportedBleTitle": {
+        "description": "Title shown on the scanner screen when the current host platform cannot use Bluetooth (typically desktop or web)."
+    },
+    "scannerUnsupportedBleDescription": "This build is running on a platform without a Bluetooth radio. Connect a SocialMesh-compatible device over the network instead.",
+    "@scannerUnsupportedBleDescription": {
+        "description": "Description shown on the scanner screen explaining why BLE is unavailable and pointing to the network connection workflow."
+    },
+    "scannerUnsupportedBleAction": "Use network connection",
+    "@scannerUnsupportedBleAction": {
+        "description": "Primary action label that switches the scanner to the network connection workflow when BLE is unavailable."
+    },
+    "scannerUnsupportedSerialTitle": "USB serial not available",
+    "@scannerUnsupportedSerialTitle": {
+        "description": "Title shown on the scanner screen when USB serial transport is unsupported on the current host platform."
+    },
+    "scannerUnsupportedSerialDescription": "This build cannot access USB serial devices. Use Bluetooth or a network connection instead.",
+    "@scannerUnsupportedSerialDescription": {
+        "description": "Description shown on the scanner screen explaining why USB serial transport is unavailable."
+    },
+    "scannerWebDashboardTitle": "Dashboard mode",
+    "@scannerWebDashboardTitle": {
+        "description": "Title shown to web users explaining that direct radio access is not possible from the browser build."
+    },
+    "scannerWebDashboardDescription": "SocialMesh on the web runs in dashboard mode: it views mesh activity synced from your paired mobile device but cannot connect to a radio directly. Open SocialMesh on your phone to pair a device.",
+    "@scannerWebDashboardDescription": {
+        "description": "Description shown to web users explaining the dashboard-only browser build and how to enable a real connection."
+    },
     "searchProductsBrowseByCategory": "Browse by Category",
     "@searchProductsBrowseByCategory": {
         "description": "UI text: search products browse by category"

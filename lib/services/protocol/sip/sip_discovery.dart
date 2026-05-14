@@ -865,7 +865,7 @@ class SipDiscovery {
   void _evictOldest() {
     if (_cache.isEmpty) return;
     int? oldestNodeId;
-    int oldestMs = 0x7FFFFFFFFFFFFFFF;
+    int oldestMs = 0x1FFFFFFFFFFFFF;
     for (final entry in _cache.entries) {
       if (entry.value.lastSeenMs < oldestMs) {
         oldestMs = entry.value.lastSeenMs;
@@ -917,7 +917,7 @@ class SipDiscovery {
     while (_lastRollcallRespMs.length > SipConstants.maxRollcallRespTracked) {
       // Evict oldest entry.
       int? oldestKey;
-      int oldestMs = 0x7FFFFFFFFFFFFFFF;
+      int oldestMs = 0x1FFFFFFFFFFFFF;
       for (final entry in _lastRollcallRespMs.entries) {
         if (entry.value < oldestMs) {
           oldestMs = entry.value;

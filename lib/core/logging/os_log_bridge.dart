@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -24,7 +23,7 @@ class OsLogBridge {
   static void setup() {
     if (_installed) return;
     if (!kDebugMode) return;
-    if (!Platform.isIOS) return;
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) return;
     _installed = true;
 
     final originalDebugPrint = debugPrint;

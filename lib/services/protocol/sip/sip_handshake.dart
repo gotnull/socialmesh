@@ -1418,7 +1418,7 @@ class SipHandshakeManager {
     // Enforce max completed results.
     while (_completed.length > SipConstants.maxCompletedResults) {
       int? oldestKey;
-      int oldestMs = 0x7FFFFFFFFFFFFFFF;
+      int oldestMs = 0x1FFFFFFFFFFFFF;
       for (final entry in _completed.entries) {
         if (entry.value.completedAtMs < oldestMs) {
           oldestMs = entry.value.completedAtMs;
@@ -1442,7 +1442,7 @@ class SipHandshakeManager {
   void _boundFailCooldownMap() {
     while (_failCooldownMs.length > SipConstants.maxTrackedPeers) {
       int? oldestKey;
-      int oldestMs = 0x7FFFFFFFFFFFFFFF;
+      int oldestMs = 0x1FFFFFFFFFFFFF;
       for (final entry in _failCooldownMs.entries) {
         if (entry.value < oldestMs) {
           oldestMs = entry.value;

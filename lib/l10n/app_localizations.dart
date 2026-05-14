@@ -28193,6 +28193,48 @@ abstract class AppLocalizations {
   /// **'Version v{version}'**
   String scannerVersionTextShort(String version);
 
+  /// Title shown on the scanner screen when the current host platform cannot use Bluetooth (typically desktop or web).
+  ///
+  /// In en, this message translates to:
+  /// **'BLE not available'**
+  String get scannerUnsupportedBleTitle;
+
+  /// Description shown on the scanner screen explaining why BLE is unavailable and pointing to the network connection workflow.
+  ///
+  /// In en, this message translates to:
+  /// **'This build is running on a platform without a Bluetooth radio. Connect a SocialMesh-compatible device over the network instead.'**
+  String get scannerUnsupportedBleDescription;
+
+  /// Primary action label that switches the scanner to the network connection workflow when BLE is unavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Use network connection'**
+  String get scannerUnsupportedBleAction;
+
+  /// Title shown on the scanner screen when USB serial transport is unsupported on the current host platform.
+  ///
+  /// In en, this message translates to:
+  /// **'USB serial not available'**
+  String get scannerUnsupportedSerialTitle;
+
+  /// Description shown on the scanner screen explaining why USB serial transport is unavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This build cannot access USB serial devices. Use Bluetooth or a network connection instead.'**
+  String get scannerUnsupportedSerialDescription;
+
+  /// Title shown to web users explaining that direct radio access is not possible from the browser build.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard mode'**
+  String get scannerWebDashboardTitle;
+
+  /// Description shown to web users explaining the dashboard-only browser build and how to enable a real connection.
+  ///
+  /// In en, this message translates to:
+  /// **'SocialMesh on the web runs in dashboard mode: it views mesh activity synced from your paired mobile device but cannot connect to a radio directly. Open SocialMesh on your phone to pair a device.'**
+  String get scannerWebDashboardDescription;
+
   /// UI text: search products browse by category
   ///
   /// In en, this message translates to:

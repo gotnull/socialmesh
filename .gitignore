@@ -46,6 +46,7 @@ AGENTS.md
 
 # Firebase Hosting content (landing page, legal docs, admin tools)
 /web/
+/web_marketing/
 /web-admin-redirect/
 /web-bugs-redirect/
 /web-redirect/

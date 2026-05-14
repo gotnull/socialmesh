@@ -6,6 +6,12 @@ import 'package:usb_serial/usb_serial.dart';
 import '../../core/logging.dart';
 import '../../core/transport.dart';
 
+/// Conditional-import factory entrypoint. Native builds resolve this
+/// symbol; the web build resolves the stub in `usb_transport_stub.dart`.
+/// Always called via `usb_transport_factory.dart` so the call site stays
+/// platform-neutral.
+DeviceTransport createUsbTransport() => UsbTransport();
+
 /// USB Serial implementation of DeviceTransport
 class UsbTransport implements DeviceTransport {
   final StreamController<DeviceConnectionState> _stateController;

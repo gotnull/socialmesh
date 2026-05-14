@@ -16129,6 +16129,30 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get scannerUnsupportedBleTitle => 'BLE not available';
+
+  @override
+  String get scannerUnsupportedBleDescription =>
+      'This build is running on a platform without a Bluetooth radio. Connect a SocialMesh-compatible device over the network instead.';
+
+  @override
+  String get scannerUnsupportedBleAction => 'Use network connection';
+
+  @override
+  String get scannerUnsupportedSerialTitle => 'USB serial not available';
+
+  @override
+  String get scannerUnsupportedSerialDescription =>
+      'This build cannot access USB serial devices. Use Bluetooth or a network connection instead.';
+
+  @override
+  String get scannerWebDashboardTitle => 'Dashboard mode';
+
+  @override
+  String get scannerWebDashboardDescription =>
+      'SocialMesh on the web runs in dashboard mode: it views mesh activity synced from your paired mobile device but cannot connect to a radio directly. Open SocialMesh on your phone to pair a device.';
+
+  @override
   String get searchProductsBrowseByCategory => 'Browse by Category';
 
   @override

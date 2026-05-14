@@ -14,12 +14,15 @@ import '../config/admin_config.dart';
 
 import '../core/constants.dart';
 import '../core/logging.dart';
+import '../core/platform/noop_device_transport.dart';
+import '../core/platform/platform_capabilities.dart';
+import '../core/platform/platform_capabilities_provider.dart';
 import '../core/safety/error_handler.dart';
 import '../core/transport.dart';
 import '../dev/demo/demo.dart';
 import '../services/transport/ble_transport.dart';
 import '../services/transport/network_transport.dart';
-import '../services/transport/usb_transport.dart';
+import '../services/transport/usb_transport_factory.dart';
 import '../services/backup/device_config_backup_service.dart';
 import '../services/protocol/admin_target.dart';
 import '../services/protocol/meshtastic_readiness_flag.dart';
@@ -148,8 +151,17 @@ class AppInitNotifier extends Notifier<AppInitState> {
     _transition(AppInitState.initializing, 'initialize');
     try {
       // Phase 1: Critical services (fast, <500ms target)
-      // Initialize notification service
-      await NotificationService().initialize();
+      // Initialize notification service. Gated on capability: on platforms
+      // without notifications (web today, desktop pending wiring) this
+      // call would reach dart:io Platform.is* internally and crash boot.
+      final caps = ref.read(platformCapabilitiesProvider);
+      if (caps.supportsNotifications) {
+        await NotificationService().initialize();
+      } else {
+        AppLogging.platform(
+          'AppInit: notifications unsupported on ${caps.platformFamily.name} - skipping NotificationService init',
+        );
+      }
 
       // Initialize storage services
       final settings = await ref.read(settingsServiceProvider.future);
@@ -818,19 +830,72 @@ final networkTransportPortProvider =
     NotifierProvider<_NetworkPortNotifier, int>(_NetworkPortNotifier.new);
 
 final transportProvider = Provider<DeviceTransport>((ref) {
-  final type = ref.watch(transportTypeProvider);
+  final caps = ref.watch(platformCapabilitiesProvider);
+  final requested = ref.watch(transportTypeProvider);
+  final resolved = _resolveTransportType(requested, caps);
 
-  switch (type) {
+  if (!_transportSupported(resolved, caps)) {
+    return NoopDeviceTransport(requested);
+  }
+
+  switch (resolved) {
     case TransportType.ble:
       return BleTransport();
     case TransportType.usb:
-      return UsbTransport();
+      return createUsbTransport();
     case TransportType.network:
       final host = ref.watch(networkTransportHostProvider);
       final port = ref.watch(networkTransportPortProvider);
       return NetworkTransport(host: host, port: port);
   }
 });
+
+/// Map a requested transport type to one supported by the current host.
+///
+/// Falls through in priority order `network -> ble -> usb`. If none of
+/// the three is supported on this host (web today), the caller receives
+/// the originally-requested type back and is expected to use the
+/// [NoopDeviceTransport] returned by [_unsupportedTransport]. Splitting
+/// these two responsibilities keeps the supported-platform switch in
+/// `transportProvider` readable while preserving the original intent for
+/// logging.
+TransportType _resolveTransportType(
+  TransportType requested,
+  PlatformCapabilities caps,
+) {
+  if (_transportSupported(requested, caps)) return requested;
+
+  for (final candidate in const [
+    TransportType.network,
+    TransportType.ble,
+    TransportType.usb,
+  ]) {
+    if (_transportSupported(candidate, caps)) {
+      AppLogging.platform(
+        'transportProvider: requested $requested unsupported on '
+        '${caps.platformFamily.name} - falling back to $candidate',
+      );
+      return candidate;
+    }
+  }
+
+  AppLogging.platform(
+    'transportProvider: no supported transport on ${caps.platformFamily.name} '
+    '- returning Noop for $requested',
+  );
+  return requested;
+}
+
+bool _transportSupported(TransportType type, PlatformCapabilities caps) {
+  switch (type) {
+    case TransportType.ble:
+      return caps.supportsBle;
+    case TransportType.usb:
+      return caps.supportsSerial;
+    case TransportType.network:
+      return caps.supportsTcp;
+  }
+}
 
 /// Dedicated BLE scanner — always a `BleTransport`, independent of the
 /// session's active [transportTypeProvider]. Scanner UI uses this so a
@@ -844,6 +909,16 @@ final transportProvider = Provider<DeviceTransport>((ref) {
 /// [prepareForDeviceTransition] which flips [transportTypeProvider]
 /// and then uses `transportProvider` for the actual connection.
 final bleScanTransportProvider = Provider<DeviceTransport>((ref) {
+  final caps = ref.watch(platformCapabilitiesProvider);
+  if (!caps.supportsBle) {
+    AppLogging.platform(
+      'bleScanTransportProvider: BLE unsupported on '
+      '${caps.platformFamily.name} - returning NoopDeviceTransport',
+    );
+    final noop = NoopDeviceTransport(TransportType.ble);
+    ref.onDispose(noop.dispose);
+    return noop;
+  }
   final transport = BleTransport();
   ref.onDispose(transport.dispose);
   return transport;

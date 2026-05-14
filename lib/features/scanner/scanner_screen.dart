@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 // lint-allow: scaffold — BLE connecting state with animated fullscreen overlay
 import 'dart:async';
-import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 
@@ -22,10 +21,13 @@ import '../../core/theme.dart';
 import '../../core/widgets/connecting_content.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/animated_empty_state.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/status_banner.dart';
+import '../../core/platform/platform_capabilities.dart';
+import '../../core/platform/platform_capabilities_provider.dart';
 import '../../models/mesh_device.dart';
 import '../../services/meshcore/meshcore_detector.dart';
 import '../../providers/meshcore_providers.dart';
@@ -934,7 +936,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
             final systemDevices = await FlutterBluePlus.systemDevices([]);
             for (final device in systemDevices) {
               try {
-                if (Platform.isAndroid) {
+                if (defaultTargetPlatform == TargetPlatform.android) {
                   await device.clearGattCache();
                 }
                 if (device.isConnected) {
@@ -965,7 +967,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                   'forcing cleanup...',
                 );
                 try {
-                  if (Platform.isAndroid) {
+                  if (defaultTargetPlatform == TargetPlatform.android) {
                     await device.clearGattCache();
                     AppLogging.connection(
                       '📡 SCANNER: Cleared GATT cache (Android)',
@@ -983,7 +985,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
               }
             }
 
-            if (Platform.isAndroid) {
+            if (defaultTargetPlatform == TargetPlatform.android) {
               try {
                 final bondedDevices = await FlutterBluePlus.bondedDevices;
                 for (final device in bondedDevices) {
@@ -1021,7 +1023,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         }
 
         // 5. Wait for BLE subsystem to fully reset
-        int resetDelay = Platform.isAndroid ? 1500 : 1000;
+        int resetDelay = defaultTargetPlatform == TargetPlatform.android
+            ? 1500
+            : 1000;
         if (userJustDisconnected) {
           resetDelay += 1000;
           AppLogging.connection(
@@ -2148,6 +2152,18 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   }
 
   Widget _buildBody(BuildContext context) {
+    final caps = ref.watch(platformCapabilitiesProvider);
+    if (!caps.supportsBle && !caps.supportsSerial && !caps.supportsTcp) {
+      AppLogging.platform(
+        'scanner: no transport supported on ${caps.platformFamily.name} '
+        '- rendering dashboard-mode empty state',
+      );
+      return _UnsupportedScannerView(
+        caps: caps,
+        isOnboarding: widget.isOnboarding,
+      );
+    }
+
     // When connecting, use EXACT same structure as onboarding
     if (_connecting) {
       return Scaffold(
@@ -3092,6 +3108,63 @@ class _DeviceDetailsTable extends StatelessWidget {
               ),
             );
           }).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+/// Shown when no transport is supported on the current host (web today).
+/// Mobile and desktop keep the full scanner UI; this view only renders on
+/// the foundation-pass dashboard-mode build.
+class _UnsupportedScannerView extends StatelessWidget {
+  final PlatformCapabilities caps;
+  final bool isOnboarding;
+
+  const _UnsupportedScannerView({
+    required this.caps,
+    required this.isOnboarding,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isWeb = caps.platformFamily == PlatformFamily.web;
+    final title = isWeb
+        ? context.l10n.scannerWebDashboardTitle
+        : context.l10n.scannerUnsupportedBleTitle;
+    final description = isWeb
+        ? context.l10n.scannerWebDashboardDescription
+        : context.l10n.scannerUnsupportedBleDescription;
+
+    return GlassScaffold.body(
+      automaticallyImplyLeading: false,
+      leading: isOnboarding
+          ? IconButton(
+              icon: Icon(Icons.arrow_back, color: context.textPrimary),
+              onPressed: () => Navigator.of(context).pop(),
+            )
+          : null,
+      titleWidget: Text(
+        context.l10n.scannerDevicesTitle,
+        style: TextStyle(
+          fontSize: 28,
+          fontWeight: FontWeight.w600,
+          color: context.textPrimary,
+        ),
+      ),
+      body: Center(
+        child: AnimatedEmptyState(
+          config: AnimatedEmptyStateConfig(
+            icons: const [
+              Icons.cloud_outlined,
+              Icons.devices_other_outlined,
+              Icons.public_outlined,
+            ],
+            taglines: [description],
+            titlePrefix: '',
+            titleKeyword: title,
+            titleSuffix: '',
+          ),
         ),
       ),
     );

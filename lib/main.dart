@@ -7,7 +7,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart'
+    show kDebugMode, kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,6 +29,9 @@ import 'core/theme.dart';
 import 'core/widgets/glass_scaffold.dart';
 import 'core/widgets/loading_indicator.dart';
 import 'core/transport.dart';
+import 'core/platform/platform_capabilities.dart';
+import 'core/platform/platform_capabilities_provider.dart';
+import 'core/platform/sqflite_init.dart';
 import 'services/protocol/protocol_service.dart' show OperationalReadiness;
 
 import 'services/transport/background_message_processor.dart';
@@ -138,15 +142,41 @@ Future<bool> get firebaseReady => firebaseReadyCompleter.future;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Resolve the host platform capability bundle once at boot. Every
+  // downstream init that today assumed mobile is gated on this; the
+  // resolved value is also pushed into the ProviderScope override at
+  // runApp so Riverpod consumers read the same answer.
+  final platformCapabilities = PlatformCapabilities.detect();
+  AppLogging.platform('boot: $platformCapabilities');
+
+  // Desktop persistence: sqflite needs the FFI backend before any
+  // openDatabase() call. Mobile platforms keep the default sqflite
+  // backend; web resolves the conditional-import stub (no-op).
+  if (platformCapabilities.supportsLocalDatabase &&
+      platformCapabilities.platformFamily == PlatformFamily.desktop) {
+    await initDesktopSqflite();
+    AppLogging.platform('boot: sqflite ffi backend activated for desktop');
+  }
+
   // Tee debugPrint into iOS os_log so Dart logs are visible via MCP log
-  // capture. Debug + iOS only — no-op everywhere else.
+  // capture. Debug + iOS only - no-op everywhere else.
   OsLogBridge.setup();
 
   // Initialize centralized error handler FIRST - catches errors during startup
   AppErrorHandler.initialize();
 
-  // Load environment variables
-  await dotenv.load(fileName: '.env');
+  // Load environment variables. Skipped on web because the .env asset
+  // contains values that crash flutter_dotenv's web parser (Uncaught
+  // SyntaxError during the fetched-asset parse step). Web is dashboard /
+  // read-only this pass and does not need runtime env values; the
+  // logging channels that read env vars all default-on when dotenv is
+  // unavailable (`_safeGetEnv` returns null and the channel uses its
+  // default).
+  if (platformCapabilities.platformFamily != PlatformFamily.web) {
+    await dotenv.load(fileName: '.env');
+  } else {
+    AppLogging.platform('boot: skipping dotenv.load on web');
+  }
 
   // Bridge category-based console logging into the in-app log viewer.
   // Categories that call _appLogSink (currently mqttProxy) will appear
@@ -161,11 +191,17 @@ Future<void> main() async {
     app_log.AppLogger().log(levels[level.clamp(0, 3)], source, message);
   });
 
-  FlutterBluePlus.setLogLevel(LogLevel.none);
-
-  // Initialize Android foreground service configuration for background BLE.
-  // Must be called before any FlutterForegroundTask.start() call.
-  BackgroundBleService.instance.init();
+  if (platformCapabilities.supportsBle) {
+    FlutterBluePlus.setLogLevel(LogLevel.none);
+    // Initialize Android foreground service configuration for background BLE.
+    // Must be called before any FlutterForegroundTask.start() call.
+    BackgroundBleService.instance.init();
+  } else {
+    AppLogging.platform(
+      'boot: BLE unsupported on this platform - skipping flutter_blue_plus '
+      'and BackgroundBleService init',
+    );
+  }
 
   // Initialize profanity checker (load banned words from assets)
   await ProfanityChecker.instance.load();
@@ -206,7 +242,7 @@ Future<void> main() async {
     // test number. Release builds strip this block entirely because
     // kDebugMode is false — so shipped App Store binaries always run
     // real APN + real reCAPTCHA + real SMS.
-    if (kDebugMode && Platform.isIOS) {
+    if (kDebugMode && !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       try {
         await FirebaseAuth.instance.setSettings(
           appVerificationDisabledForTesting: true,
@@ -251,7 +287,14 @@ Future<void> main() async {
     }),
   );
 
-  runApp(const ProviderScope(child: SocialMeshApp()));
+  runApp(
+    ProviderScope(
+      overrides: [
+        platformCapabilitiesProvider.overrideWithValue(platformCapabilities),
+      ],
+      child: const SocialMeshApp(),
+    ),
+  );
 }
 
 /// Ensure the user has a Firebase auth identity.
