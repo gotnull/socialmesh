@@ -7928,6 +7928,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshcoreChatMessageDeleteFailed => 'Could not delete message';
 
   @override
+  String get meshcoreChatHistoryEnd => 'No older messages';
+
+  @override
+  String get meshcoreChatQuoteJumpUnavailable => 'Source message not available';
+
+  @override
   String get meshcoreChatNode => 'Chat Node';
 
   @override

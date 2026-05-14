@@ -8025,6 +8025,13 @@ class AppLocalizationsIt extends AppLocalizations {
       'Impossibile eliminare il messaggio';
 
   @override
+  String get meshcoreChatHistoryEnd => 'Nessun messaggio più vecchio';
+
+  @override
+  String get meshcoreChatQuoteJumpUnavailable =>
+      'Messaggio originale non disponibile';
+
+  @override
   String get meshcoreChatNode => 'Nodo Chat';
 
   @override

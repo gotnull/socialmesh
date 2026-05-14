@@ -8010,6 +8010,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Não foi possível excluir a mensagem';
 
   @override
+  String get meshcoreChatHistoryEnd => 'Nenhuma mensagem antiga';
+
+  @override
+  String get meshcoreChatQuoteJumpUnavailable =>
+      'Mensagem original indisponível';
+
+  @override
   String get meshcoreChatNode => 'Nó de Chat';
 
   @override

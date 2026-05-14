@@ -10721,6 +10721,14 @@
     "@meshcoreChatMessageDeleteFailed": {
         "description": "Error snackbar shown when deleting a message from local storage failed"
     },
+    "meshcoreChatHistoryEnd": "No older messages",
+    "@meshcoreChatHistoryEnd": {
+        "description": "D43-A3 - Footer rendered above the oldest loaded message when paging exhausts the stored history (real bottom of history OR the 500-message trim wall — indistinguishable)"
+    },
+    "meshcoreChatQuoteJumpUnavailable": "Source message not available",
+    "@meshcoreChatQuoteJumpUnavailable": {
+        "description": "D43-A3 - Info snackbar shown when a reply quote-jump target could not be paged into the loaded window before the loadUntilContains bound was hit"
+    },
     "meshcoreChatNode": "Chat Node",
     "@meshcoreChatNode": {
         "description": "Device type label for chat nodes"

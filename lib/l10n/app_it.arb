@@ -14708,6 +14708,12 @@
   "@meshcoreChatMessageDeleted": {
     "description": "Snackbar confirmation after the long-press Delete locally action"
   },
+  "@meshcoreChatHistoryEnd": {
+    "description": "D43-A3 - Footer rendered above the oldest loaded message when paging exhausts the stored history (real bottom of history OR the 500-message trim wall — indistinguishable)"
+  },
+  "@meshcoreChatQuoteJumpUnavailable": {
+    "description": "D43-A3 - Info snackbar shown when a reply quote-jump target could not be paged into the loaded window before the loadUntilContains bound was hit"
+  },
   "@meshcoreChatNode": {
     "description": "Device type label for chat nodes"
   },
@@ -38159,6 +38165,8 @@
   "meshcoreChatMessageCopied": "Messaggio copiato",
   "meshcoreChatMessageDeleteFailed": "Impossibile eliminare il messaggio",
   "meshcoreChatMessageDeleted": "Messaggio eliminato",
+  "meshcoreChatHistoryEnd": "Nessun messaggio più vecchio",
+  "meshcoreChatQuoteJumpUnavailable": "Messaggio originale non disponibile",
   "meshcoreChatNode": "Nodo Chat",
   "meshcoreChatReplyMissingTarget": "Risposta a un messaggio non disponibile",
   "meshcoreChatReplyRateLimited": "Troppo traffico radio. Riprova tra {seconds}s.",

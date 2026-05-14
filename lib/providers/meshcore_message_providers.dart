@@ -1879,6 +1879,23 @@ class MeshCoreChatHistoryNotifier extends Notifier<MeshCoreChatHistoryState> {
     state = state.copyWith(messages: next);
   }
 
+  /// Replace the loaded copy of a message by id with [m]. No-op when
+  /// the id is not in the loaded window. Used by the retry path
+  /// (rewrites MMF on a re-send) and any other flow that needs to
+  /// rewrite multiple fields atomically — `updateMessageStatus`
+  /// alone cannot express that.
+  ///
+  /// Asserts that [m.id] matches the target id implicitly: the find
+  /// is by id, so a passed-in message with a different id finds
+  /// nothing and the call no-ops.
+  void replaceMessage(MeshCoreMessage m) {
+    final idx = state.messages.indexWhere((existing) => existing.id == m.id);
+    if (idx < 0) return;
+    final next = [...state.messages];
+    next[idx] = m;
+    state = state.copyWith(messages: next);
+  }
+
   /// Remove a message from the loaded window. No-op if absent.
   ///
   /// Caller is responsible for the store-side delete (the chat

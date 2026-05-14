@@ -5170,6 +5170,8 @@
     "meshcoreChatMessageCopied": "Сообщение скопировано",
     "meshcoreChatMessageDeleteFailed": "Не удалось удалить сообщение",
     "meshcoreChatMessageDeleted": "Сообщение удалено",
+    "meshcoreChatHistoryEnd": "Нет более старых сообщений",
+    "meshcoreChatQuoteJumpUnavailable": "Исходное сообщение недоступно",
     "meshcoreChatNode": "Чат-узел",
     "meshcoreChatReplyMissingTarget": "Ответ на сообщение, которого нет у вас",
     "meshcoreChatReplyRateLimited": "Слишком большой трафик. Повторите через {seconds}с.",

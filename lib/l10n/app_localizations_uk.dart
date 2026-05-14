@@ -8029,6 +8029,12 @@ class AppLocalizationsUk extends AppLocalizations {
       'Не вдалося видалити повідомлення';
 
   @override
+  String get meshcoreChatHistoryEnd => 'No older messages';
+
+  @override
+  String get meshcoreChatQuoteJumpUnavailable => 'Source message not available';
+
+  @override
   String get meshcoreChatNode => 'Вузол чату';
 
   @override

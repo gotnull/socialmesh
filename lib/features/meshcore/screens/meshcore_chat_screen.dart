@@ -120,9 +120,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
-  final List<MeshCoreMessage> _messages = [];
   bool _isSending = false;
-  bool _isLoading = true;
   StreamSubscription<MeshCoreFrame>? _frameSubscription;
   final MeshCoreMessageStore _messageStore = MeshCoreMessageStore();
   final MeshCoreContactStore _contactStore = MeshCoreContactStore();
@@ -137,6 +135,19 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   /// affordance feels consistent across chat surfaces.
   static const double _atBottomThresholdPx = 120;
 
+  /// D43-A3: distance from the top within which a scroll event arms
+  /// the next `loadOlder` page. Twice the bottom threshold so the
+  /// load completes before the user reaches the literal top of the
+  /// list.
+  static const double _atTopThresholdPx = 240;
+
+  /// D43-A3: pre-prepend `maxScrollExtent` captured before each
+  /// `loadOlder`. After the rebuild, the post-frame callback uses
+  /// `newExtent - capturedExtent` to translate the scroll offset by
+  /// the prepended content height — the user stays parked on the
+  /// same message instead of being teleported.
+  double? _oldMaxExtentBeforeLoadOlder;
+
   /// D33: source message the user is currently composing a reply to.
   /// Null when the composer is not in reply mode. Set by the long-press
   /// Reply action, cleared by Cancel reply, by a successful send, or
@@ -150,6 +161,23 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       return 'channel_${widget.channel!.index}';
     }
   }
+
+  /// D43-A3: family key for the chat-history provider. Sealed so the
+  /// notifier picks the right store partition without parsing a
+  /// `channel_<n>` string.
+  MeshCoreChatHistoryKey get _historyKey {
+    if (widget.chatType == MeshCoreChatType.contact) {
+      return MeshCoreChatContactKey(widget.contact!.publicKeyHex);
+    } else {
+      return MeshCoreChatChannelKey(widget.channel!.index);
+    }
+  }
+
+  MeshCoreChatHistoryNotifier get _historyNotifier =>
+      ref.read(meshCoreChatHistoryProvider(_historyKey).notifier);
+
+  MeshCoreChatHistoryState get _historyState =>
+      ref.read(meshCoreChatHistoryProvider(_historyKey));
 
   String get _title {
     if (widget.chatType == MeshCoreChatType.contact) {
@@ -184,8 +212,20 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
     );
     _scrollController.addListener(_onScroll);
     if (widget.initialMessages.isNotEmpty) {
-      _messages.addAll(widget.initialMessages);
-      _isLoading = false;
+      // D43-A3: test-injected path. Pipe each seed through the
+      // chat-history provider as if it had arrived from the wire or
+      // been queued by the composer — keeps the rendered list the
+      // single source of truth without faking a store partition.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        for (final m in widget.initialMessages) {
+          if (m.isOutgoing) {
+            _historyNotifier.appendOutbound(m);
+          } else {
+            _historyNotifier.appendInbound(m);
+          }
+        }
+      });
     } else {
       _loadMessages();
     }
@@ -204,6 +244,12 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
 
   /// D30: toggle [_showJumpToLatest] based on scroll position relative
   /// to the bottom of the message list.
+  ///
+  /// D43-A3: also arms the next `loadOlder` page when the user
+  /// approaches the top of the loaded window. The notifier owns the
+  /// rate-limit guards (`isLoadingOlder` + `hasMore`); this listener
+  /// only fires when the screen is mounted and the cursor is close
+  /// enough to need more rows.
   void _onScroll() {
     if (!_scrollController.hasClients) return;
     final position = _scrollController.position;
@@ -212,6 +258,37 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
     if (shouldShow != _showJumpToLatest && mounted) {
       setState(() => _showJumpToLatest = shouldShow);
     }
+
+    if (position.pixels <= _atTopThresholdPx) {
+      final state = _historyState;
+      if (state.hasMore && !state.isLoadingOlder && !state.isInitialLoading) {
+        _triggerLoadOlder();
+      }
+    }
+  }
+
+  /// D43-A3: kick off the next older page and preserve the visual
+  /// scroll anchor across the prepend. Captures `maxScrollExtent`
+  /// before the load and, after the rebuild, translates the scroll
+  /// offset by the delta in extent so the user stays parked on the
+  /// same message rather than being teleported.
+  Future<void> _triggerLoadOlder() async {
+    _oldMaxExtentBeforeLoadOlder = _scrollController.hasClients
+        ? _scrollController.position.maxScrollExtent
+        : null;
+    await _historyNotifier.loadOlder();
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final captured = _oldMaxExtentBeforeLoadOlder;
+      _oldMaxExtentBeforeLoadOlder = null;
+      if (captured == null || !_scrollController.hasClients) return;
+      final newExtent = _scrollController.position.maxScrollExtent;
+      final delta = newExtent - captured;
+      if (delta > 0) {
+        _scrollController.jumpTo(_scrollController.offset + delta);
+      }
+    });
   }
 
   /// D30: tap handler for the jump-to-latest pill.
@@ -224,57 +301,30 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   }
 
   Future<void> _loadMessages() async {
-    // Load persisted messages from storage
-    setState(() => _isLoading = true);
+    // D43-A3: delegate window load to the chat-history provider. The
+    // provider owns paging state (initial/loadOlder/hasMore); this
+    // method's remaining job is the on-open side-effects: mark-as-read
+    // for D38 unread tracking, and the post-load scroll-to-bottom.
     try {
       await _messageStore.init();
       await _contactStore.init();
-
-      final storedMessages = widget.chatType == MeshCoreChatType.contact
-          ? await _messageStore.loadContactMessages(_conversationId)
-          : await _messageStore.loadChannelMessages(widget.channel!.index);
-
-      final messages = storedMessages.map((stored) {
-        return MeshCoreMessage(
-          id: stored.id,
-          text: stored.text,
-          timestamp: stored.timestamp,
-          isOutgoing: stored.isOutgoing,
-          status: _convertStatus(stored.status),
-          senderKey: stored.senderKey,
-          pathLength: stored.pathLength,
-          snrQuarter: stored.snrQuarter,
-          mmf: stored.mmf,
-          replyToMmf: stored.replyToMmf,
-        );
-      }).toList();
-
-      if (mounted) {
-        setState(() {
-          _messages
-            ..clear()
-            ..addAll(messages);
-          _isLoading = false;
-        });
-        // Clear unread count when opening chat. D19.D extends this
-        // to channels too: pre-D19 only the contact path called
-        // markAsRead, so a channel with unread messages stayed
-        // unread forever on the Channels list tile until contact
-        // mode also opened. Both paths now mark-read on chat open.
-        if (widget.chatType == MeshCoreChatType.contact) {
-          await _contactStore.clearUnreadCount(_conversationId);
-        }
-        ref
-            .read(meshCoreConversationsProvider.notifier)
-            .markAsRead(_conversationId);
-        // Scroll to bottom after loading
-        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+      await _historyNotifier.loadInitial();
+      if (!mounted) return;
+      // Clear unread count when opening chat. D19.D extends this
+      // to channels too: pre-D19 only the contact path called
+      // markAsRead, so a channel with unread messages stayed
+      // unread forever on the Channels list tile until contact
+      // mode also opened. Both paths now mark-read on chat open.
+      if (widget.chatType == MeshCoreChatType.contact) {
+        await _contactStore.clearUnreadCount(_conversationId);
       }
+      if (!mounted) return;
+      ref
+          .read(meshCoreConversationsProvider.notifier)
+          .markAsRead(_conversationId);
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     } catch (e) {
       AppLogging.storage('MeshCore Chat: Error loading messages: $e');
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
     }
   }
 
@@ -404,7 +454,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       // microtask in the notifier. Both paths use the same
       // deterministic id, so the store dedupes regardless, but
       // not writing twice keeps the diag log surface clean.
-      setState(() => _messages.add(message));
+      _historyNotifier.appendInbound(message);
       // D30: only auto-scroll when the user is parked at the bottom.
       // Honour the jump-to-latest pill — if it's showing, the user is
       // reading earlier history and we must not yank them away.
@@ -489,7 +539,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
     );
 
     if (mounted) {
-      setState(() => _messages.add(message));
+      _historyNotifier.appendInbound(message);
       // D30: respect the jump-to-latest pill — only auto-scroll when
       // the user is already parked at the bottom.
       if (!_showJumpToLatest) {
@@ -510,19 +560,21 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
     // confirm handler must accept BOTH `pending` and `sent`. Pre-D14
     // this only matched `pending` and silently dropped routed-acks for
     // any message that had already flipped to `sent`.
-    if (mounted && _messages.isNotEmpty) {
-      final lastUnconfirmed = _messages.lastIndexWhere(
-        (m) => m.isOutgoing && meshCoreIsUnconfirmedOutgoingStatus(m.status),
-      );
-      if (lastUnconfirmed >= 0) {
-        setState(() {
-          _messages[lastUnconfirmed] = _messages[lastUnconfirmed].copyWith(
-            status: MeshCoreMessageDeliveryStatus.delivered,
-          );
-        });
-        _persistMessage(_messages[lastUnconfirmed]);
-      }
-    }
+    if (!mounted) return;
+    final state = _historyState;
+    if (state.messages.isEmpty) return;
+    final lastUnconfirmed = state.messages.lastIndexWhere(
+      (m) => m.isOutgoing && meshCoreIsUnconfirmedOutgoingStatus(m.status),
+    );
+    if (lastUnconfirmed < 0) return;
+    final target = state.messages[lastUnconfirmed];
+    _historyNotifier.updateMessageStatus(
+      target.id,
+      MeshCoreMessageDeliveryStatus.delivered,
+    );
+    _persistMessage(
+      target.copyWith(status: MeshCoreMessageDeliveryStatus.delivered),
+    );
   }
 
   Future<void> _persistMessage(MeshCoreMessage message) async {
@@ -558,19 +610,6 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       }
     } catch (e) {
       AppLogging.storage('MeshCore Chat: Error persisting message: $e');
-    }
-  }
-
-  MeshCoreMessageDeliveryStatus _convertStatus(MeshCoreMessageStatus status) {
-    switch (status) {
-      case MeshCoreMessageStatus.pending:
-        return MeshCoreMessageDeliveryStatus.pending;
-      case MeshCoreMessageStatus.sent:
-        return MeshCoreMessageDeliveryStatus.sent;
-      case MeshCoreMessageStatus.delivered:
-        return MeshCoreMessageDeliveryStatus.delivered;
-      case MeshCoreMessageStatus.failed:
-        return MeshCoreMessageDeliveryStatus.failed;
     }
   }
 
@@ -630,8 +669,8 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       replyToMmf: replyTarget?.mmf,
     );
 
+    _historyNotifier.appendOutbound(message);
     setState(() {
-      _messages.add(message);
       _messageController.clear();
       _replyingTo = null;
     });
@@ -702,7 +741,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   /// caller surfaces the "Reply to a message you don't have"
   /// fallback in that case.
   MeshCoreMessage? _findMessageByMmf(String mmf) {
-    for (final m in _messages) {
+    for (final m in _historyState.messages) {
       if (m.mmf == mmf) return m;
     }
     return null;
@@ -816,9 +855,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
             );
 
       if (mounted) {
-        setState(() {
-          _messages.removeWhere((m) => m.id == message.id);
-        });
+        _historyNotifier.deleteLocal(message.id);
       }
 
       AppLogging.meshcore(
@@ -854,15 +891,20 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
     if (!message.isOutgoing) return;
     if (message.status != MeshCoreMessageDeliveryStatus.failed) return;
 
-    final index = _messages.indexWhere((m) => m.id == message.id);
-    if (index < 0) return;
-
-    setState(() {
-      _messages[index] = _messages[index].copyWith(
-        status: MeshCoreMessageDeliveryStatus.pending,
-      );
-    });
-    final pending = _messages[index];
+    // D43-A3: drive status + MMF rewrite through the provider so the
+    // rendered list stays the single source of truth. The store
+    // persist call is the dual-write path the screen still owns.
+    final source = _historyState.messages.firstWhere(
+      (m) => m.id == message.id,
+      orElse: () => message,
+    );
+    _historyNotifier.updateMessageStatus(
+      source.id,
+      MeshCoreMessageDeliveryStatus.pending,
+    );
+    final pending = source.copyWith(
+      status: MeshCoreMessageDeliveryStatus.pending,
+    );
     await _persistMessage(pending);
 
     AppLogging.meshcore(
@@ -882,13 +924,8 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
         ? null
         : _findMessageByMmf(pending.replyToMmf!);
     if (!mounted) return;
-    setState(() {
-      final i = _messages.indexWhere((m) => m.id == pending.id);
-      if (i >= 0) {
-        _messages[i] = _messages[i].copyWith(mmf: retryMmf);
-      }
-    });
-    final retryMessage = _messages.firstWhere((m) => m.id == pending.id);
+    final retryMessage = pending.copyWith(mmf: retryMmf);
+    _historyNotifier.replaceMessage(retryMessage);
     await _persistMessage(retryMessage);
     if (!mounted) return;
 
@@ -904,7 +941,8 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   /// on success/failure, and surfaces user-facing errors.
   ///
   /// Caller is responsible for ensuring the message already exists in
-  /// `_messages` (and storage) with `pending` status before calling.
+  /// the chat-history window (and storage) with `pending` status
+  /// before calling.
   ///
   /// D33: [timestampS] is the Unix-epoch-seconds timestamp the wire
   /// frame must carry — caller controls this so the outbound MMF
@@ -1079,15 +1117,16 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       }
 
       if (mounted) {
-        setState(() {
-          final index = _messages.indexWhere((m) => m.id == message.id);
-          if (index >= 0) {
-            _messages[index] = _messages[index].copyWith(
-              status: MeshCoreMessageDeliveryStatus.sent,
-            );
-          }
-        });
-        _persistMessage(_messages.firstWhere((m) => m.id == message.id));
+        _historyNotifier.updateMessageStatus(
+          message.id,
+          MeshCoreMessageDeliveryStatus.sent,
+        );
+        final updated = _historyState.messages.firstWhere(
+          (m) => m.id == message.id,
+          orElse: () =>
+              message.copyWith(status: MeshCoreMessageDeliveryStatus.sent),
+        );
+        _persistMessage(updated);
       }
 
       AppLogging.protocol(
@@ -1117,31 +1156,37 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   }
 
   void _markMessageFailed(String messageId) {
-    if (mounted) {
-      setState(() {
-        final index = _messages.indexWhere((m) => m.id == messageId);
-        if (index >= 0) {
-          // Idempotent: only flip messages that have not yet reached a
-          // success state. Otherwise a late timeout would stomp a bubble
-          // that already flipped to `sent` (firmware OK landed) or
-          // `delivered` (routed-ack 0x82 landed) just before the 5s
-          // timeout fired. Pre-D14 this clobbered confirmed deliveries.
-          if (meshCoreIsTerminalDeliveryStatus(_messages[index].status)) {
-            return;
-          }
-          _messages[index] = _messages[index].copyWith(
-            status: MeshCoreMessageDeliveryStatus.failed,
-          );
-          _persistMessage(_messages[index]);
-        }
-      });
+    if (!mounted) return;
+    final messages = _historyState.messages;
+    final index = messages.indexWhere((m) => m.id == messageId);
+    if (index < 0) return;
+    // Idempotent: only flip messages that have not yet reached a
+    // success state. Otherwise a late timeout would stomp a bubble
+    // that already flipped to `sent` (firmware OK landed) or
+    // `delivered` (routed-ack 0x82 landed) just before the 5s
+    // timeout fired. Pre-D14 this clobbered confirmed deliveries.
+    if (meshCoreIsTerminalDeliveryStatus(messages[index].status)) {
+      return;
     }
+    final failed = messages[index].copyWith(
+      status: MeshCoreMessageDeliveryStatus.failed,
+    );
+    _historyNotifier.replaceMessage(failed);
+    _persistMessage(failed);
   }
 
   @override
   Widget build(BuildContext context) {
     final linkStatus = ref.watch(linkStatusProvider);
     final isConnected = linkStatus.isConnected;
+
+    // D43-A3: chat history window. The provider owns paging state
+    // (initial / older / hasMore) and the deduped message list. The
+    // screen renders from it and routes mutations back through the
+    // notifier.
+    final history = ref.watch(meshCoreChatHistoryProvider(_historyKey));
+    final messages = history.messages;
+    final showHistoryEndFooter = !history.hasMore && messages.isNotEmpty;
 
     return GestureDetector(
       onTap: _dismissKeyboard,
@@ -1181,8 +1226,8 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
               ),
 
             Expanded(
-              child: _messages.isEmpty
-                  ? _buildEmptyState()
+              child: messages.isEmpty
+                  ? _buildEmptyState(isLoading: history.isInitialLoading)
                   : Stack(
                       children: [
                         ListView.builder(
@@ -1191,9 +1236,16 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
                             horizontal: AppTheme.spacing16,
                             vertical: AppTheme.spacing8,
                           ),
-                          itemCount: _messages.length,
+                          itemCount:
+                              messages.length + (showHistoryEndFooter ? 1 : 0),
                           itemBuilder: (context, index) {
-                            return _buildMessageBubble(_messages[index]);
+                            if (showHistoryEndFooter && index == 0) {
+                              return _buildHistoryEndFooter();
+                            }
+                            final messageIndex = showHistoryEndFooter
+                                ? index - 1
+                                : index;
+                            return _buildMessageBubble(messages[messageIndex]);
                           },
                         ),
                         Positioned(
@@ -1270,8 +1322,8 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
     );
   }
 
-  Widget _buildEmptyState() {
-    if (_isLoading) {
+  Widget _buildEmptyState({required bool isLoading}) {
+    if (isLoading) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1315,6 +1367,21 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
         titleKeyword: context.l10n.meshcoreChatEmptyTitleKeyword,
         titleSuffix: context.l10n.meshcoreChatEmptyTitleSuffix,
         accentColor: _accentColor,
+      ),
+    );
+  }
+
+  /// D43-A3: subdued footer rendered above the oldest loaded bubble
+  /// when paging exhausts the stored history. Visible only when
+  /// `hasMore == false` AND the window is non-empty.
+  Widget _buildHistoryEndFooter() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing12),
+      child: Center(
+        child: Text(
+          context.l10n.meshcoreChatHistoryEnd,
+          style: TextStyle(color: context.textTertiary, fontSize: 12),
+        ),
       ),
     );
   }
@@ -1578,12 +1645,24 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
 
   /// D33: scroll the list so the bubble with [messageId] is visible
   /// near the centre. Used by the reply quote-preview row's tap
-  /// handler. Falls back to a no-op when the id isn't in the visible
-  /// list (e.g. trimmed by the 500-message store cap).
-  void _jumpToMessage(String messageId) {
-    final index = _messages.indexWhere((m) => m.id == messageId);
-    if (index < 0) return;
+  /// handler.
+  ///
+  /// D43-A3: when the target is older than the loaded window, page
+  /// through `loadUntilContains` first so the reply can be reached.
+  /// If the target can't be paged in (older than the 500-message
+  /// trim wall, or beyond the `loadUntilContains` bound), surface a
+  /// quiet info snackbar so the user knows the tap was registered.
+  Future<void> _jumpToMessage(String messageId) async {
     HapticFeedback.selectionClick();
+    final found = await _historyNotifier.loadUntilContains(messageId);
+    if (!mounted) return;
+    if (!found) {
+      showInfoSnackBar(context, context.l10n.meshcoreChatQuoteJumpUnavailable);
+      return;
+    }
+    final messages = _historyState.messages;
+    final index = messages.indexWhere((m) => m.id == messageId);
+    if (index < 0) return;
     if (!_scrollController.hasClients) return;
     // Approximate per-bubble height. The list isn't a fixed-extent
     // ListView so we can't compute exactly; estimating 76px per

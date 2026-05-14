@@ -14073,6 +14073,18 @@ abstract class AppLocalizations {
   /// **'Could not delete message'**
   String get meshcoreChatMessageDeleteFailed;
 
+  /// D43-A3 - Footer rendered above the oldest loaded message when paging exhausts the stored history (real bottom of history OR the 500-message trim wall — indistinguishable)
+  ///
+  /// In en, this message translates to:
+  /// **'No older messages'**
+  String get meshcoreChatHistoryEnd;
+
+  /// D43-A3 - Info snackbar shown when a reply quote-jump target could not be paged into the loaded window before the loadUntilContains bound was hit
+  ///
+  /// In en, this message translates to:
+  /// **'Source message not available'**
+  String get meshcoreChatQuoteJumpUnavailable;
+
   /// Device type label for chat nodes
   ///
   /// In en, this message translates to:

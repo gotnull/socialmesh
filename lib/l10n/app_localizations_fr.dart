@@ -8090,6 +8090,12 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible de supprimer le message';
 
   @override
+  String get meshcoreChatHistoryEnd => 'No older messages';
+
+  @override
+  String get meshcoreChatQuoteJumpUnavailable => 'Source message not available';
+
+  @override
   String get meshcoreChatNode => 'Nœud de chat';
 
   @override

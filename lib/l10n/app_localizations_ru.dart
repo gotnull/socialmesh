@@ -8014,6 +8014,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreChatMessageDeleteFailed => 'Не удалось удалить сообщение';
 
   @override
+  String get meshcoreChatHistoryEnd => 'Нет более старых сообщений';
+
+  @override
+  String get meshcoreChatQuoteJumpUnavailable =>
+      'Исходное сообщение недоступно';
+
+  @override
   String get meshcoreChatNode => 'Чат-узел';
 
   @override

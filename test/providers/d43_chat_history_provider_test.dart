@@ -509,6 +509,75 @@ void main() {
       expect(identical(before.messages, after.messages), isTrue);
     });
 
+    test(
+      'replaceMessage rewrites multiple fields in place; preserves index',
+      () async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        final key = const MeshCoreChatContactKey(_contactAHex);
+        final notifier = container.read(
+          meshCoreChatHistoryProvider(key).notifier,
+        );
+
+        final t = DateTime.utc(2026, 5, 12, 9);
+        notifier.appendOutbound(
+          _msg(
+            id: 'o1',
+            timestamp: t,
+            isOutgoing: true,
+            status: MeshCoreMessageDeliveryStatus.failed,
+          ),
+        );
+        notifier.appendOutbound(
+          _msg(
+            id: 'o2',
+            timestamp: t.add(const Duration(minutes: 1)),
+            isOutgoing: true,
+          ),
+        );
+
+        // Retry path: rewrite status AND mmf at once.
+        final rewritten = MeshCoreMessage(
+          id: 'o1',
+          text: 'msg',
+          timestamp: t,
+          isOutgoing: true,
+          status: MeshCoreMessageDeliveryStatus.pending,
+          mmf: '02:abc:1234',
+        );
+        notifier.replaceMessage(rewritten);
+
+        final s = container.read(meshCoreChatHistoryProvider(key));
+        expect(s.messages.map((m) => m.id), ['o1', 'o2']);
+        expect(s.messages[0].status, MeshCoreMessageDeliveryStatus.pending);
+        expect(s.messages[0].mmf, '02:abc:1234');
+        expect(s.messages[1].mmf, isNull);
+      },
+    );
+
+    test('replaceMessage no-op when id is not loaded', () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final key = const MeshCoreChatContactKey(_contactAHex);
+      final notifier = container.read(
+        meshCoreChatHistoryProvider(key).notifier,
+      );
+
+      final t = DateTime.utc(2026, 5, 12, 9);
+      notifier.appendOutbound(_msg(id: 'o1', timestamp: t, isOutgoing: true));
+      final before = container.read(meshCoreChatHistoryProvider(key));
+
+      notifier.replaceMessage(
+        _msg(id: 'does-not-exist', timestamp: t, isOutgoing: true),
+      );
+      final after = container.read(meshCoreChatHistoryProvider(key));
+      expect(
+        identical(before.messages, after.messages),
+        isTrue,
+        reason: 'absent id must be a true no-op',
+      );
+    });
+
     test('deleteLocal updates the derived oldestCursor', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
