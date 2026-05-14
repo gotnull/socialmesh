@@ -62,20 +62,12 @@ import '../../utils/validation.dart';
 import '../../models/presence_confidence.dart';
 import '../../features/nodes/node_display_name_resolver.dart';
 
-/// Mesh signal packet received from PRIVATE_APP portnum.
-///
-/// This is the over-the-air format for Signals (ephemeral posts).
-/// Format: JSON with fields:
-/// - id: Signal ID (UUID) - required for cloud sync
-/// - c: Signal text content (compressed key)
-/// - t: Time-to-live in minutes (compressed key)
-/// - la/ln: Optional location coordinates (compressed keys)
-///
-/// The id field enables deterministic matching:
-/// - Firestore document: posts/{id}
-/// - Storage path: signals/{userId}/{id}.jpg
-/// - Comments: posts/{id}/comments/{commentId}
-///
+// In-memory representation of a received Signal (ephemeral post).
+//
+// Populated by [_handleSmSignal] from a decoded binary SM_SIGNAL (portnum
+// 261). Presence is delivered separately on SM_PRESENCE (portnum 260), so
+// the [presenceInfo] field is always null on the receive path and exists
+// only as a holdover for downstream consumers that still type against it.
 class MeshSignalPacket {
   final int senderNodeId;
   final int packetId;
@@ -84,11 +76,10 @@ class MeshSignalPacket {
   final int ttlMinutes;
   final double? latitude;
   final double? longitude;
-  final int? hopCount; // null = unknown, 0 = local, 1+ = hops away
+  final int? hopCount;
   final DateTime receivedAt;
   final bool hasImage;
-  final Map<String, dynamic>?
-  presenceInfo; // Extended presence: {"i": int, "s": string}
+  final Map<String, dynamic>? presenceInfo;
 
   const MeshSignalPacket({
     required this.senderNodeId,
@@ -103,89 +94,6 @@ class MeshSignalPacket {
     this.hasImage = false,
     this.presenceInfo,
   });
-
-  /// Parse from mesh packet payload (JSON).
-  /// Compressed keys: id, c (content), t (ttl), la (lat), ln (lng), p (presence)
-  factory MeshSignalPacket.fromPayload(
-    int senderNodeId,
-    List<int> payload, {
-    int? hopCount,
-    int? packetId,
-  }) {
-    final jsonStr = utf8.decode(payload);
-    final json = jsonDecode(jsonStr) as Map<String, dynamic>;
-
-    // Support both compressed and full keys
-    final content = sanitizeExternalText(
-      json['c'] as String? ?? json['content'] as String? ?? '',
-    );
-    final ttl = json['t'] as int? ?? json['ttl'] as int? ?? 60;
-    final lat =
-        (json['la'] as num?)?.toDouble() ?? (json['lat'] as num?)?.toDouble();
-    final lng =
-        (json['ln'] as num?)?.toDouble() ?? (json['lng'] as num?)?.toDouble();
-
-    // Parse extended presence info if present
-    Map<String, dynamic>? presenceInfo;
-    final presenceRaw = json['p'];
-    if (presenceRaw is Map<String, dynamic>) {
-      presenceInfo = presenceRaw;
-    }
-
-    return MeshSignalPacket(
-      senderNodeId: senderNodeId,
-      packetId: packetId ?? 0,
-      signalId: json['id'] as String?,
-      content: content,
-      ttlMinutes: ttl,
-      latitude: lat,
-      longitude: lng,
-      hopCount: hopCount,
-      receivedAt: DateTime.now(),
-      hasImage:
-          _extractBool(json['i']) ||
-          _extractBool(json['hasImage']) ||
-          _extractBool(json['has_image']),
-      presenceInfo: presenceInfo,
-    );
-  }
-
-  static bool _extractBool(dynamic value) {
-    if (value == null) return false;
-    if (value is bool) return value;
-    if (value is num) return value != 0;
-    if (value is String) {
-      final lower = value.toLowerCase();
-      return lower == 'true' || lower == '1';
-    }
-    return false;
-  }
-
-  /// Serialize to mesh packet payload (JSON).
-  /// Uses compressed keys to minimize payload size:
-  /// - id: signal ID (required for cloud sync)
-  /// - c: content
-  /// - t: ttl
-  /// - la/ln: latitude/longitude
-  /// - p: presence info (optional)
-  List<int> toPayload() {
-    if (signalId == null || signalId!.isEmpty) {
-      throw StateError('MeshSignalPacket requires signalId for send');
-    }
-    final json = <String, dynamic>{'c': content, 't': ttlMinutes};
-    json['id'] = signalId;
-    if (latitude != null && longitude != null) {
-      json['la'] = latitude;
-      json['ln'] = longitude;
-    }
-    if (hasImage) {
-      json['i'] = true;
-    }
-    if (presenceInfo != null && presenceInfo!.isNotEmpty) {
-      json['p'] = presenceInfo;
-    }
-    return utf8.encode(jsonEncode(json));
-  }
 }
 
 /// Detection sensor event received from DETECTION_SENSOR_APP portnum.
@@ -2681,9 +2589,10 @@ class ProtocolService {
               '${data.payload.length} bytes, '
               'firstByte=${data.payload.isNotEmpty ? '0x${data.payload[0].toRadixString(16).padLeft(2, '0')}' : 'empty'}',
             );
-            // Multiplex PRIVATE_APP (256) by inspecting payload magic bytes.
-            // Order: SIP (2-byte magic), STL-wrapped file-transfer,
-            // file-transfer (kind nibble), fallback to signals (legacy JSON).
+            // Multiplex PRIVATE_APP (256) by inspecting payload magic bytes:
+            // SIP (2-byte magic), STL-wrapped file-transfer, or
+            // file-transfer (kind nibble). Anything else is unknown and
+            // dropped — signals now ride SM_SIGNAL (portnum 261).
             final privatePayload = Uint8List.fromList(data.payload);
             if (SipCodec.isSipPayload(privatePayload)) {
               _logIncomingMrrpCandidatePacket(packet, privatePayload);
@@ -2697,7 +2606,11 @@ class ProtocolService {
                 _handleFileTransferOnPrivateApp(packet, privatePayload),
               );
             } else {
-              _handleSignalMessage(packet, data);
+              AppLogging.protocol(
+                'PRIVATE_APP payload did not match any known frame '
+                'magic from=${packet.from.toRadixString(16)} '
+                '${privatePayload.length} bytes; dropped',
+              );
             }
             break;
           case pn.PortNum.DETECTION_SENSOR_APP:
@@ -2869,59 +2782,16 @@ class ProtocolService {
     }
   }
 
-  /// Handle incoming signal packets (PRIVATE_APP portnum)
-  void _handleSignalMessage(pb.MeshPacket packet, pb.Data data) {
-    try {
-      AppLogging.social(
-        'RX_SIGNAL_RAW packetId=${packet.id} from=${packet.from.toRadixString(16)} '
-        'to=${packet.to.toRadixString(16)} bytes=${data.payload.length}',
-      );
-
-      // Ignore our own signals echoed back
-      if (packet.from == _myNodeNum) {
-        AppLogging.social('Ignoring own signal echo');
-        return;
-      }
-
-      // Calculate hop count from mesh packet metadata
-      final int? hopCount = _computeHopCount(packet);
-
-      final signalPacket = MeshSignalPacket.fromPayload(
-        packet.from,
-        data.payload,
-        hopCount: hopCount,
-        packetId: packet.id,
-      );
-
-      AppLogging.social(
-        'SIGNAL_PARSE_OK packetId=${signalPacket.packetId} '
-        'signalId=${signalPacket.signalId ?? "none"} '
-        'sender=${packet.from.toRadixString(16)} ttl=${signalPacket.ttlMinutes}',
-      );
-
-      AppLogging.social(
-        'Received mesh signal from !${packet.from.toRadixString(16)}: '
-        '"${safeSubstring(signalPacket.content, 30)}" '
-        '(ttl=${signalPacket.ttlMinutes}m)',
-      );
-
-      _smMetrics.recordLegacyPacketReceived();
-      _signalController.add(signalPacket);
-    } catch (e) {
-      AppLogging.social('Failed to parse signal packet: $e');
-    }
-  }
-
   // ─────────────────────────────────────────────────────────────────
   // File transfers received on PRIVATE_APP (256)
   // ─────────────────────────────────────────────────────────────────
 
   /// Handle a binary file-transfer payload that arrived on PRIVATE_APP (256).
   ///
-  /// File transfers are sent on PRIVATE_APP because custom SM portnums
-  /// (260-263) are not reliably relayed by all firmware versions when
-  /// [SmFeatureFlag.shouldSendBinary] is off. The payload is decoded the
-  /// same way as portnum 263 — only the transport portnum differs.
+  /// File transfers ride PRIVATE_APP because custom SM portnums (260-263)
+  /// are not reliably relayed by all firmware versions in the field. The
+  /// payload is decoded the same way as portnum 263 — only the transport
+  /// portnum differs.
   Future<void> _handleFileTransferOnPrivateApp(
     pb.MeshPacket packet,
     Uint8List payload,
@@ -5935,146 +5805,32 @@ class ProtocolService {
     }
   }
 
-  /// Broadcast a signal packet to all nodes in the mesh.
+  /// Broadcast a Signal (ephemeral post) as a binary SM_SIGNAL on
+  /// portnum 261.
   ///
-  /// Uses PRIVATE_APP portnum (256) with JSON payload.
-  /// Returns the packet ID for tracking.
-  ///
-  /// Throws [ArgumentError] if payload exceeds max mesh packet size.
-  /// Note: 180 chars ≠ 180 bytes. Emojis and special chars inflate UTF-8 size.
-  /// Maximum legacy JSON signal payload size in bytes.
-  ///
-  /// Aligned with [SmPayloadLimit.loraMtu] — the LoRa MTU ceiling for
-  /// the Data.payload field. Previously 200, which was overly
-  /// conservative and prevented legitimate signals from broadcasting.
-  static const int _maxSignalPayloadBytes = SmPayloadLimit.loraMtu;
-
-  Future<int> sendSignal({
-    required String signalId,
+  /// Builds an [SmSignal] with a fresh random wire ID and delegates to
+  /// [sendSmSignal]. Returns the packet ID, or null when the device is
+  /// disconnected, the payload exceeds the LoRa MTU, or the SM rate
+  /// limiter denies the send.
+  Future<int?> sendSignal({
     required String content,
     required int ttlMinutes,
     double? latitude,
     double? longitude,
     bool hasImage = false,
-    Map<String, dynamic>? presenceInfo,
   }) async {
-    if (_myNodeNum == null) {
-      throw StateError('Cannot send signal: device not ready (no node number)');
-    }
-    if (!_transport.isConnected) {
-      throw StateError('Cannot send signal: not connected to device');
-    }
+    if (_myNodeNum == null || !_transport.isConnected) return null;
 
-    try {
-      var effectiveContent = content;
-      var effectivePresence = presenceInfo;
+    final signal = SmSignal(
+      signalId: SmSignal.generateSignalId(),
+      content: content,
+      ttl: SmPacketRouter.ttlFromMinutes(ttlMinutes),
+      hasImage: hasImage,
+      latitudeI: latitude != null ? (latitude * 1e7).round() : null,
+      longitudeI: longitude != null ? (longitude * 1e7).round() : null,
+    );
 
-      var signalPacket = MeshSignalPacket(
-        senderNodeId: _myNodeNum!,
-        packetId: 0,
-        signalId: signalId,
-        content: effectiveContent,
-        ttlMinutes: ttlMinutes,
-        latitude: latitude,
-        longitude: longitude,
-        receivedAt: DateTime.now(),
-        hasImage: hasImage,
-        presenceInfo: effectivePresence,
-      );
-
-      var payload = signalPacket.toPayload();
-
-      // Graceful degradation: strip presence first, then truncate content.
-      // The full content is preserved in the local DB and Firestore; this
-      // truncation only affects the over-the-air mesh broadcast.
-      if (payload.length > _maxSignalPayloadBytes &&
-          effectivePresence != null) {
-        effectivePresence = null;
-        signalPacket = MeshSignalPacket(
-          senderNodeId: _myNodeNum!,
-          packetId: 0,
-          signalId: signalId,
-          content: effectiveContent,
-          ttlMinutes: ttlMinutes,
-          latitude: latitude,
-          longitude: longitude,
-          receivedAt: DateTime.now(),
-          hasImage: hasImage,
-        );
-        payload = signalPacket.toPayload();
-        AppLogging.social(
-          'Stripped presence from legacy payload to fit mesh limit '
-          '(now ${payload.length} bytes)',
-        );
-      }
-
-      if (payload.length > _maxSignalPayloadBytes) {
-        // Truncate content to fit. Cloud sync delivers full text.
-        final excess = payload.length - _maxSignalPayloadBytes;
-        final trimLen = effectiveContent.length - excess - 3;
-        if (trimLen > 10) {
-          effectiveContent = '${effectiveContent.substring(0, trimLen)}…';
-          signalPacket = MeshSignalPacket(
-            senderNodeId: _myNodeNum!,
-            packetId: 0,
-            signalId: signalId,
-            content: effectiveContent,
-            ttlMinutes: ttlMinutes,
-            latitude: latitude,
-            longitude: longitude,
-            receivedAt: DateTime.now(),
-            hasImage: hasImage,
-          );
-          payload = signalPacket.toPayload();
-          AppLogging.social(
-            'Truncated signal content for mesh: '
-            '${content.length} -> ${effectiveContent.length} chars '
-            '(${payload.length} bytes)',
-          );
-        }
-      }
-
-      // Final guard: if still too large after trimming, reject
-      if (payload.length > _maxSignalPayloadBytes) {
-        AppLogging.social(
-          'Signal payload too large: ${payload.length} bytes '
-          '(max $_maxSignalPayloadBytes). Content: ${content.length} chars',
-        );
-        throw ArgumentError(
-          'Signal payload exceeds max size: ${payload.length} bytes '
-          '(limit: $_maxSignalPayloadBytes bytes). '
-          'Try shorter content or remove location.',
-        );
-      }
-
-      final packetId = _generatePacketId();
-
-      final data = pb.Data()
-        ..portnum = pn.PortNum.PRIVATE_APP
-        ..payload = payload;
-
-      final packet = MeshPacketBuilder.userPayload(
-        myNodeNum: _myNodeNum!,
-        to: 0xFFFFFFFF,
-        data: data,
-        packetId: packetId,
-      );
-
-      final toRadio = pb.ToRadio()..packet = packet;
-      final bytes = toRadio.writeToBuffer();
-
-      await _transport.send(_prepareForSend(bytes));
-
-      AppLogging.social(
-        'Broadcast signal: "${safeSubstring(content, 30)}" '
-        '(ttl=${ttlMinutes}m, packetId=$packetId)',
-      );
-
-      return packetId;
-    } catch (e) {
-      AppLogging.social('Error broadcasting signal: $e');
-      rethrow;
-    }
+    return sendSmSignal(signal);
   }
 
   // ─────────────────────────────────────────────────────────────────
@@ -7208,8 +6964,7 @@ class ProtocolService {
   /// File transfers are broadcast rather than unicast because Meshtastic
   /// firmware 2.5+ may apply PKC (Public Key Cryptography) to unicast
   /// packets, which fails when PKC keys are not properly exchanged between
-  /// devices. Broadcast packets always use channel PSK encryption — the
-  /// same proven path that legacy JSON signals use.
+  /// devices. Broadcast packets always use channel PSK encryption.
   ///
   /// The [destinationNode] parameter is retained for logging and future
   /// unicast support once PKC compatibility is resolved.
@@ -7354,93 +7109,6 @@ class ProtocolService {
       'SM_IDENTITY response sent to ${targetNodeNum.toRadixString(16)}, '
       'packetId=$packetId',
     );
-  }
-
-  /// Broadcast a signal with dual-send support (binary + legacy).
-  ///
-  /// When [smBinaryEnabled] is true:
-  ///   1. Always sends SM_SIGNAL (portnum 261) first.
-  ///   2. If legacy compatibility is still needed, also sends legacy
-  ///      JSON (portnum 256) with the same logical signal ID.
-  ///
-  /// When [smBinaryEnabled] is false:
-  ///   Behaves exactly like [sendSignal] (legacy JSON only).
-  ///
-  /// Returns the packet ID of the primary send, or null on failure.
-  Future<int?> sendSignalDualMode({
-    required String signalId,
-    required String content,
-    required int ttlMinutes,
-    double? latitude,
-    double? longitude,
-    bool hasImage = false,
-    Map<String, dynamic>? presenceInfo,
-  }) async {
-    if (_myNodeNum == null || !_transport.isConnected) return null;
-
-    if (!_smFeatureFlag.shouldSendBinary) {
-      // Binary disabled — legacy only (existing behavior).
-      // Uses the caller-provided signalId (UUID) unchanged.
-      final packetId = await sendSignal(
-        signalId: signalId,
-        content: content,
-        ttlMinutes: ttlMinutes,
-        latitude: latitude,
-        longitude: longitude,
-        hasImage: hasImage,
-        presenceInfo: presenceInfo,
-      );
-      return packetId;
-    }
-
-    // Binary enabled — build and send SM_SIGNAL first
-    final binarySignalId = SmSignal.generateSignalId();
-
-    final smSignal = SmSignal(
-      signalId: binarySignalId,
-      content: content,
-      ttl: SmPacketRouter.ttlFromMinutes(ttlMinutes),
-      hasImage: hasImage,
-      latitudeI: latitude != null ? (latitude * 1e7).round() : null,
-      longitudeI: longitude != null ? (longitude * 1e7).round() : null,
-    );
-
-    final binaryPacketId = await sendSmSignal(smSignal);
-    int? resultPacketId = binaryPacketId;
-
-    // Check if legacy send is needed
-    final sendLegacy = _smFeatureFlag.shouldSendLegacyGivenMeshState(
-      isMeshBinaryReady: _smCapabilityStore.isMeshBinaryReady,
-    );
-
-    if (sendLegacy) {
-      try {
-        // Use the ORIGINAL caller signalId (UUID) for the legacy packet.
-        // This matches the Firestore document ID so receivers can look up
-        // cloud data via posts/{signalId}. The binary packet uses its own
-        // sm- prefixed ID; cross-format dedupe on the receive side handles
-        // duplicates. If legacy send carried the sm- ID, receivers would
-        // start a post listener for a Firestore doc that doesn't exist.
-        final legacyPacketId = await sendSignal(
-          signalId: signalId,
-          content: content,
-          ttlMinutes: ttlMinutes,
-          latitude: latitude,
-          longitude: longitude,
-          hasImage: hasImage,
-          presenceInfo: presenceInfo,
-        );
-        resultPacketId ??= legacyPacketId;
-        _smMetrics.recordDualSend();
-      } catch (e) {
-        final binaryStatus = binaryPacketId != null
-            ? 'succeeded'
-            : 'also failed';
-        AppLogging.social('Dual-send legacy failed (binary $binaryStatus): $e');
-      }
-    }
-
-    return resultPacketId;
   }
 
   /// Send a text message with pre-tracking callback

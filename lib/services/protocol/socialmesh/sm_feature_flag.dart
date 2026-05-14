@@ -1,18 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-/// Feature flags for the SocialMesh binary protocol migration.
+/// Feature flags for SocialMesh protocol surfaces.
 ///
-/// These control whether the app sends binary-encoded packets
-/// and whether it maintains legacy compatibility during the transition.
-///
-/// Default state: binary disabled, legacy compat enabled.
-/// This is safe-by-default: no behavioral changes until explicitly opted in.
-///
-/// Override via `.env`:
+/// Currently gates the SIP/MRRP interop stack and the BLE receive-stall
+/// detector. Override via `.env`:
 /// ```
-/// SM_BINARY_ENABLED=true
-/// SM_LEGACY_COMPAT=false
+/// SIP_ENABLED=true
+/// MRRP_ENABLED=true
 /// ```
 library;
 
@@ -35,17 +30,11 @@ bool? _parseBoolEnv(String key) {
   return raw == 'true' || raw == '1';
 }
 
-/// Feature flags for SM binary send/receive behavior.
+/// Feature flags for SM protocol-layer behavior.
 ///
-/// All flags default to safe values. The app behaves identically to
-/// pre-binary behavior when constructed with defaults.
-///
-/// Constructor parameters override `.env` values. When neither is set,
-/// `smBinaryEnabled` defaults to `false` and `legacyCompatibilityMode`
-/// defaults to `true`.
+/// Constructor parameters override `.env` values; when neither is set
+/// each flag falls back to its documented default.
 class SmFeatureFlag {
-  bool _smBinaryEnabled;
-  bool _legacyCompatibilityMode;
   bool _sipEnabled;
   bool _mrrpEnabled;
   bool _mrrpHarnessEnabled;
@@ -57,22 +46,16 @@ class SmFeatureFlag {
   ///
   /// Resolution order for each flag:
   /// 1. Explicit constructor argument (if provided).
-  /// 2. `.env` value (`SM_BINARY_ENABLED`, `SM_LEGACY_COMPAT`, `SIP_ENABLED`).
-  /// 3. Hardcoded safe default.
+  /// 2. `.env` value (e.g. `SIP_ENABLED`, `BLE_RX_STALL_DETECTION`).
+  /// 3. Hardcoded default.
   SmFeatureFlag({
-    bool? smBinaryEnabled,
-    bool? legacyCompatibilityMode,
     bool? sipEnabled,
     bool? mrrpEnabled,
     bool? mrrpHarnessEnabled,
     bool? bleReceiveStallDetectionEnabled,
     bool? bleReceiveStallRecoveryResubscribe,
     bool? bleReceiveStallRecoveryReconnect,
-  }) : _smBinaryEnabled =
-           smBinaryEnabled ?? _parseBoolEnv('SM_BINARY_ENABLED') ?? false,
-       _legacyCompatibilityMode =
-           legacyCompatibilityMode ?? _parseBoolEnv('SM_LEGACY_COMPAT') ?? true,
-       _sipEnabled = sipEnabled ?? _parseBoolEnv('SIP_ENABLED') ?? false,
+  }) : _sipEnabled = sipEnabled ?? _parseBoolEnv('SIP_ENABLED') ?? false,
        _mrrpEnabled = mrrpEnabled ?? _parseBoolEnv('MRRP_ENABLED') ?? false,
        _mrrpHarnessEnabled =
            mrrpHarnessEnabled ?? _parseBoolEnv('MRRP_HARNESS_ENABLED') ?? false,
@@ -88,42 +71,6 @@ class SmFeatureFlag {
            bleReceiveStallRecoveryReconnect ??
            _parseBoolEnv('BLE_RX_STALL_RECOVERY_RECONNECT') ??
            false;
-
-  /// Whether to send binary-encoded SM packets.
-  /// Default: false (safe-by-default).
-  bool get smBinaryEnabled => _smBinaryEnabled;
-
-  /// Whether to also send legacy JSON packets alongside binary.
-  /// Only relevant when [smBinaryEnabled] is true.
-  /// Default: true.
-  bool get legacyCompatibilityMode => _legacyCompatibilityMode;
-
-  /// Whether we should send legacy JSON when broadcasting a signal.
-  ///
-  /// True when:
-  /// - Binary is disabled (default behavior, legacy only), OR
-  /// - Binary is enabled but legacy compat mode is also on.
-  bool get shouldSendLegacy => !_smBinaryEnabled || _legacyCompatibilityMode;
-
-  /// Whether we should send binary SM_SIGNAL when broadcasting.
-  bool get shouldSendBinary => _smBinaryEnabled;
-
-  /// Combined decision: should we send legacy given mesh readiness?
-  ///
-  /// When binary is enabled and legacy compat is on, we stop sending
-  /// legacy once the mesh has enough binary-capable peers.
-  bool shouldSendLegacyGivenMeshState({required bool isMeshBinaryReady}) {
-    if (!_smBinaryEnabled) return true;
-    if (!_legacyCompatibilityMode) return false;
-    return !isMeshBinaryReady;
-  }
-
-  /// Set binary mode.
-  void setSmBinaryEnabled(bool value) => _smBinaryEnabled = value;
-
-  /// Set legacy compatibility mode.
-  void setLegacyCompatibilityMode(bool value) =>
-      _legacyCompatibilityMode = value;
 
   /// Whether the SocialMesh Interop Profile (SIP) is enabled.
   ///
@@ -199,5 +146,5 @@ class SmFeatureFlag {
 
   @override
   String toString() =>
-      'SmFeatureFlag(binary=$_smBinaryEnabled, legacyCompat=$_legacyCompatibilityMode, sip=$_sipEnabled, mrrp=$_mrrpEnabled, mrrpHarness=$_mrrpHarnessEnabled, bleRxStallDetect=$_bleReceiveStallDetectionEnabled, bleRxStallResub=$_bleReceiveStallRecoveryResubscribe, bleRxStallReconnect=$_bleReceiveStallRecoveryReconnect)';
+      'SmFeatureFlag(sip=$_sipEnabled, mrrp=$_mrrpEnabled, mrrpHarness=$_mrrpHarnessEnabled, bleRxStallDetect=$_bleReceiveStallDetectionEnabled, bleRxStallResub=$_bleReceiveStallRecoveryResubscribe, bleRxStallReconnect=$_bleReceiveStallRecoveryReconnect)';
 }

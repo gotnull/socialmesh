@@ -27,6 +27,8 @@ import 'package:latlong2/latlong.dart';
 
 import '../core/safe_lat_lng.dart';
 import '../services/meshcore/protocol/meshcore_messages.dart';
+import '../services/meshcore/storage/meshcore_message_store.dart';
+import '../services/meshcore/storage/meshcore_path_history_store.dart';
 import 'meshcore_contact.dart';
 
 /// What kind of path the overlay represents. The map can show the
@@ -37,6 +39,12 @@ enum MeshCorePathOverlaySource {
 
   /// Built from a saved entry in the per-contact D39-A path history.
   history,
+
+  /// D42-B-A: inferred from the newest valid app-local evidence
+  /// (D39 saved entries + persisted inbound message paths). Never
+  /// auto-activated — the user explicitly opted in via the Contact
+  /// Detail "Show inferred path" action.
+  inferred,
 }
 
 extension MeshCorePathOverlaySourceWire on MeshCorePathOverlaySource {
@@ -46,6 +54,8 @@ extension MeshCorePathOverlaySourceWire on MeshCorePathOverlaySource {
         return 'active';
       case MeshCorePathOverlaySource.history:
         return 'history';
+      case MeshCorePathOverlaySource.inferred:
+        return 'inferred';
     }
   }
 }
@@ -213,6 +223,29 @@ class MeshCorePathOverlay {
     );
   }
 
+  /// D42-B-A: build an overlay from inferred [hopBytes]. Mirrors
+  /// [fromHistory] but flags the resulting overlay as
+  /// [MeshCorePathOverlaySource.inferred]. The caller is expected to
+  /// have produced [hopBytes] via [inferRecentPathBytes] (or an
+  /// equivalent pure pipeline); this factory does no inference work
+  /// itself.
+  static MeshCorePathOverlay? fromInferred({
+    required MeshCoreContact target,
+    required List<MeshCoreContact> contacts,
+    required MeshCoreSelfInfo? selfInfo,
+    required Uint8List hopBytes,
+  }) {
+    if (hopBytes.length > 64) return null;
+    return _resolve(
+      target: target,
+      contacts: contacts,
+      selfInfo: selfInfo,
+      hopBytes: hopBytes,
+      source: MeshCorePathOverlaySource.inferred,
+      isForced: false,
+    );
+  }
+
   static MeshCorePathOverlay _resolve({
     required MeshCoreContact target,
     required List<MeshCoreContact> contacts,
@@ -289,4 +322,148 @@ class MeshCorePathOverlay {
 
   static String _hex2(int byte) =>
       byte.toRadixString(16).padLeft(2, '0').toLowerCase();
+}
+
+// ---------------------------------------------------------------------------
+// D42-B-A: passive path inference (recency-based, pure)
+// ---------------------------------------------------------------------------
+
+/// Provenance of an inferred path candidate. Surfaced from the pure
+/// helper so tests (and any future diagnostics surface) can pin which
+/// evidence source the winning bytes came from. Not rendered in the
+/// UI in this slice — the map only consumes the resulting overlay.
+enum MeshCoreInferenceEvidence {
+  /// The winning bytes came from a D39 saved-path history entry.
+  savedHistory,
+
+  /// The winning bytes came from a persisted inbound contact message
+  /// (its `pathBytes` + `pathLength` fields).
+  inboundMessage,
+}
+
+/// Pure return shape of [inferRecentPathBytes]. Carries the winning
+/// hop bytes plus the timestamp + evidence source that made it win —
+/// enough for tests to assert provenance without rebuilding an
+/// overlay.
+class MeshCoreInferredPath {
+  final Uint8List hopBytes;
+  final DateTime asOf;
+  final MeshCoreInferenceEvidence evidence;
+
+  const MeshCoreInferredPath({
+    required this.hopBytes,
+    required this.asOf,
+    required this.evidence,
+  });
+
+  @override
+  String toString() =>
+      'MeshCoreInferredPath(hops=${hopBytes.length}, '
+      // lint-allow: hardcoded-string — diagnostic only, never user-visible.
+      'asOf=$asOf, evidence=${evidence.name})';
+}
+
+const int _kMeshCoreInferenceMaxPathBytes = 64;
+
+/// D42-B-A: pure recency-based path inference. Returns the newest
+/// valid candidate's hop bytes + provenance, or `null` when no
+/// candidate passes the validity filter.
+///
+/// Inputs are pre-loaded by the caller; this function does no I/O.
+///
+/// Validity:
+///   - For D39 [savedEntries]: `bytes.isNotEmpty` and
+///     `bytes.length <= 64`. (The D39 store already enforces this
+///     at parse time; the helper re-checks defensively.)
+///   - For [storedMessages]: `!isOutgoing`, `pathBytes.isNotEmpty`,
+///     `pathBytes.length <= 64`, `pathLength != null`,
+///     `pathLength > 0` (skip flood = -1 and 0-hop direct).
+///
+/// Selection: candidate with the maximum recency timestamp
+///   (`lastUsedAt` for saved entries, `timestamp` for messages).
+///
+/// Tie-break (deterministic when timestamps are equal to the
+/// millisecond):
+///   1. Saved-history wins over inbound-message.
+///   2. Shorter hop count wins.
+///   3. Lexical byte order ascending wins.
+MeshCoreInferredPath? inferRecentPathBytes({
+  required Iterable<MeshCorePathHistoryEntry> savedEntries,
+  required Iterable<MeshCoreStoredMessage> storedMessages,
+}) {
+  final candidates = <_InferenceCandidate>[];
+
+  for (final e in savedEntries) {
+    final b = e.bytes;
+    if (b.isEmpty) continue;
+    if (b.length > _kMeshCoreInferenceMaxPathBytes) continue;
+    candidates.add(
+      _InferenceCandidate(
+        bytes: b,
+        asOf: e.lastUsedAt,
+        evidence: MeshCoreInferenceEvidence.savedHistory,
+      ),
+    );
+  }
+
+  for (final m in storedMessages) {
+    if (m.isOutgoing) continue;
+    final pl = m.pathLength;
+    if (pl == null || pl <= 0) continue;
+    final b = m.pathBytes;
+    if (b.isEmpty) continue;
+    if (b.length > _kMeshCoreInferenceMaxPathBytes) continue;
+    candidates.add(
+      _InferenceCandidate(
+        bytes: b,
+        asOf: m.timestamp,
+        evidence: MeshCoreInferenceEvidence.inboundMessage,
+      ),
+    );
+  }
+
+  if (candidates.isEmpty) return null;
+
+  candidates.sort(_compareCandidates);
+  final winner = candidates.first;
+  return MeshCoreInferredPath(
+    hopBytes: Uint8List.fromList(winner.bytes),
+    asOf: winner.asOf,
+    evidence: winner.evidence,
+  );
+}
+
+/// Internal struct so the helper isn't iterating two parallel lists.
+class _InferenceCandidate {
+  final Uint8List bytes;
+  final DateTime asOf;
+  final MeshCoreInferenceEvidence evidence;
+
+  const _InferenceCandidate({
+    required this.bytes,
+    required this.asOf,
+    required this.evidence,
+  });
+}
+
+/// Strict-total ordering: most-recent first, then the three-tier
+/// deterministic tie-break.
+int _compareCandidates(_InferenceCandidate a, _InferenceCandidate b) {
+  // 1. Recency descending.
+  final tsCmp = b.asOf.compareTo(a.asOf);
+  if (tsCmp != 0) return tsCmp;
+  // 2. Saved history beats inbound message.
+  final aSaved = a.evidence == MeshCoreInferenceEvidence.savedHistory;
+  final bSaved = b.evidence == MeshCoreInferenceEvidence.savedHistory;
+  if (aSaved != bSaved) return aSaved ? -1 : 1;
+  // 3. Shorter hop count wins.
+  final lenCmp = a.bytes.length.compareTo(b.bytes.length);
+  if (lenCmp != 0) return lenCmp;
+  // 4. Lexical byte order ascending wins.
+  final n = a.bytes.length;
+  for (var i = 0; i < n; i++) {
+    final c = a.bytes[i].compareTo(b.bytes[i]);
+    if (c != 0) return c;
+  }
+  return 0;
 }

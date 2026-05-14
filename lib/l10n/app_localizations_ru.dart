@@ -9131,6 +9131,18 @@ class AppLocalizationsRu extends AppLocalizations {
       'Нарисовать маршрут на карте';
 
   @override
+  String get meshcorePathOverlayShowInferred =>
+      'Показать предполагаемый маршрут';
+
+  @override
+  String get meshcorePathOverlayShowInferredSubtitle =>
+      'Определить по сохранённым маршрутам и полученным сообщениям';
+
+  @override
+  String get meshcorePathOverlayInferredUnavailable =>
+      'Для этого контакта пока нет данных о маршруте';
+
+  @override
   String get meshcorePathOverlayClear => 'Очистить маршрут';
 
   @override

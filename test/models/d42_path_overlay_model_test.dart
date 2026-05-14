@@ -315,6 +315,84 @@ void main() {
     });
   });
 
+  group('MeshCorePathOverlay.fromInferred - D42-B-A', () {
+    test('builds overlay with source=inferred and isForced=false', () {
+      final hopA = _contact(firstByte: 0x11, lat: 1.0, lng: 2.0);
+      final target = _contact(firstByte: 0x99, lat: 5.0, lng: 6.0);
+      final overlay = MeshCorePathOverlay.fromInferred(
+        target: target,
+        contacts: [hopA, target],
+        selfInfo: _selfInfo(lat: 0.0, lng: 0.0),
+        hopBytes: Uint8List.fromList([0x11]),
+      )!;
+      expect(overlay.source, MeshCorePathOverlaySource.inferred);
+      expect(overlay.isForced, isFalse);
+      expect(overlay.hops.single.byte, 0x11);
+      expect(overlay.hops.single.latLng, LatLng(1.0, 2.0));
+      expect(overlay.contactPubKeyHex, target.publicKeyHex);
+    });
+
+    test('rejects hopBytes longer than 64 (mirrors fromHistory)', () {
+      final target = _contact(firstByte: 0x99, lat: 5.0, lng: 6.0);
+      final overlay = MeshCorePathOverlay.fromInferred(
+        target: target,
+        contacts: const [],
+        selfInfo: null,
+        hopBytes: Uint8List.fromList(List.filled(65, 0x11)),
+      );
+      expect(overlay, isNull);
+    });
+
+    test('64-byte inferred path accepted', () {
+      final target = _contact(firstByte: 0x99, lat: 5.0, lng: 6.0);
+      final overlay = MeshCorePathOverlay.fromInferred(
+        target: target,
+        contacts: const [],
+        selfInfo: null,
+        hopBytes: Uint8List.fromList(List.filled(64, 0x11)),
+      )!;
+      expect(overlay.hops, hasLength(64));
+    });
+
+    test('drawable contract identical to fromHistory: missing hop coordinates '
+        'AND missing both endpoints → !hasDrawableData', () {
+      // Self has no location, target has no location, hop bytes refer
+      // to no known contact. Nothing draws.
+      final target = _contact(firstByte: 0x99);
+      final overlay = MeshCorePathOverlay.fromInferred(
+        target: target,
+        contacts: const [],
+        selfInfo: null,
+        hopBytes: Uint8List.fromList([0x22, 0x33]),
+      )!;
+      expect(overlay.hasDrawableData, isFalse);
+    });
+
+    test('drawable when self + target known even with unresolved hops', () {
+      // Endpoint draw is sufficient: at least two drawable points.
+      final target = _contact(firstByte: 0x99, lat: 5.0, lng: 6.0);
+      final overlay = MeshCorePathOverlay.fromInferred(
+        target: target,
+        contacts: const [],
+        selfInfo: _selfInfo(lat: 1.0, lng: 1.0),
+        hopBytes: Uint8List.fromList([0x22, 0x33]),
+      )!;
+      expect(overlay.hasDrawableData, isTrue);
+      expect(overlay.source, MeshCorePathOverlaySource.inferred);
+    });
+  });
+
+  group('MeshCorePathOverlaySource wire - D42-B-A', () {
+    test('inferred wire is "inferred"', () {
+      expect(MeshCorePathOverlaySource.inferred.wire, 'inferred');
+    });
+
+    test('existing wire values are unchanged', () {
+      expect(MeshCorePathOverlaySource.active.wire, 'active');
+      expect(MeshCorePathOverlaySource.history.wire, 'history');
+    });
+  });
+
   group('hop labels are 2-char hex; no full-pubkey leakage', () {
     test('label is 2-char lowercase hex per hop byte', () {
       final target = _contact(

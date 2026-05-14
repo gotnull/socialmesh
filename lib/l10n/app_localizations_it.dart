@@ -9142,6 +9142,17 @@ class AppLocalizationsIt extends AppLocalizations {
       'Disegna il percorso come overlay sulla mappa';
 
   @override
+  String get meshcorePathOverlayShowInferred => 'Mostra percorso inferito';
+
+  @override
+  String get meshcorePathOverlayShowInferredSubtitle =>
+      'Inferisci dai percorsi salvati e dai messaggi ricevuti';
+
+  @override
+  String get meshcorePathOverlayInferredUnavailable =>
+      'Nessuna evidenza di percorso per questo contatto';
+
+  @override
   String get meshcorePathOverlayClear => 'Cancella percorso';
 
   @override

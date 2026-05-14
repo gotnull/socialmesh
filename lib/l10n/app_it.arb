@@ -15738,6 +15738,15 @@
   "@meshcorePathOverlayClear": {
     "description": "D42-A - map app-bar action that removes the active path overlay"
   },
+  "@meshcorePathOverlayShowInferred": {
+    "description": "D42-B-A - Contact Detail tile that infers a path from app-local evidence and draws it on the map"
+  },
+  "@meshcorePathOverlayShowInferredSubtitle": {
+    "description": "D42-B-A - Contact Detail Show-inferred-path tile subtitle"
+  },
+  "@meshcorePathOverlayInferredUnavailable": {
+    "description": "D42-B-A - info snackbar shown when the Show-inferred-path tile is tapped but no usable evidence exists for the contact"
+  },
   "@meshcorePathOverlayHopLabelHeader": {
     "description": "D42-A - InfoTable row label for the hop's 2-char hex byte"
   },
@@ -38468,6 +38477,9 @@
   "meshcorePathOverlayHopName": "Contatto",
   "meshcorePathOverlayHopSheetTitle": "Hop del percorso",
   "meshcorePathOverlayNoData": "Nessun dato di percorso da mostrare sulla mappa",
+  "meshcorePathOverlayInferredUnavailable": "Nessuna evidenza di percorso per questo contatto",
+  "meshcorePathOverlayShowInferred": "Mostra percorso inferito",
+  "meshcorePathOverlayShowInferredSubtitle": "Inferisci dai percorsi salvati e dai messaggi ricevuti",
   "meshcorePathOverlayShowOnMap": "Mostra sulla mappa",
   "meshcorePathOverlayShowOnMapSubtitle": "Disegna il percorso come overlay sulla mappa",
   "meshcorePathOverlayUnknownHop": "Hop sconosciuto",

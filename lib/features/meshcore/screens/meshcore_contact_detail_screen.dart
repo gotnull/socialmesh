@@ -242,6 +242,10 @@ class MeshCoreContactDetailScreen extends ConsumerWidget {
         // D42-A: Show on map tile. Hidden when the contact has no
         // usable path data (flood path or all hops unresolved).
         _ShowOnMapTile(contact: c),
+        // D42-B-A: Show inferred path tile. Always visible; the
+        // notifier returns false (and the snackbar fires) when no
+        // app-local evidence exists for this contact.
+        _ShowInferredPathTile(contact: c),
         // D41-A: Telemetry tile. Always visible for chat and
         // repeater contacts; the sheet handles the no-data /
         // timeout / cooling states internally.
@@ -533,5 +537,45 @@ class _ShowOnMapTile extends ConsumerWidget {
     Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (_) => const MeshCoreMapScreen()));
+  }
+}
+
+/// D42-B-A: Contact-detail tile that surfaces an inferred path overlay
+/// built from app-local evidence (D39 saved entries + persisted
+/// inbound message paths). Always visible; the notifier returns false
+/// when no usable evidence exists, and the tap handler surfaces a
+/// quiet info snackbar in that case.
+class _ShowInferredPathTile extends ConsumerWidget {
+  final MeshCoreContact contact;
+
+  const _ShowInferredPathTile({required this.contact});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return SettingsTile(
+      key: const ValueKey('meshcore-contact-detail-show-inferred-path'),
+      icon: Icons.auto_fix_high_rounded,
+      iconColor: context.accentColor,
+      title: l10n.meshcorePathOverlayShowInferred,
+      subtitle: l10n.meshcorePathOverlayShowInferredSubtitle,
+      onTap: () => _activate(context, ref),
+    );
+  }
+
+  Future<void> _activate(BuildContext context, WidgetRef ref) async {
+    final l10n = context.l10n;
+    final navigator = Navigator.of(context);
+    final ok = await ref
+        .read(meshCorePathOverlayProvider.notifier)
+        .setInferred(contact);
+    if (!context.mounted) return;
+    if (!ok) {
+      showInfoSnackBar(context, l10n.meshcorePathOverlayInferredUnavailable);
+      return;
+    }
+    navigator.push(
+      MaterialPageRoute(builder: (_) => const MeshCoreMapScreen()),
+    );
   }
 }

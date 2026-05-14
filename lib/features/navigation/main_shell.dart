@@ -1338,16 +1338,15 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
         requiresConnection: true,
         badgeProviderKey: 'mesh_explorer',
       ),
-    if (AppFeatureFlags.isMeshCapacityEnabled)
-      DrawerMenuItem(
-        id: 'mesh_capacity',
-        icon: Icons.network_check,
-        label: l10n.meshCapacityScreenTitle,
-        screen: const MeshCapacityScreen(),
-        iconColor: AccentColors.cyan,
-        requiresConnection: true,
-        whatsNewBadgeKey: 'mesh_capacity',
-      ),
+    DrawerMenuItem(
+      id: 'mesh_capacity',
+      icon: Icons.network_check,
+      label: l10n.meshCapacityScreenTitle,
+      screen: const MeshCapacityScreen(),
+      iconColor: AccentColors.cyan,
+      requiresConnection: true,
+      whatsNewBadgeKey: 'mesh_capacity',
+    ),
     if (AppFeatureFlags.isMeshFeedEnabled)
       DrawerMenuItem(
         id: 'mesh_feed',

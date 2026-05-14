@@ -10,6 +10,7 @@ import '../models/presence_confidence.dart';
 import '../models/social.dart';
 import '../services/notifications/push_notification_service.dart';
 import '../services/protocol/protocol_service.dart';
+import '../services/protocol/socialmesh/sm_presence.dart';
 import '../services/signal_service.dart';
 import '../utils/location_privacy.dart';
 import 'age_eligibility_provider.dart';
@@ -261,7 +262,10 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     final service = ref.read(signalServiceProvider);
     final protocol = ref.read(protocolServiceProvider);
 
-    // Set up broadcast callback (includes signalId for deterministic matching)
+    // Set up broadcast callback. The signalId arg is the local/Firestore
+    // doc ID — it is not transmitted on the wire (binary SM_SIGNAL carries
+    // its own random uint64). Presence rides a separate SM_PRESENCE
+    // packet rather than piggybacking on the signal.
     service.onBroadcastSignal =
         (
           String signalId,
@@ -272,32 +276,34 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
           bool hasImage,
         ) async {
           try {
-            // Include extended presence info if available and rate limiting allows
             final presenceService = ref.read(extendedPresenceServiceProvider);
             await presenceService.init();
             final myPresence = await presenceService.getMyPresenceInfo();
-            Map<String, dynamic>? presenceInfo;
             if (myPresence.hasData &&
                 presenceService.shouldBroadcast(myPresence)) {
-              presenceInfo = myPresence.toJson();
-              await presenceService.recordBroadcast(myPresence);
-              AppLogging.social(
-                'Piggybacking presence on signal: intent=${myPresence.intent.name}',
+              final intent =
+                  SmPresenceIntent.values[myPresence.intent.value.clamp(
+                    0,
+                    SmPresenceIntent.values.length - 1,
+                  )];
+              final presencePacketId = await protocol.sendSmPresence(
+                SmPresence(intent: intent, status: myPresence.shortStatus),
               );
+              if (presencePacketId != null) {
+                await presenceService.recordBroadcast(myPresence);
+                AppLogging.social(
+                  'Broadcast SM_PRESENCE alongside signal: '
+                  'intent=${myPresence.intent.name}',
+                );
+              }
             }
 
-            // Use dual-mode send: sends binary SM_SIGNAL (261) when enabled,
-            // with optional legacy JSON (256) fallback for compatibility.
-            // When binary is disabled (default), behaves identically to
-            // the previous direct sendSignal() call.
-            final packetId = await protocol.sendSignalDualMode(
-              signalId: signalId,
+            final packetId = await protocol.sendSignal(
               content: content,
               ttlMinutes: ttlMinutes,
               latitude: latitude,
               longitude: longitude,
               hasImage: hasImage,
-              presenceInfo: presenceInfo,
             );
             return packetId;
           } catch (e) {

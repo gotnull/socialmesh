@@ -9130,6 +9130,17 @@ class AppLocalizationsPt extends AppLocalizations {
       'Desenhar a rota como overlay no mapa';
 
   @override
+  String get meshcorePathOverlayShowInferred => 'Mostrar rota inferida';
+
+  @override
+  String get meshcorePathOverlayShowInferredSubtitle =>
+      'Inferir a partir de rotas salvas e mensagens recebidas';
+
+  @override
+  String get meshcorePathOverlayInferredUnavailable =>
+      'Nenhuma evidência de rota para este contato';
+
+  @override
   String get meshcorePathOverlayClear => 'Limpar rota';
 
   @override

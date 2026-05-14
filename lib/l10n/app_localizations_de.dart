@@ -9166,6 +9166,17 @@ class AppLocalizationsDe extends AppLocalizations {
       'Pfad als Routen-Overlay einzeichnen';
 
   @override
+  String get meshcorePathOverlayShowInferred => 'Show inferred path';
+
+  @override
+  String get meshcorePathOverlayShowInferredSubtitle =>
+      'Infer from saved paths and received messages';
+
+  @override
+  String get meshcorePathOverlayInferredUnavailable =>
+      'No path evidence yet for this contact';
+
+  @override
   String get meshcorePathOverlayClear => 'Pfad löschen';
 
   @override

@@ -26,6 +26,7 @@ import '../services/meshcore/protocol/meshcore_capture.dart';
 import '../services/meshcore/protocol/meshcore_messages.dart';
 import '../services/meshcore/protocol/meshcore_session.dart';
 import '../services/meshcore/storage/meshcore_channel_prefs_store.dart';
+import '../services/meshcore/storage/meshcore_message_store.dart';
 import '../services/meshcore/storage/meshcore_path_history_store.dart';
 import 'app_providers.dart';
 import 'connection_providers.dart';
@@ -1579,6 +1580,57 @@ class MeshCorePathOverlayNotifier extends Notifier<MeshCorePathOverlay?> {
     );
     return _apply(overlay);
   }
+
+  /// D42-B-A: build an overlay from app-local passive evidence (D39
+  /// saved entries + persisted inbound message paths). Uses
+  /// [inferRecentPathBytes] for the selection rule; never queries the
+  /// firmware. Returns `true` iff a candidate was found AND the
+  /// resulting overlay is drawable. State is not mutated on the
+  /// `false` path — existing overlays survive a failed inference
+  /// attempt.
+  Future<bool> setInferred(MeshCoreContact contact) async {
+    if (!ref.mounted) return false;
+    final selfPrefix = ref.read(meshCoreSelfPubKeyPrefixProvider);
+    final contactPrefix = meshCoreContactPubKeyPrefix(contact.publicKeyHex);
+    if (selfPrefix.isEmpty || contactPrefix.isEmpty) return false;
+
+    final historyStore = ref.read(meshCorePathHistoryStoreProvider);
+    final messageStore = _messageStoreForInference;
+
+    final results = await Future.wait<Object>([
+      historyStore.load(selfPrefix, contactPrefix),
+      messageStore.loadContactMessages(contact.publicKeyHex),
+    ]);
+    if (!ref.mounted) return false;
+
+    final savedEntries = results[0] as List<MeshCorePathHistoryEntry>;
+    final storedMessages = results[1] as List<MeshCoreStoredMessage>;
+
+    final inferred = inferRecentPathBytes(
+      savedEntries: savedEntries,
+      storedMessages: storedMessages,
+    );
+    if (inferred == null) return false;
+
+    final contacts = ref.read(meshCoreContactsProvider).contacts;
+    final selfInfo = ref.read(meshCoreSelfInfoProvider).selfInfo;
+    final overlay = MeshCorePathOverlay.fromInferred(
+      target: contact,
+      contacts: contacts,
+      selfInfo: selfInfo,
+      hopBytes: inferred.hopBytes,
+    );
+    return _apply(overlay);
+  }
+
+  /// Lazy MeshCoreMessageStore reference. Mirrors the
+  /// `MeshCoreChatHistoryNotifier` pattern: stores are instantiated
+  /// per-notifier and rely on `SharedPreferences.setMockInitialValues`
+  /// in tests. There is no dedicated provider for the message store
+  /// in this layer.
+  MeshCoreMessageStore get _messageStoreForInference =>
+      _messageStoreInstance ??= MeshCoreMessageStore();
+  MeshCoreMessageStore? _messageStoreInstance;
 
   /// Remove the active overlay.
   void clear() {

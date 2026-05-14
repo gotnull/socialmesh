@@ -3,10 +3,9 @@
 
 /// Tracks which mesh nodes support the SocialMesh binary protocol.
 ///
-/// When we receive a packet on portnum 260/261/262 from a node,
-/// we mark that node as binary-capable. This information is used to:
-///  - Decide when to stop dual-sending (legacy + binary).
-///  - Show protocol capability in node profiles.
+/// When we receive a packet on portnum 260/261/262 from a node, we mark
+/// that node as binary-capable so node-profile UI can surface protocol
+/// capability.
 ///
 /// Persistence uses an abstract [SmCapabilityPersistence] interface
 /// for testability (production impl uses SharedPreferences).
@@ -29,19 +28,11 @@ abstract class SmCapabilityPersistence {
 /// In-memory + optionally persisted capability store.
 ///
 /// Keyed by nodeNum. Stores the last time we received a binary SM
-/// packet from each node. Supports threshold-based mesh readiness
-/// detection for migration heuristics.
+/// packet from each node.
 class SmCapabilityStore {
   final Map<int, DateTime> _nodes = {};
   final SmCapabilityPersistence? _persistence;
   final SmClock _clock;
-
-  /// Maximum age for "recently seen" binary capability.
-  static const Duration recentThreshold = Duration(hours: 24);
-
-  /// Minimum number of binary-capable peers seen recently before
-  /// considering the mesh "binary ready" (for disabling legacy mode).
-  static const int meshReadyThreshold = 2;
 
   SmCapabilityStore({SmCapabilityPersistence? persistence, SmClock? clock})
     : _persistence = persistence,
@@ -70,16 +61,6 @@ class SmCapabilityStore {
 
   /// Number of nodes known to support binary.
   int get supportedNodeCount => _nodes.length;
-
-  /// Number of nodes seen sending binary within [recentThreshold].
-  int get recentBinaryNodeCount {
-    final cutoff = _clock().subtract(recentThreshold);
-    return _nodes.values.where((t) => t.isAfter(cutoff)).length;
-  }
-
-  /// Whether enough binary-capable peers exist to consider the mesh
-  /// ready for binary-only mode.
-  bool get isMeshBinaryReady => recentBinaryNodeCount >= meshReadyThreshold;
 
   /// All known binary-capable node numbers.
   Set<int> get supportedNodes => Set.unmodifiable(_nodes.keys.toSet());

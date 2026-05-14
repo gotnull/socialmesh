@@ -12236,6 +12236,18 @@
     "@meshcorePathOverlayShowOnMapSubtitle": {
         "description": "D42-A - Contact Detail Show-on-map tile subtitle"
     },
+    "meshcorePathOverlayShowInferred": "Show inferred path",
+    "@meshcorePathOverlayShowInferred": {
+        "description": "D42-B-A - Contact Detail tile that infers a path from app-local evidence and draws it on the map"
+    },
+    "meshcorePathOverlayShowInferredSubtitle": "Infer from saved paths and received messages",
+    "@meshcorePathOverlayShowInferredSubtitle": {
+        "description": "D42-B-A - Contact Detail Show-inferred-path tile subtitle"
+    },
+    "meshcorePathOverlayInferredUnavailable": "No path evidence yet for this contact",
+    "@meshcorePathOverlayInferredUnavailable": {
+        "description": "D42-B-A - info snackbar shown when the Show-inferred-path tile is tapped but no usable evidence exists for the contact"
+    },
     "meshcorePathOverlayClear": "Clear path",
     "@meshcorePathOverlayClear": {
         "description": "D42-A - map app-bar action that removes the active path overlay"

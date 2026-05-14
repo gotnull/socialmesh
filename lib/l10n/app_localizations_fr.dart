@@ -9216,6 +9216,17 @@ class AppLocalizationsFr extends AppLocalizations {
       'Tracer le chemin comme superposition d\'itinéraire';
 
   @override
+  String get meshcorePathOverlayShowInferred => 'Show inferred path';
+
+  @override
+  String get meshcorePathOverlayShowInferredSubtitle =>
+      'Infer from saved paths and received messages';
+
+  @override
+  String get meshcorePathOverlayInferredUnavailable =>
+      'No path evidence yet for this contact';
+
+  @override
   String get meshcorePathOverlayClear => 'Effacer le chemin';
 
   @override

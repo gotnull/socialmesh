@@ -9033,6 +9033,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Draw the path as a route overlay';
 
   @override
+  String get meshcorePathOverlayShowInferred => 'Show inferred path';
+
+  @override
+  String get meshcorePathOverlayShowInferredSubtitle =>
+      'Infer from saved paths and received messages';
+
+  @override
+  String get meshcorePathOverlayInferredUnavailable =>
+      'No path evidence yet for this contact';
+
+  @override
   String get meshcorePathOverlayClear => 'Clear path';
 
   @override

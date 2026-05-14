@@ -15933,6 +15933,24 @@ abstract class AppLocalizations {
   /// **'Draw the path as a route overlay'**
   String get meshcorePathOverlayShowOnMapSubtitle;
 
+  /// D42-B-A - Contact Detail tile that infers a path from app-local evidence and draws it on the map
+  ///
+  /// In en, this message translates to:
+  /// **'Show inferred path'**
+  String get meshcorePathOverlayShowInferred;
+
+  /// D42-B-A - Contact Detail Show-inferred-path tile subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Infer from saved paths and received messages'**
+  String get meshcorePathOverlayShowInferredSubtitle;
+
+  /// D42-B-A - info snackbar shown when the Show-inferred-path tile is tapped but no usable evidence exists for the contact
+  ///
+  /// In en, this message translates to:
+  /// **'No path evidence yet for this contact'**
+  String get meshcorePathOverlayInferredUnavailable;
+
   /// D42-A - map app-bar action that removes the active path overlay
   ///
   /// In en, this message translates to:

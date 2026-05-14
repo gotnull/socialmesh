@@ -9182,6 +9182,17 @@ class AppLocalizationsEs extends AppLocalizations {
       'Dibujar la ruta como superposición en el mapa';
 
   @override
+  String get meshcorePathOverlayShowInferred => 'Show inferred path';
+
+  @override
+  String get meshcorePathOverlayShowInferredSubtitle =>
+      'Infer from saved paths and received messages';
+
+  @override
+  String get meshcorePathOverlayInferredUnavailable =>
+      'No path evidence yet for this contact';
+
+  @override
   String get meshcorePathOverlayClear => 'Borrar ruta';
 
   @override
