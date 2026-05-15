@@ -10534,6 +10534,186 @@
     "@meshcoreRepeaterCliHelpNeighborsHeader": {
         "description": "D49-B - help section header"
     },
+    "meshcoreRepeaterCliHelpBridgeHeader": "Bridge",
+    "@meshcoreRepeaterCliHelpBridgeHeader": {
+        "description": "D49-D4 - help section header"
+    },
+    "meshcoreRepeaterCliHelpLoggingHeader": "Logging",
+    "@meshcoreRepeaterCliHelpLoggingHeader": {
+        "description": "D49-D4 - help section header"
+    },
+    "meshcoreRepeaterCliHelpRegionHeader": "Region",
+    "@meshcoreRepeaterCliHelpRegionHeader": {
+        "description": "D49-D4 - help section header"
+    },
+    "meshcoreRepeaterCliHelpGpsHeader": "GPS",
+    "@meshcoreRepeaterCliHelpGpsHeader": {
+        "description": "D49-D4 - help section header"
+    },
+    "meshcoreRepeaterCliHelpPassword": "Change the admin password (password <new-password>).",
+    "@meshcoreRepeaterCliHelpPassword": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetAllowReadOnly": "Toggle guest read-only access (set allow.read.only <on|off>).",
+    "@meshcoreRepeaterCliHelpSetAllowReadOnly": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetFloodMax": "Set the flood max-hop ceiling (set flood.max <hops>).",
+    "@meshcoreRepeaterCliHelpSetFloodMax": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetIntThresh": "Set the interference threshold in dB (set int.thresh <db>).",
+    "@meshcoreRepeaterCliHelpSetIntThresh": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetAgcResetInterval": "Set the AGC reset interval in seconds (set agc.reset.interval <s>).",
+    "@meshcoreRepeaterCliHelpSetAgcResetInterval": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetMultiAcks": "Toggle multi-ack mode (set multi.acks <0|1>).",
+    "@meshcoreRepeaterCliHelpSetMultiAcks": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetFloodAdvertInterval": "Set flood-advert interval in hours (set flood.advert.interval <h>).",
+    "@meshcoreRepeaterCliHelpSetFloodAdvertInterval": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetGuestPassword": "Change the guest password (set guest.password <new>).",
+    "@meshcoreRepeaterCliHelpSetGuestPassword": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetLat": "Set latitude in decimal degrees (set lat <lat>).",
+    "@meshcoreRepeaterCliHelpSetLat": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetLon": "Set longitude in decimal degrees (set lon <lon>).",
+    "@meshcoreRepeaterCliHelpSetLon": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetRxDelay": "Set receive-delay base (set rxdelay <base>).",
+    "@meshcoreRepeaterCliHelpSetRxDelay": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetTxDelay": "Set transmit-delay factor (set txdelay <factor>).",
+    "@meshcoreRepeaterCliHelpSetTxDelay": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetDirectTxDelay": "Set direct-mode transmit-delay factor (set direct.txdelay <factor>).",
+    "@meshcoreRepeaterCliHelpSetDirectTxDelay": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetBridgeEnabled": "Toggle the serial bridge (set bridge.enabled <on|off>).",
+    "@meshcoreRepeaterCliHelpSetBridgeEnabled": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetBridgeDelay": "Set bridge tx delay in ms 0-10000 (set bridge.delay <ms>).",
+    "@meshcoreRepeaterCliHelpSetBridgeDelay": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetBridgeSource": "Set the bridge source channel (set bridge.source <rx|tx>).",
+    "@meshcoreRepeaterCliHelpSetBridgeSource": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetBridgeBaud": "Set the bridge baud rate (set bridge.baud <speed>).",
+    "@meshcoreRepeaterCliHelpSetBridgeBaud": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetBridgeSecret": "Set the bridge shared secret (set bridge.secret <secret>).",
+    "@meshcoreRepeaterCliHelpSetBridgeSecret": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetAdcMultiplier": "Set the ADC multiplier factor (set adc.multiplier <factor>).",
+    "@meshcoreRepeaterCliHelpSetAdcMultiplier": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpTempRadio": "Temporarily run a radio config for N minutes (tempradio <freq>,<bw>,<sf>,<cr>,<minutes>).",
+    "@meshcoreRepeaterCliHelpTempRadio": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetPerm": "Set permissions for a peer (setperm <pubkey-hex> <permissions>).",
+    "@meshcoreRepeaterCliHelpSetPerm": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpGetBridgeType": "Show the configured bridge type (get bridge.type).",
+    "@meshcoreRepeaterCliHelpGetBridgeType": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpLogStart": "Start the on-device log (log start).",
+    "@meshcoreRepeaterCliHelpLogStart": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpLogStop": "Stop the on-device log (log stop).",
+    "@meshcoreRepeaterCliHelpLogStop": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpLogErase": "Erase the on-device log (log erase).",
+    "@meshcoreRepeaterCliHelpLogErase": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpRegion": "Show the current region.",
+    "@meshcoreRepeaterCliHelpRegion": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpRegionLoad": "Reload the region table from flash (region load).",
+    "@meshcoreRepeaterCliHelpRegionLoad": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpRegionGet": "Show one region or all (region get <* | name-prefix>).",
+    "@meshcoreRepeaterCliHelpRegionGet": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpRegionPut": "Add/replace a region (region put <name> <* | parent-name-prefix>).",
+    "@meshcoreRepeaterCliHelpRegionPut": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpRegionRemove": "Remove a region (region remove <name>).",
+    "@meshcoreRepeaterCliHelpRegionRemove": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpRegionAllowf": "Allow a frequency range (region allowf <* | name-prefix>).",
+    "@meshcoreRepeaterCliHelpRegionAllowf": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpRegionDenyf": "Deny a frequency range (region denyf <* | name-prefix>).",
+    "@meshcoreRepeaterCliHelpRegionDenyf": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpRegionHome": "Show the home region.",
+    "@meshcoreRepeaterCliHelpRegionHome": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpRegionHomeSet": "Set the home region (region home <* | name-prefix>).",
+    "@meshcoreRepeaterCliHelpRegionHomeSet": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpRegionSave": "Save the region table (region save).",
+    "@meshcoreRepeaterCliHelpRegionSave": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpGps": "Show the GPS state.",
+    "@meshcoreRepeaterCliHelpGps": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpGpsOnOff": "Toggle the GPS module (gps <on|off>).",
+    "@meshcoreRepeaterCliHelpGpsOnOff": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpGpsSync": "Sync the on-device clock from GPS (gps sync).",
+    "@meshcoreRepeaterCliHelpGpsSync": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpGpsSetLoc": "Set lat/lon from the current GPS fix (gps setloc).",
+    "@meshcoreRepeaterCliHelpGpsSetLoc": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpGpsAdvert": "Show the GPS advert policy.",
+    "@meshcoreRepeaterCliHelpGpsAdvert": {
+        "description": "D49-D4 - help row description"
+    },
+    "meshcoreRepeaterCliHelpGpsAdvertSet": "Set the GPS advert policy (gps advert <none|share|prefs>).",
+    "@meshcoreRepeaterCliHelpGpsAdvertSet": {
+        "description": "D49-D4 - help row description"
+    },
     "meshcoreRepeaterCliHelpAdvert": "Broadcast our advertisement once.",
     "@meshcoreRepeaterCliHelpAdvert": {
         "description": "D49-B - help row description"

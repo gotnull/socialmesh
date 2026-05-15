@@ -55,7 +55,7 @@ Future<void> _settle(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('sheet renders the three canonical section headers', (
+  testWidgets('sheet renders the canonical 7 section headers (D49-D4)', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1080, 2400);
@@ -69,18 +69,33 @@ void main() {
     await _settle(tester);
 
     expect(find.text(_l10n.meshcoreRepeaterCliHelpTitle), findsOneWidget);
-    expect(
-      find.text(_l10n.meshcoreRepeaterCliHelpGeneralHeader.toUpperCase()),
-      findsOneWidget,
-    );
-    expect(
-      find.text(_l10n.meshcoreRepeaterCliHelpSettingsHeader.toUpperCase()),
-      findsOneWidget,
-    );
-    expect(
-      find.text(_l10n.meshcoreRepeaterCliHelpNeighborsHeader.toUpperCase()),
-      findsOneWidget,
-    );
+
+    // The sheet's DraggableScrollableSheet only renders visible
+    // section headers; scroll the list to bring each one into view
+    // before asserting it. Use a Scrollable finder rather than
+    // ListView so it works whether the sheet wraps in a ListView,
+    // CustomScrollView, or other scrollable variant.
+    final scrollable = find.byType(Scrollable);
+    for (final header in <String>[
+      _l10n.meshcoreRepeaterCliHelpGeneralHeader.toUpperCase(),
+      _l10n.meshcoreRepeaterCliHelpSettingsHeader.toUpperCase(),
+      _l10n.meshcoreRepeaterCliHelpBridgeHeader.toUpperCase(),
+      _l10n.meshcoreRepeaterCliHelpLoggingHeader.toUpperCase(),
+      _l10n.meshcoreRepeaterCliHelpNeighborsHeader.toUpperCase(),
+      _l10n.meshcoreRepeaterCliHelpRegionHeader.toUpperCase(),
+      _l10n.meshcoreRepeaterCliHelpGpsHeader.toUpperCase(),
+    ]) {
+      await tester.scrollUntilVisible(
+        find.text(header),
+        300,
+        scrollable: scrollable.first,
+      );
+      expect(
+        find.text(header),
+        findsOneWidget,
+        reason: 'section header "$header" must render',
+      );
+    }
   });
 
   testWidgets('tapping a help row pops sheet with command template', (

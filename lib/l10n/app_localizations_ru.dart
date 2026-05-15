@@ -7890,6 +7890,179 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreRepeaterCliHelpNeighborsHeader => 'Соседи';
 
   @override
+  String get meshcoreRepeaterCliHelpBridgeHeader => 'Bridge';
+
+  @override
+  String get meshcoreRepeaterCliHelpLoggingHeader => 'Логи';
+
+  @override
+  String get meshcoreRepeaterCliHelpRegionHeader => 'Регион';
+
+  @override
+  String get meshcoreRepeaterCliHelpGpsHeader => 'GPS';
+
+  @override
+  String get meshcoreRepeaterCliHelpPassword =>
+      'Сменить пароль администратора (password <новый-пароль>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetAllowReadOnly =>
+      'Включить гостевой доступ только для чтения (set allow.read.only <on|off>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetFloodMax =>
+      'Максимум хопов в режиме flood (set flood.max <hops>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetIntThresh =>
+      'Порог помех в дБ (set int.thresh <db>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetAgcResetInterval =>
+      'Интервал сброса AGC в секундах (set agc.reset.interval <s>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetMultiAcks =>
+      'Включить режим multi-ack (set multi.acks <0|1>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetFloodAdvertInterval =>
+      'Интервал flood-анонса в часах (set flood.advert.interval <h>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetGuestPassword =>
+      'Сменить гостевой пароль (set guest.password <новый>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetLat =>
+      'Задать широту в десятичных градусах (set lat <lat>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetLon =>
+      'Задать долготу в десятичных градусах (set lon <lon>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetRxDelay =>
+      'Задать базу receive-delay (set rxdelay <base>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetTxDelay =>
+      'Задать коэффициент transmit-delay (set txdelay <factor>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetDirectTxDelay =>
+      'Задать коэффициент transmit-delay в прямом режиме (set direct.txdelay <factor>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetBridgeEnabled =>
+      'Включить serial-bridge (set bridge.enabled <on|off>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetBridgeDelay =>
+      'Задать bridge tx delay в мс 0-10000 (set bridge.delay <ms>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetBridgeSource =>
+      'Задать source-канал bridge (set bridge.source <rx|tx>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetBridgeBaud =>
+      'Задать скорость baud bridge (set bridge.baud <speed>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetBridgeSecret =>
+      'Задать общий секрет bridge (set bridge.secret <secret>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetAdcMultiplier =>
+      'Задать множитель ADC (set adc.multiplier <factor>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpTempRadio =>
+      'Временно применить radio-конфиг на N минут (tempradio <freq>,<bw>,<sf>,<cr>,<minutes>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetPerm =>
+      'Задать разрешения для peer (setperm <pubkey-hex> <permissions>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpGetBridgeType =>
+      'Показать тип сконфигурированного bridge (get bridge.type).';
+
+  @override
+  String get meshcoreRepeaterCliHelpLogStart =>
+      'Старт лога на устройстве (log start).';
+
+  @override
+  String get meshcoreRepeaterCliHelpLogStop =>
+      'Остановить лог на устройстве (log stop).';
+
+  @override
+  String get meshcoreRepeaterCliHelpLogErase =>
+      'Стереть лог на устройстве (log erase).';
+
+  @override
+  String get meshcoreRepeaterCliHelpRegion => 'Показать текущий регион.';
+
+  @override
+  String get meshcoreRepeaterCliHelpRegionLoad =>
+      'Перезагрузить таблицу регионов из flash (region load).';
+
+  @override
+  String get meshcoreRepeaterCliHelpRegionGet =>
+      'Показать один регион или все (region get <* | префикс-имени>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpRegionPut =>
+      'Добавить/заменить регион (region put <имя> <* | префикс-родителя>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpRegionRemove =>
+      'Удалить регион (region remove <имя>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpRegionAllowf =>
+      'Разрешить диапазон частот (region allowf <* | префикс-имени>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpRegionDenyf =>
+      'Запретить диапазон частот (region denyf <* | префикс-имени>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpRegionHome => 'Показать домашний регион.';
+
+  @override
+  String get meshcoreRepeaterCliHelpRegionHomeSet =>
+      'Задать домашний регион (region home <* | префикс-имени>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpRegionSave =>
+      'Сохранить таблицу регионов (region save).';
+
+  @override
+  String get meshcoreRepeaterCliHelpGps => 'Показать состояние GPS.';
+
+  @override
+  String get meshcoreRepeaterCliHelpGpsOnOff =>
+      'Включить/выключить модуль GPS (gps <on|off>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpGpsSync =>
+      'Синхронизировать часы по GPS (gps sync).';
+
+  @override
+  String get meshcoreRepeaterCliHelpGpsSetLoc =>
+      'Задать lat/lon по текущему GPS-фиксу (gps setloc).';
+
+  @override
+  String get meshcoreRepeaterCliHelpGpsAdvert =>
+      'Показать политику GPS-адвертов.';
+
+  @override
+  String get meshcoreRepeaterCliHelpGpsAdvertSet =>
+      'Задать политику GPS-адвертов (gps advert <none|share|prefs>).';
+
+  @override
   String get meshcoreRepeaterCliHelpAdvert =>
       'Однократно транслирует наше объявление.';
 

@@ -13851,6 +13851,276 @@ abstract class AppLocalizations {
   /// **'Neighbours'**
   String get meshcoreRepeaterCliHelpNeighborsHeader;
 
+  /// D49-D4 - help section header
+  ///
+  /// In en, this message translates to:
+  /// **'Bridge'**
+  String get meshcoreRepeaterCliHelpBridgeHeader;
+
+  /// D49-D4 - help section header
+  ///
+  /// In en, this message translates to:
+  /// **'Logging'**
+  String get meshcoreRepeaterCliHelpLoggingHeader;
+
+  /// D49-D4 - help section header
+  ///
+  /// In en, this message translates to:
+  /// **'Region'**
+  String get meshcoreRepeaterCliHelpRegionHeader;
+
+  /// D49-D4 - help section header
+  ///
+  /// In en, this message translates to:
+  /// **'GPS'**
+  String get meshcoreRepeaterCliHelpGpsHeader;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Change the admin password (password <new-password>).'**
+  String get meshcoreRepeaterCliHelpPassword;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle guest read-only access (set allow.read.only <on|off>).'**
+  String get meshcoreRepeaterCliHelpSetAllowReadOnly;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Set the flood max-hop ceiling (set flood.max <hops>).'**
+  String get meshcoreRepeaterCliHelpSetFloodMax;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Set the interference threshold in dB (set int.thresh <db>).'**
+  String get meshcoreRepeaterCliHelpSetIntThresh;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Set the AGC reset interval in seconds (set agc.reset.interval <s>).'**
+  String get meshcoreRepeaterCliHelpSetAgcResetInterval;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle multi-ack mode (set multi.acks <0|1>).'**
+  String get meshcoreRepeaterCliHelpSetMultiAcks;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Set flood-advert interval in hours (set flood.advert.interval <h>).'**
+  String get meshcoreRepeaterCliHelpSetFloodAdvertInterval;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Change the guest password (set guest.password <new>).'**
+  String get meshcoreRepeaterCliHelpSetGuestPassword;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Set latitude in decimal degrees (set lat <lat>).'**
+  String get meshcoreRepeaterCliHelpSetLat;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Set longitude in decimal degrees (set lon <lon>).'**
+  String get meshcoreRepeaterCliHelpSetLon;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Set receive-delay base (set rxdelay <base>).'**
+  String get meshcoreRepeaterCliHelpSetRxDelay;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Set transmit-delay factor (set txdelay <factor>).'**
+  String get meshcoreRepeaterCliHelpSetTxDelay;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Set direct-mode transmit-delay factor (set direct.txdelay <factor>).'**
+  String get meshcoreRepeaterCliHelpSetDirectTxDelay;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle the serial bridge (set bridge.enabled <on|off>).'**
+  String get meshcoreRepeaterCliHelpSetBridgeEnabled;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Set bridge tx delay in ms 0-10000 (set bridge.delay <ms>).'**
+  String get meshcoreRepeaterCliHelpSetBridgeDelay;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Set the bridge source channel (set bridge.source <rx|tx>).'**
+  String get meshcoreRepeaterCliHelpSetBridgeSource;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Set the bridge baud rate (set bridge.baud <speed>).'**
+  String get meshcoreRepeaterCliHelpSetBridgeBaud;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Set the bridge shared secret (set bridge.secret <secret>).'**
+  String get meshcoreRepeaterCliHelpSetBridgeSecret;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Set the ADC multiplier factor (set adc.multiplier <factor>).'**
+  String get meshcoreRepeaterCliHelpSetAdcMultiplier;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Temporarily run a radio config for N minutes (tempradio <freq>,<bw>,<sf>,<cr>,<minutes>).'**
+  String get meshcoreRepeaterCliHelpTempRadio;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Set permissions for a peer (setperm <pubkey-hex> <permissions>).'**
+  String get meshcoreRepeaterCliHelpSetPerm;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Show the configured bridge type (get bridge.type).'**
+  String get meshcoreRepeaterCliHelpGetBridgeType;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Start the on-device log (log start).'**
+  String get meshcoreRepeaterCliHelpLogStart;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Stop the on-device log (log stop).'**
+  String get meshcoreRepeaterCliHelpLogStop;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Erase the on-device log (log erase).'**
+  String get meshcoreRepeaterCliHelpLogErase;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Show the current region.'**
+  String get meshcoreRepeaterCliHelpRegion;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Reload the region table from flash (region load).'**
+  String get meshcoreRepeaterCliHelpRegionLoad;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Show one region or all (region get <* | name-prefix>).'**
+  String get meshcoreRepeaterCliHelpRegionGet;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Add/replace a region (region put <name> <* | parent-name-prefix>).'**
+  String get meshcoreRepeaterCliHelpRegionPut;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Remove a region (region remove <name>).'**
+  String get meshcoreRepeaterCliHelpRegionRemove;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Allow a frequency range (region allowf <* | name-prefix>).'**
+  String get meshcoreRepeaterCliHelpRegionAllowf;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Deny a frequency range (region denyf <* | name-prefix>).'**
+  String get meshcoreRepeaterCliHelpRegionDenyf;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Show the home region.'**
+  String get meshcoreRepeaterCliHelpRegionHome;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Set the home region (region home <* | name-prefix>).'**
+  String get meshcoreRepeaterCliHelpRegionHomeSet;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Save the region table (region save).'**
+  String get meshcoreRepeaterCliHelpRegionSave;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Show the GPS state.'**
+  String get meshcoreRepeaterCliHelpGps;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle the GPS module (gps <on|off>).'**
+  String get meshcoreRepeaterCliHelpGpsOnOff;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Sync the on-device clock from GPS (gps sync).'**
+  String get meshcoreRepeaterCliHelpGpsSync;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Set lat/lon from the current GPS fix (gps setloc).'**
+  String get meshcoreRepeaterCliHelpGpsSetLoc;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Show the GPS advert policy.'**
+  String get meshcoreRepeaterCliHelpGpsAdvert;
+
+  /// D49-D4 - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Set the GPS advert policy (gps advert <none|share|prefs>).'**
+  String get meshcoreRepeaterCliHelpGpsAdvertSet;
+
   /// D49-B - help row description
   ///
   /// In en, this message translates to:

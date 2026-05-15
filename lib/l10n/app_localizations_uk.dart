@@ -7898,6 +7898,178 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreRepeaterCliHelpNeighborsHeader => 'Neighbours';
 
   @override
+  String get meshcoreRepeaterCliHelpBridgeHeader => 'Bridge';
+
+  @override
+  String get meshcoreRepeaterCliHelpLoggingHeader => 'Logging';
+
+  @override
+  String get meshcoreRepeaterCliHelpRegionHeader => 'Region';
+
+  @override
+  String get meshcoreRepeaterCliHelpGpsHeader => 'GPS';
+
+  @override
+  String get meshcoreRepeaterCliHelpPassword =>
+      'Change the admin password (password <new-password>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetAllowReadOnly =>
+      'Toggle guest read-only access (set allow.read.only <on|off>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetFloodMax =>
+      'Set the flood max-hop ceiling (set flood.max <hops>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetIntThresh =>
+      'Set the interference threshold in dB (set int.thresh <db>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetAgcResetInterval =>
+      'Set the AGC reset interval in seconds (set agc.reset.interval <s>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetMultiAcks =>
+      'Toggle multi-ack mode (set multi.acks <0|1>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetFloodAdvertInterval =>
+      'Set flood-advert interval in hours (set flood.advert.interval <h>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetGuestPassword =>
+      'Change the guest password (set guest.password <new>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetLat =>
+      'Set latitude in decimal degrees (set lat <lat>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetLon =>
+      'Set longitude in decimal degrees (set lon <lon>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetRxDelay =>
+      'Set receive-delay base (set rxdelay <base>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetTxDelay =>
+      'Set transmit-delay factor (set txdelay <factor>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetDirectTxDelay =>
+      'Set direct-mode transmit-delay factor (set direct.txdelay <factor>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetBridgeEnabled =>
+      'Toggle the serial bridge (set bridge.enabled <on|off>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetBridgeDelay =>
+      'Set bridge tx delay in ms 0-10000 (set bridge.delay <ms>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetBridgeSource =>
+      'Set the bridge source channel (set bridge.source <rx|tx>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetBridgeBaud =>
+      'Set the bridge baud rate (set bridge.baud <speed>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetBridgeSecret =>
+      'Set the bridge shared secret (set bridge.secret <secret>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetAdcMultiplier =>
+      'Set the ADC multiplier factor (set adc.multiplier <factor>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpTempRadio =>
+      'Temporarily run a radio config for N minutes (tempradio <freq>,<bw>,<sf>,<cr>,<minutes>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetPerm =>
+      'Set permissions for a peer (setperm <pubkey-hex> <permissions>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpGetBridgeType =>
+      'Show the configured bridge type (get bridge.type).';
+
+  @override
+  String get meshcoreRepeaterCliHelpLogStart =>
+      'Start the on-device log (log start).';
+
+  @override
+  String get meshcoreRepeaterCliHelpLogStop =>
+      'Stop the on-device log (log stop).';
+
+  @override
+  String get meshcoreRepeaterCliHelpLogErase =>
+      'Erase the on-device log (log erase).';
+
+  @override
+  String get meshcoreRepeaterCliHelpRegion => 'Show the current region.';
+
+  @override
+  String get meshcoreRepeaterCliHelpRegionLoad =>
+      'Reload the region table from flash (region load).';
+
+  @override
+  String get meshcoreRepeaterCliHelpRegionGet =>
+      'Show one region or all (region get <* | name-prefix>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpRegionPut =>
+      'Add/replace a region (region put <name> <* | parent-name-prefix>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpRegionRemove =>
+      'Remove a region (region remove <name>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpRegionAllowf =>
+      'Allow a frequency range (region allowf <* | name-prefix>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpRegionDenyf =>
+      'Deny a frequency range (region denyf <* | name-prefix>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpRegionHome => 'Show the home region.';
+
+  @override
+  String get meshcoreRepeaterCliHelpRegionHomeSet =>
+      'Set the home region (region home <* | name-prefix>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpRegionSave =>
+      'Save the region table (region save).';
+
+  @override
+  String get meshcoreRepeaterCliHelpGps => 'Show the GPS state.';
+
+  @override
+  String get meshcoreRepeaterCliHelpGpsOnOff =>
+      'Toggle the GPS module (gps <on|off>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpGpsSync =>
+      'Sync the on-device clock from GPS (gps sync).';
+
+  @override
+  String get meshcoreRepeaterCliHelpGpsSetLoc =>
+      'Set lat/lon from the current GPS fix (gps setloc).';
+
+  @override
+  String get meshcoreRepeaterCliHelpGpsAdvert => 'Show the GPS advert policy.';
+
+  @override
+  String get meshcoreRepeaterCliHelpGpsAdvertSet =>
+      'Set the GPS advert policy (gps advert <none|share|prefs>).';
+
+  @override
   String get meshcoreRepeaterCliHelpAdvert =>
       'Broadcast our advertisement once.';
 
