@@ -11580,6 +11580,10 @@
     "@meshcoreChatInfoType": {
         "description": "Contact info row label for the contact's advertisement type (chat/repeater/room/sensor)"
     },
+    "meshcoreChatUnreadDividerLabel": "New messages",
+    "@meshcoreChatUnreadDividerLabel": {
+        "description": "D-Q1 - label on the in-chat divider that marks the read/unread boundary captured at chat-open time"
+    },
     "meshcoreChatJumpToLatest": "Jump to latest",
     "@meshcoreChatJumpToLatest": {
         "description": "Floating pill label shown when the user has scrolled away from the bottom of the message list"

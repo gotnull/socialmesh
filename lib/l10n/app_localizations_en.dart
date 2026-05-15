@@ -8653,6 +8653,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshcoreChatInfoType => 'Type';
 
   @override
+  String get meshcoreChatUnreadDividerLabel => 'New messages';
+
+  @override
   String get meshcoreChatJumpToLatest => 'Jump to latest';
 
   @override

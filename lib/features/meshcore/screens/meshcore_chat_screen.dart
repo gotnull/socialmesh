@@ -40,6 +40,7 @@ import '../../../services/meshcore/storage/meshcore_message_store.dart';
 import '../parsers/meshcore_message_frame_parser.dart';
 import '../../../services/meshcore/storage/meshcore_contact_store.dart';
 import '../../../utils/snackbar.dart';
+import '../widgets/meshcore_chat_unread_divider.dart';
 
 /// Types of MeshCore chat conversations.
 enum MeshCoreChatType { contact, channel }
@@ -154,6 +155,13 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   /// Reply action, cleared by Cancel reply, by a successful send, or
   /// when the source message disappears (e.g. local-delete).
   MeshCoreMessage? _replyingTo;
+
+  /// D-Q1: unread count snapshot captured at chat-open time before
+  /// `clearUnreadCount` runs. Stays static for the screen's lifetime
+  /// so the "New messages" divider doesn't migrate as more inbound
+  /// messages arrive during the session. Clamped at 0 when there's
+  /// nothing to mark.
+  int _initialUnreadCount = 0;
 
   String get _conversationId {
     if (widget.chatType == MeshCoreChatType.contact) {
@@ -309,6 +317,11 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
     try {
       await _messageStore.init();
       await _contactStore.init();
+      // D-Q1: snapshot the unread count BEFORE clearing it so the
+      // "New messages" divider can anchor at the boundary the user
+      // had when they opened the chat. Contact and channel paths
+      // both feed into the same `_initialUnreadCount` integer.
+      final unreadSnapshot = await _readUnreadCountForBoundary();
       await _historyNotifier.loadInitial();
       if (!mounted) return;
       // Clear unread count when opening chat. D19.D extends this
@@ -323,9 +336,29 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       ref
           .read(meshCoreConversationsProvider.notifier)
           .markAsRead(_conversationId);
+      setState(() => _initialUnreadCount = unreadSnapshot);
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     } catch (e) {
       AppLogging.storage('MeshCore Chat: Error loading messages: $e');
+    }
+  }
+
+  /// D-Q1: read the unread count for the current conversation from
+  /// the per-type store. Returns 0 on any failure so the divider
+  /// silently disappears rather than blocking the chat-open flow.
+  Future<int> _readUnreadCountForBoundary() async {
+    try {
+      if (widget.chatType == MeshCoreChatType.contact) {
+        return await _contactStore.getUnreadCount(_conversationId);
+      }
+      final devicePrefix = ref.read(meshCoreSelfPubKeyPrefixProvider);
+      if (devicePrefix.isEmpty) return 0;
+      return await _contactStore.getChannelUnreadCount(
+        devicePrefix,
+        widget.channel!.index,
+      );
+    } catch (_) {
+      return 0;
     }
   }
 
@@ -1309,22 +1342,55 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
                   ? _buildEmptyState(isLoading: history.isInitialLoading)
                   : Stack(
                       children: [
-                        ListView.builder(
-                          controller: _scrollController,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppTheme.spacing16,
-                            vertical: AppTheme.spacing8,
-                          ),
-                          itemCount:
-                              messages.length + (showHistoryEndFooter ? 1 : 0),
-                          itemBuilder: (context, index) {
-                            if (showHistoryEndFooter && index == 0) {
-                              return _buildHistoryEndFooter();
-                            }
-                            final messageIndex = showHistoryEndFooter
-                                ? index - 1
-                                : index;
-                            return _buildMessageBubble(messages[messageIndex]);
+                        Builder(
+                          builder: (context) {
+                            // D-Q1: divider insertion index from the
+                            // pure helper; -1 suppresses the divider.
+                            final dividerMessageIndex =
+                                chatUnreadDividerInsertIndex(
+                                  messageCount: messages.length,
+                                  unreadCount: _initialUnreadCount,
+                                );
+                            final dividerVisible = dividerMessageIndex >= 0;
+                            final itemCount =
+                                messages.length +
+                                (showHistoryEndFooter ? 1 : 0) +
+                                (dividerVisible ? 1 : 0);
+                            return ListView.builder(
+                              controller: _scrollController,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppTheme.spacing16,
+                                vertical: AppTheme.spacing8,
+                              ),
+                              itemCount: itemCount,
+                              itemBuilder: (context, index) {
+                                if (showHistoryEndFooter && index == 0) {
+                                  return _buildHistoryEndFooter();
+                                }
+                                final logicalIndex = showHistoryEndFooter
+                                    ? index - 1
+                                    : index;
+                                if (dividerVisible) {
+                                  // The divider sits at the message
+                                  // index `dividerMessageIndex`, so
+                                  // the logical slot one past it gets
+                                  // pushed down by one.
+                                  if (logicalIndex == dividerMessageIndex) {
+                                    return const MeshCoreChatUnreadDivider();
+                                  }
+                                  final messageIndex =
+                                      logicalIndex > dividerMessageIndex
+                                      ? logicalIndex - 1
+                                      : logicalIndex;
+                                  return _buildMessageBubble(
+                                    messages[messageIndex],
+                                  );
+                                }
+                                return _buildMessageBubble(
+                                  messages[logicalIndex],
+                                );
+                              },
+                            );
                           },
                         ),
                         Positioned(

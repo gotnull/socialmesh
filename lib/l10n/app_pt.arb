@@ -38516,6 +38516,7 @@
   "meshcoreChatInfoPath": "Caminho",
   "meshcoreChatInfoType": "Tipo",
   "meshcoreChatJumpToLatest": "Ir para a última",
+  "meshcoreChatUnreadDividerLabel": "Novas mensagens",
   "meshcoreChatMessageCopied": "Mensagem copiada",
   "meshcoreChatMessageDeleteFailed": "Não foi possível excluir a mensagem",
   "meshcoreChatHistoryEnd": "Nenhuma mensagem antiga",

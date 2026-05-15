@@ -8744,6 +8744,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreChatInfoType => 'Тип';
 
   @override
+  String get meshcoreChatUnreadDividerLabel => 'Новые сообщения';
+
+  @override
   String get meshcoreChatJumpToLatest => 'К последнему';
 
   @override

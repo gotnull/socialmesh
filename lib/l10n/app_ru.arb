@@ -5369,6 +5369,7 @@
     "meshcoreChatInfoPath": "Маршрут",
     "meshcoreChatInfoType": "Тип",
     "meshcoreChatJumpToLatest": "К последнему",
+    "meshcoreChatUnreadDividerLabel": "Новые сообщения",
     "meshcoreChatMessageCopied": "Сообщение скопировано",
     "meshcoreChatMessageDeleteFailed": "Не удалось удалить сообщение",
     "meshcoreChatMessageDeleted": "Сообщение удалено",

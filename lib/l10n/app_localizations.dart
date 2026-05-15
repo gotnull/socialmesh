@@ -15264,6 +15264,12 @@ abstract class AppLocalizations {
   /// **'Type'**
   String get meshcoreChatInfoType;
 
+  /// D-Q1 - label on the in-chat divider that marks the read/unread boundary captured at chat-open time
+  ///
+  /// In en, this message translates to:
+  /// **'New messages'**
+  String get meshcoreChatUnreadDividerLabel;
+
   /// Floating pill label shown when the user has scrolled away from the bottom of the message list
   ///
   /// In en, this message translates to:

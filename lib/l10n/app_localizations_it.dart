@@ -8759,6 +8759,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get meshcoreChatInfoType => 'Tipo';
 
   @override
+  String get meshcoreChatUnreadDividerLabel => 'Nuovi messaggi';
+
+  @override
   String get meshcoreChatJumpToLatest => 'Vai all\'ultimo';
 
   @override
