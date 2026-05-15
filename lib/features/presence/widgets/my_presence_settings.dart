@@ -213,6 +213,7 @@ class _MyPresenceSettingsState extends ConsumerState<MyPresenceSettings>
         ),
         Card(
           margin: const EdgeInsets.symmetric(horizontal: 16),
+          clipBehavior: Clip.antiAlias,
           child: Column(
             children: [
               // Intent selector

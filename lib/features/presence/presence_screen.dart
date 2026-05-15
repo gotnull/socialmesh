@@ -591,6 +591,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: context.surface,
         borderRadius: BorderRadius.circular(AppTheme.radius12),
