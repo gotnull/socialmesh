@@ -16,6 +16,8 @@
 //   6. The set returned is unmodifiable (callers can't accidentally mutate
 //      the cache).
 
+import 'dart:async';
+
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -52,9 +54,15 @@ ProviderContainer _container({
           PurchaseState(purchasedProductIds: storePurchases),
         ),
       ),
-      externalEntitlementsProvider.overrideWith(
-        (ref) => Stream.value(externalPurchases),
-      ),
+      externalEntitlementsProvider.overrideWith((ref) async* {
+        yield externalPurchases;
+        // Keep the stream open so the StreamProvider stays in AsyncData
+        // and `.future` resolves on the yielded value. Closing the stream
+        // immediately after the yield can interact poorly with Riverpod
+        // 3.x's overridden-StreamProvider plumbing and never resolve
+        // `.future`.
+        await Completer<void>().future;
+      }),
     ],
   );
 }

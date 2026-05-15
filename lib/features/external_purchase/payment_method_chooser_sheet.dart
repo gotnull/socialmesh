@@ -11,6 +11,7 @@ import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
 import '../../core/constants.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../providers/external_purchase_providers.dart';
@@ -67,29 +68,27 @@ Future<void> showPaymentMethodChooserSheet({
     return;
   }
 
-  final picked = await AppBottomSheet.show<_PaymentMethod>(
+  // The sheet runs the purchase internally so the chosen row shows a
+  // spinner until the native confirmation surface (App Store sheet /
+  // Stripe Payment Sheet) takes over. The sheet pops with the
+  // _PaymentMethodResult once the purchase resolves.
+  final result = await AppBottomSheet.show<_PaymentMethodResult>(
     context: context,
+    isDismissible: true,
     child: _PaymentMethodChooserContent(
+      productId: productId,
       productName: productName,
       priceAud: priceAud,
     ),
   );
-  AppLogging.purchase('[PaymentChooser] user picked=$picked');
-  if (picked == null) return;
   if (!context.mounted) return;
-
-  switch (picked) {
-    case _PaymentMethod.store:
-      final result = await _runStorePurchase(ref, productId);
-      if (!context.mounted) return;
-      AppLogging.purchase('[PaymentChooser] store path result=$result');
-      _handleOrchestratorResult(context, ref, result, onSuccess: onSuccess);
-    case _PaymentMethod.stripe:
-      final result = await _runStripePurchase(context, ref, productId);
-      if (!context.mounted) return;
-      AppLogging.purchase('[PaymentChooser] stripe path result=$result');
-      _handleOrchestratorResult(context, ref, result, onSuccess: onSuccess);
-  }
+  AppLogging.purchase('[PaymentChooser] sheet result=$result');
+  _handleOrchestratorResult(
+    context,
+    ref,
+    result ?? _PaymentMethodResult.canceled,
+    onSuccess: onSuccess,
+  );
 }
 
 void _handleOrchestratorResult(
@@ -126,7 +125,6 @@ Future<_PaymentMethodResult> _runStorePurchase(
 }
 
 Future<_PaymentMethodResult> _runStripePurchase(
-  BuildContext context,
   WidgetRef ref,
   String productId,
 ) async {
@@ -197,9 +195,10 @@ Future<_PaymentMethodResult> _runStripePurchase(
     // Payment Sheet returned success. Kick the confirmation overlay so
     // the UI surfaces a spinner until the webhook lands; the entitlement
     // merge then auto-flips ownership state across every consumer.
-    if (context.mounted) {
-      service.handleDeepLink(descriptor.sessionId);
-    }
+    // Wake the confirmation overlay - polls for the webhook landing.
+    // service.handleDeepLink is fire-and-forget and doesn't need a
+    // BuildContext, so no mounted guard required here.
+    service.handleDeepLink(descriptor.sessionId);
 
     AppLogging.purchase(
       '[StripePurchase] Payment Sheet confirmed sessionId=${descriptor.sessionId} '
@@ -238,16 +237,41 @@ bool _shouldOfferApplePay(String merchantId) {
 // UI
 // =============================================================================
 
-class _PaymentMethodChooserContent extends StatelessWidget {
+class _PaymentMethodChooserContent extends ConsumerStatefulWidget {
+  final String productId;
   final String productName;
   final double priceAud;
 
   const _PaymentMethodChooserContent({
+    required this.productId,
     required this.productName,
     required this.priceAud,
   });
 
-  String _storeLabel(BuildContext context) {
+  @override
+  ConsumerState<_PaymentMethodChooserContent> createState() =>
+      _PaymentMethodChooserContentState();
+}
+
+class _PaymentMethodChooserContentState
+    extends ConsumerState<_PaymentMethodChooserContent>
+    with LifecycleSafeMixin<_PaymentMethodChooserContent> {
+  _PaymentMethod? _busy;
+
+  Future<void> _onPicked(_PaymentMethod method) async {
+    if (_busy != null) return;
+    safeSetState(() => _busy = method);
+    ref.haptics.buttonTap();
+
+    final result = method == _PaymentMethod.store
+        ? await _runStorePurchase(ref, widget.productId)
+        : await _runStripePurchase(ref, widget.productId);
+    if (!mounted) return;
+    AppLogging.purchase('[PaymentChooser] ${method.name} path result=$result');
+    safeNavigatorPop<_PaymentMethodResult>(result);
+  }
+
+  String _storeLabel() {
     if (kIsWeb) {
       return context.l10n.paymentChooserStoreLabelGeneric;
     }
@@ -265,69 +289,110 @@ class _PaymentMethodChooserContent extends StatelessWidget {
   }
 
   IconData _storeIcon() {
-    if (kIsWeb) {
-      return Icons.shopping_bag_outlined;
-    }
+    if (kIsWeb) return Icons.shopping_bag_outlined;
     try {
-      if (Platform.isIOS) {
-        return Icons.apple;
-      }
-      if (Platform.isAndroid) {
-        return Icons.shop_outlined;
-      }
+      if (Platform.isIOS) return Icons.apple;
+      if (Platform.isAndroid) return Icons.shop_outlined;
     } catch (_) {
       // Fall through.
     }
     return Icons.shopping_bag_outlined;
   }
 
-  String _formatPrice() {
-    return 'A\$${priceAud.toStringAsFixed(2)}';
-  }
-
   @override
   Widget build(BuildContext context) {
+    final price = 'A\$${widget.priceAud.toStringAsFixed(2)}';
     return Column(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Compact header: title + product context on one tight block.
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
+          padding: const EdgeInsets.fromLTRB(
+            0,
+            AppTheme.spacing4,
+            0,
+            AppTheme.spacing4,
+          ),
           child: Text(
             context.l10n.paymentChooserTitle,
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 15,
               fontWeight: FontWeight.w600,
+              letterSpacing: 0.1,
+              height: 1.2,
               color: context.textPrimary,
               fontFamily: AppTheme.fontFamily,
             ),
           ),
         ),
         Padding(
-          padding: const EdgeInsets.only(bottom: AppTheme.spacing16),
-          child: Text(
-            '$productName · ${_formatPrice()}',
-            style: TextStyle(
-              fontSize: 13,
-              color: context.textSecondary,
-              fontFamily: AppTheme.fontFamily,
-            ),
+          padding: const EdgeInsets.only(bottom: AppTheme.spacing20),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  widget.productName,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.textTertiary,
+                    fontFamily: AppTheme.fontFamily,
+                  ),
+                ),
+              ),
+              Text(
+                price,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                  color: context.textSecondary,
+                  fontFamily: AppTheme.fontFamily,
+                ),
+              ),
+            ],
           ),
         ),
-        _PaymentMethodRow(
-          icon: _storeIcon(),
-          label: _storeLabel(context),
-          subtitle: context.l10n.paymentChooserStoreSubtitle,
-          price: _formatPrice(),
-          onTap: () => Navigator.of(context).pop(_PaymentMethod.store),
-        ),
-        const SizedBox(height: AppTheme.spacing12),
-        _PaymentMethodRow(
-          icon: Icons.credit_card_outlined,
-          label: context.l10n.paymentChooserStripeLabel,
-          subtitle: context.l10n.paymentChooserStripeSubtitle,
-          price: _formatPrice(),
-          onTap: () => Navigator.of(context).pop(_PaymentMethod.stripe),
+        // Grouped row stack: bordered card, divider between rows. This
+        // is the canonical inner-settings density - mirrors the way
+        // mqtt_config_screen groups related toggles.
+        Container(
+          // antiAlias clipping so each row's InkWell splash respects
+          // the outer border radius (without it, the bottom row's
+          // ripple bleeds into square corners). The matching
+          // borderRadius on the Container is what the clip uses.
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: context.card,
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+            border: Border.all(color: context.border, width: 1),
+          ),
+          child: Column(
+            children: [
+              _PaymentMethodRow(
+                icon: _storeIcon(),
+                label: _storeLabel(),
+                subtitle: context.l10n.paymentChooserStoreSubtitle,
+                enabled: _busy == null,
+                busy: _busy == _PaymentMethod.store,
+                onTap: () => _onPicked(_PaymentMethod.store),
+              ),
+              Divider(
+                height: 1,
+                thickness: 1,
+                color: context.border,
+                indent: AppTheme.spacing16,
+                endIndent: AppTheme.spacing16,
+              ),
+              _PaymentMethodRow(
+                icon: Icons.credit_card_outlined,
+                label: context.l10n.paymentChooserStripeLabel,
+                subtitle: context.l10n.paymentChooserStripeSubtitle,
+                enabled: _busy == null,
+                busy: _busy == _PaymentMethod.stripe,
+                onTap: () => _onPicked(_PaymentMethod.stripe),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -338,33 +403,40 @@ class _PaymentMethodRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final String subtitle;
-  final String price;
+  final bool enabled;
+  final bool busy;
   final VoidCallback onTap;
 
   const _PaymentMethodRow({
     required this.icon,
     required this.label,
     required this.subtitle,
-    required this.price,
+    required this.enabled,
+    required this.busy,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final foreground = enabled
+        ? context.textPrimary
+        : context.textPrimary.withValues(alpha: 0.4);
+    final secondary = enabled
+        ? context.textTertiary
+        : context.textTertiary.withValues(alpha: 0.5);
+
     return Material(
-      color: context.card,
-      borderRadius: BorderRadius.circular(AppTheme.radius12),
+      color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        onTap: enabled ? onTap : null,
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppTheme.spacing16,
-            vertical: AppTheme.spacing12,
+            vertical: AppTheme.spacing14,
           ),
           child: Row(
             children: [
-              Icon(icon, size: 24, color: context.accentColor),
+              Icon(icon, size: 18, color: foreground),
               const SizedBox(width: AppTheme.spacing16),
               Expanded(
                 child: Column(
@@ -373,9 +445,11 @@ class _PaymentMethodRow extends StatelessWidget {
                     Text(
                       label,
                       style: TextStyle(
-                        fontSize: 15,
+                        fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: context.textPrimary,
+                        letterSpacing: 0.1,
+                        height: 1.2,
+                        color: foreground,
                         fontFamily: AppTheme.fontFamily,
                       ),
                     ),
@@ -383,25 +457,26 @@ class _PaymentMethodRow extends StatelessWidget {
                     Text(
                       subtitle,
                       style: TextStyle(
-                        fontSize: 12,
-                        color: context.textTertiary,
+                        fontSize: 11,
+                        height: 1.3,
+                        color: secondary,
                         fontFamily: AppTheme.fontFamily,
                       ),
                     ),
                   ],
                 ),
               ),
-              Text(
-                price,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: context.textSecondary,
-                  fontFamily: AppTheme.fontFamily,
-                ),
+              const SizedBox(width: AppTheme.spacing12),
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: busy
+                    ? CircularProgressIndicator(
+                        strokeWidth: 1.5,
+                        color: foreground,
+                      )
+                    : Icon(Icons.chevron_right, size: 16, color: secondary),
               ),
-              const SizedBox(width: AppTheme.spacing8),
-              Icon(Icons.chevron_right, size: 18, color: context.textTertiary),
             ],
           ),
         ),
