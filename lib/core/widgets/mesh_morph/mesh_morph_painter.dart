@@ -102,7 +102,13 @@ class MeshMorphPainter extends CustomPainter {
       // the visual stays calm as balls rotate.
       final sizeFactor = (1.0 - (_depth[i] + 1.0) / 4.0).clamp(0.55, 1.0);
       final radius = (w / 36) * sizeFactor;
-      final color = _sampleGradient(i / blended.length);
+      // Color by depth, NOT by point index: when interior cube-grid
+      // points cluster at near-identical depths the sort can swap them
+      // frame-to-frame, and an index-based color would show that swap
+      // as a colour flick. Depth-based means stacked balls share a
+      // colour and the swap is invisible.
+      final colorT = ((_depth[i] + 1.0) / 2.0).clamp(0.0, 1.0);
+      final color = _sampleGradient(colorT);
 
       // Soft outer glow at a fixed alpha — no per-frame pulsing.
       final glowPaint = Paint()
