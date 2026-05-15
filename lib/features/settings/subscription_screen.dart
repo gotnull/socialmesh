@@ -971,39 +971,26 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
     final haptics = ref.haptics;
     haptics.buttonTap();
 
-    // If already owned, short-circuit and celebrate
-    final purchaseState = ref.read(purchaseStateProvider);
     final bundleId = RevenueCatConfig.completePackProductId;
-
-    // Allow viewing owned state offline, but block new purchases
-    if (!purchaseState.hasPurchased(bundleId)) {
-      if (!await _ensureOnlineForPurchase(bundleId)) return;
-    }
-    if (purchaseState.hasPurchased(bundleId)) {
-      haptics.success();
-      _showAllUnlockedCelebration();
-      return;
-    }
-
-    // Try restoring first to detect cross-account ownership without prompting the store
-    final restored = await restorePurchases(ref);
+    if (!await _ensureOnlineForPurchase(bundleId)) return;
     if (!mounted) return;
-    if (restored) {
-      final refreshedState = ref.read(purchaseStateProvider);
-      if (refreshedState.hasPurchased(bundleId)) {
-        haptics.success();
-        _showAllUnlockedCelebration();
-        return;
-      }
-    }
 
-    // Chunk C: route the bundle CTA through the chooser sheet. When
-    // Stripe is disabled, the chooser short-circuits straight to the
-    // store IAP path, preserving pre-Chunk-C behavior.
+    // Chunk C: route the bundle CTA through the chooser sheet, exactly
+    // like every individual pack. The chooser handles already-owned
+    // gracefully:
+    //   - App Store path: RevenueCat's _handleAlreadyOwned returns
+    //     success without charging, then onSuccess fires the unlock
+    //     celebration.
+    //   - Stripe path: legitimate fresh purchase (cross-platform
+    //     unlock when the user can't or won't transact via the store).
+    // The pre-chooser restorePurchases short-circuit that used to live
+    // here was inconsistent with individual packs and hid the chooser
+    // from any user whose StoreKit history already contained the
+    // bundle - including the test sandbox.
     await showPaymentMethodChooserSheet(
       context: context,
       ref: ref,
-      productId: RevenueCatConfig.completePackProductId,
+      productId: bundleId,
       productName: 'Complete Pack',
       priceAud: 14.99,
       onSuccess: _showAllUnlockedCelebration,
