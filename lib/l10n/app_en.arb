@@ -11298,6 +11298,22 @@
     "@meshcoreChannelsRefreshChannels": {
         "description": "Overflow menu item to refresh channels"
     },
+    "meshcoreChannelSortManual": "Manual",
+    "@meshcoreChannelSortManual": {
+        "description": "D-Q4 - channel-list sort mode chip: respect the user's manual reorder"
+    },
+    "meshcoreChannelSortAToZ": "A-Z",
+    "@meshcoreChannelSortAToZ": {
+        "description": "D-Q4 - channel-list sort mode chip: alphabetical ascending"
+    },
+    "meshcoreChannelSortLatest": "Latest",
+    "@meshcoreChannelSortLatest": {
+        "description": "D-Q4 - channel-list sort mode chip: most-recent activity first"
+    },
+    "meshcoreChannelSortUnread": "Unread",
+    "@meshcoreChannelSortUnread": {
+        "description": "D-Q4 - channel-list sort mode chip: highest unread count first"
+    },
     "meshcoreChannelsTitle": "Channels",
     "@meshcoreChannelsTitle": {
         "description": "Channels screen title (with optional count suffix)"
@@ -41156,36 +41172,6 @@
             "count": {
                 "type": "int",
                 "example": "96"
-            }
-        }
-    },
-    "adminMeshMorphGlowLabel": "Glow: {value}",
-    "@adminMeshMorphGlowLabel": {
-        "description": "Slider label for the mesh-morph glow intensity multiplier",
-        "placeholders": {
-            "value": {
-                "type": "String",
-                "example": "0.85"
-            }
-        }
-    },
-    "adminMeshMorphLineThicknessLabel": "Line thickness: {value}",
-    "@adminMeshMorphLineThicknessLabel": {
-        "description": "Slider label for the mesh-morph wireframe edge thickness multiplier",
-        "placeholders": {
-            "value": {
-                "type": "String",
-                "example": "0.75"
-            }
-        }
-    },
-    "adminMeshMorphNodeSizeLabel": "Node size: {value}",
-    "@adminMeshMorphNodeSizeLabel": {
-        "description": "Slider label for the mesh-morph ball/node size multiplier",
-        "placeholders": {
-            "value": {
-                "type": "String",
-                "example": "0.85"
             }
         }
     },

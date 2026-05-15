@@ -8532,6 +8532,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreChannelsRefreshChannels => 'Обновить каналы';
 
   @override
+  String get meshcoreChannelSortManual => 'Вручную';
+
+  @override
+  String get meshcoreChannelSortAToZ => 'A-Я';
+
+  @override
+  String get meshcoreChannelSortLatest => 'Свежие';
+
+  @override
+  String get meshcoreChannelSortUnread => 'Непрочитанные';
+
+  @override
   String get meshcoreChannelsTitle => 'Каналы';
 
   @override
@@ -30824,21 +30836,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String adminMeshMorphPointCountLabel(int count) {
     return 'Количество точек: $count';
-  }
-
-  @override
-  String adminMeshMorphGlowLabel(String value) {
-    return 'Свечение: $value';
-  }
-
-  @override
-  String adminMeshMorphLineThicknessLabel(String value) {
-    return 'Толщина линии: $value';
-  }
-
-  @override
-  String adminMeshMorphNodeSizeLabel(String value) {
-    return 'Размер узла: $value';
   }
 
   @override

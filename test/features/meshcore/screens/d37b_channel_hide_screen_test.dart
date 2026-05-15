@@ -97,6 +97,9 @@ Future<void> _settle(WidgetTester tester) async {
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 50));
   await tester.pump(const Duration(milliseconds: 50));
+  // D-Q4: extra pumps for the channel sort-mode AsyncNotifier's
+  // SharedPreferences microtask.
+  await tester.pump(const Duration(milliseconds: 50));
 }
 
 /// Pop the topmost modal route + drain any auto-dismissing snackbar
@@ -288,13 +291,12 @@ void main() {
     await tester.longPress(find.text('Alpha'));
     await _settle(tester);
 
-    for (final banned in const [
-      'Reorder',
-      'Pin Channel',
-      'Sort',
-      'Unread',
-      'Mark as read',
-    ]) {
+    // D-Q4: "Sort" and "Unread" entries dropped from this guard
+    // because the sort-mode chip selector now legitimately surfaces
+    // them on the channels screen. "Reorder", "Pin Channel", and
+    // "Mark as read" stay banned — they were never D37-B-A surfaces
+    // and remain deferred.
+    for (final banned in const ['Reorder', 'Pin Channel', 'Mark as read']) {
       expect(
         find.text(banned),
         findsNothing,

@@ -17,15 +17,18 @@ import '../../../core/widgets/qr_share_sheet.dart';
 import '../../../core/widgets/search_filter_header.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/chip_selector.dart';
 import '../../../core/widgets/status_filter_chip.dart';
 import '../../../models/meshcore_channel.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/meshcore_channel_sort_mode_provider.dart';
 import '../../../providers/meshcore_message_providers.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../../navigation/meshcore_shell.dart';
 import '../widgets/meshcore_channel_edit_sheet.dart';
 import '../widgets/meshcore_channel_order.dart';
+import '../widgets/meshcore_channel_sort.dart';
 import 'meshcore_chat_screen.dart';
 import 'meshcore_qr_scanner_screen.dart';
 
@@ -88,6 +91,10 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
     // both the visible subset and the underlying full list reflect the
     // user's preferred sequence. Search applies last and is read-only
     // (reorder is disabled while the search query is non-empty).
+    // D-Q4: sort mode is read inside `_buildChannelsList` instead of
+    // here so the AsyncNotifier's SharedPreferences microtask only
+    // fires when the user actually sees the channels list (not on
+    // the disconnected / empty branches).
     final userOrder = ref.watch(meshCoreChannelOrderProvider);
     final fullOrdered = applyChannelOrder(allChannels, userOrder);
     var channels = _applyFilter(fullOrdered, hiddenSet);
@@ -313,6 +320,42 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
     // the Hidden chip is only shown when at least one channel is
     // hidden so the chip row stays compact for first-time users.
     final hiddenSet = ref.watch(meshCoreChannelHiddenSetProvider);
+    // D-Q4: read the sort mode + apply non-manual sort in-place.
+    // The parent build only computed the manual-order list; when the
+    // user picks aToZ / latest / unread, we override `channels` +
+    // `fullOrdered` here.
+    final sortMode =
+        ref.watch(meshCoreChannelSortModeProvider).value ??
+        MeshCoreChannelSortMode.manual;
+    if (sortMode != MeshCoreChannelSortMode.manual) {
+      final conversationsState = ref.watch(meshCoreConversationsProvider);
+      final lastMessageByIndex = <int, DateTime?>{};
+      final unreadByIndex = <int, int>{};
+      for (final conv in conversationsState.conversations) {
+        final ix = conv.channelIndex;
+        if (ix == null) continue;
+        lastMessageByIndex[ix] = conv.lastMessageTime;
+        unreadByIndex[ix] = conv.unreadCount;
+      }
+      final sorted = sortChannels(
+        allChannels,
+        mode: sortMode,
+        byIndexLastMessageTime: lastMessageByIndex,
+        byIndexUnreadCount: unreadByIndex,
+      );
+      fullOrdered = sorted;
+      channels = _applyFilter(sorted, hiddenSet);
+      if (_searchQuery.isNotEmpty) {
+        final query = _searchQuery.toLowerCase();
+        channels = channels
+            .where(
+              (channel) =>
+                  channel.displayName.toLowerCase().contains(query) ||
+                  channel.index.toString().contains(query),
+            )
+            .toList();
+      }
+    }
     final visibleChannels = allChannels
         .where((c) => !hiddenSet.contains(c.index))
         .toList();
@@ -385,6 +428,55 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
               ],
             ),
           ),
+          // D-Q4: sort-mode selector. Re-uses the canonical
+          // ChipSelector primitive; tapping a chip updates the
+          // notifier (which persists). When mode != manual, the
+          // reorder drag handles are gated off above.
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppTheme.spacing16,
+                AppTheme.spacing4,
+                AppTheme.spacing16,
+                AppTheme.spacing4,
+              ),
+              child: ChipSelector<MeshCoreChannelSortMode>(
+                key: const ValueKey('meshcore-channel-sort-mode'),
+                value: sortMode,
+                onChanged: (v) => ref
+                    .read(meshCoreChannelSortModeProvider.notifier)
+                    .setSortMode(v),
+                options: [
+                  ChipOption(
+                    value: MeshCoreChannelSortMode.manual,
+                    label: context.l10n.meshcoreChannelSortManual,
+                    // Distinct from `Icons.drag_handle_rounded` so the
+                    // D37-C drag-handle-count assertions still hold.
+                    icon: Icons.reorder_rounded,
+                    color: context.accentColor,
+                  ),
+                  ChipOption(
+                    value: MeshCoreChannelSortMode.aToZ,
+                    label: context.l10n.meshcoreChannelSortAToZ,
+                    icon: Icons.sort_by_alpha_rounded,
+                    color: context.accentColor,
+                  ),
+                  ChipOption(
+                    value: MeshCoreChannelSortMode.latest,
+                    label: context.l10n.meshcoreChannelSortLatest,
+                    icon: Icons.schedule_rounded,
+                    color: context.accentColor,
+                  ),
+                  ChipOption(
+                    value: MeshCoreChannelSortMode.unread,
+                    label: context.l10n.meshcoreChannelSortUnread,
+                    icon: Icons.mark_email_unread_outlined,
+                    color: context.accentColor,
+                  ),
+                ],
+              ),
+            ),
+          ),
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(
               AppTheme.spacing16,
@@ -394,7 +486,12 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
             ),
             // D37-C-A: reorder is enabled only when the user is not
             // searching. A partial result has no meaningful order.
-            sliver: _searchQuery.isEmpty
+            // D-Q4: reorder is ALSO gated on the sort mode being
+            // `manual`. Computed sort modes ignore the manual order,
+            // so dragging would have no effect.
+            sliver:
+                _searchQuery.isEmpty &&
+                    sortMode == MeshCoreChannelSortMode.manual
                 ? SliverReorderableList(
                     itemCount: channels.length,
                     onReorder: (oldIndex, newIndex) => _onReorderVisible(

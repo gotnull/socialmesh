@@ -28,9 +28,6 @@ class _MeshMorphPreviewScreenState extends State<MeshMorphPreviewScreen> {
   MorphRotationStyle _rotation = MorphRotationStyle.tumble;
   bool _animate = true;
   int _pointCount = 96;
-  double _glow = 0.85;
-  double _lineThickness = 0.75;
-  double _nodeSize = 0.85;
   MeshShapeId _currentShape = MeshShapeId.cube;
 
   @override
@@ -50,9 +47,6 @@ class _MeshMorphPreviewScreenState extends State<MeshMorphPreviewScreen> {
                 rotation: _rotation,
                 animate: _animate,
                 pointCount: _pointCount,
-                glow: _glow,
-                lineThickness: _lineThickness,
-                nodeSize: _nodeSize,
                 shapeName: shapeName,
                 onShapeChanged: (id) {
                   if (mounted && id != _currentShape) {
@@ -161,34 +155,6 @@ class _MeshMorphPreviewScreenState extends State<MeshMorphPreviewScreen> {
                 divisions: 17,
                 onChanged: (v) => setState(() => _pointCount = v.round()),
               ),
-              _SliderRow(
-                label: l10n.adminMeshMorphGlowLabel(_glow.toStringAsFixed(2)),
-                value: _glow,
-                min: 0,
-                max: 2,
-                divisions: 20,
-                onChanged: (v) => setState(() => _glow = v),
-              ),
-              _SliderRow(
-                label: l10n.adminMeshMorphLineThicknessLabel(
-                  _lineThickness.toStringAsFixed(2),
-                ),
-                value: _lineThickness,
-                min: 0.25,
-                max: 2,
-                divisions: 14,
-                onChanged: (v) => setState(() => _lineThickness = v),
-              ),
-              _SliderRow(
-                label: l10n.adminMeshMorphNodeSizeLabel(
-                  _nodeSize.toStringAsFixed(2),
-                ),
-                value: _nodeSize,
-                min: 0.25,
-                max: 2,
-                divisions: 14,
-                onChanged: (v) => setState(() => _nodeSize = v),
-              ),
             ]),
           ),
         ),
@@ -203,9 +169,6 @@ class _StageCard extends StatelessWidget {
     required this.rotation,
     required this.animate,
     required this.pointCount,
-    required this.glow,
-    required this.lineThickness,
-    required this.nodeSize,
     required this.shapeName,
     required this.onShapeChanged,
   });
@@ -214,9 +177,6 @@ class _StageCard extends StatelessWidget {
   final MorphRotationStyle rotation;
   final bool animate;
   final int pointCount;
-  final double glow;
-  final double lineThickness;
-  final double nodeSize;
   final String shapeName;
   final ValueChanged<MeshShapeId> onShapeChanged;
 
@@ -244,9 +204,6 @@ class _StageCard extends StatelessWidget {
               size: 320,
               pointCount: pointCount,
               animate: animate,
-              glowIntensity: glow,
-              lineThickness: lineThickness,
-              nodeSize: nodeSize,
               rotationStyle: rotation,
               onShapeChanged: onShapeChanged,
             ),

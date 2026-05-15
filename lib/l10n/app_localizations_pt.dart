@@ -8530,6 +8530,18 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreChannelsRefreshChannels => 'Atualizar Canais';
 
   @override
+  String get meshcoreChannelSortManual => 'Manual';
+
+  @override
+  String get meshcoreChannelSortAToZ => 'A-Z';
+
+  @override
+  String get meshcoreChannelSortLatest => 'Recentes';
+
+  @override
+  String get meshcoreChannelSortUnread => 'Não lidos';
+
+  @override
   String get meshcoreChannelsTitle => 'Canais';
 
   @override
@@ -30806,21 +30818,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String adminMeshMorphPointCountLabel(int count) {
     return 'Quantidade de pontos: $count';
-  }
-
-  @override
-  String adminMeshMorphGlowLabel(String value) {
-    return 'Brilho: $value';
-  }
-
-  @override
-  String adminMeshMorphLineThicknessLabel(String value) {
-    return 'Espessura da linha: $value';
-  }
-
-  @override
-  String adminMeshMorphNodeSizeLabel(String value) {
-    return 'Tamanho do nó: $value';
   }
 
   @override

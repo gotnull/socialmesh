@@ -96,6 +96,9 @@ Future<void> _settle(WidgetTester tester) async {
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 50));
   await tester.pump(const Duration(milliseconds: 50));
+  // D-Q4: extra pumps for the channel sort-mode AsyncNotifier's
+  // SharedPreferences microtask.
+  await tester.pump(const Duration(milliseconds: 50));
 }
 
 Future<void> _dismissAnyOpenSheet(WidgetTester tester) async {

@@ -14904,6 +14904,30 @@ abstract class AppLocalizations {
   /// **'Refresh Channels'**
   String get meshcoreChannelsRefreshChannels;
 
+  /// D-Q4 - channel-list sort mode chip: respect the user's manual reorder
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get meshcoreChannelSortManual;
+
+  /// D-Q4 - channel-list sort mode chip: alphabetical ascending
+  ///
+  /// In en, this message translates to:
+  /// **'A-Z'**
+  String get meshcoreChannelSortAToZ;
+
+  /// D-Q4 - channel-list sort mode chip: most-recent activity first
+  ///
+  /// In en, this message translates to:
+  /// **'Latest'**
+  String get meshcoreChannelSortLatest;
+
+  /// D-Q4 - channel-list sort mode chip: highest unread count first
+  ///
+  /// In en, this message translates to:
+  /// **'Unread'**
+  String get meshcoreChannelSortUnread;
+
   /// Channels screen title (with optional count suffix)
   ///
   /// In en, this message translates to:
@@ -53592,24 +53616,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Point count: {count}'**
   String adminMeshMorphPointCountLabel(int count);
-
-  /// Slider label for the mesh-morph glow intensity multiplier
-  ///
-  /// In en, this message translates to:
-  /// **'Glow: {value}'**
-  String adminMeshMorphGlowLabel(String value);
-
-  /// Slider label for the mesh-morph wireframe edge thickness multiplier
-  ///
-  /// In en, this message translates to:
-  /// **'Line thickness: {value}'**
-  String adminMeshMorphLineThicknessLabel(String value);
-
-  /// Slider label for the mesh-morph ball/node size multiplier
-  ///
-  /// In en, this message translates to:
-  /// **'Node size: {value}'**
-  String adminMeshMorphNodeSizeLabel(String value);
 
   /// Label showing which shape the mesh-morph widget is currently displaying
   ///

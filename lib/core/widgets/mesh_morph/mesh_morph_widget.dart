@@ -19,7 +19,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
-import 'package:socialmesh/core/theme.dart';
+import 'package:socialmesh/core/logging.dart';
 
 import 'mesh_morph_painter.dart';
 import 'mesh_shape.dart';
@@ -51,47 +51,25 @@ class MeshMorphWidget extends StatefulWidget {
   /// [MeshMorphPresets] or hand-roll a [MorphTimeline].
   final MorphTimeline sequence;
 
-  /// Number of balls to render. More points = denser, prettier, but more
-  /// CPU per frame. 60 reads well at logo size; 120 fills out larger
-  /// canvases. Range is enforced [12, 216].
+  /// Number of points to feed the painter. Range is enforced [12, 216].
   final int pointCount;
 
   /// Whether to run the animation. Set false in tests / when off-screen
   /// to save battery.
   final bool animate;
 
-  /// Brand gradient applied to the balls. Defaults to the SocialMesh
-  /// orange→magenta→blue triple.
-  final List<Color>? gradientColors;
-
-  /// Optional secondary gradient that mixes in during morph. When set the
-  /// painter lerps the per-point colour by the eased morph progress, so
-  /// each transition feels like a colour shift in addition to the shape
-  /// change. Pass null to disable.
-  final List<Color>? morphSecondaryGradient;
-
-  /// Glow / line / ball-size multipliers. Same semantics as
-  /// AnimatedMeshNode so existing splash tuning carries over.
-  final double glowIntensity;
-  final double lineThickness;
-  final double nodeSize;
-
   /// How (or whether) to spin the mesh while it morphs.
   final MorphRotationStyle rotationStyle;
 
-  /// Manual rotation overrides — used by the parent widget when an
-  /// accelerometer / touch handler wants to steer the cube. Added to the
-  /// rotation produced by [rotationStyle].
+  /// Manual rotation overrides, added to whatever [rotationStyle] produces.
   final double externalRotationX;
   final double externalRotationY;
   final double externalRotationZ;
 
   /// Fired when the timeline wraps back to keyframe 0 (one full cycle).
-  /// Useful for swapping presets, surfacing telemetry, or chaining.
   final VoidCallback? onCycleComplete;
 
-  /// Reports the active shape any time it changes. Lets parent UI show a
-  /// label / accessibility announcement matching the current shape.
+  /// Reports the active shape any time it changes.
   final ValueChanged<MeshShapeId>? onShapeChanged;
 
   const MeshMorphWidget({
@@ -100,11 +78,6 @@ class MeshMorphWidget extends StatefulWidget {
     required this.sequence,
     this.pointCount = 60,
     this.animate = true,
-    this.gradientColors,
-    this.morphSecondaryGradient,
-    this.glowIntensity = 0.85,
-    this.lineThickness = 0.75,
-    this.nodeSize = 0.85,
     this.rotationStyle = MorphRotationStyle.tumble,
     this.externalRotationX = 0,
     this.externalRotationY = 0,
@@ -120,10 +93,6 @@ class MeshMorphWidget extends StatefulWidget {
     required double size,
     int pointCount = 60,
     bool animate = true,
-    List<Color>? gradientColors,
-    double glowIntensity = 0.85,
-    double lineThickness = 0.75,
-    double nodeSize = 0.85,
     MorphRotationStyle rotationStyle = MorphRotationStyle.tumble,
     VoidCallback? onCycleComplete,
     ValueChanged<MeshShapeId>? onShapeChanged,
@@ -133,10 +102,6 @@ class MeshMorphWidget extends StatefulWidget {
     sequence: MeshMorphPresets.byId(id),
     pointCount: pointCount,
     animate: animate,
-    gradientColors: gradientColors,
-    glowIntensity: glowIntensity,
-    lineThickness: lineThickness,
-    nodeSize: nodeSize,
     rotationStyle: rotationStyle,
     onCycleComplete: onCycleComplete,
     onShapeChanged: onShapeChanged,
@@ -164,12 +129,24 @@ class _MeshMorphWidgetState extends State<MeshMorphWidget>
 
   late int _clampedPointCount;
 
+  // Throttle counters so the diagnostic log only emits once per second
+  // rather than every animation frame.
+  int _lastLoggedSecond = -1;
+  int _tickCount = 0;
+
   @override
   void initState() {
     super.initState();
     _clampedPointCount = widget.pointCount.clamp(12, 216);
     _allocateBuffers();
     _ticker = createTicker(_onTick)..start();
+    AppLogging.adminDiag(
+      'MeshMorph init: points=$_clampedPointCount '
+      'keyframes=${widget.sequence.keyframes.length} '
+      'cycle=${widget.sequence.cycleLength.inMilliseconds}ms '
+      'animate=${widget.animate} rotation=${widget.rotationStyle.name} '
+      'tickerActive=${_ticker.isActive} tickerMuted=${_ticker.muted}',
+    );
   }
 
   @override
@@ -177,20 +154,43 @@ class _MeshMorphWidgetState extends State<MeshMorphWidget>
     super.didUpdateWidget(old);
     final newCount = widget.pointCount.clamp(12, 216);
     if (newCount != _clampedPointCount) {
+      AppLogging.adminDiag(
+        'MeshMorph reconfigure: pointCount $_clampedPointCount -> $newCount',
+      );
       _clampedPointCount = newCount;
       _allocateBuffers();
     }
     if (widget.animate != old.animate) {
+      AppLogging.adminDiag(
+        'MeshMorph animate toggled: ${old.animate} -> ${widget.animate}',
+      );
       if (widget.animate && !_ticker.isActive) {
         _ticker.start();
       } else if (!widget.animate && _ticker.isActive) {
         _ticker.stop();
       }
     }
+    if (!identical(widget.sequence, old.sequence)) {
+      AppLogging.adminDiag(
+        'MeshMorph sequence swapped: '
+        'cycle=${widget.sequence.cycleLength.inMilliseconds}ms '
+        'keyframes=${widget.sequence.keyframes.length}',
+      );
+    }
+    if (widget.rotationStyle != old.rotationStyle) {
+      AppLogging.adminDiag(
+        'MeshMorph rotation swapped: '
+        '${old.rotationStyle.name} -> ${widget.rotationStyle.name}',
+      );
+    }
   }
 
   @override
   void dispose() {
+    AppLogging.adminDiag(
+      'MeshMorph dispose: ticks=$_tickCount '
+      'finalElapsedMs=${_elapsed.inMilliseconds}',
+    );
     _ticker.dispose();
     super.dispose();
   }
@@ -214,6 +214,7 @@ class _MeshMorphWidgetState extends State<MeshMorphWidget>
 
   void _onTick(Duration t) {
     if (!widget.animate) return;
+    _tickCount++;
     // Detect cycle wrap — fire onCycleComplete when we cross back to t=0
     // (within one frame of duration).
     final cycle = widget.sequence.cycleLength;
@@ -226,6 +227,20 @@ class _MeshMorphWidgetState extends State<MeshMorphWidget>
       }
     } else {
       _elapsed = t;
+    }
+    final secondsBucket = _elapsed.inSeconds;
+    if (secondsBucket != _lastLoggedSecond) {
+      _lastLoggedSecond = secondsBucket;
+      final sample = widget.sequence.sample(_elapsed);
+      final rot = _resolveRotation();
+      AppLogging.adminDiag(
+        'MeshMorph tick: t=${_elapsed.inMilliseconds}ms ticks=$_tickCount '
+        'from=${sample.from.name} to=${sample.to.name} '
+        'inMorph=${sample.inMorph} easedT=${sample.easedT.toStringAsFixed(3)} '
+        'rotX=${rot.x.toStringAsFixed(2)} '
+        'rotY=${rot.y.toStringAsFixed(2)} '
+        'rotZ=${rot.z.toStringAsFixed(2)}',
+      );
     }
     setState(() {}); // repaint
   }
@@ -312,15 +327,6 @@ class _MeshMorphWidgetState extends State<MeshMorphWidget>
       }
     }
 
-    // Edges: take the current shape's edge list (per timeline rule the
-    // sampler already picked which side wins during morph). For wireframe
-    // shapes the indices reference positions inside our morph buffer; for
-    // surface shapes the list is null and the painter draws dots only.
-    final edgeOwner = sample.drawEdges
-        ? shapeById(sample.easedT < 0.5 ? sample.from : sample.to)
-        : null;
-    final edges = edgeOwner?.edges;
-
     // Fire onShapeChanged when the visible shape rolls over.
     final currentShape = sample.current;
     if (_lastReportedShape != currentShape) {
@@ -331,7 +337,6 @@ class _MeshMorphWidgetState extends State<MeshMorphWidget>
     }
 
     final rot = _resolveRotation();
-    final gradient = widget.gradientColors ?? _defaultGradient(context);
 
     return SizedBox(
       width: widget.size,
@@ -340,29 +345,11 @@ class _MeshMorphWidgetState extends State<MeshMorphWidget>
         size: Size(widget.size, widget.size),
         painter: MeshMorphPainter(
           blended: blended,
-          edges: edges,
           rotationX: rot.x,
           rotationY: rot.y,
           rotationZ: rot.z,
-          gradientColors: gradient,
-          secondaryGradient: widget.morphSecondaryGradient,
-          secondaryWeight: sample.inMorph ? sample.easedT : 0.0,
-          glowIntensity: widget.glowIntensity,
-          lineThickness: widget.lineThickness,
-          nodeSize: widget.nodeSize,
-          drawEdges: sample.drawEdges,
         ),
       ),
     );
-  }
-
-  List<Color> _defaultGradient(BuildContext context) {
-    // SocialMesh brand triple — same one AnimatedMeshNode and the splash
-    // logo use (orange → magenta → blue, extracted from the app icon).
-    return const [
-      AppTheme.accentOrange,
-      AppTheme.primaryMagenta,
-      AppTheme.primaryBlue,
-    ];
   }
 }

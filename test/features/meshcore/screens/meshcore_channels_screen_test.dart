@@ -28,6 +28,12 @@ Widget _wrap({required LinkStatus linkStatus}) {
 Future<void> _settle(WidgetTester tester) async {
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 50));
+  // D-Q4: the channel sort-mode AsyncNotifier schedules a microtask
+  // via SharedPreferences.getInstance(); a couple of extra pumps let
+  // it resolve before the test tear-down so we don't trip the
+  // pending-timer assertion.
+  await tester.pump(const Duration(milliseconds: 50));
+  await tester.pump(const Duration(milliseconds: 50));
 }
 
 void main() {
