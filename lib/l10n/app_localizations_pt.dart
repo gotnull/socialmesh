@@ -25159,6 +25159,16 @@ class AppLocalizationsPt extends AppLocalizations {
   String get unlockSuccessGeneric => 'Desbloqueio concluído';
 
   @override
+  String get unlockKeepPackTitle => 'Mantenha este pack entre dispositivos';
+
+  @override
+  String get unlockKeepPackBody =>
+      'Este pack está desbloqueado apenas neste dispositivo. Faça login para mantê-lo caso reinstale o app ou troque de celular.';
+
+  @override
+  String get unlockKeepPackMaybeLater => 'Talvez depois';
+
+  @override
   String get unlockCodeFallback => 'Tem um código de desbloqueio?';
 
   @override
@@ -25778,6 +25788,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get restorePurchasesNone => 'Nenhuma compra encontrada para restaurar';
+
+  @override
+  String get restorePurchasesSignInForExternal =>
+      'Nenhuma compra da App Store encontrada. Faça login para também restaurar os packs Stripe e Buy Me a Coffee.';
 
   @override
   String get restorePurchasesPending =>

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -87,6 +88,15 @@ class _RestorePurchasesButtonState extends ConsumerState<RestorePurchasesButton>
       // with hadPendingPayment = false.
     }
 
+    // External (Stripe / Buy Me a Coffee) packs are keyed to a Firebase
+    // uid, not the App Store / Google Play account. Anonymous or
+    // signed-out users won't get those back from the platform restore
+    // alone — surface the sign-in path as the action when there's
+    // nothing to celebrate from the IAP side.
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    final needsSignInForExternal =
+        firebaseUser == null || firebaseUser.isAnonymous;
+
     // Post-frame callbacks avoid BuildContext use across async gaps
     safePostFrame(() {
       if (success && restoredNew) {
@@ -101,8 +111,20 @@ class _RestorePurchasesButtonState extends ConsumerState<RestorePurchasesButton>
           '[RestorePurchases] Showing pending-payment message to user',
         );
         showInfoSnackBar(context, context.l10n.restorePurchasesPending);
+      } else if (needsSignInForExternal) {
+        // No store purchases found AND signed out — they may still have
+        // Stripe / Buy Me a Coffee packs bound to their email. The
+        // backend's claimEntitlementsToAccount auto-matches verified
+        // Firebase Auth email to buyer email at sign-in time.
+        showActionSnackBar(
+          context,
+          context.l10n.restorePurchasesSignInForExternal,
+          actionLabel: context.l10n.commonSignIn,
+          onAction: () => Navigator.pushNamed(context, '/account'),
+          type: SnackBarType.info,
+        );
       } else {
-        // No purchases found at all
+        // Signed in, no purchases found anywhere.
         showInfoSnackBar(context, context.l10n.restorePurchasesNone);
       }
     });

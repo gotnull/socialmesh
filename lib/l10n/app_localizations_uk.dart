@@ -25161,6 +25161,16 @@ class AppLocalizationsUk extends AppLocalizations {
   String get unlockSuccessGeneric => 'Розблокування завершено';
 
   @override
+  String get unlockKeepPackTitle => 'Keep this pack across devices';
+
+  @override
+  String get unlockKeepPackBody =>
+      'This pack is unlocked on this device only. Sign in to keep it if you reinstall the app or switch phones.';
+
+  @override
+  String get unlockKeepPackMaybeLater => 'Maybe later';
+
+  @override
   String get unlockCodeFallback => 'Маєте код розблокування?';
 
   @override
@@ -25784,6 +25794,10 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get restorePurchasesNone => 'Покупок для відновлення не знайдено';
+
+  @override
+  String get restorePurchasesSignInForExternal =>
+      'No App Store purchases found. Sign in to also restore Stripe and Buy Me a Coffee packs.';
 
   @override
   String get restorePurchasesPending =>

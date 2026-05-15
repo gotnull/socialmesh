@@ -43708,6 +43708,24 @@ abstract class AppLocalizations {
   /// **'Unlock complete'**
   String get unlockSuccessGeneric;
 
+  /// Title of the bottom-sheet nudge shown after an anonymous user successfully redeems an unlock code, encouraging them to sign in so the entitlement survives reinstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep this pack across devices'**
+  String get unlockKeepPackTitle;
+
+  /// Body copy of the keep-pack-across-devices nudge sheet, explaining why sign-in matters for entitlement persistence.
+  ///
+  /// In en, this message translates to:
+  /// **'This pack is unlocked on this device only. Sign in to keep it if you reinstall the app or switch phones.'**
+  String get unlockKeepPackBody;
+
+  /// Secondary action on the keep-pack-across-devices nudge sheet that dismisses without signing in.
+  ///
+  /// In en, this message translates to:
+  /// **'Maybe later'**
+  String get unlockKeepPackMaybeLater;
+
   /// Tertiary action label revealing the support-issued unlock code redemption sheet.
   ///
   /// In en, this message translates to:
@@ -44781,6 +44799,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No purchases found to restore'**
   String get restorePurchasesNone;
+
+  /// Shown after a signed-out restore turns up no IAPs, prompting sign-in so external (Stripe/BMC) entitlements can be claimed via verified-email match.
+  ///
+  /// In en, this message translates to:
+  /// **'No App Store purchases found. Sign in to also restore Stripe and Buy Me a Coffee packs.'**
+  String get restorePurchasesSignInForExternal;
 
   /// Restore result when the store has a PaymentPendingError receipt that RevenueCat cannot yet accept
   ///

@@ -33995,6 +33995,18 @@
     "@unlockSuccessGeneric": {
         "description": "Success title used when the granted product can't be resolved to a pack name."
     },
+    "unlockKeepPackTitle": "Keep this pack across devices",
+    "@unlockKeepPackTitle": {
+        "description": "Title of the bottom-sheet nudge shown after an anonymous user successfully redeems an unlock code, encouraging them to sign in so the entitlement survives reinstall."
+    },
+    "unlockKeepPackBody": "This pack is unlocked on this device only. Sign in to keep it if you reinstall the app or switch phones.",
+    "@unlockKeepPackBody": {
+        "description": "Body copy of the keep-pack-across-devices nudge sheet, explaining why sign-in matters for entitlement persistence."
+    },
+    "unlockKeepPackMaybeLater": "Maybe later",
+    "@unlockKeepPackMaybeLater": {
+        "description": "Secondary action on the keep-pack-across-devices nudge sheet that dismisses without signing in."
+    },
     "unlockCodeFallback": "Have an unlock code?",
     "@unlockCodeFallback": {
         "description": "Tertiary action label revealing the support-issued unlock code redemption sheet."
@@ -34770,6 +34782,10 @@
     "restorePurchasesNone": "No purchases found to restore",
     "@restorePurchasesNone": {
         "description": "UI text: restore purchases none"
+    },
+    "restorePurchasesSignInForExternal": "No App Store purchases found. Sign in to also restore Stripe and Buy Me a Coffee packs.",
+    "@restorePurchasesSignInForExternal": {
+        "description": "Shown after a signed-out restore turns up no IAPs, prompting sign-in so external (Stripe/BMC) entitlements can be claimed via verified-email match."
     },
     "restorePurchasesPending": "Your purchase is still being processed by the store. This can take up to 72 hours - please try again later.",
     "@restorePurchasesPending": {

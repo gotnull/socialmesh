@@ -15,12 +15,14 @@
 // row at the bottom of the subscription screen. Anywhere it appears,
 // the primary store CTAs remain the canonical purchase path.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
+import '../../core/navigation.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -34,6 +36,25 @@ Future<void> showRedeemUnlockCodeSheet(BuildContext context) {
     context: context,
     isDismissible: true,
     child: const _RedeemUnlockCodeBody(),
+  );
+}
+
+/// Open the "keep this pack across devices" nudge. Shown after an
+/// anonymous user successfully redeems a code — install-scoped
+/// entitlements are bound to a deviceInstallId that uninstall destroys,
+/// so the pack is lost on reinstall unless they sign in to re-key it
+/// onto a Firebase uid.
+///
+/// Uses the global navigator key internally so callers don't have to
+/// thread a BuildContext through async gaps — keeps
+/// `use_build_context_synchronously` quiet at call sites.
+Future<void> showKeepPackSignInNudge() {
+  final ctx = navigatorKey.currentContext;
+  if (ctx == null) return Future<void>.value();
+  return AppBottomSheet.show<void>(
+    context: ctx,
+    isDismissible: true,
+    child: const _KeepPackSignInBody(),
   );
 }
 
@@ -86,6 +107,19 @@ class _RedeemUnlockCodeBodyState extends ConsumerState<_RedeemUnlockCodeBody>
       ref.haptics.success();
       safeNavigatorPop();
       showSuccessSnackBar(context, context.l10n.unlockSuccessGeneric);
+
+      // Nudge anonymous users to sign in so the freshly-granted
+      // entitlement survives reinstall. Install-scoped entitlements are
+      // keyed on deviceInstallId, which uninstall destroys — sign-in
+      // re-keys them to the Firebase uid, which is portable across
+      // devices. Deferred so the redeem-sheet pop animation finishes
+      // before the second sheet opens.
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null || user.isAnonymous) {
+        Future<void>.delayed(const Duration(milliseconds: 350), () {
+          showKeepPackSignInNudge();
+        });
+      }
     } catch (e) {
       AppLogging.purchase('[RedeemUnlockCodeSheet] redeem failed: $e');
       if (!mounted) return;
@@ -197,6 +231,77 @@ class _RedeemUnlockCodeBodyState extends ConsumerState<_RedeemUnlockCodeBody>
                     ),
                   )
                 : Text(context.l10n.redeemCode),
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing16),
+      ],
+    );
+  }
+}
+
+class _KeepPackSignInBody extends StatelessWidget {
+  const _KeepPackSignInBody();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: AppTheme.spacing8),
+        Icon(Icons.devices_other_rounded, size: 48, color: context.accentColor),
+        const SizedBox(height: AppTheme.spacing12),
+        Text(
+          context.l10n.unlockKeepPackTitle,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: context.textPrimary,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing8),
+        Text(
+          context.l10n.unlockKeepPackBody,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 14,
+            color: context.textSecondary,
+            height: 1.4,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing24),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            onPressed: () {
+              HapticFeedback.selectionClick();
+              Navigator.of(context).pop();
+              final navCtx = navigatorKey.currentContext;
+              if (navCtx != null) {
+                Navigator.of(navCtx).pushNamed('/account');
+              }
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: context.accentColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
+              ),
+            ),
+            child: Text(context.l10n.commonSignIn),
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing8),
+        TextButton(
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            Navigator.of(context).pop();
+          },
+          child: Text(
+            context.l10n.unlockKeepPackMaybeLater,
+            style: TextStyle(color: context.textSecondary),
           ),
         ),
         const SizedBox(height: AppTheme.spacing16),

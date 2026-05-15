@@ -25156,6 +25156,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get unlockSuccessGeneric => 'Разблокировка выполнена';
 
   @override
+  String get unlockKeepPackTitle => 'Сохраните этот пак на всех устройствах';
+
+  @override
+  String get unlockKeepPackBody =>
+      'Этот пак разблокирован только на этом устройстве. Войдите в аккаунт, чтобы сохранить его при переустановке приложения или смене телефона.';
+
+  @override
+  String get unlockKeepPackMaybeLater => 'Позже';
+
+  @override
   String get unlockCodeFallback => 'Есть код разблокировки?';
 
   @override
@@ -25779,6 +25789,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get restorePurchasesNone => 'Покупки для восстановления не найдены';
+
+  @override
+  String get restorePurchasesSignInForExternal =>
+      'Покупки в App Store не найдены. Войдите в аккаунт, чтобы также восстановить паки Stripe и Buy Me a Coffee.';
 
   @override
   String get restorePurchasesPending =>

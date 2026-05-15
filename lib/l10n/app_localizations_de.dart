@@ -25225,6 +25225,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get unlockSuccessGeneric => 'Freischaltung abgeschlossen';
 
   @override
+  String get unlockKeepPackTitle => 'Keep this pack across devices';
+
+  @override
+  String get unlockKeepPackBody =>
+      'This pack is unlocked on this device only. Sign in to keep it if you reinstall the app or switch phones.';
+
+  @override
+  String get unlockKeepPackMaybeLater => 'Maybe later';
+
+  @override
   String get unlockCodeFallback => 'Haben Sie einen Freischaltcode?';
 
   @override
@@ -25858,6 +25868,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get restorePurchasesNone =>
       'Keine Käufe zum Wiederherstellen gefunden';
+
+  @override
+  String get restorePurchasesSignInForExternal =>
+      'No App Store purchases found. Sign in to also restore Stripe and Buy Me a Coffee packs.';
 
   @override
   String get restorePurchasesPending =>
