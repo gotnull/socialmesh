@@ -438,6 +438,35 @@ Future<bool> restorePurchases(WidgetRef ref) async {
       );
     }
 
+    // Also restore Stripe / external entitlements. This runs the
+    // device-to-account claim (idempotent, no-op for anonymous users)
+    // and then refreshes the external entitlement cache so any
+    // entitlements already bound to the signed-in account on this OR
+    // a previous install surface in the merged purchase state.
+    try {
+      final externalService = await ref.read(
+        externalPurchaseServiceProvider.future,
+      );
+      // Bind any install-scoped entitlements on this device to the
+      // signed-in account. Backend handles the unauthenticated case
+      // by returning empty (the method itself swallows errors).
+      await externalService.claimEntitlementsToAccount();
+      // Pull the union of install + uid entitlements from Firestore.
+      // After a claim or a cross-device sign-in, this is where Stripe
+      // purchases land in the local cache.
+      await externalService.refreshEntitlements();
+      AppLogging.subscriptions(
+        '💳 [RestorePurchases] External (Stripe) entitlements refreshed',
+      );
+    } catch (e) {
+      // External restore is best-effort. RC remains the source of
+      // truth for store IAP, so failure here must not fail the whole
+      // restore flow.
+      AppLogging.subscriptions(
+        '💳 [RestorePurchases] External entitlement restore failed (non-fatal): $e',
+      );
+    }
+
     // Always refresh state after restore
     AppLogging.subscriptions(
       '💳 [RestorePurchases] Explicitly refreshing purchase state notifier...',

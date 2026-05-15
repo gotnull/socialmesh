@@ -23,30 +23,51 @@
 
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/logging.dart';
 import '../models/subscription_models.dart';
 import '../services/external_purchase/external_entitlement_cache.dart';
 import '../services/external_purchase/external_purchase_service.dart';
+import 'auth_providers.dart';
 import 'subscription_providers.dart';
 
 /// Singleton ExternalPurchaseService. Disposes the underlying service
 /// (closes its broadcast stream and cancels any in-flight polling
 /// timer) on container teardown.
-final externalPurchaseServiceProvider = FutureProvider<ExternalPurchaseService>(
-  (ref) async {
-    final prefs = await ref.watch(sharedPreferencesProvider.future);
-    final cache = ExternalEntitlementCache(prefs);
-    final service = ExternalPurchaseService(prefs: prefs, cache: cache);
-    ref.onDispose(() {
-      AppLogging.purchase('[ProviderGraph] disposing ExternalPurchaseService');
-      unawaited(service.dispose());
-    });
-    AppLogging.purchase('[ProviderGraph] ExternalPurchaseService created');
-    return service;
-  },
-);
+final externalPurchaseServiceProvider = FutureProvider<ExternalPurchaseService>((
+  ref,
+) async {
+  final prefs = await ref.watch(sharedPreferencesProvider.future);
+  final cache = ExternalEntitlementCache(prefs);
+  final service = ExternalPurchaseService(prefs: prefs, cache: cache);
+  ref.onDispose(() {
+    AppLogging.purchase('[ProviderGraph] disposing ExternalPurchaseService');
+    unawaited(service.dispose());
+  });
+
+  // Auto-bind device-scoped entitlements to the Firebase Auth uid as
+  // soon as a permanent (non-anonymous) sign-in lands. Idempotent on
+  // the backend, so we can fire on every relevant transition without
+  // worrying about duplicates. Quiet no-op for anonymous users -
+  // anon uids change between installs and would just churn the audit
+  // trail.
+  String? lastClaimedUid;
+  ref.listen<User?>(currentUserProvider, (previous, next) {
+    if (next == null || next.isAnonymous) return;
+    if (next.uid == lastClaimedUid) return;
+    lastClaimedUid = next.uid;
+    AppLogging.purchase(
+      '[ProviderGraph] sign-in detected (uid=${next.uid.length >= 8 ? next.uid.substring(0, 8) : next.uid}…) '
+      '- firing claimEntitlementsToAccount',
+    );
+    unawaited(service.claimEntitlementsToAccount());
+  }, fireImmediately: true);
+
+  AppLogging.purchase('[ProviderGraph] ExternalPurchaseService created');
+  return service;
+});
 
 /// Stream of confirmation states, used by the post-redirect overlay
 /// (chunk 3 wires this into the UI). Never throws — the broadcast

@@ -296,6 +296,51 @@ class ExternalPurchaseService {
     return productIds;
   }
 
+  /// Bind every entitlement currently owned by this install to the
+  /// signed-in Firebase Auth account. Idempotent - safe to call on
+  /// every sign-in / link-with-credential transition.
+  ///
+  /// Returns the list of product ids that were freshly claimed (does
+  /// not include already-claimed ones). The Firestore mirror means
+  /// future `refreshEntitlements()` calls return the union of install
+  /// + uid entitlements, so reinstall / new device sign-in restores
+  /// transparently.
+  ///
+  /// Quiet no-op when the caller is not signed in - the backend
+  /// rejects with `unauthenticated` and we swallow the error. Callers
+  /// should not gate UI on this method's outcome.
+  Future<List<String>> claimEntitlementsToAccount() async {
+    AppLogging.purchase('[ExternalPurchaseService] claimEntitlementsToAccount');
+    try {
+      final installId = await DeviceInstallId.read(_prefs);
+      final response = await _invoker.call('claimEntitlementsToAccount', {
+        'deviceInstallId': installId,
+      });
+      final claimed = (response['productIds'] as List? ?? const [])
+          .map((e) => e as String)
+          .toList();
+      final claimedCount = response['claimedCount'] as int? ?? 0;
+      final alreadyCount = response['alreadyClaimedCount'] as int? ?? 0;
+      AppLogging.purchase(
+        '[ExternalPurchaseService] account_claim '
+        'claimed=$claimedCount alreadyClaimed=$alreadyCount '
+        'productIds=$claimed',
+      );
+      if (claimedCount > 0) {
+        // New uid-scoped entitlements just landed in Firestore.
+        // Refresh so the cache + activeProductIdsStream reflect them.
+        await refreshEntitlements();
+      }
+      return claimed;
+    } catch (e) {
+      AppLogging.purchase(
+        '[ExternalPurchaseService] claimEntitlementsToAccount failed '
+        '(non-fatal, will retry on next sign-in): $e',
+      );
+      return const [];
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Deep-link return + polling
   // ---------------------------------------------------------------------------

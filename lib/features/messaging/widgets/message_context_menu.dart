@@ -239,16 +239,56 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
   Widget _buildTapbackSection() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          for (final emoji in _quickReactions)
-            _QuickReactionButton(
-              emoji: emoji,
-              onTap: () => _sendTapback(emoji),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const buttonSize = 36.0;
+          const gap = 8.0;
+          final totalItems = _quickReactions.length + 1;
+          final neededWidth = buttonSize * totalItems + gap * (totalItems - 1);
+          final fits = neededWidth <= constraints.maxWidth;
+
+          final buttons = [
+            for (final emoji in _quickReactions)
+              _QuickReactionButton(
+                emoji: emoji,
+                onTap: () => _sendTapback(emoji),
+              ),
+            _MoreEmojiButton(onEmojiSelected: _sendTapback),
+          ];
+
+          if (fits) {
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: buttons,
+            );
+          }
+
+          return ShaderMask(
+            shaderCallback: (bounds) => LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              stops: const [0.0, 0.04, 0.92, 1.0],
+              colors: [
+                Colors.transparent,
+                Colors.black,
+                Colors.black,
+                Colors.transparent,
+              ],
+            ).createShader(bounds),
+            blendMode: BlendMode.dstIn,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (var i = 0; i < buttons.length; i++) ...[
+                    if (i > 0) const SizedBox(width: gap),
+                    buttons[i],
+                  ],
+                ],
+              ),
             ),
-          _MoreEmojiButton(onEmojiSelected: _sendTapback),
-        ],
+          );
+        },
       ),
     );
   }
