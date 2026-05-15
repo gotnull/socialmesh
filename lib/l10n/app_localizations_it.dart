@@ -9054,6 +9054,64 @@ class AppLocalizationsIt extends AppLocalizations {
       'Forza flood, forza diretto o ripristina automatico.';
 
   @override
+  String meshcoreManualPathTitle(String name) {
+    return 'Percorso manuale - $name';
+  }
+
+  @override
+  String get meshcoreManualPathHelper =>
+      'Digita una lista di byte prefisso pubkey separati da virgola (es. \"AB,CD\"), oppure tocca un ripetitore qui sotto per aggiungerlo.';
+
+  @override
+  String get meshcoreManualPathInputLabel => 'Byte del percorso';
+
+  @override
+  String meshcoreManualPathPreview(int count, String bytes) {
+    return '$count hop: $bytes';
+  }
+
+  @override
+  String get meshcoreManualPathPreviewEmpty => 'Nessun hop analizzato.';
+
+  @override
+  String get meshcoreManualPathPickerEmpty =>
+      'Nessun ripetitore o stanza disponibile.';
+
+  @override
+  String get meshcoreManualPathClear => 'Cancella';
+
+  @override
+  String get meshcoreManualPathApply => 'Applica';
+
+  @override
+  String meshcoreManualPathInvalidToken(String token) {
+    return 'Hop \"$token\" non valido. Ogni hop deve essere un byte esadecimale di 2 caratteri.';
+  }
+
+  @override
+  String meshcoreManualPathTooLong(int count) {
+    return '$count hop sono troppi; il firmware accetta al massimo 64.';
+  }
+
+  @override
+  String meshcoreManualPathApplySuccess(String name, int hops) {
+    return 'Routing di $name bloccato su $hops hop manuali.';
+  }
+
+  @override
+  String meshcoreManualPathApplyFailed(String name) {
+    return 'Impossibile applicare il percorso manuale per $name.';
+  }
+
+  @override
+  String get meshcorePathOverrideSetCustomPath =>
+      'Imposta percorso personalizzato...';
+
+  @override
+  String get meshcorePathOverrideSetCustomPathSubtitle =>
+      'Digita o seleziona una sequenza di hop specifica';
+
+  @override
   String get meshcorePathOverrideForceFlood => 'Forza flood';
 
   @override

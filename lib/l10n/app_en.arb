@@ -12075,6 +12075,82 @@
     "@meshcorePathOverrideSubtitle": {
         "description": "D34c-B-A - subtitle for the path override tile."
     },
+    "meshcoreManualPathTitle": "Manual path - {name}",
+    "@meshcoreManualPathTitle": {
+        "description": "D34c-B-B - title for the manual N-hop path sheet",
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "meshcoreManualPathHelper": "Type a comma-separated list of pubkey-prefix hex bytes (e.g. \"AB,CD\"), or tap a repeater below to append it.",
+    "@meshcoreManualPathHelper": {
+        "description": "D34c-B-B - helper text under the manual N-hop input"
+    },
+    "meshcoreManualPathInputLabel": "Path bytes",
+    "@meshcoreManualPathInputLabel": {
+        "description": "D34c-B-B - input label"
+    },
+    "meshcoreManualPathPreview": "{count} hops: {bytes}",
+    "@meshcoreManualPathPreview": {
+        "description": "D34c-B-B - parsed-bytes preview line under the input",
+        "placeholders": {
+            "count": {"type": "int"},
+            "bytes": {"type": "String"}
+        }
+    },
+    "meshcoreManualPathPreviewEmpty": "No hops parsed yet.",
+    "@meshcoreManualPathPreviewEmpty": {
+        "description": "D34c-B-B - preview line when the input is empty"
+    },
+    "meshcoreManualPathPickerEmpty": "No repeaters or rooms available to pick from.",
+    "@meshcoreManualPathPickerEmpty": {
+        "description": "D34c-B-B - empty-state for the contact picker"
+    },
+    "meshcoreManualPathClear": "Clear",
+    "@meshcoreManualPathClear": {
+        "description": "D34c-B-B - outlined clear button label"
+    },
+    "meshcoreManualPathApply": "Apply",
+    "@meshcoreManualPathApply": {
+        "description": "D34c-B-B - gradient apply button label"
+    },
+    "meshcoreManualPathInvalidToken": "Invalid hop \"{token}\". Each hop must be a 2-character hex byte.",
+    "@meshcoreManualPathInvalidToken": {
+        "description": "D34c-B-B - inline error for an unparseable token",
+        "placeholders": {
+            "token": {"type": "String"}
+        }
+    },
+    "meshcoreManualPathTooLong": "{count} hops is too many; the firmware accepts at most 64.",
+    "@meshcoreManualPathTooLong": {
+        "description": "D34c-B-B - inline error for >64 hops",
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "meshcoreManualPathApplySuccess": "{name} routing locked to {hops} manual hops.",
+    "@meshcoreManualPathApplySuccess": {
+        "description": "D34c-B-B - snackbar on successful apply",
+        "placeholders": {
+            "name": {"type": "String"},
+            "hops": {"type": "int"}
+        }
+    },
+    "meshcoreManualPathApplyFailed": "Could not apply manual path for {name}.",
+    "@meshcoreManualPathApplyFailed": {
+        "description": "D34c-B-B - snackbar on apply failure",
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "meshcorePathOverrideSetCustomPath": "Set custom path...",
+    "@meshcorePathOverrideSetCustomPath": {
+        "description": "D34c-B-B - routing action sheet entry label"
+    },
+    "meshcorePathOverrideSetCustomPathSubtitle": "Type or pick a specific hop sequence",
+    "@meshcorePathOverrideSetCustomPathSubtitle": {
+        "description": "D34c-B-B - routing action sheet entry subtitle"
+    },
     "meshcorePathOverrideForceFlood": "Force flood",
     "@meshcorePathOverrideForceFlood": {
         "description": "D34c-B-A - action label that writes pathLength=-1 to firmware (flood every send)."

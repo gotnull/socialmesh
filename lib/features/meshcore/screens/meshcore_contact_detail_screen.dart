@@ -41,6 +41,7 @@ import '../../../models/meshcore_contact.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../contact_l10n.dart';
+import '../widgets/meshcore_manual_path_sheet.dart';
 import 'meshcore_map_screen.dart';
 import 'meshcore_neighbors_sheet.dart';
 import 'meshcore_repeater_login_dialog.dart';
@@ -375,6 +376,14 @@ class MeshCoreContactDetailScreen extends ConsumerWidget {
           subtitle: l10n.meshcorePathOverrideForceDirectSubtitle,
           onTap: () => _confirmForceDirect(context, ref, c),
         ),
+        // D34c-B-B: manual N-hop path entry.
+        BottomSheetAction<void>(
+          icon: Icons.alt_route_rounded,
+          iconColor: accent,
+          label: l10n.meshcorePathOverrideSetCustomPath,
+          subtitle: l10n.meshcorePathOverrideSetCustomPathSubtitle,
+          onTap: () => _openManualPathSheet(context, c),
+        ),
         BottomSheetAction<void>(
           icon: Icons.refresh_rounded,
           iconColor: accent,
@@ -407,6 +416,17 @@ class MeshCoreContactDetailScreen extends ConsumerWidget {
     if (confirmed != true) return;
     if (!context.mounted) return;
     await _applyOverride(context, ref, c, PathOverrideMode.forceDirect);
+  }
+
+  // D34c-B-B: open the manual N-hop entry sheet. The sheet itself
+  // handles the firmware write + snackbar surface via its own apply
+  // flow; this helper just forwards the contact and discards the
+  // boolean outcome (the user already saw the success/fail snackbar).
+  Future<void> _openManualPathSheet(
+    BuildContext context,
+    MeshCoreContact c,
+  ) async {
+    await showMeshCoreManualPathSheet(context, contact: c);
   }
 
   Future<void> _applyOverride(

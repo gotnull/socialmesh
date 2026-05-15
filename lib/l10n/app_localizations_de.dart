@@ -9064,6 +9064,63 @@ class AppLocalizationsDe extends AppLocalizations {
       'Flood erzwingen, direkt erzwingen oder auf Auto zurücksetzen.';
 
   @override
+  String meshcoreManualPathTitle(String name) {
+    return 'Manual path - $name';
+  }
+
+  @override
+  String get meshcoreManualPathHelper =>
+      'Type a comma-separated list of pubkey-prefix hex bytes (e.g. \"AB,CD\"), or tap a repeater below to append it.';
+
+  @override
+  String get meshcoreManualPathInputLabel => 'Path bytes';
+
+  @override
+  String meshcoreManualPathPreview(int count, String bytes) {
+    return '$count hops: $bytes';
+  }
+
+  @override
+  String get meshcoreManualPathPreviewEmpty => 'No hops parsed yet.';
+
+  @override
+  String get meshcoreManualPathPickerEmpty =>
+      'No repeaters or rooms available to pick from.';
+
+  @override
+  String get meshcoreManualPathClear => 'Clear';
+
+  @override
+  String get meshcoreManualPathApply => 'Apply';
+
+  @override
+  String meshcoreManualPathInvalidToken(String token) {
+    return 'Invalid hop \"$token\". Each hop must be a 2-character hex byte.';
+  }
+
+  @override
+  String meshcoreManualPathTooLong(int count) {
+    return '$count hops is too many; the firmware accepts at most 64.';
+  }
+
+  @override
+  String meshcoreManualPathApplySuccess(String name, int hops) {
+    return '$name routing locked to $hops manual hops.';
+  }
+
+  @override
+  String meshcoreManualPathApplyFailed(String name) {
+    return 'Could not apply manual path for $name.';
+  }
+
+  @override
+  String get meshcorePathOverrideSetCustomPath => 'Set custom path...';
+
+  @override
+  String get meshcorePathOverrideSetCustomPathSubtitle =>
+      'Type or pick a specific hop sequence';
+
+  @override
   String get meshcorePathOverrideForceFlood => 'Flood erzwingen';
 
   @override

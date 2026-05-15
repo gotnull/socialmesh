@@ -9040,6 +9040,64 @@ class AppLocalizationsPt extends AppLocalizations {
       'Forçar inundação, forçar direto ou redefinir para automático.';
 
   @override
+  String meshcoreManualPathTitle(String name) {
+    return 'Rota manual - $name';
+  }
+
+  @override
+  String get meshcoreManualPathHelper =>
+      'Digite uma lista de bytes prefixo de pubkey separados por vírgula (ex. \"AB,CD\"), ou toque em um repetidor abaixo para adicioná-lo.';
+
+  @override
+  String get meshcoreManualPathInputLabel => 'Bytes da rota';
+
+  @override
+  String meshcoreManualPathPreview(int count, String bytes) {
+    return '$count hops: $bytes';
+  }
+
+  @override
+  String get meshcoreManualPathPreviewEmpty => 'Nenhum hop analisado ainda.';
+
+  @override
+  String get meshcoreManualPathPickerEmpty =>
+      'Nenhum repetidor ou sala disponível.';
+
+  @override
+  String get meshcoreManualPathClear => 'Limpar';
+
+  @override
+  String get meshcoreManualPathApply => 'Aplicar';
+
+  @override
+  String meshcoreManualPathInvalidToken(String token) {
+    return 'Hop \"$token\" inválido. Cada hop deve ser um byte hexadecimal de 2 caracteres.';
+  }
+
+  @override
+  String meshcoreManualPathTooLong(int count) {
+    return '$count hops são demais; o firmware aceita no máximo 64.';
+  }
+
+  @override
+  String meshcoreManualPathApplySuccess(String name, int hops) {
+    return 'Roteamento de $name fixado em $hops hops manuais.';
+  }
+
+  @override
+  String meshcoreManualPathApplyFailed(String name) {
+    return 'Não foi possível aplicar a rota manual para $name.';
+  }
+
+  @override
+  String get meshcorePathOverrideSetCustomPath =>
+      'Definir rota personalizada...';
+
+  @override
+  String get meshcorePathOverrideSetCustomPathSubtitle =>
+      'Digite ou escolha uma sequência específica de hops';
+
+  @override
   String get meshcorePathOverrideForceFlood => 'Forçar inundação';
 
   @override

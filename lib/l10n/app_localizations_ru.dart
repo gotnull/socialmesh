@@ -9037,6 +9037,63 @@ class AppLocalizationsRu extends AppLocalizations {
       'Принудительный флуд, прямой или сброс на авто.';
 
   @override
+  String meshcoreManualPathTitle(String name) {
+    return 'Ручной маршрут - $name';
+  }
+
+  @override
+  String get meshcoreManualPathHelper =>
+      'Введите список байт-префиксов pubkey через запятую (напр. \"AB,CD\"), или нажмите на репитер ниже, чтобы добавить его.';
+
+  @override
+  String get meshcoreManualPathInputLabel => 'Байты маршрута';
+
+  @override
+  String meshcoreManualPathPreview(int count, String bytes) {
+    return '$count хопов: $bytes';
+  }
+
+  @override
+  String get meshcoreManualPathPreviewEmpty => 'Хопы ещё не разобраны.';
+
+  @override
+  String get meshcoreManualPathPickerEmpty =>
+      'Нет доступных репитеров или комнат.';
+
+  @override
+  String get meshcoreManualPathClear => 'Очистить';
+
+  @override
+  String get meshcoreManualPathApply => 'Применить';
+
+  @override
+  String meshcoreManualPathInvalidToken(String token) {
+    return 'Недопустимый хоп \"$token\". Каждый хоп должен быть 2-символьным шестнадцатеричным байтом.';
+  }
+
+  @override
+  String meshcoreManualPathTooLong(int count) {
+    return '$count хопов слишком много; прошивка принимает максимум 64.';
+  }
+
+  @override
+  String meshcoreManualPathApplySuccess(String name, int hops) {
+    return 'Маршрутизация $name зафиксирована на $hops ручных хопах.';
+  }
+
+  @override
+  String meshcoreManualPathApplyFailed(String name) {
+    return 'Не удалось применить ручной маршрут для $name.';
+  }
+
+  @override
+  String get meshcorePathOverrideSetCustomPath => 'Задать свой маршрут...';
+
+  @override
+  String get meshcorePathOverrideSetCustomPathSubtitle =>
+      'Введите или выберите конкретную последовательность хопов';
+
+  @override
   String get meshcorePathOverrideForceFlood => 'Принудительный флуд';
 
   @override

@@ -15786,6 +15786,90 @@ abstract class AppLocalizations {
   /// **'Force flood, force direct, or reset to auto.'**
   String get meshcorePathOverrideSubtitle;
 
+  /// D34c-B-B - title for the manual N-hop path sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Manual path - {name}'**
+  String meshcoreManualPathTitle(String name);
+
+  /// D34c-B-B - helper text under the manual N-hop input
+  ///
+  /// In en, this message translates to:
+  /// **'Type a comma-separated list of pubkey-prefix hex bytes (e.g. \"AB,CD\"), or tap a repeater below to append it.'**
+  String get meshcoreManualPathHelper;
+
+  /// D34c-B-B - input label
+  ///
+  /// In en, this message translates to:
+  /// **'Path bytes'**
+  String get meshcoreManualPathInputLabel;
+
+  /// D34c-B-B - parsed-bytes preview line under the input
+  ///
+  /// In en, this message translates to:
+  /// **'{count} hops: {bytes}'**
+  String meshcoreManualPathPreview(int count, String bytes);
+
+  /// D34c-B-B - preview line when the input is empty
+  ///
+  /// In en, this message translates to:
+  /// **'No hops parsed yet.'**
+  String get meshcoreManualPathPreviewEmpty;
+
+  /// D34c-B-B - empty-state for the contact picker
+  ///
+  /// In en, this message translates to:
+  /// **'No repeaters or rooms available to pick from.'**
+  String get meshcoreManualPathPickerEmpty;
+
+  /// D34c-B-B - outlined clear button label
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get meshcoreManualPathClear;
+
+  /// D34c-B-B - gradient apply button label
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get meshcoreManualPathApply;
+
+  /// D34c-B-B - inline error for an unparseable token
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid hop \"{token}\". Each hop must be a 2-character hex byte.'**
+  String meshcoreManualPathInvalidToken(String token);
+
+  /// D34c-B-B - inline error for >64 hops
+  ///
+  /// In en, this message translates to:
+  /// **'{count} hops is too many; the firmware accepts at most 64.'**
+  String meshcoreManualPathTooLong(int count);
+
+  /// D34c-B-B - snackbar on successful apply
+  ///
+  /// In en, this message translates to:
+  /// **'{name} routing locked to {hops} manual hops.'**
+  String meshcoreManualPathApplySuccess(String name, int hops);
+
+  /// D34c-B-B - snackbar on apply failure
+  ///
+  /// In en, this message translates to:
+  /// **'Could not apply manual path for {name}.'**
+  String meshcoreManualPathApplyFailed(String name);
+
+  /// D34c-B-B - routing action sheet entry label
+  ///
+  /// In en, this message translates to:
+  /// **'Set custom path...'**
+  String get meshcorePathOverrideSetCustomPath;
+
+  /// D34c-B-B - routing action sheet entry subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Type or pick a specific hop sequence'**
+  String get meshcorePathOverrideSetCustomPathSubtitle;
+
   /// D34c-B-A - action label that writes pathLength=-1 to firmware (flood every send).
   ///
   /// In en, this message translates to:

@@ -918,6 +918,77 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
     return true;
   }
 
+  /// D34c-B-B: write a user-typed N-hop path override to the firmware
+  /// contact entry. Mirrors the shape of [setContactPathFromTrace] but
+  /// records the path-history entry with `MeshCorePathSource.manual`
+  /// so the row's source badge renders the correct label.
+  ///
+  /// Use case: power user wants to force traffic through a specific
+  /// sequence of repeaters that did NOT come from a trace response.
+  ///
+  /// Validation contract: the caller (typically the manual-path sheet)
+  /// must have already parsed `hopBytes` from the user input via
+  /// `parseManualPathHexPrefixes`. This wrapper accepts the bytes
+  /// verbatim and clamps to the same 64-hop ceiling the parser
+  /// enforces; an over-length list is silently truncated to fail the
+  /// firmware ACK rather than mask the misuse.
+  ///
+  /// Logging surface (privacy-redacted):
+  ///   - `event=contact.set_path_from_manual.attempted pubkey=<8B fingerprint> path_len=N`
+  ///   - `event=contact.set_path_from_manual.<succeeded|failed> ...`
+  /// Path bytes themselves are NEVER logged.
+  Future<bool> setContactPathFromManualEntry({
+    required String publicKeyHex,
+    required Uint8List hopBytes,
+  }) async {
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null) {
+      AppLogging.meshcore(
+        'event=contact.set_path_from_manual.skipped reason=no_session',
+        error: true,
+      );
+      return false;
+    }
+    final contact = state.contacts.firstWhere(
+      (c) => c.publicKeyHex == publicKeyHex,
+      orElse: () => throw ArgumentError('contact not found: $publicKeyHex'),
+    );
+    AppLogging.meshcore(
+      'event=contact.set_path_from_manual.attempted '
+      'pubkey=${AppLogging.publicKeyFingerprint(contact.publicKey)} '
+      'path_len=${hopBytes.length}',
+    );
+    final ok = await session.addUpdateContact(
+      pubKey: contact.publicKey,
+      advType: contact.type,
+      name: contact.name,
+      flags: 0,
+      pathLength: hopBytes.length,
+      pathBytes: hopBytes,
+      latitude: contact.latitude,
+      longitude: contact.longitude,
+    );
+    AppLogging.meshcore(
+      'event=contact.set_path_from_manual.${ok ? 'succeeded' : 'failed'} '
+      'pubkey=${AppLogging.publicKeyFingerprint(contact.publicKey)} '
+      'path_len=${hopBytes.length}',
+      error: !ok,
+    );
+    if (!ok) return false;
+    await refresh();
+    _applyLocalPathOverride(
+      publicKeyHex: publicKeyHex,
+      pathOverride: hopBytes.length,
+      pathOverrideBytes: Uint8List.fromList(hopBytes),
+    );
+    if (hopBytes.isNotEmpty) {
+      await ref
+          .read(meshCorePathHistoryProvider(publicKeyHex).notifier)
+          .record(hopBytes, MeshCorePathSource.manual);
+    }
+    return true;
+  }
+
   /// D29 Part C: reset the firmware-side learned route for the
   /// contact whose [publicKeyHex] matches (`CMD_RESET_PATH` 0x0D),
   /// then refresh so the local cache picks up the new path state.
