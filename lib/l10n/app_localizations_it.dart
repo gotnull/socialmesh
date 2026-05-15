@@ -5111,6 +5111,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get feedbackReplySent => 'Risposta inviata';
 
   @override
+  String get feedbackResponseToastAction => 'Apri';
+
+  @override
+  String get feedbackResponseToastDefault => 'Nuova risposta al tuo bug report';
+
+  @override
   String get feedbackReportBugAction => 'Segnala bug';
 
   @override

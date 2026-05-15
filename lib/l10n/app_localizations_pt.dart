@@ -5101,6 +5101,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get feedbackReplySent => 'Resposta enviada';
 
   @override
+  String get feedbackResponseToastAction => 'Ver';
+
+  @override
+  String get feedbackResponseToastDefault =>
+      'Nova resposta ao seu relatório de bug';
+
+  @override
   String get feedbackReportBugAction => 'Relatar bug';
 
   @override

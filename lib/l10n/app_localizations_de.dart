@@ -5128,6 +5128,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get feedbackReplySent => 'Antwort gesendet';
 
   @override
+  String get feedbackResponseToastAction => 'View';
+
+  @override
+  String get feedbackResponseToastDefault => 'New response to your bug report';
+
+  @override
   String get feedbackReportBugAction => 'Fehler melden';
 
   @override

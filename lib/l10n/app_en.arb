@@ -6668,6 +6668,14 @@
     "@feedbackReplySent": {
         "description": "Success snackbar after sending reply"
     },
+    "feedbackResponseToastAction": "View",
+    "@feedbackResponseToastAction": {
+        "description": "Action button on the in-app snackbar shown when a founder response to a bug report arrives while the app is in the foreground."
+    },
+    "feedbackResponseToastDefault": "New response to your bug report",
+    "@feedbackResponseToastDefault": {
+        "description": "Default body for the in-app snackbar shown when a founder response to a bug report arrives while the app is in the foreground, used when the FCM payload omits a notification body."
+    },
     "feedbackReportBugAction": "Report bug",
     "@feedbackReportBugAction": {
         "description": "Action button label"

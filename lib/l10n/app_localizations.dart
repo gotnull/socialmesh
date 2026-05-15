@@ -9030,6 +9030,18 @@ abstract class AppLocalizations {
   /// **'Reply sent'**
   String get feedbackReplySent;
 
+  /// Action button on the in-app snackbar shown when a founder response to a bug report arrives while the app is in the foreground.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get feedbackResponseToastAction;
+
+  /// Default body for the in-app snackbar shown when a founder response to a bug report arrives while the app is in the foreground, used when the FCM payload omits a notification body.
+  ///
+  /// In en, this message translates to:
+  /// **'New response to your bug report'**
+  String get feedbackResponseToastDefault;
+
   /// Action button label
   ///
   /// In en, this message translates to:

@@ -36111,6 +36111,8 @@
   "feedbackReplyFailed": "Invio risposta non riuscito: {error}",
   "feedbackReplyHint": "Scrivi una risposta...",
   "feedbackReplySent": "Risposta inviata",
+  "feedbackResponseToastAction": "Apri",
+  "feedbackResponseToastDefault": "Nuova risposta al tuo bug report",
   "feedbackReportBugAction": "Segnala bug",
   "feedbackReportBugDescription": "Se qualcosa non funziona correttamente, puoi segnalarlo per contribuire a migliorare SocialMesh per tutti.",
   "feedbackReportBugTitle": "Segnalare un bug?",

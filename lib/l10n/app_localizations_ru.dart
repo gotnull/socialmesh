@@ -5104,6 +5104,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get feedbackReplySent => 'Ответ отправлен';
 
   @override
+  String get feedbackResponseToastAction => 'Открыть';
+
+  @override
+  String get feedbackResponseToastDefault =>
+      'Новый ответ на ваш отчёт об ошибке';
+
+  @override
   String get feedbackReportBugAction => 'Сообщить об ошибке';
 
   @override

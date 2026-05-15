@@ -14,6 +14,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging.dart';
+import '../../core/navigation.dart';
+import '../../l10n/l10n_utils.dart';
+import '../../utils/snackbar.dart';
 
 import '../storage/message_database.dart';
 import '../messaging/message_utils.dart';
@@ -66,6 +69,7 @@ class PushNotificationService {
   bool _initialized = false;
   StreamSubscription<RemoteMessage>? _foregroundSubscription;
   StreamSubscription<RemoteMessage>? _openedAppSubscription;
+  StreamSubscription<User?>? _authStateSubscription;
 
   /// SharedPreferences key for persisting the last-saved FCM token so we can
   /// delete the stale Firestore entry when the platform rotates it.
@@ -133,11 +137,23 @@ class PushNotificationService {
         // Subscribe to announcements topic for admin broadcasts
         await _subscribeToAnnouncementsTopic();
 
-        // Get and save FCM token
+        // Get and save FCM token for the currently-signed-in user (if any)
         await _saveFcmToken();
 
         // Listen for token refresh
         _messaging.onTokenRefresh.listen(_onTokenRefresh);
+
+        // Re-save the FCM token whenever a user signs in. initialize() runs
+        // at app launch before any sign-in flow, so without this listener a
+        // user who signs in after launch would have no token registered
+        // until the next app restart. _saveFcmToken() is a no-op when there
+        // is no current user, so this is safe across sign-out transitions
+        // (cleanup is handled separately by onUserSignOut).
+        _authStateSubscription = _auth.authStateChanges().listen((user) {
+          if (user != null) {
+            unawaited(_saveFcmToken());
+          }
+        });
 
         // Handle foreground messages
         _foregroundSubscription = FirebaseMessaging.onMessage.listen(
@@ -290,6 +306,16 @@ class PushNotificationService {
     // Emit content refresh event for screens currently visible
     _emitContentRefreshEvent(message);
 
+    // Surface a localised in-app snackbar for founder bug-report responses
+    // when the app is in the foreground. The system local-notification
+    // banner is suppressed in this case (return below) to avoid a double
+    // banner — the snackbar's "View" action navigates to the report and is
+    // the in-app equivalent of tapping the system banner.
+    if (message.data['type'] == 'bug_report_response') {
+      _showBugReportResponseSnackBar(message);
+      return;
+    }
+
     // If push contains message payload for mesh DM/channel, log and persist via event
     final data = message.data;
     if (data.containsKey('type') &&
@@ -404,6 +430,32 @@ class PushNotificationService {
         iOS: iosDetails,
       ),
       payload: payloadString,
+    );
+  }
+
+  /// Show an in-app snackbar with a "View" action for a foreground
+  /// bug-report response push. Falls back to a localised default message
+  /// when the FCM payload omits a notification body.
+  void _showBugReportResponseSnackBar(RemoteMessage message) {
+    final l10n = safeL10n();
+    final body = message.notification?.body;
+    final snackMessage = (body != null && body.isNotEmpty)
+        ? body
+        : l10n.feedbackResponseToastDefault;
+    final targetId = message.data['targetId'] as String?;
+
+    showGlobalActionSnackBar(
+      snackMessage,
+      actionLabel: l10n.feedbackResponseToastAction,
+      onAction: () {
+        final navigator = navigatorKey.currentState;
+        navigator?.pushNamed(
+          '/my-bug-reports',
+          arguments: targetId != null ? {'reportId': targetId} : null,
+        );
+      },
+      type: SnackBarType.info,
+      duration: const Duration(seconds: 6),
     );
   }
 
@@ -757,6 +809,7 @@ class PushNotificationService {
   void dispose() {
     _foregroundSubscription?.cancel();
     _openedAppSubscription?.cancel();
+    _authStateSubscription?.cancel();
     _notificationNavigationController.close();
     _contentRefreshController.close();
   }

@@ -2964,6 +2964,8 @@
     "feedbackReplyFailed": "Не удалось отправить ответ: {error}",
     "feedbackReplyHint": "Напишите ответ...",
     "feedbackReplySent": "Ответ отправлен",
+    "feedbackResponseToastAction": "Открыть",
+    "feedbackResponseToastDefault": "Новый ответ на ваш отчёт об ошибке",
     "feedbackReportBugAction": "Сообщить об ошибке",
     "feedbackReportBugDescription": "Если что-то работает неправильно, вы можете сообщить об этом, чтобы помочь улучшить SocialMesh для всех.",
     "feedbackReportBugTitle": "Сообщить об ошибке?",
