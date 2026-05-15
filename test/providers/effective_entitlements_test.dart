@@ -16,8 +16,6 @@
 //   6. The set returned is unmodifiable (callers can't accidentally mutate
 //      the cache).
 
-import 'dart:async';
-
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -54,17 +52,39 @@ ProviderContainer _container({
           PurchaseState(purchasedProductIds: storePurchases),
         ),
       ),
-      externalEntitlementsProvider.overrideWith((ref) async* {
-        yield externalPurchases;
-        // Keep the stream open so the StreamProvider stays in AsyncData
-        // and `.future` resolves on the yielded value. Closing the stream
-        // immediately after the yield can interact poorly with Riverpod
-        // 3.x's overridden-StreamProvider plumbing and never resolve
-        // `.future`.
-        await Completer<void>().future;
-      }),
+      // Synchronous-ish stream: one event, then close. A live
+      // subscriber on the StreamProvider receives the event on the
+      // next event-loop tick; tests use `_pumpUntilData` to wait for
+      // AsyncData to land before reading downstream providers.
+      externalEntitlementsProvider.overrideWith(
+        (ref) => Stream<Set<String>>.fromIterable([externalPurchases]),
+      ),
     ],
   );
+}
+
+// Pump the event loop until `externalEntitlementsProvider` resolves
+// to AsyncData. Riverpod 3's StreamProvider.future has flaky timing
+// when overridden with synthetic streams in tests; an explicit
+// listen() drives the stream subscription and the loop yields to the
+// event queue until the AsyncValue carries data.
+Future<void> _pumpUntilData(ProviderContainer c) async {
+  final sub = c.listen<AsyncValue<Set<String>>>(
+    externalEntitlementsProvider,
+    (_, _) {},
+    fireImmediately: true,
+  );
+  try {
+    for (var i = 0; i < 20; i++) {
+      if (sub.read().hasValue) return;
+      await Future<void>.delayed(Duration.zero);
+    }
+    throw StateError(
+      'externalEntitlementsProvider did not emit AsyncData within pump budget',
+    );
+  } finally {
+    sub.close();
+  }
 }
 
 void main() {
@@ -92,8 +112,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
         storePurchases: {'theme_pack'},
         externalPurchases: {},
       );
-      // Force the FutureProvider to resolve.
-      await c.read(externalEntitlementsProvider.future);
+      await _pumpUntilData(c);
 
       expect(c.read(effectiveEntitlementsProvider), contains('theme_pack'));
       expect(c.read(hasFeatureProvider(PremiumFeature.premiumThemes)), isTrue);
@@ -106,7 +125,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
         storePurchases: {},
         externalPurchases: {'widget_pack'},
       );
-      await c.read(externalEntitlementsProvider.future);
+      await _pumpUntilData(c);
 
       expect(c.read(effectiveEntitlementsProvider), contains('widget_pack'));
       expect(c.read(hasFeatureProvider(PremiumFeature.homeWidgets)), isTrue);
@@ -121,7 +140,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
         storePurchases: {'theme_pack'},
         externalPurchases: {'widget_pack'},
       );
-      await c.read(externalEntitlementsProvider.future);
+      await _pumpUntilData(c);
 
       final union = c.read(effectiveEntitlementsProvider);
       expect(union, containsAll({'theme_pack', 'widget_pack'}));
@@ -133,7 +152,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
         storePurchases: {'complete_pack'},
         externalPurchases: {},
       );
-      await c.read(externalEntitlementsProvider.future);
+      await _pumpUntilData(c);
 
       final union = c.read(effectiveEntitlementsProvider);
       for (final p in OneTimePurchases.completePackPurchases) {
@@ -154,7 +173,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
         storePurchases: {},
         externalPurchases: {'complete_pack'},
       );
-      await c.read(externalEntitlementsProvider.future);
+      await _pumpUntilData(c);
 
       final union = c.read(effectiveEntitlementsProvider);
       for (final p in OneTimePurchases.completePackPurchases) {
@@ -172,7 +191,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
         storePurchases: {'theme_pack', 'widget_pack'},
         externalPurchases: {},
       );
-      await c.read(externalEntitlementsProvider.future);
+      await _pumpUntilData(c);
 
       expect(c.read(hasPurchasedProvider('theme_pack')), isTrue);
       expect(c.read(hasPurchasedProvider('widget_pack')), isTrue);
@@ -184,7 +203,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
         storePurchases: {'theme_pack'},
         externalPurchases: {},
       );
-      await c.read(externalEntitlementsProvider.future);
+      await _pumpUntilData(c);
 
       final set = c.read(effectiveEntitlementsProvider);
       expect(
@@ -204,7 +223,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
           storePurchases: {'theme_pack', 'widget_pack'},
           externalPurchases: {'ringtone_pack'},
         );
-        await c.read(externalEntitlementsProvider.future);
+        await _pumpUntilData(c);
 
         expect(c.read(hasAllPremiumFeaturesProvider), isFalse);
         c.dispose();

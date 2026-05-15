@@ -927,6 +927,45 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
     );
   }
 
+  // Connectivity gate for new purchases. The first read of
+  // isOnlineProvider can return a stale "offline" value in two cases
+  // observed on iOS:
+  //   1. Cold boot: the provider initialises with platformConnected=false
+  //      and only flips to true after the first ~2s reachability ping.
+  //   2. After the Stripe Payment Sheet dismisses, iOS occasionally
+  //      fires a transient `none` event on connectivity_plus's
+  //      onConnectivityChanged stream, flipping the cached state to
+  //      offline until the next periodic check (~10s later).
+  //
+  // Both produce false-negative "Purchase blocked — offline" snackbars
+  // when the network is actually live. Force a fresh checkNow() before
+  // surfacing the offline error: if the platform genuinely is down the
+  // re-check stays false and we still block; if it was stale we
+  // recover transparently.
+  Future<bool> _ensureOnlineForPurchase(String productId) async {
+    if (ref.read(isOnlineProvider)) return true;
+    AppLogging.subscriptions(
+      '[SubscriptionScreen] isOnline=false on first read for $productId '
+      '— forcing connectivity refresh before blocking',
+    );
+    await ref.read(connectivityStatusProvider.notifier).checkNow();
+    if (!mounted) return false;
+    if (ref.read(isOnlineProvider)) {
+      AppLogging.subscriptions(
+        '[SubscriptionScreen] connectivity refresh corrected stale offline '
+        'for $productId — proceeding',
+      );
+      return true;
+    }
+    AppLogging.subscriptions(
+      '[SubscriptionScreen] Purchase blocked — offline confirmed after refresh '
+      '($productId)',
+    );
+    if (!mounted) return false;
+    showErrorSnackBar(context, context.l10n.premiumPurchaseRequiresInternet);
+    return false;
+  }
+
   Future<void> _purchaseBundle() async {
     // Capture haptics before any await
     final haptics = ref.haptics;
@@ -938,18 +977,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
 
     // Allow viewing owned state offline, but block new purchases
     if (!purchaseState.hasPurchased(bundleId)) {
-      final isOnline = ref.read(isOnlineProvider);
-      if (!isOnline) {
-        AppLogging.subscriptions(
-          '[SubscriptionScreen] Purchase blocked — offline',
-        );
-        if (!mounted) return;
-        showErrorSnackBar(
-          context,
-          context.l10n.premiumPurchaseRequiresInternet,
-        );
-        return;
-      }
+      if (!await _ensureOnlineForPurchase(bundleId)) return;
     }
     if (purchaseState.hasPurchased(bundleId)) {
       haptics.success();
@@ -1180,16 +1208,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
     final haptics = ref.haptics;
     haptics.buttonTap();
 
-    final isOnline = ref.read(isOnlineProvider);
-    if (!isOnline) {
-      AppLogging.subscriptions(
-        '[SubscriptionScreen] Purchase item blocked — offline '
-        '(${purchase.productId})',
-      );
-      if (!mounted) return;
-      showErrorSnackBar(context, context.l10n.premiumPurchaseRequiresInternet);
-      return;
-    }
+    if (!await _ensureOnlineForPurchase(purchase.productId)) return;
+    if (!mounted) return;
 
     // Chunk C: route every pack CTA through the chooser sheet. When
     // Stripe is disabled, the chooser short-circuits straight to the
