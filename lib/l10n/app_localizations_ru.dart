@@ -8049,6 +8049,66 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String meshcoreRepeaterAdminSettingsOutOfRangeDecimal(
+    double min,
+    double max,
+  ) {
+    return 'Значение должно быть от $min до $max.';
+  }
+
+  @override
+  String meshcoreRepeaterAdminSettingsSavedWithTimeoutsSnackbar(
+    int saved,
+    int total,
+  ) {
+    return 'Сохранено $saved из $total настроек. Часть команд истекла - сессия админа могла истечь.';
+  }
+
+  @override
+  String get meshcoreRepeaterAdminSettingsSectionRadio => 'Радио';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsSectionLocation => 'Местоположение';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsFrequencyLabel => 'Частота (МГц)';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsFrequencyHelper =>
+      'Диапазон: 300 - 2500 МГц. Должна совпадать с локальной LoRa-регионной настройкой.';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsBandwidthLabel => 'Полоса (кГц)';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsSpreadingFactorLabel =>
+      'Spreading factor';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsCodingRateLabel => 'Coding rate';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsTxPowerLabel => 'Мощность TX (дБм)';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsTxPowerHelper =>
+      'Диапазон: 1 - 30 дБм.';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsLatLabel => 'Широта';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsLatHelper =>
+      'Десятичные градусы. Диапазон: -90 - 90.';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsLonLabel => 'Долгота';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsLonHelper =>
+      'Десятичные градусы. Диапазон: -180 - 180.';
+
+  @override
   String meshcoreRepeaterStatusTitle(String name) {
     return 'Статус $name';
   }

@@ -84,4 +84,66 @@ class MeshCoreCliReplyParser {
     if (match == null) return null;
     return int.tryParse(match.group(0)!);
   }
+
+  // D49-D1: Extract a decimal value from a CLI reply. Used for lat /
+  // lon / freq / tx replies that may carry a trailing unit suffix
+  // (e.g. `"868.0 MHz"`). Returns null when the value-portion does
+  // not start with a sign-or-digit-or-dot character.
+  static double? extractDouble(String response) {
+    final raw = extractValue(response);
+    if (raw == null) return null;
+    final v = raw.trim();
+    final match = RegExp(r'^-?\d+(?:\.\d+)?').firstMatch(v);
+    if (match == null) return null;
+    return double.tryParse(match.group(0)!);
+  }
+
+  // D49-D1: Parse `get radio` reply into its four canonical numeric
+  // fields. The firmware reply takes the shape
+  // `"<freqMHz>,<bwKHz>,<sf>,<cr>"` (e.g. `"908.205017,62.5,10,7"`).
+  //
+  // Returns null on shape mismatch (too few fields, any field
+  // non-numeric). Stripping of trailing whitespace + colon-prefix
+  // happens in [extractValue] before the CSV split; the value-portion
+  // we operate on is the CSV itself.
+  //
+  // Range validation lives at the UI layer — this helper is purely
+  // structural so the caller can surface "firmware returned an
+  // out-of-range value" separately from "firmware returned a garbled
+  // reply".
+  static ParsedMeshCoreRadioReply? parseRadioReply(String response) {
+    final v = extractValue(response);
+    if (v == null) return null;
+    final parts = v.split(',').map((p) => p.trim()).toList();
+    if (parts.length < 4) return null;
+    final freq = double.tryParse(parts[0]);
+    final bw = double.tryParse(parts[1]);
+    final sf = int.tryParse(parts[2]);
+    final cr = int.tryParse(parts[3]);
+    if (freq == null || bw == null || sf == null || cr == null) {
+      return null;
+    }
+    return ParsedMeshCoreRadioReply(
+      freqMHz: freq,
+      bandwidthKhz: bw,
+      spreadingFactor: sf,
+      codingRate: cr,
+    );
+  }
+}
+
+// D49-D1: value class for the four canonical radio params surfaced by
+// the firmware's `get radio` reply.
+class ParsedMeshCoreRadioReply {
+  final double freqMHz;
+  final double bandwidthKhz;
+  final int spreadingFactor;
+  final int codingRate;
+
+  const ParsedMeshCoreRadioReply({
+    required this.freqMHz,
+    required this.bandwidthKhz,
+    required this.spreadingFactor,
+    required this.codingRate,
+  });
 }

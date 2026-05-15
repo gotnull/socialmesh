@@ -107,6 +107,79 @@ void main() {
     });
   });
 
+  group('extractDouble - D49-D1', () {
+    test('bare decimal', () {
+      expect(MeshCoreCliReplyParser.extractDouble('868.0'), 868.0);
+    });
+
+    test('integer is parsed as double', () {
+      expect(MeshCoreCliReplyParser.extractDouble('22'), 22.0);
+    });
+
+    test('prompt-prefixed decimal', () {
+      expect(MeshCoreCliReplyParser.extractDouble('> 47.3769'), 47.3769);
+    });
+
+    test('key:value decimal', () {
+      expect(MeshCoreCliReplyParser.extractDouble('lat: 47.3769'), 47.3769);
+    });
+
+    test('negative decimal', () {
+      expect(MeshCoreCliReplyParser.extractDouble('lon: -122.4194'), -122.4194);
+    });
+
+    test('trailing unit suffix strips cleanly', () {
+      expect(MeshCoreCliReplyParser.extractDouble('> 868.0 MHz'), 868.0);
+    });
+
+    test('non-numeric returns null', () {
+      expect(MeshCoreCliReplyParser.extractDouble('Heltec1'), isNull);
+    });
+
+    test('empty returns null', () {
+      expect(MeshCoreCliReplyParser.extractDouble(''), isNull);
+    });
+  });
+
+  group('parseRadioReply - D49-D1', () {
+    test('canonical 4-field CSV parses every field', () {
+      final r = MeshCoreCliReplyParser.parseRadioReply('908.205017,62.5,10,7');
+      expect(r, isNotNull);
+      expect(r!.freqMHz, 908.205017);
+      expect(r.bandwidthKhz, 62.5);
+      expect(r.spreadingFactor, 10);
+      expect(r.codingRate, 7);
+    });
+
+    test('prompt-prefixed reply still parses', () {
+      final r = MeshCoreCliReplyParser.parseRadioReply('> 868.0,125,11,5');
+      expect(r, isNotNull);
+      expect(r!.freqMHz, 868.0);
+      expect(r.bandwidthKhz, 125.0);
+      expect(r.spreadingFactor, 11);
+      expect(r.codingRate, 5);
+    });
+
+    test('key:value reply still parses (radio: ...)', () {
+      final r = MeshCoreCliReplyParser.parseRadioReply('radio: 433.0,250,7,5');
+      expect(r, isNotNull);
+      expect(r!.freqMHz, 433.0);
+      expect(r.bandwidthKhz, 250.0);
+    });
+
+    test('too few fields returns null', () {
+      expect(MeshCoreCliReplyParser.parseRadioReply('868.0,125,11'), isNull);
+    });
+
+    test('non-numeric field returns null', () {
+      expect(MeshCoreCliReplyParser.parseRadioReply('868.0,wide,11,5'), isNull);
+    });
+
+    test('empty returns null', () {
+      expect(MeshCoreCliReplyParser.parseRadioReply(''), isNull);
+    });
+  });
+
   group('extractInt - D49-C', () {
     test('bare integer', () {
       expect(MeshCoreCliReplyParser.extractInt('120'), 120);

@@ -83,13 +83,93 @@ void main() {
       'meshcore-repeater-admin-settings-allow-read-only',
       'meshcore-repeater-admin-settings-advert-interval',
       'meshcore-repeater-admin-settings-flood-advert-interval',
+      // D49-D1: radio + location fields.
+      'meshcore-repeater-admin-settings-frequency',
+      'meshcore-repeater-admin-settings-bandwidth',
+      'meshcore-repeater-admin-settings-spreading-factor',
+      'meshcore-repeater-admin-settings-coding-rate',
+      'meshcore-repeater-admin-settings-tx-power',
+      'meshcore-repeater-admin-settings-latitude',
+      'meshcore-repeater-admin-settings-longitude',
     ]) {
+      // Several fields (e.g. lower sections) may be below the
+      // viewport at this physical-size; scroll them into view first
+      // so `findsOneWidget` is reliable.
+      await tester.dragUntilVisible(
+        find.byKey(ValueKey(keyId)),
+        find.byType(ListView),
+        const Offset(0, -100),
+      );
       expect(
         find.byKey(ValueKey(keyId)),
         findsOneWidget,
         reason: 'field with key "$keyId" must render',
       );
     }
+  });
+
+  testWidgets('D49-D1: editing the frequency field toggles save-enabled', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 2800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(_wrap(contact: _contact()));
+    await _settle(tester);
+
+    final freq = find.byKey(
+      const ValueKey('meshcore-repeater-admin-settings-frequency'),
+    );
+    await tester.dragUntilVisible(
+      freq,
+      find.byType(ListView),
+      const Offset(0, -100),
+    );
+    await tester.enterText(freq, '868.0');
+    await tester.pump();
+    final saveBtn = find.byKey(
+      const ValueKey('meshcore-repeater-admin-settings-save'),
+    );
+    await tester.ensureVisible(saveBtn);
+    await tester.pump();
+    await tester.tap(saveBtn, warnIfMissed: false);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(find.text(_l10n.meshcoreNotConnectedToDevice), findsOneWidget);
+  });
+
+  testWidgets('D49-D1: editing the latitude field toggles save-enabled', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 2800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(_wrap(contact: _contact()));
+    await _settle(tester);
+
+    final lat = find.byKey(
+      const ValueKey('meshcore-repeater-admin-settings-latitude'),
+    );
+    await tester.dragUntilVisible(
+      lat,
+      find.byType(ListView),
+      const Offset(0, -100),
+    );
+    await tester.enterText(lat, '47.3769');
+    await tester.pump();
+    final saveBtn = find.byKey(
+      const ValueKey('meshcore-repeater-admin-settings-save'),
+    );
+    await tester.ensureVisible(saveBtn);
+    await tester.pump();
+    await tester.tap(saveBtn, warnIfMissed: false);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(find.text(_l10n.meshcoreNotConnectedToDevice), findsOneWidget);
   });
 
   testWidgets('save button is initially disabled (no dirty state)', (

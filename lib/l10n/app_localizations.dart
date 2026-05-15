@@ -14091,6 +14091,99 @@ abstract class AppLocalizations {
   /// **'Value must be between {min} and {max}.'**
   String meshcoreRepeaterAdminSettingsOutOfRange(int min, int max);
 
+  /// D49-D1 - inline validation error for out-of-range decimals (freq / lat / lon)
+  ///
+  /// In en, this message translates to:
+  /// **'Value must be between {min} and {max}.'**
+  String meshcoreRepeaterAdminSettingsOutOfRangeDecimal(double min, double max);
+
+  /// D49-D1 - summary snackbar when save partially times out; advises re-login
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {saved} of {total} settings. Some commands timed out - the admin session may have expired.'**
+  String meshcoreRepeaterAdminSettingsSavedWithTimeoutsSnackbar(
+    int saved,
+    int total,
+  );
+
+  /// D49-D1 - section header for radio params
+  ///
+  /// In en, this message translates to:
+  /// **'Radio'**
+  String get meshcoreRepeaterAdminSettingsSectionRadio;
+
+  /// D49-D1 - section header for lat/lon
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get meshcoreRepeaterAdminSettingsSectionLocation;
+
+  /// D49-D1 - frequency field label
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency (MHz)'**
+  String get meshcoreRepeaterAdminSettingsFrequencyLabel;
+
+  /// D49-D1 - frequency field helper
+  ///
+  /// In en, this message translates to:
+  /// **'Range: 300 to 2500 MHz. Match the local LoRa region preset.'**
+  String get meshcoreRepeaterAdminSettingsFrequencyHelper;
+
+  /// D49-D1 - bandwidth chip-selector label
+  ///
+  /// In en, this message translates to:
+  /// **'Bandwidth (kHz)'**
+  String get meshcoreRepeaterAdminSettingsBandwidthLabel;
+
+  /// D49-D1 - SF chip-selector label
+  ///
+  /// In en, this message translates to:
+  /// **'Spreading factor'**
+  String get meshcoreRepeaterAdminSettingsSpreadingFactorLabel;
+
+  /// D49-D1 - CR chip-selector label
+  ///
+  /// In en, this message translates to:
+  /// **'Coding rate'**
+  String get meshcoreRepeaterAdminSettingsCodingRateLabel;
+
+  /// D49-D1 - TX power field label
+  ///
+  /// In en, this message translates to:
+  /// **'TX power (dBm)'**
+  String get meshcoreRepeaterAdminSettingsTxPowerLabel;
+
+  /// D49-D1 - TX power field helper
+  ///
+  /// In en, this message translates to:
+  /// **'Range: 1 to 30 dBm.'**
+  String get meshcoreRepeaterAdminSettingsTxPowerHelper;
+
+  /// D49-D1 - latitude field label
+  ///
+  /// In en, this message translates to:
+  /// **'Latitude'**
+  String get meshcoreRepeaterAdminSettingsLatLabel;
+
+  /// D49-D1 - latitude field helper
+  ///
+  /// In en, this message translates to:
+  /// **'Decimal degrees. Range: -90 to 90.'**
+  String get meshcoreRepeaterAdminSettingsLatHelper;
+
+  /// D49-D1 - longitude field label
+  ///
+  /// In en, this message translates to:
+  /// **'Longitude'**
+  String get meshcoreRepeaterAdminSettingsLonLabel;
+
+  /// D49-D1 - longitude field helper
+  ///
+  /// In en, this message translates to:
+  /// **'Decimal degrees. Range: -180 to 180.'**
+  String get meshcoreRepeaterAdminSettingsLonHelper;
+
   /// D49-A - app-bar title for the repeater status screen
   ///
   /// In en, this message translates to:

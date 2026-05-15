@@ -10720,6 +10720,74 @@
             "max": {"type": "int"}
         }
     },
+    "meshcoreRepeaterAdminSettingsOutOfRangeDecimal": "Value must be between {min} and {max}.",
+    "@meshcoreRepeaterAdminSettingsOutOfRangeDecimal": {
+        "description": "D49-D1 - inline validation error for out-of-range decimals (freq / lat / lon)",
+        "placeholders": {
+            "min": {"type": "double"},
+            "max": {"type": "double"}
+        }
+    },
+    "meshcoreRepeaterAdminSettingsSavedWithTimeoutsSnackbar": "Saved {saved} of {total} settings. Some commands timed out - the admin session may have expired.",
+    "@meshcoreRepeaterAdminSettingsSavedWithTimeoutsSnackbar": {
+        "description": "D49-D1 - summary snackbar when save partially times out; advises re-login",
+        "placeholders": {
+            "saved": {"type": "int"},
+            "total": {"type": "int"}
+        }
+    },
+    "meshcoreRepeaterAdminSettingsSectionRadio": "Radio",
+    "@meshcoreRepeaterAdminSettingsSectionRadio": {
+        "description": "D49-D1 - section header for radio params"
+    },
+    "meshcoreRepeaterAdminSettingsSectionLocation": "Location",
+    "@meshcoreRepeaterAdminSettingsSectionLocation": {
+        "description": "D49-D1 - section header for lat/lon"
+    },
+    "meshcoreRepeaterAdminSettingsFrequencyLabel": "Frequency (MHz)",
+    "@meshcoreRepeaterAdminSettingsFrequencyLabel": {
+        "description": "D49-D1 - frequency field label"
+    },
+    "meshcoreRepeaterAdminSettingsFrequencyHelper": "Range: 300 to 2500 MHz. Match the local LoRa region preset.",
+    "@meshcoreRepeaterAdminSettingsFrequencyHelper": {
+        "description": "D49-D1 - frequency field helper"
+    },
+    "meshcoreRepeaterAdminSettingsBandwidthLabel": "Bandwidth (kHz)",
+    "@meshcoreRepeaterAdminSettingsBandwidthLabel": {
+        "description": "D49-D1 - bandwidth chip-selector label"
+    },
+    "meshcoreRepeaterAdminSettingsSpreadingFactorLabel": "Spreading factor",
+    "@meshcoreRepeaterAdminSettingsSpreadingFactorLabel": {
+        "description": "D49-D1 - SF chip-selector label"
+    },
+    "meshcoreRepeaterAdminSettingsCodingRateLabel": "Coding rate",
+    "@meshcoreRepeaterAdminSettingsCodingRateLabel": {
+        "description": "D49-D1 - CR chip-selector label"
+    },
+    "meshcoreRepeaterAdminSettingsTxPowerLabel": "TX power (dBm)",
+    "@meshcoreRepeaterAdminSettingsTxPowerLabel": {
+        "description": "D49-D1 - TX power field label"
+    },
+    "meshcoreRepeaterAdminSettingsTxPowerHelper": "Range: 1 to 30 dBm.",
+    "@meshcoreRepeaterAdminSettingsTxPowerHelper": {
+        "description": "D49-D1 - TX power field helper"
+    },
+    "meshcoreRepeaterAdminSettingsLatLabel": "Latitude",
+    "@meshcoreRepeaterAdminSettingsLatLabel": {
+        "description": "D49-D1 - latitude field label"
+    },
+    "meshcoreRepeaterAdminSettingsLatHelper": "Decimal degrees. Range: -90 to 90.",
+    "@meshcoreRepeaterAdminSettingsLatHelper": {
+        "description": "D49-D1 - latitude field helper"
+    },
+    "meshcoreRepeaterAdminSettingsLonLabel": "Longitude",
+    "@meshcoreRepeaterAdminSettingsLonLabel": {
+        "description": "D49-D1 - longitude field label"
+    },
+    "meshcoreRepeaterAdminSettingsLonHelper": "Decimal degrees. Range: -180 to 180.",
+    "@meshcoreRepeaterAdminSettingsLonHelper": {
+        "description": "D49-D1 - longitude field helper"
+    },
     "meshcoreRepeaterStatusTitle": "{name} status",
     "@meshcoreRepeaterStatusTitle": {
         "description": "D49-A - app-bar title for the repeater status screen",

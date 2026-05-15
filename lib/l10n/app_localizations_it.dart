@@ -8064,6 +8064,66 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String meshcoreRepeaterAdminSettingsOutOfRangeDecimal(
+    double min,
+    double max,
+  ) {
+    return 'Il valore deve essere compreso tra $min e $max.';
+  }
+
+  @override
+  String meshcoreRepeaterAdminSettingsSavedWithTimeoutsSnackbar(
+    int saved,
+    int total,
+  ) {
+    return 'Salvate $saved di $total impostazioni. Alcuni comandi sono scaduti - la sessione admin potrebbe essere scaduta.';
+  }
+
+  @override
+  String get meshcoreRepeaterAdminSettingsSectionRadio => 'Radio';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsSectionLocation => 'Posizione';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsFrequencyLabel => 'Frequenza (MHz)';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsFrequencyHelper =>
+      'Intervallo: da 300 a 2500 MHz. Deve corrispondere al preset di regione LoRa locale.';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsBandwidthLabel => 'Banda (kHz)';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsSpreadingFactorLabel =>
+      'Spreading factor';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsCodingRateLabel => 'Coding rate';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsTxPowerLabel => 'Potenza TX (dBm)';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsTxPowerHelper =>
+      'Intervallo: da 1 a 30 dBm.';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsLatLabel => 'Latitudine';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsLatHelper =>
+      'Gradi decimali. Intervallo: da -90 a 90.';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsLonLabel => 'Longitudine';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsLonHelper =>
+      'Gradi decimali. Intervallo: da -180 a 180.';
+
+  @override
   String meshcoreRepeaterStatusTitle(String name) {
     return 'Stato di $name';
   }
