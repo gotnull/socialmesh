@@ -18,6 +18,7 @@
 // `ExternalPurchaseService.acknowledgeConfirmation()` so a future deep
 // link can re-trigger the overlay.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -26,6 +27,7 @@ import '../../core/theme.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/external_purchase_providers.dart';
 import '../../services/external_purchase/external_purchase_service.dart';
+import 'redeem_unlock_code_sheet.dart' show showKeepPackSignInNudge;
 
 /// Wraps [child] with a fullscreen overlay that surfaces external-purchase
 /// confirmation states. Drop this in the MaterialApp `builder` so every
@@ -83,7 +85,25 @@ class _OverlayContent extends ConsumerWidget {
                 ConfirmationStage.confirming => const _Confirming(),
                 ConfirmationStage.succeeded => _Success(
                   state: state,
-                  onDismiss: () => _dismiss(ref),
+                  onDismiss: () {
+                    _dismiss(ref);
+                    // Mirror the redeem-unlock-code path: an anonymous
+                    // buyer's entitlement is bound to deviceInstallId
+                    // and would vanish on reinstall. Nudge them to
+                    // sign in so the install→uid re-key happens before
+                    // they ever lose the device identity. Covers both
+                    // Stripe and Buy Me a Coffee success — this overlay
+                    // is the sole exit for both.
+                    final user = FirebaseAuth.instance.currentUser;
+                    if (user == null || user.isAnonymous) {
+                      Future<void>.delayed(
+                        const Duration(milliseconds: 350),
+                        () {
+                          showKeepPackSignInNudge();
+                        },
+                      );
+                    }
+                  },
                 ),
                 ConfirmationStage.failed => _Failed(
                   onDismiss: () => _dismiss(ref),

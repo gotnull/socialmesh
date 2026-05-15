@@ -421,6 +421,19 @@ class ExternalPurchaseService {
   }
 
   Future<void> _onPolledSuccess(CheckoutSessionStatus status) async {
+    // Dedup concurrent in-flight pollOnce cycles: Timer.periodic fires
+    // at the 2s interval, and a slow network read can leave a second
+    // _pollOnce already enqueued when the first one returns paid. Both
+    // would otherwise call _onPolledSuccess and double the
+    // refreshEntitlements + Firestore writes. _stopPolling below nulls
+    // _pollingSessionId, so the second invocation bails here.
+    if (_pollingSessionId == null) {
+      AppLogging.purchase(
+        '[ExternalPurchaseService] payment_confirmed dedup '
+        'sessionId=${status.sessionId} — already handled by prior poll cycle',
+      );
+      return;
+    }
     AppLogging.purchase(
       '[ExternalPurchaseService] payment_confirmed sessionId=${status.sessionId} '
       'productId=${status.productId} grants=${status.grantedProductIds}',
@@ -444,6 +457,10 @@ class ExternalPurchaseService {
   }
 
   void _onPolledFailure(CheckoutStatus terminal) {
+    // Same dedup as _onPolledSuccess (see comment there).
+    if (_pollingSessionId == null) {
+      return;
+    }
     AppLogging.purchase(
       '[ExternalPurchaseService] polling_terminal status=$terminal '
       'sessionId=$_pollingSessionId',
