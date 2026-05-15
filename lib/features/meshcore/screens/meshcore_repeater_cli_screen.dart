@@ -37,7 +37,17 @@ import '../widgets/meshcore_repeater_cli_help_sheet.dart';
 
 class MeshCoreRepeaterCliScreen extends ConsumerStatefulWidget {
   final MeshCoreContact contact;
-  const MeshCoreRepeaterCliScreen({super.key, required this.contact});
+
+  // D49-D2: admin password forwarded from the hub for future auto
+  // re-login. D49-B does not currently consume it; the constructor
+  // accepts it so hub call sites stay uniform between Settings + CLI.
+  final String? password;
+
+  const MeshCoreRepeaterCliScreen({
+    super.key,
+    required this.contact,
+    this.password,
+  });
 
   @override
   ConsumerState<MeshCoreRepeaterCliScreen> createState() =>

@@ -14184,6 +14184,60 @@ abstract class AppLocalizations {
   /// **'Decimal degrees. Range: -180 to 180.'**
   String get meshcoreRepeaterAdminSettingsLonHelper;
 
+  /// D49-D2 - section header for password / privacy fields
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get meshcoreRepeaterAdminSettingsSectionSecurity;
+
+  /// D49-D2 - admin password change field label
+  ///
+  /// In en, this message translates to:
+  /// **'Admin password'**
+  String get meshcoreRepeaterAdminSettingsPasswordLabel;
+
+  /// D49-D2 - admin password change field helper
+  ///
+  /// In en, this message translates to:
+  /// **'Leave blank to keep the current password. Save sends the new password to the repeater.'**
+  String get meshcoreRepeaterAdminSettingsPasswordHelper;
+
+  /// D49-D2 - guest password change field label
+  ///
+  /// In en, this message translates to:
+  /// **'Guest password'**
+  String get meshcoreRepeaterAdminSettingsGuestPasswordLabel;
+
+  /// D49-D2 - guest password change field helper
+  ///
+  /// In en, this message translates to:
+  /// **'Leave blank to keep the current guest password.'**
+  String get meshcoreRepeaterAdminSettingsGuestPasswordHelper;
+
+  /// D49-D2 - privacy-mode toggle tile title
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy mode'**
+  String get meshcoreRepeaterAdminSettingsPrivacyTile;
+
+  /// D49-D2 - privacy-mode toggle tile subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Hides the repeater from passive listeners'**
+  String get meshcoreRepeaterAdminSettingsPrivacyTileSubtitle;
+
+  /// D49-D2 - auto-clock-sync toggle tile title
+  ///
+  /// In en, this message translates to:
+  /// **'Auto clock sync on login'**
+  String get meshcoreRepeaterAdminSettingsAutoClockSyncTile;
+
+  /// D49-D2 - auto-clock-sync toggle tile subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Send \'clock sync\' after a successful admin login (stored locally)'**
+  String get meshcoreRepeaterAdminSettingsAutoClockSyncTileSubtitle;
+
   /// D49-A - app-bar title for the repeater status screen
   ///
   /// In en, this message translates to:

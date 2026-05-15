@@ -27,6 +27,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
@@ -40,7 +41,9 @@ import '../../../models/meshcore_contact.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../services/haptic_service.dart';
 import '../../../services/meshcore/protocol/meshcore_cli_reply_parser.dart';
+import '../../../services/meshcore/protocol/meshcore_messages.dart';
 import '../../../services/meshcore/protocol/meshcore_session.dart';
+import '../../../services/meshcore/storage/meshcore_admin_auto_clock_sync_store.dart';
 import '../../../utils/snackbar.dart';
 
 // Range guards mirror upstream's firmware constraints. Out-of-range
@@ -85,7 +88,18 @@ String _formatBwLabel(double khz) {
 
 class MeshCoreRepeaterAdminSettingsScreen extends ConsumerStatefulWidget {
   final MeshCoreContact contact;
-  const MeshCoreRepeaterAdminSettingsScreen({super.key, required this.contact});
+
+  // D49-D2: admin password forwarded from the hub. Drives the auto
+  // re-login fallback when `sendCliCommand` returns `firmwareTimeout`
+  // mid-save. Optional so the screen still functions in tests + when
+  // the hub was launched without a captured password.
+  final String? password;
+
+  const MeshCoreRepeaterAdminSettingsScreen({
+    super.key,
+    required this.contact,
+    this.password,
+  });
 
   @override
   ConsumerState<MeshCoreRepeaterAdminSettingsScreen> createState() =>
@@ -105,6 +119,11 @@ class _MeshCoreRepeaterAdminSettingsScreenState
   final TextEditingController _txPowerController = TextEditingController();
   final TextEditingController _latController = TextEditingController();
   final TextEditingController _lonController = TextEditingController();
+  // D49-D2: password change controllers. Both stay obscured + empty
+  // by default (we never fetch passwords from the firmware).
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _guestPasswordController =
+      TextEditingController();
 
   // Initial values are the baseline the radio reports. The save loop
   // only writes the fields whose live value differs from the initial.
@@ -132,6 +151,13 @@ class _MeshCoreRepeaterAdminSettingsScreenState
   double? _initialLatitude;
   double? _initialLongitude;
 
+  // D49-D2: privacy mode (wire) + auto-clock-sync (storage-only).
+  bool _privacyMode = false;
+  bool _initialPrivacyMode = false;
+  bool _autoClockSync = false;
+  bool _initialAutoClockSync = false;
+  MeshCoreAdminAutoClockSyncStore? _autoClockSyncStore;
+
   bool _busy = false;
   int _prefixCounter = 0;
 
@@ -140,6 +166,22 @@ class _MeshCoreRepeaterAdminSettingsScreenState
     super.initState();
     _nameController.text = widget.contact.name;
     _initialName = widget.contact.name;
+    // D49-D2: hydrate the auto-clock-sync toggle from local storage.
+    // Fire-and-forget; the screen renders the default (false) until
+    // the SharedPreferences instance lands.
+    _loadAutoClockSync();
+  }
+
+  Future<void> _loadAutoClockSync() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    final store = MeshCoreAdminAutoClockSyncStore(prefs);
+    final enabled = store.isEnabled(widget.contact.publicKeyHex);
+    setState(() {
+      _autoClockSyncStore = store;
+      _initialAutoClockSync = enabled;
+      _autoClockSync = enabled;
+    });
   }
 
   @override
@@ -151,6 +193,8 @@ class _MeshCoreRepeaterAdminSettingsScreenState
     _txPowerController.dispose();
     _latController.dispose();
     _lonController.dispose();
+    _passwordController.dispose();
+    _guestPasswordController.dispose();
     super.dispose();
   }
 
@@ -196,6 +240,13 @@ class _MeshCoreRepeaterAdminSettingsScreenState
     if (lat != _initialLatitude) return true;
     final lon = _parseDoubleOrNull(_lonController.text);
     if (lon != _initialLongitude) return true;
+    // D49-D2: any non-empty password field is a dirty signal; we
+    // never read passwords back from the firmware so there is no
+    // "initial value" to compare against.
+    if (_passwordController.text.isNotEmpty) return true;
+    if (_guestPasswordController.text.isNotEmpty) return true;
+    if (_privacyMode != _initialPrivacyMode) return true;
+    if (_autoClockSync != _initialAutoClockSync) return true;
     return false;
   }
 
@@ -338,6 +389,19 @@ class _MeshCoreRepeaterAdminSettingsScreenState
           }
         },
       ),
+      // D49-D2: privacy mode is the only D49-D2 wire-side field that
+      // has a getter; the password / guest-password fields are
+      // write-only by design, and auto-clock-sync is storage-only.
+      _RefreshTask(
+        command: 'get privacy',
+        apply: (reply) {
+          final v = MeshCoreCliReplyParser.extractBool(reply);
+          if (v != null) {
+            _initialPrivacyMode = v;
+            _privacyMode = v;
+          }
+        },
+      ),
     ];
 
     int refreshed = 0;
@@ -356,15 +420,35 @@ class _MeshCoreRepeaterAdminSettingsScreenState
   }
 
   Future<bool> _dispatchGet(MeshCoreSession session, _RefreshTask task) async {
-    final result = await session.sendCliCommand(
-      pubKey: widget.contact.publicKey,
-      command: task.command,
-      prefixToken: _nextPrefixToken(),
-    );
+    final result = await _runCliCommand(session, task.command);
     if (!mounted) return false;
     if (!result.ok) return false;
     setState(() => task.apply(result.response ?? ''));
     return true;
+  }
+
+  /// D49-D2: route a single CLI call through the re-login-aware
+  /// wrapper when a password is available; fall back to the bare
+  /// `sendCliCommand` otherwise (tests + future deep-link flows).
+  Future<MeshCoreCliResult> _runCliCommand(
+    MeshCoreSession session,
+    String command,
+  ) async {
+    final password = widget.password;
+    if (password == null || password.isEmpty) {
+      return session.sendCliCommand(
+        pubKey: widget.contact.publicKey,
+        command: command,
+        prefixToken: _nextPrefixToken(),
+      );
+    }
+    return session.sendCliCommandWithReLogin(
+      pubKey: widget.contact.publicKey,
+      password: password,
+      command: command,
+      prefixToken: _nextPrefixToken(),
+      retryPrefixTokenBuilder: _nextPrefixToken,
+    );
   }
 
   Future<void> _save() async {
@@ -511,21 +595,53 @@ class _MeshCoreRepeaterAdminSettingsScreenState
         ),
       );
     }
+    // D49-D2: password / guest password / privacy mode wire-side
+    // setters. Password fields are write-only -- on success we
+    // clear the input but DO NOT mirror the value into any state.
+    final pwd = _passwordController.text;
+    if (pwd.isNotEmpty) {
+      commands.add(
+        _SetCommand(
+          text: 'password $pwd',
+          onSuccess: () => _passwordController.clear(),
+        ),
+      );
+    }
+    final guestPwd = _guestPasswordController.text;
+    if (guestPwd.isNotEmpty) {
+      commands.add(
+        _SetCommand(
+          text: 'set guest.password $guestPwd',
+          onSuccess: () => _guestPasswordController.clear(),
+        ),
+      );
+    }
+    if (_privacyMode != _initialPrivacyMode) {
+      commands.add(
+        _SetCommand(
+          text: 'set privacy ${_privacyMode ? 'on' : 'off'}',
+          onSuccess: () => _initialPrivacyMode = _privacyMode,
+        ),
+      );
+    }
 
-    if (commands.isEmpty) return;
+    // D49-D2: auto-clock-sync is storage-only -- no wire command.
+    // Persist the dirty toggle alongside the wire-side commands;
+    // counts toward the saved total only if the storage write
+    // succeeds, so the user sees an accurate "Saved N of M".
+    final autoClockSyncDirty = _autoClockSync != _initialAutoClockSync;
+
+    if (commands.isEmpty && !autoClockSyncDirty) return;
 
     setState(() => _busy = true);
     unawaited(ref.read(hapticServiceProvider).trigger(HapticType.medium));
 
     int saved = 0;
     int timedOut = 0;
+    int total = commands.length + (autoClockSyncDirty ? 1 : 0);
     try {
       for (final cmd in commands) {
-        final result = await session.sendCliCommand(
-          pubKey: widget.contact.publicKey,
-          command: cmd.text,
-          prefixToken: _nextPrefixToken(),
-        );
+        final result = await _runCliCommand(session, cmd.text);
         if (!mounted) return;
         if (result.ok) {
           saved++;
@@ -534,6 +650,18 @@ class _MeshCoreRepeaterAdminSettingsScreenState
           timedOut++;
         }
         await Future<void>.delayed(const Duration(milliseconds: 200));
+      }
+      // D49-D2: persist the auto-clock-sync toggle (storage-only;
+      // no wire side). Counts toward the saved/total tally so the
+      // summary snackbar matches what the user expects.
+      if (autoClockSyncDirty) {
+        final store = _autoClockSyncStore;
+        if (store != null) {
+          await store.setEnabled(widget.contact.publicKeyHex, _autoClockSync);
+          if (!mounted) return;
+          saved++;
+          _initialAutoClockSync = _autoClockSync;
+        }
       }
     } catch (e) {
       if (!mounted) return;
@@ -557,16 +685,13 @@ class _MeshCoreRepeaterAdminSettingsScreenState
         context,
         context.l10n.meshcoreRepeaterAdminSettingsSavedWithTimeoutsSnackbar(
           saved,
-          commands.length,
+          total,
         ),
       );
     } else {
       showSuccessSnackBar(
         context,
-        context.l10n.meshcoreRepeaterAdminSettingsSavedSnackbar(
-          saved,
-          commands.length,
-        ),
+        context.l10n.meshcoreRepeaterAdminSettingsSavedSnackbar(saved, total),
       );
     }
   }
@@ -1000,6 +1125,103 @@ class _MeshCoreRepeaterAdminSettingsScreenState
                 ),
               ),
             ],
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing16),
+        SettingsSectionHeader(
+          title: l10n.meshcoreRepeaterAdminSettingsSectionSecurity as String,
+        ),
+        FieldGroupCard(
+          child: Column(
+            children: [
+              TextField(
+                key: const ValueKey(
+                  'meshcore-repeater-admin-settings-password',
+                ),
+                controller: _passwordController,
+                enabled: !_busy,
+                obscureText: true,
+                maxLength: 64,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  labelText:
+                      l10n.meshcoreRepeaterAdminSettingsPasswordLabel as String,
+                  helperText:
+                      l10n.meshcoreRepeaterAdminSettingsPasswordHelper
+                          as String,
+                  counterText: '',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
+                  ),
+                  filled: true,
+                  fillColor: context.background,
+                  prefixIcon: Icon(
+                    Icons.lock_outline_rounded,
+                    color: context.textSecondary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing16),
+              TextField(
+                key: const ValueKey(
+                  'meshcore-repeater-admin-settings-guest-password',
+                ),
+                controller: _guestPasswordController,
+                enabled: !_busy,
+                obscureText: true,
+                maxLength: 64,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  labelText:
+                      l10n.meshcoreRepeaterAdminSettingsGuestPasswordLabel
+                          as String,
+                  helperText:
+                      l10n.meshcoreRepeaterAdminSettingsGuestPasswordHelper
+                          as String,
+                  counterText: '',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radius8),
+                  ),
+                  filled: true,
+                  fillColor: context.background,
+                  prefixIcon: Icon(
+                    Icons.lock_person_outlined,
+                    color: context.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SettingsTile(
+          key: const ValueKey('meshcore-repeater-admin-settings-privacy-tile'),
+          icon: Icons.shield_outlined,
+          iconColor: AccentColors.purple,
+          title: l10n.meshcoreRepeaterAdminSettingsPrivacyTile as String,
+          subtitle:
+              l10n.meshcoreRepeaterAdminSettingsPrivacyTileSubtitle as String,
+          trailing: ThemedSwitch(
+            key: const ValueKey('meshcore-repeater-admin-settings-privacy'),
+            value: _privacyMode,
+            onChanged: _busy ? null : (v) => setState(() => _privacyMode = v),
+          ),
+        ),
+        SettingsTile(
+          key: const ValueKey(
+            'meshcore-repeater-admin-settings-auto-clock-sync-tile',
+          ),
+          icon: Icons.schedule_rounded,
+          iconColor: AccentColors.cyan,
+          title: l10n.meshcoreRepeaterAdminSettingsAutoClockSyncTile as String,
+          subtitle:
+              l10n.meshcoreRepeaterAdminSettingsAutoClockSyncTileSubtitle
+                  as String,
+          trailing: ThemedSwitch(
+            key: const ValueKey(
+              'meshcore-repeater-admin-settings-auto-clock-sync',
+            ),
+            value: _autoClockSync,
+            onChanged: _busy ? null : (v) => setState(() => _autoClockSync = v),
           ),
         ),
         const SizedBox(height: AppTheme.spacing24),

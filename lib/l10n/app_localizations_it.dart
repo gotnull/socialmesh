@@ -8124,6 +8124,39 @@ class AppLocalizationsIt extends AppLocalizations {
       'Gradi decimali. Intervallo: da -180 a 180.';
 
   @override
+  String get meshcoreRepeaterAdminSettingsSectionSecurity => 'Sicurezza';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsPasswordLabel => 'Password admin';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsPasswordHelper =>
+      'Lascia vuoto per mantenere la password attuale. Salvando, la nuova password viene inviata al ripetitore.';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsGuestPasswordLabel =>
+      'Password ospite';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsGuestPasswordHelper =>
+      'Lascia vuoto per mantenere la password ospite attuale.';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsPrivacyTile => 'Modalità privacy';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsPrivacyTileSubtitle =>
+      'Nasconde il ripetitore dagli ascoltatori passivi';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsAutoClockSyncTile =>
+      'Sincronizza l\'orologio al login';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsAutoClockSyncTileSubtitle =>
+      'Invia \'clock sync\' dopo un login admin riuscito (memorizzato localmente)';
+
+  @override
   String meshcoreRepeaterStatusTitle(String name) {
     return 'Stato di $name';
   }

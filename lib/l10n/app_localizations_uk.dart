@@ -8117,6 +8117,39 @@ class AppLocalizationsUk extends AppLocalizations {
       'Decimal degrees. Range: -180 to 180.';
 
   @override
+  String get meshcoreRepeaterAdminSettingsSectionSecurity => 'Security';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsPasswordLabel => 'Admin password';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsPasswordHelper =>
+      'Leave blank to keep the current password. Save sends the new password to the repeater.';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsGuestPasswordLabel =>
+      'Guest password';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsGuestPasswordHelper =>
+      'Leave blank to keep the current guest password.';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsPrivacyTile => 'Privacy mode';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsPrivacyTileSubtitle =>
+      'Hides the repeater from passive listeners';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsAutoClockSyncTile =>
+      'Auto clock sync on login';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsAutoClockSyncTileSubtitle =>
+      'Send \'clock sync\' after a successful admin login (stored locally)';
+
+  @override
   String meshcoreRepeaterStatusTitle(String name) {
     return '$name status';
   }

@@ -91,6 +91,11 @@ void main() {
       'meshcore-repeater-admin-settings-tx-power',
       'meshcore-repeater-admin-settings-latitude',
       'meshcore-repeater-admin-settings-longitude',
+      // D49-D2: password / privacy / auto-clock-sync fields.
+      'meshcore-repeater-admin-settings-password',
+      'meshcore-repeater-admin-settings-guest-password',
+      'meshcore-repeater-admin-settings-privacy',
+      'meshcore-repeater-admin-settings-auto-clock-sync',
     ]) {
       // Several fields (e.g. lower sections) may be below the
       // viewport at this physical-size; scroll them into view first
@@ -170,6 +175,69 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
 
     expect(find.text(_l10n.meshcoreNotConnectedToDevice), findsOneWidget);
+  });
+
+  testWidgets('D49-D2: typing in the password field toggles save-enabled', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 2800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(_wrap(contact: _contact()));
+    await _settle(tester);
+
+    final pwd = find.byKey(
+      const ValueKey('meshcore-repeater-admin-settings-password'),
+    );
+    await tester.dragUntilVisible(
+      pwd,
+      find.byType(ListView),
+      const Offset(0, -100),
+    );
+    await tester.enterText(pwd, 'new-secret');
+    await tester.pump();
+    final saveBtn = find.byKey(
+      const ValueKey('meshcore-repeater-admin-settings-save'),
+    );
+    await tester.ensureVisible(saveBtn);
+    await tester.pump();
+    await tester.tap(saveBtn, warnIfMissed: false);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(find.text(_l10n.meshcoreNotConnectedToDevice), findsOneWidget);
+  });
+
+  testWidgets('D49-D2: password fields are obscured', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(_wrap(contact: _contact()));
+    await _settle(tester);
+
+    final pwdFinder = find.byKey(
+      const ValueKey('meshcore-repeater-admin-settings-password'),
+    );
+    await tester.dragUntilVisible(
+      pwdFinder,
+      find.byType(ListView),
+      const Offset(0, -100),
+    );
+    final pwd = tester.widget<TextField>(pwdFinder);
+    expect(pwd.obscureText, isTrue);
+
+    final guestFinder = find.byKey(
+      const ValueKey('meshcore-repeater-admin-settings-guest-password'),
+    );
+    await tester.dragUntilVisible(
+      guestFinder,
+      find.byType(ListView),
+      const Offset(0, -100),
+    );
+    final guest = tester.widget<TextField>(guestFinder);
+    expect(guest.obscureText, isTrue);
   });
 
   testWidgets('save button is initially disabled (no dirty state)', (

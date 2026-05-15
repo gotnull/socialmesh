@@ -8109,6 +8109,38 @@ class AppLocalizationsRu extends AppLocalizations {
       'Десятичные градусы. Диапазон: -180 - 180.';
 
   @override
+  String get meshcoreRepeaterAdminSettingsSectionSecurity => 'Безопасность';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsPasswordLabel => 'Пароль админа';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsPasswordHelper =>
+      'Оставьте пустым, чтобы сохранить текущий пароль. При сохранении новый пароль отправляется на репитер.';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsGuestPasswordLabel => 'Пароль гостя';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsGuestPasswordHelper =>
+      'Оставьте пустым, чтобы сохранить текущий гостевой пароль.';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsPrivacyTile => 'Приватный режим';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsPrivacyTileSubtitle =>
+      'Скрывает репитер от пассивных слушателей';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsAutoClockSyncTile =>
+      'Авто-синхронизация часов при входе';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsAutoClockSyncTileSubtitle =>
+      'Отправить \'clock sync\' после успешного входа админа (хранится локально)';
+
+  @override
   String meshcoreRepeaterStatusTitle(String name) {
     return 'Статус $name';
   }

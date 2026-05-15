@@ -29,7 +29,19 @@ import 'meshcore_repeater_status_screen.dart';
 
 class MeshCoreRepeaterHubScreen extends ConsumerWidget {
   final MeshCoreContact contact;
-  const MeshCoreRepeaterHubScreen({super.key, required this.contact});
+
+  // D49-D2: admin password captured by the login dialog. Forwarded
+  // into the admin settings / CLI screens to enable auto re-login
+  // on session timeout. In-memory only; closing the hub drops it.
+  // Null when the hub is launched in a context without a captured
+  // password (e.g. tests, or future deep-link flows).
+  final String? password;
+
+  const MeshCoreRepeaterHubScreen({
+    super.key,
+    required this.contact,
+    this.password,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -71,7 +83,10 @@ class MeshCoreRepeaterHubScreen extends ConsumerWidget {
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (_) => MeshCoreRepeaterCliScreen(contact: contact),
+              builder: (_) => MeshCoreRepeaterCliScreen(
+                contact: contact,
+                password: password,
+              ),
             ),
           );
         },
@@ -85,8 +100,10 @@ class MeshCoreRepeaterHubScreen extends ConsumerWidget {
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (_) =>
-                  MeshCoreRepeaterAdminSettingsScreen(contact: contact),
+              builder: (_) => MeshCoreRepeaterAdminSettingsScreen(
+                contact: contact,
+                password: password,
+              ),
             ),
           );
         },

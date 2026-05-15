@@ -1933,6 +1933,84 @@ class MeshCoreSession {
     }
   }
 
+  // D49-D2: thin convenience wrapper around [sendCliCommand] that
+  // attempts a fresh admin login when the firmware times out and
+  // retries the command exactly once on success.
+  //
+  // Use case: admin save flows in `MeshCoreRepeaterAdminSettingsScreen`
+  // run several CLI sets back-to-back. If the firmware admin session
+  // ages out mid-batch, the first `firmwareTimeout` here triggers a
+  // transparent re-login + retry instead of a half-saved form.
+  //
+  // Decision matrix:
+  //   - first call ok / rateLimited       -> return verbatim
+  //   - first call timeout, login fails   -> return ORIGINAL timeout
+  //                                          (login-fail is not the
+  //                                          caller's concern; they
+  //                                          asked for a CLI result)
+  //   - first call timeout, login ok      -> retry once with a fresh
+  //                                          prefix token + attempt
+  //                                          incremented; return the
+  //                                          retry's outcome regardless
+  //
+  // The retry is single-shot; there is no recursive descent. If the
+  // retry also times out the caller gets a `firmwareTimeout` and can
+  // surface a "session may have expired" prompt — same as without
+  // this wrapper.
+  //
+  // Privacy: the password is forwarded to [sendLogin] which already
+  // redacts it from log lines. This method itself does not log the
+  // password under any circumstance.
+  Future<MeshCoreCliResult> sendCliCommandWithReLogin({
+    required Uint8List pubKey,
+    required String password,
+    required String command,
+    required String prefixToken,
+    int attempt = 0,
+    int? timestampSeconds,
+    Duration timeout = const Duration(seconds: 20),
+    Duration loginTimeout = const Duration(seconds: 10),
+    String Function()? retryPrefixTokenBuilder,
+  }) async {
+    final first = await sendCliCommand(
+      pubKey: pubKey,
+      command: command,
+      prefixToken: prefixToken,
+      attempt: attempt,
+      timestampSeconds: timestampSeconds,
+      timeout: timeout,
+    );
+    if (!first.firmwareTimeout) return first;
+    final login = await sendLogin(
+      pubKey: pubKey,
+      password: password,
+      timeout: loginTimeout,
+    );
+    if (!login.delivered) {
+      AppLogging.meshcore(
+        'event=cli.relogin.failed '
+        'target=${AppLogging.publicKeyFingerprint(pubKey)} '
+        'reason=login_${login.delivered ? "ok_unexpected" : "fail"}',
+        error: true,
+      );
+      return first;
+    }
+    AppLogging.meshcore(
+      'event=cli.relogin.succeeded '
+      'target=${AppLogging.publicKeyFingerprint(pubKey)} '
+      'admin=${login.isAdmin ? 1 : 0}',
+    );
+    final retryToken = retryPrefixTokenBuilder?.call() ?? prefixToken;
+    return sendCliCommand(
+      pubKey: pubKey,
+      command: command,
+      prefixToken: retryToken,
+      attempt: attempt + 1,
+      timestampSeconds: timestampSeconds,
+      timeout: timeout,
+    );
+  }
+
   static final RegExp _cliPrefixTokenPattern = RegExp(r'^[0-9A-F]{2}\|$');
 
   // Parse an inbound contact text frame (0x07 or 0x10 v3) into

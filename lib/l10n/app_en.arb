@@ -10788,6 +10788,42 @@
     "@meshcoreRepeaterAdminSettingsLonHelper": {
         "description": "D49-D1 - longitude field helper"
     },
+    "meshcoreRepeaterAdminSettingsSectionSecurity": "Security",
+    "@meshcoreRepeaterAdminSettingsSectionSecurity": {
+        "description": "D49-D2 - section header for password / privacy fields"
+    },
+    "meshcoreRepeaterAdminSettingsPasswordLabel": "Admin password",
+    "@meshcoreRepeaterAdminSettingsPasswordLabel": {
+        "description": "D49-D2 - admin password change field label"
+    },
+    "meshcoreRepeaterAdminSettingsPasswordHelper": "Leave blank to keep the current password. Save sends the new password to the repeater.",
+    "@meshcoreRepeaterAdminSettingsPasswordHelper": {
+        "description": "D49-D2 - admin password change field helper"
+    },
+    "meshcoreRepeaterAdminSettingsGuestPasswordLabel": "Guest password",
+    "@meshcoreRepeaterAdminSettingsGuestPasswordLabel": {
+        "description": "D49-D2 - guest password change field label"
+    },
+    "meshcoreRepeaterAdminSettingsGuestPasswordHelper": "Leave blank to keep the current guest password.",
+    "@meshcoreRepeaterAdminSettingsGuestPasswordHelper": {
+        "description": "D49-D2 - guest password change field helper"
+    },
+    "meshcoreRepeaterAdminSettingsPrivacyTile": "Privacy mode",
+    "@meshcoreRepeaterAdminSettingsPrivacyTile": {
+        "description": "D49-D2 - privacy-mode toggle tile title"
+    },
+    "meshcoreRepeaterAdminSettingsPrivacyTileSubtitle": "Hides the repeater from passive listeners",
+    "@meshcoreRepeaterAdminSettingsPrivacyTileSubtitle": {
+        "description": "D49-D2 - privacy-mode toggle tile subtitle"
+    },
+    "meshcoreRepeaterAdminSettingsAutoClockSyncTile": "Auto clock sync on login",
+    "@meshcoreRepeaterAdminSettingsAutoClockSyncTile": {
+        "description": "D49-D2 - auto-clock-sync toggle tile title"
+    },
+    "meshcoreRepeaterAdminSettingsAutoClockSyncTileSubtitle": "Send 'clock sync' after a successful admin login (stored locally)",
+    "@meshcoreRepeaterAdminSettingsAutoClockSyncTileSubtitle": {
+        "description": "D49-D2 - auto-clock-sync toggle tile subtitle"
+    },
     "meshcoreRepeaterStatusTitle": "{name} status",
     "@meshcoreRepeaterStatusTitle": {
         "description": "D49-A - app-bar title for the repeater status screen",

@@ -47,13 +47,14 @@ Future<bool> showMeshCoreRepeaterLoginDialog(
   BuildContext context, {
   required MeshCoreContact contact,
 }) async {
-  final result = await AppBottomSheet.show<MeshCoreLoginResult>(
+  final loginResult = await AppBottomSheet.show<_LoginSheetResult>(
     context: context,
     child: _MeshCoreRepeaterLoginSheet(contact: contact),
   );
   if (!context.mounted) return false;
   final l10n = context.l10n;
-  if (result == null) return false; // cancelled
+  if (loginResult == null) return false; // cancelled
+  final result = loginResult.result;
   if (!result.delivered) {
     showErrorSnackBar(context, l10n.meshcoreRepeaterAdminLoginFailed);
     return false;
@@ -65,13 +66,28 @@ Future<bool> showMeshCoreRepeaterLoginDialog(
         : l10n.meshcoreRepeaterAdminLoginSuccessGuest,
   );
   if (result.isAdmin) {
+    // D49-D2: hand the typed password forward to the hub so the
+    // admin settings + CLI screens can do auto re-login on session
+    // timeout. Password is in-memory only; closing the hub drops it.
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => MeshCoreRepeaterHubScreen(contact: contact),
+        builder: (_) => MeshCoreRepeaterHubScreen(
+          contact: contact,
+          password: loginResult.password,
+        ),
       ),
     );
   }
   return true;
+}
+
+// D49-D2: tuple carrying the firmware's login outcome PLUS the
+// password the user typed in. The wrapper above forwards the
+// password into the hub; nothing else reads it.
+class _LoginSheetResult {
+  final MeshCoreLoginResult result;
+  final String password;
+  const _LoginSheetResult({required this.result, required this.password});
 }
 
 class _MeshCoreRepeaterLoginSheet extends ConsumerStatefulWidget {
@@ -114,7 +130,7 @@ class _MeshCoreRepeaterLoginSheetState
       password: password,
     );
     if (!mounted) return;
-    navigator.pop(result);
+    navigator.pop(_LoginSheetResult(result: result, password: password));
   }
 
   @override
