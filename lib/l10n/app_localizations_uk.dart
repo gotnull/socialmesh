@@ -7831,7 +7831,135 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreRepeaterAdminHubCliTile => 'CLI';
 
   @override
-  String get meshcoreRepeaterAdminHubCliTileSubtitle => 'Coming soon';
+  String get meshcoreRepeaterAdminHubCliTileSubtitle =>
+      'Send admin commands to the repeater';
+
+  @override
+  String meshcoreRepeaterCliTitle(String name) {
+    return '$name CLI';
+  }
+
+  @override
+  String get meshcoreRepeaterCliEmptyTitle => 'No commands yet';
+
+  @override
+  String get meshcoreRepeaterCliEmptyDescription =>
+      'Type a command below or pick a quick command to get started.';
+
+  @override
+  String get meshcoreRepeaterCliPlaceholder => 'Enter a command';
+
+  @override
+  String get meshcoreRepeaterCliQuickAdvertise => 'Advertise';
+
+  @override
+  String get meshcoreRepeaterCliQuickGetName => 'Get name';
+
+  @override
+  String get meshcoreRepeaterCliQuickGetRadio => 'Get radio';
+
+  @override
+  String get meshcoreRepeaterCliQuickGetTx => 'Get TX';
+
+  @override
+  String get meshcoreRepeaterCliQuickDiscovery => 'Discovery';
+
+  @override
+  String get meshcoreRepeaterCliQuickNeighbors => 'Neighbours';
+
+  @override
+  String get meshcoreRepeaterCliQuickVersion => 'Version';
+
+  @override
+  String get meshcoreRepeaterCliQuickClock => 'Clock';
+
+  @override
+  String get meshcoreRepeaterCliQuickClockSync => 'Clock sync';
+
+  @override
+  String get meshcoreRepeaterCliClearHistory => 'Clear history';
+
+  @override
+  String get meshcoreRepeaterCliPreviousCommand => 'Previous command';
+
+  @override
+  String get meshcoreRepeaterCliNextCommand => 'Next command';
+
+  @override
+  String get meshcoreRepeaterCliHelpTitle => 'Commands';
+
+  @override
+  String get meshcoreRepeaterCliHelpGeneralHeader => 'General';
+
+  @override
+  String get meshcoreRepeaterCliHelpSettingsHeader => 'Settings';
+
+  @override
+  String get meshcoreRepeaterCliHelpNeighborsHeader => 'Neighbours';
+
+  @override
+  String get meshcoreRepeaterCliHelpAdvert =>
+      'Broadcast our advertisement once.';
+
+  @override
+  String get meshcoreRepeaterCliHelpReboot => 'Restart the repeater.';
+
+  @override
+  String get meshcoreRepeaterCliHelpClock => 'Show the device clock (UTC).';
+
+  @override
+  String get meshcoreRepeaterCliHelpVersion => 'Show the firmware version.';
+
+  @override
+  String get meshcoreRepeaterCliHelpClearStats =>
+      'Reset packet + airtime counters.';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetName =>
+      'Rename the repeater (set name <name>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetTx =>
+      'Set TX power in dBm (set tx <power>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetRadio =>
+      'Set radio params (set radio <freq>,<bw>,<sf>,<cr>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetRepeat =>
+      'Toggle repeat on/off (set repeat <on|off>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetAf =>
+      'Set the air-time factor (set af <factor>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetAdvertInterval =>
+      'Set advert interval in minutes (set advert.interval <minutes>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpNeighbors =>
+      'List neighbours seen by the repeater.';
+
+  @override
+  String get meshcoreRepeaterCliHelpNeighborRemove =>
+      'Forget a neighbour by prefix (neighbor.remove <prefix>).';
+
+  @override
+  String meshcoreRepeaterCliTimeoutSnackbar(int seconds) {
+    return 'No reply within ${seconds}s; the repeater may be offline or the admin session may have expired.';
+  }
+
+  @override
+  String meshcoreRepeaterCliRateLimitedSnackbar(int seconds) {
+    return 'Rate limit reached; try again in ${seconds}s.';
+  }
+
+  @override
+  String meshcoreRepeaterCliErrorSnackbar(String error) {
+    return 'Could not send command: $error.';
+  }
 
   @override
   String get meshcoreRepeaterAdminHubSettingsTile => 'Settings';

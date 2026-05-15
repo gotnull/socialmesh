@@ -235,6 +235,56 @@ class MeshCoreLoginResult {
   const MeshCoreLoginResult.failed() : delivered = false, isAdmin = false;
 }
 
+// D49-B: outcome of [MeshCoreSession.sendCliCommand].
+//
+// Discriminates the three terminal states of a CLI round-trip:
+// successful routed text reply (after `XX|` token strip), host-side
+// rate-limit rejection, or no routed reply within the timeout. The
+// shape mirrors [MeshCoreTextSendResult] so call sites can switch on
+// the same outcome enum surface.
+class MeshCoreCliResult {
+  final MeshCoreCliOutcome outcome;
+
+  // Repeater text reply with the leading `XX|` correlation token
+  // stripped. Non-null when [outcome] is `ok`.
+  final String? response;
+
+  // On `rateLimited`: how long the caller should wait before retrying.
+  final Duration? nextSendIn;
+
+  // On `rateLimited`: bytes still available in the budget window
+  // (the rejected request did NOT consume).
+  final int? remainingBytes;
+
+  const MeshCoreCliResult._({
+    required this.outcome,
+    this.response,
+    this.nextSendIn,
+    this.remainingBytes,
+  });
+
+  factory MeshCoreCliResult.ok({required String response}) =>
+      MeshCoreCliResult._(outcome: MeshCoreCliOutcome.ok, response: response);
+
+  factory MeshCoreCliResult.rateLimited({
+    required Duration nextSendIn,
+    required int remainingBytes,
+  }) => MeshCoreCliResult._(
+    outcome: MeshCoreCliOutcome.rateLimited,
+    nextSendIn: nextSendIn,
+    remainingBytes: remainingBytes,
+  );
+
+  factory MeshCoreCliResult.firmwareTimeout() =>
+      const MeshCoreCliResult._(outcome: MeshCoreCliOutcome.firmwareTimeout);
+
+  bool get ok => outcome == MeshCoreCliOutcome.ok;
+  bool get rateLimited => outcome == MeshCoreCliOutcome.rateLimited;
+  bool get firmwareTimeout => outcome == MeshCoreCliOutcome.firmwareTimeout;
+}
+
+enum MeshCoreCliOutcome { ok, rateLimited, firmwareTimeout }
+
 /// D49-A: parsed `PUSH_CODE_STATUS_RESPONSE 0x87` body for the
 /// repeater admin status surface.
 ///

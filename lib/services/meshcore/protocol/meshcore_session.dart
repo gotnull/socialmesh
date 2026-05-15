@@ -1774,6 +1774,198 @@ class MeshCoreSession {
     }
   }
 
+  // D49-B: issue an arbitrary CLI command to an admin-authenticated
+  // repeater and resolve when the routed text reply arrives. Wire
+  // shape mirrors the reference companion-radio CLI lane:
+  //
+  // ```
+  // outbound: [0x02][0x01][attempt:u8][timestamp:u32 LE]
+  //           [pubkey[0..5]:6 B][prefixToken:3 chars utf-8]
+  //           [command utf-8...][0x00]
+  // response: [0x07] or [0x10] -- normal inbound DM envelope
+  //           whose decoded text begins with the same prefixToken
+  // ```
+  //
+  // Correlation key 1: the 6-byte sender pubkey prefix (must match the
+  // target repeater). Correlation key 2: the 3-char `XX|` token at
+  // the start of the parsed text payload (so multiple commands can be
+  // in flight without colliding).
+  //
+  // Charges the host-side rate limiter as a `plainContact` send.
+  // Bypassing it would let CLI burns exceed the 1024 B / 60 s budget
+  // silently.
+  //
+  // Returns:
+  //   - ok(response)       -- routed text reply received, token stripped
+  //   - rateLimited(...)   -- budget rejected the send, nothing was wired
+  //   - firmwareTimeout    -- no matching reply within [timeout]
+  Future<MeshCoreCliResult> sendCliCommand({
+    required Uint8List pubKey,
+    required String command,
+    required String prefixToken,
+    int attempt = 0,
+    int? timestampSeconds,
+    Duration timeout = const Duration(seconds: 20),
+  }) async {
+    if (pubKey.length != meshCorePubKeySize) {
+      throw ArgumentError.value(
+        pubKey.length,
+        'pubKey.length',
+        'must be exactly $meshCorePubKeySize bytes',
+      );
+    }
+    if (!_cliPrefixTokenPattern.hasMatch(prefixToken)) {
+      throw ArgumentError.value(
+        prefixToken,
+        'prefixToken',
+        'must match [0-9A-F]{2}| (e.g. "01|")',
+      );
+    }
+    if (attempt < 0 || attempt > 255) {
+      throw ArgumentError.value(attempt, 'attempt', 'must be in [0, 255]');
+    }
+
+    final ts =
+        timestampSeconds ?? DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    final commandBytes = utf8.encode(command);
+    final tokenBytes = utf8.encode(prefixToken);
+
+    // payload = [0x01][attempt][ts:u32 LE][prefix6][token3][text][\0]
+    final payload = Uint8List(
+      1 + 1 + 4 + 6 + tokenBytes.length + commandBytes.length + 1,
+    );
+    var off = 0;
+    payload[off++] = MeshCoreTextTypes.cliData;
+    payload[off++] = attempt & 0xFF;
+    payload[off++] = ts & 0xFF;
+    payload[off++] = (ts >> 8) & 0xFF;
+    payload[off++] = (ts >> 16) & 0xFF;
+    payload[off++] = (ts >> 24) & 0xFF;
+    for (var i = 0; i < 6; i++) {
+      payload[off++] = pubKey[i];
+    }
+    for (var i = 0; i < tokenBytes.length; i++) {
+      payload[off++] = tokenBytes[i];
+    }
+    for (var i = 0; i < commandBytes.length; i++) {
+      payload[off++] = commandBytes[i];
+    }
+    payload[off] = 0; // C-string NUL
+
+    // Charge the rate limiter (cmd byte + payload bytes).
+    final budgetBytes = payload.length + 1;
+    final decision = _sendRateLimiter.tryAcquire(budgetBytes);
+    if (!decision.allowed) {
+      AppLogging.meshcore(
+        'event=cli.send.rate_limited '
+        'target=${AppLogging.publicKeyFingerprint(pubKey)} '
+        'bytes=$budgetBytes '
+        'remaining=${decision.remainingBytes} '
+        'wait_ms=${decision.nextSendIn.inMilliseconds}',
+      );
+      _sendRateLimiter.recordSend(
+        kind: MeshCoreSendKind.plainContact,
+        bytes: budgetBytes,
+        allowed: false,
+      );
+      return MeshCoreCliResult.rateLimited(
+        nextSendIn: decision.nextSendIn,
+        remainingBytes: decision.remainingBytes,
+      );
+    }
+    _sendRateLimiter.recordSend(
+      kind: MeshCoreSendKind.plainContact,
+      bytes: budgetBytes,
+      allowed: true,
+    );
+
+    AppLogging.meshcore(
+      'event=cli.send.started '
+      'target=${AppLogging.publicKeyFingerprint(pubKey)} '
+      'token=$prefixToken '
+      'cmd_len=${commandBytes.length}',
+    );
+
+    final completer = Completer<MeshCoreCliResult>();
+    late final StreamSubscription<MeshCoreFrame> sub;
+    sub = frameStream.listen((frame) {
+      if (completer.isCompleted) return;
+      final isV1 = frame.command == MeshCoreResponses.contactMsgRecv;
+      final isV3 = frame.command == MeshCoreResponses.contactMsgRecvV3;
+      if (!isV1 && !isV3) return;
+      final parsed = _parseContactMsgText(frame.payload, isV3: isV3);
+      if (parsed == null) return;
+      // Sender-prefix match.
+      for (var i = 0; i < 6; i++) {
+        if (parsed.senderPrefix[i] != pubKey[i]) return;
+      }
+      // Token match.
+      if (!parsed.text.startsWith(prefixToken)) return;
+      completer.complete(
+        MeshCoreCliResult.ok(
+          response: parsed.text.substring(prefixToken.length).trimLeft(),
+        ),
+      );
+    });
+
+    try {
+      await sendFrame(
+        MeshCoreFrame(command: MeshCoreCommands.sendTxtMsg, payload: payload),
+      );
+      final result = await completer.future.timeout(
+        timeout,
+        onTimeout: () => MeshCoreCliResult.firmwareTimeout(),
+      );
+      AppLogging.meshcore(
+        'event=cli.send.completed '
+        'target=${AppLogging.publicKeyFingerprint(pubKey)} '
+        'token=$prefixToken '
+        'result=${result.ok
+            ? "ok"
+            : result.firmwareTimeout
+            ? "timeout"
+            : "rate_limited"}',
+        error: !result.ok,
+      );
+      return result;
+    } finally {
+      await sub.cancel();
+    }
+  }
+
+  static final RegExp _cliPrefixTokenPattern = RegExp(r'^[0-9A-F]{2}\|$');
+
+  // Parse an inbound contact text frame (0x07 or 0x10 v3) into
+  // (senderPrefix, text). Returns null when the payload is too short
+  // or malformed. Mirrors meshcore-open's `parseContactMessageText`
+  // for the slice of layout the CLI surface relies on; the rest of
+  // the chat-receive pipeline keeps its own decoder.
+  static _ContactMsgText? _parseContactMsgText(
+    Uint8List payload, {
+    required bool isV3,
+  }) {
+    // v3 envelope (0x10): [snr][res][res][prefix:6][path_len][txt_type][ts:4][text...]
+    // v1 envelope (0x07): [prefix:6][path_len][txt_type][ts:4][text...]
+    final headerBytes = isV3 ? 3 : 0;
+    final minBytes = headerBytes + 6 + 1 + 1 + 4 + 1;
+    if (payload.length < minBytes) return null;
+    var off = headerBytes;
+    final prefix = payload.sublist(off, off + 6);
+    off += 6;
+    off += 1; // path_len
+    off += 1; // txt_type
+    off += 4; // timestamp
+    if (off >= payload.length) return null;
+    // Read until NUL or end.
+    var end = off;
+    while (end < payload.length && payload[end] != 0) {
+      end++;
+    }
+    final text = utf8.decode(payload.sublist(off, end), allowMalformed: true);
+    if (text.isEmpty) return null;
+    return _ContactMsgText(senderPrefix: prefix, text: text);
+  }
+
   // ---------------------------------------------------------------------------
   // Channels
   // ---------------------------------------------------------------------------
@@ -2825,3 +3017,11 @@ class MeshCoreTextSendResult {
 }
 
 enum MeshCoreTextSendOutcome { ok, rateLimited, firmwareTimeout }
+
+// D49-B: lightweight holder for the sender-prefix + decoded text the
+// CLI wrapper needs out of an inbound 0x07 / 0x10 text frame.
+class _ContactMsgText {
+  final Uint8List senderPrefix;
+  final String text;
+  const _ContactMsgText({required this.senderPrefix, required this.text});
+}

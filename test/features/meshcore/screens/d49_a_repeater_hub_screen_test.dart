@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D49-A: `MeshCoreRepeaterHubScreen` widget pins.
+// D49-A + D49-B: `MeshCoreRepeaterHubScreen` widget pins.
 //
 // Pinned invariants:
 //   - App-bar title formats with the repeater's name.
 //   - Three tool tiles render: Status, CLI, Settings.
-//   - The CLI + Settings tiles are wrapped in IgnorePointer (the
-//     "Coming soon" placeholder state).
-//   - The Status tile is reachable by ValueKey.
+//   - The Settings tile is wrapped in IgnorePointer (the "Coming
+//     soon" placeholder state until D49-C).
+//   - The Status tile (D49-A) is active.
+//   - The CLI tile (D49-B) is active and pushes the CLI screen.
 
 import 'dart:typed_data';
 
@@ -82,7 +83,31 @@ void main() {
     );
   });
 
-  testWidgets('CLI and Settings tiles are wrapped in IgnorePointer', (
+  testWidgets('Settings tile is wrapped in IgnorePointer (Coming soon)', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 2000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(_wrap(contact: _contact()));
+    await _settle(tester);
+
+    final tile = find.byKey(const ValueKey('meshcore-repeater-hub-settings'));
+    final ignoring = tester
+        .widgetList<IgnorePointer>(
+          find.ancestor(of: tile, matching: find.byType(IgnorePointer)),
+        )
+        .where((w) => w.ignoring)
+        .toList();
+    expect(
+      ignoring,
+      isNotEmpty,
+      reason: 'settings tile should still be IgnorePointer-wrapped until D49-C',
+    );
+  });
+
+  testWidgets('Status and CLI tiles are active (no ignoring ancestor)', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1080, 2000);
@@ -93,49 +118,21 @@ void main() {
     await _settle(tester);
 
     for (final keyId in const [
+      'meshcore-repeater-hub-status',
       'meshcore-repeater-hub-cli',
-      'meshcore-repeater-hub-settings',
     ]) {
       final tile = find.byKey(ValueKey(keyId));
-      // At least one IgnorePointer ancestor must be active. Flutter
-      // wraps other widgets in IgnorePointer internally so this is
-      // a "some ignoring=true" assertion, not exact-count.
-      final ignoring = tester
-          .widgetList<IgnorePointer>(
-            find.ancestor(of: tile, matching: find.byType(IgnorePointer)),
-          )
-          .where((w) => w.ignoring)
-          .toList();
-      expect(
-        ignoring,
-        isNotEmpty,
-        reason:
-            '$keyId should have at least one ignoring IgnorePointer ancestor '
-            '(Coming soon state)',
+      final ignore = find.ancestor(
+        of: tile,
+        matching: find.byType(IgnorePointer),
       );
-    }
-  });
-
-  testWidgets('Status tile is NOT wrapped in IgnorePointer (active)', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(1080, 2000);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.resetPhysicalSize);
-
-    await tester.pumpWidget(_wrap(contact: _contact()));
-    await _settle(tester);
-
-    final tile = find.byKey(const ValueKey('meshcore-repeater-hub-status'));
-    final ignore = find.ancestor(
-      of: tile,
-      matching: find.byType(IgnorePointer),
-    );
-    // Flutter may wrap other widgets in IgnorePointer internally, so
-    // assert by behaviour: every IgnorePointer ancestor must be
-    // inactive (ignoring == false).
-    for (final w in tester.widgetList<IgnorePointer>(ignore)) {
-      expect(w.ignoring, isFalse);
+      for (final w in tester.widgetList<IgnorePointer>(ignore)) {
+        expect(
+          w.ignoring,
+          isFalse,
+          reason: '$keyId must not be under an ignoring IgnorePointer',
+        );
+      }
     }
   });
 }

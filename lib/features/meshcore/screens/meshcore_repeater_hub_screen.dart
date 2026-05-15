@@ -7,7 +7,7 @@
 // `PUSH_CODE_LOGIN_SUCCESS 0x85` with `admin_flag = 1`. Lists the
 // admin tools as canonical `SettingsTile` rows:
 //   - Status -> [MeshCoreRepeaterStatusScreen] (D49-A, shipped).
-//   - CLI    -> disabled placeholder (D49-B).
+//   - CLI    -> [MeshCoreRepeaterCliScreen] (D49-B, shipped).
 //   - Settings -> disabled placeholder (D49-C).
 //
 // Lifecycle: stateless ConsumerWidget. The admin session itself
@@ -23,6 +23,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/settings_primitives.dart';
 import '../../../models/meshcore_contact.dart';
+import 'meshcore_repeater_cli_screen.dart';
 import 'meshcore_repeater_status_screen.dart';
 
 class MeshCoreRepeaterHubScreen extends ConsumerWidget {
@@ -60,17 +61,19 @@ class MeshCoreRepeaterHubScreen extends ConsumerWidget {
           );
         },
       ),
-      Opacity(
-        opacity: 0.5,
-        child: IgnorePointer(
-          child: SettingsTile(
-            key: const ValueKey('meshcore-repeater-hub-cli'),
-            icon: Icons.terminal_rounded,
-            iconColor: AccentColors.green,
-            title: l10n.meshcoreRepeaterAdminHubCliTile as String,
-            subtitle: l10n.meshcoreRepeaterAdminHubCliTileSubtitle as String,
-          ),
-        ),
+      SettingsTile(
+        key: const ValueKey('meshcore-repeater-hub-cli'),
+        icon: Icons.terminal_rounded,
+        iconColor: AccentColors.green,
+        title: l10n.meshcoreRepeaterAdminHubCliTile as String,
+        subtitle: l10n.meshcoreRepeaterAdminHubCliTileSubtitle as String,
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => MeshCoreRepeaterCliScreen(contact: contact),
+            ),
+          );
+        },
       ),
       Opacity(
         opacity: 0.5,

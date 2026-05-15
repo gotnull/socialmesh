@@ -10447,9 +10447,165 @@
     "@meshcoreRepeaterAdminHubCliTile": {
         "description": "D49-A - hub list tile for the CLI screen (disabled until D49-B)"
     },
-    "meshcoreRepeaterAdminHubCliTileSubtitle": "Coming soon",
+    "meshcoreRepeaterAdminHubCliTileSubtitle": "Send admin commands to the repeater",
     "@meshcoreRepeaterAdminHubCliTileSubtitle": {
-        "description": "D49-A - subtitle for the CLI hub tile while disabled"
+        "description": "D49-B - subtitle for the CLI hub tile (now active)"
+    },
+    "meshcoreRepeaterCliTitle": "{name} CLI",
+    "@meshcoreRepeaterCliTitle": {
+        "description": "D49-B - title for the repeater CLI screen",
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "meshcoreRepeaterCliEmptyTitle": "No commands yet",
+    "@meshcoreRepeaterCliEmptyTitle": {
+        "description": "D49-B - empty state headline before any command is sent"
+    },
+    "meshcoreRepeaterCliEmptyDescription": "Type a command below or pick a quick command to get started.",
+    "@meshcoreRepeaterCliEmptyDescription": {
+        "description": "D49-B - empty state description"
+    },
+    "meshcoreRepeaterCliPlaceholder": "Enter a command",
+    "@meshcoreRepeaterCliPlaceholder": {
+        "description": "D49-B - input placeholder"
+    },
+    "meshcoreRepeaterCliQuickAdvertise": "Advertise",
+    "@meshcoreRepeaterCliQuickAdvertise": {
+        "description": "D49-B - quick command chip - advert"
+    },
+    "meshcoreRepeaterCliQuickGetName": "Get name",
+    "@meshcoreRepeaterCliQuickGetName": {
+        "description": "D49-B - quick command chip - get name"
+    },
+    "meshcoreRepeaterCliQuickGetRadio": "Get radio",
+    "@meshcoreRepeaterCliQuickGetRadio": {
+        "description": "D49-B - quick command chip - get radio"
+    },
+    "meshcoreRepeaterCliQuickGetTx": "Get TX",
+    "@meshcoreRepeaterCliQuickGetTx": {
+        "description": "D49-B - quick command chip - get tx"
+    },
+    "meshcoreRepeaterCliQuickDiscovery": "Discovery",
+    "@meshcoreRepeaterCliQuickDiscovery": {
+        "description": "D49-B - quick command chip - discover.neighbors"
+    },
+    "meshcoreRepeaterCliQuickNeighbors": "Neighbours",
+    "@meshcoreRepeaterCliQuickNeighbors": {
+        "description": "D49-B - quick command chip - neighbors"
+    },
+    "meshcoreRepeaterCliQuickVersion": "Version",
+    "@meshcoreRepeaterCliQuickVersion": {
+        "description": "D49-B - quick command chip - ver"
+    },
+    "meshcoreRepeaterCliQuickClock": "Clock",
+    "@meshcoreRepeaterCliQuickClock": {
+        "description": "D49-B - quick command chip - clock"
+    },
+    "meshcoreRepeaterCliQuickClockSync": "Clock sync",
+    "@meshcoreRepeaterCliQuickClockSync": {
+        "description": "D49-B - quick command chip - clock sync"
+    },
+    "meshcoreRepeaterCliClearHistory": "Clear history",
+    "@meshcoreRepeaterCliClearHistory": {
+        "description": "D49-B - overflow action to clear the scrollback"
+    },
+    "meshcoreRepeaterCliPreviousCommand": "Previous command",
+    "@meshcoreRepeaterCliPreviousCommand": {
+        "description": "D49-B - history up arrow tooltip"
+    },
+    "meshcoreRepeaterCliNextCommand": "Next command",
+    "@meshcoreRepeaterCliNextCommand": {
+        "description": "D49-B - history down arrow tooltip"
+    },
+    "meshcoreRepeaterCliHelpTitle": "Commands",
+    "@meshcoreRepeaterCliHelpTitle": {
+        "description": "D49-B - help sheet title"
+    },
+    "meshcoreRepeaterCliHelpGeneralHeader": "General",
+    "@meshcoreRepeaterCliHelpGeneralHeader": {
+        "description": "D49-B - help section header"
+    },
+    "meshcoreRepeaterCliHelpSettingsHeader": "Settings",
+    "@meshcoreRepeaterCliHelpSettingsHeader": {
+        "description": "D49-B - help section header"
+    },
+    "meshcoreRepeaterCliHelpNeighborsHeader": "Neighbours",
+    "@meshcoreRepeaterCliHelpNeighborsHeader": {
+        "description": "D49-B - help section header"
+    },
+    "meshcoreRepeaterCliHelpAdvert": "Broadcast our advertisement once.",
+    "@meshcoreRepeaterCliHelpAdvert": {
+        "description": "D49-B - help row description"
+    },
+    "meshcoreRepeaterCliHelpReboot": "Restart the repeater.",
+    "@meshcoreRepeaterCliHelpReboot": {
+        "description": "D49-B - help row description"
+    },
+    "meshcoreRepeaterCliHelpClock": "Show the device clock (UTC).",
+    "@meshcoreRepeaterCliHelpClock": {
+        "description": "D49-B - help row description"
+    },
+    "meshcoreRepeaterCliHelpVersion": "Show the firmware version.",
+    "@meshcoreRepeaterCliHelpVersion": {
+        "description": "D49-B - help row description"
+    },
+    "meshcoreRepeaterCliHelpClearStats": "Reset packet + airtime counters.",
+    "@meshcoreRepeaterCliHelpClearStats": {
+        "description": "D49-B - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetName": "Rename the repeater (set name <name>).",
+    "@meshcoreRepeaterCliHelpSetName": {
+        "description": "D49-B - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetTx": "Set TX power in dBm (set tx <power>).",
+    "@meshcoreRepeaterCliHelpSetTx": {
+        "description": "D49-B - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetRadio": "Set radio params (set radio <freq>,<bw>,<sf>,<cr>).",
+    "@meshcoreRepeaterCliHelpSetRadio": {
+        "description": "D49-B - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetRepeat": "Toggle repeat on/off (set repeat <on|off>).",
+    "@meshcoreRepeaterCliHelpSetRepeat": {
+        "description": "D49-B - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetAf": "Set the air-time factor (set af <factor>).",
+    "@meshcoreRepeaterCliHelpSetAf": {
+        "description": "D49-B - help row description"
+    },
+    "meshcoreRepeaterCliHelpSetAdvertInterval": "Set advert interval in minutes (set advert.interval <minutes>).",
+    "@meshcoreRepeaterCliHelpSetAdvertInterval": {
+        "description": "D49-B - help row description"
+    },
+    "meshcoreRepeaterCliHelpNeighbors": "List neighbours seen by the repeater.",
+    "@meshcoreRepeaterCliHelpNeighbors": {
+        "description": "D49-B - help row description"
+    },
+    "meshcoreRepeaterCliHelpNeighborRemove": "Forget a neighbour by prefix (neighbor.remove <prefix>).",
+    "@meshcoreRepeaterCliHelpNeighborRemove": {
+        "description": "D49-B - help row description"
+    },
+    "meshcoreRepeaterCliTimeoutSnackbar": "No reply within {seconds}s; the repeater may be offline or the admin session may have expired.",
+    "@meshcoreRepeaterCliTimeoutSnackbar": {
+        "description": "D49-B - snackbar shown when sendCliCommand times out",
+        "placeholders": {
+            "seconds": {"type": "int"}
+        }
+    },
+    "meshcoreRepeaterCliRateLimitedSnackbar": "Rate limit reached; try again in {seconds}s.",
+    "@meshcoreRepeaterCliRateLimitedSnackbar": {
+        "description": "D49-B - snackbar shown when the rate limiter rejects a CLI send",
+        "placeholders": {
+            "seconds": {"type": "int"}
+        }
+    },
+    "meshcoreRepeaterCliErrorSnackbar": "Could not send command: {error}.",
+    "@meshcoreRepeaterCliErrorSnackbar": {
+        "description": "D49-B - snackbar shown when sendCliCommand throws",
+        "placeholders": {
+            "error": {"type": "String"}
+        }
     },
     "meshcoreRepeaterAdminHubSettingsTile": "Settings",
     "@meshcoreRepeaterAdminHubSettingsTile": {

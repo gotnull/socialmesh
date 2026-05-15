@@ -13725,11 +13725,227 @@ abstract class AppLocalizations {
   /// **'CLI'**
   String get meshcoreRepeaterAdminHubCliTile;
 
-  /// D49-A - subtitle for the CLI hub tile while disabled
+  /// D49-B - subtitle for the CLI hub tile (now active)
   ///
   /// In en, this message translates to:
-  /// **'Coming soon'**
+  /// **'Send admin commands to the repeater'**
   String get meshcoreRepeaterAdminHubCliTileSubtitle;
+
+  /// D49-B - title for the repeater CLI screen
+  ///
+  /// In en, this message translates to:
+  /// **'{name} CLI'**
+  String meshcoreRepeaterCliTitle(String name);
+
+  /// D49-B - empty state headline before any command is sent
+  ///
+  /// In en, this message translates to:
+  /// **'No commands yet'**
+  String get meshcoreRepeaterCliEmptyTitle;
+
+  /// D49-B - empty state description
+  ///
+  /// In en, this message translates to:
+  /// **'Type a command below or pick a quick command to get started.'**
+  String get meshcoreRepeaterCliEmptyDescription;
+
+  /// D49-B - input placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a command'**
+  String get meshcoreRepeaterCliPlaceholder;
+
+  /// D49-B - quick command chip - advert
+  ///
+  /// In en, this message translates to:
+  /// **'Advertise'**
+  String get meshcoreRepeaterCliQuickAdvertise;
+
+  /// D49-B - quick command chip - get name
+  ///
+  /// In en, this message translates to:
+  /// **'Get name'**
+  String get meshcoreRepeaterCliQuickGetName;
+
+  /// D49-B - quick command chip - get radio
+  ///
+  /// In en, this message translates to:
+  /// **'Get radio'**
+  String get meshcoreRepeaterCliQuickGetRadio;
+
+  /// D49-B - quick command chip - get tx
+  ///
+  /// In en, this message translates to:
+  /// **'Get TX'**
+  String get meshcoreRepeaterCliQuickGetTx;
+
+  /// D49-B - quick command chip - discover.neighbors
+  ///
+  /// In en, this message translates to:
+  /// **'Discovery'**
+  String get meshcoreRepeaterCliQuickDiscovery;
+
+  /// D49-B - quick command chip - neighbors
+  ///
+  /// In en, this message translates to:
+  /// **'Neighbours'**
+  String get meshcoreRepeaterCliQuickNeighbors;
+
+  /// D49-B - quick command chip - ver
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get meshcoreRepeaterCliQuickVersion;
+
+  /// D49-B - quick command chip - clock
+  ///
+  /// In en, this message translates to:
+  /// **'Clock'**
+  String get meshcoreRepeaterCliQuickClock;
+
+  /// D49-B - quick command chip - clock sync
+  ///
+  /// In en, this message translates to:
+  /// **'Clock sync'**
+  String get meshcoreRepeaterCliQuickClockSync;
+
+  /// D49-B - overflow action to clear the scrollback
+  ///
+  /// In en, this message translates to:
+  /// **'Clear history'**
+  String get meshcoreRepeaterCliClearHistory;
+
+  /// D49-B - history up arrow tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Previous command'**
+  String get meshcoreRepeaterCliPreviousCommand;
+
+  /// D49-B - history down arrow tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Next command'**
+  String get meshcoreRepeaterCliNextCommand;
+
+  /// D49-B - help sheet title
+  ///
+  /// In en, this message translates to:
+  /// **'Commands'**
+  String get meshcoreRepeaterCliHelpTitle;
+
+  /// D49-B - help section header
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get meshcoreRepeaterCliHelpGeneralHeader;
+
+  /// D49-B - help section header
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get meshcoreRepeaterCliHelpSettingsHeader;
+
+  /// D49-B - help section header
+  ///
+  /// In en, this message translates to:
+  /// **'Neighbours'**
+  String get meshcoreRepeaterCliHelpNeighborsHeader;
+
+  /// D49-B - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Broadcast our advertisement once.'**
+  String get meshcoreRepeaterCliHelpAdvert;
+
+  /// D49-B - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Restart the repeater.'**
+  String get meshcoreRepeaterCliHelpReboot;
+
+  /// D49-B - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Show the device clock (UTC).'**
+  String get meshcoreRepeaterCliHelpClock;
+
+  /// D49-B - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Show the firmware version.'**
+  String get meshcoreRepeaterCliHelpVersion;
+
+  /// D49-B - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Reset packet + airtime counters.'**
+  String get meshcoreRepeaterCliHelpClearStats;
+
+  /// D49-B - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Rename the repeater (set name <name>).'**
+  String get meshcoreRepeaterCliHelpSetName;
+
+  /// D49-B - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Set TX power in dBm (set tx <power>).'**
+  String get meshcoreRepeaterCliHelpSetTx;
+
+  /// D49-B - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Set radio params (set radio <freq>,<bw>,<sf>,<cr>).'**
+  String get meshcoreRepeaterCliHelpSetRadio;
+
+  /// D49-B - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle repeat on/off (set repeat <on|off>).'**
+  String get meshcoreRepeaterCliHelpSetRepeat;
+
+  /// D49-B - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Set the air-time factor (set af <factor>).'**
+  String get meshcoreRepeaterCliHelpSetAf;
+
+  /// D49-B - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Set advert interval in minutes (set advert.interval <minutes>).'**
+  String get meshcoreRepeaterCliHelpSetAdvertInterval;
+
+  /// D49-B - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'List neighbours seen by the repeater.'**
+  String get meshcoreRepeaterCliHelpNeighbors;
+
+  /// D49-B - help row description
+  ///
+  /// In en, this message translates to:
+  /// **'Forget a neighbour by prefix (neighbor.remove <prefix>).'**
+  String get meshcoreRepeaterCliHelpNeighborRemove;
+
+  /// D49-B - snackbar shown when sendCliCommand times out
+  ///
+  /// In en, this message translates to:
+  /// **'No reply within {seconds}s; the repeater may be offline or the admin session may have expired.'**
+  String meshcoreRepeaterCliTimeoutSnackbar(int seconds);
+
+  /// D49-B - snackbar shown when the rate limiter rejects a CLI send
+  ///
+  /// In en, this message translates to:
+  /// **'Rate limit reached; try again in {seconds}s.'**
+  String meshcoreRepeaterCliRateLimitedSnackbar(int seconds);
+
+  /// D49-B - snackbar shown when sendCliCommand throws
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send command: {error}.'**
+  String meshcoreRepeaterCliErrorSnackbar(String error);
 
   /// D49-A - hub list tile for the admin settings screen (disabled until D49-C)
   ///

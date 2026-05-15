@@ -7820,7 +7820,136 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreRepeaterAdminHubCliTile => 'CLI';
 
   @override
-  String get meshcoreRepeaterAdminHubCliTileSubtitle => 'Em breve';
+  String get meshcoreRepeaterAdminHubCliTileSubtitle =>
+      'Envie comandos admin ao repetidor';
+
+  @override
+  String meshcoreRepeaterCliTitle(String name) {
+    return 'CLI de $name';
+  }
+
+  @override
+  String get meshcoreRepeaterCliEmptyTitle => 'Nenhum comando enviado';
+
+  @override
+  String get meshcoreRepeaterCliEmptyDescription =>
+      'Digite um comando abaixo ou escolha um comando rápido para começar.';
+
+  @override
+  String get meshcoreRepeaterCliPlaceholder => 'Digite um comando';
+
+  @override
+  String get meshcoreRepeaterCliQuickAdvertise => 'Anunciar';
+
+  @override
+  String get meshcoreRepeaterCliQuickGetName => 'Get name';
+
+  @override
+  String get meshcoreRepeaterCliQuickGetRadio => 'Get radio';
+
+  @override
+  String get meshcoreRepeaterCliQuickGetTx => 'Get TX';
+
+  @override
+  String get meshcoreRepeaterCliQuickDiscovery => 'Descoberta';
+
+  @override
+  String get meshcoreRepeaterCliQuickNeighbors => 'Vizinhos';
+
+  @override
+  String get meshcoreRepeaterCliQuickVersion => 'Versão';
+
+  @override
+  String get meshcoreRepeaterCliQuickClock => 'Relógio';
+
+  @override
+  String get meshcoreRepeaterCliQuickClockSync => 'Sincronizar relógio';
+
+  @override
+  String get meshcoreRepeaterCliClearHistory => 'Limpar histórico';
+
+  @override
+  String get meshcoreRepeaterCliPreviousCommand => 'Comando anterior';
+
+  @override
+  String get meshcoreRepeaterCliNextCommand => 'Próximo comando';
+
+  @override
+  String get meshcoreRepeaterCliHelpTitle => 'Comandos';
+
+  @override
+  String get meshcoreRepeaterCliHelpGeneralHeader => 'Geral';
+
+  @override
+  String get meshcoreRepeaterCliHelpSettingsHeader => 'Configurações';
+
+  @override
+  String get meshcoreRepeaterCliHelpNeighborsHeader => 'Vizinhos';
+
+  @override
+  String get meshcoreRepeaterCliHelpAdvert =>
+      'Transmite o nosso anúncio uma vez.';
+
+  @override
+  String get meshcoreRepeaterCliHelpReboot => 'Reinicia o repetidor.';
+
+  @override
+  String get meshcoreRepeaterCliHelpClock =>
+      'Mostra o relógio do dispositivo (UTC).';
+
+  @override
+  String get meshcoreRepeaterCliHelpVersion => 'Mostra a versão do firmware.';
+
+  @override
+  String get meshcoreRepeaterCliHelpClearStats =>
+      'Reseta os contadores de pacotes e airtime.';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetName =>
+      'Renomeia o repetidor (set name <nome>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetTx =>
+      'Define a potência TX em dBm (set tx <potência>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetRadio =>
+      'Define os parâmetros de rádio (set radio <freq>,<bw>,<sf>,<cr>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetRepeat =>
+      'Ativa/desativa repetição (set repeat <on|off>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetAf =>
+      'Define o fator de airtime (set af <fator>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetAdvertInterval =>
+      'Define o intervalo de anúncio em minutos (set advert.interval <minutos>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpNeighbors =>
+      'Lista os vizinhos vistos pelo repetidor.';
+
+  @override
+  String get meshcoreRepeaterCliHelpNeighborRemove =>
+      'Esquece um vizinho pelo prefixo (neighbor.remove <prefixo>).';
+
+  @override
+  String meshcoreRepeaterCliTimeoutSnackbar(int seconds) {
+    return 'Sem resposta em $seconds s; o repetidor pode estar offline ou a sessão admin pode ter expirado.';
+  }
+
+  @override
+  String meshcoreRepeaterCliRateLimitedSnackbar(int seconds) {
+    return 'Limite de taxa atingido; tente novamente em $seconds s.';
+  }
+
+  @override
+  String meshcoreRepeaterCliErrorSnackbar(String error) {
+    return 'Não foi possível enviar o comando: $error.';
+  }
 
   @override
   String get meshcoreRepeaterAdminHubSettingsTile => 'Configurações';

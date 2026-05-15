@@ -7823,7 +7823,136 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreRepeaterAdminHubCliTile => 'CLI';
 
   @override
-  String get meshcoreRepeaterAdminHubCliTileSubtitle => 'Скоро';
+  String get meshcoreRepeaterAdminHubCliTileSubtitle =>
+      'Отправляйте админ-команды на репитер';
+
+  @override
+  String meshcoreRepeaterCliTitle(String name) {
+    return 'CLI $name';
+  }
+
+  @override
+  String get meshcoreRepeaterCliEmptyTitle => 'Команды не отправлялись';
+
+  @override
+  String get meshcoreRepeaterCliEmptyDescription =>
+      'Введите команду ниже или выберите быструю команду.';
+
+  @override
+  String get meshcoreRepeaterCliPlaceholder => 'Введите команду';
+
+  @override
+  String get meshcoreRepeaterCliQuickAdvertise => 'Объявление';
+
+  @override
+  String get meshcoreRepeaterCliQuickGetName => 'Get name';
+
+  @override
+  String get meshcoreRepeaterCliQuickGetRadio => 'Get radio';
+
+  @override
+  String get meshcoreRepeaterCliQuickGetTx => 'Get TX';
+
+  @override
+  String get meshcoreRepeaterCliQuickDiscovery => 'Поиск';
+
+  @override
+  String get meshcoreRepeaterCliQuickNeighbors => 'Соседи';
+
+  @override
+  String get meshcoreRepeaterCliQuickVersion => 'Версия';
+
+  @override
+  String get meshcoreRepeaterCliQuickClock => 'Часы';
+
+  @override
+  String get meshcoreRepeaterCliQuickClockSync => 'Синхронизация часов';
+
+  @override
+  String get meshcoreRepeaterCliClearHistory => 'Очистить историю';
+
+  @override
+  String get meshcoreRepeaterCliPreviousCommand => 'Предыдущая команда';
+
+  @override
+  String get meshcoreRepeaterCliNextCommand => 'Следующая команда';
+
+  @override
+  String get meshcoreRepeaterCliHelpTitle => 'Команды';
+
+  @override
+  String get meshcoreRepeaterCliHelpGeneralHeader => 'Общие';
+
+  @override
+  String get meshcoreRepeaterCliHelpSettingsHeader => 'Настройки';
+
+  @override
+  String get meshcoreRepeaterCliHelpNeighborsHeader => 'Соседи';
+
+  @override
+  String get meshcoreRepeaterCliHelpAdvert =>
+      'Однократно транслирует наше объявление.';
+
+  @override
+  String get meshcoreRepeaterCliHelpReboot => 'Перезагружает репитер.';
+
+  @override
+  String get meshcoreRepeaterCliHelpClock =>
+      'Показывает часы устройства (UTC).';
+
+  @override
+  String get meshcoreRepeaterCliHelpVersion => 'Показывает версию прошивки.';
+
+  @override
+  String get meshcoreRepeaterCliHelpClearStats =>
+      'Сбрасывает счётчики пакетов и airtime.';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetName =>
+      'Переименовывает репитер (set name <имя>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetTx =>
+      'Задаёт мощность TX в дБм (set tx <мощность>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetRadio =>
+      'Задаёт параметры радио (set radio <freq>,<bw>,<sf>,<cr>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetRepeat =>
+      'Включает/выключает повтор (set repeat <on|off>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetAf =>
+      'Задаёт коэффициент airtime (set af <коэффициент>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetAdvertInterval =>
+      'Задаёт интервал объявления в минутах (set advert.interval <минуты>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpNeighbors =>
+      'Список соседей, видимых репитером.';
+
+  @override
+  String get meshcoreRepeaterCliHelpNeighborRemove =>
+      'Удалить соседа по префиксу (neighbor.remove <префикс>).';
+
+  @override
+  String meshcoreRepeaterCliTimeoutSnackbar(int seconds) {
+    return 'Нет ответа в течение $seconds с; репитер может быть оффлайн или сессия админа истекла.';
+  }
+
+  @override
+  String meshcoreRepeaterCliRateLimitedSnackbar(int seconds) {
+    return 'Превышен лимит; повторите через $seconds с.';
+  }
+
+  @override
+  String meshcoreRepeaterCliErrorSnackbar(String error) {
+    return 'Не удалось отправить команду: $error.';
+  }
 
   @override
   String get meshcoreRepeaterAdminHubSettingsTile => 'Настройки';

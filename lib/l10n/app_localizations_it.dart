@@ -7837,7 +7837,137 @@ class AppLocalizationsIt extends AppLocalizations {
   String get meshcoreRepeaterAdminHubCliTile => 'CLI';
 
   @override
-  String get meshcoreRepeaterAdminHubCliTileSubtitle => 'In arrivo';
+  String get meshcoreRepeaterAdminHubCliTileSubtitle =>
+      'Invia comandi admin al ripetitore';
+
+  @override
+  String meshcoreRepeaterCliTitle(String name) {
+    return 'CLI $name';
+  }
+
+  @override
+  String get meshcoreRepeaterCliEmptyTitle => 'Nessun comando inviato';
+
+  @override
+  String get meshcoreRepeaterCliEmptyDescription =>
+      'Digita un comando qui sotto o scegli un comando rapido per iniziare.';
+
+  @override
+  String get meshcoreRepeaterCliPlaceholder => 'Inserisci un comando';
+
+  @override
+  String get meshcoreRepeaterCliQuickAdvertise => 'Annuncio';
+
+  @override
+  String get meshcoreRepeaterCliQuickGetName => 'Get name';
+
+  @override
+  String get meshcoreRepeaterCliQuickGetRadio => 'Get radio';
+
+  @override
+  String get meshcoreRepeaterCliQuickGetTx => 'Get TX';
+
+  @override
+  String get meshcoreRepeaterCliQuickDiscovery => 'Scoperta';
+
+  @override
+  String get meshcoreRepeaterCliQuickNeighbors => 'Vicini';
+
+  @override
+  String get meshcoreRepeaterCliQuickVersion => 'Versione';
+
+  @override
+  String get meshcoreRepeaterCliQuickClock => 'Orologio';
+
+  @override
+  String get meshcoreRepeaterCliQuickClockSync => 'Sincronizza orologio';
+
+  @override
+  String get meshcoreRepeaterCliClearHistory => 'Cancella cronologia';
+
+  @override
+  String get meshcoreRepeaterCliPreviousCommand => 'Comando precedente';
+
+  @override
+  String get meshcoreRepeaterCliNextCommand => 'Comando successivo';
+
+  @override
+  String get meshcoreRepeaterCliHelpTitle => 'Comandi';
+
+  @override
+  String get meshcoreRepeaterCliHelpGeneralHeader => 'Generale';
+
+  @override
+  String get meshcoreRepeaterCliHelpSettingsHeader => 'Impostazioni';
+
+  @override
+  String get meshcoreRepeaterCliHelpNeighborsHeader => 'Vicini';
+
+  @override
+  String get meshcoreRepeaterCliHelpAdvert =>
+      'Trasmette il nostro annuncio una volta.';
+
+  @override
+  String get meshcoreRepeaterCliHelpReboot => 'Riavvia il ripetitore.';
+
+  @override
+  String get meshcoreRepeaterCliHelpClock =>
+      'Mostra l\'orologio del dispositivo (UTC).';
+
+  @override
+  String get meshcoreRepeaterCliHelpVersion =>
+      'Mostra la versione del firmware.';
+
+  @override
+  String get meshcoreRepeaterCliHelpClearStats =>
+      'Azzera i contatori di pacchetti e airtime.';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetName =>
+      'Rinomina il ripetitore (set name <nome>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetTx =>
+      'Imposta la potenza TX in dBm (set tx <potenza>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetRadio =>
+      'Imposta i parametri radio (set radio <freq>,<bw>,<sf>,<cr>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetRepeat =>
+      'Attiva/disattiva il ripetitore (set repeat <on|off>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetAf =>
+      'Imposta il fattore di airtime (set af <fattore>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpSetAdvertInterval =>
+      'Imposta l\'intervallo dell\'annuncio in minuti (set advert.interval <minuti>).';
+
+  @override
+  String get meshcoreRepeaterCliHelpNeighbors =>
+      'Elenca i vicini visti dal ripetitore.';
+
+  @override
+  String get meshcoreRepeaterCliHelpNeighborRemove =>
+      'Dimentica un vicino tramite prefisso (neighbor.remove <prefisso>).';
+
+  @override
+  String meshcoreRepeaterCliTimeoutSnackbar(int seconds) {
+    return 'Nessuna risposta entro $seconds s; il ripetitore potrebbe essere offline o la sessione admin potrebbe essere scaduta.';
+  }
+
+  @override
+  String meshcoreRepeaterCliRateLimitedSnackbar(int seconds) {
+    return 'Limite di velocità raggiunto; riprova tra $seconds s.';
+  }
+
+  @override
+  String meshcoreRepeaterCliErrorSnackbar(String error) {
+    return 'Impossibile inviare il comando: $error.';
+  }
 
   @override
   String get meshcoreRepeaterAdminHubSettingsTile => 'Impostazioni';
