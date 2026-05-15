@@ -7653,6 +7653,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreAboutSocialMesh => 'О SocialMesh';
 
   @override
+  String get meshcoreChatAppearanceSectionTitle => 'Внешний вид чата';
+
+  @override
+  String get meshcoreChatTextScaleLabel => 'Размер текста';
+
+  @override
+  String get meshcoreChatTextScaleHelper =>
+      'Масштабирует весь текст в чатах MeshCore (пузыри, время, разделители, ввод). Не влияет на Meshtastic.';
+
+  @override
   String get meshcoreActions => 'Действия';
 
   @override
@@ -30784,6 +30794,84 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get adminPanelStorageHealthSub =>
       'Проверка активности режима WAL для всех баз данных SQLite';
+
+  @override
+  String get adminPanelMeshMorph => 'Предпросмотр Mesh Morph';
+
+  @override
+  String get adminPanelMeshMorphSub =>
+      'Тестирование пресетов, форм и тайминга mesh-morph';
+
+  @override
+  String get adminMeshMorphTitle => 'Mesh Morph';
+
+  @override
+  String get adminMeshMorphPresetSection => 'ПРЕСЕТ';
+
+  @override
+  String get adminMeshMorphRotationSection => 'ВРАЩЕНИЕ';
+
+  @override
+  String get adminMeshMorphTuningSection => 'НАСТРОЙКА';
+
+  @override
+  String get adminMeshMorphAnimate => 'Анимация';
+
+  @override
+  String get adminMeshMorphAnimateSub =>
+      'Поставьте на паузу, чтобы рассмотреть текущую форму';
+
+  @override
+  String adminMeshMorphPointCountLabel(int count) {
+    return 'Количество точек: $count';
+  }
+
+  @override
+  String adminMeshMorphGlowLabel(String value) {
+    return 'Свечение: $value';
+  }
+
+  @override
+  String adminMeshMorphLineThicknessLabel(String value) {
+    return 'Толщина линии: $value';
+  }
+
+  @override
+  String adminMeshMorphNodeSizeLabel(String value) {
+    return 'Размер узла: $value';
+  }
+
+  @override
+  String adminMeshMorphCurrentShape(String shape) {
+    return 'Текущая форма: $shape';
+  }
+
+  @override
+  String get adminMeshMorphPresetIcosahedronJourney => 'Путь икосаэдра';
+
+  @override
+  String get adminMeshMorphPresetVectorballTour => 'Тур по Vectorball';
+
+  @override
+  String get adminMeshMorphPresetPlatonicCircuit => 'Платоновские тела';
+
+  @override
+  String get adminMeshMorphPresetSurfaceFlow => 'Поток поверхностей';
+
+  @override
+  String get adminMeshMorphPresetWireframeMarch => 'Каркасный марш';
+
+  @override
+  String get adminMeshMorphRotationNone => 'Нет';
+
+  @override
+  String get adminMeshMorphRotationSpin => 'Вращение';
+
+  @override
+  String get adminMeshMorphRotationTumble => 'Кувырок';
+
+  @override
+  String get adminMeshMorphRotationShowcase => 'Витрина';
 
   @override
   String get adminStorageHealthTitle => 'Состояние хранилища';

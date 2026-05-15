@@ -7648,6 +7648,16 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreAboutSocialMesh => 'Sobre o SocialMesh';
 
   @override
+  String get meshcoreChatAppearanceSectionTitle => 'Aparência do chat';
+
+  @override
+  String get meshcoreChatTextScaleLabel => 'Tamanho do texto';
+
+  @override
+  String get meshcoreChatTextScaleHelper =>
+      'Escala todo o texto nos chats MeshCore (balões, timestamps, separadores, entrada). Não afeta o Meshtastic.';
+
+  @override
   String get meshcoreActions => 'Ações';
 
   @override
@@ -30767,6 +30777,83 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get adminPanelStorageHealthSub =>
       'Verificar se o modo WAL está ativo em todos os bancos de dados SQLite';
+
+  @override
+  String get adminPanelMeshMorph => 'Pré-visualização Mesh Morph';
+
+  @override
+  String get adminPanelMeshMorphSub =>
+      'Testar presets, formas e tempo do mesh-morph';
+
+  @override
+  String get adminMeshMorphTitle => 'Mesh Morph';
+
+  @override
+  String get adminMeshMorphPresetSection => 'PRESET';
+
+  @override
+  String get adminMeshMorphRotationSection => 'ROTAÇÃO';
+
+  @override
+  String get adminMeshMorphTuningSection => 'AJUSTE';
+
+  @override
+  String get adminMeshMorphAnimate => 'Animar';
+
+  @override
+  String get adminMeshMorphAnimateSub => 'Pause para inspecionar a forma atual';
+
+  @override
+  String adminMeshMorphPointCountLabel(int count) {
+    return 'Quantidade de pontos: $count';
+  }
+
+  @override
+  String adminMeshMorphGlowLabel(String value) {
+    return 'Brilho: $value';
+  }
+
+  @override
+  String adminMeshMorphLineThicknessLabel(String value) {
+    return 'Espessura da linha: $value';
+  }
+
+  @override
+  String adminMeshMorphNodeSizeLabel(String value) {
+    return 'Tamanho do nó: $value';
+  }
+
+  @override
+  String adminMeshMorphCurrentShape(String shape) {
+    return 'Forma atual: $shape';
+  }
+
+  @override
+  String get adminMeshMorphPresetIcosahedronJourney => 'Jornada do Icosaedro';
+
+  @override
+  String get adminMeshMorphPresetVectorballTour => 'Tour Vectorball';
+
+  @override
+  String get adminMeshMorphPresetPlatonicCircuit => 'Circuito Platônico';
+
+  @override
+  String get adminMeshMorphPresetSurfaceFlow => 'Fluxo de Superfície';
+
+  @override
+  String get adminMeshMorphPresetWireframeMarch => 'Marcha Wireframe';
+
+  @override
+  String get adminMeshMorphRotationNone => 'Nenhuma';
+
+  @override
+  String get adminMeshMorphRotationSpin => 'Giro';
+
+  @override
+  String get adminMeshMorphRotationTumble => 'Cambalhota';
+
+  @override
+  String get adminMeshMorphRotationShowcase => 'Vitrine';
 
   @override
   String get adminStorageHealthTitle => 'Saúde do Armazenamento';

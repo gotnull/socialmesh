@@ -10245,6 +10245,18 @@
     "@meshcoreAboutSocialMesh": {
         "description": "About dialog title"
     },
+    "meshcoreChatAppearanceSectionTitle": "Chat appearance",
+    "@meshcoreChatAppearanceSectionTitle": {
+        "description": "D-Q2 - section header on MeshCore Settings for per-app chat appearance preferences"
+    },
+    "meshcoreChatTextScaleLabel": "Chat text size",
+    "@meshcoreChatTextScaleLabel": {
+        "description": "D-Q2 - label for the text-scale chip selector"
+    },
+    "meshcoreChatTextScaleHelper": "Scales every text widget inside MeshCore chats (bubbles, timestamps, dividers, input). Does not affect Meshtastic.",
+    "@meshcoreChatTextScaleHelper": {
+        "description": "D-Q2 - helper text under the text-scale chip selector"
+    },
     "meshcoreActions": "Actions",
     "@meshcoreActions": {
         "description": "Actions card header"
@@ -41104,6 +41116,124 @@
     "adminPanelStorageHealthSub": "Verify WAL mode is active on all SQLite databases",
     "@adminPanelStorageHealthSub": {
         "description": "Admin panel tile subtitle for the storage health screen"
+    },
+    "adminPanelMeshMorph": "Mesh Morph Preview",
+    "@adminPanelMeshMorph": {
+        "description": "Admin panel tile label for the mesh-morph preview screen"
+    },
+    "adminPanelMeshMorphSub": "Test mesh-morph presets, shapes, and timing",
+    "@adminPanelMeshMorphSub": {
+        "description": "Admin panel tile subtitle for the mesh-morph preview screen"
+    },
+    "adminMeshMorphTitle": "Mesh Morph",
+    "@adminMeshMorphTitle": {
+        "description": "App bar title for the mesh-morph admin preview screen"
+    },
+    "adminMeshMorphPresetSection": "PRESET",
+    "@adminMeshMorphPresetSection": {
+        "description": "Section header for the mesh-morph preset picker"
+    },
+    "adminMeshMorphRotationSection": "ROTATION",
+    "@adminMeshMorphRotationSection": {
+        "description": "Section header for the mesh-morph rotation-style picker"
+    },
+    "adminMeshMorphTuningSection": "TUNING",
+    "@adminMeshMorphTuningSection": {
+        "description": "Section header for the mesh-morph tuning sliders"
+    },
+    "adminMeshMorphAnimate": "Animate",
+    "@adminMeshMorphAnimate": {
+        "description": "Toggle row label for pausing or resuming the mesh-morph animation"
+    },
+    "adminMeshMorphAnimateSub": "Pause to inspect the current shape",
+    "@adminMeshMorphAnimateSub": {
+        "description": "Subtitle for the animate toggle on the mesh-morph admin screen"
+    },
+    "adminMeshMorphPointCountLabel": "Point count: {count}",
+    "@adminMeshMorphPointCountLabel": {
+        "description": "Slider label showing the current ball count rendered by the mesh-morph widget",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "example": "96"
+            }
+        }
+    },
+    "adminMeshMorphGlowLabel": "Glow: {value}",
+    "@adminMeshMorphGlowLabel": {
+        "description": "Slider label for the mesh-morph glow intensity multiplier",
+        "placeholders": {
+            "value": {
+                "type": "String",
+                "example": "0.85"
+            }
+        }
+    },
+    "adminMeshMorphLineThicknessLabel": "Line thickness: {value}",
+    "@adminMeshMorphLineThicknessLabel": {
+        "description": "Slider label for the mesh-morph wireframe edge thickness multiplier",
+        "placeholders": {
+            "value": {
+                "type": "String",
+                "example": "0.75"
+            }
+        }
+    },
+    "adminMeshMorphNodeSizeLabel": "Node size: {value}",
+    "@adminMeshMorphNodeSizeLabel": {
+        "description": "Slider label for the mesh-morph ball/node size multiplier",
+        "placeholders": {
+            "value": {
+                "type": "String",
+                "example": "0.85"
+            }
+        }
+    },
+    "adminMeshMorphCurrentShape": "Current shape: {shape}",
+    "@adminMeshMorphCurrentShape": {
+        "description": "Label showing which shape the mesh-morph widget is currently displaying",
+        "placeholders": {
+            "shape": {
+                "type": "String",
+                "example": "Icosahedron"
+            }
+        }
+    },
+    "adminMeshMorphPresetIcosahedronJourney": "Icosahedron Journey",
+    "@adminMeshMorphPresetIcosahedronJourney": {
+        "description": "Mesh-morph preset name: the short icosahedron-arrival opener"
+    },
+    "adminMeshMorphPresetVectorballTour": "Vectorball Tour",
+    "@adminMeshMorphPresetVectorballTour": {
+        "description": "Mesh-morph preset name: full tour of every shape in the registry"
+    },
+    "adminMeshMorphPresetPlatonicCircuit": "Platonic Circuit",
+    "@adminMeshMorphPresetPlatonicCircuit": {
+        "description": "Mesh-morph preset name: only the regular polyhedra plus sphere"
+    },
+    "adminMeshMorphPresetSurfaceFlow": "Surface Flow",
+    "@adminMeshMorphPresetSurfaceFlow": {
+        "description": "Mesh-morph preset name: soft surface shapes only, no wireframe edges"
+    },
+    "adminMeshMorphPresetWireframeMarch": "Wireframe March",
+    "@adminMeshMorphPresetWireframeMarch": {
+        "description": "Mesh-morph preset name: wireframe shapes only, edges drawn throughout"
+    },
+    "adminMeshMorphRotationNone": "None",
+    "@adminMeshMorphRotationNone": {
+        "description": "Mesh-morph rotation style: no rotation"
+    },
+    "adminMeshMorphRotationSpin": "Spin",
+    "@adminMeshMorphRotationSpin": {
+        "description": "Mesh-morph rotation style: slow continuous Y-axis spin"
+    },
+    "adminMeshMorphRotationTumble": "Tumble",
+    "@adminMeshMorphRotationTumble": {
+        "description": "Mesh-morph rotation style: multi-axis tumble matching the splash logo"
+    },
+    "adminMeshMorphRotationShowcase": "Showcase",
+    "@adminMeshMorphRotationShowcase": {
+        "description": "Mesh-morph rotation style: faster Y spin with a slight X wobble"
     },
     "adminStorageHealthTitle": "Storage Health",
     "@adminStorageHealthTitle": {

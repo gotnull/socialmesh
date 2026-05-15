@@ -21,6 +21,7 @@ import '../conformance/ui/admin_conformance_screen.dart';
 import 'admin_broadcast_screen.dart';
 import 'admin_diagnostics_screen.dart';
 import 'admin_storage_health_screen.dart';
+import 'mesh_morph_preview_screen.dart';
 import 'qr_style_preview_screen.dart';
 import 'user_purchases_admin_screen.dart';
 
@@ -162,6 +163,14 @@ class AdminScreen extends ConsumerWidget {
                 iconColor: Colors.teal.shade400,
                 onTap: () =>
                     _navigateTo(context, const AdminStorageHealthScreen()),
+              ),
+              _AdminTile(
+                icon: Icons.auto_awesome,
+                label: context.l10n.adminPanelMeshMorph,
+                subtitle: context.l10n.adminPanelMeshMorphSub,
+                iconColor: Colors.deepPurple.shade400,
+                onTap: () =>
+                    _navigateTo(context, const MeshMorphPreviewScreen()),
               ),
               // Bottom padding
               SizedBox(height: MediaQuery.of(context).padding.bottom + 16),

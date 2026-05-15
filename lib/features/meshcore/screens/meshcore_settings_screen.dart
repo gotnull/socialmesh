@@ -15,13 +15,16 @@ import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/info_table.dart';
 import '../../../core/widgets/primary_gradient_button.dart';
 import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/chip_selector.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/settings_primitives.dart';
 import '../../../core/widgets/status_banner.dart';
 import '../../../models/meshcore_auto_add_config.dart';
 import '../../../models/meshcore_auto_route_settings.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/meshcore_chat_text_scale_provider.dart';
 import '../../../providers/meshcore_providers.dart';
+import '../../../services/meshcore/storage/meshcore_chat_text_scale_store.dart';
 import '../../../services/meshcore/protocol/meshcore_messages.dart';
 import '../../../services/meshcore/storage/meshcore_node_name_store.dart';
 import '../../../utils/snackbar.dart';
@@ -201,6 +204,11 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                   title: context.l10n.meshcoreAutoRouteSectionTitle,
                 ),
                 _buildAutoRouteSection(context),
+                SizedBox(height: AppTheme.spacing16),
+                SettingsSectionHeader(
+                  title: context.l10n.meshcoreChatAppearanceSectionTitle,
+                ),
+                _buildChatAppearanceSection(context),
                 SizedBox(height: AppTheme.spacing16),
                 SettingsSectionHeader(title: context.l10n.meshcoreActions),
                 // D29 cleanup: "Send Advertisement" used to live here AND
@@ -523,6 +531,58 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
   /// can see what the policy WILL be when they enable it.
   ///
   /// No firmware round-trip; settings persist to SharedPreferences
+  /// D-Q2: chat-appearance section — per-app MeshCore chat text scale.
+  /// Discrete steps via [ChipSelector]; the active value reflects
+  /// [meshCoreChatTextScaleProvider] and tapping a chip writes the
+  /// new value via the notifier (which clamps + persists).
+  Widget _buildChatAppearanceSection(BuildContext context) {
+    final l10n = context.l10n;
+    final scaleAsync = ref.watch(meshCoreChatTextScaleProvider);
+    final scale = scaleAsync.value ?? kMeshCoreChatTextScaleDefault;
+    final notifier = ref.read(meshCoreChatTextScaleProvider.notifier);
+
+    return FieldGroupCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.meshcoreChatTextScaleLabel,
+            style: TextStyle(color: context.textSecondary, fontSize: 13),
+          ),
+          const SizedBox(height: AppTheme.spacing4),
+          Text(
+            l10n.meshcoreChatTextScaleHelper,
+            style: TextStyle(color: context.textTertiary, fontSize: 12),
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          ChipSelector<double>(
+            key: const ValueKey('meshcore-chat-text-scale'),
+            value: scale,
+            onChanged: (v) => notifier.setScale(v),
+            options: [
+              for (final step in const [0.8, 0.9, 1.0, 1.1, 1.25, 1.5, 1.8])
+                ChipOption<double>(
+                  value: step,
+                  // Numeric scale factor — not translatable.
+                  label: _formatScaleChip(step), // lint-allow: hardcoded-string
+                  icon: Icons.text_fields_rounded,
+                  color: context.accentColor,
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _formatScaleChip(double v) {
+    if (v == v.roundToDouble()) return '${v.toStringAsFixed(0)}x';
+    if ((v * 10) == (v * 10).roundToDouble()) {
+      return '${v.toStringAsFixed(1)}x';
+    }
+    return '${v.toStringAsFixed(2)}x';
+  }
+
   /// via the provider. The orchestrator that consumes these settings
   /// lands in D48-A2.
   Widget _buildAutoRouteSection(BuildContext context) {

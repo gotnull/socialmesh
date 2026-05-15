@@ -38,6 +38,8 @@ import '../../../services/meshcore/protocol/meshcore_chat_meta_envelope.dart';
 import '../../../services/meshcore/protocol/meshcore_frame.dart';
 import '../../../services/meshcore/storage/meshcore_message_store.dart';
 import '../parsers/meshcore_message_frame_parser.dart';
+import '../../../providers/meshcore_chat_text_scale_provider.dart';
+import '../../../services/meshcore/storage/meshcore_chat_text_scale_store.dart';
 import '../../../services/meshcore/storage/meshcore_contact_store.dart';
 import '../../../utils/snackbar.dart';
 import '../widgets/meshcore_chat_unread_divider.dart';
@@ -1299,6 +1301,11 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
     final history = ref.watch(meshCoreChatHistoryProvider(_historyKey));
     final messages = history.messages;
     final showHistoryEndFooter = !history.hasMore && messages.isNotEmpty;
+    // D-Q2: per-app chat text scale. Falls back to the default while
+    // the AsyncNotifier loads from SharedPreferences so the chat
+    // doesn't flicker through an unsized state on first paint.
+    final scaleAsync = ref.watch(meshCoreChatTextScaleProvider);
+    final scale = scaleAsync.value ?? kMeshCoreChatTextScaleDefault;
 
     return GestureDetector(
       onTap: _dismissKeyboard,
@@ -1311,104 +1318,112 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
             onPressed: _showChatInfo,
           ),
         ],
-        body: Column(
-          children: [
-            // Connection status banner
-            if (!isConnected)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
+        body: MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(scale)),
+          child: Column(
+            children: [
+              // Connection status banner
+              if (!isConnected)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  color: AppTheme.errorRed.withValues(alpha: 0.2),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.link_off_rounded,
+                        size: 16,
+                        color: AppTheme.errorRed,
+                      ),
+                      const SizedBox(width: AppTheme.spacing8),
+                      Text(
+                        context.l10n.meshcoreDisconnectedMessagesWillQueue,
+                        style: TextStyle(
+                          color: AppTheme.errorRed,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                color: AppTheme.errorRed.withValues(alpha: 0.2),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.link_off_rounded,
-                      size: 16,
-                      color: AppTheme.errorRed,
-                    ),
-                    const SizedBox(width: AppTheme.spacing8),
-                    Text(
-                      context.l10n.meshcoreDisconnectedMessagesWillQueue,
-                      style: TextStyle(color: AppTheme.errorRed, fontSize: 12),
-                    ),
-                  ],
-                ),
+
+              Expanded(
+                child: messages.isEmpty
+                    ? _buildEmptyState(isLoading: history.isInitialLoading)
+                    : Stack(
+                        children: [
+                          Builder(
+                            builder: (context) {
+                              // D-Q1: divider insertion index from the
+                              // pure helper; -1 suppresses the divider.
+                              final dividerMessageIndex =
+                                  chatUnreadDividerInsertIndex(
+                                    messageCount: messages.length,
+                                    unreadCount: _initialUnreadCount,
+                                  );
+                              final dividerVisible = dividerMessageIndex >= 0;
+                              final itemCount =
+                                  messages.length +
+                                  (showHistoryEndFooter ? 1 : 0) +
+                                  (dividerVisible ? 1 : 0);
+                              return ListView.builder(
+                                controller: _scrollController,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppTheme.spacing16,
+                                  vertical: AppTheme.spacing8,
+                                ),
+                                itemCount: itemCount,
+                                itemBuilder: (context, index) {
+                                  if (showHistoryEndFooter && index == 0) {
+                                    return _buildHistoryEndFooter();
+                                  }
+                                  final logicalIndex = showHistoryEndFooter
+                                      ? index - 1
+                                      : index;
+                                  if (dividerVisible) {
+                                    // The divider sits at the message
+                                    // index `dividerMessageIndex`, so
+                                    // the logical slot one past it gets
+                                    // pushed down by one.
+                                    if (logicalIndex == dividerMessageIndex) {
+                                      return const MeshCoreChatUnreadDivider();
+                                    }
+                                    final messageIndex =
+                                        logicalIndex > dividerMessageIndex
+                                        ? logicalIndex - 1
+                                        : logicalIndex;
+                                    return _buildMessageBubble(
+                                      messages[messageIndex],
+                                    );
+                                  }
+                                  return _buildMessageBubble(
+                                    messages[logicalIndex],
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: AppTheme.spacing12,
+                            child: JumpToLatestPill(
+                              visible: _showJumpToLatest,
+                              onTap: _jumpToLatest,
+                              label: context.l10n.meshcoreChatJumpToLatest,
+                            ),
+                          ),
+                        ],
+                      ),
               ),
 
-            Expanded(
-              child: messages.isEmpty
-                  ? _buildEmptyState(isLoading: history.isInitialLoading)
-                  : Stack(
-                      children: [
-                        Builder(
-                          builder: (context) {
-                            // D-Q1: divider insertion index from the
-                            // pure helper; -1 suppresses the divider.
-                            final dividerMessageIndex =
-                                chatUnreadDividerInsertIndex(
-                                  messageCount: messages.length,
-                                  unreadCount: _initialUnreadCount,
-                                );
-                            final dividerVisible = dividerMessageIndex >= 0;
-                            final itemCount =
-                                messages.length +
-                                (showHistoryEndFooter ? 1 : 0) +
-                                (dividerVisible ? 1 : 0);
-                            return ListView.builder(
-                              controller: _scrollController,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppTheme.spacing16,
-                                vertical: AppTheme.spacing8,
-                              ),
-                              itemCount: itemCount,
-                              itemBuilder: (context, index) {
-                                if (showHistoryEndFooter && index == 0) {
-                                  return _buildHistoryEndFooter();
-                                }
-                                final logicalIndex = showHistoryEndFooter
-                                    ? index - 1
-                                    : index;
-                                if (dividerVisible) {
-                                  // The divider sits at the message
-                                  // index `dividerMessageIndex`, so
-                                  // the logical slot one past it gets
-                                  // pushed down by one.
-                                  if (logicalIndex == dividerMessageIndex) {
-                                    return const MeshCoreChatUnreadDivider();
-                                  }
-                                  final messageIndex =
-                                      logicalIndex > dividerMessageIndex
-                                      ? logicalIndex - 1
-                                      : logicalIndex;
-                                  return _buildMessageBubble(
-                                    messages[messageIndex],
-                                  );
-                                }
-                                return _buildMessageBubble(
-                                  messages[logicalIndex],
-                                );
-                              },
-                            );
-                          },
-                        ),
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          bottom: AppTheme.spacing12,
-                          child: JumpToLatestPill(
-                            visible: _showJumpToLatest,
-                            onTap: _jumpToLatest,
-                            label: context.l10n.meshcoreChatJumpToLatest,
-                          ),
-                        ),
-                      ],
-                    ),
-            ),
-
-            _buildMessageInput(),
-          ],
+              _buildMessageInput(),
+            ],
+          ),
         ),
       ),
     );

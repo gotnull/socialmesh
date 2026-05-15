@@ -13437,6 +13437,24 @@ abstract class AppLocalizations {
   /// **'About SocialMesh'**
   String get meshcoreAboutSocialMesh;
 
+  /// D-Q2 - section header on MeshCore Settings for per-app chat appearance preferences
+  ///
+  /// In en, this message translates to:
+  /// **'Chat appearance'**
+  String get meshcoreChatAppearanceSectionTitle;
+
+  /// D-Q2 - label for the text-scale chip selector
+  ///
+  /// In en, this message translates to:
+  /// **'Chat text size'**
+  String get meshcoreChatTextScaleLabel;
+
+  /// D-Q2 - helper text under the text-scale chip selector
+  ///
+  /// In en, this message translates to:
+  /// **'Scales every text widget inside MeshCore chats (bubbles, timestamps, dividers, input). Does not affect Meshtastic.'**
+  String get meshcoreChatTextScaleHelper;
+
   /// Actions card header
   ///
   /// In en, this message translates to:
@@ -53520,6 +53538,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Verify WAL mode is active on all SQLite databases'**
   String get adminPanelStorageHealthSub;
+
+  /// Admin panel tile label for the mesh-morph preview screen
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Morph Preview'**
+  String get adminPanelMeshMorph;
+
+  /// Admin panel tile subtitle for the mesh-morph preview screen
+  ///
+  /// In en, this message translates to:
+  /// **'Test mesh-morph presets, shapes, and timing'**
+  String get adminPanelMeshMorphSub;
+
+  /// App bar title for the mesh-morph admin preview screen
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Morph'**
+  String get adminMeshMorphTitle;
+
+  /// Section header for the mesh-morph preset picker
+  ///
+  /// In en, this message translates to:
+  /// **'PRESET'**
+  String get adminMeshMorphPresetSection;
+
+  /// Section header for the mesh-morph rotation-style picker
+  ///
+  /// In en, this message translates to:
+  /// **'ROTATION'**
+  String get adminMeshMorphRotationSection;
+
+  /// Section header for the mesh-morph tuning sliders
+  ///
+  /// In en, this message translates to:
+  /// **'TUNING'**
+  String get adminMeshMorphTuningSection;
+
+  /// Toggle row label for pausing or resuming the mesh-morph animation
+  ///
+  /// In en, this message translates to:
+  /// **'Animate'**
+  String get adminMeshMorphAnimate;
+
+  /// Subtitle for the animate toggle on the mesh-morph admin screen
+  ///
+  /// In en, this message translates to:
+  /// **'Pause to inspect the current shape'**
+  String get adminMeshMorphAnimateSub;
+
+  /// Slider label showing the current ball count rendered by the mesh-morph widget
+  ///
+  /// In en, this message translates to:
+  /// **'Point count: {count}'**
+  String adminMeshMorphPointCountLabel(int count);
+
+  /// Slider label for the mesh-morph glow intensity multiplier
+  ///
+  /// In en, this message translates to:
+  /// **'Glow: {value}'**
+  String adminMeshMorphGlowLabel(String value);
+
+  /// Slider label for the mesh-morph wireframe edge thickness multiplier
+  ///
+  /// In en, this message translates to:
+  /// **'Line thickness: {value}'**
+  String adminMeshMorphLineThicknessLabel(String value);
+
+  /// Slider label for the mesh-morph ball/node size multiplier
+  ///
+  /// In en, this message translates to:
+  /// **'Node size: {value}'**
+  String adminMeshMorphNodeSizeLabel(String value);
+
+  /// Label showing which shape the mesh-morph widget is currently displaying
+  ///
+  /// In en, this message translates to:
+  /// **'Current shape: {shape}'**
+  String adminMeshMorphCurrentShape(String shape);
+
+  /// Mesh-morph preset name: the short icosahedron-arrival opener
+  ///
+  /// In en, this message translates to:
+  /// **'Icosahedron Journey'**
+  String get adminMeshMorphPresetIcosahedronJourney;
+
+  /// Mesh-morph preset name: full tour of every shape in the registry
+  ///
+  /// In en, this message translates to:
+  /// **'Vectorball Tour'**
+  String get adminMeshMorphPresetVectorballTour;
+
+  /// Mesh-morph preset name: only the regular polyhedra plus sphere
+  ///
+  /// In en, this message translates to:
+  /// **'Platonic Circuit'**
+  String get adminMeshMorphPresetPlatonicCircuit;
+
+  /// Mesh-morph preset name: soft surface shapes only, no wireframe edges
+  ///
+  /// In en, this message translates to:
+  /// **'Surface Flow'**
+  String get adminMeshMorphPresetSurfaceFlow;
+
+  /// Mesh-morph preset name: wireframe shapes only, edges drawn throughout
+  ///
+  /// In en, this message translates to:
+  /// **'Wireframe March'**
+  String get adminMeshMorphPresetWireframeMarch;
+
+  /// Mesh-morph rotation style: no rotation
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get adminMeshMorphRotationNone;
+
+  /// Mesh-morph rotation style: slow continuous Y-axis spin
+  ///
+  /// In en, this message translates to:
+  /// **'Spin'**
+  String get adminMeshMorphRotationSpin;
+
+  /// Mesh-morph rotation style: multi-axis tumble matching the splash logo
+  ///
+  /// In en, this message translates to:
+  /// **'Tumble'**
+  String get adminMeshMorphRotationTumble;
+
+  /// Mesh-morph rotation style: faster Y spin with a slight X wobble
+  ///
+  /// In en, this message translates to:
+  /// **'Showcase'**
+  String get adminMeshMorphRotationShowcase;
 
   /// App bar title for the admin storage health screen
   ///

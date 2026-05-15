@@ -54,12 +54,14 @@ void main() {
     // Each section is rendered via the canonical SettingsSectionHeader.
     // D29 removed the standalone Debug section. D47-A added the
     // "Contact auto-add" section; D48-A1 added the "Auto-route
-    // rotation" section. Five section headers now: Node Settings /
-    // Contact auto-add / Auto-route rotation / Actions / About.
-    expect(find.byType(SettingsSectionHeader), findsNWidgets(5));
+    // rotation" section; D-Q2 added the "Chat appearance" section.
+    // Six section headers now: Node Settings / Contact auto-add /
+    // Auto-route rotation / Chat appearance / Actions / About.
+    expect(find.byType(SettingsSectionHeader), findsNWidgets(6));
     expect(find.text(_l10n.meshcoreNodeSettings), findsOneWidget);
     expect(find.text(_l10n.meshcoreAutoAddSectionTitle), findsOneWidget);
     expect(find.text(_l10n.meshcoreAutoRouteSectionTitle), findsOneWidget);
+    expect(find.text(_l10n.meshcoreChatAppearanceSectionTitle), findsOneWidget);
     expect(find.text(_l10n.meshcoreActions), findsOneWidget);
     expect(find.text(_l10n.meshcoreAbout), findsOneWidget);
   });
