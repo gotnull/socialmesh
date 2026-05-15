@@ -10609,11 +10609,116 @@
     },
     "meshcoreRepeaterAdminHubSettingsTile": "Settings",
     "@meshcoreRepeaterAdminHubSettingsTile": {
-        "description": "D49-A - hub list tile for the admin settings screen (disabled until D49-C)"
+        "description": "D49-A - hub list tile for the admin settings screen"
     },
-    "meshcoreRepeaterAdminHubSettingsTileSubtitle": "Coming soon",
+    "meshcoreRepeaterAdminHubSettingsTileSubtitle": "Repeater identity, behaviour, and advertisement",
     "@meshcoreRepeaterAdminHubSettingsTileSubtitle": {
-        "description": "D49-A - subtitle for the admin settings hub tile while disabled"
+        "description": "D49-C - subtitle for the admin settings hub tile (now active)"
+    },
+    "meshcoreRepeaterAdminSettingsTitle": "{name} settings",
+    "@meshcoreRepeaterAdminSettingsTitle": {
+        "description": "D49-C - title for the repeater admin settings screen",
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "meshcoreRepeaterAdminSettingsRefreshAll": "Refresh all",
+    "@meshcoreRepeaterAdminSettingsRefreshAll": {
+        "description": "D49-C - app-bar action tooltip to refresh every field from the radio"
+    },
+    "meshcoreRepeaterAdminSettingsRefreshFieldTooltip": "Refresh from radio",
+    "@meshcoreRepeaterAdminSettingsRefreshFieldTooltip": {
+        "description": "D49-C - per-field refresh icon tooltip"
+    },
+    "meshcoreRepeaterAdminSettingsSaveButton": "Save changes",
+    "@meshcoreRepeaterAdminSettingsSaveButton": {
+        "description": "D49-C - bottom gradient save button label"
+    },
+    "meshcoreRepeaterAdminSettingsSectionIdentity": "Identity",
+    "@meshcoreRepeaterAdminSettingsSectionIdentity": {
+        "description": "D49-C - section header"
+    },
+    "meshcoreRepeaterAdminSettingsSectionBehavior": "Repeater behaviour",
+    "@meshcoreRepeaterAdminSettingsSectionBehavior": {
+        "description": "D49-C - section header"
+    },
+    "meshcoreRepeaterAdminSettingsSectionAdvertisement": "Advertisement",
+    "@meshcoreRepeaterAdminSettingsSectionAdvertisement": {
+        "description": "D49-C - section header"
+    },
+    "meshcoreRepeaterAdminSettingsNameLabel": "Repeater name",
+    "@meshcoreRepeaterAdminSettingsNameLabel": {
+        "description": "D49-C - name field label"
+    },
+    "meshcoreRepeaterAdminSettingsNameHelper": "Up to 32 characters. Changing this triggers a fresh advert.",
+    "@meshcoreRepeaterAdminSettingsNameHelper": {
+        "description": "D49-C - name field helper text"
+    },
+    "meshcoreRepeaterAdminSettingsRepeatTile": "Repeat",
+    "@meshcoreRepeaterAdminSettingsRepeatTile": {
+        "description": "D49-C - repeat toggle tile title"
+    },
+    "meshcoreRepeaterAdminSettingsRepeatTileSubtitle": "Forward inbound packets to other nodes",
+    "@meshcoreRepeaterAdminSettingsRepeatTileSubtitle": {
+        "description": "D49-C - repeat toggle tile subtitle"
+    },
+    "meshcoreRepeaterAdminSettingsAllowReadOnlyTile": "Allow read-only access",
+    "@meshcoreRepeaterAdminSettingsAllowReadOnlyTile": {
+        "description": "D49-C - allow-read-only toggle tile title"
+    },
+    "meshcoreRepeaterAdminSettingsAllowReadOnlyTileSubtitle": "Guests can request status without admin login",
+    "@meshcoreRepeaterAdminSettingsAllowReadOnlyTileSubtitle": {
+        "description": "D49-C - allow-read-only toggle tile subtitle"
+    },
+    "meshcoreRepeaterAdminSettingsAdvertIntervalLabel": "Advert interval (minutes)",
+    "@meshcoreRepeaterAdminSettingsAdvertIntervalLabel": {
+        "description": "D49-C - advert interval field label"
+    },
+    "meshcoreRepeaterAdminSettingsAdvertIntervalHelper": "0 disables periodic adverts. Range: 0-1440.",
+    "@meshcoreRepeaterAdminSettingsAdvertIntervalHelper": {
+        "description": "D49-C - advert interval field helper"
+    },
+    "meshcoreRepeaterAdminSettingsFloodAdvertIntervalLabel": "Flood-advert interval (hours)",
+    "@meshcoreRepeaterAdminSettingsFloodAdvertIntervalLabel": {
+        "description": "D49-C - flood-advert interval field label"
+    },
+    "meshcoreRepeaterAdminSettingsFloodAdvertIntervalHelper": "0 disables flood adverts. Range: 0-168.",
+    "@meshcoreRepeaterAdminSettingsFloodAdvertIntervalHelper": {
+        "description": "D49-C - flood-advert interval field helper"
+    },
+    "meshcoreRepeaterAdminSettingsSavedSnackbar": "Saved {saved} of {total} settings.",
+    "@meshcoreRepeaterAdminSettingsSavedSnackbar": {
+        "description": "D49-C - summary snackbar after save",
+        "placeholders": {
+            "saved": {"type": "int"},
+            "total": {"type": "int"}
+        }
+    },
+    "meshcoreRepeaterAdminSettingsRefreshedSnackbar": "Refreshed {count} settings from the radio.",
+    "@meshcoreRepeaterAdminSettingsRefreshedSnackbar": {
+        "description": "D49-C - summary snackbar after refresh-all",
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "meshcoreRepeaterAdminSettingsSaveFailedSnackbar": "Could not save settings: {error}.",
+    "@meshcoreRepeaterAdminSettingsSaveFailedSnackbar": {
+        "description": "D49-C - snackbar on save throw",
+        "placeholders": {
+            "error": {"type": "String"}
+        }
+    },
+    "meshcoreRepeaterAdminSettingsInvalidNumber": "Enter a whole number.",
+    "@meshcoreRepeaterAdminSettingsInvalidNumber": {
+        "description": "D49-C - inline validation error for the integer fields"
+    },
+    "meshcoreRepeaterAdminSettingsOutOfRange": "Value must be between {min} and {max}.",
+    "@meshcoreRepeaterAdminSettingsOutOfRange": {
+        "description": "D49-C - inline validation error for out-of-range integers",
+        "placeholders": {
+            "min": {"type": "int"},
+            "max": {"type": "int"}
+        }
     },
     "meshcoreRepeaterStatusTitle": "{name} status",
     "@meshcoreRepeaterStatusTitle": {
@@ -12587,6 +12692,28 @@
             "count": {
                 "type": "int"
             }
+        }
+    },
+    "meshcorePathHistoryCurrentModePrefix": "Current path:",
+    "@meshcorePathHistoryCurrentModePrefix": {
+        "description": "D34c-Bb - prefix label for the live routing-mode line under the section title (e.g. \"Current path: 5 hops\")"
+    },
+    "meshcorePathHistoryClearOverrideTooltip": "Clear override (reset to auto)",
+    "@meshcorePathHistoryClearOverrideTooltip": {
+        "description": "D34c-Bb - tooltip for the inline icon-button that clears a Force Flood / Force Direct override from the path-history sheet"
+    },
+    "meshcorePathHistoryClearOverrideSuccess": "{name} is back to auto routing.",
+    "@meshcorePathHistoryClearOverrideSuccess": {
+        "description": "D34c-Bb - snackbar after a successful clear-override",
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "meshcorePathHistoryClearOverrideFailed": "Could not clear the override for {name}.",
+    "@meshcorePathHistoryClearOverrideFailed": {
+        "description": "D34c-Bb - snackbar after a failed clear-override",
+        "placeholders": {
+            "name": {"type": "String"}
         }
     },
     "meshcorePathHistoryTitle": "Path history",

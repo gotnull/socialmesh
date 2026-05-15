@@ -7997,7 +7997,96 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshcoreRepeaterAdminHubSettingsTile => 'Settings';
 
   @override
-  String get meshcoreRepeaterAdminHubSettingsTileSubtitle => 'Coming soon';
+  String get meshcoreRepeaterAdminHubSettingsTileSubtitle =>
+      'Repeater identity, behaviour, and advertisement';
+
+  @override
+  String meshcoreRepeaterAdminSettingsTitle(String name) {
+    return '$name settings';
+  }
+
+  @override
+  String get meshcoreRepeaterAdminSettingsRefreshAll => 'Refresh all';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsRefreshFieldTooltip =>
+      'Refresh from radio';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsSaveButton => 'Save changes';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsSectionIdentity => 'Identity';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsSectionBehavior =>
+      'Repeater behaviour';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsSectionAdvertisement =>
+      'Advertisement';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsNameLabel => 'Repeater name';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsNameHelper =>
+      'Up to 32 characters. Changing this triggers a fresh advert.';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsRepeatTile => 'Repeat';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsRepeatTileSubtitle =>
+      'Forward inbound packets to other nodes';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsAllowReadOnlyTile =>
+      'Allow read-only access';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsAllowReadOnlyTileSubtitle =>
+      'Guests can request status without admin login';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsAdvertIntervalLabel =>
+      'Advert interval (minutes)';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsAdvertIntervalHelper =>
+      '0 disables periodic adverts. Range: 0-1440.';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsFloodAdvertIntervalLabel =>
+      'Flood-advert interval (hours)';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsFloodAdvertIntervalHelper =>
+      '0 disables flood adverts. Range: 0-168.';
+
+  @override
+  String meshcoreRepeaterAdminSettingsSavedSnackbar(int saved, int total) {
+    return 'Saved $saved of $total settings.';
+  }
+
+  @override
+  String meshcoreRepeaterAdminSettingsRefreshedSnackbar(int count) {
+    return 'Refreshed $count settings from the radio.';
+  }
+
+  @override
+  String meshcoreRepeaterAdminSettingsSaveFailedSnackbar(String error) {
+    return 'Could not save settings: $error.';
+  }
+
+  @override
+  String get meshcoreRepeaterAdminSettingsInvalidNumber =>
+      'Enter a whole number.';
+
+  @override
+  String meshcoreRepeaterAdminSettingsOutOfRange(int min, int max) {
+    return 'Value must be between $min and $max.';
+  }
 
   @override
   String meshcoreRepeaterStatusTitle(String name) {
@@ -9441,6 +9530,23 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String meshcorePathHistoryTileSubtitle(int count) {
     return '$count rutas guardadas';
+  }
+
+  @override
+  String get meshcorePathHistoryCurrentModePrefix => 'Current path:';
+
+  @override
+  String get meshcorePathHistoryClearOverrideTooltip =>
+      'Clear override (reset to auto)';
+
+  @override
+  String meshcorePathHistoryClearOverrideSuccess(String name) {
+    return '$name is back to auto routing.';
+  }
+
+  @override
+  String meshcorePathHistoryClearOverrideFailed(String name) {
+    return 'Could not clear the override for $name.';
   }
 
   @override

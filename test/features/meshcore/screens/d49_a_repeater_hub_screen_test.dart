@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// D49-A + D49-B: `MeshCoreRepeaterHubScreen` widget pins.
+// D49-A + D49-B + D49-C: `MeshCoreRepeaterHubScreen` widget pins.
 //
 // Pinned invariants:
 //   - App-bar title formats with the repeater's name.
 //   - Three tool tiles render: Status, CLI, Settings.
-//   - The Settings tile is wrapped in IgnorePointer (the "Coming
-//     soon" placeholder state until D49-C).
-//   - The Status tile (D49-A) is active.
-//   - The CLI tile (D49-B) is active and pushes the CLI screen.
+//   - All three tiles are active (no IgnorePointer wrapper) now
+//     that D49-C closed the Settings placeholder.
 
 import 'dart:typed_data';
 
@@ -83,31 +81,7 @@ void main() {
     );
   });
 
-  testWidgets('Settings tile is wrapped in IgnorePointer (Coming soon)', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(1080, 2000);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.resetPhysicalSize);
-
-    await tester.pumpWidget(_wrap(contact: _contact()));
-    await _settle(tester);
-
-    final tile = find.byKey(const ValueKey('meshcore-repeater-hub-settings'));
-    final ignoring = tester
-        .widgetList<IgnorePointer>(
-          find.ancestor(of: tile, matching: find.byType(IgnorePointer)),
-        )
-        .where((w) => w.ignoring)
-        .toList();
-    expect(
-      ignoring,
-      isNotEmpty,
-      reason: 'settings tile should still be IgnorePointer-wrapped until D49-C',
-    );
-  });
-
-  testWidgets('Status and CLI tiles are active (no ignoring ancestor)', (
+  testWidgets('all three tiles are active (no ignoring ancestor)', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1080, 2000);
@@ -120,6 +94,7 @@ void main() {
     for (final keyId in const [
       'meshcore-repeater-hub-status',
       'meshcore-repeater-hub-cli',
+      'meshcore-repeater-hub-settings',
     ]) {
       final tile = find.byKey(ValueKey(keyId));
       final ignore = find.ancestor(

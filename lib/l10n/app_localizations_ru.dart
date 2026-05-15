@@ -7958,7 +7958,95 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreRepeaterAdminHubSettingsTile => 'Настройки';
 
   @override
-  String get meshcoreRepeaterAdminHubSettingsTileSubtitle => 'Скоро';
+  String get meshcoreRepeaterAdminHubSettingsTileSubtitle =>
+      'Идентификация репитера, поведение и анонс';
+
+  @override
+  String meshcoreRepeaterAdminSettingsTitle(String name) {
+    return 'Настройки $name';
+  }
+
+  @override
+  String get meshcoreRepeaterAdminSettingsRefreshAll => 'Обновить всё';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsRefreshFieldTooltip =>
+      'Обновить с радио';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsSaveButton => 'Сохранить изменения';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsSectionIdentity => 'Идентификация';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsSectionBehavior =>
+      'Поведение репитера';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsSectionAdvertisement => 'Анонс';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsNameLabel => 'Имя репитера';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsNameHelper =>
+      'До 32 символов. Изменение запускает новый анонс.';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsRepeatTile => 'Повторять';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsRepeatTileSubtitle =>
+      'Перенаправлять входящие пакеты другим узлам';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsAllowReadOnlyTile =>
+      'Разрешить доступ только для чтения';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsAllowReadOnlyTileSubtitle =>
+      'Гости могут запрашивать статус без логина админа';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsAdvertIntervalLabel =>
+      'Интервал анонса (минуты)';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsAdvertIntervalHelper =>
+      '0 отключает периодические анонсы. Диапазон: 0-1440.';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsFloodAdvertIntervalLabel =>
+      'Интервал flood-анонса (часы)';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsFloodAdvertIntervalHelper =>
+      '0 отключает flood-анонсы. Диапазон: 0-168.';
+
+  @override
+  String meshcoreRepeaterAdminSettingsSavedSnackbar(int saved, int total) {
+    return 'Сохранено $saved из $total настроек.';
+  }
+
+  @override
+  String meshcoreRepeaterAdminSettingsRefreshedSnackbar(int count) {
+    return 'Обновлено $count настроек с радио.';
+  }
+
+  @override
+  String meshcoreRepeaterAdminSettingsSaveFailedSnackbar(String error) {
+    return 'Не удалось сохранить настройки: $error.';
+  }
+
+  @override
+  String get meshcoreRepeaterAdminSettingsInvalidNumber =>
+      'Введите целое число.';
+
+  @override
+  String meshcoreRepeaterAdminSettingsOutOfRange(int min, int max) {
+    return 'Значение должно быть от $min до $max.';
+  }
 
   @override
   String meshcoreRepeaterStatusTitle(String name) {
@@ -9395,6 +9483,23 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String meshcorePathHistoryTileSubtitle(int count) {
     return '$count сохранённых маршрутов';
+  }
+
+  @override
+  String get meshcorePathHistoryCurrentModePrefix => 'Текущий маршрут:';
+
+  @override
+  String get meshcorePathHistoryClearOverrideTooltip =>
+      'Снять принудительный режим (вернуть авто)';
+
+  @override
+  String meshcorePathHistoryClearOverrideSuccess(String name) {
+    return '$name вернулся к авто-маршрутизации.';
+  }
+
+  @override
+  String meshcorePathHistoryClearOverrideFailed(String name) {
+    return 'Не удалось снять принудительный режим для $name.';
   }
 
   @override

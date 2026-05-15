@@ -28,6 +28,7 @@ import '../../../models/meshcore_contact.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../services/meshcore/storage/meshcore_path_history_store.dart';
 import '../../../utils/snackbar.dart';
+import '../contact_l10n.dart';
 import 'meshcore_map_screen.dart';
 
 /// 7-day threshold for the "stale" chip on a saved path row. Paths
@@ -63,7 +64,18 @@ class _PathHistorySheet extends ConsumerWidget {
     final entries = ref.watch(
       meshCorePathHistoryProvider(contact.publicKeyHex),
     );
-    final activeBytes = contact.path;
+    // D34c-Bb: re-read the live contact so the current-mode header
+    // and the active-row marker react to path-override mutations
+    // (Force Flood / Direct / Reset to Auto) without the user having
+    // to dismiss and reopen the sheet.
+    final live = ref
+        .watch(meshCoreContactsProvider)
+        .contacts
+        .firstWhere(
+          (c) => c.publicKeyHex == contact.publicKeyHex,
+          orElse: () => contact,
+        );
+    final activeBytes = live.path;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -76,6 +88,7 @@ class _PathHistorySheet extends ConsumerWidget {
           ),
           child: SectionTitle(title: l10n.meshcorePathHistoryTitle),
         ),
+        _CurrentModeHeader(contact: live),
         const Divider(height: 1),
         Expanded(
           child: entries.isEmpty
@@ -120,6 +133,90 @@ class _PathHistorySheet extends ConsumerWidget {
       if (a[i] != b[i]) return false;
     }
     return true;
+  }
+}
+
+/// D34c-Bb: pinned tile under the section title summarising the
+/// contact's current routing mode. Renders the localized
+/// `localizedPathLabel` from the contact_l10n extension. When the
+/// contact carries a non-null `pathOverride` (Force Flood / Force
+/// Direct), the tile surfaces a trailing icon-button that calls
+/// `MeshCoreContactsNotifier.resetPath` — the same wrapper Contact
+/// Detail uses for its "Reset to auto" action. Closes the
+/// architectural gap upstream's all-in-one path-management dialog
+/// covers by having both surfaces co-located.
+class _CurrentModeHeader extends ConsumerWidget {
+  final MeshCoreContact contact;
+  const _CurrentModeHeader({required this.contact});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final hasOverride = contact.pathOverride != null;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing16,
+        0,
+        AppTheme.spacing16,
+        AppTheme.spacing12,
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.route_rounded, size: 16, color: context.textSecondary),
+          const SizedBox(width: AppTheme.spacing8),
+          Expanded(
+            child: Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: AppTheme.spacing4,
+              children: [
+                Text(
+                  l10n.meshcorePathHistoryCurrentModePrefix,
+                  style: TextStyle(color: context.textSecondary, fontSize: 13),
+                ),
+                Text(
+                  contact.localizedPathLabel(l10n),
+                  style: TextStyle(
+                    color: context.textPrimary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (hasOverride)
+            IconButton(
+              key: const ValueKey('meshcore-path-history-clear-override'),
+              icon: const Icon(Icons.refresh_rounded, size: 20),
+              tooltip: l10n.meshcorePathHistoryClearOverrideTooltip,
+              onPressed: () => _clearOverride(context, ref),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _clearOverride(BuildContext context, WidgetRef ref) async {
+    final l10n = context.l10n;
+    final name = contact.displayName.isNotEmpty
+        ? contact.displayName
+        : l10n.meshcoreContactUnknownName;
+    HapticFeedback.selectionClick();
+    final ok = await ref
+        .read(meshCoreContactsProvider.notifier)
+        .resetPath(contact.publicKeyHex);
+    if (!context.mounted) return;
+    if (ok) {
+      showSuccessSnackBar(
+        context,
+        l10n.meshcorePathHistoryClearOverrideSuccess(name),
+      );
+    } else {
+      showErrorSnackBar(
+        context,
+        l10n.meshcorePathHistoryClearOverrideFailed(name),
+      );
+    }
   }
 }
 

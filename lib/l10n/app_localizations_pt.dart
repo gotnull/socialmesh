@@ -7955,7 +7955,95 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreRepeaterAdminHubSettingsTile => 'Configurações';
 
   @override
-  String get meshcoreRepeaterAdminHubSettingsTileSubtitle => 'Em breve';
+  String get meshcoreRepeaterAdminHubSettingsTileSubtitle =>
+      'Identidade do repetidor, comportamento e anúncio';
+
+  @override
+  String meshcoreRepeaterAdminSettingsTitle(String name) {
+    return 'Configurações de $name';
+  }
+
+  @override
+  String get meshcoreRepeaterAdminSettingsRefreshAll => 'Atualizar tudo';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsRefreshFieldTooltip =>
+      'Atualizar do rádio';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsSaveButton => 'Salvar alterações';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsSectionIdentity => 'Identidade';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsSectionBehavior =>
+      'Comportamento do repetidor';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsSectionAdvertisement => 'Anúncio';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsNameLabel => 'Nome do repetidor';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsNameHelper =>
+      'Até 32 caracteres. Alterar isto dispara um novo anúncio.';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsRepeatTile => 'Repetir';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsRepeatTileSubtitle =>
+      'Encaminhar pacotes recebidos para outros nós';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsAllowReadOnlyTile =>
+      'Permitir acesso somente leitura';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsAllowReadOnlyTileSubtitle =>
+      'Convidados podem solicitar status sem login admin';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsAdvertIntervalLabel =>
+      'Intervalo de anúncio (minutos)';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsAdvertIntervalHelper =>
+      '0 desativa anúncios periódicos. Intervalo: 0-1440.';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsFloodAdvertIntervalLabel =>
+      'Intervalo de anúncio flood (horas)';
+
+  @override
+  String get meshcoreRepeaterAdminSettingsFloodAdvertIntervalHelper =>
+      '0 desativa os anúncios flood. Intervalo: 0-168.';
+
+  @override
+  String meshcoreRepeaterAdminSettingsSavedSnackbar(int saved, int total) {
+    return 'Salvou $saved de $total configurações.';
+  }
+
+  @override
+  String meshcoreRepeaterAdminSettingsRefreshedSnackbar(int count) {
+    return 'Atualizadas $count configurações do rádio.';
+  }
+
+  @override
+  String meshcoreRepeaterAdminSettingsSaveFailedSnackbar(String error) {
+    return 'Não foi possível salvar as configurações: $error.';
+  }
+
+  @override
+  String get meshcoreRepeaterAdminSettingsInvalidNumber =>
+      'Digite um número inteiro.';
+
+  @override
+  String meshcoreRepeaterAdminSettingsOutOfRange(int min, int max) {
+    return 'O valor deve estar entre $min e $max.';
+  }
 
   @override
   String meshcoreRepeaterStatusTitle(String name) {
@@ -9397,6 +9485,23 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String meshcorePathHistoryTileSubtitle(int count) {
     return '$count rotas salvas';
+  }
+
+  @override
+  String get meshcorePathHistoryCurrentModePrefix => 'Rota atual:';
+
+  @override
+  String get meshcorePathHistoryClearOverrideTooltip =>
+      'Limpar forçagem (voltar ao automático)';
+
+  @override
+  String meshcorePathHistoryClearOverrideSuccess(String name) {
+    return '$name voltou ao roteamento automático.';
+  }
+
+  @override
+  String meshcorePathHistoryClearOverrideFailed(String name) {
+    return 'Não foi possível limpar a forçagem de $name.';
   }
 
   @override

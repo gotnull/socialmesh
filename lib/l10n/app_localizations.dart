@@ -13947,17 +13947,149 @@ abstract class AppLocalizations {
   /// **'Could not send command: {error}.'**
   String meshcoreRepeaterCliErrorSnackbar(String error);
 
-  /// D49-A - hub list tile for the admin settings screen (disabled until D49-C)
+  /// D49-A - hub list tile for the admin settings screen
   ///
   /// In en, this message translates to:
   /// **'Settings'**
   String get meshcoreRepeaterAdminHubSettingsTile;
 
-  /// D49-A - subtitle for the admin settings hub tile while disabled
+  /// D49-C - subtitle for the admin settings hub tile (now active)
   ///
   /// In en, this message translates to:
-  /// **'Coming soon'**
+  /// **'Repeater identity, behaviour, and advertisement'**
   String get meshcoreRepeaterAdminHubSettingsTileSubtitle;
+
+  /// D49-C - title for the repeater admin settings screen
+  ///
+  /// In en, this message translates to:
+  /// **'{name} settings'**
+  String meshcoreRepeaterAdminSettingsTitle(String name);
+
+  /// D49-C - app-bar action tooltip to refresh every field from the radio
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh all'**
+  String get meshcoreRepeaterAdminSettingsRefreshAll;
+
+  /// D49-C - per-field refresh icon tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh from radio'**
+  String get meshcoreRepeaterAdminSettingsRefreshFieldTooltip;
+
+  /// D49-C - bottom gradient save button label
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get meshcoreRepeaterAdminSettingsSaveButton;
+
+  /// D49-C - section header
+  ///
+  /// In en, this message translates to:
+  /// **'Identity'**
+  String get meshcoreRepeaterAdminSettingsSectionIdentity;
+
+  /// D49-C - section header
+  ///
+  /// In en, this message translates to:
+  /// **'Repeater behaviour'**
+  String get meshcoreRepeaterAdminSettingsSectionBehavior;
+
+  /// D49-C - section header
+  ///
+  /// In en, this message translates to:
+  /// **'Advertisement'**
+  String get meshcoreRepeaterAdminSettingsSectionAdvertisement;
+
+  /// D49-C - name field label
+  ///
+  /// In en, this message translates to:
+  /// **'Repeater name'**
+  String get meshcoreRepeaterAdminSettingsNameLabel;
+
+  /// D49-C - name field helper text
+  ///
+  /// In en, this message translates to:
+  /// **'Up to 32 characters. Changing this triggers a fresh advert.'**
+  String get meshcoreRepeaterAdminSettingsNameHelper;
+
+  /// D49-C - repeat toggle tile title
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat'**
+  String get meshcoreRepeaterAdminSettingsRepeatTile;
+
+  /// D49-C - repeat toggle tile subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Forward inbound packets to other nodes'**
+  String get meshcoreRepeaterAdminSettingsRepeatTileSubtitle;
+
+  /// D49-C - allow-read-only toggle tile title
+  ///
+  /// In en, this message translates to:
+  /// **'Allow read-only access'**
+  String get meshcoreRepeaterAdminSettingsAllowReadOnlyTile;
+
+  /// D49-C - allow-read-only toggle tile subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Guests can request status without admin login'**
+  String get meshcoreRepeaterAdminSettingsAllowReadOnlyTileSubtitle;
+
+  /// D49-C - advert interval field label
+  ///
+  /// In en, this message translates to:
+  /// **'Advert interval (minutes)'**
+  String get meshcoreRepeaterAdminSettingsAdvertIntervalLabel;
+
+  /// D49-C - advert interval field helper
+  ///
+  /// In en, this message translates to:
+  /// **'0 disables periodic adverts. Range: 0-1440.'**
+  String get meshcoreRepeaterAdminSettingsAdvertIntervalHelper;
+
+  /// D49-C - flood-advert interval field label
+  ///
+  /// In en, this message translates to:
+  /// **'Flood-advert interval (hours)'**
+  String get meshcoreRepeaterAdminSettingsFloodAdvertIntervalLabel;
+
+  /// D49-C - flood-advert interval field helper
+  ///
+  /// In en, this message translates to:
+  /// **'0 disables flood adverts. Range: 0-168.'**
+  String get meshcoreRepeaterAdminSettingsFloodAdvertIntervalHelper;
+
+  /// D49-C - summary snackbar after save
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {saved} of {total} settings.'**
+  String meshcoreRepeaterAdminSettingsSavedSnackbar(int saved, int total);
+
+  /// D49-C - summary snackbar after refresh-all
+  ///
+  /// In en, this message translates to:
+  /// **'Refreshed {count} settings from the radio.'**
+  String meshcoreRepeaterAdminSettingsRefreshedSnackbar(int count);
+
+  /// D49-C - snackbar on save throw
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save settings: {error}.'**
+  String meshcoreRepeaterAdminSettingsSaveFailedSnackbar(String error);
+
+  /// D49-C - inline validation error for the integer fields
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a whole number.'**
+  String get meshcoreRepeaterAdminSettingsInvalidNumber;
+
+  /// D49-C - inline validation error for out-of-range integers
+  ///
+  /// In en, this message translates to:
+  /// **'Value must be between {min} and {max}.'**
+  String meshcoreRepeaterAdminSettingsOutOfRange(int min, int max);
 
   /// D49-A - app-bar title for the repeater status screen
   ///
@@ -16436,6 +16568,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} saved paths'**
   String meshcorePathHistoryTileSubtitle(int count);
+
+  /// D34c-Bb - prefix label for the live routing-mode line under the section title (e.g. "Current path: 5 hops")
+  ///
+  /// In en, this message translates to:
+  /// **'Current path:'**
+  String get meshcorePathHistoryCurrentModePrefix;
+
+  /// D34c-Bb - tooltip for the inline icon-button that clears a Force Flood / Force Direct override from the path-history sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Clear override (reset to auto)'**
+  String get meshcorePathHistoryClearOverrideTooltip;
+
+  /// D34c-Bb - snackbar after a successful clear-override
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is back to auto routing.'**
+  String meshcorePathHistoryClearOverrideSuccess(String name);
+
+  /// D34c-Bb - snackbar after a failed clear-override
+  ///
+  /// In en, this message translates to:
+  /// **'Could not clear the override for {name}.'**
+  String meshcorePathHistoryClearOverrideFailed(String name);
 
   /// Path history sheet section title
   ///

@@ -8,7 +8,7 @@
 // admin tools as canonical `SettingsTile` rows:
 //   - Status -> [MeshCoreRepeaterStatusScreen] (D49-A, shipped).
 //   - CLI    -> [MeshCoreRepeaterCliScreen] (D49-B, shipped).
-//   - Settings -> disabled placeholder (D49-C).
+//   - Settings -> [MeshCoreRepeaterAdminSettingsScreen] (D49-C, shipped).
 //
 // Lifecycle: stateless ConsumerWidget. The admin session itself
 // persists implicitly on the firmware side while the radio
@@ -23,6 +23,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/settings_primitives.dart';
 import '../../../models/meshcore_contact.dart';
+import 'meshcore_repeater_admin_settings_screen.dart';
 import 'meshcore_repeater_cli_screen.dart';
 import 'meshcore_repeater_status_screen.dart';
 
@@ -75,18 +76,20 @@ class MeshCoreRepeaterHubScreen extends ConsumerWidget {
           );
         },
       ),
-      Opacity(
-        opacity: 0.5,
-        child: IgnorePointer(
-          child: SettingsTile(
-            key: const ValueKey('meshcore-repeater-hub-settings'),
-            icon: Icons.tune_rounded,
-            iconColor: AccentColors.orange,
-            title: l10n.meshcoreRepeaterAdminHubSettingsTile as String,
-            subtitle:
-                l10n.meshcoreRepeaterAdminHubSettingsTileSubtitle as String,
-          ),
-        ),
+      SettingsTile(
+        key: const ValueKey('meshcore-repeater-hub-settings'),
+        icon: Icons.tune_rounded,
+        iconColor: AccentColors.orange,
+        title: l10n.meshcoreRepeaterAdminHubSettingsTile as String,
+        subtitle: l10n.meshcoreRepeaterAdminHubSettingsTileSubtitle as String,
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) =>
+                  MeshCoreRepeaterAdminSettingsScreen(contact: contact),
+            ),
+          );
+        },
       ),
     ];
   }
