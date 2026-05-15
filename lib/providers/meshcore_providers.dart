@@ -208,7 +208,7 @@ final meshCoreSendConfirmationRouterProvider =
 /// path, and record it via the per-contact path-history notifier
 /// (D39 + D48-A1 store, source `inbound`).
 ///
-/// Owned by the active session — recreated on reconnect / radio swap,
+/// Owned by the active session: recreated on reconnect / radio swap,
 /// disposed on session teardown.
 final meshCorePathUpdateListenerProvider =
     Provider<MeshCorePathUpdateListener?>((ref) {

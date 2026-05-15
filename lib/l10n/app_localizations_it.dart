@@ -7786,6 +7786,157 @@ class AppLocalizationsIt extends AppLocalizations {
       'Quanto attendere una conferma di consegna prima di provare un altro percorso';
 
   @override
+  String get meshcoreRepeaterAdminLoginTitle => 'Accesso admin del ripetitore';
+
+  @override
+  String meshcoreRepeaterAdminLoginSubtitle(String name) {
+    return 'Autenticati su $name per sbloccare gli strumenti admin';
+  }
+
+  @override
+  String get meshcoreRepeaterAdminLoginPasswordLabel => 'Password admin';
+
+  @override
+  String get meshcoreRepeaterAdminLoginAction => 'Accedi';
+
+  @override
+  String get meshcoreRepeaterAdminLoginSuccess => 'Accesso eseguito come admin';
+
+  @override
+  String get meshcoreRepeaterAdminLoginSuccessGuest =>
+      'Accesso eseguito come ospite';
+
+  @override
+  String get meshcoreRepeaterAdminLoginFailed =>
+      'Accesso non riuscito; controlla la password e riprova';
+
+  @override
+  String get meshcoreRepeaterAdminLoginTimeout =>
+      'Accesso scaduto; il ripetitore non ha risposto';
+
+  @override
+  String get meshcoreRepeaterAdminLoginEmptyPassword =>
+      'Inserisci la password admin per continuare';
+
+  @override
+  String meshcoreRepeaterAdminHubTitle(String name) {
+    return 'Admin di $name';
+  }
+
+  @override
+  String get meshcoreRepeaterAdminHubToolsHeader => 'Strumenti admin';
+
+  @override
+  String get meshcoreRepeaterAdminHubStatusTile => 'Stato';
+
+  @override
+  String get meshcoreRepeaterAdminHubStatusTileSubtitle =>
+      'Batteria, uptime, contatori radio e pacchetti';
+
+  @override
+  String get meshcoreRepeaterAdminHubCliTile => 'CLI';
+
+  @override
+  String get meshcoreRepeaterAdminHubCliTileSubtitle => 'In arrivo';
+
+  @override
+  String get meshcoreRepeaterAdminHubSettingsTile => 'Impostazioni';
+
+  @override
+  String get meshcoreRepeaterAdminHubSettingsTileSubtitle => 'In arrivo';
+
+  @override
+  String meshcoreRepeaterStatusTitle(String name) {
+    return 'Stato di $name';
+  }
+
+  @override
+  String get meshcoreRepeaterStatusRefreshTooltip => 'Aggiorna';
+
+  @override
+  String get meshcoreRepeaterStatusSectionSystem => 'Sistema';
+
+  @override
+  String get meshcoreRepeaterStatusSectionRadio => 'Radio';
+
+  @override
+  String get meshcoreRepeaterStatusSectionPackets => 'Pacchetti';
+
+  @override
+  String get meshcoreRepeaterStatusBatteryLabel => 'Batteria';
+
+  @override
+  String get meshcoreRepeaterStatusBatteryUnknown => 'Sconosciuta';
+
+  @override
+  String get meshcoreRepeaterStatusUptimeLabel => 'Uptime';
+
+  @override
+  String get meshcoreRepeaterStatusQueueLabel => 'Lunghezza coda';
+
+  @override
+  String get meshcoreRepeaterStatusErrorsLabel => 'Eventi di errore';
+
+  @override
+  String get meshcoreRepeaterStatusNoiseLabel => 'Rumore di fondo';
+
+  @override
+  String get meshcoreRepeaterStatusRssiLabel => 'Ultimo RSSI';
+
+  @override
+  String get meshcoreRepeaterStatusSnrLabel => 'Ultimo SNR';
+
+  @override
+  String get meshcoreRepeaterStatusTxAirtimeLabel => 'Tempo di trasmissione';
+
+  @override
+  String get meshcoreRepeaterStatusRxAirtimeLabel => 'Tempo di ricezione';
+
+  @override
+  String get meshcoreRepeaterStatusPacketsRecvLabel => 'Ricevuti';
+
+  @override
+  String get meshcoreRepeaterStatusPacketsSentLabel => 'Inviati';
+
+  @override
+  String get meshcoreRepeaterStatusFloodLabel => 'Flood (TX/RX)';
+
+  @override
+  String get meshcoreRepeaterStatusDirectLabel => 'Diretti (TX/RX)';
+
+  @override
+  String get meshcoreRepeaterStatusDupsLabel => 'Duplicati (flood/diretti)';
+
+  @override
+  String get meshcoreRepeaterStatusFailed => 'Impossibile caricare lo stato';
+
+  @override
+  String get meshcoreRepeaterStatusContactDetailAction => 'Accesso admin';
+
+  @override
+  String get meshcoreRepeaterStatusContactDetailSubtitle =>
+      'Autenticati per sbloccare gli strumenti admin';
+
+  @override
+  String get meshcoreRoomLoginTitle => 'Accesso alla stanza';
+
+  @override
+  String meshcoreRoomLoginSubtitle(String name) {
+    return 'Autenticati per entrare in $name';
+  }
+
+  @override
+  String get meshcoreRoomLoginPasswordLabel => 'Password della stanza';
+
+  @override
+  String get meshcoreRoomLoginAction => 'Entra';
+
+  @override
+  String meshcoreRoomLoginSuccess(String name) {
+    return 'Sei entrato in $name';
+  }
+
+  @override
   String meshcoreAutoRouteSliderValue(String value) {
     return '$value';
   }
@@ -9202,6 +9353,16 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get meshcorePathHistoryStaleBadge => 'Obsoleto';
+
+  @override
+  String meshcorePathHistoryRttBadgeMs(String value) {
+    return 'RTT $value ms';
+  }
+
+  @override
+  String meshcorePathHistoryRttBadgeSeconds(String value) {
+    return 'RTT $value s';
+  }
 
   @override
   String get meshcorePathHistoryActivateConfirmTitle =>

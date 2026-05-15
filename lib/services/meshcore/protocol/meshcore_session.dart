@@ -1624,6 +1624,156 @@ class MeshCoreSession {
     }
   }
 
+  /// D49-A: authenticate against a repeater (or room server) by full
+  /// public key + password. Wire shape:
+  /// ```
+  /// outbound: [0x1A][pubkey:32 B][password utf-8][0x00]
+  /// success : [0x85][admin_flag:u8][pubkey_prefix:6 B]
+  /// fail    : [0x86][reserved:u8][pubkey_prefix:6 B]
+  /// ```
+  /// Returns:
+  ///   - `delivered: true, isAdmin: <flag>` on 0x85 with matching
+  ///     prefix,
+  ///   - `delivered: false` on 0x86 with matching prefix or timeout.
+  ///
+  /// Bypasses the rate limiter (host-side management RPC).
+  ///
+  /// Privacy: logs only the 8-byte fingerprint. The password is
+  /// never logged.
+  Future<MeshCoreLoginResult> sendLogin({
+    required Uint8List pubKey,
+    required String password,
+    Duration timeout = const Duration(seconds: 10),
+  }) async {
+    if (pubKey.length != meshCorePubKeySize) {
+      throw ArgumentError.value(
+        pubKey.length,
+        'pubKey.length',
+        'must be exactly $meshCorePubKeySize bytes',
+      );
+    }
+    AppLogging.meshcore(
+      'event=admin.login.started '
+      'target=${AppLogging.publicKeyFingerprint(pubKey)}',
+    );
+
+    final completer = Completer<MeshCoreLoginResult>();
+    late final StreamSubscription<MeshCoreFrame> sub;
+    sub = frameStream.listen((frame) {
+      if (completer.isCompleted) return;
+      final isSuccess = frame.command == MeshCorePushCodes.loginSuccess;
+      final isFail = frame.command == MeshCorePushCodes.loginFail;
+      if (!isSuccess && !isFail) return;
+      if (frame.payload.length < 7) return;
+      // Match on the 6-byte pubkey prefix at payload[1..7].
+      for (var i = 0; i < 6; i++) {
+        if (frame.payload[1 + i] != pubKey[i]) return;
+      }
+      if (isFail) {
+        completer.complete(const MeshCoreLoginResult.failed());
+        return;
+      }
+      final adminFlag = frame.payload[0];
+      completer.complete(
+        MeshCoreLoginResult(delivered: true, isAdmin: adminFlag != 0),
+      );
+    });
+
+    try {
+      final payloadBytes = utf8.encode(password);
+      final outbound = Uint8List(pubKey.length + payloadBytes.length + 1);
+      outbound.setRange(0, pubKey.length, pubKey);
+      outbound.setRange(
+        pubKey.length,
+        pubKey.length + payloadBytes.length,
+        payloadBytes,
+      );
+      outbound[outbound.length - 1] = 0; // C-string NUL
+      await sendFrame(
+        MeshCoreFrame(command: MeshCoreCommands.sendLogin, payload: outbound),
+      );
+      final result = await completer.future.timeout(
+        timeout,
+        onTimeout: () => const MeshCoreLoginResult.timedOut(),
+      );
+      AppLogging.meshcore(
+        'event=admin.login.completed '
+        'target=${AppLogging.publicKeyFingerprint(pubKey)} '
+        'result=${result.delivered ? "ok" : "fail"} '
+        'admin=${result.isAdmin ? 1 : 0}',
+        error: !result.delivered,
+      );
+      return result;
+    } finally {
+      await sub.cancel();
+    }
+  }
+
+  /// D49-A: request a repeater's admin-status block. Wire shape:
+  /// ```
+  /// outbound: [0x1B][pubkey:32 B]
+  /// response: [0x87][reserved:u8][pubkey_prefix:6 B][52 B stats]
+  /// ```
+  /// Returns the parsed [MeshCoreRepeaterStatus] on success, `null`
+  /// on timeout or short payload. The caller must have completed
+  /// `sendLogin` for the same pubkey within the radio session;
+  /// otherwise the firmware drops the request silently and the
+  /// wrapper times out.
+  ///
+  /// Bypasses the rate limiter (host-side management RPC).
+  Future<MeshCoreRepeaterStatus?> sendStatusRequest({
+    required Uint8List pubKey,
+    Duration timeout = const Duration(seconds: 10),
+  }) async {
+    if (pubKey.length != meshCorePubKeySize) {
+      throw ArgumentError.value(
+        pubKey.length,
+        'pubKey.length',
+        'must be exactly $meshCorePubKeySize bytes',
+      );
+    }
+    AppLogging.meshcore(
+      'event=admin.status.started '
+      'target=${AppLogging.publicKeyFingerprint(pubKey)}',
+    );
+
+    final completer = Completer<MeshCoreRepeaterStatus?>();
+    late final StreamSubscription<MeshCoreFrame> sub;
+    sub = frameStream.listen((frame) {
+      if (completer.isCompleted) return;
+      if (frame.command != MeshCorePushCodes.statusResponse) return;
+      if (frame.payload.length < 7) return;
+      for (var i = 0; i < 6; i++) {
+        if (frame.payload[1 + i] != pubKey[i]) return;
+      }
+      final parsed = MeshCoreRepeaterStatus.parse(frame.payload);
+      if (parsed == null) return;
+      completer.complete(parsed);
+    });
+
+    try {
+      await sendFrame(
+        MeshCoreFrame(
+          command: MeshCoreCommands.sendStatusReq,
+          payload: Uint8List.fromList(pubKey),
+        ),
+      );
+      final result = await completer.future.timeout(
+        timeout,
+        onTimeout: () => null,
+      );
+      AppLogging.meshcore(
+        'event=admin.status.completed '
+        'target=${AppLogging.publicKeyFingerprint(pubKey)} '
+        'result=${result != null ? "ok" : "timeout"}',
+        error: result == null,
+      );
+      return result;
+    } finally {
+      await sub.cancel();
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Channels
   // ---------------------------------------------------------------------------

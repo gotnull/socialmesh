@@ -10,7 +10,7 @@
 // valid ranges so users moving between the two apps see consistent
 // rotation behaviour.
 //
-// Auto-route rotation is a purely app-side algorithm — the firmware
+// Auto-route rotation is a purely app-side algorithm; the firmware
 // has no concept of "route weight." Rotation happens by the app
 // mutating the contact's stored `out_path` between retry attempts
 // via `CMD_ADD_UPDATE_CONTACT 0x09`. D48-A1 ships the settings +

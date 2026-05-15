@@ -231,6 +231,16 @@ class _PathHistoryRow extends ConsumerWidget {
                           label: l10n.meshcorePathHistoryStaleBadge,
                           color: AccentColors.slate,
                         ),
+                      // D48-C: surface the EMA-smoothed delivery RTT
+                      // when at least one 0x82 ack has landed for this
+                      // path. Hidden when avgTripTimeMs == 0 (no
+                      // sample yet) so brand-new entries don't claim
+                      // "0 ms" reliability.
+                      if (entry.avgTripTimeMs > 0)
+                        _Badge(
+                          label: _rttBadgeLabel(l10n, entry.avgTripTimeMs),
+                          color: AccentColors.cyan,
+                        ),
                     ],
                   ),
                 ],
@@ -252,6 +262,20 @@ class _PathHistoryRow extends ConsumerWidget {
       case MeshCorePathSource.inbound:
         return l10n.meshcorePathHistorySourceInbound as String;
     }
+  }
+
+  /// D48-C: format the per-path average delivery RTT as a badge
+  /// label. Sub-second values render in milliseconds as integers
+  /// ("RTT 850 ms"); >= 1 s renders as seconds with one decimal
+  /// ("RTT 1.2 s"). Caller suppresses the badge entirely when
+  /// `avgTripTimeMs <= 0`.
+  String _rttBadgeLabel(dynamic l10n, double avgTripTimeMs) {
+    if (avgTripTimeMs < 1000) {
+      final ms = avgTripTimeMs.round();
+      return l10n.meshcorePathHistoryRttBadgeMs(ms.toString()) as String;
+    }
+    final seconds = (avgTripTimeMs / 1000).toStringAsFixed(1);
+    return l10n.meshcorePathHistoryRttBadgeSeconds(seconds) as String;
   }
 
   String _formatAge(BuildContext context, DateTime when) {

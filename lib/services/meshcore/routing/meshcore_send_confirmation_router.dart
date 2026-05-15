@@ -11,7 +11,7 @@
 //   payload[4..8] = trip_time_ms (u32 LE)
 //
 // Note the sync `RESP_CODE_SENT 0x06` ack has a different layout
-// (leading is_flood byte). The router only consumes 0x82 — the sync
+// (leading is_flood byte). The router only consumes 0x82; the sync
 // ack is handled by `MeshCoreSession.sendAndWait`.
 
 import 'dart:async';

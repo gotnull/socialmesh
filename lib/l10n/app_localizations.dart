@@ -13641,6 +13641,276 @@ abstract class AppLocalizations {
   /// **'How long to wait for a delivery confirmation before retrying on another path'**
   String get meshcoreAutoRouteRetryTimeoutSecondsSubtitle;
 
+  /// D49-A - bottom-sheet title for the repeater admin login dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Repeater admin login'**
+  String get meshcoreRepeaterAdminLoginTitle;
+
+  /// D49-A - bottom-sheet subtitle for the repeater admin login dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate against {name} to unlock admin tools'**
+  String meshcoreRepeaterAdminLoginSubtitle(String name);
+
+  /// D49-A - text-field label for the password input on the repeater admin login dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Admin password'**
+  String get meshcoreRepeaterAdminLoginPasswordLabel;
+
+  /// D49-A - submit button label on the repeater admin login dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Login'**
+  String get meshcoreRepeaterAdminLoginAction;
+
+  /// D49-A - snackbar shown after a successful PUSH_CODE_LOGIN_SUCCESS 0x85 with admin_flag = 1
+  ///
+  /// In en, this message translates to:
+  /// **'Logged in as admin'**
+  String get meshcoreRepeaterAdminLoginSuccess;
+
+  /// D49-A - snackbar shown after a successful PUSH_CODE_LOGIN_SUCCESS 0x85 with admin_flag = 0
+  ///
+  /// In en, this message translates to:
+  /// **'Logged in as guest'**
+  String get meshcoreRepeaterAdminLoginSuccessGuest;
+
+  /// D49-A - error shown after PUSH_CODE_LOGIN_FAIL 0x86
+  ///
+  /// In en, this message translates to:
+  /// **'Login failed; check the password and try again'**
+  String get meshcoreRepeaterAdminLoginFailed;
+
+  /// D49-A - error shown when neither 0x85 nor 0x86 arrived within the timeout
+  ///
+  /// In en, this message translates to:
+  /// **'Login timed out; the repeater did not respond'**
+  String get meshcoreRepeaterAdminLoginTimeout;
+
+  /// D49-A - validation banner when the user taps Login with an empty password field
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the admin password to continue'**
+  String get meshcoreRepeaterAdminLoginEmptyPassword;
+
+  /// D49-A - app-bar title for the repeater admin hub screen
+  ///
+  /// In en, this message translates to:
+  /// **'{name} admin'**
+  String meshcoreRepeaterAdminHubTitle(String name);
+
+  /// D49-A - section header above the list of admin tools on the hub screen
+  ///
+  /// In en, this message translates to:
+  /// **'Admin tools'**
+  String get meshcoreRepeaterAdminHubToolsHeader;
+
+  /// D49-A - hub list tile that navigates to the repeater status screen
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get meshcoreRepeaterAdminHubStatusTile;
+
+  /// D49-A - subtitle for the status hub tile
+  ///
+  /// In en, this message translates to:
+  /// **'Battery, uptime, radio + packet counters'**
+  String get meshcoreRepeaterAdminHubStatusTileSubtitle;
+
+  /// D49-A - hub list tile for the CLI screen (disabled until D49-B)
+  ///
+  /// In en, this message translates to:
+  /// **'CLI'**
+  String get meshcoreRepeaterAdminHubCliTile;
+
+  /// D49-A - subtitle for the CLI hub tile while disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get meshcoreRepeaterAdminHubCliTileSubtitle;
+
+  /// D49-A - hub list tile for the admin settings screen (disabled until D49-C)
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get meshcoreRepeaterAdminHubSettingsTile;
+
+  /// D49-A - subtitle for the admin settings hub tile while disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get meshcoreRepeaterAdminHubSettingsTileSubtitle;
+
+  /// D49-A - app-bar title for the repeater status screen
+  ///
+  /// In en, this message translates to:
+  /// **'{name} status'**
+  String meshcoreRepeaterStatusTitle(String name);
+
+  /// D49-A - tooltip on the refresh button in the status screen app bar
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get meshcoreRepeaterStatusRefreshTooltip;
+
+  /// D49-A - section header for system stats (battery, uptime, queue, errors)
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get meshcoreRepeaterStatusSectionSystem;
+
+  /// D49-A - section header for radio stats (noise floor, RSSI, SNR, airtime)
+  ///
+  /// In en, this message translates to:
+  /// **'Radio'**
+  String get meshcoreRepeaterStatusSectionRadio;
+
+  /// D49-A - section header for packet counters (sent, received, duplicates)
+  ///
+  /// In en, this message translates to:
+  /// **'Packets'**
+  String get meshcoreRepeaterStatusSectionPackets;
+
+  /// D49-A - label for the battery row in the status screen
+  ///
+  /// In en, this message translates to:
+  /// **'Battery'**
+  String get meshcoreRepeaterStatusBatteryLabel;
+
+  /// D49-A - placeholder when battery_mv == 0 (firmware did not measure)
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get meshcoreRepeaterStatusBatteryUnknown;
+
+  /// D49-A - label for the uptime row in the status screen
+  ///
+  /// In en, this message translates to:
+  /// **'Uptime'**
+  String get meshcoreRepeaterStatusUptimeLabel;
+
+  /// D49-A - label for the queue-length row in the status screen
+  ///
+  /// In en, this message translates to:
+  /// **'Queue length'**
+  String get meshcoreRepeaterStatusQueueLabel;
+
+  /// D49-A - label for the error events counter in the status screen
+  ///
+  /// In en, this message translates to:
+  /// **'Error events'**
+  String get meshcoreRepeaterStatusErrorsLabel;
+
+  /// D49-A - label for the noise floor row in the status screen
+  ///
+  /// In en, this message translates to:
+  /// **'Noise floor'**
+  String get meshcoreRepeaterStatusNoiseLabel;
+
+  /// D49-A - label for the last-RSSI row in the status screen
+  ///
+  /// In en, this message translates to:
+  /// **'Last RSSI'**
+  String get meshcoreRepeaterStatusRssiLabel;
+
+  /// D49-A - label for the last-SNR row in the status screen
+  ///
+  /// In en, this message translates to:
+  /// **'Last SNR'**
+  String get meshcoreRepeaterStatusSnrLabel;
+
+  /// D49-A - label for the cumulative TX airtime row
+  ///
+  /// In en, this message translates to:
+  /// **'TX airtime'**
+  String get meshcoreRepeaterStatusTxAirtimeLabel;
+
+  /// D49-A - label for the cumulative RX airtime row
+  ///
+  /// In en, this message translates to:
+  /// **'RX airtime'**
+  String get meshcoreRepeaterStatusRxAirtimeLabel;
+
+  /// D49-A - label for the total packets-received row
+  ///
+  /// In en, this message translates to:
+  /// **'Received'**
+  String get meshcoreRepeaterStatusPacketsRecvLabel;
+
+  /// D49-A - label for the total packets-sent row
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get meshcoreRepeaterStatusPacketsSentLabel;
+
+  /// D49-A - label for the flood TX/RX counters row
+  ///
+  /// In en, this message translates to:
+  /// **'Flood (TX/RX)'**
+  String get meshcoreRepeaterStatusFloodLabel;
+
+  /// D49-A - label for the direct TX/RX counters row
+  ///
+  /// In en, this message translates to:
+  /// **'Direct (TX/RX)'**
+  String get meshcoreRepeaterStatusDirectLabel;
+
+  /// D49-A - label for the duplicate-packet counters row
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicates (flood/direct)'**
+  String get meshcoreRepeaterStatusDupsLabel;
+
+  /// D49-A - error banner shown when sendStatusRequest times out or returns null
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load status'**
+  String get meshcoreRepeaterStatusFailed;
+
+  /// D49-A - tile label on the contact-detail screen that opens the admin login dialog for repeater or room-server contacts
+  ///
+  /// In en, this message translates to:
+  /// **'Admin login'**
+  String get meshcoreRepeaterStatusContactDetailAction;
+
+  /// D49-A - subtitle for the contact-detail admin-login tile
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to unlock admin tools'**
+  String get meshcoreRepeaterStatusContactDetailSubtitle;
+
+  /// D49-A - bottom-sheet title for the room (channel) login dialog. Wire-identical to repeater admin login.
+  ///
+  /// In en, this message translates to:
+  /// **'Room login'**
+  String get meshcoreRoomLoginTitle;
+
+  /// D49-A - bottom-sheet subtitle for the room login dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to join {name}'**
+  String meshcoreRoomLoginSubtitle(String name);
+
+  /// D49-A - text-field label for the room login password input
+  ///
+  /// In en, this message translates to:
+  /// **'Room password'**
+  String get meshcoreRoomLoginPasswordLabel;
+
+  /// D49-A - submit button label on the room login dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get meshcoreRoomLoginAction;
+
+  /// D49-A - snackbar shown after a successful 0x85 against a room target
+  ///
+  /// In en, this message translates to:
+  /// **'Joined {name}'**
+  String meshcoreRoomLoginSuccess(String name);
+
   /// D48-A1 - displayed value next to each slider; the value is already formatted by the caller
   ///
   /// In en, this message translates to:
@@ -16028,6 +16298,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stale'**
   String get meshcorePathHistoryStaleBadge;
+
+  /// D48-C - path history badge showing the path's average round-trip time in milliseconds (sub-second deliveries). The orchestrator updates the value via an EMA on each PUSH_CODE_SEND_CONFIRMED 0x82 push.
+  ///
+  /// In en, this message translates to:
+  /// **'RTT {value} ms'**
+  String meshcorePathHistoryRttBadgeMs(String value);
+
+  /// D48-C - path history badge showing the path's average round-trip time in seconds (deliveries >= 1 s, e.g. '1.2 s')
+  ///
+  /// In en, this message translates to:
+  /// **'RTT {value} s'**
+  String meshcorePathHistoryRttBadgeSeconds(String value);
 
   /// Activation confirmation sheet title
   ///

@@ -10,7 +10,7 @@
 //   - A mismatched ack-hash does NOT complete the waiter.
 //   - Frames whose command isn't 0x82 are ignored even when the
 //     payload bytes happen to match.
-//   - A short payload (<8 bytes) is dropped silently — defensive
+//   - A short payload (<8 bytes) is dropped silently; defensive
 //     against firmware versions that change the layout.
 //   - The waiter times out cleanly when no matching push arrives
 //     within the timeout.

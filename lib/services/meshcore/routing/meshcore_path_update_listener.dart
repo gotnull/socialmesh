@@ -5,7 +5,7 @@
 // `PUSH_CODE_PATH_UPDATED 0x81`.
 //
 // The firmware emits 0x81 whenever it learns or refreshes a route
-// to a known contact. The wire payload is `[opcode][pubkey:32]` —
+// to a known contact. The wire payload is `[opcode][pubkey:32]`;
 // it does NOT carry the new path bytes. To retrieve them we issue
 // `CMD_GET_CONTACT_BY_KEY 0x1E` for the same pubkey; the firmware
 // responds with one `RESP_CODE_CONTACT 0x03` frame whose
@@ -85,7 +85,7 @@ class MeshCorePathUpdateListener {
   late final StreamSubscription<MeshCoreFrame> _sub;
 
   /// Pubkeys currently being refreshed. Suppresses duplicate
-  /// in-flight `CMD_GET_CONTACT_BY_KEY` per the same key — the
+  /// in-flight `CMD_GET_CONTACT_BY_KEY` per the same key; the
   /// firmware can chatter 0x81 in bursts during a multi-hop
   /// re-route.
   final Set<String> _inFlight = <String>{};

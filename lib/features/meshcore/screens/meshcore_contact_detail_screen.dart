@@ -43,6 +43,8 @@ import '../../../utils/snackbar.dart';
 import '../contact_l10n.dart';
 import 'meshcore_map_screen.dart';
 import 'meshcore_neighbors_sheet.dart';
+import 'meshcore_repeater_login_dialog.dart';
+import 'meshcore_room_login_dialog.dart';
 import 'meshcore_path_history_sheet.dart';
 import 'meshcore_telemetry_sheet.dart';
 import 'meshcore_tools_screen.dart' show showMeshCoreTracePathSheet;
@@ -269,6 +271,29 @@ class MeshCoreContactDetailScreen extends ConsumerWidget {
             title: l10n.meshcoreNeighborsTileTitle,
             subtitle: l10n.meshcoreNeighborsTileSubtitle,
             onTap: () => showMeshCoreNeighborsSheet(context, repeater: c),
+          ),
+        // D49-A: admin login tile. Repeater contacts route into the
+        // admin hub after a successful `CMD_SEND_LOGIN 0x1A` +
+        // `PUSH_CODE_LOGIN_SUCCESS 0x85` with `admin_flag = 1`.
+        // Room-server contacts route into the room login dialog;
+        // wire shape is identical, post-login routing differs.
+        if (c.type == MeshCoreAdvType.repeater)
+          SettingsTile(
+            key: const ValueKey('meshcore-contact-detail-admin-login'),
+            icon: Icons.admin_panel_settings_outlined,
+            iconColor: context.accentColor,
+            title: l10n.meshcoreRepeaterStatusContactDetailAction,
+            subtitle: l10n.meshcoreRepeaterStatusContactDetailSubtitle,
+            onTap: () => showMeshCoreRepeaterLoginDialog(context, contact: c),
+          ),
+        if (c.type == MeshCoreAdvType.room)
+          SettingsTile(
+            key: const ValueKey('meshcore-contact-detail-room-login'),
+            icon: Icons.group_outlined,
+            iconColor: context.accentColor,
+            title: l10n.meshcoreRoomLoginTitle,
+            subtitle: l10n.meshcoreRoomLoginSubtitle(c.name),
+            onTap: () => showMeshCoreRoomLoginDialog(context, contact: c),
           ),
         SettingsTile(
           key: const ValueKey('meshcore-contact-detail-reset-path'),

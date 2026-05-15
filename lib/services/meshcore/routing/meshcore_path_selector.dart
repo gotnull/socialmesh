@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 // D48-A1: pure path-selection + weight helpers. No I/O, no
-// providers, no globals — every input arrives via the function
+// providers, no globals: every input arrives via the function
 // signature so the algorithm can be exercised byte-for-byte in a
 // table-driven test.
 //
@@ -10,7 +10,7 @@
 // [selectPathForAttempt] once per retry attempt to pick which
 // saved path's bytes to write into the contact's `out_path` via
 // `CMD_ADD_UPDATE_CONTACT 0x09`. A null return means "use flood
-// (pathLen = -1)" — the final retry attempt always falls through
+// (pathLen = -1)": the final retry attempt always falls through
 // to flood so a contact whose ranked paths all fail still gets one
 // last opportunity to deliver.
 //
@@ -19,10 +19,14 @@
 //   reliability   45%  successCount / (successCount + failureCount + 1)
 //   freshness     10%  max(0, 1 - daysSinceLastUsed / 7)
 //   routeWeight   20%  current weight / maxRouteWeight
-//   latency       (deferred — we don't yet record trip-time per
-//                  path, so the latency component contributes 0%
-//                  and the composite is effectively 75%-of-100%.
-//                  D48-B will fold it in.)
+//   latency       25%  1 - min(1, avgTripTimeMs / kLatencyCeilingMs)
+//                      Entries with no sample (avgTripTimeMs == 0)
+//                      get the neutral 0.5 so a brand-new path
+//                      isn't penalized against a slow-but-known
+//                      one. D48-B activated this slice once the
+//                      orchestrator's PUSH_CODE_SEND_CONFIRMED 0x82
+//                      tripTime started flowing through to
+//                      recordPathSuccess.
 //
 // Privacy: never log raw path bytes from inside these helpers.
 // Callers that log do so with `path_idx` / `weight` / `delta_op`
@@ -68,7 +72,7 @@ const int kMeshCorePathDiversityWindow = 2;
 ///     entries.
 ///   - [settings]: the live auto-route settings (used here only as
 ///     a weight scale; selection itself ignores
-///     `enabled` — the caller gates that).
+///     `enabled`; the caller gates that).
 ///   - [now]: clock anchor for the freshness component.
 Uint8List? selectPathForAttempt({
   required List<MeshCorePathHistoryEntry> history,
@@ -124,7 +128,7 @@ Uint8List? selectPathForAttempt({
 
   // Round-robin: attempt-1 maps to rank 0 (best path), attempt-2 to
   // rank 1, etc. attemptIndex 0 is the initial send (rotation
-  // wouldn't normally call this) — pick rank 0 defensively rather
+  // wouldn't normally call this); pick rank 0 defensively rather
   // than negative-indexing.
   final retryIndex = attemptIndex <= 0 ? 0 : attemptIndex - 1;
   final picked = scored[retryIndex % scored.length];
@@ -154,7 +158,7 @@ Uint8List? selectPathForAttempt({
 /// bits of the attempt counter in the hash so meshcore-open
 /// permits at most 4 distinguishable attempts per outbound
 /// message before hash collisions begin. We mirror the mask
-/// exactly — the orchestrator's [MeshCoreAutoRouteSettings.maxRetries]
+/// exactly: the orchestrator's [MeshCoreAutoRouteSettings.maxRetries]
 /// upper bound is independently capped at 8 by setting clamping,
 /// but post-collision attempts (attempt 4 collides with 0, 5 with
 /// 1, ...) reuse an earlier attempt's expected hash so the
@@ -208,6 +212,32 @@ double weightAfterFailure(
   return next;
 }
 
+/// D48-B: RTT (ms) at which the latency component reaches 0. Trips
+/// longer than this contribute nothing to the latency score; trips
+/// shorter scale linearly toward 1.0. 10 s is roughly the orchestrator's
+/// default `retryTimeoutSeconds` ceiling; a path that approaches the
+/// retry timeout is barely "delivered" from the user's perspective.
+const double kMeshCorePathLatencyCeilingMs = 10000.0;
+
+/// D48-B: neutral score returned for entries that have no RTT sample
+/// yet. Sits at the midpoint so a freshly-seeded path isn't penalized
+/// against a slow-but-measured one (it has to actually be tried
+/// before the score becomes informative).
+const double kMeshCorePathLatencyNeutralScore = 0.5;
+
+/// D48-B: latency component of the composite score. Pure function so
+/// it's pinnable in tests independent of the rest of the score.
+///
+///   - `avgTripTimeMs == 0` (no sample) ⇒ neutral 0.5.
+///   - `avgTripTimeMs <= 0` (defensive, never expected) ⇒ neutral 0.5.
+///   - `avgTripTimeMs >= kMeshCorePathLatencyCeilingMs` ⇒ 0.0.
+///   - otherwise ⇒ `1 - avgTripTimeMs / kMeshCorePathLatencyCeilingMs`.
+double latencyComponentForEntry(MeshCorePathHistoryEntry entry) {
+  if (entry.avgTripTimeMs <= 0) return kMeshCorePathLatencyNeutralScore;
+  if (entry.avgTripTimeMs >= kMeshCorePathLatencyCeilingMs) return 0.0;
+  return 1.0 - (entry.avgTripTimeMs / kMeshCorePathLatencyCeilingMs);
+}
+
 double _composite({
   required MeshCorePathHistoryEntry entry,
   required MeshCoreAutoRouteSettings settings,
@@ -234,8 +264,12 @@ double _composite({
       ? 0.0
       : (entry.routeWeight / settings.maxRouteWeight);
 
-  // 0.45 + 0.10 + 0.20 = 0.75 — latency (0.25) deferred.
-  return (reliability * 0.45) + (freshness * 0.10) + (weightComponent * 0.20);
+  // D48-B: latency component activated. 0.45 + 0.10 + 0.20 + 0.25 = 1.0.
+  final latency = latencyComponentForEntry(entry);
+  return (reliability * 0.45) +
+      (freshness * 0.10) +
+      (weightComponent * 0.20) +
+      (latency * 0.25);
 }
 
 int _bytesCompare(Uint8List a, Uint8List b) {

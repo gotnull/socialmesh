@@ -22,12 +22,12 @@
 //      deliver.
 //
 // Off-state behaviour: when `settings.enabled` is false the
-// orchestrator is bypassed entirely by the chat-screen gate — this
+// orchestrator is bypassed entirely by the chat-screen gate; this
 // service is never instantiated. Always-on flood remains the default.
 //
 // Threading: the orchestrator is single-shot per call. The chat
 // screen creates one instance per outbound message (or uses a
-// provider-owned singleton — either is fine because state lives in
+// provider-owned singleton; either is fine because state lives in
 // local fields on the call frame).
 //
 // Privacy: never logs raw path bytes. Counters that surface attempt
@@ -214,7 +214,7 @@ class MeshCoreAutoRouteOrchestrator {
   /// 32-byte public key of the recipient.
   final Uint8List contactPubKey;
 
-  /// `MeshCoreContact.type` / `MeshCoreContactInfo.advType` — needed
+  /// `MeshCoreContact.type` / `MeshCoreContactInfo.advType`; needed
   /// by `CMD_ADD_UPDATE_CONTACT 0x09` per attempt.
   final int contactAdvType;
 
@@ -348,6 +348,7 @@ class MeshCoreAutoRouteOrchestrator {
             history,
             devicePrefix,
             contactPrefix,
+            tripTimeMs: outcome.tripTime?.inMilliseconds.toDouble(),
           );
         }
         return MeshCoreAutoRouteSendOutcome(
@@ -389,8 +390,9 @@ class MeshCoreAutoRouteOrchestrator {
     Uint8List selected,
     List<MeshCorePathHistoryEntry> history,
     String devicePrefix,
-    String contactPrefix,
-  ) async {
+    String contactPrefix, {
+    double? tripTimeMs,
+  }) async {
     final entry = _findEntry(history, selected);
     if (entry == null) return;
     final next = weightAfterSuccess(entry.routeWeight, settings);
@@ -400,6 +402,7 @@ class MeshCoreAutoRouteOrchestrator {
       pathBytes: selected,
       newWeight: next,
       now: _clock(),
+      tripTimeMs: tripTimeMs,
     );
   }
 

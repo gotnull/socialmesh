@@ -63,10 +63,10 @@ const int kMeshCorePathHistoryMaxEntriesPerContact = 20;
 const int kMeshCorePathHistoryMaxPathBytes = 64;
 
 /// Source of a recorded path.
-///   - `trace` — arrived via a user-triggered Trace Path save (D39-A).
-///   - `manual` — reserved for future user-typed N-hop paths. No
+///   - `trace`: arrived via a user-triggered Trace Path save (D39-A).
+///   - `manual`: reserved for future user-typed N-hop paths. No
 ///     D39-A entry point produces one yet.
-///   - `inbound` — recorded passively after the firmware emitted
+///   - `inbound`: recorded passively after the firmware emitted
 ///     `PUSH_CODE_PATH_UPDATED 0x81` and we re-fetched the contact
 ///     via `CMD_GET_CONTACT_BY_KEY 0x1E` (D48-A3).
 enum MeshCorePathSource { trace, manual, inbound }
@@ -117,9 +117,16 @@ class MeshCorePathHistoryEntry {
   /// time to `MeshCoreAutoRouteSettings.initialRouteWeight`, bumped
   /// on success, decremented on failure. When ≤ 0 the rotation
   /// orchestrator evicts the entry from the rotation pool (NOT from
-  /// the path-history store — the entry stays visible in the
+  /// the path-history store; the entry stays visible in the
   /// history sheet).
   final double routeWeight;
+
+  /// D48-B: exponentially-smoothed delivery RTT in milliseconds.
+  /// `0.0` means "no sample yet"; consumed by the path-selector's
+  /// latency component. The orchestrator updates this on each
+  /// successful 0x82 push via `recordPathSuccess(tripTimeMs: ...)`
+  /// using an EMA with alpha = 0.3 (see [emaAvgTripTimeMs]).
+  final double avgTripTimeMs;
 
   MeshCorePathHistoryEntry({
     required this.id,
@@ -132,6 +139,7 @@ class MeshCorePathHistoryEntry {
     this.successCount = 0,
     this.failureCount = 0,
     this.routeWeight = kMeshCorePathHistoryDefaultRouteWeight,
+    this.avgTripTimeMs = 0.0,
   });
 
   MeshCorePathHistoryEntry copyWith({
@@ -146,6 +154,7 @@ class MeshCorePathHistoryEntry {
     int? successCount,
     int? failureCount,
     double? routeWeight,
+    double? avgTripTimeMs,
   }) {
     return MeshCorePathHistoryEntry(
       id: id ?? this.id,
@@ -158,6 +167,7 @@ class MeshCorePathHistoryEntry {
       successCount: successCount ?? this.successCount,
       failureCount: failureCount ?? this.failureCount,
       routeWeight: routeWeight ?? this.routeWeight,
+      avgTripTimeMs: avgTripTimeMs ?? this.avgTripTimeMs,
     );
   }
 
@@ -172,6 +182,7 @@ class MeshCorePathHistoryEntry {
     'successCount': successCount,
     'failureCount': failureCount,
     'routeWeight': routeWeight,
+    'avgTripTimeMs': avgTripTimeMs,
   };
 
   static MeshCorePathHistoryEntry? fromJson(Object? raw) {
@@ -192,6 +203,9 @@ class MeshCorePathHistoryEntry {
       if (bytes.length != len) return null;
       // D48-A1: legacy rows pre-date `failureCount` and `routeWeight`;
       // fall through to 0 / default-weight so old data stays readable.
+      // D48-B: ditto for `avgTripTimeMs`; legacy rows hydrate to 0
+      // (no sample yet), which the latency component reads as
+      // neutral.
       return MeshCorePathHistoryEntry(
         id: id,
         bytes: Uint8List.fromList(bytes),
@@ -205,11 +219,28 @@ class MeshCorePathHistoryEntry {
         routeWeight:
             (raw['routeWeight'] as num?)?.toDouble() ??
             kMeshCorePathHistoryDefaultRouteWeight,
+        avgTripTimeMs: (raw['avgTripTimeMs'] as num?)?.toDouble() ?? 0.0,
       );
     } catch (_) {
       return null;
     }
   }
+}
+
+/// D48-B: EMA helper used by [MeshCorePathHistoryStore.recordPathSuccess]
+/// to fold a new RTT sample into the entry's running average.
+///
+/// `alpha = 0.3` is a common middle ground for low-noise smoothing:
+/// 3 samples of a new RTT pull the average ~66% of the way there,
+/// so the score reacts to mesh-level path changes within a few
+/// successful deliveries without being whipsawed by a single outlier.
+///
+/// First sample (`current <= 0`) replaces verbatim; no warm-up
+/// distortion. Negative samples are rejected at the caller.
+double emaAvgTripTimeMs(double current, double newSampleMs) {
+  if (newSampleMs <= 0) return current;
+  if (current <= 0) return newSampleMs;
+  return 0.7 * current + 0.3 * newSampleMs;
 }
 
 /// SharedPreferences-backed per-contact path history.
@@ -396,6 +427,12 @@ class MeshCorePathHistoryStore {
   /// `weightAfterSuccess` from the path-selector helper). Also
   /// touches `lastUsedAt` to [now].
   ///
+  /// D48-B: when [tripTimeMs] is supplied (and > 0), folds the
+  /// sample into the entry's [MeshCorePathHistoryEntry.avgTripTimeMs]
+  /// via `emaAvgTripTimeMs`. The orchestrator pulls the value from
+  /// `MeshCoreSendConfirmationOutcome.tripTime` on each delivered
+  /// attempt.
+  ///
   /// No-op when no entry matches. Returns the post-save list.
   Future<List<MeshCorePathHistoryEntry>> recordPathSuccess({
     required String devicePubKeyPrefix,
@@ -403,6 +440,7 @@ class MeshCorePathHistoryStore {
     required Uint8List pathBytes,
     required double newWeight,
     required DateTime now,
+    double? tripTimeMs,
   }) async {
     if (devicePubKeyPrefix.isEmpty || contactPubKeyPrefix.isEmpty) {
       return const <MeshCorePathHistoryEntry>[];
@@ -411,10 +449,14 @@ class MeshCorePathHistoryStore {
     final idx = current.indexWhere((e) => _bytesEq(e.bytes, pathBytes));
     if (idx < 0) return current;
     final existing = current[idx];
+    final nextAvg = tripTimeMs == null
+        ? existing.avgTripTimeMs
+        : emaAvgTripTimeMs(existing.avgTripTimeMs, tripTimeMs);
     final updated = existing.copyWith(
       successCount: existing.successCount + 1,
       routeWeight: newWeight,
       lastUsedAt: now,
+      avgTripTimeMs: nextAvg,
     );
     final next = List<MeshCorePathHistoryEntry>.from(current)..[idx] = updated;
     next.sort(_byNewestUsageDesc);
@@ -425,7 +467,7 @@ class MeshCorePathHistoryStore {
   /// D48-A1: record a failed delivery on the saved path matching
   /// [pathBytes]. Bumps `failureCount` and writes [newWeight].
   /// When [newWeight] is ≤ 0 the entry is REMOVED from the history
-  /// (rotation pool eviction = history eviction in D48-A1 — the
+  /// (rotation pool eviction = history eviction in D48-A1; the
   /// distinction is academic since there's no "show evicted in the
   /// sheet but skip in the orchestrator" surface yet).
   ///

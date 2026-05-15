@@ -216,6 +216,141 @@ class MeshCoreRadioStats {
       'tx=${txAirtime.inSeconds}s, rx=${rxAirtime.inSeconds}s)';
 }
 
+/// D49-A: outcome of a `CMD_SEND_LOGIN 0x1A` round-trip. The firmware
+/// answers asynchronously with either `PUSH_CODE_LOGIN_SUCCESS 0x85`
+/// (admin or guest) or `PUSH_CODE_LOGIN_FAIL 0x86`; the wrapper
+/// boxes both outcomes plus the timeout case here.
+class MeshCoreLoginResult {
+  /// `true` if the firmware confirmed authentication (0x85 received).
+  final bool delivered;
+
+  /// On `delivered`: whether the firmware accepted this client as an
+  /// admin (byte 1 of the 0x85 push = 1) vs a guest (0). Undefined
+  /// when `delivered` is false.
+  final bool isAdmin;
+
+  const MeshCoreLoginResult({required this.delivered, required this.isAdmin});
+
+  const MeshCoreLoginResult.timedOut() : delivered = false, isAdmin = false;
+  const MeshCoreLoginResult.failed() : delivered = false, isAdmin = false;
+}
+
+/// D49-A: parsed `PUSH_CODE_STATUS_RESPONSE 0x87` body for the
+/// repeater admin status surface.
+///
+/// Wire layout (after the leading opcode is stripped, so `payload[0]`
+/// is the byte after `0x87`):
+///
+/// ```
+/// [0]      reserved
+/// [1..7]   sender pubkey prefix (6 B) -- correlation key
+/// [7..]    stats body, exactly 52 bytes:
+///   +0  u16 LE  battery_mv
+///   +2  u16 LE  queue_len
+///   +4  i16 LE  noise_floor_dbm
+///   +6  i16 LE  last_rssi
+///   +8  u32 LE  packets_recv
+///   +12 u32 LE  packets_sent
+///   +16 u32 LE  tx_air_secs
+///   +20 u32 LE  uptime_secs
+///   +24 u32 LE  flood_tx
+///   +28 u32 LE  direct_tx
+///   +32 u32 LE  flood_rx
+///   +36 u32 LE  direct_rx
+///   +40 u16 LE  err_events
+///   +42 i16 LE  last_snr_raw  (divide by 4.0 for dB)
+///   +44 u16 LE  direct_dups
+///   +46 u16 LE  flood_dups
+///   +48 u32 LE  rx_air_secs
+/// ```
+///
+/// Total minimum payload length: 7 (header) + 52 (body) = 59 bytes.
+class MeshCoreRepeaterStatus {
+  /// 6-byte prefix of the responding repeater's public key. Used by
+  /// the session listener to correlate the push to an outstanding
+  /// `sendStatusRequest`.
+  final Uint8List senderPubKeyPrefix;
+  final int batteryMv;
+  final int queueLen;
+  final int noiseFloorDbm;
+  final int lastRssiDbm;
+  final int packetsRecv;
+  final int packetsSent;
+  final Duration txAirtime;
+  final Duration uptime;
+  final int floodTx;
+  final int directTx;
+  final int floodRx;
+  final int directRx;
+  final int errEvents;
+  final int lastSnrQuarter;
+  final int directDups;
+  final int floodDups;
+  final Duration rxAirtime;
+  final DateTime fetchedAt;
+
+  const MeshCoreRepeaterStatus({
+    required this.senderPubKeyPrefix,
+    required this.batteryMv,
+    required this.queueLen,
+    required this.noiseFloorDbm,
+    required this.lastRssiDbm,
+    required this.packetsRecv,
+    required this.packetsSent,
+    required this.txAirtime,
+    required this.uptime,
+    required this.floodTx,
+    required this.directTx,
+    required this.floodRx,
+    required this.directRx,
+    required this.errEvents,
+    required this.lastSnrQuarter,
+    required this.directDups,
+    required this.floodDups,
+    required this.rxAirtime,
+    required this.fetchedAt,
+  });
+
+  /// Battery voltage in volts (mv / 1000). Returns `null` when the
+  /// firmware did not measure a value (battery_mv == 0).
+  double? get batteryVolts => batteryMv == 0 ? null : batteryMv / 1000.0;
+
+  /// SNR in dB (raw quarter-dB / 4.0).
+  double get lastSnrDb => lastSnrQuarter / 4.0;
+
+  /// Parse the body of a `PUSH_CODE_STATUS_RESPONSE 0x87` frame.
+  /// Returns `null` on payload shorter than 59 bytes.
+  ///
+  /// `now` is injectable for deterministic tests; production callers
+  /// omit it and the parser stamps `DateTime.now()`.
+  static MeshCoreRepeaterStatus? parse(Uint8List payload, {DateTime? now}) {
+    if (payload.length < 59) return null;
+    final prefix = Uint8List.fromList(payload.sublist(1, 7));
+    final bd = ByteData.sublistView(payload, 7);
+    return MeshCoreRepeaterStatus(
+      senderPubKeyPrefix: prefix,
+      batteryMv: bd.getUint16(0, Endian.little),
+      queueLen: bd.getUint16(2, Endian.little),
+      noiseFloorDbm: bd.getInt16(4, Endian.little),
+      lastRssiDbm: bd.getInt16(6, Endian.little),
+      packetsRecv: bd.getUint32(8, Endian.little),
+      packetsSent: bd.getUint32(12, Endian.little),
+      txAirtime: Duration(seconds: bd.getUint32(16, Endian.little)),
+      uptime: Duration(seconds: bd.getUint32(20, Endian.little)),
+      floodTx: bd.getUint32(24, Endian.little),
+      directTx: bd.getUint32(28, Endian.little),
+      floodRx: bd.getUint32(32, Endian.little),
+      directRx: bd.getUint32(36, Endian.little),
+      errEvents: bd.getUint16(40, Endian.little),
+      lastSnrQuarter: bd.getInt16(42, Endian.little),
+      directDups: bd.getUint16(44, Endian.little),
+      floodDups: bd.getUint16(46, Endian.little),
+      rxAirtime: Duration(seconds: bd.getUint32(48, Endian.little)),
+      fetchedAt: now ?? DateTime.now(),
+    );
+  }
+}
+
 /// D35-B-A: parsed `RESP_CODE_STATS` (0x18) payload for the CORE subtype.
 ///
 /// The companion firmware exposes this on `CMD_GET_STATS` (0x38) with the

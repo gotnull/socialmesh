@@ -519,7 +519,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
 
   /// D48-A1: auto-route rotation policy section. One toggle + four
   /// sliders. The sliders are greyed (via `_maybeDisabled`) when the
-  /// master toggle is off — the values still display so the user
+  /// master toggle is off; the values still display so the user
   /// can see what the policy WILL be when they enable it.
   ///
   /// No firmware round-trip; settings persist to SharedPreferences
