@@ -74,20 +74,62 @@ void main() {
   });
 
   group('CheckoutSessionDescriptor.fromJson', () {
-    test('parses everything the createExternalCheckout callable returns', () {
+    test('parses a BMC payload (checkoutUrl + provider=buymeacoffee)', () {
       final d = CheckoutSessionDescriptor.fromJson({
         'sessionId': 'abc',
         'checkoutUrl': 'https://buymeacoffee.com/gotnull',
+        'clientSecret': '',
+        'paymentIntentId': '',
+        'publishableKey': '',
         'returnDeepLink': 'socialmesh://purchase-return?sessionId=abc',
         'referenceCode': 'SM-AB23-CD45',
         'expectedAmount': 4.99,
-        'currency': 'USD',
+        'currency': 'AUD',
         'expiresAt': '2026-05-05T11:00:00.000Z',
+        'provider': 'buymeacoffee',
       });
       expect(d.sessionId, 'abc');
       expect(d.referenceCode, 'SM-AB23-CD45');
       expect(d.expectedAmount, 4.99);
-      expect(d.currency, 'USD');
+      expect(d.currency, 'AUD');
+      expect(d.provider, CheckoutProvider.buymeacoffee);
+      expect(d.checkoutUrl, 'https://buymeacoffee.com/gotnull');
+      expect(d.clientSecret, isEmpty);
+    });
+
+    test('parses a Stripe PaymentIntent payload', () {
+      final d = CheckoutSessionDescriptor.fromJson({
+        'sessionId': 'abc',
+        'checkoutUrl': '',
+        'clientSecret': 'pi_123_secret_xyz',
+        'paymentIntentId': 'pi_123',
+        'publishableKey': 'pk_test_abc',
+        'returnDeepLink': 'socialmesh://purchase-return',
+        'referenceCode': 'SM-AB23-CD45',
+        'expectedAmount': 5.99,
+        'currency': 'AUD',
+        'expiresAt': '2026-05-15T11:00:00.000Z',
+        'provider': 'stripe',
+      });
+      expect(d.provider, CheckoutProvider.stripe);
+      expect(d.clientSecret, 'pi_123_secret_xyz');
+      expect(d.paymentIntentId, 'pi_123');
+      expect(d.publishableKey, 'pk_test_abc');
+      expect(d.checkoutUrl, isEmpty);
+    });
+
+    test('missing provider field defaults to buymeacoffee', () {
+      // Forward-compatibility with older backend deploys before Chunk C.
+      final d = CheckoutSessionDescriptor.fromJson({
+        'sessionId': 'abc',
+        'checkoutUrl': 'https://buymeacoffee.com/gotnull',
+        'returnDeepLink': 'socialmesh://purchase-return',
+        'referenceCode': 'SM-AB23-CD45',
+        'expectedAmount': 4.99,
+        'currency': 'AUD',
+        'expiresAt': '2026-05-05T11:00:00.000Z',
+      });
+      expect(d.provider, CheckoutProvider.buymeacoffee);
     });
   });
 

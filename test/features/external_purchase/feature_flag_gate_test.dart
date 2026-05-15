@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
-// Pin the kill-switch behaviour for `EXTERNAL_PURCHASE_ENABLED`.
+// Pin the kill-switch behaviour for the external-purchase flags:
+//   - STRIPE_PURCHASES_ENABLED  (primary external path, Chunk B+)
+//   - BMC_PURCHASE_ENABLED      (secondary external path)
+//   - AppFeatureFlags.isExternalPurchaseEnabled (computed union of the two)
 //
-// Off-by-default semantics: every entry point — UI link, redeem code
-// link, deep link — must be invisible/inert when the flag is unset
-// or `false`. Re-enabling later is a single env flip.
+// Off-by-default semantics: every entry point - UI link, redeem code
+// link, deep link, entitlement merge - must be invisible/inert when
+// both flags are unset or `false`. Re-enabling later is a single env
+// flip per provider.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -26,96 +30,178 @@ Widget _wrap(Widget child) {
   );
 }
 
-/// Clear the flag from dotenv's in-memory map. flutter_dotenv rejects
-/// empty `loadFromString` calls (`EmptyEnvFileError`), so we mutate
-/// the underlying map directly to simulate "env unset".
-void _clearFlag() {
+/// Clear both flags from dotenv's in-memory map. flutter_dotenv
+/// rejects empty `loadFromString` calls (`EmptyEnvFileError`), so we
+/// mutate the underlying map directly to simulate "env unset".
+void _clearFlags() {
   try {
-    dotenv.env.remove('EXTERNAL_PURCHASE_ENABLED');
+    dotenv.env.remove('STRIPE_PURCHASES_ENABLED');
+    dotenv.env.remove('BMC_PURCHASE_ENABLED');
   } catch (_) {
-    // dotenv not initialised yet — that's fine, the flag's try/catch
+    // dotenv not initialised yet - that's fine, the flag's try/catch
     // handles the uninitialised case as OFF.
   }
 }
 
-void _setFlag(String value) {
-  // loadFromString resets the entire map, which is exactly what we
-  // want between tests for isolation.
-  dotenv.loadFromString(envString: 'EXTERNAL_PURCHASE_ENABLED=$value');
+void _setStripe(String value) {
+  dotenv.env['STRIPE_PURCHASES_ENABLED'] = value;
+}
+
+void _setBmc(String value) {
+  dotenv.env['BMC_PURCHASE_ENABLED'] = value;
 }
 
 void main() {
-  setUp(_clearFlag);
+  setUpAll(() {
+    // flutter_dotenv throws NotInitializedError on the very first
+    // `dotenv.env` access, AND rejects an empty `loadFromString` call
+    // with EmptyEnvFileError. Seed the map once with a throwaway key
+    // so per-test mutations (_clearFlags / _setStripe / _setBmc) can
+    // operate on it. The seed leaves every gated flag OFF.
+    dotenv.loadFromString(envString: '_FLAG_GATE_TEST_INIT=1');
+  });
+
+  setUp(_clearFlags);
 
   // -------------------------------------------------------------------------
-  // AppFeatureFlags.isExternalPurchaseEnabled
+  // AppFeatureFlags.isStripePurchasesEnabled
   // -------------------------------------------------------------------------
 
-  group('AppFeatureFlags.isExternalPurchaseEnabled', () {
-    test('default (env unset) is OFF — opt-in only', () {
-      // The whole point of the flag: production builds without an
-      // explicit opt-in see no fallback path. A regression that
-      // flipped the default to true would silently expose every
-      // user to BMC links before BMC config is verified.
-      _clearFlag();
-      expect(AppFeatureFlags.isExternalPurchaseEnabled, isFalse);
+  group('AppFeatureFlags.isStripePurchasesEnabled', () {
+    test('default (env unset) is OFF - opt-in only', () {
+      _clearFlags();
+      expect(AppFeatureFlags.isStripePurchasesEnabled, isFalse);
     });
 
     test('reads "true" as ON', () {
-      _setFlag('true');
-      expect(AppFeatureFlags.isExternalPurchaseEnabled, isTrue);
+      _setStripe('true');
+      expect(AppFeatureFlags.isStripePurchasesEnabled, isTrue);
     });
 
     test('reads "1" as ON (numeric form for CI / scripts)', () {
-      _setFlag('1');
-      expect(AppFeatureFlags.isExternalPurchaseEnabled, isTrue);
+      _setStripe('1');
+      expect(AppFeatureFlags.isStripePurchasesEnabled, isTrue);
     });
 
     test('reads "TRUE" as ON (case-insensitive)', () {
-      _setFlag('TRUE');
-      expect(AppFeatureFlags.isExternalPurchaseEnabled, isTrue);
+      _setStripe('TRUE');
+      expect(AppFeatureFlags.isStripePurchasesEnabled, isTrue);
     });
 
     test('reads "false" as OFF', () {
-      _setFlag('false');
-      expect(AppFeatureFlags.isExternalPurchaseEnabled, isFalse);
+      _setStripe('false');
+      expect(AppFeatureFlags.isStripePurchasesEnabled, isFalse);
     });
 
     test('reads anything else as OFF (fail-safe default)', () {
-      // Typo in .env — `EXTERNAL_PURCHASE_ENABLED=enabled`, `=yes`,
-      // `=on` etc. should NOT enable the feature. Only the documented
-      // truthy strings count.
-      _setFlag('yes');
-      expect(AppFeatureFlags.isExternalPurchaseEnabled, isFalse);
-
-      _setFlag('on');
-      expect(AppFeatureFlags.isExternalPurchaseEnabled, isFalse);
-
-      _setFlag('enabled');
-      expect(AppFeatureFlags.isExternalPurchaseEnabled, isFalse);
+      _setStripe('yes');
+      expect(AppFeatureFlags.isStripePurchasesEnabled, isFalse);
+      _setStripe('on');
+      expect(AppFeatureFlags.isStripePurchasesEnabled, isFalse);
+      _setStripe('enabled');
+      expect(AppFeatureFlags.isStripePurchasesEnabled, isFalse);
     });
   });
 
   // -------------------------------------------------------------------------
-  // AlternativePaymentLink rendering gate
+  // AppFeatureFlags.isBuyMeACoffeeEnabled
   // -------------------------------------------------------------------------
 
-  group('AlternativePaymentLink (UI gate)', () {
-    testWidgets('renders nothing when flag is OFF', (tester) async {
-      _clearFlag();
+  group('AppFeatureFlags.isBuyMeACoffeeEnabled', () {
+    test('default (env unset) is OFF - opt-in only', () {
+      _clearFlags();
+      expect(AppFeatureFlags.isBuyMeACoffeeEnabled, isFalse);
+    });
+
+    test('reads "true" as ON', () {
+      _setBmc('true');
+      expect(AppFeatureFlags.isBuyMeACoffeeEnabled, isTrue);
+    });
+
+    test('reads "1" as ON', () {
+      _setBmc('1');
+      expect(AppFeatureFlags.isBuyMeACoffeeEnabled, isTrue);
+    });
+
+    test('reads "false" as OFF', () {
+      _setBmc('false');
+      expect(AppFeatureFlags.isBuyMeACoffeeEnabled, isFalse);
+    });
+
+    test('is independent of the Stripe flag', () {
+      _setStripe('true');
+      _setBmc('false');
+      expect(AppFeatureFlags.isBuyMeACoffeeEnabled, isFalse);
+      _setBmc('true');
+      _setStripe('false');
+      expect(AppFeatureFlags.isBuyMeACoffeeEnabled, isTrue);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // AppFeatureFlags.isExternalPurchaseEnabled (computed union)
+  // -------------------------------------------------------------------------
+
+  group('AppFeatureFlags.isExternalPurchaseEnabled (computed)', () {
+    test('OFF when both providers are off (or unset)', () {
+      _clearFlags();
+      expect(AppFeatureFlags.isExternalPurchaseEnabled, isFalse);
+      _setStripe('false');
+      _setBmc('false');
+      expect(AppFeatureFlags.isExternalPurchaseEnabled, isFalse);
+    });
+
+    test('ON when only Stripe is on', () {
+      _setStripe('true');
+      _setBmc('false');
+      expect(AppFeatureFlags.isExternalPurchaseEnabled, isTrue);
+    });
+
+    test('ON when only BMC is on', () {
+      _setStripe('false');
+      _setBmc('true');
+      expect(AppFeatureFlags.isExternalPurchaseEnabled, isTrue);
+    });
+
+    test('ON when both are on', () {
+      _setStripe('true');
+      _setBmc('true');
+      expect(AppFeatureFlags.isExternalPurchaseEnabled, isTrue);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // AlternativePaymentLink rendering gate (BMC-specific surface).
+  //
+  // The link opens the BMC handoff sheet today, so it's gated on
+  // isBuyMeACoffeeEnabled NOT the computed umbrella flag. Stripe will
+  // get its own dedicated link primitive in Chunk C.
+  // -------------------------------------------------------------------------
+
+  group('AlternativePaymentLink (BMC-only UI gate)', () {
+    testWidgets('renders nothing when BMC flag is OFF (and Stripe OFF)', (
+      tester,
+    ) async {
+      _clearFlags();
       await tester.pumpWidget(
         _wrap(const AlternativePaymentLink(productId: 'theme_pack')),
       );
-      // The label MUST NOT be in the tree. If the link rendered we'd
-      // see "Alternative payment".
       expect(find.text('Alternative payment'), findsNothing);
-      // SizedBox.shrink is what the widget returns — verify zero
-      // visual footprint (no TextButton in tree).
       expect(find.byType(TextButton), findsNothing);
     });
 
-    testWidgets('renders the link when flag is ON', (tester) async {
-      _setFlag('true');
+    testWidgets('renders nothing when BMC is OFF even with Stripe ON '
+        '(Stripe needs its own primitive in Chunk C)', (tester) async {
+      _setStripe('true');
+      _setBmc('false');
+      await tester.pumpWidget(
+        _wrap(const AlternativePaymentLink(productId: 'theme_pack')),
+      );
+      expect(find.text('Alternative payment'), findsNothing);
+    });
+
+    testWidgets('renders the link when BMC flag is ON', (tester) async {
+      _setBmc('true');
       await tester.pumpWidget(
         _wrap(const AlternativePaymentLink(productId: 'theme_pack')),
       );

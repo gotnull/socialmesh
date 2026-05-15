@@ -25084,6 +25084,28 @@ class AppLocalizationsIt extends AppLocalizations {
   String get premiumPurchaseFailed => 'Acquisto fallito. Riprova.';
 
   @override
+  String get paymentChooserTitle => 'Scegli metodo di pagamento';
+
+  @override
+  String get paymentChooserStoreLabelApple => 'Paga tramite App Store';
+
+  @override
+  String get paymentChooserStoreLabelGoogle => 'Paga tramite Google Play';
+
+  @override
+  String get paymentChooserStoreLabelGeneric => 'Paga tramite store';
+
+  @override
+  String get paymentChooserStoreSubtitle =>
+      'Conferma con Face ID / Touch ID o con il tuo account';
+
+  @override
+  String get paymentChooserStripeLabel => 'Paga con Stripe';
+
+  @override
+  String get paymentChooserStripeSubtitle => 'Carta o Apple Pay tramite Stripe';
+
+  @override
   String get alternativePayment => 'Pagamento alternativo';
 
   @override

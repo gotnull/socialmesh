@@ -248,11 +248,12 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
             ),
 
             // Support fallback. Cloud Sync is a store-only subscription
-            // — there is no Buy Me a Coffee path for recurring billing.
-            // This text link surfaces the redeem-code sheet for users
-            // who've been issued a manual unlock by support after a
-            // store payment problem. Gated by EXTERNAL_PURCHASE_ENABLED
-            // — codes are part of the same fallback pipeline.
+            // - there is no external recurring-billing path. This text
+            // link surfaces the redeem-code sheet for users who've been
+            // issued a manual unlock by support after a store payment
+            // problem. Stays visible whenever any external provider is
+            // on, since codes share the entitlement merge regardless
+            // of which provider issued the original checkout.
             if (AppFeatureFlags.isExternalPurchaseEnabled)
               TextButton(
                 onPressed: () => showRedeemUnlockCodeSheet(context),

@@ -568,34 +568,52 @@ class AppFeatureFlags {
     }
   }
 
-  /// Whether the external (Buy Me a Coffee + unlock-code) purchase
-  /// pipeline is enabled.
-  ///
-  /// Set `EXTERNAL_PURCHASE_ENABLED=true` in `.env` to enable.
-  /// Default: false — keeps the fallback path completely invisible
-  /// until BMC config + webhook + Cloud Functions are verified
-  /// end-to-end on a target build.
-  ///
-  /// When OFF, every surface and side-effect is suppressed:
-  ///   - "Alternative payment" link beneath each pack tile + bundle CTA
-  ///     does not render
-  ///   - "Have an unlock code?" footer link does not render
-  ///   - `socialmesh://purchase-return` deep links are dropped
-  ///     (logged but never dispatched into the polling pipeline)
-  ///   - `PurchaseStateNotifier` skips the external entitlement merge
-  ///     entirely — no `getExternalEntitlements` network call,
-  ///     `purchaseState.purchasedProductIds` reflects RevenueCat only
-  ///
-  /// Re-enabling later is a single env flip; entitlements that landed
-  /// while the flag was on persist in Firestore and re-merge cleanly.
-  static bool get isExternalPurchaseEnabled {
+  // Whether the Stripe Checkout external purchase path is enabled.
+  //
+  // Set `STRIPE_PURCHASES_ENABLED=true` in `.env` to enable. Default:
+  // false. Stripe is the primary external (off-store) purchase path
+  // for unlocking packs when App Store / Play Store IAP is unavailable
+  // or unreliable. Gates the Stripe handoff sheet + the createCheckout
+  // call when `provider=stripe`.
+  static bool get isStripePurchasesEnabled {
     try {
-      final raw = dotenv.env['EXTERNAL_PURCHASE_ENABLED']?.toLowerCase().trim();
+      final raw = dotenv.env['STRIPE_PURCHASES_ENABLED']?.toLowerCase().trim();
       return raw == 'true' || raw == '1';
     } catch (_) {
       return false;
     }
   }
+
+  // Whether the Buy Me a Coffee external purchase path is enabled.
+  //
+  // Set `BMC_PURCHASE_ENABLED=true` in `.env` to enable. Default:
+  // false. BMC is kept as a secondary external path (and eventual
+  // tipping surface). The BMC handoff sheet, reference-code copy,
+  // and createCheckout call when `provider=buymeacoffee` are all
+  // gated on this flag.
+  static bool get isBuyMeACoffeeEnabled {
+    try {
+      final raw = dotenv.env['BMC_PURCHASE_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // Shorthand: any external (off-store) purchase provider is enabled.
+  //
+  // Gates the surfaces that are agnostic to which provider is live:
+  //   - The "Alternative payment" container on pack tiles (the inner
+  //     button picks Stripe vs BMC based on which flag is on)
+  //   - The "Have an unlock code?" support fallback link
+  //   - `socialmesh://purchase-return` deep-link dispatch
+  //   - `PurchaseStateNotifier`'s external entitlement merge
+  //
+  // Stays on when either provider's flag is on. With both off, every
+  // external surface is invisible and `getExternalEntitlements` is
+  // never called.
+  static bool get isExternalPurchaseEnabled =>
+      isStripePurchasesEnabled || isBuyMeACoffeeEnabled;
 
   /// Whether the Mesh Explorer public-facing discovery experience is enabled.
   /// Set `MESH_EXPLORER_ENABLED=true` in `.env` to enable.

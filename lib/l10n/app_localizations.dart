@@ -43552,6 +43552,48 @@ abstract class AppLocalizations {
   /// **'Purchase failed. Please try again.'**
   String get premiumPurchaseFailed;
 
+  /// Heading of the bottom sheet that lets the user pick App Store / Play Store vs Stripe for a one-time pack purchase.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose payment method'**
+  String get paymentChooserTitle;
+
+  /// Row label on iOS: routes the purchase through RevenueCat / App Store IAP.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay via App Store'**
+  String get paymentChooserStoreLabelApple;
+
+  /// Row label on Android: routes the purchase through RevenueCat / Google Play billing.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay via Google Play'**
+  String get paymentChooserStoreLabelGoogle;
+
+  /// Fallback row label when the platform isn't iOS or Android (e.g. web preview).
+  ///
+  /// In en, this message translates to:
+  /// **'Pay via app store'**
+  String get paymentChooserStoreLabelGeneric;
+
+  /// Secondary text beneath the store row, hinting at the native confirmation flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm with Face ID / Touch ID or your account'**
+  String get paymentChooserStoreSubtitle;
+
+  /// Row label for the Stripe Payment Sheet path.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay with Stripe'**
+  String get paymentChooserStripeLabel;
+
+  /// Secondary text beneath the Stripe row, hinting at supported methods inside the Payment Sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Card or Apple Pay via Stripe'**
+  String get paymentChooserStripeSubtitle;
+
   /// Secondary action label that opens the external (non-store) checkout fallback. Always shown alongside the primary store purchase button, never as a replacement.
   ///
   /// In en, this message translates to:

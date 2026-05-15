@@ -94,12 +94,14 @@ Widget _wrap({
 
 void main() {
   setUpAll(() {
-    // EXTERNAL_PURCHASE_ENABLED=true is required: every widget test
-    // here exercises the BMC fallback UI which is gated behind the
-    // feature flag. Without it, AlternativePaymentLink renders as
-    // SizedBox.shrink() (correctly — that's the kill-switch behaviour
-    // pinned in feature_flag_gate_test.dart), but every assertion
-    // here would fail.
+    // BMC_PURCHASE_ENABLED=true is required: every widget test here
+    // exercises the BMC fallback UI which is gated behind the BMC
+    // flag specifically (not the computed umbrella flag, which would
+    // also flip on with Stripe alone). Without it,
+    // AlternativePaymentLink renders as SizedBox.shrink() (correctly
+    // - that's the kill-switch behaviour pinned in
+    // feature_flag_gate_test.dart), but every assertion here would
+    // fail.
     dotenv.loadFromString(
       envString: '''
 THEME_PACK_PRODUCT_ID=theme_pack
@@ -109,7 +111,7 @@ AUTOMATIONS_PACK_PRODUCT_ID=automations_pack
 IFTTT_PACK_PRODUCT_ID=ifttt_pack
 TRANSLATION_PACK_PRODUCT_ID=translation_pack
 COMPLETE_PACK_PRODUCT_ID=complete_pack
-EXTERNAL_PURCHASE_ENABLED=true
+BMC_PURCHASE_ENABLED=true
 ''',
     );
   });

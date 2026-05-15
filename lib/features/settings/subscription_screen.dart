@@ -19,11 +19,11 @@ import '../../models/subscription_models.dart';
 import '../../providers/subscription_providers.dart';
 import '../../services/audio/rtttl_library_service.dart';
 import '../../services/haptic_service.dart';
-import '../../services/subscription/subscription_service.dart';
 import '../../utils/snackbar.dart';
 import '../automations/automations_screen.dart';
 import '../dashboard/widget_dashboard_screen.dart';
 import '../external_purchase/alternative_payment_link.dart';
+import '../external_purchase/payment_method_chooser_sheet.dart';
 import '../external_purchase/redeem_unlock_code_sheet.dart';
 import 'ifttt_config_screen.dart';
 import 'ringtone_screen.dart';
@@ -170,8 +170,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
 
               // Support fallback: redeem unlock code. Low-emphasis text
               // link — primary CTAs above remain the canonical path.
-              // Gated by EXTERNAL_PURCHASE_ENABLED — codes are part of
-              // the same fallback pipeline, so they hide together.
+              // Stays visible whenever any external provider (Stripe
+              // or BMC) is on, since codes route through the shared
+              // entitlement merge regardless of which provider issued
+              // the original checkout.
               if (AppFeatureFlags.isExternalPurchaseEnabled)
                 Center(
                   child: TextButton(
@@ -967,21 +969,17 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
       }
     }
 
-    final result = await purchaseProduct(
-      ref,
-      RevenueCatConfig.completePackProductId,
+    // Chunk C: route the bundle CTA through the chooser sheet. When
+    // Stripe is disabled, the chooser short-circuits straight to the
+    // store IAP path, preserving pre-Chunk-C behavior.
+    await showPaymentMethodChooserSheet(
+      context: context,
+      ref: ref,
+      productId: RevenueCatConfig.completePackProductId,
+      productName: 'Complete Pack',
+      priceAud: 14.99,
+      onSuccess: _showAllUnlockedCelebration,
     );
-    if (!mounted) return;
-    switch (result) {
-      case PurchaseResult.success:
-        haptics.success();
-        _showAllUnlockedCelebration();
-      case PurchaseResult.canceled:
-        break;
-      case PurchaseResult.error:
-        haptics.error();
-        showErrorSnackBar(context, context.l10n.premiumPurchaseFailed);
-    }
   }
 
   Widget _buildOneTimePurchases() {
@@ -1193,12 +1191,17 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
       return;
     }
 
-    final result = await purchaseProduct(ref, purchase.productId);
-    if (!mounted) return;
-    switch (result) {
-      case PurchaseResult.success:
-        haptics.success();
-        // Check if all features are now unlocked
+    // Chunk C: route every pack CTA through the chooser sheet. When
+    // Stripe is disabled, the chooser short-circuits straight to the
+    // store IAP path, preserving pre-Chunk-C behavior.
+    await showPaymentMethodChooserSheet(
+      context: context,
+      ref: ref,
+      productId: purchase.productId,
+      productName: purchase.name,
+      priceAud: purchase.price,
+      onSuccess: () {
+        // Check if all features are now unlocked.
         final purchaseState = ref.read(purchaseStateProvider);
         final allPurchases = OneTimePurchases.allPurchases;
         final ownedCount = allPurchases
@@ -1206,18 +1209,12 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
             .length;
 
         if (ownedCount == allPurchases.length) {
-          // All features unlocked! Show celebration
           _showAllUnlockedCelebration();
         } else {
           _showUnlockedSnackBar(purchase);
         }
-      case PurchaseResult.canceled:
-        // User canceled - no message needed
-        break;
-      case PurchaseResult.error:
-        haptics.error();
-        showErrorSnackBar(context, context.l10n.premiumPurchaseFailed);
-    }
+      },
+    );
   }
 
   void _showUnlockedSnackBar(OneTimePurchase purchase) {

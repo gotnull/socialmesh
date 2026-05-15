@@ -182,36 +182,79 @@ enum CheckoutStatus {
       this == CheckoutStatus.expired;
 }
 
+// Provider that owns a checkout session. Determines which confirmation
+// surface the UI uses (Stripe Payment Sheet vs BMC handoff URL).
+enum CheckoutProvider {
+  stripe,
+  buymeacoffee;
+
+  static CheckoutProvider fromWire(String? raw) {
+    switch (raw) {
+      case 'stripe':
+        return CheckoutProvider.stripe;
+      case 'buymeacoffee':
+      // Older deploys (Chunk A / B) didn't return `provider`; default
+      // to BMC for safety since checkoutUrl is populated for that path.
+      case null:
+        return CheckoutProvider.buymeacoffee;
+      default:
+        throw ArgumentError('Unsupported checkout provider: $raw');
+    }
+  }
+}
+
 /// Result of `createExternalCheckout` — everything the UI needs to
-/// hand the user off to BMC and later confirm the unlock.
+/// hand the user off to the chosen provider and later confirm the
+/// unlock.
+///
+/// Two provider flows produce different field populations:
+///   • BMC: `checkoutUrl` is the hosted page; `clientSecret` /
+///     `paymentIntentId` / `publishableKey` are empty.
+///   • Stripe (PaymentIntent + native Payment Sheet): `checkoutUrl`
+///     is empty; the three Stripe fields carry the payload.
 class CheckoutSessionDescriptor {
   final String sessionId;
   final String checkoutUrl;
+  // Stripe-only. Empty for BMC.
+  final String clientSecret;
+  // Stripe-only. Empty for BMC.
+  final String paymentIntentId;
+  // Stripe-only. Empty for BMC.
+  final String publishableKey;
   final String returnDeepLink;
   final String referenceCode;
   final double expectedAmount;
   final String currency;
   final DateTime expiresAt;
+  final CheckoutProvider provider;
 
   const CheckoutSessionDescriptor({
     required this.sessionId,
     required this.checkoutUrl,
+    required this.clientSecret,
+    required this.paymentIntentId,
+    required this.publishableKey,
     required this.returnDeepLink,
     required this.referenceCode,
     required this.expectedAmount,
     required this.currency,
     required this.expiresAt,
+    required this.provider,
   });
 
   factory CheckoutSessionDescriptor.fromJson(Map<String, dynamic> json) {
     return CheckoutSessionDescriptor(
       sessionId: json['sessionId'] as String,
-      checkoutUrl: json['checkoutUrl'] as String,
+      checkoutUrl: (json['checkoutUrl'] as String?) ?? '',
+      clientSecret: (json['clientSecret'] as String?) ?? '',
+      paymentIntentId: (json['paymentIntentId'] as String?) ?? '',
+      publishableKey: (json['publishableKey'] as String?) ?? '',
       returnDeepLink: json['returnDeepLink'] as String,
       referenceCode: json['referenceCode'] as String,
       expectedAmount: (json['expectedAmount'] as num).toDouble(),
       currency: json['currency'] as String,
       expiresAt: DateTime.parse(json['expiresAt'] as String),
+      provider: CheckoutProvider.fromWire(json['provider'] as String?),
     );
   }
 }

@@ -122,6 +122,11 @@ class ExternalPurchaseService {
       StreamController<ConfirmationState>.broadcast();
   ConfirmationState _confirmationState = ConfirmationState.idle;
 
+  // Broadcasts every cache update so Riverpod's externalEntitlementsProvider
+  // can re-emit without manual invalidation. Fires after refreshEntitlements
+  // writes the cache; consumers receive the fresh active-product-id set.
+  final _activeProductIdsController = StreamController<Set<String>>.broadcast();
+
   Timer? _pollTimer;
   DateTime? _pollDeadline;
   String? _pollingSessionId;
@@ -138,6 +143,16 @@ class ExternalPurchaseService {
 
   Stream<ConfirmationState> get confirmationStream =>
       _confirmationController.stream;
+
+  /// Broadcast of the active product-id set after each cache write.
+  ///
+  /// Riverpod's `externalEntitlementsProvider` listens to this so the UI
+  /// flips to "unlocked" the instant `refreshEntitlements` completes,
+  /// without depending on `ref.invalidate` from a specific call site
+  /// (Stripe payment, BMC webhook, unlock code redemption all funnel
+  /// through the same refresh path and therefore the same emit).
+  Stream<Set<String>> get activeProductIdsStream =>
+      _activeProductIdsController.stream;
 
   ConfirmationState get currentConfirmation => _confirmationState;
 
@@ -176,16 +191,26 @@ class ExternalPurchaseService {
 
   /// Create a server-side checkout session for [productId].
   ///
+  /// [provider] picks the external payment provider. When omitted, the
+  /// backend picks its active default (Stripe wins over BMC). Callers
+  /// should pass it explicitly so a future change to the default
+  /// doesn't silently re-route in-progress purchase intents.
+  ///
   /// Throws if the backend rejects the productId (unknown product) or
   /// if the call fails for transport reasons. Callers should catch and
   /// surface a generic "couldn't start checkout" message.
-  Future<CheckoutSessionDescriptor> createCheckout(String productId) async {
+  Future<CheckoutSessionDescriptor> createCheckout(
+    String productId, {
+    String? provider,
+  }) async {
     AppLogging.purchase(
-      '[ExternalPurchaseService] createCheckout productId=$productId',
+      '[ExternalPurchaseService] createCheckout productId=$productId '
+      'provider=${provider ?? '<default>'}',
     );
     final identity = await _identityPayload();
     final response = await _invoker.call('createExternalCheckout', {
       'productId': productId,
+      if (provider != null) 'provider': provider,
       ...identity,
     });
     final descriptor = CheckoutSessionDescriptor.fromJson(response);
@@ -234,6 +259,10 @@ class ExternalPurchaseService {
       AppLogging.purchase(
         '[ExternalPurchaseService] entitlement_loaded count=${list.length}',
       );
+      // Notify Riverpod so the UI can flip to unlocked immediately. The
+      // active set is what consumers actually care about; the full list
+      // is returned for callers that need provenance details.
+      _activeProductIdsController.add(_cache.activeProductIds());
       return list;
     } catch (e) {
       AppLogging.purchase(
@@ -406,5 +435,6 @@ class ExternalPurchaseService {
   Future<void> dispose() async {
     _stopPolling();
     await _confirmationController.close();
+    await _activeProductIdsController.close();
   }
 }

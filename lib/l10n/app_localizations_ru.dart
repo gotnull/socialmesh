@@ -25065,6 +25065,29 @@ class AppLocalizationsRu extends AppLocalizations {
       'Покупка не выполнена. Попробуйте ещё раз.';
 
   @override
+  String get paymentChooserTitle => 'Выберите способ оплаты';
+
+  @override
+  String get paymentChooserStoreLabelApple => 'Оплатить через App Store';
+
+  @override
+  String get paymentChooserStoreLabelGoogle => 'Оплатить через Google Play';
+
+  @override
+  String get paymentChooserStoreLabelGeneric =>
+      'Оплатить через магазин приложений';
+
+  @override
+  String get paymentChooserStoreSubtitle =>
+      'Подтвердите Face ID / Touch ID или своей учётной записью';
+
+  @override
+  String get paymentChooserStripeLabel => 'Оплатить через Stripe';
+
+  @override
+  String get paymentChooserStripeSubtitle => 'Карта или Apple Pay через Stripe';
+
+  @override
   String get alternativePayment => 'Альтернативная оплата';
 
   @override

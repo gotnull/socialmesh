@@ -53,7 +53,7 @@ ProviderContainer _container({
         ),
       ),
       externalEntitlementsProvider.overrideWith(
-        (ref) async => externalPurchases,
+        (ref) => Stream.value(externalPurchases),
       ),
     ],
   );

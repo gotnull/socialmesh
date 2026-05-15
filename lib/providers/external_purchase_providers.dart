@@ -61,46 +61,27 @@ final externalConfirmationStreamProvider = StreamProvider<ConfirmationState>((
 
 /// Set of currently-active external product ids.
 ///
-/// First emission is the on-disk cache (offline-first contract).
-/// Then a network refresh runs and re-emits if anything changed.
-/// A network failure leaves the cache emission as the steady state.
-final externalEntitlementsProvider = FutureProvider<Set<String>>((ref) async {
+/// First emission is the on-disk cache (offline-first contract). Then
+/// every subsequent cache write (from a backend refresh, the polling
+/// pipeline reaching `paid`, an unlock-code redemption, etc.) re-emits
+/// via the service's `activeProductIdsStream`. A network failure leaves
+/// the cache emission as the steady state.
+final externalEntitlementsProvider = StreamProvider<Set<String>>((ref) async* {
   final service = await ref.watch(externalPurchaseServiceProvider.future);
-  // Surface the cached set immediately so the UI doesn't flash to
-  // "locked" on cold start while the network refresh is in flight.
-  // The cache is loaded synchronously from SharedPreferences — no IO.
-  final cached = service.cachedActiveProductIds;
-  // Fire-and-forget refresh in the background. The provider returns
-  // the cache result; downstream invalidation by `refreshExternalEntitlements`
-  // re-runs this builder if the network result changes.
-  unawaited(
-    service.refreshEntitlements().then((entitlements) {
-      // Compare the active set against what we just emitted; if the
-      // network said something different, invalidate so consumers
-      // see the fresh truth.
-      final freshActive = entitlements
-          .where((e) => e.isActive)
-          .map((e) => e.productId)
-          .toSet();
-      if (!_setEquals(freshActive, cached)) {
-        AppLogging.purchase(
-          '[ProviderGraph] external entitlements drift '
-          'cached=$cached fresh=$freshActive — invalidating',
-        );
-        ref.invalidateSelf();
-      }
-    }),
-  );
-  return cached;
-});
+  final initial = service.cachedActiveProductIds;
+  yield initial;
 
-bool _setEquals<T>(Set<T> a, Set<T> b) {
-  if (a.length != b.length) return false;
-  for (final v in a) {
-    if (!b.contains(v)) return false;
+  // Kick a background refresh so the cache becomes consistent with the
+  // server immediately after the provider is first observed. The
+  // service push updates into activeProductIdsStream when the refresh
+  // lands, which yields below.
+  unawaited(service.refreshEntitlements());
+
+  // Re-emit on every subsequent cache write.
+  await for (final set in service.activeProductIdsStream) {
+    yield set;
   }
-  return true;
-}
+});
 
 /// Family checker for "has this pack via the external pipeline?".
 ///

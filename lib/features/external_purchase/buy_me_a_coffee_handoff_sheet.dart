@@ -82,7 +82,10 @@ class _BuyMeACoffeeHandoffBodyState
     try {
       final service = await ref.read(externalPurchaseServiceProvider.future);
       if (!mounted) return;
-      final descriptor = await service.createCheckout(widget.productId);
+      final descriptor = await service.createCheckout(
+        widget.productId,
+        provider: 'buymeacoffee',
+      );
       if (!mounted) return;
       safeSetState(() {
         _descriptor = descriptor;

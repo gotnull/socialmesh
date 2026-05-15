@@ -386,10 +386,10 @@ class DeepLinkManager {
   /// best-effort wakeup. The user can also hit the Refresh affordance
   /// in the confirmation overlay to retry.
   Future<void> _handlePurchaseReturn(ParsedDeepLink link) async {
-    // Hard kill switch — when EXTERNAL_PURCHASE_ENABLED is off, drop
-    // the deep link silently. Logging it (but not dispatching) gives
-    // a forensic breadcrumb if a stale BMC redirect somehow reaches
-    // a feature-flagged-off build.
+    // Hard kill switch - when every external provider is disabled,
+    // drop the deep link silently. Logging it (but not dispatching)
+    // gives a forensic breadcrumb if a stale provider redirect
+    // somehow reaches a feature-flagged-off build.
     if (!AppFeatureFlags.isExternalPurchaseEnabled) {
       AppLogging.purchase(
         '[DeepLinkManager] purchase-return dropped — feature flag off '

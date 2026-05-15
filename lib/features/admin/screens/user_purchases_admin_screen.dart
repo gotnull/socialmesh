@@ -20,14 +20,17 @@ import '../../../utils/snackbar.dart';
 /// Filter modes for the user list.
 enum _UserFilter { all, paying, free, excluded, anonymous, deleted }
 
-/// Product prices in AUD for revenue calculation
-/// These should match RevenueCat product prices
+// Product prices in AUD for revenue calculation. Mirrors the canonical
+// RevenueCat prices and the backend PRODUCT_CATALOG in
+// `backend/functions/src/external_checkout.ts`. When a price changes
+// in RevenueCat, this map, the backend catalog, and the Stripe price
+// IDs in `backend/functions/.env` all change as a unit.
 const _productPricesAud = <String, double>{
-  'theme_pack': 2.99,
-  'ringtone_pack': 2.99,
+  'theme_pack': 4.99,
+  'ringtone_pack': 1.99,
   'widget_pack': 4.99,
-  'automations_pack': 4.99,
-  'ifttt_pack': 2.99,
+  'automations_pack': 5.99,
+  'ifttt_pack': 4.99,
   'complete_pack': 14.99,
   'cloud_monthly': 2.99,
   'cloud_yearly': 24.99,

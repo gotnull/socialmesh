@@ -25136,6 +25136,28 @@ class AppLocalizationsDe extends AppLocalizations {
       'Kauf fehlgeschlagen. Bitte versuchen Sie es erneut.';
 
   @override
+  String get paymentChooserTitle => 'Choose payment method';
+
+  @override
+  String get paymentChooserStoreLabelApple => 'Pay via App Store';
+
+  @override
+  String get paymentChooserStoreLabelGoogle => 'Pay via Google Play';
+
+  @override
+  String get paymentChooserStoreLabelGeneric => 'Pay via app store';
+
+  @override
+  String get paymentChooserStoreSubtitle =>
+      'Confirm with Face ID / Touch ID or your account';
+
+  @override
+  String get paymentChooserStripeLabel => 'Pay with Stripe';
+
+  @override
+  String get paymentChooserStripeSubtitle => 'Card or Apple Pay via Stripe';
+
+  @override
   String get alternativePayment => 'Alternative Zahlung';
 
   @override

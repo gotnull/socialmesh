@@ -103,6 +103,10 @@ dependencies:
   characters: ^1.4.0
   cloud_firestore: ^6.2.0
   cloud_functions: ^6.0.7
+  # Stripe SDK - native Payment Sheet for the external (off-store)
+  # purchase path. Publishable key + merchantIdentifier configured
+  # at app startup from .env.
+  flutter_stripe: ^12.6.0
   google_sign_in: ^7.2.0
   sign_in_with_apple: ^8.0.0
   crypto: ^3.0.6

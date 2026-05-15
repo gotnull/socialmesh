@@ -81,13 +81,14 @@ class PurchaseStateNotifier extends Notifier<PurchaseState> {
       _subscription = null;
     });
 
-    // External (BMC + unlock-code) entitlement merge — gated by
-    // EXTERNAL_PURCHASE_ENABLED. When the flag is off we skip the
-    // listen + initial read entirely so the FutureProvider's network
-    // fetch never fires AND no external product ids leak into the
-    // merged state. `_external` stays at its initial empty value, so
-    // `_computeMerged()` returns an RC-only PurchaseState exactly as
-    // the legacy code did before chunk 2 shipped.
+    // External (Stripe / BMC / unlock-code) entitlement merge: on
+    // when any external provider is enabled. When all external flags
+    // are off we skip the listen + initial read entirely so the
+    // FutureProvider's network fetch never fires AND no external
+    // product ids leak into the merged state. `_external` stays at
+    // its initial empty value, so `_computeMerged()` returns an
+    // RC-only PurchaseState exactly as the legacy code did before
+    // chunk 2 shipped.
     if (AppFeatureFlags.isExternalPurchaseEnabled) {
       // Side-effect: when external entitlements change (cache loaded,
       // unlock-code redeemed, BMC webhook landed), recompute the merged

@@ -33881,6 +33881,34 @@
     "@premiumPurchaseFailed": {
         "description": "Error message in premium features"
     },
+    "paymentChooserTitle": "Choose payment method",
+    "@paymentChooserTitle": {
+        "description": "Heading of the bottom sheet that lets the user pick App Store / Play Store vs Stripe for a one-time pack purchase."
+    },
+    "paymentChooserStoreLabelApple": "Pay via App Store",
+    "@paymentChooserStoreLabelApple": {
+        "description": "Row label on iOS: routes the purchase through RevenueCat / App Store IAP."
+    },
+    "paymentChooserStoreLabelGoogle": "Pay via Google Play",
+    "@paymentChooserStoreLabelGoogle": {
+        "description": "Row label on Android: routes the purchase through RevenueCat / Google Play billing."
+    },
+    "paymentChooserStoreLabelGeneric": "Pay via app store",
+    "@paymentChooserStoreLabelGeneric": {
+        "description": "Fallback row label when the platform isn't iOS or Android (e.g. web preview)."
+    },
+    "paymentChooserStoreSubtitle": "Confirm with Face ID / Touch ID or your account",
+    "@paymentChooserStoreSubtitle": {
+        "description": "Secondary text beneath the store row, hinting at the native confirmation flow."
+    },
+    "paymentChooserStripeLabel": "Pay with Stripe",
+    "@paymentChooserStripeLabel": {
+        "description": "Row label for the Stripe Payment Sheet path."
+    },
+    "paymentChooserStripeSubtitle": "Card or Apple Pay via Stripe",
+    "@paymentChooserStripeSubtitle": {
+        "description": "Secondary text beneath the Stripe row, hinting at supported methods inside the Payment Sheet."
+    },
     "alternativePayment": "Alternative payment",
     "@alternativePayment": {
         "description": "Secondary action label that opens the external (non-store) checkout fallback. Always shown alongside the primary store purchase button, never as a replacement."

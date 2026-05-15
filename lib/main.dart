@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_stripe/flutter_stripe.dart' show Stripe;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -25,6 +26,7 @@ import 'package:socialmesh/services/transport/background_ble_service.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector3;
 import 'package:socialmesh/features/scanner/widgets/connecting_animation.dart';
 import 'firebase_options.dart';
+import 'core/constants.dart';
 import 'core/theme.dart';
 import 'core/widgets/glass_scaffold.dart';
 import 'core/widgets/loading_indicator.dart';
@@ -213,6 +215,39 @@ Future<void> main() async {
   // Initialize accessibility preferences before UI renders
   // This ensures text scaling and density are applied from first frame
   await AccessibilityPreferencesService().initialize();
+
+  // Stripe SDK init for the external (off-store) Payment Sheet path.
+  // The publishable key is mode-aware on the server (the createCheckout
+  // response carries the active key) but Stripe.publishableKey must be
+  // set before the Payment Sheet can be presented. The test key gets us
+  // a working init; the server re-sets the key on each Stripe checkout
+  // so live builds use the live key without an app upgrade.
+  if (AppFeatureFlags.isStripePurchasesEnabled) {
+    try {
+      final publishableKey =
+          dotenv.env['STRIPE_TEST_PUBLISHABLE_KEY'] ??
+          dotenv.env['STRIPE_LIVE_PUBLISHABLE_KEY'] ??
+          '';
+      if (publishableKey.isNotEmpty) {
+        Stripe.publishableKey = publishableKey;
+        final merchantId = dotenv.env['STRIPE_APPLE_MERCHANT_ID']?.trim() ?? '';
+        if (merchantId.isNotEmpty) {
+          Stripe.merchantIdentifier = merchantId;
+        }
+        await Stripe.instance.applySettings();
+        AppLogging.purchase(
+          'boot: Stripe SDK initialised '
+          '(merchantId=${merchantId.isEmpty ? '<none>' : merchantId})',
+        );
+      } else {
+        AppLogging.purchase(
+          'boot: STRIPE_PURCHASES_ENABLED on but no publishable key in .env — Payment Sheet will not work',
+        );
+      }
+    } catch (e) {
+      AppLogging.purchase('boot: Stripe init failed (non-fatal): $e');
+    }
+  }
 
   // Initialize Firebase core BEFORE runApp — per Google's official docs.
   // This is a local operation (reads google-services.json), no network needed.

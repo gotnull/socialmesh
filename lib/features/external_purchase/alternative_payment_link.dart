@@ -33,11 +33,13 @@ class AlternativePaymentLink extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Hard kill switch — when EXTERNAL_PURCHASE_ENABLED is off in
-    // .env, the entire BMC fallback path is invisible. Returning a
-    // zero-sized SizedBox keeps any surrounding `Column.children`
-    // layout stable without rendering the link.
-    if (!AppFeatureFlags.isExternalPurchaseEnabled) {
+    // Hard kill switch — the tap-target opens the BMC handoff sheet,
+    // so this link is gated specifically on the BMC flag rather than
+    // the umbrella external-purchase flag. Stripe will get its own
+    // link primitive when Chunk C lands. Returning a zero-sized
+    // SizedBox keeps any surrounding `Column.children` layout stable
+    // without rendering the link.
+    if (!AppFeatureFlags.isBuyMeACoffeeEnabled) {
       return const SizedBox.shrink();
     }
     return Padding(
