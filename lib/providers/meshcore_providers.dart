@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/logging.dart';
+import '../core/meshcore_constants.dart';
 import '../core/transport.dart';
 import '../models/mesh_device.dart';
 // D46-A: `parseContact` is imported via meshcore_messages.dart below
@@ -481,13 +482,19 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
           longitude: info.longitudeDegrees,
           lastSeen: DateTime.now(),
           unreadCount: unreadCounts[keyHex] ?? 0,
+          // D-Q3: surface the firmware-side flags byte. Bit 0
+          // drives the favorite star + pinned-to-top sort.
+          flags: info.flags,
         );
       }).toList();
 
-      // Sort by name
-      contacts.sort(
-        (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-      );
+      // D-Q3: favorites pin to the top; remaining rows sort by name.
+      contacts.sort((a, b) {
+        if (a.isFavorite != b.isFavorite) {
+          return a.isFavorite ? -1 : 1;
+        }
+        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      });
 
       state = MeshCoreContactsState(
         contacts: contacts,
@@ -986,6 +993,66 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
           .read(meshCorePathHistoryProvider(publicKeyHex).notifier)
           .record(hopBytes, MeshCorePathSource.manual);
     }
+    return true;
+  }
+
+  /// D-Q3: flip the per-contact favorite bit (`MeshCoreContactFlags.favorite`)
+  /// and write the new flags byte back via `CMD_ADD_UPDATE_CONTACT 0x09`.
+  /// Read-modify-write: reserved bits in `flags` round-trip verbatim so a
+  /// future telemetry-permission slice doesn't fight this one.
+  ///
+  /// Mirrors the new flag into local state on success so the UI re-renders
+  /// without waiting for the post-write `refresh()` (which still fires so
+  /// the firmware-canonical state lands).
+  Future<bool> toggleContactFavorite({required String publicKeyHex}) async {
+    final session = ref.read(meshCoreSessionProvider);
+    if (session == null) {
+      AppLogging.meshcore(
+        'event=contact.toggle_favorite.skipped reason=no_session',
+        error: true,
+      );
+      return false;
+    }
+    final contact = state.contacts.firstWhere(
+      (c) => c.publicKeyHex == publicKeyHex,
+      orElse: () => throw ArgumentError('contact not found: $publicKeyHex'),
+    );
+    final nextFlags = contact.flags ^ MeshCoreContactFlags.favorite;
+    AppLogging.meshcore(
+      'event=contact.toggle_favorite.attempted '
+      'pubkey=${AppLogging.publicKeyFingerprint(contact.publicKey)} '
+      'flags_before=0x${contact.flags.toRadixString(16).padLeft(2, '0')} '
+      'flags_after=0x${nextFlags.toRadixString(16).padLeft(2, '0')}',
+    );
+    final ok = await session.addUpdateContact(
+      pubKey: contact.publicKey,
+      advType: contact.type,
+      name: contact.name,
+      flags: nextFlags,
+      pathLength: contact.pathLength,
+      pathBytes: contact.path,
+      latitude: contact.latitude,
+      longitude: contact.longitude,
+    );
+    AppLogging.meshcore(
+      'event=contact.toggle_favorite.${ok ? 'succeeded' : 'failed'} '
+      'pubkey=${AppLogging.publicKeyFingerprint(contact.publicKey)}',
+      error: !ok,
+    );
+    if (!ok) return false;
+    // Mirror locally before refresh() so the UI re-renders immediately.
+    final updatedContacts =
+        state.contacts.map((c) {
+          if (c.publicKeyHex != publicKeyHex) return c;
+          return c.copyWith(flags: nextFlags);
+        }).toList()..sort((a, b) {
+          if (a.isFavorite != b.isFavorite) {
+            return a.isFavorite ? -1 : 1;
+          }
+          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        });
+    state = state.copyWith(contacts: updatedContacts);
+    await refresh();
     return true;
   }
 

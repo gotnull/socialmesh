@@ -215,5 +215,46 @@ void main() {
         expect(result.value!.name, equals(name), reason: 'name="$name"');
       }
     });
+
+    // D-Q3: flags byte at offset 33 must round-trip; bit 0 surfaces
+    // as `isFavorite`. Reserved bits stay intact so a future
+    // telemetry-permission slice doesn't fight a favorite toggle.
+    test('flags byte round-trips with favorite bit set', () {
+      final pub = Uint8List.fromList(List.generate(32, (i) => i));
+      final payload = _buildPayload(pubKey: pub, flags: 0x01, name: 'Fav');
+      final result = parseContact(payload);
+      expect(result.isSuccess, isTrue);
+      expect(result.value!.flags, 0x01);
+      expect(result.value!.isFavorite, isTrue);
+    });
+
+    test('flags byte round-trips with favorite bit unset', () {
+      final pub = Uint8List.fromList(List.generate(32, (i) => i));
+      final payload = _buildPayload(pubKey: pub, flags: 0x00, name: 'X');
+      final result = parseContact(payload);
+      expect(result.isSuccess, isTrue);
+      expect(result.value!.flags, 0x00);
+      expect(result.value!.isFavorite, isFalse);
+    });
+
+    test('reserved flag bits round-trip verbatim', () {
+      final pub = Uint8List.fromList(List.generate(32, (i) => i));
+      // 0x06 = bits 1 + 2 (telemetry-permission reserved bits per
+      // upstream's flag map); favorite bit (0) is off.
+      final payload = _buildPayload(pubKey: pub, flags: 0x06, name: 'X');
+      final result = parseContact(payload);
+      expect(result.isSuccess, isTrue);
+      expect(result.value!.flags, 0x06);
+      expect(result.value!.isFavorite, isFalse);
+    });
+
+    test('favorite + reserved bits combined preserve every bit', () {
+      final pub = Uint8List.fromList(List.generate(32, (i) => i));
+      final payload = _buildPayload(pubKey: pub, flags: 0x07, name: 'X');
+      final result = parseContact(payload);
+      expect(result.isSuccess, isTrue);
+      expect(result.value!.flags, 0x07);
+      expect(result.value!.isFavorite, isTrue);
+    });
   });
 }

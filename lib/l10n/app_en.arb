@@ -13979,6 +13979,35 @@
     "@meshcoreShareChannel": {
         "description": "Channel options action label"
     },
+    "meshcoreContactAddFavorite": "Add to favorites",
+    "@meshcoreContactAddFavorite": {
+        "description": "D-Q3 - contacts long-press action label when the contact is NOT a favorite"
+    },
+    "meshcoreContactRemoveFavorite": "Remove from favorites",
+    "@meshcoreContactRemoveFavorite": {
+        "description": "D-Q3 - contacts long-press action label when the contact IS a favorite"
+    },
+    "meshcoreContactAddFavoriteSuccess": "{name} is now a favorite.",
+    "@meshcoreContactAddFavoriteSuccess": {
+        "description": "D-Q3 - snackbar after a successful add-favorite",
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "meshcoreContactRemoveFavoriteSuccess": "Removed {name} from favorites.",
+    "@meshcoreContactRemoveFavoriteSuccess": {
+        "description": "D-Q3 - snackbar after a successful remove-favorite",
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "meshcoreContactToggleFavoriteFailed": "Could not update favorite status for {name}.",
+    "@meshcoreContactToggleFavoriteFailed": {
+        "description": "D-Q3 - snackbar after a failed favorite toggle",
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
     "meshcoreShareContact": "Share Contact",
     "@meshcoreShareContact": {
         "description": "Contact options action label"

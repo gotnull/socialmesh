@@ -10532,6 +10532,27 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreShareChannel => 'Поделиться каналом';
 
   @override
+  String get meshcoreContactAddFavorite => 'Добавить в избранное';
+
+  @override
+  String get meshcoreContactRemoveFavorite => 'Убрать из избранного';
+
+  @override
+  String meshcoreContactAddFavoriteSuccess(String name) {
+    return '$name добавлен в избранное.';
+  }
+
+  @override
+  String meshcoreContactRemoveFavoriteSuccess(String name) {
+    return '$name удалён из избранного.';
+  }
+
+  @override
+  String meshcoreContactToggleFavoriteFailed(String name) {
+    return 'Не удалось обновить избранное для $name.';
+  }
+
+  @override
   String get meshcoreShareContact => 'Поделиться контактом';
 
   @override

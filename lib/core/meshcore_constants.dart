@@ -458,6 +458,20 @@ class MeshCoreAdvertTypes {
   static const int sensor = 0x04;
 }
 
+/// D-Q3: MeshCore contact-flags bitset. Lives at offset 33 of the
+/// canonical 147-byte CONTACT frame and round-trips through
+/// `CMD_ADD_UPDATE_CONTACT 0x09`. Today SocialMesh consumes the
+/// `favorite` bit only; other bits are reserved for telemetry-
+/// permission / future expansion and are preserved verbatim on
+/// read-modify-write.
+class MeshCoreContactFlags {
+  MeshCoreContactFlags._();
+
+  /// Per-contact "favorite" marker — surfaces in the contacts list
+  /// with a star badge + pins the row to the top.
+  static const int favorite = 0x01;
+}
+
 /// MeshCore protocol timeouts.
 class MeshCoreTimeouts {
   MeshCoreTimeouts._();

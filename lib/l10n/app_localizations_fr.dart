@@ -10612,6 +10612,27 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meshcoreShareChannel => 'Partager le canal';
 
   @override
+  String get meshcoreContactAddFavorite => 'Add to favorites';
+
+  @override
+  String get meshcoreContactRemoveFavorite => 'Remove from favorites';
+
+  @override
+  String meshcoreContactAddFavoriteSuccess(String name) {
+    return '$name is now a favorite.';
+  }
+
+  @override
+  String meshcoreContactRemoveFavoriteSuccess(String name) {
+    return 'Removed $name from favorites.';
+  }
+
+  @override
+  String meshcoreContactToggleFavoriteFailed(String name) {
+    return 'Could not update favorite status for $name.';
+  }
+
+  @override
   String get meshcoreShareContact => 'Partager le contact';
 
   @override

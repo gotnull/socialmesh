@@ -18286,6 +18286,36 @@ abstract class AppLocalizations {
   /// **'Share Channel'**
   String get meshcoreShareChannel;
 
+  /// D-Q3 - contacts long-press action label when the contact is NOT a favorite
+  ///
+  /// In en, this message translates to:
+  /// **'Add to favorites'**
+  String get meshcoreContactAddFavorite;
+
+  /// D-Q3 - contacts long-press action label when the contact IS a favorite
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from favorites'**
+  String get meshcoreContactRemoveFavorite;
+
+  /// D-Q3 - snackbar after a successful add-favorite
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is now a favorite.'**
+  String meshcoreContactAddFavoriteSuccess(String name);
+
+  /// D-Q3 - snackbar after a successful remove-favorite
+  ///
+  /// In en, this message translates to:
+  /// **'Removed {name} from favorites.'**
+  String meshcoreContactRemoveFavoriteSuccess(String name);
+
+  /// D-Q3 - snackbar after a failed favorite toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update favorite status for {name}.'**
+  String meshcoreContactToggleFavoriteFailed(String name);
+
   /// Contact options action label
   ///
   /// In en, this message translates to:

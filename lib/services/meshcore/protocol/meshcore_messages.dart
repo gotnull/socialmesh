@@ -9,6 +9,7 @@
 
 import 'dart:typed_data';
 
+import '../../../core/meshcore_constants.dart';
 import '../../../utils/text_sanitizer.dart';
 import 'meshcore_frame.dart';
 
@@ -1017,6 +1018,11 @@ class MeshCoreContactInfo {
   /// Path length: -1 = flood, 0+ = direct hops.
   final int pathLength;
 
+  /// D-Q3: firmware-side flags byte at offset 33 of the CONTACT
+  /// frame. Bit 0 is `favorite`; other bits reserved for upstream
+  /// telemetry-permission expansion (preserved verbatim on toggle).
+  final int flags;
+
   /// Last modification timestamp.
   final int lastMod;
 
@@ -1046,6 +1052,7 @@ class MeshCoreContactInfo {
     required this.publicKey,
     required this.advType,
     required this.pathLength,
+    this.flags = 0,
     required this.lastMod,
     this.latitude,
     this.longitude,
@@ -1053,6 +1060,10 @@ class MeshCoreContactInfo {
     required this.pathBytes,
     required this.rawPayload,
   });
+
+  /// D-Q3: convenience getter for the `favorite` bit (offset 0x01).
+  bool get isFavorite =>
+      (flags & MeshCoreContactFlags.favorite) == MeshCoreContactFlags.favorite;
 
   /// Public key as hex string.
   String get publicKeyHex =>
@@ -1125,7 +1136,10 @@ ParseResult<MeshCoreContactInfo> parseContact(Uint8List payload) {
   // Required fields
   final pubKey = reader.readBytes(meshCorePubKeySize);
   final advType = reader.readByte();
-  reader.readByte(); // flags — currently unused by the app surface
+  // D-Q3: capture the firmware-side flags byte (bit 0 = favorite).
+  // Reserved bits round-trip on toggle so future telemetry-permission
+  // bits stay intact.
+  final flags = reader.readByte();
   final pathLenUnsigned = reader.readByte();
   // 0xFF (255) is the firmware's sentinel for "flood / no direct
   // path"; map to -1 to preserve the historical
@@ -1177,6 +1191,7 @@ ParseResult<MeshCoreContactInfo> parseContact(Uint8List payload) {
       publicKey: pubKey,
       advType: advType,
       pathLength: pathLen,
+      flags: flags,
       lastMod: lastMod,
       latitude: lat,
       longitude: lon,

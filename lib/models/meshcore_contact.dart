@@ -3,6 +3,7 @@
 
 import 'dart:typed_data';
 
+import '../core/meshcore_constants.dart';
 import '../services/meshcore/protocol/meshcore_messages.dart' as msgs;
 
 /// Advertisement types for MeshCore contacts.
@@ -68,6 +69,12 @@ class MeshCoreContact {
   /// Unread message count.
   final int unreadCount;
 
+  /// D-Q3: firmware-side contact flags bitset (offset 33 of the
+  /// CONTACT frame). Bit 0 = favorite; remaining bits reserved.
+  /// Defaults to `0` for in-memory / test contacts that didn't come
+  /// from a firmware refresh.
+  final int flags;
+
   /// D28: latest known SNR for this contact, encoded as the firmware's
   /// raw int8 value scaled by 4 (so dB = snrQuarter / 4.0). Sourced
   /// from inbound V3 message frames at receive time.
@@ -91,7 +98,12 @@ class MeshCoreContact {
     DateTime? lastMessageAt,
     this.unreadCount = 0,
     this.snrQuarter,
+    this.flags = 0,
   }) : lastMessageAt = lastMessageAt ?? lastSeen;
+
+  /// D-Q3: convenience getter for the `favorite` bit.
+  bool get isFavorite =>
+      (flags & MeshCoreContactFlags.favorite) == MeshCoreContactFlags.favorite;
 
   /// D28: SNR in dB derived from the raw firmware quarter encoding,
   /// or null when no message has carried SNR for this contact yet.
@@ -174,6 +186,7 @@ class MeshCoreContact {
     int? unreadCount,
     int? snrQuarter,
     bool clearSnrQuarter = false,
+    int? flags,
   }) {
     return MeshCoreContact(
       publicKey: publicKey ?? this.publicKey,
@@ -192,6 +205,7 @@ class MeshCoreContact {
       lastSeen: lastSeen ?? this.lastSeen,
       lastMessageAt: lastMessageAt ?? this.lastMessageAt,
       unreadCount: unreadCount ?? this.unreadCount,
+      flags: flags ?? this.flags,
       snrQuarter: clearSnrQuarter ? null : (snrQuarter ?? this.snrQuarter),
     );
   }

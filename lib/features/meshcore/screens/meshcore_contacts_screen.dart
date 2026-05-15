@@ -565,6 +565,18 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
             openMeshCoreContactDetail(context, contact: contact);
           },
         ),
+        // D-Q3: per-contact favorite toggle. Read-modify-writes the
+        // firmware-side flags byte; reserved bits round-trip.
+        BottomSheetAction(
+          icon: contact.isFavorite
+              ? Icons.star_rounded
+              : Icons.star_border_rounded,
+          iconColor: AccentColors.yellow,
+          label: contact.isFavorite
+              ? context.l10n.meshcoreContactRemoveFavorite
+              : context.l10n.meshcoreContactAddFavorite,
+          onTap: () => _toggleFavorite(contact),
+        ),
         BottomSheetAction(
           icon: Icons.share_rounded,
           label: context.l10n.meshcoreShareContact,
@@ -698,6 +710,30 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
       showErrorSnackBar(
         context,
         context.l10n.meshcoreResetPathFailed(contact.name),
+      );
+    }
+  }
+
+  /// D-Q3: flip the per-contact favorite bit + surface a snackbar.
+  /// The provider mirrors the new flag into local state immediately
+  /// so the contact-list row re-renders with the new star + sort.
+  Future<void> _toggleFavorite(MeshCoreContact contact) async {
+    final wasFavorite = contact.isFavorite;
+    final ok = await ref
+        .read(meshCoreContactsProvider.notifier)
+        .toggleContactFavorite(publicKeyHex: contact.publicKeyHex);
+    if (!mounted) return;
+    if (ok) {
+      showSuccessSnackBar(
+        context,
+        wasFavorite
+            ? context.l10n.meshcoreContactRemoveFavoriteSuccess(contact.name)
+            : context.l10n.meshcoreContactAddFavoriteSuccess(contact.name),
+      );
+    } else {
+      showErrorSnackBar(
+        context,
+        context.l10n.meshcoreContactToggleFavoriteFailed(contact.name),
       );
     }
   }
@@ -938,20 +974,36 @@ class _ContactCard extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      // D23: `displayName` falls through to the
-                      // redacted pubkey fingerprint when the firmware
-                      // contact entry has an empty name field. Only
-                      // the rare empty-name + empty-pubkey case lands
-                      // on the localized "Unknown" placeholder.
-                      contact.displayName.isNotEmpty
-                          ? contact.displayName
-                          : context.l10n.meshcoreContactUnknownName,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            // D23: `displayName` falls through to the
+                            // redacted pubkey fingerprint when the
+                            // firmware contact entry has an empty name
+                            // field. Only the rare empty-name +
+                            // empty-pubkey case lands on the localized
+                            // "Unknown" placeholder.
+                            contact.displayName.isNotEmpty
+                                ? contact.displayName
+                                : context.l10n.meshcoreContactUnknownName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                        // D-Q3: pinned star badge for favorites.
+                        if (contact.isFavorite) ...[
+                          const SizedBox(width: AppTheme.spacing4),
+                          Icon(
+                            Icons.star_rounded,
+                            size: 16,
+                            color: AccentColors.yellow,
+                          ),
+                        ],
+                      ],
                     ),
                     if (lastMessageText != null &&
                         lastMessageText.isNotEmpty) ...[
