@@ -74,8 +74,8 @@ class _RemoteFlagsAdminSheetState extends State<RemoteFlagsAdminSheet> {
         ValueListenableBuilder<int>(
           valueListenable: _service.revision,
           builder: (context, _, _) {
-            final keys = _visibleKeys;
-            if (keys.isEmpty) {
+            final rows = _buildGroupedRows();
+            if (rows.isEmpty) {
               return SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.all(AppTheme.spacing24),
@@ -91,13 +91,7 @@ class _RemoteFlagsAdminSheetState extends State<RemoteFlagsAdminSheet> {
                 ),
               );
             }
-            return SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) =>
-                    _FlagRow(envKey: keys[index], service: _service),
-                childCount: keys.length,
-              ),
-            );
+            return SliverList(delegate: SliverChildListDelegate(rows));
           },
         ),
         SliverToBoxAdapter(
@@ -135,6 +129,43 @@ class _RemoteFlagsAdminSheetState extends State<RemoteFlagsAdminSheet> {
     );
   }
 
+  /// Group keys by the first underscore-separated token so related
+  /// flags sit together. Behavior flags sort before logging/debug
+  /// flags inside a group; otherwise alphabetical.
+  List<Widget> _buildGroupedRows() {
+    final keys = _visibleKeys;
+    if (keys.isEmpty) return const [];
+
+    final grouped = <String, List<String>>{};
+    for (final key in keys) {
+      final group = key.split('_').first;
+      grouped.putIfAbsent(group, () => <String>[]).add(key);
+    }
+
+    final groupNames = grouped.keys.toList()..sort();
+
+    int sortRank(String k) {
+      final isDebugOrLogging = k.endsWith('_DEBUG') || k.contains('_LOGGING');
+      return isDebugOrLogging ? 1 : 0;
+    }
+
+    final widgets = <Widget>[];
+    for (final group in groupNames) {
+      final entries = grouped[group]!
+        ..sort((a, b) {
+          final rankA = sortRank(a);
+          final rankB = sortRank(b);
+          if (rankA != rankB) return rankA - rankB;
+          return a.compareTo(b);
+        });
+      widgets.add(_GroupHeader(label: group, count: entries.length));
+      for (final key in entries) {
+        widgets.add(_FlagRow(envKey: key, service: _service));
+      }
+    }
+    return widgets;
+  }
+
   Widget _buildSummary(BuildContext context) {
     final overrides = _service.currentOverrides;
     return ValueListenableBuilder<int>(
@@ -156,6 +187,48 @@ class _RemoteFlagsAdminSheetState extends State<RemoteFlagsAdminSheet> {
           ),
         );
       },
+    );
+  }
+}
+
+class _GroupHeader extends StatelessWidget {
+  const _GroupHeader({required this.label, required this.count});
+
+  final String label;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing20,
+        AppTheme.spacing16,
+        AppTheme.spacing16,
+        AppTheme.spacing8,
+      ),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.2,
+              color: context.textTertiary,
+              fontFamily: AppTheme.fontFamily,
+            ),
+          ),
+          const SizedBox(width: AppTheme.spacing8),
+          Text(
+            '($count)',
+            style: TextStyle(
+              fontSize: 10,
+              color: context.textTertiary.withValues(alpha: 0.6),
+              fontFamily: AppTheme.fontFamily,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
