@@ -1081,6 +1081,87 @@ class AppLogging {
     return 'len=${bytes.length} head=$head$ellipsis';
   }
 
+  /// Clear every cached `*LoggingEnabled` bool so the next getter read
+  /// resolves against the current `dotenv.env`.
+  ///
+  /// Called by `RemoteFlagOverridesService` whenever a remote override
+  /// changes the dotenv overlay. Unlike [reset], this does NOT touch
+  /// `_appLogSink` or any logger handles - those are wired once at app
+  /// startup and must survive remote flag flips.
+  static void invalidateCaches() {
+    _bleLoggingEnabled = null;
+    _mapLoggingEnabled = null;
+    _protocolLoggingEnabled = null;
+    _widgetsLoggingEnabled = null;
+    _liveActivityLoggingEnabled = null;
+    _automationsLoggingEnabled = null;
+    _messagesLoggingEnabled = null;
+    _iftttLoggingEnabled = null;
+    _telemetryLoggingEnabled = null;
+    _connectionLoggingEnabled = null;
+    _nodesLoggingEnabled = null;
+    _channelsLoggingEnabled = null;
+    _appLoggingEnabled = null;
+    _subscriptionsLoggingEnabled = null;
+    _purchaseLoggingEnabled = null;
+    _notificationsLoggingEnabled = null;
+    _audioLoggingEnabled = null;
+    _mapsLoggingEnabled = null;
+    _firmwareLoggingEnabled = null;
+    _settingsLoggingEnabled = null;
+    _debugLoggingEnabled = null;
+    _authLoggingEnabled = null;
+    _socialLoggingEnabled = null;
+    _storageLoggingEnabled = null;
+    _permissionsLoggingEnabled = null;
+    _marketplaceLoggingEnabled = null;
+    _qrLoggingEnabled = null;
+    _bugReportLoggingEnabled = null;
+    _shopLoggingEnabled = null;
+    _nodeDexLoggingEnabled = null;
+    _nodeBoardLoggingEnabled = null;
+    _petLoggingEnabled = null;
+    _syncLoggingEnabled = null;
+    _mfaLoggingEnabled = null;
+    _aetherLoggingEnabled = null;
+    _takLoggingEnabled = null;
+    _claimsLoggingEnabled = null;
+    _uiGatesLoggingEnabled = null;
+    _incidentsLoggingEnabled = null;
+    _incidentSyncLoggingEnabled = null;
+    _incidentUILoggingEnabled = null;
+    _adminDiagLoggingEnabled = null;
+    _tasksLoggingEnabled = null;
+    _taskSyncLoggingEnabled = null;
+    _operationsLoggingEnabled = null;
+    _fileTransferLoggingEnabled = null;
+    _sipLoggingEnabled = null;
+    _sipInkLoggingEnabled = null;
+    _sipPlayLoggingEnabled = null;
+    _sipSignalLoggingEnabled = null;
+    _mrrpDebugEnabled = null;
+    _handshakeLoggingEnabled = null;
+    _mrrpHarnessDebugEnabled = null;
+    _meshExplorerDebugEnabled = null;
+    _voiceLoggingEnabled = null;
+    _codec2LoggingEnabled = null;
+    _sppLoggingEnabled = null;
+    _sppNegotiationLoggingEnabled = null;
+    _stlLoggingEnabled = null;
+    _overlayLoggingEnabled = null;
+    _reticulumLoggingEnabled = null;
+    _meshFeedLoggingEnabled = null;
+    _meshGamesLoggingEnabled = null;
+    _meshGameTransportLoggingEnabled = null;
+    _meshGameSessionLoggingEnabled = null;
+    _meshGameUiLoggingEnabled = null;
+    _meshCapacityLoggingEnabled = null;
+    _mqttProxyLoggingEnabled = null;
+    _meshcoreLoggingEnabled = null;
+    _meshcoreLoggingLocationEnabled = null;
+    _platformLoggingEnabled = null;
+  }
+
   static void reset() {
     _appLogSink = null;
     _bleLoggingEnabled = null;

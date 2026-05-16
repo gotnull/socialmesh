@@ -34,6 +34,7 @@ import 'core/transport.dart';
 import 'core/platform/platform_capabilities.dart';
 import 'core/platform/platform_capabilities_provider.dart';
 import 'core/platform/sqflite_init.dart';
+import 'services/config/remote_flag_overrides_service.dart';
 import 'services/protocol/protocol_service.dart' show OperationalReadiness;
 
 import 'services/transport/background_message_processor.dart';
@@ -257,6 +258,11 @@ Future<void> main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     AppLogging.app('🔥 Firebase core initialized');
+
+    // Remote env-flag overrides: apply cached overrides immediately,
+    // then subscribe to Firestore in the background. Never blocks
+    // startup on the network.
+    unawaited(RemoteFlagOverridesService.instance.initialise());
 
     // Gate telemetry — disabled by default until consent is verified in
     // _initializeFirebaseServices(). This ensures zero collection between

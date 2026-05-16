@@ -21,6 +21,7 @@ import '../conformance/ui/admin_conformance_screen.dart';
 import 'admin_broadcast_screen.dart';
 import 'admin_diagnostics_screen.dart';
 import 'admin_storage_health_screen.dart';
+import 'remote_flags_admin_sheet.dart';
 import 'mesh_morph_preview_screen.dart';
 import 'qr_style_preview_screen.dart';
 import 'user_purchases_admin_screen.dart';
@@ -163,6 +164,15 @@ class AdminScreen extends ConsumerWidget {
                 iconColor: Colors.teal.shade400,
                 onTap: () =>
                     _navigateTo(context, const AdminStorageHealthScreen()),
+              ),
+              _AdminTile(
+                icon: Icons.toggle_on_outlined,
+                label: 'Remote flags', // lint-allow: hardcoded-string
+                subtitle:
+                    'Override existing *_ENABLED env flags from Firestore', // lint-allow: hardcoded-string
+                iconColor: Colors.orange.shade400,
+                onTap: () =>
+                    _navigateTo(context, const RemoteFlagsAdminSheet()),
               ),
               _AdminTile(
                 icon: Icons.auto_awesome,
