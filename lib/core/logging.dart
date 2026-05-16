@@ -424,16 +424,16 @@ class AppLogging {
     if (protocolLoggingEnabled) debugPrint('Protocol: $message');
   }
 
-  static void widgets(String message) {
-    if (widgetsLoggingEnabled) debugPrint('Widgets: $message');
-  }
-
   static void liveActivity(String message) {
     if (liveActivityLoggingEnabled) debugPrint('LiveActivity: $message');
   }
 
+  static void widgets(String message) {
+    if (widgetsLoggingEnabled) debugPrint('Widgets: $message');
+  }
+
   static void automations(String message) {
-    if (automationsLoggingEnabled) debugPrint('Automations: $message');
+    if (automationsLoggingEnabled) debugPrint('FlickerAutomations: $message');
   }
 
   static void messages(String message) {

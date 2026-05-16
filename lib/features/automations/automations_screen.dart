@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/logging.dart';
 import '../../core/legal/legal_constants.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
@@ -106,8 +107,13 @@ class AutomationsScreen extends ConsumerWidget {
         slivers: automationsAsync.when(
           data: (automations) {
             if (automations.isEmpty) {
+              AppLogging.automations('screen RENDER -> EMPTY (Quick Start)');
               return _buildEmptyStateSlivers(context, ref);
             }
+            AppLogging.automations(
+              'screen RENDER -> LIST '
+              '(count=${automations.length})',
+            );
             return _buildAutomationsListSlivers(
               context,
               ref,
@@ -115,12 +121,15 @@ class AutomationsScreen extends ConsumerWidget {
               stats,
             );
           },
-          loading: () => [
-            const SliverFillRemaining(
-              hasScrollBody: false,
-              child: ScreenLoadingIndicator(),
-            ),
-          ],
+          loading: () {
+            AppLogging.automations('screen RENDER -> LOADING');
+            return [
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: ScreenLoadingIndicator(),
+              ),
+            ];
+          },
           error: (error, _) => [
             SliverFillRemaining(
               hasScrollBody: false,

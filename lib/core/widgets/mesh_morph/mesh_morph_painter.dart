@@ -1,67 +1,89 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
-// CustomPainter for MeshMorphWidget. Rotates + projects the blended shape
-// buffer, then draws each point as a soft-glow ball using the SocialMesh
-// brand gradient. Intentionally omits two things the earlier version had:
+// CustomPainter for MeshMorphWidget. Renders each ball as a vector-shaded
+// 3D sphere using a RadialGradient — no rasterized sprites, no pixelation
+// at any size.
 //
-//   - Wireframe edge lines connecting points (removed: visually noisy,
-//     z-order issues during morph).
-//   - Per-ball white specular highlight + depth-modulated alpha (removed:
-//     the moving highlight + alpha pulse together read as "flashing").
+// The 6 brightness levels and the lit-sphere look match the Equinox
+// Vectorball original, but instead of blitting a 15×15 pre-baked PNG (which
+// looks chunky when scaled up to 30+ px), we extract the highlight / mid /
+// rim colours from each sprite and rebuild the sphere shading at the ball's
+// actual paint radius. Same colour palette, infinitely sharp.
 //
-// Result: a calm point cloud with subtle depth-scale, no visual jitter.
+// Pipeline per frame:
+//   1) Rotate all blended points through ZYX Tait-Bryan matrix.
+//   2) Project to screen with perspective.
+//   3) Sort indices back-to-front so closer balls paint over farther.
+//   4) For each ball, compute its depth bucket (0..5) and draw a circle
+//      shaded with a 3-stop RadialGradient pulled from that bucket's
+//      palette samples. Highlight always sits upper-left, matching the
+//      original sprite art's fixed light direction.
 
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-import 'package:socialmesh/core/theme.dart';
-
 import 'mesh_shape.dart';
+import 'vectorball_sprite_data.dart';
+
+/// Number of brightness buckets. Matches the original Equinox sprite count.
+const int kVectorballBrightnessLevels = 6;
 
 class MeshMorphPainter extends CustomPainter {
-  /// Pre-resolved positions for the current frame. Length == pointCount.
   final List<Point3D> blended;
-
-  /// Euler angles (radians) applied before projection. Mirrors the
-  /// AnimatedMeshNode rotation pipeline.
   final double rotationX;
   final double rotationY;
   final double rotationZ;
+
+  /// Per-ball draw diameter as a fraction of widget width. 0.06 = 6 % of
+  /// canvas width, so a 372 px canvas draws ~22 px balls. The cluster's
+  /// physical extent is controlled by [clusterScale] not this.
+  final double ballSizeFraction;
+
+  /// Multiplier applied to the rotated model coords before perspective.
+  /// Bigger = balls spread further across the canvas.
+  final double clusterScale;
 
   MeshMorphPainter({
     required this.blended,
     required this.rotationX,
     required this.rotationY,
     required this.rotationZ,
+    this.ballSizeFraction = 0.07,
+    this.clusterScale = 0.85,
   });
 
-  // Brand triple, same one AnimatedMeshNode and the splash logo use.
-  static const List<Color> _brandGradient = [
-    AppTheme.accentOrange,
-    AppTheme.primaryMagenta,
-    AppTheme.primaryBlue,
-  ];
+  // Pre-computed bucket palettes — extracted once from kVectorballSprite +
+  // kVectorballPaletteRGB. Index = brightness bucket (0 dimmest .. 5 brightest).
+  static final List<_BucketColors> _buckets = _buildBucketColors();
 
-  // Projection scratch buffers — kept across frames so the math output
-  // doesn't re-allocate per paint.
-  final List<Offset> _projected = <Offset>[];
-  final List<double> _depth = <double>[];
+  // Reused scratch — survives across frames, never re-allocated.
+  final List<double> _sx = <double>[];
+  final List<double> _sy = <double>[];
+  final List<double> _sz = <double>[];
 
   @override
   void paint(Canvas canvas, Size size) {
-    const perspective = 3.0;
+    // Tight perspective so near balls sit clearly in front of far ones.
+    const perspective = 2.0;
     final w = size.width;
+    final h = size.height;
     final cx = w / 2;
-    final cy = size.height / 2;
+    final cy = h / 2;
+    final canvasScale = math.min(w, h) / 2 * clusterScale;
+    final ballRadius = w * ballSizeFraction * 0.5;
 
-    if (_projected.length != blended.length) {
-      _projected
+    final n = blended.length;
+    if (_sx.length != n) {
+      _sx
         ..clear()
-        ..addAll(List<Offset>.filled(blended.length, Offset.zero));
-      _depth
+        ..addAll(List<double>.filled(n, 0));
+      _sy
         ..clear()
-        ..addAll(List<double>.filled(blended.length, 0));
+        ..addAll(List<double>.filled(n, 0));
+      _sz
+        ..clear()
+        ..addAll(List<double>.filled(n, 0));
     }
 
     final cosX = math.cos(rotationX);
@@ -71,9 +93,13 @@ class MeshMorphPainter extends CustomPainter {
     final cosZ = math.cos(rotationZ);
     final sinZ = math.sin(rotationZ);
 
-    for (int i = 0; i < blended.length; i++) {
+    double zMin = double.infinity;
+    double zMax = -double.infinity;
+
+    for (int i = 0; i < n; i++) {
       final p = blended[i];
 
+      // Rotate Z → Y → X (same order as the rsvpnano firmware).
       final x1 = p.x * cosZ - p.y * sinZ;
       final y1 = p.x * sinZ + p.y * cosZ;
       final z1 = p.z;
@@ -87,50 +113,111 @@ class MeshMorphPainter extends CustomPainter {
       final z3 = y2 * sinX + z2 * cosX;
 
       final scale = perspective / (perspective + z3);
-      _projected[i] = Offset(x3 * scale * w / 2 + cx, y3 * scale * w / 2 + cy);
-      _depth[i] = z3;
+      _sx[i] = x3 * scale * canvasScale + cx;
+      _sy[i] = y3 * scale * canvasScale + cy;
+      _sz[i] = z3;
+      if (z3 < zMin) zMin = z3;
+      if (z3 > zMax) zMax = z3;
     }
 
-    // Back-to-front so closer balls overwrite farther ones cleanly.
-    final order = List<int>.generate(blended.length, (i) => i);
-    order.sort((a, b) => _depth[b].compareTo(_depth[a]));
+    // Back-to-front painter's order — sort indices, not balls.
+    final order = List<int>.generate(n, (i) => i);
+    order.sort((a, b) => _sz[b].compareTo(_sz[a]));
+
+    // Use the actual observed [zMin..zMax] range so the cluster always
+    // exercises the full bucket brightness range regardless of shape.
+    final zSpan = (zMax - zMin).abs() < 1e-4 ? 1.0 : (zMax - zMin);
+    const lastBucket = kVectorballBrightnessLevels - 1;
+
+    // Highlight position in upper-left, matching the original sprite art.
+    // Alignment is relative to the ball's bounding rect — same offset for
+    // every ball so the cluster reads as lit from a single source.
+    const highlightAlign = Alignment(-0.45, -0.45);
 
     for (final i in order) {
-      final p = _projected[i];
-      // Smoothly map depth (-1 near .. +1 far) to a size factor in
-      // [0.55, 1.0]. Single curve — no random per-point variation, so
-      // the visual stays calm as balls rotate.
-      final sizeFactor = (1.0 - (_depth[i] + 1.0) / 4.0).clamp(0.55, 1.0);
-      final radius = (w / 36) * sizeFactor;
-      // Color by depth, NOT by point index: when interior cube-grid
-      // points cluster at near-identical depths the sort can swap them
-      // frame-to-frame, and an index-based color would show that swap
-      // as a colour flick. Depth-based means stacked balls share a
-      // colour and the swap is invisible.
-      final colorT = ((_depth[i] + 1.0) / 2.0).clamp(0.0, 1.0);
-      final color = _sampleGradient(colorT);
+      // Nearest ball = brightest bucket (5), farthest = bucket 0.
+      final t = (_sz[i] - zMin) / zSpan; // 0 near, 1 far
+      var bucketIdx = (lastBucket - (t * lastBucket).round()).toInt();
+      if (bucketIdx < 0) bucketIdx = 0;
+      if (bucketIdx > lastBucket) bucketIdx = lastBucket;
 
-      // Soft outer glow at a fixed alpha — no per-frame pulsing.
-      final glowPaint = Paint()
-        ..color = color.withValues(alpha: 0.28)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, radius * 1.2);
-      canvas.drawCircle(p, radius * 1.8, glowPaint);
+      final bucket = _buckets[bucketIdx];
+      final centre = Offset(_sx[i], _sy[i]);
+      final ballRect = Rect.fromCircle(center: centre, radius: ballRadius);
 
-      // Solid core, fixed alpha.
-      final corePaint = Paint()..color = color.withValues(alpha: 0.92);
-      canvas.drawCircle(p, radius, corePaint);
+      // Fresh shader per ball — RadialGradient.createShader is cheap
+      // (no rasterization happens until canvas.drawCircle below).
+      final shader = RadialGradient(
+        center: highlightAlign,
+        radius: 0.85,
+        colors: [bucket.highlight, bucket.mid, bucket.rim],
+        stops: const [0.0, 0.45, 1.0],
+      ).createShader(ballRect);
+
+      canvas.drawCircle(centre, ballRadius, Paint()..shader = shader);
     }
-  }
-
-  Color _sampleGradient(double t) {
-    final clamped = t.clamp(0.0, 1.0);
-    final scaled = clamped * (_brandGradient.length - 1);
-    final idx = scaled.floor();
-    final frac = scaled - idx;
-    if (idx >= _brandGradient.length - 1) return _brandGradient.last;
-    return Color.lerp(_brandGradient[idx], _brandGradient[idx + 1], frac)!;
   }
 
   @override
-  bool shouldRepaint(covariant MeshMorphPainter old) => true;
+  bool shouldRepaint(covariant MeshMorphPainter old) =>
+      old.blended != blended ||
+      old.rotationX != rotationX ||
+      old.rotationY != rotationY ||
+      old.rotationZ != rotationZ ||
+      old.ballSizeFraction != ballSizeFraction ||
+      old.clusterScale != clusterScale;
+
+  // -------------------------------------------------------------------------
+  // Bucket palette extraction. Each of the 6 sprite stamps in
+  // kVectorballSprite uses a range of palette indices to fake a 3D-lit
+  // sphere. We sample three points from each sprite — brightest pixel,
+  // median pixel, and dimmest visible pixel — to build a 3-stop gradient
+  // that reproduces the sprite's overall colour ramp.
+  // -------------------------------------------------------------------------
+
+  static List<_BucketColors> _buildBucketColors() {
+    final out = <_BucketColors>[];
+    for (int b = 0; b < kVectorballBrightnessLevels; b++) {
+      final sprite = kVectorballSprite[b];
+      // Collect every non-zero (i.e. non-transparent) pixel's palette
+      // index. Lower index = brighter colour in the Equinox palette.
+      final values = <int>[];
+      for (final row in sprite) {
+        for (final v in row) {
+          if (v != 0) values.add(v);
+        }
+      }
+      values.sort(); // ascending = bright → dim
+      final highlightIdx = values.first;
+      final midIdx = values[values.length ~/ 2];
+      final rimIdx = values.last;
+      out.add(_BucketColors(
+        highlight: _palColor(highlightIdx),
+        mid: _palColor(midIdx),
+        rim: _palColor(rimIdx),
+      ));
+    }
+    return out;
+  }
+
+  static Color _palColor(int idx) {
+    final off = idx * 3;
+    return Color.fromARGB(
+      255,
+      kVectorballPaletteRGB[off],
+      kVectorballPaletteRGB[off + 1],
+      kVectorballPaletteRGB[off + 2],
+    );
+  }
+}
+
+class _BucketColors {
+  final Color highlight;
+  final Color mid;
+  final Color rim;
+  const _BucketColors({
+    required this.highlight,
+    required this.mid,
+    required this.rim,
+  });
 }

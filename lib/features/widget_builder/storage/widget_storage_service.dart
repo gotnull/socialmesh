@@ -142,6 +142,9 @@ class WidgetStorageService {
   /// Save a custom widget
   Future<void> saveWidget(WidgetSchema widget) async {
     AppLogging.widgets(
+      'saveWidget entry id=${widget.id} name="${widget.name}"',
+    );
+    AppLogging.widgets(
       '[WidgetStorage] saveWidget called for id=${widget.id}, name=${widget.name}',
     );
     AppLogging.sync(
@@ -282,6 +285,7 @@ class WidgetStorageService {
   /// Delete a widget
   /// Returns the marketplace ID if this was a marketplace widget (for profile cleanup)
   Future<String?> deleteWidget(String id) async {
+    AppLogging.widgets('deleteWidget entry id=$id');
     AppLogging.sync(
       '[WidgetStorage] deleteWidget() ENTER — '
       'id=$id, hasStore=$hasStore, '
@@ -404,6 +408,10 @@ class WidgetStorageService {
     WidgetSchema widget, {
     String? marketplaceId,
   }) async {
+    AppLogging.widgets(
+      'installMarketplaceWidget entry '
+      'id=${widget.id} name="${widget.name}" marketplaceId=$marketplaceId',
+    );
     try {
       // Save to regular storage
       await saveWidget(widget);

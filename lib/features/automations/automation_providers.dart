@@ -74,16 +74,21 @@ final automationSyncServiceProvider = Provider<AutomationSyncService?>((ref) {
 
 /// Provider for the automation repository.
 ///
-/// The repository is wired to the SQLite store when available.
+/// Hands out a stable repository instance for the lifetime of the provider.
+/// The SQLite store is wired in via [ref.listen] when [automationStoreProvider]
+/// resolves, so this provider does NOT rebuild when the store transitions
+/// loading -> data. Rebuilding the repo on store resolution caused the
+/// Quick Start flash on cold start (no-store repo briefly emitted an empty
+/// list before the store-backed repo took over).
 final automationRepositoryProvider = Provider<AutomationRepository>((ref) {
   final repository = AutomationRepository();
 
-  // Wire the SQLite store into the repository when available
-  final storeAsync = ref.watch(automationStoreProvider);
-  final store = storeAsync.asData?.value;
-  if (store != null) {
-    repository.setStore(store);
-  }
+  ref.listen<AsyncValue<AutomationSqliteStore>>(automationStoreProvider, (
+    prev,
+    next,
+  ) {
+    next.whenData(repository.setStore);
+  }, fireImmediately: true);
 
   return repository;
 });
@@ -290,21 +295,49 @@ final automationsProvider =
 
 /// State notifier for automations
 class AutomationsNotifier extends Notifier<AsyncValue<List<Automation>>> {
+  int _emitCount = 0;
+
+  void _emit(AsyncValue<List<Automation>> next, String reason) {
+    _emitCount++;
+    final desc = next.when(
+      data: (list) => 'data(${list.length})',
+      loading: () => 'loading',
+      error: (e, _) => 'error($e)',
+    );
+    AppLogging.automations('#$_emitCount emit -> $desc via $reason');
+    state = next;
+  }
+
   @override
   AsyncValue<List<Automation>> build() {
-    final repository = ref.watch(automationRepositoryProvider);
+    AppLogging.automations(
+      'build() entered (notifier id=${identityHashCode(this)})',
+    );
+    // Repository is now lifetime-stable (see automationRepositoryProvider).
+    // build() runs once per notifier lifetime — no churn on store / sync /
+    // entitlement resolution. That keeps the UI from flashing Quick Start
+    // templates while the cold-start providers settle.
+    final repository = ref.read(automationRepositoryProvider);
     repository.addListener(_onRepositoryChanged);
 
-    // Activate sync service (reads entitlement, enables/disables).
-    // Wire up onPullApplied so remote data reloads into the UI.
-    final syncService = ref.watch(automationSyncServiceProvider);
-    syncService?.onPullApplied = (appliedCount) {
-      if (!ref.mounted) return;
+    // Sync service is wired via listen, not watch — its rebuilds (entitlement
+    // changes, store resolution) must not retrigger AutomationsNotifier.build.
+    ref.listen<AutomationSyncService?>(automationSyncServiceProvider, (
+      prev,
+      next,
+    ) {
       AppLogging.automations(
-        'Sync pull applied $appliedCount automations — reloading state',
+        'syncService listen fired '
+        '(prev=${prev != null}, next=${next != null})',
       );
-      state = AsyncValue.data(_repository.automations);
-    };
+      next?.onPullApplied = (appliedCount) {
+        if (!ref.mounted) return;
+        _emit(
+          AsyncValue.data(_repository.automations),
+          'onPullApplied(applied=$appliedCount, repoCount=${_repository.automations.length})',
+        );
+      };
+    }, fireImmediately: true);
 
     // One-time safety net: if the profile still has automationsJson from
     // the old blob-sync approach, import it into SQLite (only if empty).
@@ -326,10 +359,14 @@ class AutomationsNotifier extends Notifier<AsyncValue<List<Automation>>> {
     });
 
     ref.onDispose(() {
+      AppLogging.automations(
+        'notifier disposed (id=${identityHashCode(this)})',
+      );
       repository.removeListener(_onRepositoryChanged);
     });
 
     _loadAutomations();
+    AppLogging.automations('build() returning initial AsyncValue.loading()');
     return const AsyncValue.loading();
   }
 
@@ -337,19 +374,32 @@ class AutomationsNotifier extends Notifier<AsyncValue<List<Automation>>> {
       ref.read(automationRepositoryProvider);
 
   void _onRepositoryChanged() {
-    // Update state with latest automations when repository changes
-    state = AsyncValue.data(_repository.automations);
+    final list = _repository.automations;
+    _emit(
+      AsyncValue.data(list),
+      '_onRepositoryChanged(repoCount=${list.length})',
+    );
     // Also bump the log revision so automationLogProvider rebuilds
     // when new execution log entries are added by the engine.
     ref.read(_logRevisionProvider.notifier).bump();
   }
 
   Future<void> _loadAutomations() async {
+    AppLogging.automations('_loadAutomations() start, awaiting store');
     try {
+      // Wait for the SQLite store before initing the repository, so we never
+      // emit an empty list from the legacy SharedPreferences fallback path
+      // while the store is still resolving.
+      await ref.read(automationStoreProvider.future);
+      AppLogging.automations('_loadAutomations() store ready, calling init');
       await _repository.init();
-      state = AsyncValue.data(_repository.automations);
+      AppLogging.automations(
+        '_loadAutomations() init complete, '
+        'repoCount=${_repository.automations.length}',
+      );
+      _emit(AsyncValue.data(_repository.automations), '_loadAutomations()');
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      _emit(AsyncValue.error(e, st), '_loadAutomations() error');
     }
   }
 

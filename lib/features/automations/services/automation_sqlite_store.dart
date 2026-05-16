@@ -102,6 +102,19 @@ class AutomationSqliteStore {
   /// Number of stored automations (non-deleted).
   int get count => _cache?.length ?? 0;
 
+  /// Whether any row exists in the table, including tombstoned deletions.
+  ///
+  /// Used to decide whether the user has ever stored an automation on this
+  /// device. A non-zero count of tombstones means the user has used the
+  /// app and deleted things — the stale profile-blob (`automationsJson`)
+  /// must not be re-imported, or those deletions get resurrected.
+  Future<bool> hasAnyRows() async {
+    final rows = await _db.rawQuery(
+      'SELECT 1 FROM ${AutomationTables.automations} LIMIT 1',
+    );
+    return rows.isNotEmpty;
+  }
+
   // ---------------------------------------------------------------------------
   // Write operations
   // ---------------------------------------------------------------------------

@@ -32,7 +32,6 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../dashboard/models/dashboard_widget_config.dart';
 import '../dashboard/providers/dashboard_providers.dart';
-import '../dashboard/widgets/schema_widget_content.dart';
 
 /// Main widget builder screen - list and manage custom widgets
 class WidgetBuilderScreen extends ConsumerStatefulWidget {
@@ -45,90 +44,56 @@ class WidgetBuilderScreen extends ConsumerStatefulWidget {
 
 class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
     with LifecycleSafeMixin<WidgetBuilderScreen> {
-  List<WidgetSchema> _myWidgets = [];
-  Set<String> _marketplaceIds = {};
-  bool _isLoading = true;
-  int _lastRefreshTrigger = 0;
+  bool _didCheckProfileRestore = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadWidgets();
-  }
+  Future<void> _refreshList() =>
+      ref.read(widgetBuilderListProvider.notifier).refresh();
 
-  Future<void> _loadWidgets() async {
-    safeSetState(() => _isLoading = true);
-
-    try {
-      final storageService = await ref.read(
-        widgetStorageServiceProvider.future,
-      );
-      if (!mounted) return;
-      final widgets = await storageService.getWidgets();
-      final installedIds = await storageService.getInstalledMarketplaceIds();
-
+  /// Compare the user profile's installed marketplace IDs against what we
+  /// actually have locally and re-install anything missing. Fires once per
+  /// screen mount, the first time the list provider produces data.
+  Future<void> _checkAndRestoreFromProfile(Set<String> marketplaceIds) async {
+    AppLogging.widgets(
+      '_checkAndRestoreFromProfile entry '
+      '(local marketplace=$marketplaceIds)',
+    );
+    final profile = ref.read(userProfileProvider).value;
+    if (profile == null || profile.installedWidgetIds.isEmpty) {
       AppLogging.widgets(
-        '[WidgetBuilder] Loaded ${widgets.length} widgets from local storage',
+        '_checkAndRestoreFromProfile SKIP: profile null '
+        'or installedWidgetIds empty',
       );
-      AppLogging.widgets(
-        '[WidgetBuilder] Local widget IDs: ${widgets.map((w) => w.id).toList()}',
-      );
-      AppLogging.widgets(
-        '[WidgetBuilder] Installed marketplace IDs: $installedIds',
-      );
-
-      // Check profile for installed widgets that might need restoration
-      if (!mounted) return;
-      final profile = ref.read(userProfileProvider).value;
-      AppLogging.widgets(
-        '[WidgetBuilder] Profile installedWidgetIds: ${profile?.installedWidgetIds ?? []}',
-      );
-
-      if (profile != null && profile.installedWidgetIds.isNotEmpty) {
-        // Compare against marketplace IDs (not schema IDs) since profile stores marketplace IDs
-        final installedMarketplaceIds = installedIds.toSet();
-        final missingIds = profile.installedWidgetIds
-            .where((id) => !installedMarketplaceIds.contains(id))
-            .toList();
-
-        AppLogging.widgets(
-          '[WidgetBuilder] Missing IDs (in profile but not local): $missingIds',
-        );
-
-        if (missingIds.isNotEmpty) {
-          AppLogging.widgets(
-            '[WidgetBuilder] Found ${missingIds.length} widgets to restore from cloud',
-          );
-          // Restore missing widgets from marketplace
-          await _restoreMissingWidgets(missingIds, storageService);
-          // Reload after restoration
-          final updatedWidgets = await storageService.getWidgets();
-          final updatedInstalledIds = await storageService
-              .getInstalledMarketplaceIds();
-          AppLogging.widgets(
-            '[WidgetBuilder] After restore: ${updatedWidgets.length} widgets',
-          );
-          safeSetState(() {
-            _myWidgets = List.of(updatedWidgets);
-            _marketplaceIds = updatedInstalledIds.toSet();
-            _isLoading = false;
-          });
-          return;
-        }
-      }
-
-      if (!mounted) return;
-      safeSetState(() {
-        _myWidgets = List.of(widgets);
-        _marketplaceIds = installedIds.toSet();
-        _isLoading = false;
-      });
-    } catch (e) {
-      AppLogging.widgets('[WidgetBuilder] Error loading widgets: $e');
-      safeSetState(() {
-        _isLoading = false;
-      });
+      return;
     }
+    final missingIds = profile.installedWidgetIds
+        .where((id) => !marketplaceIds.contains(id))
+        .toList();
+    AppLogging.widgets(
+      '_checkAndRestoreFromProfile '
+      'profile.installedWidgetIds=${profile.installedWidgetIds} '
+      'missing=$missingIds',
+    );
+    AppLogging.widgets(
+      '[WidgetBuilder] Profile installedWidgetIds: ${profile.installedWidgetIds}',
+    );
+    AppLogging.widgets(
+      '[WidgetBuilder] Missing IDs (in profile but not local): $missingIds',
+    );
+    if (missingIds.isEmpty) return;
+
+    AppLogging.widgets(
+      '_checkAndRestoreFromProfile '
+      'restoring ${missingIds.length} widgets from cloud — '
+      'this WILL cause a list change',
+    );
+    AppLogging.widgets(
+      '[WidgetBuilder] Found ${missingIds.length} widgets to restore from cloud',
+    );
+    final storageService = await ref.read(widgetStorageServiceProvider.future);
+    if (!mounted) return;
+    await _restoreMissingWidgets(missingIds, storageService);
+    if (!mounted) return;
+    await _refreshList();
   }
 
   /// Restore widgets from marketplace that are in profile but not local storage
@@ -181,15 +146,22 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Watch the refresh trigger to reload when widgets are imported
-    final refreshTrigger = ref.watch(widgetRefreshTriggerProvider);
-    if (refreshTrigger != _lastRefreshTrigger) {
-      _lastRefreshTrigger = refreshTrigger;
-      // Schedule reload after build
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _loadWidgets();
-      });
-    }
+    final listAsync = ref.watch(widgetBuilderListProvider);
+
+    // One-shot: on the first successful load, check the user profile for
+    // marketplace widgets that need restoring from cloud. The notifier
+    // refreshes itself on sync arrivals, so this only needs to fire once
+    // per screen mount.
+    ref.listen<AsyncValue<WidgetBuilderListState>>(widgetBuilderListProvider, (
+      prev,
+      next,
+    ) {
+      if (_didCheckProfileRestore) return;
+      final data = next.asData?.value;
+      if (data == null) return;
+      _didCheckProfileRestore = true;
+      _checkAndRestoreFromProfile(data.marketplaceIds);
+    });
 
     return HelpTourController(
       topicId: 'widget_builder_overview',
@@ -234,24 +206,47 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
             ],
           ),
         ],
-        body: _isLoading ? const ScreenLoadingIndicator() : _buildWidgetList(),
+        body: listAsync.when(
+          loading: () {
+            AppLogging.widgets('screen RENDER -> LOADING');
+            return const ScreenLoadingIndicator();
+          },
+          error: (e, _) {
+            AppLogging.widgets('screen RENDER -> ERROR ($e)');
+            return _buildDetailedEmptyState();
+          },
+          data: (data) {
+            if (data.widgets.isEmpty) {
+              AppLogging.widgets('screen RENDER -> EMPTY (Quick Start)');
+            } else {
+              AppLogging.widgets(
+                'screen RENDER -> LIST '
+                '(count=${data.widgets.length})',
+              );
+            }
+            return _buildWidgetList(data.widgets, data.marketplaceIds);
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildWidgetList() {
-    if (_myWidgets.isEmpty) {
+  Widget _buildWidgetList(
+    List<WidgetSchema> widgets,
+    Set<String> marketplaceIds,
+  ) {
+    if (widgets.isEmpty) {
       return _buildDetailedEmptyState();
     }
 
     return RefreshIndicator(
-      onRefresh: _loadWidgets,
+      onRefresh: _refreshList,
       child: ListView.builder(
         padding: const EdgeInsets.all(AppTheme.spacing16),
-        itemCount: _myWidgets.length,
+        itemCount: widgets.length,
         itemBuilder: (context, index) {
-          final schema = _myWidgets[index];
-          final isFromMarketplace = _marketplaceIds.contains(schema.id);
+          final schema = widgets[index];
+          final isFromMarketplace = marketplaceIds.contains(schema.id);
           return _buildWidgetCard(
             schema,
             isTemplate: false,
@@ -988,7 +983,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
 
     // Always reload widgets after returning from wizard
     // The save happens inside the wizard, so we should reload regardless
-    await _loadWidgets();
+    await _refreshList();
     AppLogging.widgets('[WidgetBuilder] Widgets reloaded');
 
     // Add to dashboard if requested
@@ -1070,7 +1065,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
     AppLogging.widgets('[WidgetBuilder] Wizard returned, result: $result');
 
     // Always reload widgets after returning from wizard
-    await _loadWidgets();
+    await _refreshList();
     AppLogging.widgets('[WidgetBuilder] Widgets reloaded');
   }
 
@@ -1139,7 +1134,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
     );
 
     // Always reload widgets after returning from wizard
-    await _loadWidgets();
+    await _refreshList();
     AppLogging.widgets('[WidgetBuilder] Widgets reloaded');
   }
 
@@ -1163,7 +1158,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
         if (!mounted) return;
         final dupStorage = ref.read(widgetStorageServiceProvider).asData?.value;
         if (dupStorage != null) await dupStorage.duplicateWidget(schema.id);
-        await _loadWidgets();
+        await _refreshList();
         AppLogging.widgets('[WidgetBuilder] Widget duplicated');
         break;
       case 'submit_marketplace':
@@ -1288,16 +1283,15 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
                     // Pop bottom sheet immediately
                     Navigator.pop(context);
 
-                    // Remove from local state first so the card disappears
-                    // and the 3-dot menu is no longer accessible.
                     final schemaId = schema.id;
                     final schemaName = schema.name;
-                    safeSetState(() {
-                      // Defensive copy — guards against an unmodifiable list
-                      // reaching _myWidgets (e.g. via provider snapshot).
-                      _myWidgets = List.of(_myWidgets)
-                        ..removeWhere((w) => w.id == schemaId);
-                    });
+
+                    // Optimistically drop from the in-memory list so the card
+                    // disappears immediately, before the storage delete + sync
+                    // round-trip completes.
+                    ref
+                        .read(widgetBuilderListProvider.notifier)
+                        .removeWidgetLocally(schemaId);
 
                     // Remove from dashboard if needed (sync, no await)
                     if (isOnDashboard) {
@@ -1347,10 +1341,8 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
 
                     if (!mounted) return;
 
-                    // Update marketplace IDs tracking
-                    safeSetState(() {
-                      _marketplaceIds.remove(marketplaceId ?? schemaId);
-                    });
+                    // Reconcile marketplace IDs with the final storage state.
+                    await _refreshList();
                     showGlobalSuccessSnackBar('Deleted "$schemaName"');
                   },
                   child: Text(
@@ -1371,7 +1363,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
       context,
       MaterialPageRoute(builder: (context) => const WidgetMarketplaceScreen()),
     );
-    await _loadWidgets();
+    await _refreshList();
   }
 
   void _submitToMarketplace(WidgetSchema schema) async {

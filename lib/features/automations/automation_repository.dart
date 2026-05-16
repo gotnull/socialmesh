@@ -13,8 +13,20 @@ import 'services/automation_sqlite_store.dart';
 /// Sync state key used to mark that automations were imported from the
 /// stale profile blob (`automationsJson`). The sync service checks this
 /// flag to reset the pull watermark and prevent resurrecting deleted
-/// automations.
+/// automations. **Transient** — cleared by the sync service after the
+/// reconciliation pull completes.
 const String blobImportedSyncKey = 'automations_blob_imported';
+
+/// Permanent local flag: once set, the profile's `automationsJson` blob
+/// has been processed for this user on this device and must never be
+/// imported again. Distinct from [blobImportedSyncKey] because that flag
+/// is transient (the sync service clears it after the reconciliation
+/// pull). Without a permanent flag, a user who imported the blob, synced,
+/// then deleted everything would resurrect their deleted automations on
+/// the next cold start — `_store.count` returns 0 for tombstones, and the
+/// transient flag has already been cleared, so the count-based gate would
+/// happily re-import the stale blob.
+const String blobConsumedSyncKey = 'automations_blob_consumed';
 
 /// Repository for storing and retrieving automations.
 ///
@@ -118,16 +130,54 @@ class AutomationRepository extends ChangeNotifier {
 
   /// Import automations from a cloud profile preferences JSON string.
   ///
-  /// This is the one-time safety net for users who synced automations
-  /// via the old profile-blob approach. Called when the profile loads
-  /// and automationsJson is non-empty, but only if the SQLite store
-  /// is empty (to avoid overwriting newer per-document synced data).
+  /// One-time safety net for users who synced automations via the old
+  /// profile-blob approach. Gated by the [blobImportedSyncKey] flag rather
+  /// than by `_store.count`, because tombstoned (deleted) rows return 0
+  /// from `count` — if we only checked count, a user who imported the
+  /// blob, then deleted everything, would resurrect the deleted entries
+  /// on the next cold start. Per-document sync is authoritative the moment
+  /// the blob has been imported once, deletions included.
   Future<void> importFromCloudPrefsIfEmpty(String automationsJson) async {
-    if (_store == null) return;
-    if (_store!.count > 0) {
-      // SQLite already has automations — per-document sync is authoritative
+    if (_store == null) {
+      AppLogging.automations('importFromCloudPrefsIfEmpty SKIP: store is null');
       return;
     }
+
+    // Permanent gate — once consumed, never re-import. This is the load-
+    // bearing check: without it, a user who imports the blob, syncs, then
+    // deletes their automations would resurrect the deletions on every
+    // cold start (tombstones return 0 from `count`, and the transient
+    // [blobImportedSyncKey] has already been cleared by the sync service).
+    final consumed = await _store!.getSyncState(blobConsumedSyncKey) == 'true';
+    if (consumed) {
+      AppLogging.automations(
+        'importFromCloudPrefsIfEmpty SKIP: blob already consumed',
+      );
+      return;
+    }
+
+    // Mark consumed BEFORE doing anything else, so that a crash or parse
+    // failure can't leave the gate open for the next cold start.
+    await _store!.setSyncState(blobConsumedSyncKey, 'true');
+    AppLogging.automations('importFromCloudPrefsIfEmpty marked blob consumed');
+
+    // If the user has ever stored an automation on this device (live OR
+    // tombstoned), do NOT import. Per-document sync is authoritative.
+    // The previous gate checked only `_store.count`, which excludes
+    // tombstones — that's exactly how the deletion-resurrection blip
+    // slipped through.
+    if (await _store!.hasAnyRows()) {
+      AppLogging.automations(
+        'importFromCloudPrefsIfEmpty SKIP: '
+        'hasAnyRows=true (tombstones or live rows present), '
+        'live count=${_store!.count}',
+      );
+      return;
+    }
+    AppLogging.automations(
+      'importFromCloudPrefsIfEmpty proceeding with import '
+      '(SQLite is completely empty for this user)',
+    );
 
     try {
       final list = jsonDecode(automationsJson) as List;
@@ -141,10 +191,10 @@ class AutomationRepository extends ChangeNotifier {
           'automations from cloud profile preferences (one-time)',
         );
         await _store!.bulkImport(automations);
-        // Mark that data was imported from the stale profile blob.
-        // The sync service will reset the pull watermark and do a
-        // full re-pull before pushing, so Firestore deletion markers
-        // are applied first and deleted automations are not resurrected.
+        // Transient flag for the sync service: tells it to reset the pull
+        // watermark and do a full re-pull before pushing, so Firestore
+        // deletion markers are applied first. The sync service clears
+        // this flag itself after the reconciliation completes.
         await _store!.setSyncState(blobImportedSyncKey, 'true');
         notifyListeners();
       }
@@ -330,12 +380,16 @@ class AutomationRepository extends ChangeNotifier {
 
   /// Add a new automation
   Future<void> addAutomation(Automation automation) async {
+    AppLogging.automations(
+      'addAutomation entry id=${automation.id} name="${automation.name}"',
+    );
     if (_store != null) {
       await _store!.save(automation);
     } else {
       _legacyAutomations.add(automation);
       await _saveLegacyAutomations();
     }
+    AppLogging.automations('addAutomation persisted, about to notifyListeners');
     notifyListeners();
     AppLogging.automations(
       'AutomationRepository: Added automation "${automation.name}"',
@@ -344,6 +398,9 @@ class AutomationRepository extends ChangeNotifier {
 
   /// Update an existing automation
   Future<void> updateAutomation(Automation automation) async {
+    AppLogging.automations(
+      'updateAutomation entry id=${automation.id} name="${automation.name}"',
+    );
     if (_store != null) {
       await _store!.save(automation);
     } else {
@@ -353,6 +410,9 @@ class AutomationRepository extends ChangeNotifier {
         await _saveLegacyAutomations();
       }
     }
+    AppLogging.automations(
+      'updateAutomation persisted, about to notifyListeners',
+    );
     notifyListeners();
     AppLogging.automations(
       'AutomationRepository: Updated automation "${automation.name}"',
@@ -361,12 +421,16 @@ class AutomationRepository extends ChangeNotifier {
 
   /// Delete an automation
   Future<void> deleteAutomation(String id) async {
+    AppLogging.automations('deleteAutomation entry id=$id');
     if (_store != null) {
       await _store!.delete(id);
     } else {
       _legacyAutomations.removeWhere((a) => a.id == id);
       await _saveLegacyAutomations();
     }
+    AppLogging.automations(
+      'deleteAutomation persisted, about to notifyListeners',
+    );
     notifyListeners();
     AppLogging.automations('AutomationRepository: Deleted automation $id');
   }
