@@ -1040,15 +1040,15 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
   }
 
   void _addAction() {
-    showModalBottomSheet(
+    AppBottomSheet.showScrollable<void>(
       context: context,
-      backgroundColor: context.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => _ActionTypeSelector(
+      title: context.l10n.automationEditorAddAction,
+      initialChildSize: 0.6,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      builder: (controller) => _ActionTypeSelector(
+        scrollController: controller,
         onSelect: (type) {
-          Navigator.pop(context);
           setState(() {
             _actions.add(AutomationAction(type: type));
           });
@@ -1058,15 +1058,15 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
   }
 
   void _addCondition() {
-    showModalBottomSheet(
+    AppBottomSheet.showScrollable<void>(
       context: context,
-      backgroundColor: context.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => _ConditionTypeSelector(
+      title: context.l10n.automationEditorSelectConditionType,
+      initialChildSize: 0.6,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      builder: (controller) => _ConditionTypeSelector(
+        scrollController: controller,
         onSelect: (type) {
-          Navigator.pop(context);
           setState(() {
             _conditions ??= [];
             _conditions!.add(AutomationCondition(type: type));
@@ -1092,15 +1092,15 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
   }
 
   void _addElseAction() {
-    showModalBottomSheet(
+    AppBottomSheet.showScrollable<void>(
       context: context,
-      backgroundColor: context.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => _ActionTypeSelector(
+      title: context.l10n.automationEditorAddAction,
+      initialChildSize: 0.6,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      builder: (controller) => _ActionTypeSelector(
+        scrollController: controller,
         onSelect: (type) {
-          Navigator.pop(context);
           setState(() {
             _elseActions ??= [];
             _elseActions!.add(AutomationAction(type: type));
@@ -1383,68 +1383,51 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
 
 /// Bottom sheet for selecting action type
 class _ActionTypeSelector extends StatelessWidget {
+  final ScrollController scrollController;
   final void Function(ActionType type) onSelect;
 
-  const _ActionTypeSelector({required this.onSelect});
+  const _ActionTypeSelector({
+    required this.scrollController,
+    required this.onSelect,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
+    return SingleChildScrollView(
+      controller: scrollController,
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing16,
+        0,
+        AppTheme.spacing16,
+        AppTheme.spacing16,
+      ),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: ActionType.values.map((type) {
+          return BouncyTap(
+            onTap: () {
+              Navigator.of(context).pop();
+              onSelect(type);
+            },
             child: Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: SemanticColors.muted,
-                borderRadius: BorderRadius.circular(AppTheme.radius2),
+                color: context.card,
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
+                border: Border.all(color: context.border),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(type.icon, size: 20),
+                  const SizedBox(width: AppTheme.spacing8),
+                  Text(type.localizedName(context.l10n)),
+                ],
               ),
             ),
-          ),
-          Text(
-            context.l10n.automationEditorAddAction,
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: AppTheme.spacing16),
-
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: ActionType.values.map((type) {
-              return BouncyTap(
-                onTap: () => onSelect(type),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.card,
-                    borderRadius: BorderRadius.circular(AppTheme.radius12),
-                    border: Border.all(color: context.border),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(type.icon, size: 20),
-                      const SizedBox(width: AppTheme.spacing8),
-                      Text(type.displayName),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-
-          SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
-        ],
+          );
+        }).toList(),
       ),
     );
   }
@@ -1454,66 +1437,50 @@ class _ActionTypeSelector extends StatelessWidget {
 class _ConditionTypeSelector extends StatelessWidget {
   final void Function(ConditionType type) onSelect;
 
-  const _ConditionTypeSelector({required this.onSelect});
+  const _ConditionTypeSelector({
+    required this.scrollController,
+    required this.onSelect,
+  });
+
+  final ScrollController scrollController;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
+    return SingleChildScrollView(
+      controller: scrollController,
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing16,
+        0,
+        AppTheme.spacing16,
+        AppTheme.spacing16,
+      ),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: ConditionType.values.map((type) {
+          return BouncyTap(
+            onTap: () {
+              Navigator.of(context).pop();
+              onSelect(type);
+            },
             child: Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: SemanticColors.muted,
-                borderRadius: BorderRadius.circular(AppTheme.radius2),
+                color: context.card,
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
+                border: Border.all(color: context.border),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(type.icon, size: 20, color: AccentColors.cyan),
+                  const SizedBox(width: AppTheme.spacing8),
+                  Text(type.localizedName(context.l10n)),
+                ],
               ),
             ),
-          ),
-          Text(
-            context.l10n.automationEditorSelectConditionType,
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: AppTheme.spacing16),
-
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: ConditionType.values.map((type) {
-              return BouncyTap(
-                onTap: () => onSelect(type),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.card,
-                    borderRadius: BorderRadius.circular(AppTheme.radius12),
-                    border: Border.all(color: context.border),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(type.icon, size: 20, color: AccentColors.cyan),
-                      const SizedBox(width: AppTheme.spacing8),
-                      Text(type.localizedName(context.l10n)),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-
-          SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
-        ],
+          );
+        }).toList(),
       ),
     );
   }
