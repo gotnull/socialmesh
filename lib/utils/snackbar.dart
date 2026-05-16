@@ -9,38 +9,22 @@ import '../core/widgets/loading_indicator.dart';
 import '../core/navigation.dart';
 import 'package:socialmesh/core/theme.dart';
 
-/// Snackbar types with associated styling
+/// Snackbar types with associated styling.
+///
+/// Only the icon tint is per-type; the container background is driven by
+/// `Theme.of(context).cardColor` in the helpers below. All colours come
+/// from the theme — no hardcoded `Color(0x...)` literals.
 enum SnackBarType {
-  success(
-    icon: Icons.check_circle_rounded,
-    backgroundColor: AppTheme.successGreen,
-    iconColor: ChartColors.green,
-  ),
-  error(
-    icon: Icons.error_rounded,
-    backgroundColor: Color(0xFF7F1D1D),
-    iconColor: Color(0xFFEF5350),
-  ),
-  warning(
-    icon: Icons.warning_rounded,
-    backgroundColor: Color(0xFF7C4700),
-    iconColor: Color(0xFFFFB74D),
-  ),
-  info(
-    icon: Icons.info_rounded,
-    backgroundColor: Color(0xFF0D47A1),
-    iconColor: Color(0xFF64B5F6),
-  );
+  success(icon: Icons.check_circle_rounded, iconColor: ChartColors.green),
+  error(icon: Icons.error_rounded, iconColor: AppTheme.errorRed),
+  warning(icon: Icons.warning_rounded, iconColor: AppTheme.warningYellow),
+  info(icon: Icons.info_rounded, iconColor: SemanticColors.info),
+  bug(icon: Icons.bug_report, iconColor: AccentColors.magenta);
 
   final IconData icon;
-  final Color backgroundColor;
   final Color iconColor;
 
-  const SnackBarType({
-    required this.icon,
-    required this.backgroundColor,
-    required this.iconColor,
-  });
+  const SnackBarType({required this.icon, required this.iconColor});
 }
 
 /// Shows a success snackbar with check icon
@@ -95,6 +79,20 @@ void showInfoSnackBar(
     context,
     message,
     type: SnackBarType.info,
+    duration: duration,
+  );
+}
+
+/// Shows a bug snackbar with bug-report icon (founder responses, etc).
+void showBugSnackBar(
+  BuildContext context,
+  String message, {
+  Duration duration = const Duration(seconds: 3),
+}) {
+  _showStyledSnackBar(
+    context,
+    message,
+    type: SnackBarType.bug,
     duration: duration,
   );
 }
@@ -235,6 +233,7 @@ void _showStyledSnackBar(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
                     width: 36,
@@ -334,6 +333,7 @@ void showActionSnackBar(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
                     width: 36,
@@ -425,6 +425,7 @@ void _showLoadingSnackBar(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
                     width: 36,

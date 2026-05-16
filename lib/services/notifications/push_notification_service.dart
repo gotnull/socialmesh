@@ -454,7 +454,7 @@ class PushNotificationService {
           arguments: targetId != null ? {'reportId': targetId} : null,
         );
       },
-      type: SnackBarType.info,
+      type: SnackBarType.bug,
       duration: const Duration(seconds: 6),
     );
   }

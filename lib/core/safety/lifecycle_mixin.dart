@@ -181,6 +181,8 @@ mixin LifecycleSafeMixin<T extends ConsumerStatefulWidget> on ConsumerState<T> {
           showWarningSnackBar(context, message, duration: duration);
         case SnackBarType.info:
           showInfoSnackBar(context, message, duration: duration);
+        case SnackBarType.bug:
+          showBugSnackBar(context, message, duration: duration);
       }
     }
   }
@@ -350,6 +352,8 @@ mixin StatefulLifecycleSafeMixin<T extends StatefulWidget> on State<T> {
           showWarningSnackBar(context, message, duration: duration);
         case SnackBarType.info:
           showInfoSnackBar(context, message, duration: duration);
+        case SnackBarType.bug:
+          showBugSnackBar(context, message, duration: duration);
       }
     }
   }
