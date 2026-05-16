@@ -150,8 +150,11 @@ class MeshMorphPainter extends CustomPainter {
 
       final lowBucket = _buckets[lowIdx];
       final highBucket = _buckets[highIdx];
-      final highlight =
-          Color.lerp(lowBucket.highlight, highBucket.highlight, blend)!;
+      final highlight = Color.lerp(
+        lowBucket.highlight,
+        highBucket.highlight,
+        blend,
+      )!;
       final mid = Color.lerp(lowBucket.mid, highBucket.mid, blend)!;
       final rim = Color.lerp(lowBucket.rim, highBucket.rim, blend)!;
 
