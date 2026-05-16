@@ -191,11 +191,13 @@ class MeshMorphPainter extends CustomPainter {
       final highlightIdx = values.first;
       final midIdx = values[values.length ~/ 2];
       final rimIdx = values.last;
-      out.add(_BucketColors(
-        highlight: _palColor(highlightIdx),
-        mid: _palColor(midIdx),
-        rim: _palColor(rimIdx),
-      ));
+      out.add(
+        _BucketColors(
+          highlight: _palColor(highlightIdx),
+          mid: _palColor(midIdx),
+          rim: _palColor(rimIdx),
+        ),
+      );
     }
     return out;
   }
