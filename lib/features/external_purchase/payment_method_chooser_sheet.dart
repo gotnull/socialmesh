@@ -175,9 +175,11 @@ Future<_PaymentMethodResult> _runStripePurchase(
 
     final merchantId = stripe.Stripe.merchantIdentifier ?? '';
     final applePay = _shouldOfferApplePay(merchantId);
+    final googlePay = _shouldOfferGooglePay();
     AppLogging.purchase(
       '[StripePurchase] initPaymentSheet '
-      'applePay=$applePay merchantId=${merchantId.isEmpty ? '<none>' : merchantId}',
+      'applePay=$applePay googlePay=$googlePay '
+      'merchantId=${merchantId.isEmpty ? '<none>' : merchantId}',
     );
 
     await stripe.Stripe.instance.initPaymentSheet(
@@ -187,14 +189,22 @@ Future<_PaymentMethodResult> _runStripePurchase(
         applePay: applePay
             ? stripe.PaymentSheetApplePay(merchantCountryCode: 'AU')
             : null,
-        // Required for Android. Stripe Link + 3DS auth open a Chrome
-        // Custom Tab; the SDK uses this URL to deep-link back to the
-        // app when the user finishes (or taps the "Back to <app>"
-        // chip). Without it the Custom Tab strands the user. Must
-        // match an intent filter registered in AndroidManifest.xml
-        // (socialmesh:// is already declared for our other deep-link
-        // routes; the SDK reads the URL before our deep-link router
-        // sees it).
+        googlePay: googlePay
+            ? stripe.PaymentSheetGooglePay(
+                merchantCountryCode: 'AU',
+                currencyCode: 'AUD',
+                // Sandbox network when STRIPE_USE_TEST_MODE=true on
+                // the backend - matches whatever publishable key the
+                // server returned.
+                testEnv: descriptor.publishableKey.startsWith('pk_test_'),
+              )
+            : null,
+        // Required for redirect-based methods on Android (Link's
+        // "Back to <app>" button, 3DS auth). The SDK uses this URL
+        // as the redirect target; DeepLinkManager intercepts the
+        // returning intent and forwards it to
+        // Stripe.instance.handleURLCallback so the Payment Sheet
+        // can complete. Must match Stripe.urlScheme set at boot.
         returnURL: 'socialmesh://stripe-redirect',
       ),
     );
@@ -237,6 +247,19 @@ bool _shouldOfferApplePay(String merchantId) {
   if (merchantId.isEmpty) return false;
   try {
     return defaultTargetPlatform == TargetPlatform.iOS && Platform.isIOS;
+  } catch (_) {
+    return false;
+  }
+}
+
+bool _shouldOfferGooglePay() {
+  // Google Pay requires no app-side merchant identifier (Stripe owns
+  // the GP merchant on our behalf). Android-only - on iOS the user
+  // gets Apple Pay instead.
+  if (kIsWeb) return false;
+  try {
+    return defaultTargetPlatform == TargetPlatform.android &&
+        Platform.isAndroid;
   } catch (_) {
     return false;
   }

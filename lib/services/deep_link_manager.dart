@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
 
 import '../core/constants.dart';
 import '../core/logging.dart';
@@ -114,6 +115,19 @@ class DeepLinkManager {
     AppLogging.qr('DeepLinkManager: _appReady=$_appReady');
     AppLogging.qr('DeepLinkManager: _isNavigatorReady=${_isNavigatorReady()}');
 
+    // Step 0: Stripe redirect intercept. Stripe Link's "Back to
+    // <app>" button + 3DS auth redirects route to MainActivity via
+    // our `socialmesh://` intent filter. We must forward those URLs
+    // to the Stripe SDK BEFORE our own dedup / parsing / navigation
+    // logic, otherwise the pending presentPaymentSheet() flow hangs
+    // waiting for a callback it never receives. Per flutter_stripe's
+    // own docs (lib/src/stripe.dart line 367), this is the
+    // documented integration pattern when the host app owns its
+    // deep-link scheme.
+    if (_maybeHandleStripeRedirect(uriString)) {
+      return;
+    }
+
     // Step 1: Parse the URI
     final parsed = deepLinkParser.parse(uriString);
 
@@ -158,6 +172,57 @@ class DeepLinkManager {
       );
       _pendingLink = parsed;
     }
+  }
+
+  /// Forward Stripe-owned redirect URLs to the Stripe SDK so a
+  /// pending Payment Sheet flow can complete.
+  ///
+  /// Triggered by Stripe Link's "Back to app" button and 3DS
+  /// auth return URLs on Android (and the iDEAL / SOFORT / similar
+  /// redirect flows). The SDK requires the host app to forward
+  /// these URLs via `Stripe.instance.handleURLCallback` - without
+  /// the forward, the SDK's PaymentSheet activity hangs waiting
+  /// for a callback that's already been delivered to MainActivity
+  /// instead. See flutter_stripe-12.6.0/lib/src/stripe.dart line
+  /// 367 for the documented integration pattern.
+  ///
+  /// Returns true if the URL was Stripe-owned and forwarded.
+  /// Callers MUST early-return on true so our own dedup / parsing /
+  /// navigation never touches it.
+  bool _maybeHandleStripeRedirect(String uriString) {
+    Uri uri;
+    try {
+      uri = Uri.parse(uriString);
+    } catch (_) {
+      return false;
+    }
+    // Match the scheme + host configured in main.dart's
+    // Stripe.urlScheme + initPaymentSheet returnURL. Accept both
+    // host styles Stripe has used over SDK versions for forward
+    // compatibility (safepay was the iDEAL legacy host).
+    if (uri.scheme != 'socialmesh') return false;
+    if (uri.host != 'stripe-redirect' && uri.host != 'safepay') return false;
+
+    AppLogging.purchase(
+      '[DeepLinkManager] Stripe redirect intercepted '
+      '(host=${uri.host}) - forwarding to Stripe SDK',
+    );
+    // Fire-and-forget. The SDK schedules the completion callback
+    // synchronously enough that the pending presentPaymentSheet()
+    // future resolves before the next event loop tick.
+    unawaited(
+      stripe.Stripe.instance
+          .handleURLCallback(uriString)
+          .then(
+            (handled) => AppLogging.purchase(
+              '[DeepLinkManager] Stripe SDK handleURLCallback returned $handled',
+            ),
+            onError: (Object e) => AppLogging.purchase(
+              '[DeepLinkManager] Stripe handleURLCallback failed (non-fatal): $e',
+            ),
+          ),
+    );
+    return true;
   }
 
   /// Generate a unique key for the link target (type + identifier)

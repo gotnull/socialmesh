@@ -235,10 +235,20 @@ Future<void> main() async {
         if (merchantId.isNotEmpty) {
           Stripe.merchantIdentifier = merchantId;
         }
+        // Required for redirect-based methods (Stripe Link's "Back to
+        // <app>" button, 3DS auth, etc.) on Android. The SDK passes
+        // this scheme as the redirect target; when the user finishes
+        // the external flow, the URL hits Android's intent router,
+        // app_links surfaces it to Flutter, and our DeepLinkManager
+        // forwards it to Stripe.instance.handleURLCallback so the
+        // SDK can complete the pending Payment Sheet flow. See
+        // DeepLinkManager._maybeHandleStripeRedirect.
+        Stripe.urlScheme = 'socialmesh';
         await Stripe.instance.applySettings();
         AppLogging.purchase(
           'boot: Stripe SDK initialised '
-          '(merchantId=${merchantId.isEmpty ? '<none>' : merchantId})',
+          '(merchantId=${merchantId.isEmpty ? '<none>' : merchantId}, '
+          'urlScheme=socialmesh)',
         );
       } else {
         AppLogging.purchase(

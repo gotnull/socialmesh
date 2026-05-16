@@ -1541,11 +1541,26 @@ class _AccountSubscriptionsScreenState
 
   Future<void> _signOut(BuildContext _) async {
     final l10n = context.l10n;
-    final online = ref.read(isOnlineProvider);
-    if (!online) {
-      AppLogging.subscriptions('🚪 Sign out blocked — offline');
-      showErrorSnackBar(context, l10n.accountSubSignOutRequiresInternet);
-      return;
+    // Force a fresh connectivity check before blocking. iOS
+    // connectivity_plus occasionally reports transient `none` events
+    // during view controller transitions (Stripe Payment Sheet,
+    // share sheets, etc.) which leaves isOnlineProvider stuck false
+    // for ~10s. Without this refresh, sign-out (and every other
+    // online-gated action) gets a spurious "requires internet" error
+    // on a genuinely-online device.
+    if (!ref.read(isOnlineProvider)) {
+      await ref.read(connectivityStatusProvider.notifier).checkNow();
+      if (!mounted) return;
+      if (!ref.read(isOnlineProvider)) {
+        AppLogging.subscriptions(
+          '🚪 Sign out blocked — offline (confirmed after refresh)',
+        );
+        showErrorSnackBar(context, l10n.accountSubSignOutRequiresInternet);
+        return;
+      }
+      AppLogging.subscriptions(
+        '🚪 Sign out: stale-offline corrected by refresh, proceeding',
+      );
     }
 
     // Capture provider ref before await

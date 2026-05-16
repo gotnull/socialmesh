@@ -73,6 +73,14 @@ class ConnectivityNotifier extends Notifier<ConnectivityStatus> {
   final Duration _cacheDuration = const Duration(seconds: 3);
   final Duration _periodicCheckInterval = const Duration(seconds: 10);
 
+  // Reachability probe. Hits our own marketing host so connectivity
+  // checks don't leak per-tap network signals to Google (the previous
+  // `generate_204` endpoint). HEAD requests against socialmesh.app
+  // return ~200 bytes and don't touch any auth/API state. The host
+  // is the same Firebase Hosting site that serves the privacy and
+  // terms pages already used elsewhere in the app.
+  static const String _reachabilityProbeUrl = 'https://socialmesh.app/';
+
   late final Connectivity _connectivity;
   StreamSubscription<List<ConnectivityResult>>? _sub;
   Timer? _periodicTimer;
@@ -137,7 +145,7 @@ class ConnectivityNotifier extends Notifier<ConnectivityStatus> {
         // Perform lightweight reachability check
         try {
           reachable = await _pingUrl(
-            'https://www.google.com/generate_204',
+            _reachabilityProbeUrl,
             timeout: _reachabilityTimeout,
           );
           reason = 'ping';
@@ -178,15 +186,54 @@ class ConnectivityNotifier extends Notifier<ConnectivityStatus> {
         !results.contains(ConnectivityResult.none) && results.isNotEmpty;
 
     if (!platformConnected) {
-      // Immediately set offline — don't wait for a ping that will fail anyway
+      // iOS connectivity_plus emits transient `none` events during view
+      // controller transitions (Stripe Payment Sheet, Apple Pay, system
+      // share sheets, etc.) AND during Wi-Fi -> cellular handoffs. Each
+      // false positive used to flip us straight to offline, breaking
+      // every isOnlineProvider gate (pack purchases, sign-out, etc.)
+      // for ~10s until the next periodic check corrected it.
+      //
+      // Mitigation: when the platform says disconnected, defer the
+      // verdict to a real reachability ping. If the ping succeeds, the
+      // `none` was transient and we stay online. If it fails, we
+      // genuinely are offline and flip the state. This adds ~250ms of
+      // ambiguity after every platform event but eliminates the
+      // false-negative class of bugs.
+      AppLogging.connection(
+        '🌐 Connectivity: platform change -> NONE reported, '
+        'verifying with reachability ping before flipping offline, '
+        'results=$results',
+      );
+      bool reachable = false;
+      try {
+        reachable = await _pingUrl(
+          _reachabilityProbeUrl,
+          timeout: _reachabilityTimeout,
+        );
+      } catch (_) {
+        reachable = false;
+      }
+      _lastReachabilityCheck = DateTime.now();
+      _lastReachable = reachable;
+      if (reachable) {
+        // Transient `none` - we're actually online.
+        state = const ConnectivityStatus(
+          platformConnected: true,
+          reachable: true,
+          reason: 'transient_none_ignored',
+        );
+        AppLogging.connection(
+          '🌐 Connectivity: transient NONE ignored (ping succeeded) - staying online',
+        );
+        return;
+      }
       state = const ConnectivityStatus(
         platformConnected: false,
         reachable: false,
         reason: 'platform_disconnected',
       );
       AppLogging.connection(
-        '🌐 Connectivity: platform change -> offline (airplane/wifi off), '
-        'results=$results',
+        '🌐 Connectivity: confirmed offline (NONE + ping failed)',
       );
       return;
     }

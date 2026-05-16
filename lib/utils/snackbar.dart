@@ -9,6 +9,36 @@ import '../core/widgets/loading_indicator.dart';
 import '../core/navigation.dart';
 import 'package:socialmesh/core/theme.dart';
 
+// Picks the Row cross-axis alignment for a snackbar based on whether
+// the message actually wraps. Single-line messages look better
+// vertically centered; multi-line messages need top-alignment so the
+// icon sits next to the first line instead of the visual middle.
+//
+// Approximates the text-cell width by subtracting the icon column
+// (36 + 12 spacing) and trailing column (8 + estimated trailingWidth)
+// from the constraint passed by LayoutBuilder.
+CrossAxisAlignment _snackBarRowAlignment({
+  required BoxConstraints constraints,
+  required String message,
+  required TextStyle? style,
+  required double trailingWidth,
+}) {
+  const iconColumn = 36.0 + AppTheme.spacing12;
+  const trailingGap = AppTheme.spacing8;
+  final textMaxWidth =
+      (constraints.maxWidth - iconColumn - trailingGap - trailingWidth).clamp(
+        0,
+        double.infinity,
+      );
+  final painter = TextPainter(
+    text: TextSpan(text: message, style: style),
+    textDirection: TextDirection.ltr,
+    maxLines: null,
+  )..layout(maxWidth: textMaxWidth.toDouble());
+  final isMultiLine = painter.computeLineMetrics().length > 1;
+  return isMultiLine ? CrossAxisAlignment.start : CrossAxisAlignment.center;
+}
+
 /// Snackbar types with associated styling.
 ///
 /// Only the icon tint is per-type; the container background is driven by
@@ -232,46 +262,56 @@ void _showStyledSnackBar(
             color: Colors.transparent,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: type.iconColor.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(AppTheme.radius10),
-                    ),
-                    child: Icon(type.icon, color: type.iconColor, size: 20),
-                  ),
-                  const SizedBox(width: AppTheme.spacing12),
-                  Expanded(
-                    child: Text(
-                      message,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final textStyle = Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w500,
                         height: 1.3,
+                      );
+                  // Close button: 4px padding + 18px icon + 4px padding = 26px
+                  final alignment = _snackBarRowAlignment(
+                    constraints: constraints,
+                    message: message,
+                    style: textStyle,
+                    trailingWidth: 26,
+                  );
+                  return Row(
+                    crossAxisAlignment: alignment,
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: type.iconColor.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius10,
+                          ),
+                        ),
+                        child: Icon(type.icon, color: type.iconColor, size: 20),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: AppTheme.spacing8),
-                  GestureDetector(
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      messenger.hideCurrentSnackBar();
-                    },
-                    behavior: HitTestBehavior.opaque,
-                    child: Container(
-                      padding: const EdgeInsets.all(AppTheme.spacing4),
-                      child: Icon(
-                        Icons.close_rounded,
-                        color: Colors.white.withValues(alpha: 0.7),
-                        size: 18,
+                      const SizedBox(width: AppTheme.spacing12),
+                      Expanded(child: Text(message, style: textStyle)),
+                      const SizedBox(width: AppTheme.spacing8),
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          messenger.hideCurrentSnackBar();
+                        },
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          padding: const EdgeInsets.all(AppTheme.spacing4),
+                          child: Icon(
+                            Icons.close_rounded,
+                            color: Colors.white.withValues(alpha: 0.7),
+                            size: 18,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ],
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -332,43 +372,55 @@ void showActionSnackBar(
             color: Colors.transparent,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: type.iconColor.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(AppTheme.radius10),
-                    ),
-                    child: Icon(type.icon, color: type.iconColor, size: 20),
-                  ),
-                  const SizedBox(width: AppTheme.spacing12),
-                  Expanded(
-                    child: Text(
-                      message,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final textStyle = Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w500,
                         height: 1.3,
+                      );
+                  // TextButton width depends on the action label;
+                  // rough estimate of 72px covers common 4-8 char
+                  // labels like "View" / "Restore".
+                  final alignment = _snackBarRowAlignment(
+                    constraints: constraints,
+                    message: message,
+                    style: textStyle,
+                    trailingWidth: 72,
+                  );
+                  return Row(
+                    crossAxisAlignment: alignment,
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: type.iconColor.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius10,
+                          ),
+                        ),
+                        child: Icon(type.icon, color: type.iconColor, size: 20),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: AppTheme.spacing8),
-                  TextButton(
-                    onPressed: () {
-                      messenger.hideCurrentSnackBar();
-                      onAction();
-                    },
-                    child: Text(
-                      actionLabel,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.labelLarge?.copyWith(color: Colors.white),
-                    ),
-                  ),
-                ],
+                      const SizedBox(width: AppTheme.spacing12),
+                      Expanded(child: Text(message, style: textStyle)),
+                      const SizedBox(width: AppTheme.spacing8),
+                      TextButton(
+                        onPressed: () {
+                          messenger.hideCurrentSnackBar();
+                          onAction();
+                        },
+                        child: Text(
+                          actionLabel,
+                          style: Theme.of(
+                            context,
+                          ).textTheme.labelLarge?.copyWith(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -424,35 +476,47 @@ void _showLoadingSnackBar(
             color: Colors.transparent,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: SnackBarType.info.iconColor.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(AppTheme.radius10),
-                    ),
-                    child: Center(
-                      child: LoadingIndicator(
-                        size: 24,
-                        color: SnackBarType.info.iconColor,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppTheme.spacing12),
-                  Expanded(
-                    child: Text(
-                      message,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final textStyle = Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w500,
                         height: 1.3,
+                      );
+                  // Loading snackbar has no trailing widget.
+                  final alignment = _snackBarRowAlignment(
+                    constraints: constraints,
+                    message: message,
+                    style: textStyle,
+                    trailingWidth: 0,
+                  );
+                  return Row(
+                    crossAxisAlignment: alignment,
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: SnackBarType.info.iconColor.withValues(
+                            alpha: 0.2,
+                          ),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius10,
+                          ),
+                        ),
+                        child: Center(
+                          child: LoadingIndicator(
+                            size: 24,
+                            color: SnackBarType.info.iconColor,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ],
+                      const SizedBox(width: AppTheme.spacing12),
+                      Expanded(child: Text(message, style: textStyle)),
+                    ],
+                  );
+                },
               ),
             ),
           ),
