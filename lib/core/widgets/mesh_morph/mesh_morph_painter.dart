@@ -135,13 +135,26 @@ class MeshMorphPainter extends CustomPainter {
     const highlightAlign = Alignment(-0.45, -0.45);
 
     for (final i in order) {
-      // Nearest ball = brightest bucket (5), farthest = bucket 0.
+      // Continuous bucket interpolation — was discrete .round() to one of
+      // 6 buckets, which made balls visibly "pop" between brightness
+      // levels as they crossed bucket boundaries. Lerping between the two
+      // adjacent buckets gives a smooth ramp instead of a step staircase.
       final t = (_sz[i] - zMin) / zSpan; // 0 near, 1 far
-      var bucketIdx = (lastBucket - (t * lastBucket).round()).toInt();
-      if (bucketIdx < 0) bucketIdx = 0;
-      if (bucketIdx > lastBucket) bucketIdx = lastBucket;
+      final bucketPos = (1.0 - t) * lastBucket; // continuous, 0 far .. 5 near
+      var lowIdx = bucketPos.floor();
+      if (lowIdx < 0) lowIdx = 0;
+      if (lowIdx > lastBucket) lowIdx = lastBucket;
+      var highIdx = lowIdx + 1;
+      if (highIdx > lastBucket) highIdx = lastBucket;
+      final blend = (bucketPos - lowIdx).clamp(0.0, 1.0);
 
-      final bucket = _buckets[bucketIdx];
+      final lowBucket = _buckets[lowIdx];
+      final highBucket = _buckets[highIdx];
+      final highlight =
+          Color.lerp(lowBucket.highlight, highBucket.highlight, blend)!;
+      final mid = Color.lerp(lowBucket.mid, highBucket.mid, blend)!;
+      final rim = Color.lerp(lowBucket.rim, highBucket.rim, blend)!;
+
       final centre = Offset(_sx[i], _sy[i]);
       final ballRect = Rect.fromCircle(center: centre, radius: ballRadius);
 
@@ -150,7 +163,7 @@ class MeshMorphPainter extends CustomPainter {
       final shader = RadialGradient(
         center: highlightAlign,
         radius: 0.85,
-        colors: [bucket.highlight, bucket.mid, bucket.rim],
+        colors: [highlight, mid, rim],
         stops: const [0.0, 0.45, 1.0],
       ).createShader(ballRect);
 
@@ -202,14 +215,26 @@ class MeshMorphPainter extends CustomPainter {
     return out;
   }
 
+  // Lerp every palette colour toward white by this amount before use, so
+  // the cluster reads as a brighter / airier version of the original
+  // Equinox palette (which was mixed for a dark CRT and trends quite
+  // saturated). 0 = raw palette, 1 = fully white-out.
+  static const double _paletteLightenAmount = 0.22;
+
+  // Per-ball alpha. Slight transparency lets overlapping balls bleed into
+  // each other instead of forming hard stacked discs — sells the "cloud
+  // of marbles" feel rather than "deck of stickers".
+  static const int _ballAlpha = 224; // ~0.88
+
   static Color _palColor(int idx) {
     final off = idx * 3;
-    return Color.fromARGB(
-      255,
-      kVectorballPaletteRGB[off],
-      kVectorballPaletteRGB[off + 1],
-      kVectorballPaletteRGB[off + 2],
-    );
+    final r = kVectorballPaletteRGB[off];
+    final g = kVectorballPaletteRGB[off + 1];
+    final b = kVectorballPaletteRGB[off + 2];
+    final r2 = r + ((255 - r) * _paletteLightenAmount).round();
+    final g2 = g + ((255 - g) * _paletteLightenAmount).round();
+    final b2 = b + ((255 - b) * _paletteLightenAmount).round();
+    return Color.fromARGB(_ballAlpha, r2, g2, b2);
   }
 }
 

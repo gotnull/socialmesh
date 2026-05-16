@@ -61,6 +61,11 @@ class UserPreferences {
   /// IFTTT config (JSON-encoded)
   final String? iftttConfigJson;
 
+  /// Suppress the in-app snackbar that fires when a founder responds to one
+  /// of the user's bug reports. The push notification and local notification
+  /// still fire when true — only the foreground snackbar is silenced.
+  final bool? bugResponseSnackbarsDisabled;
+
   const UserPreferences({
     this.themeModeIndex,
     this.notificationsEnabled,
@@ -94,6 +99,7 @@ class UserPreferences {
     this.splashMeshStretchIntensity,
     this.automationsJson,
     this.iftttConfigJson,
+    this.bugResponseSnackbarsDisabled,
   });
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) {
@@ -141,6 +147,8 @@ class UserPreferences {
           ?.toDouble(),
       automationsJson: json['automationsJson'] as String?,
       iftttConfigJson: json['iftttConfigJson'] as String?,
+      bugResponseSnackbarsDisabled:
+          json['bugResponseSnackbarsDisabled'] as bool?,
     );
   }
 
@@ -201,6 +209,8 @@ class UserPreferences {
         'splashMeshStretchIntensity': splashMeshStretchIntensity,
       if (automationsJson != null) 'automationsJson': automationsJson,
       if (iftttConfigJson != null) 'iftttConfigJson': iftttConfigJson,
+      if (bugResponseSnackbarsDisabled != null)
+        'bugResponseSnackbarsDisabled': bugResponseSnackbarsDisabled,
     };
   }
 
@@ -237,6 +247,7 @@ class UserPreferences {
     double? splashMeshStretchIntensity,
     String? automationsJson,
     String? iftttConfigJson,
+    bool? bugResponseSnackbarsDisabled,
   }) {
     return UserPreferences(
       themeModeIndex: themeModeIndex ?? this.themeModeIndex,
@@ -293,6 +304,8 @@ class UserPreferences {
           splashMeshStretchIntensity ?? this.splashMeshStretchIntensity,
       automationsJson: automationsJson ?? this.automationsJson,
       iftttConfigJson: iftttConfigJson ?? this.iftttConfigJson,
+      bugResponseSnackbarsDisabled:
+          bugResponseSnackbarsDisabled ?? this.bugResponseSnackbarsDisabled,
     );
   }
 

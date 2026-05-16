@@ -6676,6 +6676,64 @@
     "@feedbackResponseToastDefault": {
         "description": "Default body for the in-app snackbar shown when a founder response to a bug report arrives while the app is in the foreground, used when the FCM payload omits a notification body."
     },
+    "bugResponseSheetTitle": "Bug Reply",
+    "@bugResponseSheetTitle": {
+        "description": "Header title of the quick-action bottom sheet shown when the user taps the founder-response snackbar."
+    },
+    "bugResponseSheetReportedOn": "Reported {date}",
+    "@bugResponseSheetReportedOn": {
+        "description": "Small caption shown above the description of the original bug report in the quick sheet.",
+        "placeholders": {
+            "date": { "type": "String" }
+        }
+    },
+    "bugResponseSheetReplyLabel": "Reply",
+    "@bugResponseSheetReplyLabel": {
+        "description": "Section label above the reply text field in the founder-response quick sheet."
+    },
+    "bugResponseSheetReplyHint": "Type a reply…",
+    "@bugResponseSheetReplyHint": {
+        "description": "Placeholder text in the reply field of the founder-response quick sheet."
+    },
+    "bugResponseSheetSend": "Send reply",
+    "@bugResponseSheetSend": {
+        "description": "Send button on the reply field of the founder-response quick sheet."
+    },
+    "bugResponseSheetReplySent": "Reply sent",
+    "@bugResponseSheetReplySent": {
+        "description": "Success snackbar confirming the user's reply was sent from the quick sheet."
+    },
+    "bugResponseSheetReplyFailed": "Failed to send reply: {error}",
+    "@bugResponseSheetReplyFailed": {
+        "description": "Error snackbar when sending a reply from the quick sheet fails.",
+        "placeholders": {
+            "error": { "type": "String" }
+        }
+    },
+    "bugResponseSheetViewFull": "View full bug report",
+    "@bugResponseSheetViewFull": {
+        "description": "Secondary action: navigate to the full /my-bug-reports screen with the matching report expanded and the reply field focused."
+    },
+    "bugResponseSheetDisableSnackbars": "Don't show again",
+    "@bugResponseSheetDisableSnackbars": {
+        "description": "Secondary action: suppress future foreground snackbars for founder responses (push and local notifications still fire)."
+    },
+    "bugResponseSheetSnackbarsDisabled": "In-app alerts off. Push notifications still fire.",
+    "@bugResponseSheetSnackbarsDisabled": {
+        "description": "Confirmation snackbar after the user disables in-app founder-response snackbars."
+    },
+    "settingsTileBugResponseAlertsTitle": "Bug report reply alerts",
+    "@settingsTileBugResponseAlertsTitle": {
+        "description": "Settings toggle title: in-app snackbar when the founder replies to one of the user's bug reports."
+    },
+    "settingsTileBugResponseAlertsSubtitle": "In-app snackbar when the founder replies",
+    "@settingsTileBugResponseAlertsSubtitle": {
+        "description": "Settings toggle subtitle clarifying that the toggle controls only the in-app foreground snackbar; push and local notifications are unaffected."
+    },
+    "bugResponseSheetLoadFailed": "Couldn't load the bug report",
+    "@bugResponseSheetLoadFailed": {
+        "description": "Inline error shown in the quick sheet when fetching the bug report fails."
+    },
     "feedbackReportBugAction": "Report bug",
     "@feedbackReportBugAction": {
         "description": "Action button label"

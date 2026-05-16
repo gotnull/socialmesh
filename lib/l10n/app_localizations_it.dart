@@ -5117,6 +5117,51 @@ class AppLocalizationsIt extends AppLocalizations {
   String get feedbackResponseToastDefault => 'Nuova risposta al tuo bug report';
 
   @override
+  String get bugResponseSheetTitle => 'Bug Reply';
+
+  @override
+  String bugResponseSheetReportedOn(String date) {
+    return 'Reported $date';
+  }
+
+  @override
+  String get bugResponseSheetReplyLabel => 'Reply';
+
+  @override
+  String get bugResponseSheetReplyHint => 'Type a reply…';
+
+  @override
+  String get bugResponseSheetSend => 'Send reply';
+
+  @override
+  String get bugResponseSheetReplySent => 'Reply sent';
+
+  @override
+  String bugResponseSheetReplyFailed(String error) {
+    return 'Failed to send reply: $error';
+  }
+
+  @override
+  String get bugResponseSheetViewFull => 'View full bug report';
+
+  @override
+  String get bugResponseSheetDisableSnackbars => 'Don\'t show again';
+
+  @override
+  String get bugResponseSheetSnackbarsDisabled =>
+      'In-app alerts off. Push notifications still fire.';
+
+  @override
+  String get settingsTileBugResponseAlertsTitle => 'Bug report reply alerts';
+
+  @override
+  String get settingsTileBugResponseAlertsSubtitle =>
+      'In-app snackbar when the founder replies';
+
+  @override
+  String get bugResponseSheetLoadFailed => 'Couldn\'t load the bug report';
+
+  @override
   String get feedbackReportBugAction => 'Segnala bug';
 
   @override

@@ -1943,9 +1943,12 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
           if (settings.name == '/my-bug-reports') {
             final args = settings.arguments as Map<String, dynamic>?;
             final reportId = args?['reportId'] as String?;
+            final focusReply = args?['focusReply'] as bool? ?? false;
             return MaterialPageRoute(
-              builder: (context) =>
-                  MyBugReportsScreen(initialReportId: reportId),
+              builder: (context) => MyBugReportsScreen(
+                initialReportId: reportId,
+                initialFocusReply: focusReply,
+              ),
             );
           }
           if (settings.name == '/admin-bug-reports') {

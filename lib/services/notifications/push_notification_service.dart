@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart'
     hide Message;
 import 'package:http/http.dart' as http;
@@ -15,7 +16,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging.dart';
 import '../../core/navigation.dart';
+import '../../features/feedback/bug_response_quick_sheet.dart';
 import '../../l10n/l10n_utils.dart';
+import '../../providers/profile_providers.dart';
 import '../../utils/snackbar.dart';
 
 import '../storage/message_database.dart';
@@ -435,24 +438,47 @@ class PushNotificationService {
 
   /// Show an in-app snackbar with a "View" action for a foreground
   /// bug-report response push. Falls back to a localised default message
-  /// when the FCM payload omits a notification body.
+  /// when the FCM payload omits a notification body. Suppressed entirely
+  /// if the user has set [UserPreferences.bugResponseSnackbarsDisabled]
+  /// (push and local notifications still fire).
   void _showBugReportResponseSnackBar(RemoteMessage message) {
+    final ctx = navigatorKey.currentContext;
+    if (ctx == null) return;
+
+    // Respect the user's opt-out: if they've silenced these in-app
+    // snackbars, return early — push/local notifications still fire
+    // because they're dispatched by the OS layer above this helper.
+    final container = ProviderScope.containerOf(ctx, listen: false);
+    final profile = container.read(userProfileProvider).value;
+    final disabled =
+        profile?.preferences?.bugResponseSnackbarsDisabled ?? false;
+    if (disabled) {
+      AppLogging.notifications(
+        'Bug-response snackbar suppressed (user opt-out)',
+      );
+      return;
+    }
+
     final l10n = safeL10n();
     final body = message.notification?.body;
     final snackMessage = (body != null && body.isNotEmpty)
         ? body
         : l10n.feedbackResponseToastDefault;
     final targetId = message.data['targetId'] as String?;
+    if (targetId == null || targetId.isEmpty) {
+      AppLogging.notifications(
+        'Bug-response snackbar skipped: missing targetId',
+      );
+      return;
+    }
 
     showGlobalActionSnackBar(
       snackMessage,
       actionLabel: l10n.feedbackResponseToastAction,
       onAction: () {
-        final navigator = navigatorKey.currentState;
-        navigator?.pushNamed(
-          '/my-bug-reports',
-          arguments: targetId != null ? {'reportId': targetId} : null,
-        );
+        final sheetCtx = navigatorKey.currentContext;
+        if (sheetCtx == null) return;
+        BugResponseQuickSheet.show(context: sheetCtx, reportId: targetId);
       },
       type: SnackBarType.bug,
       duration: const Duration(seconds: 6),

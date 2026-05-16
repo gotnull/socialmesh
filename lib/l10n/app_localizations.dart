@@ -9042,6 +9042,84 @@ abstract class AppLocalizations {
   /// **'New response to your bug report'**
   String get feedbackResponseToastDefault;
 
+  /// Header title of the quick-action bottom sheet shown when the user taps the founder-response snackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Bug Reply'**
+  String get bugResponseSheetTitle;
+
+  /// Small caption shown above the description of the original bug report in the quick sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported {date}'**
+  String bugResponseSheetReportedOn(String date);
+
+  /// Section label above the reply text field in the founder-response quick sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply'**
+  String get bugResponseSheetReplyLabel;
+
+  /// Placeholder text in the reply field of the founder-response quick sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a reply…'**
+  String get bugResponseSheetReplyHint;
+
+  /// Send button on the reply field of the founder-response quick sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Send reply'**
+  String get bugResponseSheetSend;
+
+  /// Success snackbar confirming the user's reply was sent from the quick sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply sent'**
+  String get bugResponseSheetReplySent;
+
+  /// Error snackbar when sending a reply from the quick sheet fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send reply: {error}'**
+  String bugResponseSheetReplyFailed(String error);
+
+  /// Secondary action: navigate to the full /my-bug-reports screen with the matching report expanded and the reply field focused.
+  ///
+  /// In en, this message translates to:
+  /// **'View full bug report'**
+  String get bugResponseSheetViewFull;
+
+  /// Secondary action: suppress future foreground snackbars for founder responses (push and local notifications still fire).
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t show again'**
+  String get bugResponseSheetDisableSnackbars;
+
+  /// Confirmation snackbar after the user disables in-app founder-response snackbars.
+  ///
+  /// In en, this message translates to:
+  /// **'In-app alerts off. Push notifications still fire.'**
+  String get bugResponseSheetSnackbarsDisabled;
+
+  /// Settings toggle title: in-app snackbar when the founder replies to one of the user's bug reports.
+  ///
+  /// In en, this message translates to:
+  /// **'Bug report reply alerts'**
+  String get settingsTileBugResponseAlertsTitle;
+
+  /// Settings toggle subtitle clarifying that the toggle controls only the in-app foreground snackbar; push and local notifications are unaffected.
+  ///
+  /// In en, this message translates to:
+  /// **'In-app snackbar when the founder replies'**
+  String get settingsTileBugResponseAlertsSubtitle;
+
+  /// Inline error shown in the quick sheet when fetching the bug report fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the bug report'**
+  String get bugResponseSheetLoadFailed;
+
   /// Action button label
   ///
   /// In en, this message translates to:

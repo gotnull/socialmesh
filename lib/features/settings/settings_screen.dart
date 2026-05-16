@@ -2782,6 +2782,46 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                 },
                               ),
                             ),
+                            _SettingsTile(
+                              icon: Icons.bug_report_outlined,
+                              title: context
+                                  .l10n
+                                  .settingsTileBugResponseAlertsTitle,
+                              subtitle: context
+                                  .l10n
+                                  .settingsTileBugResponseAlertsSubtitle,
+                              trailing: Consumer(
+                                builder: (context, ref, _) {
+                                  final disabled =
+                                      ref
+                                          .watch(userProfileProvider)
+                                          .value
+                                          ?.preferences
+                                          ?.bugResponseSnackbarsDisabled ??
+                                      false;
+                                  return ThemedSwitch(
+                                    value: !disabled,
+                                    onChanged: (enabled) async {
+                                      HapticFeedback.selectionClick();
+                                      final current =
+                                          ref
+                                              .read(userProfileProvider)
+                                              .value
+                                              ?.preferences ??
+                                          const UserPreferences();
+                                      await ref
+                                          .read(userProfileProvider.notifier)
+                                          .updatePreferences(
+                                            current.copyWith(
+                                              bugResponseSnackbarsDisabled:
+                                                  !enabled,
+                                            ),
+                                          );
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
                           ],
 
                           const SizedBox(height: AppTheme.spacing16),

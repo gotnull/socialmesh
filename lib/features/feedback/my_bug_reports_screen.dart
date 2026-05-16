@@ -23,10 +23,19 @@ enum _BugReportFilter { all, open, responded, awaiting, resolved }
 
 /// Screen showing the user's submitted bug reports and threaded responses.
 class MyBugReportsScreen extends ConsumerStatefulWidget {
-  const MyBugReportsScreen({super.key, this.initialReportId});
+  const MyBugReportsScreen({
+    super.key,
+    this.initialReportId,
+    this.initialFocusReply = false,
+  });
 
   /// If provided, scrolls to and expands this specific report on load.
   final String? initialReportId;
+
+  /// When true, the matching card auto-focuses its reply field after the
+  /// scroll-into-view animation. Used by the bug-response quick sheet's
+  /// "View full bug report" action so the user can reply immediately.
+  final bool initialFocusReply;
 
   @override
   ConsumerState<MyBugReportsScreen> createState() => _MyBugReportsScreenState();
@@ -271,8 +280,13 @@ class _MyBugReportsScreenState extends ConsumerState<MyBugReportsScreen>
                       final isInitialReport =
                           widget.initialReportId == report.id;
                       return _BugReportCard(
+                        key: isInitialReport
+                            ? const PageStorageKey('initial-bug-report-card')
+                            : null,
                         report: report,
                         initiallyExpanded: isInitialReport,
+                        autoFocusReply:
+                            isInitialReport && widget.initialFocusReply,
                       );
                     },
                   ),
@@ -337,10 +351,20 @@ class _MyBugReportsScreenState extends ConsumerState<MyBugReportsScreen>
 
 /// Expandable card showing a single bug report with its threaded responses.
 class _BugReportCard extends ConsumerStatefulWidget {
-  const _BugReportCard({required this.report, this.initiallyExpanded = false});
+  const _BugReportCard({
+    super.key,
+    required this.report,
+    this.initiallyExpanded = false,
+    this.autoFocusReply = false,
+  });
 
   final BugReport report;
   final bool initiallyExpanded;
+
+  /// On mount: scroll this card into view and focus its reply field. Used by
+  /// the bug-response quick sheet so users land in reply mode without an
+  /// extra tap.
+  final bool autoFocusReply;
 
   @override
   ConsumerState<_BugReportCard> createState() => _BugReportCardState();
@@ -365,6 +389,25 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
     _replyFocusNode.addListener(_onReplyFocusChanged);
     if (_isExpanded && widget.report.hasUnreadResponses) {
       _markAsRead();
+    }
+    if (widget.autoFocusReply) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        final ctx = context;
+        try {
+          await Scrollable.ensureVisible(
+            ctx,
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeOutCubic,
+            alignment: 0.1,
+          );
+        } catch (_) {
+          // Card may not be inside a Scrollable yet (race during build).
+          // Falling through to focus still gives the user a usable state.
+        }
+        if (!mounted) return;
+        _replyFocusNode.requestFocus();
+      });
     }
   }
 
