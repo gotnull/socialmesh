@@ -1212,117 +1212,96 @@ class _ActionEditorState extends ConsumerState<ActionEditor>
   }
 
   void _showActionTypePicker(BuildContext context) {
-    showModalBottomSheet(
+    AppBottomSheet.showScrollable<void>(
       context: context,
-      backgroundColor: context.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(AppTheme.spacing16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: SemanticColors.muted,
-                  borderRadius: BorderRadius.circular(AppTheme.radius2),
-                ),
-              ),
-            ),
-            Text(
-              context.l10n.automationActionChangeType,
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: AppTheme.spacing16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: ActionType.values
-                  .where((type) {
-                    // Hide glyphPattern on non-Nothing phones
-                    if (type == ActionType.glyphPattern) {
-                      return ref.watch(glyphServiceProvider).isSupported;
+      title: context.l10n.automationActionChangeType,
+      initialChildSize: 0.6,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      builder: (scrollController) => SingleChildScrollView(
+        controller: scrollController,
+        padding: const EdgeInsets.fromLTRB(
+          AppTheme.spacing16,
+          0,
+          AppTheme.spacing16,
+          AppTheme.spacing16,
+        ),
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: ActionType.values
+              .where((type) {
+                // Hide glyphPattern on non-Nothing phones
+                if (type == ActionType.glyphPattern) {
+                  return ref.watch(glyphServiceProvider).isSupported;
+                }
+                return true;
+              })
+              .map((type) {
+                final isSelected = type == widget.action.type;
+                return BouncyTap(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    if (type != widget.action.type) {
+                      _webhookEventController.text = '';
+                      _webhookUrlController.text = '';
+                      _shortcutNameController.text = '';
+                      // Pre-populate message text for sendMessage/sendToChannel
+                      final config = <String, dynamic>{};
+                      if ((type == ActionType.sendMessage ||
+                              type == ActionType.sendToChannel) &&
+                          widget.triggerType != null) {
+                        config['messageText'] =
+                            widget.triggerType!.defaultMessageText;
+                      }
+                      widget.onChanged(
+                        AutomationAction(type: type, config: config),
+                      );
                     }
-                    return true;
-                  })
-                  .map((type) {
-                    final isSelected = type == widget.action.type;
-                    return BouncyTap(
-                      onTap: () {
-                        Navigator.pop(context);
-                        if (type != widget.action.type) {
-                          _webhookEventController.text = '';
-                          _webhookUrlController.text = '';
-                          _shortcutNameController.text = '';
-                          // Pre-populate message text for sendMessage/sendToChannel
-                          final config = <String, dynamic>{};
-                          if ((type == ActionType.sendMessage ||
-                                  type == ActionType.sendToChannel) &&
-                              widget.triggerType != null) {
-                            config['messageText'] =
-                                widget.triggerType!.defaultMessageText;
-                          }
-                          widget.onChanged(
-                            AutomationAction(type: type, config: config),
-                          );
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.2)
+                          : context.card,
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                      border: Border.all(
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : context.border,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          type.icon,
+                          size: 20,
                           color: isSelected
-                              ? Theme.of(
-                                  context,
-                                ).colorScheme.primary.withValues(alpha: 0.2)
-                              : context.card,
-                          borderRadius: BorderRadius.circular(
-                            AppTheme.radius12,
-                          ),
-                          border: Border.all(
+                              ? Theme.of(context).colorScheme.primary
+                              : null,
+                        ),
+                        const SizedBox(width: AppTheme.spacing8),
+                        Text(
+                          type.localizedName(context.l10n),
+                          style: TextStyle(
                             color: isSelected
                                 ? Theme.of(context).colorScheme.primary
-                                : context.border,
+                                : null,
                           ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              type.icon,
-                              size: 20,
-                              color: isSelected
-                                  ? Theme.of(context).colorScheme.primary
-                                  : null,
-                            ),
-                            const SizedBox(width: AppTheme.spacing8),
-                            Text(
-                              type.displayName,
-                              style: TextStyle(
-                                color: isSelected
-                                    ? Theme.of(context).colorScheme.primary
-                                    : null,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  })
-                  .toList(),
-            ),
-            SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
-          ],
+                      ],
+                    ),
+                  ),
+                );
+              })
+              .toList(),
         ),
       ),
     );
