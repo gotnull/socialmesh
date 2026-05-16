@@ -187,6 +187,15 @@ Future<_PaymentMethodResult> _runStripePurchase(
         applePay: applePay
             ? stripe.PaymentSheetApplePay(merchantCountryCode: 'AU')
             : null,
+        // Required for Android. Stripe Link + 3DS auth open a Chrome
+        // Custom Tab; the SDK uses this URL to deep-link back to the
+        // app when the user finishes (or taps the "Back to <app>"
+        // chip). Without it the Custom Tab strands the user. Must
+        // match an intent filter registered in AndroidManifest.xml
+        // (socialmesh:// is already declared for our other deep-link
+        // routes; the SDK reads the URL before our deep-link router
+        // sees it).
+        returnURL: 'socialmesh://stripe-redirect',
       ),
     );
     AppLogging.purchase('[StripePurchase] presentPaymentSheet');

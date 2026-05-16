@@ -174,5 +174,13 @@
             <action android:name="android.intent.action.PROCESS_TEXT" />
             <data android:mimeType="text/plain" />
         </intent>
+        <!-- Stripe Link + 3DS auth opens a Chrome Custom Tab on Android.
+             Without this query declaration (required by Android 11+
+             package-visibility rules) the SDK can't enumerate the
+             browser package and the Custom Tab fails to open or fails
+             to deep-link back via the return URL. -->
+        <intent>
+            <action android:name="android.support.customtabs.action.CustomTabsService" />
+        </intent>
     </queries>
 </manifest>
