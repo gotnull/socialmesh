@@ -358,7 +358,7 @@ class AutomationsScreen extends ConsumerWidget {
         const SizedBox(height: AppTheme.spacing12),
         SizedBox(
           height: 130,
-          child: EdgeFade.horizontal(
+          child: EdgeFade.end(
             fadeSize: 24,
             fadeColor: context.background,
             child: ListView.separated(
@@ -1161,7 +1161,7 @@ class _AddAutomationSheet extends ConsumerWidget {
         const SizedBox(height: AppTheme.spacing12),
         SizedBox(
           height: 130,
-          child: EdgeFade.horizontal(
+          child: EdgeFade.end(
             fadeSize: 24,
             fadeColor: context.surface,
             child: ListView.separated(

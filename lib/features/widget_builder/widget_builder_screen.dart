@@ -578,7 +578,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen>
         const SizedBox(height: AppTheme.spacing12),
         SizedBox(
           height: 140,
-          child: EdgeFade.horizontal(
+          child: EdgeFade.end(
             fadeSize: 24,
             fadeColor: context.background,
             child: ListView.separated(
