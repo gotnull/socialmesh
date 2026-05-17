@@ -350,10 +350,10 @@ class _MeshCoreChannelEditSheetState
                     borderRadius: BorderRadius.circular(AppTheme.radius8),
                     borderSide: BorderSide(color: accent),
                   ),
-                  prefixIcon: Icon(
-                    Icons.tag_rounded,
-                    color: context.textSecondary,
+                  prefixIcon: canonicalPrefixIcon(
+                    Icon(Icons.tag_rounded, color: context.textSecondary),
                   ),
+                  prefixIconConstraints: canonicalPrefixIconConstraints,
                   counterText: '',
                 ),
               ),
@@ -404,10 +404,10 @@ class _MeshCoreChannelEditSheetState
                     borderRadius: BorderRadius.circular(AppTheme.radius8),
                     borderSide: BorderSide(color: accent),
                   ),
-                  prefixIcon: Icon(
-                    Icons.vpn_key_rounded,
-                    color: context.textSecondary,
+                  prefixIcon: canonicalPrefixIcon(
+                    Icon(Icons.vpn_key_rounded, color: context.textSecondary),
                   ),
+                  prefixIconConstraints: canonicalPrefixIconConstraints,
                   // D34d: dice button generates a fresh 16-byte PSK via
                   // `Random.secure()` and fills the field with the
                   // 32-char lowercase hex form. Lives in the input's
@@ -680,10 +680,10 @@ class _PassphraseDeriveSheetState extends ConsumerState<_PassphraseDeriveSheet>
                     borderRadius: BorderRadius.circular(AppTheme.radius8),
                     borderSide: BorderSide(color: accent),
                   ),
-                  prefixIcon: Icon(
-                    Icons.password_rounded,
-                    color: context.textSecondary,
+                  prefixIcon: canonicalPrefixIcon(
+                    Icon(Icons.password_rounded, color: context.textSecondary),
                   ),
+                  prefixIconConstraints: canonicalPrefixIconConstraints,
                   counterText: '',
                 ),
               ),

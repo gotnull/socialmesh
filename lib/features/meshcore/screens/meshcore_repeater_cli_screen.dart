@@ -28,6 +28,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animated_empty_state.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/settings_primitives.dart';
 import '../../../models/meshcore_contact.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../services/haptic_service.dart';
@@ -528,10 +529,13 @@ class _CommandInput extends StatelessWidget {
                     horizontal: AppTheme.spacing16,
                     vertical: AppTheme.spacing12,
                   ),
-                  prefixIcon: Icon(
-                    Icons.chevron_right_rounded,
-                    color: context.textSecondary,
+                  prefixIcon: canonicalPrefixIcon(
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: context.textSecondary,
+                    ),
                   ),
+                  prefixIconConstraints: canonicalPrefixIconConstraints,
                 ),
                 textInputAction: TextInputAction.send,
                 inputFormatters: [LengthLimitingTextInputFormatter(maxLength)],

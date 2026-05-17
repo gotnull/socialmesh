@@ -826,10 +826,13 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                 borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.accentColor),
               ),
-              prefixIcon: Icon(
-                Icons.person_outline_rounded,
-                color: context.textSecondary,
+              prefixIcon: canonicalPrefixIcon(
+                Icon(
+                  Icons.person_outline_rounded,
+                  color: context.textSecondary,
+                ),
               ),
+              prefixIconConstraints: canonicalPrefixIconConstraints,
               counterText: '',
             ),
           ),
@@ -1286,10 +1289,10 @@ class _EditLocationSheetState extends ConsumerState<_EditLocationSheet>
                 borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.accentColor),
               ),
-              prefixIcon: Icon(
-                Icons.my_location_outlined,
-                color: context.textSecondary,
+              prefixIcon: canonicalPrefixIcon(
+                Icon(Icons.my_location_outlined, color: context.textSecondary),
               ),
+              prefixIconConstraints: canonicalPrefixIconConstraints,
               counterText: '',
             ),
           ),
@@ -1326,15 +1329,18 @@ class _EditLocationSheetState extends ConsumerState<_EditLocationSheet>
                 borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.accentColor),
               ),
-              prefixIcon: Icon(
-                Icons.location_searching_outlined,
-                color: context.textSecondary,
+              prefixIcon: canonicalPrefixIcon(
+                Icon(
+                  Icons.location_searching_outlined,
+                  color: context.textSecondary,
+                ),
               ),
+              prefixIconConstraints: canonicalPrefixIconConstraints,
               counterText: '',
             ),
           ),
           const SizedBox(height: AppTheme.spacing16),
-          // Tertiary "use my location" — full-width, text-style so
+          // Tertiary "use my location" - full-width, text-style so
           // it never competes with the primary Apply button. Sits
           // above the Apply/Clear row so the two halved buttons keep
           // single-line labels and matching widths.

@@ -760,10 +760,10 @@ class _MeshCoreRepeaterAdminSettingsScreenState
               ),
               filled: true,
               fillColor: context.background,
-              prefixIcon: Icon(
-                Icons.badge_outlined,
-                color: context.textSecondary,
+              prefixIcon: canonicalPrefixIcon(
+                Icon(Icons.badge_outlined, color: context.textSecondary),
               ),
+              prefixIconConstraints: canonicalPrefixIconConstraints,
             ),
           ),
         ),
@@ -838,10 +838,10 @@ class _MeshCoreRepeaterAdminSettingsScreenState
                   ),
                   filled: true,
                   fillColor: context.background,
-                  prefixIcon: Icon(
-                    Icons.timer_outlined,
-                    color: context.textSecondary,
+                  prefixIcon: canonicalPrefixIcon(
+                    Icon(Icons.timer_outlined, color: context.textSecondary),
                   ),
+                  prefixIconConstraints: canonicalPrefixIconConstraints,
                 ),
               ),
               const SizedBox(height: AppTheme.spacing16),
@@ -873,10 +873,13 @@ class _MeshCoreRepeaterAdminSettingsScreenState
                   ),
                   filled: true,
                   fillColor: context.background,
-                  prefixIcon: Icon(
-                    Icons.broadcast_on_personal_outlined,
-                    color: context.textSecondary,
+                  prefixIcon: canonicalPrefixIcon(
+                    Icon(
+                      Icons.broadcast_on_personal_outlined,
+                      color: context.textSecondary,
+                    ),
                   ),
+                  prefixIconConstraints: canonicalPrefixIconConstraints,
                 ),
               ),
             ],
@@ -922,10 +925,10 @@ class _MeshCoreRepeaterAdminSettingsScreenState
                   ),
                   filled: true,
                   fillColor: context.background,
-                  prefixIcon: Icon(
-                    Icons.podcasts_rounded,
-                    color: context.textSecondary,
+                  prefixIcon: canonicalPrefixIcon(
+                    Icon(Icons.podcasts_rounded, color: context.textSecondary),
                   ),
+                  prefixIconConstraints: canonicalPrefixIconConstraints,
                 ),
               ),
               const SizedBox(height: AppTheme.spacing16),
@@ -1033,10 +1036,10 @@ class _MeshCoreRepeaterAdminSettingsScreenState
                   ),
                   filled: true,
                   fillColor: context.background,
-                  prefixIcon: Icon(
-                    Icons.flash_on_rounded,
-                    color: context.textSecondary,
+                  prefixIcon: canonicalPrefixIcon(
+                    Icon(Icons.flash_on_rounded, color: context.textSecondary),
                   ),
+                  prefixIconConstraints: canonicalPrefixIconConstraints,
                 ),
               ),
             ],
@@ -1080,10 +1083,10 @@ class _MeshCoreRepeaterAdminSettingsScreenState
                   ),
                   filled: true,
                   fillColor: context.background,
-                  prefixIcon: Icon(
-                    Icons.place_outlined,
-                    color: context.textSecondary,
+                  prefixIcon: canonicalPrefixIcon(
+                    Icon(Icons.place_outlined, color: context.textSecondary),
                   ),
+                  prefixIconConstraints: canonicalPrefixIconConstraints,
                 ),
               ),
               const SizedBox(height: AppTheme.spacing16),
@@ -1118,10 +1121,10 @@ class _MeshCoreRepeaterAdminSettingsScreenState
                   ),
                   filled: true,
                   fillColor: context.background,
-                  prefixIcon: Icon(
-                    Icons.explore_outlined,
-                    color: context.textSecondary,
+                  prefixIcon: canonicalPrefixIcon(
+                    Icon(Icons.explore_outlined, color: context.textSecondary),
                   ),
+                  prefixIconConstraints: canonicalPrefixIconConstraints,
                 ),
               ),
             ],
@@ -1155,10 +1158,13 @@ class _MeshCoreRepeaterAdminSettingsScreenState
                   ),
                   filled: true,
                   fillColor: context.background,
-                  prefixIcon: Icon(
-                    Icons.lock_outline_rounded,
-                    color: context.textSecondary,
+                  prefixIcon: canonicalPrefixIcon(
+                    Icon(
+                      Icons.lock_outline_rounded,
+                      color: context.textSecondary,
+                    ),
                   ),
+                  prefixIconConstraints: canonicalPrefixIconConstraints,
                 ),
               ),
               const SizedBox(height: AppTheme.spacing16),
@@ -1184,10 +1190,13 @@ class _MeshCoreRepeaterAdminSettingsScreenState
                   ),
                   filled: true,
                   fillColor: context.background,
-                  prefixIcon: Icon(
-                    Icons.lock_person_outlined,
-                    color: context.textSecondary,
+                  prefixIcon: canonicalPrefixIcon(
+                    Icon(
+                      Icons.lock_person_outlined,
+                      color: context.textSecondary,
+                    ),
                   ),
+                  prefixIconConstraints: canonicalPrefixIconConstraints,
                 ),
               ),
             ],

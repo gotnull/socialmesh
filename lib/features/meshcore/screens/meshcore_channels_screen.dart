@@ -12,6 +12,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animated_empty_state.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/settings_primitives.dart';
 import '../../../core/widgets/primary_gradient_button.dart';
 import '../../../core/widgets/qr_share_sheet.dart';
 import '../../../core/widgets/search_filter_header.dart';
@@ -955,10 +956,14 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
           TextField(
             controller: controller,
             autofocus: true,
-            maxLines: 3,
+            // `name:hex_psk` codes are ~50 chars max (name <=16 +
+            // 32-hex PSK + 1 separator). The earlier 3-line field
+            // produced an overgrown box that vertically de-centered
+            // the prefix icon; single-line keeps the icon flush with
+            // the placeholder.
+            maxLines: 1,
             maxLength: 256,
             onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
-            textAlignVertical: TextAlignVertical.top,
             decoration: InputDecoration(
               hintText: context.l10n.meshcoreImportChannelHint,
               hintStyle: TextStyle(color: SemanticColors.muted),
@@ -976,14 +981,13 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                 borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.accentColor),
               ),
-              prefixIcon: Icon(
-                Icons.qr_code_scanner_rounded,
-                color: context.textSecondary,
+              prefixIcon: canonicalPrefixIcon(
+                Icon(
+                  Icons.qr_code_scanner_rounded,
+                  color: context.textSecondary,
+                ),
               ),
-              prefixIconConstraints: const BoxConstraints(
-                minWidth: 48,
-                minHeight: 48,
-              ),
+              prefixIconConstraints: canonicalPrefixIconConstraints,
               counterText: '',
             ),
             style: TextStyle(
@@ -1095,10 +1099,10 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
           TextField(
             controller: controller,
             autofocus: true,
-            maxLines: 3,
+            // Same single-line decision as the Import dialog above.
+            maxLines: 1,
             maxLength: 256,
             onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
-            textAlignVertical: TextAlignVertical.top,
             decoration: InputDecoration(
               hintText: context.l10n.meshcorePasteChannelCodeHint,
               hintStyle: TextStyle(color: SemanticColors.muted),
@@ -1116,11 +1120,10 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                 borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.accentColor),
               ),
-              prefixIcon: Icon(Icons.key_rounded, color: context.textSecondary),
-              prefixIconConstraints: const BoxConstraints(
-                minWidth: 48,
-                minHeight: 48,
+              prefixIcon: canonicalPrefixIcon(
+                Icon(Icons.key_rounded, color: context.textSecondary),
               ),
+              prefixIconConstraints: canonicalPrefixIconConstraints,
               counterText: '',
             ),
             style: TextStyle(
