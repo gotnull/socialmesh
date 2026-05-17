@@ -325,13 +325,13 @@ class _ManualPathSheetState extends ConsumerState<_ManualPathSheet>
       return Text(
         l10n.meshcoreManualPathInvalidToken(parsed.invalidToken ?? '')
             as String,
-        style: TextStyle(color: AccentColors.red, fontSize: 12),
+        style: TextStyle(color: AppTheme.errorRed, fontSize: 12),
       );
     }
     if (parsed.isTooLong) {
       return Text(
         l10n.meshcoreManualPathTooLong(parsed.overflowLength ?? 0) as String,
-        style: TextStyle(color: AccentColors.red, fontSize: 12),
+        style: TextStyle(color: AppTheme.errorRed, fontSize: 12),
       );
     }
     final bytes = parsed.bytes ?? Uint8List(0);

@@ -2110,10 +2110,10 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
       return AccentColors.purple;
     }
     final colors = [
-      const Color(0xFF5B4FCE),
-      const Color(0xFFD946A6),
+      AccentColors.indigo,
+      AccentColors.pink,
       AppTheme.graphBlue,
-      const Color(0xFFF59E0B),
+      AccentColors.orange,
       AppTheme.errorRed,
       AccentColors.emerald,
     ];
