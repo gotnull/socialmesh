@@ -2144,6 +2144,44 @@ class MeshCoreSession {
   // Channels
   // ---------------------------------------------------------------------------
 
+  /// D-Q9: single-slot channel fetch. Drives `CMD_GET_CHANNEL 0x1F`
+  /// + `respCodeChannelInfo 0x12` for one specific slot rather than
+  /// looping all 8 (which is what [getChannels] does). Useful for
+  /// post-edit refresh: after writing a single channel with
+  /// [setChannel] the caller can re-read just that slot instead of
+  /// triggering an 8-slot drain. The wire envelope is identical to
+  /// the inner per-slot call in [getChannels]; this method just
+  /// pulls one out as a public API.
+  ///
+  /// Returns the parsed channel info, or `null` on:
+  ///   - timeout,
+  ///   - parse failure,
+  ///   - firmware indicating the slot is unconfigured (the parser
+  ///     returns `isEmpty == true`, which we surface as null so
+  ///     callers can distinguish "empty slot" from "decoding ok").
+  ///
+  /// Slot index is clamped to `[0, 7]`; firmware silently ignores
+  /// out-of-range values, so we reject them up-front.
+  Future<MeshCoreChannelInfo?> getChannel(
+    int slot, {
+    Duration timeout = const Duration(seconds: 2),
+  }) async {
+    if (slot < 0 || slot > 7) {
+      throw ArgumentError.value(slot, 'slot', 'must be in [0, 7]');
+    }
+    final response = await sendAndWait(
+      MeshCoreCommands.getChannel,
+      payload: Uint8List.fromList([slot]),
+      expectedResponse: MeshCoreResponses.channelInfo,
+      timeout: timeout,
+    );
+    if (response == null) return null;
+    final result = parseChannelInfo(response.payload);
+    if (!result.isSuccess || result.value == null) return null;
+    if (result.value!.isEmpty) return null;
+    return result.value;
+  }
+
   /// Request channel info from device.
   ///
   /// Sends CMD_GET_CHANNEL for each index and collects CHANNEL_INFO responses.

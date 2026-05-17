@@ -8463,6 +8463,36 @@ class AppLocalizationsEn extends AppLocalizations {
       'Based on LiPo voltage range (3.0V - 4.2V)';
 
   @override
+  String get meshcoreBasedOnLifepo4Voltage =>
+      'Based on LiFePO4 voltage range (2.5V - 3.6V)';
+
+  @override
+  String get meshcoreBasedOnLiionVoltage =>
+      'Based on Li-Ion voltage range (2.75V - 4.2V)';
+
+  @override
+  String get meshcoreBasedOnNimhVoltage =>
+      'Based on NiMH single-cell range (0.9V - 1.4V)';
+
+  @override
+  String get meshcoreBatteryChemistryLabel => 'Cell chemistry';
+
+  @override
+  String get meshcoreBatteryChemistryAuto => 'Auto';
+
+  @override
+  String get meshcoreBatteryChemistryLipo => 'LiPo';
+
+  @override
+  String get meshcoreBatteryChemistryLifepo4 => 'LiFePO4';
+
+  @override
+  String get meshcoreBatteryChemistryLiion => 'Li-Ion';
+
+  @override
+  String get meshcoreBatteryChemistryNimh => 'NiMH';
+
+  @override
   String get meshcoreBatteryAndStorage => 'Battery & Storage';
 
   @override
@@ -10371,6 +10401,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshcoreMapTitle => 'Map';
 
   @override
+  String get meshcoreMapPinDropTitle => 'Drop a pin';
+
+  @override
+  String meshcoreMapPinDropSubtitle(String lat, String lon) {
+    return 'Lat $lat, Lon $lon';
+  }
+
+  @override
+  String get meshcoreMapPinDropLabelField => 'Label';
+
+  @override
+  String get meshcoreMapPinDropLabelHint => 'e.g. Home, Cabin, Repeater hill';
+
+  @override
+  String get meshcoreMapPinDropSave => 'Save pin';
+
+  @override
+  String get meshcoreMapPinCancel => 'Cancel';
+
+  @override
+  String meshcoreMapPinDropped(String label) {
+    return 'Pin saved: $label';
+  }
+
+  @override
+  String get meshcoreMapPinRemove => 'Remove pin';
+
+  @override
+  String meshcoreMapPinRemoved(String label) {
+    return 'Pin removed: $label';
+  }
+
+  @override
   String get meshcoreMaxTxPowerLabel => 'Max TX Power';
 
   @override
@@ -10721,6 +10784,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String meshcoreContactToggleFavoriteFailed(String name) {
     return 'Could not update favorite status for $name.';
   }
+
+  @override
+  String get meshcoreContactBlock => 'Mute notifications';
+
+  @override
+  String get meshcoreContactUnblock => 'Unmute notifications';
+
+  @override
+  String meshcoreContactBlockSuccess(String name) {
+    return 'Notifications muted for $name.';
+  }
+
+  @override
+  String meshcoreContactUnblockSuccess(String name) {
+    return 'Notifications restored for $name.';
+  }
+
+  @override
+  String get meshcoreContactBlockedBadge => 'Muted';
 
   @override
   String get meshcoreShareContact => 'Share Contact';

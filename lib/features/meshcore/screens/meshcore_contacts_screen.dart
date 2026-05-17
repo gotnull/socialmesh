@@ -21,6 +21,7 @@ import '../../../models/meshcore_contact.dart';
 import '../../../models/meshcore_contact_import_preview.dart';
 import '../contact_l10n.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/meshcore_contact_block_provider.dart';
 import '../../../providers/meshcore_message_providers.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../utils/snackbar.dart';
@@ -577,6 +578,21 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
               : context.l10n.meshcoreContactAddFavorite,
           onTap: () => _toggleFavorite(contact),
         ),
+        // D-Q8: per-contact block toggle. Local-only — blocked
+        // contacts' inbound messages still arrive but the OS
+        // notification is suppressed. No wire change.
+        BottomSheetAction(
+          icon: _isBlocked(contact)
+              ? Icons.notifications_active_rounded
+              : Icons.notifications_off_outlined,
+          iconColor: _isBlocked(contact)
+              ? AccentColors.green
+              : AccentColors.red,
+          label: _isBlocked(contact)
+              ? context.l10n.meshcoreContactUnblock
+              : context.l10n.meshcoreContactBlock,
+          onTap: () => _toggleBlock(contact),
+        ),
         BottomSheetAction(
           icon: Icons.share_rounded,
           label: context.l10n.meshcoreShareContact,
@@ -710,6 +726,39 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
       showErrorSnackBar(
         context,
         context.l10n.meshcoreResetPathFailed(contact.name),
+      );
+    }
+  }
+
+  /// D-Q8: sync block check against the provider's hydrated state.
+  /// Used by the long-press sheet to flip the action label between
+  /// "Block contact" and "Unblock contact".
+  bool _isBlocked(MeshCoreContact contact) {
+    return ref
+        .read(meshCoreContactBlockProvider.notifier)
+        .isBlocked(contact.publicKeyHex);
+  }
+
+  /// D-Q8: toggle the per-contact block flag. Local-only (no wire
+  /// change) — the OS notification path checks `isBlocked()` before
+  /// surfacing inbound messages from this contact.
+  Future<void> _toggleBlock(MeshCoreContact contact) async {
+    final l10n = context.l10n;
+    final notifier = ref.read(meshCoreContactBlockProvider.notifier);
+    final wasBlocked = notifier.isBlocked(contact.publicKeyHex);
+    if (wasBlocked) {
+      await notifier.unblock(contact.publicKeyHex);
+      if (!mounted) return;
+      showSuccessSnackBar(
+        context,
+        l10n.meshcoreContactUnblockSuccess(contact.name),
+      );
+    } else {
+      await notifier.block(contact.publicKeyHex);
+      if (!mounted) return;
+      showSuccessSnackBar(
+        context,
+        l10n.meshcoreContactBlockSuccess(contact.name),
       );
     }
   }

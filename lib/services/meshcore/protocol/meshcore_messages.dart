@@ -11,6 +11,7 @@ import 'dart:typed_data';
 
 import '../../../core/meshcore_constants.dart';
 import '../../../utils/text_sanitizer.dart';
+import '../storage/meshcore_battery_chemistry.dart';
 import 'meshcore_frame.dart';
 
 /// Parsed SELF_INFO response data.
@@ -108,10 +109,15 @@ class MeshCoreBattAndStorage {
   /// Battery percentage estimate (0-100), or null if cannot be determined.
   ///
   /// Based on typical LiPo voltage range: 3.0V (empty) to 4.2V (full).
+  /// D-Q11 routes through the chemistry-aware estimator so callers
+  /// with a non-LiPo cell (LiFePO4 / Li-Ion / NiMH) can pass the
+  /// right profile; this getter preserves the historical default
+  /// for callers that don't know any better.
   int? get batteryPercentEstimate {
-    if (batteryMillivolts < 3000) return 0;
-    if (batteryMillivolts > 4200) return 100;
-    return ((batteryMillivolts - 3000) * 100 / 1200).round();
+    return estimateMeshCoreBatteryPercent(
+      voltageMv: batteryMillivolts,
+      chemistry: MeshCoreBatteryChemistry.lipo,
+    );
   }
 
   /// Storage percentage used (0-100), or null if total is zero.

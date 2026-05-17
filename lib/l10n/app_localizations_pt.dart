@@ -8550,6 +8550,36 @@ class AppLocalizationsPt extends AppLocalizations {
       'Baseado na faixa de tensão LiPo (3.0V - 4.2V)';
 
   @override
+  String get meshcoreBasedOnLifepo4Voltage =>
+      'Baseado na faixa de tensão LiFePO4 (2.5V - 3.6V)';
+
+  @override
+  String get meshcoreBasedOnLiionVoltage =>
+      'Baseado na faixa de tensão Li-Ion (2.75V - 4.2V)';
+
+  @override
+  String get meshcoreBasedOnNimhVoltage =>
+      'Baseado na faixa de tensão de uma célula NiMH (0.9V - 1.4V)';
+
+  @override
+  String get meshcoreBatteryChemistryLabel => 'Química da célula';
+
+  @override
+  String get meshcoreBatteryChemistryAuto => 'Auto';
+
+  @override
+  String get meshcoreBatteryChemistryLipo => 'LiPo';
+
+  @override
+  String get meshcoreBatteryChemistryLifepo4 => 'LiFePO4';
+
+  @override
+  String get meshcoreBatteryChemistryLiion => 'Li-Ion';
+
+  @override
+  String get meshcoreBatteryChemistryNimh => 'NiMH';
+
+  @override
   String get meshcoreBatteryAndStorage => 'Bateria e armazenamento';
 
   @override
@@ -10483,6 +10513,40 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreMapTitle => 'Mapa';
 
   @override
+  String get meshcoreMapPinDropTitle => 'Adicionar um pin';
+
+  @override
+  String meshcoreMapPinDropSubtitle(String lat, String lon) {
+    return 'Lat $lat, Lon $lon';
+  }
+
+  @override
+  String get meshcoreMapPinDropLabelField => 'Rótulo';
+
+  @override
+  String get meshcoreMapPinDropLabelHint =>
+      'ex. Casa, Cabana, Morro do repetidor';
+
+  @override
+  String get meshcoreMapPinDropSave => 'Salvar pin';
+
+  @override
+  String get meshcoreMapPinCancel => 'Cancelar';
+
+  @override
+  String meshcoreMapPinDropped(String label) {
+    return 'Pin salvo: $label';
+  }
+
+  @override
+  String get meshcoreMapPinRemove => 'Remover pin';
+
+  @override
+  String meshcoreMapPinRemoved(String label) {
+    return 'Pin removido: $label';
+  }
+
+  @override
   String get meshcoreMaxTxPowerLabel => 'Potência TX Máx';
 
   @override
@@ -10840,6 +10904,25 @@ class AppLocalizationsPt extends AppLocalizations {
   String meshcoreContactToggleFavoriteFailed(String name) {
     return 'Não foi possível atualizar os favoritos para $name.';
   }
+
+  @override
+  String get meshcoreContactBlock => 'Silenciar notificações';
+
+  @override
+  String get meshcoreContactUnblock => 'Reativar notificações';
+
+  @override
+  String meshcoreContactBlockSuccess(String name) {
+    return 'Notificações silenciadas para $name.';
+  }
+
+  @override
+  String meshcoreContactUnblockSuccess(String name) {
+    return 'Notificações restauradas para $name.';
+  }
+
+  @override
+  String get meshcoreContactBlockedBadge => 'Silenciado';
 
   @override
   String get meshcoreShareContact => 'Compartilhar contato';

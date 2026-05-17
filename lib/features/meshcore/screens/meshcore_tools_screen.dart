@@ -22,8 +22,13 @@ import 'package:share_plus/share_plus.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_message_providers.dart';
 import '../../../providers/meshcore_providers.dart';
+import '../../../core/widgets/chip_selector.dart';
+import '../../../providers/meshcore_battery_chemistry_provider.dart';
 import '../../../services/meshcore/diagnostics/meshcore_diagnostics_bundle_service.dart';
 import '../../../services/meshcore/protocol/meshcore_messages.dart';
+import '../../../services/meshcore/storage/meshcore_battery_chemistry.dart';
+import '../../../services/meshcore/storage/meshcore_battery_chemistry_store.dart';
+import '../../../utils/encoding.dart';
 import '../../../utils/snackbar.dart';
 import '../../../models/meshcore_contact.dart';
 import '../../navigation/meshcore_shell.dart';
@@ -441,6 +446,27 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
     return AccentColors.green;
   }
 
+  /// D-Q11: human-readable range hint matching the active chemistry.
+  /// Shown in the battery sheet info banner so the user knows the
+  /// voltage envelope the percent is computed against.
+  String _chemistryRangeHint(
+    BuildContext context,
+    MeshCoreBatteryChemistry chemistry,
+  ) {
+    final l10n = context.l10n;
+    switch (chemistry) {
+      case MeshCoreBatteryChemistry.auto:
+      case MeshCoreBatteryChemistry.lipo:
+        return l10n.meshcoreBasedOnLiPoVoltage;
+      case MeshCoreBatteryChemistry.lifepo4:
+        return l10n.meshcoreBasedOnLifepo4Voltage;
+      case MeshCoreBatteryChemistry.liion:
+        return l10n.meshcoreBasedOnLiionVoltage;
+      case MeshCoreBatteryChemistry.nimh:
+        return l10n.meshcoreBasedOnNimhVoltage;
+    }
+  }
+
   String _getTxPowerDisplay(MeshCoreSelfInfo? selfInfo) {
     if (selfInfo == null) return '--';
     return '${selfInfo.txPowerDbm}dBm';
@@ -562,71 +588,156 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
       return;
     }
 
-    final battPct = battInfo.percentage;
-    final battColor = _getBatteryColor(battInfo);
-
     AppBottomSheet.show<void>(
       context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.l10n.meshcoreBatteryStatus,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-            ),
-          ),
-          SizedBox(height: AppTheme.spacing20),
-
-          Row(
+      child: Consumer(
+        builder: (context, ref, _) {
+          // D-Q11: look up the chemistry override for the current
+          // self radio. AsyncValue.value can be null before
+          // hydration — treat that as `auto` so the sheet renders
+          // cleanly during the first frame after open.
+          final selfInfo = ref.watch(meshCoreSelfInfoProvider).selfInfo;
+          final selfPubKeyHex = selfInfo != null
+              ? HexUtils.toHex(selfInfo.pubKey)
+              : '';
+          final overrides =
+              ref.watch(meshCoreBatteryChemistryProvider).value ??
+              const <String, MeshCoreBatteryChemistry>{};
+          final chemistry = MeshCoreBatteryChemistryStore.lookup(
+            overrides,
+            selfPubKeyHex,
+          );
+          // Recompute the percent against the user-selected
+          // chemistry. Falls back to the adapter's pre-computed
+          // value (LiPo curve) when voltage is unknown.
+          final battPct = battInfo.voltageMillivolts != null
+              ? estimateMeshCoreBatteryPercent(
+                  voltageMv: battInfo.voltageMillivolts!,
+                  chemistry: chemistry,
+                )
+              : battInfo.percentage;
+          final battColor = battPct == null
+              ? context.textTertiary
+              : (battPct < 20
+                    ? AppTheme.errorRed
+                    : battPct < 50
+                    ? AppTheme.warningYellow
+                    : AccentColors.green);
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.battery_full_rounded, color: battColor, size: 32),
-              SizedBox(width: AppTheme.spacing12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      battPct != null
-                          ? '$battPct%'
-                          : '${battInfo.voltageMillivolts}mV',
-                      style: TextStyle(
-                        color: battColor,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      '${context.l10n.meshcoreBatteryStatusLabel} '
-                      '${battPct != null && battInfo.voltageMillivolts != null ? '(${battInfo.voltageMillivolts}mV)' : ''}',
-                      style: TextStyle(color: context.textSecondary),
-                    ),
-                  ],
+              Text(
+                context.l10n.meshcoreBatteryStatus,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: context.textPrimary,
                 ),
               ),
-            ],
-          ),
-          if (battPct != null) ...[
-            SizedBox(height: AppTheme.spacing12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(AppTheme.radius4),
-              child: LinearProgressIndicator(
-                value: battPct / 100,
-                backgroundColor: context.background,
-                valueColor: AlwaysStoppedAnimation(battColor),
-                minHeight: 8,
+              SizedBox(height: AppTheme.spacing20),
+              Row(
+                children: [
+                  Icon(Icons.battery_full_rounded, color: battColor, size: 32),
+                  SizedBox(width: AppTheme.spacing12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          battPct != null
+                              ? '$battPct%'
+                              : '${battInfo.voltageMillivolts ?? "?"}mV',
+                          style: TextStyle(
+                            color: battColor,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          '${context.l10n.meshcoreBatteryStatusLabel} '
+                          '${battPct != null && battInfo.voltageMillivolts != null ? '(${battInfo.voltageMillivolts}mV)' : ''}',
+                          style: TextStyle(color: context.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-          SizedBox(height: AppTheme.spacing16),
-          StatusBanner.info(
-            title: context.l10n.meshcoreBasedOnLiPoVoltage,
-            icon: Icons.info_outline_rounded,
-          ),
-        ],
+              if (battPct != null) ...[
+                SizedBox(height: AppTheme.spacing12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(AppTheme.radius4),
+                  child: LinearProgressIndicator(
+                    value: battPct / 100,
+                    backgroundColor: context.background,
+                    valueColor: AlwaysStoppedAnimation(battColor),
+                    minHeight: 8,
+                  ),
+                ),
+              ],
+              SizedBox(height: AppTheme.spacing16),
+              // D-Q11: chemistry picker. `auto` falls back to the
+              // firmware-default LiPo curve.
+              Text(
+                context.l10n.meshcoreBatteryChemistryLabel,
+                style: TextStyle(
+                  color: context.textSecondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(height: AppTheme.spacing8),
+              ChipSelector<MeshCoreBatteryChemistry>(
+                key: const ValueKey('meshcore-battery-chemistry'),
+                value: chemistry,
+                onChanged: (next) {
+                  if (selfPubKeyHex.isEmpty) return;
+                  ref
+                      .read(meshCoreBatteryChemistryProvider.notifier)
+                      .setChemistry(pubKeyHex: selfPubKeyHex, chemistry: next);
+                },
+                options: [
+                  ChipOption<MeshCoreBatteryChemistry>(
+                    value: MeshCoreBatteryChemistry.auto,
+                    label: context.l10n.meshcoreBatteryChemistryAuto,
+                    icon: Icons.auto_awesome_rounded,
+                    color: context.accentColor,
+                  ),
+                  ChipOption<MeshCoreBatteryChemistry>(
+                    value: MeshCoreBatteryChemistry.lipo,
+                    label: context.l10n.meshcoreBatteryChemistryLipo,
+                    icon: Icons.battery_charging_full_rounded,
+                    color: context.accentColor,
+                  ),
+                  ChipOption<MeshCoreBatteryChemistry>(
+                    value: MeshCoreBatteryChemistry.lifepo4,
+                    label: context.l10n.meshcoreBatteryChemistryLifepo4,
+                    icon: Icons.bolt_outlined,
+                    color: context.accentColor,
+                  ),
+                  ChipOption<MeshCoreBatteryChemistry>(
+                    value: MeshCoreBatteryChemistry.liion,
+                    label: context.l10n.meshcoreBatteryChemistryLiion,
+                    icon: Icons.battery_full_outlined,
+                    color: context.accentColor,
+                  ),
+                  ChipOption<MeshCoreBatteryChemistry>(
+                    value: MeshCoreBatteryChemistry.nimh,
+                    label: context.l10n.meshcoreBatteryChemistryNimh,
+                    icon: Icons.battery_std_outlined,
+                    color: context.accentColor,
+                  ),
+                ],
+              ),
+              SizedBox(height: AppTheme.spacing12),
+              StatusBanner.info(
+                title: _chemistryRangeHint(context, chemistry),
+                icon: Icons.info_outline_rounded,
+              ),
+            ],
+          );
+        },
       ),
     );
   }

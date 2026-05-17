@@ -8553,6 +8553,36 @@ class AppLocalizationsRu extends AppLocalizations {
       'На основе диапазона напряжения LiPo (3.0В - 4.2В)';
 
   @override
+  String get meshcoreBasedOnLifepo4Voltage =>
+      'На основе диапазона напряжения LiFePO4 (2.5В - 3.6В)';
+
+  @override
+  String get meshcoreBasedOnLiionVoltage =>
+      'На основе диапазона напряжения Li-Ion (2.75В - 4.2В)';
+
+  @override
+  String get meshcoreBasedOnNimhVoltage =>
+      'На основе диапазона одной ячейки NiMH (0.9В - 1.4В)';
+
+  @override
+  String get meshcoreBatteryChemistryLabel => 'Химия элемента';
+
+  @override
+  String get meshcoreBatteryChemistryAuto => 'Авто';
+
+  @override
+  String get meshcoreBatteryChemistryLipo => 'LiPo';
+
+  @override
+  String get meshcoreBatteryChemistryLifepo4 => 'LiFePO4';
+
+  @override
+  String get meshcoreBatteryChemistryLiion => 'Li-Ion';
+
+  @override
+  String get meshcoreBatteryChemistryNimh => 'NiMH';
+
+  @override
   String get meshcoreBatteryAndStorage => 'Батарея и хранилище';
 
   @override
@@ -10484,6 +10514,39 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreMapTitle => 'Карта';
 
   @override
+  String get meshcoreMapPinDropTitle => 'Поставить метку';
+
+  @override
+  String meshcoreMapPinDropSubtitle(String lat, String lon) {
+    return 'Шир. $lat, Долг. $lon';
+  }
+
+  @override
+  String get meshcoreMapPinDropLabelField => 'Подпись';
+
+  @override
+  String get meshcoreMapPinDropLabelHint => 'напр. Дом, Хижина, Холм репитера';
+
+  @override
+  String get meshcoreMapPinDropSave => 'Сохранить метку';
+
+  @override
+  String get meshcoreMapPinCancel => 'Отмена';
+
+  @override
+  String meshcoreMapPinDropped(String label) {
+    return 'Метка сохранена: $label';
+  }
+
+  @override
+  String get meshcoreMapPinRemove => 'Удалить метку';
+
+  @override
+  String meshcoreMapPinRemoved(String label) {
+    return 'Метка удалена: $label';
+  }
+
+  @override
   String get meshcoreMaxTxPowerLabel => 'Максимальная TX-мощность';
 
   @override
@@ -10841,6 +10904,25 @@ class AppLocalizationsRu extends AppLocalizations {
   String meshcoreContactToggleFavoriteFailed(String name) {
     return 'Не удалось обновить избранное для $name.';
   }
+
+  @override
+  String get meshcoreContactBlock => 'Отключить уведомления';
+
+  @override
+  String get meshcoreContactUnblock => 'Включить уведомления';
+
+  @override
+  String meshcoreContactBlockSuccess(String name) {
+    return 'Уведомления для $name отключены.';
+  }
+
+  @override
+  String meshcoreContactUnblockSuccess(String name) {
+    return 'Уведомления для $name восстановлены.';
+  }
+
+  @override
+  String get meshcoreContactBlockedBadge => 'Без уведомлений';
 
   @override
   String get meshcoreShareContact => 'Поделиться контактом';

@@ -28,6 +28,7 @@ import '../services/meshcore/storage/meshcore_contact_store.dart';
 import '../services/notifications/notification_service.dart';
 import 'app_lifecycle_provider.dart';
 import 'app_providers.dart';
+import 'meshcore_contact_block_provider.dart';
 import 'meshcore_providers.dart';
 
 // ---------------------------------------------------------------------------
@@ -1034,6 +1035,23 @@ class MeshCoreConversationsNotifier
         final settings = await ref.read(settingsServiceProvider.future);
         if (!settings.notificationsEnabled) return;
         if (!settings.directMessageNotificationsEnabled) return;
+        // D-Q8: per-contact block list. Blocked contacts still
+        // appear on the radio's roster and their messages still
+        // arrive (no wire change), but the OS notification is
+        // suppressed so the user isn't nagged. Reading the
+        // notifier synchronously is safe — the provider has been
+        // hydrated by the time the first DM arrives in any
+        // realistic flow, and a missed-on-cold-start notification
+        // is an acceptable single-frame fallback.
+        if (ref
+            .read(meshCoreContactBlockProvider.notifier)
+            .isBlocked(pubKeyHex)) {
+          AppLogging.meshcore(
+            'event=notification.suppressed scope=contact '
+            'reason=blocked',
+          );
+          return;
+        }
         await NotificationService().showMeshCoreContactMessageNotification(
           senderName: senderName.isNotEmpty ? senderName : 'MeshCore',
           pubKeyHex: pubKeyHex,

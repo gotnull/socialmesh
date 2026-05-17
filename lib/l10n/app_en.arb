@@ -11309,6 +11309,42 @@
     "@meshcoreBasedOnLiPoVoltage": {
         "description": "Info text explaining battery percentage calculation"
     },
+    "meshcoreBasedOnLifepo4Voltage": "Based on LiFePO4 voltage range (2.5V - 3.6V)",
+    "@meshcoreBasedOnLifepo4Voltage": {
+        "description": "D-Q11 - hint banner for LiFePO4 chemistry"
+    },
+    "meshcoreBasedOnLiionVoltage": "Based on Li-Ion voltage range (2.75V - 4.2V)",
+    "@meshcoreBasedOnLiionVoltage": {
+        "description": "D-Q11 - hint banner for Li-Ion chemistry"
+    },
+    "meshcoreBasedOnNimhVoltage": "Based on NiMH single-cell range (0.9V - 1.4V)",
+    "@meshcoreBasedOnNimhVoltage": {
+        "description": "D-Q11 - hint banner for NiMH chemistry"
+    },
+    "meshcoreBatteryChemistryLabel": "Cell chemistry",
+    "@meshcoreBatteryChemistryLabel": {
+        "description": "D-Q11 - section header above the chip selector"
+    },
+    "meshcoreBatteryChemistryAuto": "Auto",
+    "@meshcoreBatteryChemistryAuto": {
+        "description": "D-Q11 - auto (LiPo) chemistry chip"
+    },
+    "meshcoreBatteryChemistryLipo": "LiPo",
+    "@meshcoreBatteryChemistryLipo": {
+        "description": "D-Q11 - LiPo chemistry chip"
+    },
+    "meshcoreBatteryChemistryLifepo4": "LiFePO4",
+    "@meshcoreBatteryChemistryLifepo4": {
+        "description": "D-Q11 - LiFePO4 chemistry chip"
+    },
+    "meshcoreBatteryChemistryLiion": "Li-Ion",
+    "@meshcoreBatteryChemistryLiion": {
+        "description": "D-Q11 - Li-Ion chemistry chip"
+    },
+    "meshcoreBatteryChemistryNimh": "NiMH",
+    "@meshcoreBatteryChemistryNimh": {
+        "description": "D-Q11 - NiMH chemistry chip"
+    },
     "meshcoreBatteryAndStorage": "Battery & Storage",
     "@meshcoreBatteryAndStorage": {
         "description": "Tool card title for battery and storage"
@@ -13888,6 +13924,52 @@
     "@meshcoreMapTitle": {
         "description": "Map screen title"
     },
+    "meshcoreMapPinDropTitle": "Drop a pin",
+    "@meshcoreMapPinDropTitle": {
+        "description": "D-Q10 - long-press prompt title"
+    },
+    "meshcoreMapPinDropSubtitle": "Lat {lat}, Lon {lon}",
+    "@meshcoreMapPinDropSubtitle": {
+        "description": "D-Q10 - subtitle showing the dropped lat/lon",
+        "placeholders": {
+            "lat": {"type": "String"},
+            "lon": {"type": "String"}
+        }
+    },
+    "meshcoreMapPinDropLabelField": "Label",
+    "@meshcoreMapPinDropLabelField": {
+        "description": "D-Q10 - label input field title"
+    },
+    "meshcoreMapPinDropLabelHint": "e.g. Home, Cabin, Repeater hill",
+    "@meshcoreMapPinDropLabelHint": {
+        "description": "D-Q10 - label input placeholder"
+    },
+    "meshcoreMapPinDropSave": "Save pin",
+    "@meshcoreMapPinDropSave": {
+        "description": "D-Q10 - save-pin primary button"
+    },
+    "meshcoreMapPinCancel": "Cancel",
+    "@meshcoreMapPinCancel": {
+        "description": "D-Q10 - cancel button on the drop-pin sheet"
+    },
+    "meshcoreMapPinDropped": "Pin saved: {label}",
+    "@meshcoreMapPinDropped": {
+        "description": "D-Q10 - success snackbar after a pin is saved",
+        "placeholders": {
+            "label": {"type": "String"}
+        }
+    },
+    "meshcoreMapPinRemove": "Remove pin",
+    "@meshcoreMapPinRemove": {
+        "description": "D-Q10 - tap-pin action sheet remove button"
+    },
+    "meshcoreMapPinRemoved": "Pin removed: {label}",
+    "@meshcoreMapPinRemoved": {
+        "description": "D-Q10 - success snackbar after a pin is removed",
+        "placeholders": {
+            "label": {"type": "String"}
+        }
+    },
     "meshcoreMaxTxPowerLabel": "Max TX Power",
     "@meshcoreMaxTxPowerLabel": {
         "description": "Info row label for max TX power"
@@ -14343,6 +14425,32 @@
         "placeholders": {
             "name": {"type": "String"}
         }
+    },
+    "meshcoreContactBlock": "Mute notifications",
+    "@meshcoreContactBlock": {
+        "description": "D-Q8 - long-press action label to suppress notifications from this contact"
+    },
+    "meshcoreContactUnblock": "Unmute notifications",
+    "@meshcoreContactUnblock": {
+        "description": "D-Q8 - long-press action label to re-enable notifications from a previously-blocked contact"
+    },
+    "meshcoreContactBlockSuccess": "Notifications muted for {name}.",
+    "@meshcoreContactBlockSuccess": {
+        "description": "D-Q8 - snackbar after a successful block",
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "meshcoreContactUnblockSuccess": "Notifications restored for {name}.",
+    "@meshcoreContactUnblockSuccess": {
+        "description": "D-Q8 - snackbar after a successful unblock",
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "meshcoreContactBlockedBadge": "Muted",
+    "@meshcoreContactBlockedBadge": {
+        "description": "D-Q8 - small badge on a contact row when notifications are muted"
     },
     "meshcoreShareContact": "Share Contact",
     "@meshcoreShareContact": {

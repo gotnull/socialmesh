@@ -14922,6 +14922,60 @@ abstract class AppLocalizations {
   /// **'Based on LiPo voltage range (3.0V - 4.2V)'**
   String get meshcoreBasedOnLiPoVoltage;
 
+  /// D-Q11 - hint banner for LiFePO4 chemistry
+  ///
+  /// In en, this message translates to:
+  /// **'Based on LiFePO4 voltage range (2.5V - 3.6V)'**
+  String get meshcoreBasedOnLifepo4Voltage;
+
+  /// D-Q11 - hint banner for Li-Ion chemistry
+  ///
+  /// In en, this message translates to:
+  /// **'Based on Li-Ion voltage range (2.75V - 4.2V)'**
+  String get meshcoreBasedOnLiionVoltage;
+
+  /// D-Q11 - hint banner for NiMH chemistry
+  ///
+  /// In en, this message translates to:
+  /// **'Based on NiMH single-cell range (0.9V - 1.4V)'**
+  String get meshcoreBasedOnNimhVoltage;
+
+  /// D-Q11 - section header above the chip selector
+  ///
+  /// In en, this message translates to:
+  /// **'Cell chemistry'**
+  String get meshcoreBatteryChemistryLabel;
+
+  /// D-Q11 - auto (LiPo) chemistry chip
+  ///
+  /// In en, this message translates to:
+  /// **'Auto'**
+  String get meshcoreBatteryChemistryAuto;
+
+  /// D-Q11 - LiPo chemistry chip
+  ///
+  /// In en, this message translates to:
+  /// **'LiPo'**
+  String get meshcoreBatteryChemistryLipo;
+
+  /// D-Q11 - LiFePO4 chemistry chip
+  ///
+  /// In en, this message translates to:
+  /// **'LiFePO4'**
+  String get meshcoreBatteryChemistryLifepo4;
+
+  /// D-Q11 - Li-Ion chemistry chip
+  ///
+  /// In en, this message translates to:
+  /// **'Li-Ion'**
+  String get meshcoreBatteryChemistryLiion;
+
+  /// D-Q11 - NiMH chemistry chip
+  ///
+  /// In en, this message translates to:
+  /// **'NiMH'**
+  String get meshcoreBatteryChemistryNimh;
+
   /// Tool card title for battery and storage
   ///
   /// In en, this message translates to:
@@ -18136,6 +18190,60 @@ abstract class AppLocalizations {
   /// **'Map'**
   String get meshcoreMapTitle;
 
+  /// D-Q10 - long-press prompt title
+  ///
+  /// In en, this message translates to:
+  /// **'Drop a pin'**
+  String get meshcoreMapPinDropTitle;
+
+  /// D-Q10 - subtitle showing the dropped lat/lon
+  ///
+  /// In en, this message translates to:
+  /// **'Lat {lat}, Lon {lon}'**
+  String meshcoreMapPinDropSubtitle(String lat, String lon);
+
+  /// D-Q10 - label input field title
+  ///
+  /// In en, this message translates to:
+  /// **'Label'**
+  String get meshcoreMapPinDropLabelField;
+
+  /// D-Q10 - label input placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Home, Cabin, Repeater hill'**
+  String get meshcoreMapPinDropLabelHint;
+
+  /// D-Q10 - save-pin primary button
+  ///
+  /// In en, this message translates to:
+  /// **'Save pin'**
+  String get meshcoreMapPinDropSave;
+
+  /// D-Q10 - cancel button on the drop-pin sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get meshcoreMapPinCancel;
+
+  /// D-Q10 - success snackbar after a pin is saved
+  ///
+  /// In en, this message translates to:
+  /// **'Pin saved: {label}'**
+  String meshcoreMapPinDropped(String label);
+
+  /// D-Q10 - tap-pin action sheet remove button
+  ///
+  /// In en, this message translates to:
+  /// **'Remove pin'**
+  String get meshcoreMapPinRemove;
+
+  /// D-Q10 - success snackbar after a pin is removed
+  ///
+  /// In en, this message translates to:
+  /// **'Pin removed: {label}'**
+  String meshcoreMapPinRemoved(String label);
+
   /// Info row label for max TX power
   ///
   /// In en, this message translates to:
@@ -18783,6 +18891,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not update favorite status for {name}.'**
   String meshcoreContactToggleFavoriteFailed(String name);
+
+  /// D-Q8 - long-press action label to suppress notifications from this contact
+  ///
+  /// In en, this message translates to:
+  /// **'Mute notifications'**
+  String get meshcoreContactBlock;
+
+  /// D-Q8 - long-press action label to re-enable notifications from a previously-blocked contact
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute notifications'**
+  String get meshcoreContactUnblock;
+
+  /// D-Q8 - snackbar after a successful block
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications muted for {name}.'**
+  String meshcoreContactBlockSuccess(String name);
+
+  /// D-Q8 - snackbar after a successful unblock
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications restored for {name}.'**
+  String meshcoreContactUnblockSuccess(String name);
+
+  /// D-Q8 - small badge on a contact row when notifications are muted
+  ///
+  /// In en, this message translates to:
+  /// **'Muted'**
+  String get meshcoreContactBlockedBadge;
 
   /// Contact options action label
   ///

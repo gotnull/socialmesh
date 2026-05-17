@@ -23,6 +23,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animated_empty_state.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/meshcore_providers.dart';
+import '../../../services/meshcore/diagnostics/meshcore_frame_decoder.dart';
 import '../../../services/meshcore/protocol/meshcore_capture.dart';
 import '../../../utils/snackbar.dart';
 import '../../navigation/meshcore_shell.dart';
@@ -214,8 +215,71 @@ class _FrameLogRow extends StatelessWidget {
               height: 1.3,
             ),
           ),
+          // D-Q9 Row 51: decoded-field view. If the (direction,
+          // opcode) pair has a registered decoder, render a small
+          // table of labelled values below the raw hex. Privacy
+          // invariants live in `meshcore_frame_decoder.dart`: no
+          // chat bodies, no full pubkeys, no PSK bytes.
+          ..._buildDecoded(context, isRx),
         ],
       ),
     );
+  }
+
+  List<Widget> _buildDecoded(BuildContext context, bool isRx) {
+    final fields = decodeMeshCoreFrame(
+      direction: isRx ? MeshCoreFrameDirection.rx : MeshCoreFrameDirection.tx,
+      opcode: frame.code,
+      payload: frame.payload,
+    );
+    if (fields.isEmpty) return const [];
+    return [
+      const SizedBox(height: AppTheme.spacing4),
+      Container(
+        margin: const EdgeInsets.only(top: AppTheme.spacing4),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spacing8,
+          vertical: AppTheme.spacing4,
+        ),
+        decoration: BoxDecoration(
+          color: context.background.withValues(alpha: 0.4),
+          borderRadius: BorderRadius.circular(AppTheme.radius8),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final field in fields)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 1),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 96,
+                      child: Text(
+                        '${field.label}:',
+                        style: TextStyle(
+                          fontFamily: AppTheme.fontFamily,
+                          fontSize: 10,
+                          color: context.textTertiary,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        field.value,
+                        style: TextStyle(
+                          fontFamily: AppTheme.fontFamily,
+                          fontSize: 10,
+                          color: context.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    ];
   }
 }

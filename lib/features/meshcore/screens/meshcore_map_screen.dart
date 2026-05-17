@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -25,6 +26,8 @@ import '../../../core/widgets/section_header.dart';
 import '../../../utils/snackbar.dart';
 import '../../../models/meshcore_contact.dart';
 import '../../../models/meshcore_path_overlay.dart';
+import '../../../models/meshcore_pinned_location.dart';
+import '../../../providers/meshcore_pinned_location_provider.dart';
 import '../contact_l10n.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_providers.dart';
@@ -51,7 +54,8 @@ class MeshCoreMapScreen extends ConsumerStatefulWidget {
   ConsumerState<MeshCoreMapScreen> createState() => _MeshCoreMapScreenState();
 }
 
-class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
+class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
+    with LifecycleSafeMixin {
   final MapController _mapController = MapController();
   bool _hasInitializedMap = false;
   bool _showRepeaters = true;
@@ -106,6 +110,12 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
     final contactsState = ref.watch(meshCoreContactsProvider);
     // D42-A: path overlay drives the polyline + hop markers.
     final pathOverlay = ref.watch(meshCorePathOverlayProvider);
+    // D-Q10: user-dropped POI pins. AsyncValue — hydrates from
+    // SharedPreferences once after first build; treat the loading /
+    // error state as "no pins" so the map renders cleanly.
+    final pinnedLocations =
+        ref.watch(meshCorePinnedLocationProvider).value ??
+        const <MeshCorePinnedLocation>[];
 
     // Auto-fit map bounds when the overlay flips to a new value.
     if (!identical(pathOverlay, _lastFittedOverlay)) {
@@ -269,6 +279,13 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
                         _handleMeasureTap(point);
                       }
                     },
+                    // D-Q10: long-press anywhere on the map to drop
+                    // a pin (POI annotation). Measure mode owns
+                    // taps; long-press is a separate gesture so the
+                    // two never conflict.
+                    onLongPress: (tapPos, point) {
+                      _promptForPinLabel(point);
+                    },
                   ),
                   children: [
                     // Tile layer. Routes to mapbox/dark-v11 when Mapbox is
@@ -301,6 +318,11 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
                             ),
                           ),
                         ..._buildContactMarkers(contactsWithLocation),
+                        // D-Q10: user-dropped POI pins, rendered as
+                        // a yellow pin_drop icon distinct from
+                        // contact-marker circles. Tap a pin to
+                        // open the remove-pin action sheet.
+                        ..._buildPinnedLocationMarkers(pinnedLocations),
                       ]),
                     ),
                     // Measurement polyline
@@ -726,6 +748,178 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen> {
       default:
         return Icons.device_unknown;
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // D-Q10: pinned-locations (POI annotations).
+  // ---------------------------------------------------------------------------
+
+  List<Marker> _buildPinnedLocationMarkers(List<MeshCorePinnedLocation> pins) {
+    return pins
+        .map((pin) {
+          return Marker(
+            point: LatLng(pin.latitude, pin.longitude),
+            width: 36,
+            height: 36,
+            alignment: Alignment.topCenter,
+            child: GestureDetector(
+              onTap: () => _showPinActionSheet(pin),
+              child: Tooltip(
+                message: pin.label,
+                child: Icon(
+                  Icons.pin_drop_rounded,
+                  color: AccentColors.yellow,
+                  size: 30,
+                ),
+              ),
+            ),
+          );
+        })
+        .toList(growable: false);
+  }
+
+  /// D-Q10: bottom-sheet prompt for the pin label. Cancel returns
+  /// without writing; submit appends to the SharedPreferences-backed
+  /// list via the AsyncNotifier.
+  Future<void> _promptForPinLabel(LatLng point) async {
+    HapticFeedback.lightImpact();
+    final l10n = context.l10n;
+    final controller = TextEditingController();
+    final result = await AppBottomSheet.show<String>(
+      context: context,
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.spacing16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              l10n.meshcoreMapPinDropTitle,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing4),
+            Text(
+              l10n.meshcoreMapPinDropSubtitle(
+                point.latitude.toStringAsFixed(5),
+                point.longitude.toStringAsFixed(5),
+              ),
+              style: TextStyle(color: context.textTertiary, fontSize: 13),
+            ),
+            const SizedBox(height: AppTheme.spacing16),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              maxLength: 64,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (v) => Navigator.of(context).pop(v),
+              onTapOutside: (_) =>
+                  FocusManager.instance.primaryFocus?.unfocus(),
+              style: TextStyle(color: context.textPrimary),
+              decoration: InputDecoration(
+                labelText: l10n.meshcoreMapPinDropLabelField,
+                labelStyle: TextStyle(color: context.textSecondary),
+                hintText: l10n.meshcoreMapPinDropLabelHint,
+                hintStyle: TextStyle(color: SemanticColors.muted),
+                filled: true,
+                fillColor: context.background,
+                counterText: '',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                  borderSide: BorderSide(color: context.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                  borderSide: BorderSide(color: context.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                  borderSide: BorderSide(color: context.accentColor),
+                ),
+                prefixIcon: Icon(
+                  Icons.pin_drop_outlined,
+                  color: context.textSecondary,
+                ),
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(l10n.meshcoreMapPinCancel),
+                  ),
+                ),
+                const SizedBox(width: AppTheme.spacing12),
+                Expanded(
+                  child: PrimaryGradientButton(
+                    label: l10n.meshcoreMapPinDropSave,
+                    icon: Icons.check_rounded,
+                    onPressed: () => Navigator.of(context).pop(controller.text),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+    controller.dispose();
+    if (!mounted) return;
+    final label = (result ?? '').trim();
+    if (label.isEmpty) return;
+    await ref
+        .read(meshCorePinnedLocationProvider.notifier)
+        .addPin(
+          latitude: point.latitude,
+          longitude: point.longitude,
+          label: label,
+        );
+    if (!mounted) return;
+    showSuccessSnackBar(context, l10n.meshcoreMapPinDropped(label));
+  }
+
+  /// D-Q10: tap a pin to open the per-pin action sheet (currently
+  /// just a "Remove" affordance).
+  Future<void> _showPinActionSheet(MeshCorePinnedLocation pin) async {
+    HapticFeedback.lightImpact();
+    final l10n = context.l10n;
+    await AppBottomSheet.showActions<void>(
+      context: context,
+      header: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spacing24,
+          vertical: AppTheme.spacing12,
+        ),
+        child: Text(
+          pin.label,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: context.textPrimary,
+          ),
+        ),
+      ),
+      actions: [
+        BottomSheetAction(
+          icon: Icons.delete_outline_rounded,
+          iconColor: AppTheme.errorRed,
+          label: l10n.meshcoreMapPinRemove,
+          isDestructive: true,
+          onTap: () async {
+            await ref
+                .read(meshCorePinnedLocationProvider.notifier)
+                .removePin(pin.id);
+            if (!mounted) return;
+            showSuccessSnackBar(context, l10n.meshcoreMapPinRemoved(pin.label));
+          },
+        ),
+      ],
+    );
   }
 
   Widget _buildLegend(int contactCount) {
