@@ -154,7 +154,12 @@ class AppBottomSheet extends StatelessWidget {
         builder: (context, scrollController) => Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: context.card,
+            // Sheet shell uses `context.background` (darker) so the
+            // entire sheet — drag pill, body, button area — is one
+            // consistent dark surface. Nested cards (`context.card`,
+            // lighter) and `InfoTable`-style read-only blocks (`context
+            // .background` + border) both delineate naturally on top.
+            color: context.background,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: SafeArea(
@@ -392,7 +397,10 @@ class AppBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: context.card,
+        // Match `showScrollable` shell color: consistent `context
+        // .background` across the entire sheet so the drag-pill area,
+        // body, and bottom padding share one dark surface.
+        color: context.background,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Padding(
