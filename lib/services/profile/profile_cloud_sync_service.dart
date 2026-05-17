@@ -13,6 +13,14 @@ import '../../core/logging.dart';
 import '../../models/user_profile.dart';
 import 'profile_service.dart';
 
+/// Placeholder display names that are seeded automatically when no real
+/// name is available. The public-mirror uniqueness check must skip these
+/// — multiple accounts legitimately share them, and a `Guest`-named
+/// account would otherwise never get a `profiles/{uid}` doc written
+/// (the check throws on the first sync and aborts mid-flight).
+@visibleForTesting
+const Set<String> placeholderDisplayNames = {'Guest', 'New User'};
+
 /// Sanitise an auth-provider display name so it passes Firestore rules.
 ///
 /// Rules require `^[a-zA-Z0-9._]+$`, 2-30 chars, no leading/trailing period,
@@ -307,11 +315,17 @@ class ProfileCloudSyncService {
     final doc = await docRef.get();
 
     // Only run the uniqueness check when the display name is actually
-    // changing. A passive sync (e.g. on app launch) must never throw
-    // DisplayNameTakenException for the user's own existing name — that
-    // throw used to abort the public-profile write mid-flight, leaving
-    // users/{uid} and profiles/{uid} out of sync.
-    if (profile.displayName.isNotEmpty) {
+    // changing AND is not a placeholder. A passive sync (e.g. on app
+    // launch) must never throw DisplayNameTakenException for the user's
+    // own existing name — that throw used to abort the public-profile
+    // write mid-flight, leaving users/{uid} and profiles/{uid} out of
+    // sync. Placeholder names like "Guest" and "New User" are seeded
+    // automatically when no real name is available, so multiple users
+    // legitimately share them; running the uniqueness check against
+    // those values would fail for every account that never picked a
+    // name and would leave the public mirror permanently missing.
+    if (profile.displayName.isNotEmpty &&
+        !placeholderDisplayNames.contains(profile.displayName)) {
       final existingName = doc.exists
           ? (doc.data()?['displayName'] as String?)
           : null;

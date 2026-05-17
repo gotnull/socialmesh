@@ -426,6 +426,19 @@ void main() {
     });
   });
 
+  group('placeholderDisplayNames', () {
+    test('contains Guest and New User', () {
+      // Both names are seeded by UserProfile.guest() and
+      // UserProfile.fromFirebaseUser() respectively. The public-mirror
+      // uniqueness check must skip them — many accounts share these
+      // placeholders and the check would otherwise throw on the very
+      // first sync, leaving profiles/{uid} permanently missing and the
+      // Account screen showing the "Error" sync badge.
+      expect(placeholderDisplayNames, contains('Guest'));
+      expect(placeholderDisplayNames, contains('New User'));
+    });
+  });
+
   group('mergePublicMirrorIntoCloud — drift recovery', () {
     test('returns identical cloud profile when public mirror is empty', () {
       final cloud = _createProfile(
