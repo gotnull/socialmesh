@@ -5683,7 +5683,6 @@
     "meshcoreShellRetry": "Réessayer",
     "meshcoreShellScanToAddContact": "Scanner pour ajouter comme contact",
     "meshcoreShellSearchingFor": "Recherche de {deviceName}...",
-    "meshcoreShellSectionConnection": "Connexion",
     "meshcoreShellSectionDeviceInfo": "Informations sur l'appareil",
     "meshcoreShellSectionQuickActions": "Actions rapides",
     "meshcoreShellShareContactInfo": "Partagez votre code de contact pour que d'autres puissent vous envoyer des messages",

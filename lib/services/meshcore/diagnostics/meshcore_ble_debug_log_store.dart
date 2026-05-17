@@ -56,7 +56,27 @@ class MeshCoreBleDebugLogEntry {
 /// that fires on every append / clear / pause-toggle. UI consumers
 /// subscribe through the Riverpod provider; `_streamController` is
 /// closed via `dispose()` when the provider tears down.
+///
+/// The store exposes a lazily-initialised [instance] singleton so the
+/// BLE transport (which has no `ref`) can append without explicit DI.
+/// Tests can replace the singleton via the setter to keep state
+/// isolated.
 class MeshCoreBleDebugLogStore {
+  MeshCoreBleDebugLogStore();
+
+  static MeshCoreBleDebugLogStore? _instance;
+
+  /// Process-wide singleton. Lazily constructed on first access so a
+  /// pure unit test that never touches it pays no allocation cost.
+  static MeshCoreBleDebugLogStore get instance =>
+      _instance ??= MeshCoreBleDebugLogStore();
+
+  /// Test seam: replace the global singleton with a freshly-built
+  /// store between tests so per-test buffers stay isolated.
+  static set instance(MeshCoreBleDebugLogStore store) {
+    _instance = store;
+  }
+
   final List<MeshCoreBleDebugLogEntry> _entries = [];
   bool _paused = false;
   final StreamController<List<MeshCoreBleDebugLogEntry>> _streamController =

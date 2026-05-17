@@ -10,6 +10,7 @@ import '../../core/logging.dart';
 import '../../core/transport.dart';
 import '../../core/meshcore_constants.dart';
 import '../../models/mesh_device.dart';
+import 'diagnostics/meshcore_ble_debug_log_store.dart';
 import 'mesh_transport.dart';
 
 /// Exception thrown when MeshCore UART service is not found.
@@ -107,6 +108,13 @@ class MeshCoreBleTransport implements MeshTransport {
     try {
       AppLogging.ble('MeshCore: Connecting to ${device.name}...');
       AppLogging.meshcore('event=ble.connect device=${device.id}');
+      MeshCoreBleDebugLogStore.instance.append(
+        severity: MeshCoreBleDebugLogSeverity.info,
+        category: MeshCoreBleDebugLogCategory.connect,
+        message:
+            'Connect attempt: ${device.name} '
+            '(${redactMacFingerprint(device.id)})',
+      );
 
       // Get or create BluetoothDevice
       final systemDevices = await FlutterBluePlus.systemDevices([]);
@@ -148,11 +156,21 @@ class MeshCoreBleTransport implements MeshTransport {
       _updateState(DeviceConnectionState.connected);
       AppLogging.ble('MeshCore: Connected and ready');
       AppLogging.meshcore('event=ble.connected device=${device.id}');
+      MeshCoreBleDebugLogStore.instance.append(
+        severity: MeshCoreBleDebugLogSeverity.info,
+        category: MeshCoreBleDebugLogCategory.connect,
+        message: 'Connected (${redactMacFingerprint(device.id)})',
+      );
     } catch (e) {
       AppLogging.ble('MeshCore: Connection error: $e');
       AppLogging.meshcore(
         'event=ble.error stage=connect reason=${e.runtimeType}',
         error: true,
+      );
+      MeshCoreBleDebugLogStore.instance.append(
+        severity: MeshCoreBleDebugLogSeverity.error,
+        category: MeshCoreBleDebugLogCategory.error,
+        message: 'Connect failed: ${e.runtimeType}',
       );
       await disconnect();
       _updateState(DeviceConnectionState.error);
@@ -165,6 +183,13 @@ class MeshCoreBleTransport implements MeshTransport {
 
     // Log all discovered services for debugging
     AppLogging.ble('MeshCore: Found ${services.length} services');
+    MeshCoreBleDebugLogStore.instance.append(
+      severity: MeshCoreBleDebugLogSeverity.info,
+      category: MeshCoreBleDebugLogCategory.discover,
+      message:
+          'Discovered ${services.length} service(s): '
+          '${redactServiceUuids(services.map((s) => s.uuid.toString()))}',
+    );
     for (final svc in services) {
       AppLogging.ble('MeshCore: Service: ${svc.uuid}');
       for (final char in svc.characteristics) {
@@ -190,6 +215,11 @@ class MeshCoreBleTransport implements MeshTransport {
       AppLogging.meshcore(
         'event=ble.error stage=discover reason=service_missing',
         error: true,
+      );
+      MeshCoreBleDebugLogStore.instance.append(
+        severity: MeshCoreBleDebugLogSeverity.error,
+        category: MeshCoreBleDebugLogCategory.discover,
+        message: 'Nordic UART service not found on device',
       );
       throw MeshCoreServiceNotFoundException(
         'MeshCore Nordic UART service (${MeshCoreBleUuids.serviceUuid}) not found. '
@@ -248,10 +278,20 @@ class MeshCoreBleTransport implements MeshTransport {
       },
       onError: (e) {
         AppLogging.ble('MeshCore: Notify error: $e');
+        MeshCoreBleDebugLogStore.instance.append(
+          severity: MeshCoreBleDebugLogSeverity.error,
+          category: MeshCoreBleDebugLogCategory.notify,
+          message: 'Notify stream error: ${e.runtimeType}',
+        );
       },
     );
 
     AppLogging.ble('MeshCore: Characteristic setup complete');
+    MeshCoreBleDebugLogStore.instance.append(
+      severity: MeshCoreBleDebugLogSeverity.info,
+      category: MeshCoreBleDebugLogCategory.notify,
+      message: 'Subscribed to RX notifications (Nordic UART)',
+    );
   }
 
   @override
@@ -275,6 +315,11 @@ class MeshCoreBleTransport implements MeshTransport {
   @override
   Future<void> disconnect() async {
     AppLogging.ble('MeshCore: Disconnecting...');
+    MeshCoreBleDebugLogStore.instance.append(
+      severity: MeshCoreBleDebugLogSeverity.info,
+      category: MeshCoreBleDebugLogCategory.disconnect,
+      message: 'Disconnect requested',
+    );
 
     // Debug: Log stack trace to identify disconnect caller
     if (kDebugMode) {
@@ -308,6 +353,11 @@ class MeshCoreBleTransport implements MeshTransport {
     _updateState(DeviceConnectionState.disconnected);
     AppLogging.ble('MeshCore: Disconnected');
     AppLogging.meshcore('event=ble.closed');
+    MeshCoreBleDebugLogStore.instance.append(
+      severity: MeshCoreBleDebugLogSeverity.info,
+      category: MeshCoreBleDebugLogCategory.disconnect,
+      message: 'Disconnected',
+    );
   }
 
   @override

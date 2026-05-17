@@ -5683,7 +5683,6 @@
     "meshcoreShellRetry": "Повторити",
     "meshcoreShellScanToAddContact": "Скануйте, щоб додати як контакт",
     "meshcoreShellSearchingFor": "Пошук {deviceName}...",
-    "meshcoreShellSectionConnection": "З'єднання",
     "meshcoreShellSectionDeviceInfo": "Інформація про пристрій",
     "meshcoreShellSectionQuickActions": "Швидкі дії",
     "meshcoreShellShareContactInfo": "Поділіться своїм контактним кодом, щоб інші могли вам написати",

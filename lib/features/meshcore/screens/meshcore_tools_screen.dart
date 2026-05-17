@@ -29,6 +29,7 @@ import '../../../models/meshcore_contact.dart';
 import '../../navigation/meshcore_shell.dart';
 import '../contact_l10n.dart';
 import '../../debug/app_log_screen.dart';
+import 'meshcore_ble_debug_log_screen.dart';
 import '../widgets/meshcore_chat_traffic_card.dart';
 import '../widgets/meshcore_radio_stats_card.dart';
 import 'meshcore_discovery_screen.dart';

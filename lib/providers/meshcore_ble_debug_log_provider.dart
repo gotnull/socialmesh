@@ -11,15 +11,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/meshcore/diagnostics/meshcore_ble_debug_log_store.dart';
 
-/// Singleton ring buffer. Kept alive for the lifetime of the app so
-/// BLE events fired from `MeshCoreBleTransport` are captured even
-/// when the viewer screen isn't mounted.
+/// Singleton ring buffer accessor. Returns the same instance as
+/// [MeshCoreBleDebugLogStore.instance] so the BLE transport (which
+/// has no `ref`) and the viewer screen share one buffer. The
+/// instance is kept alive for the lifetime of the app — the provider
+/// intentionally does NOT register an `onDispose` because the
+/// transport may still emit after the viewer screen has unmounted.
 final meshCoreBleDebugLogStoreProvider = Provider<MeshCoreBleDebugLogStore>((
   ref,
 ) {
-  final store = MeshCoreBleDebugLogStore();
-  ref.onDispose(store.dispose);
-  return store;
+  return MeshCoreBleDebugLogStore.instance;
 });
 
 /// Composite snapshot exposing both the entry list and the paused
