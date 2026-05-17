@@ -1898,7 +1898,9 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
   Widget _buildAccountSection(BuildContext context, ThemeData theme) {
     final authState = ref.watch(authStateProvider);
     final profileAsync = ref.watch(userProfileProvider);
-    final isSignedIn = authState.value != null;
+    final user = authState.value;
+    final isSignedIn = user != null;
+    final isAnonymous = user?.isAnonymous ?? false;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1918,14 +1920,24 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
             ),
           ),
           profileAsync.when(
-            data: (profile) =>
-                _buildProfileTile(context, theme, profile, isSignedIn),
+            data: (profile) => _buildProfileTile(
+              context,
+              theme,
+              profile,
+              isSignedIn,
+              isAnonymous,
+            ),
             loading: () => const SizedBox(
               height: 56,
               child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
             ),
-            error: (e, st) =>
-                _buildProfileTile(context, theme, null, isSignedIn),
+            error: (e, st) => _buildProfileTile(
+              context,
+              theme,
+              null,
+              isSignedIn,
+              isAnonymous,
+            ),
           ),
         ],
       ),
@@ -1937,6 +1949,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
     ThemeData theme,
     dynamic profile,
     bool isSignedIn,
+    bool isAnonymous,
   ) {
     final accentColor = theme.colorScheme.primary;
     final syncStatus = ref.watch(syncStatusProvider);
@@ -1965,7 +1978,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
       child: InkWell(
         onTap: () {
           ref.haptics.tabChange();
-          if (isSignedIn) {
+          if (isSignedIn && !isAnonymous) {
             navigateFromDrawer(context, const ProfileScreen());
           } else {
             navigateFromDrawer(context, const AccountSubscriptionsScreen());
