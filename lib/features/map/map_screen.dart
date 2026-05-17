@@ -3289,13 +3289,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
       );
     }
 
+    if (droppedHops > 0) {
+      AppLogging.maps(
+        'Traceroute polyline target=${log.targetNode}: dropped '
+        '$droppedHops hop(s) with non-finite/out-of-range coordinates',
+      );
+    }
+
     if (unverified) {
-      if (droppedHops > 0 || polylines.isEmpty) {
-        AppLogging.maps(
-          'Traceroute polyline target=${log.targetNode} unverified: '
-          'droppedHops=$droppedHops segments=${polylines.length}',
-        );
-      }
       return polylines;
     }
 
@@ -3320,13 +3321,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
               ? StrokePattern.dashed(segments: const [12, 8])
               : const StrokePattern.dotted(spacingFactor: 1.5),
         ),
-      );
-    }
-
-    if (droppedHops > 0) {
-      AppLogging.maps(
-        'Traceroute polyline target=${log.targetNode}: dropped '
-        '$droppedHops hop(s) with non-finite/out-of-range coordinates',
       );
     }
 
