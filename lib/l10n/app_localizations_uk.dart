@@ -11442,6 +11442,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get messagingJumpToLatest => 'Перейти до останнього';
 
   @override
+  String get messagingChatUnreadDividerLabel => 'New messages';
+
+  @override
   String get messagingSectionActive => 'Онлайн';
 
   @override

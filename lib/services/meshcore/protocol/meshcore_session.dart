@@ -697,8 +697,18 @@ class MeshCoreSession {
     // Register waiter BEFORE sending to avoid race condition
     final completer = _registerWaiter(responseCode);
 
-    // Send the command
-    await sendFrame(frame);
+    // Send the command. If sendFrame throws (transport disconnected
+    // mid-send, !isConnected, transport-layer write error), the waiter
+    // would stay orphaned in _pendingResponses[responseCode], causing
+    // the next sendAndWait call on the same code to hit a same-generation
+    // single-flight violation. Remove the waiter and rethrow.
+    // Crashlytics [A f1e904cd].
+    try {
+      await sendFrame(frame);
+    } catch (_) {
+      _pendingResponses.remove(responseCode);
+      rethrow;
+    }
 
     // Wait for response
     try {
@@ -898,13 +908,22 @@ class MeshCoreSession {
       (frame) => frame.payload.length >= _minSelfInfoPayloadSize,
     );
 
-    // Build and send startup sequence with proper frame formats
+    // Build and send startup sequence with proper frame formats. If
+    // either sendRaw throws (transport disconnected mid-handshake), the
+    // validated waiter would stay orphaned in _validatedWaiters[0x05],
+    // so the next getSelfInfo would hit a same-generation single-flight
+    // violation. Remove the waiter and rethrow.
     // The firmware checks len >= 2 for deviceQuery, len >= 8 for appStart
     final deviceQueryFrame = _buildDeviceQueryFrame();
     AppLogging.protocol(
       'MeshCore: Sending deviceQuery (0x16) [${deviceQueryFrame.length} bytes]...',
     );
-    await _transport.sendRaw(deviceQueryFrame);
+    try {
+      await _transport.sendRaw(deviceQueryFrame);
+    } catch (_) {
+      _validatedWaiters.remove(MeshCoreResponses.selfInfo);
+      rethrow;
+    }
     _capture?.recordTx(
       MeshCoreFrame(
         command: MeshCoreCommands.deviceQuery,
@@ -916,7 +935,12 @@ class MeshCoreSession {
     AppLogging.protocol(
       'MeshCore: Sending appStart (0x01) [${appStartFrame.length} bytes]...',
     );
-    await _transport.sendRaw(appStartFrame);
+    try {
+      await _transport.sendRaw(appStartFrame);
+    } catch (_) {
+      _validatedWaiters.remove(MeshCoreResponses.selfInfo);
+      rethrow;
+    }
     _capture?.recordTx(
       MeshCoreFrame(
         command: MeshCoreCommands.appStart,
@@ -1505,8 +1529,16 @@ class MeshCoreSession {
         });
 
     try {
-      // Send GET_CONTACTS command
-      await sendCommand(MeshCoreCommands.getContacts);
+      // Send GET_CONTACTS command. If sendCommand throws (transport
+      // disconnected mid-fetch), remove the orphaned endOfContacts
+      // waiter so the next getContacts call does not hit a same-
+      // generation single-flight violation.
+      try {
+        await sendCommand(MeshCoreCommands.getContacts);
+      } catch (_) {
+        _pendingResponses.remove(MeshCoreResponses.endOfContacts);
+        rethrow;
+      }
 
       // Wait for END_OF_CONTACTS
       await endCompleter.future.timeout(

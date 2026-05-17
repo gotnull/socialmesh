@@ -15207,6 +15207,10 @@
     "@messagingJumpToLatest": {
         "description": "Affordance shown when the user is reading older chat history and can jump back to the newest messages."
     },
+    "messagingChatUnreadDividerLabel": "New messages",
+    "@messagingChatUnreadDividerLabel": {
+        "description": "Label on the in-chat divider that marks the read/unread boundary captured at chat-open time. Session-only anchor, mirrors the MeshCore equivalent."
+    },
     "messagingSectionActive": "Online",
     "@messagingSectionActive": {
         "description": "Section header for online contacts (heard within 2 hours)."

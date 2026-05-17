@@ -39270,6 +39270,7 @@
   "messagingFilterUnread": "Non letti",
   "messagingFindMessageHint": "Trova un messaggio",
   "messagingHelp": "Aiuto",
+  "messagingChatUnreadDividerLabel": "Nuovi messaggi",
   "messagingJumpToLatest": "Vai all'ultimo",
   "messagingMessageDeleted": "Messaggio eliminato",
   "messagingMessageHint": "Messaggio",

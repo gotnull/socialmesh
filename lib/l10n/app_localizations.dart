@@ -19828,6 +19828,12 @@ abstract class AppLocalizations {
   /// **'Jump to latest'**
   String get messagingJumpToLatest;
 
+  /// Label on the in-chat divider that marks the read/unread boundary captured at chat-open time. Session-only anchor, mirrors the MeshCore equivalent.
+  ///
+  /// In en, this message translates to:
+  /// **'New messages'**
+  String get messagingChatUnreadDividerLabel;
+
   /// Section header for online contacts (heard within 2 hours).
   ///
   /// In en, this message translates to:

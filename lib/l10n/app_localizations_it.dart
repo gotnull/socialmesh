@@ -11451,6 +11451,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get messagingJumpToLatest => 'Vai all\'ultimo';
 
   @override
+  String get messagingChatUnreadDividerLabel => 'Nuovi messaggi';
+
+  @override
   String get messagingSectionActive => 'Online';
 
   @override

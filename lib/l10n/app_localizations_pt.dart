@@ -11442,6 +11442,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get messagingJumpToLatest => 'Ir para o mais recente';
 
   @override
+  String get messagingChatUnreadDividerLabel => 'Novas mensagens';
+
+  @override
   String get messagingSectionActive => 'Online';
 
   @override

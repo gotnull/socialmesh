@@ -6123,6 +6123,7 @@
     "messagingFilterUnread": "Непрочитанные",
     "messagingFindMessageHint": "Найти сообщение",
     "messagingHelp": "Справка",
+    "messagingChatUnreadDividerLabel": "Новые сообщения",
     "messagingJumpToLatest": "Перейти к последнему",
     "messagingMessageDeleted": "Сообщение удалено",
     "messagingMessageHint": "Сообщение",

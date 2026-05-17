@@ -11,6 +11,7 @@ import '../../core/safety/lifecycle_mixin.dart';
 import 'package:flutter/services.dart';
 import 'dm_channel_resolver.dart';
 import 'widgets/chat_composer.dart';
+import 'widgets/messaging_unread_divider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/text_sanitizer.dart';
 import '../../utils/time_format.dart';
@@ -985,6 +986,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   /// The message being replied to, or null if not replying.
   Message? _replyingTo;
 
+  /// Unread count snapshot captured at chat-open time before
+  /// `_markAsRead` flips the per-message `read` flags. Stays static for
+  /// the screen's lifetime so the "New messages" divider doesn't migrate
+  /// as more inbound messages arrive during the session. Session-only —
+  /// resets to 0 the next time the screen mounts.
+  int _initialUnreadCount = 0;
+
   @override
   void initState() {
     super.initState();
@@ -995,10 +1003,42 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _messageFocusNode.requestFocus();
+        _captureInitialUnreadCount();
         _markAsRead();
       }
     });
     _searchController.addListener(_onSearchChanged);
+  }
+
+  /// Snapshot the unread message count for this conversation BEFORE
+  /// `_markAsRead` clears the per-message `read` flags. Filters mirror
+  /// `MessagesNotifier.markConversationAsRead` / `markChannelAsRead`
+  /// exactly so the count matches what the next call will flip.
+  void _captureInitialUnreadCount() {
+    final messages = ref.read(messagesProvider);
+    int count = 0;
+    if (widget.type == ConversationType.directMessage &&
+        widget.nodeNum != null) {
+      final nodeNum = widget.nodeNum!;
+      count = messages
+          .where((m) => m.received && m.from == nodeNum && !m.read)
+          .length;
+    } else if (widget.type == ConversationType.channel &&
+        widget.channelIndex != null) {
+      final channelIndex = widget.channelIndex!;
+      count = messages
+          .where(
+            (m) =>
+                m.received &&
+                m.isBroadcast &&
+                m.channel == channelIndex &&
+                !m.read,
+          )
+          .length;
+    }
+    if (count > 0) {
+      setState(() => _initialUnreadCount = count);
+    }
   }
 
   /// Mark all messages in this conversation as read.
@@ -2456,131 +2496,179 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                             )
                     : Stack(
                         children: [
-                          ScrollablePositionedList.builder(
-                            itemScrollController: _timelineScrollController,
-                            itemPositionsListener: _itemPositionsListener,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            physics: const ClampingScrollPhysics(),
-                            itemCount: filteredRows.length,
-                            itemBuilder: (context, index) {
-                              final row = filteredRows[index];
-
-                              if (row.isOrphanPlaceholder) {
-                                return KeyedSubtree(
-                                  key: ValueKey(row.key),
-                                  child: _OrphanTapbackPlaceholder(row: row),
-                                );
-                              }
-
-                              final message = row.message!;
-                              final isFromMe = message.from == myNodeNum;
-
-                              if (index == filteredRows.length - 1 &&
-                                  AppLogging.messagesLoggingEnabled) {
-                                AppLogging.messages(
-                                  '📨 Latest visible message: from=${message.from}, myNodeNum=$myNodeNum, isFromMe=$isFromMe, text="${message.text.substring(0, message.text.length.clamp(0, 20))}"',
-                                );
-                              }
-
-                              final senderNode = nodes[message.from];
-                              final senderName =
-                                  senderNode?.displayName ??
-                                  message.senderDisplayName;
-                              final senderShortName =
-                                  senderNode?.shortName ??
-                                  message.senderAvatarName;
-                              final avatarColor =
-                                  senderNode?.avatarColor ??
-                                  message.senderAvatarColor;
-
-                              return KeyedSubtree(
-                                key: ValueKey(row.key),
-                                child: _MessageBubble(
-                                  message: message,
-                                  allMessages: visibleMessages,
-                                  tapbacks: row.tapbacks,
-                                  isFromMe: isFromMe,
-                                  senderName: senderName,
-                                  senderShortName: senderShortName,
-                                  avatarColor: avatarColor,
-                                  showSender:
-                                      widget.type == ConversationType.channel &&
-                                      !isFromMe,
-                                  isEncrypted: isEncrypted,
-                                  isDm:
-                                      widget.type ==
-                                      ConversationType.directMessage,
-                                  isQueued: queuedMessageIds.contains(
-                                    message.id,
-                                  ),
-                                  isHighlighted:
-                                      _highlightedMessageId == message.id,
-                                  showTechInfo: _expandedTechInfoIds.contains(
-                                    message.id,
-                                  ),
-                                  onToggleTechInfo: () {
-                                    ref.haptics.trigger(HapticType.light);
-                                    setState(() {
-                                      if (_expandedTechInfoIds.contains(
-                                        message.id,
-                                      )) {
-                                        _expandedTechInfoIds.remove(message.id);
-                                      } else {
-                                        _expandedTechInfoIds.add(message.id);
-                                      }
-                                    });
-                                  },
-                                  channelIndex:
-                                      widget.type == ConversationType.channel
-                                      ? widget.channelIndex
-                                      : null,
-                                  onReply: () => _setReplyTo(message),
-                                  onRetry: message.isFailed
-                                      ? () => _retryMessage(message)
-                                      : null,
-                                  onResend: isFromMe && message.canResend
-                                      ? () => ref
-                                            .read(dmRetryCoordinatorProvider)
-                                            .scheduleResend(message)
-                                      : null,
-                                  onAutoRetry:
-                                      isFromMe && message.canEnableAutoRetry
-                                      ? () => ref
-                                            .read(dmRetryCoordinatorProvider)
-                                            .enableAutoRetry(message.id)
-                                      : null,
-                                  onStopRetry:
-                                      isFromMe && message.canStopAutoRetry
-                                      ? () => ref
-                                            .read(dmRetryCoordinatorProvider)
-                                            .disableAutoRetry(message.id)
-                                      : null,
-                                  onPkiFix:
-                                      message.routingError?.isPkiRelated == true
-                                      ? () => _showPkiFixSheet(message)
-                                      : null,
-                                  onDelete: () => _deleteMessage(message),
-                                  onSenderTap: senderNode != null && !isFromMe
-                                      ? () => showNodeDetailsSheet(
-                                          context,
-                                          senderNode,
-                                          false,
-                                        )
-                                      : null,
-                                  onQuoteTap: message.replyId != null
-                                      ? () {
-                                          ref.haptics.trigger(HapticType.light);
-                                          unawaited(
-                                            _scrollToQuotedMessage(
-                                              message.replyId!,
-                                            ),
-                                          );
-                                        }
-                                      : null,
+                          Builder(
+                            builder: (context) {
+                              // "New messages" divider boundary. Suppressed during
+                              // search so the helper never anchors against a
+                              // filtered window. Index returned by the helper
+                              // points at the row the divider should sit ABOVE.
+                              // Wrapping in the same slot (instead of adding a
+                              // separate list item) preserves index parity with
+                              // every scroll/restore helper that reads from
+                              // `_currentDisplayRows[position.index]`.
+                              final dividerInsertIndex = _isSearching
+                                  ? -1
+                                  : messagingUnreadDividerInsertIndex(
+                                      messageCount: filteredRows.length,
+                                      unreadCount: _initialUnreadCount,
+                                    );
+                              return ScrollablePositionedList.builder(
+                                itemScrollController: _timelineScrollController,
+                                itemPositionsListener: _itemPositionsListener,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
                                 ),
+                                physics: const ClampingScrollPhysics(),
+                                itemCount: filteredRows.length,
+                                itemBuilder: (context, index) {
+                                  final row = filteredRows[index];
+                                  final showDividerAbove =
+                                      dividerInsertIndex == index;
+
+                                  if (row.isOrphanPlaceholder) {
+                                    return KeyedSubtree(
+                                      key: ValueKey(row.key),
+                                      child: showDividerAbove
+                                          ? Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.stretch,
+                                              children: [
+                                                const MessagingUnreadDivider(),
+                                                _OrphanTapbackPlaceholder(
+                                                  row: row,
+                                                ),
+                                              ],
+                                            )
+                                          : _OrphanTapbackPlaceholder(row: row),
+                                    );
+                                  }
+
+                                  final message = row.message!;
+                                  final isFromMe = message.from == myNodeNum;
+
+                                  if (index == filteredRows.length - 1 &&
+                                      AppLogging.messagesLoggingEnabled) {
+                                    AppLogging.messages(
+                                      '📨 Latest visible message: from=${message.from}, myNodeNum=$myNodeNum, isFromMe=$isFromMe, text="${message.text.substring(0, message.text.length.clamp(0, 20))}"',
+                                    );
+                                  }
+
+                                  final senderNode = nodes[message.from];
+                                  final senderName =
+                                      senderNode?.displayName ??
+                                      message.senderDisplayName;
+                                  final senderShortName =
+                                      senderNode?.shortName ??
+                                      message.senderAvatarName;
+                                  final avatarColor =
+                                      senderNode?.avatarColor ??
+                                      message.senderAvatarColor;
+
+                                  final bubble = _MessageBubble(
+                                    message: message,
+                                    allMessages: visibleMessages,
+                                    tapbacks: row.tapbacks,
+                                    isFromMe: isFromMe,
+                                    senderName: senderName,
+                                    senderShortName: senderShortName,
+                                    avatarColor: avatarColor,
+                                    showSender:
+                                        widget.type ==
+                                            ConversationType.channel &&
+                                        !isFromMe,
+                                    isEncrypted: isEncrypted,
+                                    isDm:
+                                        widget.type ==
+                                        ConversationType.directMessage,
+                                    isQueued: queuedMessageIds.contains(
+                                      message.id,
+                                    ),
+                                    isHighlighted:
+                                        _highlightedMessageId == message.id,
+                                    showTechInfo: _expandedTechInfoIds.contains(
+                                      message.id,
+                                    ),
+                                    onToggleTechInfo: () {
+                                      ref.haptics.trigger(HapticType.light);
+                                      setState(() {
+                                        if (_expandedTechInfoIds.contains(
+                                          message.id,
+                                        )) {
+                                          _expandedTechInfoIds.remove(
+                                            message.id,
+                                          );
+                                        } else {
+                                          _expandedTechInfoIds.add(message.id);
+                                        }
+                                      });
+                                    },
+                                    channelIndex:
+                                        widget.type == ConversationType.channel
+                                        ? widget.channelIndex
+                                        : null,
+                                    onReply: () => _setReplyTo(message),
+                                    onRetry: message.isFailed
+                                        ? () => _retryMessage(message)
+                                        : null,
+                                    onResend: isFromMe && message.canResend
+                                        ? () => ref
+                                              .read(dmRetryCoordinatorProvider)
+                                              .scheduleResend(message)
+                                        : null,
+                                    onAutoRetry:
+                                        isFromMe && message.canEnableAutoRetry
+                                        ? () => ref
+                                              .read(dmRetryCoordinatorProvider)
+                                              .enableAutoRetry(message.id)
+                                        : null,
+                                    onStopRetry:
+                                        isFromMe && message.canStopAutoRetry
+                                        ? () => ref
+                                              .read(dmRetryCoordinatorProvider)
+                                              .disableAutoRetry(message.id)
+                                        : null,
+                                    onPkiFix:
+                                        message.routingError?.isPkiRelated ==
+                                            true
+                                        ? () => _showPkiFixSheet(message)
+                                        : null,
+                                    onDelete: () => _deleteMessage(message),
+                                    onSenderTap: senderNode != null && !isFromMe
+                                        ? () => showNodeDetailsSheet(
+                                            context,
+                                            senderNode,
+                                            false,
+                                          )
+                                        : null,
+                                    onQuoteTap: message.replyId != null
+                                        ? () {
+                                            ref.haptics.trigger(
+                                              HapticType.light,
+                                            );
+                                            unawaited(
+                                              _scrollToQuotedMessage(
+                                                message.replyId!,
+                                              ),
+                                            );
+                                          }
+                                        : null,
+                                  );
+
+                                  return KeyedSubtree(
+                                    key: ValueKey(row.key),
+                                    child: showDividerAbove
+                                        ? Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.stretch,
+                                            children: [
+                                              const MessagingUnreadDivider(),
+                                              bubble,
+                                            ],
+                                          )
+                                        : bubble,
+                                  );
+                                },
                               );
                             },
                           ),

@@ -11436,6 +11436,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get messagingJumpToLatest => 'Перейти к последнему';
 
   @override
+  String get messagingChatUnreadDividerLabel => 'Новые сообщения';
+
+  @override
   String get messagingSectionActive => 'Онлайн';
 
   @override
