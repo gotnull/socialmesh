@@ -15,6 +15,7 @@ import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/primary_gradient_button.dart';
 import '../../../core/widgets/qr_share_sheet.dart';
 import '../../../core/widgets/search_filter_header.dart';
+import 'meshcore_community_qr_scanner_screen.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/chip_selector.dart';
@@ -130,6 +131,8 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                   _showJoinChannelDialog();
                 case 'import':
                   _importChannelByCode();
+                case 'scan_community':
+                  _openCommunityQrScanner();
                 case 'refresh':
                   _refreshChannels();
                 case 'disconnect':
@@ -169,6 +172,15 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                 child: ListTile(
                   leading: const Icon(Icons.qr_code_scanner_rounded),
                   title: Text(context.l10n.meshcoreImportChannel),
+                  contentPadding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'scan_community',
+                child: ListTile(
+                  leading: const Icon(Icons.qr_code_2_rounded),
+                  title: Text(context.l10n.meshcoreCommunityQrScannerMenu),
                   contentPadding: EdgeInsets.zero,
                   visualDensity: VisualDensity.compact,
                 ),
@@ -565,6 +577,21 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
   Future<void> _refreshChannels() async {
     final notifier = ref.read(meshCoreChannelsProvider.notifier);
     await notifier.refresh();
+  }
+
+  /// D-Q7: open the community-QR scanner. After it returns, refresh
+  /// the channel list so any newly-imported channels show up.
+  Future<void> _openCommunityQrScanner() async {
+    HapticFeedback.lightImpact();
+    final accepted = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => const MeshCoreCommunityQrScannerScreen(),
+      ),
+    );
+    if (!mounted) return;
+    if (accepted == true) {
+      await ref.read(meshCoreChannelsProvider.notifier).refresh();
+    }
   }
 
   /// D31: open the canonical channel edit sheet. Pre-populates from

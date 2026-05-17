@@ -10154,6 +10154,83 @@ class AppLocalizationsRu extends AppLocalizations {
       'Журнал BLE приостановлен. Возобновите, чтобы записывать новые события.';
 
   @override
+  String get meshcoreCommunityQrScannerTitle => 'Сканировать QR сообщества';
+
+  @override
+  String get meshcoreCommunityQrScannerHint =>
+      'Наведите камеру на QR-код сообщества MeshCore. Каждый канал будет проверен перед добавлением.';
+
+  @override
+  String get meshcoreCommunityQrScannerMenu => 'Сканировать QR сообщества';
+
+  @override
+  String get meshcoreCommunityQrPreviewTitle => 'Каналы сообщества';
+
+  @override
+  String meshcoreCommunityQrPreviewSubtitle(String name) {
+    return '$name содержит эти каналы. Нажмите Добавить, чтобы импортировать каждый.';
+  }
+
+  @override
+  String get meshcoreCommunityQrAddRow => 'Добавить';
+
+  @override
+  String get meshcoreCommunityQrDone => 'Готово';
+
+  @override
+  String meshcoreCommunityQrPskFingerprint(String fingerprint) {
+    return 'PSK: $fingerprint';
+  }
+
+  @override
+  String get meshcoreCommunityQrAddHashtagSection => 'Добавить хэштег-канал';
+
+  @override
+  String get meshcoreCommunityQrHashtagHint => 'напр. общий';
+
+  @override
+  String get meshcoreCommunityQrAddHashtagButton => 'Создать канал';
+
+  @override
+  String get meshcoreCommunityQrHashtagEmpty => 'Сначала введите хэштег.';
+
+  @override
+  String get meshcoreCommunityQrHashtagDuplicate => 'Этот хэштег уже в списке.';
+
+  @override
+  String meshcoreCommunityQrChannelAdded(String name) {
+    return '$name добавлен в радио.';
+  }
+
+  @override
+  String get meshcoreCommunityQrChannelAddFailed =>
+      'Не удалось добавить канал. Проверьте подключение к радио и повторите попытку.';
+
+  @override
+  String get meshcoreCommunityQrNoFreeSlot =>
+      'Все 8 слотов каналов заняты. Удалите один перед добавлением нового.';
+
+  @override
+  String get meshcoreCommunityQrErrorNotJson =>
+      'QR-код не является payload-ом сообщества.';
+
+  @override
+  String get meshcoreCommunityQrErrorWrongType =>
+      'QR-код не относится к сообществу MeshCore.';
+
+  @override
+  String get meshcoreCommunityQrErrorUnsupportedVersion =>
+      'Этот QR сообщества использует неподдерживаемую версию.';
+
+  @override
+  String get meshcoreCommunityQrErrorMissingName =>
+      'В QR сообщества отсутствует имя.';
+
+  @override
+  String get meshcoreCommunityQrErrorBadSecret =>
+      'QR сообщества содержит недопустимый секрет.';
+
+  @override
   String get meshcoreTelemetryTileTitle => 'Телеметрия';
 
   @override

@@ -17592,6 +17592,132 @@ abstract class AppLocalizations {
   /// **'BLE log paused. Resume to capture new events.'**
   String get meshcoreBleDebugLogEmptyPaused;
 
+  /// D-Q7 - scanner screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Scan community QR'**
+  String get meshcoreCommunityQrScannerTitle;
+
+  /// D-Q7 - scanner overlay hint
+  ///
+  /// In en, this message translates to:
+  /// **'Point the camera at a MeshCore community QR. Each channel will be reviewed before adding.'**
+  String get meshcoreCommunityQrScannerHint;
+
+  /// D-Q7 - Channels overflow menu entry label
+  ///
+  /// In en, this message translates to:
+  /// **'Scan community QR'**
+  String get meshcoreCommunityQrScannerMenu;
+
+  /// D-Q7 - preview sheet title
+  ///
+  /// In en, this message translates to:
+  /// **'Community channels'**
+  String get meshcoreCommunityQrPreviewTitle;
+
+  /// D-Q7 - preview sheet subtitle showing the community name
+  ///
+  /// In en, this message translates to:
+  /// **'{name} ships these channels. Tap Add to import each one.'**
+  String meshcoreCommunityQrPreviewSubtitle(String name);
+
+  /// D-Q7 - per-row Add button label
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get meshcoreCommunityQrAddRow;
+
+  /// D-Q7 - preview sheet bottom Done button
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get meshcoreCommunityQrDone;
+
+  /// D-Q7 - PSK preview line in each row
+  ///
+  /// In en, this message translates to:
+  /// **'PSK: {fingerprint}'**
+  String meshcoreCommunityQrPskFingerprint(String fingerprint);
+
+  /// D-Q7 - hashtag input section header
+  ///
+  /// In en, this message translates to:
+  /// **'Add a hashtag channel'**
+  String get meshcoreCommunityQrAddHashtagSection;
+
+  /// D-Q7 - hashtag input placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. general'**
+  String get meshcoreCommunityQrHashtagHint;
+
+  /// D-Q7 - hashtag input add button tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Derive channel'**
+  String get meshcoreCommunityQrAddHashtagButton;
+
+  /// D-Q7 - error when add-hashtag is tapped with no input
+  ///
+  /// In en, this message translates to:
+  /// **'Type a hashtag first.'**
+  String get meshcoreCommunityQrHashtagEmpty;
+
+  /// D-Q7 - error when the user adds a duplicate hashtag
+  ///
+  /// In en, this message translates to:
+  /// **'That hashtag is already in the list.'**
+  String get meshcoreCommunityQrHashtagDuplicate;
+
+  /// D-Q7 - success snackbar after a channel is written
+  ///
+  /// In en, this message translates to:
+  /// **'Added {name} to the radio.'**
+  String meshcoreCommunityQrChannelAdded(String name);
+
+  /// D-Q7 - error snackbar when the wire write fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not add channel. Check the radio connection and try again.'**
+  String get meshcoreCommunityQrChannelAddFailed;
+
+  /// D-Q7 - error when the radio has no free channel slot
+  ///
+  /// In en, this message translates to:
+  /// **'All 8 channel slots are full. Remove one before adding another.'**
+  String get meshcoreCommunityQrNoFreeSlot;
+
+  /// D-Q7 - parse error: not JSON
+  ///
+  /// In en, this message translates to:
+  /// **'QR code is not a community payload.'**
+  String get meshcoreCommunityQrErrorNotJson;
+
+  /// D-Q7 - parse error: discriminator mismatch
+  ///
+  /// In en, this message translates to:
+  /// **'QR code is not a MeshCore community.'**
+  String get meshcoreCommunityQrErrorWrongType;
+
+  /// D-Q7 - parse error: version mismatch
+  ///
+  /// In en, this message translates to:
+  /// **'This community QR uses an unsupported version.'**
+  String get meshcoreCommunityQrErrorUnsupportedVersion;
+
+  /// D-Q7 - parse error: name missing or empty
+  ///
+  /// In en, this message translates to:
+  /// **'Community QR is missing a name.'**
+  String get meshcoreCommunityQrErrorMissingName;
+
+  /// D-Q7 - parse error: secret missing / unparseable / wrong length
+  ///
+  /// In en, this message translates to:
+  /// **'Community QR has an invalid secret.'**
+  String get meshcoreCommunityQrErrorBadSecret;
+
   /// D41-A - Contact Detail tile title opening the per-contact telemetry sheet
   ///
   /// In en, this message translates to:

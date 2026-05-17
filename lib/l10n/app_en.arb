@@ -13460,6 +13460,99 @@
     "@meshcoreBleDebugLogEmptyPaused": {
         "description": "D-Q5 - empty state when buffer is empty and paused"
     },
+    "meshcoreCommunityQrScannerTitle": "Scan community QR",
+    "@meshcoreCommunityQrScannerTitle": {
+        "description": "D-Q7 - scanner screen title"
+    },
+    "meshcoreCommunityQrScannerHint": "Point the camera at a MeshCore community QR. Each channel will be reviewed before adding.",
+    "@meshcoreCommunityQrScannerHint": {
+        "description": "D-Q7 - scanner overlay hint"
+    },
+    "meshcoreCommunityQrScannerMenu": "Scan community QR",
+    "@meshcoreCommunityQrScannerMenu": {
+        "description": "D-Q7 - Channels overflow menu entry label"
+    },
+    "meshcoreCommunityQrPreviewTitle": "Community channels",
+    "@meshcoreCommunityQrPreviewTitle": {
+        "description": "D-Q7 - preview sheet title"
+    },
+    "meshcoreCommunityQrPreviewSubtitle": "{name} ships these channels. Tap Add to import each one.",
+    "@meshcoreCommunityQrPreviewSubtitle": {
+        "description": "D-Q7 - preview sheet subtitle showing the community name",
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "meshcoreCommunityQrAddRow": "Add",
+    "@meshcoreCommunityQrAddRow": {
+        "description": "D-Q7 - per-row Add button label"
+    },
+    "meshcoreCommunityQrDone": "Done",
+    "@meshcoreCommunityQrDone": {
+        "description": "D-Q7 - preview sheet bottom Done button"
+    },
+    "meshcoreCommunityQrPskFingerprint": "PSK: {fingerprint}",
+    "@meshcoreCommunityQrPskFingerprint": {
+        "description": "D-Q7 - PSK preview line in each row",
+        "placeholders": {
+            "fingerprint": {"type": "String"}
+        }
+    },
+    "meshcoreCommunityQrAddHashtagSection": "Add a hashtag channel",
+    "@meshcoreCommunityQrAddHashtagSection": {
+        "description": "D-Q7 - hashtag input section header"
+    },
+    "meshcoreCommunityQrHashtagHint": "e.g. general",
+    "@meshcoreCommunityQrHashtagHint": {
+        "description": "D-Q7 - hashtag input placeholder"
+    },
+    "meshcoreCommunityQrAddHashtagButton": "Derive channel",
+    "@meshcoreCommunityQrAddHashtagButton": {
+        "description": "D-Q7 - hashtag input add button tooltip"
+    },
+    "meshcoreCommunityQrHashtagEmpty": "Type a hashtag first.",
+    "@meshcoreCommunityQrHashtagEmpty": {
+        "description": "D-Q7 - error when add-hashtag is tapped with no input"
+    },
+    "meshcoreCommunityQrHashtagDuplicate": "That hashtag is already in the list.",
+    "@meshcoreCommunityQrHashtagDuplicate": {
+        "description": "D-Q7 - error when the user adds a duplicate hashtag"
+    },
+    "meshcoreCommunityQrChannelAdded": "Added {name} to the radio.",
+    "@meshcoreCommunityQrChannelAdded": {
+        "description": "D-Q7 - success snackbar after a channel is written",
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "meshcoreCommunityQrChannelAddFailed": "Could not add channel. Check the radio connection and try again.",
+    "@meshcoreCommunityQrChannelAddFailed": {
+        "description": "D-Q7 - error snackbar when the wire write fails"
+    },
+    "meshcoreCommunityQrNoFreeSlot": "All 8 channel slots are full. Remove one before adding another.",
+    "@meshcoreCommunityQrNoFreeSlot": {
+        "description": "D-Q7 - error when the radio has no free channel slot"
+    },
+    "meshcoreCommunityQrErrorNotJson": "QR code is not a community payload.",
+    "@meshcoreCommunityQrErrorNotJson": {
+        "description": "D-Q7 - parse error: not JSON"
+    },
+    "meshcoreCommunityQrErrorWrongType": "QR code is not a MeshCore community.",
+    "@meshcoreCommunityQrErrorWrongType": {
+        "description": "D-Q7 - parse error: discriminator mismatch"
+    },
+    "meshcoreCommunityQrErrorUnsupportedVersion": "This community QR uses an unsupported version.",
+    "@meshcoreCommunityQrErrorUnsupportedVersion": {
+        "description": "D-Q7 - parse error: version mismatch"
+    },
+    "meshcoreCommunityQrErrorMissingName": "Community QR is missing a name.",
+    "@meshcoreCommunityQrErrorMissingName": {
+        "description": "D-Q7 - parse error: name missing or empty"
+    },
+    "meshcoreCommunityQrErrorBadSecret": "Community QR has an invalid secret.",
+    "@meshcoreCommunityQrErrorBadSecret": {
+        "description": "D-Q7 - parse error: secret missing / unparseable / wrong length"
+    },
     "meshcoreTelemetryTileTitle": "Telemetry",
     "@meshcoreTelemetryTileTitle": {
         "description": "D41-A - Contact Detail tile title opening the per-contact telemetry sheet"

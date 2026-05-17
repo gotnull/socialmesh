@@ -10155,6 +10155,85 @@ class AppLocalizationsPt extends AppLocalizations {
       'Log BLE pausado. Retome para capturar novos eventos.';
 
   @override
+  String get meshcoreCommunityQrScannerTitle => 'Escanear QR da comunidade';
+
+  @override
+  String get meshcoreCommunityQrScannerHint =>
+      'Aponte a câmera para um QR de comunidade MeshCore. Cada canal será revisado antes de adicionar.';
+
+  @override
+  String get meshcoreCommunityQrScannerMenu => 'Escanear QR da comunidade';
+
+  @override
+  String get meshcoreCommunityQrPreviewTitle => 'Canais da comunidade';
+
+  @override
+  String meshcoreCommunityQrPreviewSubtitle(String name) {
+    return '$name inclui estes canais. Toque em Adicionar para importar cada um.';
+  }
+
+  @override
+  String get meshcoreCommunityQrAddRow => 'Adicionar';
+
+  @override
+  String get meshcoreCommunityQrDone => 'Concluído';
+
+  @override
+  String meshcoreCommunityQrPskFingerprint(String fingerprint) {
+    return 'PSK: $fingerprint';
+  }
+
+  @override
+  String get meshcoreCommunityQrAddHashtagSection =>
+      'Adicionar um canal hashtag';
+
+  @override
+  String get meshcoreCommunityQrHashtagHint => 'ex. geral';
+
+  @override
+  String get meshcoreCommunityQrAddHashtagButton => 'Derivar canal';
+
+  @override
+  String get meshcoreCommunityQrHashtagEmpty => 'Digite uma hashtag primeiro.';
+
+  @override
+  String get meshcoreCommunityQrHashtagDuplicate =>
+      'Essa hashtag já está na lista.';
+
+  @override
+  String meshcoreCommunityQrChannelAdded(String name) {
+    return '$name adicionado ao rádio.';
+  }
+
+  @override
+  String get meshcoreCommunityQrChannelAddFailed =>
+      'Não foi possível adicionar o canal. Verifique a conexão com o rádio e tente novamente.';
+
+  @override
+  String get meshcoreCommunityQrNoFreeSlot =>
+      'Todos os 8 slots de canal estão cheios. Remova um antes de adicionar outro.';
+
+  @override
+  String get meshcoreCommunityQrErrorNotJson =>
+      'O QR não é um payload de comunidade.';
+
+  @override
+  String get meshcoreCommunityQrErrorWrongType =>
+      'O QR não é uma comunidade MeshCore.';
+
+  @override
+  String get meshcoreCommunityQrErrorUnsupportedVersion =>
+      'Este QR de comunidade usa uma versão não suportada.';
+
+  @override
+  String get meshcoreCommunityQrErrorMissingName =>
+      'Falta o nome no QR da comunidade.';
+
+  @override
+  String get meshcoreCommunityQrErrorBadSecret =>
+      'O QR da comunidade tem um segredo inválido.';
+
+  @override
   String get meshcoreTelemetryTileTitle => 'Telemetria';
 
   @override
