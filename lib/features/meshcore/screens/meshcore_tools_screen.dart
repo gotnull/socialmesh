@@ -1010,66 +1010,61 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
         .where((c) => c.isChat || c.isRepeater)
         .toList(growable: false);
 
-    // D31c: shift the body's background to `context.background` so
-    // the unselected contact rows (which use `context.card`) pop
-    // against the page-like surface, with the same rhythm as
-    // full-screen settings.
-    return ColoredBox(
-      color: context.background,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppTheme.spacing16,
-              AppTheme.spacing12,
-              AppTheme.spacing16,
-              AppTheme.spacing8,
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.route_rounded, color: context.accentColor, size: 22),
-                const SizedBox(width: AppTheme.spacing8),
-                Expanded(
-                  child: Text(
-                    l.meshcoreTracePathTitle,
-                    style: TextStyle(
-                      color: context.textPrimary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: AppTheme.fontFamily,
-                    ),
+    // Sheet body uses the default sheet shell color so the contact
+    // rows blend with the surround, matching Meshtastic sheets.
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppTheme.spacing16,
+            AppTheme.spacing12,
+            AppTheme.spacing16,
+            AppTheme.spacing8,
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.route_rounded, color: context.accentColor, size: 22),
+              const SizedBox(width: AppTheme.spacing8),
+              Expanded(
+                child: Text(
+                  l.meshcoreTracePathTitle,
+                  style: TextStyle(
+                    color: context.textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: AppTheme.fontFamily,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const Divider(height: 1),
-          Expanded(
-            child: ListView(
-              controller: widget.scrollController,
-              padding: const EdgeInsets.all(AppTheme.spacing16),
-              children: [
-                if (_result != null)
-                  _buildResult(context, _result!)
-                else if (_running != null)
-                  _buildRunning(context, _running!)
-                else if (_failed)
-                  StatusBanner.error(
-                    title: l.meshcoreTracePathFailed,
-                    icon: Icons.error_outline_rounded,
-                  )
-                else if (_timedOut)
-                  StatusBanner.warning(
-                    title: l.meshcoreTracePathTimeout,
-                    icon: Icons.hourglass_empty_rounded,
-                  )
-                else
-                  _buildPicker(context, eligible),
-              ],
-            ),
+        ),
+        const Divider(height: 1),
+        Expanded(
+          child: ListView(
+            controller: widget.scrollController,
+            padding: const EdgeInsets.all(AppTheme.spacing16),
+            children: [
+              if (_result != null)
+                _buildResult(context, _result!)
+              else if (_running != null)
+                _buildRunning(context, _running!)
+              else if (_failed)
+                StatusBanner.error(
+                  title: l.meshcoreTracePathFailed,
+                  icon: Icons.error_outline_rounded,
+                )
+              else if (_timedOut)
+                StatusBanner.warning(
+                  title: l.meshcoreTracePathTimeout,
+                  icon: Icons.hourglass_empty_rounded,
+                )
+              else
+                _buildPicker(context, eligible),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

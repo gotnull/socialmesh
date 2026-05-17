@@ -544,276 +544,264 @@ class _MeshCoreRadioSettingsSheetState
     // lint, and so taps on chip rows / outlined buttons still bubble
     // through to their own handlers without an extra interception.
     //
-    // D31c: shift the body's background to `context.background` so
-    // nested SettingsTile / FieldGroupCard surfaces (also `context.card`)
-    // pop the same way they do on full-screen settings. Sheet shell
-    // (drag-pill area) stays on `context.card`.
-    return ColoredBox(
-      color: context.background,
-      child: Form(
-        key: _formKey,
-        child: ListView(
-          controller: widget.scrollController,
-          padding: EdgeInsets.zero,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppTheme.spacing16,
-                AppTheme.spacing8,
-                AppTheme.spacing16,
-                AppTheme.spacing8,
+    // Sheet body uses the default sheet shell color (`context.card`)
+    // so nested FieldGroupCard surfaces (also `context.card`) blend
+    // seamlessly, matching Meshtastic sheet rendering.
+    return Form(
+      key: _formKey,
+      child: ListView(
+        controller: widget.scrollController,
+        padding: EdgeInsets.zero,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing16,
+              AppTheme.spacing8,
+              AppTheme.spacing16,
+              AppTheme.spacing8,
+            ),
+            child: Text(
+              l10n.meshcoreRadioSettingsTitle,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
               ),
-              child: Text(
-                l10n.meshcoreRadioSettingsTitle,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: context.textPrimary,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing16,
+              0,
+              AppTheme.spacing16,
+              AppTheme.spacing16,
+            ),
+            child: Text(
+              l10n.meshcoreRadioSettingsHint,
+              style: TextStyle(fontSize: 13, color: context.textTertiary),
+            ),
+          ),
+
+          // D26: Region preset selector. Opens a modal picker rather
+          // than a 20-chip wrap row because 19 named regions plus
+          // Custom would cover several lines and look broken.
+          SettingsSectionHeader(
+            title: l10n.meshcoreRadioSettingsRegionSectionHeader,
+          ),
+          SettingsTile(
+            icon: Icons.public,
+            iconColor: AccentColors.cyan,
+            title: l10n.meshcoreRadioSettingsRegionTileTitle,
+            subtitle: _currentPresetLabel(l10n),
+            trailing: Icon(Icons.chevron_right, color: context.textTertiary),
+            onTap: _saving ? null : () => _openPresetPicker(l10n),
+          ),
+
+          SettingsSectionHeader(
+            title: l10n.meshcoreRadioSettingsFreqSectionHeader,
+          ),
+          FieldGroupCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextFormField(
+                  controller: _freqController,
+                  maxLength: 12,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                  ],
+                  // Canonical SocialMesh keyboard-dismissal pattern.
+                  // tapping anywhere off the input drops focus. Mirrors
+                  // the per-field behaviour used by mqtt_config_screen
+                  // and the existing _editNodeName sheet.
+                  onTapOutside: (_) =>
+                      FocusManager.instance.primaryFocus?.unfocus(),
+                  style: TextStyle(color: context.textPrimary),
+                  validator: (v) => _validateFreq(v, l10n),
+                  decoration: InputDecoration(
+                    labelText: l10n.meshcoreRadioSettingsFrequencyLabel,
+                    labelStyle: TextStyle(color: context.textSecondary),
+                    hintText: l10n.meshcoreRadioSettingsFrequencyHint,
+                    hintStyle: TextStyle(color: SemanticColors.muted),
+                    filled: true,
+                    fillColor: context.background,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      borderSide: BorderSide(color: context.border),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      borderSide: BorderSide(color: context.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      borderSide: BorderSide(color: context.accentColor),
+                    ),
+                    prefixIcon: Icon(
+                      Icons.broadcast_on_personal_outlined,
+                      color: context.textSecondary,
+                    ),
+                    counterText: '',
+                  ),
                 ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppTheme.spacing16,
-                0,
-                AppTheme.spacing16,
-                AppTheme.spacing16,
-              ),
-              child: Text(
-                l10n.meshcoreRadioSettingsHint,
-                style: TextStyle(fontSize: 13, color: context.textTertiary),
-              ),
-            ),
-
-            // D26: Region preset selector. Opens a modal picker rather
-            // than a 20-chip wrap row because 19 named regions plus
-            // Custom would cover several lines and look broken.
-            SettingsSectionHeader(
-              title: l10n.meshcoreRadioSettingsRegionSectionHeader,
-            ),
-            SettingsTile(
-              icon: Icons.public,
-              iconColor: AccentColors.cyan,
-              title: l10n.meshcoreRadioSettingsRegionTileTitle,
-              subtitle: _currentPresetLabel(l10n),
-              trailing: Icon(Icons.chevron_right, color: context.textTertiary),
-              onTap: _saving ? null : () => _openPresetPicker(l10n),
-            ),
-
-            SettingsSectionHeader(
-              title: l10n.meshcoreRadioSettingsFreqSectionHeader,
-            ),
-            FieldGroupCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextFormField(
-                    controller: _freqController,
-                    maxLength: 12,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-                    ],
-                    // Canonical SocialMesh keyboard-dismissal pattern.
-                    // tapping anywhere off the input drops focus. Mirrors
-                    // the per-field behaviour used by mqtt_config_screen
-                    // and the existing _editNodeName sheet.
-                    onTapOutside: (_) =>
-                        FocusManager.instance.primaryFocus?.unfocus(),
-                    style: TextStyle(color: context.textPrimary),
-                    validator: (v) => _validateFreq(v, l10n),
-                    decoration: InputDecoration(
-                      labelText: l10n.meshcoreRadioSettingsFrequencyLabel,
-                      labelStyle: TextStyle(color: context.textSecondary),
-                      hintText: l10n.meshcoreRadioSettingsFrequencyHint,
-                      hintStyle: TextStyle(color: SemanticColors.muted),
-                      filled: true,
-                      fillColor: context.background,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radius8),
-                        borderSide: BorderSide(color: context.border),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radius8),
-                        borderSide: BorderSide(color: context.border),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radius8),
-                        borderSide: BorderSide(color: context.accentColor),
-                      ),
-                      prefixIcon: Icon(
-                        Icons.broadcast_on_personal_outlined,
-                        color: context.textSecondary,
-                      ),
-                      counterText: '',
-                    ),
-                  ),
-                  SizedBox(height: AppTheme.spacing16),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
-                    child: Text(
-                      l10n.meshcoreRadioSettingsBandwidthLabel,
-                      style: TextStyle(
-                        color: context.textSecondary,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                  ChipSelector<double>(
-                    value: _bandwidthKhz,
-                    onChanged: _saving
-                        ? null
-                        : (v) => safeSetState(() => _bandwidthKhz = v),
-                    options: [
-                      for (final khz in _supportedBandwidthsKhz)
-                        ChipOption(
-                          value: khz,
-                          label: _bwLabel(khz),
-                          icon: Icons.tune_rounded,
-                          color: context.accentColor,
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            SettingsSectionHeader(
-              title: l10n.meshcoreRadioSettingsModulationHeader,
-            ),
-            FieldGroupCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.meshcoreRadioSettingsSpreadingFactorLabel,
+                SizedBox(height: AppTheme.spacing16),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+                  child: Text(
+                    l10n.meshcoreRadioSettingsBandwidthLabel,
                     style: TextStyle(
                       color: context.textSecondary,
                       fontSize: 13,
                     ),
                   ),
-                  SizedBox(height: AppTheme.spacing8),
-                  ChipSelector<int>(
-                    value: _spreadingFactor,
-                    onChanged: _saving
-                        ? null
-                        : (v) => safeSetState(() => _spreadingFactor = v),
-                    options: [
-                      for (var sf = 5; sf <= 12; sf++)
-                        ChipOption(
-                          value: sf,
-                          // Technical SF index, not a translatable string.
-                          label: '$sf', // lint-allow: hardcoded-string
-                          icon: Icons.signal_cellular_alt_rounded,
-                          color: context.accentColor,
-                        ),
-                    ],
-                  ),
-                  SizedBox(height: AppTheme.spacing16),
-                  Text(
-                    l10n.meshcoreRadioSettingsCodingRateLabel,
-                    style: TextStyle(
-                      color: context.textSecondary,
-                      fontSize: 13,
-                    ),
-                  ),
-                  SizedBox(height: AppTheme.spacing8),
-                  ChipSelector<int>(
-                    value: _codingRate,
-                    onChanged: _saving
-                        ? null
-                        : (v) => safeSetState(() => _codingRate = v),
-                    options: [
-                      for (var cr = 5; cr <= 8; cr++)
-                        ChipOption(
-                          value: cr,
-                          // Coding rate fraction (4/5, 4/6, …) is a
-                          // protocol-level numeric label, not translatable.
-                          label: '4/$cr', // lint-allow: hardcoded-string
-                          icon: Icons.alt_route_rounded,
-                          color: context.accentColor,
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            SettingsSectionHeader(title: l10n.meshcoreRadioSettingsPowerHeader),
-            FieldGroupCard(
-              child: TextFormField(
-                controller: _txController,
-                maxLength: 4,
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[\-0-9]')),
-                ],
-                onTapOutside: (_) =>
-                    FocusManager.instance.primaryFocus?.unfocus(),
-                style: TextStyle(color: context.textPrimary),
-                validator: (v) => _validateTx(v, l10n),
-                decoration: InputDecoration(
-                  labelText: l10n.meshcoreRadioSettingsTxPowerLabel,
-                  labelStyle: TextStyle(color: context.textSecondary),
-                  hintText: l10n.meshcoreRadioSettingsTxPowerHint,
-                  hintStyle: TextStyle(color: SemanticColors.muted),
-                  filled: true,
-                  fillColor: context.background,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radius8),
-                    borderSide: BorderSide(color: context.border),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radius8),
-                    borderSide: BorderSide(color: context.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radius8),
-                    borderSide: BorderSide(color: context.accentColor),
-                  ),
-                  prefixIcon: Icon(
-                    Icons.flash_on_rounded,
-                    color: context.textSecondary,
-                  ),
-                  counterText: '',
                 ),
-              ),
+                ChipSelector<double>(
+                  value: _bandwidthKhz,
+                  onChanged: _saving
+                      ? null
+                      : (v) => safeSetState(() => _bandwidthKhz = v),
+                  options: [
+                    for (final khz in _supportedBandwidthsKhz)
+                      ChipOption(
+                        value: khz,
+                        label: _bwLabel(khz),
+                        icon: Icons.tune_rounded,
+                        color: context.accentColor,
+                      ),
+                  ],
+                ),
+              ],
             ),
+          ),
 
-            SizedBox(height: AppTheme.spacing24),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.spacing16,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _saving ? null : () => Navigator.pop(context),
-                      child: Text(l10n.meshcoreCancel),
-                    ),
-                  ),
-                  SizedBox(width: AppTheme.spacing12),
-                  Expanded(
-                    child: PrimaryGradientButton(
-                      label: _saving
-                          ? l10n.meshcoreRadioSettingsApplying
-                          : l10n.meshcoreRadioSettingsApply,
-                      icon: Icons.check_rounded,
-                      // Disable Apply while loading persisted values (brief)
-                      // so the user doesn't dispatch with stale defaults if
-                      // they're a quick tapper.
-                      onPressed: (_saving || _hydrating) ? null : _apply,
-                    ),
-                  ),
-                ],
+          SettingsSectionHeader(
+            title: l10n.meshcoreRadioSettingsModulationHeader,
+          ),
+          FieldGroupCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.meshcoreRadioSettingsSpreadingFactorLabel,
+                  style: TextStyle(color: context.textSecondary, fontSize: 13),
+                ),
+                SizedBox(height: AppTheme.spacing8),
+                ChipSelector<int>(
+                  value: _spreadingFactor,
+                  onChanged: _saving
+                      ? null
+                      : (v) => safeSetState(() => _spreadingFactor = v),
+                  options: [
+                    for (var sf = 5; sf <= 12; sf++)
+                      ChipOption(
+                        value: sf,
+                        // Technical SF index, not a translatable string.
+                        label: '$sf', // lint-allow: hardcoded-string
+                        icon: Icons.signal_cellular_alt_rounded,
+                        color: context.accentColor,
+                      ),
+                  ],
+                ),
+                SizedBox(height: AppTheme.spacing16),
+                Text(
+                  l10n.meshcoreRadioSettingsCodingRateLabel,
+                  style: TextStyle(color: context.textSecondary, fontSize: 13),
+                ),
+                SizedBox(height: AppTheme.spacing8),
+                ChipSelector<int>(
+                  value: _codingRate,
+                  onChanged: _saving
+                      ? null
+                      : (v) => safeSetState(() => _codingRate = v),
+                  options: [
+                    for (var cr = 5; cr <= 8; cr++)
+                      ChipOption(
+                        value: cr,
+                        // Coding rate fraction (4/5, 4/6, …) is a
+                        // protocol-level numeric label, not translatable.
+                        label: '4/$cr', // lint-allow: hardcoded-string
+                        icon: Icons.alt_route_rounded,
+                        color: context.accentColor,
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          SettingsSectionHeader(title: l10n.meshcoreRadioSettingsPowerHeader),
+          FieldGroupCard(
+            child: TextFormField(
+              controller: _txController,
+              maxLength: 4,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[\-0-9]')),
+              ],
+              onTapOutside: (_) =>
+                  FocusManager.instance.primaryFocus?.unfocus(),
+              style: TextStyle(color: context.textPrimary),
+              validator: (v) => _validateTx(v, l10n),
+              decoration: InputDecoration(
+                labelText: l10n.meshcoreRadioSettingsTxPowerLabel,
+                labelStyle: TextStyle(color: context.textSecondary),
+                hintText: l10n.meshcoreRadioSettingsTxPowerHint,
+                hintStyle: TextStyle(color: SemanticColors.muted),
+                filled: true,
+                fillColor: context.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                  borderSide: BorderSide(color: context.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                  borderSide: BorderSide(color: context.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                  borderSide: BorderSide(color: context.accentColor),
+                ),
+                prefixIcon: Icon(
+                  Icons.flash_on_rounded,
+                  color: context.textSecondary,
+                ),
+                counterText: '',
               ),
             ),
-            SizedBox(height: AppTheme.spacing16),
-          ],
-        ),
+          ),
+
+          SizedBox(height: AppTheme.spacing24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _saving ? null : () => Navigator.pop(context),
+                    child: Text(l10n.meshcoreCancel),
+                  ),
+                ),
+                SizedBox(width: AppTheme.spacing12),
+                Expanded(
+                  child: PrimaryGradientButton(
+                    label: _saving
+                        ? l10n.meshcoreRadioSettingsApplying
+                        : l10n.meshcoreRadioSettingsApply,
+                    icon: Icons.check_rounded,
+                    // Disable Apply while loading persisted values (brief)
+                    // so the user doesn't dispatch with stale defaults if
+                    // they're a quick tapper.
+                    onPressed: (_saving || _hydrating) ? null : _apply,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: AppTheme.spacing16),
+        ],
       ),
     );
   }
