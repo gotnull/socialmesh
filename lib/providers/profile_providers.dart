@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/logging.dart';
@@ -14,12 +15,56 @@ import 'auth_providers.dart';
 /// Resolve the best display name from a Firebase [User].
 ///
 /// The top-level [User.displayName] is often `null` (e.g. Apple Sign-In
-/// doesn't always populate it). Fall back to the first non-empty name
-/// found in [User.providerData] (Google, GitHub, Twitter, etc.).
-String? _resolveDisplayName(User user) {
-  final top = user.displayName;
-  if (top != null && top.isNotEmpty) return top;
-  for (final info in user.providerData) {
+/// doesn't always populate it). Fall back to provider display names in a
+/// stable preference order: real-name providers (Google, Apple, GitHub,
+/// email, phone) before social-handle providers (Twitter/X), because the
+/// `displayName` field on social handles is often an informal nickname
+/// that the user does not want on their profile.
+@visibleForTesting
+String? resolveDisplayName(User user) {
+  return resolveDisplayNameFromParts(
+    rootDisplayName: user.displayName,
+    providers: [
+      for (final info in user.providerData)
+        (providerId: info.providerId, displayName: info.displayName),
+    ],
+  );
+}
+
+/// Pure-logic counterpart of [resolveDisplayName] that works on raw
+/// provider tuples instead of a Firebase [User] instance. Exposed so
+/// tests can exercise precedence without constructing a [User] mock.
+@visibleForTesting
+String? resolveDisplayNameFromParts({
+  required String? rootDisplayName,
+  required List<({String providerId, String? displayName})> providers,
+}) {
+  if (rootDisplayName != null && rootDisplayName.isNotEmpty) {
+    return rootDisplayName;
+  }
+  const preferenceOrder = <String>[
+    'google.com',
+    'apple.com',
+    'github.com',
+    'password',
+    'phone',
+    'microsoft.com',
+    'yahoo.com',
+    'facebook.com',
+    'twitter.com',
+  ];
+  final byProvider = <String, String>{};
+  for (final info in providers) {
+    final name = info.displayName;
+    if (name != null && name.isNotEmpty) {
+      byProvider.putIfAbsent(info.providerId, () => name);
+    }
+  }
+  for (final providerId in preferenceOrder) {
+    final name = byProvider[providerId];
+    if (name != null) return name;
+  }
+  for (final info in providers) {
     final name = info.displayName;
     if (name != null && name.isNotEmpty) return name;
   }
@@ -117,7 +162,7 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
           );
           final synced = await cloudSync.fullSync(
             user.uid,
-            authDisplayName: _resolveDisplayName(user),
+            authDisplayName: resolveDisplayName(user),
           );
           AppLogging.auth(
             '║ ☁️ fullSync returned: ${synced?.displayName ?? "NULL"}',
@@ -975,7 +1020,7 @@ Future<void> _triggerAutoSync(Ref ref, String uid) async {
         .fullSync(
           uid,
           authDisplayName: ref.read(currentUserProvider) != null
-              ? _resolveDisplayName(ref.read(currentUserProvider)!)
+              ? resolveDisplayName(ref.read(currentUserProvider)!)
               : null,
         );
     ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.synced);
@@ -998,7 +1043,7 @@ Future<void> triggerManualSync(WidgetRef ref) async {
   try {
     await ref
         .read(userProfileProvider.notifier)
-        .fullSync(user.uid, authDisplayName: _resolveDisplayName(user));
+        .fullSync(user.uid, authDisplayName: resolveDisplayName(user));
     ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.synced);
   } catch (e) {
     ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.error);

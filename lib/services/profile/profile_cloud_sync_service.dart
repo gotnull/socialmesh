@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 
@@ -200,13 +200,15 @@ class ProfileCloudSyncService {
       final profileForCloud = localProfile.copyWith(id: uid, isSynced: true);
 
       // Convert to Firestore-compatible map
-      final data = _profileToFirestore(profileForCloud);
+      final data = profileToFirestoreMap(profileForCloud);
+
+      // Sync the public mirror first. The uniqueness check on displayName
+      // lives inside _syncPublicProfile; if it throws, we want users/{uid}
+      // to remain untouched rather than half-updated.
+      await _syncPublicProfile(uid, profileForCloud);
 
       // Use merge to avoid overwriting fields we don't manage
       await _userDoc(uid).set(data, SetOptions(merge: true));
-
-      // Also sync public fields to `profiles` collection for social features
-      await _syncPublicProfile(uid, profileForCloud);
 
       // Update local profile with synced status
       await _localService.saveProfile(profileForCloud);
@@ -301,35 +303,52 @@ class ProfileCloudSyncService {
   Future<void> _syncPublicProfile(String uid, UserProfile profile) async {
     AppLogging.auth('ProfileSync: Syncing public profile for uid: $uid');
 
-    // Check display name uniqueness before syncing
-    if (profile.displayName.isNotEmpty) {
-      final isTaken = await isDisplayNameTaken(profile.displayName, uid);
-      if (isTaken) {
-        throw DisplayNameTakenException(profile.displayName);
-      }
-    }
-
     final docRef = _publicProfileDoc(uid);
     final doc = await docRef.get();
 
-    // Only write HTTP(S) URLs to Firestore — local file paths must not leak
-    final safeAvatarUrl = _sanitizeUrlForCloud(profile.avatarUrl);
-    final safeBannerUrl = _sanitizeUrlForCloud(profile.bannerUrl);
+    // Only run the uniqueness check when the display name is actually
+    // changing. A passive sync (e.g. on app launch) must never throw
+    // DisplayNameTakenException for the user's own existing name — that
+    // throw used to abort the public-profile write mid-flight, leaving
+    // users/{uid} and profiles/{uid} out of sync.
+    if (profile.displayName.isNotEmpty) {
+      final existingName = doc.exists
+          ? (doc.data()?['displayName'] as String?)
+          : null;
+      final nameChanged =
+          existingName == null || existingName != profile.displayName;
+      if (nameChanged) {
+        final isTaken = await isDisplayNameTaken(profile.displayName, uid);
+        if (isTaken) {
+          throw DisplayNameTakenException(profile.displayName);
+        }
+      }
+    }
 
+    // Null entries are stripped for the same reason as profileToFirestoreMap:
+    // writing nulls would wipe existing cloud fields when a stale or
+    // partially-loaded local profile is synced.
     final publicData = <String, dynamic>{
       'displayName': profile.displayName,
       'displayNameLower': profile.displayName.toLowerCase(),
-      'avatarUrl': safeAvatarUrl,
-      'bannerUrl': safeBannerUrl,
-      'bio': profile.bio,
-      'callsign': profile.callsign,
-      'website': profile.website,
-      'socialLinks': profile.socialLinks?.toJson(),
-      'primaryNodeId': profile.primaryNodeId,
       'linkedNodeIds': profile.linkedNodeIds,
       // Note: isVerified is NOT included - managed by admin only
       'updatedAt': FieldValue.serverTimestamp(),
     };
+    final safeAvatarUrl = _sanitizeUrlForCloud(profile.avatarUrl);
+    if (safeAvatarUrl != null) publicData['avatarUrl'] = safeAvatarUrl;
+    final safeBannerUrl = _sanitizeUrlForCloud(profile.bannerUrl);
+    if (safeBannerUrl != null) publicData['bannerUrl'] = safeBannerUrl;
+    final bio = profile.bio;
+    if (bio != null) publicData['bio'] = bio;
+    final callsign = profile.callsign;
+    if (callsign != null) publicData['callsign'] = callsign;
+    final website = profile.website;
+    if (website != null) publicData['website'] = website;
+    final socialLinks = profile.socialLinks?.toJson();
+    if (socialLinks != null) publicData['socialLinks'] = socialLinks;
+    final primaryNodeId = profile.primaryNodeId;
+    if (primaryNodeId != null) publicData['primaryNodeId'] = primaryNodeId;
 
     if (!doc.exists) {
       // Document doesn't exist - create with counter fields set to 0
@@ -340,10 +359,104 @@ class ProfileCloudSyncService {
       await docRef.set(publicData);
       AppLogging.auth('ProfileSync: Created new public profile');
     } else {
-      // Document exists - update without touching counter fields
-      await docRef.update(publicData);
+      // Use set(merge: true) instead of update() so the call succeeds even
+      // if some fields were missing on the existing doc.
+      await docRef.set(publicData, SetOptions(merge: true));
       AppLogging.auth('ProfileSync: Updated existing public profile');
     }
+  }
+
+  /// Backfill any fields that are present in the public mirror
+  /// (`profiles/{uid}`) but missing from the private user doc
+  /// (`users/{uid}`). Recovers from past drift caused by partial writes —
+  /// e.g. the `profileToFirestoreMap` null-stomp bug that wiped users/{uid}
+  /// while leaving profiles/{uid} intact.
+  ///
+  /// If anything is backfilled, the corrected fields are also written
+  /// back to `users/{uid}` so subsequent reads see the recovered state.
+  Future<UserProfile> _recoverDriftFromPublicMirror(
+    String uid,
+    UserProfile cloud,
+  ) async {
+    final publicDoc = await _publicProfileDoc(uid).get();
+    if (!publicDoc.exists) return cloud;
+    final public = publicDoc.data();
+    if (public == null) return cloud;
+
+    final recovered = mergePublicMirrorIntoCloud(cloud, public);
+    if (identical(recovered, cloud)) return cloud;
+
+    AppLogging.auth(
+      'ProfileSync: 🩹 Drift recovered from profiles/{uid} → '
+      'avatar=${recovered.avatarUrl != cloud.avatarUrl}, '
+      'banner=${recovered.bannerUrl != cloud.bannerUrl}, '
+      'bio=${recovered.bio != cloud.bio}, '
+      'callsign=${recovered.callsign != cloud.callsign}, '
+      'website=${recovered.website != cloud.website}, '
+      'primaryNodeId=${recovered.primaryNodeId != cloud.primaryNodeId}, '
+      'socialLinks=${recovered.socialLinks != cloud.socialLinks}',
+    );
+
+    // Persist the recovered fields back to users/{uid}. Stripped-null
+    // payload + merge:true means only the newly-filled keys are written.
+    await _userDoc(
+      uid,
+    ).set(profileToFirestoreMap(recovered), SetOptions(merge: true));
+    return recovered;
+  }
+
+  /// Pure-logic counterpart of [_recoverDriftFromPublicMirror]: given a
+  /// cloud-side `UserProfile` and the raw `profiles/{uid}` document data,
+  /// return a profile whose null fields are backfilled from the public
+  /// mirror. Returns the same `cloud` instance (via `identical`) when
+  /// nothing changes — callers can use `identical(out, cloud)` as a
+  /// no-op signal.
+  @visibleForTesting
+  static UserProfile mergePublicMirrorIntoCloud(
+    UserProfile cloud,
+    Map<String, dynamic> public,
+  ) {
+    final recoveredAvatarUrl =
+        cloud.avatarUrl ?? public['avatarUrl'] as String?;
+    final recoveredBannerUrl =
+        cloud.bannerUrl ?? public['bannerUrl'] as String?;
+    final recoveredBio = cloud.bio ?? public['bio'] as String?;
+    final recoveredCallsign = cloud.callsign ?? public['callsign'] as String?;
+    final recoveredWebsite = cloud.website ?? public['website'] as String?;
+    final recoveredPrimaryNodeId =
+        cloud.primaryNodeId ?? public['primaryNodeId'] as int?;
+    final publicSocialLinks = public['socialLinks'] as Map<String, dynamic>?;
+    final recoveredSocialLinks =
+        cloud.socialLinks ??
+        (publicSocialLinks != null
+            ? ProfileSocialLinks.fromJson(publicSocialLinks)
+            : null);
+    // displayName is intentionally NOT recovered from the public mirror.
+    // The cloud doc is the source of truth for the user's own name —
+    // pulling from public would clobber legitimate private edits where
+    // the public mirror hadn't caught up yet. If a past null-stomp left
+    // users/{uid}.displayName at an Auth-fallback shape, that needs a
+    // manual / one-shot fix, not silent drift recovery on every sync.
+
+    final didRecover =
+        recoveredAvatarUrl != cloud.avatarUrl ||
+        recoveredBannerUrl != cloud.bannerUrl ||
+        recoveredBio != cloud.bio ||
+        recoveredCallsign != cloud.callsign ||
+        recoveredWebsite != cloud.website ||
+        recoveredPrimaryNodeId != cloud.primaryNodeId ||
+        recoveredSocialLinks != cloud.socialLinks;
+    if (!didRecover) return cloud;
+
+    return cloud.copyWith(
+      avatarUrl: recoveredAvatarUrl,
+      bannerUrl: recoveredBannerUrl,
+      bio: recoveredBio,
+      callsign: recoveredCallsign,
+      website: recoveredWebsite,
+      primaryNodeId: recoveredPrimaryNodeId,
+      socialLinks: recoveredSocialLinks,
+    );
   }
 
   /// Fetch profile from Firestore and merge with local
@@ -488,8 +601,14 @@ class ProfileCloudSyncService {
           final freshProfile = (name != null && name.isNotEmpty)
               ? UserProfile.fromFirebaseUser(uid: uid, displayName: name)
               : UserProfile.guest().copyWith(id: uid, isSynced: true);
-          await _userDoc(uid).set(_profileToFirestore(freshProfile));
+          // Public mirror first so a uniqueness throw cannot leave
+          // users/{uid} half-written. Always merge, never overwrite — if
+          // a concurrent write or stale cache made cloudDoc appear
+          // missing when it actually exists, a bare set() would wipe it.
           await _syncPublicProfile(uid, freshProfile);
+          await _userDoc(
+            uid,
+          ).set(profileToFirestoreMap(freshProfile), SetOptions(merge: true));
           finalProfile = freshProfile;
           AppLogging.auth(
             '║ ✅ Created fresh profile: ${freshProfile.displayName}',
@@ -503,8 +622,11 @@ class ProfileCloudSyncService {
             id: uid,
             isSynced: true,
           );
-          await _userDoc(uid).set(_profileToFirestore(profileForCloud));
           await _syncPublicProfile(uid, profileForCloud);
+          await _userDoc(uid).set(
+            profileToFirestoreMap(profileForCloud),
+            SetOptions(merge: true),
+          );
           finalProfile = profileForCloud;
           AppLogging.auth(
             '║ ✅ Pushed local to cloud: ${profileForCloud.displayName}',
@@ -513,11 +635,23 @@ class ProfileCloudSyncService {
       } else {
         // Cloud profile exists
         AppLogging.auth('║ 📬 CLOUD PROFILE EXISTS');
-        final cloudProfile = _profileFromFirestore(uid, cloudDoc.data()!);
+        final rawCloudProfile = _profileFromFirestore(uid, cloudDoc.data()!);
         AppLogging.auth('║ ☁️ Cloud profile:');
-        AppLogging.auth('║    - displayName: ${cloudProfile.displayName}');
-        AppLogging.auth('║    - id: ${cloudProfile.id}');
-        AppLogging.auth('║    - isSynced: ${cloudProfile.isSynced}');
+        AppLogging.auth('║    - displayName: ${rawCloudProfile.displayName}');
+        AppLogging.auth('║    - id: ${rawCloudProfile.id}');
+        AppLogging.auth('║    - isSynced: ${rawCloudProfile.isSynced}');
+
+        // Recover any fields that drifted out of users/{uid} but still
+        // live in profiles/{uid}. A previous bug (null entries in
+        // profileToFirestoreMap + non-merge set()) could wipe avatar,
+        // banner, bio, etc. on the private doc while leaving the public
+        // mirror intact when its uniqueness check threw mid-flight. This
+        // pulls those fields back so the user's own app surfaces match
+        // what every other reader (admin dashboard, other users) sees.
+        final cloudProfile = await _recoverDriftFromPublicMirror(
+          uid,
+          rawCloudProfile,
+        );
 
         if (localIsForDifferentUser) {
           // Local belongs to different user - just use cloud profile.
@@ -533,10 +667,10 @@ class ProfileCloudSyncService {
               '→ $patchedName (raw=$authDisplayName)',
             );
             finalProfile = cloudProfile.copyWith(displayName: patchedName);
+            await _syncPublicProfile(uid, finalProfile);
             await _userDoc(
               uid,
-            ).set(_profileToFirestore(finalProfile), SetOptions(merge: true));
-            await _syncPublicProfile(uid, finalProfile);
+            ).set(profileToFirestoreMap(finalProfile), SetOptions(merge: true));
           } else {
             AppLogging.auth(
               '║ ➡️ Using CLOUD profile (local is for different user)',
@@ -551,11 +685,12 @@ class ProfileCloudSyncService {
           finalProfile = _mergeProfiles(localProfile, cloudProfile);
           AppLogging.auth('║ 🔀 Merged result: ${finalProfile.displayName}');
 
-          // Push merged version back to cloud
+          // Push merged version back to cloud (public mirror first so a
+          // uniqueness throw cannot leave users/{uid} half-written).
+          await _syncPublicProfile(uid, finalProfile);
           await _userDoc(
             uid,
-          ).set(_profileToFirestore(finalProfile), SetOptions(merge: true));
-          await _syncPublicProfile(uid, finalProfile);
+          ).set(profileToFirestoreMap(finalProfile), SetOptions(merge: true));
         }
       }
 
@@ -1018,26 +1153,44 @@ class ProfileCloudSyncService {
   /// Note: Social counters (followerCount, followingCount, postCount) are NOT included
   /// because they are managed by Cloud Functions triggers and should never be
   /// overwritten by the client.
-  Map<String, dynamic> _profileToFirestore(UserProfile profile) {
-    return {
+  @visibleForTesting
+  static Map<String, dynamic> profileToFirestoreMap(UserProfile profile) {
+    // Null entries are stripped: writing `{avatarUrl: null}` with
+    // `SetOptions(merge: true)` still overwrites the cloud value to null,
+    // so a stale or freshly-created local profile (avatar/banner/bio not
+    // yet loaded) would silently wipe existing cloud data. Omitting the
+    // key entirely is the only safe default. Explicit clears must use
+    // `FieldValue.delete()` at the call site.
+    final data = <String, dynamic>{
       'displayName': profile.displayName,
-      'bio': profile.bio,
-      'callsign': profile.callsign,
-      'email': profile.email,
-      'website': profile.website,
-      'avatarUrl': _sanitizeUrlForCloud(profile.avatarUrl),
-      'bannerUrl': _sanitizeUrlForCloud(profile.bannerUrl),
-      'socialLinks': profile.socialLinks?.toJson(),
-      'primaryNodeId': profile.primaryNodeId,
       'linkedNodeIds': profile.linkedNodeIds,
-      'accentColorIndex': profile.accentColorIndex,
       'installedWidgetIds': profile.installedWidgetIds,
-      'preferences': profile.preferences?.toJson(),
       'createdAt': profile.createdAt.toIso8601String(),
       'updatedAt': FieldValue.serverTimestamp(),
       // Do NOT include: followerCount, followingCount, postCount, isVerified
       // These are managed by Cloud Functions / admin only
     };
+    final bio = profile.bio;
+    if (bio != null) data['bio'] = bio;
+    final callsign = profile.callsign;
+    if (callsign != null) data['callsign'] = callsign;
+    final email = profile.email;
+    if (email != null) data['email'] = email;
+    final website = profile.website;
+    if (website != null) data['website'] = website;
+    final safeAvatarUrl = _sanitizeUrlForCloud(profile.avatarUrl);
+    if (safeAvatarUrl != null) data['avatarUrl'] = safeAvatarUrl;
+    final safeBannerUrl = _sanitizeUrlForCloud(profile.bannerUrl);
+    if (safeBannerUrl != null) data['bannerUrl'] = safeBannerUrl;
+    final socialLinks = profile.socialLinks?.toJson();
+    if (socialLinks != null) data['socialLinks'] = socialLinks;
+    final primaryNodeId = profile.primaryNodeId;
+    if (primaryNodeId != null) data['primaryNodeId'] = primaryNodeId;
+    final accentColorIndex = profile.accentColorIndex;
+    if (accentColorIndex != null) data['accentColorIndex'] = accentColorIndex;
+    final preferences = profile.preferences?.toJson();
+    if (preferences != null) data['preferences'] = preferences;
+    return data;
   }
 
   /// Create UserProfile from Firestore document
