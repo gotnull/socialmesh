@@ -10080,6 +10080,26 @@ class AppLocalizationsRu extends AppLocalizations {
       'Просмотр последних диагностических данных';
 
   @override
+  String get meshcoreDiagnosticsBundleTool => 'Поделиться диагностикой';
+
+  @override
+  String get meshcoreDiagnosticsBundleToolSubtitle =>
+      'Упаковать журнал кадров, состояние радио и метаданные приложения для тикета поддержки';
+
+  @override
+  String get meshcoreDiagnosticsBundleProgress =>
+      'Готовится пакет диагностики...';
+
+  @override
+  String get meshcoreDiagnosticsBundleSuccess =>
+      'Пакет диагностики готов к отправке.';
+
+  @override
+  String meshcoreDiagnosticsBundleFailed(String error) {
+    return 'Не удалось собрать пакет диагностики: $error';
+  }
+
+  @override
   String get meshcoreTelemetryTileTitle => 'Телеметрия';
 
   @override

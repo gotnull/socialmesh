@@ -10108,6 +10108,26 @@ class AppLocalizationsDe extends AppLocalizations {
       'Aktuelle App-Diagnosen anzeigen';
 
   @override
+  String get meshcoreDiagnosticsBundleTool => 'Share diagnostics';
+
+  @override
+  String get meshcoreDiagnosticsBundleToolSubtitle =>
+      'Zip the frame log + radio state + app metadata for a support ticket';
+
+  @override
+  String get meshcoreDiagnosticsBundleProgress =>
+      'Preparing diagnostics bundle...';
+
+  @override
+  String get meshcoreDiagnosticsBundleSuccess =>
+      'Diagnostics bundle ready to share.';
+
+  @override
+  String meshcoreDiagnosticsBundleFailed(String error) {
+    return 'Could not build diagnostics bundle: $error';
+  }
+
+  @override
   String get meshcoreTelemetryTileTitle => 'Telemetrie';
 
   @override

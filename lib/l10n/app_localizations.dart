@@ -17484,6 +17484,36 @@ abstract class AppLocalizations {
   /// **'View recent app diagnostics'**
   String get meshcoreAppDebugLogToolSubtitle;
 
+  /// D-Q6 - MeshCore Tools tile title for the diagnostics bundle
+  ///
+  /// In en, this message translates to:
+  /// **'Share diagnostics'**
+  String get meshcoreDiagnosticsBundleTool;
+
+  /// D-Q6 - MeshCore Tools tile subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Zip the frame log + radio state + app metadata for a support ticket'**
+  String get meshcoreDiagnosticsBundleToolSubtitle;
+
+  /// D-Q6 - in-flight progress snackbar
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing diagnostics bundle...'**
+  String get meshcoreDiagnosticsBundleProgress;
+
+  /// D-Q6 - snackbar after the share sheet fires
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnostics bundle ready to share.'**
+  String get meshcoreDiagnosticsBundleSuccess;
+
+  /// D-Q6 - snackbar on bundle-build failure
+  ///
+  /// In en, this message translates to:
+  /// **'Could not build diagnostics bundle: {error}'**
+  String meshcoreDiagnosticsBundleFailed(String error);
+
   /// D41-A - Contact Detail tile title opening the per-contact telemetry sheet
   ///
   /// In en, this message translates to:

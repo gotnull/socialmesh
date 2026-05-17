@@ -10083,6 +10083,26 @@ class AppLocalizationsPt extends AppLocalizations {
       'Ver diagnóstico recente do app';
 
   @override
+  String get meshcoreDiagnosticsBundleTool => 'Compartilhar diagnóstico';
+
+  @override
+  String get meshcoreDiagnosticsBundleToolSubtitle =>
+      'Zipa o frame log, estado do rádio e metadados do app para um chamado de suporte';
+
+  @override
+  String get meshcoreDiagnosticsBundleProgress =>
+      'Preparando o pacote de diagnóstico...';
+
+  @override
+  String get meshcoreDiagnosticsBundleSuccess =>
+      'Pacote de diagnóstico pronto para compartilhar.';
+
+  @override
+  String meshcoreDiagnosticsBundleFailed(String error) {
+    return 'Não foi possível criar o pacote de diagnóstico: $error';
+  }
+
+  @override
   String get meshcoreTelemetryTileTitle => 'Telemetria';
 
   @override

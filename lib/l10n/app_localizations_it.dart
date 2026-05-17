@@ -10095,6 +10095,26 @@ class AppLocalizationsIt extends AppLocalizations {
       'Visualizza la diagnostica recente dell\'app';
 
   @override
+  String get meshcoreDiagnosticsBundleTool => 'Condividi diagnostica';
+
+  @override
+  String get meshcoreDiagnosticsBundleToolSubtitle =>
+      'Zippa frame log, stato radio e metadati app per una richiesta di supporto';
+
+  @override
+  String get meshcoreDiagnosticsBundleProgress =>
+      'Preparazione del bundle diagnostico...';
+
+  @override
+  String get meshcoreDiagnosticsBundleSuccess =>
+      'Bundle diagnostico pronto per la condivisione.';
+
+  @override
+  String meshcoreDiagnosticsBundleFailed(String error) {
+    return 'Impossibile creare il bundle diagnostico: $error';
+  }
+
+  @override
   String get meshcoreTelemetryTileTitle => 'Telemetria';
 
   @override

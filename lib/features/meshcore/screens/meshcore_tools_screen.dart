@@ -17,9 +17,12 @@ import '../../../core/widgets/info_table.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/settings_primitives.dart';
 import '../../../core/widgets/status_banner.dart';
+import 'package:share_plus/share_plus.dart';
+
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_message_providers.dart';
 import '../../../providers/meshcore_providers.dart';
+import '../../../services/meshcore/diagnostics/meshcore_diagnostics_bundle_service.dart';
 import '../../../services/meshcore/protocol/meshcore_messages.dart';
 import '../../../utils/snackbar.dart';
 import '../../../models/meshcore_contact.dart';
@@ -182,6 +185,20 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
               subtitle: context.l10n.meshcoreAppDebugLogToolSubtitle,
               trailing: _chevron(context),
               onTap: _openAppDebugLog,
+            ),
+            // D-Q6: share a diagnostics bundle (bundle.json +
+            // frame-log.txt zipped). Privacy: no chat bodies, no
+            // full pubkeys, no passwords, no GPS coordinates — see
+            // `MeshCoreDiagnosticsBundleService` for the redaction
+            // invariants.
+            SettingsTile(
+              key: const ValueKey('meshcore-tools-diagnostics-bundle'),
+              icon: Icons.ios_share_rounded,
+              iconColor: AccentColors.cyan,
+              title: context.l10n.meshcoreDiagnosticsBundleTool,
+              subtitle: context.l10n.meshcoreDiagnosticsBundleToolSubtitle,
+              trailing: _chevron(context),
+              onTap: _shareDiagnosticsBundle,
             ),
             // D28 Part D: queue status card (heartbeat + last-drain
             // outcome + in-progress badge). Sits above the manual
@@ -680,6 +697,34 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
     Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => const MeshCoreFrameLogScreen()),
     );
+  }
+
+  /// D-Q6: generate the MeshCore diagnostics bundle (bundle.json +
+  /// frame-log.txt zipped) and hand it to the system share sheet.
+  /// Snackbar surfaces success / failure; the temp file lives in the
+  /// platform temp directory and is cleaned up by the OS.
+  Future<void> _shareDiagnosticsBundle() async {
+    HapticFeedback.lightImpact();
+    final l10n = context.l10n;
+    final service = ref.read(meshCoreDiagnosticsBundleServiceProvider);
+    showInfoSnackBar(context, l10n.meshcoreDiagnosticsBundleProgress);
+    try {
+      final file = await service.generate();
+      if (!mounted) return;
+      await Share.shareXFiles([XFile(file.path)]);
+      if (!mounted) return;
+      showSuccessSnackBar(context, l10n.meshcoreDiagnosticsBundleSuccess);
+    } catch (e) {
+      AppLogging.meshcore(
+        'event=diagnostics.bundle.failed reason=$e',
+        error: true,
+      );
+      if (!mounted) return;
+      showErrorSnackBar(
+        context,
+        l10n.meshcoreDiagnosticsBundleFailed(e.toString()),
+      );
+    }
   }
 
   /// D44: open the shared `AppLogScreen` over the in-memory AppLogger
@@ -1218,7 +1263,9 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
           const SizedBox(height: AppTheme.spacing8),
         ],
         OutlinedButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
           child: Text(l.meshcoreTracePathClose),
         ),
       ],
