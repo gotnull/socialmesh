@@ -19184,6 +19184,9 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get signalLocationInvalid => 'Местоположение недоступно';
+
+  @override
   String get signalLocationUnavailableSent =>
       'Местоположение недоступно, сигнал отправлен без него.';
 

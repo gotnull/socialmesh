@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../../core/logging.dart';
 import '../../../core/map_config.dart';
 import '../../../core/safe_lat_lng.dart';
 import '../../../core/theme.dart';
@@ -155,8 +156,11 @@ class FlightRouteMap extends StatelessWidget {
                     isDeparture: false,
                   ),
 
-                  // Live plane position
-                  if (livePosition != null)
+                  // Live plane position. Skip when the upstream feed
+                  // produces non-finite or out-of-range coordinates so
+                  // we never construct a marker with a bad point.
+                  if (livePosition != null &&
+                      _isFiniteFlightPosition(livePosition!))
                     _planeMarker(context, livePosition!),
                 ]),
               ),
@@ -255,6 +259,17 @@ class FlightRouteMap extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  bool _isFiniteFlightPosition(FlightPosition position) {
+    final ok = safeLatLng(position.latitude, position.longitude) != null;
+    if (!ok) {
+      AppLogging.aether(
+        'FlightRouteMap dropped plane marker: non-finite live position '
+        '(lat=${position.latitude}, lng=${position.longitude})',
+      );
+    }
+    return ok;
   }
 
   Marker _planeMarker(BuildContext context, FlightPosition position) {

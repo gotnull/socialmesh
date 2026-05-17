@@ -28,7 +28,6 @@ import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/primary_gradient_button.dart';
-import '../../../core/widgets/settings_primitives.dart';
 import '../../../models/meshcore_contact.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../services/meshcore/routing/meshcore_manual_path_parser.dart';
@@ -219,10 +218,10 @@ class _ManualPathSheetState extends ConsumerState<_ManualPathSheet>
               ),
               filled: true,
               fillColor: context.background,
-              prefixIcon: canonicalPrefixIcon(
-                Icon(Icons.alt_route_rounded, color: context.textSecondary),
+              prefixIcon: Icon(
+                Icons.alt_route_rounded,
+                color: context.textSecondary,
               ),
-              prefixIconConstraints: canonicalPrefixIconConstraints,
             ),
           ),
         ),

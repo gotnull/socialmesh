@@ -7,16 +7,17 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:socialmesh/features/settings/account_subscriptions_screen.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../core/safe_lat_lng.dart';
 import '../../../core/safety/safe_image.dart';
 import '../../../core/theme.dart';
 import '../../../core/logging.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/user_avatar.dart';
+import '../../../utils/snackbar.dart';
 import '../../../models/presence_confidence.dart';
 import '../../nodedex/widgets/tappable_sigil_avatar.dart';
 import '../../../models/social.dart';
@@ -859,6 +860,24 @@ class _SignalLocation extends StatelessWidget {
   final Post signal;
 
   void _openMap(BuildContext context) {
+    final location = signal.location;
+    // Persisted Post.location values are plain doubles and have historically
+    // contained NaN / out-of-range coordinates from malformed peer payloads
+    // or older buggy writes. Feeding a non-finite LatLng to FlutterMap as
+    // initialCenter crashes TileRangeCalculator on the first frame, so we
+    // validate at the navigation boundary and bail with a user message.
+    final point = location == null
+        ? null
+        : safeLatLng(location.latitude, location.longitude);
+    if (point == null) {
+      AppLogging.maps(
+        'Rejected show-on-map: signal=${signal.id} has invalid location '
+        '(hasLocation=${location != null})',
+      );
+      showErrorSnackBar(context, context.l10n.signalLocationInvalid);
+      return;
+    }
+
     // If we're already inside a SignalFeedScreen, update it in-place instead
     // of pushing a new screen to avoid stacking multiple signal feed screens.
     final presenceState = context
@@ -885,10 +904,7 @@ class _SignalLocation extends StatelessWidget {
         MaterialPageRoute(
           builder: (_) => SignalFeedScreen(
             initialViewMode: SignalViewMode.map,
-            initialCenter: LatLng(
-              signal.location!.latitude,
-              signal.location!.longitude,
-            ),
+            initialCenter: point,
             initialSelectedSignalId: signal.id,
           ),
         ),

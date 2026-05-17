@@ -19272,6 +19272,9 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get signalLocationInvalid => 'Location unavailable';
+
+  @override
   String get signalLocationUnavailableSent =>
       'Ubicación no disponible, enviada sin ubicación.';
 

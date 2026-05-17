@@ -28,7 +28,6 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animated_empty_state.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
-import '../../../core/widgets/settings_primitives.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../models/meshcore_contact.dart';
 import '../../../providers/meshcore_providers.dart';
@@ -379,10 +378,10 @@ class _SearchSortBar extends StatelessWidget {
                   horizontal: AppTheme.spacing12,
                   vertical: AppTheme.spacing12,
                 ),
-                prefixIcon: canonicalPrefixIcon(
-                  Icon(Icons.search_rounded, color: context.textSecondary),
+                prefixIcon: Icon(
+                  Icons.search_rounded,
+                  color: context.textSecondary,
                 ),
-                prefixIconConstraints: canonicalPrefixIconConstraints,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radius8),
                   borderSide: BorderSide(color: context.border),

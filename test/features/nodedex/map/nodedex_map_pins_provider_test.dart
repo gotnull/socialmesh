@@ -134,6 +134,61 @@ void main() {
       expect(container.read(nodedexMapPinsProvider), isEmpty);
     });
 
+    test('entry with all NaN positioned encounters is filtered out', () {
+      // Regression: production crash where corrupted persisted encounter
+      // rows carried NaN coordinates and built a NodeDexMapPin with a
+      // non-finite LatLng, which then tripped Crs.checkLatLng inside
+      // flutter_map's MarkerLayer.
+      final container = _container({
+        1: _entry(
+          nodeNum: 1,
+          encounters: [
+            EncounterRecord(
+              timestamp: DateTime(2026, 4, 20, 10),
+              latitude: double.nan,
+              longitude: double.nan,
+            ),
+            EncounterRecord(
+              timestamp: DateTime(2026, 4, 21, 10),
+              latitude: 0.0,
+              longitude: 200.0, // out of WGS-84 range
+            ),
+          ],
+        ),
+      });
+      addTearDown(container.dispose);
+
+      expect(container.read(nodedexMapPinsProvider), isEmpty);
+    });
+
+    test('entry with mixed finite + NaN encounters uses the finite one', () {
+      final container = _container({
+        1: _entry(
+          nodeNum: 1,
+          encounters: [
+            EncounterRecord(
+              timestamp: DateTime(2026, 4, 20, 10),
+              latitude: 37.0,
+              longitude: -122.0,
+            ),
+            // Newer but corrupt — walker should skip and fall back to
+            // the older finite record.
+            EncounterRecord(
+              timestamp: DateTime(2026, 4, 22, 14),
+              latitude: double.infinity,
+              longitude: 0.0,
+            ),
+          ],
+        ),
+      });
+      addTearDown(container.dispose);
+
+      final pin = container.read(nodedexMapPinsProvider).single;
+      expect(pin.position.latitude, 37.0);
+      expect(pin.position.longitude, -122.0);
+      expect(pin.positionedAt, DateTime(2026, 4, 20, 10));
+    });
+
     test('entry with empty encounters list is filtered out', () {
       final container = _container({
         1: _entry(nodeNum: 1, encounters: const []),

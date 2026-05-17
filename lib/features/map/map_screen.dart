@@ -3206,42 +3206,53 @@ class _MapScreenState extends ConsumerState<MapScreen>
     int? myNodeNum,
   ) {
     final polylines = <Polyline>[];
+    var droppedHops = 0;
 
-    // Resolve local device position as the start of the forward route
-    // Prefer stored position from traceroute time
-    LatLng? localPosition;
-    if (log.originLatitude != null &&
-        log.originLongitude != null &&
-        !(log.originLatitude == 0.0 && log.originLongitude == 0.0)) {
-      localPosition = LatLng(log.originLatitude!, log.originLongitude!);
-    } else if (myNodeNum != null) {
+    // Coordinates persisted by the traceroute pipeline have surfaced as
+    // NaN / out-of-range in field reports; route every direct LatLng()
+    // construction through safeLatLng so a malformed hop drops out of
+    // the route instead of crashing the polyline / tile layer at build
+    // time.
+    LatLng? safePointFromCoords(double? lat, double? lng) {
+      if (lat == null || lng == null) return null;
+      if (lat == 0.0 && lng == 0.0) return null; // unset sentinel
+      return safeLatLng(lat, lng);
+    }
+
+    // Resolve local device position as the start of the forward route.
+    // Prefer the stored position captured at traceroute time.
+    var localPosition = safePointFromCoords(
+      log.originLatitude,
+      log.originLongitude,
+    );
+    if (localPosition == null && myNodeNum != null) {
       final myNode = nodes[myNodeNum];
       if (myNode != null && myNode.hasPosition) {
-        localPosition = LatLng(myNode.latitude!, myNode.longitude!);
+        localPosition = safeLatLng(myNode.latitude, myNode.longitude);
       }
     }
 
-    // Resolve target node position as the end of the forward route
-    // Prefer stored position from traceroute time
-    LatLng? targetPosition;
-    if (log.targetLatitude != null &&
-        log.targetLongitude != null &&
-        !(log.targetLatitude == 0.0 && log.targetLongitude == 0.0)) {
-      targetPosition = LatLng(log.targetLatitude!, log.targetLongitude!);
-    } else {
+    // Resolve target node position as the end of the forward route.
+    var targetPosition = safePointFromCoords(
+      log.targetLatitude,
+      log.targetLongitude,
+    );
+    if (targetPosition == null) {
       final targetNode = nodes[log.targetNode];
       if (targetNode != null && targetNode.hasPosition) {
-        targetPosition = LatLng(targetNode.latitude!, targetNode.longitude!);
+        targetPosition = safeLatLng(targetNode.latitude, targetNode.longitude);
       }
     }
 
     LatLng? positionOf(TraceRouteHop hop) {
-      if (hop.latitude != null &&
+      final point = safePointFromCoords(hop.latitude, hop.longitude);
+      if (point == null &&
+          hop.latitude != null &&
           hop.longitude != null &&
           !(hop.latitude == 0.0 && hop.longitude == 0.0)) {
-        return LatLng(hop.latitude!, hop.longitude!);
+        droppedHops++;
       }
-      return null;
+      return point;
     }
 
     // Forward path: local → hop1 → hop2 → ... → target.
@@ -3279,6 +3290,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
     }
 
     if (unverified) {
+      if (droppedHops > 0 || polylines.isEmpty) {
+        AppLogging.maps(
+          'Traceroute polyline target=${log.targetNode} unverified: '
+          'droppedHops=$droppedHops segments=${polylines.length}',
+        );
+      }
       return polylines;
     }
 
@@ -3306,6 +3323,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
       );
     }
 
+    if (droppedHops > 0) {
+      AppLogging.maps(
+        'Traceroute polyline target=${log.targetNode}: dropped '
+        '$droppedHops hop(s) with non-finite/out-of-range coordinates',
+      );
+    }
+
     return polylines;
   }
 
@@ -3327,13 +3351,22 @@ class _MapScreenState extends ConsumerState<MapScreen>
         continue;
       }
 
+      final point = safeLatLng(hop.latitude, hop.longitude);
+      if (point == null) {
+        AppLogging.maps(
+          'Traceroute marker skipped: hop ${hop.nodeNum} has non-finite '
+          'coordinates (lat=${hop.latitude}, lng=${hop.longitude})',
+        );
+        continue;
+      }
+
       final node = nodes[hop.nodeNum];
       final name =
           node?.displayName ?? NodeDisplayNameResolver.defaultName(hop.nodeNum);
 
       markers.add(
         Marker(
-          point: LatLng(hop.latitude!, hop.longitude!),
+          point: point,
           width: 80,
           height: 32,
           child: Center(
@@ -3375,37 +3408,35 @@ class _MapScreenState extends ConsumerState<MapScreen>
   ) {
     final points = <LatLng>[];
 
-    // Local device position – prefer stored position from traceroute time
-    if (log.originLatitude != null &&
-        log.originLongitude != null &&
-        !(log.originLatitude == 0.0 && log.originLongitude == 0.0)) {
-      points.add(LatLng(log.originLatitude!, log.originLongitude!));
-    } else if (myNodeNum != null) {
+    void addIfFinite(double? lat, double? lng) {
+      if (lat == null || lng == null) return;
+      if (lat == 0.0 && lng == 0.0) return; // unset sentinel
+      final point = safeLatLng(lat, lng);
+      if (point != null) points.add(point);
+    }
+
+    // Local device position - prefer stored position from traceroute time.
+    addIfFinite(log.originLatitude, log.originLongitude);
+    if (points.isEmpty && myNodeNum != null) {
       final myNode = nodes[myNodeNum];
       if (myNode != null && myNode.hasPosition) {
-        points.add(LatLng(myNode.latitude!, myNode.longitude!));
+        addIfFinite(myNode.latitude, myNode.longitude);
       }
     }
 
-    // Target node position – prefer stored position from traceroute time
-    if (log.targetLatitude != null &&
-        log.targetLongitude != null &&
-        !(log.targetLatitude == 0.0 && log.targetLongitude == 0.0)) {
-      points.add(LatLng(log.targetLatitude!, log.targetLongitude!));
-    } else {
+    // Target node position - prefer stored position from traceroute time.
+    final beforeTarget = points.length;
+    addIfFinite(log.targetLatitude, log.targetLongitude);
+    if (points.length == beforeTarget) {
       final target = nodes[log.targetNode];
       if (target != null && target.hasPosition) {
-        points.add(LatLng(target.latitude!, target.longitude!));
+        addIfFinite(target.latitude, target.longitude);
       }
     }
 
-    // Hop positions
+    // Hop positions.
     for (final hop in log.hops) {
-      if (hop.latitude != null &&
-          hop.longitude != null &&
-          !(hop.latitude == 0.0 && hop.longitude == 0.0)) {
-        points.add(LatLng(hop.latitude!, hop.longitude!));
-      }
+      addIfFinite(hop.latitude, hop.longitude);
     }
 
     if (points.length < 2) return null;
@@ -3422,14 +3453,24 @@ class _MapScreenState extends ConsumerState<MapScreen>
       if (p.longitude > maxLng) maxLng = p.longitude;
     }
 
-    // Add padding (10% on each side)
+    // Add padding (10% on each side), clamped to WGS-84 range so we
+    // never hand non-finite or out-of-range corners to LatLngBounds.
     final latPad = (maxLat - minLat) * 0.1;
     final lngPad = (maxLng - minLng) * 0.1;
 
-    return LatLngBounds(
-      LatLng(minLat - latPad, minLng - lngPad),
-      LatLng(maxLat + latPad, maxLng + lngPad),
-    );
+    final sw =
+        safeLatLng(minLat - latPad, minLng - lngPad) ??
+        LatLng(
+          (minLat - latPad).clamp(-90.0, 90.0),
+          (minLng - lngPad).clamp(-180.0, 180.0),
+        );
+    final ne =
+        safeLatLng(maxLat + latPad, maxLng + lngPad) ??
+        LatLng(
+          (maxLat + latPad).clamp(-90.0, 90.0),
+          (maxLng + lngPad).clamp(-180.0, 180.0),
+        );
+    return LatLngBounds(sw, ne);
   }
 
   /// Build distance label markers for connections from my node

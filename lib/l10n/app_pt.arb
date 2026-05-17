@@ -43093,6 +43093,7 @@
   "signalLocalBadge": "Local",
   "signalLocalBadgeGallery": "Local",
   "signalLocationBadge": "Localização",
+  "signalLocationInvalid": "Localização indisponível",
   "signalLocationPrivacyNote": "A localização do sinal usa a posição do dispositivo mesh, arredondada para ~{radiusMeters}m.",
   "signalLocationUnavailableSent": "Localização indisponível, enviado sem localização.",
   "signalMaxFileSize": "Máx. {size} KB",

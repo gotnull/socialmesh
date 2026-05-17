@@ -25876,6 +25876,10 @@
         },
         "description": "Text in signals Parameters: {radiusMeters}."
     },
+    "signalLocationInvalid": "Location unavailable",
+    "@signalLocationInvalid": {
+        "description": "Toast shown when a signal's stored coordinates are non-finite or out of range and we cannot open the map for it."
+    },
     "signalLocationUnavailableSent": "Location unavailable, sent without location.",
     "@signalLocationUnavailableSent": {
         "description": "Text displayed in signals"

@@ -13,7 +13,6 @@ import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/primary_gradient_button.dart';
 import '../../../core/widgets/search_filter_header.dart';
-import '../../../core/widgets/settings_primitives.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/qr_share_sheet.dart';
@@ -795,10 +794,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                 borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.accentColor),
               ),
-              prefixIcon: canonicalPrefixIcon(
-                Icon(Icons.key_rounded, color: context.textSecondary),
-              ),
-              prefixIconConstraints: canonicalPrefixIconConstraints,
+              prefixIcon: Icon(Icons.key_rounded, color: context.textSecondary),
               counterText: '',
             ),
             style: TextStyle(

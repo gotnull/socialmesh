@@ -20,7 +20,6 @@ import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/primary_gradient_button.dart';
-import '../../../core/widgets/settings_primitives.dart';
 import '../../../models/meshcore_contact.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../services/meshcore/protocol/meshcore_messages.dart';
@@ -142,10 +141,10 @@ class _MeshCoreRoomLoginSheetState
               borderRadius: BorderRadius.circular(AppTheme.radius8),
               borderSide: BorderSide(color: context.accentColor),
             ),
-            prefixIcon: canonicalPrefixIcon(
-              Icon(Icons.lock_outline_rounded, color: context.textSecondary),
+            prefixIcon: Icon(
+              Icons.lock_outline_rounded,
+              color: context.textSecondary,
             ),
-            prefixIconConstraints: canonicalPrefixIconConstraints,
             counterText: '',
           ),
         ),

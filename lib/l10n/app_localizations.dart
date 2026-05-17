@@ -33176,6 +33176,12 @@ abstract class AppLocalizations {
   /// **'Signal location uses mesh device position, rounded to ~{radiusMeters}m.'**
   String signalLocationPrivacyNote(int radiusMeters);
 
+  /// Toast shown when a signal's stored coordinates are non-finite or out of range and we cannot open the map for it.
+  ///
+  /// In en, this message translates to:
+  /// **'Location unavailable'**
+  String get signalLocationInvalid;
+
   /// Text displayed in signals
   ///
   /// In en, this message translates to:

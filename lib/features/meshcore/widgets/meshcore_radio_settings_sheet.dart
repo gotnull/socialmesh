@@ -643,13 +643,10 @@ class _MeshCoreRadioSettingsSheetState
                         borderRadius: BorderRadius.circular(AppTheme.radius8),
                         borderSide: BorderSide(color: context.accentColor),
                       ),
-                      prefixIcon: canonicalPrefixIcon(
-                        Icon(
-                          Icons.broadcast_on_personal_outlined,
-                          color: context.textSecondary,
-                        ),
+                      prefixIcon: Icon(
+                        Icons.broadcast_on_personal_outlined,
+                        color: context.textSecondary,
                       ),
-                      prefixIconConstraints: canonicalPrefixIconConstraints,
                       counterText: '',
                     ),
                   ),
@@ -776,10 +773,10 @@ class _MeshCoreRadioSettingsSheetState
                     borderRadius: BorderRadius.circular(AppTheme.radius8),
                     borderSide: BorderSide(color: context.accentColor),
                   ),
-                  prefixIcon: canonicalPrefixIcon(
-                    Icon(Icons.flash_on_rounded, color: context.textSecondary),
+                  prefixIcon: Icon(
+                    Icons.flash_on_rounded,
+                    color: context.textSecondary,
                   ),
-                  prefixIconConstraints: canonicalPrefixIconConstraints,
                   counterText: '',
                 ),
               ),

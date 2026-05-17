@@ -826,13 +826,10 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                 borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.accentColor),
               ),
-              prefixIcon: canonicalPrefixIcon(
-                Icon(
-                  Icons.person_outline_rounded,
-                  color: context.textSecondary,
-                ),
+              prefixIcon: Icon(
+                Icons.person_outline_rounded,
+                color: context.textSecondary,
               ),
-              prefixIconConstraints: canonicalPrefixIconConstraints,
               counterText: '',
             ),
           ),
@@ -1289,10 +1286,10 @@ class _EditLocationSheetState extends ConsumerState<_EditLocationSheet>
                 borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.accentColor),
               ),
-              prefixIcon: canonicalPrefixIcon(
-                Icon(Icons.my_location_outlined, color: context.textSecondary),
+              prefixIcon: Icon(
+                Icons.my_location_outlined,
+                color: context.textSecondary,
               ),
-              prefixIconConstraints: canonicalPrefixIconConstraints,
               counterText: '',
             ),
           ),
@@ -1329,13 +1326,10 @@ class _EditLocationSheetState extends ConsumerState<_EditLocationSheet>
                 borderRadius: BorderRadius.circular(AppTheme.radius8),
                 borderSide: BorderSide(color: context.accentColor),
               ),
-              prefixIcon: canonicalPrefixIcon(
-                Icon(
-                  Icons.location_searching_outlined,
-                  color: context.textSecondary,
-                ),
+              prefixIcon: Icon(
+                Icons.location_searching_outlined,
+                color: context.textSecondary,
               ),
-              prefixIconConstraints: canonicalPrefixIconConstraints,
               counterText: '',
             ),
           ),

@@ -9946,6 +9946,7 @@
     "signalLocalBadge": "Локальный",
     "signalLocalBadgeGallery": "Локальный",
     "signalLocationBadge": "Местоположение",
+    "signalLocationInvalid": "Местоположение недоступно",
     "signalLocationPrivacyNote": "Местоположение сигнала использует позицию mesh-устройства, округлённую до ~{radiusMeters}м.",
     "signalLocationUnavailableSent": "Местоположение недоступно, сигнал отправлен без него.",
     "signalMaxFileSize": "Макс. {size} КБ",

@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../core/logging.dart';
 import '../../../core/map_config.dart';
 import '../../../core/safe_lat_lng.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
@@ -94,6 +95,17 @@ class _SignalMapViewState extends ConsumerState<SignalMapView>
   void initState() {
     super.initState();
     _loadMapStyle();
+    // Defence in depth: callers may construct LatLng(NaN, NaN) from corrupted
+    // persisted signal locations. The `_center` getter already drops a non-
+    // finite initialCenter, but log here so the rejection is visible in
+    // breadcrumbs the next time a real crash slips through.
+    final initial = widget.initialCenter;
+    if (initial != null && !isFiniteLatLng(initial)) {
+      AppLogging.maps(
+        'SignalMapView rejected non-finite initialCenter '
+        '(lat=${initial.latitude}, lng=${initial.longitude})',
+      );
+    }
     if (widget.initialSelectedSignalId != null) {
       try {
         _selectedSignal = widget.signals.firstWhere(

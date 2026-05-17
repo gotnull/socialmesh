@@ -21,6 +21,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../../core/logging.dart';
+import '../../../core/safe_lat_lng.dart';
 import '../models/nodedex_entry.dart';
 import '../providers/nodedex_providers.dart';
 import 'nodedex_map_pin.dart';
@@ -50,22 +52,38 @@ final nodedexMapPinsProvider = Provider<List<NodeDexMapPin>>((ref) {
 NodeDexMapPin? _pinFromEntry(NodeDexEntry entry) {
   if (entry.encounters.isEmpty) return null;
 
-  // Walk newest -> oldest. The first record with both coords non-null
-  // supplies position + positionedAt.
+  // Walk newest -> oldest. The first record with both coords finite +
+  // in WGS-84 range supplies position + positionedAt. Older encounter
+  // rows from buggy writes have surfaced with NaN / out-of-range
+  // values; skipping them here keeps non-finite LatLngs out of the
+  // MarkerLayer.
   EncounterRecord? positioned;
+  LatLng? positionedPoint;
   for (var i = entry.encounters.length - 1; i >= 0; i--) {
     final e = entry.encounters[i];
-    if (e.latitude != null && e.longitude != null) {
+    final point = safeLatLng(e.latitude, e.longitude);
+    if (point != null) {
       positioned = e;
+      positionedPoint = point;
       break;
     }
   }
-  if (positioned == null) return null;
+  if (positioned == null || positionedPoint == null) {
+    if (entry.encounters.any(
+      (e) => e.latitude != null && e.longitude != null,
+    )) {
+      AppLogging.nodeDex(
+        'NodeDex pin skipped for node ${entry.nodeNum}: all positioned '
+        'encounters had non-finite or out-of-range coordinates',
+      );
+    }
+    return null;
+  }
 
   final newest = entry.encounters.last;
   return NodeDexMapPin(
     nodeNum: entry.nodeNum,
-    position: LatLng(positioned.latitude!, positioned.longitude!),
+    position: positionedPoint,
     positionedAt: positioned.timestamp,
     lastEncounterAt: newest.timestamp,
     encounterCount: entry.encounterCount,

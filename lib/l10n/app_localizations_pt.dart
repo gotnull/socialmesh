@@ -19201,6 +19201,9 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get signalLocationInvalid => 'Localização indisponível';
+
+  @override
   String get signalLocationUnavailableSent =>
       'Localização indisponível, enviado sem localização.';
 
