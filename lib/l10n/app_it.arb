@@ -16598,9 +16598,6 @@
       }
     }
   },
-  "@meshcoreShellSectionConnection": {
-    "description": "Section title for connection actions in the MeshCore device sheet."
-  },
   "@meshcoreShellSectionDeviceInfo": {
     "description": "Section title for device information in the MeshCore device sheet."
   },
@@ -38451,6 +38448,19 @@
   "meshcoreDiagnosticsBundleProgress": "Preparazione del bundle diagnostico...",
   "meshcoreDiagnosticsBundleSuccess": "Bundle diagnostico pronto per la condivisione.",
   "meshcoreDiagnosticsBundleFailed": "Impossibile creare il bundle diagnostico: {error}",
+  "meshcoreBleDebugLogTool": "Log debug BLE",
+  "meshcoreBleDebugLogToolSubtitle": "Eventi del livello di trasporto: scansione, connessione e notifiche",
+  "meshcoreBleDebugLogTitle": "Log debug BLE",
+  "meshcoreBleDebugLogEntryCount": "{count, plural, =0{Nessuna voce} =1{1 voce} other{{count} voci}}",
+  "meshcoreBleDebugLogPaused": "In pausa",
+  "meshcoreBleDebugLogLive": "In diretta",
+  "meshcoreBleDebugLogCopyAll": "Copia tutto",
+  "meshcoreBleDebugLogClear": "Svuota",
+  "meshcoreBleDebugLogCleared": "Log debug BLE svuotato.",
+  "meshcoreBleDebugLogCopied": "Log debug BLE copiato negli appunti.",
+  "meshcoreBleDebugLogEntryCopied": "Voce copiata.",
+  "meshcoreBleDebugLogEmpty": "Nessun evento BLE registrato. Gli eventi appariranno qui quando la radio si connette.",
+  "meshcoreBleDebugLogEmptyPaused": "Log BLE in pausa. Riprendi per acquisire nuovi eventi.",
   "meshcoreApplying": "Applicazione in corso…",
   "meshcoreBandwidthLabel": "Larghezza di banda",
   "meshcoreBasedOnLiPoVoltage": "Basato sull'intervallo di tensione LiPo (3.0V - 4.2V)",
@@ -39124,7 +39134,6 @@
   "meshcoreShellRetry": "Riprova",
   "meshcoreShellScanToAddContact": "Scansiona per aggiungere come contatto",
   "meshcoreShellSearchingFor": "Ricerca di {deviceName}...",
-  "meshcoreShellSectionConnection": "Connessione",
   "meshcoreShellSectionDeviceInfo": "Informazioni dispositivo",
   "meshcoreShellSectionQuickActions": "Azioni rapide",
   "meshcoreShellShareContactInfo": "Condividi il tuo codice contatto per farti scrivere",

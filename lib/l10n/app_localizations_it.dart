@@ -10115,6 +10115,58 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get meshcoreBleDebugLogTool => 'Log debug BLE';
+
+  @override
+  String get meshcoreBleDebugLogToolSubtitle =>
+      'Eventi del livello di trasporto: scansione, connessione e notifiche';
+
+  @override
+  String get meshcoreBleDebugLogTitle => 'Log debug BLE';
+
+  @override
+  String meshcoreBleDebugLogEntryCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count voci',
+      one: '1 voce',
+      zero: 'Nessuna voce',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshcoreBleDebugLogPaused => 'In pausa';
+
+  @override
+  String get meshcoreBleDebugLogLive => 'In diretta';
+
+  @override
+  String get meshcoreBleDebugLogCopyAll => 'Copia tutto';
+
+  @override
+  String get meshcoreBleDebugLogClear => 'Svuota';
+
+  @override
+  String get meshcoreBleDebugLogCleared => 'Log debug BLE svuotato.';
+
+  @override
+  String get meshcoreBleDebugLogCopied =>
+      'Log debug BLE copiato negli appunti.';
+
+  @override
+  String get meshcoreBleDebugLogEntryCopied => 'Voce copiata.';
+
+  @override
+  String get meshcoreBleDebugLogEmpty =>
+      'Nessun evento BLE registrato. Gli eventi appariranno qui quando la radio si connette.';
+
+  @override
+  String get meshcoreBleDebugLogEmptyPaused =>
+      'Log BLE in pausa. Riprendi per acquisire nuovi eventi.';
+
+  @override
   String get meshcoreTelemetryTileTitle => 'Telemetria';
 
   @override
@@ -10913,9 +10965,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get meshcoreShellScanToAddContact =>
       'Scansiona per aggiungere come contatto';
-
-  @override
-  String get meshcoreShellSectionConnection => 'Connessione';
 
   @override
   String get meshcoreShellSectionDeviceInfo => 'Informazioni dispositivo';

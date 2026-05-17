@@ -10103,6 +10103,58 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get meshcoreBleDebugLogTool => 'Log de depuração BLE';
+
+  @override
+  String get meshcoreBleDebugLogToolSubtitle =>
+      'Eventos da camada de transporte: scan, conexão e notificações';
+
+  @override
+  String get meshcoreBleDebugLogTitle => 'Log de depuração BLE';
+
+  @override
+  String meshcoreBleDebugLogEntryCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entradas',
+      one: '1 entrada',
+      zero: 'Nenhuma entrada',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshcoreBleDebugLogPaused => 'Pausado';
+
+  @override
+  String get meshcoreBleDebugLogLive => 'Ao vivo';
+
+  @override
+  String get meshcoreBleDebugLogCopyAll => 'Copiar tudo';
+
+  @override
+  String get meshcoreBleDebugLogClear => 'Limpar';
+
+  @override
+  String get meshcoreBleDebugLogCleared => 'Log de depuração BLE limpo.';
+
+  @override
+  String get meshcoreBleDebugLogCopied =>
+      'Log de depuração BLE copiado para a área de transferência.';
+
+  @override
+  String get meshcoreBleDebugLogEntryCopied => 'Entrada copiada.';
+
+  @override
+  String get meshcoreBleDebugLogEmpty =>
+      'Nenhum evento BLE registrado. Os eventos aparecem aqui quando o rádio conecta.';
+
+  @override
+  String get meshcoreBleDebugLogEmptyPaused =>
+      'Log BLE pausado. Retome para capturar novos eventos.';
+
+  @override
   String get meshcoreTelemetryTileTitle => 'Telemetria';
 
   @override
@@ -10903,9 +10955,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get meshcoreShellScanToAddContact =>
       'Escaneie para adicionar como contato';
-
-  @override
-  String get meshcoreShellSectionConnection => 'Conexão';
 
   @override
   String get meshcoreShellSectionDeviceInfo => 'Informações do dispositivo';

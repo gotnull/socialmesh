@@ -186,6 +186,19 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
               trailing: _chevron(context),
               onTap: _openAppDebugLog,
             ),
+            // D-Q5: BLE transport debug log viewer. Distinct from D44
+            // App Debug Log (which is app-wide); this is transport-only
+            // and shows scan / connect / discover / notify / disconnect
+            // events with MAC addresses redacted to the last 4 hex.
+            SettingsTile(
+              key: const ValueKey('meshcore-tools-ble-debug-log'),
+              icon: Icons.bluetooth_searching_rounded,
+              iconColor: AccentColors.indigo,
+              title: context.l10n.meshcoreBleDebugLogTool,
+              subtitle: context.l10n.meshcoreBleDebugLogToolSubtitle,
+              trailing: _chevron(context),
+              onTap: _openBleDebugLog,
+            ),
             // D-Q6: share a diagnostics bundle (bundle.json +
             // frame-log.txt zipped). Privacy: no chat bodies, no
             // full pubkeys, no passwords, no GPS coordinates — see
@@ -735,6 +748,16 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
     Navigator.of(
       context,
     ).push(MaterialPageRoute<void>(builder: (_) => const AppLogScreen()));
+  }
+
+  /// D-Q5: open the BLE transport debug log viewer.
+  void _openBleDebugLog() {
+    HapticFeedback.lightImpact();
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const MeshCoreBleDebugLogScreen(),
+      ),
+    );
   }
 
   /// D28 Part C: open the Trace Path picker bottom sheet.

@@ -1388,20 +1388,21 @@ class _MeshCoreDeviceSheetContentState
                 },
               ),
               const SizedBox(height: AppTheme.spacing24),
-
-              // Connection Actions
-              if (isConnected) ...[
-                _buildSectionTitle(
-                  context,
-                  context.l10n.meshcoreShellSectionConnection,
-                ),
-                const SizedBox(height: AppTheme.spacing12),
-                _buildDisconnectButton(context),
-              ],
-              const SizedBox(height: AppTheme.spacing32),
             ],
           ),
         ),
+        if (isConnected && !_disconnecting) ...[
+          Divider(color: context.border.withValues(alpha: 0.2), height: 1),
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              AppTheme.spacing20,
+              AppTheme.spacing12,
+              AppTheme.spacing20,
+              AppTheme.spacing12 + MediaQuery.of(context).padding.bottom,
+            ),
+            child: _buildDisconnectButton(context),
+          ),
+        ],
       ],
     );
   }

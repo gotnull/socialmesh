@@ -16598,9 +16598,6 @@
       }
     }
   },
-  "@meshcoreShellSectionConnection": {
-    "description": "Section title for connection actions in the MeshCore device sheet."
-  },
   "@meshcoreShellSectionDeviceInfo": {
     "description": "Section title for device information in the MeshCore device sheet."
   },
@@ -38451,6 +38448,19 @@
   "meshcoreDiagnosticsBundleProgress": "Preparando o pacote de diagnóstico...",
   "meshcoreDiagnosticsBundleSuccess": "Pacote de diagnóstico pronto para compartilhar.",
   "meshcoreDiagnosticsBundleFailed": "Não foi possível criar o pacote de diagnóstico: {error}",
+  "meshcoreBleDebugLogTool": "Log de depuração BLE",
+  "meshcoreBleDebugLogToolSubtitle": "Eventos da camada de transporte: scan, conexão e notificações",
+  "meshcoreBleDebugLogTitle": "Log de depuração BLE",
+  "meshcoreBleDebugLogEntryCount": "{count, plural, =0{Nenhuma entrada} =1{1 entrada} other{{count} entradas}}",
+  "meshcoreBleDebugLogPaused": "Pausado",
+  "meshcoreBleDebugLogLive": "Ao vivo",
+  "meshcoreBleDebugLogCopyAll": "Copiar tudo",
+  "meshcoreBleDebugLogClear": "Limpar",
+  "meshcoreBleDebugLogCleared": "Log de depuração BLE limpo.",
+  "meshcoreBleDebugLogCopied": "Log de depuração BLE copiado para a área de transferência.",
+  "meshcoreBleDebugLogEntryCopied": "Entrada copiada.",
+  "meshcoreBleDebugLogEmpty": "Nenhum evento BLE registrado. Os eventos aparecem aqui quando o rádio conecta.",
+  "meshcoreBleDebugLogEmptyPaused": "Log BLE pausado. Retome para capturar novos eventos.",
   "meshcoreApplying": "A aplicar…",
   "meshcoreBandwidthLabel": "Largura de banda",
   "meshcoreBasedOnLiPoVoltage": "Baseado na faixa de tensão LiPo (3.0V - 4.2V)",
@@ -39124,7 +39134,6 @@
   "meshcoreShellRetry": "Tentar novamente",
   "meshcoreShellScanToAddContact": "Escaneie para adicionar como contato",
   "meshcoreShellSearchingFor": "Procurando {deviceName}...",
-  "meshcoreShellSectionConnection": "Conexão",
   "meshcoreShellSectionDeviceInfo": "Informações do dispositivo",
   "meshcoreShellSectionQuickActions": "Ações rápidas",
   "meshcoreShellShareContactInfo": "Compartilhe seu código de contato para outros te enviarem mensagens",

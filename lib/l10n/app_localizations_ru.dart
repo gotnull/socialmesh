@@ -10100,6 +10100,60 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get meshcoreBleDebugLogTool => 'Журнал отладки BLE';
+
+  @override
+  String get meshcoreBleDebugLogToolSubtitle =>
+      'События транспортного уровня: сканирование, подключение и уведомления';
+
+  @override
+  String get meshcoreBleDebugLogTitle => 'Журнал отладки BLE';
+
+  @override
+  String meshcoreBleDebugLogEntryCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count записей',
+      many: '$count записей',
+      few: '$count записи',
+      one: '$count запись',
+      zero: 'Нет записей',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshcoreBleDebugLogPaused => 'Приостановлено';
+
+  @override
+  String get meshcoreBleDebugLogLive => 'В реальном времени';
+
+  @override
+  String get meshcoreBleDebugLogCopyAll => 'Копировать всё';
+
+  @override
+  String get meshcoreBleDebugLogClear => 'Очистить';
+
+  @override
+  String get meshcoreBleDebugLogCleared => 'Журнал отладки BLE очищен.';
+
+  @override
+  String get meshcoreBleDebugLogCopied =>
+      'Журнал отладки BLE скопирован в буфер обмена.';
+
+  @override
+  String get meshcoreBleDebugLogEntryCopied => 'Запись скопирована.';
+
+  @override
+  String get meshcoreBleDebugLogEmpty =>
+      'Событий BLE пока нет. События появятся здесь после подключения радио.';
+
+  @override
+  String get meshcoreBleDebugLogEmptyPaused =>
+      'Журнал BLE приостановлен. Возобновите, чтобы записывать новые события.';
+
+  @override
   String get meshcoreTelemetryTileTitle => 'Телеметрия';
 
   @override
@@ -10899,9 +10953,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get meshcoreShellScanToAddContact =>
       'Отсканируйте, чтобы добавить в контакты';
-
-  @override
-  String get meshcoreShellSectionConnection => 'Подключение';
 
   @override
   String get meshcoreShellSectionDeviceInfo => 'Информация об устройстве';

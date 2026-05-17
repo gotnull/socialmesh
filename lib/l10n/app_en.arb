@@ -13405,6 +13405,61 @@
             "error": {"type": "String"}
         }
     },
+    "meshcoreBleDebugLogTool": "BLE debug log",
+    "@meshcoreBleDebugLogTool": {
+        "description": "D-Q5 - MeshCore Tools tile title for the BLE transport debug log"
+    },
+    "meshcoreBleDebugLogToolSubtitle": "Transport-layer scan, connect, and notify events",
+    "@meshcoreBleDebugLogToolSubtitle": {
+        "description": "D-Q5 - MeshCore Tools tile subtitle"
+    },
+    "meshcoreBleDebugLogTitle": "BLE debug log",
+    "@meshcoreBleDebugLogTitle": {
+        "description": "D-Q5 - viewer screen title"
+    },
+    "meshcoreBleDebugLogEntryCount": "{count, plural, =0{No entries} =1{1 entry} other{{count} entries}}",
+    "@meshcoreBleDebugLogEntryCount": {
+        "description": "D-Q5 - header entry count badge",
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "meshcoreBleDebugLogPaused": "Paused",
+    "@meshcoreBleDebugLogPaused": {
+        "description": "D-Q5 - paused chip label"
+    },
+    "meshcoreBleDebugLogLive": "Live",
+    "@meshcoreBleDebugLogLive": {
+        "description": "D-Q5 - live chip label"
+    },
+    "meshcoreBleDebugLogCopyAll": "Copy all",
+    "@meshcoreBleDebugLogCopyAll": {
+        "description": "D-Q5 - copy-all toolbar action"
+    },
+    "meshcoreBleDebugLogClear": "Clear",
+    "@meshcoreBleDebugLogClear": {
+        "description": "D-Q5 - clear toolbar action"
+    },
+    "meshcoreBleDebugLogCleared": "BLE debug log cleared.",
+    "@meshcoreBleDebugLogCleared": {
+        "description": "D-Q5 - snackbar after clear"
+    },
+    "meshcoreBleDebugLogCopied": "BLE debug log copied to clipboard.",
+    "@meshcoreBleDebugLogCopied": {
+        "description": "D-Q5 - snackbar after copy-all"
+    },
+    "meshcoreBleDebugLogEntryCopied": "Entry copied.",
+    "@meshcoreBleDebugLogEntryCopied": {
+        "description": "D-Q5 - snackbar after tapping a single entry to copy it"
+    },
+    "meshcoreBleDebugLogEmpty": "No BLE events recorded yet. Events appear here as the radio connects.",
+    "@meshcoreBleDebugLogEmpty": {
+        "description": "D-Q5 - empty state when buffer is empty and live"
+    },
+    "meshcoreBleDebugLogEmptyPaused": "BLE log paused. Resume to capture new events.",
+    "@meshcoreBleDebugLogEmptyPaused": {
+        "description": "D-Q5 - empty state when buffer is empty and paused"
+    },
     "meshcoreTelemetryTileTitle": "Telemetry",
     "@meshcoreTelemetryTileTitle": {
         "description": "D41-A - Contact Detail tile title opening the per-contact telemetry sheet"
@@ -14455,10 +14510,6 @@
     "meshcoreShellScanToAddContact": "Scan to add as contact",
     "@meshcoreShellScanToAddContact": {
         "description": "Subtitle on the QR share sheet for adding a MeshCore contact."
-    },
-    "meshcoreShellSectionConnection": "Connection",
-    "@meshcoreShellSectionConnection": {
-        "description": "Section title for connection actions in the MeshCore device sheet."
     },
     "meshcoreShellSectionDeviceInfo": "Device Information",
     "@meshcoreShellSectionDeviceInfo": {

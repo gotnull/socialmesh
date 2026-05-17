@@ -17514,6 +17514,84 @@ abstract class AppLocalizations {
   /// **'Could not build diagnostics bundle: {error}'**
   String meshcoreDiagnosticsBundleFailed(String error);
 
+  /// D-Q5 - MeshCore Tools tile title for the BLE transport debug log
+  ///
+  /// In en, this message translates to:
+  /// **'BLE debug log'**
+  String get meshcoreBleDebugLogTool;
+
+  /// D-Q5 - MeshCore Tools tile subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Transport-layer scan, connect, and notify events'**
+  String get meshcoreBleDebugLogToolSubtitle;
+
+  /// D-Q5 - viewer screen title
+  ///
+  /// In en, this message translates to:
+  /// **'BLE debug log'**
+  String get meshcoreBleDebugLogTitle;
+
+  /// D-Q5 - header entry count badge
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No entries} =1{1 entry} other{{count} entries}}'**
+  String meshcoreBleDebugLogEntryCount(int count);
+
+  /// D-Q5 - paused chip label
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get meshcoreBleDebugLogPaused;
+
+  /// D-Q5 - live chip label
+  ///
+  /// In en, this message translates to:
+  /// **'Live'**
+  String get meshcoreBleDebugLogLive;
+
+  /// D-Q5 - copy-all toolbar action
+  ///
+  /// In en, this message translates to:
+  /// **'Copy all'**
+  String get meshcoreBleDebugLogCopyAll;
+
+  /// D-Q5 - clear toolbar action
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get meshcoreBleDebugLogClear;
+
+  /// D-Q5 - snackbar after clear
+  ///
+  /// In en, this message translates to:
+  /// **'BLE debug log cleared.'**
+  String get meshcoreBleDebugLogCleared;
+
+  /// D-Q5 - snackbar after copy-all
+  ///
+  /// In en, this message translates to:
+  /// **'BLE debug log copied to clipboard.'**
+  String get meshcoreBleDebugLogCopied;
+
+  /// D-Q5 - snackbar after tapping a single entry to copy it
+  ///
+  /// In en, this message translates to:
+  /// **'Entry copied.'**
+  String get meshcoreBleDebugLogEntryCopied;
+
+  /// D-Q5 - empty state when buffer is empty and live
+  ///
+  /// In en, this message translates to:
+  /// **'No BLE events recorded yet. Events appear here as the radio connects.'**
+  String get meshcoreBleDebugLogEmpty;
+
+  /// D-Q5 - empty state when buffer is empty and paused
+  ///
+  /// In en, this message translates to:
+  /// **'BLE log paused. Resume to capture new events.'**
+  String get meshcoreBleDebugLogEmptyPaused;
+
   /// D41-A - Contact Detail tile title opening the per-contact telemetry sheet
   ///
   /// In en, this message translates to:
@@ -18921,12 +18999,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Scan to add as contact'**
   String get meshcoreShellScanToAddContact;
-
-  /// Section title for connection actions in the MeshCore device sheet.
-  ///
-  /// In en, this message translates to:
-  /// **'Connection'**
-  String get meshcoreShellSectionConnection;
 
   /// Section title for device information in the MeshCore device sheet.
   ///

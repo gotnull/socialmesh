@@ -10112,6 +10112,57 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get meshcoreBleDebugLogTool => 'BLE debug log';
+
+  @override
+  String get meshcoreBleDebugLogToolSubtitle =>
+      'Transport-layer scan, connect, and notify events';
+
+  @override
+  String get meshcoreBleDebugLogTitle => 'BLE debug log';
+
+  @override
+  String meshcoreBleDebugLogEntryCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entries',
+      one: '1 entry',
+      zero: 'No entries',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshcoreBleDebugLogPaused => 'Paused';
+
+  @override
+  String get meshcoreBleDebugLogLive => 'Live';
+
+  @override
+  String get meshcoreBleDebugLogCopyAll => 'Copy all';
+
+  @override
+  String get meshcoreBleDebugLogClear => 'Clear';
+
+  @override
+  String get meshcoreBleDebugLogCleared => 'BLE debug log cleared.';
+
+  @override
+  String get meshcoreBleDebugLogCopied => 'BLE debug log copied to clipboard.';
+
+  @override
+  String get meshcoreBleDebugLogEntryCopied => 'Entry copied.';
+
+  @override
+  String get meshcoreBleDebugLogEmpty =>
+      'No BLE events recorded yet. Events appear here as the radio connects.';
+
+  @override
+  String get meshcoreBleDebugLogEmptyPaused =>
+      'BLE log paused. Resume to capture new events.';
+
+  @override
   String get meshcoreTelemetryTileTitle => 'Телеметрія';
 
   @override
@@ -10905,9 +10956,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshcoreShellScanToAddContact => 'Скануйте, щоб додати як контакт';
-
-  @override
-  String get meshcoreShellSectionConnection => 'З\'єднання';
 
   @override
   String get meshcoreShellSectionDeviceInfo => 'Інформація про пристрій';
