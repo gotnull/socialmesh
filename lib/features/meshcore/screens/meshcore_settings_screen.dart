@@ -560,7 +560,9 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
             value: scale,
             onChanged: (v) => notifier.setScale(v),
             options: [
-              for (final step in const [0.8, 0.9, 1.0, 1.1, 1.25, 1.5, 1.8])
+              // Capped at 1.5 to match the Meshtastic accessibility
+              // `maxSafeScale` in `lib/models/accessibility_preferences.dart`.
+              for (final step in const [0.8, 0.9, 1.0, 1.1, 1.25, 1.5])
                 ChipOption<double>(
                   value: step,
                   // Numeric scale factor — not translatable.

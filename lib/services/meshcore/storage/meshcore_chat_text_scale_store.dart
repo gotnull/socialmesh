@@ -10,7 +10,10 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 const double kMeshCoreChatTextScaleMin = 0.8;
-const double kMeshCoreChatTextScaleMax = 1.8;
+// Matches Meshtastic accessibility `maxSafeScale` (1.5) in
+// `lib/models/accessibility_preferences.dart`. Beyond 1.5 breaks
+// bubble layout in long-string locales.
+const double kMeshCoreChatTextScaleMax = 1.5;
 const double kMeshCoreChatTextScaleDefault = 1.0;
 
 class MeshCoreChatTextScaleStore {

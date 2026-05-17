@@ -34,19 +34,19 @@ void main() {
     expect(kMeshCoreChatTextScaleMin, 0.8);
   });
 
-  test('write clamps above 1.8', () async {
+  test('write clamps above the canonical max (1.5)', () async {
     final prefs = await SharedPreferences.getInstance();
     final store = MeshCoreChatTextScaleStore(prefs);
     await store.write(3.5);
     expect(store.read(), kMeshCoreChatTextScaleMax);
-    expect(kMeshCoreChatTextScaleMax, 1.8);
+    expect(kMeshCoreChatTextScaleMax, 1.5);
   });
 
   test('clamp helper is pure', () {
     expect(MeshCoreChatTextScaleStore.clamp(0.0), 0.8);
     expect(MeshCoreChatTextScaleStore.clamp(1.0), 1.0);
-    expect(MeshCoreChatTextScaleStore.clamp(1.8), 1.8);
-    expect(MeshCoreChatTextScaleStore.clamp(99.0), 1.8);
+    expect(MeshCoreChatTextScaleStore.clamp(1.5), 1.5);
+    expect(MeshCoreChatTextScaleStore.clamp(99.0), 1.5);
   });
 
   test(
