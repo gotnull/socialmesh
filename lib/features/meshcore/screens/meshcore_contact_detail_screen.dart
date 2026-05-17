@@ -77,25 +77,56 @@ class MeshCoreContactDetailScreen extends ConsumerWidget {
           : l10n.meshcoreContactUnknownName,
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(
-            AppTheme.spacing16,
-            AppTheme.spacing16,
-            AppTheme.spacing16,
-            AppTheme.spacing24,
+          padding: const EdgeInsets.only(
+            top: AppTheme.spacing16,
+            bottom: AppTheme.spacing24,
           ),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
-              _identitySection(context, live),
+              // Data-table sections (SectionTitle + InfoTable) own no
+              // horizontal padding; wrap them in h16 to align with the
+              // SettingsTile rows below (which own their own h16 via
+              // the canonical settings_primitives margin).
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing16,
+                ),
+                child: _identitySection(context, live),
+              ),
               const SizedBox(height: AppTheme.spacing16),
-              _routingSection(context, live),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing16,
+                ),
+                child: _routingSection(context, live),
+              ),
               const SizedBox(height: AppTheme.spacing16),
-              _activitySection(context, live),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing16,
+                ),
+                child: _activitySection(context, live),
+              ),
               if (live.hasLocation) ...[
                 const SizedBox(height: AppTheme.spacing16),
-                _locationSection(context, live),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing16,
+                  ),
+                  child: _locationSection(context, live),
+                ),
               ],
               const SizedBox(height: AppTheme.spacing24),
-              _actionsSection(context, ref, live),
+              // Actions section: SectionTitle still needs h16 but the
+              // SettingsTile rows below carry their own h16 margin.
+              // Wrap only the title.
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing16,
+                ),
+                child: _actionsSectionHeader(context),
+              ),
+              ..._actionsSectionTiles(context, ref, live),
             ]),
           ),
         ),
@@ -212,100 +243,104 @@ class MeshCoreContactDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _actionsSection(
+  Widget _actionsSectionHeader(BuildContext context) {
+    final l10n = context.l10n;
+    return SectionTitle(title: l10n.meshcoreContactDetailActions);
+  }
+
+  // Returns the action SettingsTile rows as a flat list so each tile
+  // can sit directly under the SliverList without an outer h16 wrapper
+  // that would double-pad the tile's own intrinsic h16 margin.
+  List<Widget> _actionsSectionTiles(
     BuildContext context,
     WidgetRef ref,
     MeshCoreContact c,
   ) {
     final l10n = context.l10n;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionTitle(title: l10n.meshcoreContactDetailActions),
+    return [
+      SettingsTile(
+        key: const ValueKey('meshcore-contact-detail-trace-path'),
+        icon: Icons.route_rounded,
+        iconColor: context.accentColor,
+        title: l10n.meshcoreTracePathTitle,
+        subtitle: l10n.meshcoreContactDetailTracePathSubtitle,
+        onTap: () => showMeshCoreTracePathSheet(context),
+      ),
+      SettingsTile(
+        key: const ValueKey('meshcore-contact-detail-path-override'),
+        icon: Icons.alt_route_rounded,
+        iconColor: context.accentColor,
+        title: l10n.meshcorePathOverrideTitle,
+        subtitle: l10n.meshcorePathOverrideSubtitle,
+        onTap: () => _openPathOverrideSheet(context, ref, c),
+      ),
+      // D39-A: Path History tile. Hidden when the contact has no
+      // saved paths. Tap opens the history sheet; the sheet itself
+      // handles activation confirmation, View, and Delete.
+      _PathHistoryTile(contact: c),
+      // D42-A: Show on map tile. Hidden when the contact has no
+      // usable path data (flood path or all hops unresolved).
+      _ShowOnMapTile(contact: c),
+      // D42-B-A: Show inferred path tile. Always visible; the
+      // notifier returns false (and the snackbar fires) when no
+      // app-local evidence exists for this contact.
+      _ShowInferredPathTile(contact: c),
+      // D41-A: Telemetry tile. Always visible for chat and
+      // repeater contacts; the sheet handles the no-data /
+      // timeout / cooling states internally.
+      SettingsTile(
+        key: const ValueKey('meshcore-contact-detail-telemetry'),
+        icon: Icons.sensors_rounded,
+        iconColor: context.accentColor,
+        title: l10n.meshcoreTelemetryTileTitle,
+        subtitle: l10n.meshcoreTelemetryTileSubtitle,
+        onTap: () => showMeshCoreTelemetrySheet(context, contact: c),
+      ),
+      // D36-A: Neighbours query is repeater-only. The chat-type
+      // contacts can't be queried this way (they aren't repeaters)
+      // so the tile is hidden entirely; we don't show a greyed-out
+      // disabled variant.
+      if (c.type == MeshCoreAdvType.repeater)
         SettingsTile(
-          key: const ValueKey('meshcore-contact-detail-trace-path'),
-          icon: Icons.route_rounded,
+          key: const ValueKey('meshcore-contact-detail-neighbors'),
+          icon: Icons.hub_rounded,
           iconColor: context.accentColor,
-          title: l10n.meshcoreTracePathTitle,
-          subtitle: l10n.meshcoreContactDetailTracePathSubtitle,
-          onTap: () => showMeshCoreTracePathSheet(context),
+          title: l10n.meshcoreNeighborsTileTitle,
+          subtitle: l10n.meshcoreNeighborsTileSubtitle,
+          onTap: () => showMeshCoreNeighborsSheet(context, repeater: c),
         ),
+      // D49-A: admin login tile. Repeater contacts route into the
+      // admin hub after a successful `CMD_SEND_LOGIN 0x1A` +
+      // `PUSH_CODE_LOGIN_SUCCESS 0x85` with `admin_flag = 1`.
+      // Room-server contacts route into the room login dialog;
+      // wire shape is identical, post-login routing differs.
+      if (c.type == MeshCoreAdvType.repeater)
         SettingsTile(
-          key: const ValueKey('meshcore-contact-detail-path-override'),
-          icon: Icons.alt_route_rounded,
+          key: const ValueKey('meshcore-contact-detail-admin-login'),
+          icon: Icons.admin_panel_settings_outlined,
           iconColor: context.accentColor,
-          title: l10n.meshcorePathOverrideTitle,
-          subtitle: l10n.meshcorePathOverrideSubtitle,
-          onTap: () => _openPathOverrideSheet(context, ref, c),
+          title: l10n.meshcoreRepeaterStatusContactDetailAction,
+          subtitle: l10n.meshcoreRepeaterStatusContactDetailSubtitle,
+          onTap: () => showMeshCoreRepeaterLoginDialog(context, contact: c),
         ),
-        // D39-A: Path History tile. Hidden when the contact has no
-        // saved paths. Tap opens the history sheet; the sheet itself
-        // handles activation confirmation, View, and Delete.
-        _PathHistoryTile(contact: c),
-        // D42-A: Show on map tile. Hidden when the contact has no
-        // usable path data (flood path or all hops unresolved).
-        _ShowOnMapTile(contact: c),
-        // D42-B-A: Show inferred path tile. Always visible; the
-        // notifier returns false (and the snackbar fires) when no
-        // app-local evidence exists for this contact.
-        _ShowInferredPathTile(contact: c),
-        // D41-A: Telemetry tile. Always visible for chat and
-        // repeater contacts; the sheet handles the no-data /
-        // timeout / cooling states internally.
+      if (c.type == MeshCoreAdvType.room)
         SettingsTile(
-          key: const ValueKey('meshcore-contact-detail-telemetry'),
-          icon: Icons.sensors_rounded,
+          key: const ValueKey('meshcore-contact-detail-room-login'),
+          icon: Icons.group_outlined,
           iconColor: context.accentColor,
-          title: l10n.meshcoreTelemetryTileTitle,
-          subtitle: l10n.meshcoreTelemetryTileSubtitle,
-          onTap: () => showMeshCoreTelemetrySheet(context, contact: c),
+          title: l10n.meshcoreRoomLoginTitle,
+          subtitle: l10n.meshcoreRoomLoginSubtitle(c.name),
+          onTap: () => showMeshCoreRoomLoginDialog(context, contact: c),
         ),
-        // D36-A: Neighbours query is repeater-only. The chat-type
-        // contacts can't be queried this way (they aren't repeaters)
-        // so the tile is hidden entirely; we don't show a greyed-out
-        // disabled variant.
-        if (c.type == MeshCoreAdvType.repeater)
-          SettingsTile(
-            key: const ValueKey('meshcore-contact-detail-neighbors'),
-            icon: Icons.hub_rounded,
-            iconColor: context.accentColor,
-            title: l10n.meshcoreNeighborsTileTitle,
-            subtitle: l10n.meshcoreNeighborsTileSubtitle,
-            onTap: () => showMeshCoreNeighborsSheet(context, repeater: c),
-          ),
-        // D49-A: admin login tile. Repeater contacts route into the
-        // admin hub after a successful `CMD_SEND_LOGIN 0x1A` +
-        // `PUSH_CODE_LOGIN_SUCCESS 0x85` with `admin_flag = 1`.
-        // Room-server contacts route into the room login dialog;
-        // wire shape is identical, post-login routing differs.
-        if (c.type == MeshCoreAdvType.repeater)
-          SettingsTile(
-            key: const ValueKey('meshcore-contact-detail-admin-login'),
-            icon: Icons.admin_panel_settings_outlined,
-            iconColor: context.accentColor,
-            title: l10n.meshcoreRepeaterStatusContactDetailAction,
-            subtitle: l10n.meshcoreRepeaterStatusContactDetailSubtitle,
-            onTap: () => showMeshCoreRepeaterLoginDialog(context, contact: c),
-          ),
-        if (c.type == MeshCoreAdvType.room)
-          SettingsTile(
-            key: const ValueKey('meshcore-contact-detail-room-login'),
-            icon: Icons.group_outlined,
-            iconColor: context.accentColor,
-            title: l10n.meshcoreRoomLoginTitle,
-            subtitle: l10n.meshcoreRoomLoginSubtitle(c.name),
-            onTap: () => showMeshCoreRoomLoginDialog(context, contact: c),
-          ),
-        SettingsTile(
-          key: const ValueKey('meshcore-contact-detail-reset-path'),
-          icon: Icons.refresh_rounded,
-          iconColor: context.accentColor,
-          title: l10n.meshcoreResetPath,
-          subtitle: l10n.meshcoreContactDetailResetPathSubtitle,
-          onTap: () => _resetPath(context, ref, c),
-        ),
-      ],
-    );
+      SettingsTile(
+        key: const ValueKey('meshcore-contact-detail-reset-path'),
+        icon: Icons.refresh_rounded,
+        iconColor: context.accentColor,
+        title: l10n.meshcoreResetPath,
+        subtitle: l10n.meshcoreContactDetailResetPathSubtitle,
+        onTap: () => _resetPath(context, ref, c),
+      ),
+    ];
   }
 
   Future<void> _copyPubKey(BuildContext context, MeshCoreContact c) async {

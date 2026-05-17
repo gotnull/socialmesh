@@ -558,13 +558,34 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
                 final gradient = LinearGradient(
                   colors: AccentColors.gradientFor(accentColor),
                 );
+                // Normalise the boundary whitespace between the
+                // plain prefix/suffix runs and the gradient-masked
+                // keyword. The RichText/WidgetSpan path renders the
+                // three pieces adjacent without injecting any
+                // separator, so a caller (or a locale string) that
+                // omits the trailing/leading space produces
+                // "Nodiscoverednodes yet". Re-insert a single space
+                // at each boundary if missing.
+                final prefix = widget.config.titlePrefix;
+                final suffix = widget.config.titleSuffix;
+                final keyword = widget.config.titleKeyword;
+                final needsPrefixSpace =
+                    prefix.isNotEmpty &&
+                    keyword.isNotEmpty &&
+                    !prefix.endsWith(' ');
+                final needsSuffixSpace =
+                    suffix.isNotEmpty &&
+                    keyword.isNotEmpty &&
+                    !suffix.startsWith(' ');
+                final normalisedPrefix = needsPrefixSpace ? '$prefix ' : prefix;
+                final normalisedSuffix = needsSuffixSpace ? ' $suffix' : suffix;
                 return RichText(
                   textAlign: TextAlign.center,
                   text: TextSpan(
                     style: baseStyle,
                     children: [
-                      if (widget.config.titlePrefix.isNotEmpty)
-                        TextSpan(text: widget.config.titlePrefix),
+                      if (normalisedPrefix.isNotEmpty)
+                        TextSpan(text: normalisedPrefix),
                       WidgetSpan(
                         alignment: PlaceholderAlignment.baseline,
                         baseline: TextBaseline.alphabetic,
@@ -572,7 +593,7 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
                           gradient: gradient,
                           animate: true,
                           child: Text(
-                            widget.config.titleKeyword,
+                            keyword,
                             style: baseStyle.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.w700,
@@ -580,8 +601,8 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
                           ),
                         ),
                       ),
-                      if (widget.config.titleSuffix.isNotEmpty)
-                        TextSpan(text: widget.config.titleSuffix),
+                      if (normalisedSuffix.isNotEmpty)
+                        TextSpan(text: normalisedSuffix),
                     ],
                   ),
                 );
