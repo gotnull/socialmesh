@@ -8194,6 +8194,69 @@ class AppLocalizationsPt extends AppLocalizations {
       'Identidade do repetidor, comportamento e anúncio';
 
   @override
+  String get meshcoreRepeaterAdminHubBinaryRpcTile => 'RPC binário';
+
+  @override
+  String get meshcoreRepeaterAdminHubBinaryRpcTileSubtitle =>
+      'Status, keep-alive e leitura da lista de acesso';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcTitle => 'RPC binário';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcSubtitle =>
+      'Operações pull sob demanda no envelope binário admin. Respostas exibidas como hex bruto.';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcOperationsSection => 'Operações';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcStatus => 'Buscar status';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcKeepAlive => 'Manter sessão ativa';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcAccessList => 'Ler lista de acesso';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcSending => 'Enviando…';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcDone => 'Resposta recebida.';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcFailed =>
+      'Sem resposta do repetidor (timeout ou conexão perdida).';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcNoSession =>
+      'Nenhuma sessão MeshCore ativa. Conecte ao rádio primeiro.';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcLastResultSection => 'Última resposta';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcEmptyResponse => '(sem bytes)';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcCopyResult => 'Copiar hex';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcCopied => 'Hex da resposta copiado.';
+
+  @override
+  String meshcoreRepeaterBinaryRpcResponseLength(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bytes',
+      one: '1 byte',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String meshcoreRepeaterAdminSettingsTitle(String name) {
     return 'Configurações de $name';
   }

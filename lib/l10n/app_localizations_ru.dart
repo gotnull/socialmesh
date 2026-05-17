@@ -8197,6 +8197,71 @@ class AppLocalizationsRu extends AppLocalizations {
       'Идентификация репитера, поведение и анонс';
 
   @override
+  String get meshcoreRepeaterAdminHubBinaryRpcTile => 'Бинарный RPC';
+
+  @override
+  String get meshcoreRepeaterAdminHubBinaryRpcTileSubtitle =>
+      'Статус, keep-alive и список доступа';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcTitle => 'Бинарный RPC';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcSubtitle =>
+      'Операции по запросу через бинарный envelope администратора. Ответы отображаются в виде сырого hex.';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcOperationsSection => 'Операции';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcStatus => 'Запросить статус';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcKeepAlive => 'Поддержать сессию';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcAccessList => 'Прочитать список доступа';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcSending => 'Отправка…';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcDone => 'Ответ получен.';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcFailed =>
+      'Нет ответа от репитера (таймаут или потеря связи).';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcNoSession =>
+      'Нет активной сессии MeshCore. Сначала подключитесь к радио.';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcLastResultSection => 'Последний ответ';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcEmptyResponse => '(нет байт)';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcCopyResult => 'Скопировать hex';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcCopied => 'Hex ответа скопирован.';
+
+  @override
+  String meshcoreRepeaterBinaryRpcResponseLength(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count байт',
+      many: '$count байт',
+      few: '$count байта',
+      one: '$count байт',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String meshcoreRepeaterAdminSettingsTitle(String name) {
     return 'Настройки $name';
   }

@@ -697,14 +697,26 @@ class MeshCoreSession {
     // Register waiter BEFORE sending to avoid race condition
     final completer = _registerWaiter(responseCode);
 
-    // Send the command. If sendFrame throws (transport disconnected
-    // mid-send, !isConnected, transport-layer write error), the waiter
-    // would stay orphaned in _pendingResponses[responseCode], causing
-    // the next sendAndWait call on the same code to hit a same-generation
-    // single-flight violation. Remove the waiter and rethrow.
+    // Send the command. Two failure modes both need to remove the
+    // waiter so the next sendAndWait on the same code doesn't hit a
+    // same-generation single-flight violation:
+    //
+    //   StateError ("transport not connected" / "session not active"
+    //   from the BLE / TCP / USB layer): treat as a transient null
+    //   return — same semantics as a TimeoutException. Periodic
+    //   pollers (radio / core / packets stats notifiers) call us
+    //   from a `Future.microtask` chain and would otherwise surface
+    //   the StateError as an unhandled async error in production.
+    //
+    //   Any other exception: keep the orphan-clean-up + rethrow so a
+    //   genuinely surprising failure stays visible.
+    //
     // Crashlytics [A f1e904cd].
     try {
       await sendFrame(frame);
+    } on StateError catch (_) {
+      _pendingResponses.remove(responseCode);
+      return null;
     } catch (_) {
       _pendingResponses.remove(responseCode);
       rethrow;
@@ -1433,6 +1445,58 @@ class MeshCoreSession {
       await pushSub.cancel();
       _binaryRequestInFlight = false;
     }
+  }
+
+  /// D49-D3: pull a one-shot binary status snapshot from a repeater
+  /// the user is logged into as admin. Wire payload is the single
+  /// type byte `[REQ_TYPE_GET_STATUS 0x01]`; the repeater replies
+  /// via the standard `PUSH_CODE_BINARY_RESPONSE 0x8C` envelope.
+  ///
+  /// Distinct from D49-A's `PUSH_CODE_STATUS 0x87` push: D49-A is
+  /// the periodic broadcast surface; this is the pull surface for
+  /// support tickets / debugging.
+  ///
+  /// Bypasses the chat rate limiter (host-management RPC). Returns
+  /// the raw response bytes for the caller to render; null on
+  /// timeout / transport drop / single-flight rejection.
+  Future<Uint8List?> requestRepeaterStatus({
+    required Uint8List recipientPubKey,
+    Duration timeout = const Duration(seconds: 10),
+  }) async {
+    return sendBinaryRequest(
+      recipientPubKey: recipientPubKey,
+      requestBytes: Uint8List.fromList([MeshCoreBinaryReqType.getStatus]),
+      timeout: timeout,
+    );
+  }
+
+  /// D49-D3: send a keep-alive heartbeat to a repeater admin session
+  /// to extend the firmware-side timeout. D49-D2's auto re-login
+  /// handles the reactive path (re-authenticate after the session
+  /// has already timed out); keep-alive is the proactive path for
+  /// long-running admin sessions that want to stay warm.
+  Future<Uint8List?> requestRepeaterKeepAlive({
+    required Uint8List recipientPubKey,
+    Duration timeout = const Duration(seconds: 10),
+  }) async {
+    return sendBinaryRequest(
+      recipientPubKey: recipientPubKey,
+      requestBytes: Uint8List.fromList([MeshCoreBinaryReqType.keepAlive]),
+      timeout: timeout,
+    );
+  }
+
+  /// D49-D3: read the repeater's access list (admin allow-list).
+  /// Read-only — mutation lives on a separate slice.
+  Future<Uint8List?> requestRepeaterAccessList({
+    required Uint8List recipientPubKey,
+    Duration timeout = const Duration(seconds: 10),
+  }) async {
+    return sendBinaryRequest(
+      recipientPubKey: recipientPubKey,
+      requestBytes: Uint8List.fromList([MeshCoreBinaryReqType.getAccessList]),
+      timeout: timeout,
+    );
   }
 
   /// D41-A: request a contact's Cayenne LPP telemetry over LoRa via

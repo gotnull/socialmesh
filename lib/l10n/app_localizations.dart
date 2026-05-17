@@ -14337,6 +14337,108 @@ abstract class AppLocalizations {
   /// **'Repeater identity, behaviour, and advertisement'**
   String get meshcoreRepeaterAdminHubSettingsTileSubtitle;
 
+  /// D49-D3 - hub tile for the on-demand binary RPC operations
+  ///
+  /// In en, this message translates to:
+  /// **'Binary RPC'**
+  String get meshcoreRepeaterAdminHubBinaryRpcTile;
+
+  /// D49-D3 - hub tile subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Status, keep-alive, and access-list pulls'**
+  String get meshcoreRepeaterAdminHubBinaryRpcTileSubtitle;
+
+  /// D49-D3 - sub-screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Binary RPC'**
+  String get meshcoreRepeaterBinaryRpcTitle;
+
+  /// D49-D3 - explanatory subtitle on the sub-screen
+  ///
+  /// In en, this message translates to:
+  /// **'On-demand pull operations over the admin binary-request envelope. Responses are shown as raw hex.'**
+  String get meshcoreRepeaterBinaryRpcSubtitle;
+
+  /// D49-D3 - section header above the three action buttons
+  ///
+  /// In en, this message translates to:
+  /// **'Operations'**
+  String get meshcoreRepeaterBinaryRpcOperationsSection;
+
+  /// D49-D3 - REQ_TYPE_GET_STATUS button label
+  ///
+  /// In en, this message translates to:
+  /// **'Pull status'**
+  String get meshcoreRepeaterBinaryRpcStatus;
+
+  /// D49-D3 - REQ_TYPE_KEEP_ALIVE button label
+  ///
+  /// In en, this message translates to:
+  /// **'Keep session alive'**
+  String get meshcoreRepeaterBinaryRpcKeepAlive;
+
+  /// D49-D3 - REQ_TYPE_GET_ACCESS_LIST button label
+  ///
+  /// In en, this message translates to:
+  /// **'Read access list'**
+  String get meshcoreRepeaterBinaryRpcAccessList;
+
+  /// D49-D3 - in-flight button label
+  ///
+  /// In en, this message translates to:
+  /// **'Sending...'**
+  String get meshcoreRepeaterBinaryRpcSending;
+
+  /// D49-D3 - success snackbar
+  ///
+  /// In en, this message translates to:
+  /// **'Response received.'**
+  String get meshcoreRepeaterBinaryRpcDone;
+
+  /// D49-D3 - failure snackbar
+  ///
+  /// In en, this message translates to:
+  /// **'No response from repeater (timeout or transport drop).'**
+  String get meshcoreRepeaterBinaryRpcFailed;
+
+  /// D49-D3 - error when session is null at button-tap time
+  ///
+  /// In en, this message translates to:
+  /// **'No active MeshCore session. Connect to the radio first.'**
+  String get meshcoreRepeaterBinaryRpcNoSession;
+
+  /// D49-D3 - section header above the result hex card
+  ///
+  /// In en, this message translates to:
+  /// **'Last response'**
+  String get meshcoreRepeaterBinaryRpcLastResultSection;
+
+  /// D49-D3 - shown when the response is null
+  ///
+  /// In en, this message translates to:
+  /// **'(no bytes)'**
+  String get meshcoreRepeaterBinaryRpcEmptyResponse;
+
+  /// D49-D3 - copy-to-clipboard tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Copy hex'**
+  String get meshcoreRepeaterBinaryRpcCopyResult;
+
+  /// D49-D3 - copy success snackbar
+  ///
+  /// In en, this message translates to:
+  /// **'Response hex copied.'**
+  String get meshcoreRepeaterBinaryRpcCopied;
+
+  /// D49-D3 - byte count under the hex output
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 byte} other{{count} bytes}}'**
+  String meshcoreRepeaterBinaryRpcResponseLength(int count);
+
   /// D49-C - title for the repeater admin settings screen
   ///
   /// In en, this message translates to:

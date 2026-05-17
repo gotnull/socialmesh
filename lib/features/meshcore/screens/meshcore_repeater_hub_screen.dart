@@ -24,6 +24,7 @@ import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/settings_primitives.dart';
 import '../../../models/meshcore_contact.dart';
 import 'meshcore_repeater_admin_settings_screen.dart';
+import 'meshcore_repeater_binary_rpc_screen.dart';
 import 'meshcore_repeater_cli_screen.dart';
 import 'meshcore_repeater_status_screen.dart';
 
@@ -104,6 +105,26 @@ class MeshCoreRepeaterHubScreen extends ConsumerWidget {
                 contact: contact,
                 password: password,
               ),
+            ),
+          );
+        },
+      ),
+      // D49-D3: optional admin binary-RPC trio. Pull-on-demand
+      // surface for status / keep-alive / access-list (REQ_TYPE
+      // 0x01 / 0x02 / 0x05 over the existing CMD_SEND_BINARY_REQ
+      // 0x32 envelope). D49-A's PUSH_CODE_STATUS already covers
+      // the push side, so this is intentionally framed as the
+      // "diagnostic / power-user" entry.
+      SettingsTile(
+        key: const ValueKey('meshcore-repeater-hub-binary-rpc'),
+        icon: Icons.bolt_outlined,
+        iconColor: AccentColors.indigo,
+        title: l10n.meshcoreRepeaterAdminHubBinaryRpcTile as String,
+        subtitle: l10n.meshcoreRepeaterAdminHubBinaryRpcTileSubtitle as String,
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => MeshCoreRepeaterBinaryRpcScreen(contact: contact),
             ),
           );
         },

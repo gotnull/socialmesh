@@ -10873,6 +10873,77 @@
     "@meshcoreRepeaterAdminHubSettingsTileSubtitle": {
         "description": "D49-C - subtitle for the admin settings hub tile (now active)"
     },
+    "meshcoreRepeaterAdminHubBinaryRpcTile": "Binary RPC",
+    "@meshcoreRepeaterAdminHubBinaryRpcTile": {
+        "description": "D49-D3 - hub tile for the on-demand binary RPC operations"
+    },
+    "meshcoreRepeaterAdminHubBinaryRpcTileSubtitle": "Status, keep-alive, and access-list pulls",
+    "@meshcoreRepeaterAdminHubBinaryRpcTileSubtitle": {
+        "description": "D49-D3 - hub tile subtitle"
+    },
+    "meshcoreRepeaterBinaryRpcTitle": "Binary RPC",
+    "@meshcoreRepeaterBinaryRpcTitle": {
+        "description": "D49-D3 - sub-screen title"
+    },
+    "meshcoreRepeaterBinaryRpcSubtitle": "On-demand pull operations over the admin binary-request envelope. Responses are shown as raw hex.",
+    "@meshcoreRepeaterBinaryRpcSubtitle": {
+        "description": "D49-D3 - explanatory subtitle on the sub-screen"
+    },
+    "meshcoreRepeaterBinaryRpcOperationsSection": "Operations",
+    "@meshcoreRepeaterBinaryRpcOperationsSection": {
+        "description": "D49-D3 - section header above the three action buttons"
+    },
+    "meshcoreRepeaterBinaryRpcStatus": "Pull status",
+    "@meshcoreRepeaterBinaryRpcStatus": {
+        "description": "D49-D3 - REQ_TYPE_GET_STATUS button label"
+    },
+    "meshcoreRepeaterBinaryRpcKeepAlive": "Keep session alive",
+    "@meshcoreRepeaterBinaryRpcKeepAlive": {
+        "description": "D49-D3 - REQ_TYPE_KEEP_ALIVE button label"
+    },
+    "meshcoreRepeaterBinaryRpcAccessList": "Read access list",
+    "@meshcoreRepeaterBinaryRpcAccessList": {
+        "description": "D49-D3 - REQ_TYPE_GET_ACCESS_LIST button label"
+    },
+    "meshcoreRepeaterBinaryRpcSending": "Sending...",
+    "@meshcoreRepeaterBinaryRpcSending": {
+        "description": "D49-D3 - in-flight button label"
+    },
+    "meshcoreRepeaterBinaryRpcDone": "Response received.",
+    "@meshcoreRepeaterBinaryRpcDone": {
+        "description": "D49-D3 - success snackbar"
+    },
+    "meshcoreRepeaterBinaryRpcFailed": "No response from repeater (timeout or transport drop).",
+    "@meshcoreRepeaterBinaryRpcFailed": {
+        "description": "D49-D3 - failure snackbar"
+    },
+    "meshcoreRepeaterBinaryRpcNoSession": "No active MeshCore session. Connect to the radio first.",
+    "@meshcoreRepeaterBinaryRpcNoSession": {
+        "description": "D49-D3 - error when session is null at button-tap time"
+    },
+    "meshcoreRepeaterBinaryRpcLastResultSection": "Last response",
+    "@meshcoreRepeaterBinaryRpcLastResultSection": {
+        "description": "D49-D3 - section header above the result hex card"
+    },
+    "meshcoreRepeaterBinaryRpcEmptyResponse": "(no bytes)",
+    "@meshcoreRepeaterBinaryRpcEmptyResponse": {
+        "description": "D49-D3 - shown when the response is null"
+    },
+    "meshcoreRepeaterBinaryRpcCopyResult": "Copy hex",
+    "@meshcoreRepeaterBinaryRpcCopyResult": {
+        "description": "D49-D3 - copy-to-clipboard tooltip"
+    },
+    "meshcoreRepeaterBinaryRpcCopied": "Response hex copied.",
+    "@meshcoreRepeaterBinaryRpcCopied": {
+        "description": "D49-D3 - copy success snackbar"
+    },
+    "meshcoreRepeaterBinaryRpcResponseLength": "{count, plural, =1{1 byte} other{{count} bytes}}",
+    "@meshcoreRepeaterBinaryRpcResponseLength": {
+        "description": "D49-D3 - byte count under the hex output",
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
     "meshcoreRepeaterAdminSettingsTitle": "{name} settings",
     "@meshcoreRepeaterAdminSettingsTitle": {
         "description": "D49-C - title for the repeater admin settings screen",

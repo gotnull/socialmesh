@@ -8234,6 +8234,69 @@ class AppLocalizationsEs extends AppLocalizations {
       'Repeater identity, behaviour, and advertisement';
 
   @override
+  String get meshcoreRepeaterAdminHubBinaryRpcTile => 'Binary RPC';
+
+  @override
+  String get meshcoreRepeaterAdminHubBinaryRpcTileSubtitle =>
+      'Status, keep-alive, and access-list pulls';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcTitle => 'Binary RPC';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcSubtitle =>
+      'On-demand pull operations over the admin binary-request envelope. Responses are shown as raw hex.';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcOperationsSection => 'Operations';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcStatus => 'Pull status';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcKeepAlive => 'Keep session alive';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcAccessList => 'Read access list';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcSending => 'Sending...';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcDone => 'Response received.';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcFailed =>
+      'No response from repeater (timeout or transport drop).';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcNoSession =>
+      'No active MeshCore session. Connect to the radio first.';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcLastResultSection => 'Last response';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcEmptyResponse => '(no bytes)';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcCopyResult => 'Copy hex';
+
+  @override
+  String get meshcoreRepeaterBinaryRpcCopied => 'Response hex copied.';
+
+  @override
+  String meshcoreRepeaterBinaryRpcResponseLength(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bytes',
+      one: '1 byte',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String meshcoreRepeaterAdminSettingsTitle(String name) {
     return '$name settings';
   }

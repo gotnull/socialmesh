@@ -381,6 +381,25 @@ class MeshCoreAutoAddFlag {
 class MeshCoreBinaryReqType {
   MeshCoreBinaryReqType._();
 
+  /// D49-D3: "Return the repeater's binary status snapshot." Single
+  /// type-byte payload `[0x01]`; the repeater replies asynchronously
+  /// via `PUSH_CODE_BINARY_RESPONSE` (0x8C). Same data shape as the
+  /// `PUSH_CODE_STATUS` (0x87) push that D49-A handles, but pulled
+  /// on demand rather than pushed periodically.
+  static const int getStatus = 0x01;
+
+  /// D49-D3: "Keep the active admin session warm." Single type-byte
+  /// payload `[0x02]`; the repeater echoes a short ACK. D49-D2's
+  /// auto-re-login covers the reactive path (re-login after the
+  /// session timed out); keep-alive is the proactive path for
+  /// long-running admin sessions.
+  static const int keepAlive = 0x02;
+
+  /// D49-D3: "Enumerate the repeater's access list." Single
+  /// type-byte payload `[0x05]`; the repeater replies asynchronously
+  /// with the allow-list rows. Read-only.
+  static const int getAccessList = 0x05;
+
   /// "List adjacent peers heard by the target repeater." Followed by
   /// `[reserved:u8][max:u8][offset_hi:u8][offset_lo:u8][order_by:u8]
   /// [key_prefix_len:u8]`. The repeater responds asynchronously via
