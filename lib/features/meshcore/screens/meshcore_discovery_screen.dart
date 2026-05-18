@@ -32,6 +32,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../models/meshcore_contact.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../utils/snackbar.dart';
+import '../widgets/meshcore_sigil_avatar.dart';
 import 'meshcore_contact_detail_screen.dart';
 
 enum _SortMode { recent, alphabetical }
@@ -465,12 +466,20 @@ class _AdvertRow extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(
-              advert.advType == MeshCoreAdvType.repeater
-                  ? Icons.cell_tower_rounded
-                  : Icons.person_rounded,
-              color: imported ? accent : context.textSecondary,
-            ),
+            // D-S5: pubkey-derived sigil for visual identity. The
+            // advert type (repeater / chat node) is still surfaced as
+            // text in the meta row below, so swapping the leading icon
+            // to a sigil does not lose type discrimination - it adds
+            // identity-glance on top of it.
+            if (advert.publicKey.length >= 4)
+              MeshCoreSigilAvatar(pubKey: advert.publicKey, size: 32)
+            else
+              Icon(
+                advert.advType == MeshCoreAdvType.repeater
+                    ? Icons.cell_tower_rounded
+                    : Icons.person_rounded,
+                color: imported ? accent : context.textSecondary,
+              ),
             const SizedBox(width: AppTheme.spacing12),
             Expanded(
               child: Column(

@@ -43,6 +43,7 @@ import '../../../services/meshcore/storage/meshcore_chat_text_scale_store.dart';
 import '../../../services/meshcore/storage/meshcore_contact_store.dart';
 import '../../../utils/snackbar.dart';
 import '../widgets/meshcore_chat_unread_divider.dart';
+import '../widgets/meshcore_sigil_avatar.dart';
 
 /// Types of MeshCore chat conversations.
 enum MeshCoreChatType { contact, channel }
@@ -1451,6 +1452,9 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
               size: 18,
             ),
           )
+        else if (widget.contact != null &&
+            widget.contact!.publicKey.length >= 4)
+          MeshCoreSigilAvatar(pubKey: widget.contact!.publicKey, size: 36)
         else
           NodeAvatar(
             text: _initialsFor(_title, fallback: '?'),
@@ -1645,11 +1649,14 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
           if (showSender)
             Padding(
               padding: const EdgeInsets.only(right: AppTheme.spacing8),
-              child: NodeAvatar(
-                text: _initialsFor(_senderLabel(message), fallback: '?'),
-                color: _senderColor(message),
-                size: 32,
-              ),
+              child:
+                  (message.senderKey != null && message.senderKey!.length >= 4)
+                  ? MeshCoreSigilAvatar(pubKey: message.senderKey!, size: 32)
+                  : NodeAvatar(
+                      text: _initialsFor(_senderLabel(message), fallback: '?'),
+                      color: _senderColor(message),
+                      size: 32,
+                    ),
             ),
           Flexible(
             child: Column(
