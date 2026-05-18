@@ -34,11 +34,7 @@ class MeshCoreDrawerNodeHeader extends ConsumerWidget {
               context.l10n.meshcoreShellDefaultDeviceNameFull;
 
     final nodeId = selfInfo.selfInfo != null
-        ? selfInfo.selfInfo!.pubKey
-              .take(4)
-              .map((b) => b.toRadixString(16).padLeft(2, '0'))
-              .join()
-              .toUpperCase()
+        ? '#${selfInfo.selfInfo!.pubKey.take(4).map((b) => b.toRadixString(16).padLeft(2, '0')).join().toUpperCase()}'
         : '';
 
     final initials = nodeName.length >= 2
@@ -70,26 +66,37 @@ class MeshCoreDrawerNodeHeader extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text(
+                  nodeName,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: AppTheme.fontFamily,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: AppTheme.spacing4),
                 Row(
                   children: [
-                    Flexible(
-                      child: Text(
-                        nodeName,
+                    if (nodeId.isNotEmpty)
+                      Text(
+                        nodeId,
                         style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
                           fontFamily: AppTheme.fontFamily,
-                          color: theme.colorScheme.onSurface,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    const SizedBox(width: AppTheme.spacing8),
+                    if (nodeId.isNotEmpty)
+                      const SizedBox(width: AppTheme.spacing8),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
-                        vertical: 4,
+                        vertical: 3,
                       ),
                       decoration: BoxDecoration(
                         color: isConnected
@@ -129,17 +136,6 @@ class MeshCoreDrawerNodeHeader extends ConsumerWidget {
                     ),
                   ],
                 ),
-                if (isConnected && nodeId.isNotEmpty) ...[
-                  const SizedBox(height: AppTheme.spacing4),
-                  Text(
-                    nodeId,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontFamily: AppTheme.fontFamily,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ],
               ],
             ),
           ),

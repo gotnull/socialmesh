@@ -47,9 +47,7 @@ class MeshCoreDrawerMenuTile extends StatelessWidget {
               duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.all(AppTheme.spacing10),
               decoration: BoxDecoration(
-                color: (iconColor ?? theme.colorScheme.primary).withValues(
-                  alpha: 0.15,
-                ),
+                color: theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(AppTheme.radius12),
               ),
               child: Icon(
@@ -71,11 +69,6 @@ class MeshCoreDrawerMenuTile extends StatelessWidget {
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                 ),
               ),
-            ),
-            Icon(
-              Icons.chevron_right,
-              size: 20,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
             ),
           ],
         ),
