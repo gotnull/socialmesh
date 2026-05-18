@@ -15628,9 +15628,6 @@
   "@meshcoreNoContactsForTrace": {
     "description": "Info snackbar when no contacts exist for trace"
   },
-  "@meshcoreNoContactsWithLocation": {
-    "description": "Empty state title when no contacts have location"
-  },
   "@meshcoreNoContactsWithLocationDescription": {
     "description": "Empty state description when no contacts have location"
   },
@@ -38873,8 +38870,12 @@
   "meshcoreNoContacts": "Nessun Contatto",
   "meshcoreNoContactsDescription": "I contatti appariranno qui quando scoperti tramite annunci.\n\nPuoi anche aggiungere contatti manualmente usando il loro codice contatto.",
   "meshcoreNoContactsForTrace": "Nessun contatto disponibile per il tracciamento",
-  "meshcoreNoContactsWithLocation": "Nessun Contatto con Posizione",
-  "meshcoreNoContactsWithLocationDescription": "I contatti con coordinate GPS appariranno sulla mappa.\nAssicurati che i tuoi contatti abbiano la condivisione posizione attiva.",
+  "meshcoreMapEmptyTitlePrefix": "Nessun",
+  "meshcoreMapEmptyTitleKeyword": "contatto",
+  "meshcoreMapEmptyTitleMid": "con",
+  "meshcoreMapEmptyTitleKeyword2": "Posizione",
+  "meshcoreMapEmptyTitleSuffix": "",
+  "meshcoreNoContactsWithLocationDescription": "I contatti con coordinate GPS appariranno sulla mappa.\n\nAssicurati che i tuoi contatti abbiano la condivisione posizione attiva.",
   "meshcoreNoHiddenChannels": "Nessun canale nascosto",
   "meshcoreNoMessagesYet": "Nessun messaggio",
   "meshcoreNodeNameLabel": "Nome Nodo",

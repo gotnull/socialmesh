@@ -73,7 +73,12 @@ void main() {
 
       // Default contacts state is empty → no contacts with location → the
       // empty-no-location branch fires (still no FlutterMap rendered).
-      expect(find.text(_l10n.meshcoreNoContactsWithLocation), findsOneWidget);
+      // Title is split into prefix + keyword + suffix; the keyword is
+      // rendered in a dedicated gradient-styled Text widget while the
+      // prefix lives inside a RichText TextSpan (which is harder to find
+      // with `find.text`). Asserting the keyword is the canonical signal
+      // that the empty-state title rendered.
+      expect(find.text(_l10n.meshcoreMapEmptyTitleKeyword), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

@@ -14102,11 +14102,27 @@
     "@meshcoreNoContactsForTrace": {
         "description": "Info snackbar when no contacts exist for trace"
     },
-    "meshcoreNoContactsWithLocation": "No Contacts with Location",
-    "@meshcoreNoContactsWithLocation": {
-        "description": "Empty state title when no contacts have location"
+    "meshcoreMapEmptyTitlePrefix": "No",
+    "@meshcoreMapEmptyTitlePrefix": {
+        "description": "Map empty-state title prefix (plain text before the first gradient keyword)"
     },
-    "meshcoreNoContactsWithLocationDescription": "Contacts with GPS coordinates will appear on the map.\nMake sure your contacts have location sharing enabled.",
+    "meshcoreMapEmptyTitleKeyword": "Contacts",
+    "@meshcoreMapEmptyTitleKeyword": {
+        "description": "Map empty-state title first gradient keyword (the entity)"
+    },
+    "meshcoreMapEmptyTitleMid": "with",
+    "@meshcoreMapEmptyTitleMid": {
+        "description": "Map empty-state title plain mid segment between the two gradient keywords"
+    },
+    "meshcoreMapEmptyTitleKeyword2": "Location",
+    "@meshcoreMapEmptyTitleKeyword2": {
+        "description": "Map empty-state title second gradient keyword (the missing attribute)"
+    },
+    "meshcoreMapEmptyTitleSuffix": "",
+    "@meshcoreMapEmptyTitleSuffix": {
+        "description": "Map empty-state title suffix (plain text after the second gradient keyword; intentionally empty)"
+    },
+    "meshcoreNoContactsWithLocationDescription": "Contacts with GPS coordinates will appear on the map.\n\nMake sure your contacts have location sharing enabled.",
     "@meshcoreNoContactsWithLocationDescription": {
         "description": "Empty state description when no contacts have location"
     },

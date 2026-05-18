@@ -32,7 +32,9 @@ import '../contact_l10n.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../navigation/meshcore_shell.dart';
+import '../widgets/meshcore_sigil_avatar.dart';
 import 'meshcore_chat_screen.dart';
+import 'meshcore_map_marker_staleness.dart';
 
 /// MeshCore Map screen.
 ///
@@ -577,9 +579,11 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
           context.l10n.meshcoreContactsEmptyTagline1,
           context.l10n.meshcoreContactsEmptyTagline3,
         ],
-        titlePrefix: '',
-        titleKeyword: context.l10n.meshcoreNoContactsWithLocation,
-        titleSuffix: '',
+        titlePrefix: context.l10n.meshcoreMapEmptyTitlePrefix,
+        titleKeyword: context.l10n.meshcoreMapEmptyTitleKeyword,
+        titleMid: context.l10n.meshcoreMapEmptyTitleMid,
+        titleKeyword2: context.l10n.meshcoreMapEmptyTitleKeyword2,
+        titleSuffix: context.l10n.meshcoreMapEmptyTitleSuffix,
       ),
     );
   }
@@ -661,8 +665,14 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
   List<Marker> _buildContactMarkers(List<MeshCoreContact> contacts) {
     final markers = <Marker>[];
 
+    final now = DateTime.now();
     for (final contact in contacts) {
       if (!contact.hasLocation) continue;
+
+      // Row 13: age-based marker fade. Contacts we haven't heard from
+      // recently get rendered at reduced opacity so the map reflects
+      // the freshness of the data at a glance.
+      final stalenessOpacity = meshCoreContactMarkerOpacity(contact, now);
 
       markers.add(
         Marker(
@@ -688,29 +698,43 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
                 _measureContactB = null;
               });
             },
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppTheme.spacing8),
-                  decoration: BoxDecoration(
-                    color: _getContactColor(contact.type),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    _getContactIcon(contact.type),
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-              ],
+            // D-S5b: sigil-with-type-badge composite when the contact
+            // carries a usable pubkey. The outer container preserves
+            // the "map pin" affordance (white border + drop shadow);
+            // the inner sigil gives at-a-glance identity; the badge
+            // overlay preserves at-a-glance type discrimination
+            // (person / cell_tower / meeting_room / sensors). For
+            // malformed contacts (< 4 byte pubkey) the original
+            // type-only marker is preserved as a safe fallback.
+            // Row 13: wrap in Opacity so stale-location markers fade.
+            child: Opacity(
+              opacity: stalenessOpacity,
+              child: contact.publicKey.length >= 4
+                  ? _buildSigilMarker(contact)
+                  : Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(AppTheme.spacing8),
+                          decoration: BoxDecoration(
+                            color: _getContactColor(contact.type),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            _getContactIcon(contact.type),
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                      ],
+                    ),
             ),
           ),
         ),
@@ -718,6 +742,57 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
     }
 
     return markers;
+  }
+
+  /// D-S5b: composite map marker that overlays a small type-icon badge
+  /// (bottom-right) on top of a pubkey-derived sigil. The outer ring
+  /// keeps the "map pin" affordance (white border + drop shadow); the
+  /// inner sigil delivers identity-glance; the badge delivers
+  /// type-glance (chat / repeater / room / sensor). Callers guarantee
+  /// `contact.publicKey.length >= 4`.
+  Widget _buildSigilMarker(MeshCoreContact contact) {
+    final typeColor = _getContactColor(contact.type);
+    return Container(
+      width: 52,
+      height: 52,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          ClipOval(
+            child: MeshCoreSigilAvatar(pubKey: contact.publicKey, size: 48),
+          ),
+          Positioned(
+            right: -4,
+            bottom: -4,
+            child: Container(
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                color: typeColor,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+              child: Icon(
+                _getContactIcon(contact.type),
+                color: Colors.white,
+                size: 12,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Color _getContactColor(int type) {

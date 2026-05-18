@@ -28,6 +28,18 @@ class AnimatedEmptyStateConfig {
   final String titleKeyword;
   final String titleSuffix;
 
+  /// Optional plain-text mid segment between two gradient keywords.
+  /// When [titleKeyword2] is set, the title renders as:
+  ///   prefix | keyword (gradient) | mid | keyword2 (gradient) | suffix
+  /// Default empty string keeps the single-keyword behaviour for all
+  /// existing callers.
+  final String titleMid;
+
+  /// Optional second gradient-animated keyword. When non-empty, the
+  /// title renders with two gradient words separated by [titleMid].
+  /// Default empty string preserves the single-keyword behaviour.
+  final String titleKeyword2;
+
   /// Optional action button configuration
   final String? actionLabel;
   final IconData? actionIcon;
@@ -48,6 +60,8 @@ class AnimatedEmptyStateConfig {
     required this.titlePrefix,
     required this.titleKeyword,
     required this.titleSuffix,
+    this.titleMid = '',
+    this.titleKeyword2 = '',
     this.actionLabel,
     this.actionIcon,
     this.onAction,
@@ -569,16 +583,55 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
                 final prefix = widget.config.titlePrefix;
                 final suffix = widget.config.titleSuffix;
                 final keyword = widget.config.titleKeyword;
-                final needsPrefixSpace =
-                    prefix.isNotEmpty &&
-                    keyword.isNotEmpty &&
-                    !prefix.endsWith(' ');
-                final needsSuffixSpace =
-                    suffix.isNotEmpty &&
-                    keyword.isNotEmpty &&
-                    !suffix.startsWith(' ');
-                final normalisedPrefix = needsPrefixSpace ? '$prefix ' : prefix;
-                final normalisedSuffix = needsSuffixSpace ? ' $suffix' : suffix;
+                final mid = widget.config.titleMid;
+                final keyword2 = widget.config.titleKeyword2;
+                final hasSecond = keyword2.isNotEmpty;
+                // Helper: ensure single-space boundary between a plain
+                // run and a gradient keyword. Avoid double-spacing if
+                // the caller already includes one.
+                String pad(
+                  String text, {
+                  required bool spaceBefore,
+                  required bool spaceAfter,
+                }) {
+                  var t = text;
+                  if (spaceBefore && t.isNotEmpty && !t.startsWith(' ')) {
+                    t = ' $t';
+                  }
+                  if (spaceAfter && t.isNotEmpty && !t.endsWith(' ')) {
+                    t = '$t ';
+                  }
+                  return t;
+                }
+
+                final normalisedPrefix = pad(
+                  prefix,
+                  spaceBefore: false,
+                  spaceAfter: keyword.isNotEmpty,
+                );
+                final normalisedMid = hasSecond
+                    ? pad(mid, spaceBefore: true, spaceAfter: true)
+                    : '';
+                final normalisedSuffix = pad(
+                  suffix,
+                  spaceBefore: hasSecond
+                      ? keyword2.isNotEmpty
+                      : keyword.isNotEmpty,
+                  spaceAfter: false,
+                );
+
+                Widget gradientWord(String word) => AnimatedGradientMask(
+                  gradient: gradient,
+                  animate: true,
+                  child: Text(
+                    word,
+                    style: baseStyle.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                );
+
                 return RichText(
                   textAlign: TextAlign.center,
                   text: TextSpan(
@@ -586,21 +639,20 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
                     children: [
                       if (normalisedPrefix.isNotEmpty)
                         TextSpan(text: normalisedPrefix),
-                      WidgetSpan(
-                        alignment: PlaceholderAlignment.baseline,
-                        baseline: TextBaseline.alphabetic,
-                        child: AnimatedGradientMask(
-                          gradient: gradient,
-                          animate: true,
-                          child: Text(
-                            keyword,
-                            style: baseStyle.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
+                      if (keyword.isNotEmpty)
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.baseline,
+                          baseline: TextBaseline.alphabetic,
+                          child: gradientWord(keyword),
                         ),
-                      ),
+                      if (normalisedMid.isNotEmpty)
+                        TextSpan(text: normalisedMid),
+                      if (hasSecond)
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.baseline,
+                          baseline: TextBaseline.alphabetic,
+                          child: gradientWord(keyword2),
+                        ),
                       if (normalisedSuffix.isNotEmpty)
                         TextSpan(text: normalisedSuffix),
                     ],
@@ -609,19 +661,43 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
               },
             ),
 
-            const SizedBox(height: AppTheme.spacing8),
+            const SizedBox(height: AppTheme.spacing20),
 
-            // Cycling taglines
+            // Cycling taglines. Two-layer constraint so the text
+            // wraps responsively:
+            //   - Horizontal padding (24 each side) guarantees a
+            //     reading margin on every phone width down to iPhone
+            //     SE 1st gen (320pt), where a hardcoded max-width
+            //     would have collapsed the margins to zero.
+            //   - Soft max-width (~360pt) keeps the line length in
+            //     the readable 45-65 character band on iPad/landscape
+            //     where the screen is wider than a phone.
+            // Hardcoded `\n` line breaks in the locale string would
+            // override this layout; the convention is to write
+            // single-sentence copy and let the layout wrap it.
             SizedBox(
-              height: 80,
+              // Fixed height to keep the layout stable while the tagline
+              // cycles through multiple values of varying line count.
+              // 120pt fits up to ~5 lines of 14pt body text including a
+              // paragraph break (when the locale string contains a
+              // `\n\n` between two sentences).
+              height: 120,
               child: Center(
-                child: AnimatedTagline(
-                  taglines: widget.config.taglines,
-                  textStyle: TextStyle(
-                    color: context.textSecondary,
-                    fontSize: 14,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing24,
                   ),
-                  textAlign: TextAlign.center,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 360),
+                    child: AnimatedTagline(
+                      taglines: widget.config.taglines,
+                      textStyle: TextStyle(
+                        color: context.textSecondary,
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 ),
               ),
             ),

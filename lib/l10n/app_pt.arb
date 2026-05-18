@@ -15628,9 +15628,6 @@
   "@meshcoreNoContactsForTrace": {
     "description": "Info snackbar when no contacts exist for trace"
   },
-  "@meshcoreNoContactsWithLocation": {
-    "description": "Empty state title when no contacts have location"
-  },
   "@meshcoreNoContactsWithLocationDescription": {
     "description": "Empty state description when no contacts have location"
   },
@@ -38873,8 +38870,12 @@
   "meshcoreNoContacts": "Nenhum Contato",
   "meshcoreNoContactsDescription": "Os contatos aparecerão aqui quando descobertos via anúncios.\n\nVocê também pode adicionar contatos manualmente usando o código de contato.",
   "meshcoreNoContactsForTrace": "Nenhum contato disponível para rastreamento",
-  "meshcoreNoContactsWithLocation": "Nenhum Contato com Localização",
-  "meshcoreNoContactsWithLocationDescription": "Contatos com coordenadas GPS aparecerão no mapa.\nVerifique se seus contatos têm o compartilhamento de localização ativado.",
+  "meshcoreMapEmptyTitlePrefix": "Nenhum",
+  "meshcoreMapEmptyTitleKeyword": "contato",
+  "meshcoreMapEmptyTitleMid": "com",
+  "meshcoreMapEmptyTitleKeyword2": "Localização",
+  "meshcoreMapEmptyTitleSuffix": "",
+  "meshcoreNoContactsWithLocationDescription": "Contatos com coordenadas GPS aparecerão no mapa.\n\nVerifique se seus contatos têm o compartilhamento de localização ativado.",
   "meshcoreNoHiddenChannels": "Nenhum canal oculto",
   "meshcoreNoMessagesYet": "Nenhuma mensagem ainda",
   "meshcoreNodeNameLabel": "Nome do Nó",
