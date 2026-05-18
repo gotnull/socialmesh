@@ -156,7 +156,11 @@ class MeshCoreContact {
   }
 
   /// Whether this contact has location data.
-  bool get hasLocation => latitude != null && longitude != null;
+  bool get hasLocation =>
+      latitude != null &&
+      longitude != null &&
+      latitude!.isFinite &&
+      longitude!.isFinite;
 
   /// Whether this is a chat-type contact.
   bool get isChat => type == MeshCoreAdvType.chat;

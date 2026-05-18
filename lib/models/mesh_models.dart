@@ -870,11 +870,16 @@ class MeshNode {
     return NodeDisplayNameResolver.shortHex(nodeNum);
   }
 
-  /// Check if node has valid position data
-  /// Position must be non-null and not exactly 0,0 (invalid/unset marker)
+  // Position must be non-null, finite, and not exactly 0,0 (invalid/unset
+  // marker). The isFinite check is mandatory: flutter_map's Crs.checkLatLng
+  // throws fatally when a non-finite LatLng reaches projectAtZoom, and every
+  // map layer (tile, marker, circle, polyline) hits projectAtZoom during
+  // build or paint.
   bool get hasPosition =>
       latitude != null &&
       longitude != null &&
+      latitude!.isFinite &&
+      longitude!.isFinite &&
       !(latitude == 0.0 && longitude == 0.0);
 
   /// Check if node was recently discovered (first heard within last 24 hours)

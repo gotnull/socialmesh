@@ -36,6 +36,7 @@ import '../../../providers/meshcore_providers.dart';
 import '../../../services/meshcore/protocol/meshcore_messages.dart';
 import '../../../services/meshcore/storage/meshcore_radio_params_store.dart';
 import '../../../utils/snackbar.dart';
+import 'meshcore_region_preset_label.dart';
 
 /// Supported MeshCore LoRa bandwidth values, in kHz.
 ///
@@ -222,7 +223,7 @@ class _MeshCoreRadioSettingsSheetState
       return l10n.meshcoreRadioSettingsRegionCustom;
     }
     for (final p in kMeshCoreRegionPresets) {
-      if (p.id == _selectedPresetId) return p.label;
+      if (p.id == _selectedPresetId) return meshCoreRegionPresetLabel(l10n, p);
     }
     return l10n.meshcoreRadioSettingsRegionCustom;
   }
@@ -859,7 +860,7 @@ class _RegionPresetPickerList extends StatelessWidget {
               }
               final p = kMeshCoreRegionPresets[index];
               return _PresetRow(
-                label: p.label,
+                label: meshCoreRegionPresetLabel(l10n, p),
                 subtitle:
                     '${p.frequencyMHz.toStringAsFixed(3)} MHz · '
                     '${_bwLabel(p.bandwidthKhz)} kHz · '

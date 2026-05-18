@@ -605,7 +605,7 @@ class MeshCoreRegionPreset {
 const List<MeshCoreRegionPreset> kMeshCoreRegionPresets = [
   MeshCoreRegionPreset(
     id: 'au_default',
-    label: 'Australia',
+    label: 'Australia', // lint-allow: hardcoded-string
     frequencyMHz: 915.8,
     bandwidthKhz: 250,
     spreadingFactor: 10,
@@ -614,7 +614,7 @@ const List<MeshCoreRegionPreset> kMeshCoreRegionPresets = [
   ),
   MeshCoreRegionPreset(
     id: 'au_narrow',
-    label: 'Australia (Narrow)',
+    label: 'Australia (Narrow)', // lint-allow: hardcoded-string
     frequencyMHz: 916.575,
     bandwidthKhz: 62.5,
     spreadingFactor: 7,
@@ -623,7 +623,7 @@ const List<MeshCoreRegionPreset> kMeshCoreRegionPresets = [
   ),
   MeshCoreRegionPreset(
     id: 'au_sa_wa_qld',
-    label: 'Australia SA, WA, QLD',
+    label: 'Australia SA, WA, QLD', // lint-allow: hardcoded-string
     frequencyMHz: 923.125,
     bandwidthKhz: 62.5,
     spreadingFactor: 8,
@@ -632,7 +632,7 @@ const List<MeshCoreRegionPreset> kMeshCoreRegionPresets = [
   ),
   MeshCoreRegionPreset(
     id: 'cz',
-    label: 'Czech Republic',
+    label: 'Czech Republic', // lint-allow: hardcoded-string
     frequencyMHz: 869.432,
     bandwidthKhz: 62.5,
     spreadingFactor: 7,
@@ -641,7 +641,7 @@ const List<MeshCoreRegionPreset> kMeshCoreRegionPresets = [
   ),
   MeshCoreRegionPreset(
     id: 'eu_433',
-    label: 'EU 433MHz',
+    label: 'EU 433MHz', // lint-allow: hardcoded-string
     frequencyMHz: 433.650,
     bandwidthKhz: 250,
     spreadingFactor: 11,
@@ -650,7 +650,7 @@ const List<MeshCoreRegionPreset> kMeshCoreRegionPresets = [
   ),
   MeshCoreRegionPreset(
     id: 'eu_uk_long_range',
-    label: 'EU/UK (Long Range)',
+    label: 'EU/UK (Long Range)', // lint-allow: hardcoded-string
     frequencyMHz: 869.525,
     bandwidthKhz: 250,
     spreadingFactor: 11,
@@ -659,7 +659,7 @@ const List<MeshCoreRegionPreset> kMeshCoreRegionPresets = [
   ),
   MeshCoreRegionPreset(
     id: 'eu_uk_medium_range',
-    label: 'EU/UK (Medium Range)',
+    label: 'EU/UK (Medium Range)', // lint-allow: hardcoded-string
     frequencyMHz: 869.525,
     bandwidthKhz: 250,
     spreadingFactor: 10,
@@ -668,7 +668,7 @@ const List<MeshCoreRegionPreset> kMeshCoreRegionPresets = [
   ),
   MeshCoreRegionPreset(
     id: 'eu_uk_narrow',
-    label: 'EU/UK (Narrow)',
+    label: 'EU/UK (Narrow)', // lint-allow: hardcoded-string
     frequencyMHz: 869.618,
     bandwidthKhz: 62.5,
     spreadingFactor: 8,
@@ -677,7 +677,7 @@ const List<MeshCoreRegionPreset> kMeshCoreRegionPresets = [
   ),
   MeshCoreRegionPreset(
     id: 'nz_default',
-    label: 'New Zealand',
+    label: 'New Zealand', // lint-allow: hardcoded-string
     frequencyMHz: 917.375,
     bandwidthKhz: 250,
     spreadingFactor: 11,
@@ -686,7 +686,7 @@ const List<MeshCoreRegionPreset> kMeshCoreRegionPresets = [
   ),
   MeshCoreRegionPreset(
     id: 'nz_narrow',
-    label: 'New Zealand (Narrow)',
+    label: 'New Zealand (Narrow)', // lint-allow: hardcoded-string
     frequencyMHz: 917.375,
     bandwidthKhz: 62.5,
     spreadingFactor: 7,
@@ -695,7 +695,7 @@ const List<MeshCoreRegionPreset> kMeshCoreRegionPresets = [
   ),
   MeshCoreRegionPreset(
     id: 'pt_433',
-    label: 'Portugal 433',
+    label: 'Portugal 433', // lint-allow: hardcoded-string
     frequencyMHz: 433.375,
     bandwidthKhz: 62.5,
     spreadingFactor: 9,
@@ -704,7 +704,7 @@ const List<MeshCoreRegionPreset> kMeshCoreRegionPresets = [
   ),
   MeshCoreRegionPreset(
     id: 'pt_869',
-    label: 'Portugal 869',
+    label: 'Portugal 869', // lint-allow: hardcoded-string
     frequencyMHz: 869.618,
     bandwidthKhz: 62.5,
     spreadingFactor: 7,
@@ -713,7 +713,7 @@ const List<MeshCoreRegionPreset> kMeshCoreRegionPresets = [
   ),
   MeshCoreRegionPreset(
     id: 'ch',
-    label: 'Switzerland',
+    label: 'Switzerland', // lint-allow: hardcoded-string
     frequencyMHz: 869.618,
     bandwidthKhz: 62.5,
     spreadingFactor: 8,
@@ -722,7 +722,7 @@ const List<MeshCoreRegionPreset> kMeshCoreRegionPresets = [
   ),
   MeshCoreRegionPreset(
     id: 'us_arizona',
-    label: 'USA Arizona',
+    label: 'USA Arizona', // lint-allow: hardcoded-string
     frequencyMHz: 908.205,
     bandwidthKhz: 62.5,
     spreadingFactor: 10,
@@ -731,7 +731,7 @@ const List<MeshCoreRegionPreset> kMeshCoreRegionPresets = [
   ),
   MeshCoreRegionPreset(
     id: 'us_canada',
-    label: 'USA/Canada',
+    label: 'USA/Canada', // lint-allow: hardcoded-string
     frequencyMHz: 910.525,
     bandwidthKhz: 62.5,
     spreadingFactor: 7,
@@ -740,7 +740,7 @@ const List<MeshCoreRegionPreset> kMeshCoreRegionPresets = [
   ),
   MeshCoreRegionPreset(
     id: 'vn',
-    label: 'Vietnam',
+    label: 'Vietnam', // lint-allow: hardcoded-string
     frequencyMHz: 920.250,
     bandwidthKhz: 250,
     spreadingFactor: 11,
@@ -749,7 +749,7 @@ const List<MeshCoreRegionPreset> kMeshCoreRegionPresets = [
   ),
   MeshCoreRegionPreset(
     id: 'offgrid_433',
-    label: 'Off-Grid 433',
+    label: 'Off-Grid 433', // lint-allow: hardcoded-string
     frequencyMHz: 433.0,
     bandwidthKhz: 250,
     spreadingFactor: 11,
@@ -758,7 +758,7 @@ const List<MeshCoreRegionPreset> kMeshCoreRegionPresets = [
   ),
   MeshCoreRegionPreset(
     id: 'offgrid_869',
-    label: 'Off-Grid 869',
+    label: 'Off-Grid 869', // lint-allow: hardcoded-string
     frequencyMHz: 869.0,
     bandwidthKhz: 250,
     spreadingFactor: 11,
@@ -767,7 +767,7 @@ const List<MeshCoreRegionPreset> kMeshCoreRegionPresets = [
   ),
   MeshCoreRegionPreset(
     id: 'offgrid_918',
-    label: 'Off-Grid 918',
+    label: 'Off-Grid 918', // lint-allow: hardcoded-string
     frequencyMHz: 918.0,
     bandwidthKhz: 250,
     spreadingFactor: 11,

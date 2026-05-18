@@ -12772,6 +12772,82 @@
     "@meshcoreRadioSettingsRegionCustomSubtitle": {
         "description": "D26 — Subtitle of the Custom row in the region preset picker"
     },
+    "meshcoreRegionPresetAuDefault": "Australia",
+    "@meshcoreRegionPresetAuDefault": {
+        "description": "D-S2 region preset label: Australia default (915.8 MHz / 250 kHz)"
+    },
+    "meshcoreRegionPresetAuNarrow": "Australia (Narrow)",
+    "@meshcoreRegionPresetAuNarrow": {
+        "description": "D-S2 region preset label: Australia narrow (62.5 kHz). The (Narrow) qualifier should be translated."
+    },
+    "meshcoreRegionPresetAuSaWaQld": "Australia SA, WA, QLD",
+    "@meshcoreRegionPresetAuSaWaQld": {
+        "description": "D-S2 region preset label: Australia South Australia / Western Australia / Queensland (923 MHz). State abbreviations are not translated."
+    },
+    "meshcoreRegionPresetCz": "Czech Republic",
+    "@meshcoreRegionPresetCz": {
+        "description": "D-S2 region preset label: Czech Republic"
+    },
+    "meshcoreRegionPresetEu433": "EU 433MHz",
+    "@meshcoreRegionPresetEu433": {
+        "description": "D-S2 region preset label: European 433 MHz band. 'EU' may translate per locale (e.g. UE)."
+    },
+    "meshcoreRegionPresetEuUkLongRange": "EU/UK (Long Range)",
+    "@meshcoreRegionPresetEuUkLongRange": {
+        "description": "D-S2 region preset label: EU/UK 869 MHz long-range profile. (Long Range) qualifier translates."
+    },
+    "meshcoreRegionPresetEuUkMediumRange": "EU/UK (Medium Range)",
+    "@meshcoreRegionPresetEuUkMediumRange": {
+        "description": "D-S2 region preset label: EU/UK 869 MHz medium-range profile. (Medium Range) qualifier translates."
+    },
+    "meshcoreRegionPresetEuUkNarrow": "EU/UK (Narrow)",
+    "@meshcoreRegionPresetEuUkNarrow": {
+        "description": "D-S2 region preset label: EU/UK 869 MHz narrow profile (62.5 kHz). (Narrow) qualifier translates."
+    },
+    "meshcoreRegionPresetNzDefault": "New Zealand",
+    "@meshcoreRegionPresetNzDefault": {
+        "description": "D-S2 region preset label: New Zealand default (917.375 MHz / 250 kHz)"
+    },
+    "meshcoreRegionPresetNzNarrow": "New Zealand (Narrow)",
+    "@meshcoreRegionPresetNzNarrow": {
+        "description": "D-S2 region preset label: New Zealand narrow (62.5 kHz). (Narrow) qualifier translates."
+    },
+    "meshcoreRegionPresetPt433": "Portugal 433",
+    "@meshcoreRegionPresetPt433": {
+        "description": "D-S2 region preset label: Portugal 433 MHz band"
+    },
+    "meshcoreRegionPresetPt869": "Portugal 869",
+    "@meshcoreRegionPresetPt869": {
+        "description": "D-S2 region preset label: Portugal 869 MHz band"
+    },
+    "meshcoreRegionPresetCh": "Switzerland",
+    "@meshcoreRegionPresetCh": {
+        "description": "D-S2 region preset label: Switzerland"
+    },
+    "meshcoreRegionPresetUsArizona": "USA Arizona",
+    "@meshcoreRegionPresetUsArizona": {
+        "description": "D-S2 region preset label: USA Arizona-specific 908.205 MHz profile. 'USA' may localise."
+    },
+    "meshcoreRegionPresetUsCanada": "USA/Canada",
+    "@meshcoreRegionPresetUsCanada": {
+        "description": "D-S2 region preset label: USA / Canada 910.525 MHz profile. Slash separator stays."
+    },
+    "meshcoreRegionPresetVn": "Vietnam",
+    "@meshcoreRegionPresetVn": {
+        "description": "D-S2 region preset label: Vietnam"
+    },
+    "meshcoreRegionPresetOffgrid433": "Off-Grid 433",
+    "@meshcoreRegionPresetOffgrid433": {
+        "description": "D-S2 region preset label: Off-grid 433 MHz long-range community profile. 'Off-Grid' may translate."
+    },
+    "meshcoreRegionPresetOffgrid869": "Off-Grid 869",
+    "@meshcoreRegionPresetOffgrid869": {
+        "description": "D-S2 region preset label: Off-grid 869 MHz long-range community profile. 'Off-Grid' may translate."
+    },
+    "meshcoreRegionPresetOffgrid918": "Off-Grid 918",
+    "@meshcoreRegionPresetOffgrid918": {
+        "description": "D-S2 region preset label: Off-grid 918 MHz long-range community profile. 'Off-Grid' may translate."
+    },
     "meshcoreRadioSettingsFreqSectionHeader": "FREQUENCY & BANDWIDTH",
     "@meshcoreRadioSettingsFreqSectionHeader": {
         "description": "Section header for frequency and bandwidth fields"

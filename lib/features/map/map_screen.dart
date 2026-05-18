@@ -444,6 +444,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   /// Update trail history for a node
   void _updateNodeTrail(int nodeNum, double lat, double lng) {
+    // Drop NaN/Infinity at the boundary: a single non-finite trail point
+    // poisons the entire PolylineLayer (Crs.checkLatLng throws fatally on
+    // projectAtZoom), so any caller leaking non-finite coords here would
+    // crash every subsequent map build.
+    if (!lat.isFinite || !lng.isFinite) return;
     final trails = _nodeTrails[nodeNum] ?? [];
     final now = DateTime.now();
 
@@ -1572,42 +1577,54 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       // Range circles (theoretical coverage) - hide in location only mode
                       if (_showRangeCircles && !widget.locationOnlyMode)
                         CircleLayer(
-                          circles: nodesWithPosition.map((n) {
-                            final isMyNode = n.node.nodeNum == myNodeNum;
-                            return CircleMarker(
-                              point: LatLng(n.latitude, n.longitude),
-                              radius: 5000, // 5km range circle
-                              useRadiusInMeter: true,
-                              color:
-                                  (isMyNode
-                                          ? context.accentColor
-                                          : AppTheme.primaryPurple)
-                                      .withValues(alpha: 0.08),
-                              borderColor:
-                                  (isMyNode
-                                          ? context.accentColor
-                                          : AppTheme.primaryPurple)
-                                      .withValues(alpha: 0.2),
-                              borderStrokeWidth: 1,
-                            );
-                          }).toList(),
+                          circles: nodesWithPosition
+                              .where(
+                                (n) =>
+                                    n.latitude.isFinite && n.longitude.isFinite,
+                              )
+                              .map((n) {
+                                final isMyNode = n.node.nodeNum == myNodeNum;
+                                return CircleMarker(
+                                  point: LatLng(n.latitude, n.longitude),
+                                  radius: 5000, // 5km range circle
+                                  useRadiusInMeter: true,
+                                  color:
+                                      (isMyNode
+                                              ? context.accentColor
+                                              : AppTheme.primaryPurple)
+                                          .withValues(alpha: 0.08),
+                                  borderColor:
+                                      (isMyNode
+                                              ? context.accentColor
+                                              : AppTheme.primaryPurple)
+                                          .withValues(alpha: 0.2),
+                                  borderStrokeWidth: 1,
+                                );
+                              })
+                              .toList(),
                         ),
                       // Heatmap layer - hide in location only mode
                       if (_showHeatmap && !widget.locationOnlyMode)
                         CircleLayer(
-                          circles: nodesWithPosition.map((n) {
-                            return CircleMarker(
-                              point: LatLng(n.latitude, n.longitude),
-                              radius: 50,
-                              color: context.accentColor.withValues(
-                                alpha: 0.15,
-                              ),
-                              borderColor: context.accentColor.withValues(
-                                alpha: 0.3,
-                              ),
-                              borderStrokeWidth: 1,
-                            );
-                          }).toList(),
+                          circles: nodesWithPosition
+                              .where(
+                                (n) =>
+                                    n.latitude.isFinite && n.longitude.isFinite,
+                              )
+                              .map((n) {
+                                return CircleMarker(
+                                  point: LatLng(n.latitude, n.longitude),
+                                  radius: 50,
+                                  color: context.accentColor.withValues(
+                                    alpha: 0.15,
+                                  ),
+                                  borderColor: context.accentColor.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                  borderStrokeWidth: 1,
+                                );
+                              })
+                              .toList(),
                         ),
                       // Node trails (movement history) - hide in location only mode
                       if (!widget.locationOnlyMode &&

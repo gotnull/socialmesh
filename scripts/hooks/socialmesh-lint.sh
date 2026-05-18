@@ -10,6 +10,7 @@
 #   no-bare-logging            Bare debugPrint/print (use AppLogging.<feature>)
 #   no-private-log             Private _log() methods (use AppLogging.<feature> directly)
 #   no-hardcoded-ui-strings    Hardcoded user-facing strings (Text('...'), title: '...')
+#   no-raw-latlng              Raw LatLng(<expr>, <expr>) outside safeLatLng()
 #   no-unimplemented           throw UnimplementedError
 #   no-bare-scaffold           Bare Scaffold (use GlassScaffold)
 #   no-bare-switch             Bare Switch/SwitchListTile (use ThemedSwitch)
@@ -42,6 +43,7 @@
 #   scripts/hooks/socialmesh-lint.sh --format           # Also run dart format check
 #   scripts/hooks/socialmesh-lint.sh --em-dash file ... # Also flag em-dash chars (opt-in: see below)
 #   scripts/hooks/socialmesh-lint.sh --unsafe-pop file ... # Flag unsafe Navigator.pop in callbacks (opt-in)
+#   scripts/hooks/socialmesh-lint.sh --no-raw-latlng file ... # Flag raw LatLng() outside safeLatLng (opt-in)
 #   scripts/hooks/socialmesh-lint.sh --diff-only --format  # Combined
 #
 # --em-dash is opt-in by design. The em-dash character (U+2014) is banned
@@ -61,6 +63,17 @@
 # cannot distinguish State.context from a Builder/parameter context without
 # AST analysis, so pass --unsafe-pop when reviewing files you are about to
 # ship to surface candidates manually.
+#
+# --no-raw-latlng is opt-in by design. flutter_map's Crs.checkLatLng throws
+# fatally when a non-finite LatLng reaches projectAtZoom, and Crashlytics
+# issue 563ef91f regressed four times because new features kept introducing
+# raw LatLng(expr, expr) constructions outside the safeLatLng() helper. The
+# rule flags every LatLng( with an identifier-prefix first arg (i.e. not a
+# numeric literal), skipping `const LatLng` and the definition file. 50+
+# legacy callsites still fire today, so running by default would block
+# routine edits unrelated to the LatLng family. Pass --no-raw-latlng when
+# reviewing files you are about to ship; new code should route through
+# safeLatLng() from lib/core/safe_lat_lng.dart.
 #
 # Exit codes:
 #   0  All checks passed
@@ -110,6 +123,12 @@ CHECK_UNSAFE_POP=false  # Opt-in: surfaces Navigator.of(context).pop in
                         # without AST analysis (Builder/parameter contexts
                         # are safe, State.context is not). Use when auditing
                         # a file before shipping to verify each site.
+CHECK_RAW_LATLNG=false  # Opt-in: flags raw LatLng(<expr>, <expr>) outside
+                        # safeLatLng(). flutter_map's Crs.checkLatLng throws
+                        # fatally on non-finite values; every new callsite
+                        # should route through safeLatLng. 50+ legacy sites
+                        # would fire today, so off by default - run when
+                        # auditing files before shipping.
 EXPLICIT_FILES=()
 
 while [ $# -gt 0 ]; do
@@ -119,6 +138,7 @@ while [ $# -gt 0 ]; do
     --format)       RUN_FORMAT=true; shift ;;
     --em-dash)      CHECK_EM_DASH=true; shift ;;
     --unsafe-pop)   CHECK_UNSAFE_POP=true; shift ;;
+    --no-raw-latlng) CHECK_RAW_LATLNG=true; shift ;;
     -*)             echo "Unknown flag: $1" >&2; exit 2 ;;
     *)              MODE="explicit"; EXPLICIT_FILES+=("$1"); shift ;;
   esac
@@ -871,6 +891,43 @@ check_file() {
       "unsafe-navigator-pop" \
       "Navigator.of(context).pop in arrow callback - if context is State.context, swap for safeNavigatorPop or add a mounted guard. Skip if context is a Builder/parameter." \
       "error"
+  fi
+
+  # ------------------------------------------------------------------
+  # ERROR: Raw LatLng(<expr>, <expr>) outside safeLatLng()
+  # flutter_map's Crs.checkLatLng throws fatally on NaN / Infinity /
+  # out-of-range coords. Every code path that builds a LatLng from
+  # runtime numeric data must route through safeLatLng() (see
+  # lib/core/safe_lat_lng.dart) so bad values drop out before reaching
+  # projectAtZoom. Crashlytics issue 563ef91f regressed four times
+  # before this rule was added.
+  #
+  # The regex flags any LatLng( with an identifier-prefix first arg
+  # (i.e. not a numeric literal). Lines containing `const LatLng` and
+  # the definition file itself are skipped.
+  #
+  # OPT-IN: 50+ legacy callsites still fire today.
+  # ------------------------------------------------------------------
+  if [ "$CHECK_RAW_LATLNG" = true ] && [ "$is_dart" = true ]; then
+    case "$file" in
+      lib/core/safe_lat_lng.dart) ;;
+      *)
+        while IFS=: read -r lineno matched_line; do
+          line_in_scope "$file" "$lineno" || continue
+          # Skip lines where the LatLng is being assigned to a const
+          # binding (`const x = LatLng(...)`) or constructed inline as
+          # `const LatLng(...)`. Both forms are compile-time literals
+          # and cannot carry NaN at runtime.
+          [[ "$matched_line" =~ (^|[^a-zA-Z_])const([[:space:]]|$).*LatLng\( ]] && continue
+          # Skip comment-only lines.
+          local trimmed="${matched_line#"${matched_line%%[![:space:]]*}"}"
+          [[ "$trimmed" == //* ]] && continue
+          record_hit "$file" "$lineno" "no-raw-latlng" \
+            "Raw LatLng(<expr>) - wrap with safeLatLng() so NaN/Infinity/out-of-range coords drop out before reaching flutter_map projectAtZoom (lib/core/safe_lat_lng.dart)." \
+            "error"
+        done < <(grep -nE '[^a-zA-Z_]LatLng\([a-zA-Z_]' "$file" 2>/dev/null || true)
+        ;;
+    esac
   fi
 
   # ------------------------------------------------------------------

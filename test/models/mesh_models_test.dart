@@ -323,6 +323,38 @@ void main() {
       expect(node.hasPosition, false);
     });
 
+    test('hasPosition returns false for NaN coordinates', () {
+      final nodeBothNaN = MeshNode(
+        nodeNum: 123,
+        latitude: double.nan,
+        longitude: double.nan,
+      );
+      expect(nodeBothNaN.hasPosition, false);
+
+      final nodeLatNaN = MeshNode(
+        nodeNum: 124,
+        latitude: double.nan,
+        longitude: 151.2093,
+      );
+      expect(nodeLatNaN.hasPosition, false);
+
+      final nodeLngNaN = MeshNode(
+        nodeNum: 125,
+        latitude: -33.8688,
+        longitude: double.nan,
+      );
+      expect(nodeLngNaN.hasPosition, false);
+    });
+
+    test('hasPosition returns false for infinite coordinates', () {
+      final node = MeshNode(
+        nodeNum: 123,
+        latitude: double.infinity,
+        longitude: double.negativeInfinity,
+      );
+      expect(node.hasPosition, false);
+    });
+
     test('copyWith preserves unmodified values', () {
       final original = MeshNode(
         nodeNum: 123,

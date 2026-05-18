@@ -755,27 +755,34 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
   // ---------------------------------------------------------------------------
 
   List<Marker> _buildPinnedLocationMarkers(List<MeshCorePinnedLocation> pins) {
-    return pins
-        .map((pin) {
-          return Marker(
-            point: LatLng(pin.latitude, pin.longitude),
-            width: 36,
-            height: 36,
-            alignment: Alignment.topCenter,
-            child: GestureDetector(
-              onTap: () => _showPinActionSheet(pin),
-              child: Tooltip(
-                message: pin.label,
-                child: Icon(
-                  Icons.pin_drop_rounded,
-                  color: AccentColors.yellow,
-                  size: 30,
-                ),
+    final markers = <Marker>[];
+    for (final pin in pins) {
+      // Drop pins with non-finite coords at the boundary - one NaN
+      // LatLng in a MarkerLayer makes projectAtZoom throw and crashes
+      // the whole map build.
+      final point = safeLatLng(pin.latitude, pin.longitude);
+      if (point == null) continue;
+      markers.add(
+        Marker(
+          point: point,
+          width: 36,
+          height: 36,
+          alignment: Alignment.topCenter,
+          child: GestureDetector(
+            onTap: () => _showPinActionSheet(pin),
+            child: Tooltip(
+              message: pin.label,
+              child: Icon(
+                Icons.pin_drop_rounded,
+                color: AccentColors.yellow,
+                size: 30,
               ),
             ),
-          );
-        })
-        .toList(growable: false);
+          ),
+        ),
+      );
+    }
+    return markers;
   }
 
   /// D-Q10: bottom-sheet prompt for the pin label. Cancel returns
