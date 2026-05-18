@@ -10,9 +10,7 @@ import '../../core/l10n/l10n_extension.dart';
 import '../../core/navigation.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
-import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
-import '../../core/widgets/node_avatar.dart';
 import '../../core/widgets/qr_share_sheet.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../providers/app_providers.dart';
@@ -27,6 +25,8 @@ import '../meshcore/screens/meshcore_map_screen.dart';
 import '../meshcore/screens/meshcore_settings_screen.dart';
 import '../meshcore/screens/meshcore_qr_scanner_screen.dart';
 import '../meshcore/widgets/meshcore_device_sheet.dart';
+import '../meshcore/widgets/meshcore_drawer_menu_tile.dart';
+import '../meshcore/widgets/meshcore_drawer_node_header.dart';
 import '../meshcore/widgets/meshcore_shell_nav_bar_item.dart';
 
 // MeshCore bottom navigation tab items
@@ -521,7 +521,7 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Node Info Header - matches MainShell _DrawerNodeHeader
-            const _MeshCoreDrawerNodeHeader(),
+            const MeshCoreDrawerNodeHeader(),
 
             // Divider after header
             Padding(
@@ -544,7 +544,7 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
                     context.l10n.meshcoreShellDrawerSectionHeader,
                   ),
 
-                  _MeshCoreDrawerMenuTile(
+                  MeshCoreDrawerMenuTile(
                     icon: Icons.person_add_rounded,
                     label: context.l10n.meshcoreShellDrawerAddContact,
                     iconColor: AccentColors.cyan,
@@ -555,7 +555,7 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
                     },
                   ),
                   const SizedBox(height: AppTheme.spacing4),
-                  _MeshCoreDrawerMenuTile(
+                  MeshCoreDrawerMenuTile(
                     icon: Icons.add_rounded,
                     label: context.l10n.meshcoreShellDrawerAddChannel,
                     iconColor: context.accentColor,
@@ -566,7 +566,7 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
                     },
                   ),
                   const SizedBox(height: AppTheme.spacing4),
-                  _MeshCoreDrawerMenuTile(
+                  MeshCoreDrawerMenuTile(
                     icon: Icons.radar_rounded,
                     label: context.l10n.meshcoreShellDrawerDiscoverContacts,
                     iconColor: AccentColors.green,
@@ -577,7 +577,7 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
                     },
                   ),
                   const SizedBox(height: AppTheme.spacing4),
-                  _MeshCoreDrawerMenuTile(
+                  MeshCoreDrawerMenuTile(
                     icon: Icons.qr_code_rounded,
                     label: context.l10n.meshcoreShellDrawerMyContactCode,
                     iconColor: AccentColors.orange,
@@ -597,7 +597,7 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
                   ),
                   const SizedBox(height: AppTheme.spacing8),
 
-                  _MeshCoreDrawerMenuTile(
+                  MeshCoreDrawerMenuTile(
                     icon: Icons.settings_outlined,
                     label: context.l10n.meshcoreShellDrawerSettings,
                     iconColor: SemanticColors.muted,
@@ -869,217 +869,6 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
       subtitle: context.l10n.meshcoreShellScanToAddContact,
       qrData: shareCode,
       infoText: context.l10n.meshcoreShellShareContactInfo,
-    );
-  }
-}
-
-/// Drawer node header - matches MainShell _DrawerNodeHeader exactly
-class _MeshCoreDrawerNodeHeader extends ConsumerWidget {
-  const _MeshCoreDrawerNodeHeader();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final accentColor = theme.colorScheme.primary;
-    final linkStatus = ref.watch(linkStatusProvider);
-    final selfInfo = ref.watch(meshCoreSelfInfoProvider);
-    final isConnected = linkStatus.isConnected;
-
-    final nodeName = selfInfo.selfInfo?.nodeName.isNotEmpty == true
-        ? selfInfo.selfInfo!.nodeName
-        : linkStatus.deviceName ??
-              context.l10n.meshcoreShellDefaultDeviceNameFull;
-
-    final nodeId = selfInfo.selfInfo != null
-        ? selfInfo.selfInfo!.pubKey
-              .take(4)
-              .map((b) => b.toRadixString(16).padLeft(2, '0'))
-              .join()
-              .toUpperCase()
-        : '';
-
-    // Get initials for avatar
-    final initials = nodeName.length >= 2
-        ? nodeName.substring(0, 2).toUpperCase()
-        : context.l10n.meshcoreShellDefaultInitials;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 20, 20, 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Node avatar - matches MainShell drawer exactly
-          NodeAvatar(
-            text: initials,
-            color: isConnected ? accentColor : theme.dividerColor,
-            size: 56,
-            showOnlineIndicator: true,
-            onlineStatus: isConnected
-                ? OnlineStatus.online
-                : OnlineStatus.offline,
-            border: isConnected
-                ? Border.all(
-                    color: Colors.white.withValues(alpha: 0.3),
-                    width: 2,
-                  )
-                : null,
-          ),
-          const SizedBox(width: AppTheme.spacing12),
-          // Node info - flexible column
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Name and status on same row
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        nodeName,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: AppTheme.fontFamily,
-                          color: theme.colorScheme.onSurface,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: AppTheme.spacing8),
-                    // Connection status indicator (compact) - matches MainShell exactly
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isConnected
-                            ? AppTheme.successGreen.withValues(alpha: 0.15)
-                            : AppTheme.errorRed.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: isConnected
-                                  ? AppTheme.successGreen
-                                  : AppTheme.errorRed,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: AppTheme.spacing4),
-                          Text(
-                            isConnected
-                                ? context.l10n.meshcoreShellStatusOnline
-                                : context.l10n.meshcoreShellStatusOffline,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              fontFamily: AppTheme.fontFamily,
-                              color: isConnected
-                                  ? AppTheme.successGreen
-                                  : AppTheme.errorRed,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                if (isConnected && nodeId.isNotEmpty) ...[
-                  const SizedBox(height: AppTheme.spacing4),
-                  Text(
-                    nodeId,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontFamily: AppTheme.fontFamily,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Drawer menu tile - matches MainShell _DrawerMenuTile styling exactly
-class _MeshCoreDrawerMenuTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final Color? iconColor;
-
-  const _MeshCoreDrawerMenuTile({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.iconColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return BouncyTap(
-      onTap: onTap,
-      scaleFactor: 0.98,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(AppTheme.radius16),
-        ),
-        child: Row(
-          children: [
-            // Icon container - matches MainShell drawer
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.all(AppTheme.spacing10),
-              decoration: BoxDecoration(
-                color: (iconColor ?? theme.colorScheme.primary).withValues(
-                  alpha: 0.15,
-                ),
-                borderRadius: BorderRadius.circular(AppTheme.radius12),
-              ),
-              child: Icon(
-                icon,
-                size: 22,
-                color:
-                    iconColor ??
-                    theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
-            ),
-            const SizedBox(width: AppTheme.spacing14),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  fontFamily: AppTheme.fontFamily,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
-                ),
-              ),
-            ),
-            Icon(
-              Icons.chevron_right,
-              size: 20,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
