@@ -40943,6 +40943,11 @@
   "notificationChannelDeviceAlerts": "Notifiche importanti dal tuo dispositivo Meshtastic",
   "notificationChannelDirectMessages": "Notifiche per messaggi mesh diretti",
   "notificationChannelMessageTitle": "{senderName} ({shortCode}) in {channelName}",
+  "notificationMeshCoreAdvertTitle": "Nuovo peer: {contactName} ({shortCode})",
+  "notificationMeshCoreAdvertBody": "{advTypeLabel}",
+  "meshcoreNotifications": "Notifiche",
+  "meshcoreSettingsAdvertNotificationsTitle": "Notifiche annunci",
+  "meshcoreSettingsAdvertNotificationsSubtitle": "Avvisa quando viene rilevato un nuovo peer nelle vicinanze",
   "notificationChannelMessages": "Notifiche per messaggi mesh del canale",
   "meshcoreNotificationChannelAdvertsName": "Annunci MeshCore",
   "meshcoreNotificationChannelAdvertsDescription": "Avvisi quando viene rilevato un nuovo peer MeshCore nelle vicinanze",
@@ -45411,5 +45416,14 @@
   "worldMeshTimeJustNow": "adesso",
   "worldMeshTimeMinutesAgo": "{minutes}m fa",
   "worldMeshTitle": "Mappa mondiale",
-  "worldMeshUptimeLabel": "Attività: {uptime}"
+  "worldMeshUptimeLabel": "Attività: {uptime}",
+  "notificationMeshCoreAdvertBatchTitle": "{peerCount, plural, =1{1 nuovo peer rilevato} other{{peerCount} nuovi peer rilevati}}",
+  "notificationMeshCoreAdvertBatchBody": "{namesHead} e altri {remaining}",
+  "meshcoreTransportStatusThroughputSection": "Velocità",
+  "meshcoreTransportStatusFieldBytesTx": "Byte inviati",
+  "meshcoreTransportStatusFieldBytesRx": "Byte ricevuti",
+  "meshcoreTransportStatusFieldRateTx": "Velocità TX",
+  "meshcoreTransportStatusFieldRateRx": "Velocità RX",
+  "meshcoreTransportStatusFieldSessionDuration": "Sessione",
+  "meshcoreTransportStatusThroughputIdle": "Inattivo"
 }

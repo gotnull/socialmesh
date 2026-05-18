@@ -11,6 +11,7 @@ import '../../core/safety/lifecycle_mixin.dart';
 import 'package:flutter/services.dart';
 import 'dm_channel_resolver.dart';
 import 'widgets/chat_composer.dart';
+import 'widgets/message_bubble_body.dart';
 import 'widgets/messaging_unread_divider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/text_sanitizer.dart';
@@ -36,7 +37,6 @@ import '../../core/widgets/auto_scroll_text.dart';
 import '../../core/widgets/chat_bubble_text.dart';
 import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/glass_scaffold.dart';
-import '../../core/widgets/linkified_text.dart';
 import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/jump_to_latest_pill.dart';
@@ -3226,33 +3226,28 @@ class _MessageBubble extends ConsumerWidget {
                             _buildReplyQuote(context, sentByMe: true),
                             const SizedBox(height: AppTheme.spacing6),
                           ],
-                          if (message.text.trim().isEmpty)
-                            Text(
-                              context.l10n.messagingMessageUnableToDisplay,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontStyle: FontStyle.italic,
-                                color: Colors.white.withValues(alpha: 0.7),
-                              ),
-                            )
-                          else
-                            LinkifiedText(
-                              text: message.text,
-                              // Match inbound bubble size (15pt) so a
-                              // back-and-forth thread reads with one
-                              // consistent rhythm. Pre-existing 14/15
-                              // split surfaced during D30 live smoke.
-                              style: chatBubbleBodyStyle(
-                                ref,
-                                baseFontSize: 14,
-                                color: Colors.white,
-                              ),
-                              linkStyle: const TextStyle(
-                                color: Colors.white,
-                                decoration: TextDecoration.underline,
-                                decorationColor: Colors.white,
-                              ),
+                          MessageBubbleBody(
+                            text: message.text,
+                            // Match inbound bubble size (15pt) so a
+                            // back-and-forth thread reads with one
+                            // consistent rhythm. Pre-existing 14/15
+                            // split surfaced during D30 live smoke.
+                            bodyStyle: chatBubbleBodyStyle(
+                              ref,
+                              baseFontSize: 14,
+                              color: Colors.white,
                             ),
+                            fallbackStyle: TextStyle(
+                              fontSize: 14,
+                              fontStyle: FontStyle.italic,
+                              color: Colors.white.withValues(alpha: 0.7),
+                            ),
+                            linkStyle: const TextStyle(
+                              color: Colors.white,
+                              decoration: TextDecoration.underline,
+                              decorationColor: Colors.white,
+                            ),
+                          ),
                           // Inline translation
                           if (isTranslatable)
                             _buildTranslationSection(
@@ -3525,28 +3520,23 @@ class _MessageBubble extends ConsumerWidget {
                           _buildReplyQuote(context),
                           const SizedBox(height: AppTheme.spacing6),
                         ],
-                        if (message.text.trim().isEmpty)
-                          Text(
-                            context.l10n.messagingMessageUnableToDisplay,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontStyle: FontStyle.italic,
-                              color: context.textTertiary,
-                            ),
-                          )
-                        else
-                          LinkifiedText(
-                            text: message.text,
-                            // Canonical chat-body size (14pt). Pre-D30
-                            // this was 15 on inbound and 14 on outbound;
-                            // unified on 14 across MeshCore + SIP DM +
-                            // messaging during the D30 polish pass.
-                            style: chatBubbleBodyStyle(
-                              ref,
-                              baseFontSize: 14,
-                              color: context.textPrimary,
-                            ),
+                        MessageBubbleBody(
+                          text: message.text,
+                          // Canonical chat-body size (14pt). Pre-D30 this
+                          // was 15 on inbound and 14 on outbound; unified
+                          // on 14 across MeshCore + SIP DM + messaging
+                          // during the D30 polish pass.
+                          bodyStyle: chatBubbleBodyStyle(
+                            ref,
+                            baseFontSize: 14,
+                            color: context.textPrimary,
                           ),
+                          fallbackStyle: TextStyle(
+                            fontSize: 14,
+                            fontStyle: FontStyle.italic,
+                            color: context.textTertiary,
+                          ),
+                        ),
                         // Inline translation
                         if (isTranslatable)
                           _buildTranslationSection(

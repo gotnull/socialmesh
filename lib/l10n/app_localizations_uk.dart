@@ -8588,6 +8588,27 @@ class AppLocalizationsUk extends AppLocalizations {
       'Стан зʼєднання, тип транспорту, деталі кінцевої точки';
 
   @override
+  String get meshcoreTransportStatusThroughputSection => 'Пропускна здатність';
+
+  @override
+  String get meshcoreTransportStatusFieldBytesTx => 'Байтів надіслано';
+
+  @override
+  String get meshcoreTransportStatusFieldBytesRx => 'Байтів отримано';
+
+  @override
+  String get meshcoreTransportStatusFieldRateTx => 'Швидкість TX';
+
+  @override
+  String get meshcoreTransportStatusFieldRateRx => 'Швидкість RX';
+
+  @override
+  String get meshcoreTransportStatusFieldSessionDuration => 'Сеанс';
+
+  @override
+  String get meshcoreTransportStatusThroughputIdle => 'Очікування';
+
+  @override
   String get meshcoreAdvertisementSentTools => 'Оголошення надіслано';
 
   @override
@@ -34885,6 +34906,43 @@ class AppLocalizationsUk extends AppLocalizations {
     String channelName,
   ) {
     return '$senderName ($shortCode) у $channelName';
+  }
+
+  @override
+  String notificationMeshCoreAdvertTitle(String contactName, String shortCode) {
+    return 'Новий пер: $contactName ($shortCode)';
+  }
+
+  @override
+  String notificationMeshCoreAdvertBody(String advTypeLabel) {
+    return '$advTypeLabel';
+  }
+
+  @override
+  String get meshcoreNotifications => 'Сповіщення';
+
+  @override
+  String get meshcoreSettingsAdvertNotificationsTitle =>
+      'Сповіщення про оголошення';
+
+  @override
+  String get meshcoreSettingsAdvertNotificationsSubtitle =>
+      'Сповіщати, коли поблизу зʼявляється новий пер';
+
+  @override
+  String notificationMeshCoreAdvertBatchTitle(int peerCount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      peerCount,
+      locale: localeName,
+      other: 'Почуто $peerCount нових вузлів',
+      one: 'Почуто 1 нового вузла',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notificationMeshCoreAdvertBatchBody(String namesHead, int remaining) {
+    return '$namesHead та ще $remaining';
   }
 
   @override

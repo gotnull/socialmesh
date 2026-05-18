@@ -1027,36 +1027,20 @@ class _ContactCard extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            // D23: `displayName` falls through to the
-                            // redacted pubkey fingerprint when the
-                            // firmware contact entry has an empty name
-                            // field. Only the rare empty-name +
-                            // empty-pubkey case lands on the localized
-                            // "Unknown" placeholder.
-                            contact.displayName.isNotEmpty
-                                ? contact.displayName
-                                : context.l10n.meshcoreContactUnknownName,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ),
-                        // D-Q3: pinned star badge for favorites.
-                        if (contact.isFavorite) ...[
-                          const SizedBox(width: AppTheme.spacing4),
-                          Icon(
-                            Icons.star_rounded,
-                            size: 16,
-                            color: AccentColors.yellow,
-                          ),
-                        ],
-                      ],
+                    Text(
+                      // D23: `displayName` falls through to the
+                      // redacted pubkey fingerprint when the firmware
+                      // contact entry has an empty name field. Only the
+                      // rare empty-name + empty-pubkey case lands on the
+                      // localized "Unknown" placeholder.
+                      contact.displayName.isNotEmpty
+                          ? contact.displayName
+                          : context.l10n.meshcoreContactUnknownName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
                     ),
                     if (lastMessageText != null &&
                         lastMessageText.isNotEmpty) ...[
@@ -1115,6 +1099,14 @@ class _ContactCard extends ConsumerWidget {
                   ],
                 ),
               ),
+              // D-Q3: favorite star sits at the trailing edge before
+              // the unread badge / chevron, matching the Meshtastic
+              // conversation-tile layout in messaging_screen.dart.
+              if (contact.isFavorite)
+                const Padding(
+                  padding: EdgeInsets.only(right: 8),
+                  child: Icon(Icons.star, color: AccentColors.yellow, size: 20),
+                ),
               // Unread badge / chevron
               if (unreadCount > 0)
                 Container(

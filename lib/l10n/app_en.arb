@@ -11349,6 +11349,34 @@
     "@meshcoreTransportStatusToolSubtitle": {
         "description": "Row 50 Tools tile subtitle for the transport status entry"
     },
+    "meshcoreTransportStatusThroughputSection": "Throughput",
+    "@meshcoreTransportStatusThroughputSection": {
+        "description": "Row 50.b SectionTitle for the throughput InfoTable on the Transport screen"
+    },
+    "meshcoreTransportStatusFieldBytesTx": "Bytes sent",
+    "@meshcoreTransportStatusFieldBytesTx": {
+        "description": "Row 50.b InfoTable row label: cumulative bytes transmitted since current connect"
+    },
+    "meshcoreTransportStatusFieldBytesRx": "Bytes received",
+    "@meshcoreTransportStatusFieldBytesRx": {
+        "description": "Row 50.b InfoTable row label: cumulative bytes received since current connect"
+    },
+    "meshcoreTransportStatusFieldRateTx": "TX rate",
+    "@meshcoreTransportStatusFieldRateTx": {
+        "description": "Row 50.b InfoTable row label: rolling 10-second transmit rate"
+    },
+    "meshcoreTransportStatusFieldRateRx": "RX rate",
+    "@meshcoreTransportStatusFieldRateRx": {
+        "description": "Row 50.b InfoTable row label: rolling 10-second receive rate"
+    },
+    "meshcoreTransportStatusFieldSessionDuration": "Session",
+    "@meshcoreTransportStatusFieldSessionDuration": {
+        "description": "Row 50.b InfoTable row label: uptime of the current transport session"
+    },
+    "meshcoreTransportStatusThroughputIdle": "Idle",
+    "@meshcoreTransportStatusThroughputIdle": {
+        "description": "Row 50.b InfoTable value when no bytes have flowed yet on the active session"
+    },
     "meshcoreAdvertisementSentTools": "Advertisement sent",
     "@meshcoreAdvertisementSentTools": {
         "description": "Success snackbar after sending advertisement in tools"
@@ -46193,6 +46221,60 @@
             },
             "channelName": {
                 "type": "String"
+            }
+        }
+    },
+    "notificationMeshCoreAdvertTitle": "New peer: {contactName} ({shortCode})",
+    "@notificationMeshCoreAdvertTitle": {
+        "description": "Row 11.b notification title when a brand-new MeshCore peer is heard via advert",
+        "placeholders": {
+            "contactName": {
+                "type": "String"
+            },
+            "shortCode": {
+                "type": "String"
+            }
+        }
+    },
+    "notificationMeshCoreAdvertBody": "{advTypeLabel}",
+    "@notificationMeshCoreAdvertBody": {
+        "description": "Row 11.b notification body for advert; renders the advert type (chat node / repeater / room / sensor)",
+        "placeholders": {
+            "advTypeLabel": {
+                "type": "String"
+            }
+        }
+    },
+    "meshcoreNotifications": "Notifications",
+    "@meshcoreNotifications": {
+        "description": "Row 11.b MeshCore Settings section header for the notification toggles"
+    },
+    "meshcoreSettingsAdvertNotificationsTitle": "Advert notifications",
+    "@meshcoreSettingsAdvertNotificationsTitle": {
+        "description": "Row 11.b MeshCore Settings row title for the advert-notifications toggle"
+    },
+    "meshcoreSettingsAdvertNotificationsSubtitle": "Notify when a new peer is heard nearby",
+    "@meshcoreSettingsAdvertNotificationsSubtitle": {
+        "description": "Row 11.b MeshCore Settings row subtitle for the advert-notifications toggle"
+    },
+    "notificationMeshCoreAdvertBatchTitle": "{peerCount, plural, =1{1 new peer heard} other{{peerCount} new peers heard}}",
+    "@notificationMeshCoreAdvertBatchTitle": {
+        "description": "Row 11.c batch summary notification title; aggregates adverts that were suppressed during the per-event cooldown window",
+        "placeholders": {
+            "peerCount": {
+                "type": "int"
+            }
+        }
+    },
+    "notificationMeshCoreAdvertBatchBody": "{namesHead} and {remaining} more",
+    "@notificationMeshCoreAdvertBatchBody": {
+        "description": "Row 11.c batch summary notification body for >3 peers; lists the first three names then a remainder count",
+        "placeholders": {
+            "namesHead": {
+                "type": "String"
+            },
+            "remaining": {
+                "type": "int"
             }
         }
     },

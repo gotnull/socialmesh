@@ -8620,6 +8620,27 @@ class AppLocalizationsEs extends AppLocalizations {
       'Estado de conexión, tipo de transporte, detalles del endpoint';
 
   @override
+  String get meshcoreTransportStatusThroughputSection => 'Rendimiento';
+
+  @override
+  String get meshcoreTransportStatusFieldBytesTx => 'Bytes enviados';
+
+  @override
+  String get meshcoreTransportStatusFieldBytesRx => 'Bytes recibidos';
+
+  @override
+  String get meshcoreTransportStatusFieldRateTx => 'Tasa TX';
+
+  @override
+  String get meshcoreTransportStatusFieldRateRx => 'Tasa RX';
+
+  @override
+  String get meshcoreTransportStatusFieldSessionDuration => 'Sesión';
+
+  @override
+  String get meshcoreTransportStatusThroughputIdle => 'Inactivo';
+
+  @override
   String get meshcoreAdvertisementSentTools => 'Anuncio enviado';
 
   @override
@@ -35032,6 +35053,43 @@ class AppLocalizationsEs extends AppLocalizations {
     String channelName,
   ) {
     return '$senderName ($shortCode) en $channelName';
+  }
+
+  @override
+  String notificationMeshCoreAdvertTitle(String contactName, String shortCode) {
+    return 'Nuevo par: $contactName ($shortCode)';
+  }
+
+  @override
+  String notificationMeshCoreAdvertBody(String advTypeLabel) {
+    return '$advTypeLabel';
+  }
+
+  @override
+  String get meshcoreNotifications => 'Notificaciones';
+
+  @override
+  String get meshcoreSettingsAdvertNotificationsTitle =>
+      'Notificaciones de anuncios';
+
+  @override
+  String get meshcoreSettingsAdvertNotificationsSubtitle =>
+      'Avisar cuando se detecte un nuevo par cerca';
+
+  @override
+  String notificationMeshCoreAdvertBatchTitle(int peerCount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      peerCount,
+      locale: localeName,
+      other: '$peerCount nuevos peers detectados',
+      one: '1 nuevo peer detectado',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notificationMeshCoreAdvertBatchBody(String namesHead, int remaining) {
+    return '$namesHead y $remaining más';
   }
 
   @override

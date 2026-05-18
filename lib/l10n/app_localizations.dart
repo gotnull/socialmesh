@@ -14982,6 +14982,48 @@ abstract class AppLocalizations {
   /// **'Connection state, transport type, endpoint details'**
   String get meshcoreTransportStatusToolSubtitle;
 
+  /// Row 50.b SectionTitle for the throughput InfoTable on the Transport screen
+  ///
+  /// In en, this message translates to:
+  /// **'Throughput'**
+  String get meshcoreTransportStatusThroughputSection;
+
+  /// Row 50.b InfoTable row label: cumulative bytes transmitted since current connect
+  ///
+  /// In en, this message translates to:
+  /// **'Bytes sent'**
+  String get meshcoreTransportStatusFieldBytesTx;
+
+  /// Row 50.b InfoTable row label: cumulative bytes received since current connect
+  ///
+  /// In en, this message translates to:
+  /// **'Bytes received'**
+  String get meshcoreTransportStatusFieldBytesRx;
+
+  /// Row 50.b InfoTable row label: rolling 10-second transmit rate
+  ///
+  /// In en, this message translates to:
+  /// **'TX rate'**
+  String get meshcoreTransportStatusFieldRateTx;
+
+  /// Row 50.b InfoTable row label: rolling 10-second receive rate
+  ///
+  /// In en, this message translates to:
+  /// **'RX rate'**
+  String get meshcoreTransportStatusFieldRateRx;
+
+  /// Row 50.b InfoTable row label: uptime of the current transport session
+  ///
+  /// In en, this message translates to:
+  /// **'Session'**
+  String get meshcoreTransportStatusFieldSessionDuration;
+
+  /// Row 50.b InfoTable value when no bytes have flowed yet on the active session
+  ///
+  /// In en, this message translates to:
+  /// **'Idle'**
+  String get meshcoreTransportStatusThroughputIdle;
+
   /// Success snackbar after sending advertisement in tools
   ///
   /// In en, this message translates to:
@@ -60454,6 +60496,48 @@ abstract class AppLocalizations {
     String shortCode,
     String channelName,
   );
+
+  /// Row 11.b notification title when a brand-new MeshCore peer is heard via advert
+  ///
+  /// In en, this message translates to:
+  /// **'New peer: {contactName} ({shortCode})'**
+  String notificationMeshCoreAdvertTitle(String contactName, String shortCode);
+
+  /// Row 11.b notification body for advert; renders the advert type (chat node / repeater / room / sensor)
+  ///
+  /// In en, this message translates to:
+  /// **'{advTypeLabel}'**
+  String notificationMeshCoreAdvertBody(String advTypeLabel);
+
+  /// Row 11.b MeshCore Settings section header for the notification toggles
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get meshcoreNotifications;
+
+  /// Row 11.b MeshCore Settings row title for the advert-notifications toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Advert notifications'**
+  String get meshcoreSettingsAdvertNotificationsTitle;
+
+  /// Row 11.b MeshCore Settings row subtitle for the advert-notifications toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Notify when a new peer is heard nearby'**
+  String get meshcoreSettingsAdvertNotificationsSubtitle;
+
+  /// Row 11.c batch summary notification title; aggregates adverts that were suppressed during the per-event cooldown window
+  ///
+  /// In en, this message translates to:
+  /// **'{peerCount, plural, =1{1 new peer heard} other{{peerCount} new peers heard}}'**
+  String notificationMeshCoreAdvertBatchTitle(int peerCount);
+
+  /// Row 11.c batch summary notification body for >3 peers; lists the first three names then a remainder count
+  ///
+  /// In en, this message translates to:
+  /// **'{namesHead} and {remaining} more'**
+  String notificationMeshCoreAdvertBatchBody(String namesHead, int remaining);
 
   /// Android notification channel description for node discovery
   ///

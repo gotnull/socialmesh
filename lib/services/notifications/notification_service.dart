@@ -1233,6 +1233,156 @@ class NotificationService {
     );
   }
 
+  /// Row 11.b: fire a notification when a brand-new MeshCore peer is
+  /// heard via 0x8A advertisement. Uses the `meshcore_adverts` Android
+  /// channel (registered eagerly in Row 11 phase 1) so users can set a
+  /// distinct ringtone in Android Settings.
+  ///
+  /// [contactName] is the advertised display name; [pubKeyHex] is the
+  /// full 64-char hex pubkey; [advTypeLabel] is the localised type
+  /// string (chat node / repeater / room / sensor) or null when the
+  /// advert was a minimal 0x80 ping without type info.
+  ///
+  /// Rate limiting is enforced at the call site
+  /// (`MeshCoreNotificationRateLimiter`), not here, so this method is
+  /// safe to call freely and the gating policy lives in one place.
+  Future<void> showMeshCoreAdvertNotification({
+    required String contactName,
+    required String pubKeyHex,
+    String? advTypeLabel,
+  }) async {
+    if (!_initialized) {
+      AppLogging.notifications(
+        '🔔 NotificationService not initialized, skipping MeshCore advert',
+      );
+      return;
+    }
+    final androidDetails = AndroidNotificationDetails(
+      'meshcore_adverts',
+      'MeshCore Adverts', // lint-allow: hardcoded-string
+      channelDescription: _l10n.meshcoreNotificationChannelAdvertsDescription,
+      // Adverts are background-class signals: discovery context, not a
+      // direct user-addressed message. `defaultImportance` matches the
+      // channel registration in Row 11 phase 1.
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+      icon: '@mipmap/ic_launcher',
+      groupKey: 'mesh_adverts',
+    );
+    final iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: false,
+      presentSound: false,
+    );
+    final notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+      macOS: iosDetails,
+    );
+    final shortCode = pubKeyHex.length >= 8
+        ? pubKeyHex.substring(0, 8).toUpperCase()
+        : pubKeyHex.toUpperCase();
+    // Notification id derived from first 4 bytes of pubkey + 4M offset
+    // so notifications from the same peer coalesce, and the 4M base
+    // keeps clear of the DM (3M+) and channel (2.5M+) ranges.
+    final keyBytes = pubKeyHex.length >= 8
+        ? int.tryParse(pubKeyHex.substring(0, 8), radix: 16) ?? 0
+        : 0;
+    final notificationId = (keyBytes & 0x7FFFFFFF) ~/ 16 + 4000000;
+    final body = advTypeLabel == null || advTypeLabel.isEmpty
+        ? ''
+        : _l10n.notificationMeshCoreAdvertBody(advTypeLabel);
+    try {
+      await _notifications.show(
+        id: notificationId,
+        title: _l10n.notificationMeshCoreAdvertTitle(contactName, shortCode),
+        body: body,
+        notificationDetails: notificationDetails,
+        payload: 'meshcore-advert:$pubKeyHex',
+      );
+      AppLogging.notifications(
+        '🔔 Showed MeshCore advert notification: $contactName ($shortCode)',
+      );
+    } catch (e) {
+      AppLogging.notifications(
+        '🔔 Error showing MeshCore advert notification: $e',
+      );
+      rethrow;
+    }
+  }
+
+  /// Row 11.c: surface a single batch-summary notification that rolls up
+  /// every advert suppressed by the per-event rate limiter during the
+  /// last cooldown window. Fires on the dedicated `meshcore_batch_summary`
+  /// channel (registered in Row 11 phase 1) so users can give it a
+  /// distinct ringtone via Android Settings.
+  ///
+  /// [peerNames] is in arrival order. The body lists up to three names
+  /// then truncates with "and N more" when needed so the lock-screen
+  /// banner stays scannable.
+  Future<void> showMeshCoreAdvertBatchSummaryNotification({
+    required int peerCount,
+    required List<String> peerNames,
+  }) async {
+    if (!_initialized) {
+      AppLogging.notifications(
+        '🔔 NotificationService not initialized, '
+        'skipping MeshCore advert batch summary',
+      );
+      return;
+    }
+    final androidDetails = AndroidNotificationDetails(
+      'meshcore_batch_summary',
+      'MeshCore Activity Summary', // lint-allow: hardcoded-string
+      channelDescription:
+          _l10n.meshcoreNotificationChannelBatchSummaryDescription,
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+      icon: '@mipmap/ic_launcher',
+      groupKey: 'mesh_advert_summary',
+    );
+    final iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: false,
+      presentSound: false,
+    );
+    final notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+      macOS: iosDetails,
+    );
+    // Single stable id for the summary channel so subsequent summaries
+    // replace the in-tray entry rather than stacking.
+    const notificationId = 5000000;
+    final title = _l10n.notificationMeshCoreAdvertBatchTitle(peerCount);
+    final body = _composeBatchSummaryBody(peerNames);
+    try {
+      await _notifications.show(
+        id: notificationId,
+        title: title,
+        body: body,
+        notificationDetails: notificationDetails,
+        payload: 'meshcore-advert-summary:$peerCount',
+      );
+      AppLogging.notifications(
+        '🔔 Showed MeshCore advert batch summary: count=$peerCount',
+      );
+    } catch (e) {
+      AppLogging.notifications(
+        '🔔 Error showing MeshCore advert batch summary: $e',
+      );
+      rethrow;
+    }
+  }
+
+  String _composeBatchSummaryBody(List<String> peerNames) {
+    if (peerNames.isEmpty) return '';
+    if (peerNames.length <= 3) return peerNames.join(', ');
+    final head = peerNames.take(3).join(', ');
+    final remaining = peerNames.length - 3;
+    return _l10n.notificationMeshCoreAdvertBatchBody(head, remaining);
+  }
+
   /// Cancel all notifications
   Future<void> cancelAll() async {
     await _notifications.cancelAll();

@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/logging.dart';
+import '../l10n/app_localizations.dart';
 import '../core/meshcore_constants.dart';
 import '../core/transport.dart';
 import '../models/mesh_device.dart';
@@ -39,8 +40,12 @@ import '../services/meshcore/routing/meshcore_send_confirmation_router.dart';
 import '../services/meshcore/storage/meshcore_channel_prefs_store.dart';
 import '../services/meshcore/storage/meshcore_message_store.dart';
 import '../services/meshcore/storage/meshcore_path_history_store.dart';
+import '../services/notifications/meshcore_advert_batcher.dart';
+import '../services/notifications/meshcore_notification_rate_limiter.dart';
+import '../services/notifications/notification_service.dart';
 import 'app_providers.dart';
 import 'connection_providers.dart';
+import 'meshcore_notification_settings.dart';
 
 /// Provider for the connection coordinator singleton.
 ///
@@ -2601,6 +2606,20 @@ class HeardAdvert {
 /// extra work. Re-emits a fresh `List.unmodifiable` view on every
 /// mutation so Riverpod's identity-based equality triggers downstream
 /// rebuilds reliably.
+/// Row 11.b: per-process rate limiter shared across all MeshCore
+/// notification categories. Held at module level (not inside the
+/// notifier) so its state survives notifier rebuilds and so multiple
+/// surfaces can share categories without coordination.
+final MeshCoreNotificationRateLimiter _meshCoreNotificationRateLimiter =
+    MeshCoreNotificationRateLimiter(
+      defaultCooldown: const Duration(minutes: 5),
+    );
+
+/// Row 11.c: aggregation buffer for adverts the rate limiter suppressed.
+/// Drained on the next eligible advert and surfaced as a single batch
+/// summary notification on the `meshcore_batch_summary` channel.
+final MeshCoreAdvertBatcher _meshCoreAdvertBatcher = MeshCoreAdvertBatcher();
+
 class MeshCoreDiscoveredAdvertsNotifier extends Notifier<List<HeardAdvert>> {
   /// Hard cap. FIFO eviction by `lastHeard` (oldest evicted first when
   /// the cap is exceeded).
@@ -2637,6 +2656,107 @@ class MeshCoreDiscoveredAdvertsNotifier extends Notifier<List<HeardAdvert>> {
     );
     _evictIfOver();
     _emit();
+
+    // Row 11.b: fire an advert notification when this is the first
+    // time we hear this peer in the current session, gated by the
+    // user's "Advert notifications" toggle and the per-category rate
+    // limiter so a chatty radio doesn't flood the lock screen.
+    if (existing == null) {
+      _maybeFireAdvertNotification(info);
+    }
+  }
+
+  void _maybeFireAdvertNotification(MeshCoreContactInfo info) {
+    final notificationsEnabled = ref
+        .read(meshCoreAdvertNotificationsEnabledProvider)
+        .maybeWhen(data: (v) => v, orElse: () => true);
+    if (!notificationsEnabled) {
+      // Toggle is OFF: discard anything currently buffered so a later
+      // re-enable doesn't surface stale peers from the previous window.
+      _meshCoreAdvertBatcher.clear();
+      return;
+    }
+    final displayName = info.name.isEmpty ? info.publicKeyHex : info.name;
+    if (!_meshCoreNotificationRateLimiter.tryFire('meshcore_adverts')) {
+      // Row 11.c: instead of dropping, buffer the suppressed peer.
+      // It will surface in the batch summary on the next eligible
+      // fire when the rate limiter window elapses.
+      _meshCoreAdvertBatcher.add(
+        MeshCoreAdvertBatchEntry(
+          pubKeyHex: info.publicKeyHex,
+          displayName: displayName,
+          heardAt: DateTime.now(),
+        ),
+      );
+      AppLogging.meshcore(
+        'event=discovery.notification.rate_limited '
+        'pubkey=${AppLogging.publicKeyFingerprint(info.publicKey)} '
+        'buffered=${_meshCoreAdvertBatcher.pendingCount}',
+      );
+      return;
+    }
+    // Rate limiter allowed the fire. If anything is buffered, this is a
+    // batch trigger: include the trigger as the final entry and surface
+    // a single summary covering every suppressed peer plus the trigger.
+    if (_meshCoreAdvertBatcher.isNotEmpty) {
+      _meshCoreAdvertBatcher.add(
+        MeshCoreAdvertBatchEntry(
+          pubKeyHex: info.publicKeyHex,
+          displayName: displayName,
+          heardAt: DateTime.now(),
+        ),
+      );
+      final drained = _meshCoreAdvertBatcher.drain();
+      AppLogging.meshcore(
+        'event=discovery.notification.batch_summary '
+        'count=${drained.length}',
+      );
+      NotificationService()
+          .showMeshCoreAdvertBatchSummaryNotification(
+            peerCount: drained.length,
+            peerNames: drained.map((e) => e.displayName).toList(),
+          )
+          .catchError((Object e) {
+            AppLogging.meshcore(
+              'event=discovery.notification.error reason=${e.runtimeType}',
+              error: true,
+            );
+          });
+      return;
+    }
+    final advTypeLabel = _advTypeLabelForNotification(info.advType);
+    NotificationService()
+        .showMeshCoreAdvertNotification(
+          contactName: displayName,
+          pubKeyHex: info.publicKeyHex,
+          advTypeLabel: advTypeLabel,
+        )
+        .catchError((Object e) {
+          AppLogging.meshcore(
+            'event=discovery.notification.error reason=${e.runtimeType}',
+            error: true,
+          );
+        });
+  }
+
+  String? _advTypeLabelForNotification(int advType) {
+    // The notifier doesn't carry a BuildContext, so resolve to a
+    // locale-derived label via lookupAppLocalizations off the platform
+    // dispatcher. Acceptable for a notification body; the chat UI uses
+    // contact_l10n.dart for in-app type rendering.
+    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    switch (advType) {
+      case MeshCoreAdvType.chat:
+        return l10n.meshcoreChatNode;
+      case MeshCoreAdvType.repeater:
+        return l10n.meshcoreRepeaterNode;
+      case MeshCoreAdvType.room:
+        return l10n.meshcoreRoomNode;
+      case MeshCoreAdvType.sensor:
+        return l10n.meshcoreSensorNode;
+      default:
+        return null;
+    }
   }
 
   /// Bump `lastHeard` for an existing entry, OR (if the pubkey is not

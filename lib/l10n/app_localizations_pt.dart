@@ -8580,6 +8580,27 @@ class AppLocalizationsPt extends AppLocalizations {
       'Estado da conexão, tipo de transporte, detalhes do endpoint';
 
   @override
+  String get meshcoreTransportStatusThroughputSection => 'Taxa';
+
+  @override
+  String get meshcoreTransportStatusFieldBytesTx => 'Bytes enviados';
+
+  @override
+  String get meshcoreTransportStatusFieldBytesRx => 'Bytes recebidos';
+
+  @override
+  String get meshcoreTransportStatusFieldRateTx => 'Taxa TX';
+
+  @override
+  String get meshcoreTransportStatusFieldRateRx => 'Taxa RX';
+
+  @override
+  String get meshcoreTransportStatusFieldSessionDuration => 'Sessão';
+
+  @override
+  String get meshcoreTransportStatusThroughputIdle => 'Inativo';
+
+  @override
   String get meshcoreAdvertisementSentTools => 'Anúncio enviado';
 
   @override
@@ -34867,6 +34888,43 @@ class AppLocalizationsPt extends AppLocalizations {
     String channelName,
   ) {
     return '$senderName ($shortCode) em $channelName';
+  }
+
+  @override
+  String notificationMeshCoreAdvertTitle(String contactName, String shortCode) {
+    return 'Novo peer: $contactName ($shortCode)';
+  }
+
+  @override
+  String notificationMeshCoreAdvertBody(String advTypeLabel) {
+    return '$advTypeLabel';
+  }
+
+  @override
+  String get meshcoreNotifications => 'Notificações';
+
+  @override
+  String get meshcoreSettingsAdvertNotificationsTitle =>
+      'Notificações de anúncios';
+
+  @override
+  String get meshcoreSettingsAdvertNotificationsSubtitle =>
+      'Avisar quando um novo peer for ouvido nas proximidades';
+
+  @override
+  String notificationMeshCoreAdvertBatchTitle(int peerCount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      peerCount,
+      locale: localeName,
+      other: '$peerCount novos peers detectados',
+      one: '1 novo peer detectado',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notificationMeshCoreAdvertBatchBody(String namesHead, int remaining) {
+    return '$namesHead e mais $remaining';
   }
 
   @override

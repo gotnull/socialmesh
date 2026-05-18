@@ -8493,6 +8493,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'Connection state, transport type, endpoint details';
 
   @override
+  String get meshcoreTransportStatusThroughputSection => 'Throughput';
+
+  @override
+  String get meshcoreTransportStatusFieldBytesTx => 'Bytes sent';
+
+  @override
+  String get meshcoreTransportStatusFieldBytesRx => 'Bytes received';
+
+  @override
+  String get meshcoreTransportStatusFieldRateTx => 'TX rate';
+
+  @override
+  String get meshcoreTransportStatusFieldRateRx => 'RX rate';
+
+  @override
+  String get meshcoreTransportStatusFieldSessionDuration => 'Session';
+
+  @override
+  String get meshcoreTransportStatusThroughputIdle => 'Idle';
+
+  @override
   String get meshcoreAdvertisementSentTools => 'Advertisement sent';
 
   @override
@@ -34494,6 +34515,42 @@ class AppLocalizationsEn extends AppLocalizations {
     String channelName,
   ) {
     return '$senderName ($shortCode) in $channelName';
+  }
+
+  @override
+  String notificationMeshCoreAdvertTitle(String contactName, String shortCode) {
+    return 'New peer: $contactName ($shortCode)';
+  }
+
+  @override
+  String notificationMeshCoreAdvertBody(String advTypeLabel) {
+    return '$advTypeLabel';
+  }
+
+  @override
+  String get meshcoreNotifications => 'Notifications';
+
+  @override
+  String get meshcoreSettingsAdvertNotificationsTitle => 'Advert notifications';
+
+  @override
+  String get meshcoreSettingsAdvertNotificationsSubtitle =>
+      'Notify when a new peer is heard nearby';
+
+  @override
+  String notificationMeshCoreAdvertBatchTitle(int peerCount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      peerCount,
+      locale: localeName,
+      other: '$peerCount new peers heard',
+      one: '1 new peer heard',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notificationMeshCoreAdvertBatchBody(String namesHead, int remaining) {
+    return '$namesHead and $remaining more';
   }
 
   @override

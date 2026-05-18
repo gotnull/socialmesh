@@ -76,6 +76,48 @@ void main() {
       final bad = Uint8List.fromList(<int>[0, 0, 0, 1, 0xFF, 0xFE]);
       expect(SipDmMessages.decodeSecureDmText(bad), isNull);
     });
+
+    test('rejects body that sanitizes to empty (control chars only)', () {
+      // timestamp + a single 0x00 byte — UTF-8 decodes to "\x00" which
+      // sanitizeExternalText strips to "". decodeDm must reject so that
+      // no blank-bodied SipDmMessage propagates downstream.
+      final controlOnly = Uint8List.fromList(<int>[0, 0, 0, 1, 0x00]);
+      expect(SipDmMessages.decodeSecureDmText(controlOnly), isNull);
+    });
+
+    test('rejects body that sanitizes to whitespace only', () {
+      // timestamp + spaces + tab + newline. After sanitizer (which keeps
+      // tab/newline) the result is whitespace-only; decodeDm must still
+      // drop because the trimmed body is empty.
+      final whitespaceOnly = Uint8List.fromList(<int>[
+        0,
+        0,
+        0,
+        1,
+        0x20,
+        0x09,
+        0x0A,
+        0x20,
+      ]);
+      expect(SipDmMessages.decodeSecureDmText(whitespaceOnly), isNull);
+    });
+
+    test('valid emoji body survives the sanitization guard', () {
+      // 👋 = U+1F44B in UTF-8: F0 9F 91 8B
+      final body = Uint8List.fromList(<int>[
+        0,
+        0,
+        0,
+        1,
+        0xF0,
+        0x9F,
+        0x91,
+        0x8B,
+      ]);
+      final decoded = SipDmMessages.decodeSecureDmText(body);
+      expect(decoded, isNotNull);
+      expect(decoded!.message.text, '👋');
+    });
   });
 
   group('SipDmMessages.encodeSecureReaction', () {

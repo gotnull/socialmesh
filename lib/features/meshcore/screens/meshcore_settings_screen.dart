@@ -23,6 +23,7 @@ import '../../../models/meshcore_auto_add_config.dart';
 import '../../../models/meshcore_auto_route_settings.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_chat_text_scale_provider.dart';
+import '../../../providers/meshcore_notification_settings.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../services/meshcore/storage/meshcore_chat_text_scale_store.dart';
 import '../../../services/meshcore/protocol/meshcore_messages.dart';
@@ -204,6 +205,16 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
                   title: context.l10n.meshcoreAutoRouteSectionTitle,
                 ),
                 _buildAutoRouteSection(context),
+                SizedBox(height: AppTheme.spacing16),
+                // Row 11.b: per-category notification toggles for
+                // MeshCore signals. Phase 2 ships only the advert
+                // toggle; future phases (batch summary, presence) add
+                // tiles in the same section without churning the
+                // section header.
+                SettingsSectionHeader(
+                  title: context.l10n.meshcoreNotifications,
+                ),
+                _buildNotificationsSection(context),
                 SizedBox(height: AppTheme.spacing16),
                 SettingsSectionHeader(
                   title: context.l10n.meshcoreChatAppearanceSectionTitle,
@@ -535,6 +546,28 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
   /// Discrete steps via [ChipSelector]; the active value reflects
   /// [meshCoreChatTextScaleProvider] and tapping a chip writes the
   /// new value via the notifier (which clamps + persists).
+  /// Row 11.b: per-category notification toggle section. Currently
+  /// holds only the advert notifications switch; expandable to future
+  /// notification categories (batch summary, presence pings) without
+  /// changing the section header.
+  Widget _buildNotificationsSection(BuildContext context) {
+    final l10n = context.l10n;
+    final enabledAsync = ref.watch(meshCoreAdvertNotificationsEnabledProvider);
+    final enabled = enabledAsync.value ?? true;
+    final notifier = ref.read(
+      meshCoreAdvertNotificationsEnabledProvider.notifier,
+    );
+    return SettingsTile(
+      key: const ValueKey('meshcore-advert-notifications-enabled'),
+      icon: Icons.notifications_active_rounded,
+      iconColor: AccentColors.cyan,
+      title: l10n.meshcoreSettingsAdvertNotificationsTitle,
+      subtitle: l10n.meshcoreSettingsAdvertNotificationsSubtitle,
+      trailing: ThemedSwitch(value: enabled, onChanged: notifier.setEnabled),
+      onTap: () => notifier.setEnabled(!enabled),
+    );
+  }
+
   Widget _buildChatAppearanceSection(BuildContext context) {
     final l10n = context.l10n;
     final scaleAsync = ref.watch(meshCoreChatTextScaleProvider);

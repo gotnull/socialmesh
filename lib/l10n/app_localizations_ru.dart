@@ -8583,6 +8583,28 @@ class AppLocalizationsRu extends AppLocalizations {
       'Состояние соединения, тип транспорта, детали конечной точки';
 
   @override
+  String get meshcoreTransportStatusThroughputSection =>
+      'Пропускная способность';
+
+  @override
+  String get meshcoreTransportStatusFieldBytesTx => 'Байты отправлены';
+
+  @override
+  String get meshcoreTransportStatusFieldBytesRx => 'Байты получены';
+
+  @override
+  String get meshcoreTransportStatusFieldRateTx => 'Скорость TX';
+
+  @override
+  String get meshcoreTransportStatusFieldRateRx => 'Скорость RX';
+
+  @override
+  String get meshcoreTransportStatusFieldSessionDuration => 'Сессия';
+
+  @override
+  String get meshcoreTransportStatusThroughputIdle => 'Простой';
+
+  @override
   String get meshcoreAdvertisementSentTools => 'Объявление отправлено';
 
   @override
@@ -34886,6 +34908,42 @@ class AppLocalizationsRu extends AppLocalizations {
     String channelName,
   ) {
     return '$senderName ($shortCode) в $channelName';
+  }
+
+  @override
+  String notificationMeshCoreAdvertTitle(String contactName, String shortCode) {
+    return 'Новый пир: $contactName ($shortCode)';
+  }
+
+  @override
+  String notificationMeshCoreAdvertBody(String advTypeLabel) {
+    return '$advTypeLabel';
+  }
+
+  @override
+  String get meshcoreNotifications => 'Уведомления';
+
+  @override
+  String get meshcoreSettingsAdvertNotificationsTitle => 'Уведомления о пирах';
+
+  @override
+  String get meshcoreSettingsAdvertNotificationsSubtitle =>
+      'Уведомлять о появлении нового пира поблизости';
+
+  @override
+  String notificationMeshCoreAdvertBatchTitle(int peerCount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      peerCount,
+      locale: localeName,
+      other: 'Услышано $peerCount новых пиров',
+      one: 'Услышан 1 новый пир',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notificationMeshCoreAdvertBatchBody(String namesHead, int remaining) {
+    return '$namesHead и ещё $remaining';
   }
 
   @override

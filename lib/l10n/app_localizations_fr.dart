@@ -8648,6 +8648,27 @@ class AppLocalizationsFr extends AppLocalizations {
       'État de connexion, type de transport, détails du point de terminaison';
 
   @override
+  String get meshcoreTransportStatusThroughputSection => 'Débit';
+
+  @override
+  String get meshcoreTransportStatusFieldBytesTx => 'Octets envoyés';
+
+  @override
+  String get meshcoreTransportStatusFieldBytesRx => 'Octets reçus';
+
+  @override
+  String get meshcoreTransportStatusFieldRateTx => 'Débit TX';
+
+  @override
+  String get meshcoreTransportStatusFieldRateRx => 'Débit RX';
+
+  @override
+  String get meshcoreTransportStatusFieldSessionDuration => 'Session';
+
+  @override
+  String get meshcoreTransportStatusThroughputIdle => 'Inactif';
+
+  @override
   String get meshcoreAdvertisementSentTools => 'Annonce envoyée';
 
   @override
@@ -35135,6 +35156,43 @@ class AppLocalizationsFr extends AppLocalizations {
     String channelName,
   ) {
     return '$senderName ($shortCode) dans $channelName';
+  }
+
+  @override
+  String notificationMeshCoreAdvertTitle(String contactName, String shortCode) {
+    return 'Nouveau pair : $contactName ($shortCode)';
+  }
+
+  @override
+  String notificationMeshCoreAdvertBody(String advTypeLabel) {
+    return '$advTypeLabel';
+  }
+
+  @override
+  String get meshcoreNotifications => 'Notifications';
+
+  @override
+  String get meshcoreSettingsAdvertNotificationsTitle =>
+      'Notifications d\'annonces';
+
+  @override
+  String get meshcoreSettingsAdvertNotificationsSubtitle =>
+      'Avertir lorsqu\'un nouveau pair est entendu à proximité';
+
+  @override
+  String notificationMeshCoreAdvertBatchTitle(int peerCount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      peerCount,
+      locale: localeName,
+      other: '$peerCount nouveaux pairs détectés',
+      one: '1 nouveau pair détecté',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notificationMeshCoreAdvertBatchBody(String namesHead, int remaining) {
+    return '$namesHead et $remaining de plus';
   }
 
   @override

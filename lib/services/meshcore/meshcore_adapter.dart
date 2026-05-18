@@ -8,8 +8,17 @@ import '../../core/transport.dart';
 import '../../models/mesh_device.dart';
 import 'mesh_device_adapter.dart';
 import 'mesh_transport.dart';
+import 'meshcore_throughput_counter.dart';
 import 'protocol/meshcore_frame.dart';
 import 'protocol/meshcore_session.dart';
+
+/// Row 50.b: per-process throughput counter for the active MeshCore
+/// transport. Held at module scope so [_MeshTransportAdapter] (the
+/// chokepoint every BLE / USB / TCP byte flows through) can record
+/// from one place. Reset on transport disconnect by
+/// [MeshCoreAdapter.disconnect] / [MeshCoreAdapter.dispose].
+final MeshCoreThroughputCounter meshCoreThroughputCounter =
+    MeshCoreThroughputCounter();
 
 // MeshCore protocol adapter implementation.
 //
@@ -284,6 +293,10 @@ class MeshCoreAdapter implements MeshDeviceAdapter {
     await _transport.disconnect();
     _deviceInfo = null;
     _session?.clearPendingResponses();
+    // Row 50.b: throughput counter represents "since current connect"
+    // - resetting on disconnect keeps the Transport screen aligned
+    // with that label.
+    meshCoreThroughputCounter.reset();
   }
 
   @override
@@ -304,11 +317,16 @@ class _MeshTransportAdapter implements MeshCoreTransport {
   _MeshTransportAdapter(this._transport);
 
   @override
-  Stream<Uint8List> get rawRxStream =>
-      _transport.dataStream.map((data) => Uint8List.fromList(data));
+  Stream<Uint8List> get rawRxStream => _transport.dataStream.map((data) {
+    meshCoreThroughputCounter.recordRx(data.length);
+    return Uint8List.fromList(data);
+  });
 
   @override
-  Future<void> sendRaw(Uint8List data) => _transport.sendBytes(data);
+  Future<void> sendRaw(Uint8List data) {
+    meshCoreThroughputCounter.recordTx(data.length);
+    return _transport.sendBytes(data);
+  }
 
   @override
   bool get isConnected => _transport.isConnected;

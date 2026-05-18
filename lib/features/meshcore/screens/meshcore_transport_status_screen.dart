@@ -11,16 +11,16 @@ import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/info_table.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/meshcore_throughput_provider.dart';
 import '../../../services/meshcore/connection_coordinator.dart';
+import '../../../services/meshcore/meshcore_throughput_counter.dart';
 import '../../navigation/meshcore_shell.dart';
 
 /// Row 50: dedicated transport status screen for the active MeshCore
-/// link. Surfaces transport type, connection state, and endpoint info
-/// (host+port for TCP, device path for USB, redacted device id for BLE).
-///
-/// Throughput counters are not yet exposed by the transport layer;
-/// when they land they'll appear as a third section here. Tracked as
-/// Row 50.b in the parity audit.
+/// link. Surfaces transport type, connection state, endpoint info
+/// (host+port for TCP, device path for USB, redacted device id for BLE),
+/// and live throughput (Row 50.b: bytes RX/TX since current connect +
+/// rolling 10-second rate).
 class MeshCoreTransportStatusScreen extends ConsumerWidget {
   const MeshCoreTransportStatusScreen({super.key});
 
@@ -98,6 +98,12 @@ class MeshCoreTransportStatusScreen extends ConsumerWidget {
                   tcpId,
                 ),
               ),
+              const SizedBox(height: AppTheme.spacing20),
+              SectionTitle(
+                title: l10n.meshcoreTransportStatusThroughputSection,
+              ),
+              const SizedBox(height: AppTheme.spacing8),
+              _ThroughputCard(),
             ]),
           ),
         ),
@@ -198,5 +204,82 @@ class MeshCoreTransportStatusScreen extends ConsumerWidget {
     if (raw == null || raw.isEmpty) return '-';
     if (raw.length <= 4) return raw;
     return '…${raw.substring(raw.length - 4)}';
+  }
+}
+
+/// Row 50.b: live throughput InfoTable. Watches the 1 Hz snapshot
+/// stream and renders cumulative bytes + rolling 10-second rate.
+/// Shows "Idle" when no bytes have flowed yet on the active session.
+class _ThroughputCard extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final snapshotAsync = ref.watch(meshCoreThroughputSnapshotProvider);
+    final snapshot = snapshotAsync.value ?? MeshCoreThroughputSnapshot.zero;
+
+    return InfoTable(
+      rows: [
+        InfoTableRow(
+          label: l10n.meshcoreTransportStatusFieldBytesTx,
+          value: snapshot.hasActivity
+              ? _formatBytes(snapshot.bytesTx)
+              : l10n.meshcoreTransportStatusThroughputIdle,
+          icon: Icons.upload_rounded,
+          iconColor: AccentColors.cyan,
+        ),
+        InfoTableRow(
+          label: l10n.meshcoreTransportStatusFieldBytesRx,
+          value: snapshot.hasActivity
+              ? _formatBytes(snapshot.bytesRx)
+              : l10n.meshcoreTransportStatusThroughputIdle,
+          icon: Icons.download_rounded,
+          iconColor: AccentColors.cyan,
+        ),
+        InfoTableRow(
+          label: l10n.meshcoreTransportStatusFieldRateTx,
+          value: _formatRate(snapshot.txBytesPerSecond),
+          icon: Icons.speed_rounded,
+        ),
+        InfoTableRow(
+          label: l10n.meshcoreTransportStatusFieldRateRx,
+          value: _formatRate(snapshot.rxBytesPerSecond),
+          icon: Icons.speed_rounded,
+        ),
+        InfoTableRow(
+          label: l10n.meshcoreTransportStatusFieldSessionDuration,
+          value: _formatDuration(snapshot.sessionSeconds),
+          icon: Icons.timer_outlined,
+        ),
+      ],
+    );
+  }
+
+  static String _formatBytes(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) {
+      return '${(bytes / 1024).toStringAsFixed(1)} KiB';
+    }
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(2)} MiB';
+  }
+
+  static String _formatRate(double bytesPerSecond) {
+    if (bytesPerSecond < 1) return '0 B/s';
+    if (bytesPerSecond < 1024) {
+      return '${bytesPerSecond.toStringAsFixed(0)} B/s';
+    }
+    if (bytesPerSecond < 1024 * 1024) {
+      return '${(bytesPerSecond / 1024).toStringAsFixed(1)} KiB/s';
+    }
+    return '${(bytesPerSecond / (1024 * 1024)).toStringAsFixed(2)} MiB/s';
+  }
+
+  static String _formatDuration(int seconds) {
+    if (seconds < 60) return '${seconds}s';
+    final m = seconds ~/ 60;
+    final s = seconds % 60;
+    if (m < 60) return '${m}m ${s.toString().padLeft(2, '0')}s';
+    final h = m ~/ 60;
+    final mm = m % 60;
+    return '${h}h ${mm.toString().padLeft(2, '0')}m';
   }
 }
