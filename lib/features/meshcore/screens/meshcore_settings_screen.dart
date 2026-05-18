@@ -19,6 +19,7 @@ import '../../../core/widgets/chip_selector.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/settings_primitives.dart';
 import '../../../core/widgets/status_banner.dart';
+import '../../../core/widgets/tap_shimmer.dart';
 import '../../../models/meshcore_auto_add_config.dart';
 import '../../../models/meshcore_auto_route_settings.dart';
 import '../../../providers/app_providers.dart';
@@ -58,6 +59,13 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
   /// means no cached value is available.
   String? _cachedNodeName;
   final MeshCoreNodeNameStore _nodeNameStore = MeshCoreNodeNameStore();
+
+  /// FU 2026-05-18: tracks which auto-add toggle is currently waiting
+  /// on its firmware round-trip so only the tapped row shimmers (the
+  /// shared `state.isLoading` flag would otherwise pulse all five auto-
+  /// add rows in unison). Keys: 'chat' | 'repeater' | 'room' | 'sensor'
+  /// | 'overwrite'.
+  String? _pendingAutoAddKey;
 
   @override
   void initState() {
@@ -434,9 +442,12 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
 
     final config = state.loaded ?? const MeshCoreAutoAddConfig.off();
 
-    Future<void> drive(MeshCoreAutoAddConfig next) async {
+    Future<void> drive(MeshCoreAutoAddConfig next, String key) async {
       final saveFailedMsg = l10n.meshcoreAutoAddSaveFailed;
+      safeSetState(() => _pendingAutoAddKey = key);
       final ok = await notifier.update(next);
+      if (!mounted) return;
+      safeSetState(() => _pendingAutoAddKey = null);
       if (!context.mounted) return;
       if (!ok) {
         showErrorSnackBar(context, saveFailedMsg);
@@ -456,79 +467,106 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
           ),
         _maybeDisabled(
           enabled: isConnected,
-          child: SettingsTile(
-            key: const ValueKey('meshcore-auto-add-chat'),
-            icon: Icons.chat_bubble_outline_rounded,
-            title: l10n.meshcoreAutoAddChat,
-            subtitle: l10n.meshcoreAutoAddChatSubtitle,
-            trailing: ThemedSwitch(
-              value: config.autoAddChat,
-              onChanged: (v) => drive(config.copyWith(autoAddChat: v)),
-            ),
-            onTap: () =>
-                drive(config.copyWith(autoAddChat: !config.autoAddChat)),
-          ),
-        ),
-        _maybeDisabled(
-          enabled: isConnected,
-          child: SettingsTile(
-            key: const ValueKey('meshcore-auto-add-repeater'),
-            icon: Icons.cell_tower_rounded,
-            title: l10n.meshcoreAutoAddRepeater,
-            subtitle: l10n.meshcoreAutoAddRepeaterSubtitle,
-            trailing: ThemedSwitch(
-              value: config.autoAddRepeater,
-              onChanged: (v) => drive(config.copyWith(autoAddRepeater: v)),
-            ),
-            onTap: () => drive(
-              config.copyWith(autoAddRepeater: !config.autoAddRepeater),
+          child: TapShimmer(
+            active: _pendingAutoAddKey == 'chat',
+            child: SettingsTile(
+              key: const ValueKey('meshcore-auto-add-chat'),
+              icon: Icons.chat_bubble_outline_rounded,
+              title: l10n.meshcoreAutoAddChat,
+              subtitle: l10n.meshcoreAutoAddChatSubtitle,
+              trailing: ThemedSwitch(
+                value: config.autoAddChat,
+                onChanged: (v) =>
+                    drive(config.copyWith(autoAddChat: v), 'chat'),
+              ),
+              onTap: () => drive(
+                config.copyWith(autoAddChat: !config.autoAddChat),
+                'chat',
+              ),
             ),
           ),
         ),
         _maybeDisabled(
           enabled: isConnected,
-          child: SettingsTile(
-            key: const ValueKey('meshcore-auto-add-room'),
-            icon: Icons.meeting_room_outlined,
-            title: l10n.meshcoreAutoAddRoomServer,
-            subtitle: l10n.meshcoreAutoAddRoomServerSubtitle,
-            trailing: ThemedSwitch(
-              value: config.autoAddRoomServer,
-              onChanged: (v) => drive(config.copyWith(autoAddRoomServer: v)),
-            ),
-            onTap: () => drive(
-              config.copyWith(autoAddRoomServer: !config.autoAddRoomServer),
+          child: TapShimmer(
+            active: _pendingAutoAddKey == 'repeater',
+            child: SettingsTile(
+              key: const ValueKey('meshcore-auto-add-repeater'),
+              icon: Icons.cell_tower_rounded,
+              title: l10n.meshcoreAutoAddRepeater,
+              subtitle: l10n.meshcoreAutoAddRepeaterSubtitle,
+              trailing: ThemedSwitch(
+                value: config.autoAddRepeater,
+                onChanged: (v) =>
+                    drive(config.copyWith(autoAddRepeater: v), 'repeater'),
+              ),
+              onTap: () => drive(
+                config.copyWith(autoAddRepeater: !config.autoAddRepeater),
+                'repeater',
+              ),
             ),
           ),
         ),
         _maybeDisabled(
           enabled: isConnected,
-          child: SettingsTile(
-            key: const ValueKey('meshcore-auto-add-sensor'),
-            icon: Icons.sensors_rounded,
-            title: l10n.meshcoreAutoAddSensor,
-            subtitle: l10n.meshcoreAutoAddSensorSubtitle,
-            trailing: ThemedSwitch(
-              value: config.autoAddSensor,
-              onChanged: (v) => drive(config.copyWith(autoAddSensor: v)),
+          child: TapShimmer(
+            active: _pendingAutoAddKey == 'room',
+            child: SettingsTile(
+              key: const ValueKey('meshcore-auto-add-room'),
+              icon: Icons.meeting_room_outlined,
+              title: l10n.meshcoreAutoAddRoomServer,
+              subtitle: l10n.meshcoreAutoAddRoomServerSubtitle,
+              trailing: ThemedSwitch(
+                value: config.autoAddRoomServer,
+                onChanged: (v) =>
+                    drive(config.copyWith(autoAddRoomServer: v), 'room'),
+              ),
+              onTap: () => drive(
+                config.copyWith(autoAddRoomServer: !config.autoAddRoomServer),
+                'room',
+              ),
             ),
-            onTap: () =>
-                drive(config.copyWith(autoAddSensor: !config.autoAddSensor)),
           ),
         ),
         _maybeDisabled(
           enabled: isConnected,
-          child: SettingsTile(
-            key: const ValueKey('meshcore-auto-add-overwrite-oldest'),
-            icon: Icons.swap_horiz_rounded,
-            title: l10n.meshcoreAutoAddOverwriteOldest,
-            subtitle: l10n.meshcoreAutoAddOverwriteOldestSubtitle,
-            trailing: ThemedSwitch(
-              value: config.overwriteOldest,
-              onChanged: (v) => drive(config.copyWith(overwriteOldest: v)),
+          child: TapShimmer(
+            active: _pendingAutoAddKey == 'sensor',
+            child: SettingsTile(
+              key: const ValueKey('meshcore-auto-add-sensor'),
+              icon: Icons.sensors_rounded,
+              title: l10n.meshcoreAutoAddSensor,
+              subtitle: l10n.meshcoreAutoAddSensorSubtitle,
+              trailing: ThemedSwitch(
+                value: config.autoAddSensor,
+                onChanged: (v) =>
+                    drive(config.copyWith(autoAddSensor: v), 'sensor'),
+              ),
+              onTap: () => drive(
+                config.copyWith(autoAddSensor: !config.autoAddSensor),
+                'sensor',
+              ),
             ),
-            onTap: () => drive(
-              config.copyWith(overwriteOldest: !config.overwriteOldest),
+          ),
+        ),
+        _maybeDisabled(
+          enabled: isConnected,
+          child: TapShimmer(
+            active: _pendingAutoAddKey == 'overwrite',
+            child: SettingsTile(
+              key: const ValueKey('meshcore-auto-add-overwrite-oldest'),
+              icon: Icons.swap_horiz_rounded,
+              title: l10n.meshcoreAutoAddOverwriteOldest,
+              subtitle: l10n.meshcoreAutoAddOverwriteOldestSubtitle,
+              trailing: ThemedSwitch(
+                value: config.overwriteOldest,
+                onChanged: (v) =>
+                    drive(config.copyWith(overwriteOldest: v), 'overwrite'),
+              ),
+              onTap: () => drive(
+                config.copyWith(overwriteOldest: !config.overwriteOldest),
+                'overwrite',
+              ),
             ),
           ),
         ),
