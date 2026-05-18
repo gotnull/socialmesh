@@ -821,7 +821,7 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
     );
   }
 
-  void _showDiscoverContacts() {
+  Future<void> _showDiscoverContacts() async {
     // Send advertisement to discover other nodes
     final session = ref.read(meshCoreSessionProvider);
     if (session == null) {
@@ -829,9 +829,19 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
       return;
     }
 
-    // Send self advertisement command
-    session.sendCommand(0x07);
-    showSuccessSnackBar(context, context.l10n.meshcoreShellAdvertisementSent);
+    try {
+      await session.sendCommand(0x07);
+      if (mounted) {
+        showSuccessSnackBar(
+          context,
+          context.l10n.meshcoreShellAdvertisementSent,
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        showErrorSnackBar(context, context.l10n.meshcoreShellNotConnected);
+      }
+    }
   }
 
   void _showMyContactCode() {
@@ -1597,17 +1607,25 @@ class _MeshCoreDeviceSheetContentState
     );
   }
 
-  void _discoverContacts() {
+  Future<void> _discoverContacts() async {
     final session = ref.read(meshCoreSessionProvider);
     if (session == null) {
       showErrorSnackBar(context, context.l10n.meshcoreShellNotConnected);
       return;
     }
-    session.sendCommand(0x07);
-    showSuccessSnackBar(
-      context,
-      context.l10n.meshcoreShellAdvertisementSentListening,
-    );
+    try {
+      await session.sendCommand(0x07);
+      if (mounted) {
+        showSuccessSnackBar(
+          context,
+          context.l10n.meshcoreShellAdvertisementSentListening,
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        showErrorSnackBar(context, context.l10n.meshcoreShellNotConnected);
+      }
+    }
   }
 }
 
