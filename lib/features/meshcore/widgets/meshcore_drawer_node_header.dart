@@ -9,16 +9,26 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/node_avatar.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_providers.dart';
+import 'meshcore_sigil_avatar.dart';
 
-/// Node info header for the MeshCore drawer — shows current node details
-/// including avatar, name, ID, and connection status chip.
+/// Node info header for the MeshCore drawer that shows current node
+/// details: sigil avatar, name, node ID, and connection status chip.
 ///
 /// Counterpart to [DrawerNodeHeader] in
-/// `lib/features/navigation/widgets/drawer_node_header.dart`. Visual
-/// alignment between the two is the goal; see the parity audit's
-/// Launch-readiness LR-1 entry for the structural deltas still to close.
+/// `lib/features/navigation/widgets/drawer_node_header.dart`. Mirrors
+/// Meshtastic's layout: name on row one, node ID + status chip on row
+/// two. The avatar is a pubkey-seeded sigil when SelfInfo is available
+/// (D-S3); falls back to the initials [NodeAvatar] before identify
+/// completes.
+///
+/// [onSelfTap] is invoked when the sigil is tapped. Pass a callback
+/// that opens the MeshCore device sheet (the "this is me" surface,
+/// analogous to Meshtastic's NodeDexDetailScreen of self). When null,
+/// the avatar is non-interactive.
 class MeshCoreDrawerNodeHeader extends ConsumerWidget {
-  const MeshCoreDrawerNodeHeader({super.key});
+  final VoidCallback? onSelfTap;
+
+  const MeshCoreDrawerNodeHeader({super.key, this.onSelfTap});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -37,16 +47,31 @@ class MeshCoreDrawerNodeHeader extends ConsumerWidget {
         ? '#${selfInfo.selfInfo!.pubKey.take(4).map((b) => b.toRadixString(16).padLeft(2, '0')).join().toUpperCase()}'
         : '';
 
+    final pubKey = selfInfo.selfInfo?.pubKey;
+    final hasSigilKey = pubKey != null && pubKey.length >= 4;
+
     final initials = nodeName.length >= 2
         ? nodeName.substring(0, 2).toUpperCase()
         : context.l10n.meshcoreShellDefaultInitials;
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 20, 20, 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          NodeAvatar(
+    final statusBadge = Container(
+      width: 14,
+      height: 14,
+      decoration: BoxDecoration(
+        color: isConnected ? AppTheme.successGreen : AppTheme.errorRed,
+        shape: BoxShape.circle,
+        border: Border.all(color: theme.scaffoldBackgroundColor, width: 2),
+      ),
+    );
+
+    final Widget avatar = hasSigilKey
+        ? MeshCoreSigilAvatar(
+            pubKey: pubKey,
+            size: 56,
+            badge: statusBadge,
+            onTap: onSelfTap,
+          )
+        : NodeAvatar(
             text: initials,
             color: isConnected ? accentColor : theme.dividerColor,
             size: 56,
@@ -60,7 +85,14 @@ class MeshCoreDrawerNodeHeader extends ConsumerWidget {
                     width: 2,
                   )
                 : null,
-          ),
+          );
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(AppTheme.spacing20, 20, 20, 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          avatar,
           const SizedBox(width: AppTheme.spacing12),
           Expanded(
             child: Column(

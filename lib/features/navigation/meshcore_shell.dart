@@ -520,8 +520,16 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Node Info Header - matches MainShell _DrawerNodeHeader
-            const MeshCoreDrawerNodeHeader(),
+            // Node Info Header - matches MainShell _DrawerNodeHeader.
+            // D-S3: tapping the sigil avatar opens the device sheet
+            // (the MeshCore "this is me" surface, analogous to
+            // Meshtastic's NodeDexDetailScreen of self).
+            MeshCoreDrawerNodeHeader(
+              onSelfTap: () {
+                Navigator.of(context).maybePop(); // close the drawer
+                showMeshCoreDeviceSheet(context);
+              },
+            ),
 
             // Divider after header
             Padding(
