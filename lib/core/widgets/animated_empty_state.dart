@@ -675,31 +675,32 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
             // Hardcoded `\n` line breaks in the locale string would
             // override this layout; the convention is to write
             // single-sentence copy and let the layout wrap it.
-            SizedBox(
-              // Fixed height keeps the layout stable while the tagline
-              // cycles through values of varying line count (1-5 lines).
-              // 120pt fits a 5-line tagline including a paragraph break
-              // (when the locale string contains a `\n\n` between two
-              // sentences). Content is top-aligned within this box so a
-              // short single-line tagline sits close to the title
-              // instead of floating awkwardly far below it.
-              height: 120,
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.spacing24,
-                  ),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 360),
-                    child: AnimatedTagline(
-                      taglines: widget.config.taglines,
-                      textStyle: TextStyle(
-                        color: context.textSecondary,
-                        fontSize: 14,
-                      ),
-                      textAlign: TextAlign.center,
+            // `AnimatedSize` lets the tagline area smoothly grow and
+            // shrink as the cycling tagline rotates between short
+            // single-line copy and multi-paragraph copy. Earlier
+            // revisions pinned a fixed 120pt height + top-align, but
+            // that left a hostile chunk of empty space under any
+            // single-line tagline. With `AnimatedSize` the column
+            // hugs its content; if a downstream action button exists
+            // it moves with the animation, which reads as a natural
+            // accordion expansion rather than a jump cut.
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing24,
+                ),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 360),
+                  child: AnimatedTagline(
+                    taglines: widget.config.taglines,
+                    textStyle: TextStyle(
+                      color: context.textSecondary,
+                      fontSize: 14,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ),

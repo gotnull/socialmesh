@@ -8560,6 +8560,49 @@ class AppLocalizationsDe extends AppLocalizations {
   String get meshcoreAdvertisementSent => 'Ankündigung gesendet';
 
   @override
+  String get meshcoreTransportStatusTitle => 'Transport';
+
+  @override
+  String get meshcoreTransportStatusConnectionSection => 'Verbindung';
+
+  @override
+  String get meshcoreTransportStatusEndpointSection => 'Endpunkt';
+
+  @override
+  String get meshcoreTransportStatusFieldStatus => 'Status';
+
+  @override
+  String get meshcoreTransportStatusFieldTransport => 'Transport';
+
+  @override
+  String get meshcoreTransportStatusFieldDevice => 'Gerät';
+
+  @override
+  String get meshcoreTransportStatusFieldHost => 'Host';
+
+  @override
+  String get meshcoreTransportStatusFieldPort => 'Port';
+
+  @override
+  String get meshcoreTransportStatusFieldSerialPort => 'Serieller Port';
+
+  @override
+  String get meshcoreTransportStatusFieldBaud => 'Baudrate';
+
+  @override
+  String get meshcoreTransportStatusFieldDeviceId => 'Geräte-ID';
+
+  @override
+  String get meshcoreTransportStatusFieldEndpoint => 'Endpunkt';
+
+  @override
+  String get meshcoreTransportStatusEndpointUnknown => 'Unbekannt';
+
+  @override
+  String get meshcoreTransportStatusToolSubtitle =>
+      'Verbindungsstatus, Transporttyp, Endpunktdetails';
+
+  @override
   String get meshcoreAdvertisementSentTools => 'Ankündigung gesendet';
 
   @override
@@ -11703,6 +11746,9 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get messagingMessageQueuedOffline =>
       'Nachricht in Warteschlange - wird gesendet, wenn verbunden';
+
+  @override
+  String get messagingMessageUnableToDisplay => '(nicht anzeigbar)';
 
   @override
   String messagingNoContactsMatchSearch(String query) {

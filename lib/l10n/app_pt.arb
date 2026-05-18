@@ -17090,6 +17090,9 @@
   "@messagingMessageQueuedOffline": {
     "description": "Info snackbar shown when a message is queued because the device is offline."
   },
+  "@messagingMessageUnableToDisplay": {
+    "description": "Fallback rendered inside a chat bubble when the persisted message body is empty or whitespace-only and there is no text to show."
+  },
   "@messagingNoContactsMatchSearch": {
     "description": "Empty state text when the contact search returns no results.",
     "placeholders": {
@@ -38453,6 +38456,20 @@
   "meshcoreRoomLoginSuccess": "Você entrou em {name}",
   "meshcoreAutoRouteSliderValue": "{value}",
   "meshcoreAdvertisementSent": "Anúncio enviado",
+  "meshcoreTransportStatusTitle": "Transporte",
+  "meshcoreTransportStatusConnectionSection": "Conexão",
+  "meshcoreTransportStatusEndpointSection": "Endpoint",
+  "meshcoreTransportStatusFieldStatus": "Status",
+  "meshcoreTransportStatusFieldTransport": "Transporte",
+  "meshcoreTransportStatusFieldDevice": "Dispositivo",
+  "meshcoreTransportStatusFieldHost": "Host",
+  "meshcoreTransportStatusFieldPort": "Porta",
+  "meshcoreTransportStatusFieldSerialPort": "Porta serial",
+  "meshcoreTransportStatusFieldBaud": "Baud rate",
+  "meshcoreTransportStatusFieldDeviceId": "ID do dispositivo",
+  "meshcoreTransportStatusFieldEndpoint": "Endpoint",
+  "meshcoreTransportStatusEndpointUnknown": "Desconhecido",
+  "meshcoreTransportStatusToolSubtitle": "Estado da conexão, tipo de transporte, detalhes do endpoint",
   "meshcoreAdvertisementSentTools": "Anúncio enviado",
   "meshcoreAnalysis": "Análise",
   "meshcoreAppDebugLogTool": "Log de Depuração",
@@ -39367,6 +39384,7 @@
   "messagingMessageDeleted": "Mensagem excluída",
   "messagingMessageHint": "Mensagem",
   "messagingMessageQueuedOffline": "Mensagem na fila - será enviada ao conectar",
+  "messagingMessageUnableToDisplay": "(não foi possível exibir)",
   "messagingNoContactsMatchSearch": "Nenhum contato corresponde a \"{query}\"",
   "messagingNoContactsYet": "Nenhum contato ainda",
   "messagingNoFilteredContacts": "Nenhum contato {filter}",

@@ -139,6 +139,61 @@ void main() {
     });
   });
 
+  group('sanitizeExternalTextWithStats', () {
+    test('empty input reports zero repairs', () {
+      final result = sanitizeExternalTextWithStats('');
+      expect(result.text, '');
+      expect(result.stats.controlsStripped, 0);
+      expect(result.stats.surrogateRepairs, 0);
+      expect(result.stats.hadAnyRepair, isFalse);
+    });
+
+    test('clean ASCII reports zero repairs', () {
+      final result = sanitizeExternalTextWithStats('hello');
+      expect(result.text, 'hello');
+      expect(result.stats.controlsStripped, 0);
+      expect(result.stats.surrogateRepairs, 0);
+    });
+
+    test('control-char-only input yields empty text and stripped count', () {
+      final result = sanitizeExternalTextWithStats('\x00\x01\x02\x7F');
+      expect(result.text, '');
+      expect(result.stats.controlsStripped, 4);
+      expect(result.stats.surrogateRepairs, 0);
+      expect(result.stats.hadAnyRepair, isTrue);
+    });
+
+    test('mixed text + controls reports only stripped controls', () {
+      final result = sanitizeExternalTextWithStats('he\x01ll\x02o');
+      expect(result.text, 'hello');
+      expect(result.stats.controlsStripped, 2);
+      expect(result.stats.surrogateRepairs, 0);
+    });
+
+    test('unpaired high surrogate increments surrogateRepairs', () {
+      final result = sanitizeExternalTextWithStats('A\uD800B');
+      expect(result.text, 'A�B');
+      expect(result.stats.controlsStripped, 0);
+      expect(result.stats.surrogateRepairs, 1);
+    });
+
+    test('valid surrogate pair (emoji) reports zero repairs', () {
+      // 👋 U+1F44B = 👋
+      final result = sanitizeExternalTextWithStats('👋');
+      expect(result.text, '👋');
+      expect(result.stats.controlsStripped, 0);
+      expect(result.stats.surrogateRepairs, 0);
+    });
+
+    test('control + valid emoji preserves emoji, counts the stripped byte', () {
+      // \x00 + 👋 → just 👋
+      final result = sanitizeExternalTextWithStats('\x00👋');
+      expect(result.text, '👋');
+      expect(result.stats.controlsStripped, 1);
+      expect(result.stats.surrogateRepairs, 0);
+    });
+  });
+
   group('safeSubstring', () {
     test('returns empty for empty input', () {
       expect(safeSubstring('', 10), '');

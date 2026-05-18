@@ -8605,6 +8605,49 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meshcoreAdvertisementSent => 'Annonce envoyée';
 
   @override
+  String get meshcoreTransportStatusTitle => 'Transport';
+
+  @override
+  String get meshcoreTransportStatusConnectionSection => 'Connexion';
+
+  @override
+  String get meshcoreTransportStatusEndpointSection => 'Point de terminaison';
+
+  @override
+  String get meshcoreTransportStatusFieldStatus => 'État';
+
+  @override
+  String get meshcoreTransportStatusFieldTransport => 'Transport';
+
+  @override
+  String get meshcoreTransportStatusFieldDevice => 'Appareil';
+
+  @override
+  String get meshcoreTransportStatusFieldHost => 'Hôte';
+
+  @override
+  String get meshcoreTransportStatusFieldPort => 'Port';
+
+  @override
+  String get meshcoreTransportStatusFieldSerialPort => 'Port série';
+
+  @override
+  String get meshcoreTransportStatusFieldBaud => 'Débit en bauds';
+
+  @override
+  String get meshcoreTransportStatusFieldDeviceId => 'ID de l\'appareil';
+
+  @override
+  String get meshcoreTransportStatusFieldEndpoint => 'Point de terminaison';
+
+  @override
+  String get meshcoreTransportStatusEndpointUnknown => 'Inconnu';
+
+  @override
+  String get meshcoreTransportStatusToolSubtitle =>
+      'État de connexion, type de transport, détails du point de terminaison';
+
+  @override
   String get meshcoreAdvertisementSentTools => 'Annonce envoyée';
 
   @override
@@ -11756,6 +11799,9 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get messagingMessageQueuedOffline =>
       'Message mis en file d\'attente - sera envoyé lors de la connexion';
+
+  @override
+  String get messagingMessageUnableToDisplay => '(impossible à afficher)';
 
   @override
   String messagingNoContactsMatchSearch(String query) {

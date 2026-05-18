@@ -8540,6 +8540,49 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreAdvertisementSent => 'Объявление отправлено';
 
   @override
+  String get meshcoreTransportStatusTitle => 'Транспорт';
+
+  @override
+  String get meshcoreTransportStatusConnectionSection => 'Соединение';
+
+  @override
+  String get meshcoreTransportStatusEndpointSection => 'Конечная точка';
+
+  @override
+  String get meshcoreTransportStatusFieldStatus => 'Статус';
+
+  @override
+  String get meshcoreTransportStatusFieldTransport => 'Транспорт';
+
+  @override
+  String get meshcoreTransportStatusFieldDevice => 'Устройство';
+
+  @override
+  String get meshcoreTransportStatusFieldHost => 'Хост';
+
+  @override
+  String get meshcoreTransportStatusFieldPort => 'Порт';
+
+  @override
+  String get meshcoreTransportStatusFieldSerialPort => 'Последовательный порт';
+
+  @override
+  String get meshcoreTransportStatusFieldBaud => 'Скорость';
+
+  @override
+  String get meshcoreTransportStatusFieldDeviceId => 'ID устройства';
+
+  @override
+  String get meshcoreTransportStatusFieldEndpoint => 'Конечная точка';
+
+  @override
+  String get meshcoreTransportStatusEndpointUnknown => 'Неизвестно';
+
+  @override
+  String get meshcoreTransportStatusToolSubtitle =>
+      'Состояние соединения, тип транспорта, детали конечной точки';
+
+  @override
   String get meshcoreAdvertisementSentTools => 'Объявление отправлено';
 
   @override
@@ -11676,6 +11719,9 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get messagingMessageQueuedOffline =>
       'Сообщение в очереди - будет отправлено при подключении';
+
+  @override
+  String get messagingMessageUnableToDisplay => '(не удалось отобразить)';
 
   @override
   String messagingNoContactsMatchSearch(String query) {

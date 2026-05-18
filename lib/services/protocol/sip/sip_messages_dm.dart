@@ -86,6 +86,10 @@ abstract final class SipDmMessages {
 
     try {
       final text = sanitizeExternalText(utf8.decode(payload));
+      if (text.trim().isEmpty) {
+        AppLogging.sip('SIP_DM: decode rejected: sanitized empty');
+        return null;
+      }
       return SipDmMessage(text: text, rawPayload: Uint8List.fromList(payload));
     } on FormatException {
       AppLogging.sip('SIP_DM: decode rejected: invalid UTF-8');

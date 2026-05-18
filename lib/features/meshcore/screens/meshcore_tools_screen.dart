@@ -35,6 +35,7 @@ import '../../navigation/meshcore_shell.dart';
 import '../contact_l10n.dart';
 import '../../debug/app_log_screen.dart';
 import 'meshcore_ble_debug_log_screen.dart';
+import 'meshcore_transport_status_screen.dart';
 import '../widgets/meshcore_chat_traffic_card.dart';
 import '../widgets/meshcore_radio_stats_card.dart';
 import 'meshcore_discovery_screen.dart';
@@ -205,9 +206,22 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
               trailing: _chevron(context),
               onTap: _openBleDebugLog,
             ),
+            // Row 50: dedicated transport status surface. Shows
+            // transport type, connection state, and endpoint details
+            // (host+port for TCP, port+baud for USB, redacted device
+            // id for BLE).
+            SettingsTile(
+              key: const ValueKey('meshcore-tools-transport-status'),
+              icon: Icons.cable_rounded,
+              iconColor: AccentColors.cyan,
+              title: context.l10n.meshcoreTransportStatusTitle,
+              subtitle: context.l10n.meshcoreTransportStatusToolSubtitle,
+              trailing: _chevron(context),
+              onTap: _openTransportStatus,
+            ),
             // D-Q6: share a diagnostics bundle (bundle.json +
             // frame-log.txt zipped). Privacy: no chat bodies, no
-            // full pubkeys, no passwords, no GPS coordinates — see
+            // full pubkeys, no passwords, no GPS coordinates - see
             // `MeshCoreDiagnosticsBundleService` for the redaction
             // invariants.
             SettingsTile(
@@ -860,6 +874,17 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
     Navigator.of(
       context,
     ).push(MaterialPageRoute<void>(builder: (_) => const AppLogScreen()));
+  }
+
+  /// Row 50: open the dedicated transport status screen (connection
+  /// state, transport type, endpoint detail per transport).
+  void _openTransportStatus() {
+    HapticFeedback.lightImpact();
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const MeshCoreTransportStatusScreen(),
+      ),
+    );
   }
 
   /// D-Q5: open the BLE transport debug log viewer.

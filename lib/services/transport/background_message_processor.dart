@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -361,10 +362,21 @@ class BackgroundMessageProcessor {
     }
 
     // ---- Decode text ---------------------------------------------------
-    final text = sanitizeExternalText(
+    final sanitized = sanitizeExternalTextWithStats(
       utf8.decode(data.payload, allowMalformed: true),
     );
-    if (text.isEmpty) return;
+    final text = sanitized.text;
+    if (text.trim().isEmpty) {
+      final digest = sha256.convert(data.payload).toString().substring(0, 8);
+      AppLogging.ble(
+        'rx_text_dropped reason=sanitized_empty '
+        'len=${data.payload.length}B '
+        'ctrl=${sanitized.stats.controlsStripped} '
+        'surrogate_repairs=${sanitized.stats.surrogateRepairs} '
+        'digest=$digest',
+      );
+      return;
+    }
 
     // ---- Resolve sender identity from NodeDex --------------------------
     String? senderLongName;

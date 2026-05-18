@@ -8537,6 +8537,49 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreAdvertisementSent => 'Anúncio enviado';
 
   @override
+  String get meshcoreTransportStatusTitle => 'Transporte';
+
+  @override
+  String get meshcoreTransportStatusConnectionSection => 'Conexão';
+
+  @override
+  String get meshcoreTransportStatusEndpointSection => 'Endpoint';
+
+  @override
+  String get meshcoreTransportStatusFieldStatus => 'Status';
+
+  @override
+  String get meshcoreTransportStatusFieldTransport => 'Transporte';
+
+  @override
+  String get meshcoreTransportStatusFieldDevice => 'Dispositivo';
+
+  @override
+  String get meshcoreTransportStatusFieldHost => 'Host';
+
+  @override
+  String get meshcoreTransportStatusFieldPort => 'Porta';
+
+  @override
+  String get meshcoreTransportStatusFieldSerialPort => 'Porta serial';
+
+  @override
+  String get meshcoreTransportStatusFieldBaud => 'Baud rate';
+
+  @override
+  String get meshcoreTransportStatusFieldDeviceId => 'ID do dispositivo';
+
+  @override
+  String get meshcoreTransportStatusFieldEndpoint => 'Endpoint';
+
+  @override
+  String get meshcoreTransportStatusEndpointUnknown => 'Desconhecido';
+
+  @override
+  String get meshcoreTransportStatusToolSubtitle =>
+      'Estado da conexão, tipo de transporte, detalhes do endpoint';
+
+  @override
   String get meshcoreAdvertisementSentTools => 'Anúncio enviado';
 
   @override
@@ -11682,6 +11725,9 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get messagingMessageQueuedOffline =>
       'Mensagem na fila - será enviada ao conectar';
+
+  @override
+  String get messagingMessageUnableToDisplay => '(não foi possível exibir)';
 
   @override
   String messagingNoContactsMatchSearch(String query) {

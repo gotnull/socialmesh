@@ -8450,6 +8450,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshcoreAdvertisementSent => 'Advertisement sent';
 
   @override
+  String get meshcoreTransportStatusTitle => 'Transport';
+
+  @override
+  String get meshcoreTransportStatusConnectionSection => 'Connection';
+
+  @override
+  String get meshcoreTransportStatusEndpointSection => 'Endpoint';
+
+  @override
+  String get meshcoreTransportStatusFieldStatus => 'Status';
+
+  @override
+  String get meshcoreTransportStatusFieldTransport => 'Transport';
+
+  @override
+  String get meshcoreTransportStatusFieldDevice => 'Device';
+
+  @override
+  String get meshcoreTransportStatusFieldHost => 'Host';
+
+  @override
+  String get meshcoreTransportStatusFieldPort => 'Port';
+
+  @override
+  String get meshcoreTransportStatusFieldSerialPort => 'Serial port';
+
+  @override
+  String get meshcoreTransportStatusFieldBaud => 'Baud rate';
+
+  @override
+  String get meshcoreTransportStatusFieldDeviceId => 'Device ID';
+
+  @override
+  String get meshcoreTransportStatusFieldEndpoint => 'Endpoint';
+
+  @override
+  String get meshcoreTransportStatusEndpointUnknown => 'Unknown';
+
+  @override
+  String get meshcoreTransportStatusToolSubtitle =>
+      'Connection state, transport type, endpoint details';
+
+  @override
   String get meshcoreAdvertisementSentTools => 'Advertisement sent';
 
   @override
@@ -11547,6 +11590,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get messagingMessageQueuedOffline =>
       'Message queued - will send when connected';
+
+  @override
+  String get messagingMessageUnableToDisplay => '(unable to display)';
 
   @override
   String messagingNoContactsMatchSearch(String query) {

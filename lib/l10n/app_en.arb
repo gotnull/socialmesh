@@ -11293,6 +11293,62 @@
     "@meshcoreAdvertisementSent": {
         "description": "Success snackbar after sending advertisement"
     },
+    "meshcoreTransportStatusTitle": "Transport",
+    "@meshcoreTransportStatusTitle": {
+        "description": "Row 50 transport status screen title"
+    },
+    "meshcoreTransportStatusConnectionSection": "Connection",
+    "@meshcoreTransportStatusConnectionSection": {
+        "description": "Row 50 section title for connection state rows"
+    },
+    "meshcoreTransportStatusEndpointSection": "Endpoint",
+    "@meshcoreTransportStatusEndpointSection": {
+        "description": "Row 50 section title for endpoint detail rows (host/port for TCP, port/baud for USB, device id for BLE)"
+    },
+    "meshcoreTransportStatusFieldStatus": "Status",
+    "@meshcoreTransportStatusFieldStatus": {
+        "description": "Row 50 InfoTable row label: connection status (Connected / Connecting / Disconnected)"
+    },
+    "meshcoreTransportStatusFieldTransport": "Transport",
+    "@meshcoreTransportStatusFieldTransport": {
+        "description": "Row 50 InfoTable row label: transport type (BLE / USB / TCP)"
+    },
+    "meshcoreTransportStatusFieldDevice": "Device",
+    "@meshcoreTransportStatusFieldDevice": {
+        "description": "Row 50 InfoTable row label: connected device name"
+    },
+    "meshcoreTransportStatusFieldHost": "Host",
+    "@meshcoreTransportStatusFieldHost": {
+        "description": "Row 50 InfoTable row label: TCP host"
+    },
+    "meshcoreTransportStatusFieldPort": "Port",
+    "@meshcoreTransportStatusFieldPort": {
+        "description": "Row 50 InfoTable row label: TCP port number"
+    },
+    "meshcoreTransportStatusFieldSerialPort": "Serial port",
+    "@meshcoreTransportStatusFieldSerialPort": {
+        "description": "Row 50 InfoTable row label: USB serial port path"
+    },
+    "meshcoreTransportStatusFieldBaud": "Baud rate",
+    "@meshcoreTransportStatusFieldBaud": {
+        "description": "Row 50 InfoTable row label: USB baud rate"
+    },
+    "meshcoreTransportStatusFieldDeviceId": "Device ID",
+    "@meshcoreTransportStatusFieldDeviceId": {
+        "description": "Row 50 InfoTable row label: BLE device identifier (last 4 chars only for privacy)"
+    },
+    "meshcoreTransportStatusFieldEndpoint": "Endpoint",
+    "@meshcoreTransportStatusFieldEndpoint": {
+        "description": "Row 50 InfoTable row label: generic endpoint when transport-specific parse fails"
+    },
+    "meshcoreTransportStatusEndpointUnknown": "Unknown",
+    "@meshcoreTransportStatusEndpointUnknown": {
+        "description": "Row 50 placeholder when the endpoint cannot be parsed from the device id"
+    },
+    "meshcoreTransportStatusToolSubtitle": "Connection state, transport type, endpoint details",
+    "@meshcoreTransportStatusToolSubtitle": {
+        "description": "Row 50 Tools tile subtitle for the transport status entry"
+    },
     "meshcoreAdvertisementSentTools": "Advertisement sent",
     "@meshcoreAdvertisementSentTools": {
         "description": "Success snackbar after sending advertisement in tools"
@@ -15473,6 +15529,10 @@
     "messagingMessageQueuedOffline": "Message queued - will send when connected",
     "@messagingMessageQueuedOffline": {
         "description": "Info snackbar shown when a message is queued because the device is offline."
+    },
+    "messagingMessageUnableToDisplay": "(unable to display)",
+    "@messagingMessageUnableToDisplay": {
+        "description": "Fallback rendered inside a chat bubble when the persisted message body is empty or whitespace-only and there is no text to show."
     },
     "messagingNoContactsMatchSearch": "No contacts match \"{query}\"",
     "@messagingNoContactsMatchSearch": {

@@ -14898,6 +14898,90 @@ abstract class AppLocalizations {
   /// **'Advertisement sent'**
   String get meshcoreAdvertisementSent;
 
+  /// Row 50 transport status screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Transport'**
+  String get meshcoreTransportStatusTitle;
+
+  /// Row 50 section title for connection state rows
+  ///
+  /// In en, this message translates to:
+  /// **'Connection'**
+  String get meshcoreTransportStatusConnectionSection;
+
+  /// Row 50 section title for endpoint detail rows (host/port for TCP, port/baud for USB, device id for BLE)
+  ///
+  /// In en, this message translates to:
+  /// **'Endpoint'**
+  String get meshcoreTransportStatusEndpointSection;
+
+  /// Row 50 InfoTable row label: connection status (Connected / Connecting / Disconnected)
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get meshcoreTransportStatusFieldStatus;
+
+  /// Row 50 InfoTable row label: transport type (BLE / USB / TCP)
+  ///
+  /// In en, this message translates to:
+  /// **'Transport'**
+  String get meshcoreTransportStatusFieldTransport;
+
+  /// Row 50 InfoTable row label: connected device name
+  ///
+  /// In en, this message translates to:
+  /// **'Device'**
+  String get meshcoreTransportStatusFieldDevice;
+
+  /// Row 50 InfoTable row label: TCP host
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get meshcoreTransportStatusFieldHost;
+
+  /// Row 50 InfoTable row label: TCP port number
+  ///
+  /// In en, this message translates to:
+  /// **'Port'**
+  String get meshcoreTransportStatusFieldPort;
+
+  /// Row 50 InfoTable row label: USB serial port path
+  ///
+  /// In en, this message translates to:
+  /// **'Serial port'**
+  String get meshcoreTransportStatusFieldSerialPort;
+
+  /// Row 50 InfoTable row label: USB baud rate
+  ///
+  /// In en, this message translates to:
+  /// **'Baud rate'**
+  String get meshcoreTransportStatusFieldBaud;
+
+  /// Row 50 InfoTable row label: BLE device identifier (last 4 chars only for privacy)
+  ///
+  /// In en, this message translates to:
+  /// **'Device ID'**
+  String get meshcoreTransportStatusFieldDeviceId;
+
+  /// Row 50 InfoTable row label: generic endpoint when transport-specific parse fails
+  ///
+  /// In en, this message translates to:
+  /// **'Endpoint'**
+  String get meshcoreTransportStatusFieldEndpoint;
+
+  /// Row 50 placeholder when the endpoint cannot be parsed from the device id
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get meshcoreTransportStatusEndpointUnknown;
+
+  /// Row 50 Tools tile subtitle for the transport status entry
+  ///
+  /// In en, this message translates to:
+  /// **'Connection state, transport type, endpoint details'**
+  String get meshcoreTransportStatusToolSubtitle;
+
   /// Success snackbar after sending advertisement in tools
   ///
   /// In en, this message translates to:
@@ -20247,6 +20331,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Message queued - will send when connected'**
   String get messagingMessageQueuedOffline;
+
+  /// Fallback rendered inside a chat bubble when the persisted message body is empty or whitespace-only and there is no text to show.
+  ///
+  /// In en, this message translates to:
+  /// **'(unable to display)'**
+  String get messagingMessageUnableToDisplay;
 
   /// Empty state text when the contact search returns no results.
   ///

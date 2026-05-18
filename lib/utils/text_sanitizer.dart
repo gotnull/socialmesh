@@ -28,36 +28,79 @@ bool _isUnsafeControl(int codeUnit) {
 /// control characters that crash Flutter's native paragraph builder on iOS.
 /// Safe characters (tab, newline, carriage return) are preserved. Normal emoji,
 /// multilingual text, and combining characters pass through unchanged.
-String sanitizeExternalText(String input) {
-  if (input.isEmpty) return input;
+String sanitizeExternalText(String input) =>
+    sanitizeExternalTextWithStats(input).text;
+
+/// Counts of the sanitization repairs performed on a single input string.
+///
+/// Used by receive paths to emit privacy-safe diagnostic logs (no payload
+/// content, just the shape of the repair) when a sanitized result ends up
+/// empty and the wire packet is therefore dropped.
+class SanitizationStats {
+  /// C0/C1 control characters stripped (null, 0x01-0x08, 0x0B-0x0C, 0x0E-0x1F,
+  /// DEL, 0x80-0x9F). Tab / LF / CR are not counted as they are preserved.
+  final int controlsStripped;
+
+  /// Orphan UTF-16 surrogate halves replaced with U+FFFD.
+  final int surrogateRepairs;
+
+  const SanitizationStats({
+    required this.controlsStripped,
+    required this.surrogateRepairs,
+  });
+
+  bool get hadAnyRepair => controlsStripped > 0 || surrogateRepairs > 0;
+}
+
+/// Result of [sanitizeExternalTextWithStats]: the sanitized string plus the
+/// counts of repairs performed on the way.
+class SanitizedTextResult {
+  final String text;
+  final SanitizationStats stats;
+
+  const SanitizedTextResult({required this.text, required this.stats});
+}
+
+/// Same behaviour as [sanitizeExternalText] but also reports repair counts.
+///
+/// Prefer the plain [sanitizeExternalText] when stats aren't needed. Receive
+/// paths use this overload so they can emit a `reason=sanitized_empty
+/// ctrl=\u2026 surrogate_repairs=\u2026` diagnostic when a packet's payload sanitises
+/// to an empty body and gets dropped.
+SanitizedTextResult sanitizeExternalTextWithStats(String input) {
+  if (input.isEmpty) {
+    return const SanitizedTextResult(
+      text: '',
+      stats: SanitizationStats(controlsStripped: 0, surrogateRepairs: 0),
+    );
+  }
 
   final codeUnits = input.codeUnits;
-  var hadInvalid = false;
+  var controlsStripped = 0;
+  var surrogateRepairs = 0;
   final buffer = StringBuffer();
 
   for (var i = 0; i < codeUnits.length; i++) {
     final unit = codeUnits[i];
 
-    // Strip unsafe control characters.
     if (_isUnsafeControl(unit)) {
-      hadInvalid = true;
+      controlsStripped++;
       continue;
     }
 
-    // Fix unpaired surrogates.
     if (_isHighSurrogate(unit)) {
       if (i + 1 < codeUnits.length && _isLowSurrogate(codeUnits[i + 1])) {
         buffer.writeCharCode(unit);
         buffer.writeCharCode(codeUnits[i + 1]);
         i++;
       } else {
-        hadInvalid = true;
+        surrogateRepairs++;
         buffer.write('\uFFFD');
       }
       continue;
     }
     if (_isLowSurrogate(unit)) {
-      hadInvalid = true;
+      surrogateRepairs++;
       buffer.write('\uFFFD');
       continue;
     }
@@ -65,7 +108,14 @@ String sanitizeExternalText(String input) {
     buffer.writeCharCode(unit);
   }
 
-  return hadInvalid ? buffer.toString() : input;
+  final hadInvalid = controlsStripped > 0 || surrogateRepairs > 0;
+  return SanitizedTextResult(
+    text: hadInvalid ? buffer.toString() : input,
+    stats: SanitizationStats(
+      controlsStripped: controlsStripped,
+      surrogateRepairs: surrogateRepairs,
+    ),
+  );
 }
 
 /// Code-unit truncation that avoids splitting UTF-16 surrogate pairs.

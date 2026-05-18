@@ -8545,6 +8545,49 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreAdvertisementSent => 'Оголошення надіслано';
 
   @override
+  String get meshcoreTransportStatusTitle => 'Транспорт';
+
+  @override
+  String get meshcoreTransportStatusConnectionSection => 'З\'єднання';
+
+  @override
+  String get meshcoreTransportStatusEndpointSection => 'Кінцева точка';
+
+  @override
+  String get meshcoreTransportStatusFieldStatus => 'Статус';
+
+  @override
+  String get meshcoreTransportStatusFieldTransport => 'Транспорт';
+
+  @override
+  String get meshcoreTransportStatusFieldDevice => 'Пристрій';
+
+  @override
+  String get meshcoreTransportStatusFieldHost => 'Хост';
+
+  @override
+  String get meshcoreTransportStatusFieldPort => 'Порт';
+
+  @override
+  String get meshcoreTransportStatusFieldSerialPort => 'Послідовний порт';
+
+  @override
+  String get meshcoreTransportStatusFieldBaud => 'Швидкість передачі';
+
+  @override
+  String get meshcoreTransportStatusFieldDeviceId => 'ID пристрою';
+
+  @override
+  String get meshcoreTransportStatusFieldEndpoint => 'Кінцева точка';
+
+  @override
+  String get meshcoreTransportStatusEndpointUnknown => 'Невідомо';
+
+  @override
+  String get meshcoreTransportStatusToolSubtitle =>
+      'Стан зʼєднання, тип транспорту, деталі кінцевої точки';
+
+  @override
   String get meshcoreAdvertisementSentTools => 'Оголошення надіслано';
 
   @override
@@ -11679,6 +11722,9 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get messagingMessageQueuedOffline =>
       'Повідомлення в черзі - буде надіслано після підключення';
+
+  @override
+  String get messagingMessageUnableToDisplay => '(не вдалося відобразити)';
 
   @override
   String messagingNoContactsMatchSearch(String query) {

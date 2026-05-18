@@ -3226,23 +3226,33 @@ class _MessageBubble extends ConsumerWidget {
                             _buildReplyQuote(context, sentByMe: true),
                             const SizedBox(height: AppTheme.spacing6),
                           ],
-                          LinkifiedText(
-                            text: message.text,
-                            // Match inbound bubble size (15pt) so a
-                            // back-and-forth thread reads with one
-                            // consistent rhythm. Pre-existing 14/15
-                            // split surfaced during D30 live smoke.
-                            style: chatBubbleBodyStyle(
-                              ref,
-                              baseFontSize: 14,
-                              color: Colors.white,
+                          if (message.text.trim().isEmpty)
+                            Text(
+                              context.l10n.messagingMessageUnableToDisplay,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontStyle: FontStyle.italic,
+                                color: Colors.white.withValues(alpha: 0.7),
+                              ),
+                            )
+                          else
+                            LinkifiedText(
+                              text: message.text,
+                              // Match inbound bubble size (15pt) so a
+                              // back-and-forth thread reads with one
+                              // consistent rhythm. Pre-existing 14/15
+                              // split surfaced during D30 live smoke.
+                              style: chatBubbleBodyStyle(
+                                ref,
+                                baseFontSize: 14,
+                                color: Colors.white,
+                              ),
+                              linkStyle: const TextStyle(
+                                color: Colors.white,
+                                decoration: TextDecoration.underline,
+                                decorationColor: Colors.white,
+                              ),
                             ),
-                            linkStyle: const TextStyle(
-                              color: Colors.white,
-                              decoration: TextDecoration.underline,
-                              decorationColor: Colors.white,
-                            ),
-                          ),
                           // Inline translation
                           if (isTranslatable)
                             _buildTranslationSection(
@@ -3515,18 +3525,28 @@ class _MessageBubble extends ConsumerWidget {
                           _buildReplyQuote(context),
                           const SizedBox(height: AppTheme.spacing6),
                         ],
-                        LinkifiedText(
-                          text: message.text,
-                          // Canonical chat-body size (14pt). Pre-D30
-                          // this was 15 on inbound and 14 on outbound;
-                          // unified on 14 across MeshCore + SIP DM +
-                          // messaging during the D30 polish pass.
-                          style: chatBubbleBodyStyle(
-                            ref,
-                            baseFontSize: 14,
-                            color: context.textPrimary,
+                        if (message.text.trim().isEmpty)
+                          Text(
+                            context.l10n.messagingMessageUnableToDisplay,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontStyle: FontStyle.italic,
+                              color: context.textTertiary,
+                            ),
+                          )
+                        else
+                          LinkifiedText(
+                            text: message.text,
+                            // Canonical chat-body size (14pt). Pre-D30
+                            // this was 15 on inbound and 14 on outbound;
+                            // unified on 14 across MeshCore + SIP DM +
+                            // messaging during the D30 polish pass.
+                            style: chatBubbleBodyStyle(
+                              ref,
+                              baseFontSize: 14,
+                              color: context.textPrimary,
+                            ),
                           ),
-                        ),
                         // Inline translation
                         if (isTranslatable)
                           _buildTranslationSection(

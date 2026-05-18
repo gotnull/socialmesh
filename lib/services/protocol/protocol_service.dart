@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/logging.dart';
@@ -3876,9 +3877,24 @@ class ProtocolService {
   /// Handle text message
   void _handleTextMessage(pb.MeshPacket packet, pb.Data data) {
     try {
-      final text = sanitizeExternalText(
+      final sanitized = sanitizeExternalTextWithStats(
         utf8.decode(data.payload, allowMalformed: true),
       );
+      final text = sanitized.text;
+      // Background ingest already drops post-sanitization empties; mirror
+      // here so foreground delivery doesn't leak blank rows into messages.db
+      // and bubbles that render as just a lock icon + timestamp.
+      if (text.trim().isEmpty) {
+        final digest = sha256.convert(data.payload).toString().substring(0, 8);
+        AppLogging.protocol(
+          'rx_text_dropped reason=sanitized_empty '
+          'len=${data.payload.length}B '
+          'ctrl=${sanitized.stats.controlsStripped} '
+          'surrogate_repairs=${sanitized.stats.surrogateRepairs} '
+          'digest=$digest',
+        );
+        return;
+      }
       AppLogging.protocol('Text message from ${packet.from}: $text');
 
       // Look up sender node info to cache in message
