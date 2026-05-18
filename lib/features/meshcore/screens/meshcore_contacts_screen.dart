@@ -26,6 +26,7 @@ import '../../../providers/meshcore_message_providers.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../../navigation/meshcore_shell.dart';
+import '../widgets/meshcore_sigil_avatar.dart';
 import 'meshcore_chat_screen.dart';
 import 'meshcore_contact_detail_screen.dart';
 import 'meshcore_contact_import_sheet.dart';
@@ -992,27 +993,34 @@ class _ContactCard extends ConsumerWidget {
           padding: const EdgeInsets.all(AppTheme.spacing12),
           child: Row(
             children: [
-              // Avatar
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: avatarColor.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(AppTheme.radius12),
-                ),
-                child: Center(
-                  child: Text(
-                    contact.name.isNotEmpty
-                        ? contact.name[0].toUpperCase()
-                        : '?',
-                    style: TextStyle(
-                      color: avatarColor,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+              // Avatar: pubkey-derived sigil (D-S4) when the contact
+              // carries a usable pubkey, falling back to the
+              // single-letter colored tile when not (rare; only for
+              // malformed contact entries with empty or short pubkeys).
+              // onTap stays null so the outer InkWell handles row taps.
+              if (contact.publicKey.length >= 4)
+                MeshCoreSigilAvatar(pubKey: contact.publicKey, size: 48)
+              else
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: avatarColor.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
+                  ),
+                  child: Center(
+                    child: Text(
+                      contact.name.isNotEmpty
+                          ? contact.name[0].toUpperCase()
+                          : '?',
+                      style: TextStyle(
+                        color: avatarColor,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
-              ),
               const SizedBox(width: AppTheme.spacing12),
               // Info
               Expanded(
