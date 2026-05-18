@@ -676,13 +676,16 @@ class _AnimatedEmptyStateState extends State<AnimatedEmptyState>
             // override this layout; the convention is to write
             // single-sentence copy and let the layout wrap it.
             SizedBox(
-              // Fixed height to keep the layout stable while the tagline
-              // cycles through multiple values of varying line count.
-              // 120pt fits up to ~5 lines of 14pt body text including a
-              // paragraph break (when the locale string contains a
-              // `\n\n` between two sentences).
+              // Fixed height keeps the layout stable while the tagline
+              // cycles through values of varying line count (1-5 lines).
+              // 120pt fits a 5-line tagline including a paragraph break
+              // (when the locale string contains a `\n\n` between two
+              // sentences). Content is top-aligned within this box so a
+              // short single-line tagline sits close to the title
+              // instead of floating awkwardly far below it.
               height: 120,
-              child: Center(
+              child: Align(
+                alignment: Alignment.topCenter,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppTheme.spacing24,

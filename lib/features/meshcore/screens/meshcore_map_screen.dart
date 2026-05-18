@@ -27,6 +27,7 @@ import '../../../utils/snackbar.dart';
 import '../../../models/meshcore_contact.dart';
 import '../../../models/meshcore_path_overlay.dart';
 import '../../../models/meshcore_pinned_location.dart';
+import '../../../providers/meshcore_contact_block_provider.dart';
 import '../../../providers/meshcore_pinned_location_provider.dart';
 import '../contact_l10n.dart';
 import '../../../providers/app_providers.dart';
@@ -63,6 +64,9 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
   bool _showRepeaters = true;
   bool _showChatNodes = true;
   bool _showOtherNodes = true;
+  // Row 14: extra filters beyond the original type-based set.
+  bool _showOnlyUnread = false;
+  bool _hideMuted = false;
 
   // Measurement state
   bool _measureMode = false;
@@ -144,6 +148,13 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
     }
 
     // Filter contacts with finite location
+    // Row 14: load the muted-contact set once per build so the
+    // per-marker predicate can hide muted entries without a provider
+    // read per item.
+    final blockedHex = ref
+        .watch(meshCoreContactBlockProvider)
+        .maybeWhen(data: (set) => set, orElse: () => const <String>{});
+
     final contactsWithLocation = contactsState.contacts
         .where(
           (c) =>
@@ -156,6 +167,11 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
           if (c.type == 2 && !_showRepeaters) return false; // Repeater
           if (c.type == 1 && !_showChatNodes) return false; // Chat
           if (c.type != 1 && c.type != 2 && !_showOtherNodes) return false;
+          // Row 14: unread-only + hide-muted filters.
+          if (_showOnlyUnread && c.unreadCount == 0) return false;
+          if (_hideMuted && blockedHex.contains(c.publicKeyHex.toLowerCase())) {
+            return false;
+          }
           return true;
         })
         .toList();
@@ -1257,6 +1273,31 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
               _showOtherNodes,
               (value) {
                 setSheetState(() => _showOtherNodes = value);
+                setState(() {});
+              },
+            ),
+            // Row 14: unread-only + hide-muted filters.
+            _buildFilterSwitch(
+              ctx,
+              setSheetState,
+              context.l10n.meshcoreFilterUnreadOnly,
+              Icons.mark_email_unread_outlined,
+              AccentColors.cyan,
+              _showOnlyUnread,
+              (value) {
+                setSheetState(() => _showOnlyUnread = value);
+                setState(() {});
+              },
+            ),
+            _buildFilterSwitch(
+              ctx,
+              setSheetState,
+              context.l10n.meshcoreFilterHideMuted,
+              Icons.notifications_off_outlined,
+              AccentColors.orange,
+              _hideMuted,
+              (value) {
+                setSheetState(() => _hideMuted = value);
                 setState(() {});
               },
             ),

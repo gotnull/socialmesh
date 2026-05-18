@@ -5325,6 +5325,8 @@
     "meshcoreFilterHidden": "Приховані",
     "meshcoreFilterMap": "Фільтр карти",
     "meshcoreFilterOtherNodes": "Інші вузли",
+    "meshcoreFilterUnreadOnly": "Лише непрочитані",
+    "meshcoreFilterHideMuted": "Приховати заглушені",
     "meshcoreFilterRepeaters": "Репітери",
     "meshcoreFilterTooltip": "Фільтр",
     "meshcoreFrameLogCopied": "Скопійовано {count} кадрів",

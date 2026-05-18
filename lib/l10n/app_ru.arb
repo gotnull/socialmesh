@@ -5630,6 +5630,8 @@
     "meshcoreFilterHidden": "Скрытые",
     "meshcoreFilterMap": "Фильтр карты",
     "meshcoreFilterOtherNodes": "Другие узлы",
+    "meshcoreFilterUnreadOnly": "Только непрочитанные",
+    "meshcoreFilterHideMuted": "Скрыть отключённые",
     "meshcoreFilterRepeaters": "Репитеры",
     "meshcoreFilterTooltip": "Фильтр",
     "meshcoreFrameLogCopied": "Скопировано {count} фреймов",

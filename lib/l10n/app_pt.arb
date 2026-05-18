@@ -38771,6 +38771,8 @@
   "meshcoreFilterHidden": "Ocultos",
   "meshcoreFilterMap": "Filtrar Mapa",
   "meshcoreFilterOtherNodes": "Outros Nós",
+  "meshcoreFilterUnreadOnly": "Apenas não lidos",
+  "meshcoreFilterHideMuted": "Ocultar silenciados",
   "meshcoreFilterRepeaters": "Repetidores",
   "meshcoreFilterTooltip": "Filtrar",
   "meshcoreFrameLogCopied": "Copiados {count} frames",

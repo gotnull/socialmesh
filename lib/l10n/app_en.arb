@@ -13180,6 +13180,14 @@
     "@meshcoreFilterOtherNodes": {
         "description": "Filter switch label for other nodes"
     },
+    "meshcoreFilterUnreadOnly": "Unread only",
+    "@meshcoreFilterUnreadOnly": {
+        "description": "Row 14 map filter switch label: show only contacts with unread messages"
+    },
+    "meshcoreFilterHideMuted": "Hide muted",
+    "@meshcoreFilterHideMuted": {
+        "description": "Row 14 map filter switch label: hide contacts whose notifications are muted"
+    },
     "meshcoreFilterRepeaters": "Repeaters",
     "@meshcoreFilterRepeaters": {
         "description": "Filter switch label for repeaters"
