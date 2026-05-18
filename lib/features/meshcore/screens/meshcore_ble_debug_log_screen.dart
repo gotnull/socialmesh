@@ -236,7 +236,10 @@ class _EntryTile extends StatelessWidget {
     return InkWell(
       onTap: () async {
         await Clipboard.setData(
-          ClipboardData(text: '${entry.category.name}: ${entry.message}'),
+          ClipboardData(
+            text:
+                '${entry.category.name}: ${entry.message}', // lint-allow: hardcoded-string
+          ),
         );
         if (!context.mounted) return;
         showSuccessSnackBar(

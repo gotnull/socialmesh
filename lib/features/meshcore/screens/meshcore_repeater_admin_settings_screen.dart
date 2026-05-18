@@ -293,7 +293,7 @@ class _MeshCoreRepeaterAdminSettingsScreenState
 
     final refreshers = <_RefreshTask>[
       _RefreshTask(
-        command: 'get name',
+        command: 'get name', // lint-allow: hardcoded-string
         apply: (reply) {
           final v = MeshCoreCliReplyParser.extractValue(reply);
           if (v != null) {
@@ -303,7 +303,7 @@ class _MeshCoreRepeaterAdminSettingsScreenState
         },
       ),
       _RefreshTask(
-        command: 'get repeat',
+        command: 'get repeat', // lint-allow: hardcoded-string
         apply: (reply) {
           final v = MeshCoreCliReplyParser.extractBool(reply);
           if (v != null) {
@@ -313,7 +313,7 @@ class _MeshCoreRepeaterAdminSettingsScreenState
         },
       ),
       _RefreshTask(
-        command: 'get allow.read.only',
+        command: 'get allow.read.only', // lint-allow: hardcoded-string
         apply: (reply) {
           final v = MeshCoreCliReplyParser.extractBool(reply);
           if (v != null) {
@@ -323,7 +323,7 @@ class _MeshCoreRepeaterAdminSettingsScreenState
         },
       ),
       _RefreshTask(
-        command: 'get advert.interval',
+        command: 'get advert.interval', // lint-allow: hardcoded-string
         apply: (reply) {
           final v = MeshCoreCliReplyParser.extractInt(reply);
           if (v != null) {
@@ -333,7 +333,7 @@ class _MeshCoreRepeaterAdminSettingsScreenState
         },
       ),
       _RefreshTask(
-        command: 'get flood.advert.interval',
+        command: 'get flood.advert.interval', // lint-allow: hardcoded-string
         apply: (reply) {
           final v = MeshCoreCliReplyParser.extractInt(reply);
           if (v != null) {
@@ -344,7 +344,7 @@ class _MeshCoreRepeaterAdminSettingsScreenState
       ),
       // D49-D1: radio params come back as a single CSV reply.
       _RefreshTask(
-        command: 'get radio',
+        command: 'get radio', // lint-allow: hardcoded-string
         apply: (reply) {
           final r = MeshCoreCliReplyParser.parseRadioReply(reply);
           if (r != null) {
@@ -360,7 +360,7 @@ class _MeshCoreRepeaterAdminSettingsScreenState
         },
       ),
       _RefreshTask(
-        command: 'get tx',
+        command: 'get tx', // lint-allow: hardcoded-string
         apply: (reply) {
           final v = MeshCoreCliReplyParser.extractInt(reply);
           if (v != null) {
@@ -370,7 +370,7 @@ class _MeshCoreRepeaterAdminSettingsScreenState
         },
       ),
       _RefreshTask(
-        command: 'get lat',
+        command: 'get lat', // lint-allow: hardcoded-string
         apply: (reply) {
           final v = MeshCoreCliReplyParser.extractDouble(reply);
           if (v != null) {
@@ -380,7 +380,7 @@ class _MeshCoreRepeaterAdminSettingsScreenState
         },
       ),
       _RefreshTask(
-        command: 'get lon',
+        command: 'get lon', // lint-allow: hardcoded-string
         apply: (reply) {
           final v = MeshCoreCliReplyParser.extractDouble(reply);
           if (v != null) {
@@ -393,7 +393,7 @@ class _MeshCoreRepeaterAdminSettingsScreenState
       // has a getter; the password / guest-password fields are
       // write-only by design, and auto-clock-sync is storage-only.
       _RefreshTask(
-        command: 'get privacy',
+        command: 'get privacy', // lint-allow: hardcoded-string
         apply: (reply) {
           final v = MeshCoreCliReplyParser.extractBool(reply);
           if (v != null) {
@@ -505,7 +505,7 @@ class _MeshCoreRepeaterAdminSettingsScreenState
     if (liveName != _initialName && liveName.isNotEmpty) {
       commands.add(
         _SetCommand(
-          text: 'set name $liveName',
+          text: 'set name $liveName', // lint-allow: hardcoded-string
           onSuccess: () => _initialName = liveName,
         ),
       );
@@ -513,7 +513,8 @@ class _MeshCoreRepeaterAdminSettingsScreenState
     if (_repeat != _initialRepeat) {
       commands.add(
         _SetCommand(
-          text: 'set repeat ${_repeat ? 'on' : 'off'}',
+          text:
+              'set repeat ${_repeat ? 'on' : 'off'}', // lint-allow: hardcoded-string
           onSuccess: () => _initialRepeat = _repeat,
         ),
       );
@@ -521,7 +522,8 @@ class _MeshCoreRepeaterAdminSettingsScreenState
     if (_allowReadOnly != _initialAllowReadOnly) {
       commands.add(
         _SetCommand(
-          text: 'set allow.read.only ${_allowReadOnly ? 'on' : 'off'}',
+          text:
+              'set allow.read.only ${_allowReadOnly ? 'on' : 'off'}', // lint-allow: hardcoded-string
           onSuccess: () => _initialAllowReadOnly = _allowReadOnly,
         ),
       );
@@ -530,7 +532,7 @@ class _MeshCoreRepeaterAdminSettingsScreenState
     if (adv != null && adv != _initialAdvertInterval) {
       commands.add(
         _SetCommand(
-          text: 'set advert.interval $adv',
+          text: 'set advert.interval $adv', // lint-allow: hardcoded-string
           onSuccess: () => _initialAdvertInterval = adv,
         ),
       );
@@ -539,7 +541,8 @@ class _MeshCoreRepeaterAdminSettingsScreenState
     if (flood != null && flood != _initialFloodAdvertInterval) {
       commands.add(
         _SetCommand(
-          text: 'set flood.advert.interval $flood',
+          text:
+              'set flood.advert.interval $flood', // lint-allow: hardcoded-string
           onSuccess: () => _initialFloodAdvertInterval = flood,
         ),
       );
@@ -557,7 +560,8 @@ class _MeshCoreRepeaterAdminSettingsScreenState
         final bwText = _formatBwLabel(bw);
         commands.add(
           _SetCommand(
-            text: 'set radio $freq $bwText $sf $cr',
+            text:
+                'set radio $freq $bwText $sf $cr', // lint-allow: hardcoded-string
             onSuccess: () {
               _initialFrequencyMHz = freq;
               _initialBandwidthKhz = bw;
@@ -572,7 +576,7 @@ class _MeshCoreRepeaterAdminSettingsScreenState
     if (tx != null && tx != _initialTxPowerDbm) {
       commands.add(
         _SetCommand(
-          text: 'set tx $tx',
+          text: 'set tx $tx', // lint-allow: hardcoded-string
           onSuccess: () => _initialTxPowerDbm = tx,
         ),
       );
@@ -581,7 +585,7 @@ class _MeshCoreRepeaterAdminSettingsScreenState
     if (lat != null && lat != _initialLatitude) {
       commands.add(
         _SetCommand(
-          text: 'set lat $lat',
+          text: 'set lat $lat', // lint-allow: hardcoded-string
           onSuccess: () => _initialLatitude = lat,
         ),
       );
@@ -590,7 +594,7 @@ class _MeshCoreRepeaterAdminSettingsScreenState
     if (lon != null && lon != _initialLongitude) {
       commands.add(
         _SetCommand(
-          text: 'set lon $lon',
+          text: 'set lon $lon', // lint-allow: hardcoded-string
           onSuccess: () => _initialLongitude = lon,
         ),
       );
@@ -602,7 +606,7 @@ class _MeshCoreRepeaterAdminSettingsScreenState
     if (pwd.isNotEmpty) {
       commands.add(
         _SetCommand(
-          text: 'password $pwd',
+          text: 'password $pwd', // lint-allow: hardcoded-string
           onSuccess: () => _passwordController.clear(),
         ),
       );
@@ -611,7 +615,7 @@ class _MeshCoreRepeaterAdminSettingsScreenState
     if (guestPwd.isNotEmpty) {
       commands.add(
         _SetCommand(
-          text: 'set guest.password $guestPwd',
+          text: 'set guest.password $guestPwd', // lint-allow: hardcoded-string
           onSuccess: () => _guestPasswordController.clear(),
         ),
       );
@@ -619,7 +623,8 @@ class _MeshCoreRepeaterAdminSettingsScreenState
     if (_privacyMode != _initialPrivacyMode) {
       commands.add(
         _SetCommand(
-          text: 'set privacy ${_privacyMode ? 'on' : 'off'}',
+          text:
+              'set privacy ${_privacyMode ? 'on' : 'off'}', // lint-allow: hardcoded-string
           onSuccess: () => _initialPrivacyMode = _privacyMode,
         ),
       );
