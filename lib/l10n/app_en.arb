@@ -46168,6 +46168,22 @@
     "@notificationChannelMessages": {
         "description": "Android notification channel description for channel messages"
     },
+    "meshcoreNotificationChannelAdvertsName": "MeshCore Adverts",
+    "@meshcoreNotificationChannelAdvertsName": {
+        "description": "Row 11 Android notification channel display name for new-peer advertisement alerts"
+    },
+    "meshcoreNotificationChannelAdvertsDescription": "Alerts when a new MeshCore peer is heard nearby",
+    "@meshcoreNotificationChannelAdvertsDescription": {
+        "description": "Row 11 Android notification channel description for new-peer advertisement alerts"
+    },
+    "meshcoreNotificationChannelBatchSummaryName": "MeshCore Activity Summary",
+    "@meshcoreNotificationChannelBatchSummaryName": {
+        "description": "Row 11 Android notification channel display name for aggregated activity summaries"
+    },
+    "meshcoreNotificationChannelBatchSummaryDescription": "Periodic summaries when multiple MeshCore events arrive in a short window",
+    "@meshcoreNotificationChannelBatchSummaryDescription": {
+        "description": "Row 11 Android notification channel description for aggregated activity summaries"
+    },
     "flowNodeEvent": "Event",
     "@flowNodeEvent": {
         "description": "Visual flow node title: Event"

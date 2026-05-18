@@ -4996,8 +4996,20 @@ class ProtocolService {
       final nowEpoch = DateTime.now().millisecondsSinceEpoch ~/ 1000;
       if (lastHeardEpoch >= _minPlausibleEpoch &&
           lastHeardEpoch <= nowEpoch + _maxFutureSlack) {
-        deviceLastHeard = DateTime.fromMillisecondsSinceEpoch(
+        // NodeInfo can arrive AFTER a fresh packet has already advanced
+        // the existing lastHeard (firmware emits NodeInfo on NodeDB sync
+        // carrying its own stored timestamp, which can be older than what
+        // we just learned from a live packet). The monotonic guard keeps
+        // the newer of the two so a stale firmware value cannot rewind
+        // the timestamp.
+        final fromDevice = DateTime.fromMillisecondsSinceEpoch(
           lastHeardEpoch * 1000,
+        );
+        deviceLastHeard = _monotonicLastHeard(
+          existingNode?.lastHeard,
+          fromDevice,
+          nodeNum: nodeInfo.num,
+          source: 'nodeinfo_db',
         );
         AppLogging.protocol(
           'NodeInfo ${nodeInfo.num}: using device lastHeard=$lastHeardEpoch '

@@ -68,8 +68,7 @@ import 'app_localizations_uk.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -77,8 +76,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -90,13 +88,12 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
@@ -107,7 +104,7 @@ abstract class AppLocalizations {
     Locale('it'),
     Locale('pt'),
     Locale('ru'),
-    Locale('uk'),
+    Locale('uk')
   ];
 
   /// Text displayed in admin panel
@@ -1458,11 +1455,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{nodeName} already has a flight ({flightNumber} - {status})'**
-  String aetherNodeAlreadyHasFlight(
-    String nodeName,
-    String flightNumber,
-    String status,
-  );
+  String aetherNodeAlreadyHasFlight(String nodeName, String flightNumber, String status);
 
   /// Badge label shown when a flight node is detected in the mesh
   ///
@@ -1786,10 +1779,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{nodeName} already has an active flight ({flightNumber})'**
-  String aetherScheduleNodeHasActiveFlight(
-    String nodeName,
-    String flightNumber,
-  );
+  String aetherScheduleNodeHasActiveFlight(String nodeName, String flightNumber);
 
   /// Hint text for the notes field
   ///
@@ -1831,11 +1821,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{departure} and {arrival} are {distance} km apart - too close for a commercial flight'**
-  String aetherScheduleRouteTooClose(
-    String departure,
-    String arrival,
-    int distance,
-  );
+  String aetherScheduleRouteTooClose(String departure, String arrival, int distance);
 
   /// Warning snackbar when departure equals arrival airport
   ///
@@ -2075,12 +2061,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{flightNumber} {departure} → {arrival}\nTrack this Meshtastic flight on Aether:\n{url}'**
-  String aetherShareText(
-    Object flightNumber,
-    Object departure,
-    Object arrival,
-    Object url,
-  );
+  String aetherShareText(Object flightNumber, Object departure, Object arrival, Object url);
 
   /// Title shown when My Flights filter requires sign-in
   ///
@@ -9826,11 +9807,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{filename} is {fileSize} KB - mesh transfer limit is {limit} KB.'**
-  String fileTransferFileTooLarge(
-    String filename,
-    String fileSize,
-    String limit,
-  );
+  String fileTransferFileTooLarge(String filename, String fileSize, String limit);
 
   /// Filter chip label
   ///
@@ -11852,19 +11829,13 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{fromState} -> {toState} is not a valid transition'**
-  String incidentStateMachineInvalidTransition(
-    String fromState,
-    String toState,
-  );
+  String incidentStateMachineInvalidTransition(String fromState, String toState);
 
   /// Permission error when the actor's role lacks the required permission. Placeholders: permissionName, roleName
   ///
   /// In en, this message translates to:
   /// **'{permissionName} denied for role {roleName}'**
-  String incidentStateMachinePermissionDenied(
-    String permissionName,
-    String roleName,
-  );
+  String incidentStateMachinePermissionDenied(String permissionName, String roleName);
 
   /// Error when trying to transition an incident in a terminal state. Placeholder: stateName
   ///
@@ -12812,12 +12783,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'RF Link Budget (free-space path loss)\nDistance: {distance}\nFrequency: {frequency}\nPath Loss: {pathLoss}\nLink Margin: {linkMargin}'**
-  String mapRfLinkBudgetClipboard(
-    String distance,
-    String frequency,
-    String pathLoss,
-    String linkMargin,
-  );
+  String mapRfLinkBudgetClipboard(String distance, String frequency, String pathLoss, String linkMargin);
 
   /// Text displayed in map view
   ///
@@ -14581,10 +14547,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Saved {saved} of {total} settings. Some commands timed out - the admin session may have expired.'**
-  String meshcoreRepeaterAdminSettingsSavedWithTimeoutsSnackbar(
-    int saved,
-    int total,
-  );
+  String meshcoreRepeaterAdminSettingsSavedWithTimeoutsSnackbar(int saved, int total);
 
   /// D49-D1 - section header for radio params
   ///
@@ -18118,11 +18081,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{lat}, {lon} ({altitudeMeters} m)'**
-  String meshcoreTelemetryRowLocationValue(
-    String lat,
-    String lon,
-    int altitudeMeters,
-  );
+  String meshcoreTelemetryRowLocationValue(String lat, String lon, int altitudeMeters);
 
   /// Confirm dialog message for leaving a channel
   ///
@@ -25988,11 +25947,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{count} encounters over {duration}{detail}'**
-  String nodedexTimelineEncounterSession(
-    int count,
-    String duration,
-    String detail,
-  );
+  String nodedexTimelineEncounterSession(int count, String duration, String detail);
 
   /// Text displayed in node management
   ///
@@ -42102,10 +42057,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'\"{templateName}\" uses {newDataType} instead, so your current selections won\'t be used.'**
-  String widgetBuilderSwitchTemplateIncompatible(
-    String templateName,
-    String newDataType,
-  );
+  String widgetBuilderSwitchTemplateIncompatible(String templateName, String newDataType);
 
   /// Template switch warning showing current selection count
   ///
@@ -42951,12 +42903,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'RF Link Budget (free-space path loss)\nDistance: {distance}\nFrequency: {frequency}\nPath Loss: {pathLoss}\nLink Margin: {linkMargin}'**
-  String worldMeshRfLinkBudgetClipboard(
-    String distance,
-    String frequency,
-    String pathLoss,
-    String linkMargin,
-  );
+  String worldMeshRfLinkBudgetClipboard(String distance, String frequency, String pathLoss, String linkMargin);
 
   /// UI text: world mesh scroll for more
   ///
@@ -47690,12 +47637,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Seeded {users} users, {posts} posts, {stories} stories, {comments} comments'**
-  String adminFollowSeededSummary(
-    int users,
-    int posts,
-    int stories,
-    int comments,
-  );
+  String adminFollowSeededSummary(int users, int posts, int stories, int comments);
 
   /// Title for the admin panel screen
   ///
@@ -51625,11 +51567,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Applied {applied} of {total}. {failed} failed.'**
-  String dataExportDeviceConfigRestoreSummaryWithFailures(
-    int applied,
-    int total,
-    int failed,
-  );
+  String dataExportDeviceConfigRestoreSummaryWithFailures(int applied, int total, int failed);
 
   /// Snackbar shown when the user taps Apply with no toggles enabled
   ///
@@ -60359,11 +60297,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{senderName} ({shortCode}) in {channelName}'**
-  String notificationChannelMessageTitle(
-    String senderName,
-    String shortCode,
-    String channelName,
-  );
+  String notificationChannelMessageTitle(String senderName, String shortCode, String channelName);
 
   /// Android notification channel description for node discovery
   ///
@@ -60412,6 +60346,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Notifications for channel mesh messages'**
   String get notificationChannelMessages;
+
+  /// Row 11 Android notification channel display name for new-peer advertisement alerts
+  ///
+  /// In en, this message translates to:
+  /// **'MeshCore Adverts'**
+  String get meshcoreNotificationChannelAdvertsName;
+
+  /// Row 11 Android notification channel description for new-peer advertisement alerts
+  ///
+  /// In en, this message translates to:
+  /// **'Alerts when a new MeshCore peer is heard nearby'**
+  String get meshcoreNotificationChannelAdvertsDescription;
+
+  /// Row 11 Android notification channel display name for aggregated activity summaries
+  ///
+  /// In en, this message translates to:
+  /// **'MeshCore Activity Summary'**
+  String get meshcoreNotificationChannelBatchSummaryName;
+
+  /// Row 11 Android notification channel description for aggregated activity summaries
+  ///
+  /// In en, this message translates to:
+  /// **'Periodic summaries when multiple MeshCore events arrive in a short window'**
+  String get meshcoreNotificationChannelBatchSummaryDescription;
 
   /// Visual flow node title: Event
   ///
@@ -73788,8 +73746,7 @@ abstract class AppLocalizations {
   String get presenceInferenceTooltip;
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -73798,46 +73755,31 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) => <String>[
-    'de',
-    'en',
-    'es',
-    'fr',
-    'it',
-    'pt',
-    'ru',
-    'uk',
-  ].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['de', 'en', 'es', 'fr', 'it', 'pt', 'ru', 'uk'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'de':
-      return AppLocalizationsDe();
-    case 'en':
-      return AppLocalizationsEn();
-    case 'es':
-      return AppLocalizationsEs();
-    case 'fr':
-      return AppLocalizationsFr();
-    case 'it':
-      return AppLocalizationsIt();
-    case 'pt':
-      return AppLocalizationsPt();
-    case 'ru':
-      return AppLocalizationsRu();
-    case 'uk':
-      return AppLocalizationsUk();
+    case 'de': return AppLocalizationsDe();
+    case 'en': return AppLocalizationsEn();
+    case 'es': return AppLocalizationsEs();
+    case 'fr': return AppLocalizationsFr();
+    case 'it': return AppLocalizationsIt();
+    case 'pt': return AppLocalizationsPt();
+    case 'ru': return AppLocalizationsRu();
+    case 'uk': return AppLocalizationsUk();
   }
 
   throw FlutterError(
     'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
     'an issue with the localizations generation tool. Please file an issue '
     'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
+    'that was used.'
   );
 }

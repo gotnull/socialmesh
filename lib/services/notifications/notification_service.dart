@@ -265,6 +265,43 @@ class NotificationService {
       AppLogging.notifications(
         '🔔 Android notification permissions granted: $granted',
       );
+
+      // Row 11: eagerly register the MeshCore notification channels
+      // that don't yet have a notification fired against them. Without
+      // this step the channels would only materialise on first fire
+      // and users couldn't customise their ringtones / vibration via
+      // Android Settings ahead of time.
+      //
+      // The existing `direct_messages` and `channel_messages` channels
+      // are intentionally NOT re-created here - they were
+      // lazy-created earlier by `AndroidNotificationDetails` inside
+      // `showMeshCoreContactMessageNotification` /
+      // `showMeshCoreChannelMessageNotification`. Re-creating them
+      // with potentially different importance/description would reset
+      // user-customised sound/vibration prefs.
+      if (androidPlugin != null) {
+        await androidPlugin.createNotificationChannel(
+          AndroidNotificationChannel(
+            'meshcore_adverts',
+            _l10n.meshcoreNotificationChannelAdvertsName,
+            description: _l10n.meshcoreNotificationChannelAdvertsDescription,
+            importance: Importance.defaultImportance,
+          ),
+        );
+        await androidPlugin.createNotificationChannel(
+          AndroidNotificationChannel(
+            'meshcore_batch_summary',
+            _l10n.meshcoreNotificationChannelBatchSummaryName,
+            description:
+                _l10n.meshcoreNotificationChannelBatchSummaryDescription,
+            importance: Importance.defaultImportance,
+          ),
+        );
+        AppLogging.notifications(
+          '🔔 Registered MeshCore notification channels: '
+          'meshcore_adverts, meshcore_batch_summary',
+        );
+      }
     }
 
     _initialized = true;
