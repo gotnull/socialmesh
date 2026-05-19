@@ -26,6 +26,7 @@ import '../../core/widgets/status_banner.dart';
 import '../../core/widgets/map_controls.dart';
 import '../../core/widgets/map_node_drawer.dart';
 import '../../core/widgets/node_info_card.dart';
+import '../../core/widgets/stale_location_opacity.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -139,6 +140,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
   bool _showHeatmap = false;
   bool _clusterMarkers = false;
   bool _isRefreshing = false;
+  // Row 13: most recent faded-marker count we logged. Used to suppress
+  // the `event=map.stale_fade.applied` log when nothing has changed
+  // between frames - prevents spam on every rebuild.
+  int _lastLoggedFadedCount = 0;
   double _currentZoom = 14.0;
   bool _showNodeList = false;
   bool _showFilters = false;
@@ -1749,11 +1754,40 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                 if (aIsMe != bIsMe) return aIsMe ? 1 : -1;
                                 return 0;
                               });
+                            // Row 13: age-based fade. Compute "now" once
+                            // per build so every marker in this frame
+                            // shares the same reference, and a single
+                            // log line summarises how many of the
+                            // visible nodes are fading.
+                            final now = DateTime.now();
+                            int fadedCount = 0;
+                            for (final n in sortedNodes) {
+                              if (markerOpacityForLastHeard(
+                                    n.node.lastHeard,
+                                    now,
+                                  ) <
+                                  1.0) {
+                                fadedCount++;
+                              }
+                            }
+                            if (fadedCount > 0 &&
+                                fadedCount != _lastLoggedFadedCount) {
+                              _lastLoggedFadedCount = fadedCount;
+                              AppLogging.map(
+                                'event=map.stale_fade.applied '
+                                'visible=${sortedNodes.length} '
+                                'faded=$fadedCount',
+                              );
+                            }
                             final markers = finiteMarkers(
                               sortedNodes.map((n) {
                                 final isMyNode = n.node.nodeNum == myNodeNum;
                                 final isSelected =
                                     _selectedNode?.nodeNum == n.node.nodeNum;
+                                final ageOpacity = markerOpacityForLastHeard(
+                                  n.node.lastHeard,
+                                  now,
+                                );
                                 return Marker(
                                   key: ValueKey<int>(n.node.nodeNum),
                                   point: LatLng(n.latitude, n.longitude),
@@ -1790,25 +1824,37 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                         _selectedTakEntity = null;
                                       });
                                     },
-                                    child: widget.nodedexMode
-                                        ? NodeDexSigilMarker(
-                                            pin:
-                                                nodedexPinsByNum[n
-                                                    .node
-                                                    .nodeNum]!,
-                                            isSelected: isSelected,
-                                            isStale: n.isStale,
-                                          )
-                                        : _NodeMarker(
-                                            node: n.node,
-                                            presence: presenceConfidenceFor(
-                                              presenceMap,
-                                              n.node,
+                                    child: Opacity(
+                                      // Row 13: age-from-lastHeard fade
+                                      // applied on top of the existing
+                                      // cached-position isStale logic.
+                                      // Composes multiplicatively if
+                                      // both flags fire on the same
+                                      // marker (rare in practice).
+                                      // Skip the wrapper for own-node
+                                      // so the user's marker never
+                                      // ghosts itself.
+                                      opacity: isMyNode ? 1.0 : ageOpacity,
+                                      child: widget.nodedexMode
+                                          ? NodeDexSigilMarker(
+                                              pin:
+                                                  nodedexPinsByNum[n
+                                                      .node
+                                                      .nodeNum]!,
+                                              isSelected: isSelected,
+                                              isStale: n.isStale,
+                                            )
+                                          : _NodeMarker(
+                                              node: n.node,
+                                              presence: presenceConfidenceFor(
+                                                presenceMap,
+                                                n.node,
+                                              ),
+                                              isMyNode: isMyNode,
+                                              isSelected: isSelected,
+                                              isStale: n.isStale,
                                             ),
-                                            isMyNode: isMyNode,
-                                            isSelected: isSelected,
-                                            isStale: n.isStale,
-                                          ),
+                                    ),
                                   ),
                                 );
                               }),
