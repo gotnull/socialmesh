@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1021,6 +1023,17 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
     // verify the `mounted` guard is the canonical State one (not a
     // shadowed parameter).
     final l10n = context.l10n;
+    // Read the radio's current advertised lat/lon from SELF_INFO so
+    // the editor opens prefilled with the value currently stored on
+    // the device. Firmware wire scale is 1e6 - see
+    // kMeshCoreAdvertLatLonScale.
+    final selfInfo = ref.read(meshCoreSelfInfoProvider).selfInfo;
+    final initialLat = selfInfo?.latitude == null
+        ? null
+        : selfInfo!.latitude! / 1e6;
+    final initialLon = selfInfo?.longitude == null
+        ? null
+        : selfInfo!.longitude! / 1e6;
     // D26: use the same `showScrollable` variant as the Radio
     // Settings sheet (`device_sheet.dart` style: Column ->
     // Padding(header) -> Expanded(ListView with widget
@@ -1033,7 +1046,11 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
       initialChildSize: 0.85,
       minChildSize: 0.5,
       maxChildSize: 0.95,
-      builder: (controller) => _EditLocationSheet(scrollController: controller),
+      builder: (controller) => _EditLocationSheet(
+        scrollController: controller,
+        initialLatitude: initialLat,
+        initialLongitude: initialLon,
+      ),
     );
     if (result == null) return;
     if (!mounted) return;
@@ -1049,15 +1066,30 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
       final ok = await session.setAdvertLatLon(result.lat, result.lon);
       if (!mounted) return;
       if (ok) {
+        // Re-fetch SELF_INFO so the cached value reflects what the
+        // firmware now advertises. Without this, the next reopen of
+        // the editor would prefill with the stale pre-apply lat/lon.
+        AppLogging.meshcore(
+          'event=location.apply.succeeded cleared=${result.cleared}',
+        );
+        unawaited(ref.read(meshCoreSelfInfoProvider.notifier).refresh());
         if (result.cleared) {
           showSuccessSnackBar(context, l10n.meshcoreLocationCleared);
         } else {
           showSuccessSnackBar(context, l10n.meshcoreLocationUpdated);
         }
       } else {
+        AppLogging.meshcore(
+          'event=location.apply.failed reason=session_returned_false',
+          error: true,
+        );
         showErrorSnackBar(context, l10n.meshcoreFailedToSetLocation);
       }
-    } catch (_) {
+    } catch (e) {
+      AppLogging.meshcore(
+        'event=location.apply.failed reason=${e.runtimeType}',
+        error: true,
+      );
       if (mounted) {
         showErrorSnackBar(context, l10n.meshcoreFailedToSetLocation);
       }
@@ -1221,7 +1253,19 @@ class _EditLocationResult {
 class _EditLocationSheet extends ConsumerStatefulWidget {
   final ScrollController scrollController;
 
-  const _EditLocationSheet({required this.scrollController});
+  /// Current advertised latitude in degrees (decoded from firmware
+  /// 1e6 wire scale). Null when no position is stored on the radio
+  /// yet - the sheet opens with blank fields in that case.
+  final double? initialLatitude;
+
+  /// Current advertised longitude in degrees. See [initialLatitude].
+  final double? initialLongitude;
+
+  const _EditLocationSheet({
+    required this.scrollController,
+    this.initialLatitude,
+    this.initialLongitude,
+  });
 
   @override
   ConsumerState<_EditLocationSheet> createState() => _EditLocationSheetState();
@@ -1230,9 +1274,35 @@ class _EditLocationSheet extends ConsumerStatefulWidget {
 class _EditLocationSheetState extends ConsumerState<_EditLocationSheet>
     with LifecycleSafeMixin<_EditLocationSheet> {
   final _formKey = GlobalKey<FormState>();
-  final _latController = TextEditingController();
-  final _lonController = TextEditingController();
+  late final TextEditingController _latController;
+  late final TextEditingController _lonController;
   bool _fetchingGps = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Prefill the controllers from the radio's currently-advertised
+    // value so the editor shows what's stored. 6-decimal formatting
+    // matches the firmware's 1e6 wire scale exactly.
+    _latController = TextEditingController(
+      text: _formatInitial(widget.initialLatitude),
+    );
+    _lonController = TextEditingController(
+      text: _formatInitial(widget.initialLongitude),
+    );
+    AppLogging.meshcore(
+      'event=location.editor.opened '
+      'has_initial=${widget.initialLatitude != null && widget.initialLongitude != null}',
+    );
+  }
+
+  static String _formatInitial(double? value) {
+    if (value == null) return '';
+    // Treat (0, 0) as "no position stored" - that's how the firmware's
+    // clear-location convention encodes the empty state.
+    if (value == 0) return '';
+    return value.toStringAsFixed(6);
+  }
 
   @override
   void dispose() {

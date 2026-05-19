@@ -358,10 +358,10 @@ class MeshCoreSession {
     // open (e.g. during the bridge tests in D15). Code + size only;
     // payload bytes are deliberately omitted to keep secrets out of the
     // structured log channel.
-    AppLogging.meshcore(
-      'event=frame.received scope=protocol code=0x$hexCode '
-      'size=${frame.payload.length}',
-    );
+    // AppLogging.meshcore(
+    //   'event=frame.received scope=protocol code=0x$hexCode '
+    //   'size=${frame.payload.length}',
+    // );
 
     // Debug-only verbose dump for raw hex (full payload), payload-redacted
     // for sensitive codes (message bodies, contact identity material,
@@ -1091,14 +1091,14 @@ class MeshCoreSession {
     final stats = MeshCoreRadioStats.parse(reframed);
     if (stats == null) return null;
 
-    AppLogging.meshcore(
-      'event=radio_stats.fetched '
-      'noise=${stats.noiseFloorDbm} '
-      'rssi=${stats.lastRssiDbm} '
-      'snr_q=${stats.lastSnrQuarter} '
-      'tx_s=${stats.txAirtime.inSeconds} '
-      'rx_s=${stats.rxAirtime.inSeconds}',
-    );
+    // AppLogging.meshcore(
+    //   'event=radio_stats.fetched '
+    //   'noise=${stats.noiseFloorDbm} '
+    //   'rssi=${stats.lastRssiDbm} '
+    //   'snr_q=${stats.lastSnrQuarter} '
+    //   'tx_s=${stats.txAirtime.inSeconds} '
+    //   'rx_s=${stats.rxAirtime.inSeconds}',
+    // );
     return stats;
   }
 
