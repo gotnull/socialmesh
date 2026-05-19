@@ -2788,6 +2788,22 @@ class AppLocalizationsIt extends AppLocalizations {
       'Filtra per nodo (facoltativo)';
 
   @override
+  String get automationTriggerProtocolLabel => 'Ambito protocollo';
+
+  @override
+  String get automationTriggerProtocolHelp =>
+      'Quale protocollo attiva questo trigger';
+
+  @override
+  String get automationTriggerProtocolAny => 'Qualsiasi';
+
+  @override
+  String get automationTriggerProtocolMeshtastic => 'Meshtastic';
+
+  @override
+  String get automationTriggerProtocolMeshcore => 'MeshCore';
+
+  @override
   String get automationTriggerNodeOffline => 'Il nodo diventa inattivo';
 
   @override

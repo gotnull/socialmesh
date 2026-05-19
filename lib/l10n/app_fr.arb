@@ -11953,5 +11953,10 @@
   "meshcoreDashboardEmptyTitle": "Aucun widget ajouté",
   "meshcoreDashboardEmptyMessage": "Personnalisez votre tableau de bord MeshCore avec les widgets qui comptent pour vous",
   "meshcoreDashboardManageWidgetsTitle": "Gérer les widgets",
-  "meshcoreDashboardManageWidgetsHint": "Touchez pour ajouter ou retirer des widgets de votre tableau de bord"
+  "meshcoreDashboardManageWidgetsHint": "Touchez pour ajouter ou retirer des widgets de votre tableau de bord",
+  "automationTriggerProtocolLabel": "Portée du protocole",
+  "automationTriggerProtocolHelp": "Quel protocole déclenche ce trigger",
+  "automationTriggerProtocolAny": "Tous",
+  "automationTriggerProtocolMeshtastic": "Meshtastic",
+  "automationTriggerProtocolMeshcore": "MeshCore"
 }

@@ -17,7 +17,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/logging.dart';
 import '../core/meshcore_constants.dart';
+import '../features/automations/automation_engine.dart';
+import '../features/automations/automation_providers.dart';
+import '../features/automations/models/automation.dart';
 import '../features/meshcore/parsers/meshcore_message_frame_parser.dart';
+import '../models/mesh_models.dart' as mesh;
 import '../models/meshcore_contact.dart';
 import '../services/meshcore/protocol/meshcore_chat_meta_envelope.dart';
 import '../services/meshcore/protocol/meshcore_frame.dart';
@@ -995,6 +999,18 @@ class MeshCoreConversationsNotifier
 
     _addMessageToConversation(conversationId, message, incrementUnread: true);
 
+    // Phase 3 Slice A: fan out to automation engine + IFTTT service
+    // tagged with `TriggerProtocol.meshcore`. The `from` int is the
+    // first 4 pubkey bytes interpreted as a big-endian uint32 so
+    // dedupe keys are stable per-contact across messages. Channel
+    // index is null for DMs.
+    _fireMeshCoreMessageToEngines(
+      senderKey: fullSenderKey,
+      senderName: senderName ?? '',
+      text: displayText,
+      channelIndex: null,
+    );
+
     // D30 Part A: fire a local notification for inbound MeshCore DMs.
     // Gated on the existing app-wide notification toggles so the user's
     // master + per-category preferences apply uniformly across protocols.
@@ -1077,9 +1093,80 @@ class MeshCoreConversationsNotifier
   /// D37-B-A: hide is intentionally NOT consulted here. A hidden
   /// channel still notifies unless it is also muted. Mute is the only
   /// notification suppression input; hide only affects the channels-
-  /// screen visibility. Keeping the two axes orthogonal preserves the
-  /// user's mental model and prevents silent message loss for users
-  /// who hide a channel to declutter without intending to silence it.
+  // Phase 3 Slice A: dispatch an inbound MeshCore message to the
+  // automation engine and IFTTT service, both tagged with
+  // `TriggerProtocol.meshcore`. Existing automations / webhooks fire
+  // if their `protocolFilter` is `any` or `meshcore`. Engine/IFTTT
+  // run fire-and-forget off-frame to keep the broadcast listener
+  // non-blocking; failures are logged and otherwise swallowed.
+  //
+  // `senderKey` is the full 32-byte MeshCore pubkey for DMs (null for
+  // channel frames where firmware strips identity). `from` int is the
+  // first 4 pubkey bytes as big-endian uint32: stable per contact,
+  // identical across messages, so the engine's per-sender dedupe key
+  // (`messageReceived_node{from}`) coalesces rapid-fire identical
+  // messages from one peer the same way the Meshtastic side does.
+  void _fireMeshCoreMessageToEngines({
+    required Uint8List? senderKey,
+    required String senderName,
+    required String text,
+    required int? channelIndex,
+  }) {
+    final from = meshCoreSenderIdFromKey(senderKey);
+    final automationMessage = AutomationMessage(
+      from: from,
+      text: text,
+      channel: channelIndex,
+    );
+
+    Future.microtask(() async {
+      if (_disposed) return;
+      try {
+        final engine = ref.read(automationEngineProvider);
+        await engine.processMessage(
+          automationMessage,
+          senderName: senderName,
+          protocol: TriggerProtocol.meshcore,
+        );
+      } catch (e) {
+        AppLogging.meshcore(
+          'event=automation.fanout.failed scope=meshcore '
+          'reason=${e.runtimeType}',
+          error: true,
+        );
+      }
+    });
+
+    Future.microtask(() async {
+      if (_disposed) return;
+      try {
+        final iftttService = ref.read(iftttServiceProvider);
+        if (!iftttService.isActive) return;
+        // IFTTT consumes the Meshtastic `Message` shape - reuse it
+        // for the MeshCore-tagged call. Phase 4 will refactor IFTTT
+        // to use AutomationMessage natively, but the typed wrapper
+        // lets us thread protocol now without an IFTTT refactor.
+        final iftttMessage = mesh.Message(
+          from: from,
+          to: 0,
+          text: text,
+          channel: channelIndex ?? 0,
+        );
+        await iftttService.processMessage(
+          iftttMessage,
+          senderName: senderName,
+          protocol: TriggerProtocol.meshcore,
+        );
+      } catch (e) {
+        AppLogging.meshcore(
+          'event=ifttt.fanout.failed scope=meshcore '
+          'reason=${e.runtimeType}',
+          error: true,
+        );
+      }
+    });
+  }
+
   void _maybeNotifyChannelMessage({
     required String senderName,
     required String channelName,
@@ -1238,6 +1325,18 @@ class MeshCoreConversationsNotifier
       message,
       incrementUnread: true,
       isChannel: true,
+      channelIndex: parsed.channelIndex,
+    );
+
+    // Phase 3 Slice A: fan out to automation engine + IFTTT service.
+    // MeshCore channel frames carry no per-sender identity (firmware
+    // strips it), so `from` is 0 and senderName is empty - matches
+    // the analogous limitation surfaced in the OS notification path
+    // below.
+    _fireMeshCoreMessageToEngines(
+      senderKey: null,
+      senderName: '',
+      text: displayText,
       channelIndex: parsed.channelIndex,
     );
 
@@ -2011,3 +2110,15 @@ final meshCoreChatHistoryProvider =
       MeshCoreChatHistoryState,
       MeshCoreChatHistoryKey
     >(MeshCoreChatHistoryNotifier.new);
+
+// First 4 bytes of `key` interpreted as a big-endian uint32, or 0
+// when no key is available. Used as a stable per-contact `from` int
+// for the `AutomationMessage` / `Message` plumbed into the
+// automation engine + IFTTT service from MeshCore inbound message
+// handlers. Channel frames (no per-sender identity in firmware) get
+// 0. Top-level so the derivation can be regression-pinned in a unit
+// test without instantiating the full conversations notifier.
+int meshCoreSenderIdFromKey(Uint8List? key) {
+  if (key == null || key.length < 4) return 0;
+  return (key[0] << 24) | (key[1] << 16) | (key[2] << 8) | key[3];
+}

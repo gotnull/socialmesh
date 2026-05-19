@@ -45471,5 +45471,10 @@
   "meshcoreDashboardEmptyTitle": "Nessun widget aggiunto",
   "meshcoreDashboardEmptyMessage": "Personalizza la dashboard MeshCore con i widget che ti interessano",
   "meshcoreDashboardManageWidgetsTitle": "Gestisci widget",
-  "meshcoreDashboardManageWidgetsHint": "Tocca per aggiungere o rimuovere widget dalla dashboard"
+  "meshcoreDashboardManageWidgetsHint": "Tocca per aggiungere o rimuovere widget dalla dashboard",
+  "automationTriggerProtocolLabel": "Ambito protocollo",
+  "automationTriggerProtocolHelp": "Quale protocollo attiva questo trigger",
+  "automationTriggerProtocolAny": "Qualsiasi",
+  "automationTriggerProtocolMeshtastic": "Meshtastic",
+  "automationTriggerProtocolMeshcore": "MeshCore"
 }

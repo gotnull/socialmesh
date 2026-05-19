@@ -2813,6 +2813,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get automationTriggerNodeFilterLabel => 'Filtrer par nœud (optionnel)';
 
   @override
+  String get automationTriggerProtocolLabel => 'Portée du protocole';
+
+  @override
+  String get automationTriggerProtocolHelp =>
+      'Quel protocole déclenche ce trigger';
+
+  @override
+  String get automationTriggerProtocolAny => 'Tous';
+
+  @override
+  String get automationTriggerProtocolMeshtastic => 'Meshtastic';
+
+  @override
+  String get automationTriggerProtocolMeshcore => 'MeshCore';
+
+  @override
   String get automationTriggerNodeOffline => 'Le nœud devient inactif';
 
   @override

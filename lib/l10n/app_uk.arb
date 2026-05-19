@@ -11953,5 +11953,10 @@
   "meshcoreDashboardEmptyTitle": "Віджети не додано",
   "meshcoreDashboardEmptyMessage": "Налаштуйте свою панель MeshCore віджетами, які вам важливі",
   "meshcoreDashboardManageWidgetsTitle": "Керування віджетами",
-  "meshcoreDashboardManageWidgetsHint": "Торкніться, щоб додати або видалити віджети з панелі"
+  "meshcoreDashboardManageWidgetsHint": "Торкніться, щоб додати або видалити віджети з панелі",
+  "automationTriggerProtocolLabel": "Область протоколу",
+  "automationTriggerProtocolHelp": "Який протокол запускає цей тригер",
+  "automationTriggerProtocolAny": "Будь-який",
+  "automationTriggerProtocolMeshtastic": "Meshtastic",
+  "automationTriggerProtocolMeshcore": "MeshCore"
 }

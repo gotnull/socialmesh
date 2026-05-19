@@ -2796,6 +2796,22 @@ class AppLocalizationsDe extends AppLocalizations {
   String get automationTriggerNodeFilterLabel => 'Nach Node filtern (optional)';
 
   @override
+  String get automationTriggerProtocolLabel => 'Protokoll-Bereich';
+
+  @override
+  String get automationTriggerProtocolHelp =>
+      'Welches Protokoll diesen Trigger auslöst';
+
+  @override
+  String get automationTriggerProtocolAny => 'Beliebig';
+
+  @override
+  String get automationTriggerProtocolMeshtastic => 'Meshtastic';
+
+  @override
+  String get automationTriggerProtocolMeshcore => 'MeshCore';
+
+  @override
   String get automationTriggerNodeOffline => 'Node wird inaktiv';
 
   @override

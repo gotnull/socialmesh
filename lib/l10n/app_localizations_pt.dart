@@ -2774,6 +2774,22 @@ class AppLocalizationsPt extends AppLocalizations {
   String get automationTriggerNodeFilterLabel => 'Filtrar por nó (opcional)';
 
   @override
+  String get automationTriggerProtocolLabel => 'Escopo do protocolo';
+
+  @override
+  String get automationTriggerProtocolHelp =>
+      'Qual protocolo dispara este gatilho';
+
+  @override
+  String get automationTriggerProtocolAny => 'Qualquer';
+
+  @override
+  String get automationTriggerProtocolMeshtastic => 'Meshtastic';
+
+  @override
+  String get automationTriggerProtocolMeshcore => 'MeshCore';
+
+  @override
   String get automationTriggerNodeOffline => 'Nó fica inativo';
 
   @override

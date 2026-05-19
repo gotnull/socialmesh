@@ -3656,6 +3656,26 @@
     "@automationTriggerNodeFilterLabel": {
         "description": "Label for the optional node filter"
     },
+    "automationTriggerProtocolLabel": "Protocol scope",
+    "@automationTriggerProtocolLabel": {
+        "description": "Section label for the automation protocol-filter pill"
+    },
+    "automationTriggerProtocolHelp": "Which protocol fires this trigger",
+    "@automationTriggerProtocolHelp": {
+        "description": "Helper text under the automation protocol-filter pill"
+    },
+    "automationTriggerProtocolAny": "Any",
+    "@automationTriggerProtocolAny": {
+        "description": "Protocol-filter pill option: fire on any protocol"
+    },
+    "automationTriggerProtocolMeshtastic": "Meshtastic",
+    "@automationTriggerProtocolMeshtastic": {
+        "description": "Protocol-filter pill option: fire only on Meshtastic events"
+    },
+    "automationTriggerProtocolMeshcore": "MeshCore",
+    "@automationTriggerProtocolMeshcore": {
+        "description": "Protocol-filter pill option: fire only on MeshCore events"
+    },
     "automationTriggerNodeOffline": "Node becomes inactive",
     "@automationTriggerNodeOffline": {
         "description": "Display name for the nodeOffline trigger type"

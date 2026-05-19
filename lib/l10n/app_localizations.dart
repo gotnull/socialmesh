@@ -4896,6 +4896,36 @@ abstract class AppLocalizations {
   /// **'Filter by node (optional)'**
   String get automationTriggerNodeFilterLabel;
 
+  /// Section label for the automation protocol-filter pill
+  ///
+  /// In en, this message translates to:
+  /// **'Protocol scope'**
+  String get automationTriggerProtocolLabel;
+
+  /// Helper text under the automation protocol-filter pill
+  ///
+  /// In en, this message translates to:
+  /// **'Which protocol fires this trigger'**
+  String get automationTriggerProtocolHelp;
+
+  /// Protocol-filter pill option: fire on any protocol
+  ///
+  /// In en, this message translates to:
+  /// **'Any'**
+  String get automationTriggerProtocolAny;
+
+  /// Protocol-filter pill option: fire only on Meshtastic events
+  ///
+  /// In en, this message translates to:
+  /// **'Meshtastic'**
+  String get automationTriggerProtocolMeshtastic;
+
+  /// Protocol-filter pill option: fire only on MeshCore events
+  ///
+  /// In en, this message translates to:
+  /// **'MeshCore'**
+  String get automationTriggerProtocolMeshcore;
+
   /// Display name for the nodeOffline trigger type
   ///
   /// In en, this message translates to:

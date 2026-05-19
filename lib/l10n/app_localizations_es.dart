@@ -2803,6 +2803,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String get automationTriggerNodeFilterLabel => 'Filtrar por nodo (opcional)';
 
   @override
+  String get automationTriggerProtocolLabel => 'Alcance del protocolo';
+
+  @override
+  String get automationTriggerProtocolHelp =>
+      'Qué protocolo activa este disparador';
+
+  @override
+  String get automationTriggerProtocolAny => 'Cualquiera';
+
+  @override
+  String get automationTriggerProtocolMeshtastic => 'Meshtastic';
+
+  @override
+  String get automationTriggerProtocolMeshcore => 'MeshCore';
+
+  @override
   String get automationTriggerNodeOffline => 'El nodo pasa a inactivo';
 
   @override

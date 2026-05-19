@@ -2779,6 +2779,22 @@ class AppLocalizationsUk extends AppLocalizations {
       'Фільтр за вузлом (необов\'язково)';
 
   @override
+  String get automationTriggerProtocolLabel => 'Область протоколу';
+
+  @override
+  String get automationTriggerProtocolHelp =>
+      'Який протокол запускає цей тригер';
+
+  @override
+  String get automationTriggerProtocolAny => 'Будь-який';
+
+  @override
+  String get automationTriggerProtocolMeshtastic => 'Meshtastic';
+
+  @override
+  String get automationTriggerProtocolMeshcore => 'MeshCore';
+
+  @override
   String get automationTriggerNodeOffline => 'Вузол стає неактивним';
 
   @override

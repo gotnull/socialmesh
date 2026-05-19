@@ -2752,6 +2752,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get automationTriggerNodeFilterLabel => 'Filter by node (optional)';
 
   @override
+  String get automationTriggerProtocolLabel => 'Protocol scope';
+
+  @override
+  String get automationTriggerProtocolHelp =>
+      'Which protocol fires this trigger';
+
+  @override
+  String get automationTriggerProtocolAny => 'Any';
+
+  @override
+  String get automationTriggerProtocolMeshtastic => 'Meshtastic';
+
+  @override
+  String get automationTriggerProtocolMeshcore => 'MeshCore';
+
+  @override
   String get automationTriggerNodeOffline => 'Node becomes inactive';
 
   @override

@@ -12327,5 +12327,10 @@
   "meshcoreDashboardEmptyTitle": "Виджеты не добавлены",
   "meshcoreDashboardEmptyMessage": "Настройте панель MeshCore с виджетами, которые вам важны",
   "meshcoreDashboardManageWidgetsTitle": "Управление виджетами",
-  "meshcoreDashboardManageWidgetsHint": "Нажмите, чтобы добавить или удалить виджеты с панели"
+  "meshcoreDashboardManageWidgetsHint": "Нажмите, чтобы добавить или удалить виджеты с панели",
+  "automationTriggerProtocolLabel": "Область протокола",
+  "automationTriggerProtocolHelp": "Какой протокол запускает этот триггер",
+  "automationTriggerProtocolAny": "Любой",
+  "automationTriggerProtocolMeshtastic": "Meshtastic",
+  "automationTriggerProtocolMeshcore": "MeshCore"
 }

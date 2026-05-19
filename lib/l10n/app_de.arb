@@ -11953,5 +11953,10 @@
   "meshcoreDashboardEmptyTitle": "Keine Widgets hinzugefügt",
   "meshcoreDashboardEmptyMessage": "Passe dein MeshCore-Dashboard mit den Widgets an, die dir wichtig sind",
   "meshcoreDashboardManageWidgetsTitle": "Widgets verwalten",
-  "meshcoreDashboardManageWidgetsHint": "Tippe, um Widgets zu deinem Dashboard hinzuzufügen oder zu entfernen"
+  "meshcoreDashboardManageWidgetsHint": "Tippe, um Widgets zu deinem Dashboard hinzuzufügen oder zu entfernen",
+  "automationTriggerProtocolLabel": "Protokoll-Bereich",
+  "automationTriggerProtocolHelp": "Welches Protokoll diesen Trigger auslöst",
+  "automationTriggerProtocolAny": "Beliebig",
+  "automationTriggerProtocolMeshtastic": "Meshtastic",
+  "automationTriggerProtocolMeshcore": "MeshCore"
 }

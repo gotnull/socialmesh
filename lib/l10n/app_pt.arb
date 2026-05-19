@@ -45471,5 +45471,10 @@
   "meshcoreDashboardEmptyTitle": "Nenhum widget adicionado",
   "meshcoreDashboardEmptyMessage": "Personalize seu painel MeshCore com os widgets que importam para você",
   "meshcoreDashboardManageWidgetsTitle": "Gerenciar widgets",
-  "meshcoreDashboardManageWidgetsHint": "Toque para adicionar ou remover widgets do seu painel"
+  "meshcoreDashboardManageWidgetsHint": "Toque para adicionar ou remover widgets do seu painel",
+  "automationTriggerProtocolLabel": "Escopo do protocolo",
+  "automationTriggerProtocolHelp": "Qual protocolo dispara este gatilho",
+  "automationTriggerProtocolAny": "Qualquer",
+  "automationTriggerProtocolMeshtastic": "Meshtastic",
+  "automationTriggerProtocolMeshcore": "MeshCore"
 }

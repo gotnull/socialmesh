@@ -11953,5 +11953,10 @@
   "meshcoreDashboardEmptyTitle": "Sin widgets añadidos",
   "meshcoreDashboardEmptyMessage": "Personaliza tu panel MeshCore con los widgets que mas te importan",
   "meshcoreDashboardManageWidgetsTitle": "Gestionar widgets",
-  "meshcoreDashboardManageWidgetsHint": "Toca para añadir o eliminar widgets de tu panel"
+  "meshcoreDashboardManageWidgetsHint": "Toca para añadir o eliminar widgets de tu panel",
+  "automationTriggerProtocolLabel": "Alcance del protocolo",
+  "automationTriggerProtocolHelp": "Qué protocolo activa este disparador",
+  "automationTriggerProtocolAny": "Cualquiera",
+  "automationTriggerProtocolMeshtastic": "Meshtastic",
+  "automationTriggerProtocolMeshcore": "MeshCore"
 }
