@@ -115,12 +115,12 @@ class MeshCoreRecentMessagesContent extends ConsumerWidget {
                 const SizedBox(width: AppTheme.spacing4),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
+                    horizontal: AppTheme.spacing6,
+                    vertical: AppTheme.spacing2,
                   ),
                   decoration: BoxDecoration(
                     color: context.accentColor,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppTheme.radius10),
                   ),
                   child: Text(
                     conv.unreadCount > 99 ? '99+' : '${conv.unreadCount}',

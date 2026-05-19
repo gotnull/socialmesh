@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_extension.dart';
 import '../../../../core/logging.dart';
 import '../../../../core/meshcore_constants.dart';
+import '../../../../core/safety/lifecycle_mixin.dart';
 import '../../../../core/theme.dart';
 import '../../../../providers/meshcore_providers.dart';
 import '../../../../utils/snackbar.dart';
@@ -24,7 +25,8 @@ class MeshCoreQuickActionsContent extends ConsumerStatefulWidget {
 }
 
 class _MeshCoreQuickActionsContentState
-    extends ConsumerState<MeshCoreQuickActionsContent> {
+    extends ConsumerState<MeshCoreQuickActionsContent>
+    with LifecycleSafeMixin {
   String? _busy;
 
   @override
