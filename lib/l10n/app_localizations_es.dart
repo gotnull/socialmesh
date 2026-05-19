@@ -7199,6 +7199,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get mapFilterNodesTooltip => 'Filtrar nodos';
 
   @override
+  String get mapShowListSheet => 'Mostrar lista de nodos';
+
+  @override
+  String get mapHideListSheet => 'Ocultar lista de nodos';
+
+  @override
+  String get mapMoreOptionsTooltip => 'Más opciones';
+
+  @override
   String get mapFilterWithGps => 'Con GPS';
 
   @override
@@ -10785,6 +10794,24 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get meshcoreMapEmptyTaglineWaitForAdverts =>
       'Los pares aparecen a medida que sus anuncios llegan por la mesh';
+
+  @override
+  String get meshcoreContactJustHeard => 'Justo ahora';
+
+  @override
+  String meshcoreContactHeardMinutesAgo(String minutes) {
+    return 'hace ${minutes}m';
+  }
+
+  @override
+  String meshcoreContactHeardHoursAgo(String hours) {
+    return 'hace ${hours}h';
+  }
+
+  @override
+  String meshcoreContactHeardDaysAgo(String days) {
+    return 'hace ${days}d';
+  }
 
   @override
   String get meshcoreNoMessagesYet => 'Sin mensajes aún';
@@ -35146,6 +35173,37 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get meshcoreNotificationChannelBatchSummaryDescription =>
       'Resúmenes periódicos cuando llegan varios eventos MeshCore en poco tiempo';
+
+  @override
+  String get meshcoreRingtonesTitle => 'Tonos de notificación';
+
+  @override
+  String get meshcoreRingtonesSubtitle =>
+      'Elige un sonido para cada canal de notificación MeshCore';
+
+  @override
+  String get meshcoreRingtonesChannelSectionTitle => 'Canal';
+
+  @override
+  String get meshcoreRingtonesPresetsSectionTitle => 'Preajustes';
+
+  @override
+  String get meshcoreRingtonesUseDefault => 'Usar predeterminado del sistema';
+
+  @override
+  String get meshcoreRingtonesPreviewTooltip => 'Vista previa';
+
+  @override
+  String get meshcoreRingtonesStopTooltip => 'Detener';
+
+  @override
+  String get meshcoreRingtonesSelectedBadge => 'Seleccionado';
+
+  @override
+  String get meshcoreRingtonesSavedToast => 'Guardado';
+
+  @override
+  String get meshcoreRingtonesClearedToast => 'Restablecido al predeterminado';
 
   @override
   String get flowNodeEvent => 'Evento';

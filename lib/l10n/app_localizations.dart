@@ -12544,6 +12544,24 @@ abstract class AppLocalizations {
   /// **'Filter nodes'**
   String get mapFilterNodesTooltip;
 
+  /// Map AppBar button tooltip when the side panel listing nodes / contacts is currently hidden
+  ///
+  /// In en, this message translates to:
+  /// **'Show node list'**
+  String get mapShowListSheet;
+
+  /// Map AppBar button tooltip when the side panel listing nodes / contacts is currently open
+  ///
+  /// In en, this message translates to:
+  /// **'Hide node list'**
+  String get mapHideListSheet;
+
+  /// Tooltip on the AppBar kebab overflow menu - mirrors the Meshtastic map's overflow surface
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get mapMoreOptionsTooltip;
+
   /// Text displayed in map view
   ///
   /// In en, this message translates to:
@@ -18627,6 +18645,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Peers appear as their adverts arrive over the mesh'**
   String get meshcoreMapEmptyTaglineWaitForAdverts;
+
+  /// Contact list row status when the last advert from this peer arrived less than a minute ago
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get meshcoreContactJustHeard;
+
+  /// Contact list row status when the last advert arrived between 1 and 59 minutes ago
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m ago'**
+  String meshcoreContactHeardMinutesAgo(String minutes);
+
+  /// Contact list row status when the last advert arrived between 1 and 23 hours ago
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h ago'**
+  String meshcoreContactHeardHoursAgo(String hours);
+
+  /// Contact list row status when the last advert arrived 1 or more days ago
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d ago'**
+  String meshcoreContactHeardDaysAgo(String days);
 
   /// Empty state title when no messages exist
   ///
@@ -60622,6 +60664,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Periodic summaries when multiple MeshCore events arrive in a short window'**
   String get meshcoreNotificationChannelBatchSummaryDescription;
+
+  /// MeshCore Settings tile + Ringtones screen title - per-channel notification sound picker
+  ///
+  /// In en, this message translates to:
+  /// **'Notification ringtones'**
+  String get meshcoreRingtonesTitle;
+
+  /// MeshCore Settings tile subtitle for the per-channel ringtone picker entry
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a sound for each MeshCore notification channel'**
+  String get meshcoreRingtonesSubtitle;
+
+  /// Ringtones screen section header above the channel selector chip group
+  ///
+  /// In en, this message translates to:
+  /// **'Channel'**
+  String get meshcoreRingtonesChannelSectionTitle;
+
+  /// Ringtones screen section header above the preset list
+  ///
+  /// In en, this message translates to:
+  /// **'Presets'**
+  String get meshcoreRingtonesPresetsSectionTitle;
+
+  /// Ringtones screen action label - clears the user's selection so the channel falls back to the OS default sound
+  ///
+  /// In en, this message translates to:
+  /// **'Use system default'**
+  String get meshcoreRingtonesUseDefault;
+
+  /// Tooltip on the preview-play button next to a ringtone preset
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get meshcoreRingtonesPreviewTooltip;
+
+  /// Tooltip on the preview-stop button while a preset is playing
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get meshcoreRingtonesStopTooltip;
+
+  /// Inline badge marking the currently-selected preset for the active channel
+  ///
+  /// In en, this message translates to:
+  /// **'Selected'**
+  String get meshcoreRingtonesSelectedBadge;
+
+  /// Snackbar confirming a ringtone selection has been saved
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get meshcoreRingtonesSavedToast;
+
+  /// Snackbar confirming the channel's ringtone has been cleared back to the OS default
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to default'**
+  String get meshcoreRingtonesClearedToast;
 
   /// Visual flow node title: Event
   ///

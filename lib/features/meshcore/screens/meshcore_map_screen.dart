@@ -3,11 +3,13 @@
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -18,10 +20,14 @@ import '../../../core/safe_lat_lng.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animated_empty_state.dart';
 import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/info_table.dart';
+import '../../../core/widgets/map_controls.dart';
+import '../../../core/widgets/map_entity_list_item.dart';
 import '../../../core/widgets/primary_gradient_button.dart';
+import 'widgets/meshcore_contact_list_panel.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../utils/snackbar.dart';
 import '../../../models/meshcore_contact.dart';
@@ -75,6 +81,35 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
   MeshCoreContact? _measureContactA;
   MeshCoreContact? _measureContactB;
 
+  // Side-panel state. Mirrors the Meshtastic map's node-list drawer
+  // shape so the two screens render the same UI affordance for
+  // browsing the entities with positions.
+  bool _showContactList = false;
+  MeshCoreContact? _selectedContact;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  // Live camera state - tracked via onPositionChanged so the controls
+  // overlay (zoom buttons + compass) renders the correct current
+  // values without polling the controller every frame.
+  double _currentZoom = 13.0;
+  double _mapRotation = 0.0;
+
+  // Tile style. Hydrates from settings on first frame so the user's
+  // selection survives app restarts; mirrors the Meshtastic map.
+  MapTileStyle _mapStyle = MapTileStyle.dark;
+  bool _mapStyleHydrated = false;
+
+  // Diagnostic overlays. Independent toggles; can stack on top of each
+  // other and the type filters. In-memory only for v1 - persistence
+  // can be added once the cross-protocol storage key strategy lands.
+  bool _showRangeCircles = false;
+  bool _showHeatmap = false;
+
+  // Cluster markers at low zoom so dense areas read cleanly. Off by
+  // default. Mirrors the Meshtastic map's `_clusterMarkers` flag.
+  bool _clusterMarkers = false;
+
   @override
   void initState() {
     super.initState();
@@ -82,7 +117,42 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _mapController.safeMove(widget.highlightPosition, widget.highlightZoom);
+      _hydrateMapStyle();
     });
+  }
+
+  Future<void> _hydrateMapStyle() async {
+    if (_mapStyleHydrated) return;
+    try {
+      final settings = await ref.read(settingsServiceProvider.future);
+      if (!mounted) return;
+      final index = settings.mapTileStyleIndex;
+      if (index >= 0 && index < MapTileStyle.values.length) {
+        safeSetState(() {
+          _mapStyle = MapTileStyle.values[index];
+          _mapStyleHydrated = true;
+        });
+      }
+    } catch (_) {
+      // Settings not available - keep default dark style.
+    }
+  }
+
+  Future<void> _saveMapStyle(MapTileStyle style) async {
+    try {
+      final settings = await ref.read(settingsServiceProvider.future);
+      if (!mounted) return;
+      await settings.setMapTileStyleIndex(style.index);
+    } catch (_) {
+      // Storage failure is non-fatal - the in-memory selection still
+      // applies for the rest of the session.
+    }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   double _standardDeviation(List<double> values) {
@@ -289,19 +359,105 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
       physics: const NeverScrollableScrollPhysics(),
       actions: [
         const MeshCoreDeviceStatusButton(),
-        // D42-A: Clear-path action only visible when an overlay is set.
-        if (pathOverlay != null)
-          IconButton(
-            key: const ValueKey('meshcore-map-path-overlay-clear'),
-            icon: const Icon(Icons.timeline_outlined),
-            onPressed: () =>
-                ref.read(meshCorePathOverlayProvider.notifier).clear(),
-            tooltip: context.l10n.meshcorePathOverlayClear,
-          ),
-        IconButton(
-          icon: const Icon(Icons.filter_list),
-          onPressed: () => _showFilterDialog(context),
-          tooltip: context.l10n.meshcoreFilterTooltip,
+        // Single kebab overflow for all the secondary actions
+        // (filters, tile style, contextual clear-path). Mirrors the
+        // Meshtastic AppBar pattern - one DeviceStatusButton + one
+        // kebab. Never more than two icons in the bar.
+        AppBarOverflowMenu<String>(
+          tooltip: context.l10n.mapMoreOptionsTooltip,
+          onSelected: (value) {
+            if (value == 'toggle_list') {
+              setState(() => _showContactList = !_showContactList);
+              return;
+            }
+            if (value == 'filter') {
+              _showFilterDialog(context);
+              return;
+            }
+            if (value == 'clear_path') {
+              ref.read(meshCorePathOverlayProvider.notifier).clear();
+              return;
+            }
+            if (value.startsWith('style_')) {
+              final styleName = value.substring('style_'.length);
+              for (final style in MapTileStyle.values) {
+                if (style.name == styleName) {
+                  setState(() => _mapStyle = style);
+                  unawaited(_saveMapStyle(style));
+                  return;
+                }
+              }
+            }
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem<String>(
+              value: 'toggle_list',
+              child: Row(
+                children: [
+                  Icon(
+                    _showContactList ? Icons.list_alt : Icons.list,
+                    size: 18,
+                    color: _showContactList
+                        ? context.accentColor
+                        : context.textSecondary,
+                  ),
+                  SizedBox(width: AppTheme.spacing8),
+                  Text(
+                    _showContactList
+                        ? context.l10n.mapHideListSheet
+                        : context.l10n.mapShowListSheet,
+                  ),
+                ],
+              ),
+            ),
+            PopupMenuItem<String>(
+              value: 'filter',
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.filter_list,
+                    size: 18,
+                    color: context.textSecondary,
+                  ),
+                  SizedBox(width: AppTheme.spacing8),
+                  Text(context.l10n.meshcoreFilterTooltip),
+                ],
+              ),
+            ),
+            if (pathOverlay != null)
+              PopupMenuItem<String>(
+                value: 'clear_path',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.timeline_outlined,
+                      size: 18,
+                      color: context.textSecondary,
+                    ),
+                    SizedBox(width: AppTheme.spacing8),
+                    Text(context.l10n.meshcorePathOverlayClear),
+                  ],
+                ),
+              ),
+            const PopupMenuDivider(),
+            for (final style in MapTileStyle.values)
+              PopupMenuItem<String>(
+                value: 'style_${style.name}',
+                child: Row(
+                  children: [
+                    Icon(
+                      _mapStyle == style ? Icons.check : Icons.map_outlined,
+                      size: 18,
+                      color: _mapStyle == style
+                          ? context.accentColor
+                          : context.textSecondary,
+                    ),
+                    SizedBox(width: AppTheme.spacing8),
+                    Text(style.label),
+                  ],
+                ),
+              ),
+          ],
         ),
       ],
       body: !isConnected
@@ -317,9 +473,25 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
                     initialZoom: initialZoom,
                     minZoom: 2.0,
                     maxZoom: 18.0,
+                    // Enable the full interaction set so the new
+                    // MapControlsOverlay compass + rotation gestures
+                    // are usable. Mirrors the Meshtastic map.
                     interactionOptions: const InteractionOptions(
-                      flags: ~InteractiveFlag.rotate,
+                      flags: InteractiveFlag.all,
+                      pinchZoomThreshold: 0.5,
+                      scrollWheelVelocity: 0.005,
                     ),
+                    onPositionChanged: (position, hasGesture) {
+                      final newZoom = position.zoom;
+                      final newRotation = position.rotation;
+                      if (newZoom != _currentZoom ||
+                          newRotation != _mapRotation) {
+                        setState(() {
+                          _currentZoom = newZoom;
+                          _mapRotation = newRotation;
+                        });
+                      }
+                    },
                     onTap: (tapPos, point) {
                       if (_measureMode) {
                         _handleMeasureTap(point);
@@ -334,22 +506,95 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
                     },
                   ),
                   children: [
-                    // Tile layer. Routes to mapbox/dark-v11 when Mapbox is
-                    // active so the visual matches the rest of the app.
+                    // Tile layer. Routes through MapConfig so the
+                    // active Mapbox style applies when available; falls
+                    // back to the OpenStreetMap-style URL for the
+                    // selected MapTileStyle otherwise.
                     TileLayer(
                       urlTemplate:
                           MapConfig.mapboxUrlForStyle(
-                            MapTileStyle.dark,
+                            _mapStyle,
                             satelliteLabelsOn: false,
                           ) ??
-                          MapTileStyle.dark.url,
+                          _mapStyle.url,
                       subdomains: MapConfig.isMapboxActive
                           ? const <String>[]
-                          : MapTileStyle.dark.subdomains,
+                          : _mapStyle.subdomains,
                       userAgentPackageName: MapConfig.userAgentPackageName,
                       retinaMode: MapConfig.isMapboxActive,
                       evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
                     ),
+                    // Range circles: 5km radius around each contact
+                    // (and self). Visualises a rough LoRa coverage
+                    // estimate so the user can eyeball gaps. Mirrors
+                    // the Meshtastic map's range-circle layer 1:1 in
+                    // style (translucent purple fill + thin border).
+                    if (_showRangeCircles)
+                      CircleLayer(
+                        circles: [
+                          for (final c in contactsWithLocation)
+                            CircleMarker(
+                              point: LatLng(c.latitude!, c.longitude!),
+                              radius: 5000,
+                              useRadiusInMeter: true,
+                              color: AppTheme.primaryPurple.withValues(
+                                alpha: 0.08,
+                              ),
+                              borderColor: AppTheme.primaryPurple.withValues(
+                                alpha: 0.2,
+                              ),
+                              borderStrokeWidth: 1,
+                            ),
+                          if (selfPosition != null)
+                            CircleMarker(
+                              point: selfPosition,
+                              radius: 5000,
+                              useRadiusInMeter: true,
+                              color: AccentColors.cyan.withValues(alpha: 0.08),
+                              borderColor: AccentColors.cyan.withValues(
+                                alpha: 0.25,
+                              ),
+                              borderStrokeWidth: 1,
+                            ),
+                        ],
+                      ),
+                    // Heatmap: small accent-tinted circle at every
+                    // entity position. Density reads as a heatmap on
+                    // top of the tile layer. Same shape as Meshtastic.
+                    if (_showHeatmap)
+                      CircleLayer(
+                        circles: [
+                          for (final c in contactsWithLocation)
+                            CircleMarker(
+                              point: LatLng(c.latitude!, c.longitude!),
+                              radius: 50,
+                              color: context.accentColor.withValues(
+                                alpha: 0.15,
+                              ),
+                              borderColor: context.accentColor.withValues(
+                                alpha: 0.3,
+                              ),
+                              borderStrokeWidth: 1,
+                            ),
+                          if (selfPosition != null)
+                            CircleMarker(
+                              point: selfPosition,
+                              radius: 50,
+                              color: context.accentColor.withValues(
+                                alpha: 0.15,
+                              ),
+                              borderColor: context.accentColor.withValues(
+                                alpha: 0.3,
+                              ),
+                              borderStrokeWidth: 1,
+                            ),
+                        ],
+                      ),
+                    // Non-clustered overlay markers: red highlight pin,
+                    // the user's self "you are here" marker, and the
+                    // POI pins. These never enter the cluster - they
+                    // are distinct affordances that the user needs to
+                    // see at every zoom level.
                     MarkerLayer(
                       markers: finiteMarkers([
                         if (widget.highlightPosition != null)
@@ -363,11 +608,6 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
                               size: 34,
                             ),
                           ),
-                        // "You are here" marker for the user's own
-                        // advertised position. Cyan accent + white halo
-                        // so it reads as self vs the sigil markers used
-                        // for peers. Self always renders even when peer
-                        // type filters would hide everyone else.
                         if (selfPosition != null)
                           Marker(
                             key: const ValueKey('meshcore-map-self-marker'),
@@ -399,13 +639,31 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
                               ),
                             ),
                           ),
-                        ..._buildContactMarkers(contactsWithLocation),
-                        // D-Q10: user-dropped POI pins, rendered as
-                        // a yellow pin_drop icon distinct from
-                        // contact-marker circles. Tap a pin to
-                        // open the remove-pin action sheet.
                         ..._buildPinnedLocationMarkers(pinnedLocations),
                       ]),
+                    ),
+                    // Contact markers - wrapped in a cluster layer when
+                    // the user has opted in via the filter dialog. The
+                    // contact-by-pubkey-hex map lets the cluster tap
+                    // handler recover the underlying contact for the
+                    // list sheet.
+                    Builder(
+                      builder: (context) {
+                        final contactMarkers = finiteMarkers(
+                          _buildContactMarkers(contactsWithLocation),
+                        ).toList(growable: false);
+                        if (!_clusterMarkers) {
+                          return MarkerLayer(markers: contactMarkers);
+                        }
+                        return _buildClusterLayer(
+                          context: context,
+                          markers: contactMarkers,
+                          contactsByPubKeyHex: {
+                            for (final c in contactsWithLocation)
+                              c.publicKeyHex: c,
+                          },
+                        );
+                      },
                     ),
                     // Measurement polyline
                     if (_measureStart != null && _measureEnd != null)
@@ -615,8 +873,226 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
                       }),
                     ),
                   ),
+                // Right-side controls overlay: compass, zoom in/out,
+                // fit-all, center-on-me. Mirrors the Meshtastic map's
+                // controls 1:1 via the shared `MapControlsOverlay`
+                // widget in lib/core/widgets/.
+                MapControlsOverlay(
+                  currentZoom: _currentZoom,
+                  mapRotation: _mapRotation,
+                  onZoomIn: () {
+                    final next = (_currentZoom + 1.0).clamp(2.0, 18.0);
+                    _mapController.safeMove(_mapController.camera.center, next);
+                  },
+                  onZoomOut: () {
+                    final next = (_currentZoom - 1.0).clamp(2.0, 18.0);
+                    _mapController.safeMove(_mapController.camera.center, next);
+                  },
+                  onFitAll: contactsWithLocation.isEmpty && selfPosition == null
+                      ? null
+                      : () {
+                          final points = <LatLng>[
+                            for (final c in contactsWithLocation)
+                              LatLng(c.latitude!, c.longitude!),
+                            if (selfPosition != null) selfPosition,
+                          ];
+                          if (points.length < 2) {
+                            _mapController.safeMove(points.first, 13.0);
+                            return;
+                          }
+                          try {
+                            _mapController.fitCamera(
+                              CameraFit.bounds(
+                                bounds: LatLngBounds.fromPoints(points),
+                                padding: const EdgeInsets.all(
+                                  AppTheme.spacing48,
+                                ),
+                              ),
+                            );
+                          } catch (_) {
+                            // Degenerate bounds (points coincide); fall
+                            // back to a simple move on the first point.
+                            _mapController.safeMove(points.first, 13.0);
+                          }
+                        },
+                  onCenterOnMe: selfPosition == null
+                      ? null
+                      : () => _mapController.safeMove(selfPosition, 15.0),
+                  hasMyLocation: selfPosition != null,
+                  onResetNorth: () {
+                    _mapController.rotate(0);
+                  },
+                ),
+                // Side panel listing contacts with locations. Mirrors
+                // the Meshtastic map's `_NodeListPanel` slide-in shape
+                // exactly: 300pt wide drawer that animates in from the
+                // left edge. Tapping a contact centers the map and
+                // opens the existing info sheet.
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeOutCubic,
+                  left: _showContactList ? 0 : -300,
+                  top: 0,
+                  bottom: 0,
+                  width: 300,
+                  child: MeshCoreContactListPanel(
+                    contacts: contactsWithLocation,
+                    selectedContact: _selectedContact,
+                    selfPosition: selfPosition,
+                    onContactSelected: (c) {
+                      setState(() {
+                        _selectedContact = c;
+                        _showContactList = false;
+                      });
+                      _mapController.safeMove(
+                        LatLng(c.latitude!, c.longitude!),
+                        15.0,
+                      );
+                      _showContactInfo(c);
+                    },
+                    onClose: () => setState(() => _showContactList = false),
+                    searchController: _searchController,
+                    searchQuery: _searchQuery,
+                    onSearchChanged: (q) => setState(() => _searchQuery = q),
+                  ),
+                ),
               ],
             ),
+    );
+  }
+
+  /// Wraps the contact markers in a [MarkerClusterLayerWidget]. Config
+  /// mirrors the Meshtastic map (`maxClusterRadius: 80`, fade-friendly
+  /// animations) so cluster behaviour is consistent across both
+  /// protocols. Tapping a cluster opens a bottom sheet listing the
+  /// underlying contacts.
+  Widget _buildClusterLayer({
+    required BuildContext context,
+    required List<Marker> markers,
+    required Map<String, MeshCoreContact> contactsByPubKeyHex,
+  }) {
+    final accentColor = context.accentColor;
+    return MarkerClusterLayerWidget(
+      options: MarkerClusterLayerOptions(
+        maxClusterRadius: 80,
+        size: const Size(44, 44),
+        alignment: Alignment.center,
+        padding: EdgeInsets.zero,
+        maxZoom: 15,
+        zoomToBoundsOnClick: false,
+        animationsOptions: const AnimationsOptions(
+          zoom: Duration.zero,
+          fitBound: Duration(milliseconds: 300),
+          centerMarker: Duration.zero,
+          spiderfy: Duration(milliseconds: 200),
+        ),
+        markers: markers,
+        builder: (context, clusterMarkers) {
+          final count = clusterMarkers.length;
+          final size = count > 100
+              ? 48.0
+              : count > 50
+              ? 44.0
+              : 40.0;
+          return GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => _showClusterListSheet(
+              context,
+              clusterMarkers,
+              contactsByPubKeyHex,
+            ),
+            child: Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: accentColor.withValues(alpha: 0.9),
+                border: Border.all(color: Colors.white, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  count > 999
+                      ? '${(count / 1000).toStringAsFixed(1)}k'
+                      : '$count',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// Opens a bottom sheet listing the contacts inside a tapped
+  /// cluster. Tapping a row centers the map on the contact and
+  /// surfaces the existing contact info sheet.
+  Future<void> _showClusterListSheet(
+    BuildContext context,
+    List<Marker> clusterMarkers,
+    Map<String, MeshCoreContact> contactsByPubKeyHex,
+  ) async {
+    final contacts = <MeshCoreContact>[];
+    for (final m in clusterMarkers) {
+      final key = m.key;
+      if (key is ValueKey<String>) {
+        // Marker keys are formatted `meshcore-contact-marker-<hex>`.
+        const prefix = 'meshcore-contact-marker-';
+        if (key.value.startsWith(prefix)) {
+          final hex = key.value.substring(prefix.length);
+          final contact = contactsByPubKeyHex[hex];
+          if (contact != null) contacts.add(contact);
+        }
+      }
+    }
+    if (contacts.isEmpty) return;
+    HapticFeedback.selectionClick();
+    await AppBottomSheet.showScrollable<void>(
+      context: context,
+      initialChildSize: 0.5,
+      minChildSize: 0.3,
+      maxChildSize: 0.9,
+      builder: (scrollController) => ListView.builder(
+        controller: scrollController,
+        itemCount: contacts.length,
+        itemBuilder: (ctx, i) {
+          final c = contacts[i];
+          final age = DateTime.now().difference(c.lastSeen);
+          final isFresh = age <= kMeshCoreMarkerFreshThreshold;
+          final isStale = age >= kMeshCoreMarkerVeryStaleThreshold;
+          return MapEntityListItem(
+            displayName: c.displayName,
+            avatarChar: c.name.isNotEmpty
+                ? c.name.characters.first.toUpperCase()
+                : c.publicKeyHex.characters.first.toUpperCase(),
+            isMyEntity: false,
+            isSelected: false,
+            isStale: isStale,
+            isActive: isFresh,
+            statusColor: isFresh
+                ? AppTheme.successGreen
+                : (isStale ? AppTheme.errorRed : ctx.textSecondary),
+            statusText: c.typeLabel,
+            onTap: () {
+              if (!mounted) return;
+              Navigator.of(ctx).pop();
+              _mapController.safeMove(LatLng(c.latitude!, c.longitude!), 15.0);
+              _showContactInfo(c);
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -756,6 +1232,12 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
 
       markers.add(
         Marker(
+          // Key carries the contact's public-key hex so the cluster
+          // builder can recover the underlying MeshCoreContact when a
+          // cluster expands into a list sheet.
+          key: ValueKey<String>(
+            'meshcore-contact-marker-${contact.publicKeyHex}',
+          ),
           point: LatLng(contact.latitude!, contact.longitude!),
           width: 80,
           height: 80,
@@ -1362,6 +1844,42 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
               _hideMuted,
               (value) {
                 setSheetState(() => _hideMuted = value);
+                setState(() {});
+              },
+            ),
+            _buildFilterSwitch(
+              ctx,
+              setSheetState,
+              context.l10n.mapShowRangeCircles,
+              Icons.radio_button_unchecked,
+              AppTheme.primaryPurple,
+              _showRangeCircles,
+              (value) {
+                setSheetState(() => _showRangeCircles = value);
+                setState(() {});
+              },
+            ),
+            _buildFilterSwitch(
+              ctx,
+              setSheetState,
+              context.l10n.mapShowHeatmap,
+              Icons.local_fire_department_outlined,
+              AppTheme.errorRed,
+              _showHeatmap,
+              (value) {
+                setSheetState(() => _showHeatmap = value);
+                setState(() {});
+              },
+            ),
+            _buildFilterSwitch(
+              ctx,
+              setSheetState,
+              context.l10n.mapShowClusterMarkers,
+              Icons.bubble_chart_outlined,
+              AccentColors.cyan,
+              _clusterMarkers,
+              (value) {
+                setSheetState(() => _clusterMarkers = value);
                 setState(() {});
               },
             ),

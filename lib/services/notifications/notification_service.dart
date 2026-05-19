@@ -8,8 +8,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
 import '../../features/pet/models/pet_enums.dart';
 import '../../models/mesh_models.dart';
+import '../../providers/meshcore_ringtone_preferences.dart';
 import '../protocol/sip/play/sip_play_constants.dart';
 import '../../utils/text_sanitizer.dart';
+import '../audio/notification_sound_service.dart';
 import 'package:socialmesh/core/theme.dart';
 import 'package:socialmesh/l10n/l10n_utils.dart';
 
@@ -1246,6 +1248,29 @@ class NotificationService {
   /// Rate limiting is enforced at the call site
   /// (`MeshCoreNotificationRateLimiter`), not here, so this method is
   /// safe to call freely and the gating policy lives in one place.
+  /// Look up the user's chosen ringtone for a MeshCore notification
+  /// channel and convert it to a cached WAV file. Returns null when
+  /// no customisation is set (caller falls through to the system
+  /// default channel sound). Android per-notification sound is
+  /// ignored on API 26+ when the channel exists, so this only feeds
+  /// the iOS DarwinNotificationDetails - matches the pattern used by
+  /// the automations engine for per-notification overrides.
+  Future<String?> _resolveMeshCoreChannelSound(String channelId) async {
+    try {
+      final rtttl = await readMeshCoreRingtoneForChannel(channelId);
+      if (rtttl == null || rtttl.isEmpty) return null;
+      return await NotificationSoundService.instance.prepareSoundFromRtttl(
+        rtttl,
+      );
+    } catch (e) {
+      AppLogging.notifications(
+        '🔔 Failed to resolve MeshCore channel sound '
+        'channel=$channelId reason=${e.runtimeType}',
+      );
+      return null;
+    }
+  }
+
   Future<void> showMeshCoreAdvertNotification({
     required String contactName,
     required String pubKeyHex,
@@ -1257,6 +1282,9 @@ class NotificationService {
       );
       return;
     }
+    final customSound = await _resolveMeshCoreChannelSound(
+      MeshCoreRingtoneChannel.adverts,
+    );
     final androidDetails = AndroidNotificationDetails(
       'meshcore_adverts',
       'MeshCore Adverts', // lint-allow: hardcoded-string
@@ -1272,7 +1300,11 @@ class NotificationService {
     final iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: false,
-      presentSound: false,
+      // Play the sound only when the user has explicitly chosen one
+      // for this channel. Default remains silent (matches the prior
+      // behaviour for background-class signals).
+      presentSound: customSound != null,
+      sound: customSound,
     );
     final notificationDetails = NotificationDetails(
       android: androidDetails,
@@ -1331,6 +1363,9 @@ class NotificationService {
       );
       return;
     }
+    final customSound = await _resolveMeshCoreChannelSound(
+      MeshCoreRingtoneChannel.batchSummary,
+    );
     final androidDetails = AndroidNotificationDetails(
       'meshcore_batch_summary',
       'MeshCore Activity Summary', // lint-allow: hardcoded-string
@@ -1344,7 +1379,8 @@ class NotificationService {
     final iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: false,
-      presentSound: false,
+      presentSound: customSound != null,
+      sound: customSound,
     );
     final notificationDetails = NotificationDetails(
       android: androidDetails,

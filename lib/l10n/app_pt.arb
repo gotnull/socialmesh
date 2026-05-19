@@ -45427,5 +45427,22 @@
   "meshcoreTransportStatusFieldSessionDuration": "Sessão",
   "meshcoreTransportStatusThroughputIdle": "Inativo",
   "meshcoreMapEmptyTaglineSetOwnLocation": "Defina sua localização em Configurações -> Localização para se marcar no mapa",
-  "meshcoreMapEmptyTaglineWaitForAdverts": "Os pares aparecem conforme seus anúncios chegam pela mesh"
+  "meshcoreMapEmptyTaglineWaitForAdverts": "Os pares aparecem conforme seus anúncios chegam pela mesh",
+  "meshcoreContactJustHeard": "Agora mesmo",
+  "meshcoreContactHeardMinutesAgo": "há {minutes}m",
+  "meshcoreContactHeardHoursAgo": "há {hours}h",
+  "meshcoreContactHeardDaysAgo": "há {days}d",
+  "mapShowListSheet": "Mostrar lista de nós",
+  "mapHideListSheet": "Ocultar lista de nós",
+  "meshcoreRingtonesTitle": "Toques de notificação",
+  "meshcoreRingtonesSubtitle": "Escolha um som para cada canal de notificação MeshCore",
+  "meshcoreRingtonesChannelSectionTitle": "Canal",
+  "meshcoreRingtonesPresetsSectionTitle": "Predefinições",
+  "meshcoreRingtonesUseDefault": "Usar padrão do sistema",
+  "meshcoreRingtonesPreviewTooltip": "Pré-visualizar",
+  "meshcoreRingtonesStopTooltip": "Parar",
+  "meshcoreRingtonesSelectedBadge": "Selecionado",
+  "meshcoreRingtonesSavedToast": "Guardado",
+  "meshcoreRingtonesClearedToast": "Restaurado para o padrão",
+  "mapMoreOptionsTooltip": "Mais opções"
 }

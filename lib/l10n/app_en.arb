@@ -9558,6 +9558,18 @@
     "@mapFilterNodesTooltip": {
         "description": "Tooltip in map view"
     },
+    "mapShowListSheet": "Show node list",
+    "@mapShowListSheet": {
+        "description": "Map AppBar button tooltip when the side panel listing nodes / contacts is currently hidden"
+    },
+    "mapHideListSheet": "Hide node list",
+    "@mapHideListSheet": {
+        "description": "Map AppBar button tooltip when the side panel listing nodes / contacts is currently open"
+    },
+    "mapMoreOptionsTooltip": "More options",
+    "@mapMoreOptionsTooltip": {
+        "description": "Tooltip on the AppBar kebab overflow menu - mirrors the Meshtastic map's overflow surface"
+    },
     "mapFilterWithGps": "With GPS",
     "@mapFilterWithGps": {
         "description": "Text displayed in map view"
@@ -14225,6 +14237,37 @@
     "meshcoreMapEmptyTaglineWaitForAdverts": "Peers appear as their adverts arrive over the mesh",
     "@meshcoreMapEmptyTaglineWaitForAdverts": {
         "description": "Map empty-state tagline explaining peers will populate as adverts arrive"
+    },
+    "meshcoreContactJustHeard": "Just now",
+    "@meshcoreContactJustHeard": {
+        "description": "Contact list row status when the last advert from this peer arrived less than a minute ago"
+    },
+    "meshcoreContactHeardMinutesAgo": "{minutes}m ago",
+    "@meshcoreContactHeardMinutesAgo": {
+        "description": "Contact list row status when the last advert arrived between 1 and 59 minutes ago",
+        "placeholders": {
+            "minutes": {
+                "type": "String"
+            }
+        }
+    },
+    "meshcoreContactHeardHoursAgo": "{hours}h ago",
+    "@meshcoreContactHeardHoursAgo": {
+        "description": "Contact list row status when the last advert arrived between 1 and 23 hours ago",
+        "placeholders": {
+            "hours": {
+                "type": "String"
+            }
+        }
+    },
+    "meshcoreContactHeardDaysAgo": "{days}d ago",
+    "@meshcoreContactHeardDaysAgo": {
+        "description": "Contact list row status when the last advert arrived 1 or more days ago",
+        "placeholders": {
+            "days": {
+                "type": "String"
+            }
+        }
     },
     "meshcoreNoMessagesYet": "No messages yet",
     "@meshcoreNoMessagesYet": {
@@ -46333,6 +46376,46 @@
     "meshcoreNotificationChannelBatchSummaryDescription": "Periodic summaries when multiple MeshCore events arrive in a short window",
     "@meshcoreNotificationChannelBatchSummaryDescription": {
         "description": "Row 11 Android notification channel description for aggregated activity summaries"
+    },
+    "meshcoreRingtonesTitle": "Notification ringtones",
+    "@meshcoreRingtonesTitle": {
+        "description": "MeshCore Settings tile + Ringtones screen title - per-channel notification sound picker"
+    },
+    "meshcoreRingtonesSubtitle": "Pick a sound for each MeshCore notification channel",
+    "@meshcoreRingtonesSubtitle": {
+        "description": "MeshCore Settings tile subtitle for the per-channel ringtone picker entry"
+    },
+    "meshcoreRingtonesChannelSectionTitle": "Channel",
+    "@meshcoreRingtonesChannelSectionTitle": {
+        "description": "Ringtones screen section header above the channel selector chip group"
+    },
+    "meshcoreRingtonesPresetsSectionTitle": "Presets",
+    "@meshcoreRingtonesPresetsSectionTitle": {
+        "description": "Ringtones screen section header above the preset list"
+    },
+    "meshcoreRingtonesUseDefault": "Use system default",
+    "@meshcoreRingtonesUseDefault": {
+        "description": "Ringtones screen action label - clears the user's selection so the channel falls back to the OS default sound"
+    },
+    "meshcoreRingtonesPreviewTooltip": "Preview",
+    "@meshcoreRingtonesPreviewTooltip": {
+        "description": "Tooltip on the preview-play button next to a ringtone preset"
+    },
+    "meshcoreRingtonesStopTooltip": "Stop",
+    "@meshcoreRingtonesStopTooltip": {
+        "description": "Tooltip on the preview-stop button while a preset is playing"
+    },
+    "meshcoreRingtonesSelectedBadge": "Selected",
+    "@meshcoreRingtonesSelectedBadge": {
+        "description": "Inline badge marking the currently-selected preset for the active channel"
+    },
+    "meshcoreRingtonesSavedToast": "Saved",
+    "@meshcoreRingtonesSavedToast": {
+        "description": "Snackbar confirming a ringtone selection has been saved"
+    },
+    "meshcoreRingtonesClearedToast": "Reset to default",
+    "@meshcoreRingtonesClearedToast": {
+        "description": "Snackbar confirming the channel's ringtone has been cleared back to the OS default"
     },
     "flowNodeEvent": "Event",
     "@flowNodeEvent": {

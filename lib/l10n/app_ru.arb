@@ -12283,5 +12283,22 @@
   "meshcoreTransportStatusFieldSessionDuration": "Сессия",
   "meshcoreTransportStatusThroughputIdle": "Простой",
   "meshcoreMapEmptyTaglineSetOwnLocation": "Укажите свою позицию в Настройки -> Местоположение, чтобы отметить себя на карте",
-  "meshcoreMapEmptyTaglineWaitForAdverts": "Пиры появляются по мере поступления их анонсов через сеть"
+  "meshcoreMapEmptyTaglineWaitForAdverts": "Пиры появляются по мере поступления их анонсов через сеть",
+  "meshcoreContactJustHeard": "Только что",
+  "meshcoreContactHeardMinutesAgo": "{minutes} мин назад",
+  "meshcoreContactHeardHoursAgo": "{hours} ч назад",
+  "meshcoreContactHeardDaysAgo": "{days} дн назад",
+  "mapShowListSheet": "Показать список узлов",
+  "mapHideListSheet": "Скрыть список узлов",
+  "meshcoreRingtonesTitle": "Мелодии уведомлений",
+  "meshcoreRingtonesSubtitle": "Выберите звук для каждого канала уведомлений MeshCore",
+  "meshcoreRingtonesChannelSectionTitle": "Канал",
+  "meshcoreRingtonesPresetsSectionTitle": "Пресеты",
+  "meshcoreRingtonesUseDefault": "Системный по умолчанию",
+  "meshcoreRingtonesPreviewTooltip": "Предпросмотр",
+  "meshcoreRingtonesStopTooltip": "Стоп",
+  "meshcoreRingtonesSelectedBadge": "Выбрано",
+  "meshcoreRingtonesSavedToast": "Сохранено",
+  "meshcoreRingtonesClearedToast": "Сброшено по умолчанию",
+  "mapMoreOptionsTooltip": "Другие параметры"
 }

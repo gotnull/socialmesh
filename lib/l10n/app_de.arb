@@ -11909,5 +11909,22 @@
   "meshcoreTransportStatusFieldSessionDuration": "Sitzung",
   "meshcoreTransportStatusThroughputIdle": "Inaktiv",
   "meshcoreMapEmptyTaglineSetOwnLocation": "Setze deinen Standort in Einstellungen -> Standort, um dich auf der Karte zu markieren",
-  "meshcoreMapEmptyTaglineWaitForAdverts": "Peers erscheinen, sobald ihre Adverts über das Mesh eintreffen"
+  "meshcoreMapEmptyTaglineWaitForAdverts": "Peers erscheinen, sobald ihre Adverts über das Mesh eintreffen",
+  "meshcoreContactJustHeard": "Gerade eben",
+  "meshcoreContactHeardMinutesAgo": "vor {minutes}min",
+  "meshcoreContactHeardHoursAgo": "vor {hours}h",
+  "meshcoreContactHeardDaysAgo": "vor {days}T",
+  "mapShowListSheet": "Knotenliste anzeigen",
+  "mapHideListSheet": "Knotenliste ausblenden",
+  "meshcoreRingtonesTitle": "Benachrichtigungstöne",
+  "meshcoreRingtonesSubtitle": "Wähle einen Ton für jeden MeshCore-Benachrichtigungskanal",
+  "meshcoreRingtonesChannelSectionTitle": "Kanal",
+  "meshcoreRingtonesPresetsSectionTitle": "Voreinstellungen",
+  "meshcoreRingtonesUseDefault": "Systemstandard verwenden",
+  "meshcoreRingtonesPreviewTooltip": "Vorhören",
+  "meshcoreRingtonesStopTooltip": "Stopp",
+  "meshcoreRingtonesSelectedBadge": "Ausgewählt",
+  "meshcoreRingtonesSavedToast": "Gespeichert",
+  "meshcoreRingtonesClearedToast": "Auf Standard zurückgesetzt",
+  "mapMoreOptionsTooltip": "Weitere Optionen"
 }

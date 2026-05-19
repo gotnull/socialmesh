@@ -11909,5 +11909,22 @@
   "meshcoreTransportStatusFieldSessionDuration": "Сеанс",
   "meshcoreTransportStatusThroughputIdle": "Очікування",
   "meshcoreMapEmptyTaglineSetOwnLocation": "Встановіть своє розташування в Налаштування -> Розташування, щоб позначити себе на карті",
-  "meshcoreMapEmptyTaglineWaitForAdverts": "Пiри зʼявляються коли їхні оголошення приходять по мережi"
+  "meshcoreMapEmptyTaglineWaitForAdverts": "Пiри зʼявляються коли їхні оголошення приходять по мережi",
+  "meshcoreContactJustHeard": "Щойно",
+  "meshcoreContactHeardMinutesAgo": "{minutes} хв тому",
+  "meshcoreContactHeardHoursAgo": "{hours} год тому",
+  "meshcoreContactHeardDaysAgo": "{days} дн тому",
+  "mapShowListSheet": "Показати список вузлів",
+  "mapHideListSheet": "Сховати список вузлів",
+  "meshcoreRingtonesTitle": "Мелодії сповіщень",
+  "meshcoreRingtonesSubtitle": "Виберіть звук для кожного каналу сповіщень MeshCore",
+  "meshcoreRingtonesChannelSectionTitle": "Канал",
+  "meshcoreRingtonesPresetsSectionTitle": "Пресети",
+  "meshcoreRingtonesUseDefault": "Системний за замовчуванням",
+  "meshcoreRingtonesPreviewTooltip": "Прослуховування",
+  "meshcoreRingtonesStopTooltip": "Зупинити",
+  "meshcoreRingtonesSelectedBadge": "Вибрано",
+  "meshcoreRingtonesSavedToast": "Збережено",
+  "meshcoreRingtonesClearedToast": "Скинуто до системного",
+  "mapMoreOptionsTooltip": "Інші параметри"
 }

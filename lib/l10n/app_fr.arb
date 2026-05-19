@@ -11909,5 +11909,22 @@
   "meshcoreTransportStatusFieldSessionDuration": "Session",
   "meshcoreTransportStatusThroughputIdle": "Inactif",
   "meshcoreMapEmptyTaglineSetOwnLocation": "Définissez votre position dans Paramètres -> Emplacement pour vous marquer sur la carte",
-  "meshcoreMapEmptyTaglineWaitForAdverts": "Les pairs apparaissent à mesure que leurs annonces arrivent sur le mesh"
+  "meshcoreMapEmptyTaglineWaitForAdverts": "Les pairs apparaissent à mesure que leurs annonces arrivent sur le mesh",
+  "meshcoreContactJustHeard": "À l'instant",
+  "meshcoreContactHeardMinutesAgo": "il y a {minutes}min",
+  "meshcoreContactHeardHoursAgo": "il y a {hours}h",
+  "meshcoreContactHeardDaysAgo": "il y a {days}j",
+  "mapShowListSheet": "Afficher la liste des nœuds",
+  "mapHideListSheet": "Masquer la liste des nœuds",
+  "meshcoreRingtonesTitle": "Sonneries de notification",
+  "meshcoreRingtonesSubtitle": "Choisissez un son pour chaque canal de notification MeshCore",
+  "meshcoreRingtonesChannelSectionTitle": "Canal",
+  "meshcoreRingtonesPresetsSectionTitle": "Préréglages",
+  "meshcoreRingtonesUseDefault": "Utiliser le réglage système",
+  "meshcoreRingtonesPreviewTooltip": "Aperçu",
+  "meshcoreRingtonesStopTooltip": "Arrêter",
+  "meshcoreRingtonesSelectedBadge": "Sélectionné",
+  "meshcoreRingtonesSavedToast": "Enregistré",
+  "meshcoreRingtonesClearedToast": "Réinitialisé au système",
+  "mapMoreOptionsTooltip": "Plus d'options"
 }

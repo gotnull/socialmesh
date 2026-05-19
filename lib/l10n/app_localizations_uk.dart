@@ -7165,6 +7165,15 @@ class AppLocalizationsUk extends AppLocalizations {
   String get mapFilterNodesTooltip => 'Фільтрувати вузли';
 
   @override
+  String get mapShowListSheet => 'Показати список вузлів';
+
+  @override
+  String get mapHideListSheet => 'Сховати список вузлів';
+
+  @override
+  String get mapMoreOptionsTooltip => 'Інші параметри';
+
+  @override
   String get mapFilterWithGps => 'З GPS';
 
   @override
@@ -10754,6 +10763,24 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get meshcoreMapEmptyTaglineWaitForAdverts =>
       'Пiри зʼявляються коли їхні оголошення приходять по мережi';
+
+  @override
+  String get meshcoreContactJustHeard => 'Щойно';
+
+  @override
+  String meshcoreContactHeardMinutesAgo(String minutes) {
+    return '$minutes хв тому';
+  }
+
+  @override
+  String meshcoreContactHeardHoursAgo(String hours) {
+    return '$hours год тому';
+  }
+
+  @override
+  String meshcoreContactHeardDaysAgo(String days) {
+    return '$days дн тому';
+  }
 
   @override
   String get meshcoreNoMessagesYet => 'Повідомлень ще немає';
@@ -34999,6 +35026,37 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get meshcoreNotificationChannelBatchSummaryDescription =>
       'Періодичні зведення, коли кілька подій MeshCore надходять за короткий проміжок часу';
+
+  @override
+  String get meshcoreRingtonesTitle => 'Мелодії сповіщень';
+
+  @override
+  String get meshcoreRingtonesSubtitle =>
+      'Виберіть звук для кожного каналу сповіщень MeshCore';
+
+  @override
+  String get meshcoreRingtonesChannelSectionTitle => 'Канал';
+
+  @override
+  String get meshcoreRingtonesPresetsSectionTitle => 'Пресети';
+
+  @override
+  String get meshcoreRingtonesUseDefault => 'Системний за замовчуванням';
+
+  @override
+  String get meshcoreRingtonesPreviewTooltip => 'Прослуховування';
+
+  @override
+  String get meshcoreRingtonesStopTooltip => 'Зупинити';
+
+  @override
+  String get meshcoreRingtonesSelectedBadge => 'Вибрано';
+
+  @override
+  String get meshcoreRingtonesSavedToast => 'Збережено';
+
+  @override
+  String get meshcoreRingtonesClearedToast => 'Скинуто до системного';
 
   @override
   String get flowNodeEvent => 'Подія';

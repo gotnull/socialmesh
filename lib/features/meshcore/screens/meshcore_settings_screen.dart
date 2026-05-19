@@ -34,6 +34,7 @@ import '../../../services/meshcore/storage/meshcore_node_name_store.dart';
 import '../../../utils/snackbar.dart';
 import '../../navigation/meshcore_shell.dart';
 import '../widgets/meshcore_radio_settings_sheet.dart';
+import 'meshcore_ringtone_screen.dart';
 
 /// MeshCore Settings screen.
 ///
@@ -597,14 +598,38 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
     final notifier = ref.read(
       meshCoreAdvertNotificationsEnabledProvider.notifier,
     );
-    return SettingsTile(
-      key: const ValueKey('meshcore-advert-notifications-enabled'),
-      icon: Icons.notifications_active_rounded,
-      iconColor: AccentColors.cyan,
-      title: l10n.meshcoreSettingsAdvertNotificationsTitle,
-      subtitle: l10n.meshcoreSettingsAdvertNotificationsSubtitle,
-      trailing: ThemedSwitch(value: enabled, onChanged: notifier.setEnabled),
-      onTap: () => notifier.setEnabled(!enabled),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SettingsTile(
+          key: const ValueKey('meshcore-advert-notifications-enabled'),
+          icon: Icons.notifications_active_rounded,
+          iconColor: AccentColors.cyan,
+          title: l10n.meshcoreSettingsAdvertNotificationsTitle,
+          subtitle: l10n.meshcoreSettingsAdvertNotificationsSubtitle,
+          trailing: ThemedSwitch(
+            value: enabled,
+            onChanged: notifier.setEnabled,
+          ),
+          onTap: () => notifier.setEnabled(!enabled),
+        ),
+        SettingsTile(
+          key: const ValueKey('meshcore-ringtones-entry'),
+          icon: Icons.music_note_rounded,
+          iconColor: AccentColors.green,
+          title: l10n.meshcoreRingtonesTitle,
+          subtitle: l10n.meshcoreRingtonesSubtitle,
+          trailing: Icon(
+            Icons.chevron_right_rounded,
+            color: context.textTertiary,
+          ),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const MeshCoreRingtoneScreen(),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
