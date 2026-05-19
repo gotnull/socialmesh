@@ -10813,6 +10813,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les contacts avec coordonnées GPS apparaîtront sur la carte.\n\nAssurez-vous que vos contacts ont activé le partage de localisation.';
 
   @override
+  String get meshcoreMapEmptyTaglineSetOwnLocation =>
+      'Définissez votre position dans Paramètres -> Emplacement pour vous marquer sur la carte';
+
+  @override
+  String get meshcoreMapEmptyTaglineWaitForAdverts =>
+      'Les pairs apparaissent à mesure que leurs annonces arrivent sur le mesh';
+
+  @override
   String get meshcoreNoMessagesYet => 'Aucun message pour l\'instant';
 
   @override

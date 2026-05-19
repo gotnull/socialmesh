@@ -11907,5 +11907,7 @@
   "meshcoreTransportStatusFieldRateTx": "Débit TX",
   "meshcoreTransportStatusFieldRateRx": "Débit RX",
   "meshcoreTransportStatusFieldSessionDuration": "Session",
-  "meshcoreTransportStatusThroughputIdle": "Inactif"
+  "meshcoreTransportStatusThroughputIdle": "Inactif",
+  "meshcoreMapEmptyTaglineSetOwnLocation": "Définissez votre position dans Paramètres -> Emplacement pour vous marquer sur la carte",
+  "meshcoreMapEmptyTaglineWaitForAdverts": "Les pairs apparaissent à mesure que leurs annonces arrivent sur le mesh"
 }

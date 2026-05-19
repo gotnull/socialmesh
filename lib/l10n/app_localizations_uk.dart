@@ -10748,6 +10748,14 @@ class AppLocalizationsUk extends AppLocalizations {
       'Контакти з GPS-координатами відображатимуться на карті.\n\nПереконайтеся, що ваші контакти увімкнули обмін розташуванням.';
 
   @override
+  String get meshcoreMapEmptyTaglineSetOwnLocation =>
+      'Встановіть своє розташування в Налаштування -> Розташування, щоб позначити себе на карті';
+
+  @override
+  String get meshcoreMapEmptyTaglineWaitForAdverts =>
+      'Пiри зʼявляються коли їхні оголошення приходять по мережi';
+
+  @override
   String get meshcoreNoMessagesYet => 'Повідомлень ще немає';
 
   @override

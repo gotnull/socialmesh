@@ -11907,5 +11907,7 @@
   "meshcoreTransportStatusFieldRateTx": "Швидкість TX",
   "meshcoreTransportStatusFieldRateRx": "Швидкість RX",
   "meshcoreTransportStatusFieldSessionDuration": "Сеанс",
-  "meshcoreTransportStatusThroughputIdle": "Очікування"
+  "meshcoreTransportStatusThroughputIdle": "Очікування",
+  "meshcoreMapEmptyTaglineSetOwnLocation": "Встановіть своє розташування в Налаштування -> Розташування, щоб позначити себе на карті",
+  "meshcoreMapEmptyTaglineWaitForAdverts": "Пiри зʼявляються коли їхні оголошення приходять по мережi"
 }

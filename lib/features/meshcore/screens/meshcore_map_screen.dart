@@ -123,6 +123,23 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
         ref.watch(meshCorePinnedLocationProvider).value ??
         const <MeshCorePinnedLocation>[];
 
+    // Decode the user's own advertised lat/lon from SELF_INFO. Firmware
+    // wire scale is 1e6 (kMeshCoreAdvertLatLonScale). Treat (0, 0) as
+    // "no location stored" - that matches the firmware clear-position
+    // convention used by `setAdvertLatLon`. Non-finite values guard
+    // against malformed payloads.
+    final selfInfo = ref.watch(meshCoreSelfInfoProvider).selfInfo;
+    LatLng? selfPosition;
+    if (selfInfo != null &&
+        selfInfo.latitude != null &&
+        selfInfo.longitude != null) {
+      final lat = selfInfo.latitude! / 1e6;
+      final lon = selfInfo.longitude! / 1e6;
+      if (lat.isFinite && lon.isFinite && !(lat == 0 && lon == 0)) {
+        selfPosition = LatLng(lat, lon);
+      }
+    }
+
     // Auto-fit map bounds when the overlay flips to a new value.
     if (!identical(pathOverlay, _lastFittedOverlay)) {
       _lastFittedOverlay = pathOverlay;
@@ -180,7 +197,9 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
     LatLng center = const LatLng(0, 0);
     double initialZoom = 10.0;
     final hasMapContent =
-        contactsWithLocation.isNotEmpty || widget.highlightPosition != null;
+        contactsWithLocation.isNotEmpty ||
+        widget.highlightPosition != null ||
+        selfPosition != null;
 
     if (contactsWithLocation.isNotEmpty) {
       final allPoints = contactsWithLocation
@@ -237,6 +256,15 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
             center;
         initialZoom = 12.0;
       }
+    }
+
+    // Fall back to centering on the user's own advertised position
+    // when no contacts have a known location. Lower priority than
+    // contact-derived bounds (above) and than an explicit highlight
+    // (below) - if we have peers to show, those drive the camera.
+    if (contactsWithLocation.isEmpty && selfPosition != null) {
+      center = selfPosition;
+      initialZoom = 14.0;
     }
 
     final highlight = widget.highlightPosition;
@@ -333,6 +361,42 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
                               Icons.location_on_outlined,
                               color: AppTheme.errorRed,
                               size: 34,
+                            ),
+                          ),
+                        // "You are here" marker for the user's own
+                        // advertised position. Cyan accent + white halo
+                        // so it reads as self vs the sigil markers used
+                        // for peers. Self always renders even when peer
+                        // type filters would hide everyone else.
+                        if (selfPosition != null)
+                          Marker(
+                            key: const ValueKey('meshcore-map-self-marker'),
+                            point: selfPosition,
+                            width: 32,
+                            height: 32,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: AccentColors.cyan,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 3,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AccentColors.cyan.withValues(
+                                      alpha: 0.45,
+                                    ),
+                                    blurRadius: 10,
+                                    spreadRadius: 2,
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.person,
+                                color: Colors.white,
+                                size: 16,
+                              ),
                             ),
                           ),
                         ..._buildContactMarkers(contactsWithLocation),
@@ -592,8 +656,8 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
         ],
         taglines: [
           context.l10n.meshcoreNoContactsWithLocationDescription,
-          context.l10n.meshcoreContactsEmptyTagline1,
-          context.l10n.meshcoreContactsEmptyTagline3,
+          context.l10n.meshcoreMapEmptyTaglineSetOwnLocation,
+          context.l10n.meshcoreMapEmptyTaglineWaitForAdverts,
         ],
         titlePrefix: context.l10n.meshcoreMapEmptyTitlePrefix,
         titleKeyword: context.l10n.meshcoreMapEmptyTitleKeyword,

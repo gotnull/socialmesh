@@ -14218,6 +14218,14 @@
     "@meshcoreNoContactsWithLocationDescription": {
         "description": "Empty state description when no contacts have location"
     },
+    "meshcoreMapEmptyTaglineSetOwnLocation": "Set your own location in Settings -> Location to mark yourself on the map",
+    "@meshcoreMapEmptyTaglineSetOwnLocation": {
+        "description": "Map empty-state tagline suggesting the user set their own advertised location so the map has at least one anchor (themselves)"
+    },
+    "meshcoreMapEmptyTaglineWaitForAdverts": "Peers appear as their adverts arrive over the mesh",
+    "@meshcoreMapEmptyTaglineWaitForAdverts": {
+        "description": "Map empty-state tagline explaining peers will populate as adverts arrive"
+    },
     "meshcoreNoMessagesYet": "No messages yet",
     "@meshcoreNoMessagesYet": {
         "description": "Empty state title when no messages exist"

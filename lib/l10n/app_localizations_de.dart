@@ -10763,6 +10763,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Kontakte mit GPS-Koordinaten erscheinen auf der Karte.\n\nStellen Sie sicher, dass Ihre Kontakte die Standortfreigabe aktiviert haben.';
 
   @override
+  String get meshcoreMapEmptyTaglineSetOwnLocation =>
+      'Setze deinen Standort in Einstellungen -> Standort, um dich auf der Karte zu markieren';
+
+  @override
+  String get meshcoreMapEmptyTaglineWaitForAdverts =>
+      'Peers erscheinen, sobald ihre Adverts über das Mesh eintreffen';
+
+  @override
   String get meshcoreNoMessagesYet => 'Noch keine Nachrichten';
 
   @override

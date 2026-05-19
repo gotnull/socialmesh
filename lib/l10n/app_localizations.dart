@@ -18616,6 +18616,18 @@ abstract class AppLocalizations {
   /// **'Contacts with GPS coordinates will appear on the map.\n\nMake sure your contacts have location sharing enabled.'**
   String get meshcoreNoContactsWithLocationDescription;
 
+  /// Map empty-state tagline suggesting the user set their own advertised location so the map has at least one anchor (themselves)
+  ///
+  /// In en, this message translates to:
+  /// **'Set your own location in Settings -> Location to mark yourself on the map'**
+  String get meshcoreMapEmptyTaglineSetOwnLocation;
+
+  /// Map empty-state tagline explaining peers will populate as adverts arrive
+  ///
+  /// In en, this message translates to:
+  /// **'Peers appear as their adverts arrive over the mesh'**
+  String get meshcoreMapEmptyTaglineWaitForAdverts;
+
   /// Empty state title when no messages exist
   ///
   /// In en, this message translates to:

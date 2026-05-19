@@ -11907,5 +11907,7 @@
   "meshcoreTransportStatusFieldRateTx": "TX-Rate",
   "meshcoreTransportStatusFieldRateRx": "RX-Rate",
   "meshcoreTransportStatusFieldSessionDuration": "Sitzung",
-  "meshcoreTransportStatusThroughputIdle": "Inaktiv"
+  "meshcoreTransportStatusThroughputIdle": "Inaktiv",
+  "meshcoreMapEmptyTaglineSetOwnLocation": "Setze deinen Standort in Einstellungen -> Standort, um dich auf der Karte zu markieren",
+  "meshcoreMapEmptyTaglineWaitForAdverts": "Peers erscheinen, sobald ihre Adverts über das Mesh eintreffen"
 }

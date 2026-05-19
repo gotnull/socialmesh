@@ -12281,5 +12281,7 @@
   "meshcoreTransportStatusFieldRateTx": "Скорость TX",
   "meshcoreTransportStatusFieldRateRx": "Скорость RX",
   "meshcoreTransportStatusFieldSessionDuration": "Сессия",
-  "meshcoreTransportStatusThroughputIdle": "Простой"
+  "meshcoreTransportStatusThroughputIdle": "Простой",
+  "meshcoreMapEmptyTaglineSetOwnLocation": "Укажите свою позицию в Настройки -> Местоположение, чтобы отметить себя на карте",
+  "meshcoreMapEmptyTaglineWaitForAdverts": "Пиры появляются по мере поступления их анонсов через сеть"
 }

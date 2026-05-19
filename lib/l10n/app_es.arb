@@ -11907,5 +11907,7 @@
   "meshcoreTransportStatusFieldRateTx": "Tasa TX",
   "meshcoreTransportStatusFieldRateRx": "Tasa RX",
   "meshcoreTransportStatusFieldSessionDuration": "Sesión",
-  "meshcoreTransportStatusThroughputIdle": "Inactivo"
+  "meshcoreTransportStatusThroughputIdle": "Inactivo",
+  "meshcoreMapEmptyTaglineSetOwnLocation": "Establece tu ubicación en Ajustes -> Ubicación para marcarte en el mapa",
+  "meshcoreMapEmptyTaglineWaitForAdverts": "Los pares aparecen a medida que sus anuncios llegan por la mesh"
 }

@@ -10624,6 +10624,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Contacts with GPS coordinates will appear on the map.\n\nMake sure your contacts have location sharing enabled.';
 
   @override
+  String get meshcoreMapEmptyTaglineSetOwnLocation =>
+      'Set your own location in Settings -> Location to mark yourself on the map';
+
+  @override
+  String get meshcoreMapEmptyTaglineWaitForAdverts =>
+      'Peers appear as their adverts arrive over the mesh';
+
+  @override
   String get meshcoreNoMessagesYet => 'No messages yet';
 
   @override

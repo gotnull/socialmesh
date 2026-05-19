@@ -45425,5 +45425,7 @@
   "meshcoreTransportStatusFieldRateTx": "Taxa TX",
   "meshcoreTransportStatusFieldRateRx": "Taxa RX",
   "meshcoreTransportStatusFieldSessionDuration": "Sessão",
-  "meshcoreTransportStatusThroughputIdle": "Inativo"
+  "meshcoreTransportStatusThroughputIdle": "Inativo",
+  "meshcoreMapEmptyTaglineSetOwnLocation": "Defina sua localização em Configurações -> Localização para se marcar no mapa",
+  "meshcoreMapEmptyTaglineWaitForAdverts": "Os pares aparecem conforme seus anúncios chegam pela mesh"
 }

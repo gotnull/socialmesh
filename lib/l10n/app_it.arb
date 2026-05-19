@@ -45425,5 +45425,7 @@
   "meshcoreTransportStatusFieldRateTx": "Velocità TX",
   "meshcoreTransportStatusFieldRateRx": "Velocità RX",
   "meshcoreTransportStatusFieldSessionDuration": "Sessione",
-  "meshcoreTransportStatusThroughputIdle": "Inattivo"
+  "meshcoreTransportStatusThroughputIdle": "Inattivo",
+  "meshcoreMapEmptyTaglineSetOwnLocation": "Imposta la tua posizione in Impostazioni -> Posizione per segnarti sulla mappa",
+  "meshcoreMapEmptyTaglineWaitForAdverts": "I peer appaiono man mano che i loro annunci arrivano sulla mesh"
 }

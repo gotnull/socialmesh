@@ -10753,6 +10753,14 @@ class AppLocalizationsIt extends AppLocalizations {
       'I contatti con coordinate GPS appariranno sulla mappa.\n\nAssicurati che i tuoi contatti abbiano la condivisione posizione attiva.';
 
   @override
+  String get meshcoreMapEmptyTaglineSetOwnLocation =>
+      'Imposta la tua posizione in Impostazioni -> Posizione per segnarti sulla mappa';
+
+  @override
+  String get meshcoreMapEmptyTaglineWaitForAdverts =>
+      'I peer appaiono man mano che i loro annunci arrivano sulla mesh';
+
+  @override
   String get meshcoreNoMessagesYet => 'Nessun messaggio';
 
   @override

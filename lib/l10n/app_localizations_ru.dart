@@ -10741,6 +10741,14 @@ class AppLocalizationsRu extends AppLocalizations {
       'Контакты с координатами GPS будут отображаться на карте.\n\nУбедитесь, что у ваших контактов включена передача местоположения.';
 
   @override
+  String get meshcoreMapEmptyTaglineSetOwnLocation =>
+      'Укажите свою позицию в Настройки -> Местоположение, чтобы отметить себя на карте';
+
+  @override
+  String get meshcoreMapEmptyTaglineWaitForAdverts =>
+      'Пиры появляются по мере поступления их анонсов через сеть';
+
+  @override
   String get meshcoreNoMessagesYet => 'Сообщений пока нет';
 
   @override
