@@ -440,9 +440,44 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   /// torn down (the disconnect is async). Once we see disconnected state,
   /// we start the normal scan flow.
   void _listenForDisconnectCompletion() {
-    // Helper that closes BOTH subscriptions and fires the scan once,
-    // regardless of which provider's signal arrived first.
+    final initialMeshtastic = ref.read(conn.deviceConnectionProvider);
+    final initialMeshCore = ref
+        .read(meshCoreConnectionStateProvider)
+        .asData
+        ?.value;
+    // `lastDeviceId` carries a protocol prefix (`meshcore-tcp:`,
+    // `meshcore-ble:`, or none for Meshtastic). That tells us which
+    // protocol owned the session that just ended, so we can apply
+    // `fireImmediately: true` ONLY to the matching listener.
+    //
+    // Why this matters: `meshCoreConnectionStateProvider` defaults to
+    // `disconnected` for sessions that were never MeshCore, so firing
+    // immediately on its registered value would race past a
+    // legitimately-still-tearing-down Meshtastic transport.
+    final settingsAsync = ref.read(settingsServiceProvider);
+    final lastDeviceId = settingsAsync.asData?.value.lastDeviceId;
+    final lastWasMeshCore =
+        lastDeviceId != null && lastDeviceId.startsWith('meshcore-');
+    AppLogging.connection(
+      '📡 SCANNER: _listenForDisconnectCompletion registering — '
+      'initial meshtasticState=${initialMeshtastic.state}, '
+      'initial meshCoreState=$initialMeshCore, '
+      'lastDeviceId=$lastDeviceId, lastWasMeshCore=$lastWasMeshCore',
+    );
+
+    // Local guard so the two fire-immediately/transition listeners
+    // below don't BOTH trigger _startScan if both end up matching at
+    // the same instant. Closure-captured per registration.
+    var fired = false;
+
     void onDone(String source) {
+      if (fired) {
+        AppLogging.connection(
+          '📡 SCANNER: onDone duplicate ignored (source=$source)',
+        );
+        return;
+      }
+      fired = true;
       AppLogging.connection(
         '📡 SCANNER: Transport disconnect completed (source=$source) '
         '— starting scan',
@@ -455,34 +490,46 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       _startScan();
     }
 
-    // Meshtastic-flavoured disconnect listener (existing path).
+    // Meshtastic-flavoured disconnect listener. Fire-immediately is
+    // only enabled when the last session was a Meshtastic one - that
+    // way an already-disconnected Meshtastic provider triggers a scan
+    // start immediately, but a stale-connected Meshtastic provider on
+    // a MeshCore session doesn't pretend to be a disconnect signal.
     _disconnectSub?.close();
     _disconnectSub = ref.listenManual<conn.DeviceConnectionState2>(
       conn.deviceConnectionProvider,
       (previous, next) {
+        AppLogging.connection(
+          '📡 SCANNER: meshtastic listener fired — '
+          'prev=${previous?.state}, next=${next.state}',
+        );
         if (next.state == conn.DevicePairingState.disconnected ||
             next.state == conn.DevicePairingState.neverPaired) {
           onDone('meshtastic_provider');
         }
       },
+      fireImmediately: !lastWasMeshCore,
     );
 
-    // D28 follow-up: parallel MeshCore-flavoured disconnect listener.
-    // The MeshCore coordinator drives its own state stream
-    // (`meshCoreConnectionStateProvider`); the Meshtastic provider
-    // above never transitions for a MeshCore session, so without this
-    // listener the Scanner waited forever after a MeshCore Disconnect
-    // and never repopulated devices. Either signal is sufficient — we
-    // race them.
+    // MeshCore-flavoured disconnect listener. Fire-immediately is
+    // enabled only when the last session was a MeshCore one. For a
+    // Meshtastic session, the MeshCore provider defaults to
+    // `disconnected` and would otherwise race past Meshtastic's real
+    // teardown.
     _meshCoreDisconnectSub?.close();
     _meshCoreDisconnectSub = ref.listenManual<AsyncValue<MeshConnectionState>>(
       meshCoreConnectionStateProvider,
       (previous, next) {
         final state = next.asData?.value;
+        AppLogging.connection(
+          '📡 SCANNER: meshcore listener fired — '
+          'prev=${previous?.asData?.value}, next=$state',
+        );
         if (state == MeshConnectionState.disconnected) {
           onDone('meshcore_provider');
         }
       },
+      fireImmediately: lastWasMeshCore,
     );
   }
 
@@ -558,10 +605,20 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     final userDisconnected = ref.read(userDisconnectedProvider);
     final settingsFuture = ref.read(settingsServiceProvider.future);
     final transport = ref.read(bleScanTransportProvider);
+    // Diagnostic: capture MeshCore state too. A MeshCore disconnect
+    // does not transition the Meshtastic deviceConnectionProvider, so
+    // logging only one side hides which protocol the user was on.
+    final meshCoreStateAsync = ref.read(meshCoreConnectionStateProvider);
+    final meshCoreState = meshCoreStateAsync.asData?.value;
 
     AppLogging.connection(
-      '📡 SCANNER: _tryAutoReconnect - autoReconnectState=$autoReconnectState, '
-      'deviceState=${deviceState.state}, reason=${deviceState.reason}',
+      '📡 SCANNER: _tryAutoReconnect entry — '
+      'autoReconnectState=$autoReconnectState, '
+      'meshtasticState=${deviceState.state}, '
+      'meshtasticReason=${deviceState.reason}, '
+      'meshCoreState=$meshCoreState, '
+      'userDisconnected=$userDisconnected, '
+      'transportRuntimeType=${transport.runtimeType}',
     );
 
     // CRITICAL: If a device is already connected or configuring, do NOT
@@ -580,8 +637,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
             deviceState.state == conn.DevicePairingState.configuring) &&
         !userDisconnected) {
       AppLogging.connection(
-        '📡 SCANNER: BLOCKED — device already ${deviceState.state}, '
-        'navigating to main instead of scanning',
+        '📡 SCANNER: gate=block_navigate_to_main TRIPPED — '
+        'meshtasticState=${deviceState.state}, userDisconnected=false',
       );
       final appState = ref.read(appInitProvider);
       if (appState == AppInitState.needsScanner) {
@@ -598,8 +655,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         (deviceState.isConnected ||
             deviceState.state == conn.DevicePairingState.configuring)) {
       AppLogging.connection(
-        '📡 SCANNER: User disconnected but transport still ${deviceState.state} '
-        '— waiting for disconnect to complete before scanning',
+        '📡 SCANNER: gate=wait_for_disconnect TRIPPED — '
+        'meshtasticState=${deviceState.state}, meshCoreState=$meshCoreState, '
+        'registering listener for disconnect completion',
       );
       _listenForDisconnectCompletion();
       return;
@@ -617,8 +675,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     if (autoReconnectState == AutoReconnectState.scanning ||
         autoReconnectState == AutoReconnectState.connecting) {
       AppLogging.connection(
-        '📡 SCANNER: DEFERRED — background reconnect already active '
-        '(state=$autoReconnectState), showing reconnecting UI instead of scanning',
+        '📡 SCANNER: gate=defer_to_background_reconnect TRIPPED — '
+        'autoReconnectState=$autoReconnectState',
       );
       AppErrorHandler.addBreadcrumb(
         'Scanner: deferred to background reconnect ($autoReconnectState)', // lint-allow: hardcoded-string
@@ -634,7 +692,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
     if (autoReconnectState == AutoReconnectState.failed) {
       AppLogging.connection(
-        '📡 SCANNER: Auto-reconnect already failed, skipping to scan',
+        '📡 SCANNER: gate=auto_reconnect_failed TRIPPED — '
+        'falling through to _startScan',
       );
       _startScan();
       return;
@@ -643,7 +702,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     // CRITICAL: Check the global userDisconnected flag
     if (userDisconnected) {
       AppLogging.connection(
-        '📡 SCANNER: User manually disconnected (global flag), skipping auto-reconnect',
+        '📡 SCANNER: gate=user_disconnected_flag TRIPPED — '
+        'falling through to _startScan',
       );
       _startScan();
       return;
@@ -652,7 +712,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     // If user manually disconnected, don't auto-reconnect - just show scanner
     if (deviceState.reason == conn.DisconnectReason.userDisconnected) {
       AppLogging.connection(
-        '📡 SCANNER: User manually disconnected, skipping auto-reconnect',
+        '📡 SCANNER: gate=meshtastic_disconnect_reason_user TRIPPED — '
+        'falling through to _startScan',
       );
       _startScan();
       return;
