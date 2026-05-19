@@ -358,11 +358,24 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
       title: context.l10n.meshcoreMapTitle,
       physics: const NeverScrollableScrollPhysics(),
       actions: [
+        // Contextual clear-path action - only when a path overlay is
+        // active. Surfaces as a primary icon (not buried in the
+        // overflow menu) because it's a transient state the user just
+        // toggled on and needs an obvious off switch.
+        if (pathOverlay != null)
+          IconButton(
+            key: const ValueKey('meshcore-map-path-overlay-clear'),
+            icon: const Icon(Icons.timeline_outlined),
+            tooltip: context.l10n.meshcorePathOverlayClear,
+            onPressed: () {
+              ref.read(meshCorePathOverlayProvider.notifier).clear();
+            },
+          ),
         const MeshCoreDeviceStatusButton(),
-        // Single kebab overflow for all the secondary actions
-        // (filters, tile style, contextual clear-path). Mirrors the
-        // Meshtastic AppBar pattern - one DeviceStatusButton + one
-        // kebab. Never more than two icons in the bar.
+        // Single kebab overflow for the remaining secondary actions
+        // (toggle list, filters, tile style). Mirrors the Meshtastic
+        // AppBar pattern - one contextual primary + DeviceStatus +
+        // kebab.
         AppBarOverflowMenu<String>(
           tooltip: context.l10n.mapMoreOptionsTooltip,
           onSelected: (value) {
@@ -372,10 +385,6 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
             }
             if (value == 'filter') {
               _showFilterDialog(context);
-              return;
-            }
-            if (value == 'clear_path') {
-              ref.read(meshCorePathOverlayProvider.notifier).clear();
               return;
             }
             if (value.startsWith('style_')) {
@@ -424,21 +433,6 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
                 ],
               ),
             ),
-            if (pathOverlay != null)
-              PopupMenuItem<String>(
-                value: 'clear_path',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.timeline_outlined,
-                      size: 18,
-                      color: context.textSecondary,
-                    ),
-                    SizedBox(width: AppTheme.spacing8),
-                    Text(context.l10n.meshcorePathOverlayClear),
-                  ],
-                ),
-              ),
             const PopupMenuDivider(),
             for (final style in MapTileStyle.values)
               PopupMenuItem<String>(
@@ -1567,9 +1561,12 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
   }
 
   Widget _buildLegend(int contactCount) {
+    // Bottom-left so it doesn't collide with the right-side
+    // MapControlsOverlay (compass + zoom + recenter column). Bottom
+    // padding clears the system safe area + a comfortable thumb gap.
     return Positioned(
-      top: 16,
-      right: 16,
+      bottom: 24,
+      left: 16,
       child: Container(
         decoration: BoxDecoration(
           color: context.card,

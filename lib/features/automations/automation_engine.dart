@@ -300,6 +300,7 @@ class AutomationEngine {
   Future<void> processNodeUpdate(
     MeshNode node, {
     MeshNode? previousNode,
+    TriggerProtocol protocol = TriggerProtocol.meshtastic,
   }) async {
     // Track node name for silent node lookups
     _nodeNames[node.nodeNum] = node.displayName;
@@ -358,6 +359,7 @@ class AutomationEngine {
               batteryLevel: node.batteryLevel,
               latitude: pos?.$1,
               longitude: pos?.$2,
+              protocol: protocol,
             ),
           );
         }
@@ -376,6 +378,7 @@ class AutomationEngine {
             batteryLevel: node.batteryLevel,
             latitude: fullPos?.$1,
             longitude: fullPos?.$2,
+            protocol: protocol,
           ),
         );
       }
@@ -397,11 +400,17 @@ class AutomationEngine {
             batteryLevel: _nodeBatteryLevels[node.nodeNum],
             latitude: node.latitude,
             longitude: node.longitude,
+            protocol: protocol,
           ),
         );
 
         // Check geofence events for all automations with geofence triggers
-        await _checkGeofenceEvents(node, previousPos, currentPos);
+        await _checkGeofenceEvents(
+          node,
+          previousPos,
+          currentPos,
+          protocol: protocol,
+        );
       }
     }
 
@@ -417,6 +426,7 @@ class AutomationEngine {
           snr: node.snr,
           latitude: snrPos?.$1,
           longitude: snrPos?.$2,
+          protocol: protocol,
         ),
       );
     }
@@ -446,6 +456,7 @@ class AutomationEngine {
           node,
           previous: previousPresence,
           current: currentPresence,
+          protocol: protocol,
         );
       }
     } catch (e) {
@@ -458,6 +469,7 @@ class AutomationEngine {
     MeshNode node, {
     required PresenceConfidence previous,
     required PresenceConfidence current,
+    TriggerProtocol protocol = TriggerProtocol.meshtastic,
   }) async {
     final automations = _repository.automations
         .where((a) => a.enabled)
@@ -475,6 +487,7 @@ class AutomationEngine {
           batteryLevel: node.batteryLevel,
           latitude: node.latitude,
           longitude: node.longitude,
+          protocol: protocol,
         ),
       );
       return;
@@ -489,6 +502,7 @@ class AutomationEngine {
           batteryLevel: _nodeBatteryLevels[node.nodeNum],
           latitude: node.latitude,
           longitude: node.longitude,
+          protocol: protocol,
         ),
       );
     }
@@ -499,8 +513,11 @@ class AutomationEngine {
     AutomationMessage message, {
     required String senderName,
     String? channelName,
+    TriggerProtocol protocol = TriggerProtocol.meshtastic,
   }) async {
-    // Enrich message events with cached node data
+    // Enrich message events with cached node data. Cached battery /
+    // position only exists on the Meshtastic side; MeshCore events
+    // arrive with null which is harmless.
     final msgBattery = _nodeBatteryLevels[message.from];
     final msgPos = _nodePositions[message.from];
 
@@ -515,6 +532,7 @@ class AutomationEngine {
         batteryLevel: msgBattery,
         latitude: msgPos?.$1,
         longitude: msgPos?.$2,
+        protocol: protocol,
       ),
     );
 
@@ -529,6 +547,7 @@ class AutomationEngine {
         batteryLevel: msgBattery,
         latitude: msgPos?.$1,
         longitude: msgPos?.$2,
+        protocol: protocol,
       ),
     );
 
@@ -544,6 +563,7 @@ class AutomationEngine {
           batteryLevel: msgBattery,
           latitude: msgPos?.$1,
           longitude: msgPos?.$2,
+          protocol: protocol,
         ),
       );
     }
@@ -578,7 +598,12 @@ class AutomationEngine {
   /// Process an automation event
   Future<void> _processEvent(AutomationEvent event) async {
     final automations = _repository.automations
-        .where((a) => a.enabled && a.trigger.type == event.type)
+        .where(
+          (a) =>
+              a.enabled &&
+              a.trigger.type == event.type &&
+              a.trigger.matchesProtocol(event.protocol),
+        )
         .toList();
 
     AppLogging.automations(
@@ -1536,8 +1561,9 @@ class AutomationEngine {
   Future<void> _checkGeofenceEvents(
     MeshNode node,
     (double, double) previousPos,
-    (double, double) currentPos,
-  ) async {
+    (double, double) currentPos, {
+    TriggerProtocol protocol = TriggerProtocol.meshtastic,
+  }) async {
     final automations = _repository.automations
         .where(
           (a) =>
@@ -1579,6 +1605,7 @@ class AutomationEngine {
             batteryLevel: _nodeBatteryLevels[node.nodeNum],
             latitude: currentPos.$1,
             longitude: currentPos.$2,
+            protocol: protocol,
           ),
         );
       } else if (wasInside &&
@@ -1592,6 +1619,7 @@ class AutomationEngine {
             batteryLevel: _nodeBatteryLevels[node.nodeNum],
             latitude: currentPos.$1,
             longitude: currentPos.$2,
+            protocol: protocol,
           ),
         );
       }

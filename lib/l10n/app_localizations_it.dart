@@ -11309,6 +11309,95 @@ class AppLocalizationsIt extends AppLocalizations {
   String get meshcoreShellNavContacts => 'Contatti';
 
   @override
+  String get meshcoreShellNavDashboard => 'Dashboard';
+
+  @override
+  String get meshcoreDashboardTitle => 'Dashboard';
+
+  @override
+  String get meshcoreDashboardEmptyTitlePrefix => 'La tua';
+
+  @override
+  String get meshcoreDashboardEmptyTitleKeyword => 'Dashboard';
+
+  @override
+  String get meshcoreDashboardEmptyTitleMid => 'è';
+
+  @override
+  String get meshcoreDashboardEmptyTitleKeyword2 => 'Vuota';
+
+  @override
+  String get meshcoreDashboardEmptyTitleSuffix => '';
+
+  @override
+  String get meshcoreDashboardEmptyTagline1 =>
+      'Aggiungi widget per vedere la tua attività mesh a colpo d\'occhio';
+
+  @override
+  String get meshcoreDashboardEmptyTagline2 =>
+      'Raccogli le tue metriche preferite in un\'unica vista';
+
+  @override
+  String get meshcoreWidgetNetworkOverviewName => 'Panoramica rete';
+
+  @override
+  String get meshcoreWidgetNetworkOverviewDescription =>
+      'Contatti totali, online, canali';
+
+  @override
+  String get meshcoreWidgetTotalContacts => 'Contatti';
+
+  @override
+  String get meshcoreWidgetOnline => 'Online';
+
+  @override
+  String get meshcoreWidgetChannels => 'Canali';
+
+  @override
+  String get meshcoreWidgetNearbyContactsName => 'Contatti vicini';
+
+  @override
+  String get meshcoreWidgetRecentMessagesName => 'Messaggi recenti';
+
+  @override
+  String get meshcoreWidgetQuickActionsName => 'Azioni rapide';
+
+  @override
+  String get meshcoreWidgetQuickActionsDescription =>
+      'Invia annuncio, aggiorna contatti, sincronizza ora';
+
+  @override
+  String get meshcoreWidgetNearbyContactsDescription =>
+      'Contatti principali per attività recente e segnale';
+
+  @override
+  String get meshcoreWidgetRecentMessagesDescription =>
+      'Ultimi messaggi diretti e di canale';
+
+  @override
+  String get meshcoreDashboardEmptyTitle => 'Nessun widget aggiunto';
+
+  @override
+  String get meshcoreDashboardEmptyMessage =>
+      'Personalizza la dashboard MeshCore con i widget che ti interessano';
+
+  @override
+  String get meshcoreDashboardManageWidgetsTitle => 'Gestisci widget';
+
+  @override
+  String get meshcoreDashboardManageWidgetsHint =>
+      'Tocca per aggiungere o rimuovere widget dalla dashboard';
+
+  @override
+  String get meshcoreQuickActionSendAdvert => 'Invia annuncio';
+
+  @override
+  String get meshcoreQuickActionRefreshContacts => 'Aggiorna contatti';
+
+  @override
+  String get meshcoreQuickActionSyncTime => 'Sincronizza ora';
+
+  @override
   String get meshcoreShellNavMap => 'Mappa';
 
   @override

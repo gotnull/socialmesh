@@ -19606,6 +19606,168 @@ abstract class AppLocalizations {
   /// **'Contacts'**
   String get meshcoreShellNavContacts;
 
+  /// MeshCore bottom-nav label for the Dashboard tab (1:1 with the Meshtastic main shell's Dashboard tab)
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard'**
+  String get meshcoreShellNavDashboard;
+
+  /// MeshCore dashboard screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard'**
+  String get meshcoreDashboardTitle;
+
+  /// MeshCore dashboard empty-state title prefix (before the gradient keyword)
+  ///
+  /// In en, this message translates to:
+  /// **'Your'**
+  String get meshcoreDashboardEmptyTitlePrefix;
+
+  /// MeshCore dashboard empty-state gradient keyword
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard'**
+  String get meshcoreDashboardEmptyTitleKeyword;
+
+  /// MeshCore dashboard empty-state mid word between gradient keywords
+  ///
+  /// In en, this message translates to:
+  /// **'is'**
+  String get meshcoreDashboardEmptyTitleMid;
+
+  /// MeshCore dashboard empty-state second gradient keyword
+  ///
+  /// In en, this message translates to:
+  /// **'Empty'**
+  String get meshcoreDashboardEmptyTitleKeyword2;
+
+  /// MeshCore dashboard empty-state title suffix (intentionally empty)
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get meshcoreDashboardEmptyTitleSuffix;
+
+  /// MeshCore dashboard empty-state tagline 1
+  ///
+  /// In en, this message translates to:
+  /// **'Add widgets to see your mesh activity at a glance'**
+  String get meshcoreDashboardEmptyTagline1;
+
+  /// MeshCore dashboard empty-state tagline 2
+  ///
+  /// In en, this message translates to:
+  /// **'Pinch your favourite metrics into one view'**
+  String get meshcoreDashboardEmptyTagline2;
+
+  /// MeshCore Network Overview widget display name
+  ///
+  /// In en, this message translates to:
+  /// **'Network Overview'**
+  String get meshcoreWidgetNetworkOverviewName;
+
+  /// MeshCore Network Overview widget description shown in picker
+  ///
+  /// In en, this message translates to:
+  /// **'Total contacts, online count, channels'**
+  String get meshcoreWidgetNetworkOverviewDescription;
+
+  /// Label for total contacts metric in MeshCore network overview widget
+  ///
+  /// In en, this message translates to:
+  /// **'Total contacts'**
+  String get meshcoreWidgetTotalContacts;
+
+  /// Label for online contact count metric (heard within last 24h)
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get meshcoreWidgetOnline;
+
+  /// Label for channel count metric
+  ///
+  /// In en, this message translates to:
+  /// **'Channels'**
+  String get meshcoreWidgetChannels;
+
+  /// MeshCore Nearby Contacts widget display name
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby Contacts'**
+  String get meshcoreWidgetNearbyContactsName;
+
+  /// MeshCore Recent Messages widget display name
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Messages'**
+  String get meshcoreWidgetRecentMessagesName;
+
+  /// MeshCore Quick Actions widget display name
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Actions'**
+  String get meshcoreWidgetQuickActionsName;
+
+  /// MeshCore Quick Actions widget description in the widget picker
+  ///
+  /// In en, this message translates to:
+  /// **'Send advert, refresh contacts, sync time'**
+  String get meshcoreWidgetQuickActionsDescription;
+
+  /// MeshCore Nearby Contacts widget description in the widget picker
+  ///
+  /// In en, this message translates to:
+  /// **'Top contacts by recent activity and signal'**
+  String get meshcoreWidgetNearbyContactsDescription;
+
+  /// MeshCore Recent Messages widget description in the widget picker
+  ///
+  /// In en, this message translates to:
+  /// **'Latest DMs and channel messages'**
+  String get meshcoreWidgetRecentMessagesDescription;
+
+  /// Title shown on the MeshCore dashboard when no widgets are present
+  ///
+  /// In en, this message translates to:
+  /// **'No Widgets Added'**
+  String get meshcoreDashboardEmptyTitle;
+
+  /// Empty-state body copy on the MeshCore dashboard
+  ///
+  /// In en, this message translates to:
+  /// **'Customize your MeshCore dashboard with widgets that matter to you'**
+  String get meshcoreDashboardEmptyMessage;
+
+  /// Title of the bottom sheet for adding/removing MeshCore dashboard widgets
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Widgets'**
+  String get meshcoreDashboardManageWidgetsTitle;
+
+  /// Helper text in the MeshCore Manage Widgets bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to add or remove widgets from your dashboard'**
+  String get meshcoreDashboardManageWidgetsHint;
+
+  /// Quick action button label - broadcast a self advertisement to nearby peers
+  ///
+  /// In en, this message translates to:
+  /// **'Send Advert'**
+  String get meshcoreQuickActionSendAdvert;
+
+  /// Quick action button label - request a full contact list from the radio
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh Contacts'**
+  String get meshcoreQuickActionRefreshContacts;
+
+  /// Quick action button label - sync the radio's clock to the phone's current time
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Time'**
+  String get meshcoreQuickActionSyncTime;
+
   /// Bottom navigation label for the Map tab in MeshCore.
   ///
   /// In en, this message translates to:

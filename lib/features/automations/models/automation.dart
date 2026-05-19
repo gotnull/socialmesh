@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../l10n/app_localizations.dart';
+import '../../../models/trigger_protocol.dart';
 import 'condition_node.dart';
+
+export '../../../models/trigger_protocol.dart' show TriggerProtocol;
 
 /// Core automation model
 class Automation {
@@ -448,12 +451,48 @@ extension TriggerTypeExtension on TriggerType {
   }
 }
 
+// Which protocol's event stream an automation listens to.
+//
+// `any` is the legacy default: existing automations created before
+// MeshCore support fire on any inbound event regardless of source.
+// `meshtastic` / `meshcore` restrict firing to events tagged with that
+// protocol. Tagging happens at the event-source seam in
+// `app_providers.dart` (Meshtastic) and the MeshCore message provider
+// (MeshCore); see `AutomationEvent.protocol`.
+enum TriggerProtocolFilter { any, meshtastic, meshcore }
+
 /// Automation trigger
 class AutomationTrigger {
   final TriggerType type;
   final Map<String, dynamic> config;
 
   const AutomationTrigger({required this.type, this.config = const {}});
+
+  // Protocol scope. Defaults to `any` for back-compat with automations
+  // persisted before MeshCore support landed. Stored under
+  // `config['protocolFilter']` as the enum's `name` string so existing
+  // `AutomationSqliteStore` schema needs no migration.
+  TriggerProtocolFilter get protocolFilter {
+    final raw = config['protocolFilter'];
+    if (raw is String) {
+      for (final v in TriggerProtocolFilter.values) {
+        if (v.name == raw) return v;
+      }
+    }
+    return TriggerProtocolFilter.any;
+  }
+
+  // True when this trigger should fire for an event carrying `incoming`.
+  bool matchesProtocol(TriggerProtocol incoming) {
+    switch (protocolFilter) {
+      case TriggerProtocolFilter.any:
+        return true;
+      case TriggerProtocolFilter.meshtastic:
+        return incoming == TriggerProtocol.meshtastic;
+      case TriggerProtocolFilter.meshcore:
+        return incoming == TriggerProtocol.meshcore;
+    }
+  }
 
   /// Node filter - which node(s) this trigger applies to
   /// null = all nodes, otherwise specific node number
@@ -958,6 +997,12 @@ class AutomationEvent {
   /// Whether this is a catch-up execution (missed schedule)
   final bool isCatchUp;
 
+  // Source protocol of this event. Defaults to `meshtastic` so existing
+  // call sites that didn't carry a protocol field keep firing the same
+  // automations they always did. MeshCore-sourced events are tagged via
+  // `processMeshCore*` engine methods.
+  final TriggerProtocol protocol;
+
   AutomationEvent({
     required this.type,
     this.nodeNum,
@@ -975,6 +1020,7 @@ class AutomationEvent {
     this.slotKey,
     this.scheduledFor,
     this.isCatchUp = false,
+    this.protocol = TriggerProtocol.meshtastic,
   }) : timestamp = timestamp ?? DateTime.now();
 
   /// Factory for creating a scheduled fire event

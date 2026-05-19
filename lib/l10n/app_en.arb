@@ -14933,6 +14933,114 @@
     "@meshcoreShellNavContacts": {
         "description": "Bottom navigation label for the Contacts tab in MeshCore."
     },
+    "meshcoreShellNavDashboard": "Dashboard",
+    "@meshcoreShellNavDashboard": {
+        "description": "MeshCore bottom-nav label for the Dashboard tab (1:1 with the Meshtastic main shell's Dashboard tab)"
+    },
+    "meshcoreDashboardTitle": "Dashboard",
+    "@meshcoreDashboardTitle": {
+        "description": "MeshCore dashboard screen title"
+    },
+    "meshcoreDashboardEmptyTitlePrefix": "Your",
+    "@meshcoreDashboardEmptyTitlePrefix": {
+        "description": "MeshCore dashboard empty-state title prefix (before the gradient keyword)"
+    },
+    "meshcoreDashboardEmptyTitleKeyword": "Dashboard",
+    "@meshcoreDashboardEmptyTitleKeyword": {
+        "description": "MeshCore dashboard empty-state gradient keyword"
+    },
+    "meshcoreDashboardEmptyTitleMid": "is",
+    "@meshcoreDashboardEmptyTitleMid": {
+        "description": "MeshCore dashboard empty-state mid word between gradient keywords"
+    },
+    "meshcoreDashboardEmptyTitleKeyword2": "Empty",
+    "@meshcoreDashboardEmptyTitleKeyword2": {
+        "description": "MeshCore dashboard empty-state second gradient keyword"
+    },
+    "meshcoreDashboardEmptyTitleSuffix": "",
+    "@meshcoreDashboardEmptyTitleSuffix": {
+        "description": "MeshCore dashboard empty-state title suffix (intentionally empty)"
+    },
+    "meshcoreDashboardEmptyTagline1": "Add widgets to see your mesh activity at a glance",
+    "@meshcoreDashboardEmptyTagline1": {
+        "description": "MeshCore dashboard empty-state tagline 1"
+    },
+    "meshcoreDashboardEmptyTagline2": "Pinch your favourite metrics into one view",
+    "@meshcoreDashboardEmptyTagline2": {
+        "description": "MeshCore dashboard empty-state tagline 2"
+    },
+    "meshcoreWidgetNetworkOverviewName": "Network Overview",
+    "@meshcoreWidgetNetworkOverviewName": {
+        "description": "MeshCore Network Overview widget display name"
+    },
+    "meshcoreWidgetNetworkOverviewDescription": "Total contacts, online count, channels",
+    "@meshcoreWidgetNetworkOverviewDescription": {
+        "description": "MeshCore Network Overview widget description shown in picker"
+    },
+    "meshcoreWidgetTotalContacts": "Total contacts",
+    "@meshcoreWidgetTotalContacts": {
+        "description": "Label for total contacts metric in MeshCore network overview widget"
+    },
+    "meshcoreWidgetOnline": "Online",
+    "@meshcoreWidgetOnline": {
+        "description": "Label for online contact count metric (heard within last 24h)"
+    },
+    "meshcoreWidgetChannels": "Channels",
+    "@meshcoreWidgetChannels": {
+        "description": "Label for channel count metric"
+    },
+    "meshcoreWidgetNearbyContactsName": "Nearby Contacts",
+    "@meshcoreWidgetNearbyContactsName": {
+        "description": "MeshCore Nearby Contacts widget display name"
+    },
+    "meshcoreWidgetRecentMessagesName": "Recent Messages",
+    "@meshcoreWidgetRecentMessagesName": {
+        "description": "MeshCore Recent Messages widget display name"
+    },
+    "meshcoreWidgetQuickActionsName": "Quick Actions",
+    "@meshcoreWidgetQuickActionsName": {
+        "description": "MeshCore Quick Actions widget display name"
+    },
+    "meshcoreWidgetQuickActionsDescription": "Send advert, refresh contacts, sync time",
+    "@meshcoreWidgetQuickActionsDescription": {
+        "description": "MeshCore Quick Actions widget description in the widget picker"
+    },
+    "meshcoreWidgetNearbyContactsDescription": "Top contacts by recent activity and signal",
+    "@meshcoreWidgetNearbyContactsDescription": {
+        "description": "MeshCore Nearby Contacts widget description in the widget picker"
+    },
+    "meshcoreWidgetRecentMessagesDescription": "Latest DMs and channel messages",
+    "@meshcoreWidgetRecentMessagesDescription": {
+        "description": "MeshCore Recent Messages widget description in the widget picker"
+    },
+    "meshcoreDashboardEmptyTitle": "No Widgets Added",
+    "@meshcoreDashboardEmptyTitle": {
+        "description": "Title shown on the MeshCore dashboard when no widgets are present"
+    },
+    "meshcoreDashboardEmptyMessage": "Customize your MeshCore dashboard with widgets that matter to you",
+    "@meshcoreDashboardEmptyMessage": {
+        "description": "Empty-state body copy on the MeshCore dashboard"
+    },
+    "meshcoreDashboardManageWidgetsTitle": "Manage Widgets",
+    "@meshcoreDashboardManageWidgetsTitle": {
+        "description": "Title of the bottom sheet for adding/removing MeshCore dashboard widgets"
+    },
+    "meshcoreDashboardManageWidgetsHint": "Tap to add or remove widgets from your dashboard",
+    "@meshcoreDashboardManageWidgetsHint": {
+        "description": "Helper text in the MeshCore Manage Widgets bottom sheet"
+    },
+    "meshcoreQuickActionSendAdvert": "Send Advert",
+    "@meshcoreQuickActionSendAdvert": {
+        "description": "Quick action button label - broadcast a self advertisement to nearby peers"
+    },
+    "meshcoreQuickActionRefreshContacts": "Refresh Contacts",
+    "@meshcoreQuickActionRefreshContacts": {
+        "description": "Quick action button label - request a full contact list from the radio"
+    },
+    "meshcoreQuickActionSyncTime": "Sync Time",
+    "@meshcoreQuickActionSyncTime": {
+        "description": "Quick action button label - sync the radio's clock to the phone's current time"
+    },
     "meshcoreShellNavMap": "Map",
     "@meshcoreShellNavMap": {
         "description": "Bottom navigation label for the Map tab in MeshCore."

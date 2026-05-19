@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/core/logging.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
+import '../../models/trigger_protocol.dart';
 
 /// IFTTT trigger types
 enum IftttTriggerType {
@@ -646,9 +647,15 @@ class IftttService {
   }
 
   /// Process a node update for IFTTT triggers
+  //
+  // `protocol` lets callers tag where this event came from. Phase 0
+  // accepts the parameter as a forward-looking API surface; Phase 4
+  // will wire it into the webhook payload so subscribers can branch
+  // on protocol (`meshtastic_node_update` vs `meshcore_node_update`).
   Future<void> processNodeUpdate(
     MeshNode node, {
     MeshNode? previousNode,
+    TriggerProtocol protocol = TriggerProtocol.meshtastic,
   }) async {
     if (!isActive) return;
 
@@ -688,6 +695,7 @@ class IftttService {
     MeshNode node, {
     required PresenceConfidence previous,
     required PresenceConfidence current,
+    TriggerProtocol protocol = TriggerProtocol.meshtastic,
   }) async {
     if (!isActive) return;
 
@@ -709,6 +717,7 @@ class IftttService {
     Message message, {
     required String senderName,
     String? channelName,
+    TriggerProtocol protocol = TriggerProtocol.meshtastic,
   }) async {
     if (!isActive) return;
 

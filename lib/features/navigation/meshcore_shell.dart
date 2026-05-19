@@ -18,6 +18,7 @@ import '../../providers/meshcore_providers.dart';
 import '../../providers/connection_providers.dart' as conn;
 import '../../services/haptic_service.dart';
 import '../../utils/snackbar.dart';
+import '../meshcore/dashboard/meshcore_dashboard_screen.dart';
 import '../meshcore/screens/meshcore_contacts_screen.dart';
 import '../meshcore/screens/meshcore_channels_screen.dart';
 import '../meshcore/screens/meshcore_tools_screen.dart';
@@ -260,6 +261,11 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
       label: context.l10n.meshcoreShellNavChannels,
     ),
     _MeshCoreNavItem(
+      icon: Icons.dashboard_outlined,
+      activeIcon: Icons.dashboard,
+      label: context.l10n.meshcoreShellNavDashboard,
+    ),
+    _MeshCoreNavItem(
       icon: Icons.map_outlined,
       activeIcon: Icons.map,
       label: context.l10n.meshcoreShellNavMap,
@@ -278,8 +284,10 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
       case 1:
         return const MeshCoreChannelsScreen();
       case 2:
-        return const MeshCoreMapScreen();
+        return const MeshCoreDashboardScreen();
       case 3:
+        return const MeshCoreMapScreen();
+      case 4:
         return const MeshCoreToolsScreen();
       default:
         return const MeshCoreContactsScreen();

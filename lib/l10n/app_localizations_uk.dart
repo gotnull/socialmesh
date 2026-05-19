@@ -11299,6 +11299,95 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreShellNavContacts => 'Контакти';
 
   @override
+  String get meshcoreShellNavDashboard => 'Панель';
+
+  @override
+  String get meshcoreDashboardTitle => 'Панель';
+
+  @override
+  String get meshcoreDashboardEmptyTitlePrefix => 'Ваша';
+
+  @override
+  String get meshcoreDashboardEmptyTitleKeyword => 'Панель';
+
+  @override
+  String get meshcoreDashboardEmptyTitleMid => '';
+
+  @override
+  String get meshcoreDashboardEmptyTitleKeyword2 => 'Порожня';
+
+  @override
+  String get meshcoreDashboardEmptyTitleSuffix => '';
+
+  @override
+  String get meshcoreDashboardEmptyTagline1 =>
+      'Додайте віджети щоб бачити активність вашої мережi одним поглядом';
+
+  @override
+  String get meshcoreDashboardEmptyTagline2 =>
+      'Зберіть улюблені метрики в одному вигляді';
+
+  @override
+  String get meshcoreWidgetNetworkOverviewName => 'Огляд мережі';
+
+  @override
+  String get meshcoreWidgetNetworkOverviewDescription =>
+      'Контакти всього, онлайн, канали';
+
+  @override
+  String get meshcoreWidgetTotalContacts => 'Контакти';
+
+  @override
+  String get meshcoreWidgetOnline => 'Онлайн';
+
+  @override
+  String get meshcoreWidgetChannels => 'Канали';
+
+  @override
+  String get meshcoreWidgetNearbyContactsName => 'Ближні контакти';
+
+  @override
+  String get meshcoreWidgetRecentMessagesName => 'Останні повідомлення';
+
+  @override
+  String get meshcoreWidgetQuickActionsName => 'Швидкі дії';
+
+  @override
+  String get meshcoreWidgetQuickActionsDescription =>
+      'Надіслати оголошення, оновити контакти, синхронізувати час';
+
+  @override
+  String get meshcoreWidgetNearbyContactsDescription =>
+      'Топові контакти за нещодавньою активністю та сигналом';
+
+  @override
+  String get meshcoreWidgetRecentMessagesDescription =>
+      'Останні особисті та канальні повідомлення';
+
+  @override
+  String get meshcoreDashboardEmptyTitle => 'Віджети не додано';
+
+  @override
+  String get meshcoreDashboardEmptyMessage =>
+      'Налаштуйте свою панель MeshCore віджетами, які вам важливі';
+
+  @override
+  String get meshcoreDashboardManageWidgetsTitle => 'Керування віджетами';
+
+  @override
+  String get meshcoreDashboardManageWidgetsHint =>
+      'Торкніться, щоб додати або видалити віджети з панелі';
+
+  @override
+  String get meshcoreQuickActionSendAdvert => 'Надіслати оголошення';
+
+  @override
+  String get meshcoreQuickActionRefreshContacts => 'Оновити контакти';
+
+  @override
+  String get meshcoreQuickActionSyncTime => 'Синхронізувати час';
+
+  @override
   String get meshcoreShellNavMap => 'Карта';
 
   @override
