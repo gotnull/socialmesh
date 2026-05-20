@@ -6,8 +6,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/chip_selector.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/settings_primitives.dart';
+import '../../models/trigger_protocol.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -46,6 +48,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
 
   bool _enabled = false;
   WebhookMode _webhookMode = WebhookMode.ifttt;
+  TriggerProtocolFilter _protocolFilter = TriggerProtocolFilter.any;
   bool _messageReceived = true;
   bool _nodeOnline = true;
   bool _nodeOffline = true;
@@ -82,6 +85,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
     safeSetState(() {
       _enabled = config.enabled;
       _webhookMode = config.webhookMode;
+      _protocolFilter = config.protocolFilter;
       _messageReceived = config.messageReceived;
       _nodeOnline = config.nodeOnline;
       _nodeOffline = config.nodeOffline;
@@ -179,6 +183,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
       geofenceNodeNum: _geofenceNodeNum,
       geofenceNodeName: _geofenceNodeName,
       geofenceThrottleMinutes: _geofenceThrottleMinutes,
+      protocolFilter: _protocolFilter,
     );
 
     safeSetState(() => _isSaving = true);
@@ -243,6 +248,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
       geofenceNodeNum: _geofenceNodeNum,
       geofenceNodeName: _geofenceNodeName,
       geofenceThrottleMinutes: _geofenceThrottleMinutes,
+      protocolFilter: _protocolFilter,
     );
     await iftttService.saveConfig(tempConfig);
 
@@ -340,6 +346,11 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                     title: context.l10n.iftttConfigSectionWebhook,
                   ),
                   _buildWebhookSection(),
+                  const SizedBox(height: AppTheme.spacing16),
+                  SettingsSectionHeader(
+                    title: context.l10n.iftttConfigSectionProtocolScope,
+                  ),
+                  _buildProtocolScopeSection(),
                   const SizedBox(height: AppTheme.spacing16),
                   SettingsSectionHeader(
                     title: context.l10n.iftttConfigSectionMessageTriggers,
@@ -556,6 +567,54 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildProtocolScopeSection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.l10n.iftttConfigProtocolScopeHelp,
+            style: TextStyle(color: context.textSecondary, fontSize: 12),
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          ChipSelector<TriggerProtocolFilter>(
+            value: _protocolFilter,
+            onChanged: (value) {
+              HapticFeedback.selectionClick();
+              safeSetState(() => _protocolFilter = value);
+            },
+            options: [
+              ChipOption(
+                value: TriggerProtocolFilter.any,
+                label: context.l10n.iftttConfigProtocolAny,
+                icon: Icons.all_inclusive,
+                color: AppTheme.primaryBlue,
+              ),
+              ChipOption(
+                value: TriggerProtocolFilter.meshtastic,
+                label: context.l10n.iftttConfigProtocolMeshtastic,
+                icon: Icons.router,
+                color: AccentColors.cyan,
+              ),
+              ChipOption(
+                value: TriggerProtocolFilter.meshcore,
+                label: context.l10n.iftttConfigProtocolMeshcore,
+                icon: Icons.hub,
+                color: AppTheme.primaryMagenta,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

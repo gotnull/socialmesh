@@ -12356,5 +12356,10 @@
   "meshcoreContactImportRowPubkey": "Pubkey",
   "meshcoreContactImportRowFormat": "Format",
   "adminMeshMorphTitle": "Mesh Morph",
-  "adminMeshMorphRotationSection": "ROTATION"
+  "adminMeshMorphRotationSection": "ROTATION",
+  "iftttConfigSectionProtocolScope": "PROTOKOLL-BEREICH",
+  "iftttConfigProtocolScopeHelp": "Welches Protokoll löst IFTTT-Webhooks aus",
+  "iftttConfigProtocolAny": "Beliebig",
+  "iftttConfigProtocolMeshtastic": "Meshtastic",
+  "iftttConfigProtocolMeshcore": "MeshCore"
 }

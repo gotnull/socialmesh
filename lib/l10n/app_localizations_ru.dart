@@ -30503,6 +30503,22 @@ class AppLocalizationsRu extends AppLocalizations {
   String get iftttConfigSectionMessageTriggers => 'ТРИГГЕРЫ СООБЩЕНИЙ';
 
   @override
+  String get iftttConfigSectionProtocolScope => 'ОБЛАСТЬ ПРОТОКОЛА';
+
+  @override
+  String get iftttConfigProtocolScopeHelp =>
+      'Какой протокол запускает веб-хуки IFTTT';
+
+  @override
+  String get iftttConfigProtocolAny => 'Любой';
+
+  @override
+  String get iftttConfigProtocolMeshtastic => 'Meshtastic';
+
+  @override
+  String get iftttConfigProtocolMeshcore => 'MeshCore';
+
+  @override
   String get iftttConfigSectionNodeTriggers => 'ТРИГГЕРЫ СТАТУСА УЗЛА';
 
   @override

@@ -7,7 +7,8 @@ import '../../../l10n/app_localizations.dart';
 import '../../../models/trigger_protocol.dart';
 import 'condition_node.dart';
 
-export '../../../models/trigger_protocol.dart' show TriggerProtocol;
+export '../../../models/trigger_protocol.dart'
+    show TriggerProtocol, TriggerProtocolFilter;
 
 /// Core automation model
 class Automation {
@@ -451,15 +452,10 @@ extension TriggerTypeExtension on TriggerType {
   }
 }
 
-// Which protocol's event stream an automation listens to.
-//
-// `any` is the legacy default: existing automations created before
-// MeshCore support fire on any inbound event regardless of source.
-// `meshtastic` / `meshcore` restrict firing to events tagged with that
-// protocol. Tagging happens at the event-source seam in
-// `app_providers.dart` (Meshtastic) and the MeshCore message provider
-// (MeshCore); see `AutomationEvent.protocol`.
-enum TriggerProtocolFilter { any, meshtastic, meshcore }
+// `TriggerProtocolFilter` is defined in `lib/models/trigger_protocol.dart`
+// (re-exported above) so service-layer consumers like
+// `lib/services/ifttt/` can use it without violating the
+// services-cannot-import-features module boundary.
 
 /// Automation trigger
 class AutomationTrigger {

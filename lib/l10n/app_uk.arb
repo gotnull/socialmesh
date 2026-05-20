@@ -12356,5 +12356,10 @@
   "meshcoreBatteryChemistryLiion": "Li-Ion",
   "meshcoreBatteryChemistryNimh": "NiMH",
   "meshcoreCommunityQrPskFingerprint": "PSK: {fingerprint}",
-  "adminMeshMorphTitle": "Mesh Morph"
+  "adminMeshMorphTitle": "Mesh Morph",
+  "iftttConfigSectionProtocolScope": "ОБЛАСТЬ ПРОТОКОЛУ",
+  "iftttConfigProtocolScopeHelp": "Який протокол запускає веб-хуки IFTTT",
+  "iftttConfigProtocolAny": "Будь-який",
+  "iftttConfigProtocolMeshtastic": "Meshtastic",
+  "iftttConfigProtocolMeshcore": "MeshCore"
 }

@@ -30751,6 +30751,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get iftttConfigSectionMessageTriggers => 'DÉCLENCHEURS DE MESSAGES';
 
   @override
+  String get iftttConfigSectionProtocolScope => 'PORTÉE DU PROTOCOLE';
+
+  @override
+  String get iftttConfigProtocolScopeHelp =>
+      'Quel protocole déclenche les webhooks IFTTT';
+
+  @override
+  String get iftttConfigProtocolAny => 'Tous';
+
+  @override
+  String get iftttConfigProtocolMeshtastic => 'Meshtastic';
+
+  @override
+  String get iftttConfigProtocolMeshcore => 'MeshCore';
+
+  @override
   String get iftttConfigSectionNodeTriggers => 'DÉCLENCHEURS D\'ÉTAT DES NŒUDS';
 
   @override

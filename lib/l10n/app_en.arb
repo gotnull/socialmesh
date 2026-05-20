@@ -40736,6 +40736,26 @@
     "@iftttConfigSectionMessageTriggers": {
         "description": "UI text: ifttt config section message triggers"
     },
+    "iftttConfigSectionProtocolScope": "PROTOCOL SCOPE",
+    "@iftttConfigSectionProtocolScope": {
+        "description": "Section header for the IFTTT protocol-filter pill"
+    },
+    "iftttConfigProtocolScopeHelp": "Which protocol's events fire IFTTT webhooks",
+    "@iftttConfigProtocolScopeHelp": {
+        "description": "Helper text under the IFTTT protocol-scope pill"
+    },
+    "iftttConfigProtocolAny": "Any",
+    "@iftttConfigProtocolAny": {
+        "description": "IFTTT protocol-scope pill option: fire for any protocol"
+    },
+    "iftttConfigProtocolMeshtastic": "Meshtastic",
+    "@iftttConfigProtocolMeshtastic": {
+        "description": "IFTTT protocol-scope pill option: Meshtastic only"
+    },
+    "iftttConfigProtocolMeshcore": "MeshCore",
+    "@iftttConfigProtocolMeshcore": {
+        "description": "IFTTT protocol-scope pill option: MeshCore only"
+    },
     "iftttConfigSectionNodeTriggers": "NODE STATUS TRIGGERS",
     "@iftttConfigSectionNodeTriggers": {
         "description": "UI text: ifttt config section node triggers"

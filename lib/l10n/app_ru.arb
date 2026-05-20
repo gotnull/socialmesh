@@ -12356,5 +12356,10 @@
   "meshcoreContactSelectorTitle": "Выбрать контакт MeshCore",
   "meshcoreContactSelectorSearchHint": "Поиск контактов",
   "meshcoreContactSelectorEmpty": "Пока нет контактов MeshCore",
-  "meshcoreContactSelectorNoMatches": "Совпадений нет"
+  "meshcoreContactSelectorNoMatches": "Совпадений нет",
+  "iftttConfigSectionProtocolScope": "ОБЛАСТЬ ПРОТОКОЛА",
+  "iftttConfigProtocolScopeHelp": "Какой протокол запускает веб-хуки IFTTT",
+  "iftttConfigProtocolAny": "Любой",
+  "iftttConfigProtocolMeshtastic": "Meshtastic",
+  "iftttConfigProtocolMeshcore": "MeshCore"
 }

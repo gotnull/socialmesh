@@ -603,7 +603,11 @@ void main() {
       );
 
       // Should not throw
-      await service.processMessage(message, senderName: 'Test Node');
+      await service.processMessage(
+        from: message.from,
+        text: message.text,
+        senderName: 'Test Node',
+      );
     });
 
     test('processMessage detects SOS keywords', () async {
@@ -623,7 +627,11 @@ void main() {
         );
 
         // Should not throw
-        await service.processMessage(message, senderName: 'Test');
+        await service.processMessage(
+          from: message.from,
+          text: message.text,
+          senderName: 'Test',
+        );
       }
     });
   });

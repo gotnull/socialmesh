@@ -45500,5 +45500,10 @@
   "meshcoreContactSelectorTitle": "Selecionar contato MeshCore",
   "meshcoreContactSelectorSearchHint": "Buscar contatos",
   "meshcoreContactSelectorEmpty": "Nenhum contato MeshCore ainda",
-  "meshcoreContactSelectorNoMatches": "Sem correspondências"
+  "meshcoreContactSelectorNoMatches": "Sem correspondências",
+  "iftttConfigSectionProtocolScope": "ESCOPO DO PROTOCOLO",
+  "iftttConfigProtocolScopeHelp": "Qual protocolo dispara os webhooks IFTTT",
+  "iftttConfigProtocolAny": "Qualquer",
+  "iftttConfigProtocolMeshtastic": "Meshtastic",
+  "iftttConfigProtocolMeshcore": "MeshCore"
 }

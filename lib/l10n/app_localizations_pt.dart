@@ -30487,6 +30487,22 @@ class AppLocalizationsPt extends AppLocalizations {
   String get iftttConfigSectionMessageTriggers => 'GATILHOS DE MENSAGEM';
 
   @override
+  String get iftttConfigSectionProtocolScope => 'ESCOPO DO PROTOCOLO';
+
+  @override
+  String get iftttConfigProtocolScopeHelp =>
+      'Qual protocolo dispara os webhooks IFTTT';
+
+  @override
+  String get iftttConfigProtocolAny => 'Qualquer';
+
+  @override
+  String get iftttConfigProtocolMeshtastic => 'Meshtastic';
+
+  @override
+  String get iftttConfigProtocolMeshcore => 'MeshCore';
+
+  @override
   String get iftttConfigSectionNodeTriggers => 'GATILHOS DE STATUS DO NÓ';
 
   @override

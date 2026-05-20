@@ -30143,6 +30143,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get iftttConfigSectionMessageTriggers => 'MESSAGE TRIGGERS';
 
   @override
+  String get iftttConfigSectionProtocolScope => 'PROTOCOL SCOPE';
+
+  @override
+  String get iftttConfigProtocolScopeHelp =>
+      'Which protocol\'s events fire IFTTT webhooks';
+
+  @override
+  String get iftttConfigProtocolAny => 'Any';
+
+  @override
+  String get iftttConfigProtocolMeshtastic => 'Meshtastic';
+
+  @override
+  String get iftttConfigProtocolMeshcore => 'MeshCore';
+
+  @override
   String get iftttConfigSectionNodeTriggers => 'NODE STATUS TRIGGERS';
 
   @override

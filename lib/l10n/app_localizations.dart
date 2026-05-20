@@ -53005,6 +53005,36 @@ abstract class AppLocalizations {
   /// **'MESSAGE TRIGGERS'**
   String get iftttConfigSectionMessageTriggers;
 
+  /// Section header for the IFTTT protocol-filter pill
+  ///
+  /// In en, this message translates to:
+  /// **'PROTOCOL SCOPE'**
+  String get iftttConfigSectionProtocolScope;
+
+  /// Helper text under the IFTTT protocol-scope pill
+  ///
+  /// In en, this message translates to:
+  /// **'Which protocol\'s events fire IFTTT webhooks'**
+  String get iftttConfigProtocolScopeHelp;
+
+  /// IFTTT protocol-scope pill option: fire for any protocol
+  ///
+  /// In en, this message translates to:
+  /// **'Any'**
+  String get iftttConfigProtocolAny;
+
+  /// IFTTT protocol-scope pill option: Meshtastic only
+  ///
+  /// In en, this message translates to:
+  /// **'Meshtastic'**
+  String get iftttConfigProtocolMeshtastic;
+
+  /// IFTTT protocol-scope pill option: MeshCore only
+  ///
+  /// In en, this message translates to:
+  /// **'MeshCore'**
+  String get iftttConfigProtocolMeshcore;
+
   /// UI text: ifttt config section node triggers
   ///
   /// In en, this message translates to:

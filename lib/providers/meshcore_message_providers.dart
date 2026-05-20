@@ -21,7 +21,6 @@ import '../features/automations/automation_engine.dart';
 import '../features/automations/automation_providers.dart';
 import '../features/automations/models/automation.dart';
 import '../features/meshcore/parsers/meshcore_message_frame_parser.dart';
-import '../models/mesh_models.dart' as mesh;
 import '../models/meshcore_contact.dart';
 import '../services/meshcore/protocol/meshcore_chat_meta_envelope.dart';
 import '../services/meshcore/protocol/meshcore_frame.dart';
@@ -1142,18 +1141,13 @@ class MeshCoreConversationsNotifier
       try {
         final iftttService = ref.read(iftttServiceProvider);
         if (!iftttService.isActive) return;
-        // IFTTT consumes the Meshtastic `Message` shape - reuse it
-        // for the MeshCore-tagged call. Phase 4 will refactor IFTTT
-        // to use AutomationMessage natively, but the typed wrapper
-        // lets us thread protocol now without an IFTTT refactor.
-        final iftttMessage = mesh.Message(
-          from: from,
-          to: 0,
-          text: text,
-          channel: channelIndex ?? 0,
-        );
+        // Phase 4 Slice A: IFTTT takes primitives directly. No
+        // `mesh.Message` shim needed - the service stays
+        // protocol-agnostic at its surface and the `protocol` tag
+        // drives event-name selection + payload `protocol` field.
         await iftttService.processMessage(
-          iftttMessage,
+          from: from,
+          text: text,
           senderName: senderName,
           protocol: TriggerProtocol.meshcore,
         );

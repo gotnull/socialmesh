@@ -49,6 +49,12 @@ class IftttConfig {
   final int? geofenceNodeNum; // Node to monitor for geofencing
   final String? geofenceNodeName; // Display name of monitored node
   final int geofenceThrottleMinutes; // Minimum minutes between geofence alerts
+  // Per-protocol scope. Mirrors `TriggerProtocolFilter` from
+  // Automations Phase 0. `any` (the legacy default) fires for both
+  // protocols so existing IFTTT setups stay back-compat. Pinning to
+  // `meshtastic` or `meshcore` short-circuits the trigger methods
+  // when the firing event's protocol doesn't match.
+  final TriggerProtocolFilter protocolFilter;
 
   const IftttConfig({
     this.enabled = false,
@@ -70,6 +76,7 @@ class IftttConfig {
     this.geofenceNodeNum,
     this.geofenceNodeName,
     this.geofenceThrottleMinutes = 30,
+    this.protocolFilter = TriggerProtocolFilter.any,
   });
 
   /// Whether the webhook key is configured (IFTTT mode)
@@ -102,6 +109,7 @@ class IftttConfig {
     int? geofenceNodeNum,
     String? geofenceNodeName,
     int? geofenceThrottleMinutes,
+    TriggerProtocolFilter? protocolFilter,
   }) {
     return IftttConfig(
       enabled: enabled ?? this.enabled,
@@ -124,6 +132,7 @@ class IftttConfig {
       geofenceNodeName: geofenceNodeName ?? this.geofenceNodeName,
       geofenceThrottleMinutes:
           geofenceThrottleMinutes ?? this.geofenceThrottleMinutes,
+      protocolFilter: protocolFilter ?? this.protocolFilter,
     );
   }
 
@@ -147,6 +156,7 @@ class IftttConfig {
     'geofenceNodeNum': geofenceNodeNum,
     'geofenceNodeName': geofenceNodeName,
     'geofenceThrottleMinutes': geofenceThrottleMinutes,
+    'protocolFilter': protocolFilter.name,
   };
 
   factory IftttConfig.fromJson(Map<String, dynamic> json) {
@@ -171,7 +181,16 @@ class IftttConfig {
       geofenceNodeNum: json['geofenceNodeNum'] as int?,
       geofenceNodeName: json['geofenceNodeName'] as String?,
       geofenceThrottleMinutes: json['geofenceThrottleMinutes'] as int? ?? 30,
+      protocolFilter: _parseProtocolFilter(json['protocolFilter'] as String?),
     );
+  }
+
+  static TriggerProtocolFilter _parseProtocolFilter(String? value) {
+    if (value == null) return TriggerProtocolFilter.any;
+    for (final f in TriggerProtocolFilter.values) {
+      if (f.name == value) return f;
+    }
+    return TriggerProtocolFilter.any;
   }
 
   static WebhookMode _parseWebhookMode(String? value) {
@@ -256,6 +275,7 @@ class IftttService {
     String? value1,
     String? value2,
     String? value3,
+    TriggerProtocol? protocol,
   }) async {
     if (!isActive) return false;
 
@@ -266,6 +286,7 @@ class IftttService {
         value1: value1,
         value2: value2,
         value3: value3,
+        protocol: protocol,
       );
     }
 
@@ -327,15 +348,21 @@ class IftttService {
     String? value1,
     String? value2,
     String? value3,
+    // Optional protocol tag. When provided, written into the JSON
+    // body as `"protocol": "meshtastic"|"meshcore"` so applets can
+    // branch on the source. Triggers that aren't yet protocol-aware
+    // (battery / position / etc.) pass null and omit the field.
+    TriggerProtocol? protocol,
   }) async {
     try {
-      final body = <String, dynamic>{
-        'event': eventName,
-        if (value1 != null) 'value1': value1,
-        if (value2 != null) 'value2': value2,
-        if (value3 != null) 'value3': value3,
-        'timestamp': DateTime.now().toIso8601String(),
-      };
+      final body = buildIftttCustomUrlBody(
+        eventName: eventName,
+        value1: value1,
+        value2: value2,
+        value3: value3,
+        protocol: protocol,
+        timestamp: DateTime.now(),
+      );
 
       AppLogging.ifttt('Webhook: POST $eventName -> $url');
 
@@ -388,6 +415,7 @@ class IftttService {
     required String senderName,
     required String message,
     String? channelName,
+    TriggerProtocol protocol = TriggerProtocol.meshtastic,
   }) async {
     AppLogging.debug(
       'IFTTT: triggerMessageReceived called - messageReceived=${_config.messageReceived}',
@@ -401,11 +429,35 @@ class IftttService {
       'IFTTT: Sending message webhook - sender=$senderName, msg=$message',
     );
     return _triggerWebhook(
-      eventName: 'meshtastic_message',
+      eventName: _messageReceivedEventName(protocol),
       value1: senderName,
       value2: message,
       value3: channelName ?? 'Direct Message', // lint-allow: hardcoded-string
+      protocol: protocol,
     );
+  }
+
+  // Event-name discrimination by protocol. Existing IFTTT applets
+  // out there subscribe to `meshtastic_message`; preserving that
+  // name for Meshtastic-sourced events is the back-compat guarantee.
+  // MeshCore-sourced events get a separate `meshcore_message` name
+  // so new applets can subscribe to one protocol only.
+  String _messageReceivedEventName(TriggerProtocol protocol) {
+    switch (protocol) {
+      case TriggerProtocol.meshtastic:
+        return 'meshtastic_message';
+      case TriggerProtocol.meshcore:
+        return 'meshcore_message';
+    }
+  }
+
+  String _sosEventName(TriggerProtocol protocol) {
+    switch (protocol) {
+      case TriggerProtocol.meshtastic:
+        return 'meshtastic_sos';
+      case TriggerProtocol.meshcore:
+        return 'meshcore_sos';
+    }
   }
 
   /// Trigger node online event
@@ -585,6 +637,7 @@ class IftttService {
     required String nodeName,
     double? latitude,
     double? longitude,
+    TriggerProtocol protocol = TriggerProtocol.meshtastic,
   }) async {
     if (!_config.sosEmergency) return false;
 
@@ -593,10 +646,11 @@ class IftttService {
         : 'Unknown location';
 
     return _triggerWebhook(
-      eventName: 'meshtastic_sos',
+      eventName: _sosEventName(protocol),
       value1: nodeName,
       value2: '!${nodeNum.toRadixString(16)}',
       value3: location,
+      protocol: protocol,
     );
   }
 
@@ -712,30 +766,49 @@ class IftttService {
     }
   }
 
-  /// Process a message for IFTTT triggers
-  Future<void> processMessage(
-    Message message, {
+  // Process an inbound message for IFTTT triggers. Takes primitives
+  // so both protocols can call into the same seam without coupling
+  // the service to either `Message` (Meshtastic) or `MeshCoreMessage`.
+  // The `protocol` tag drives event-name selection
+  // (`meshtastic_message` vs `meshcore_message`) and is also written
+  // into the custom-URL JSON payload so downstream applets can
+  // branch. The user's per-config `protocolFilter` short-circuits
+  // events from protocols they don't want surfaced.
+  Future<void> processMessage({
+    required int from,
+    required String text,
     required String senderName,
     String? channelName,
     TriggerProtocol protocol = TriggerProtocol.meshtastic,
   }) async {
     if (!isActive) return;
+    if (!triggerProtocolFilterMatches(_config.protocolFilter, protocol)) {
+      AppLogging.ifttt(
+        'IFTTT: skipping message - protocol filter '
+        '${_config.protocolFilter.name} excludes ${protocol.name}',
+      );
+      return;
+    }
 
     // Check for SOS keywords in message
-    final lowerText = message.text.toLowerCase();
+    final lowerText = text.toLowerCase();
     if (lowerText.contains('sos') ||
         lowerText.contains('emergency') ||
         lowerText.contains('help') ||
         lowerText.contains('mayday')) {
-      // Get sender position if available from the message context
-      await triggerSosEmergency(nodeNum: message.from, nodeName: senderName);
+      await triggerSosEmergency(
+        nodeNum: from,
+        nodeName: senderName,
+        protocol: protocol,
+      );
     }
 
     // Trigger message received
     await triggerMessageReceived(
       senderName: senderName,
-      message: message.text,
+      message: text,
       channelName: channelName,
+      protocol: protocol,
     );
   }
 
@@ -808,4 +881,30 @@ class IftttService {
     }
     return result;
   }
+}
+
+// Custom-URL JSON body assembly. Top-level so the wire shape is
+// directly testable without spinning up an HTTP mock. The Meshtastic
+// path passes `protocol = TriggerProtocol.meshtastic` and the MeshCore
+// path passes `meshcore`; both surface as a `"protocol"` field so
+// downstream applets (Home Assistant, n8n, Node-RED) can branch on
+// the source without inspecting the event name. Triggers that aren't
+// yet protocol-aware (battery / position) pass null and the field is
+// omitted for back-compat with existing applet bodies.
+Map<String, dynamic> buildIftttCustomUrlBody({
+  required String eventName,
+  String? value1,
+  String? value2,
+  String? value3,
+  TriggerProtocol? protocol,
+  required DateTime timestamp,
+}) {
+  return <String, dynamic>{
+    'event': eventName,
+    if (value1 != null) 'value1': value1,
+    if (value2 != null) 'value2': value2,
+    if (value3 != null) 'value3': value3,
+    if (protocol != null) 'protocol': protocol.name,
+    'timestamp': timestamp.toIso8601String(),
+  };
 }

@@ -5088,7 +5088,8 @@ class MessagesNotifier extends Notifier<List<Message>> {
     }
 
     iftttService.processMessage(
-      message,
+      from: message.from,
+      text: message.text,
       senderName: senderName,
       channelName: channelName,
     );

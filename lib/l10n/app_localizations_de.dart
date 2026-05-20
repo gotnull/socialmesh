@@ -30594,6 +30594,22 @@ class AppLocalizationsDe extends AppLocalizations {
   String get iftttConfigSectionMessageTriggers => 'NACHRICHTENAUSLÖSER';
 
   @override
+  String get iftttConfigSectionProtocolScope => 'PROTOKOLL-BEREICH';
+
+  @override
+  String get iftttConfigProtocolScopeHelp =>
+      'Welches Protokoll löst IFTTT-Webhooks aus';
+
+  @override
+  String get iftttConfigProtocolAny => 'Beliebig';
+
+  @override
+  String get iftttConfigProtocolMeshtastic => 'Meshtastic';
+
+  @override
+  String get iftttConfigProtocolMeshcore => 'MeshCore';
+
+  @override
   String get iftttConfigSectionNodeTriggers => 'KNOTENSTATUS-AUSLÖSER';
 
   @override

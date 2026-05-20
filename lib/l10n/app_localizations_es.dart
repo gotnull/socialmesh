@@ -30659,6 +30659,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String get iftttConfigSectionMessageTriggers => 'ACTIVADORES DE MENSAJES';
 
   @override
+  String get iftttConfigSectionProtocolScope => 'ALCANCE DEL PROTOCOLO';
+
+  @override
+  String get iftttConfigProtocolScopeHelp =>
+      'Qué protocolo dispara los webhooks IFTTT';
+
+  @override
+  String get iftttConfigProtocolAny => 'Cualquiera';
+
+  @override
+  String get iftttConfigProtocolMeshtastic => 'Meshtastic';
+
+  @override
+  String get iftttConfigProtocolMeshcore => 'MeshCore';
+
+  @override
   String get iftttConfigSectionNodeTriggers => 'ACTIVADORES DE ESTADO DEL NODO';
 
   @override
