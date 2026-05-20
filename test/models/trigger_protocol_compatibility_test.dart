@@ -1,0 +1,248 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+
+// Pins the cross-protocol compatibility matrix to the categorisation
+// documented in `docs/engineering/MESHCORE_PROTOCOL_COMPATIBILITY.md`.
+// When a new TriggerType / ActionType / DashboardWidgetType is added,
+// these tests fail until the new value gets an explicit row in both
+// the doc + the corresponding `supportOn` extension method. That keeps
+// the matrix doc from silently drifting away from the code.
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:socialmesh/features/automations/models/automation.dart';
+import 'package:socialmesh/features/dashboard/models/dashboard_widget_config.dart';
+import 'package:socialmesh/models/trigger_protocol.dart';
+
+void main() {
+  group('TriggerType.supportOn', () {
+    test('every TriggerType is supported on Meshtastic', () {
+      for (final t in TriggerType.values) {
+        expect(
+          t.supportOn(TriggerProtocol.meshtastic),
+          ProtocolSupport.supported,
+          reason: 'TriggerType.$t should be fully supported on Meshtastic',
+        );
+      }
+    });
+
+    test('Meshtastic-only triggers report unsupported on MeshCore', () {
+      const meshtasticOnly = <TriggerType>{
+        TriggerType.batteryLow,
+        TriggerType.batteryFull,
+        TriggerType.detectionSensor,
+      };
+      for (final t in meshtasticOnly) {
+        expect(
+          t.supportOn(TriggerProtocol.meshcore),
+          ProtocolSupport.unsupported,
+          reason:
+              'TriggerType.$t depends on data MeshCore does not surface; '
+              'must report unsupported so the picker hides it',
+        );
+      }
+    });
+
+    test('partial-support triggers on MeshCore', () {
+      const partialOnMeshCore = <TriggerType>{
+        TriggerType.nodeOnline,
+        TriggerType.nodeOffline,
+        TriggerType.positionChanged,
+        TriggerType.geofenceEnter,
+        TriggerType.geofenceExit,
+      };
+      for (final t in partialOnMeshCore) {
+        expect(
+          t.supportOn(TriggerProtocol.meshcore),
+          ProtocolSupport.partial,
+          reason:
+              'TriggerType.$t fires on MeshCore only when the underlying '
+              'data happens to exist; must report partial so the picker '
+              "tags it with a 'Limited on MeshCore' chip",
+        );
+      }
+    });
+
+    test('fully-supported triggers on MeshCore (Phase 3 Slices A-E)', () {
+      const fullySupported = <TriggerType>{
+        TriggerType.messageReceived,
+        TriggerType.messageContains,
+        TriggerType.nodeSilent,
+        TriggerType.scheduled,
+        TriggerType.signalWeak,
+        TriggerType.channelActivity,
+        TriggerType.manual,
+      };
+      for (final t in fullySupported) {
+        expect(
+          t.supportOn(TriggerProtocol.meshcore),
+          ProtocolSupport.supported,
+          reason: 'TriggerType.$t should be fully supported on MeshCore',
+        );
+      }
+    });
+
+    test('every TriggerType has an explicit categorisation', () {
+      // Catches a new TriggerType added without a corresponding row in
+      // `supportOn`. The switch in the extension is exhaustive so the
+      // analyzer would already catch this, but the explicit test gives
+      // a clearer failure message.
+      const accountedFor = <TriggerType>{
+        // Meshtastic-only / unsupported
+        TriggerType.batteryLow,
+        TriggerType.batteryFull,
+        TriggerType.detectionSensor,
+        // Partial
+        TriggerType.nodeOnline,
+        TriggerType.nodeOffline,
+        TriggerType.positionChanged,
+        TriggerType.geofenceEnter,
+        TriggerType.geofenceExit,
+        // Supported
+        TriggerType.messageReceived,
+        TriggerType.messageContains,
+        TriggerType.nodeSilent,
+        TriggerType.scheduled,
+        TriggerType.signalWeak,
+        TriggerType.channelActivity,
+        TriggerType.manual,
+      };
+      final missing = TriggerType.values.toSet().difference(accountedFor);
+      expect(
+        missing,
+        isEmpty,
+        reason:
+            'New TriggerType detected without a compatibility row: '
+            "${missing.map((t) => t.name).join(', ')}. "
+            'Update MESHCORE_PROTOCOL_COMPATIBILITY.md + add to '
+            'TriggerTypeProtocolSupport.supportOn + add to this test.',
+      );
+    });
+  });
+
+  group('ActionType.supportOn', () {
+    test('every ActionType is supported on Meshtastic', () {
+      for (final a in ActionType.values) {
+        expect(
+          a.supportOn(TriggerProtocol.meshtastic),
+          ProtocolSupport.supported,
+        );
+      }
+    });
+
+    test('updateWidget is partial on MeshCore', () {
+      expect(
+        ActionType.updateWidget.supportOn(TriggerProtocol.meshcore),
+        ProtocolSupport.partial,
+        reason:
+            'updateWidget partial-supports MeshCore: depends on the '
+            'target widget having a MeshCore renderer',
+      );
+    });
+
+    test('all other actions are fully supported on MeshCore', () {
+      const fullySupported = <ActionType>{
+        ActionType.sendMessage,
+        ActionType.sendToChannel,
+        ActionType.playSound,
+        ActionType.vibrate,
+        ActionType.pushNotification,
+        ActionType.triggerWebhook,
+        ActionType.logEvent,
+        ActionType.triggerShortcut,
+        ActionType.glyphPattern,
+      };
+      for (final a in fullySupported) {
+        expect(
+          a.supportOn(TriggerProtocol.meshcore),
+          ProtocolSupport.supported,
+          reason: 'ActionType.$a should be supported on MeshCore',
+        );
+      }
+    });
+
+    test('every ActionType has an explicit categorisation', () {
+      const accountedFor = <ActionType>{
+        ActionType.updateWidget,
+        ActionType.sendMessage,
+        ActionType.sendToChannel,
+        ActionType.playSound,
+        ActionType.vibrate,
+        ActionType.pushNotification,
+        ActionType.triggerWebhook,
+        ActionType.logEvent,
+        ActionType.triggerShortcut,
+        ActionType.glyphPattern,
+      };
+      final missing = ActionType.values.toSet().difference(accountedFor);
+      expect(missing, isEmpty);
+    });
+  });
+
+  group('DashboardWidgetType.supportOn', () {
+    test('every DashboardWidgetType is supported on Meshtastic', () {
+      for (final w in DashboardWidgetType.values) {
+        expect(
+          w.supportOn(TriggerProtocol.meshtastic),
+          ProtocolSupport.supported,
+        );
+      }
+    });
+
+    test('widgets with a MeshCore renderer report supported', () {
+      const meshCoreReady = <DashboardWidgetType>{
+        DashboardWidgetType.networkOverview,
+        DashboardWidgetType.recentMessages,
+        DashboardWidgetType.nearbyNodes,
+        DashboardWidgetType.custom,
+      };
+      for (final w in meshCoreReady) {
+        expect(
+          w.supportOn(TriggerProtocol.meshcore),
+          ProtocolSupport.supported,
+          reason:
+              'DashboardWidgetType.$w has a MeshCore-side renderer; must '
+              'report supported',
+        );
+      }
+    });
+
+    test('Meshtastic-only widget types report unsupported on MeshCore', () {
+      const meshtasticOnly = <DashboardWidgetType>{
+        DashboardWidgetType.signalStrength,
+        DashboardWidgetType.channelActivity,
+        DashboardWidgetType.meshHealth,
+        DashboardWidgetType.quickCompose,
+        DashboardWidgetType.nodeMap,
+        DashboardWidgetType.environmentMetrics,
+      };
+      for (final w in meshtasticOnly) {
+        expect(
+          w.supportOn(TriggerProtocol.meshcore),
+          ProtocolSupport.unsupported,
+          reason:
+              'DashboardWidgetType.$w has no MeshCore renderer today; '
+              "must report unsupported until v2 ships",
+        );
+      }
+    });
+
+    test('every DashboardWidgetType has an explicit categorisation', () {
+      const accountedFor = <DashboardWidgetType>{
+        DashboardWidgetType.networkOverview,
+        DashboardWidgetType.recentMessages,
+        DashboardWidgetType.nearbyNodes,
+        DashboardWidgetType.custom,
+        DashboardWidgetType.signalStrength,
+        DashboardWidgetType.channelActivity,
+        DashboardWidgetType.meshHealth,
+        DashboardWidgetType.quickCompose,
+        DashboardWidgetType.nodeMap,
+        DashboardWidgetType.environmentMetrics,
+      };
+      final missing = DashboardWidgetType.values.toSet().difference(
+        accountedFor,
+      );
+      expect(missing, isEmpty);
+    });
+  });
+}

@@ -178,6 +178,52 @@ enum TriggerType {
   manual, // Triggered manually via Siri Shortcuts or UI
 }
 
+// Per-protocol compatibility for each TriggerType. Source of truth:
+// docs/engineering/MESHCORE_PROTOCOL_COMPATIBILITY.md - keep in sync
+// when adding new TriggerTypes or when MeshCore gains new wire
+// features. Tests in test/models/trigger_protocol_compatibility_test.dart
+// pin every enum value against this matrix.
+extension TriggerTypeProtocolSupport on TriggerType {
+  ProtocolSupport supportOn(TriggerProtocol protocol) {
+    switch (protocol) {
+      case TriggerProtocol.meshtastic:
+        // Every TriggerType supports Meshtastic - that's the legacy
+        // platform every trigger was originally designed for.
+        return ProtocolSupport.supported;
+      case TriggerProtocol.meshcore:
+        switch (this) {
+          // Battery + detection-sensor data simply isn't on the
+          // MeshCore wire. Hide these from the picker when
+          // protocolFilter==meshcore.
+          case TriggerType.batteryLow:
+          case TriggerType.batteryFull:
+          case TriggerType.detectionSensor:
+            return ProtocolSupport.unsupported;
+          // Online/offline + position triggers work when the
+          // underlying data happens to exist (advert cadence,
+          // contact lat/lon). Flag as partial so the picker can
+          // tag them with a "Limited on MeshCore" chip.
+          case TriggerType.nodeOnline:
+          case TriggerType.nodeOffline:
+          case TriggerType.positionChanged:
+          case TriggerType.geofenceEnter:
+          case TriggerType.geofenceExit:
+            return ProtocolSupport.partial;
+          // Everything else is fully supported - the wiring landed
+          // in Phase 3 Slices A-E.
+          case TriggerType.messageReceived:
+          case TriggerType.messageContains:
+          case TriggerType.nodeSilent:
+          case TriggerType.scheduled:
+          case TriggerType.signalWeak:
+          case TriggerType.channelActivity:
+          case TriggerType.manual:
+            return ProtocolSupport.supported;
+        }
+    }
+  }
+}
+
 extension TriggerTypeExtension on TriggerType {
   /// Non-localized display name for internal use (e.g. default text matching).
   String get displayName {
@@ -630,6 +676,36 @@ enum ActionType {
   sendToChannel,
   triggerShortcut,
   glyphPattern,
+}
+
+// Per-protocol compatibility for each ActionType. Most actions are
+// phone-side (vibrate / playSound / triggerShortcut) and protocol-
+// agnostic; the two `send*` actions route through the right protocol's
+// session via the Slice D `_routingProtocol` helper. Only `updateWidget`
+// is partial - depends on whether the target widget has a MeshCore
+// renderer (see DashboardWidgetType.supportOn).
+extension ActionTypeProtocolSupport on ActionType {
+  ProtocolSupport supportOn(TriggerProtocol protocol) {
+    switch (protocol) {
+      case TriggerProtocol.meshtastic:
+        return ProtocolSupport.supported;
+      case TriggerProtocol.meshcore:
+        switch (this) {
+          case ActionType.updateWidget:
+            return ProtocolSupport.partial;
+          case ActionType.sendMessage:
+          case ActionType.sendToChannel:
+          case ActionType.playSound:
+          case ActionType.vibrate:
+          case ActionType.pushNotification:
+          case ActionType.triggerWebhook:
+          case ActionType.logEvent:
+          case ActionType.triggerShortcut:
+          case ActionType.glyphPattern:
+            return ProtocolSupport.supported;
+        }
+    }
+  }
 }
 
 extension ActionTypeExtension on ActionType {

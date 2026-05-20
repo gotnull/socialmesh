@@ -2,6 +2,8 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
 
+import '../../../models/trigger_protocol.dart';
+
 /// Types of widgets available for the dashboard
 enum DashboardWidgetType {
   signalStrength,
@@ -14,6 +16,34 @@ enum DashboardWidgetType {
   nodeMap,
   environmentMetrics,
   custom, // Schema-based custom widgets from Widget Builder
+}
+
+// Per-protocol compatibility for each Meshtastic-side widget type.
+// Source of truth: docs/engineering/MESHCORE_PROTOCOL_COMPATIBILITY.md.
+// Used by the `updateWidget` automation action's picker to gate
+// incompatible widget types from MeshCore-pinned automations.
+extension DashboardWidgetTypeProtocolSupport on DashboardWidgetType {
+  ProtocolSupport supportOn(TriggerProtocol protocol) {
+    switch (protocol) {
+      case TriggerProtocol.meshtastic:
+        return ProtocolSupport.supported;
+      case TriggerProtocol.meshcore:
+        switch (this) {
+          case DashboardWidgetType.networkOverview:
+          case DashboardWidgetType.recentMessages:
+          case DashboardWidgetType.nearbyNodes:
+          case DashboardWidgetType.custom:
+            return ProtocolSupport.supported;
+          case DashboardWidgetType.signalStrength:
+          case DashboardWidgetType.channelActivity:
+          case DashboardWidgetType.meshHealth:
+          case DashboardWidgetType.quickCompose:
+          case DashboardWidgetType.nodeMap:
+          case DashboardWidgetType.environmentMetrics:
+            return ProtocolSupport.unsupported;
+        }
+    }
+  }
 }
 
 /// Size options for widgets

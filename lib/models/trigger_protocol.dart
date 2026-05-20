@@ -32,3 +32,24 @@ bool triggerProtocolFilterMatches(
       return incoming == TriggerProtocol.meshcore;
   }
 }
+
+// Tri-state for the Automation trigger / action and Dashboard widget
+// compatibility matrix. Source of truth: docs/engineering/
+// MESHCORE_PROTOCOL_COMPATIBILITY.md. Extension methods on the three
+// enums (`TriggerType.supportOn`, `ActionType.supportOn`,
+// `DashboardWidgetType.supportOn`) read against this enum so the
+// editor / picker UI can hide unsupported items + flag partial ones
+// with a "Limited on <protocol>" chip.
+enum ProtocolSupport {
+  // Wire path exists and the trigger/action/widget reliably fires +
+  // dispatches end-to-end on this protocol.
+  supported,
+  // Works when the underlying data happens to exist (e.g. position
+  // triggers fire only for contacts that broadcast GPS). Picker
+  // should surface a "Limited on <protocol>" tag.
+  partial,
+  // The protocol doesn't expose the data source / wire surface this
+  // item requires. Picker should hide the row when filtered to this
+  // protocol.
+  unsupported,
+}
