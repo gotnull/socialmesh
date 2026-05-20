@@ -608,6 +608,27 @@ class AutomationEngine {
     );
   }
 
+  // Derive the routing protocol for an automation+event pair. A
+  // pinned trigger filter wins outright; otherwise the firing event's
+  // own protocol carries through. Scheduled events use this same
+  // helper so a meshcore-pinned scheduled trigger dispatches its
+  // actions via MeshCore even though the scheduled event itself has
+  // no source protocol (default `meshtastic` exists only as a
+  // placeholder for the gate).
+  TriggerProtocol _routingProtocol(
+    Automation automation,
+    AutomationEvent event,
+  ) {
+    switch (automation.trigger.protocolFilter) {
+      case TriggerProtocolFilter.meshtastic:
+        return TriggerProtocol.meshtastic;
+      case TriggerProtocolFilter.meshcore:
+        return TriggerProtocol.meshcore;
+      case TriggerProtocolFilter.any:
+        return event.protocol;
+    }
+  }
+
   /// Process an automation event
   Future<void> _processEvent(AutomationEvent event) async {
     final automations = _repository.automations
@@ -615,7 +636,14 @@ class AutomationEngine {
           (a) =>
               a.enabled &&
               a.trigger.type == event.type &&
-              a.trigger.matchesProtocol(event.protocol),
+              // Scheduled events have no source protocol — the user's
+              // filter intent is honoured at action dispatch via
+              // `_routingProtocol`, so the gate skips the protocol
+              // check here. Every other event type carries a real
+              // source protocol (Meshtastic vs MeshCore) and is gated
+              // normally.
+              (event.type == TriggerType.scheduled ||
+                  a.trigger.matchesProtocol(event.protocol)),
         )
         .toList();
 
@@ -1213,7 +1241,7 @@ class AutomationEngine {
           final sent = await onSendMessage!(
             action.targetNodeNum!,
             message,
-            event.protocol,
+            _routingProtocol(automation, event),
           );
           return ActionResult(
             actionName: actionName,
@@ -1244,7 +1272,7 @@ class AutomationEngine {
           final sent = await onSendToChannel!(
             action.targetChannelIndex!,
             message,
-            event.protocol,
+            _routingProtocol(automation, event),
           );
           return ActionResult(
             actionName: actionName,
