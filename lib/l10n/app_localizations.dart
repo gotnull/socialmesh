@@ -19816,6 +19816,216 @@ abstract class AppLocalizations {
   /// **'Latest DMs and channel messages'**
   String get meshcoreWidgetRecentMessagesDescription;
 
+  /// MeshCore Signal Strength widget name in the widget picker
+  ///
+  /// In en, this message translates to:
+  /// **'Signal Strength'**
+  String get meshcoreWidgetSignalStrengthName;
+
+  /// MeshCore Signal Strength widget description in the widget picker
+  ///
+  /// In en, this message translates to:
+  /// **'Network-wide SNR aggregate across recent contact adverts'**
+  String get meshcoreWidgetSignalStrengthDescription;
+
+  /// Empty state inside the MeshCore Signal Strength widget when no contacts have a SNR yet
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for advert signal data'**
+  String get meshcoreWidgetSignalEmpty;
+
+  /// Tiny label inside the SignalStrength gauge indicating the displayed SNR is a median across contacts
+  ///
+  /// In en, this message translates to:
+  /// **'MEDIAN'**
+  String get meshcoreWidgetSignalMedianLabel;
+
+  /// Label for the best per-contact SNR stat in the MeshCore Signal Strength widget
+  ///
+  /// In en, this message translates to:
+  /// **'Best'**
+  String get meshcoreWidgetSignalBestLabel;
+
+  /// Label for the count of contacts with strong SNR in the MeshCore Signal Strength widget
+  ///
+  /// In en, this message translates to:
+  /// **'Strong'**
+  String get meshcoreWidgetSignalStrongLabel;
+
+  /// Label for the worst per-contact SNR stat in the MeshCore Signal Strength widget
+  ///
+  /// In en, this message translates to:
+  /// **'Worst'**
+  String get meshcoreWidgetSignalWorstLabel;
+
+  /// Label for the count of contacts with weak SNR in the MeshCore Signal Strength widget
+  ///
+  /// In en, this message translates to:
+  /// **'Weak'**
+  String get meshcoreWidgetSignalWeakLabel;
+
+  /// MeshCore Channel Activity widget name in the widget picker
+  ///
+  /// In en, this message translates to:
+  /// **'Channel Activity'**
+  String get meshcoreWidgetChannelActivityName;
+
+  /// MeshCore Channel Activity widget description in the widget picker
+  ///
+  /// In en, this message translates to:
+  /// **'Recent message traffic per channel'**
+  String get meshcoreWidgetChannelActivityDescription;
+
+  /// Empty state inside the MeshCore Channel Activity widget when the channels list is empty
+  ///
+  /// In en, this message translates to:
+  /// **'No channels configured'**
+  String get meshcoreWidgetChannelActivityEmpty;
+
+  /// Placeholder name for an unnamed MeshCore channel in the Channel Activity widget; {slot} is the firmware channel index
+  ///
+  /// In en, this message translates to:
+  /// **'Channel {slot}'**
+  String meshcoreWidgetChannelActivityUnnamedChannel(int slot);
+
+  /// Per-row subtitle inside the MeshCore Channel Activity widget when a channel has never received a message
+  ///
+  /// In en, this message translates to:
+  /// **'No recent activity'**
+  String get meshcoreWidgetChannelActivityNoActivity;
+
+  /// Relative time label for MeshCore Channel Activity rows when the last message arrived within the last minute
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get meshcoreWidgetChannelActivityJustNow;
+
+  /// Relative time label for MeshCore Channel Activity rows; {minutes} is an int count of minutes since the last message
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m ago'**
+  String meshcoreWidgetChannelActivityMinutesAgo(int minutes);
+
+  /// Relative time label for MeshCore Channel Activity rows; {hours} is an int count of hours since the last message
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h ago'**
+  String meshcoreWidgetChannelActivityHoursAgo(int hours);
+
+  /// Relative time label for MeshCore Channel Activity rows; {days} is an int count of days since the last message
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d ago'**
+  String meshcoreWidgetChannelActivityDaysAgo(int days);
+
+  /// MeshCore Mesh Health widget name in the widget picker
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Health'**
+  String get meshcoreWidgetMeshHealthName;
+
+  /// MeshCore Mesh Health widget description in the widget picker
+  ///
+  /// In en, this message translates to:
+  /// **'Overall MeshCore mesh status and quality score'**
+  String get meshcoreWidgetMeshHealthDescription;
+
+  /// Caption for the connection-status factor in the MeshCore Mesh Health widget
+  ///
+  /// In en, this message translates to:
+  /// **'Link'**
+  String get meshcoreWidgetMeshHealthConnectionLabel;
+
+  /// Status text shown when the MeshCore companion radio is connected
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get meshcoreWidgetMeshHealthOnline;
+
+  /// Status text shown when the MeshCore companion radio is disconnected
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get meshcoreWidgetMeshHealthOffline;
+
+  /// Caption for the recently-active-contacts factor in the MeshCore Mesh Health widget
+  ///
+  /// In en, this message translates to:
+  /// **'Fresh'**
+  String get meshcoreWidgetMeshHealthFreshLabel;
+
+  /// Caption for the SNR factor in the MeshCore Mesh Health widget
+  ///
+  /// In en, this message translates to:
+  /// **'SNR'**
+  String get meshcoreWidgetMeshHealthSnrLabel;
+
+  /// Placeholder shown for the SNR factor in the MeshCore Mesh Health widget when no contacts have reported SNR
+  ///
+  /// In en, this message translates to:
+  /// **'--'**
+  String get meshcoreWidgetMeshHealthSnrUnknown;
+
+  /// Caption for the channels-configured factor in the MeshCore Mesh Health widget
+  ///
+  /// In en, this message translates to:
+  /// **'Channels'**
+  String get meshcoreWidgetMeshHealthChannelsLabel;
+
+  /// Status label inside the MeshCore Mesh Health gauge when the score is greater than or equal to 80
+  ///
+  /// In en, this message translates to:
+  /// **'Excellent'**
+  String get meshcoreWidgetMeshHealthStatusExcellent;
+
+  /// Status label inside the MeshCore Mesh Health gauge when the score is greater than or equal to 60
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get meshcoreWidgetMeshHealthStatusGood;
+
+  /// Status label inside the MeshCore Mesh Health gauge when the score is greater than or equal to 40
+  ///
+  /// In en, this message translates to:
+  /// **'Fair'**
+  String get meshcoreWidgetMeshHealthStatusFair;
+
+  /// Status label inside the MeshCore Mesh Health gauge when the score is below 40 but greater than 0
+  ///
+  /// In en, this message translates to:
+  /// **'Poor'**
+  String get meshcoreWidgetMeshHealthStatusPoor;
+
+  /// MeshCore Node Map widget name in the widget picker
+  ///
+  /// In en, this message translates to:
+  /// **'Node Map'**
+  String get meshcoreWidgetNodeMapName;
+
+  /// MeshCore Node Map widget description in the widget picker
+  ///
+  /// In en, this message translates to:
+  /// **'Compact map view of contacts with location'**
+  String get meshcoreWidgetNodeMapDescription;
+
+  /// Hint shown over the compact MeshCore Node Map widget directing users to open the full map tab
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to expand'**
+  String get meshcoreWidgetNodeMapTapToExpand;
+
+  /// Empty-state title inside the MeshCore Node Map widget when no contacts have a known location
+  ///
+  /// In en, this message translates to:
+  /// **'No GPS data'**
+  String get meshcoreWidgetNodeMapEmptyTitle;
+
+  /// Empty-state subtitle inside the MeshCore Node Map widget
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts will appear here once they advertise a position'**
+  String get meshcoreWidgetNodeMapEmptySubtitle;
+
   /// Title shown on the MeshCore dashboard when no widgets are present
   ///
   /// In en, this message translates to:

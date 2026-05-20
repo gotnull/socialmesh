@@ -190,10 +190,20 @@ void main() {
 
     test('widgets with a MeshCore renderer report supported', () {
       const meshCoreReady = <DashboardWidgetType>{
+        // Pack Phase 2 v1
         DashboardWidgetType.networkOverview,
         DashboardWidgetType.recentMessages,
         DashboardWidgetType.nearbyNodes,
         DashboardWidgetType.custom,
+        // Pack Phase 2 v2: Dashboard v2 additions
+        DashboardWidgetType.signalStrength,
+        DashboardWidgetType.channelActivity,
+        DashboardWidgetType.meshHealth,
+        DashboardWidgetType.nodeMap,
+        // quickCompose: semantic-equivalent to MeshCore's pre-existing
+        // quickActions widget; same role, different enum name on the
+        // MeshCore side.
+        DashboardWidgetType.quickCompose,
       };
       for (final w in meshCoreReady) {
         expect(
@@ -206,24 +216,17 @@ void main() {
       }
     });
 
-    test('Meshtastic-only widget types report unsupported on MeshCore', () {
-      const meshtasticOnly = <DashboardWidgetType>{
-        DashboardWidgetType.signalStrength,
-        DashboardWidgetType.channelActivity,
-        DashboardWidgetType.meshHealth,
-        DashboardWidgetType.quickCompose,
-        DashboardWidgetType.nodeMap,
-        DashboardWidgetType.environmentMetrics,
-      };
-      for (final w in meshtasticOnly) {
-        expect(
-          w.supportOn(TriggerProtocol.meshcore),
-          ProtocolSupport.unsupported,
-          reason:
-              'DashboardWidgetType.$w has no MeshCore renderer today; '
-              "must report unsupported until v2 ships",
-        );
-      }
+    test('environmentMetrics still reports unsupported on MeshCore', () {
+      // MeshCore wire protocol does not exchange peer telemetry the way
+      // Meshtastic's TELEMETRY_APP portnum does, so a MeshCore-side
+      // environment renderer would have no data to render. Stay
+      // unsupported until a future MeshCore telemetry feature ships.
+      expect(
+        DashboardWidgetType.environmentMetrics.supportOn(
+          TriggerProtocol.meshcore,
+        ),
+        ProtocolSupport.unsupported,
+      );
     });
 
     test('every DashboardWidgetType has an explicit categorisation', () {

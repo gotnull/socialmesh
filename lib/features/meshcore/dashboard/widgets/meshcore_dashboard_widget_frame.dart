@@ -138,6 +138,14 @@ class _MeshCoreDashboardWidgetFrameState
         return l10n.meshcoreWidgetNearbyContactsName;
       case MeshCoreDashboardWidgetType.recentMessages:
         return l10n.meshcoreWidgetRecentMessagesName;
+      case MeshCoreDashboardWidgetType.signalStrength:
+        return l10n.meshcoreWidgetSignalStrengthName;
+      case MeshCoreDashboardWidgetType.channelActivity:
+        return l10n.meshcoreWidgetChannelActivityName;
+      case MeshCoreDashboardWidgetType.meshHealth:
+        return l10n.meshcoreWidgetMeshHealthName;
+      case MeshCoreDashboardWidgetType.nodeMap:
+        return l10n.meshcoreWidgetNodeMapName;
     }
   }
 

@@ -11413,6 +11413,126 @@ class AppLocalizationsRu extends AppLocalizations {
       'Последние личные и канальные сообщения';
 
   @override
+  String get meshcoreWidgetSignalStrengthName => 'Уровень сигнала';
+
+  @override
+  String get meshcoreWidgetSignalStrengthDescription =>
+      'Сводный SNR сети по недавним объявлениям контактов';
+
+  @override
+  String get meshcoreWidgetSignalEmpty =>
+      'Ожидание данных сигнала из объявлений';
+
+  @override
+  String get meshcoreWidgetSignalMedianLabel => 'МЕДИАНА';
+
+  @override
+  String get meshcoreWidgetSignalBestLabel => 'Лучший';
+
+  @override
+  String get meshcoreWidgetSignalStrongLabel => 'Сильный';
+
+  @override
+  String get meshcoreWidgetSignalWorstLabel => 'Худший';
+
+  @override
+  String get meshcoreWidgetSignalWeakLabel => 'Слабый';
+
+  @override
+  String get meshcoreWidgetChannelActivityName => 'Активность каналов';
+
+  @override
+  String get meshcoreWidgetChannelActivityDescription =>
+      'Недавний трафик сообщений по каналам';
+
+  @override
+  String get meshcoreWidgetChannelActivityEmpty => 'Каналы не настроены';
+
+  @override
+  String meshcoreWidgetChannelActivityUnnamedChannel(int slot) {
+    return 'Канал $slot';
+  }
+
+  @override
+  String get meshcoreWidgetChannelActivityNoActivity =>
+      'Нет недавней активности';
+
+  @override
+  String get meshcoreWidgetChannelActivityJustNow => 'Только что';
+
+  @override
+  String meshcoreWidgetChannelActivityMinutesAgo(int minutes) {
+    return '$minutes мин назад';
+  }
+
+  @override
+  String meshcoreWidgetChannelActivityHoursAgo(int hours) {
+    return '$hours ч назад';
+  }
+
+  @override
+  String meshcoreWidgetChannelActivityDaysAgo(int days) {
+    return '$days дн назад';
+  }
+
+  @override
+  String get meshcoreWidgetMeshHealthName => 'Состояние сети';
+
+  @override
+  String get meshcoreWidgetMeshHealthDescription =>
+      'Общее состояние и оценка качества сети MeshCore';
+
+  @override
+  String get meshcoreWidgetMeshHealthConnectionLabel => 'Связь';
+
+  @override
+  String get meshcoreWidgetMeshHealthOnline => 'В сети';
+
+  @override
+  String get meshcoreWidgetMeshHealthOffline => 'Не в сети';
+
+  @override
+  String get meshcoreWidgetMeshHealthFreshLabel => 'Свежие';
+
+  @override
+  String get meshcoreWidgetMeshHealthSnrLabel => 'SNR';
+
+  @override
+  String get meshcoreWidgetMeshHealthSnrUnknown => '--';
+
+  @override
+  String get meshcoreWidgetMeshHealthChannelsLabel => 'Каналы';
+
+  @override
+  String get meshcoreWidgetMeshHealthStatusExcellent => 'Отлично';
+
+  @override
+  String get meshcoreWidgetMeshHealthStatusGood => 'Хорошо';
+
+  @override
+  String get meshcoreWidgetMeshHealthStatusFair => 'Удовлетворительно';
+
+  @override
+  String get meshcoreWidgetMeshHealthStatusPoor => 'Плохо';
+
+  @override
+  String get meshcoreWidgetNodeMapName => 'Карта узлов';
+
+  @override
+  String get meshcoreWidgetNodeMapDescription =>
+      'Компактный вид контактов с координатами';
+
+  @override
+  String get meshcoreWidgetNodeMapTapToExpand => 'Нажмите, чтобы развернуть';
+
+  @override
+  String get meshcoreWidgetNodeMapEmptyTitle => 'Нет данных GPS';
+
+  @override
+  String get meshcoreWidgetNodeMapEmptySubtitle =>
+      'Контакты появятся здесь, когда передадут свою позицию';
+
+  @override
   String get meshcoreDashboardEmptyTitle => 'Виджеты не добавлены';
 
   @override

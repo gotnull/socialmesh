@@ -11284,6 +11284,124 @@ class AppLocalizationsEn extends AppLocalizations {
       'Latest DMs and channel messages';
 
   @override
+  String get meshcoreWidgetSignalStrengthName => 'Signal Strength';
+
+  @override
+  String get meshcoreWidgetSignalStrengthDescription =>
+      'Network-wide SNR aggregate across recent contact adverts';
+
+  @override
+  String get meshcoreWidgetSignalEmpty => 'Waiting for advert signal data';
+
+  @override
+  String get meshcoreWidgetSignalMedianLabel => 'MEDIAN';
+
+  @override
+  String get meshcoreWidgetSignalBestLabel => 'Best';
+
+  @override
+  String get meshcoreWidgetSignalStrongLabel => 'Strong';
+
+  @override
+  String get meshcoreWidgetSignalWorstLabel => 'Worst';
+
+  @override
+  String get meshcoreWidgetSignalWeakLabel => 'Weak';
+
+  @override
+  String get meshcoreWidgetChannelActivityName => 'Channel Activity';
+
+  @override
+  String get meshcoreWidgetChannelActivityDescription =>
+      'Recent message traffic per channel';
+
+  @override
+  String get meshcoreWidgetChannelActivityEmpty => 'No channels configured';
+
+  @override
+  String meshcoreWidgetChannelActivityUnnamedChannel(int slot) {
+    return 'Channel $slot';
+  }
+
+  @override
+  String get meshcoreWidgetChannelActivityNoActivity => 'No recent activity';
+
+  @override
+  String get meshcoreWidgetChannelActivityJustNow => 'Just now';
+
+  @override
+  String meshcoreWidgetChannelActivityMinutesAgo(int minutes) {
+    return '${minutes}m ago';
+  }
+
+  @override
+  String meshcoreWidgetChannelActivityHoursAgo(int hours) {
+    return '${hours}h ago';
+  }
+
+  @override
+  String meshcoreWidgetChannelActivityDaysAgo(int days) {
+    return '${days}d ago';
+  }
+
+  @override
+  String get meshcoreWidgetMeshHealthName => 'Mesh Health';
+
+  @override
+  String get meshcoreWidgetMeshHealthDescription =>
+      'Overall MeshCore mesh status and quality score';
+
+  @override
+  String get meshcoreWidgetMeshHealthConnectionLabel => 'Link';
+
+  @override
+  String get meshcoreWidgetMeshHealthOnline => 'Online';
+
+  @override
+  String get meshcoreWidgetMeshHealthOffline => 'Offline';
+
+  @override
+  String get meshcoreWidgetMeshHealthFreshLabel => 'Fresh';
+
+  @override
+  String get meshcoreWidgetMeshHealthSnrLabel => 'SNR';
+
+  @override
+  String get meshcoreWidgetMeshHealthSnrUnknown => '--';
+
+  @override
+  String get meshcoreWidgetMeshHealthChannelsLabel => 'Channels';
+
+  @override
+  String get meshcoreWidgetMeshHealthStatusExcellent => 'Excellent';
+
+  @override
+  String get meshcoreWidgetMeshHealthStatusGood => 'Good';
+
+  @override
+  String get meshcoreWidgetMeshHealthStatusFair => 'Fair';
+
+  @override
+  String get meshcoreWidgetMeshHealthStatusPoor => 'Poor';
+
+  @override
+  String get meshcoreWidgetNodeMapName => 'Node Map';
+
+  @override
+  String get meshcoreWidgetNodeMapDescription =>
+      'Compact map view of contacts with location';
+
+  @override
+  String get meshcoreWidgetNodeMapTapToExpand => 'Tap to expand';
+
+  @override
+  String get meshcoreWidgetNodeMapEmptyTitle => 'No GPS data';
+
+  @override
+  String get meshcoreWidgetNodeMapEmptySubtitle =>
+      'Contacts will appear here once they advertise a position';
+
+  @override
   String get meshcoreDashboardEmptyTitle => 'No Widgets Added';
 
   @override

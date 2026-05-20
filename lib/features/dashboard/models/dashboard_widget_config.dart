@@ -29,16 +29,25 @@ extension DashboardWidgetTypeProtocolSupport on DashboardWidgetType {
         return ProtocolSupport.supported;
       case TriggerProtocol.meshcore:
         switch (this) {
+          // Pre-existing MeshCore renderers (Pack Phase 2 v1):
           case DashboardWidgetType.networkOverview:
           case DashboardWidgetType.recentMessages:
           case DashboardWidgetType.nearbyNodes:
           case DashboardWidgetType.custom:
-            return ProtocolSupport.supported;
+          // Dashboard v2 additions: MeshCore-side renderers landed in
+          // `lib/features/meshcore/dashboard/widgets/`. quickCompose
+          // maps semantically to MeshCore's pre-existing `quickActions`
+          // widget (same role; different enum name on the MeshCore side).
           case DashboardWidgetType.signalStrength:
           case DashboardWidgetType.channelActivity:
           case DashboardWidgetType.meshHealth:
           case DashboardWidgetType.quickCompose:
           case DashboardWidgetType.nodeMap:
+            return ProtocolSupport.supported;
+          // No MeshCore renderer: MeshCore wire protocol does not
+          // exchange peer telemetry (battery, temperature, humidity,
+          // pressure, gas resistance, etc.) the way Meshtastic's
+          // TELEMETRY_APP portnum does.
           case DashboardWidgetType.environmentMetrics:
             return ProtocolSupport.unsupported;
         }

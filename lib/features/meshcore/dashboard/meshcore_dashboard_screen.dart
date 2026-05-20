@@ -16,11 +16,15 @@ import '../../dashboard/widgets/dashboard_widget.dart';
 import '../../navigation/meshcore_shell.dart';
 import 'models/meshcore_dashboard_widget_config.dart';
 import 'providers/meshcore_dashboard_providers.dart';
+import 'widgets/meshcore_channel_activity_content.dart';
 import 'widgets/meshcore_dashboard_widget_frame.dart';
+import 'widgets/meshcore_mesh_health_content.dart';
 import 'widgets/meshcore_nearby_contacts_content.dart';
 import 'widgets/meshcore_network_overview_content.dart';
+import 'widgets/meshcore_node_map_content.dart';
 import 'widgets/meshcore_quick_actions_content.dart';
 import 'widgets/meshcore_recent_messages_content.dart';
+import 'widgets/meshcore_signal_strength_content.dart';
 
 // MeshCore-side Dashboard screen. Full 1:1 mirror of the Meshtastic
 // `WidgetDashboardScreen`: ReorderableListView body, edit-mode toggle,
@@ -233,6 +237,14 @@ class _MeshCoreDashboardScreenState
         return const MeshCoreNearbyContactsContent();
       case MeshCoreDashboardWidgetType.recentMessages:
         return const MeshCoreRecentMessagesContent();
+      case MeshCoreDashboardWidgetType.signalStrength:
+        return const MeshCoreSignalStrengthContent();
+      case MeshCoreDashboardWidgetType.channelActivity:
+        return const MeshCoreChannelActivityContent();
+      case MeshCoreDashboardWidgetType.meshHealth:
+        return const MeshCoreMeshHealthContent();
+      case MeshCoreDashboardWidgetType.nodeMap:
+        return const MeshCoreNodeMapContent();
     }
   }
 
@@ -422,6 +434,14 @@ String _localizedWidgetName(
       return l10n.meshcoreWidgetNearbyContactsName;
     case MeshCoreDashboardWidgetType.recentMessages:
       return l10n.meshcoreWidgetRecentMessagesName;
+    case MeshCoreDashboardWidgetType.signalStrength:
+      return l10n.meshcoreWidgetSignalStrengthName;
+    case MeshCoreDashboardWidgetType.channelActivity:
+      return l10n.meshcoreWidgetChannelActivityName;
+    case MeshCoreDashboardWidgetType.meshHealth:
+      return l10n.meshcoreWidgetMeshHealthName;
+    case MeshCoreDashboardWidgetType.nodeMap:
+      return l10n.meshcoreWidgetNodeMapName;
   }
 }
 
@@ -439,6 +459,14 @@ String _localizedWidgetDescription(
       return l10n.meshcoreWidgetNearbyContactsDescription;
     case MeshCoreDashboardWidgetType.recentMessages:
       return l10n.meshcoreWidgetRecentMessagesDescription;
+    case MeshCoreDashboardWidgetType.signalStrength:
+      return l10n.meshcoreWidgetSignalStrengthDescription;
+    case MeshCoreDashboardWidgetType.channelActivity:
+      return l10n.meshcoreWidgetChannelActivityDescription;
+    case MeshCoreDashboardWidgetType.meshHealth:
+      return l10n.meshcoreWidgetMeshHealthDescription;
+    case MeshCoreDashboardWidgetType.nodeMap:
+      return l10n.meshcoreWidgetNodeMapDescription;
   }
 }
 

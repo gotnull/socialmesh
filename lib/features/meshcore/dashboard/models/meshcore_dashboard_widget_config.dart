@@ -10,6 +10,10 @@ enum MeshCoreDashboardWidgetType {
   quickActions,
   nearbyContacts,
   recentMessages,
+  signalStrength,
+  channelActivity,
+  meshHealth,
+  nodeMap,
 }
 
 enum MeshCoreWidgetSize { small, medium, large }
@@ -124,6 +128,34 @@ class MeshCoreWidgetRegistry {
       description:
           'Latest DMs and channel messages', // lint-allow: hardcoded-string
       icon: Icons.chat_bubble_outline_rounded,
+    ),
+    MeshCoreWidgetTypeInfo(
+      type: MeshCoreDashboardWidgetType.signalStrength,
+      name: 'Signal Strength', // lint-allow: hardcoded-string
+      description:
+          'Network-wide SNR aggregate across recent contact adverts', // lint-allow: hardcoded-string
+      icon: Icons.signal_cellular_alt_rounded,
+    ),
+    MeshCoreWidgetTypeInfo(
+      type: MeshCoreDashboardWidgetType.channelActivity,
+      name: 'Channel Activity', // lint-allow: hardcoded-string
+      description:
+          'Recent message traffic per channel', // lint-allow: hardcoded-string
+      icon: Icons.wifi_tethering_rounded,
+    ),
+    MeshCoreWidgetTypeInfo(
+      type: MeshCoreDashboardWidgetType.meshHealth,
+      name: 'Mesh Health', // lint-allow: hardcoded-string
+      description:
+          'Overall MeshCore mesh status and quality score', // lint-allow: hardcoded-string
+      icon: Icons.favorite_rounded,
+    ),
+    MeshCoreWidgetTypeInfo(
+      type: MeshCoreDashboardWidgetType.nodeMap,
+      name: 'Node Map', // lint-allow: hardcoded-string
+      description:
+          'Compact map view of contacts with location', // lint-allow: hardcoded-string
+      icon: Icons.map_outlined,
     ),
   ];
 

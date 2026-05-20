@@ -11448,6 +11448,125 @@ class AppLocalizationsDe extends AppLocalizations {
       'Aktuelle Direktnachrichten und Kanalnachrichten';
 
   @override
+  String get meshcoreWidgetSignalStrengthName => 'Signalstärke';
+
+  @override
+  String get meshcoreWidgetSignalStrengthDescription =>
+      'Netzwerkweiter SNR-Durchschnitt aus aktuellen Kontakt-Adverts';
+
+  @override
+  String get meshcoreWidgetSignalEmpty => 'Warte auf Signaldaten aus Adverts';
+
+  @override
+  String get meshcoreWidgetSignalMedianLabel => 'MEDIAN';
+
+  @override
+  String get meshcoreWidgetSignalBestLabel => 'Bestes';
+
+  @override
+  String get meshcoreWidgetSignalStrongLabel => 'Stark';
+
+  @override
+  String get meshcoreWidgetSignalWorstLabel => 'Schlechtestes';
+
+  @override
+  String get meshcoreWidgetSignalWeakLabel => 'Schwach';
+
+  @override
+  String get meshcoreWidgetChannelActivityName => 'Kanal-Aktivität';
+
+  @override
+  String get meshcoreWidgetChannelActivityDescription =>
+      'Aktueller Nachrichtenverkehr pro Kanal';
+
+  @override
+  String get meshcoreWidgetChannelActivityEmpty => 'Keine Kanäle konfiguriert';
+
+  @override
+  String meshcoreWidgetChannelActivityUnnamedChannel(int slot) {
+    return 'Kanal $slot';
+  }
+
+  @override
+  String get meshcoreWidgetChannelActivityNoActivity =>
+      'Keine aktuelle Aktivität';
+
+  @override
+  String get meshcoreWidgetChannelActivityJustNow => 'Gerade eben';
+
+  @override
+  String meshcoreWidgetChannelActivityMinutesAgo(int minutes) {
+    return 'vor ${minutes}m';
+  }
+
+  @override
+  String meshcoreWidgetChannelActivityHoursAgo(int hours) {
+    return 'vor ${hours}h';
+  }
+
+  @override
+  String meshcoreWidgetChannelActivityDaysAgo(int days) {
+    return 'vor ${days}T';
+  }
+
+  @override
+  String get meshcoreWidgetMeshHealthName => 'Netzwerk-Gesundheit';
+
+  @override
+  String get meshcoreWidgetMeshHealthDescription =>
+      'Gesamtstatus und Qualitäts-Score des MeshCore-Netzwerks';
+
+  @override
+  String get meshcoreWidgetMeshHealthConnectionLabel => 'Link';
+
+  @override
+  String get meshcoreWidgetMeshHealthOnline => 'Online';
+
+  @override
+  String get meshcoreWidgetMeshHealthOffline => 'Offline';
+
+  @override
+  String get meshcoreWidgetMeshHealthFreshLabel => 'Aktuell';
+
+  @override
+  String get meshcoreWidgetMeshHealthSnrLabel => 'SNR';
+
+  @override
+  String get meshcoreWidgetMeshHealthSnrUnknown => '--';
+
+  @override
+  String get meshcoreWidgetMeshHealthChannelsLabel => 'Kanäle';
+
+  @override
+  String get meshcoreWidgetMeshHealthStatusExcellent => 'Ausgezeichnet';
+
+  @override
+  String get meshcoreWidgetMeshHealthStatusGood => 'Gut';
+
+  @override
+  String get meshcoreWidgetMeshHealthStatusFair => 'Mittel';
+
+  @override
+  String get meshcoreWidgetMeshHealthStatusPoor => 'Schlecht';
+
+  @override
+  String get meshcoreWidgetNodeMapName => 'Knoten-Karte';
+
+  @override
+  String get meshcoreWidgetNodeMapDescription =>
+      'Kompakte Kartenansicht der Kontakte mit Standort';
+
+  @override
+  String get meshcoreWidgetNodeMapTapToExpand => 'Tippen zum Erweitern';
+
+  @override
+  String get meshcoreWidgetNodeMapEmptyTitle => 'Keine GPS-Daten';
+
+  @override
+  String get meshcoreWidgetNodeMapEmptySubtitle =>
+      'Kontakte erscheinen hier, sobald sie eine Position senden';
+
+  @override
   String get meshcoreDashboardEmptyTitle => 'Keine Widgets hinzugefügt';
 
   @override
