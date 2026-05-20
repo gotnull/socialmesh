@@ -11,7 +11,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/features/automations/models/automation.dart';
 import 'package:socialmesh/features/dashboard/models/dashboard_widget_config.dart';
-import 'package:socialmesh/models/trigger_protocol.dart';
+import 'package:socialmesh/services/ifttt/ifttt_service.dart';
 
 void main() {
   group('TriggerType.supportOn', () {
@@ -243,6 +243,89 @@ void main() {
         accountedFor,
       );
       expect(missing, isEmpty);
+    });
+  });
+
+  group('IftttTriggerType.supportOn', () {
+    test('every IftttTriggerType is supported on Meshtastic', () {
+      for (final t in IftttTriggerType.values) {
+        expect(
+          t.supportOn(TriggerProtocol.meshtastic),
+          ProtocolSupport.supported,
+          reason: 'IftttTriggerType.$t should be fully supported on Meshtastic',
+        );
+      }
+    });
+
+    test('Meshtastic-only IFTTT triggers report unsupported on MeshCore', () {
+      const meshtasticOnly = <IftttTriggerType>{
+        IftttTriggerType.batteryLow,
+        IftttTriggerType.temperatureAlert,
+      };
+      for (final t in meshtasticOnly) {
+        expect(
+          t.supportOn(TriggerProtocol.meshcore),
+          ProtocolSupport.unsupported,
+          reason:
+              'IftttTriggerType.$t depends on telemetry MeshCore does not '
+              'exchange peer-to-peer; must report unsupported so the IFTTT '
+              'config screen hides the row when MeshCore-pinned',
+        );
+      }
+    });
+
+    test('partial-support IFTTT triggers on MeshCore', () {
+      const partialOnMeshCore = <IftttTriggerType>{
+        IftttTriggerType.nodeOnline,
+        IftttTriggerType.nodeOffline,
+        IftttTriggerType.positionUpdate,
+      };
+      for (final t in partialOnMeshCore) {
+        expect(
+          t.supportOn(TriggerProtocol.meshcore),
+          ProtocolSupport.partial,
+          reason:
+              'IftttTriggerType.$t fires on MeshCore only when the '
+              "underlying data exists; must report partial so the row "
+              "renders with a 'Limited on MeshCore' warning",
+        );
+      }
+    });
+
+    test('fully-supported IFTTT triggers on MeshCore', () {
+      const fullySupported = <IftttTriggerType>{
+        IftttTriggerType.messageReceived,
+        IftttTriggerType.sosEmergency,
+      };
+      for (final t in fullySupported) {
+        expect(
+          t.supportOn(TriggerProtocol.meshcore),
+          ProtocolSupport.supported,
+          reason: 'IftttTriggerType.$t should be fully supported on MeshCore',
+        );
+      }
+    });
+
+    test('every IftttTriggerType has an explicit categorisation', () {
+      const accountedFor = <IftttTriggerType>{
+        IftttTriggerType.batteryLow,
+        IftttTriggerType.temperatureAlert,
+        IftttTriggerType.nodeOnline,
+        IftttTriggerType.nodeOffline,
+        IftttTriggerType.positionUpdate,
+        IftttTriggerType.messageReceived,
+        IftttTriggerType.sosEmergency,
+      };
+      final missing = IftttTriggerType.values.toSet().difference(accountedFor);
+      expect(
+        missing,
+        isEmpty,
+        reason:
+            'New IftttTriggerType detected without a compatibility row: '
+            "${missing.map((t) => t.name).join(', ')}. "
+            'Update MESHCORE_PROTOCOL_COMPATIBILITY.md + add to '
+            'IftttTriggerTypeProtocolSupport.supportOn + add to this test.',
+      );
     });
   });
 }

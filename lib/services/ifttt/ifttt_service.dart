@@ -19,6 +19,47 @@ enum IftttTriggerType {
   sosEmergency,
 }
 
+// Per-protocol support categorisation for the IFTTT trigger surface.
+// Mirrors `TriggerType.supportOn` on the Automations side so the same
+// matrix metadata drives both pickers. Source of truth for the
+// classifications is `docs/engineering/MESHCORE_PROTOCOL_COMPATIBILITY.md`.
+//
+// MeshCore mapping:
+//   messageReceived  - supported (DM + channel text events are first-class).
+//   nodeOnline       - partial (advert-driven, less precise than Meshtastic's
+//                      presence state machine; fires only when an advert lands).
+//   nodeOffline      - partial (no firmware-level "went offline" signal; the
+//                      app infers offline from advert silence + age).
+//   positionUpdate   - partial (only when the contact carries lat/lon in its
+//                      advert; many MeshCore contact types omit position).
+//   batteryLow       - unsupported (peer battery telemetry is not exchanged
+//                      between MeshCore nodes; only SELF_INFO carries it).
+//   temperatureAlert - unsupported (MeshCore has no telemetry-sensor protocol
+//                      equivalent to Meshtastic environmental telemetry).
+//   sosEmergency     - supported (text pattern matching on inbound DMs and
+//                      channel messages works identically on both protocols).
+extension IftttTriggerTypeProtocolSupport on IftttTriggerType {
+  ProtocolSupport supportOn(TriggerProtocol protocol) {
+    switch (protocol) {
+      case TriggerProtocol.meshtastic:
+        return ProtocolSupport.supported;
+      case TriggerProtocol.meshcore:
+        switch (this) {
+          case IftttTriggerType.messageReceived:
+          case IftttTriggerType.sosEmergency:
+            return ProtocolSupport.supported;
+          case IftttTriggerType.nodeOnline:
+          case IftttTriggerType.nodeOffline:
+          case IftttTriggerType.positionUpdate:
+            return ProtocolSupport.partial;
+          case IftttTriggerType.batteryLow:
+          case IftttTriggerType.temperatureAlert:
+            return ProtocolSupport.unsupported;
+        }
+    }
+  }
+}
+
 /// Webhook mode: IFTTT key-based or custom URL
 enum WebhookMode {
   /// Classic IFTTT Webhooks: event name + key -> maker.ifttt.com

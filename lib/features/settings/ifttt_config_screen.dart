@@ -361,11 +361,16 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                     title: context.l10n.iftttConfigSectionNodeTriggers,
                   ),
                   _buildNodeTriggers(),
-                  const SizedBox(height: AppTheme.spacing16),
-                  SettingsSectionHeader(
-                    title: context.l10n.iftttConfigSectionTelemetryTriggers,
-                  ),
-                  _buildTelemetryTriggers(),
+                  if (_anyTriggerVisible(const [
+                    IftttTriggerType.batteryLow,
+                    IftttTriggerType.temperatureAlert,
+                  ])) ...[
+                    const SizedBox(height: AppTheme.spacing16),
+                    SettingsSectionHeader(
+                      title: context.l10n.iftttConfigSectionTelemetryTriggers,
+                    ),
+                    _buildTelemetryTriggers(),
+                  ],
                   const SizedBox(height: AppTheme.spacing16),
                   SettingsSectionHeader(
                     title: context.l10n.iftttConfigSectionGeofencing,
@@ -618,31 +623,101 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
     );
   }
 
+  // Apply protocol-support gating to a trigger row. When the active
+  // protocol filter is `meshcore` and the trigger is `unsupported` on
+  // MeshCore, the row is hidden entirely. When `partial`, the row is
+  // rendered with a yellow "Limited on MeshCore" sub-label so the user
+  // knows the trigger only fires under specific conditions on this
+  // protocol. Mirrors the trigger picker gating shape in
+  // `lib/features/automations/widgets/trigger_selector.dart`.
+  Widget _gatedTriggerTile({
+    required IftttTriggerType type,
+    required Widget tile,
+  }) {
+    if (_protocolFilter != TriggerProtocolFilter.meshcore) return tile;
+    final support = type.supportOn(TriggerProtocol.meshcore);
+    switch (support) {
+      case ProtocolSupport.supported:
+        return tile;
+      case ProtocolSupport.unsupported:
+        return const SizedBox.shrink();
+      case ProtocolSupport.partial:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            tile,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppTheme.spacing32,
+                AppTheme.spacing4,
+                AppTheme.spacing16,
+                AppTheme.spacing8,
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.info_outline_rounded,
+                    size: 14,
+                    color: AppTheme.warningYellow,
+                  ),
+                  const SizedBox(width: AppTheme.spacing6),
+                  Text(
+                    context.l10n.automationTriggerLimitedOnMeshcore,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.warningYellow,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+    }
+  }
+
+  // Whether any trigger in [types] is reachable under the active
+  // protocol filter. Used to hide a section header when all of its
+  // rows would be unsupported on the pinned protocol.
+  bool _anyTriggerVisible(List<IftttTriggerType> types) {
+    if (_protocolFilter != TriggerProtocolFilter.meshcore) return true;
+    return types.any(
+      (t) =>
+          t.supportOn(TriggerProtocol.meshcore) != ProtocolSupport.unsupported,
+    );
+  }
+
   Widget _buildMessageTriggers() {
     return Column(
       children: [
-        SettingsTile(
-          icon: Icons.message_outlined,
-          title: context.l10n.iftttConfigMessageReceived,
-          subtitle: context.l10n.iftttConfigMessageReceivedSubtitle,
-          trailing: ThemedSwitch(
-            value: _messageReceived,
-            onChanged: (value) {
-              HapticFeedback.selectionClick();
-              safeSetState(() => _messageReceived = value);
-            },
+        _gatedTriggerTile(
+          type: IftttTriggerType.messageReceived,
+          tile: SettingsTile(
+            icon: Icons.message_outlined,
+            title: context.l10n.iftttConfigMessageReceived,
+            subtitle: context.l10n.iftttConfigMessageReceivedSubtitle,
+            trailing: ThemedSwitch(
+              value: _messageReceived,
+              onChanged: (value) {
+                HapticFeedback.selectionClick();
+                safeSetState(() => _messageReceived = value);
+              },
+            ),
           ),
         ),
-        SettingsTile(
-          icon: Icons.sos_outlined,
-          title: context.l10n.iftttConfigSosEmergency,
-          subtitle: context.l10n.iftttConfigSosEmergencySubtitle,
-          trailing: ThemedSwitch(
-            value: _sosEmergency,
-            onChanged: (value) {
-              HapticFeedback.selectionClick();
-              safeSetState(() => _sosEmergency = value);
-            },
+        _gatedTriggerTile(
+          type: IftttTriggerType.sosEmergency,
+          tile: SettingsTile(
+            icon: Icons.sos_outlined,
+            title: context.l10n.iftttConfigSosEmergency,
+            subtitle: context.l10n.iftttConfigSosEmergencySubtitle,
+            trailing: ThemedSwitch(
+              value: _sosEmergency,
+              onChanged: (value) {
+                HapticFeedback.selectionClick();
+                safeSetState(() => _sosEmergency = value);
+              },
+            ),
           ),
         ),
       ],
@@ -652,50 +727,71 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
   Widget _buildNodeTriggers() {
     return Column(
       children: [
-        SettingsTile(
-          icon: Icons.wifi_tethering,
-          title: context.l10n.iftttConfigNodeActive,
-          subtitle: context.l10n.iftttConfigNodeActiveSubtitle,
-          trailing: ThemedSwitch(
-            value: _nodeOnline,
-            onChanged: (value) {
-              HapticFeedback.selectionClick();
-              safeSetState(() => _nodeOnline = value);
-            },
+        _gatedTriggerTile(
+          type: IftttTriggerType.nodeOnline,
+          tile: SettingsTile(
+            icon: Icons.wifi_tethering,
+            title: context.l10n.iftttConfigNodeActive,
+            subtitle: context.l10n.iftttConfigNodeActiveSubtitle,
+            trailing: ThemedSwitch(
+              value: _nodeOnline,
+              onChanged: (value) {
+                HapticFeedback.selectionClick();
+                safeSetState(() => _nodeOnline = value);
+              },
+            ),
           ),
         ),
-        SettingsTile(
-          icon: Icons.wifi_off_outlined,
-          title: context.l10n.iftttConfigNodeInactive,
-          subtitle: context.l10n.iftttConfigNodeInactiveSubtitle,
-          trailing: ThemedSwitch(
-            value: _nodeOffline,
-            onChanged: (value) {
-              HapticFeedback.selectionClick();
-              safeSetState(() => _nodeOffline = value);
-            },
+        _gatedTriggerTile(
+          type: IftttTriggerType.nodeOffline,
+          tile: SettingsTile(
+            icon: Icons.wifi_off_outlined,
+            title: context.l10n.iftttConfigNodeInactive,
+            subtitle: context.l10n.iftttConfigNodeInactiveSubtitle,
+            trailing: ThemedSwitch(
+              value: _nodeOffline,
+              onChanged: (value) {
+                HapticFeedback.selectionClick();
+                safeSetState(() => _nodeOffline = value);
+              },
+            ),
           ),
         ),
       ],
     );
   }
 
+  // Whether the given trigger is reachable under the active protocol
+  // filter. `unsupported` triggers (e.g. batteryLow on MeshCore) hide
+  // both their toggle tile and any dependent inline configuration
+  // (thresholds, geofence radius) so the stale state can't show.
+  bool _triggerVisible(IftttTriggerType type) {
+    if (_protocolFilter != TriggerProtocolFilter.meshcore) return true;
+    return type.supportOn(TriggerProtocol.meshcore) !=
+        ProtocolSupport.unsupported;
+  }
+
   Widget _buildTelemetryTriggers() {
     return Column(
       children: [
-        SettingsTile(
-          icon: Icons.battery_3_bar,
-          title: context.l10n.iftttConfigBatteryLow,
-          subtitle: context.l10n.iftttConfigBatteryLowSubtitle,
-          trailing: ThemedSwitch(
-            value: _batteryLow,
-            onChanged: (value) {
-              HapticFeedback.selectionClick();
-              safeSetState(() => _batteryLow = value);
-            },
+        if (_triggerVisible(IftttTriggerType.batteryLow)) ...[
+          _gatedTriggerTile(
+            type: IftttTriggerType.batteryLow,
+            tile: SettingsTile(
+              icon: Icons.battery_3_bar,
+              title: context.l10n.iftttConfigBatteryLow,
+              subtitle: context.l10n.iftttConfigBatteryLowSubtitle,
+              trailing: ThemedSwitch(
+                value: _batteryLow,
+                onChanged: (value) {
+                  HapticFeedback.selectionClick();
+                  safeSetState(() => _batteryLow = value);
+                },
+              ),
+            ),
           ),
-        ),
-        if (_batteryLow)
+        ],
+        if (_triggerVisible(IftttTriggerType.batteryLow) && _batteryLow)
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
             padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -790,19 +886,25 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
               ],
             ),
           ),
-        SettingsTile(
-          icon: Icons.device_thermostat,
-          title: context.l10n.iftttConfigTemperatureAlert,
-          subtitle: context.l10n.iftttConfigTemperatureAlertSubtitle,
-          trailing: ThemedSwitch(
-            value: _temperatureAlert,
-            onChanged: (value) {
-              HapticFeedback.selectionClick();
-              safeSetState(() => _temperatureAlert = value);
-            },
+        if (_triggerVisible(IftttTriggerType.temperatureAlert)) ...[
+          _gatedTriggerTile(
+            type: IftttTriggerType.temperatureAlert,
+            tile: SettingsTile(
+              icon: Icons.device_thermostat,
+              title: context.l10n.iftttConfigTemperatureAlert,
+              subtitle: context.l10n.iftttConfigTemperatureAlertSubtitle,
+              trailing: ThemedSwitch(
+                value: _temperatureAlert,
+                onChanged: (value) {
+                  HapticFeedback.selectionClick();
+                  safeSetState(() => _temperatureAlert = value);
+                },
+              ),
+            ),
           ),
-        ),
-        if (_temperatureAlert)
+        ],
+        if (_triggerVisible(IftttTriggerType.temperatureAlert) &&
+            _temperatureAlert)
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
             padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -904,19 +1006,22 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
   Widget _buildGeofenceSettings() {
     return Column(
       children: [
-        SettingsTile(
-          icon: Icons.radar,
-          title: context.l10n.iftttConfigPositionUpdates,
-          subtitle: context.l10n.iftttConfigPositionUpdatesSubtitle,
-          trailing: ThemedSwitch(
-            value: _positionUpdate,
-            onChanged: (value) {
-              HapticFeedback.selectionClick();
-              safeSetState(() => _positionUpdate = value);
-            },
+        _gatedTriggerTile(
+          type: IftttTriggerType.positionUpdate,
+          tile: SettingsTile(
+            icon: Icons.radar,
+            title: context.l10n.iftttConfigPositionUpdates,
+            subtitle: context.l10n.iftttConfigPositionUpdatesSubtitle,
+            trailing: ThemedSwitch(
+              value: _positionUpdate,
+              onChanged: (value) {
+                HapticFeedback.selectionClick();
+                safeSetState(() => _positionUpdate = value);
+              },
+            ),
           ),
         ),
-        if (_positionUpdate)
+        if (_triggerVisible(IftttTriggerType.positionUpdate) && _positionUpdate)
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
             padding: const EdgeInsets.all(AppTheme.spacing16),
