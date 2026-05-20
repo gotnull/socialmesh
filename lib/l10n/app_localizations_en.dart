@@ -2752,22 +2752,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get automationTriggerNodeFilterLabel => 'Filter by node (optional)';
 
   @override
-  String get automationTriggerProtocolLabel => 'Protocol scope';
-
-  @override
-  String get automationTriggerProtocolHelp =>
-      'Which protocol fires this trigger';
-
-  @override
-  String get automationTriggerProtocolAny => 'Any';
-
-  @override
-  String get automationTriggerProtocolMeshtastic => 'Meshtastic';
-
-  @override
-  String get automationTriggerProtocolMeshcore => 'MeshCore';
-
-  @override
   String get automationTriggerLimitedOnMeshcore => 'Limited on MeshCore';
 
   @override
@@ -30279,22 +30263,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get iftttConfigSectionMessageTriggers => 'MESSAGE TRIGGERS';
-
-  @override
-  String get iftttConfigSectionProtocolScope => 'PROTOCOL SCOPE';
-
-  @override
-  String get iftttConfigProtocolScopeHelp =>
-      'Which protocol\'s events fire IFTTT webhooks';
-
-  @override
-  String get iftttConfigProtocolAny => 'Any';
-
-  @override
-  String get iftttConfigProtocolMeshtastic => 'Meshtastic';
-
-  @override
-  String get iftttConfigProtocolMeshcore => 'MeshCore';
 
   @override
   String get iftttConfigSectionNodeTriggers => 'NODE STATUS TRIGGERS';

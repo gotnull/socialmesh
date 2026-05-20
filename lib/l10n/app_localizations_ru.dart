@@ -2779,22 +2779,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Фильтр по узлу (необязательно)';
 
   @override
-  String get automationTriggerProtocolLabel => 'Область протокола';
-
-  @override
-  String get automationTriggerProtocolHelp =>
-      'Какой протокол запускает этот триггер';
-
-  @override
-  String get automationTriggerProtocolAny => 'Любой';
-
-  @override
-  String get automationTriggerProtocolMeshtastic => 'Meshtastic';
-
-  @override
-  String get automationTriggerProtocolMeshcore => 'MeshCore';
-
-  @override
   String get automationTriggerLimitedOnMeshcore => 'Ограничено в MeshCore';
 
   @override
@@ -30641,22 +30625,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get iftttConfigSectionMessageTriggers => 'ТРИГГЕРЫ СООБЩЕНИЙ';
-
-  @override
-  String get iftttConfigSectionProtocolScope => 'ОБЛАСТЬ ПРОТОКОЛА';
-
-  @override
-  String get iftttConfigProtocolScopeHelp =>
-      'Какой протокол запускает веб-хуки IFTTT';
-
-  @override
-  String get iftttConfigProtocolAny => 'Любой';
-
-  @override
-  String get iftttConfigProtocolMeshtastic => 'Meshtastic';
-
-  @override
-  String get iftttConfigProtocolMeshcore => 'MeshCore';
 
   @override
   String get iftttConfigSectionNodeTriggers => 'ТРИГГЕРЫ СТАТУСА УЗЛА';

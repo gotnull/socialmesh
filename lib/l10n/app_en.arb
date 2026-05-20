@@ -3656,26 +3656,6 @@
     "@automationTriggerNodeFilterLabel": {
         "description": "Label for the optional node filter"
     },
-    "automationTriggerProtocolLabel": "Protocol scope",
-    "@automationTriggerProtocolLabel": {
-        "description": "Section label for the automation protocol-filter pill"
-    },
-    "automationTriggerProtocolHelp": "Which protocol fires this trigger",
-    "@automationTriggerProtocolHelp": {
-        "description": "Helper text under the automation protocol-filter pill"
-    },
-    "automationTriggerProtocolAny": "Any",
-    "@automationTriggerProtocolAny": {
-        "description": "Protocol-filter pill option: fire on any protocol"
-    },
-    "automationTriggerProtocolMeshtastic": "Meshtastic",
-    "@automationTriggerProtocolMeshtastic": {
-        "description": "Protocol-filter pill option: fire only on Meshtastic events"
-    },
-    "automationTriggerProtocolMeshcore": "MeshCore",
-    "@automationTriggerProtocolMeshcore": {
-        "description": "Protocol-filter pill option: fire only on MeshCore events"
-    },
     "automationTriggerLimitedOnMeshcore": "Limited on MeshCore",
     "@automationTriggerLimitedOnMeshcore": {
         "description": "Subtitle tag on trigger / action / widget picker rows that work partially on MeshCore (e.g. positionChanged fires only for contacts that broadcast GPS)"
@@ -40911,26 +40891,6 @@
     "iftttConfigSectionMessageTriggers": "MESSAGE TRIGGERS",
     "@iftttConfigSectionMessageTriggers": {
         "description": "UI text: ifttt config section message triggers"
-    },
-    "iftttConfigSectionProtocolScope": "PROTOCOL SCOPE",
-    "@iftttConfigSectionProtocolScope": {
-        "description": "Section header for the IFTTT protocol-filter pill"
-    },
-    "iftttConfigProtocolScopeHelp": "Which protocol's events fire IFTTT webhooks",
-    "@iftttConfigProtocolScopeHelp": {
-        "description": "Helper text under the IFTTT protocol-scope pill"
-    },
-    "iftttConfigProtocolAny": "Any",
-    "@iftttConfigProtocolAny": {
-        "description": "IFTTT protocol-scope pill option: fire for any protocol"
-    },
-    "iftttConfigProtocolMeshtastic": "Meshtastic",
-    "@iftttConfigProtocolMeshtastic": {
-        "description": "IFTTT protocol-scope pill option: Meshtastic only"
-    },
-    "iftttConfigProtocolMeshcore": "MeshCore",
-    "@iftttConfigProtocolMeshcore": {
-        "description": "IFTTT protocol-scope pill option: MeshCore only"
     },
     "iftttConfigSectionNodeTriggers": "NODE STATUS TRIGGERS",
     "@iftttConfigSectionNodeTriggers": {

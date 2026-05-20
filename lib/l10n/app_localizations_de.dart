@@ -2796,22 +2796,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get automationTriggerNodeFilterLabel => 'Nach Node filtern (optional)';
 
   @override
-  String get automationTriggerProtocolLabel => 'Protokoll-Bereich';
-
-  @override
-  String get automationTriggerProtocolHelp =>
-      'Welches Protokoll diesen Trigger auslöst';
-
-  @override
-  String get automationTriggerProtocolAny => 'Beliebig';
-
-  @override
-  String get automationTriggerProtocolMeshtastic => 'Meshtastic';
-
-  @override
-  String get automationTriggerProtocolMeshcore => 'MeshCore';
-
-  @override
   String get automationTriggerLimitedOnMeshcore => 'Eingeschränkt auf MeshCore';
 
   @override
@@ -30731,22 +30715,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get iftttConfigSectionMessageTriggers => 'NACHRICHTENAUSLÖSER';
-
-  @override
-  String get iftttConfigSectionProtocolScope => 'PROTOKOLL-BEREICH';
-
-  @override
-  String get iftttConfigProtocolScopeHelp =>
-      'Welches Protokoll löst IFTTT-Webhooks aus';
-
-  @override
-  String get iftttConfigProtocolAny => 'Beliebig';
-
-  @override
-  String get iftttConfigProtocolMeshtastic => 'Meshtastic';
-
-  @override
-  String get iftttConfigProtocolMeshcore => 'MeshCore';
 
   @override
   String get iftttConfigSectionNodeTriggers => 'KNOTENSTATUS-AUSLÖSER';

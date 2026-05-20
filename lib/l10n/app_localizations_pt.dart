@@ -2774,22 +2774,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get automationTriggerNodeFilterLabel => 'Filtrar por nó (opcional)';
 
   @override
-  String get automationTriggerProtocolLabel => 'Escopo do protocolo';
-
-  @override
-  String get automationTriggerProtocolHelp =>
-      'Qual protocolo dispara este gatilho';
-
-  @override
-  String get automationTriggerProtocolAny => 'Qualquer';
-
-  @override
-  String get automationTriggerProtocolMeshtastic => 'Meshtastic';
-
-  @override
-  String get automationTriggerProtocolMeshcore => 'MeshCore';
-
-  @override
   String get automationTriggerLimitedOnMeshcore => 'Limitado no MeshCore';
 
   @override
@@ -30624,22 +30608,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get iftttConfigSectionMessageTriggers => 'GATILHOS DE MENSAGEM';
-
-  @override
-  String get iftttConfigSectionProtocolScope => 'ESCOPO DO PROTOCOLO';
-
-  @override
-  String get iftttConfigProtocolScopeHelp =>
-      'Qual protocolo dispara os webhooks IFTTT';
-
-  @override
-  String get iftttConfigProtocolAny => 'Qualquer';
-
-  @override
-  String get iftttConfigProtocolMeshtastic => 'Meshtastic';
-
-  @override
-  String get iftttConfigProtocolMeshcore => 'MeshCore';
 
   @override
   String get iftttConfigSectionNodeTriggers => 'GATILHOS DE STATUS DO NÓ';

@@ -4896,36 +4896,6 @@ abstract class AppLocalizations {
   /// **'Filter by node (optional)'**
   String get automationTriggerNodeFilterLabel;
 
-  /// Section label for the automation protocol-filter pill
-  ///
-  /// In en, this message translates to:
-  /// **'Protocol scope'**
-  String get automationTriggerProtocolLabel;
-
-  /// Helper text under the automation protocol-filter pill
-  ///
-  /// In en, this message translates to:
-  /// **'Which protocol fires this trigger'**
-  String get automationTriggerProtocolHelp;
-
-  /// Protocol-filter pill option: fire on any protocol
-  ///
-  /// In en, this message translates to:
-  /// **'Any'**
-  String get automationTriggerProtocolAny;
-
-  /// Protocol-filter pill option: fire only on Meshtastic events
-  ///
-  /// In en, this message translates to:
-  /// **'Meshtastic'**
-  String get automationTriggerProtocolMeshtastic;
-
-  /// Protocol-filter pill option: fire only on MeshCore events
-  ///
-  /// In en, this message translates to:
-  /// **'MeshCore'**
-  String get automationTriggerProtocolMeshcore;
-
   /// Subtitle tag on trigger / action / widget picker rows that work partially on MeshCore (e.g. positionChanged fires only for contacts that broadcast GPS)
   ///
   /// In en, this message translates to:
@@ -53250,36 +53220,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'MESSAGE TRIGGERS'**
   String get iftttConfigSectionMessageTriggers;
-
-  /// Section header for the IFTTT protocol-filter pill
-  ///
-  /// In en, this message translates to:
-  /// **'PROTOCOL SCOPE'**
-  String get iftttConfigSectionProtocolScope;
-
-  /// Helper text under the IFTTT protocol-scope pill
-  ///
-  /// In en, this message translates to:
-  /// **'Which protocol\'s events fire IFTTT webhooks'**
-  String get iftttConfigProtocolScopeHelp;
-
-  /// IFTTT protocol-scope pill option: fire for any protocol
-  ///
-  /// In en, this message translates to:
-  /// **'Any'**
-  String get iftttConfigProtocolAny;
-
-  /// IFTTT protocol-scope pill option: Meshtastic only
-  ///
-  /// In en, this message translates to:
-  /// **'Meshtastic'**
-  String get iftttConfigProtocolMeshtastic;
-
-  /// IFTTT protocol-scope pill option: MeshCore only
-  ///
-  /// In en, this message translates to:
-  /// **'MeshCore'**
-  String get iftttConfigProtocolMeshcore;
 
   /// UI text: ifttt config section node triggers
   ///

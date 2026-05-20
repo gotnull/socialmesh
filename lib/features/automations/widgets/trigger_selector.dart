@@ -82,14 +82,6 @@ class _TriggerSelectorState extends State<TriggerSelector> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Protocol scope picker. Determines which protocol's event
-        // stream fires this trigger. Default is "Any" so legacy
-        // automations stay back-compat. Pinning to a single protocol
-        // is the only way to silence a trigger on the other side.
-        _buildProtocolFilterConfig(context),
-
-        const SizedBox(height: AppTheme.spacing8),
-
         // Trigger type selector
         BouncyTap(
           onTap: () => _showTriggerTypePicker(context),
@@ -461,72 +453,6 @@ class _TriggerSelectorState extends State<TriggerSelector> {
       newConfig.remove('detectedStateFilter');
     } else {
       newConfig['detectedStateFilter'] = value;
-    }
-    widget.onChanged(widget.trigger.copyWith(config: newConfig));
-  }
-
-  Widget _buildProtocolFilterConfig(BuildContext context) {
-    final current = widget.trigger.protocolFilter;
-
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-        border: Border.all(color: context.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.l10n.automationTriggerProtocolLabel,
-            style: const TextStyle(color: SemanticColors.disabled),
-          ),
-          const SizedBox(height: AppTheme.spacing4),
-          Text(
-            context.l10n.automationTriggerProtocolHelp,
-            style: TextStyle(color: SemanticColors.muted, fontSize: 12),
-          ),
-          const SizedBox(height: AppTheme.spacing12),
-          ChipSelector<TriggerProtocolFilter>(
-            value: current,
-            onChanged: _setProtocolFilter,
-            options: [
-              ChipOption(
-                value: TriggerProtocolFilter.any,
-                label: context.l10n.automationTriggerProtocolAny,
-                icon: Icons.all_inclusive,
-                color: AppTheme.primaryBlue,
-              ),
-              ChipOption(
-                value: TriggerProtocolFilter.meshtastic,
-                label: context.l10n.automationTriggerProtocolMeshtastic,
-                icon: Icons.router,
-                color: AccentColors.cyan,
-              ),
-              ChipOption(
-                value: TriggerProtocolFilter.meshcore,
-                label: context.l10n.automationTriggerProtocolMeshcore,
-                icon: Icons.hub,
-                color: AppTheme.primaryMagenta,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Writes `protocolFilter` to trigger config. Drops the key entirely
-  // when the user selects `any` so legacy JSON shape (no key) is
-  // restored - keeps the persisted config tidy and means automations
-  // created before this slice never grow a synthetic field.
-  void _setProtocolFilter(TriggerProtocolFilter value) {
-    final newConfig = Map<String, dynamic>.from(widget.trigger.config);
-    if (value == TriggerProtocolFilter.any) {
-      newConfig.remove('protocolFilter');
-    } else {
-      newConfig['protocolFilter'] = value.name;
     }
     widget.onChanged(widget.trigger.copyWith(config: newConfig));
   }

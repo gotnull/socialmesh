@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
-import '../../core/widgets/chip_selector.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/settings_primitives.dart';
 import '../../models/trigger_protocol.dart';
@@ -48,7 +47,6 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
 
   bool _enabled = false;
   WebhookMode _webhookMode = WebhookMode.ifttt;
-  TriggerProtocolFilter _protocolFilter = TriggerProtocolFilter.any;
   bool _messageReceived = true;
   bool _nodeOnline = true;
   bool _nodeOffline = true;
@@ -72,11 +70,12 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
     _loadMapStyle();
   }
 
-  // Resolve the picker's active filter from the connected protocol.
-  // Mirrors the helper in `automations_screen.dart`. Used by
-  // `_loadConfig` to seed `_protocolFilter` for users who have never
-  // tapped the protocol scope pill.
-  TriggerProtocolFilter _activeProtocolFilter() {
+  // Protocol filter is derived from the active shell, never user-chosen.
+  // Protocol selection lives at the root shell only - downstream
+  // screens read the active protocol and scope themselves accordingly.
+  // The IFTTT engine reads this filter to decide which protocol's
+  // event stream feeds each webhook trigger.
+  TriggerProtocolFilter get _protocolFilter {
     final active = ref.read(activeProtocolProvider);
     switch (active) {
       case ActiveProtocol.meshcore:
@@ -98,23 +97,9 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
     _geofenceLatController.text = config.geofenceLat?.toStringAsFixed(6) ?? '';
     _geofenceLonController.text = config.geofenceLon?.toStringAsFixed(6) ?? '';
 
-    // When the saved config is still on the default `any` filter, seed
-    // the picker from the active shell so a MeshCore user lands on
-    // MeshCore-filtered toggles without having to tap the protocol pill
-    // themselves. Once the user explicitly picks a filter via the pill
-    // (and saves), `config.protocolFilter` becomes non-`any` and wins.
-    final saved = config.protocolFilter;
-    final activeFilter = _activeProtocolFilter();
-    final seededFilter =
-        saved == TriggerProtocolFilter.any &&
-            activeFilter != TriggerProtocolFilter.any
-        ? activeFilter
-        : saved;
-
     safeSetState(() {
       _enabled = config.enabled;
       _webhookMode = config.webhookMode;
-      _protocolFilter = seededFilter;
       _messageReceived = config.messageReceived;
       _nodeOnline = config.nodeOnline;
       _nodeOffline = config.nodeOffline;
@@ -377,11 +362,6 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
                   _buildWebhookSection(),
                   const SizedBox(height: AppTheme.spacing16),
                   SettingsSectionHeader(
-                    title: context.l10n.iftttConfigSectionProtocolScope,
-                  ),
-                  _buildProtocolScopeSection(),
-                  const SizedBox(height: AppTheme.spacing16),
-                  SettingsSectionHeader(
                     title: context.l10n.iftttConfigSectionMessageTriggers,
                   ),
                   _buildMessageTriggers(),
@@ -601,54 +581,6 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildProtocolScopeSection() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.l10n.iftttConfigProtocolScopeHelp,
-            style: TextStyle(color: context.textSecondary, fontSize: 12),
-          ),
-          const SizedBox(height: AppTheme.spacing12),
-          ChipSelector<TriggerProtocolFilter>(
-            value: _protocolFilter,
-            onChanged: (value) {
-              HapticFeedback.selectionClick();
-              safeSetState(() => _protocolFilter = value);
-            },
-            options: [
-              ChipOption(
-                value: TriggerProtocolFilter.any,
-                label: context.l10n.iftttConfigProtocolAny,
-                icon: Icons.all_inclusive,
-                color: AppTheme.primaryBlue,
-              ),
-              ChipOption(
-                value: TriggerProtocolFilter.meshtastic,
-                label: context.l10n.iftttConfigProtocolMeshtastic,
-                icon: Icons.router,
-                color: AccentColors.cyan,
-              ),
-              ChipOption(
-                value: TriggerProtocolFilter.meshcore,
-                label: context.l10n.iftttConfigProtocolMeshcore,
-                icon: Icons.hub,
-                color: AppTheme.primaryMagenta,
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 
