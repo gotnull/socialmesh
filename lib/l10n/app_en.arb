@@ -3676,6 +3676,22 @@
     "@automationTriggerProtocolMeshcore": {
         "description": "Protocol-filter pill option: fire only on MeshCore events"
     },
+    "meshcoreContactSelectorTitle": "Select MeshCore contact",
+    "@meshcoreContactSelectorTitle": {
+        "description": "Title of the MeshCore contact picker bottom sheet"
+    },
+    "meshcoreContactSelectorSearchHint": "Search contacts",
+    "@meshcoreContactSelectorSearchHint": {
+        "description": "Search hint inside the MeshCore contact picker"
+    },
+    "meshcoreContactSelectorEmpty": "No MeshCore contacts yet",
+    "@meshcoreContactSelectorEmpty": {
+        "description": "Empty state when the MeshCore contacts list is empty"
+    },
+    "meshcoreContactSelectorNoMatches": "No matches",
+    "@meshcoreContactSelectorNoMatches": {
+        "description": "Empty state when no contacts match the search query"
+    },
     "automationTriggerNodeOffline": "Node becomes inactive",
     "@automationTriggerNodeOffline": {
         "description": "Display name for the nodeOffline trigger type"
@@ -5621,9 +5637,9 @@
     "@deviceConfigRoleClientMute": {
         "description": "Client Mute = a Meshtastic device role that receives but does not rebroadcast mesh packets."
     },
-    "deviceConfigRoleClientMuteDesc": "Same as client but will not transmit any messages from itself. Useful for monitoring.",
+    "deviceConfigRoleClientMuteDesc": "Does not forward packets from other nodes. Still sends and receives its own messages normally.",
     "@deviceConfigRoleClientMuteDesc": {
-        "description": "Description text in developer tools"
+        "description": "Client Mute = sends and receives its own traffic like a client, but does not repeat packets from other nodes."
     },
     "deviceConfigRoleLostAndFound": "Lost and Found",
     "@deviceConfigRoleLostAndFound": {
@@ -5637,9 +5653,9 @@
     "@deviceConfigRoleRouter": {
         "description": "Meshtastic device role: a dedicated packet forwarder that stays powered on."
     },
-    "deviceConfigRoleRouterDesc": "Routes mesh packets between nodes. Screen and Bluetooth disabled to conserve power.",
+    "deviceConfigRoleRouterDesc": "Infrastructure node for tower or mountain-top installation only. Not for rooftops or mobile nodes.",
     "@deviceConfigRoleRouterDesc": {
-        "description": "Router = a Meshtastic device role dedicated to relaying mesh packets. Disables screen and Bluetooth to save power."
+        "description": "Router = a Meshtastic device role intended only for high, well-sited infrastructure nodes that provide exceptional radio coverage."
     },
     "deviceConfigRoleRouterLate": "Router Late",
     "@deviceConfigRoleRouterLate": {
@@ -5669,9 +5685,9 @@
     "@deviceConfigRoleTakTracker": {
         "description": "TAK Tracker = combination of TAK (team situational awareness) and GPS tracker device roles."
     },
-    "deviceConfigRoleTakTrackerDesc": "Combination of TAK and Tracker modes.",
+    "deviceConfigRoleTakTrackerDesc": "Sends automatic TAK PLI broadcasts and reduces routine traffic.",
     "@deviceConfigRoleTakTrackerDesc": {
-        "description": "TAK = Team Awareness Kit (team SA). Tracker = GPS position broadcasting mode."
+        "description": "TAK Tracker = TAK (Team Awareness Kit) role with automatic PLI (Position Location Information) broadcasts and reduced routine traffic. Do not translate 'TAK' or 'PLI'."
     },
     "deviceConfigRoleTracker": "Tracker",
     "@deviceConfigRoleTracker": {

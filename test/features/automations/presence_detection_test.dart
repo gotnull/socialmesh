@@ -47,7 +47,7 @@ void main() {
     engine = AutomationEngine(
       repository: repo,
       iftttService: ifttt,
-      onSendMessage: (nodeNum, message) async {
+      onSendMessage: (nodeNum, message, _) async {
         sentMessages.add((nodeNum, message));
         return true;
       },

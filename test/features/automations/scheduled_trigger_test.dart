@@ -1074,7 +1074,7 @@ void main() {
         repository: mockRepository,
         iftttService: MockSchedulerIftttService(),
         scheduler: scheduler,
-        onSendMessage: (nodeNum, message) async {
+        onSendMessage: (nodeNum, message, _) async {
           sentMessages.add((nodeNum, message));
           return true;
         },

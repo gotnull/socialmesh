@@ -83,11 +83,11 @@ void main() {
     engine = AutomationEngine(
       repository: repo,
       iftttService: _NoopIftttService(),
-      onSendMessage: (_, _) async {
+      onSendMessage: (_, _, _) async {
         fired.add('msg');
         return true;
       },
-      onSendToChannel: (_, _) async => true,
+      onSendToChannel: (_, _, _) async => true,
     );
   });
 

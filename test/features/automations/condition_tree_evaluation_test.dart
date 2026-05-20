@@ -62,7 +62,7 @@ void main() {
       repository: repo,
       iftttService: ifttt,
       debugService: debugService,
-      onSendMessage: (nodeNum, message) async {
+      onSendMessage: (nodeNum, message, _) async {
         sentMessages.add((nodeNum, message));
         return true;
       },

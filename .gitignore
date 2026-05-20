@@ -4,6 +4,7 @@
 # Miscellaneous
 logs.txt
 logs_android.txt
+.translation-scratch/
 *.class
 *.log
 *.pyc

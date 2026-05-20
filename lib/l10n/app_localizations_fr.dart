@@ -251,10 +251,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'meshtastic, lora, gps (séparés par des virgules)';
 
   @override
-  String get adminProductsTagsLabel => 'Tags';
+  String get adminProductsTagsLabel => 'Étiquettes';
 
   @override
-  String get adminProductsTagsSection => 'Tags';
+  String get adminProductsTagsSection => 'Étiquettes';
 
   @override
   String get adminProductsTechSpecsSection => 'Spécifications techniques';
@@ -1719,7 +1719,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authMfaPhoneFallback => 'Téléphone';
 
   @override
-  String get authMfaPhoneNumberHint => '+1 234 567 890';
+  String get authMfaPhoneNumberHint => '+33 6 12 34 56 78';
 
   @override
   String get authMfaPhoneNumberLabel => 'Numéro de téléphone';
@@ -2827,6 +2827,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get automationTriggerProtocolMeshcore => 'MeshCore';
+
+  @override
+  String get meshcoreContactSelectorTitle => 'Sélectionner un contact MeshCore';
+
+  @override
+  String get meshcoreContactSelectorSearchHint => 'Rechercher des contacts';
+
+  @override
+  String get meshcoreContactSelectorEmpty =>
+      'Aucun contact MeshCore pour l\'instant';
+
+  @override
+  String get meshcoreContactSelectorNoMatches => 'Aucune correspondance';
 
   @override
   String get automationTriggerNodeOffline => 'Le nœud devient inactif';
@@ -3992,7 +4005,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get debugScreenMeshcoreDiagnosticsSubject =>
-      'SocialMesh MeshCore Diagnostics';
+      'Diagnostics SocialMesh MeshCore';
 
   @override
   String get networkProtocolMeshtastic => 'Meshtastic';
@@ -4556,7 +4569,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String deviceSheetBatteryPercent(String percent) {
-    return '$percent%';
+    return '$percent %';
   }
 
   @override
@@ -5180,55 +5193,58 @@ class AppLocalizationsFr extends AppLocalizations {
   String get feedbackReplySent => 'Réponse envoyée';
 
   @override
-  String get feedbackResponseToastAction => 'View';
+  String get feedbackResponseToastAction => 'Voir';
 
   @override
-  String get feedbackResponseToastDefault => 'New response to your bug report';
+  String get feedbackResponseToastDefault =>
+      'Nouvelle réponse à votre rapport de bug';
 
   @override
-  String get bugResponseSheetTitle => 'Bug Reply';
+  String get bugResponseSheetTitle => 'Réponse au bug';
 
   @override
   String bugResponseSheetReportedOn(String date) {
-    return 'Reported $date';
+    return 'Signalé le $date';
   }
 
   @override
-  String get bugResponseSheetReplyLabel => 'Reply';
+  String get bugResponseSheetReplyLabel => 'Répondre';
 
   @override
-  String get bugResponseSheetReplyHint => 'Type a reply…';
+  String get bugResponseSheetReplyHint => 'Saisissez une réponse…';
 
   @override
-  String get bugResponseSheetSend => 'Send reply';
+  String get bugResponseSheetSend => 'Envoyer la réponse';
 
   @override
-  String get bugResponseSheetReplySent => 'Reply sent';
+  String get bugResponseSheetReplySent => 'Réponse envoyée';
 
   @override
   String bugResponseSheetReplyFailed(String error) {
-    return 'Failed to send reply: $error';
+    return 'Échec de l\'envoi de la réponse : $error';
   }
 
   @override
-  String get bugResponseSheetViewFull => 'View full bug report';
+  String get bugResponseSheetViewFull => 'Voir le rapport complet';
 
   @override
-  String get bugResponseSheetDisableSnackbars => 'Don\'t show again';
+  String get bugResponseSheetDisableSnackbars => 'Ne plus afficher';
 
   @override
   String get bugResponseSheetSnackbarsDisabled =>
-      'In-app alerts off. Push notifications still fire.';
+      'Alertes intégrées désactivées. Les notifications push restent actives.';
 
   @override
-  String get settingsTileBugResponseAlertsTitle => 'Bug report reply alerts';
+  String get settingsTileBugResponseAlertsTitle =>
+      'Alertes de réponse aux rapports de bug';
 
   @override
   String get settingsTileBugResponseAlertsSubtitle =>
-      'In-app snackbar when the founder replies';
+      'Snackbar dans l\'app quand le fondateur répond';
 
   @override
-  String get bugResponseSheetLoadFailed => 'Couldn\'t load the bug report';
+  String get bugResponseSheetLoadFailed =>
+      'Impossible de charger le rapport de bug';
 
   @override
   String get feedbackReportBugAction => 'Signaler un bug';
@@ -5627,7 +5643,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String fileTransferTimeDate(String month, String day) {
-    return '$month/$day';
+    return '$day/$month';
   }
 
   @override
@@ -5823,7 +5839,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String fileTransferGalleryDurationSeconds(int count) {
-    return '${count}s';
+    return '$count s';
   }
 
   @override
@@ -6215,7 +6231,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String gpsStatusAccuracyValue(String meters) {
-    return '±${meters}m';
+    return '±$meters m';
   }
 
   @override
@@ -6229,7 +6245,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String gpsStatusAltitudeValue(String meters) {
-    return '${meters}m';
+    return '$meters m';
   }
 
   @override
@@ -7162,7 +7178,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String mapDistanceKilometers(String km) {
-    return '${km}km';
+    return '$km km';
   }
 
   @override
@@ -7177,12 +7193,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String mapDistanceKilometersRound(String km) {
-    return '${km}km';
+    return '$km km';
   }
 
   @override
   String mapDistanceMeters(String meters) {
-    return '${meters}m';
+    return '$meters m';
   }
 
   @override
@@ -7694,7 +7710,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meshHealthDontRemindAgain => 'Ne plus me rappeler';
 
   @override
-  String get meshHealthFloodBadge => 'FLOOD';
+  String get meshHealthFloodBadge => 'INONDATION';
 
   @override
   String get meshHealthHealthy => 'Mesh sain';
@@ -7802,14 +7818,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meshcoreAboutSocialMesh => 'À propos de SocialMesh';
 
   @override
-  String get meshcoreChatAppearanceSectionTitle => 'Chat appearance';
+  String get meshcoreChatAppearanceSectionTitle => 'Apparence du chat';
 
   @override
-  String get meshcoreChatTextScaleLabel => 'Chat text size';
+  String get meshcoreChatTextScaleLabel => 'Taille du texte du chat';
 
   @override
   String get meshcoreChatTextScaleHelper =>
-      'Scales every text widget inside MeshCore chats (bubbles, timestamps, dividers, input). Does not affect Meshtastic.';
+      'Met à l\'échelle tous les widgets texte des chats MeshCore (bulles, horodatages, séparateurs, saisie). N\'affecte pas Meshtastic.';
 
   @override
   String get meshcoreActions => 'Actions';
@@ -7827,614 +7843,625 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meshcoreAddContactButton => 'Ajouter un contact';
 
   @override
-  String get meshcoreAutoAddSectionTitle => 'Contact auto-add';
+  String get meshcoreAutoAddSectionTitle => 'Ajout automatique de contacts';
 
   @override
   String get meshcoreAutoAddSectionSubtitle =>
-      'Automatically import contacts the radio hears';
+      'Importer automatiquement les contacts détectés par la radio';
 
   @override
-  String get meshcoreAutoAddChat => 'Auto-add chat contacts';
+  String get meshcoreAutoAddChat =>
+      'Ajouter automatiquement les contacts de chat';
 
   @override
   String get meshcoreAutoAddChatSubtitle =>
-      'Add nearby chat-type peers to your contacts automatically';
+      'Ajoute automatiquement à vos contacts les pairs de chat à proximité';
 
   @override
-  String get meshcoreAutoAddRepeater => 'Auto-add repeaters';
+  String get meshcoreAutoAddRepeater => 'Ajouter automatiquement les répéteurs';
 
   @override
   String get meshcoreAutoAddRepeaterSubtitle =>
-      'Add nearby repeaters to your contacts automatically';
+      'Ajoute automatiquement les répéteurs à proximité à vos contacts';
 
   @override
-  String get meshcoreAutoAddRoomServer => 'Auto-add rooms';
+  String get meshcoreAutoAddRoomServer => 'Ajouter automatiquement les salons';
 
   @override
   String get meshcoreAutoAddRoomServerSubtitle =>
-      'Add nearby room servers to your contacts automatically';
+      'Ajoute automatiquement les serveurs de salons à proximité à vos contacts';
 
   @override
-  String get meshcoreAutoAddSensor => 'Auto-add sensors';
+  String get meshcoreAutoAddSensor => 'Ajouter automatiquement les capteurs';
 
   @override
   String get meshcoreAutoAddSensorSubtitle =>
-      'Add nearby sensors to your contacts automatically';
+      'Ajoute automatiquement les capteurs à proximité à vos contacts';
 
   @override
-  String get meshcoreAutoAddOverwriteOldest => 'Overwrite oldest when full';
+  String get meshcoreAutoAddOverwriteOldest =>
+      'Écraser le plus ancien si plein';
 
   @override
   String get meshcoreAutoAddOverwriteOldestSubtitle =>
-      'When the contact list is full, evict the oldest non-favourite to make room';
+      'Lorsque la liste de contacts est pleine, supprime le plus ancien non favori pour libérer de la place';
 
   @override
-  String get meshcoreAutoAddLoadFailed => 'Could not load auto-add config';
+  String get meshcoreAutoAddLoadFailed =>
+      'Impossible de charger la configuration d\'ajout automatique';
 
   @override
-  String get meshcoreAutoAddSaveFailed => 'Could not save auto-add config';
+  String get meshcoreAutoAddSaveFailed =>
+      'Impossible d\'enregistrer la configuration d\'ajout automatique';
 
   @override
-  String get meshcoreAutoRouteSectionTitle => 'Auto-route rotation';
+  String get meshcoreAutoRouteSectionTitle => 'Rotation auto des routes';
 
   @override
-  String get meshcoreAutoRouteEnabled => 'Enable auto-route rotation';
+  String get meshcoreAutoRouteEnabled => 'Activer la rotation auto des routes';
 
   @override
   String get meshcoreAutoRouteEnabledSubtitle =>
-      'When a message fails, retry on the next-best saved path before falling back to flood';
+      'Si un message échoue, réessayer sur le meilleur chemin sauvegardé suivant avant de basculer en inondation';
 
   @override
-  String get meshcoreAutoRouteMaxWeight => 'Max route weight';
+  String get meshcoreAutoRouteMaxWeight => 'Poids max de route';
 
   @override
   String get meshcoreAutoRouteMaxWeightSubtitle =>
-      'Upper limit on how confident the app can become about a single path';
+      'Limite supérieure de confiance de l\'app sur un seul chemin';
 
   @override
-  String get meshcoreAutoRouteInitialWeight => 'Initial route weight';
+  String get meshcoreAutoRouteInitialWeight => 'Poids initial de route';
 
   @override
   String get meshcoreAutoRouteInitialWeightSubtitle =>
-      'Starting weight for newly-discovered paths';
+      'Poids de départ pour les chemins nouvellement découverts';
 
   @override
-  String get meshcoreAutoRouteSuccessIncrement => 'Success bonus';
+  String get meshcoreAutoRouteSuccessIncrement => 'Bonus de réussite';
 
   @override
   String get meshcoreAutoRouteSuccessIncrementSubtitle =>
-      'How much to reward a path that delivered successfully';
+      'Récompense attribuée à un chemin ayant livré avec succès';
 
   @override
-  String get meshcoreAutoRouteFailureDecrement => 'Failure penalty';
+  String get meshcoreAutoRouteFailureDecrement => 'Pénalité d\'échec';
 
   @override
   String get meshcoreAutoRouteFailureDecrementSubtitle =>
-      'How much to penalize a path that failed; reaches zero = evicted';
+      'Niveau de pénalité appliqué à un chemin en échec ; atteint zéro = évincé';
 
   @override
-  String get meshcoreAutoRouteMaxRetries => 'Max attempts per message';
+  String get meshcoreAutoRouteMaxRetries => 'Tentatives max par message';
 
   @override
   String get meshcoreAutoRouteMaxRetriesSubtitle =>
-      'Total attempts including the initial send; the last attempt falls back to flood';
+      'Nombre total d\'essais incluant l\'envoi initial ; la dernière tentative bascule en inondation';
 
   @override
-  String get meshcoreAutoRouteRetryTimeoutSeconds => 'Retry timeout (seconds)';
+  String get meshcoreAutoRouteRetryTimeoutSeconds =>
+      'Délai avant nouvelle tentative (secondes)';
 
   @override
   String get meshcoreAutoRouteRetryTimeoutSecondsSubtitle =>
-      'How long to wait for a delivery confirmation before retrying on another path';
+      'Durée d\'attente d\'une confirmation de livraison avant de réessayer sur un autre chemin';
 
   @override
-  String get meshcoreRepeaterAdminLoginTitle => 'Repeater admin login';
+  String get meshcoreRepeaterAdminLoginTitle => 'Connexion admin au répéteur';
 
   @override
   String meshcoreRepeaterAdminLoginSubtitle(String name) {
-    return 'Authenticate against $name to unlock admin tools';
+    return 'Authentifiez-vous sur $name pour déverrouiller les outils admin';
   }
 
   @override
-  String get meshcoreRepeaterAdminLoginPasswordLabel => 'Admin password';
+  String get meshcoreRepeaterAdminLoginPasswordLabel => 'Mot de passe admin';
 
   @override
-  String get meshcoreRepeaterAdminLoginAction => 'Login';
+  String get meshcoreRepeaterAdminLoginAction => 'Connexion';
 
   @override
-  String get meshcoreRepeaterAdminLoginSuccess => 'Logged in as admin';
+  String get meshcoreRepeaterAdminLoginSuccess => 'Connecté en tant qu\'admin';
 
   @override
-  String get meshcoreRepeaterAdminLoginSuccessGuest => 'Logged in as guest';
+  String get meshcoreRepeaterAdminLoginSuccessGuest =>
+      'Connecté en tant qu\'invité';
 
   @override
   String get meshcoreRepeaterAdminLoginFailed =>
-      'Login failed; check the password and try again';
+      'Échec de connexion ; vérifiez le mot de passe et réessayez';
 
   @override
   String get meshcoreRepeaterAdminLoginTimeout =>
-      'Login timed out; the repeater did not respond';
+      'Délai de connexion dépassé ; le répéteur n\'a pas répondu';
 
   @override
   String get meshcoreRepeaterAdminLoginEmptyPassword =>
-      'Enter the admin password to continue';
+      'Saisissez le mot de passe admin pour continuer';
 
   @override
   String meshcoreRepeaterAdminHubTitle(String name) {
-    return '$name admin';
+    return 'Admin $name';
   }
 
   @override
-  String get meshcoreRepeaterAdminHubToolsHeader => 'Admin tools';
+  String get meshcoreRepeaterAdminHubToolsHeader => 'Outils admin';
 
   @override
-  String get meshcoreRepeaterAdminHubStatusTile => 'Status';
+  String get meshcoreRepeaterAdminHubStatusTile => 'Statut';
 
   @override
   String get meshcoreRepeaterAdminHubStatusTileSubtitle =>
-      'Battery, uptime, radio + packet counters';
+      'Batterie, uptime, compteurs radio et paquets';
 
   @override
   String get meshcoreRepeaterAdminHubCliTile => 'CLI';
 
   @override
   String get meshcoreRepeaterAdminHubCliTileSubtitle =>
-      'Send admin commands to the repeater';
+      'Envoyer des commandes admin au répéteur';
 
   @override
   String meshcoreRepeaterCliTitle(String name) {
-    return '$name CLI';
+    return 'CLI $name';
   }
 
   @override
-  String get meshcoreRepeaterCliEmptyTitle => 'No commands yet';
+  String get meshcoreRepeaterCliEmptyTitle => 'Aucune commande pour l\'instant';
 
   @override
   String get meshcoreRepeaterCliEmptyDescription =>
-      'Type a command below or pick a quick command to get started.';
+      'Saisissez une commande ci-dessous ou choisissez une commande rapide pour commencer.';
 
   @override
-  String get meshcoreRepeaterCliPlaceholder => 'Enter a command';
+  String get meshcoreRepeaterCliPlaceholder => 'Saisissez une commande';
 
   @override
-  String get meshcoreRepeaterCliQuickAdvertise => 'Advertise';
+  String get meshcoreRepeaterCliQuickAdvertise => 'Annoncer';
 
   @override
-  String get meshcoreRepeaterCliQuickGetName => 'Get name';
+  String get meshcoreRepeaterCliQuickGetName => 'Obtenir le nom';
 
   @override
-  String get meshcoreRepeaterCliQuickGetRadio => 'Get radio';
+  String get meshcoreRepeaterCliQuickGetRadio => 'Obtenir la radio';
 
   @override
-  String get meshcoreRepeaterCliQuickGetTx => 'Get TX';
+  String get meshcoreRepeaterCliQuickGetTx => 'Obtenir la TX';
 
   @override
-  String get meshcoreRepeaterCliQuickDiscovery => 'Discovery';
+  String get meshcoreRepeaterCliQuickDiscovery => 'Découverte';
 
   @override
-  String get meshcoreRepeaterCliQuickNeighbors => 'Neighbours';
+  String get meshcoreRepeaterCliQuickNeighbors => 'Voisins';
 
   @override
   String get meshcoreRepeaterCliQuickVersion => 'Version';
 
   @override
-  String get meshcoreRepeaterCliQuickClock => 'Clock';
+  String get meshcoreRepeaterCliQuickClock => 'Horloge';
 
   @override
-  String get meshcoreRepeaterCliQuickClockSync => 'Clock sync';
+  String get meshcoreRepeaterCliQuickClockSync => 'Synchroniser l\'horloge';
 
   @override
-  String get meshcoreRepeaterCliClearHistory => 'Clear history';
+  String get meshcoreRepeaterCliClearHistory => 'Effacer l\'historique';
 
   @override
-  String get meshcoreRepeaterCliPreviousCommand => 'Previous command';
+  String get meshcoreRepeaterCliPreviousCommand => 'Commande précédente';
 
   @override
-  String get meshcoreRepeaterCliNextCommand => 'Next command';
+  String get meshcoreRepeaterCliNextCommand => 'Commande suivante';
 
   @override
-  String get meshcoreRepeaterCliHelpTitle => 'Commands';
+  String get meshcoreRepeaterCliHelpTitle => 'Commandes';
 
   @override
-  String get meshcoreRepeaterCliHelpGeneralHeader => 'General';
+  String get meshcoreRepeaterCliHelpGeneralHeader => 'Général';
 
   @override
-  String get meshcoreRepeaterCliHelpSettingsHeader => 'Settings';
+  String get meshcoreRepeaterCliHelpSettingsHeader => 'Paramètres';
 
   @override
-  String get meshcoreRepeaterCliHelpNeighborsHeader => 'Neighbours';
+  String get meshcoreRepeaterCliHelpNeighborsHeader => 'Voisins';
 
   @override
-  String get meshcoreRepeaterCliHelpBridgeHeader => 'Bridge';
+  String get meshcoreRepeaterCliHelpBridgeHeader => 'Pont';
 
   @override
-  String get meshcoreRepeaterCliHelpLoggingHeader => 'Logging';
+  String get meshcoreRepeaterCliHelpLoggingHeader => 'Journalisation';
 
   @override
-  String get meshcoreRepeaterCliHelpRegionHeader => 'Region';
+  String get meshcoreRepeaterCliHelpRegionHeader => 'Région';
 
   @override
   String get meshcoreRepeaterCliHelpGpsHeader => 'GPS';
 
   @override
   String get meshcoreRepeaterCliHelpPassword =>
-      'Change the admin password (password <new-password>).';
+      'Changer le mot de passe admin (password <nouveau-mot-de-passe>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetAllowReadOnly =>
-      'Toggle guest read-only access (set allow.read.only <on|off>).';
+      'Activer l\'accès invité en lecture seule (set allow.read.only <on|off>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetFloodMax =>
-      'Set the flood max-hop ceiling (set flood.max <hops>).';
+      'Définir le plafond max de sauts en inondation (set flood.max <sauts>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetIntThresh =>
-      'Set the interference threshold in dB (set int.thresh <db>).';
+      'Définir le seuil d\'interférence en dB (set int.thresh <db>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetAgcResetInterval =>
-      'Set the AGC reset interval in seconds (set agc.reset.interval <s>).';
+      'Définir l\'intervalle de remise à zéro de l\'AGC en secondes (set agc.reset.interval <s>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetMultiAcks =>
-      'Toggle multi-ack mode (set multi.acks <0|1>).';
+      'Activer le mode multi-ack (set multi.acks <0|1>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetFloodAdvertInterval =>
-      'Set flood-advert interval in hours (set flood.advert.interval <h>).';
+      'Définir l\'intervalle d\'annonce d\'inondation en heures (set flood.advert.interval <h>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetGuestPassword =>
-      'Change the guest password (set guest.password <new>).';
+      'Changer le mot de passe invité (set guest.password <nouveau>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetLat =>
-      'Set latitude in decimal degrees (set lat <lat>).';
+      'Définir la latitude en degrés décimaux (set lat <lat>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetLon =>
-      'Set longitude in decimal degrees (set lon <lon>).';
+      'Définir la longitude en degrés décimaux (set lon <lon>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetRxDelay =>
-      'Set receive-delay base (set rxdelay <base>).';
+      'Définir la base de délai de réception (set rxdelay <base>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetTxDelay =>
-      'Set transmit-delay factor (set txdelay <factor>).';
+      'Définir le facteur de délai d\'émission (set txdelay <facteur>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetDirectTxDelay =>
-      'Set direct-mode transmit-delay factor (set direct.txdelay <factor>).';
+      'Définir le facteur de délai d\'émission en mode direct (set direct.txdelay <facteur>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetBridgeEnabled =>
-      'Toggle the serial bridge (set bridge.enabled <on|off>).';
+      'Activer le pont série (set bridge.enabled <on|off>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetBridgeDelay =>
-      'Set bridge tx delay in ms 0-10000 (set bridge.delay <ms>).';
+      'Définir le délai d\'émission du pont en ms 0-10000 (set bridge.delay <ms>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetBridgeSource =>
-      'Set the bridge source channel (set bridge.source <rx|tx>).';
+      'Définir le canal source du pont (set bridge.source <rx|tx>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetBridgeBaud =>
-      'Set the bridge baud rate (set bridge.baud <speed>).';
+      'Définir le débit en bauds du pont (set bridge.baud <débit>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetBridgeSecret =>
-      'Set the bridge shared secret (set bridge.secret <secret>).';
+      'Définir le secret partagé du pont (set bridge.secret <secret>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetAdcMultiplier =>
-      'Set the ADC multiplier factor (set adc.multiplier <factor>).';
+      'Définir le facteur multiplicateur ADC (set adc.multiplier <facteur>).';
 
   @override
   String get meshcoreRepeaterCliHelpTempRadio =>
-      'Temporarily run a radio config for N minutes (tempradio <freq>,<bw>,<sf>,<cr>,<minutes>).';
+      'Exécuter temporairement une configuration radio pendant N minutes (tempradio <freq>,<bw>,<sf>,<cr>,<minutes>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetPerm =>
-      'Set permissions for a peer (setperm <pubkey-hex> <permissions>).';
+      'Définir les permissions d\'un pair (setperm <clé-publique-hex> <permissions>).';
 
   @override
   String get meshcoreRepeaterCliHelpGetBridgeType =>
-      'Show the configured bridge type (get bridge.type).';
+      'Afficher le type de pont configuré (get bridge.type).';
 
   @override
   String get meshcoreRepeaterCliHelpLogStart =>
-      'Start the on-device log (log start).';
+      'Démarrer le journal embarqué (log start).';
 
   @override
   String get meshcoreRepeaterCliHelpLogStop =>
-      'Stop the on-device log (log stop).';
+      'Arrêter le journal embarqué (log stop).';
 
   @override
   String get meshcoreRepeaterCliHelpLogErase =>
-      'Erase the on-device log (log erase).';
+      'Effacer le journal embarqué (log erase).';
 
   @override
-  String get meshcoreRepeaterCliHelpRegion => 'Show the current region.';
+  String get meshcoreRepeaterCliHelpRegion => 'Afficher la région actuelle.';
 
   @override
   String get meshcoreRepeaterCliHelpRegionLoad =>
-      'Reload the region table from flash (region load).';
+      'Recharger la table des régions depuis la flash (region load).';
 
   @override
   String get meshcoreRepeaterCliHelpRegionGet =>
-      'Show one region or all (region get <* | name-prefix>).';
+      'Afficher une région ou toutes (region get <* | préfixe-nom>).';
 
   @override
   String get meshcoreRepeaterCliHelpRegionPut =>
-      'Add/replace a region (region put <name> <* | parent-name-prefix>).';
+      'Ajouter/remplacer une région (region put <nom> <* | préfixe-nom-parent>).';
 
   @override
   String get meshcoreRepeaterCliHelpRegionRemove =>
-      'Remove a region (region remove <name>).';
+      'Supprimer une région (region remove <nom>).';
 
   @override
   String get meshcoreRepeaterCliHelpRegionAllowf =>
-      'Allow a frequency range (region allowf <* | name-prefix>).';
+      'Autoriser une plage de fréquences (region allowf <* | préfixe-nom>).';
 
   @override
   String get meshcoreRepeaterCliHelpRegionDenyf =>
-      'Deny a frequency range (region denyf <* | name-prefix>).';
+      'Interdire une plage de fréquences (region denyf <* | préfixe-nom>).';
 
   @override
-  String get meshcoreRepeaterCliHelpRegionHome => 'Show the home region.';
+  String get meshcoreRepeaterCliHelpRegionHome =>
+      'Afficher la région d\'origine.';
 
   @override
   String get meshcoreRepeaterCliHelpRegionHomeSet =>
-      'Set the home region (region home <* | name-prefix>).';
+      'Définir la région d\'origine (region home <* | préfixe-nom>).';
 
   @override
   String get meshcoreRepeaterCliHelpRegionSave =>
-      'Save the region table (region save).';
+      'Enregistrer la table des régions (region save).';
 
   @override
-  String get meshcoreRepeaterCliHelpGps => 'Show the GPS state.';
+  String get meshcoreRepeaterCliHelpGps => 'Afficher l\'état du GPS.';
 
   @override
   String get meshcoreRepeaterCliHelpGpsOnOff =>
-      'Toggle the GPS module (gps <on|off>).';
+      'Activer/désactiver le module GPS (gps <on|off>).';
 
   @override
   String get meshcoreRepeaterCliHelpGpsSync =>
-      'Sync the on-device clock from GPS (gps sync).';
+      'Synchroniser l\'horloge embarquée depuis le GPS (gps sync).';
 
   @override
   String get meshcoreRepeaterCliHelpGpsSetLoc =>
-      'Set lat/lon from the current GPS fix (gps setloc).';
+      'Définir lat/lon à partir de la position GPS actuelle (gps setloc).';
 
   @override
-  String get meshcoreRepeaterCliHelpGpsAdvert => 'Show the GPS advert policy.';
+  String get meshcoreRepeaterCliHelpGpsAdvert =>
+      'Afficher la politique d\'annonce GPS.';
 
   @override
   String get meshcoreRepeaterCliHelpGpsAdvertSet =>
-      'Set the GPS advert policy (gps advert <none|share|prefs>).';
+      'Définir la politique d\'annonce GPS (gps advert <none|share|prefs>).';
 
   @override
   String get meshcoreRepeaterCliHelpAdvert =>
-      'Broadcast our advertisement once.';
+      'Diffuser notre annonce une fois.';
 
   @override
-  String get meshcoreRepeaterCliHelpReboot => 'Restart the repeater.';
+  String get meshcoreRepeaterCliHelpReboot => 'Redémarrer le répéteur.';
 
   @override
-  String get meshcoreRepeaterCliHelpClock => 'Show the device clock (UTC).';
+  String get meshcoreRepeaterCliHelpClock =>
+      'Afficher l\'horloge de l\'appareil (UTC).';
 
   @override
-  String get meshcoreRepeaterCliHelpVersion => 'Show the firmware version.';
+  String get meshcoreRepeaterCliHelpVersion =>
+      'Afficher la version du firmware.';
 
   @override
   String get meshcoreRepeaterCliHelpClearStats =>
-      'Reset packet + airtime counters.';
+      'Réinitialiser les compteurs de paquets et de temps d\'antenne.';
 
   @override
   String get meshcoreRepeaterCliHelpSetName =>
-      'Rename the repeater (set name <name>).';
+      'Renommer le répéteur (set name <nom>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetTx =>
-      'Set TX power in dBm (set tx <power>).';
+      'Définir la puissance TX en dBm (set tx <puissance>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetRadio =>
-      'Set radio params (set radio <freq>,<bw>,<sf>,<cr>).';
+      'Définir les paramètres radio (set radio <freq>,<bw>,<sf>,<cr>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetRepeat =>
-      'Toggle repeat on/off (set repeat <on|off>).';
+      'Activer/désactiver la répétition (set repeat <on|off>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetAf =>
-      'Set the air-time factor (set af <factor>).';
+      'Définir le facteur de temps d\'antenne (set af <facteur>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetAdvertInterval =>
-      'Set advert interval in minutes (set advert.interval <minutes>).';
+      'Définir l\'intervalle d\'annonce en minutes (set advert.interval <minutes>).';
 
   @override
   String get meshcoreRepeaterCliHelpNeighbors =>
-      'List neighbours seen by the repeater.';
+      'Lister les voisins vus par le répéteur.';
 
   @override
   String get meshcoreRepeaterCliHelpNeighborRemove =>
-      'Forget a neighbour by prefix (neighbor.remove <prefix>).';
+      'Oublier un voisin par préfixe (neighbor.remove <préfixe>).';
 
   @override
   String meshcoreRepeaterCliTimeoutSnackbar(int seconds) {
-    return 'No reply within ${seconds}s; the repeater may be offline or the admin session may have expired.';
+    return 'Aucune réponse dans les $seconds s ; le répéteur est peut-être hors ligne ou la session admin a expiré.';
   }
 
   @override
   String meshcoreRepeaterCliRateLimitedSnackbar(int seconds) {
-    return 'Rate limit reached; try again in ${seconds}s.';
+    return 'Limite de débit atteinte ; réessayez dans $seconds s.';
   }
 
   @override
   String meshcoreRepeaterCliErrorSnackbar(String error) {
-    return 'Could not send command: $error.';
+    return 'Impossible d\'envoyer la commande : $error.';
   }
 
   @override
-  String get meshcoreRepeaterAdminHubSettingsTile => 'Settings';
+  String get meshcoreRepeaterAdminHubSettingsTile => 'Paramètres';
 
   @override
   String get meshcoreRepeaterAdminHubSettingsTileSubtitle =>
-      'Repeater identity, behaviour, and advertisement';
+      'Identité, comportement et annonce du répéteur';
 
   @override
-  String get meshcoreRepeaterAdminHubBinaryRpcTile => 'Binary RPC';
+  String get meshcoreRepeaterAdminHubBinaryRpcTile => 'RPC binaire';
 
   @override
   String get meshcoreRepeaterAdminHubBinaryRpcTileSubtitle =>
-      'Status, keep-alive, and access-list pulls';
+      'Statut, keep-alive et lectures de listes d\'accès';
 
   @override
-  String get meshcoreRepeaterBinaryRpcTitle => 'Binary RPC';
+  String get meshcoreRepeaterBinaryRpcTitle => 'RPC binaire';
 
   @override
   String get meshcoreRepeaterBinaryRpcSubtitle =>
-      'On-demand pull operations over the admin binary-request envelope. Responses are shown as raw hex.';
+      'Opérations de récupération à la demande via l\'enveloppe de requête binaire admin. Les réponses sont affichées en hex brut.';
 
   @override
-  String get meshcoreRepeaterBinaryRpcOperationsSection => 'Operations';
+  String get meshcoreRepeaterBinaryRpcOperationsSection => 'Opérations';
 
   @override
-  String get meshcoreRepeaterBinaryRpcStatus => 'Pull status';
+  String get meshcoreRepeaterBinaryRpcStatus => 'Récupérer le statut';
 
   @override
-  String get meshcoreRepeaterBinaryRpcKeepAlive => 'Keep session alive';
+  String get meshcoreRepeaterBinaryRpcKeepAlive =>
+      'Maintenir la session active';
 
   @override
-  String get meshcoreRepeaterBinaryRpcAccessList => 'Read access list';
+  String get meshcoreRepeaterBinaryRpcAccessList => 'Lire la liste d\'accès';
 
   @override
-  String get meshcoreRepeaterBinaryRpcSending => 'Sending...';
+  String get meshcoreRepeaterBinaryRpcSending => 'Envoi...';
 
   @override
-  String get meshcoreRepeaterBinaryRpcDone => 'Response received.';
+  String get meshcoreRepeaterBinaryRpcDone => 'Réponse reçue.';
 
   @override
   String get meshcoreRepeaterBinaryRpcFailed =>
-      'No response from repeater (timeout or transport drop).';
+      'Aucune réponse du répéteur (délai dépassé ou transport interrompu).';
 
   @override
   String get meshcoreRepeaterBinaryRpcNoSession =>
-      'No active MeshCore session. Connect to the radio first.';
+      'Aucune session MeshCore active. Connectez-vous d\'abord à la radio.';
 
   @override
-  String get meshcoreRepeaterBinaryRpcLastResultSection => 'Last response';
+  String get meshcoreRepeaterBinaryRpcLastResultSection => 'Dernière réponse';
 
   @override
-  String get meshcoreRepeaterBinaryRpcEmptyResponse => '(no bytes)';
+  String get meshcoreRepeaterBinaryRpcEmptyResponse => '(aucun octet)';
 
   @override
-  String get meshcoreRepeaterBinaryRpcCopyResult => 'Copy hex';
+  String get meshcoreRepeaterBinaryRpcCopyResult => 'Copier l\'hex';
 
   @override
-  String get meshcoreRepeaterBinaryRpcCopied => 'Response hex copied.';
+  String get meshcoreRepeaterBinaryRpcCopied => 'Hex de la réponse copié.';
 
   @override
   String meshcoreRepeaterBinaryRpcResponseLength(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count bytes',
-      one: '1 byte',
+      other: '$count octets',
+      one: '1 octet',
     );
     return '$_temp0';
   }
 
   @override
   String meshcoreRepeaterAdminSettingsTitle(String name) {
-    return '$name settings';
+    return 'Paramètres de $name';
   }
 
   @override
-  String get meshcoreRepeaterAdminSettingsRefreshAll => 'Refresh all';
+  String get meshcoreRepeaterAdminSettingsRefreshAll => 'Tout actualiser';
 
   @override
   String get meshcoreRepeaterAdminSettingsRefreshFieldTooltip =>
-      'Refresh from radio';
+      'Actualiser depuis la radio';
 
   @override
-  String get meshcoreRepeaterAdminSettingsSaveButton => 'Save changes';
+  String get meshcoreRepeaterAdminSettingsSaveButton =>
+      'Enregistrer les modifications';
 
   @override
-  String get meshcoreRepeaterAdminSettingsSectionIdentity => 'Identity';
+  String get meshcoreRepeaterAdminSettingsSectionIdentity => 'Identité';
 
   @override
   String get meshcoreRepeaterAdminSettingsSectionBehavior =>
-      'Repeater behaviour';
+      'Comportement du répéteur';
 
   @override
-  String get meshcoreRepeaterAdminSettingsSectionAdvertisement =>
-      'Advertisement';
+  String get meshcoreRepeaterAdminSettingsSectionAdvertisement => 'Annonce';
 
   @override
-  String get meshcoreRepeaterAdminSettingsNameLabel => 'Repeater name';
+  String get meshcoreRepeaterAdminSettingsNameLabel => 'Nom du répéteur';
 
   @override
   String get meshcoreRepeaterAdminSettingsNameHelper =>
-      'Up to 32 characters. Changing this triggers a fresh advert.';
+      'Jusqu\'à 32 caractères. Toute modification déclenche une nouvelle annonce.';
 
   @override
-  String get meshcoreRepeaterAdminSettingsRepeatTile => 'Repeat';
+  String get meshcoreRepeaterAdminSettingsRepeatTile => 'Répétition';
 
   @override
   String get meshcoreRepeaterAdminSettingsRepeatTileSubtitle =>
-      'Forward inbound packets to other nodes';
+      'Transmet les paquets entrants à d\'autres nœuds';
 
   @override
   String get meshcoreRepeaterAdminSettingsAllowReadOnlyTile =>
-      'Allow read-only access';
+      'Autoriser l\'accès en lecture seule';
 
   @override
   String get meshcoreRepeaterAdminSettingsAllowReadOnlyTileSubtitle =>
-      'Guests can request status without admin login';
+      'Les invités peuvent demander le statut sans connexion admin';
 
   @override
   String get meshcoreRepeaterAdminSettingsAdvertIntervalLabel =>
-      'Advert interval (minutes)';
+      'Intervalle d\'annonce (minutes)';
 
   @override
   String get meshcoreRepeaterAdminSettingsAdvertIntervalHelper =>
-      '0 disables periodic adverts. Range: 0-1440.';
+      '0 désactive les annonces périodiques. Plage : 0-1440.';
 
   @override
   String get meshcoreRepeaterAdminSettingsFloodAdvertIntervalLabel =>
-      'Flood-advert interval (hours)';
+      'Intervalle d\'annonce d\'inondation (heures)';
 
   @override
   String get meshcoreRepeaterAdminSettingsFloodAdvertIntervalHelper =>
-      '0 disables flood adverts. Range: 0-168.';
+      '0 désactive les annonces d\'inondation. Plage : 0-168.';
 
   @override
   String meshcoreRepeaterAdminSettingsSavedSnackbar(int saved, int total) {
-    return 'Saved $saved of $total settings.';
+    return '$saved paramètres sur $total enregistrés.';
   }
 
   @override
   String meshcoreRepeaterAdminSettingsRefreshedSnackbar(int count) {
-    return 'Refreshed $count settings from the radio.';
+    return '$count paramètres actualisés depuis la radio.';
   }
 
   @override
   String meshcoreRepeaterAdminSettingsSaveFailedSnackbar(String error) {
-    return 'Could not save settings: $error.';
+    return 'Impossible d\'enregistrer les paramètres : $error.';
   }
 
   @override
   String get meshcoreRepeaterAdminSettingsInvalidNumber =>
-      'Enter a whole number.';
+      'Saisissez un nombre entier.';
 
   @override
   String meshcoreRepeaterAdminSettingsOutOfRange(int min, int max) {
-    return 'Value must be between $min and $max.';
+    return 'La valeur doit être comprise entre $min et $max.';
   }
 
   @override
@@ -8442,7 +8469,7 @@ class AppLocalizationsFr extends AppLocalizations {
     double min,
     double max,
   ) {
-    return 'Value must be between $min and $max.';
+    return 'La valeur doit être comprise entre $min et $max.';
   }
 
   @override
@@ -8450,175 +8477,176 @@ class AppLocalizationsFr extends AppLocalizations {
     int saved,
     int total,
   ) {
-    return 'Saved $saved of $total settings. Some commands timed out - the admin session may have expired.';
+    return '$saved paramètres sur $total enregistrés. Certaines commandes ont expiré ; la session admin est peut-être terminée.';
   }
 
   @override
   String get meshcoreRepeaterAdminSettingsSectionRadio => 'Radio';
 
   @override
-  String get meshcoreRepeaterAdminSettingsSectionLocation => 'Location';
+  String get meshcoreRepeaterAdminSettingsSectionLocation => 'Localisation';
 
   @override
-  String get meshcoreRepeaterAdminSettingsFrequencyLabel => 'Frequency (MHz)';
+  String get meshcoreRepeaterAdminSettingsFrequencyLabel => 'Fréquence (MHz)';
 
   @override
   String get meshcoreRepeaterAdminSettingsFrequencyHelper =>
-      'Range: 300 to 2500 MHz. Match the local LoRa region preset.';
+      'Plage : 300 à 2500 MHz. Faites correspondre au préréglage régional LoRa local.';
 
   @override
-  String get meshcoreRepeaterAdminSettingsBandwidthLabel => 'Bandwidth (kHz)';
+  String get meshcoreRepeaterAdminSettingsBandwidthLabel =>
+      'Bande passante (kHz)';
 
   @override
   String get meshcoreRepeaterAdminSettingsSpreadingFactorLabel =>
-      'Spreading factor';
+      'Facteur d\'étalement';
 
   @override
-  String get meshcoreRepeaterAdminSettingsCodingRateLabel => 'Coding rate';
+  String get meshcoreRepeaterAdminSettingsCodingRateLabel => 'Taux de codage';
 
   @override
-  String get meshcoreRepeaterAdminSettingsTxPowerLabel => 'TX power (dBm)';
+  String get meshcoreRepeaterAdminSettingsTxPowerLabel => 'Puissance TX (dBm)';
 
   @override
   String get meshcoreRepeaterAdminSettingsTxPowerHelper =>
-      'Range: 1 to 30 dBm.';
+      'Plage : 1 à 30 dBm.';
 
   @override
   String get meshcoreRepeaterAdminSettingsLatLabel => 'Latitude';
 
   @override
   String get meshcoreRepeaterAdminSettingsLatHelper =>
-      'Decimal degrees. Range: -90 to 90.';
+      'Degrés décimaux. Plage : -90 à 90.';
 
   @override
   String get meshcoreRepeaterAdminSettingsLonLabel => 'Longitude';
 
   @override
   String get meshcoreRepeaterAdminSettingsLonHelper =>
-      'Decimal degrees. Range: -180 to 180.';
+      'Degrés décimaux. Plage : -180 à 180.';
 
   @override
-  String get meshcoreRepeaterAdminSettingsSectionSecurity => 'Security';
+  String get meshcoreRepeaterAdminSettingsSectionSecurity => 'Sécurité';
 
   @override
-  String get meshcoreRepeaterAdminSettingsPasswordLabel => 'Admin password';
+  String get meshcoreRepeaterAdminSettingsPasswordLabel => 'Mot de passe admin';
 
   @override
   String get meshcoreRepeaterAdminSettingsPasswordHelper =>
-      'Leave blank to keep the current password. Save sends the new password to the repeater.';
+      'Laissez vide pour conserver le mot de passe actuel. Enregistrer envoie le nouveau mot de passe au répéteur.';
 
   @override
   String get meshcoreRepeaterAdminSettingsGuestPasswordLabel =>
-      'Guest password';
+      'Mot de passe invité';
 
   @override
   String get meshcoreRepeaterAdminSettingsGuestPasswordHelper =>
-      'Leave blank to keep the current guest password.';
+      'Laissez vide pour conserver le mot de passe invité actuel.';
 
   @override
-  String get meshcoreRepeaterAdminSettingsPrivacyTile => 'Privacy mode';
+  String get meshcoreRepeaterAdminSettingsPrivacyTile => 'Mode confidentialité';
 
   @override
   String get meshcoreRepeaterAdminSettingsPrivacyTileSubtitle =>
-      'Hides the repeater from passive listeners';
+      'Masque le répéteur aux écouteurs passifs';
 
   @override
   String get meshcoreRepeaterAdminSettingsAutoClockSyncTile =>
-      'Auto clock sync on login';
+      'Synchronisation auto de l\'horloge à la connexion';
 
   @override
   String get meshcoreRepeaterAdminSettingsAutoClockSyncTileSubtitle =>
-      'Send \'clock sync\' after a successful admin login (stored locally)';
+      'Envoyer \'clock sync\' après une connexion admin réussie (stocké localement)';
 
   @override
   String meshcoreRepeaterStatusTitle(String name) {
-    return '$name status';
+    return 'Statut de $name';
   }
 
   @override
-  String get meshcoreRepeaterStatusRefreshTooltip => 'Refresh';
+  String get meshcoreRepeaterStatusRefreshTooltip => 'Actualiser';
 
   @override
-  String get meshcoreRepeaterStatusSectionSystem => 'System';
+  String get meshcoreRepeaterStatusSectionSystem => 'Système';
 
   @override
   String get meshcoreRepeaterStatusSectionRadio => 'Radio';
 
   @override
-  String get meshcoreRepeaterStatusSectionPackets => 'Packets';
+  String get meshcoreRepeaterStatusSectionPackets => 'Paquets';
 
   @override
-  String get meshcoreRepeaterStatusBatteryLabel => 'Battery';
+  String get meshcoreRepeaterStatusBatteryLabel => 'Batterie';
 
   @override
-  String get meshcoreRepeaterStatusBatteryUnknown => 'Unknown';
+  String get meshcoreRepeaterStatusBatteryUnknown => 'Inconnue';
 
   @override
   String get meshcoreRepeaterStatusUptimeLabel => 'Uptime';
 
   @override
-  String get meshcoreRepeaterStatusQueueLabel => 'Queue length';
+  String get meshcoreRepeaterStatusQueueLabel => 'Longueur de file';
 
   @override
-  String get meshcoreRepeaterStatusErrorsLabel => 'Error events';
+  String get meshcoreRepeaterStatusErrorsLabel => 'Erreurs';
 
   @override
-  String get meshcoreRepeaterStatusNoiseLabel => 'Noise floor';
+  String get meshcoreRepeaterStatusNoiseLabel => 'Plancher de bruit';
 
   @override
-  String get meshcoreRepeaterStatusRssiLabel => 'Last RSSI';
+  String get meshcoreRepeaterStatusRssiLabel => 'Dernier RSSI';
 
   @override
-  String get meshcoreRepeaterStatusSnrLabel => 'Last SNR';
+  String get meshcoreRepeaterStatusSnrLabel => 'Dernier SNR';
 
   @override
-  String get meshcoreRepeaterStatusTxAirtimeLabel => 'TX airtime';
+  String get meshcoreRepeaterStatusTxAirtimeLabel => 'Temps d\'antenne TX';
 
   @override
-  String get meshcoreRepeaterStatusRxAirtimeLabel => 'RX airtime';
+  String get meshcoreRepeaterStatusRxAirtimeLabel => 'Temps d\'antenne RX';
 
   @override
-  String get meshcoreRepeaterStatusPacketsRecvLabel => 'Received';
+  String get meshcoreRepeaterStatusPacketsRecvLabel => 'Reçus';
 
   @override
-  String get meshcoreRepeaterStatusPacketsSentLabel => 'Sent';
+  String get meshcoreRepeaterStatusPacketsSentLabel => 'Envoyés';
 
   @override
-  String get meshcoreRepeaterStatusFloodLabel => 'Flood (TX/RX)';
+  String get meshcoreRepeaterStatusFloodLabel => 'Inondation (TX/RX)';
 
   @override
   String get meshcoreRepeaterStatusDirectLabel => 'Direct (TX/RX)';
 
   @override
-  String get meshcoreRepeaterStatusDupsLabel => 'Duplicates (flood/direct)';
+  String get meshcoreRepeaterStatusDupsLabel => 'Doublons (inondation/direct)';
 
   @override
-  String get meshcoreRepeaterStatusFailed => 'Failed to load status';
+  String get meshcoreRepeaterStatusFailed => 'Échec du chargement du statut';
 
   @override
-  String get meshcoreRepeaterStatusContactDetailAction => 'Admin login';
+  String get meshcoreRepeaterStatusContactDetailAction => 'Connexion admin';
 
   @override
   String get meshcoreRepeaterStatusContactDetailSubtitle =>
-      'Authenticate to unlock admin tools';
+      'Authentifiez-vous pour déverrouiller les outils admin';
 
   @override
-  String get meshcoreRoomLoginTitle => 'Room login';
+  String get meshcoreRoomLoginTitle => 'Connexion au salon';
 
   @override
   String meshcoreRoomLoginSubtitle(String name) {
-    return 'Authenticate to join $name';
+    return 'Authentifiez-vous pour rejoindre $name';
   }
 
   @override
-  String get meshcoreRoomLoginPasswordLabel => 'Room password';
+  String get meshcoreRoomLoginPasswordLabel => 'Mot de passe du salon';
 
   @override
-  String get meshcoreRoomLoginAction => 'Join';
+  String get meshcoreRoomLoginAction => 'Rejoindre';
 
   @override
   String meshcoreRoomLoginSuccess(String name) {
-    return 'Joined $name';
+    return 'Vous avez rejoint $name';
   }
 
   @override
@@ -8708,18 +8736,18 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get meshcoreBasedOnLifepo4Voltage =>
-      'Based on LiFePO4 voltage range (2.5V - 3.6V)';
+      'Basé sur la plage de tension LiFePO4 (2,5 V - 3,6 V)';
 
   @override
   String get meshcoreBasedOnLiionVoltage =>
-      'Based on Li-Ion voltage range (2.75V - 4.2V)';
+      'Basé sur la plage de tension Li-Ion (2,75 V - 4,2 V)';
 
   @override
   String get meshcoreBasedOnNimhVoltage =>
-      'Based on NiMH single-cell range (0.9V - 1.4V)';
+      'Basé sur la plage d\'une cellule NiMH (0,9 V - 1,4 V)';
 
   @override
-  String get meshcoreBatteryChemistryLabel => 'Cell chemistry';
+  String get meshcoreBatteryChemistryLabel => 'Chimie de cellule';
 
   @override
   String get meshcoreBatteryChemistryAuto => 'Auto';
@@ -8833,16 +8861,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meshcoreChannelsRefreshChannels => 'Actualiser les canaux';
 
   @override
-  String get meshcoreChannelSortManual => 'Manual';
+  String get meshcoreChannelSortManual => 'Manuel';
 
   @override
   String get meshcoreChannelSortAToZ => 'A-Z';
 
   @override
-  String get meshcoreChannelSortLatest => 'Latest';
+  String get meshcoreChannelSortLatest => 'Plus récents';
 
   @override
-  String get meshcoreChannelSortUnread => 'Unread';
+  String get meshcoreChannelSortUnread => 'Non lus';
 
   @override
   String get meshcoreChannelsTitle => 'Canaux';
@@ -9069,7 +9097,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meshcoreChatInfoType => 'Type';
 
   @override
-  String get meshcoreChatUnreadDividerLabel => 'New messages';
+  String get meshcoreChatUnreadDividerLabel => 'Nouveaux messages';
 
   @override
   String get meshcoreChatJumpToLatest => 'Aller au dernier message';
@@ -9085,10 +9113,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible de supprimer le message';
 
   @override
-  String get meshcoreChatHistoryEnd => 'No older messages';
+  String get meshcoreChatHistoryEnd => 'Aucun message plus ancien';
 
   @override
-  String get meshcoreChatQuoteJumpUnavailable => 'Source message not available';
+  String get meshcoreChatQuoteJumpUnavailable => 'Message source indisponible';
 
   @override
   String get meshcoreChatNode => 'Nœud de chat';
@@ -9543,60 +9571,62 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String meshcoreManualPathTitle(String name) {
-    return 'Manual path - $name';
+    return 'Chemin manuel - $name';
   }
 
   @override
   String get meshcoreManualPathHelper =>
-      'Type a comma-separated list of pubkey-prefix hex bytes (e.g. \"AB,CD\"), or tap a repeater below to append it.';
+      'Saisissez une liste séparée par des virgules d\'octets hex de préfixe de clé publique (ex. \"AB,CD\"), ou appuyez sur un répéteur ci-dessous pour l\'ajouter.';
 
   @override
-  String get meshcoreManualPathInputLabel => 'Path bytes';
+  String get meshcoreManualPathInputLabel => 'Octets du chemin';
 
   @override
   String meshcoreManualPathPreview(int count, String bytes) {
-    return '$count hops: $bytes';
+    return '$count sauts : $bytes';
   }
 
   @override
-  String get meshcoreManualPathPreviewEmpty => 'No hops parsed yet.';
+  String get meshcoreManualPathPreviewEmpty =>
+      'Aucun saut analysé pour l\'instant.';
 
   @override
   String get meshcoreManualPathPickerEmpty =>
-      'No repeaters or rooms available to pick from.';
+      'Aucun répéteur ni salon disponible à sélectionner.';
 
   @override
-  String get meshcoreManualPathClear => 'Clear';
+  String get meshcoreManualPathClear => 'Effacer';
 
   @override
-  String get meshcoreManualPathApply => 'Apply';
+  String get meshcoreManualPathApply => 'Appliquer';
 
   @override
   String meshcoreManualPathInvalidToken(String token) {
-    return 'Invalid hop \"$token\". Each hop must be a 2-character hex byte.';
+    return 'Saut invalide \"$token\". Chaque saut doit être un octet hex de 2 caractères.';
   }
 
   @override
   String meshcoreManualPathTooLong(int count) {
-    return '$count hops is too many; the firmware accepts at most 64.';
+    return '$count sauts est trop ; le firmware en accepte au maximum 64.';
   }
 
   @override
   String meshcoreManualPathApplySuccess(String name, int hops) {
-    return '$name routing locked to $hops manual hops.';
+    return 'Routage de $name verrouillé sur $hops sauts manuels.';
   }
 
   @override
   String meshcoreManualPathApplyFailed(String name) {
-    return 'Could not apply manual path for $name.';
+    return 'Impossible d\'appliquer le chemin manuel pour $name.';
   }
 
   @override
-  String get meshcorePathOverrideSetCustomPath => 'Set custom path...';
+  String get meshcorePathOverrideSetCustomPath =>
+      'Définir un chemin personnalisé...';
 
   @override
   String get meshcorePathOverrideSetCustomPathSubtitle =>
-      'Type or pick a specific hop sequence';
+      'Saisissez ou choisissez une séquence de sauts spécifique';
 
   @override
   String get meshcorePathOverrideForceFlood => 'Forcer l\'inondation';
@@ -10209,20 +10239,20 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get meshcorePathHistoryCurrentModePrefix => 'Current path:';
+  String get meshcorePathHistoryCurrentModePrefix => 'Chemin actuel :';
 
   @override
   String get meshcorePathHistoryClearOverrideTooltip =>
-      'Clear override (reset to auto)';
+      'Effacer la surcharge (revenir en auto)';
 
   @override
   String meshcorePathHistoryClearOverrideSuccess(String name) {
-    return '$name is back to auto routing.';
+    return '$name repasse en routage auto.';
   }
 
   @override
   String meshcorePathHistoryClearOverrideFailed(String name) {
-    return 'Could not clear the override for $name.';
+    return 'Impossible d\'effacer la surcharge pour $name.';
   }
 
   @override
@@ -10361,15 +10391,15 @@ class AppLocalizationsFr extends AppLocalizations {
       'Tracer le chemin comme superposition d\'itinéraire';
 
   @override
-  String get meshcorePathOverlayShowInferred => 'Show inferred path';
+  String get meshcorePathOverlayShowInferred => 'Afficher le chemin déduit';
 
   @override
   String get meshcorePathOverlayShowInferredSubtitle =>
-      'Infer from saved paths and received messages';
+      'Déduit à partir des chemins enregistrés et des messages reçus';
 
   @override
   String get meshcorePathOverlayInferredUnavailable =>
-      'No path evidence yet for this contact';
+      'Aucune preuve de chemin pour ce contact pour l\'instant';
 
   @override
   String get meshcorePathOverlayClear => 'Effacer le chemin';
@@ -10403,153 +10433,156 @@ class AppLocalizationsFr extends AppLocalizations {
       'Afficher les diagnostics récents de l\'application';
 
   @override
-  String get meshcoreDiagnosticsBundleTool => 'Share diagnostics';
+  String get meshcoreDiagnosticsBundleTool => 'Partager les diagnostics';
 
   @override
   String get meshcoreDiagnosticsBundleToolSubtitle =>
-      'Zip the frame log + radio state + app metadata for a support ticket';
+      'Compresser le journal de trames, l\'état radio et les métadonnées de l\'app pour un ticket de support';
 
   @override
   String get meshcoreDiagnosticsBundleProgress =>
-      'Preparing diagnostics bundle...';
+      'Préparation de l\'archive de diagnostics...';
 
   @override
   String get meshcoreDiagnosticsBundleSuccess =>
-      'Diagnostics bundle ready to share.';
+      'Archive de diagnostics prête à être partagée.';
 
   @override
   String meshcoreDiagnosticsBundleFailed(String error) {
-    return 'Could not build diagnostics bundle: $error';
+    return 'Impossible de générer l\'archive de diagnostics : $error';
   }
 
   @override
-  String get meshcoreBleDebugLogTool => 'BLE debug log';
+  String get meshcoreBleDebugLogTool => 'Journal de débogage BLE';
 
   @override
   String get meshcoreBleDebugLogToolSubtitle =>
-      'Transport-layer scan, connect, and notify events';
+      'Événements de scan, connexion et notification au niveau transport';
 
   @override
-  String get meshcoreBleDebugLogTitle => 'BLE debug log';
+  String get meshcoreBleDebugLogTitle => 'Journal de débogage BLE';
 
   @override
   String meshcoreBleDebugLogEntryCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count entries',
-      one: '1 entry',
-      zero: 'No entries',
+      other: '$count entrées',
+      one: '1 entrée',
+      zero: 'Aucune entrée',
     );
     return '$_temp0';
   }
 
   @override
-  String get meshcoreBleDebugLogPaused => 'Paused';
+  String get meshcoreBleDebugLogPaused => 'En pause';
 
   @override
-  String get meshcoreBleDebugLogLive => 'Live';
+  String get meshcoreBleDebugLogLive => 'En direct';
 
   @override
-  String get meshcoreBleDebugLogCopyAll => 'Copy all';
+  String get meshcoreBleDebugLogCopyAll => 'Tout copier';
 
   @override
-  String get meshcoreBleDebugLogClear => 'Clear';
+  String get meshcoreBleDebugLogClear => 'Effacer';
 
   @override
-  String get meshcoreBleDebugLogCleared => 'BLE debug log cleared.';
+  String get meshcoreBleDebugLogCleared => 'Journal de débogage BLE effacé.';
 
   @override
-  String get meshcoreBleDebugLogCopied => 'BLE debug log copied to clipboard.';
+  String get meshcoreBleDebugLogCopied =>
+      'Journal de débogage BLE copié dans le presse-papiers.';
 
   @override
-  String get meshcoreBleDebugLogEntryCopied => 'Entry copied.';
+  String get meshcoreBleDebugLogEntryCopied => 'Entrée copiée.';
 
   @override
   String get meshcoreBleDebugLogEmpty =>
-      'No BLE events recorded yet. Events appear here as the radio connects.';
+      'Aucun événement BLE enregistré pour le moment. Les événements apparaîtront ici dès que la radio se connectera.';
 
   @override
   String get meshcoreBleDebugLogEmptyPaused =>
-      'BLE log paused. Resume to capture new events.';
+      'Journal BLE en pause. Reprenez pour capturer de nouveaux événements.';
 
   @override
-  String get meshcoreCommunityQrScannerTitle => 'Scan community QR';
+  String get meshcoreCommunityQrScannerTitle => 'Scanner un QR communautaire';
 
   @override
   String get meshcoreCommunityQrScannerHint =>
-      'Point the camera at a MeshCore community QR. Each channel will be reviewed before adding.';
+      'Pointez l\'appareil photo vers un QR de communauté MeshCore. Chaque canal sera examiné avant ajout.';
 
   @override
-  String get meshcoreCommunityQrScannerMenu => 'Scan community QR';
+  String get meshcoreCommunityQrScannerMenu => 'Scanner un QR communautaire';
 
   @override
-  String get meshcoreCommunityQrPreviewTitle => 'Community channels';
+  String get meshcoreCommunityQrPreviewTitle => 'Canaux communautaires';
 
   @override
   String meshcoreCommunityQrPreviewSubtitle(String name) {
-    return '$name ships these channels. Tap Add to import each one.';
+    return '$name embarque ces canaux. Appuyez sur Ajouter pour importer chacun.';
   }
 
   @override
-  String get meshcoreCommunityQrAddRow => 'Add';
+  String get meshcoreCommunityQrAddRow => 'Ajouter';
 
   @override
-  String get meshcoreCommunityQrDone => 'Done';
+  String get meshcoreCommunityQrDone => 'Terminé';
 
   @override
   String meshcoreCommunityQrPskFingerprint(String fingerprint) {
-    return 'PSK: $fingerprint';
+    return 'PSK : $fingerprint';
   }
 
   @override
-  String get meshcoreCommunityQrAddHashtagSection => 'Add a hashtag channel';
+  String get meshcoreCommunityQrAddHashtagSection =>
+      'Ajouter un canal à partir d\'un hashtag';
 
   @override
-  String get meshcoreCommunityQrHashtagHint => 'e.g. general';
+  String get meshcoreCommunityQrHashtagHint => 'ex. general';
 
   @override
-  String get meshcoreCommunityQrAddHashtagButton => 'Derive channel';
+  String get meshcoreCommunityQrAddHashtagButton => 'Dériver un canal';
 
   @override
-  String get meshcoreCommunityQrHashtagEmpty => 'Type a hashtag first.';
+  String get meshcoreCommunityQrHashtagEmpty =>
+      'Saisissez d\'abord un hashtag.';
 
   @override
   String get meshcoreCommunityQrHashtagDuplicate =>
-      'That hashtag is already in the list.';
+      'Ce hashtag est déjà dans la liste.';
 
   @override
   String meshcoreCommunityQrChannelAdded(String name) {
-    return 'Added $name to the radio.';
+    return '$name ajouté à la radio.';
   }
 
   @override
   String get meshcoreCommunityQrChannelAddFailed =>
-      'Could not add channel. Check the radio connection and try again.';
+      'Impossible d\'ajouter le canal. Vérifiez la connexion à la radio et réessayez.';
 
   @override
   String get meshcoreCommunityQrNoFreeSlot =>
-      'All 8 channel slots are full. Remove one before adding another.';
+      'Les 8 emplacements de canaux sont pleins. Supprimez-en un avant d\'en ajouter un autre.';
 
   @override
   String get meshcoreCommunityQrErrorNotJson =>
-      'QR code is not a community payload.';
+      'Ce code QR n\'est pas une charge utile communautaire.';
 
   @override
   String get meshcoreCommunityQrErrorWrongType =>
-      'QR code is not a MeshCore community.';
+      'Ce code QR n\'est pas une communauté MeshCore.';
 
   @override
   String get meshcoreCommunityQrErrorUnsupportedVersion =>
-      'This community QR uses an unsupported version.';
+      'Ce QR communautaire utilise une version non prise en charge.';
 
   @override
   String get meshcoreCommunityQrErrorMissingName =>
-      'Community QR is missing a name.';
+      'Le QR communautaire ne contient pas de nom.';
 
   @override
   String get meshcoreCommunityQrErrorBadSecret =>
-      'Community QR has an invalid secret.';
+      'Le QR communautaire contient un secret invalide.';
 
   @override
   String get meshcoreTelemetryTileTitle => 'Télémétrie';
@@ -10739,7 +10772,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meshcoreMapTitle => 'Carte';
 
   @override
-  String get meshcoreMapPinDropTitle => 'Drop a pin';
+  String get meshcoreMapPinDropTitle => 'Déposer une épingle';
 
   @override
   String meshcoreMapPinDropSubtitle(String lat, String lon) {
@@ -10747,28 +10780,29 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get meshcoreMapPinDropLabelField => 'Label';
+  String get meshcoreMapPinDropLabelField => 'Étiquette';
 
   @override
-  String get meshcoreMapPinDropLabelHint => 'e.g. Home, Cabin, Repeater hill';
+  String get meshcoreMapPinDropLabelHint =>
+      'ex. Maison, Refuge, Colline du répéteur';
 
   @override
-  String get meshcoreMapPinDropSave => 'Save pin';
+  String get meshcoreMapPinDropSave => 'Enregistrer l\'épingle';
 
   @override
-  String get meshcoreMapPinCancel => 'Cancel';
+  String get meshcoreMapPinCancel => 'Annuler';
 
   @override
   String meshcoreMapPinDropped(String label) {
-    return 'Pin saved: $label';
+    return 'Épingle enregistrée : $label';
   }
 
   @override
-  String get meshcoreMapPinRemove => 'Remove pin';
+  String get meshcoreMapPinRemove => 'Supprimer l\'épingle';
 
   @override
   String meshcoreMapPinRemoved(String label) {
-    return 'Pin removed: $label';
+    return 'Épingle supprimée : $label';
   }
 
   @override
@@ -11149,109 +11183,112 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meshcoreShareChannel => 'Partager le canal';
 
   @override
-  String get meshcoreContactAddFavorite => 'Add to favorites';
+  String get meshcoreContactAddFavorite => 'Ajouter aux favoris';
 
   @override
-  String get meshcoreContactRemoveFavorite => 'Remove from favorites';
+  String get meshcoreContactRemoveFavorite => 'Retirer des favoris';
 
   @override
   String meshcoreContactAddFavoriteSuccess(String name) {
-    return '$name is now a favorite.';
+    return '$name est désormais un favori.';
   }
 
   @override
   String meshcoreContactRemoveFavoriteSuccess(String name) {
-    return 'Removed $name from favorites.';
+    return '$name retiré des favoris.';
   }
 
   @override
   String meshcoreContactToggleFavoriteFailed(String name) {
-    return 'Could not update favorite status for $name.';
+    return 'Impossible de mettre à jour le statut favori pour $name.';
   }
 
   @override
-  String get meshcoreContactBlock => 'Mute notifications';
+  String get meshcoreContactBlock => 'Couper les notifications';
 
   @override
-  String get meshcoreContactUnblock => 'Unmute notifications';
+  String get meshcoreContactUnblock => 'Réactiver les notifications';
 
   @override
   String meshcoreContactBlockSuccess(String name) {
-    return 'Notifications muted for $name.';
+    return 'Notifications coupées pour $name.';
   }
 
   @override
   String meshcoreContactUnblockSuccess(String name) {
-    return 'Notifications restored for $name.';
+    return 'Notifications restaurées pour $name.';
   }
 
   @override
-  String get meshcoreContactBlockedBadge => 'Muted';
+  String get meshcoreContactBlockedBadge => 'Muet';
 
   @override
   String get meshcoreShareContact => 'Partager le contact';
 
   @override
-  String get meshcoreContactUrlCopied => 'Contact URL copied';
+  String get meshcoreContactUrlCopied => 'URL du contact copiée';
 
   @override
-  String get meshcoreContactExportFailed => 'Could not export contact';
+  String get meshcoreContactExportFailed => 'Impossible d\'exporter le contact';
 
   @override
-  String get meshcoreBroadcastSelfContact => 'Broadcast my contact';
+  String get meshcoreBroadcastSelfContact => 'Diffuser ma fiche de contact';
 
   @override
-  String get meshcoreSelfContactBroadcasted => 'Your contact card sent';
+  String get meshcoreSelfContactBroadcasted =>
+      'Votre carte de contact a été envoyée';
 
   @override
   String get meshcoreSelfContactBroadcastFailed =>
-      'Could not broadcast contact card';
+      'Impossible de diffuser la carte de contact';
 
   @override
-  String get meshcoreContactsAddFromClipboard => 'Add from clipboard';
+  String get meshcoreContactsAddFromClipboard =>
+      'Ajouter depuis le presse-papiers';
 
   @override
   String get meshcoreContactImportParseFailed =>
-      'Could not parse clipboard as a contact URL';
+      'Impossible d\'analyser le presse-papiers comme une URL de contact';
 
   @override
-  String get meshcoreContactImportConfirmTitle => 'Add contact?';
+  String get meshcoreContactImportConfirmTitle => 'Ajouter le contact ?';
 
   @override
-  String get meshcoreContactImportConfirmAction => 'Add contact';
+  String get meshcoreContactImportConfirmAction => 'Ajouter le contact';
 
   @override
-  String get meshcoreContactImportConfirmFormatFull => 'Full (path + location)';
+  String get meshcoreContactImportConfirmFormatFull =>
+      'Complet (chemin + position)';
 
   @override
-  String get meshcoreContactImportConfirmFormatLegacy => 'Legacy (name only)';
+  String get meshcoreContactImportConfirmFormatLegacy => 'Hérité (nom seul)';
 
   @override
-  String get meshcoreContactImported => 'Contact added';
+  String get meshcoreContactImported => 'Contact ajouté';
 
   @override
-  String get meshcoreContactImportFailed => 'Could not add contact';
+  String get meshcoreContactImportFailed => 'Impossible d\'ajouter le contact';
 
   @override
-  String get meshcoreContactImportRowName => 'Name';
+  String get meshcoreContactImportRowName => 'Nom';
 
   @override
-  String get meshcoreContactImportRowPubkey => 'Pubkey';
+  String get meshcoreContactImportRowPubkey => 'Clé publique';
 
   @override
-  String get meshcoreContactImportRowLastSeen => 'Last seen';
+  String get meshcoreContactImportRowLastSeen => 'Vu pour la dernière fois';
 
   @override
-  String get meshcoreContactImportRowLocation => 'Location';
+  String get meshcoreContactImportRowLocation => 'Position';
 
   @override
   String get meshcoreContactImportRowFormat => 'Format';
 
   @override
-  String get meshcoreContactImportLastSeenUnknown => 'Unknown';
+  String get meshcoreContactImportLastSeenUnknown => 'Inconnu';
 
   @override
-  String get meshcoreContactImportLocationUnknown => 'Not shared';
+  String get meshcoreContactImportLocationUnknown => 'Non partagée';
 
   @override
   String get meshcoreShareContactCodeInfo =>
@@ -11567,7 +11604,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String meshcoreSlotIndex(int index) {
-    return 'Slot $index';
+    return 'Emplacement $index';
   }
 
   @override
@@ -11699,7 +11736,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meshcoreQueueOutcomeFailed => 'Échec';
 
   @override
-  String get meshcoreQueueSourceTickle => 'Tickle';
+  String get meshcoreQueueSourceTickle => 'Stimulation';
 
   @override
   String get meshcoreQueueSourceManual => 'Manuel';
@@ -12075,7 +12112,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get messagingJumpToLatest => 'Aller au dernier';
 
   @override
-  String get messagingChatUnreadDividerLabel => 'New messages';
+  String get messagingChatUnreadDividerLabel => 'Nouveaux messages';
 
   @override
   String get messagingSectionActive => 'En ligne';
@@ -12549,7 +12586,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get navigationSectionIdentity => 'IDENTITÉ';
 
   @override
-  String get navigationSectionMesh => 'MESH';
+  String get navigationSectionMesh => 'MAILLE';
 
   @override
   String get navigationSectionPremium => 'PREMIUM';
@@ -12610,7 +12647,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String nodeAnalyticsAltitude(String meters) {
-    return '${meters}m';
+    return '$meters m';
   }
 
   @override
@@ -13006,7 +13043,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String nodeDetailBatteryPercent(int level) {
-    return '$level%';
+    return '$level %';
   }
 
   @override
@@ -13438,7 +13475,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String nodeDetailValuePercent(String value) {
-    return '$value%';
+    return '$value %';
   }
 
   @override
@@ -13789,7 +13826,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get nodedexDensityDense => 'Dense';
 
   @override
-  String get nodedexDensityNormal => 'Normal';
+  String get nodedexDensityNormal => 'Normale';
 
   @override
   String get nodedexDensitySparse => 'Épars';
@@ -13868,7 +13905,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get nodedexEdgeDensityDense => 'Dense';
 
   @override
-  String get nodedexEdgeDensityNormal => 'Normal';
+  String get nodedexEdgeDensityNormal => 'Normale';
 
   @override
   String get nodedexEdgeDensitySparse => 'Épars';
@@ -14589,7 +14626,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get nodedexHelpDiscoveryStats => 'Statistiques de découverte';
 
   @override
-  String get nodedexHelpInfoDefault => 'Info';
+  String get nodedexHelpInfoDefault => 'Infos';
 
   @override
   String get nodedexHelpNote => 'Note';
@@ -16724,7 +16761,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get profileDetailsSection => 'Détails';
 
   @override
-  String get profileDiscordHint => 'username#0000';
+  String get profileDiscordHint => 'pseudo#0000';
 
   @override
   String get profileDiscordLabel => 'Discord';
@@ -16753,7 +16790,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get profileGitHubHint => 'username';
+  String get profileGitHubHint => 'pseudo';
 
   @override
   String get profileGitHubLabel => 'GitHub';
@@ -16888,7 +16925,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get profileSyncing => 'Synchronisation en cours...';
 
   @override
-  String get profileTelegramHint => 'username';
+  String get profileTelegramHint => 'pseudo';
 
   @override
   String get profileTelegramLabel => 'Telegram';
@@ -16897,7 +16934,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get profileTitle => 'Profil';
 
   @override
-  String get profileTwitterHint => 'username';
+  String get profileTwitterHint => 'pseudo';
 
   @override
   String get profileTwitterLabel => 'Twitter / X';
@@ -16913,7 +16950,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'L\'URL doit commencer par http:// ou https://';
 
   @override
-  String get profileWebsiteHint => 'https://example.com';
+  String get profileWebsiteHint => 'https://exemple.com';
 
   @override
   String get profileWebsiteLabel => 'Site web';
@@ -17635,12 +17672,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String routesCardDurationHoursMinutes(int hours, int minutes) {
-    return '${hours}h ${minutes}m';
+    return '$hours h $minutes min';
   }
 
   @override
   String routesCardDurationMinutes(int minutes) {
-    return '${minutes}min';
+    return '$minutes min';
   }
 
   @override
@@ -17667,32 +17704,32 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String routesDistanceKilometers(String km) {
-    return '${km}km';
+    return '$km km';
   }
 
   @override
   String routesDistanceMeters(String meters) {
-    return '${meters}m';
+    return '$meters m';
   }
 
   @override
   String routesDurationHoursMinutes(int hours, int minutes) {
-    return '${hours}h ${minutes}m';
+    return '$hours h $minutes min';
   }
 
   @override
   String routesDurationMinutesSeconds(int minutes, int seconds) {
-    return '${minutes}m ${seconds}s';
+    return '$minutes min $seconds s';
   }
 
   @override
   String routesDurationSeconds(int seconds) {
-    return '${seconds}s';
+    return '$seconds s';
   }
 
   @override
   String routesElevationGain(String meters) {
-    return '${meters}m ↑';
+    return '$meters m ↑';
   }
 
   @override
@@ -17975,28 +18012,28 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get scannerUnsupportedBleTitle => 'BLE not available';
+  String get scannerUnsupportedBleTitle => 'BLE indisponible';
 
   @override
   String get scannerUnsupportedBleDescription =>
-      'This build is running on a platform without a Bluetooth radio. Connect a SocialMesh-compatible device over the network instead.';
+      'Cette version s\'exécute sur une plateforme sans radio Bluetooth. Connectez un appareil compatible SocialMesh via le réseau à la place.';
 
   @override
-  String get scannerUnsupportedBleAction => 'Use network connection';
+  String get scannerUnsupportedBleAction => 'Utiliser une connexion réseau';
 
   @override
-  String get scannerUnsupportedSerialTitle => 'USB serial not available';
+  String get scannerUnsupportedSerialTitle => 'USB série indisponible';
 
   @override
   String get scannerUnsupportedSerialDescription =>
-      'This build cannot access USB serial devices. Use Bluetooth or a network connection instead.';
+      'Cette version ne peut pas accéder aux périphériques série USB. Utilisez Bluetooth ou une connexion réseau à la place.';
 
   @override
-  String get scannerWebDashboardTitle => 'Dashboard mode';
+  String get scannerWebDashboardTitle => 'Mode tableau de bord';
 
   @override
   String get scannerWebDashboardDescription =>
-      'SocialMesh on the web runs in dashboard mode: it views mesh activity synced from your paired mobile device but cannot connect to a radio directly. Open SocialMesh on your phone to pair a device.';
+      'SocialMesh sur le web fonctionne en mode tableau de bord : il consulte l\'activité de la maille synchronisée depuis votre appareil mobile jumelé, mais ne peut pas se connecter directement à une radio. Ouvrez SocialMesh sur votre téléphone pour jumeler un appareil.';
 
   @override
   String get searchProductsBrowseByCategory => 'Parcourir par catégorie';
@@ -19361,37 +19398,37 @@ class AppLocalizationsFr extends AppLocalizations {
   String get shopFavoritesUnableToLoad => 'Impossible de charger le produit';
 
   @override
-  String get shopModelBandAu915 => 'AU 915MHz';
+  String get shopModelBandAu915 => 'AU 915 MHz';
 
   @override
   String get shopModelBandAu915Range => '915-928 MHz';
 
   @override
-  String get shopModelBandCn470 => 'CN 470MHz';
+  String get shopModelBandCn470 => 'CN 470 MHz';
 
   @override
   String get shopModelBandCn470Range => '470-510 MHz';
 
   @override
-  String get shopModelBandEu868 => 'EU 868MHz';
+  String get shopModelBandEu868 => 'EU 868 MHz';
 
   @override
   String get shopModelBandEu868Range => '863-870 MHz';
 
   @override
-  String get shopModelBandIn865 => 'IN 865MHz';
+  String get shopModelBandIn865 => 'IN 865 MHz';
 
   @override
   String get shopModelBandIn865Range => '865-867 MHz';
 
   @override
-  String get shopModelBandJp920 => 'JP 920MHz';
+  String get shopModelBandJp920 => 'JP 920 MHz';
 
   @override
   String get shopModelBandJp920Range => '920-925 MHz';
 
   @override
-  String get shopModelBandKr920 => 'KR 920MHz';
+  String get shopModelBandKr920 => 'KR 920 MHz';
 
   @override
   String get shopModelBandKr920Range => '920-923 MHz';
@@ -19403,7 +19440,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get shopModelBandMultiRange => 'Fréquences multiples';
 
   @override
-  String get shopModelBandUs915 => 'US 915MHz';
+  String get shopModelBandUs915 => 'US 915 MHz';
 
   @override
   String get shopModelBandUs915Range => '902-928 MHz';
@@ -19549,7 +19586,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get signalAddPhotos => 'Ajouter des photos';
 
   @override
-  String get signalAnonAuthor => 'Anon';
+  String get signalAnonAuthor => 'Anonyme';
 
   @override
   String get signalAnonymous => 'Anonyme';
@@ -19749,7 +19786,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get signalFilterMedia => 'Médias';
 
   @override
-  String get signalFilterMesh => 'Mesh';
+  String get signalFilterMesh => 'Maille';
 
   @override
   String get signalFilterNearby => 'À proximité';
@@ -19877,7 +19914,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get signalLocationInvalid => 'Location unavailable';
+  String get signalLocationInvalid => 'Position indisponible';
 
   @override
   String get signalLocationUnavailableSent =>
@@ -19940,7 +19977,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get signalOriginCloud => 'Cloud';
 
   @override
-  String get signalOriginMesh => 'Mesh';
+  String get signalOriginMesh => 'Maille';
 
   @override
   String signalPeopleActiveCount(int count) {
@@ -21822,7 +21859,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get takCompassW => 'O';
 
   @override
-  String get takCotTypeAtom => 'Atom';
+  String get takCotTypeAtom => 'Atome';
 
   @override
   String get takCotTypeBits => 'Bits';
@@ -22376,7 +22413,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String takStatusCardUptimeSeconds(int seconds) {
-    return '${seconds}s';
+    return '$seconds s';
   }
 
   @override
@@ -22475,7 +22512,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get telemetryAirQualityParticle05um => '>0,5µm';
 
   @override
-  String get telemetryAirQualityParticle100um => '>10µm';
+  String get telemetryAirQualityParticle100um => '>10 µm';
 
   @override
   String get telemetryAirQualityParticle10um => '>1,0µm';
@@ -22681,7 +22718,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String telemetryDeviceMetricsAirUtil(String percent) {
-    return 'Air $percent%';
+    return 'Air $percent %';
   }
 
   @override
@@ -22694,7 +22731,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String telemetryDeviceMetricsVoltageValue(String voltage) {
-    return '${voltage}V';
+    return '$voltage V';
   }
 
   @override
@@ -22711,7 +22748,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String telemetryEnvHumidityValue(String value) {
-    return '$value%';
+    return '$value %';
   }
 
   @override
@@ -22731,7 +22768,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String telemetryEnvTemperatureValue(String value) {
-    return '$value°C';
+    return '$value °C';
   }
 
   @override
@@ -23065,7 +23102,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get timelineFilterNodes => 'Noeuds';
 
   @override
-  String get timelineFilterSignals => 'Signals';
+  String get timelineFilterSignals => 'Signaux';
 
   @override
   String get timelineFilterWaypoints => 'Points de passage';
@@ -24056,7 +24093,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get widgetBuilderIconHumidity => 'Humidité';
 
   @override
-  String get widgetBuilderIconInfo => 'Info';
+  String get widgetBuilderIconInfo => 'Infos';
 
   @override
   String get widgetBuilderIconLocation => 'Position';
@@ -25658,13 +25695,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get dateTimePickerMonthAug => 'Août';
 
   @override
-  String get dateTimePickerMonthSep => 'Sep';
+  String get dateTimePickerMonthSep => 'sept.';
 
   @override
-  String get dateTimePickerMonthOct => 'Oct';
+  String get dateTimePickerMonthOct => 'oct.';
 
   @override
-  String get dateTimePickerMonthNov => 'Nov';
+  String get dateTimePickerMonthNov => 'nov.';
 
   @override
   String get dateTimePickerMonthDec => 'Déc';
@@ -25878,26 +25915,27 @@ class AppLocalizationsFr extends AppLocalizations {
   String get premiumPurchaseFailed => 'Achat échoué. Veuillez réessayer.';
 
   @override
-  String get paymentChooserTitle => 'Choose payment method';
+  String get paymentChooserTitle => 'Choisir le mode de paiement';
 
   @override
-  String get paymentChooserStoreLabelApple => 'Pay via App Store';
+  String get paymentChooserStoreLabelApple => 'Payer via App Store';
 
   @override
-  String get paymentChooserStoreLabelGoogle => 'Pay via Google Play';
+  String get paymentChooserStoreLabelGoogle => 'Payer via Google Play';
 
   @override
-  String get paymentChooserStoreLabelGeneric => 'Pay via app store';
+  String get paymentChooserStoreLabelGeneric =>
+      'Payer via la boutique d\'applications';
 
   @override
   String get paymentChooserStoreSubtitle =>
-      'Confirm with Face ID / Touch ID or your account';
+      'Confirmer avec Face ID / Touch ID ou votre compte';
 
   @override
-  String get paymentChooserStripeLabel => 'Pay with Stripe';
+  String get paymentChooserStripeLabel => 'Payer avec Stripe';
 
   @override
-  String get paymentChooserStripeSubtitle => 'Card or Apple Pay via Stripe';
+  String get paymentChooserStripeSubtitle => 'Carte ou Apple Pay via Stripe';
 
   @override
   String get alternativePayment => 'Paiement alternatif';
@@ -25961,14 +25999,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get unlockSuccessGeneric => 'Déverrouillage terminé';
 
   @override
-  String get unlockKeepPackTitle => 'Keep this pack across devices';
+  String get unlockKeepPackTitle => 'Conserver ce pack sur tous les appareils';
 
   @override
   String get unlockKeepPackBody =>
-      'This pack is unlocked on this device only. Sign in to keep it if you reinstall the app or switch phones.';
+      'Ce pack n\'est déverrouillé que sur cet appareil. Connectez-vous pour le conserver en cas de réinstallation ou de changement de téléphone.';
 
   @override
-  String get unlockKeepPackMaybeLater => 'Maybe later';
+  String get unlockKeepPackMaybeLater => 'Plus tard';
 
   @override
   String get unlockCodeFallback => 'Vous avez un code de déverrouillage ?';
@@ -26603,7 +26641,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get restorePurchasesSignInForExternal =>
-      'No App Store purchases found. Sign in to also restore Stripe and Buy Me a Coffee packs.';
+      'Aucun achat App Store trouvé. Connectez-vous pour aussi restaurer les packs Stripe et Buy Me a Coffee.';
 
   @override
   String get restorePurchasesPending =>
@@ -27626,7 +27664,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appearanceTimeFormat12h => '12 heures';
 
   @override
-  String get appearanceTimeFormat12hDesc => '1:30 PM';
+  String get appearanceTimeFormat12hDesc => '13:30';
 
   @override
   String get appearanceTimeFormat24h => '24 heures';
@@ -28026,7 +28064,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bgConnLiveActivityDestTitle => 'Destination';
 
   @override
-  String get bgConnLiveActivityDestMesh => 'Mesh';
+  String get bgConnLiveActivityDestMesh => 'Maille';
 
   @override
   String get bgConnLiveActivityDestBestPeer => 'Meilleur pair';
@@ -30317,7 +30355,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String displayConfigScreenTimeoutSeconds(int seconds) {
-    return '${seconds}s';
+    return '$seconds s';
   }
 
   @override
@@ -30596,13 +30634,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get extNotifDurationDefault => 'Par défaut';
 
   @override
-  String get extNotifDuration100ms => '100ms';
+  String get extNotifDuration100ms => '100 ms';
 
   @override
-  String get extNotifDuration250ms => '250ms';
+  String get extNotifDuration250ms => '250 ms';
 
   @override
-  String get extNotifDuration500ms => '500ms';
+  String get extNotifDuration500ms => '500 ms';
 
   @override
   String get extNotifDuration1s => '1 seconde';
@@ -31137,7 +31175,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mqttProxyTls => 'TLS';
 
   @override
-  String get mqttProxyAuth => 'Auth';
+  String get mqttProxyAuth => 'Authentification';
 
   @override
   String get mqttProxyTopic => 'Sujet';
@@ -31716,66 +31754,67 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vérifier que le mode WAL est actif sur toutes les bases de données SQLite';
 
   @override
-  String get adminPanelMeshMorph => 'Mesh Morph Preview';
+  String get adminPanelMeshMorph => 'Aperçu Mesh Morph';
 
   @override
   String get adminPanelMeshMorphSub =>
-      'Test mesh-morph presets, shapes, and timing';
+      'Testez les préréglages, formes et timings de Mesh Morph';
 
   @override
   String get adminMeshMorphTitle => 'Mesh Morph';
 
   @override
-  String get adminMeshMorphPresetSection => 'PRESET';
+  String get adminMeshMorphPresetSection => 'PRÉRÉGLAGE';
 
   @override
   String get adminMeshMorphRotationSection => 'ROTATION';
 
   @override
-  String get adminMeshMorphTuningSection => 'TUNING';
+  String get adminMeshMorphTuningSection => 'RÉGLAGE';
 
   @override
-  String get adminMeshMorphAnimate => 'Animate';
+  String get adminMeshMorphAnimate => 'Animer';
 
   @override
-  String get adminMeshMorphAnimateSub => 'Pause to inspect the current shape';
+  String get adminMeshMorphAnimateSub =>
+      'Mettre en pause pour inspecter la forme actuelle';
 
   @override
   String adminMeshMorphPointCountLabel(int count) {
-    return 'Point count: $count';
+    return 'Nombre de points : $count';
   }
 
   @override
   String adminMeshMorphCurrentShape(String shape) {
-    return 'Current shape: $shape';
+    return 'Forme actuelle : $shape';
   }
 
   @override
-  String get adminMeshMorphPresetIcosahedronJourney => 'Icosahedron Journey';
+  String get adminMeshMorphPresetIcosahedronJourney => 'Voyage icosaédrique';
 
   @override
-  String get adminMeshMorphPresetVectorballTour => 'Vectorball Tour';
+  String get adminMeshMorphPresetVectorballTour => 'Tour Vectorball';
 
   @override
-  String get adminMeshMorphPresetPlatonicCircuit => 'Platonic Circuit';
+  String get adminMeshMorphPresetPlatonicCircuit => 'Circuit platonicien';
 
   @override
-  String get adminMeshMorphPresetSurfaceFlow => 'Surface Flow';
+  String get adminMeshMorphPresetSurfaceFlow => 'Flux de surface';
 
   @override
-  String get adminMeshMorphPresetWireframeMarch => 'Wireframe March';
+  String get adminMeshMorphPresetWireframeMarch => 'Marche filaire';
 
   @override
-  String get adminMeshMorphRotationNone => 'None';
+  String get adminMeshMorphRotationNone => 'Aucune';
 
   @override
   String get adminMeshMorphRotationSpin => 'Spin';
 
   @override
-  String get adminMeshMorphRotationTumble => 'Tumble';
+  String get adminMeshMorphRotationTumble => 'Culbute';
 
   @override
-  String get adminMeshMorphRotationShowcase => 'Showcase';
+  String get adminMeshMorphRotationShowcase => 'Vitrine';
 
   @override
   String get adminStorageHealthTitle => 'Santé du stockage';
@@ -31998,7 +32037,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get adminBroadcastIconTip => 'Conseil';
 
   @override
-  String get adminBroadcastIconSignals => 'Signals';
+  String get adminBroadcastIconSignals => 'Signaux';
 
   @override
   String get adminBroadcastIconNodedex => 'NodeDex';
@@ -32169,13 +32208,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Connectez SocialMesh à vos services préférés via IFTTT.';
 
   @override
-  String get adminBroadcastDeepLinkCatCore => 'CORE';
+  String get adminBroadcastDeepLinkCatCore => 'NOYAU';
 
   @override
   String get adminBroadcastDeepLinkCatSocial => 'SOCIAL';
 
   @override
-  String get adminBroadcastDeepLinkCatMesh => 'MESH';
+  String get adminBroadcastDeepLinkCatMesh => 'MAILLE';
 
   @override
   String get adminBroadcastDeepLinkCatPremium => 'PREMIUM';
@@ -32202,7 +32241,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get adminBroadcastLinkMap => 'Carte';
 
   @override
-  String get adminBroadcastLinkSignals => 'Signals';
+  String get adminBroadcastLinkSignals => 'Signaux';
 
   @override
   String get adminBroadcastLinkNodedex => 'NodeDex';
@@ -33064,7 +33103,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String globalLayerShortDateFormat(int month, int day) {
-    return '$month/$day';
+    return '$day/$month';
   }
 
   @override
@@ -33492,7 +33531,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get globalLayerAdvanced => 'AVANCÉ';
 
   @override
-  String get globalLayerAuth => 'Auth';
+  String get globalLayerAuth => 'Authentification';
 
   @override
   String get globalLayerAuthentication => 'AUTHENTIFICATION';
@@ -35196,7 +35235,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get whatsNewVersion1110Subtitle => 'Version 1.11.0';
 
   @override
-  String get whatsNewSignalsTitle => 'Signals';
+  String get whatsNewSignalsTitle => 'Signaux';
 
   @override
   String get whatsNewSignalsDescription =>
@@ -36283,7 +36322,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get globalLayerSummaryTlsDisabled => 'Désactivé';
 
   @override
-  String get globalLayerSummaryAuth => 'Auth';
+  String get globalLayerSummaryAuth => 'Authentification';
 
   @override
   String get globalLayerSummaryAuthCredentials => 'Identifiants configurés';
@@ -36441,7 +36480,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Connectez votre appareil pour utiliser cette fonctionnalité';
 
   @override
-  String get sipBadgeLabel => 'Handshake';
+  String get sipBadgeLabel => 'Poignée de main';
 
   @override
   String get sipIdentityStateUnverified => 'Non vérifié';
@@ -37080,7 +37119,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sipCountersTitle => 'Compteurs de débogage SIP';
 
   @override
-  String get sipHubTitle => 'Handshake';
+  String get sipHubTitle => 'Poignée de main';
 
   @override
   String get sipHubSectionPeers => 'Personnes';
@@ -37247,19 +37286,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meshCapacityActivityTitle => 'Activité récente';
 
   @override
-  String get meshCapacityBucket1m => '<1m';
+  String get meshCapacityBucket1m => '<1 min';
 
   @override
-  String get meshCapacityBucket5m => '<5m';
+  String get meshCapacityBucket5m => '<5 min';
 
   @override
-  String get meshCapacityBucket15m => '<15m';
+  String get meshCapacityBucket15m => '<15 min';
 
   @override
-  String get meshCapacityBucket60m => '<60m';
+  String get meshCapacityBucket60m => '<60 min';
 
   @override
-  String get meshCapacityBucket6h => '<6h';
+  String get meshCapacityBucket6h => '<6 h';
 
   @override
   String get meshCapacityEducationHeader =>
@@ -37365,13 +37404,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meshCapacityNodeFilterAll => 'Tous';
 
   @override
-  String get meshCapacityNodeFilter5m => '<5m';
+  String get meshCapacityNodeFilter5m => '<5 min';
 
   @override
-  String get meshCapacityNodeFilter15m => '<15m';
+  String get meshCapacityNodeFilter15m => '<15 min';
 
   @override
-  String get meshCapacityNodeFilter60m => '<60m';
+  String get meshCapacityNodeFilter60m => '<60 min';
 
   @override
   String get meshCapacityNodeListHeader => 'Noeuds actifs via RF';
@@ -38256,10 +38295,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mrrpHarnessCountersSimFaults => 'Pannes simulées';
 
   @override
-  String get meshExplorerTitle => 'Mesh Explorer';
+  String get meshExplorerTitle => 'Explorateur de maille';
 
   @override
-  String get meshExplorerDrawerLabel => 'Mesh Explorer';
+  String get meshExplorerDrawerLabel => 'Explorateur de maille';
 
   @override
   String get meshExplorerHeroConnected => 'Connecté au mesh';
@@ -39320,7 +39359,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String mapTerrainNodeAltitude(String value) {
-    return '· ${value}m';
+    return '· $value m';
   }
 
   @override
@@ -39541,7 +39580,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String voiceMessageDuration(int seconds) {
-    return '${seconds}s';
+    return '$seconds s';
   }
 
   @override
@@ -39610,7 +39649,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String voiceQualityDuration(String seconds) {
-    return '${seconds}s';
+    return '$seconds s';
   }
 
   @override
@@ -39691,10 +39730,10 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get takBridgePacketsInbound => 'Mesh → TAK';
+  String get takBridgePacketsInbound => 'Maille -> TAK';
 
   @override
-  String get takBridgePacketsOutbound => 'TAK → Mesh';
+  String get takBridgePacketsOutbound => 'TAK -> Maille';
 
   @override
   String get takBridgeExportPackage => 'Exporter le package de données';
@@ -40890,7 +40929,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get meshServicesSignalKindCheckIn => 'Check-in';
+  String get meshServicesSignalKindCheckIn => 'Pointage';
 
   @override
   String get meshServicesSignalKindNeedHelp => 'Besoin d\'aide';
@@ -40914,7 +40953,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meshServicesFieldSensorValue => 'Relevé';
 
   @override
-  String get meshServicesSensorValueHint => '23.4';
+  String get meshServicesSensorValueHint => '23,4';
 
   @override
   String get meshServicesMinSensorValue =>
@@ -41689,20 +41728,20 @@ class AppLocalizationsFr extends AppLocalizations {
   String get petDnaAlleleDominant => 'Dominant';
 
   @override
-  String get petAlleleAurora => 'Aurora';
+  String get petAlleleAurora => 'Aurore';
 
   @override
-  String get petAlleleTether => 'Tether';
+  String get petAlleleTether => 'Lien';
 
   @override
-  String get petAlleleGale => 'Gale';
+  String get petAlleleGale => 'Bourrasque';
 
   @override
   String get petAlleleCalm => 'Calme';
 
   @override
   String petDnaAlleleRatioValue(String letter, int percent) {
-    return '$letter  $percent%';
+    return '$letter  $percent %';
   }
 
   @override
@@ -41918,7 +41957,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String petTimelineDurationHours(int hours) {
-    return '${hours}h';
+    return '$hours h';
   }
 
   @override
@@ -42080,7 +42119,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get reticulumDiagAvgFragmentSize => 'Taille moyenne des fragments';
 
   @override
-  String get reticulumDiagFragmentsPerSecond => 'Fragments/sec (60s)';
+  String get reticulumDiagFragmentsPerSecond => 'Fragments/s (60 s)';
 
   @override
   String get reticulumDiagNeverSeen => 'Jamais';
@@ -42392,7 +42431,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get reticulumDetailChannelIndex => 'Indice de canal';
 
   @override
-  String get reticulumDetailChannelIndexHint => '0–7';
+  String get reticulumDetailChannelIndexHint => '0-7';
 
   @override
   String get reticulumDetailNotes => 'Notes';
@@ -42804,7 +42843,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get nodedexConstellationFilterTimeNow => 'Maintenant';
 
   @override
-  String get nodedexConstellationFilterTime24h => '24h';
+  String get nodedexConstellationFilterTime24h => '24 h';
 
   @override
   String get nodedexConstellationFilterTime7d => '7j';

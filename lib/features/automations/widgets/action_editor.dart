@@ -10,6 +10,7 @@ import '../../../core/theme.dart';
 import '../../../providers/glyph_provider.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/meshcore_contact_selector_sheet.dart';
 import '../../../core/widgets/node_selector_sheet.dart';
 import '../../../models/mesh_models.dart';
 import '../../../models/presence_confidence.dart';
@@ -23,6 +24,17 @@ import 'variable_text_field.dart';
 import '../../../core/widgets/loading_indicator.dart';
 import '../../../core/widgets/status_banner.dart';
 
+// Protocol-agnostic adapter for the action-editor's channel picker.
+// The Meshtastic side passes its `ChannelConfig` directly; the
+// MeshCore side maps each `MeshCoreChannel` to one of these so the
+// picker only depends on the index + display name.
+class MeshCoreChannelOption {
+  final int index;
+  final String name;
+
+  const MeshCoreChannelOption({required this.index, required this.name});
+}
+
 /// Widget for editing an action
 class ActionEditor extends ConsumerStatefulWidget {
   final AutomationAction action;
@@ -34,6 +46,18 @@ class ActionEditor extends ConsumerStatefulWidget {
   final List<MeshNode> availableNodes;
   final List<ChannelConfig> availableChannels;
   final int? myNodeNum;
+  // Trigger's protocol scope. When `meshcore` the node picker reads
+  // MeshCore contacts and the channel picker reads MeshCore channel
+  // names instead of the Meshtastic-provider lists threaded through
+  // `availableNodes` / `availableChannels`. Defaults to `any` so
+  // existing call sites that don't yet plumb the filter behave like
+  // before.
+  final TriggerProtocolFilter protocolFilter;
+  // MeshCore channels are passed separately so the Meshtastic
+  // channel list stays the legacy `availableChannels` parameter.
+  // When the editor branches on protocolFilter==meshcore it shows
+  // these instead.
+  final List<MeshCoreChannelOption> availableMeshCoreChannels;
 
   const ActionEditor({
     super.key,
@@ -46,6 +70,8 @@ class ActionEditor extends ConsumerStatefulWidget {
     this.availableNodes = const [],
     this.availableChannels = const [],
     this.myNodeNum,
+    this.protocolFilter = TriggerProtocolFilter.any,
+    this.availableMeshCoreChannels = const [],
   });
 
   @override
@@ -250,24 +276,37 @@ class _ActionEditorState extends ConsumerState<ActionEditor>
           });
 
     final channels = widget.availableChannels;
+    final isMeshCore = widget.protocolFilter == TriggerProtocolFilter.meshcore;
+    final meshCoreChannels = widget.availableMeshCoreChannels;
 
-    // Determine selected target display name
+    // Determine selected target display name. The MeshCore branch
+    // looks up names from `availableMeshCoreChannels` so the picker
+    // and the surface label agree.
     String targetDisplay;
     if (toChannel) {
       final selectedChannelIndex = widget.action.targetChannelIndex;
       if (selectedChannelIndex != null) {
-        final channel = channels.firstWhere(
-          (c) => c.index == selectedChannelIndex,
-          orElse: () =>
-              ChannelConfig(index: selectedChannelIndex, name: '', psk: []),
-        );
-        targetDisplay = channel.name.isEmpty
-            ? (selectedChannelIndex == 0
-                  ? context.l10n.automationActionPrimary
-                  : context.l10n.automationActionChannelIndex(
-                      selectedChannelIndex,
-                    ))
-            : channel.name;
+        if (isMeshCore) {
+          final channel = meshCoreChannels
+              .where((c) => c.index == selectedChannelIndex)
+              .firstOrNull;
+          targetDisplay = (channel?.name.isNotEmpty ?? false)
+              ? channel!.name
+              : context.l10n.automationActionChannelIndex(selectedChannelIndex);
+        } else {
+          final channel = channels.firstWhere(
+            (c) => c.index == selectedChannelIndex,
+            orElse: () =>
+                ChannelConfig(index: selectedChannelIndex, name: '', psk: []),
+          );
+          targetDisplay = channel.name.isEmpty
+              ? (selectedChannelIndex == 0
+                    ? context.l10n.automationActionPrimary
+                    : context.l10n.automationActionChannelIndex(
+                        selectedChannelIndex,
+                      ))
+              : channel.name;
+        }
       } else {
         targetDisplay = context.l10n.automationActionSelectChannel;
       }
@@ -302,7 +341,9 @@ class _ActionEditorState extends ConsumerState<ActionEditor>
           SizedBox(height: AppTheme.spacing8),
           GestureDetector(
             onTap: () => toChannel
-                ? _showChannelPicker(context, channels)
+                ? (isMeshCore
+                      ? _showMeshCoreChannelPicker(context, meshCoreChannels)
+                      : _showChannelPicker(context, channels))
                 : _showNodePicker(context, nodes),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -403,6 +444,30 @@ class _ActionEditorState extends ConsumerState<ActionEditor>
     BuildContext context,
     List<MeshNode> nodes,
   ) async {
+    // MeshCore-pinned automations target a MeshCore contact, not a
+    // Meshtastic node. The selected contact's pubkey-prefix int
+    // (`meshCoreSenderIdFromKey(c.publicKey)`) is written into
+    // `targetNodeNum`; Slice D's `_sendMeshCoreContactMessage`
+    // helper reads it back the same way to dispatch the wire frame.
+    if (widget.protocolFilter == TriggerProtocolFilter.meshcore) {
+      final selection = await MeshCoreContactSelectorSheet.show(
+        context,
+        title: context.l10n.meshcoreContactSelectorTitle,
+        initialSelection: widget.action.targetNodeNum,
+      );
+      if (selection != null) {
+        widget.onChanged(
+          widget.action.copyWith(
+            config: {
+              ...widget.action.config,
+              'targetNodeNum': selection.nodeNumPrefix,
+            },
+          ),
+        );
+      }
+      return;
+    }
+
     final selection = await NodeSelectorSheet.show(
       context,
       title: context.l10n.automationTriggerSelectNode,
@@ -502,6 +567,115 @@ class _ActionEditorState extends ConsumerState<ActionEditor>
                         : context.l10n.automationActionChannelIndex(
                             channel.index,
                           ),
+                    isSelected: isSelected,
+                    onTap: () {
+                      widget.onChanged(
+                        widget.action.copyWith(
+                          config: {
+                            ...widget.action.config,
+                            'targetChannelIndex': channel.index,
+                          },
+                        ),
+                      );
+                      Navigator.pop(context);
+                    },
+                  );
+                },
+              ),
+            ),
+            SizedBox(height: MediaQuery.of(context).padding.bottom),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // MeshCore counterpart of `_showChannelPicker`. Iterates the
+  // protocol-agnostic `MeshCoreChannelOption` list (already adapted
+  // from `MeshCoreChannel` at the call site) so the picker layout
+  // stays identical to the Meshtastic side and the `targetChannelIndex`
+  // selection writes the same int Slice D's
+  // `_sendMeshCoreChannelMessage` helper reads back.
+  void _showMeshCoreChannelPicker(
+    BuildContext context,
+    List<MeshCoreChannelOption> channels,
+  ) {
+    if (channels.isEmpty) {
+      showWarningSnackBar(context, context.l10n.automationActionNoChannels);
+      return;
+    }
+
+    AppBottomSheet.show(
+      context: context,
+      padding: EdgeInsets.zero,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.4,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 0, 16, 0),
+              child: Row(
+                children: [
+                  Text(
+                    context.l10n.automationActionSelectChannelTitle,
+                    style: TextStyle(
+                      color: context.textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      context.l10n.automationActionDone,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Divider(height: 1, color: context.border),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  Text(
+                    context.l10n.automationActionChannelsCount(channels.length),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: context.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: channels.length,
+                itemBuilder: (context, index) {
+                  final channel = channels[index];
+                  final isSelected =
+                      widget.action.targetChannelIndex == channel.index;
+                  final channelName = channel.name.isNotEmpty
+                      ? channel.name
+                      : context.l10n.automationActionChannelIndex(
+                          channel.index,
+                        );
+                  return _buildTargetTile(
+                    context: context,
+                    icon: Icons.forum,
+                    iconColor: Theme.of(context).colorScheme.primary,
+                    title: channelName,
+                    subtitle: context.l10n.automationActionChannelIndex(
+                      channel.index,
+                    ),
                     isSelected: isSelected,
                     onTap: () {
                       widget.onChanged(

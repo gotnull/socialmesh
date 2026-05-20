@@ -129,13 +129,24 @@ jobs:
                           + ", ".join(sorted(missing_params))
                       )
 
-              # Missing keys are fine — Flutter falls back to English.
+              # Missing keys are an ERROR. Flutter would silently fall back to
+              # English, but that lets feature commits add keys to en.arb and
+              # forget every other locale - this is how locales drift out of
+              # sync. Every key in app_en.arb MUST exist in every locale file,
+              # even if the value is identical to English (intentional verbatim
+              # for brand names, units, format templates). Use
+              # `python3 scripts/backfill_verbatim_keys.py` to add missing
+              # keys with the English value when they are intentional verbatim.
               missing = set(template_keys) - set(locale_keys)
               if missing:
-                  total = len(template_keys)
-                  present = total - len(missing)
-                  pct = present / total * 100
-                  print(f"  {arb_file}: {present}/{total} keys ({pct:.1f}%) — {len(missing)} using English fallback")
+                  errors.append(
+                      f"{arb_file}: {len(missing)} key(s) missing from locale "
+                      f"(must be present in every locale file - run "
+                      f"scripts/backfill_verbatim_keys.py for intentional "
+                      f"verbatim, or translate them): "
+                      + ", ".join(sorted(missing)[:10])
+                      + ("..." if len(missing) > 10 else "")
+                  )
               else:
                   print(f"  {arb_file}: {len(locale_keys)} keys (complete)")
 

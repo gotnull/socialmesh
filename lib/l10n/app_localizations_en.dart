@@ -2768,6 +2768,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get automationTriggerProtocolMeshcore => 'MeshCore';
 
   @override
+  String get meshcoreContactSelectorTitle => 'Select MeshCore contact';
+
+  @override
+  String get meshcoreContactSelectorSearchHint => 'Search contacts';
+
+  @override
+  String get meshcoreContactSelectorEmpty => 'No MeshCore contacts yet';
+
+  @override
+  String get meshcoreContactSelectorNoMatches => 'No matches';
+
+  @override
   String get automationTriggerNodeOffline => 'Node becomes inactive';
 
   @override
@@ -4259,7 +4271,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deviceConfigRoleClientMuteDesc =>
-      'Same as client but will not transmit any messages from itself. Useful for monitoring.';
+      'Does not forward packets from other nodes. Still sends and receives its own messages normally.';
 
   @override
   String get deviceConfigRoleLostAndFound => 'Lost and Found';
@@ -4273,7 +4285,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deviceConfigRoleRouterDesc =>
-      'Routes mesh packets between nodes. Screen and Bluetooth disabled to conserve power.';
+      'Infrastructure node for tower or mountain-top installation only. Not for rooftops or mobile nodes.';
 
   @override
   String get deviceConfigRoleRouterLate => 'Router Late';
@@ -4301,7 +4313,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deviceConfigRoleTakTrackerDesc =>
-      'Combination of TAK and Tracker modes.';
+      'Sends automatic TAK PLI broadcasts and reduces routine traffic.';
 
   @override
   String get deviceConfigRoleTracker => 'Tracker';

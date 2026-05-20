@@ -1388,13 +1388,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get arTouchUnlocked => 'Сенсор разблокирован';
 
   @override
-  String get arViewModeSelectorExp => 'EXP';
+  String get arViewModeSelectorExp => 'ЭКСП';
 
   @override
-  String get arViewModeSelectorMin => 'MIN';
+  String get arViewModeSelectorMin => 'МИН';
 
   @override
-  String get arViewModeSelectorTac => 'ADV';
+  String get arViewModeSelectorTac => 'ПРО';
 
   @override
   String get authMfaActiveMethods => 'Активные методы';
@@ -2793,6 +2793,18 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get automationTriggerProtocolMeshcore => 'MeshCore';
+
+  @override
+  String get meshcoreContactSelectorTitle => 'Выбрать контакт MeshCore';
+
+  @override
+  String get meshcoreContactSelectorSearchHint => 'Поиск контактов';
+
+  @override
+  String get meshcoreContactSelectorEmpty => 'Пока нет контактов MeshCore';
+
+  @override
+  String get meshcoreContactSelectorNoMatches => 'Совпадений нет';
 
   @override
   String get automationTriggerNodeOffline => 'Узел стал неактивным';
@@ -4306,7 +4318,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get deviceConfigRoleClientMuteDesc =>
-      'Аналогично клиенту, но не передает никаких собственных сообщений. Полезно для мониторинга.';
+      'Не пересылает пакеты других узлов. Свои сообщения по-прежнему отправляет и принимает в обычном режиме.';
 
   @override
   String get deviceConfigRoleLostAndFound => 'Найди и потеряй';
@@ -4320,7 +4332,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get deviceConfigRoleRouterDesc =>
-      'Маршрутизирует пакеты сети между узлами. Экран и Bluetooth отключены для экономии энергии.';
+      'Инфраструктурный узел только для установки на вышках или вершинах гор. Не подходит для крыш или мобильных узлов.';
 
   @override
   String get deviceConfigRoleRouterLate => 'Запоздалый роутер';
@@ -4348,7 +4360,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get deviceConfigRoleTakTrackerDesc =>
-      'Комбинация режимов TAK и трекера.';
+      'Автоматически отправляет TAK PLI-рассылки и снижает рутинный трафик.';
 
   @override
   String get deviceConfigRoleTracker => 'Трекер';
@@ -5127,49 +5139,51 @@ class AppLocalizationsRu extends AppLocalizations {
       'Новый ответ на ваш отчёт об ошибке';
 
   @override
-  String get bugResponseSheetTitle => 'Bug Reply';
+  String get bugResponseSheetTitle => 'Ответ по ошибке';
 
   @override
   String bugResponseSheetReportedOn(String date) {
-    return 'Reported $date';
+    return 'Отправлено $date';
   }
 
   @override
-  String get bugResponseSheetReplyLabel => 'Reply';
+  String get bugResponseSheetReplyLabel => 'Ответ';
 
   @override
-  String get bugResponseSheetReplyHint => 'Type a reply…';
+  String get bugResponseSheetReplyHint => 'Введите ответ…';
 
   @override
-  String get bugResponseSheetSend => 'Send reply';
+  String get bugResponseSheetSend => 'Отправить ответ';
 
   @override
-  String get bugResponseSheetReplySent => 'Reply sent';
+  String get bugResponseSheetReplySent => 'Ответ отправлен';
 
   @override
   String bugResponseSheetReplyFailed(String error) {
-    return 'Failed to send reply: $error';
+    return 'Не удалось отправить ответ: $error';
   }
 
   @override
-  String get bugResponseSheetViewFull => 'View full bug report';
+  String get bugResponseSheetViewFull => 'Открыть полный отчёт';
 
   @override
-  String get bugResponseSheetDisableSnackbars => 'Don\'t show again';
+  String get bugResponseSheetDisableSnackbars => 'Больше не показывать';
 
   @override
   String get bugResponseSheetSnackbarsDisabled =>
-      'In-app alerts off. Push notifications still fire.';
+      'Уведомления в приложении выключены. Push-уведомления продолжают приходить.';
 
   @override
-  String get settingsTileBugResponseAlertsTitle => 'Bug report reply alerts';
+  String get settingsTileBugResponseAlertsTitle =>
+      'Уведомления об ответах на ошибки';
 
   @override
   String get settingsTileBugResponseAlertsSubtitle =>
-      'In-app snackbar when the founder replies';
+      'Snackbar в приложении при ответе разработчика';
 
   @override
-  String get bugResponseSheetLoadFailed => 'Couldn\'t load the bug report';
+  String get bugResponseSheetLoadFailed =>
+      'Не удалось загрузить отчёт об ошибке';
 
   @override
   String get feedbackReportBugAction => 'Сообщить об ошибке';
@@ -6459,7 +6473,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get helpCenterScreenSignalFeed => 'Лента сигналов';
 
   @override
-  String get helpCenterScreenTakGateway => 'TAK Gateway';
+  String get helpCenterScreenTakGateway => 'Шлюз TAK';
 
   @override
   String get helpCenterScreenTimeline => 'Хронология';
@@ -7932,13 +7946,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreRepeaterCliQuickAdvertise => 'Объявление';
 
   @override
-  String get meshcoreRepeaterCliQuickGetName => 'Get name';
+  String get meshcoreRepeaterCliQuickGetName => 'Получить имя';
 
   @override
-  String get meshcoreRepeaterCliQuickGetRadio => 'Get radio';
+  String get meshcoreRepeaterCliQuickGetRadio => 'Получить радио';
 
   @override
-  String get meshcoreRepeaterCliQuickGetTx => 'Get TX';
+  String get meshcoreRepeaterCliQuickGetTx => 'Получить TX';
 
   @override
   String get meshcoreRepeaterCliQuickDiscovery => 'Поиск';
@@ -7977,7 +7991,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreRepeaterCliHelpNeighborsHeader => 'Соседи';
 
   @override
-  String get meshcoreRepeaterCliHelpBridgeHeader => 'Bridge';
+  String get meshcoreRepeaterCliHelpBridgeHeader => 'Мост';
 
   @override
   String get meshcoreRepeaterCliHelpLoggingHeader => 'Логи';
@@ -8407,10 +8421,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get meshcoreRepeaterAdminSettingsSpreadingFactorLabel =>
-      'Spreading factor';
+      'Коэффициент расширения';
 
   @override
-  String get meshcoreRepeaterAdminSettingsCodingRateLabel => 'Coding rate';
+  String get meshcoreRepeaterAdminSettingsCodingRateLabel =>
+      'Скорость кодирования';
 
   @override
   String get meshcoreRepeaterAdminSettingsTxPowerLabel => 'Мощность TX (дБм)';
@@ -8519,7 +8534,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreRepeaterStatusPacketsSentLabel => 'Отправлено';
 
   @override
-  String get meshcoreRepeaterStatusFloodLabel => 'Flood (TX/RX)';
+  String get meshcoreRepeaterStatusFloodLabel => 'Лавинная (TX/RX)';
 
   @override
   String get meshcoreRepeaterStatusDirectLabel => 'Прямые (TX/RX)';
@@ -12899,7 +12914,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get nodeComparisonUnknown => 'Неизвестно';
 
   @override
-  String get nodeComparisonVs => 'VS';
+  String get nodeComparisonVs => 'ПРОТИВ';
 
   @override
   String get nodeComparisonYes => 'Да';
@@ -17862,28 +17877,28 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get scannerUnsupportedBleTitle => 'BLE not available';
+  String get scannerUnsupportedBleTitle => 'BLE недоступен';
 
   @override
   String get scannerUnsupportedBleDescription =>
-      'This build is running on a platform without a Bluetooth radio. Connect a SocialMesh-compatible device over the network instead.';
+      'Эта сборка запущена на платформе без Bluetooth-радио. Подключите устройство, совместимое с SocialMesh, через сеть.';
 
   @override
-  String get scannerUnsupportedBleAction => 'Use network connection';
+  String get scannerUnsupportedBleAction => 'Использовать сетевое подключение';
 
   @override
-  String get scannerUnsupportedSerialTitle => 'USB serial not available';
+  String get scannerUnsupportedSerialTitle => 'USB Serial недоступен';
 
   @override
   String get scannerUnsupportedSerialDescription =>
-      'This build cannot access USB serial devices. Use Bluetooth or a network connection instead.';
+      'Эта сборка не может работать с USB-устройствами. Используйте Bluetooth или сетевое подключение.';
 
   @override
-  String get scannerWebDashboardTitle => 'Dashboard mode';
+  String get scannerWebDashboardTitle => 'Режим панели';
 
   @override
   String get scannerWebDashboardDescription =>
-      'SocialMesh on the web runs in dashboard mode: it views mesh activity synced from your paired mobile device but cannot connect to a radio directly. Open SocialMesh on your phone to pair a device.';
+      'SocialMesh в вебе работает в режиме панели: показывает активность mesh-сети, синхронизированную с парным мобильным устройством, но не может подключаться к радио напрямую. Откройте SocialMesh на телефоне, чтобы выполнить сопряжение устройства.';
 
   @override
   String get searchProductsBrowseByCategory => 'Просмотр по категориям';
@@ -18516,7 +18531,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'URL шлюза, публикация местоположения, позывной';
 
   @override
-  String get settingsSearchTakGatewayTitle => 'TAK Gateway';
+  String get settingsSearchTakGatewayTitle => 'Шлюз TAK';
 
   @override
   String get settingsSearchThemePackSubtitle =>
@@ -21778,7 +21793,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get takDashboardThreatProximity => 'Близость объектов';
 
   @override
-  String get takDashboardTitle => 'TAK Dashboard';
+  String get takDashboardTitle => 'Панель TAK';
 
   @override
   String get takDashboardTotalEntities => 'Всего объектов';
@@ -22051,7 +22066,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get takScreenHelpTitleStatus => 'Статус подключения';
 
   @override
-  String get takScreenOverflowDashboard => 'TAK Dashboard';
+  String get takScreenOverflowDashboard => 'Панель TAK';
 
   @override
   String get takScreenOverflowSettings => 'Настройки TAK';
@@ -22069,7 +22084,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get takScreenStaleModeStaleOnly => 'Только устаревшие';
 
   @override
-  String get takScreenTitle => 'TAK Gateway';
+  String get takScreenTitle => 'Шлюз TAK';
 
   @override
   String get takScreenTooltipConnect => 'Подключиться';
@@ -22210,7 +22225,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get takStatusCardDisconnected => 'Отключён';
 
   @override
-  String get takStatusCardLabel => 'TAK Gateway';
+  String get takStatusCardLabel => 'Шлюз TAK';
 
   @override
   String get takStatusCardReconnecting => 'Переподключение...';
@@ -26900,7 +26915,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String themeSettingsThemePack(String colorName) {
-    return '$colorName (Theme Pack)';
+    return '$colorName (набор тем)';
   }
 
   @override
@@ -31761,7 +31776,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get adminBroadcastIconTip => 'Совет';
 
   @override
-  String get adminBroadcastIconSignals => 'Signals';
+  String get adminBroadcastIconSignals => 'Сигналы';
 
   @override
   String get adminBroadcastIconNodedex => 'NodeDex';
@@ -31963,7 +31978,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get adminBroadcastLinkMap => 'Карта';
 
   @override
-  String get adminBroadcastLinkSignals => 'Signals';
+  String get adminBroadcastLinkSignals => 'Сигналы';
 
   @override
   String get adminBroadcastLinkNodedex => 'NodeDex';
@@ -32300,7 +32315,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Классический блочный стиль QR. Максимальная совместимость.';
 
   @override
-  String get adminQrStyleElevatedHeader => 'ELEVATED STYLES';
+  String get adminQrStyleElevatedHeader => 'ОБЪЁМНЫЕ СТИЛИ';
 
   @override
   String adminQrStyleElevatedSub(String styleName) {
@@ -32834,7 +32849,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get globalLayerUnhealthy => 'Проблемы';
 
   @override
-  String get globalLayerPingLabel => 'Ping';
+  String get globalLayerPingLabel => 'Пинг';
 
   @override
   String get globalLayerReconnectsLabel => 'Переподключения';
@@ -33731,7 +33746,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Отслеживайте узлы Meshtastic на высоте';
 
   @override
-  String get helpTakGatewayOverviewTitle => 'TAK Gateway';
+  String get helpTakGatewayOverviewTitle => 'Шлюз TAK';
 
   @override
   String get helpTakGatewayOverviewDescription =>
@@ -34948,7 +34963,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get whatsNewVersion1110Subtitle => 'Версия 1.11.0';
 
   @override
-  String get whatsNewSignalsTitle => 'Signals';
+  String get whatsNewSignalsTitle => 'Сигналы';
 
   @override
   String get whatsNewSignalsDescription =>
@@ -34978,7 +34993,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get whatsNewVersion1160Subtitle => 'Версия 1.16.0';
 
   @override
-  String get whatsNewTakGatewayTitle => 'TAK Gateway';
+  String get whatsNewTakGatewayTitle => 'Шлюз TAK';
 
   @override
   String get whatsNewTakGatewayDescription =>
@@ -35737,17 +35752,17 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get onboardingSignalAuthorSarah => 'Sarah';
+  String get onboardingSignalAuthorSarah => 'Сара';
 
   @override
   String get onboardingSignalContentSarah =>
       'Только что достигла вершины! Сигнал здесь кристально чистый.';
 
   @override
-  String get onboardingSignalAuthorMike => 'Mike';
+  String get onboardingSignalAuthorMike => 'Майк';
 
   @override
-  String get onboardingSignalAuthorAlex => 'Alex';
+  String get onboardingSignalAuthorAlex => 'Алекс';
 
   @override
   String get globalLayerCopyExplainTitle => 'Что такое Глобальный уровень?';
@@ -38862,7 +38877,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshGamesYouLabel => 'Вы';
 
   @override
-  String get meshGamesVsSeparator => 'vs';
+  String get meshGamesVsSeparator => 'против';
 
   @override
   String get meshGamesOpponentPickerTitle => 'Выберите противника';
@@ -39203,7 +39218,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get servicePresentationMeetupAction => 'Подробнее';
 
   @override
-  String get servicePresentationSignalsTitle => 'Signals';
+  String get servicePresentationSignalsTitle => 'Сигналы';
 
   @override
   String get servicePresentationSignalsSubtitle =>
@@ -39281,7 +39296,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get voiceRecordingStopButton => 'Стоп';
 
   @override
-  String get voiceRecordingLive => 'REC';
+  String get voiceRecordingLive => 'ЗАП';
 
   @override
   String voiceRecordingMaxSeconds(String seconds) {
@@ -39392,7 +39407,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Датчик компаса недоступен на этом устройстве';
 
   @override
-  String get takBridgeSectionTitle => 'Mesh Bridge';
+  String get takBridgeSectionTitle => 'Mesh-мост';
 
   @override
   String get takBridgeEnableToggle => 'Включить TAK Mesh Bridge';
@@ -39462,7 +39477,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get takIdentityOverrideHint => 'Введите произвольный позывной';
 
   @override
-  String get takScreenBridgeOnlyTitle => 'TAK Mesh Bridge';
+  String get takScreenBridgeOnlyTitle => 'TAK Mesh-мост';
 
   @override
   String get takScreenBridgeOnlyDescription =>
@@ -42102,7 +42117,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get reticulumDetailChannelIndex => 'Индекс канала';
 
   @override
-  String get reticulumDetailChannelIndexHint => '0–7';
+  String get reticulumDetailChannelIndexHint => '0-7';
 
   @override
   String get reticulumDetailNotes => 'Заметки';
@@ -42349,7 +42364,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Диагностика скопирована в буфер обмена';
 
   @override
-  String get settingsRnsCompanionTitle => 'RNS Services (Companion)';
+  String get settingsRnsCompanionTitle => 'RNS-сервисы (компаньон)';
 
   @override
   String get settingsRnsCompanionSubtitle =>

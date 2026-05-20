@@ -51,11 +51,24 @@ class AutomationEngine {
   Scheduler? _scheduler;
   StreamSubscription<ScheduledFireEvent>? _schedulerSubscription;
 
-  /// Callback to send a message via the mesh
-  final Future<bool> Function(int nodeNum, String message)? onSendMessage;
+  // Callback to send a message via the mesh. The `protocol` carries
+  // the firing event's source (`event.protocol`) so the wiring layer
+  // can route via Meshtastic's `protocolServiceProvider` or
+  // MeshCore's `meshCoreSessionProvider`. Tests that only care about
+  // node-num + text can ignore the third argument.
+  final Future<bool> Function(
+    int nodeNum,
+    String message,
+    TriggerProtocol protocol,
+  )?
+  onSendMessage;
 
-  /// Callback to send a message to a channel
-  final Future<bool> Function(int channelIndex, String message)?
+  // Same shape for channel sends.
+  final Future<bool> Function(
+    int channelIndex,
+    String message,
+    TriggerProtocol protocol,
+  )?
   onSendToChannel;
 
   /// Callback to resolve the local device's node number.
@@ -1197,7 +1210,11 @@ class AutomationEngine {
             event,
             trigger: automation.trigger,
           );
-          final sent = await onSendMessage!(action.targetNodeNum!, message);
+          final sent = await onSendMessage!(
+            action.targetNodeNum!,
+            message,
+            event.protocol,
+          );
           return ActionResult(
             actionName: actionName,
             success: sent,
@@ -1227,6 +1244,7 @@ class AutomationEngine {
           final sent = await onSendToChannel!(
             action.targetChannelIndex!,
             message,
+            event.protocol,
           );
           return ActionResult(
             actionName: actionName,

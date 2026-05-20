@@ -2795,6 +2795,18 @@ class AppLocalizationsUk extends AppLocalizations {
   String get automationTriggerProtocolMeshcore => 'MeshCore';
 
   @override
+  String get meshcoreContactSelectorTitle => 'Виберіть контакт MeshCore';
+
+  @override
+  String get meshcoreContactSelectorSearchHint => 'Пошук контактів';
+
+  @override
+  String get meshcoreContactSelectorEmpty => 'Поки немає контактів MeshCore';
+
+  @override
+  String get meshcoreContactSelectorNoMatches => 'Збігів не знайдено';
+
+  @override
   String get automationTriggerNodeOffline => 'Вузол стає неактивним';
 
   @override
@@ -5128,55 +5140,58 @@ class AppLocalizationsUk extends AppLocalizations {
   String get feedbackReplySent => 'Відповідь надіслано';
 
   @override
-  String get feedbackResponseToastAction => 'View';
+  String get feedbackResponseToastAction => 'Переглянути';
 
   @override
-  String get feedbackResponseToastDefault => 'New response to your bug report';
+  String get feedbackResponseToastDefault =>
+      'Нова відповідь на ваш звіт про помилку';
 
   @override
-  String get bugResponseSheetTitle => 'Bug Reply';
+  String get bugResponseSheetTitle => 'Відповідь на звіт';
 
   @override
   String bugResponseSheetReportedOn(String date) {
-    return 'Reported $date';
+    return 'Повідомлено $date';
   }
 
   @override
-  String get bugResponseSheetReplyLabel => 'Reply';
+  String get bugResponseSheetReplyLabel => 'Відповідь';
 
   @override
-  String get bugResponseSheetReplyHint => 'Type a reply…';
+  String get bugResponseSheetReplyHint => 'Введіть відповідь…';
 
   @override
-  String get bugResponseSheetSend => 'Send reply';
+  String get bugResponseSheetSend => 'Надіслати відповідь';
 
   @override
-  String get bugResponseSheetReplySent => 'Reply sent';
+  String get bugResponseSheetReplySent => 'Відповідь надіслано';
 
   @override
   String bugResponseSheetReplyFailed(String error) {
-    return 'Failed to send reply: $error';
+    return 'Не вдалося надіслати відповідь: $error';
   }
 
   @override
-  String get bugResponseSheetViewFull => 'View full bug report';
+  String get bugResponseSheetViewFull => 'Переглянути повний звіт';
 
   @override
-  String get bugResponseSheetDisableSnackbars => 'Don\'t show again';
+  String get bugResponseSheetDisableSnackbars => 'Більше не показувати';
 
   @override
   String get bugResponseSheetSnackbarsDisabled =>
-      'In-app alerts off. Push notifications still fire.';
+      'Сповіщення в застосунку вимкнено. Push-сповіщення працюють.';
 
   @override
-  String get settingsTileBugResponseAlertsTitle => 'Bug report reply alerts';
+  String get settingsTileBugResponseAlertsTitle =>
+      'Сповіщення про відповіді на звіти';
 
   @override
   String get settingsTileBugResponseAlertsSubtitle =>
-      'In-app snackbar when the founder replies';
+      'Снекбар у застосунку, коли засновник відповідає';
 
   @override
-  String get bugResponseSheetLoadFailed => 'Couldn\'t load the bug report';
+  String get bugResponseSheetLoadFailed =>
+      'Не вдалося завантажити звіт про помилку';
 
   @override
   String get feedbackReportBugAction => 'Повідомити про помилку';
@@ -7342,7 +7357,7 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get mapSaDashboard => 'TAK Dashboard';
+  String get mapSaDashboard => 'Панель TAK';
 
   @override
   String get mapScreenTitle => 'Мережева карта';
@@ -7742,14 +7757,14 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreAboutSocialMesh => 'Про SocialMesh';
 
   @override
-  String get meshcoreChatAppearanceSectionTitle => 'Chat appearance';
+  String get meshcoreChatAppearanceSectionTitle => 'Вигляд чату';
 
   @override
-  String get meshcoreChatTextScaleLabel => 'Chat text size';
+  String get meshcoreChatTextScaleLabel => 'Розмір тексту чату';
 
   @override
   String get meshcoreChatTextScaleHelper =>
-      'Scales every text widget inside MeshCore chats (bubbles, timestamps, dividers, input). Does not affect Meshtastic.';
+      'Масштабує всі текстові віджети в чатах MeshCore (бульбашки, мітки часу, розділювачі, введення). Не впливає на Meshtastic.';
 
   @override
   String get meshcoreActions => 'Дії';
@@ -7767,614 +7782,622 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreAddContactButton => 'Додати контакт';
 
   @override
-  String get meshcoreAutoAddSectionTitle => 'Contact auto-add';
+  String get meshcoreAutoAddSectionTitle => 'Автододавання контактів';
 
   @override
   String get meshcoreAutoAddSectionSubtitle =>
-      'Automatically import contacts the radio hears';
+      'Автоматично імпортувати контакти, які чує радіо';
 
   @override
-  String get meshcoreAutoAddChat => 'Auto-add chat contacts';
+  String get meshcoreAutoAddChat => 'Автододавання контактів чату';
 
   @override
   String get meshcoreAutoAddChatSubtitle =>
-      'Add nearby chat-type peers to your contacts automatically';
+      'Автоматично додавати поруч пірів типу chat до контактів';
 
   @override
-  String get meshcoreAutoAddRepeater => 'Auto-add repeaters';
+  String get meshcoreAutoAddRepeater => 'Автододавання ретрансляторів';
 
   @override
   String get meshcoreAutoAddRepeaterSubtitle =>
-      'Add nearby repeaters to your contacts automatically';
+      'Автоматично додавати ретранслятори поруч до контактів';
 
   @override
-  String get meshcoreAutoAddRoomServer => 'Auto-add rooms';
+  String get meshcoreAutoAddRoomServer => 'Автододавання кімнат';
 
   @override
   String get meshcoreAutoAddRoomServerSubtitle =>
-      'Add nearby room servers to your contacts automatically';
+      'Автоматично додавати сервери кімнат поруч до контактів';
 
   @override
-  String get meshcoreAutoAddSensor => 'Auto-add sensors';
+  String get meshcoreAutoAddSensor => 'Автододавання сенсорів';
 
   @override
   String get meshcoreAutoAddSensorSubtitle =>
-      'Add nearby sensors to your contacts automatically';
+      'Автоматично додавати сенсори поруч до контактів';
 
   @override
-  String get meshcoreAutoAddOverwriteOldest => 'Overwrite oldest when full';
+  String get meshcoreAutoAddOverwriteOldest =>
+      'Перезаписувати найстаріший, коли список заповнено';
 
   @override
   String get meshcoreAutoAddOverwriteOldestSubtitle =>
-      'When the contact list is full, evict the oldest non-favourite to make room';
+      'Коли список контактів заповнено, видаляти найстаріший не-обраний контакт, щоб звільнити місце';
 
   @override
-  String get meshcoreAutoAddLoadFailed => 'Could not load auto-add config';
+  String get meshcoreAutoAddLoadFailed =>
+      'Не вдалося завантажити налаштування автододавання';
 
   @override
-  String get meshcoreAutoAddSaveFailed => 'Could not save auto-add config';
+  String get meshcoreAutoAddSaveFailed =>
+      'Не вдалося зберегти налаштування автододавання';
 
   @override
-  String get meshcoreAutoRouteSectionTitle => 'Auto-route rotation';
+  String get meshcoreAutoRouteSectionTitle => 'Авторотація маршрутів';
 
   @override
-  String get meshcoreAutoRouteEnabled => 'Enable auto-route rotation';
+  String get meshcoreAutoRouteEnabled => 'Увімкнути авторотацію маршрутів';
 
   @override
   String get meshcoreAutoRouteEnabledSubtitle =>
-      'When a message fails, retry on the next-best saved path before falling back to flood';
+      'Якщо повідомлення не доставлено, повторити через наступний найкращий збережений шлях перед поверненням до flood';
 
   @override
-  String get meshcoreAutoRouteMaxWeight => 'Max route weight';
+  String get meshcoreAutoRouteMaxWeight => 'Максимальна вага маршруту';
 
   @override
   String get meshcoreAutoRouteMaxWeightSubtitle =>
-      'Upper limit on how confident the app can become about a single path';
+      'Верхня межа того, наскільки впевненим застосунок може бути в одному шляху';
 
   @override
-  String get meshcoreAutoRouteInitialWeight => 'Initial route weight';
+  String get meshcoreAutoRouteInitialWeight => 'Початкова вага маршруту';
 
   @override
   String get meshcoreAutoRouteInitialWeightSubtitle =>
-      'Starting weight for newly-discovered paths';
+      'Початкова вага для новознайдених шляхів';
 
   @override
-  String get meshcoreAutoRouteSuccessIncrement => 'Success bonus';
+  String get meshcoreAutoRouteSuccessIncrement => 'Бонус за успіх';
 
   @override
   String get meshcoreAutoRouteSuccessIncrementSubtitle =>
-      'How much to reward a path that delivered successfully';
+      'Наскільки винагороджувати шлях, який успішно доставив повідомлення';
 
   @override
-  String get meshcoreAutoRouteFailureDecrement => 'Failure penalty';
+  String get meshcoreAutoRouteFailureDecrement => 'Штраф за помилку';
 
   @override
   String get meshcoreAutoRouteFailureDecrementSubtitle =>
-      'How much to penalize a path that failed; reaches zero = evicted';
+      'Наскільки знижувати рейтинг шляху, що зазнав невдачі; досягнення нуля = видалення';
 
   @override
-  String get meshcoreAutoRouteMaxRetries => 'Max attempts per message';
+  String get meshcoreAutoRouteMaxRetries => 'Максимум спроб на повідомлення';
 
   @override
   String get meshcoreAutoRouteMaxRetriesSubtitle =>
-      'Total attempts including the initial send; the last attempt falls back to flood';
+      'Загальна кількість спроб включно з першою; остання спроба виконується через flood';
 
   @override
-  String get meshcoreAutoRouteRetryTimeoutSeconds => 'Retry timeout (seconds)';
+  String get meshcoreAutoRouteRetryTimeoutSeconds =>
+      'Тайм-аут повтору (секунди)';
 
   @override
   String get meshcoreAutoRouteRetryTimeoutSecondsSubtitle =>
-      'How long to wait for a delivery confirmation before retrying on another path';
+      'Як довго чекати підтвердження доставки перед спробою через інший шлях';
 
   @override
-  String get meshcoreRepeaterAdminLoginTitle => 'Repeater admin login';
+  String get meshcoreRepeaterAdminLoginTitle => 'Вхід адміна ретранслятора';
 
   @override
   String meshcoreRepeaterAdminLoginSubtitle(String name) {
-    return 'Authenticate against $name to unlock admin tools';
+    return 'Авторизуйтеся в $name, щоб розблокувати адмін-інструменти';
   }
 
   @override
-  String get meshcoreRepeaterAdminLoginPasswordLabel => 'Admin password';
+  String get meshcoreRepeaterAdminLoginPasswordLabel => 'Пароль адміна';
 
   @override
-  String get meshcoreRepeaterAdminLoginAction => 'Login';
+  String get meshcoreRepeaterAdminLoginAction => 'Увійти';
 
   @override
-  String get meshcoreRepeaterAdminLoginSuccess => 'Logged in as admin';
+  String get meshcoreRepeaterAdminLoginSuccess => 'Увійшли як адмін';
 
   @override
-  String get meshcoreRepeaterAdminLoginSuccessGuest => 'Logged in as guest';
+  String get meshcoreRepeaterAdminLoginSuccessGuest => 'Увійшли як гість';
 
   @override
   String get meshcoreRepeaterAdminLoginFailed =>
-      'Login failed; check the password and try again';
+      'Помилка входу; перевірте пароль і спробуйте знову';
 
   @override
   String get meshcoreRepeaterAdminLoginTimeout =>
-      'Login timed out; the repeater did not respond';
+      'Час входу вичерпано; ретранслятор не відповів';
 
   @override
   String get meshcoreRepeaterAdminLoginEmptyPassword =>
-      'Enter the admin password to continue';
+      'Введіть пароль адміна, щоб продовжити';
 
   @override
   String meshcoreRepeaterAdminHubTitle(String name) {
-    return '$name admin';
+    return 'Адмін $name';
   }
 
   @override
-  String get meshcoreRepeaterAdminHubToolsHeader => 'Admin tools';
+  String get meshcoreRepeaterAdminHubToolsHeader => 'Адмін-інструменти';
 
   @override
-  String get meshcoreRepeaterAdminHubStatusTile => 'Status';
+  String get meshcoreRepeaterAdminHubStatusTile => 'Статус';
 
   @override
   String get meshcoreRepeaterAdminHubStatusTileSubtitle =>
-      'Battery, uptime, radio + packet counters';
+      'Батарея, аптайм, лічильники радіо та пакетів';
 
   @override
   String get meshcoreRepeaterAdminHubCliTile => 'CLI';
 
   @override
   String get meshcoreRepeaterAdminHubCliTileSubtitle =>
-      'Send admin commands to the repeater';
+      'Надіслати адмін-команди до ретранслятора';
 
   @override
   String meshcoreRepeaterCliTitle(String name) {
-    return '$name CLI';
+    return 'CLI $name';
   }
 
   @override
-  String get meshcoreRepeaterCliEmptyTitle => 'No commands yet';
+  String get meshcoreRepeaterCliEmptyTitle => 'Команд ще немає';
 
   @override
   String get meshcoreRepeaterCliEmptyDescription =>
-      'Type a command below or pick a quick command to get started.';
+      'Введіть команду нижче або виберіть швидку команду, щоб почати.';
 
   @override
-  String get meshcoreRepeaterCliPlaceholder => 'Enter a command';
+  String get meshcoreRepeaterCliPlaceholder => 'Введіть команду';
 
   @override
-  String get meshcoreRepeaterCliQuickAdvertise => 'Advertise';
+  String get meshcoreRepeaterCliQuickAdvertise => 'Рекламувати';
 
   @override
-  String get meshcoreRepeaterCliQuickGetName => 'Get name';
+  String get meshcoreRepeaterCliQuickGetName => 'Отримати назву';
 
   @override
-  String get meshcoreRepeaterCliQuickGetRadio => 'Get radio';
+  String get meshcoreRepeaterCliQuickGetRadio => 'Отримати радіо';
 
   @override
-  String get meshcoreRepeaterCliQuickGetTx => 'Get TX';
+  String get meshcoreRepeaterCliQuickGetTx => 'Отримати TX';
 
   @override
-  String get meshcoreRepeaterCliQuickDiscovery => 'Discovery';
+  String get meshcoreRepeaterCliQuickDiscovery => 'Виявлення';
 
   @override
-  String get meshcoreRepeaterCliQuickNeighbors => 'Neighbours';
+  String get meshcoreRepeaterCliQuickNeighbors => 'Сусіди';
 
   @override
-  String get meshcoreRepeaterCliQuickVersion => 'Version';
+  String get meshcoreRepeaterCliQuickVersion => 'Версія';
 
   @override
-  String get meshcoreRepeaterCliQuickClock => 'Clock';
+  String get meshcoreRepeaterCliQuickClock => 'Годинник';
 
   @override
-  String get meshcoreRepeaterCliQuickClockSync => 'Clock sync';
+  String get meshcoreRepeaterCliQuickClockSync => 'Синхр. годинника';
 
   @override
-  String get meshcoreRepeaterCliClearHistory => 'Clear history';
+  String get meshcoreRepeaterCliClearHistory => 'Очистити історію';
 
   @override
-  String get meshcoreRepeaterCliPreviousCommand => 'Previous command';
+  String get meshcoreRepeaterCliPreviousCommand => 'Попередня команда';
 
   @override
-  String get meshcoreRepeaterCliNextCommand => 'Next command';
+  String get meshcoreRepeaterCliNextCommand => 'Наступна команда';
 
   @override
-  String get meshcoreRepeaterCliHelpTitle => 'Commands';
+  String get meshcoreRepeaterCliHelpTitle => 'Команди';
 
   @override
-  String get meshcoreRepeaterCliHelpGeneralHeader => 'General';
+  String get meshcoreRepeaterCliHelpGeneralHeader => 'Загальні';
 
   @override
-  String get meshcoreRepeaterCliHelpSettingsHeader => 'Settings';
+  String get meshcoreRepeaterCliHelpSettingsHeader => 'Налаштування';
 
   @override
-  String get meshcoreRepeaterCliHelpNeighborsHeader => 'Neighbours';
+  String get meshcoreRepeaterCliHelpNeighborsHeader => 'Сусіди';
 
   @override
-  String get meshcoreRepeaterCliHelpBridgeHeader => 'Bridge';
+  String get meshcoreRepeaterCliHelpBridgeHeader => 'Міст';
 
   @override
-  String get meshcoreRepeaterCliHelpLoggingHeader => 'Logging';
+  String get meshcoreRepeaterCliHelpLoggingHeader => 'Журналювання';
 
   @override
-  String get meshcoreRepeaterCliHelpRegionHeader => 'Region';
+  String get meshcoreRepeaterCliHelpRegionHeader => 'Регіон';
 
   @override
   String get meshcoreRepeaterCliHelpGpsHeader => 'GPS';
 
   @override
   String get meshcoreRepeaterCliHelpPassword =>
-      'Change the admin password (password <new-password>).';
+      'Змінити пароль адміна (password <new-password>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetAllowReadOnly =>
-      'Toggle guest read-only access (set allow.read.only <on|off>).';
+      'Перемкнути доступ гостей лише для читання (set allow.read.only <on|off>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetFloodMax =>
-      'Set the flood max-hop ceiling (set flood.max <hops>).';
+      'Встановити максимальну стелю переходів flood (set flood.max <hops>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetIntThresh =>
-      'Set the interference threshold in dB (set int.thresh <db>).';
+      'Встановити поріг завад у dB (set int.thresh <db>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetAgcResetInterval =>
-      'Set the AGC reset interval in seconds (set agc.reset.interval <s>).';
+      'Встановити інтервал скидання AGC в секундах (set agc.reset.interval <s>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetMultiAcks =>
-      'Toggle multi-ack mode (set multi.acks <0|1>).';
+      'Перемкнути режим multi-ack (set multi.acks <0|1>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetFloodAdvertInterval =>
-      'Set flood-advert interval in hours (set flood.advert.interval <h>).';
+      'Встановити інтервал flood-реклами в годинах (set flood.advert.interval <h>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetGuestPassword =>
-      'Change the guest password (set guest.password <new>).';
+      'Змінити пароль гостя (set guest.password <new>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetLat =>
-      'Set latitude in decimal degrees (set lat <lat>).';
+      'Встановити широту в десяткових градусах (set lat <lat>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetLon =>
-      'Set longitude in decimal degrees (set lon <lon>).';
+      'Встановити довготу в десяткових градусах (set lon <lon>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetRxDelay =>
-      'Set receive-delay base (set rxdelay <base>).';
+      'Встановити базу затримки прийому (set rxdelay <base>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetTxDelay =>
-      'Set transmit-delay factor (set txdelay <factor>).';
+      'Встановити коефіцієнт затримки передачі (set txdelay <factor>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetDirectTxDelay =>
-      'Set direct-mode transmit-delay factor (set direct.txdelay <factor>).';
+      'Встановити коефіцієнт затримки прямої передачі (set direct.txdelay <factor>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetBridgeEnabled =>
-      'Toggle the serial bridge (set bridge.enabled <on|off>).';
+      'Перемкнути серійний міст (set bridge.enabled <on|off>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetBridgeDelay =>
-      'Set bridge tx delay in ms 0-10000 (set bridge.delay <ms>).';
+      'Встановити TX-затримку мосту в мс 0-10000 (set bridge.delay <ms>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetBridgeSource =>
-      'Set the bridge source channel (set bridge.source <rx|tx>).';
+      'Встановити вихідний канал мосту (set bridge.source <rx|tx>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetBridgeBaud =>
-      'Set the bridge baud rate (set bridge.baud <speed>).';
+      'Встановити швидкість мосту (set bridge.baud <speed>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetBridgeSecret =>
-      'Set the bridge shared secret (set bridge.secret <secret>).';
+      'Встановити спільний секрет мосту (set bridge.secret <secret>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetAdcMultiplier =>
-      'Set the ADC multiplier factor (set adc.multiplier <factor>).';
+      'Встановити множник ADC (set adc.multiplier <factor>).';
 
   @override
   String get meshcoreRepeaterCliHelpTempRadio =>
-      'Temporarily run a radio config for N minutes (tempradio <freq>,<bw>,<sf>,<cr>,<minutes>).';
+      'Тимчасово запустити радіоконфіг на N хвилин (tempradio <freq>,<bw>,<sf>,<cr>,<minutes>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetPerm =>
-      'Set permissions for a peer (setperm <pubkey-hex> <permissions>).';
+      'Встановити дозволи для піра (setperm <pubkey-hex> <permissions>).';
 
   @override
   String get meshcoreRepeaterCliHelpGetBridgeType =>
-      'Show the configured bridge type (get bridge.type).';
+      'Показати налаштований тип мосту (get bridge.type).';
 
   @override
   String get meshcoreRepeaterCliHelpLogStart =>
-      'Start the on-device log (log start).';
+      'Запустити журнал пристрою (log start).';
 
   @override
   String get meshcoreRepeaterCliHelpLogStop =>
-      'Stop the on-device log (log stop).';
+      'Зупинити журнал пристрою (log stop).';
 
   @override
   String get meshcoreRepeaterCliHelpLogErase =>
-      'Erase the on-device log (log erase).';
+      'Стерти журнал пристрою (log erase).';
 
   @override
-  String get meshcoreRepeaterCliHelpRegion => 'Show the current region.';
+  String get meshcoreRepeaterCliHelpRegion => 'Показати поточний регіон.';
 
   @override
   String get meshcoreRepeaterCliHelpRegionLoad =>
-      'Reload the region table from flash (region load).';
+      'Перезавантажити таблицю регіонів з флеш-памʼяті (region load).';
 
   @override
   String get meshcoreRepeaterCliHelpRegionGet =>
-      'Show one region or all (region get <* | name-prefix>).';
+      'Показати один регіон або всі (region get <* | name-prefix>).';
 
   @override
   String get meshcoreRepeaterCliHelpRegionPut =>
-      'Add/replace a region (region put <name> <* | parent-name-prefix>).';
+      'Додати/замінити регіон (region put <name> <* | parent-name-prefix>).';
 
   @override
   String get meshcoreRepeaterCliHelpRegionRemove =>
-      'Remove a region (region remove <name>).';
+      'Видалити регіон (region remove <name>).';
 
   @override
   String get meshcoreRepeaterCliHelpRegionAllowf =>
-      'Allow a frequency range (region allowf <* | name-prefix>).';
+      'Дозволити діапазон частот (region allowf <* | name-prefix>).';
 
   @override
   String get meshcoreRepeaterCliHelpRegionDenyf =>
-      'Deny a frequency range (region denyf <* | name-prefix>).';
+      'Заборонити діапазон частот (region denyf <* | name-prefix>).';
 
   @override
-  String get meshcoreRepeaterCliHelpRegionHome => 'Show the home region.';
+  String get meshcoreRepeaterCliHelpRegionHome => 'Показати домашній регіон.';
 
   @override
   String get meshcoreRepeaterCliHelpRegionHomeSet =>
-      'Set the home region (region home <* | name-prefix>).';
+      'Встановити домашній регіон (region home <* | name-prefix>).';
 
   @override
   String get meshcoreRepeaterCliHelpRegionSave =>
-      'Save the region table (region save).';
+      'Зберегти таблицю регіонів (region save).';
 
   @override
-  String get meshcoreRepeaterCliHelpGps => 'Show the GPS state.';
+  String get meshcoreRepeaterCliHelpGps => 'Показати стан GPS.';
 
   @override
   String get meshcoreRepeaterCliHelpGpsOnOff =>
-      'Toggle the GPS module (gps <on|off>).';
+      'Перемкнути модуль GPS (gps <on|off>).';
 
   @override
   String get meshcoreRepeaterCliHelpGpsSync =>
-      'Sync the on-device clock from GPS (gps sync).';
+      'Синхронізувати годинник пристрою з GPS (gps sync).';
 
   @override
   String get meshcoreRepeaterCliHelpGpsSetLoc =>
-      'Set lat/lon from the current GPS fix (gps setloc).';
+      'Встановити шир./дов. з поточного фіксу GPS (gps setloc).';
 
   @override
-  String get meshcoreRepeaterCliHelpGpsAdvert => 'Show the GPS advert policy.';
+  String get meshcoreRepeaterCliHelpGpsAdvert =>
+      'Показати політику реклами GPS.';
 
   @override
   String get meshcoreRepeaterCliHelpGpsAdvertSet =>
-      'Set the GPS advert policy (gps advert <none|share|prefs>).';
+      'Встановити політику реклами GPS (gps advert <none|share|prefs>).';
 
   @override
   String get meshcoreRepeaterCliHelpAdvert =>
-      'Broadcast our advertisement once.';
+      'Один раз транслювати нашу рекламу.';
 
   @override
-  String get meshcoreRepeaterCliHelpReboot => 'Restart the repeater.';
+  String get meshcoreRepeaterCliHelpReboot => 'Перезавантажити ретранслятор.';
 
   @override
-  String get meshcoreRepeaterCliHelpClock => 'Show the device clock (UTC).';
+  String get meshcoreRepeaterCliHelpClock =>
+      'Показати годинник пристрою (UTC).';
 
   @override
-  String get meshcoreRepeaterCliHelpVersion => 'Show the firmware version.';
+  String get meshcoreRepeaterCliHelpVersion => 'Показати версію прошивки.';
 
   @override
   String get meshcoreRepeaterCliHelpClearStats =>
-      'Reset packet + airtime counters.';
+      'Скинути лічильники пакетів та ефірного часу.';
 
   @override
   String get meshcoreRepeaterCliHelpSetName =>
-      'Rename the repeater (set name <name>).';
+      'Перейменувати ретранслятор (set name <name>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetTx =>
-      'Set TX power in dBm (set tx <power>).';
+      'Встановити TX-потужність у dBm (set tx <power>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetRadio =>
-      'Set radio params (set radio <freq>,<bw>,<sf>,<cr>).';
+      'Встановити параметри радіо (set radio <freq>,<bw>,<sf>,<cr>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetRepeat =>
-      'Toggle repeat on/off (set repeat <on|off>).';
+      'Перемкнути повтор on/off (set repeat <on|off>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetAf =>
-      'Set the air-time factor (set af <factor>).';
+      'Встановити коефіцієнт ефірного часу (set af <factor>).';
 
   @override
   String get meshcoreRepeaterCliHelpSetAdvertInterval =>
-      'Set advert interval in minutes (set advert.interval <minutes>).';
+      'Встановити інтервал реклами в хвилинах (set advert.interval <minutes>).';
 
   @override
   String get meshcoreRepeaterCliHelpNeighbors =>
-      'List neighbours seen by the repeater.';
+      'Показати сусідів, помічених ретранслятором.';
 
   @override
   String get meshcoreRepeaterCliHelpNeighborRemove =>
-      'Forget a neighbour by prefix (neighbor.remove <prefix>).';
+      'Забути сусіда за префіксом (neighbor.remove <prefix>).';
 
   @override
   String meshcoreRepeaterCliTimeoutSnackbar(int seconds) {
-    return 'No reply within ${seconds}s; the repeater may be offline or the admin session may have expired.';
+    return 'Немає відповіді протягом $seconds с; ретранслятор може бути офлайн або сесія адміна закінчилася.';
   }
 
   @override
   String meshcoreRepeaterCliRateLimitedSnackbar(int seconds) {
-    return 'Rate limit reached; try again in ${seconds}s.';
+    return 'Досягнуто ліміт швидкості; спробуйте знову через $seconds с.';
   }
 
   @override
   String meshcoreRepeaterCliErrorSnackbar(String error) {
-    return 'Could not send command: $error.';
+    return 'Не вдалося надіслати команду: $error.';
   }
 
   @override
-  String get meshcoreRepeaterAdminHubSettingsTile => 'Settings';
+  String get meshcoreRepeaterAdminHubSettingsTile => 'Налаштування';
 
   @override
   String get meshcoreRepeaterAdminHubSettingsTileSubtitle =>
-      'Repeater identity, behaviour, and advertisement';
+      'Ідентичність, поведінка та реклама ретранслятора';
 
   @override
-  String get meshcoreRepeaterAdminHubBinaryRpcTile => 'Binary RPC';
+  String get meshcoreRepeaterAdminHubBinaryRpcTile => 'Бінарний RPC';
 
   @override
   String get meshcoreRepeaterAdminHubBinaryRpcTileSubtitle =>
-      'Status, keep-alive, and access-list pulls';
+      'Запити статусу, keep-alive та списків доступу';
 
   @override
-  String get meshcoreRepeaterBinaryRpcTitle => 'Binary RPC';
+  String get meshcoreRepeaterBinaryRpcTitle => 'Бінарний RPC';
 
   @override
   String get meshcoreRepeaterBinaryRpcSubtitle =>
-      'On-demand pull operations over the admin binary-request envelope. Responses are shown as raw hex.';
+      'Операції запиту на вимогу через конверт бінарного запиту адміна. Відповіді показано як сирий hex.';
 
   @override
-  String get meshcoreRepeaterBinaryRpcOperationsSection => 'Operations';
+  String get meshcoreRepeaterBinaryRpcOperationsSection => 'Операції';
 
   @override
-  String get meshcoreRepeaterBinaryRpcStatus => 'Pull status';
+  String get meshcoreRepeaterBinaryRpcStatus => 'Запитати статус';
 
   @override
-  String get meshcoreRepeaterBinaryRpcKeepAlive => 'Keep session alive';
+  String get meshcoreRepeaterBinaryRpcKeepAlive =>
+      'Підтримувати сесію активною';
 
   @override
-  String get meshcoreRepeaterBinaryRpcAccessList => 'Read access list';
+  String get meshcoreRepeaterBinaryRpcAccessList => 'Прочитати список доступу';
 
   @override
-  String get meshcoreRepeaterBinaryRpcSending => 'Sending...';
+  String get meshcoreRepeaterBinaryRpcSending => 'Надсилання...';
 
   @override
-  String get meshcoreRepeaterBinaryRpcDone => 'Response received.';
+  String get meshcoreRepeaterBinaryRpcDone => 'Відповідь отримано.';
 
   @override
   String get meshcoreRepeaterBinaryRpcFailed =>
-      'No response from repeater (timeout or transport drop).';
+      'Немає відповіді від ретранслятора (тайм-аут або обрив транспорту).';
 
   @override
   String get meshcoreRepeaterBinaryRpcNoSession =>
-      'No active MeshCore session. Connect to the radio first.';
+      'Немає активної сесії MeshCore. Спочатку підключіться до радіо.';
 
   @override
-  String get meshcoreRepeaterBinaryRpcLastResultSection => 'Last response';
+  String get meshcoreRepeaterBinaryRpcLastResultSection => 'Остання відповідь';
 
   @override
-  String get meshcoreRepeaterBinaryRpcEmptyResponse => '(no bytes)';
+  String get meshcoreRepeaterBinaryRpcEmptyResponse => '(немає байтів)';
 
   @override
-  String get meshcoreRepeaterBinaryRpcCopyResult => 'Copy hex';
+  String get meshcoreRepeaterBinaryRpcCopyResult => 'Копіювати hex';
 
   @override
-  String get meshcoreRepeaterBinaryRpcCopied => 'Response hex copied.';
+  String get meshcoreRepeaterBinaryRpcCopied => 'Hex відповіді скопійовано.';
 
   @override
   String meshcoreRepeaterBinaryRpcResponseLength(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count bytes',
-      one: '1 byte',
+      other: '$count байтів',
+      many: '$count байтів',
+      few: '$count байти',
+      one: '1 байт',
     );
     return '$_temp0';
   }
 
   @override
   String meshcoreRepeaterAdminSettingsTitle(String name) {
-    return '$name settings';
+    return 'Налаштування $name';
   }
 
   @override
-  String get meshcoreRepeaterAdminSettingsRefreshAll => 'Refresh all';
+  String get meshcoreRepeaterAdminSettingsRefreshAll => 'Оновити все';
 
   @override
   String get meshcoreRepeaterAdminSettingsRefreshFieldTooltip =>
-      'Refresh from radio';
+      'Оновити з радіо';
 
   @override
-  String get meshcoreRepeaterAdminSettingsSaveButton => 'Save changes';
+  String get meshcoreRepeaterAdminSettingsSaveButton => 'Зберегти зміни';
 
   @override
-  String get meshcoreRepeaterAdminSettingsSectionIdentity => 'Identity';
+  String get meshcoreRepeaterAdminSettingsSectionIdentity => 'Ідентичність';
 
   @override
   String get meshcoreRepeaterAdminSettingsSectionBehavior =>
-      'Repeater behaviour';
+      'Поведінка ретранслятора';
 
   @override
-  String get meshcoreRepeaterAdminSettingsSectionAdvertisement =>
-      'Advertisement';
+  String get meshcoreRepeaterAdminSettingsSectionAdvertisement => 'Реклама';
 
   @override
-  String get meshcoreRepeaterAdminSettingsNameLabel => 'Repeater name';
+  String get meshcoreRepeaterAdminSettingsNameLabel => 'Назва ретранслятора';
 
   @override
   String get meshcoreRepeaterAdminSettingsNameHelper =>
-      'Up to 32 characters. Changing this triggers a fresh advert.';
+      'До 32 символів. Зміна викликає нову рекламу.';
 
   @override
-  String get meshcoreRepeaterAdminSettingsRepeatTile => 'Repeat';
+  String get meshcoreRepeaterAdminSettingsRepeatTile => 'Повтор';
 
   @override
   String get meshcoreRepeaterAdminSettingsRepeatTileSubtitle =>
-      'Forward inbound packets to other nodes';
+      'Пересилати вхідні пакети іншим вузлам';
 
   @override
   String get meshcoreRepeaterAdminSettingsAllowReadOnlyTile =>
-      'Allow read-only access';
+      'Дозволити доступ лише для читання';
 
   @override
   String get meshcoreRepeaterAdminSettingsAllowReadOnlyTileSubtitle =>
-      'Guests can request status without admin login';
+      'Гості можуть запитувати статус без входу адміна';
 
   @override
   String get meshcoreRepeaterAdminSettingsAdvertIntervalLabel =>
-      'Advert interval (minutes)';
+      'Інтервал реклами (хвилини)';
 
   @override
   String get meshcoreRepeaterAdminSettingsAdvertIntervalHelper =>
-      '0 disables periodic adverts. Range: 0-1440.';
+      '0 вимикає періодичну рекламу. Діапазон: 0-1440.';
 
   @override
   String get meshcoreRepeaterAdminSettingsFloodAdvertIntervalLabel =>
-      'Flood-advert interval (hours)';
+      'Інтервал flood-реклами (години)';
 
   @override
   String get meshcoreRepeaterAdminSettingsFloodAdvertIntervalHelper =>
-      '0 disables flood adverts. Range: 0-168.';
+      '0 вимикає flood-рекламу. Діапазон: 0-168.';
 
   @override
   String meshcoreRepeaterAdminSettingsSavedSnackbar(int saved, int total) {
-    return 'Saved $saved of $total settings.';
+    return 'Збережено $saved з $total налаштувань.';
   }
 
   @override
   String meshcoreRepeaterAdminSettingsRefreshedSnackbar(int count) {
-    return 'Refreshed $count settings from the radio.';
+    return 'Оновлено $count налаштувань з радіо.';
   }
 
   @override
   String meshcoreRepeaterAdminSettingsSaveFailedSnackbar(String error) {
-    return 'Could not save settings: $error.';
+    return 'Не вдалося зберегти налаштування: $error.';
   }
 
   @override
   String get meshcoreRepeaterAdminSettingsInvalidNumber =>
-      'Enter a whole number.';
+      'Введіть ціле число.';
 
   @override
   String meshcoreRepeaterAdminSettingsOutOfRange(int min, int max) {
-    return 'Value must be between $min and $max.';
+    return 'Значення має бути між $min і $max.';
   }
 
   @override
@@ -8382,7 +8405,7 @@ class AppLocalizationsUk extends AppLocalizations {
     double min,
     double max,
   ) {
-    return 'Value must be between $min and $max.';
+    return 'Значення має бути між $min і $max.';
   }
 
   @override
@@ -8390,175 +8413,175 @@ class AppLocalizationsUk extends AppLocalizations {
     int saved,
     int total,
   ) {
-    return 'Saved $saved of $total settings. Some commands timed out - the admin session may have expired.';
+    return 'Збережено $saved з $total налаштувань. Деякі команди завершилися тайм-аутом - сесія адміна могла закінчитися.';
   }
 
   @override
-  String get meshcoreRepeaterAdminSettingsSectionRadio => 'Radio';
+  String get meshcoreRepeaterAdminSettingsSectionRadio => 'Радіо';
 
   @override
-  String get meshcoreRepeaterAdminSettingsSectionLocation => 'Location';
+  String get meshcoreRepeaterAdminSettingsSectionLocation => 'Локація';
 
   @override
-  String get meshcoreRepeaterAdminSettingsFrequencyLabel => 'Frequency (MHz)';
+  String get meshcoreRepeaterAdminSettingsFrequencyLabel => 'Частота (MHz)';
 
   @override
   String get meshcoreRepeaterAdminSettingsFrequencyHelper =>
-      'Range: 300 to 2500 MHz. Match the local LoRa region preset.';
+      'Діапазон: 300 - 2500 MHz. Відповідає місцевому пресету регіону LoRa.';
 
   @override
-  String get meshcoreRepeaterAdminSettingsBandwidthLabel => 'Bandwidth (kHz)';
+  String get meshcoreRepeaterAdminSettingsBandwidthLabel => 'Смуга (kHz)';
 
   @override
   String get meshcoreRepeaterAdminSettingsSpreadingFactorLabel =>
       'Spreading factor';
 
   @override
-  String get meshcoreRepeaterAdminSettingsCodingRateLabel => 'Coding rate';
+  String get meshcoreRepeaterAdminSettingsCodingRateLabel =>
+      'Швидкість кодування';
 
   @override
-  String get meshcoreRepeaterAdminSettingsTxPowerLabel => 'TX power (dBm)';
+  String get meshcoreRepeaterAdminSettingsTxPowerLabel => 'TX-потужність (dBm)';
 
   @override
   String get meshcoreRepeaterAdminSettingsTxPowerHelper =>
-      'Range: 1 to 30 dBm.';
+      'Діапазон: 1 - 30 dBm.';
 
   @override
-  String get meshcoreRepeaterAdminSettingsLatLabel => 'Latitude';
+  String get meshcoreRepeaterAdminSettingsLatLabel => 'Широта';
 
   @override
   String get meshcoreRepeaterAdminSettingsLatHelper =>
-      'Decimal degrees. Range: -90 to 90.';
+      'Десяткові градуси. Діапазон: -90 - 90.';
 
   @override
-  String get meshcoreRepeaterAdminSettingsLonLabel => 'Longitude';
+  String get meshcoreRepeaterAdminSettingsLonLabel => 'Довгота';
 
   @override
   String get meshcoreRepeaterAdminSettingsLonHelper =>
-      'Decimal degrees. Range: -180 to 180.';
+      'Десяткові градуси. Діапазон: -180 - 180.';
 
   @override
-  String get meshcoreRepeaterAdminSettingsSectionSecurity => 'Security';
+  String get meshcoreRepeaterAdminSettingsSectionSecurity => 'Безпека';
 
   @override
-  String get meshcoreRepeaterAdminSettingsPasswordLabel => 'Admin password';
+  String get meshcoreRepeaterAdminSettingsPasswordLabel => 'Пароль адміна';
 
   @override
   String get meshcoreRepeaterAdminSettingsPasswordHelper =>
-      'Leave blank to keep the current password. Save sends the new password to the repeater.';
+      'Залиште порожнім, щоб зберегти поточний пароль. Збереження надсилає новий пароль до ретранслятора.';
 
   @override
-  String get meshcoreRepeaterAdminSettingsGuestPasswordLabel =>
-      'Guest password';
+  String get meshcoreRepeaterAdminSettingsGuestPasswordLabel => 'Пароль гостя';
 
   @override
   String get meshcoreRepeaterAdminSettingsGuestPasswordHelper =>
-      'Leave blank to keep the current guest password.';
+      'Залиште порожнім, щоб зберегти поточний пароль гостя.';
 
   @override
-  String get meshcoreRepeaterAdminSettingsPrivacyTile => 'Privacy mode';
+  String get meshcoreRepeaterAdminSettingsPrivacyTile => 'Режим приватності';
 
   @override
   String get meshcoreRepeaterAdminSettingsPrivacyTileSubtitle =>
-      'Hides the repeater from passive listeners';
+      'Приховує ретранслятор від пасивних слухачів';
 
   @override
   String get meshcoreRepeaterAdminSettingsAutoClockSyncTile =>
-      'Auto clock sync on login';
+      'Авто-синхронізація годинника при вході';
 
   @override
   String get meshcoreRepeaterAdminSettingsAutoClockSyncTileSubtitle =>
-      'Send \'clock sync\' after a successful admin login (stored locally)';
+      'Надсилати \'clock sync\' після успішного входу адміна (зберігається локально)';
 
   @override
   String meshcoreRepeaterStatusTitle(String name) {
-    return '$name status';
+    return 'Статус $name';
   }
 
   @override
-  String get meshcoreRepeaterStatusRefreshTooltip => 'Refresh';
+  String get meshcoreRepeaterStatusRefreshTooltip => 'Оновити';
 
   @override
-  String get meshcoreRepeaterStatusSectionSystem => 'System';
+  String get meshcoreRepeaterStatusSectionSystem => 'Система';
 
   @override
-  String get meshcoreRepeaterStatusSectionRadio => 'Radio';
+  String get meshcoreRepeaterStatusSectionRadio => 'Радіо';
 
   @override
-  String get meshcoreRepeaterStatusSectionPackets => 'Packets';
+  String get meshcoreRepeaterStatusSectionPackets => 'Пакети';
 
   @override
-  String get meshcoreRepeaterStatusBatteryLabel => 'Battery';
+  String get meshcoreRepeaterStatusBatteryLabel => 'Батарея';
 
   @override
-  String get meshcoreRepeaterStatusBatteryUnknown => 'Unknown';
+  String get meshcoreRepeaterStatusBatteryUnknown => 'Невідомо';
 
   @override
-  String get meshcoreRepeaterStatusUptimeLabel => 'Uptime';
+  String get meshcoreRepeaterStatusUptimeLabel => 'Аптайм';
 
   @override
-  String get meshcoreRepeaterStatusQueueLabel => 'Queue length';
+  String get meshcoreRepeaterStatusQueueLabel => 'Довжина черги';
 
   @override
-  String get meshcoreRepeaterStatusErrorsLabel => 'Error events';
+  String get meshcoreRepeaterStatusErrorsLabel => 'Події помилок';
 
   @override
-  String get meshcoreRepeaterStatusNoiseLabel => 'Noise floor';
+  String get meshcoreRepeaterStatusNoiseLabel => 'Рівень шуму';
 
   @override
-  String get meshcoreRepeaterStatusRssiLabel => 'Last RSSI';
+  String get meshcoreRepeaterStatusRssiLabel => 'Останній RSSI';
 
   @override
-  String get meshcoreRepeaterStatusSnrLabel => 'Last SNR';
+  String get meshcoreRepeaterStatusSnrLabel => 'Останній SNR';
 
   @override
-  String get meshcoreRepeaterStatusTxAirtimeLabel => 'TX airtime';
+  String get meshcoreRepeaterStatusTxAirtimeLabel => 'Ефірний час TX';
 
   @override
-  String get meshcoreRepeaterStatusRxAirtimeLabel => 'RX airtime';
+  String get meshcoreRepeaterStatusRxAirtimeLabel => 'Ефірний час RX';
 
   @override
-  String get meshcoreRepeaterStatusPacketsRecvLabel => 'Received';
+  String get meshcoreRepeaterStatusPacketsRecvLabel => 'Отримано';
 
   @override
-  String get meshcoreRepeaterStatusPacketsSentLabel => 'Sent';
+  String get meshcoreRepeaterStatusPacketsSentLabel => 'Надіслано';
 
   @override
   String get meshcoreRepeaterStatusFloodLabel => 'Flood (TX/RX)';
 
   @override
-  String get meshcoreRepeaterStatusDirectLabel => 'Direct (TX/RX)';
+  String get meshcoreRepeaterStatusDirectLabel => 'Пряме (TX/RX)';
 
   @override
-  String get meshcoreRepeaterStatusDupsLabel => 'Duplicates (flood/direct)';
+  String get meshcoreRepeaterStatusDupsLabel => 'Дублікати (flood/direct)';
 
   @override
-  String get meshcoreRepeaterStatusFailed => 'Failed to load status';
+  String get meshcoreRepeaterStatusFailed => 'Не вдалося завантажити статус';
 
   @override
-  String get meshcoreRepeaterStatusContactDetailAction => 'Admin login';
+  String get meshcoreRepeaterStatusContactDetailAction => 'Вхід адміна';
 
   @override
   String get meshcoreRepeaterStatusContactDetailSubtitle =>
-      'Authenticate to unlock admin tools';
+      'Авторизуйтесь, щоб розблокувати адмін-інструменти';
 
   @override
-  String get meshcoreRoomLoginTitle => 'Room login';
+  String get meshcoreRoomLoginTitle => 'Вхід у кімнату';
 
   @override
   String meshcoreRoomLoginSubtitle(String name) {
-    return 'Authenticate to join $name';
+    return 'Авторизуйтесь, щоб приєднатися до $name';
   }
 
   @override
-  String get meshcoreRoomLoginPasswordLabel => 'Room password';
+  String get meshcoreRoomLoginPasswordLabel => 'Пароль кімнати';
 
   @override
-  String get meshcoreRoomLoginAction => 'Join';
+  String get meshcoreRoomLoginAction => 'Приєднатися';
 
   @override
   String meshcoreRoomLoginSuccess(String name) {
-    return 'Joined $name';
+    return 'Приєдналися до $name';
   }
 
   @override
@@ -8648,21 +8671,21 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshcoreBasedOnLifepo4Voltage =>
-      'Based on LiFePO4 voltage range (2.5V - 3.6V)';
+      'На основі діапазону напруги LiFePO4 (2.5V - 3.6V)';
 
   @override
   String get meshcoreBasedOnLiionVoltage =>
-      'Based on Li-Ion voltage range (2.75V - 4.2V)';
+      'На основі діапазону напруги Li-Ion (2.75V - 4.2V)';
 
   @override
   String get meshcoreBasedOnNimhVoltage =>
-      'Based on NiMH single-cell range (0.9V - 1.4V)';
+      'На основі діапазону напруги одного елемента NiMH (0.9V - 1.4V)';
 
   @override
-  String get meshcoreBatteryChemistryLabel => 'Cell chemistry';
+  String get meshcoreBatteryChemistryLabel => 'Хімія елементів';
 
   @override
-  String get meshcoreBatteryChemistryAuto => 'Auto';
+  String get meshcoreBatteryChemistryAuto => 'Авто';
 
   @override
   String get meshcoreBatteryChemistryLipo => 'LiPo';
@@ -8772,16 +8795,16 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreChannelsRefreshChannels => 'Оновити канали';
 
   @override
-  String get meshcoreChannelSortManual => 'Manual';
+  String get meshcoreChannelSortManual => 'Вручну';
 
   @override
-  String get meshcoreChannelSortAToZ => 'A-Z';
+  String get meshcoreChannelSortAToZ => 'А-Я';
 
   @override
-  String get meshcoreChannelSortLatest => 'Latest';
+  String get meshcoreChannelSortLatest => 'Останні';
 
   @override
-  String get meshcoreChannelSortUnread => 'Unread';
+  String get meshcoreChannelSortUnread => 'Непрочитані';
 
   @override
   String get meshcoreChannelsTitle => 'Канали';
@@ -9008,7 +9031,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreChatInfoType => 'Тип';
 
   @override
-  String get meshcoreChatUnreadDividerLabel => 'New messages';
+  String get meshcoreChatUnreadDividerLabel => 'Нові повідомлення';
 
   @override
   String get meshcoreChatJumpToLatest => 'Перейти до останніх';
@@ -9024,10 +9047,11 @@ class AppLocalizationsUk extends AppLocalizations {
       'Не вдалося видалити повідомлення';
 
   @override
-  String get meshcoreChatHistoryEnd => 'No older messages';
+  String get meshcoreChatHistoryEnd => 'Старіших повідомлень немає';
 
   @override
-  String get meshcoreChatQuoteJumpUnavailable => 'Source message not available';
+  String get meshcoreChatQuoteJumpUnavailable =>
+      'Джерельне повідомлення недоступне';
 
   @override
   String get meshcoreChatNode => 'Вузол чату';
@@ -9480,60 +9504,60 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String meshcoreManualPathTitle(String name) {
-    return 'Manual path - $name';
+    return 'Ручний шлях - $name';
   }
 
   @override
   String get meshcoreManualPathHelper =>
-      'Type a comma-separated list of pubkey-prefix hex bytes (e.g. \"AB,CD\"), or tap a repeater below to append it.';
+      'Введіть через кому список hex-байтів префіксів публічних ключів (напр. \"AB,CD\") або торкніться ретранслятора нижче, щоб додати його.';
 
   @override
-  String get meshcoreManualPathInputLabel => 'Path bytes';
+  String get meshcoreManualPathInputLabel => 'Байти шляху';
 
   @override
   String meshcoreManualPathPreview(int count, String bytes) {
-    return '$count hops: $bytes';
+    return '$count переходів: $bytes';
   }
 
   @override
-  String get meshcoreManualPathPreviewEmpty => 'No hops parsed yet.';
+  String get meshcoreManualPathPreviewEmpty => 'Переходів ще не розібрано.';
 
   @override
   String get meshcoreManualPathPickerEmpty =>
-      'No repeaters or rooms available to pick from.';
+      'Немає доступних ретрансляторів чи кімнат для вибору.';
 
   @override
-  String get meshcoreManualPathClear => 'Clear';
+  String get meshcoreManualPathClear => 'Очистити';
 
   @override
-  String get meshcoreManualPathApply => 'Apply';
+  String get meshcoreManualPathApply => 'Застосувати';
 
   @override
   String meshcoreManualPathInvalidToken(String token) {
-    return 'Invalid hop \"$token\". Each hop must be a 2-character hex byte.';
+    return 'Недійсний перехід \"$token\". Кожен перехід має бути 2-символьним hex-байтом.';
   }
 
   @override
   String meshcoreManualPathTooLong(int count) {
-    return '$count hops is too many; the firmware accepts at most 64.';
+    return '$count переходів забагато; прошивка приймає максимум 64.';
   }
 
   @override
   String meshcoreManualPathApplySuccess(String name, int hops) {
-    return '$name routing locked to $hops manual hops.';
+    return 'Маршрутизацію $name зафіксовано на $hops ручних переходах.';
   }
 
   @override
   String meshcoreManualPathApplyFailed(String name) {
-    return 'Could not apply manual path for $name.';
+    return 'Не вдалося застосувати ручний шлях для $name.';
   }
 
   @override
-  String get meshcorePathOverrideSetCustomPath => 'Set custom path...';
+  String get meshcorePathOverrideSetCustomPath => 'Задати власний шлях...';
 
   @override
   String get meshcorePathOverrideSetCustomPathSubtitle =>
-      'Type or pick a specific hop sequence';
+      'Введіть або виберіть конкретну послідовність переходів';
 
   @override
   String get meshcorePathOverrideForceFlood => 'Примусово широкомовний';
@@ -10144,20 +10168,20 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get meshcorePathHistoryCurrentModePrefix => 'Current path:';
+  String get meshcorePathHistoryCurrentModePrefix => 'Поточний шлях:';
 
   @override
   String get meshcorePathHistoryClearOverrideTooltip =>
-      'Clear override (reset to auto)';
+      'Скинути перевизначення (повернути в авто)';
 
   @override
   String meshcorePathHistoryClearOverrideSuccess(String name) {
-    return '$name is back to auto routing.';
+    return '$name повернуто до автоматичної маршрутизації.';
   }
 
   @override
   String meshcorePathHistoryClearOverrideFailed(String name) {
-    return 'Could not clear the override for $name.';
+    return 'Не вдалося скинути перевизначення для $name.';
   }
 
   @override
@@ -10225,7 +10249,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcorePathHistorySourceManual => 'Вручну';
 
   @override
-  String get meshcorePathHistorySourceInbound => 'Auto';
+  String get meshcorePathHistorySourceInbound => 'Авто';
 
   @override
   String get meshcorePathHistoryActiveBadge => 'Активний';
@@ -10235,12 +10259,12 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String meshcorePathHistoryRttBadgeMs(String value) {
-    return 'RTT $value ms';
+    return 'RTT $value мс';
   }
 
   @override
   String meshcorePathHistoryRttBadgeSeconds(String value) {
-    return 'RTT $value s';
+    return 'RTT $value с';
   }
 
   @override
@@ -10297,15 +10321,15 @@ class AppLocalizationsUk extends AppLocalizations {
       'Намалювати маршрут як накладку';
 
   @override
-  String get meshcorePathOverlayShowInferred => 'Show inferred path';
+  String get meshcorePathOverlayShowInferred => 'Показати визначений шлях';
 
   @override
   String get meshcorePathOverlayShowInferredSubtitle =>
-      'Infer from saved paths and received messages';
+      'Визначити з збережених шляхів і отриманих повідомлень';
 
   @override
   String get meshcorePathOverlayInferredUnavailable =>
-      'No path evidence yet for this contact';
+      'Для цього контакту ще немає даних про шлях';
 
   @override
   String get meshcorePathOverlayClear => 'Очистити маршрут';
@@ -10339,99 +10363,101 @@ class AppLocalizationsUk extends AppLocalizations {
       'Переглянути нещодавні діагностичні дані застосунку';
 
   @override
-  String get meshcoreDiagnosticsBundleTool => 'Share diagnostics';
+  String get meshcoreDiagnosticsBundleTool => 'Поділитися діагностикою';
 
   @override
   String get meshcoreDiagnosticsBundleToolSubtitle =>
-      'Zip the frame log + radio state + app metadata for a support ticket';
+      'Запакувати журнал кадрів + стан радіо + метадані застосунку для звернення в підтримку';
 
   @override
-  String get meshcoreDiagnosticsBundleProgress =>
-      'Preparing diagnostics bundle...';
+  String get meshcoreDiagnosticsBundleProgress => 'Готую пакет діагностики...';
 
   @override
   String get meshcoreDiagnosticsBundleSuccess =>
-      'Diagnostics bundle ready to share.';
+      'Пакет діагностики готовий до надсилання.';
 
   @override
   String meshcoreDiagnosticsBundleFailed(String error) {
-    return 'Could not build diagnostics bundle: $error';
+    return 'Не вдалося створити пакет діагностики: $error';
   }
 
   @override
-  String get meshcoreBleDebugLogTool => 'BLE debug log';
+  String get meshcoreBleDebugLogTool => 'Журнал зневадження BLE';
 
   @override
   String get meshcoreBleDebugLogToolSubtitle =>
-      'Transport-layer scan, connect, and notify events';
+      'Події сканування, підключення та повідомлень транспортного рівня';
 
   @override
-  String get meshcoreBleDebugLogTitle => 'BLE debug log';
+  String get meshcoreBleDebugLogTitle => 'Журнал зневадження BLE';
 
   @override
   String meshcoreBleDebugLogEntryCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count entries',
-      one: '1 entry',
-      zero: 'No entries',
+      other: '$count записів',
+      many: '$count записів',
+      few: '$count записи',
+      one: '1 запис',
+      zero: 'Записів немає',
     );
     return '$_temp0';
   }
 
   @override
-  String get meshcoreBleDebugLogPaused => 'Paused';
+  String get meshcoreBleDebugLogPaused => 'Призупинено';
 
   @override
-  String get meshcoreBleDebugLogLive => 'Live';
+  String get meshcoreBleDebugLogLive => 'Наживо';
 
   @override
-  String get meshcoreBleDebugLogCopyAll => 'Copy all';
+  String get meshcoreBleDebugLogCopyAll => 'Копіювати все';
 
   @override
-  String get meshcoreBleDebugLogClear => 'Clear';
+  String get meshcoreBleDebugLogClear => 'Очистити';
 
   @override
-  String get meshcoreBleDebugLogCleared => 'BLE debug log cleared.';
+  String get meshcoreBleDebugLogCleared => 'Журнал зневадження BLE очищено.';
 
   @override
-  String get meshcoreBleDebugLogCopied => 'BLE debug log copied to clipboard.';
+  String get meshcoreBleDebugLogCopied =>
+      'Журнал зневадження BLE скопійовано в буфер.';
 
   @override
-  String get meshcoreBleDebugLogEntryCopied => 'Entry copied.';
+  String get meshcoreBleDebugLogEntryCopied => 'Запис скопійовано.';
 
   @override
   String get meshcoreBleDebugLogEmpty =>
-      'No BLE events recorded yet. Events appear here as the radio connects.';
+      'Подій BLE ще не записано. Події з\'являтимуться тут, щойно радіо підключиться.';
 
   @override
   String get meshcoreBleDebugLogEmptyPaused =>
-      'BLE log paused. Resume to capture new events.';
+      'Журнал BLE призупинено. Поновіть, щоб записувати нові події.';
 
   @override
-  String get meshcoreCommunityQrScannerTitle => 'Scan community QR';
+  String get meshcoreCommunityQrScannerTitle => 'Сканувати спільнотний QR';
 
   @override
   String get meshcoreCommunityQrScannerHint =>
-      'Point the camera at a MeshCore community QR. Each channel will be reviewed before adding.';
+      'Наведіть камеру на спільнотний QR MeshCore. Кожен канал буде переглянуто перед додаванням.';
 
   @override
-  String get meshcoreCommunityQrScannerMenu => 'Scan community QR';
+  String get meshcoreCommunityQrScannerMenu => 'Сканувати спільнотний QR';
 
   @override
-  String get meshcoreCommunityQrPreviewTitle => 'Community channels';
+  String get meshcoreCommunityQrPreviewTitle => 'Канали спільноти';
 
   @override
   String meshcoreCommunityQrPreviewSubtitle(String name) {
-    return '$name ships these channels. Tap Add to import each one.';
+    return '$name надає ці канали. Натисніть «Додати», щоб імпортувати кожен з них.';
   }
 
   @override
-  String get meshcoreCommunityQrAddRow => 'Add';
+  String get meshcoreCommunityQrAddRow => 'Додати';
 
   @override
-  String get meshcoreCommunityQrDone => 'Done';
+  String get meshcoreCommunityQrDone => 'Готово';
 
   @override
   String meshcoreCommunityQrPskFingerprint(String fingerprint) {
@@ -10439,53 +10465,51 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get meshcoreCommunityQrAddHashtagSection => 'Add a hashtag channel';
+  String get meshcoreCommunityQrAddHashtagSection => 'Додати канал-хештег';
 
   @override
-  String get meshcoreCommunityQrHashtagHint => 'e.g. general';
+  String get meshcoreCommunityQrHashtagHint => 'напр. general';
 
   @override
-  String get meshcoreCommunityQrAddHashtagButton => 'Derive channel';
+  String get meshcoreCommunityQrAddHashtagButton => 'Створити канал';
 
   @override
-  String get meshcoreCommunityQrHashtagEmpty => 'Type a hashtag first.';
+  String get meshcoreCommunityQrHashtagEmpty => 'Спочатку введіть хештег.';
 
   @override
-  String get meshcoreCommunityQrHashtagDuplicate =>
-      'That hashtag is already in the list.';
+  String get meshcoreCommunityQrHashtagDuplicate => 'Цей хештег уже в списку.';
 
   @override
   String meshcoreCommunityQrChannelAdded(String name) {
-    return 'Added $name to the radio.';
+    return 'Додано $name до радіо.';
   }
 
   @override
   String get meshcoreCommunityQrChannelAddFailed =>
-      'Could not add channel. Check the radio connection and try again.';
+      'Не вдалося додати канал. Перевірте з\'єднання з радіо і спробуйте знову.';
 
   @override
   String get meshcoreCommunityQrNoFreeSlot =>
-      'All 8 channel slots are full. Remove one before adding another.';
+      'Усі 8 слотів каналів зайнято. Видаліть один перед додаванням.';
 
   @override
-  String get meshcoreCommunityQrErrorNotJson =>
-      'QR code is not a community payload.';
+  String get meshcoreCommunityQrErrorNotJson => 'QR-код не є даними спільноти.';
 
   @override
   String get meshcoreCommunityQrErrorWrongType =>
-      'QR code is not a MeshCore community.';
+      'QR-код не є спільнотою MeshCore.';
 
   @override
   String get meshcoreCommunityQrErrorUnsupportedVersion =>
-      'This community QR uses an unsupported version.';
+      'Цей спільнотний QR використовує непідтримувану версію.';
 
   @override
   String get meshcoreCommunityQrErrorMissingName =>
-      'Community QR is missing a name.';
+      'У спільнотному QR відсутня назва.';
 
   @override
   String get meshcoreCommunityQrErrorBadSecret =>
-      'Community QR has an invalid secret.';
+      'Спільнотний QR має недійсний секрет.';
 
   @override
   String get meshcoreTelemetryTileTitle => 'Телеметрія';
@@ -10675,36 +10699,37 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreMapTitle => 'Карта';
 
   @override
-  String get meshcoreMapPinDropTitle => 'Drop a pin';
+  String get meshcoreMapPinDropTitle => 'Поставити позначку';
 
   @override
   String meshcoreMapPinDropSubtitle(String lat, String lon) {
-    return 'Lat $lat, Lon $lon';
+    return 'Шир. $lat, Дов. $lon';
   }
 
   @override
-  String get meshcoreMapPinDropLabelField => 'Label';
+  String get meshcoreMapPinDropLabelField => 'Підпис';
 
   @override
-  String get meshcoreMapPinDropLabelHint => 'e.g. Home, Cabin, Repeater hill';
+  String get meshcoreMapPinDropLabelHint =>
+      'напр. Дім, Хатина, Пагорб ретранслятора';
 
   @override
-  String get meshcoreMapPinDropSave => 'Save pin';
+  String get meshcoreMapPinDropSave => 'Зберегти позначку';
 
   @override
-  String get meshcoreMapPinCancel => 'Cancel';
+  String get meshcoreMapPinCancel => 'Скасувати';
 
   @override
   String meshcoreMapPinDropped(String label) {
-    return 'Pin saved: $label';
+    return 'Позначку збережено: $label';
   }
 
   @override
-  String get meshcoreMapPinRemove => 'Remove pin';
+  String get meshcoreMapPinRemove => 'Видалити позначку';
 
   @override
   String meshcoreMapPinRemoved(String label) {
-    return 'Pin removed: $label';
+    return 'Позначку видалено: $label';
   }
 
   @override
@@ -11081,109 +11106,111 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreShareChannel => 'Поділитися каналом';
 
   @override
-  String get meshcoreContactAddFavorite => 'Add to favorites';
+  String get meshcoreContactAddFavorite => 'Додати в обрані';
 
   @override
-  String get meshcoreContactRemoveFavorite => 'Remove from favorites';
+  String get meshcoreContactRemoveFavorite => 'Видалити з обраних';
 
   @override
   String meshcoreContactAddFavoriteSuccess(String name) {
-    return '$name is now a favorite.';
+    return '$name тепер в обраних.';
   }
 
   @override
   String meshcoreContactRemoveFavoriteSuccess(String name) {
-    return 'Removed $name from favorites.';
+    return '$name видалено з обраних.';
   }
 
   @override
   String meshcoreContactToggleFavoriteFailed(String name) {
-    return 'Could not update favorite status for $name.';
+    return 'Не вдалося оновити статус обраного для $name.';
   }
 
   @override
-  String get meshcoreContactBlock => 'Mute notifications';
+  String get meshcoreContactBlock => 'Вимкнути сповіщення';
 
   @override
-  String get meshcoreContactUnblock => 'Unmute notifications';
+  String get meshcoreContactUnblock => 'Увімкнути сповіщення';
 
   @override
   String meshcoreContactBlockSuccess(String name) {
-    return 'Notifications muted for $name.';
+    return 'Сповіщення для $name вимкнено.';
   }
 
   @override
   String meshcoreContactUnblockSuccess(String name) {
-    return 'Notifications restored for $name.';
+    return 'Сповіщення для $name відновлено.';
   }
 
   @override
-  String get meshcoreContactBlockedBadge => 'Muted';
+  String get meshcoreContactBlockedBadge => 'Без звуку';
 
   @override
   String get meshcoreShareContact => 'Поділитися контактом';
 
   @override
-  String get meshcoreContactUrlCopied => 'Contact URL copied';
+  String get meshcoreContactUrlCopied => 'URL контакту скопійовано';
 
   @override
-  String get meshcoreContactExportFailed => 'Could not export contact';
+  String get meshcoreContactExportFailed => 'Не вдалося експортувати контакт';
 
   @override
-  String get meshcoreBroadcastSelfContact => 'Broadcast my contact';
+  String get meshcoreBroadcastSelfContact => 'Транслювати мій контакт';
 
   @override
-  String get meshcoreSelfContactBroadcasted => 'Your contact card sent';
+  String get meshcoreSelfContactBroadcasted => 'Вашу картку контакту надіслано';
 
   @override
   String get meshcoreSelfContactBroadcastFailed =>
-      'Could not broadcast contact card';
+      'Не вдалося транслювати картку контакту';
 
   @override
-  String get meshcoreContactsAddFromClipboard => 'Add from clipboard';
+  String get meshcoreContactsAddFromClipboard => 'Додати з буфера обміну';
 
   @override
   String get meshcoreContactImportParseFailed =>
-      'Could not parse clipboard as a contact URL';
+      'Не вдалося розібрати буфер обміну як URL контакту';
 
   @override
-  String get meshcoreContactImportConfirmTitle => 'Add contact?';
+  String get meshcoreContactImportConfirmTitle => 'Додати контакт?';
 
   @override
-  String get meshcoreContactImportConfirmAction => 'Add contact';
+  String get meshcoreContactImportConfirmAction => 'Додати контакт';
 
   @override
-  String get meshcoreContactImportConfirmFormatFull => 'Full (path + location)';
+  String get meshcoreContactImportConfirmFormatFull =>
+      'Повний (шлях + локація)';
 
   @override
-  String get meshcoreContactImportConfirmFormatLegacy => 'Legacy (name only)';
+  String get meshcoreContactImportConfirmFormatLegacy =>
+      'Застарілий (тільки ім\'я)';
 
   @override
-  String get meshcoreContactImported => 'Contact added';
+  String get meshcoreContactImported => 'Контакт додано';
 
   @override
-  String get meshcoreContactImportFailed => 'Could not add contact';
+  String get meshcoreContactImportFailed => 'Не вдалося додати контакт';
 
   @override
-  String get meshcoreContactImportRowName => 'Name';
+  String get meshcoreContactImportRowName => 'Ім\'я';
 
   @override
-  String get meshcoreContactImportRowPubkey => 'Pubkey';
+  String get meshcoreContactImportRowPubkey => 'Публічний ключ';
 
   @override
-  String get meshcoreContactImportRowLastSeen => 'Last seen';
+  String get meshcoreContactImportRowLastSeen => 'Востаннє в мережі';
 
   @override
-  String get meshcoreContactImportRowLocation => 'Location';
+  String get meshcoreContactImportRowLocation => 'Локація';
 
   @override
-  String get meshcoreContactImportRowFormat => 'Format';
+  String get meshcoreContactImportRowFormat => 'Формат';
 
   @override
-  String get meshcoreContactImportLastSeenUnknown => 'Unknown';
+  String get meshcoreContactImportLastSeenUnknown => 'Невідомо';
 
   @override
-  String get meshcoreContactImportLocationUnknown => 'Not shared';
+  String get meshcoreContactImportLocationUnknown => 'Не надано';
 
   @override
   String get meshcoreShareContactCodeInfo =>
@@ -11996,7 +12023,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get messagingJumpToLatest => 'Перейти до останнього';
 
   @override
-  String get messagingChatUnreadDividerLabel => 'New messages';
+  String get messagingChatUnreadDividerLabel => 'Нові повідомлення';
 
   @override
   String get messagingSectionActive => 'Онлайн';
@@ -13950,7 +13977,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String nodedexEvidenceAirtimeTx(String percent) {
-    return 'Airtime TX $percent%';
+    return 'Ефірний час TX $percent%';
   }
 
   @override
@@ -17872,28 +17899,28 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get scannerUnsupportedBleTitle => 'BLE not available';
+  String get scannerUnsupportedBleTitle => 'BLE недоступний';
 
   @override
   String get scannerUnsupportedBleDescription =>
-      'This build is running on a platform without a Bluetooth radio. Connect a SocialMesh-compatible device over the network instead.';
+      'Ця збірка працює на платформі без Bluetooth-радіо. Підключіть сумісний з SocialMesh пристрій через мережу.';
 
   @override
-  String get scannerUnsupportedBleAction => 'Use network connection';
+  String get scannerUnsupportedBleAction => 'Використати мережеве з\'єднання';
 
   @override
-  String get scannerUnsupportedSerialTitle => 'USB serial not available';
+  String get scannerUnsupportedSerialTitle => 'USB Serial недоступний';
 
   @override
   String get scannerUnsupportedSerialDescription =>
-      'This build cannot access USB serial devices. Use Bluetooth or a network connection instead.';
+      'Ця збірка не може отримати доступ до USB-серійних пристроїв. Використайте Bluetooth або мережеве з\'єднання.';
 
   @override
-  String get scannerWebDashboardTitle => 'Dashboard mode';
+  String get scannerWebDashboardTitle => 'Режим панелі';
 
   @override
   String get scannerWebDashboardDescription =>
-      'SocialMesh on the web runs in dashboard mode: it views mesh activity synced from your paired mobile device but cannot connect to a radio directly. Open SocialMesh on your phone to pair a device.';
+      'SocialMesh у вебі працює в режимі панелі: він переглядає mesh-активність, синхронізовану з парним мобільним пристроєм, але не може підключитися до радіо напряму. Відкрийте SocialMesh на телефоні, щоб під\'єднати пристрій.';
 
   @override
   String get searchProductsBrowseByCategory => 'Переглянути за категорією';
@@ -19746,7 +19773,7 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get signalLocationInvalid => 'Location unavailable';
+  String get signalLocationInvalid => 'Локація недоступна';
 
   @override
   String get signalLocationUnavailableSent =>
@@ -21781,7 +21808,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get takDashboardThreatProximity => 'Близькість об\'єктів';
 
   @override
-  String get takDashboardTitle => 'TAK Dashboard';
+  String get takDashboardTitle => 'Панель TAK';
 
   @override
   String get takDashboardTotalEntities => 'Всього об\'єктів';
@@ -22054,7 +22081,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get takScreenHelpTitleStatus => 'Стан з\'єднання';
 
   @override
-  String get takScreenOverflowDashboard => 'TAK Dashboard';
+  String get takScreenOverflowDashboard => 'Панель TAK';
 
   @override
   String get takScreenOverflowSettings => 'Налаштування TAK';
@@ -25703,26 +25730,27 @@ class AppLocalizationsUk extends AppLocalizations {
       'Покупка не вдалася. Будь ласка, спробуйте ще раз.';
 
   @override
-  String get paymentChooserTitle => 'Choose payment method';
+  String get paymentChooserTitle => 'Виберіть спосіб оплати';
 
   @override
-  String get paymentChooserStoreLabelApple => 'Pay via App Store';
+  String get paymentChooserStoreLabelApple => 'Оплатити через App Store';
 
   @override
-  String get paymentChooserStoreLabelGoogle => 'Pay via Google Play';
+  String get paymentChooserStoreLabelGoogle => 'Оплатити через Google Play';
 
   @override
-  String get paymentChooserStoreLabelGeneric => 'Pay via app store';
+  String get paymentChooserStoreLabelGeneric =>
+      'Оплатити через магазин застосунків';
 
   @override
   String get paymentChooserStoreSubtitle =>
-      'Confirm with Face ID / Touch ID or your account';
+      'Підтвердьте через Face ID / Touch ID або обліковий запис';
 
   @override
-  String get paymentChooserStripeLabel => 'Pay with Stripe';
+  String get paymentChooserStripeLabel => 'Оплатити через Stripe';
 
   @override
-  String get paymentChooserStripeSubtitle => 'Card or Apple Pay via Stripe';
+  String get paymentChooserStripeSubtitle => 'Карта або Apple Pay через Stripe';
 
   @override
   String get alternativePayment => 'Альтернативний спосіб оплати';
@@ -25786,14 +25814,14 @@ class AppLocalizationsUk extends AppLocalizations {
   String get unlockSuccessGeneric => 'Розблокування завершено';
 
   @override
-  String get unlockKeepPackTitle => 'Keep this pack across devices';
+  String get unlockKeepPackTitle => 'Зберегти цей пакет на пристроях';
 
   @override
   String get unlockKeepPackBody =>
-      'This pack is unlocked on this device only. Sign in to keep it if you reinstall the app or switch phones.';
+      'Цей пакет розблоковано лише на цьому пристрої. Увійдіть, щоб зберегти його при перевстановленні застосунку або зміні телефону.';
 
   @override
-  String get unlockKeepPackMaybeLater => 'Maybe later';
+  String get unlockKeepPackMaybeLater => 'Можливо, пізніше';
 
   @override
   String get unlockCodeFallback => 'Маєте код розблокування?';
@@ -26422,7 +26450,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get restorePurchasesSignInForExternal =>
-      'No App Store purchases found. Sign in to also restore Stripe and Buy Me a Coffee packs.';
+      'Покупок App Store не знайдено. Увійдіть, щоб також відновити пакети Stripe і Buy Me a Coffee.';
 
   @override
   String get restorePurchasesPending =>
@@ -31475,66 +31503,67 @@ class AppLocalizationsUk extends AppLocalizations {
       'Перевірка активності режиму WAL у всіх базах даних SQLite';
 
   @override
-  String get adminPanelMeshMorph => 'Mesh Morph Preview';
+  String get adminPanelMeshMorph => 'Перегляд Mesh Morph';
 
   @override
   String get adminPanelMeshMorphSub =>
-      'Test mesh-morph presets, shapes, and timing';
+      'Перевірте пресети, форми та таймінг mesh-morph';
 
   @override
   String get adminMeshMorphTitle => 'Mesh Morph';
 
   @override
-  String get adminMeshMorphPresetSection => 'PRESET';
+  String get adminMeshMorphPresetSection => 'ПРЕСЕТ';
 
   @override
-  String get adminMeshMorphRotationSection => 'ROTATION';
+  String get adminMeshMorphRotationSection => 'ОБЕРТАННЯ';
 
   @override
-  String get adminMeshMorphTuningSection => 'TUNING';
+  String get adminMeshMorphTuningSection => 'НАЛАШТУВАННЯ';
 
   @override
-  String get adminMeshMorphAnimate => 'Animate';
+  String get adminMeshMorphAnimate => 'Анімувати';
 
   @override
-  String get adminMeshMorphAnimateSub => 'Pause to inspect the current shape';
+  String get adminMeshMorphAnimateSub =>
+      'Призупиніть, щоб роздивитися поточну форму';
 
   @override
   String adminMeshMorphPointCountLabel(int count) {
-    return 'Point count: $count';
+    return 'Кількість точок: $count';
   }
 
   @override
   String adminMeshMorphCurrentShape(String shape) {
-    return 'Current shape: $shape';
+    return 'Поточна форма: $shape';
   }
 
   @override
-  String get adminMeshMorphPresetIcosahedronJourney => 'Icosahedron Journey';
+  String get adminMeshMorphPresetIcosahedronJourney => 'Подорож ікосаедра';
 
   @override
-  String get adminMeshMorphPresetVectorballTour => 'Vectorball Tour';
+  String get adminMeshMorphPresetVectorballTour => 'Тур векторною кулею';
 
   @override
-  String get adminMeshMorphPresetPlatonicCircuit => 'Platonic Circuit';
+  String get adminMeshMorphPresetPlatonicCircuit => 'Платонівський контур';
 
   @override
-  String get adminMeshMorphPresetSurfaceFlow => 'Surface Flow';
+  String get adminMeshMorphPresetSurfaceFlow => 'Потік поверхні';
 
   @override
-  String get adminMeshMorphPresetWireframeMarch => 'Wireframe March';
+  String get adminMeshMorphPresetWireframeMarch => 'Марш каркасу';
 
   @override
-  String get adminMeshMorphRotationNone => 'None';
+  String get adminMeshMorphRotationNone => 'Немає';
 
   @override
-  String get adminMeshMorphRotationSpin => 'Spin';
+  String get adminMeshMorphRotationSpin => 'Обертання';
 
   @override
-  String get adminMeshMorphRotationTumble => 'Tumble';
+  String get adminMeshMorphRotationTumble => 'Перекидання';
 
   @override
-  String get adminMeshMorphRotationShowcase => 'Showcase';
+  String get adminMeshMorphRotationShowcase => 'Показ';
 
   @override
   String get adminStorageHealthTitle => 'Стан сховища';
@@ -37584,7 +37613,7 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get mrrpHarnessRawHex => 'Raw hex';
+  String get mrrpHarnessRawHex => 'Сирий hex';
 
   @override
   String get mrrpHarnessComposerTitle => 'Конструктор запитів';

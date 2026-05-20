@@ -17,6 +17,7 @@ import '../../providers/subscription_providers.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/meshcore_providers.dart';
 import 'automation_providers.dart';
 import 'automation_summary.dart';
 import 'models/automation.dart';
@@ -618,6 +619,16 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                       // Get nodes and channels for action editor
                       final nodes = ref.watch(nodesProvider);
                       final channels = ref.watch(channelsProvider);
+                      final meshCoreChannels = ref
+                          .watch(meshCoreChannelsProvider)
+                          .channels
+                          .map(
+                            (c) => MeshCoreChannelOption(
+                              index: c.index,
+                              name: c.name,
+                            ),
+                          )
+                          .toList();
                       final myNodeNum = ref.watch(myNodeNumProvider);
                       return Column(
                         children: [
@@ -628,6 +639,8 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                             triggerType: _trigger.type,
                             availableNodes: nodes.values.toList(),
                             availableChannels: channels,
+                            availableMeshCoreChannels: meshCoreChannels,
+                            protocolFilter: _trigger.protocolFilter,
                             myNodeNum: myNodeNum,
                             onChanged: (updated) {
                               setState(() {
@@ -772,6 +785,16 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                         final action = entry.value;
                         final nodes = ref.watch(nodesProvider);
                         final channels = ref.watch(channelsProvider);
+                        final meshCoreChannels = ref
+                            .watch(meshCoreChannelsProvider)
+                            .channels
+                            .map(
+                              (c) => MeshCoreChannelOption(
+                                index: c.index,
+                                name: c.name,
+                              ),
+                            )
+                            .toList();
                         final myNodeNum = ref.watch(myNodeNumProvider);
                         return Column(
                           children: [
@@ -782,6 +805,8 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                               triggerType: _trigger.type,
                               availableNodes: nodes.values.toList(),
                               availableChannels: channels,
+                              availableMeshCoreChannels: meshCoreChannels,
+                              protocolFilter: _trigger.protocolFilter,
                               myNodeNum: myNodeNum,
                               onChanged: (updated) {
                                 setState(() {

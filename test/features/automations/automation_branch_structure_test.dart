@@ -75,11 +75,11 @@ void main() {
       repository: mockRepository,
       iftttService: mockIftttService,
       debugService: debugService,
-      onSendMessage: (nodeNum, message) async {
+      onSendMessage: (nodeNum, message, _) async {
         sentMessages.add((nodeNum, message));
         return true;
       },
-      onSendToChannel: (channelIndex, message) async {
+      onSendToChannel: (channelIndex, message, _) async {
         sentChannelMessages.add((channelIndex, message));
         return true;
       },

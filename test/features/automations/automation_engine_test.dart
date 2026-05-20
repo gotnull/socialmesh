@@ -114,11 +114,11 @@ void main() {
     engine = AutomationEngine(
       repository: mockRepository,
       iftttService: mockIftttService,
-      onSendMessage: (nodeNum, message) async {
+      onSendMessage: (nodeNum, message, _) async {
         sentMessages.add((nodeNum, message));
         return true;
       },
-      onSendToChannel: (channelIndex, message) async {
+      onSendToChannel: (channelIndex, message, _) async {
         sentChannelMessages.add((channelIndex, message));
         return true;
       },
@@ -3172,11 +3172,11 @@ void main() {
         engine = AutomationEngine(
           repository: mockRepository,
           iftttService: mockIftttService,
-          onSendMessage: (nodeNum, message) async {
+          onSendMessage: (nodeNum, message, _) async {
             sentMessages.add((nodeNum, message));
             return true;
           },
-          onSendToChannel: (channelIndex, message) async {
+          onSendToChannel: (channelIndex, message, _) async {
             sentChannelMessages.add((channelIndex, message));
             return true;
           },

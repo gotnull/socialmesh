@@ -4926,6 +4926,30 @@ abstract class AppLocalizations {
   /// **'MeshCore'**
   String get automationTriggerProtocolMeshcore;
 
+  /// Title of the MeshCore contact picker bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Select MeshCore contact'**
+  String get meshcoreContactSelectorTitle;
+
+  /// Search hint inside the MeshCore contact picker
+  ///
+  /// In en, this message translates to:
+  /// **'Search contacts'**
+  String get meshcoreContactSelectorSearchHint;
+
+  /// Empty state when the MeshCore contacts list is empty
+  ///
+  /// In en, this message translates to:
+  /// **'No MeshCore contacts yet'**
+  String get meshcoreContactSelectorEmpty;
+
+  /// Empty state when no contacts match the search query
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get meshcoreContactSelectorNoMatches;
+
   /// Display name for the nodeOffline trigger type
   ///
   /// In en, this message translates to:
@@ -7584,10 +7608,10 @@ abstract class AppLocalizations {
   /// **'Client Mute'**
   String get deviceConfigRoleClientMute;
 
-  /// Description text in developer tools
+  /// Client Mute = sends and receives its own traffic like a client, but does not repeat packets from other nodes.
   ///
   /// In en, this message translates to:
-  /// **'Same as client but will not transmit any messages from itself. Useful for monitoring.'**
+  /// **'Does not forward packets from other nodes. Still sends and receives its own messages normally.'**
   String get deviceConfigRoleClientMuteDesc;
 
   /// Meshtastic device role: optimized for asset tracking with infrequent position reports.
@@ -7608,10 +7632,10 @@ abstract class AppLocalizations {
   /// **'Router'**
   String get deviceConfigRoleRouter;
 
-  /// Router = a Meshtastic device role dedicated to relaying mesh packets. Disables screen and Bluetooth to save power.
+  /// Router = a Meshtastic device role intended only for high, well-sited infrastructure nodes that provide exceptional radio coverage.
   ///
   /// In en, this message translates to:
-  /// **'Routes mesh packets between nodes. Screen and Bluetooth disabled to conserve power.'**
+  /// **'Infrastructure node for tower or mountain-top installation only. Not for rooftops or mobile nodes.'**
   String get deviceConfigRoleRouterDesc;
 
   /// Meshtastic device role: acts as a router only if no other router has already relayed the packet.
@@ -7656,10 +7680,10 @@ abstract class AppLocalizations {
   /// **'TAK Tracker'**
   String get deviceConfigRoleTakTracker;
 
-  /// TAK = Team Awareness Kit (team SA). Tracker = GPS position broadcasting mode.
+  /// TAK Tracker = TAK (Team Awareness Kit) role with automatic PLI (Position Location Information) broadcasts and reduced routine traffic. Do not translate 'TAK' or 'PLI'.
   ///
   /// In en, this message translates to:
-  /// **'Combination of TAK and Tracker modes.'**
+  /// **'Sends automatic TAK PLI broadcasts and reduces routine traffic.'**
   String get deviceConfigRoleTakTrackerDesc;
 
   /// Text displayed in developer tools

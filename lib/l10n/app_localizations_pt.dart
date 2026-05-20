@@ -1704,7 +1704,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get authMfaPhoneFallback => 'Telefone';
 
   @override
-  String get authMfaPhoneNumberHint => '+1 234 567 890';
+  String get authMfaPhoneNumberHint => '+55 11 91234 5678';
 
   @override
   String get authMfaPhoneNumberLabel => 'Número de telefone';
@@ -2201,7 +2201,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String automationConditionConfigTimeRange(String start, String end) {
-    return '$start – $end';
+    return '$start - $end';
   }
 
   @override
@@ -2788,6 +2788,18 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get automationTriggerProtocolMeshcore => 'MeshCore';
+
+  @override
+  String get meshcoreContactSelectorTitle => 'Selecionar contato MeshCore';
+
+  @override
+  String get meshcoreContactSelectorSearchHint => 'Buscar contatos';
+
+  @override
+  String get meshcoreContactSelectorEmpty => 'Nenhum contato MeshCore ainda';
+
+  @override
+  String get meshcoreContactSelectorNoMatches => 'Sem correspondências';
 
   @override
   String get automationTriggerNodeOffline => 'Nó fica inativo';
@@ -4297,7 +4309,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get deviceConfigRoleClientMuteDesc =>
-      'Igual ao client mas não transmite mensagens próprias. Útil para monitoramento.';
+      'Não encaminha pacotes de outros nós. Continua enviando e recebendo normalmente suas próprias mensagens.';
 
   @override
   String get deviceConfigRoleLostAndFound => 'Achados e perdidos';
@@ -4307,11 +4319,11 @@ class AppLocalizationsPt extends AppLocalizations {
       'Otimizado para encontrar dispositivos perdidos. Envia beacons periódicos.';
 
   @override
-  String get deviceConfigRoleRouter => 'Router';
+  String get deviceConfigRoleRouter => 'Roteador';
 
   @override
   String get deviceConfigRoleRouterDesc =>
-      'Roteia pacotes mesh entre nós. Tela e Bluetooth desativados para economizar energia.';
+      'Nó de infraestrutura apenas para instalação em torres ou no topo de montanhas. Não usar em telhados ou nós móveis.';
 
   @override
   String get deviceConfigRoleRouterLate => 'Router atrasado';
@@ -4339,7 +4351,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get deviceConfigRoleTakTrackerDesc =>
-      'Combinação dos modos TAK e Tracker.';
+      'Envia broadcasts PLI TAK automáticos e reduz o tráfego de rotina.';
 
   @override
   String get deviceConfigRoleTracker => 'Rastreador';
@@ -5124,49 +5136,51 @@ class AppLocalizationsPt extends AppLocalizations {
       'Nova resposta ao seu relatório de bug';
 
   @override
-  String get bugResponseSheetTitle => 'Bug Reply';
+  String get bugResponseSheetTitle => 'Resposta do bug';
 
   @override
   String bugResponseSheetReportedOn(String date) {
-    return 'Reported $date';
+    return 'Reportado em $date';
   }
 
   @override
-  String get bugResponseSheetReplyLabel => 'Reply';
+  String get bugResponseSheetReplyLabel => 'Responder';
 
   @override
-  String get bugResponseSheetReplyHint => 'Type a reply…';
+  String get bugResponseSheetReplyHint => 'Digite uma resposta...';
 
   @override
-  String get bugResponseSheetSend => 'Send reply';
+  String get bugResponseSheetSend => 'Enviar resposta';
 
   @override
-  String get bugResponseSheetReplySent => 'Reply sent';
+  String get bugResponseSheetReplySent => 'Resposta enviada';
 
   @override
   String bugResponseSheetReplyFailed(String error) {
-    return 'Failed to send reply: $error';
+    return 'Falha ao enviar resposta: $error';
   }
 
   @override
-  String get bugResponseSheetViewFull => 'View full bug report';
+  String get bugResponseSheetViewFull => 'Ver relatório completo do bug';
 
   @override
-  String get bugResponseSheetDisableSnackbars => 'Don\'t show again';
+  String get bugResponseSheetDisableSnackbars => 'Não mostrar novamente';
 
   @override
   String get bugResponseSheetSnackbarsDisabled =>
-      'In-app alerts off. Push notifications still fire.';
+      'Alertas no app desativados. Notificações push continuam ativas.';
 
   @override
-  String get settingsTileBugResponseAlertsTitle => 'Bug report reply alerts';
+  String get settingsTileBugResponseAlertsTitle =>
+      'Alertas de resposta de relatórios de bug';
 
   @override
   String get settingsTileBugResponseAlertsSubtitle =>
-      'In-app snackbar when the founder replies';
+      'Snackbar no app quando o fundador responde';
 
   @override
-  String get bugResponseSheetLoadFailed => 'Couldn\'t load the bug report';
+  String get bugResponseSheetLoadFailed =>
+      'Não foi possível carregar o relatório de bug';
 
   @override
   String get feedbackReportBugAction => 'Relatar bug';
@@ -5562,7 +5576,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String fileTransferTimeDate(String month, String day) {
-    return '$month/$day';
+    return '$day/$month';
   }
 
   @override
@@ -6070,7 +6084,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'O seu dispositivo usa a Atualização de Firmware Nordic por Bluetooth. Quando uma nova versão estiver disponível, toque em Iniciar Atualização e a app transfere o firmware, reinicia o dispositivo no modo bootloader e instala-o sem fios. Mantenha o dispositivo próximo e ligado até a transferência terminar.';
 
   @override
-  String get firmwareMethodInfoWebHeading => 'Web Flasher (USB)';
+  String get firmwareMethodInfoWebHeading => 'Flasher Web (USB)';
 
   @override
   String get firmwareMethodInfoWebBody =>
@@ -6096,7 +6110,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'URL do firmware copiado para a área de transferência';
 
   @override
-  String get firmwareUpdateMethodWebFlasher => 'Web Flasher';
+  String get firmwareUpdateMethodWebFlasher => 'Flasher Web';
 
   @override
   String get firmwareArchitecture => 'Arquitetura';
@@ -7929,13 +7943,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreRepeaterCliQuickAdvertise => 'Anunciar';
 
   @override
-  String get meshcoreRepeaterCliQuickGetName => 'Get name';
+  String get meshcoreRepeaterCliQuickGetName => 'Obter nome';
 
   @override
-  String get meshcoreRepeaterCliQuickGetRadio => 'Get radio';
+  String get meshcoreRepeaterCliQuickGetRadio => 'Obter rádio';
 
   @override
-  String get meshcoreRepeaterCliQuickGetTx => 'Get TX';
+  String get meshcoreRepeaterCliQuickGetTx => 'Obter TX';
 
   @override
   String get meshcoreRepeaterCliQuickDiscovery => 'Descoberta';
@@ -8403,10 +8417,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get meshcoreRepeaterAdminSettingsSpreadingFactorLabel =>
-      'Spreading factor';
+      'Fator de espalhamento';
 
   @override
-  String get meshcoreRepeaterAdminSettingsCodingRateLabel => 'Coding rate';
+  String get meshcoreRepeaterAdminSettingsCodingRateLabel =>
+      'Taxa de codificação';
 
   @override
   String get meshcoreRepeaterAdminSettingsTxPowerLabel => 'Potência TX (dBm)';
@@ -8486,7 +8501,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreRepeaterStatusBatteryUnknown => 'Desconhecida';
 
   @override
-  String get meshcoreRepeaterStatusUptimeLabel => 'Uptime';
+  String get meshcoreRepeaterStatusUptimeLabel => 'Tempo ativo';
 
   @override
   String get meshcoreRepeaterStatusQueueLabel => 'Comprimento da fila';
@@ -8589,7 +8604,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreTransportStatusFieldSerialPort => 'Porta serial';
 
   @override
-  String get meshcoreTransportStatusFieldBaud => 'Baud rate';
+  String get meshcoreTransportStatusFieldBaud => 'Taxa de baud';
 
   @override
   String get meshcoreTransportStatusFieldDeviceId => 'ID do dispositivo';
@@ -9485,7 +9500,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String meshcoreManualPathPreview(int count, String bytes) {
-    return '$count hops: $bytes';
+    return '$count saltos: $bytes';
   }
 
   @override
@@ -9885,7 +9900,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreCreateChannelDialogTitle => 'Criar Canal';
 
   @override
-  String get meshcoreDebug => 'Debug';
+  String get meshcoreDebug => 'Depurar';
 
   @override
   String get meshcoreDeviceInfo => 'Info do Dispositivo';
@@ -16817,7 +16832,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'O URL deve começar com http:// ou https://';
 
   @override
-  String get profileWebsiteHint => 'https://example.com';
+  String get profileWebsiteHint => 'https://exemplo.com';
 
   @override
   String get profileWebsiteLabel => 'Site';
@@ -17874,28 +17889,28 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get scannerUnsupportedBleTitle => 'BLE not available';
+  String get scannerUnsupportedBleTitle => 'BLE indisponível';
 
   @override
   String get scannerUnsupportedBleDescription =>
-      'This build is running on a platform without a Bluetooth radio. Connect a SocialMesh-compatible device over the network instead.';
+      'Esta build está rodando em uma plataforma sem rádio Bluetooth. Conecte um dispositivo compatível com SocialMesh pela rede.';
 
   @override
-  String get scannerUnsupportedBleAction => 'Use network connection';
+  String get scannerUnsupportedBleAction => 'Usar conexão de rede';
 
   @override
-  String get scannerUnsupportedSerialTitle => 'USB serial not available';
+  String get scannerUnsupportedSerialTitle => 'USB serial indisponível';
 
   @override
   String get scannerUnsupportedSerialDescription =>
-      'This build cannot access USB serial devices. Use Bluetooth or a network connection instead.';
+      'Esta build não pode acessar dispositivos USB serial. Use Bluetooth ou uma conexão de rede.';
 
   @override
-  String get scannerWebDashboardTitle => 'Dashboard mode';
+  String get scannerWebDashboardTitle => 'Modo dashboard';
 
   @override
   String get scannerWebDashboardDescription =>
-      'SocialMesh on the web runs in dashboard mode: it views mesh activity synced from your paired mobile device but cannot connect to a radio directly. Open SocialMesh on your phone to pair a device.';
+      'O SocialMesh na web roda em modo dashboard: ele visualiza a atividade da mesh sincronizada do seu dispositivo móvel pareado, mas não consegue conectar a um rádio diretamente. Abra o SocialMesh no seu celular para parear um dispositivo.';
 
   @override
   String get searchProductsBrowseByCategory => 'Explorar por categoria';
@@ -22505,7 +22520,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get telemetryDeviceCharging => 'Carregando';
 
   @override
-  String get telemetryDeviceFilterAirUtil => 'Air Util';
+  String get telemetryDeviceFilterAirUtil => 'Util. ar';
 
   @override
   String get telemetryDeviceFilterBattery => 'Bateria';
@@ -22520,13 +22535,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get telemetryDeviceFilterVoltage => 'Tensão';
 
   @override
-  String get telemetryDeviceLegendAirUtil => 'Air Util';
+  String get telemetryDeviceLegendAirUtil => 'Util. ar';
 
   @override
   String get telemetryDeviceLegendBattery => 'Bateria';
 
   @override
-  String get telemetryDeviceLegendChUtil => 'Ch Util';
+  String get telemetryDeviceLegendChUtil => 'Util. canal';
 
   @override
   String get telemetryDeviceLegendVoltage => 'Tensão';
@@ -23935,7 +23950,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get widgetBuilderIconRoute => 'Rota';
 
   @override
-  String get widgetBuilderIconRouter => 'Router';
+  String get widgetBuilderIconRouter => 'Roteador';
 
   @override
   String get widgetBuilderIconSend => 'Enviar';
@@ -31471,7 +31486,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get adminMeshMorphTitle => 'Mesh Morph';
 
   @override
-  String get adminMeshMorphPresetSection => 'PRESET';
+  String get adminMeshMorphPresetSection => 'PREDEFINIÇÃO';
 
   @override
   String get adminMeshMorphRotationSection => 'ROTAÇÃO';
@@ -39320,7 +39335,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get voiceQualityExtended => 'Alargada';
 
   @override
-  String get voiceQualityStandard => 'Standard';
+  String get voiceQualityStandard => 'Padrão';
 
   @override
   String get voiceQualityHigh => 'Alta qualidade';
@@ -39408,10 +39423,10 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get takBridgePacketsInbound => 'Mesh → TAK';
+  String get takBridgePacketsInbound => 'Mesh -> TAK';
 
   @override
-  String get takBridgePacketsOutbound => 'TAK → Mesh';
+  String get takBridgePacketsOutbound => 'TAK -> Mesh';
 
   @override
   String get takBridgeExportPackage => 'Exportar Pacote de Dados';

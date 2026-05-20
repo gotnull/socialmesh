@@ -9,6 +9,7 @@ import '../../../../core/logging.dart';
 import '../../../../core/meshcore_constants.dart';
 import '../../../../core/safety/lifecycle_mixin.dart';
 import '../../../../core/theme.dart';
+import '../../../../core/widgets/animations.dart';
 import '../../../../providers/meshcore_providers.dart';
 import '../../../../utils/snackbar.dart';
 
@@ -33,11 +34,9 @@ class _MeshCoreQuickActionsContentState
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppTheme.spacing12,
-        AppTheme.spacing4,
-        AppTheme.spacing12,
-        AppTheme.spacing12,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing12,
+        vertical: AppTheme.spacing8,
       ),
       child: Row(
         children: [
@@ -151,38 +150,48 @@ class _ActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final enabled = onTap != null;
     final color = enabled ? context.accentColor : context.textTertiary;
-    return InkWell(
+    return BouncyTap(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppTheme.radius12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      scaleFactor: 0.95,
+      enabled: enabled,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        height: 48,
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: enabled
+              ? context.accentColor.withValues(alpha: 0.08)
+              : context.background,
           borderRadius: BorderRadius.circular(AppTheme.radius12),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
+          border: Border.all(
+            color: enabled
+                ? context.accentColor.withValues(alpha: 0.2)
+                : context.border,
+          ),
         ),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (busy)
               SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(strokeWidth: 2, color: color),
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 1.5,
+                  color: color,
+                ),
               )
             else
-              Icon(icon, size: 22, color: color),
-            const SizedBox(height: AppTheme.spacing6),
+              Icon(icon, size: 18, color: color),
+            const SizedBox(height: AppTheme.spacing2),
             Text(
               label,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 8,
                 fontWeight: FontWeight.w600,
-                color: enabled ? context.textPrimary : context.textTertiary,
+                color: color,
+                height: 1.1,
               ),
               textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

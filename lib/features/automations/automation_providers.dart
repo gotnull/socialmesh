@@ -6,13 +6,17 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/core/logging.dart';
 
+import '../../core/meshcore_constants.dart';
 import '../../models/mesh_models.dart';
 import '../../models/user_profile.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/meshcore_message_providers.dart';
+import '../../providers/meshcore_providers.dart';
 
 import '../../providers/cloud_sync_entitlement_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/glyph_provider.dart';
+import '../../services/meshcore/protocol/meshcore_text_frame_builders.dart';
 import '../../services/notifications/notification_service.dart';
 import 'automation_debug_service.dart';
 import 'automation_engine.dart';
@@ -135,7 +139,14 @@ final automationEngineProvider = Provider<AutomationEngine>((ref) {
       }
       return null;
     },
-    onSendMessage: (nodeNum, message) async {
+    onSendMessage: (nodeNum, message, eventProtocol) async {
+      if (eventProtocol == TriggerProtocol.meshcore) {
+        return _sendMeshCoreContactMessage(
+          ref: ref,
+          nodeNumPrefix: nodeNum,
+          message: message,
+        );
+      }
       try {
         await protocol.sendMessage(
           text: message,
@@ -148,7 +159,14 @@ final automationEngineProvider = Provider<AutomationEngine>((ref) {
         return false;
       }
     },
-    onSendToChannel: (channelIndex, message) async {
+    onSendToChannel: (channelIndex, message, eventProtocol) async {
+      if (eventProtocol == TriggerProtocol.meshcore) {
+        return _sendMeshCoreChannelMessage(
+          ref: ref,
+          channelIndex: channelIndex,
+          message: message,
+        );
+      }
       try {
         // Channel 0 is broadcast, send to all nodes
         // Broadcast messages never receive ACKs, so wantAck must be false
@@ -669,3 +687,112 @@ final automationHistoryByIdProvider =
         automationId: automationId,
       );
     });
+
+// Phase 3 Slice D: dispatch a MeshCore-targeted automation
+// `sendMessage` action. `nodeNumPrefix` is the first 4 pubkey bytes
+// as a big-endian uint32 - the same shape Slice A used to derive
+// `AutomationMessage.from` from MeshCore inbound messages, so a
+// reply automation can use `{{node.from}}` interpolation and route
+// back to the same peer. Falls back to false (with a clear log
+// line) when no matching contact is found or the session is offline.
+Future<bool> _sendMeshCoreContactMessage({
+  required Ref ref,
+  required int nodeNumPrefix,
+  required String message,
+}) async {
+  final session = ref.read(meshCoreSessionProvider);
+  if (session == null) {
+    AppLogging.automations(
+      'event=automation.send.skipped scope=meshcore_contact '
+      'reason=session_offline node_prefix=$nodeNumPrefix',
+    );
+    return false;
+  }
+
+  final contacts = ref.read(meshCoreContactsProvider).contacts;
+  final match = contacts
+      .where((c) => meshCoreSenderIdFromKey(c.publicKey) == nodeNumPrefix)
+      .firstOrNull;
+  if (match == null) {
+    AppLogging.automations(
+      'event=automation.send.skipped scope=meshcore_contact '
+      'reason=no_matching_contact node_prefix=$nodeNumPrefix',
+    );
+    return false;
+  }
+
+  try {
+    final frame = meshCoreBuildSendContactTextFrame(
+      recipientPubKey: match.publicKey,
+      text: message,
+      timestampS: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+    );
+    final result = await session.sendTextMessage(
+      command: frame.command,
+      payload: frame.payload,
+      expectedResponse: MeshCoreResponses.sent,
+      timeout: const Duration(seconds: 5),
+    );
+    if (result.rateLimited) {
+      AppLogging.automations(
+        'event=automation.send.rate_limited scope=meshcore_contact '
+        'node_prefix=$nodeNumPrefix',
+      );
+      return false;
+    }
+    return result.ok;
+  } catch (e) {
+    AppLogging.automations(
+      'event=automation.send.failed scope=meshcore_contact '
+      'reason=${e.runtimeType} node_prefix=$nodeNumPrefix',
+    );
+    return false;
+  }
+}
+
+// MeshCore channel broadcast for `sendToChannel` actions. Channel
+// indices are 0-7; the same int the Meshtastic side uses, so the
+// action's `targetChannelIndex` field needs no protocol-specific
+// editing UI in Slice D.
+Future<bool> _sendMeshCoreChannelMessage({
+  required Ref ref,
+  required int channelIndex,
+  required String message,
+}) async {
+  final session = ref.read(meshCoreSessionProvider);
+  if (session == null) {
+    AppLogging.automations(
+      'event=automation.send.skipped scope=meshcore_channel '
+      'reason=session_offline channel=$channelIndex',
+    );
+    return false;
+  }
+
+  try {
+    final frame = meshCoreBuildSendChannelTextFrame(
+      channelIndex: channelIndex,
+      text: message,
+      timestampS: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+    );
+    final result = await session.sendTextMessage(
+      command: frame.command,
+      payload: frame.payload,
+      expectedResponse: MeshCoreResponses.ok,
+      timeout: const Duration(seconds: 5),
+    );
+    if (result.rateLimited) {
+      AppLogging.automations(
+        'event=automation.send.rate_limited scope=meshcore_channel '
+        'channel=$channelIndex',
+      );
+      return false;
+    }
+    return result.ok;
+  } catch (e) {
+    AppLogging.automations(
+      'event=automation.send.failed scope=meshcore_channel '
+      'reason=${e.runtimeType} channel=$channelIndex',
+    );
+    return false;
+  }
+}

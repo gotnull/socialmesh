@@ -7,6 +7,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/chip_selector.dart';
+import '../../../core/widgets/meshcore_contact_selector_sheet.dart';
 import '../../../core/widgets/node_selector_sheet.dart';
 import '../../../models/mesh_models.dart';
 import '../../settings/geofence_picker_screen.dart';
@@ -640,6 +641,31 @@ class _TriggerSelectorState extends State<TriggerSelector> {
   }
 
   Future<void> _showNodePicker(BuildContext context) async {
+    // When the trigger is pinned to MeshCore the picker must read
+    // MeshCore contacts, not Meshtastic nodes. The selection's
+    // `nodeNumPrefix` is the first 4 pubkey bytes as big-endian
+    // uint32 - same int Slice A used to tag `AutomationMessage.from`
+    // for inbound MeshCore events, so the trigger's node filter
+    // matches messages from that contact.
+    if (widget.trigger.protocolFilter == TriggerProtocolFilter.meshcore) {
+      final selection = await MeshCoreContactSelectorSheet.show(
+        context,
+        title: context.l10n.meshcoreContactSelectorTitle,
+        initialSelection: widget.trigger.nodeNum,
+      );
+      if (selection != null) {
+        widget.onChanged(
+          widget.trigger.copyWith(
+            config: {
+              ...widget.trigger.config,
+              'nodeNum': selection.nodeNumPrefix,
+            },
+          ),
+        );
+      }
+      return;
+    }
+
     final selection = await NodeSelectorSheet.show(
       context,
       title: context.l10n.automationTriggerSelectNode,

@@ -2804,6 +2804,18 @@ class AppLocalizationsIt extends AppLocalizations {
   String get automationTriggerProtocolMeshcore => 'MeshCore';
 
   @override
+  String get meshcoreContactSelectorTitle => 'Seleziona contatto MeshCore';
+
+  @override
+  String get meshcoreContactSelectorSearchHint => 'Cerca contatti';
+
+  @override
+  String get meshcoreContactSelectorEmpty => 'Nessun contatto MeshCore';
+
+  @override
+  String get meshcoreContactSelectorNoMatches => 'Nessuna corrispondenza';
+
+  @override
   String get automationTriggerNodeOffline => 'Il nodo diventa inattivo';
 
   @override
@@ -4312,7 +4324,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get deviceConfigRoleClientMuteDesc =>
-      'Come client ma non trasmette alcun messaggio da sé. Utile per il monitoraggio.';
+      'Non inoltra i pacchetti di altri nodi. Continua a inviare e ricevere normalmente i propri messaggi.';
 
   @override
   String get deviceConfigRoleLostAndFound => 'Oggetti smarriti';
@@ -4326,7 +4338,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get deviceConfigRoleRouterDesc =>
-      'Instrada pacchetti mesh tra nodi. Schermo e Bluetooth disabilitati per risparmiare energia.';
+      'Nodo di infrastruttura solo per installazioni su torri o vette. Non adatto a tetti o nodi mobili.';
 
   @override
   String get deviceConfigRoleRouterLate => 'Router ritardato';
@@ -4354,7 +4366,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get deviceConfigRoleTakTrackerDesc =>
-      'Combinazione delle modalità TAK e Tracker.';
+      'Invia broadcast PLI TAK automatici e riduce il traffico di routine.';
 
   @override
   String get deviceConfigRoleTracker => 'Tracker';
@@ -5133,49 +5145,50 @@ class AppLocalizationsIt extends AppLocalizations {
   String get feedbackResponseToastDefault => 'Nuova risposta al tuo bug report';
 
   @override
-  String get bugResponseSheetTitle => 'Bug Reply';
+  String get bugResponseSheetTitle => 'Risposta al bug';
 
   @override
   String bugResponseSheetReportedOn(String date) {
-    return 'Reported $date';
+    return 'Segnalato il $date';
   }
 
   @override
-  String get bugResponseSheetReplyLabel => 'Reply';
+  String get bugResponseSheetReplyLabel => 'Rispondi';
 
   @override
-  String get bugResponseSheetReplyHint => 'Type a reply…';
+  String get bugResponseSheetReplyHint => 'Scrivi una risposta…';
 
   @override
-  String get bugResponseSheetSend => 'Send reply';
+  String get bugResponseSheetSend => 'Invia risposta';
 
   @override
-  String get bugResponseSheetReplySent => 'Reply sent';
+  String get bugResponseSheetReplySent => 'Risposta inviata';
 
   @override
   String bugResponseSheetReplyFailed(String error) {
-    return 'Failed to send reply: $error';
+    return 'Invio risposta non riuscito: $error';
   }
 
   @override
-  String get bugResponseSheetViewFull => 'View full bug report';
+  String get bugResponseSheetViewFull => 'Vedi segnalazione completa';
 
   @override
-  String get bugResponseSheetDisableSnackbars => 'Don\'t show again';
+  String get bugResponseSheetDisableSnackbars => 'Non mostrare più';
 
   @override
   String get bugResponseSheetSnackbarsDisabled =>
-      'In-app alerts off. Push notifications still fire.';
+      'Avvisi in app disattivati. Le notifiche push restano attive.';
 
   @override
-  String get settingsTileBugResponseAlertsTitle => 'Bug report reply alerts';
+  String get settingsTileBugResponseAlertsTitle => 'Avvisi risposta bug report';
 
   @override
   String get settingsTileBugResponseAlertsSubtitle =>
-      'In-app snackbar when the founder replies';
+      'Snackbar in app quando il founder risponde';
 
   @override
-  String get bugResponseSheetLoadFailed => 'Couldn\'t load the bug report';
+  String get bugResponseSheetLoadFailed =>
+      'Impossibile caricare la segnalazione';
 
   @override
   String get feedbackReportBugAction => 'Segnala bug';
@@ -5572,7 +5585,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String fileTransferTimeDate(String month, String day) {
-    return '$month/$day';
+    return '$day/$month';
   }
 
   @override
@@ -7945,13 +7958,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get meshcoreRepeaterCliQuickAdvertise => 'Annuncio';
 
   @override
-  String get meshcoreRepeaterCliQuickGetName => 'Get name';
+  String get meshcoreRepeaterCliQuickGetName => 'Leggi nome';
 
   @override
-  String get meshcoreRepeaterCliQuickGetRadio => 'Get radio';
+  String get meshcoreRepeaterCliQuickGetRadio => 'Leggi radio';
 
   @override
-  String get meshcoreRepeaterCliQuickGetTx => 'Get TX';
+  String get meshcoreRepeaterCliQuickGetTx => 'Leggi TX';
 
   @override
   String get meshcoreRepeaterCliQuickDiscovery => 'Scoperta';
@@ -12522,7 +12535,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get navigationThemePack => 'Pacchetto Tema';
 
   @override
-  String get navigationTimeline => 'Timeline';
+  String get navigationTimeline => 'Cronologia';
 
   @override
   String get navigationViewProfile => 'Visualizza Profilo';
@@ -17890,28 +17903,28 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get scannerUnsupportedBleTitle => 'BLE not available';
+  String get scannerUnsupportedBleTitle => 'BLE non disponibile';
 
   @override
   String get scannerUnsupportedBleDescription =>
-      'This build is running on a platform without a Bluetooth radio. Connect a SocialMesh-compatible device over the network instead.';
+      'Questa build gira su una piattaforma senza radio Bluetooth. Collega un dispositivo compatibile con SocialMesh tramite rete.';
 
   @override
-  String get scannerUnsupportedBleAction => 'Use network connection';
+  String get scannerUnsupportedBleAction => 'Usa connessione di rete';
 
   @override
-  String get scannerUnsupportedSerialTitle => 'USB serial not available';
+  String get scannerUnsupportedSerialTitle => 'USB seriale non disponibile';
 
   @override
   String get scannerUnsupportedSerialDescription =>
-      'This build cannot access USB serial devices. Use Bluetooth or a network connection instead.';
+      'Questa build non può accedere ai dispositivi seriali USB. Usa Bluetooth o una connessione di rete.';
 
   @override
-  String get scannerWebDashboardTitle => 'Dashboard mode';
+  String get scannerWebDashboardTitle => 'Modalità dashboard';
 
   @override
   String get scannerWebDashboardDescription =>
-      'SocialMesh on the web runs in dashboard mode: it views mesh activity synced from your paired mobile device but cannot connect to a radio directly. Open SocialMesh on your phone to pair a device.';
+      'SocialMesh sul web funziona in modalità dashboard: visualizza l\'attività mesh sincronizzata dal dispositivo mobile abbinato ma non può connettersi direttamente a una radio. Apri SocialMesh sul telefono per abbinare un dispositivo.';
 
   @override
   String get searchProductsBrowseByCategory => 'Sfoglia per categoria';
@@ -18043,7 +18056,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Velocità di comunicazione seriale';
 
   @override
-  String get serialConfigEcho => 'Echo';
+  String get serialConfigEcho => 'Eco';
 
   @override
   String get serialConfigEchoSubtitle =>
@@ -22994,7 +23007,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get timelineThursday => 'Giovedì';
 
   @override
-  String get timelineTitle => 'Timeline';
+  String get timelineTitle => 'Cronologia';
 
   @override
   String get timelineTryDifferent => 'Prova una ricerca o un filtro diverso';
@@ -28209,10 +28222,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get radioConfigRegionNz865 => 'NZ 865';
 
   @override
-  String get radioConfigRegionMalaysia433 => 'Malaysia 433';
+  String get radioConfigRegionMalaysia433 => 'Malesia 433';
 
   @override
-  String get radioConfigRegionMalaysia919 => 'Malaysia 919';
+  String get radioConfigRegionMalaysia919 => 'Malesia 919';
 
   @override
   String get radioConfigRegionLora24 => 'LoRa 2.4GHz';
@@ -31763,7 +31776,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get adminBroadcastIconTip => 'Suggerimento';
 
   @override
-  String get adminBroadcastIconSignals => 'Signals';
+  String get adminBroadcastIconSignals => 'Segnali';
 
   @override
   String get adminBroadcastIconNodedex => 'NodeDex';
@@ -31778,7 +31791,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get adminBroadcastIconPresence => 'Presenza';
 
   @override
-  String get adminBroadcastIconCommunity => 'Community';
+  String get adminBroadcastIconCommunity => 'Comunità';
 
   @override
   String get adminBroadcastIconWorldMap => 'Mappa mondiale';
@@ -31965,7 +31978,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get adminBroadcastLinkMap => 'Mappa';
 
   @override
-  String get adminBroadcastLinkSignals => 'Signals';
+  String get adminBroadcastLinkSignals => 'Segnali';
 
   @override
   String get adminBroadcastLinkNodedex => 'NodeDex';
@@ -33635,7 +33648,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get helpGlobeOverviewDescription => 'Globo 3D con la tua rete mesh';
 
   @override
-  String get helpTimelineOverviewTitle => 'Timeline';
+  String get helpTimelineOverviewTitle => 'Cronologia';
 
   @override
   String get helpTimelineOverviewDescription =>
@@ -35221,7 +35234,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get flowNodeLimit => 'Limite';
 
   @override
-  String get flowNodeInput => 'Input';
+  String get flowNodeInput => 'Ingresso';
 
   @override
   String get flowNodeFiltered => 'Filtrato';
@@ -39214,7 +39227,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get servicePresentationMeetupAction => 'Dettagli';
 
   @override
-  String get servicePresentationSignalsTitle => 'Signals';
+  String get servicePresentationSignalsTitle => 'Segnali';
 
   @override
   String get servicePresentationSignalsSubtitle =>
@@ -41426,7 +41439,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get petAlleleTether => 'Tether';
 
   @override
-  String get petAlleleGale => 'Gale';
+  String get petAlleleGale => 'Raffica';
 
   @override
   String get petAlleleCalm => 'Calmo';
