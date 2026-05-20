@@ -45510,5 +45510,11 @@
   "meshcoreRingtoneChannelAdvertsHint": "Suono di sistema predefinito",
   "meshcoreRingtoneChannelBatchSummary": "Notifiche di riepilogo attività",
   "meshcoreRingtoneChannelBatchSummaryHint": "Suono di sistema predefinito",
-  "meshcoreRingtoneChannelCustom": "RTTTL personalizzato"
+  "meshcoreRingtoneChannelCustom": "RTTTL personalizzato",
+  "automationTriggerLimitedOnMeshcore": "Limitato su MeshCore",
+  "meshcoreMessagingEmptyTitlePrefix": "Nessuna ",
+  "meshcoreMessagingEmptyTitleKeyword": "conversazione",
+  "meshcoreMessagingEmptyTitleSuffix": " ancora",
+  "meshcoreMessagingEmptyHint": "Le conversazioni compaiono qui dopo aver scambiato un messaggio diretto con un contatto",
+  "meshcoreMessagingEmptyTaglineNodesTab": "Apri la scheda Nodi per iniziare una nuova conversazione"
 }

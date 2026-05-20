@@ -12366,5 +12366,11 @@
   "meshcoreRingtoneChannelAdvertsHint": "Sonido del sistema predeterminado",
   "meshcoreRingtoneChannelBatchSummary": "Notificaciones de resumen de actividad",
   "meshcoreRingtoneChannelBatchSummaryHint": "Sonido del sistema predeterminado",
-  "meshcoreRingtoneChannelCustom": "RTTTL personalizado"
+  "meshcoreRingtoneChannelCustom": "RTTTL personalizado",
+  "automationTriggerLimitedOnMeshcore": "Limitado en MeshCore",
+  "meshcoreMessagingEmptyTitlePrefix": "Sin ",
+  "meshcoreMessagingEmptyTitleKeyword": "conversaciones",
+  "meshcoreMessagingEmptyTitleSuffix": " todavía",
+  "meshcoreMessagingEmptyHint": "Las conversaciones aparecen aquí cuando intercambias un mensaje directo con un contacto",
+  "meshcoreMessagingEmptyTaglineNodesTab": "Abre la pestaña Nodos para iniciar una nueva conversación"
 }

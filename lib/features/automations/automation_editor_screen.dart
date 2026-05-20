@@ -1084,6 +1084,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
       maxChildSize: 0.9,
       builder: (controller) => _ActionTypeSelector(
         scrollController: controller,
+        protocolFilter: _trigger.protocolFilter,
         onSelect: (type) {
           setState(() {
             _actions.add(AutomationAction(type: type));
@@ -1136,6 +1137,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
       maxChildSize: 0.9,
       builder: (controller) => _ActionTypeSelector(
         scrollController: controller,
+        protocolFilter: _trigger.protocolFilter,
         onSelect: (type) {
           setState(() {
             _elseActions ??= [];
@@ -1421,14 +1423,22 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
 class _ActionTypeSelector extends StatelessWidget {
   final ScrollController scrollController;
   final void Function(ActionType type) onSelect;
+  // Trigger's protocol scope. When `meshcore`, action chips that are
+  // partially supported on MeshCore (e.g. `updateWidget`) gain a
+  // "Limited on MeshCore" sub-label so the user knows the action
+  // depends on the target widget having a MeshCore renderer.
+  final TriggerProtocolFilter protocolFilter;
 
   const _ActionTypeSelector({
     required this.scrollController,
     required this.onSelect,
+    this.protocolFilter = TriggerProtocolFilter.any,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isMeshCoreOnly = protocolFilter == TriggerProtocolFilter.meshcore;
+
     return SingleChildScrollView(
       controller: scrollController,
       padding: const EdgeInsets.fromLTRB(
@@ -1441,6 +1451,10 @@ class _ActionTypeSelector extends StatelessWidget {
         spacing: 8,
         runSpacing: 8,
         children: ActionType.values.map((type) {
+          final isPartialOnMeshCore =
+              isMeshCoreOnly &&
+              type.supportOn(TriggerProtocol.meshcore) ==
+                  ProtocolSupport.partial;
           return BouncyTap(
             onTap: () {
               Navigator.of(context).pop();
@@ -1453,12 +1467,28 @@ class _ActionTypeSelector extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppTheme.radius12),
                 border: Border.all(color: context.border),
               ),
-              child: Row(
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(type.icon, size: 20),
-                  const SizedBox(width: AppTheme.spacing8),
-                  Text(type.localizedName(context.l10n)),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(type.icon, size: 20),
+                      const SizedBox(width: AppTheme.spacing8),
+                      Text(type.localizedName(context.l10n)),
+                    ],
+                  ),
+                  if (isPartialOnMeshCore) ...[
+                    const SizedBox(height: AppTheme.spacing4),
+                    Text(
+                      context.l10n.automationTriggerLimitedOnMeshcore,
+                      style: TextStyle(
+                        color: AppTheme.warningYellow,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

@@ -23,7 +23,7 @@ import '../../models/subscription_models.dart';
 import '../../providers/subscription_providers.dart';
 import '../automations/automations_screen.dart';
 import '../meshcore/dashboard/meshcore_dashboard_screen.dart';
-import '../meshcore/screens/meshcore_contacts_screen.dart';
+import '../meshcore/screens/meshcore_nodes_screen.dart';
 import '../meshcore/screens/meshcore_messages_container_screen.dart';
 import '../meshcore/screens/meshcore_tools_screen.dart';
 import '../meshcore/screens/meshcore_map_screen.dart';
@@ -293,7 +293,7 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
       case 1:
         return const MeshCoreMapScreen();
       case 2:
-        return const MeshCoreContactsScreen();
+        return const MeshCoreNodesScreen();
       case 3:
         return const MeshCoreDashboardScreen();
       default:

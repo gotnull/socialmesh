@@ -1285,8 +1285,22 @@ class _TriggerSelectorState extends State<TriggerSelector> {
   ];
 
   List<Widget> _buildTriggerList(BuildContext context) {
+    // When the trigger is pinned to MeshCore, drop trigger types whose
+    // wire/data dependency MeshCore doesn't satisfy (batteryLow,
+    // batteryFull, detectionSensor) so the user can't build a doomed
+    // automation. Partial-support triggers stay in the list with a
+    // "Limited on MeshCore" tag. See MESHCORE_PROTOCOL_COMPATIBILITY.md
+    // for the source-of-truth matrix.
+    final isMeshCoreOnly =
+        widget.trigger.protocolFilter == TriggerProtocolFilter.meshcore;
+
     final grouped = <String, List<TriggerType>>{};
     for (final type in TriggerType.values) {
+      if (isMeshCoreOnly &&
+          type.supportOn(TriggerProtocol.meshcore) ==
+              ProtocolSupport.unsupported) {
+        continue;
+      }
       grouped.putIfAbsent(type.category, () => []).add(type);
     }
 
@@ -1310,6 +1324,9 @@ class _TriggerSelectorState extends State<TriggerSelector> {
       );
 
       for (final type in triggers) {
+        final isPartialOnMeshCore =
+            isMeshCoreOnly &&
+            type.supportOn(TriggerProtocol.meshcore) == ProtocolSupport.partial;
         widgets.add(
           ListTile(
             leading: Container(
@@ -1332,6 +1349,15 @@ class _TriggerSelectorState extends State<TriggerSelector> {
               ),
             ),
             title: Text(type.displayName),
+            subtitle: isPartialOnMeshCore
+                ? Text(
+                    context.l10n.automationTriggerLimitedOnMeshcore,
+                    style: TextStyle(
+                      color: AppTheme.warningYellow,
+                      fontSize: 12,
+                    ),
+                  )
+                : null,
             trailing: type == widget.trigger.type
                 ? Icon(
                     Icons.check,

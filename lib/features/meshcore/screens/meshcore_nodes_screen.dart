@@ -1,78 +1,63 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-import '../../../core/l10n/l10n_extension.dart';
-import '../../../core/logging.dart';
-import '../../../core/safety/lifecycle_mixin.dart';
+
+// MeshCore Nodes screen.
+//
+// Standalone top-level tab (bottom-nav index 2) showing the full
+// discovered-peer roster. Mirrors `NodesScreen` on the Meshtastic
+// side: full node list with search, filter chips, and per-row
+// quick-actions. Distinct from `MeshCoreMessagingScreen`, which is
+// the conversations-only sub-tab inside the Messages container.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/l10n/l10n_extension.dart';
+import '../../../core/logging.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animated_empty_state.dart';
-import '../../../core/widgets/animations.dart';
-import '../../../core/widgets/glass_scaffold.dart';
-import '../../../core/widgets/primary_gradient_button.dart';
-import '../../../core/widgets/search_filter_header.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/primary_gradient_button.dart';
 import '../../../core/widgets/qr_share_sheet.dart';
+import '../../../core/widgets/search_filter_header.dart';
 import '../../../core/widgets/status_filter_chip.dart';
 import '../../../models/meshcore_contact.dart';
 import '../../../models/meshcore_contact_import_preview.dart';
-import '../contact_l10n.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_contact_block_provider.dart';
-import '../../../providers/meshcore_message_providers.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../../navigation/meshcore_shell.dart';
-import '../widgets/meshcore_sigil_avatar.dart';
+import '../widgets/meshcore_contact_card.dart';
 import 'meshcore_chat_screen.dart';
 import 'meshcore_contact_detail_screen.dart';
 import 'meshcore_contact_import_sheet.dart';
 import 'meshcore_qr_scanner_screen.dart';
 
-/// MeshCore Contacts screen.
-///
-/// Displays discovered contacts via advertisements, allows adding contacts
-/// via QR code, and shows contact status.
-class MeshCoreContactsScreen extends ConsumerStatefulWidget {
-  // When `true`, render only the body content (no GlassScaffold app
-  // bar) so the screen can be embedded inside the Messages container's
-  // TabBarView. Mirrors `MessagingScreen.embedded`. Outer container
-  // owns the app bar + tab selector when embedded.
-  final bool embedded;
-  // When `true`, filter the contact list to only those with at least
-  // one persisted conversation (DM thread with messages). This is the
-  // "Messages -> Contacts" sub-tab role. When `false` (default), the
-  // full discovered-peer roster renders - that's the standalone Nodes
-  // tab role. Mirrors Meshtastic's MessagingScreen vs NodesScreen
-  // split into a single parameterised screen.
-  final bool conversationsOnly;
-
-  const MeshCoreContactsScreen({
-    super.key,
-    this.embedded = false,
-    this.conversationsOnly = false,
-  });
+class MeshCoreNodesScreen extends ConsumerStatefulWidget {
+  const MeshCoreNodesScreen({super.key});
 
   @override
-  ConsumerState<MeshCoreContactsScreen> createState() =>
-      _MeshCoreContactsScreenState();
+  ConsumerState<MeshCoreNodesScreen> createState() =>
+      _MeshCoreNodesScreenState();
 }
 
-enum _MeshCoreContactFilter { all, unread, chat, repeaters, other }
+enum _MeshCoreNodeFilter { all, unread, chat, repeaters, other }
 
-class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
-    with LifecycleSafeMixin<MeshCoreContactsScreen> {
+class _MeshCoreNodesScreenState extends ConsumerState<MeshCoreNodesScreen>
+    with LifecycleSafeMixin<MeshCoreNodesScreen> {
   String _searchQuery = '';
   final _searchController = TextEditingController();
-  _MeshCoreContactFilter _activeFilter = _MeshCoreContactFilter.all;
+  _MeshCoreNodeFilter _activeFilter = _MeshCoreNodeFilter.all;
 
   @override
   void initState() {
     super.initState();
-    AppLogging.meshcore('event=screen.opened name=contacts');
+    AppLogging.meshcore('event=screen.opened name=nodes');
   }
 
   @override
@@ -87,16 +72,8 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
     final isConnected = linkStatus.isConnected;
     final deviceName = linkStatus.deviceName ?? 'MeshCore';
     final contactsState = ref.watch(meshCoreContactsProvider);
+    final allContacts = contactsState.contacts;
 
-    // Conversations-only mode (Messages -> Contacts sub-tab): keep
-    // only contacts whose pubkey has at least one persisted DM
-    // conversation. The conversations provider's contact entries are
-    // keyed by `publicKeyHex`; channel entries are excluded. Mirrors
-    // Meshtastic's MessagingScreen which shows DM threads, not the
-    // broader node roster.
-    final allContacts = widget.conversationsOnly
-        ? _filterToContactsWithConversations(contactsState.contacts)
-        : contactsState.contacts;
     var contacts = _applyFilter(allContacts);
     if (_searchQuery.isNotEmpty) {
       contacts = contacts.where((c) {
@@ -117,18 +94,6 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
         ? _buildFilteredEmptyState()
         : _buildContactsList(contacts, allContacts, contactsState.isLoading);
 
-    // Embedded inside the Messages container: skip the AppBar — the
-    // container owns it (title + DeviceStatusButton + overflow menu).
-    // The container's TabBar sits underneath the AppBar; this child
-    // returns the body content only.
-    if (widget.embedded) {
-      return GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: Container(color: context.background, child: body),
-      );
-    }
-
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () => FocusScope.of(context).unfocus(),
@@ -136,8 +101,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
         hasScrollBody: true,
         resizeToAvoidBottomInset: false,
         leading: const MeshCoreHamburgerMenuButton(),
-        title:
-            '${context.l10n.meshcoreContactsTitle}${allContacts.isEmpty ? '' : ' (${allContacts.length})'}',
+        title: context.l10n.nodesScreenTitle(allContacts.length),
         actions: [
           const MeshCoreDeviceStatusButton(),
           AppBarOverflowMenu<String>(
@@ -153,8 +117,6 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                   _refreshContacts();
                 case 'my_code':
                   _showMyContactCode();
-                case 'disconnect':
-                  _disconnect();
               }
             },
             itemBuilder: (context) => [
@@ -203,16 +165,6 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                   visualDensity: VisualDensity.compact,
                 ),
               ),
-              const PopupMenuDivider(),
-              PopupMenuItem(
-                value: 'disconnect',
-                child: ListTile(
-                  leading: const Icon(Icons.link_off_rounded),
-                  title: Text(context.l10n.meshcoreDisconnect),
-                  contentPadding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
             ],
           ),
         ],
@@ -221,36 +173,17 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
     );
   }
 
-  // Restrict to contacts whose pubkey is present in the conversations
-  // provider's contact entries (channels excluded). Used by the
-  // Messages -> Contacts sub-tab to render only DM threads, not the
-  // full discovered roster.
-  List<MeshCoreContact> _filterToContactsWithConversations(
-    List<MeshCoreContact> contacts,
-  ) {
-    final convoIds = ref
-        .watch(meshCoreConversationsProvider)
-        .conversations
-        .where((c) => !c.isChannel)
-        .map((c) => c.id.toLowerCase())
-        .toSet();
-    if (convoIds.isEmpty) return const [];
-    return contacts
-        .where((c) => convoIds.contains(c.publicKeyHex.toLowerCase()))
-        .toList();
-  }
-
   List<MeshCoreContact> _applyFilter(List<MeshCoreContact> contacts) {
     switch (_activeFilter) {
-      case _MeshCoreContactFilter.all:
+      case _MeshCoreNodeFilter.all:
         return contacts;
-      case _MeshCoreContactFilter.unread:
+      case _MeshCoreNodeFilter.unread:
         return contacts.where((contact) => contact.unreadCount > 0).toList();
-      case _MeshCoreContactFilter.chat:
+      case _MeshCoreNodeFilter.chat:
         return contacts.where((contact) => contact.type == 1).toList();
-      case _MeshCoreContactFilter.repeaters:
+      case _MeshCoreNodeFilter.repeaters:
         return contacts.where((contact) => contact.type == 2).toList();
-      case _MeshCoreContactFilter.other:
+      case _MeshCoreNodeFilter.other:
         return contacts
             .where((contact) => contact.type != 1 && contact.type != 2)
             .toList();
@@ -296,12 +229,6 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
     );
   }
 
-  /// D28 follow-up: empty state for the case where the user has
-  /// contacts but the active filter excludes them all (e.g. tapping
-  /// "Unread 0" with no unread messages). The default empty state
-  /// shows "Add Contact" which is misleading — the user already has
-  /// contacts and just wants to back out of the empty filter. The
-  /// "Show all contacts" action resets [_activeFilter] to `all`.
   Widget _buildFilteredEmptyState() {
     final l10n = context.l10n;
     return AnimatedEmptyState(
@@ -317,20 +244,13 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
         titleSuffix: '',
         actionLabel: l10n.meshcoreContactsFilteredEmptyAction,
         actionIcon: Icons.clear_all_rounded,
-        onAction: () =>
-            setState(() => _activeFilter = _MeshCoreContactFilter.all),
+        onAction: () => setState(() => _activeFilter = _MeshCoreNodeFilter.all),
         accentColor: AccentColors.cyan,
       ),
     );
   }
 
   Widget _buildEmptyState(String deviceName) {
-    // [deviceName] is no longer surfaced inline: the connected device is
-    // already visible via the device-status button in the app bar; keeping
-    // a separate "Connected to X" badge inside the empty state would be
-    // duplicate UI and clash with the canonical AnimatedEmptyState shape.
-    // The pull-to-refresh affordance on the list itself preserves the
-    // refresh path without a secondary button.
     return AnimatedEmptyState(
       config: AnimatedEmptyStateConfig(
         icons: const [
@@ -396,50 +316,47 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                 StatusFilterChip(
                   label: context.l10n.messagingFilterAll,
                   count: allContacts.length,
-                  isSelected: _activeFilter == _MeshCoreContactFilter.all,
-                  onTap: () => setState(
-                    () => _activeFilter = _MeshCoreContactFilter.all,
-                  ),
+                  isSelected: _activeFilter == _MeshCoreNodeFilter.all,
+                  onTap: () =>
+                      setState(() => _activeFilter = _MeshCoreNodeFilter.all),
                 ),
                 StatusFilterChip(
                   label: context.l10n.messagingFilterUnread,
                   count: unreadCount,
-                  isSelected: _activeFilter == _MeshCoreContactFilter.unread,
+                  isSelected: _activeFilter == _MeshCoreNodeFilter.unread,
                   icon: Icons.mark_email_unread_outlined,
                   color: AccentColors.red,
                   onTap: () => setState(
-                    () => _activeFilter = _MeshCoreContactFilter.unread,
+                    () => _activeFilter = _MeshCoreNodeFilter.unread,
                   ),
                 ),
                 StatusFilterChip(
                   label: context.l10n.meshcoreFilterChatNodes,
                   count: chatCount,
-                  isSelected: _activeFilter == _MeshCoreContactFilter.chat,
+                  isSelected: _activeFilter == _MeshCoreNodeFilter.chat,
                   icon: Icons.person,
                   color: AccentColors.blue,
-                  onTap: () => setState(
-                    () => _activeFilter = _MeshCoreContactFilter.chat,
-                  ),
+                  onTap: () =>
+                      setState(() => _activeFilter = _MeshCoreNodeFilter.chat),
                 ),
                 StatusFilterChip(
                   label: context.l10n.meshcoreFilterRepeaters,
                   count: repeaterCount,
-                  isSelected: _activeFilter == _MeshCoreContactFilter.repeaters,
+                  isSelected: _activeFilter == _MeshCoreNodeFilter.repeaters,
                   icon: Icons.cell_tower_rounded,
                   color: AccentColors.green,
                   onTap: () => setState(
-                    () => _activeFilter = _MeshCoreContactFilter.repeaters,
+                    () => _activeFilter = _MeshCoreNodeFilter.repeaters,
                   ),
                 ),
                 StatusFilterChip(
                   label: context.l10n.meshcoreFilterOtherNodes,
                   count: otherCount,
-                  isSelected: _activeFilter == _MeshCoreContactFilter.other,
+                  isSelected: _activeFilter == _MeshCoreNodeFilter.other,
                   icon: Icons.device_unknown,
                   color: SemanticColors.disabled,
-                  onTap: () => setState(
-                    () => _activeFilter = _MeshCoreContactFilter.other,
-                  ),
+                  onTap: () =>
+                      setState(() => _activeFilter = _MeshCoreNodeFilter.other),
                 ),
               ],
             ),
@@ -449,7 +366,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate((context, index) {
                 final contact = contacts[index];
-                return _ContactCard(
+                return MeshCoreContactCard(
                   contact: contact,
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
@@ -501,7 +418,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.only(bottom: AppTheme.spacing16),
             child: Text(
               context.l10n.meshcoreAddContact,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -606,8 +523,6 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
             );
           },
         ),
-        // D34c-A: Read-only contact detail surface — pubkey, path,
-        // hops, last-heard, GPS. No override controls in this slice.
         BottomSheetAction(
           icon: Icons.info_outline_rounded,
           iconColor: context.accentColor,
@@ -616,8 +531,6 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
             openMeshCoreContactDetail(context, contact: contact);
           },
         ),
-        // D-Q3: per-contact favorite toggle. Read-modify-writes the
-        // firmware-side flags byte; reserved bits round-trip.
         BottomSheetAction(
           icon: contact.isFavorite
               ? Icons.star_rounded
@@ -628,9 +541,6 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
               : context.l10n.meshcoreContactAddFavorite,
           onTap: () => _toggleFavorite(contact),
         ),
-        // D-Q8: per-contact block toggle. Local-only — blocked
-        // contacts' inbound messages still arrive but the OS
-        // notification is suppressed. No wire change.
         BottomSheetAction(
           icon: _isBlocked(contact)
               ? Icons.notifications_active_rounded
@@ -668,9 +578,6 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
     );
   }
 
-  /// D46-A: export a contact via `CMD_EXPORT_CONTACT 0x11`, encode as
-  /// `meshcore://<hex>`, write to clipboard. Snackbar fires on success
-  /// or failure.
   Future<void> _shareContactUrl(MeshCoreContact contact) async {
     final l10n = context.l10n;
     final notifier = ref.read(meshCoreContactsProvider.notifier);
@@ -685,8 +592,6 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
     showSuccessSnackBar(context, l10n.meshcoreContactUrlCopied);
   }
 
-  /// D46-A: broadcast our own contact card zero-hop via
-  /// `CMD_SHARE_CONTACT 0x10`. Snackbar fires on success or failure.
   Future<void> _broadcastSelfContact() async {
     final l10n = context.l10n;
     final notifier = ref.read(meshCoreContactsProvider.notifier);
@@ -699,9 +604,6 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
     }
   }
 
-  /// D46-A: read the clipboard, parse as `meshcore://` (or legacy
-  /// `<pubkeyhex>:<name>`), open the confirmation sheet. The sheet
-  /// drives the commit through the provider on Confirm.
   Future<void> _addContactFromClipboard() async {
     final l10n = context.l10n;
     final clip = await Clipboard.getData(Clipboard.kTextPlain);
@@ -739,8 +641,6 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
     if (confirmed != true) return;
     if (!mounted) return;
 
-    // D29 Part B: send to firmware first; only show success after the
-    // radio ACKs and the contact list refreshes.
     final ok = await ref
         .read(meshCoreContactsProvider.notifier)
         .removeContact(contact.publicKeyHex);
@@ -758,10 +658,6 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
     }
   }
 
-  /// D29 Part C: reset the firmware-side learned route for [contact].
-  /// Routes through the wire (`CMD_RESET_PATH` 0x0D) and refreshes the
-  /// contact list. Non-destructive — no confirmation dialog; the
-  /// label copy explains what happens.
   Future<void> _resetContactPath(MeshCoreContact contact) async {
     final ok = await ref
         .read(meshCoreContactsProvider.notifier)
@@ -780,18 +676,12 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
     }
   }
 
-  /// D-Q8: sync block check against the provider's hydrated state.
-  /// Used by the long-press sheet to flip the action label between
-  /// "Block contact" and "Unblock contact".
   bool _isBlocked(MeshCoreContact contact) {
     return ref
         .read(meshCoreContactBlockProvider.notifier)
         .isBlocked(contact.publicKeyHex);
   }
 
-  /// D-Q8: toggle the per-contact block flag. Local-only (no wire
-  /// change) — the OS notification path checks `isBlocked()` before
-  /// surfacing inbound messages from this contact.
   Future<void> _toggleBlock(MeshCoreContact contact) async {
     final l10n = context.l10n;
     final notifier = ref.read(meshCoreContactBlockProvider.notifier);
@@ -813,9 +703,6 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
     }
   }
 
-  /// D-Q3: flip the per-contact favorite bit + surface a snackbar.
-  /// The provider mirrors the new flag into local state immediately
-  /// so the contact-list row re-renders with the new star + sort.
   Future<void> _toggleFavorite(MeshCoreContact contact) async {
     final wasFavorite = contact.isFavorite;
     final ok = await ref
@@ -835,11 +722,6 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
         context.l10n.meshcoreContactToggleFavoriteFailed(contact.name),
       );
     }
-  }
-
-  void _disconnect() async {
-    final coordinator = ref.read(connectionCoordinatorProvider);
-    await coordinator.disconnect();
   }
 
   void _scanContactQr() {
@@ -908,7 +790,9 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                 child: OutlinedButton(
                   onPressed: () => Navigator.pop(context),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppTheme.spacing16,
+                    ),
                     side: BorderSide(color: SemanticColors.divider),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppTheme.radius12),
@@ -933,10 +817,6 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
                       return;
                     }
                     Navigator.pop(context);
-                    // D29: send to firmware first; only show success
-                    // toast after the radio ACKs and the contact list
-                    // refreshes. Pre-D29 we showed success unconditionally
-                    // and the contact silently disappeared on next refresh.
                     final ok = await ref
                         .read(meshCoreContactsProvider.notifier)
                         .addContact(contact);
@@ -960,294 +840,5 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
         ],
       ),
     ).whenComplete(controller.dispose);
-  }
-}
-
-/// Card widget for displaying a single contact.
-/// D19.C: now a `ConsumerWidget` so the tile reflects the live
-/// last-message preview pulled from `meshCoreConversationsProvider`.
-/// The unread badge keeps using `contact.unreadCount` (already
-/// hydrated from SharedPreferences via the contacts notifier) but
-/// falls back to the conversations provider's count when the
-/// contacts notifier hasn't refreshed yet, so a freshly-arrived
-/// inbound message bumps the badge immediately.
-class _ContactCard extends ConsumerWidget {
-  final MeshCoreContact contact;
-  final VoidCallback onTap;
-  final VoidCallback onLongPress;
-
-  const _ContactCard({
-    required this.contact,
-    required this.onTap,
-    required this.onLongPress,
-  });
-
-  Color _getAvatarColor() {
-    // Generate color from public key
-    final colors = [
-      AccentColors.cyan,
-      AccentColors.purple,
-      AccentColors.pink,
-      AccentColors.green,
-      AccentColors.orange,
-      AccentColors.blue,
-    ];
-    final hash = contact.publicKeyHex.hashCode;
-    return colors[hash.abs() % colors.length];
-  }
-
-  IconData _getTypeIcon() {
-    switch (contact.type) {
-      case 1: // Chat
-        return Icons.person_rounded;
-      case 2: // Repeater
-        return Icons.cell_tower_rounded;
-      case 3: // Room
-        return Icons.meeting_room_rounded;
-      case 4: // Sensor
-        return Icons.sensors_rounded;
-      default:
-        return Icons.device_unknown_rounded;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final avatarColor = _getAvatarColor();
-    final conversationsState = ref.watch(meshCoreConversationsProvider);
-    final conversation = conversationsState.conversations
-        .where((c) => c.id == contact.publicKeyHex)
-        .cast<MeshCoreConversation?>()
-        .firstWhere((_) => true, orElse: () => null);
-    final lastMessageText = conversation?.lastMessageText;
-    // Prefer contact-store-hydrated count for stability; fall back to
-    // the conversations notifier's live count for fresh inbound that
-    // hasn't been re-read into the contacts state yet.
-    final unreadCount = contact.unreadCount > 0
-        ? contact.unreadCount
-        : (conversation?.unreadCount ?? 0);
-
-    return BouncyTap(
-      onTap: onTap,
-      onLongPress: onLongPress,
-      scaleFactor: 0.98,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        decoration: BoxDecoration(
-          color: context.card,
-          borderRadius: BorderRadius.circular(AppTheme.radius12),
-          border: Border.all(color: context.border, width: 1),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spacing12),
-          child: Row(
-            children: [
-              // Avatar: pubkey-derived sigil (D-S4) when the contact
-              // carries a usable pubkey, falling back to the
-              // single-letter colored tile when not (rare; only for
-              // malformed contact entries with empty or short pubkeys).
-              // onTap stays null so the outer InkWell handles row taps.
-              if (contact.publicKey.length >= 4)
-                MeshCoreSigilAvatar(pubKey: contact.publicKey, size: 48)
-              else
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: avatarColor.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(AppTheme.radius12),
-                  ),
-                  child: Center(
-                    child: Text(
-                      contact.name.isNotEmpty
-                          ? contact.name[0].toUpperCase()
-                          : '?',
-                      style: TextStyle(
-                        color: avatarColor,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              const SizedBox(width: AppTheme.spacing12),
-              // Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      // D23: `displayName` falls through to the
-                      // redacted pubkey fingerprint when the firmware
-                      // contact entry has an empty name field. Only the
-                      // rare empty-name + empty-pubkey case lands on the
-                      // localized "Unknown" placeholder.
-                      contact.displayName.isNotEmpty
-                          ? contact.displayName
-                          : context.l10n.meshcoreContactUnknownName,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
-                    ),
-                    if (lastMessageText != null &&
-                        lastMessageText.isNotEmpty) ...[
-                      const SizedBox(height: AppTheme.spacing2),
-                      Text(
-                        lastMessageText,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: unreadCount > 0
-                              ? context.textPrimary
-                              : context.textSecondary,
-                          fontSize: 13,
-                          fontWeight: unreadCount > 0
-                              ? FontWeight.w500
-                              : FontWeight.w400,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: AppTheme.spacing4),
-                    Row(
-                      children: [
-                        Icon(
-                          _getTypeIcon(),
-                          size: 14,
-                          color: context.textTertiary,
-                        ),
-                        const SizedBox(width: AppTheme.spacing4),
-                        Text(
-                          contact.localizedTypeLabel(context.l10n),
-                          style: TextStyle(
-                            color: context.textTertiary,
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(width: AppTheme.spacing12),
-                        Icon(
-                          Icons.route_rounded,
-                          size: 14,
-                          color: context.textTertiary,
-                        ),
-                        const SizedBox(width: AppTheme.spacing4),
-                        Text(
-                          contact.localizedPathLabel(context.l10n),
-                          style: TextStyle(
-                            color: context.textTertiary,
-                            fontSize: 12,
-                          ),
-                        ),
-                        if (contact.snrDb != null) ...[
-                          const SizedBox(width: AppTheme.spacing12),
-                          _SnrBadge(snrDb: contact.snrDb!),
-                        ],
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              // D-Q3: favorite star sits at the trailing edge before
-              // the unread badge / chevron, matching the Meshtastic
-              // conversation-tile layout in messaging_screen.dart.
-              if (contact.isFavorite)
-                const Padding(
-                  padding: EdgeInsets.only(right: 8),
-                  child: Icon(Icons.star, color: AccentColors.yellow, size: 20),
-                ),
-              // Unread badge / chevron
-              if (unreadCount > 0)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AccentColors.cyan,
-                    borderRadius: BorderRadius.circular(AppTheme.radius12),
-                  ),
-                  child: Text(
-                    unreadCount > 99 ? '99+' : '$unreadCount',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                )
-              else
-                Icon(Icons.chevron_right_rounded, color: context.textTertiary),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// D28: Per-contact SNR badge.
-///
-/// Three signal bars colour-graded against the underlying dB and a
-/// numeric label. Bars present so the badge reads as link-quality at a
-/// glance; numeric label so the precise value is never hidden behind a
-/// qualitative bucket. Hidden by the caller when SNR is unknown.
-class _SnrBadge extends StatelessWidget {
-  final double snrDb;
-  const _SnrBadge({required this.snrDb});
-
-  /// Three-step bar fill: 0 / 1 / 2 / 3 bars active.
-  /// Thresholds picked to match LoRa SNR bands typical for MeshCore:
-  /// `>=  0 dB` excellent (3), `>= -7 dB` good (2), `>= -12 dB` weak (1),
-  /// below -12 dB very poor (0). Bars are visual hints; the numeric
-  /// label is the source of truth.
-  int get _activeBars {
-    if (snrDb >= 0) return 3;
-    if (snrDb >= -7) return 2;
-    if (snrDb >= -12) return 1;
-    return 0;
-  }
-
-  Color _accent(BuildContext context) {
-    final bars = _activeBars;
-    if (bars >= 3) return AccentColors.green;
-    if (bars >= 2) return AccentColors.cyan;
-    if (bars >= 1) return AppTheme.warningYellow;
-    return AppTheme.errorRed;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final accent = _accent(context);
-    final active = _activeBars;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (var i = 0; i < 3; i++) ...[
-          Container(
-            width: 3,
-            height: 4 + i * 3.0,
-            margin: EdgeInsets.only(
-              right: i == 2 ? AppTheme.spacing6 : AppTheme.spacing2,
-            ),
-            decoration: BoxDecoration(
-              color: i < active
-                  ? accent
-                  : context.textTertiary.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(AppTheme.spacing2 / 2),
-            ),
-          ),
-        ],
-        Text(
-          context.l10n.meshcoreSnrLabel(snrDb.toStringAsFixed(1)),
-          style: TextStyle(
-            color: accent,
-            fontSize: 12,
-            fontFamily: AppTheme.fontFamily,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
   }
 }

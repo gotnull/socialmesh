@@ -4926,6 +4926,12 @@ abstract class AppLocalizations {
   /// **'MeshCore'**
   String get automationTriggerProtocolMeshcore;
 
+  /// Subtitle tag on trigger / action / widget picker rows that work partially on MeshCore (e.g. positionChanged fires only for contacts that broadcast GPS)
+  ///
+  /// In en, this message translates to:
+  /// **'Limited on MeshCore'**
+  String get automationTriggerLimitedOnMeshcore;
+
   /// Title of the MeshCore contact picker bottom sheet
   ///
   /// In en, this message translates to:
@@ -17135,6 +17141,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **' yet'**
   String get meshcoreContactsEmptyTitleSuffix;
+
+  /// Animated empty-state title prefix shown before the keyword in the MeshCore Messages > Contacts sub-tab when there are no active DM conversations
+  ///
+  /// In en, this message translates to:
+  /// **'No '**
+  String get meshcoreMessagingEmptyTitlePrefix;
+
+  /// Animated empty-state gradient keyword shown in the MeshCore Messages > Contacts sub-tab when there are no active DM conversations
+  ///
+  /// In en, this message translates to:
+  /// **'conversations'**
+  String get meshcoreMessagingEmptyTitleKeyword;
+
+  /// Animated empty-state title suffix shown after the keyword in the MeshCore Messages > Contacts sub-tab when there are no active DM conversations
+  ///
+  /// In en, this message translates to:
+  /// **' yet'**
+  String get meshcoreMessagingEmptyTitleSuffix;
+
+  /// Tagline for the MeshCore Messages > Contacts sub-tab empty state explaining when conversation tiles will appear
+  ///
+  /// In en, this message translates to:
+  /// **'Conversations appear here once you exchange a direct message with a contact'**
+  String get meshcoreMessagingEmptyHint;
+
+  /// Tagline for the MeshCore Messages > Contacts sub-tab empty state directing users to the Nodes tab to start a new chat
+  ///
+  /// In en, this message translates to:
+  /// **'Open the Nodes tab to start a new conversation'**
+  String get meshcoreMessagingEmptyTaglineNodesTab;
 
   /// D28 follow-up - title for the filtered-empty state on the Contacts screen (active filter excludes all contacts but the user still has contacts)
   ///

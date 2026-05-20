@@ -8,7 +8,7 @@ import '../../../models/trigger_protocol.dart';
 import 'condition_node.dart';
 
 export '../../../models/trigger_protocol.dart'
-    show TriggerProtocol, TriggerProtocolFilter;
+    show TriggerProtocol, TriggerProtocolFilter, ProtocolSupport;
 
 /// Core automation model
 class Automation {

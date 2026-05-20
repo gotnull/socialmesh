@@ -3676,6 +3676,10 @@
     "@automationTriggerProtocolMeshcore": {
         "description": "Protocol-filter pill option: fire only on MeshCore events"
     },
+    "automationTriggerLimitedOnMeshcore": "Limited on MeshCore",
+    "@automationTriggerLimitedOnMeshcore": {
+        "description": "Subtitle tag on trigger / action / widget picker rows that work partially on MeshCore (e.g. positionChanged fires only for contacts that broadcast GPS)"
+    },
     "meshcoreContactSelectorTitle": "Select MeshCore contact",
     "@meshcoreContactSelectorTitle": {
         "description": "Title of the MeshCore contact picker bottom sheet"
@@ -13071,6 +13075,26 @@
     "meshcoreContactsEmptyTitleSuffix": " yet",
     "@meshcoreContactsEmptyTitleSuffix": {
         "description": "Animated empty-state title suffix shown after the keyword for an empty contacts list"
+    },
+    "meshcoreMessagingEmptyTitlePrefix": "No ",
+    "@meshcoreMessagingEmptyTitlePrefix": {
+        "description": "Animated empty-state title prefix shown before the keyword in the MeshCore Messages > Contacts sub-tab when there are no active DM conversations"
+    },
+    "meshcoreMessagingEmptyTitleKeyword": "conversations",
+    "@meshcoreMessagingEmptyTitleKeyword": {
+        "description": "Animated empty-state gradient keyword shown in the MeshCore Messages > Contacts sub-tab when there are no active DM conversations"
+    },
+    "meshcoreMessagingEmptyTitleSuffix": " yet",
+    "@meshcoreMessagingEmptyTitleSuffix": {
+        "description": "Animated empty-state title suffix shown after the keyword in the MeshCore Messages > Contacts sub-tab when there are no active DM conversations"
+    },
+    "meshcoreMessagingEmptyHint": "Conversations appear here once you exchange a direct message with a contact",
+    "@meshcoreMessagingEmptyHint": {
+        "description": "Tagline for the MeshCore Messages > Contacts sub-tab empty state explaining when conversation tiles will appear"
+    },
+    "meshcoreMessagingEmptyTaglineNodesTab": "Open the Nodes tab to start a new conversation",
+    "@meshcoreMessagingEmptyTaglineNodesTab": {
+        "description": "Tagline for the MeshCore Messages > Contacts sub-tab empty state directing users to the Nodes tab to start a new chat"
     },
     "meshcoreContactsFilteredEmptyTitle": "No matches",
     "@meshcoreContactsFilteredEmptyTitle": {

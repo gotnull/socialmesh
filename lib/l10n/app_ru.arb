@@ -12366,5 +12366,11 @@
   "meshcoreRingtoneChannelAdvertsHint": "Системный звук по умолчанию",
   "meshcoreRingtoneChannelBatchSummary": "Уведомления о сводке активности",
   "meshcoreRingtoneChannelBatchSummaryHint": "Системный звук по умолчанию",
-  "meshcoreRingtoneChannelCustom": "Пользовательский RTTTL"
+  "meshcoreRingtoneChannelCustom": "Пользовательский RTTTL",
+  "automationTriggerLimitedOnMeshcore": "Ограничено в MeshCore",
+  "meshcoreMessagingEmptyTitlePrefix": "Пока нет ",
+  "meshcoreMessagingEmptyTitleKeyword": "переписок",
+  "meshcoreMessagingEmptyTitleSuffix": "",
+  "meshcoreMessagingEmptyHint": "Переписки появятся здесь после первого личного сообщения с контактом",
+  "meshcoreMessagingEmptyTaglineNodesTab": "Откройте вкладку Узлы, чтобы начать новую переписку"
 }

@@ -7,9 +7,10 @@
 // bottom nav; folding Contacts + Channels into one container keeps
 // the UI shape identical across protocols.
 //
-// The two children render with `embedded: true` so they skip their
+// The Channels child renders with `embedded: true` so it skips its
 // own GlassScaffold app bar (this container owns the title + actions
-// + tab bar).
+// + tab bar). The Contacts child is the conversations-only
+// `MeshCoreMessagingScreen`, which is always embedded by design.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,7 +20,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../navigation/meshcore_shell.dart';
 import 'meshcore_channels_screen.dart';
-import 'meshcore_contacts_screen.dart';
+import 'meshcore_messaging_screen.dart';
 
 class MeshCoreMessagesContainerScreen extends ConsumerStatefulWidget {
   const MeshCoreMessagesContainerScreen({super.key});
@@ -97,7 +98,7 @@ class _MeshCoreMessagesContainerScreenState
               // an active DM conversation. The full roster (every
               // discovered peer) lives on the standalone Nodes
               // top-level tab.
-              MeshCoreContactsScreen(embedded: true, conversationsOnly: true),
+              MeshCoreMessagingScreen(),
               MeshCoreChannelsScreen(embedded: true),
             ],
           ),

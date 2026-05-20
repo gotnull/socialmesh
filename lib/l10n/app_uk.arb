@@ -12366,5 +12366,11 @@
   "meshcoreRingtoneChannelAdvertsHint": "Стандартний системний звук",
   "meshcoreRingtoneChannelBatchSummary": "Сповіщення про підсумок активності",
   "meshcoreRingtoneChannelBatchSummaryHint": "Стандартний системний звук",
-  "meshcoreRingtoneChannelCustom": "Користувацький RTTTL"
+  "meshcoreRingtoneChannelCustom": "Користувацький RTTTL",
+  "automationTriggerLimitedOnMeshcore": "Обмежено в MeshCore",
+  "meshcoreMessagingEmptyTitlePrefix": "Поки немає ",
+  "meshcoreMessagingEmptyTitleKeyword": "розмов",
+  "meshcoreMessagingEmptyTitleSuffix": "",
+  "meshcoreMessagingEmptyHint": "Розмови з'являться тут після обміну прямим повідомленням із контактом",
+  "meshcoreMessagingEmptyTaglineNodesTab": "Відкрийте вкладку Вузли, щоб почати нову розмову"
 }

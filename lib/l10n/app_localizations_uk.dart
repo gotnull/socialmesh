@@ -2795,6 +2795,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get automationTriggerProtocolMeshcore => 'MeshCore';
 
   @override
+  String get automationTriggerLimitedOnMeshcore => 'Обмежено в MeshCore';
+
+  @override
   String get meshcoreContactSelectorTitle => 'Виберіть контакт MeshCore';
 
   @override
@@ -9857,6 +9860,23 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshcoreContactsEmptyTitleSuffix => '';
+
+  @override
+  String get meshcoreMessagingEmptyTitlePrefix => 'Поки немає ';
+
+  @override
+  String get meshcoreMessagingEmptyTitleKeyword => 'розмов';
+
+  @override
+  String get meshcoreMessagingEmptyTitleSuffix => '';
+
+  @override
+  String get meshcoreMessagingEmptyHint =>
+      'Розмови з\'являться тут після обміну прямим повідомленням із контактом';
+
+  @override
+  String get meshcoreMessagingEmptyTaglineNodesTab =>
+      'Відкрийте вкладку Вузли, щоб почати нову розмову';
 
   @override
   String get meshcoreContactsFilteredEmptyTitle => 'Немає збігів';

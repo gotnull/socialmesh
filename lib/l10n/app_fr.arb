@@ -12366,5 +12366,11 @@
   "meshcoreRingtoneChannelAdvertsHint": "Son système par défaut",
   "meshcoreRingtoneChannelBatchSummary": "Notifications de résumé d'activité",
   "meshcoreRingtoneChannelBatchSummaryHint": "Son système par défaut",
-  "meshcoreRingtoneChannelCustom": "RTTTL personnalisé"
+  "meshcoreRingtoneChannelCustom": "RTTTL personnalisé",
+  "automationTriggerLimitedOnMeshcore": "Limité sur MeshCore",
+  "meshcoreMessagingEmptyTitlePrefix": "Aucune ",
+  "meshcoreMessagingEmptyTitleKeyword": "conversation",
+  "meshcoreMessagingEmptyTitleSuffix": " pour l'instant",
+  "meshcoreMessagingEmptyHint": "Les conversations apparaissent ici une fois que vous avez échangé un message direct avec un contact",
+  "meshcoreMessagingEmptyTaglineNodesTab": "Ouvrez l'onglet Nœuds pour démarrer une nouvelle conversation"
 }

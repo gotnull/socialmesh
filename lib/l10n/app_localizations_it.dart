@@ -2804,6 +2804,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get automationTriggerProtocolMeshcore => 'MeshCore';
 
   @override
+  String get automationTriggerLimitedOnMeshcore => 'Limitato su MeshCore';
+
+  @override
   String get meshcoreContactSelectorTitle => 'Seleziona contatto MeshCore';
 
   @override
@@ -9850,6 +9853,23 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get meshcoreContactsEmptyTitleSuffix => ' ancora';
+
+  @override
+  String get meshcoreMessagingEmptyTitlePrefix => 'Nessuna ';
+
+  @override
+  String get meshcoreMessagingEmptyTitleKeyword => 'conversazione';
+
+  @override
+  String get meshcoreMessagingEmptyTitleSuffix => ' ancora';
+
+  @override
+  String get meshcoreMessagingEmptyHint =>
+      'Le conversazioni compaiono qui dopo aver scambiato un messaggio diretto con un contatto';
+
+  @override
+  String get meshcoreMessagingEmptyTaglineNodesTab =>
+      'Apri la scheda Nodi per iniziare una nuova conversazione';
 
   @override
   String get meshcoreContactsFilteredEmptyTitle => 'Nessun risultato';

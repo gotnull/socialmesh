@@ -1438,6 +1438,10 @@ class _ActionEditorState extends ConsumerState<ActionEditor>
               })
               .map((type) {
                 final isSelected = type == widget.action.type;
+                final isPartialOnMeshCore =
+                    widget.protocolFilter == TriggerProtocolFilter.meshcore &&
+                    type.supportOn(TriggerProtocol.meshcore) ==
+                        ProtocolSupport.partial;
                 return BouncyTap(
                   onTap: () {
                     Navigator.of(context).pop();
@@ -1476,25 +1480,41 @@ class _ActionEditorState extends ConsumerState<ActionEditor>
                             : context.border,
                       ),
                     ),
-                    child: Row(
+                    child: Column(
                       mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          type.icon,
-                          size: 20,
-                          color: isSelected
-                              ? Theme.of(context).colorScheme.primary
-                              : null,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              type.icon,
+                              size: 20,
+                              color: isSelected
+                                  ? Theme.of(context).colorScheme.primary
+                                  : null,
+                            ),
+                            const SizedBox(width: AppTheme.spacing8),
+                            Text(
+                              type.localizedName(context.l10n),
+                              style: TextStyle(
+                                color: isSelected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : null,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: AppTheme.spacing8),
-                        Text(
-                          type.localizedName(context.l10n),
-                          style: TextStyle(
-                            color: isSelected
-                                ? Theme.of(context).colorScheme.primary
-                                : null,
+                        if (isPartialOnMeshCore) ...[
+                          const SizedBox(height: AppTheme.spacing4),
+                          Text(
+                            context.l10n.automationTriggerLimitedOnMeshcore,
+                            style: TextStyle(
+                              color: AppTheme.warningYellow,
+                              fontSize: 11,
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),

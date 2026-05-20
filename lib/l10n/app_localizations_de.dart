@@ -2812,6 +2812,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get automationTriggerProtocolMeshcore => 'MeshCore';
 
   @override
+  String get automationTriggerLimitedOnMeshcore => 'Eingeschränkt auf MeshCore';
+
+  @override
   String get meshcoreContactSelectorTitle => 'MeshCore-Kontakt auswählen';
 
   @override
@@ -9866,6 +9869,23 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get meshcoreContactsEmptyTitleSuffix => ' vorhanden';
+
+  @override
+  String get meshcoreMessagingEmptyTitlePrefix => 'Noch keine ';
+
+  @override
+  String get meshcoreMessagingEmptyTitleKeyword => 'Unterhaltungen';
+
+  @override
+  String get meshcoreMessagingEmptyTitleSuffix => '';
+
+  @override
+  String get meshcoreMessagingEmptyHint =>
+      'Unterhaltungen erscheinen hier, sobald du eine Direktnachricht mit einem Kontakt austauschst';
+
+  @override
+  String get meshcoreMessagingEmptyTaglineNodesTab =>
+      'Öffne den Reiter Knoten, um eine neue Unterhaltung zu beginnen';
 
   @override
   String get meshcoreContactsFilteredEmptyTitle => 'Keine Treffer';

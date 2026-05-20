@@ -45510,5 +45510,11 @@
   "meshcoreRingtoneChannelAdvertsHint": "Som padrão do sistema",
   "meshcoreRingtoneChannelBatchSummary": "Notificações de resumo de atividade",
   "meshcoreRingtoneChannelBatchSummaryHint": "Som padrão do sistema",
-  "meshcoreRingtoneChannelCustom": "RTTTL personalizado"
+  "meshcoreRingtoneChannelCustom": "RTTTL personalizado",
+  "automationTriggerLimitedOnMeshcore": "Limitado no MeshCore",
+  "meshcoreMessagingEmptyTitlePrefix": "Sem ",
+  "meshcoreMessagingEmptyTitleKeyword": "conversas",
+  "meshcoreMessagingEmptyTitleSuffix": " ainda",
+  "meshcoreMessagingEmptyHint": "As conversas aparecem aqui depois de trocares uma mensagem direta com um contacto",
+  "meshcoreMessagingEmptyTaglineNodesTab": "Abre o separador Nós para iniciar uma nova conversa"
 }

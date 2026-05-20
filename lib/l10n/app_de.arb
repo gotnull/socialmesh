@@ -12366,5 +12366,11 @@
   "meshcoreRingtoneChannelAdvertsHint": "Standard-Systemton",
   "meshcoreRingtoneChannelBatchSummary": "Aktivitäts-Zusammenfassungs-Benachrichtigungen",
   "meshcoreRingtoneChannelBatchSummaryHint": "Standard-Systemton",
-  "meshcoreRingtoneChannelCustom": "Benutzerdefiniertes RTTTL"
+  "meshcoreRingtoneChannelCustom": "Benutzerdefiniertes RTTTL",
+  "automationTriggerLimitedOnMeshcore": "Eingeschränkt auf MeshCore",
+  "meshcoreMessagingEmptyTitlePrefix": "Noch keine ",
+  "meshcoreMessagingEmptyTitleKeyword": "Unterhaltungen",
+  "meshcoreMessagingEmptyTitleSuffix": "",
+  "meshcoreMessagingEmptyHint": "Unterhaltungen erscheinen hier, sobald du eine Direktnachricht mit einem Kontakt austauschst",
+  "meshcoreMessagingEmptyTaglineNodesTab": "Öffne den Reiter Knoten, um eine neue Unterhaltung zu beginnen"
 }
