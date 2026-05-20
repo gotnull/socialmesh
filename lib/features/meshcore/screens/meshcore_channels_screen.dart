@@ -37,7 +37,13 @@ import 'meshcore_qr_scanner_screen.dart';
 ///
 /// Displays MeshCore channels/rooms, allows creating and joining channels.
 class MeshCoreChannelsScreen extends ConsumerStatefulWidget {
-  const MeshCoreChannelsScreen({super.key});
+  // When `true`, render only the body content (no GlassScaffold app
+  // bar) so the screen can be embedded inside the Messages container's
+  // TabBarView. Mirrors `ChannelsScreen.embedded` on the Meshtastic
+  // side.
+  final bool embedded;
+
+  const MeshCoreChannelsScreen({super.key, this.embedded = false});
 
   @override
   ConsumerState<MeshCoreChannelsScreen> createState() =>
@@ -108,6 +114,29 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
                 channel.index.toString().contains(query),
           )
           .toList();
+    }
+
+    final body = !isConnected
+        ? _buildDisconnectedState()
+        : channelsState.isLoading && allChannels.isEmpty
+        ? _buildLoadingState()
+        : allChannels.isEmpty
+        ? _buildEmptyState(deviceName)
+        : _buildChannelsList(
+            channels,
+            fullOrdered,
+            allChannels,
+            channelsState.isLoading,
+          );
+
+    // Embedded: the Messages container owns the AppBar + tab selector.
+    // Return body content only.
+    if (widget.embedded) {
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Container(color: context.background, child: body),
+      );
     }
 
     return GestureDetector(
@@ -207,23 +236,7 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
             ],
           ),
         ],
-        body: !isConnected
-            ? _buildDisconnectedState()
-            : channelsState.isLoading && allChannels.isEmpty
-            ? _buildLoadingState()
-            : allChannels.isEmpty
-            // D37-B-A: only fall through to the empty-state CTA when
-            // the user genuinely has no channels at all. If the current
-            // filter is just emptied (e.g. user hides their only
-            // visible channel from the All filter), keep the chip row
-            // mounted so the Hidden chip stays reachable for recovery.
-            ? _buildEmptyState(deviceName)
-            : _buildChannelsList(
-                channels,
-                fullOrdered,
-                allChannels,
-                channelsState.isLoading,
-              ),
+        body: body,
       ),
     );
   }

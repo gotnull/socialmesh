@@ -18,15 +18,20 @@ import '../../providers/meshcore_providers.dart';
 import '../../providers/connection_providers.dart' as conn;
 import '../../services/haptic_service.dart';
 import '../../utils/snackbar.dart';
+import '../automations/automations_screen.dart';
 import '../meshcore/dashboard/meshcore_dashboard_screen.dart';
 import '../meshcore/screens/meshcore_contacts_screen.dart';
-import '../meshcore/screens/meshcore_channels_screen.dart';
+import '../meshcore/screens/meshcore_messages_container_screen.dart';
 import '../meshcore/screens/meshcore_tools_screen.dart';
 import '../meshcore/screens/meshcore_map_screen.dart';
 import '../meshcore/screens/meshcore_settings_screen.dart';
 import '../meshcore/screens/meshcore_qr_scanner_screen.dart';
 import '../meshcore/widgets/meshcore_device_sheet.dart';
 import '../meshcore/widgets/meshcore_drawer_menu_tile.dart';
+import '../settings/ifttt_config_screen.dart';
+import '../settings/ringtone_screen.dart';
+import '../settings/theme_settings_screen.dart';
+import '../widget_builder/widget_builder_screen.dart';
 import '../meshcore/widgets/meshcore_drawer_node_header.dart';
 import '../meshcore/widgets/meshcore_shell_nav_bar_item.dart';
 
@@ -251,19 +256,9 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
 
   List<_MeshCoreNavItem> _navItems(BuildContext context) => [
     _MeshCoreNavItem(
-      icon: Icons.people_outline,
-      activeIcon: Icons.people,
-      label: context.l10n.meshcoreShellNavContacts,
-    ),
-    _MeshCoreNavItem(
-      icon: Icons.forum_outlined,
-      activeIcon: Icons.forum,
-      label: context.l10n.meshcoreShellNavChannels,
-    ),
-    _MeshCoreNavItem(
-      icon: Icons.dashboard_outlined,
-      activeIcon: Icons.dashboard,
-      label: context.l10n.meshcoreShellNavDashboard,
+      icon: Icons.chat_bubble_outline,
+      activeIcon: Icons.chat_bubble,
+      label: context.l10n.navigationMessages,
     ),
     _MeshCoreNavItem(
       icon: Icons.map_outlined,
@@ -271,26 +266,34 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
       label: context.l10n.meshcoreShellNavMap,
     ),
     _MeshCoreNavItem(
-      icon: Icons.build_outlined,
-      activeIcon: Icons.build,
-      label: context.l10n.meshcoreShellNavTools,
+      icon: Icons.people_outline,
+      activeIcon: Icons.people,
+      label: context.l10n.navigationNodes,
+    ),
+    _MeshCoreNavItem(
+      icon: Icons.dashboard_outlined,
+      activeIcon: Icons.dashboard,
+      label: context.l10n.meshcoreShellNavDashboard,
     ),
   ];
 
+  // Tab order mirrors `MainShell._buildScreen`: Messages / Map /
+  // Nodes / Dashboard. The Messages tab houses both Contacts and
+  // Channels in sub-tabs; the Nodes tab is the standalone contact
+  // roster (full discovered-peer list) — same shape as Meshtastic's
+  // MessagesContainerScreen + NodesScreen split.
   Widget _buildScreen(int index) {
     switch (index) {
       case 0:
-        return const MeshCoreContactsScreen();
+        return const MeshCoreMessagesContainerScreen();
       case 1:
-        return const MeshCoreChannelsScreen();
-      case 2:
-        return const MeshCoreDashboardScreen();
-      case 3:
         return const MeshCoreMapScreen();
-      case 4:
-        return const MeshCoreToolsScreen();
-      default:
+      case 2:
         return const MeshCoreContactsScreen();
+      case 3:
+        return const MeshCoreDashboardScreen();
+      default:
+        return const MeshCoreMessagesContainerScreen();
     }
   }
 
@@ -614,6 +617,22 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
                   const SizedBox(height: AppTheme.spacing8),
 
                   MeshCoreDrawerMenuTile(
+                    icon: Icons.build_outlined,
+                    label: context.l10n.meshcoreShellNavTools,
+                    iconColor: SemanticColors.muted,
+                    onTap: () {
+                      ref.haptics.tabChange();
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => const MeshCoreToolsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: AppTheme.spacing4),
+                  MeshCoreDrawerMenuTile(
                     icon: Icons.settings_outlined,
                     label: context.l10n.meshcoreShellDrawerSettings,
                     iconColor: SemanticColors.muted,
@@ -628,78 +647,101 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
                       );
                     },
                   ),
-                ],
-              ),
-            ),
 
-            // Divider before footer
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Divider(
-                color: theme.dividerColor.withValues(alpha: dividerAlpha),
-              ),
-            ),
+                  const SizedBox(height: AppTheme.spacing8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Divider(
+                      color: theme.dividerColor.withValues(alpha: dividerAlpha),
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spacing8),
 
-            // Footer with settings button and disconnect - matches MainShell
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppTheme.spacing16,
-                12,
-                16,
-                16,
-              ),
-              child: Row(
-                children: [
-                  // Settings button (circular) - matches MainShell _SettingsButton
-                  GestureDetector(
+                  // PREMIUM section - mirrors MainShell drawer. Each
+                  // entry routes to the canonical cross-protocol screen
+                  // that landed during Phases 3-4: Automations + IFTTT
+                  // now read meshcore events natively, Theme / Ringtone
+                  // / Widget Builder are already protocol-agnostic.
+                  _buildSectionHeader(context.l10n.navigationSectionPremium),
+
+                  MeshCoreDrawerMenuTile(
+                    icon: Icons.palette_outlined,
+                    label: context.l10n.navigationThemePack,
+                    iconColor: AccentColors.purple,
                     onTap: () {
-                      HapticFeedback.selectionClick();
+                      ref.haptics.tabChange();
                       Navigator.pop(context);
                       Navigator.push(
                         context,
                         MaterialPageRoute<void>(
-                          builder: (_) => const MeshCoreSettingsScreen(),
+                          builder: (_) => const ThemeSettingsScreen(),
                         ),
                       );
                     },
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: theme.dividerColor.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Icon(
-                        Icons.settings_outlined,
-                        size: 22,
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.8,
-                        ),
-                      ),
-                    ),
                   ),
-                  const Spacer(),
-                  // Disconnect button
-                  OutlinedButton.icon(
-                    onPressed: () {
+                  const SizedBox(height: AppTheme.spacing4),
+                  MeshCoreDrawerMenuTile(
+                    icon: Icons.music_note_outlined,
+                    label: context.l10n.navigationRingtonePack,
+                    iconColor: AccentColors.pink,
+                    onTap: () {
+                      ref.haptics.tabChange();
                       Navigator.pop(context);
-                      _disconnect();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => const RingtoneScreen(),
+                        ),
+                      );
                     },
-                    icon: const Icon(Icons.link_off_rounded, size: 18),
-                    label: Text(context.l10n.meshcoreShellDrawerDisconnect),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.errorRed,
-                      side: BorderSide(
-                        color: AppTheme.errorRed.withValues(alpha: 0.5),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spacing4),
+                  MeshCoreDrawerMenuTile(
+                    icon: Icons.widgets_outlined,
+                    label: context.l10n.navigationWidgets,
+                    iconColor: AccentColors.coral,
+                    onTap: () {
+                      ref.haptics.tabChange();
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => const WidgetBuilderScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: AppTheme.spacing4),
+                  MeshCoreDrawerMenuTile(
+                    icon: Icons.auto_awesome,
+                    label: context.l10n.navigationAutomations,
+                    iconColor: AccentColors.yellow,
+                    onTap: () {
+                      ref.haptics.tabChange();
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => const AutomationsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: AppTheme.spacing4),
+                  MeshCoreDrawerMenuTile(
+                    icon: Icons.webhook_outlined,
+                    label: context.l10n.navigationIftttIntegration,
+                    iconColor: AccentColors.sky,
+                    onTap: () {
+                      ref.haptics.tabChange();
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => const IftttConfigScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -761,39 +803,6 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
         .read(autoReconnectStateProvider.notifier)
         .setState(AutoReconnectState.scanning);
     dispatchReconnectMeshCoreAwareForWidget(ref, deviceId);
-  }
-
-  /// Drawer Disconnect tap.
-  ///
-  /// D28: route to Scanner immediately, mirroring the Meshtastic device
-  /// sheet's disconnect flow. Sequence:
-  ///
-  /// 1. Set `userDisconnected=true` and `autoReconnectState=idle`
-  ///    BEFORE the async transport teardown so the lifecycle listeners
-  ///    can't re-arm in the gap.
-  /// 2. `setNeedsScanner` + `pushNamedAndRemoveUntil('/app', ...)` — same
-  ///    route-replace pattern Meshtastic uses, so the user lands on the
-  ///    Scanner with no MeshCoreShell visible underneath.
-  /// 3. Fire `coordinator.disconnect()` AFTER the route swap so any
-  ///    coordinator-owned cleanup (capture, adapter teardown) still
-  ///    runs but doesn't block the visual transition.
-  ///
-  /// Pre-D28 the drawer only called `userCancelAutoReconnect` +
-  /// `coordinator.disconnect()`, leaving the user staring at the
-  /// MeshCoreShell with the disconnected banner — which doesn't match
-  /// the Meshtastic UX (where Disconnect always pops to Scanner).
-  void _disconnect() {
-    AppLogging.connection('event=shell.drawer.disconnect protocol=meshcore');
-    ref.read(userDisconnectedProvider.notifier).setUserDisconnected(true);
-    ref
-        .read(autoReconnectStateProvider.notifier)
-        .setState(AutoReconnectState.idle);
-    _routeToScanner();
-    // Coordinator teardown after the route swap so MeshCore-owned
-    // resources (capture buffer, adapter, transport socket) close
-    // cleanly but don't gate the visual handoff.
-    final coordinator = ref.read(connectionCoordinatorProvider);
-    Future.microtask(coordinator.disconnect);
   }
 
   /// Shared route-replace into the Scanner via the declarative

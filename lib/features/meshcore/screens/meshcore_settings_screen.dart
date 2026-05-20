@@ -34,7 +34,7 @@ import '../../../services/meshcore/storage/meshcore_node_name_store.dart';
 import '../../../utils/snackbar.dart';
 import '../../navigation/meshcore_shell.dart';
 import '../widgets/meshcore_radio_settings_sheet.dart';
-import 'meshcore_ringtone_screen.dart';
+import '../../settings/ringtone_screen.dart';
 
 /// MeshCore Settings screen.
 ///
@@ -624,9 +624,7 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
             color: context.textTertiary,
           ),
           onTap: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => const MeshCoreRingtoneScreen(),
-            ),
+            MaterialPageRoute<void>(builder: (_) => const RingtoneScreen()),
           ),
         ),
       ],

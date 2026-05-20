@@ -37,7 +37,13 @@ import 'meshcore_qr_scanner_screen.dart';
 /// Displays discovered contacts via advertisements, allows adding contacts
 /// via QR code, and shows contact status.
 class MeshCoreContactsScreen extends ConsumerStatefulWidget {
-  const MeshCoreContactsScreen({super.key});
+  // When `true`, render only the body content (no GlassScaffold app
+  // bar) so the screen can be embedded inside the Messages container's
+  // TabBarView. Mirrors `MessagingScreen.embedded`. Outer container
+  // owns the app bar + tab selector when embedded.
+  final bool embedded;
+
+  const MeshCoreContactsScreen({super.key, this.embedded = false});
 
   @override
   ConsumerState<MeshCoreContactsScreen> createState() =>
@@ -80,6 +86,28 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
             c.publicKeyHex.toLowerCase().contains(query) ||
             c.typeLabel.toLowerCase().contains(query);
       }).toList();
+    }
+
+    final body = !isConnected
+        ? _buildDisconnectedState()
+        : contactsState.isLoading && allContacts.isEmpty
+        ? _buildLoadingState()
+        : contacts.isEmpty && allContacts.isEmpty
+        ? _buildEmptyState(deviceName)
+        : contacts.isEmpty
+        ? _buildFilteredEmptyState()
+        : _buildContactsList(contacts, allContacts, contactsState.isLoading);
+
+    // Embedded inside the Messages container: skip the AppBar — the
+    // container owns it (title + DeviceStatusButton + overflow menu).
+    // The container's TabBar sits underneath the AppBar; this child
+    // returns the body content only.
+    if (widget.embedded) {
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Container(color: context.background, child: body),
+      );
     }
 
     return GestureDetector(
@@ -169,24 +197,7 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
             ],
           ),
         ],
-        body: !isConnected
-            ? _buildDisconnectedState()
-            : contactsState.isLoading && allContacts.isEmpty
-            ? _buildLoadingState()
-            : contacts.isEmpty && allContacts.isEmpty
-            ? _buildEmptyState(deviceName)
-            : contacts.isEmpty
-            // D28 follow-up: filtered list is empty but we DO have
-            // contacts. Render a "no matches in this filter" surface
-            // with a Show All action so tapping a zero-count chip
-            // doesn't trap the user behind a misleading "Add Contact"
-            // empty state.
-            ? _buildFilteredEmptyState()
-            : _buildContactsList(
-                contacts,
-                allContacts,
-                contactsState.isLoading,
-              ),
+        body: body,
       ),
     );
   }
