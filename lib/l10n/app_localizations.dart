@@ -60923,6 +60923,36 @@ abstract class AppLocalizations {
   /// **'Pick a sound for each MeshCore notification channel'**
   String get meshcoreRingtonesSubtitle;
 
+  /// MeshCore Settings tile title for the Adverts notification channel ringtone
+  ///
+  /// In en, this message translates to:
+  /// **'Advert notifications'**
+  String get meshcoreRingtoneChannelAdverts;
+
+  /// Subtitle hint when no custom ringtone is bound to the Adverts channel
+  ///
+  /// In en, this message translates to:
+  /// **'Default system sound'**
+  String get meshcoreRingtoneChannelAdvertsHint;
+
+  /// MeshCore Settings tile title for the Activity Summary notification channel ringtone
+  ///
+  /// In en, this message translates to:
+  /// **'Activity summary notifications'**
+  String get meshcoreRingtoneChannelBatchSummary;
+
+  /// Subtitle hint when no custom ringtone is bound to the Activity Summary channel
+  ///
+  /// In en, this message translates to:
+  /// **'Default system sound'**
+  String get meshcoreRingtoneChannelBatchSummaryHint;
+
+  /// Subtitle when a bound RTTTL doesn't match any built-in preset
+  ///
+  /// In en, this message translates to:
+  /// **'Custom RTTTL'**
+  String get meshcoreRingtoneChannelCustom;
+
   /// Ringtones screen section header above the channel selector chip group
   ///
   /// In en, this message translates to:

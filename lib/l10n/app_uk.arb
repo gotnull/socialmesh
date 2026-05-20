@@ -12361,5 +12361,10 @@
   "iftttConfigProtocolScopeHelp": "Який протокол запускає веб-хуки IFTTT",
   "iftttConfigProtocolAny": "Будь-який",
   "iftttConfigProtocolMeshtastic": "Meshtastic",
-  "iftttConfigProtocolMeshcore": "MeshCore"
+  "iftttConfigProtocolMeshcore": "MeshCore",
+  "meshcoreRingtoneChannelAdverts": "Сповіщення про оголошення",
+  "meshcoreRingtoneChannelAdvertsHint": "Стандартний системний звук",
+  "meshcoreRingtoneChannelBatchSummary": "Сповіщення про підсумок активності",
+  "meshcoreRingtoneChannelBatchSummaryHint": "Стандартний системний звук",
+  "meshcoreRingtoneChannelCustom": "Користувацький RTTTL"
 }

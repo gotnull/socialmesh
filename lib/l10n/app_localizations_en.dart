@@ -34776,6 +34776,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'Pick a sound for each MeshCore notification channel';
 
   @override
+  String get meshcoreRingtoneChannelAdverts => 'Advert notifications';
+
+  @override
+  String get meshcoreRingtoneChannelAdvertsHint => 'Default system sound';
+
+  @override
+  String get meshcoreRingtoneChannelBatchSummary =>
+      'Activity summary notifications';
+
+  @override
+  String get meshcoreRingtoneChannelBatchSummaryHint => 'Default system sound';
+
+  @override
+  String get meshcoreRingtoneChannelCustom => 'Custom RTTTL';
+
+  @override
   String get meshcoreRingtonesChannelSectionTitle => 'Channel';
 
   @override

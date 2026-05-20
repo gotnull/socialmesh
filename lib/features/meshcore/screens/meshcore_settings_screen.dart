@@ -34,6 +34,7 @@ import '../../../services/meshcore/storage/meshcore_node_name_store.dart';
 import '../../../utils/snackbar.dart';
 import '../../navigation/meshcore_shell.dart';
 import '../widgets/meshcore_radio_settings_sheet.dart';
+import '../../../providers/meshcore_ringtone_preferences.dart';
 import '../../settings/ringtone_screen.dart';
 
 /// MeshCore Settings screen.
@@ -613,22 +614,74 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
           ),
           onTap: () => notifier.setEnabled(!enabled),
         ),
-        SettingsTile(
-          key: const ValueKey('meshcore-ringtones-entry'),
-          icon: Icons.music_note_rounded,
-          iconColor: AccentColors.green,
-          title: l10n.meshcoreRingtonesTitle,
-          subtitle: l10n.meshcoreRingtonesSubtitle,
-          trailing: Icon(
-            Icons.chevron_right_rounded,
-            color: context.textTertiary,
-          ),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(builder: (_) => const RingtoneScreen()),
-          ),
+        // One tile per MeshCore notification channel. Each opens
+        // the canonical `RingtoneScreen` in per-channel-binding
+        // mode (`meshCoreChannelId` set). The Save action writes
+        // to `meshCoreRingtonePreferencesProvider`; the read at
+        // notification fire time is the same map.
+        _buildMeshCoreRingtoneChannelTile(
+          context: context,
+          channelId: MeshCoreRingtoneChannel.adverts,
+          label: l10n.meshcoreRingtoneChannelAdverts,
+          subtitleHint: l10n.meshcoreRingtoneChannelAdvertsHint,
+        ),
+        _buildMeshCoreRingtoneChannelTile(
+          context: context,
+          channelId: MeshCoreRingtoneChannel.batchSummary,
+          label: l10n.meshcoreRingtoneChannelBatchSummary,
+          subtitleHint: l10n.meshcoreRingtoneChannelBatchSummaryHint,
         ),
       ],
     );
+  }
+
+  // Builds a single ringtone-channel tile under the Notifications
+  // section. Subtitle shows the currently bound preset name (or a
+  // "default" hint when no binding is set), pulled live from the
+  // MeshCore preferences provider. Tap pushes `RingtoneScreen` with
+  // `meshCoreChannelId` set so save/load operates on this channel.
+  Widget _buildMeshCoreRingtoneChannelTile({
+    required BuildContext context,
+    required String channelId,
+    required String label,
+    required String subtitleHint,
+  }) {
+    final prefsAsync = ref.watch(meshCoreRingtonePreferencesProvider);
+    final boundRtttl = prefsAsync.value?[channelId];
+    final boundLabel = _matchBuiltInPresetLabel(boundRtttl);
+    final subtitle = boundRtttl == null || boundRtttl.isEmpty
+        ? subtitleHint
+        : boundLabel ?? context.l10n.meshcoreRingtoneChannelCustom;
+
+    return SettingsTile(
+      key: ValueKey('meshcore-ringtone-channel-$channelId'),
+      icon: Icons.music_note_rounded,
+      iconColor: AccentColors.green,
+      title: label,
+      subtitle: subtitle,
+      trailing: Icon(Icons.chevron_right_rounded, color: context.textTertiary),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => RingtoneScreen(
+            meshCoreChannelId: channelId,
+            meshCoreChannelLabel: label,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Maps a stored RTTTL back to the user-facing built-in preset name
+  // so the channel tile's subtitle reads "Nokia Ringtone" instead of
+  // raw RTTTL bytes. Returns null when the RTTTL doesn't match any
+  // built-in preset (the user pasted a custom RTTTL or imported a
+  // library tone).
+  String? _matchBuiltInPresetLabel(String? rtttl) {
+    if (rtttl == null || rtttl.isEmpty) return null;
+    for (final preset in builtInRingtonePresets) {
+      if (preset.rtttl == rtttl) return preset.name;
+    }
+    return null;
   }
 
   Widget _buildChatAppearanceSection(BuildContext context) {

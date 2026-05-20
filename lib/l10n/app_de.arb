@@ -12361,5 +12361,10 @@
   "iftttConfigProtocolScopeHelp": "Welches Protokoll löst IFTTT-Webhooks aus",
   "iftttConfigProtocolAny": "Beliebig",
   "iftttConfigProtocolMeshtastic": "Meshtastic",
-  "iftttConfigProtocolMeshcore": "MeshCore"
+  "iftttConfigProtocolMeshcore": "MeshCore",
+  "meshcoreRingtoneChannelAdverts": "Advert-Benachrichtigungen",
+  "meshcoreRingtoneChannelAdvertsHint": "Standard-Systemton",
+  "meshcoreRingtoneChannelBatchSummary": "Aktivitäts-Zusammenfassungs-Benachrichtigungen",
+  "meshcoreRingtoneChannelBatchSummaryHint": "Standard-Systemton",
+  "meshcoreRingtoneChannelCustom": "Benutzerdefiniertes RTTTL"
 }

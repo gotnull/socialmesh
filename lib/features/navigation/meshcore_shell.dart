@@ -18,6 +18,8 @@ import '../../providers/meshcore_providers.dart';
 import '../../providers/connection_providers.dart' as conn;
 import '../../services/haptic_service.dart';
 import '../../utils/snackbar.dart';
+import '../../models/subscription_models.dart';
+import '../../providers/subscription_providers.dart';
 import '../automations/automations_screen.dart';
 import '../meshcore/dashboard/meshcore_dashboard_screen.dart';
 import '../meshcore/screens/meshcore_contacts_screen.dart';
@@ -661,13 +663,21 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
                   // entry routes to the canonical cross-protocol screen
                   // that landed during Phases 3-4: Automations + IFTTT
                   // now read meshcore events natively, Theme / Ringtone
-                  // / Widget Builder are already protocol-agnostic.
+                  // / Widget Builder are already protocol-agnostic. The
+                  // `isLocked` flag drives a small lock badge mirroring
+                  // `DrawerMenuTile.isLocked` so unowned tiles read
+                  // consistently across both shells. Tap still routes
+                  // through; entitlement enforcement happens inside the
+                  // destination screen (paywall sheet).
                   _buildSectionHeader(context.l10n.navigationSectionPremium),
 
                   MeshCoreDrawerMenuTile(
                     icon: Icons.palette_outlined,
                     label: context.l10n.navigationThemePack,
                     iconColor: AccentColors.purple,
+                    isLocked: !ref.watch(
+                      hasFeatureProvider(PremiumFeature.premiumThemes),
+                    ),
                     onTap: () {
                       ref.haptics.tabChange();
                       Navigator.pop(context);
@@ -684,6 +694,9 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
                     icon: Icons.music_note_outlined,
                     label: context.l10n.navigationRingtonePack,
                     iconColor: AccentColors.pink,
+                    isLocked: !ref.watch(
+                      hasFeatureProvider(PremiumFeature.customRingtones),
+                    ),
                     onTap: () {
                       ref.haptics.tabChange();
                       Navigator.pop(context);
@@ -700,6 +713,9 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
                     icon: Icons.widgets_outlined,
                     label: context.l10n.navigationWidgets,
                     iconColor: AccentColors.coral,
+                    isLocked: !ref.watch(
+                      hasFeatureProvider(PremiumFeature.homeWidgets),
+                    ),
                     onTap: () {
                       ref.haptics.tabChange();
                       Navigator.pop(context);
@@ -716,6 +732,9 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
                     icon: Icons.auto_awesome,
                     label: context.l10n.navigationAutomations,
                     iconColor: AccentColors.yellow,
+                    isLocked: !ref.watch(
+                      hasFeatureProvider(PremiumFeature.automations),
+                    ),
                     onTap: () {
                       ref.haptics.tabChange();
                       Navigator.pop(context);
@@ -732,6 +751,9 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
                     icon: Icons.webhook_outlined,
                     label: context.l10n.navigationIftttIntegration,
                     iconColor: AccentColors.sky,
+                    isLocked: !ref.watch(
+                      hasFeatureProvider(PremiumFeature.iftttIntegration),
+                    ),
                     onTap: () {
                       ref.haptics.tabChange();
                       Navigator.pop(context);

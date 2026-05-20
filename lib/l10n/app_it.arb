@@ -45505,5 +45505,10 @@
   "iftttConfigProtocolScopeHelp": "Quale protocollo attiva i webhook IFTTT",
   "iftttConfigProtocolAny": "Qualsiasi",
   "iftttConfigProtocolMeshtastic": "Meshtastic",
-  "iftttConfigProtocolMeshcore": "MeshCore"
+  "iftttConfigProtocolMeshcore": "MeshCore",
+  "meshcoreRingtoneChannelAdverts": "Notifiche di annuncio",
+  "meshcoreRingtoneChannelAdvertsHint": "Suono di sistema predefinito",
+  "meshcoreRingtoneChannelBatchSummary": "Notifiche di riepilogo attività",
+  "meshcoreRingtoneChannelBatchSummaryHint": "Suono di sistema predefinito",
+  "meshcoreRingtoneChannelCustom": "RTTTL personalizzato"
 }

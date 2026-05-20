@@ -46549,6 +46549,26 @@
     "@meshcoreRingtonesSubtitle": {
         "description": "MeshCore Settings tile subtitle for the per-channel ringtone picker entry"
     },
+    "meshcoreRingtoneChannelAdverts": "Advert notifications",
+    "@meshcoreRingtoneChannelAdverts": {
+        "description": "MeshCore Settings tile title for the Adverts notification channel ringtone"
+    },
+    "meshcoreRingtoneChannelAdvertsHint": "Default system sound",
+    "@meshcoreRingtoneChannelAdvertsHint": {
+        "description": "Subtitle hint when no custom ringtone is bound to the Adverts channel"
+    },
+    "meshcoreRingtoneChannelBatchSummary": "Activity summary notifications",
+    "@meshcoreRingtoneChannelBatchSummary": {
+        "description": "MeshCore Settings tile title for the Activity Summary notification channel ringtone"
+    },
+    "meshcoreRingtoneChannelBatchSummaryHint": "Default system sound",
+    "@meshcoreRingtoneChannelBatchSummaryHint": {
+        "description": "Subtitle hint when no custom ringtone is bound to the Activity Summary channel"
+    },
+    "meshcoreRingtoneChannelCustom": "Custom RTTTL",
+    "@meshcoreRingtoneChannelCustom": {
+        "description": "Subtitle when a bound RTTTL doesn't match any built-in preset"
+    },
     "meshcoreRingtonesChannelSectionTitle": "Channel",
     "@meshcoreRingtonesChannelSectionTitle": {
         "description": "Ringtones screen section header above the channel selector chip group"

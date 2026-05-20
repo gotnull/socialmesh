@@ -35172,6 +35172,24 @@ class AppLocalizationsIt extends AppLocalizations {
       'Scegli un suono per ogni canale di notifica MeshCore';
 
   @override
+  String get meshcoreRingtoneChannelAdverts => 'Notifiche di annuncio';
+
+  @override
+  String get meshcoreRingtoneChannelAdvertsHint =>
+      'Suono di sistema predefinito';
+
+  @override
+  String get meshcoreRingtoneChannelBatchSummary =>
+      'Notifiche di riepilogo attività';
+
+  @override
+  String get meshcoreRingtoneChannelBatchSummaryHint =>
+      'Suono di sistema predefinito';
+
+  @override
+  String get meshcoreRingtoneChannelCustom => 'RTTTL personalizzato';
+
+  @override
   String get meshcoreRingtonesChannelSectionTitle => 'Canale';
 
   @override

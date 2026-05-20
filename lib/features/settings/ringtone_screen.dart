@@ -16,6 +16,7 @@ import '../../core/widgets/premium_feature_gate.dart';
 import '../../core/widgets/premium_gating.dart';
 import '../../models/subscription_models.dart';
 import '../../models/user_profile.dart';
+import '../../providers/meshcore_ringtone_preferences.dart';
 import '../../providers/app_providers.dart';
 import '../../services/protocol/admin_target.dart';
 import '../../providers/profile_providers.dart';
@@ -40,7 +41,7 @@ class RingtonePreset {
 }
 
 /// Built-in ringtone presets
-const _builtInPresets = [
+const builtInRingtonePresets = [
   RingtonePreset(
     name: 'Meshtastic Default',
     rtttl:
@@ -570,7 +571,24 @@ class CustomRingtonesNotifier extends Notifier<List<RingtonePreset>> {
 }
 
 class RingtoneScreen extends ConsumerStatefulWidget {
-  const RingtoneScreen({super.key});
+  // Optional: when set, the screen edits the per-MeshCore-notification-
+  // channel binding (stored via `meshCoreRingtonePreferencesProvider`)
+  // for that specific channel id, NOT the global Meshtastic device
+  // ringtone. `MeshCoreRingtoneChannel.adverts` and `batchSummary` are
+  // the two canonical channel ids. Null = legacy Meshtastic-firmware
+  // mode (default).
+  final String? meshCoreChannelId;
+  // Optional display name for the channel (shown in the screen header
+  // when in MeshCore mode). Falls back to the channel id when null.
+  final String? meshCoreChannelLabel;
+
+  const RingtoneScreen({
+    super.key,
+    this.meshCoreChannelId,
+    this.meshCoreChannelLabel,
+  });
+
+  bool get isMeshCoreMode => meshCoreChannelId != null;
 
   @override
   ConsumerState<RingtoneScreen> createState() => _RingtoneScreenState();
@@ -579,7 +597,7 @@ class RingtoneScreen extends ConsumerStatefulWidget {
 class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
     with LifecycleSafeMixin<RingtoneScreen> {
   /// Number of built-in tones shown by default before the user expands
-  /// the full list. The first 10 entries of [_builtInPresets] are the
+  /// the full list. The first 10 entries of [builtInRingtonePresets] are the
   /// hand-ordered classics (Meshtastic Default, Nokia, Mario, Zelda,
   /// utility alerts) — past 10 the list becomes alphabetical band
   /// names which feel like library content. Hiding them by default
@@ -731,6 +749,35 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
       final count = await _libraryService.getTotalToneCount();
       if (!mounted) return;
 
+      // MeshCore per-channel binding mode: read the binding for the
+      // configured channel from the MeshCore preferences provider,
+      // skip the Meshtastic device-ringtone roundtrip entirely.
+      if (widget.isMeshCoreMode) {
+        final stored = await readMeshCoreRingtoneForChannel(
+          widget.meshCoreChannelId!,
+        );
+        if (!mounted) return;
+        safeSetState(() {
+          _libraryToneCount = count;
+          if (stored != null && stored.isNotEmpty) {
+            _rtttlController.text = stored;
+            // Try to match the stored RTTTL to a known built-in preset
+            // so the selected card highlights in the UI.
+            final builtIns = builtInRingtonePresets;
+            final matchIdx = builtIns.indexWhere((p) => p.rtttl == stored);
+            if (matchIdx >= 0) {
+              _selectedPresetIndex = matchIdx;
+              _selectedName = builtIns[matchIdx].name;
+              _selectedDescription = builtIns[matchIdx].description;
+              _selectedSource = 'builtin';
+            } else {
+              _selectedSource = 'custom';
+            }
+          }
+        });
+        return;
+      }
+
       final settings = await ref.read(settingsServiceProvider.future);
       if (!mounted) return;
       final rtttl = settings.selectedRingtoneRtttl;
@@ -780,6 +827,20 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
 
   Future<void> _saveSelectedRingtone() async {
     if (_selectedName == null) return;
+
+    // MeshCore per-channel binding: persist the selected RTTTL to
+    // the channel's preferences instead of the global selected-
+    // ringtone settings + cloud profile (those are Meshtastic-side).
+    if (widget.isMeshCoreMode) {
+      try {
+        await ref
+            .read(meshCoreRingtonePreferencesProvider.notifier)
+            .setRtttl(widget.meshCoreChannelId!, _rtttlController.text.trim());
+      } catch (_) {
+        // Ignore save errors; toast happens on the explicit Save action.
+      }
+      return;
+    }
 
     final profileNotifier = ref.read(userProfileProvider.notifier);
     try {
@@ -952,14 +1013,28 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
       return;
     }
 
-    final protocol = ref.read(protocolServiceProvider);
-    final target = AdminTarget.fromNullable(
-      ref.read(remoteAdminTargetProvider),
-    );
     final l10n = context.l10n;
     safeSetState(() => _saving = true);
 
     try {
+      // MeshCore per-channel binding: write the RTTTL to the
+      // notification-channel preferences, NOT to the Meshtastic
+      // firmware admin module (which doesn't exist for a MeshCore
+      // session). `NotificationService._resolveMeshCoreChannelSound`
+      // reads back the same map at fire time.
+      if (widget.isMeshCoreMode) {
+        await ref
+            .read(meshCoreRingtonePreferencesProvider.notifier)
+            .setRtttl(widget.meshCoreChannelId!, _rtttlController.text.trim());
+        if (!mounted) return;
+        showSuccessSnackBar(context, l10n.ringtoneSaved);
+        return;
+      }
+
+      final protocol = ref.read(protocolServiceProvider);
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
       await protocol.setRingtone(_rtttlController.text.trim(), target: target);
       if (!mounted) return;
 
@@ -1688,8 +1763,8 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                       Builder(
                         builder: (_) {
                           final visiblePresets = _showAllBuiltIns
-                              ? _builtInPresets
-                              : _builtInPresets
+                              ? builtInRingtonePresets
+                              : builtInRingtonePresets
                                     .take(_featuredBuiltInCount)
                                     .toList();
                           return Container(
@@ -1720,7 +1795,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                           ? const BorderRadius.vertical(
                                               top: Radius.circular(12),
                                             )
-                                          : index == _builtInPresets.length - 1
+                                          : index ==
+                                                builtInRingtonePresets.length -
+                                                    1
                                           ? const BorderRadius.vertical(
                                               bottom: Radius.circular(12),
                                             )
@@ -1868,7 +1945,8 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                       // renders when there are entries past the
                       // featured slice. Tapping flips state in place;
                       // no scroll position reset, no provider churn.
-                      if (_builtInPresets.length > _featuredBuiltInCount) ...[
+                      if (builtInRingtonePresets.length >
+                          _featuredBuiltInCount) ...[
                         SizedBox(height: AppTheme.spacing8),
                         InkWell(
                           borderRadius: BorderRadius.circular(
@@ -1904,7 +1982,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen>
                                   _showAllBuiltIns
                                       ? context.l10n.ringtoneShowFewerBuiltIn
                                       : context.l10n.ringtoneShowAllBuiltIn(
-                                          _builtInPresets.length,
+                                          builtInRingtonePresets.length,
                                         ),
                                   style: TextStyle(
                                     color: context.accentColor,

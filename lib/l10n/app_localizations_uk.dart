@@ -35185,6 +35185,23 @@ class AppLocalizationsUk extends AppLocalizations {
       'Виберіть звук для кожного каналу сповіщень MeshCore';
 
   @override
+  String get meshcoreRingtoneChannelAdverts => 'Сповіщення про оголошення';
+
+  @override
+  String get meshcoreRingtoneChannelAdvertsHint => 'Стандартний системний звук';
+
+  @override
+  String get meshcoreRingtoneChannelBatchSummary =>
+      'Сповіщення про підсумок активності';
+
+  @override
+  String get meshcoreRingtoneChannelBatchSummaryHint =>
+      'Стандартний системний звук';
+
+  @override
+  String get meshcoreRingtoneChannelCustom => 'Користувацький RTTTL';
+
+  @override
   String get meshcoreRingtonesChannelSectionTitle => 'Канал';
 
   @override
