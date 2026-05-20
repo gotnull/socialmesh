@@ -378,6 +378,9 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                   TriggerSelector(
                     trigger: _trigger,
                     availableNodes: ref.watch(nodesProvider).values.toList(),
+                    availableMeshCoreContacts: ref
+                        .watch(meshCoreContactsProvider)
+                        .contacts,
                     onChanged: (trigger) => _updateTrigger(trigger),
                   ),
 
@@ -629,6 +632,9 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                             ),
                           )
                           .toList();
+                      final meshCoreContacts = ref
+                          .watch(meshCoreContactsProvider)
+                          .contacts;
                       final myNodeNum = ref.watch(myNodeNumProvider);
                       return Column(
                         children: [
@@ -640,6 +646,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                             availableNodes: nodes.values.toList(),
                             availableChannels: channels,
                             availableMeshCoreChannels: meshCoreChannels,
+                            availableMeshCoreContacts: meshCoreContacts,
                             protocolFilter: _trigger.protocolFilter,
                             myNodeNum: myNodeNum,
                             onChanged: (updated) {
@@ -795,6 +802,9 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                               ),
                             )
                             .toList();
+                        final meshCoreContacts = ref
+                            .watch(meshCoreContactsProvider)
+                            .contacts;
                         final myNodeNum = ref.watch(myNodeNumProvider);
                         return Column(
                           children: [
@@ -806,6 +816,7 @@ class _AutomationEditorScreenState extends ConsumerState<AutomationEditorScreen>
                               availableNodes: nodes.values.toList(),
                               availableChannels: channels,
                               availableMeshCoreChannels: meshCoreChannels,
+                              availableMeshCoreContacts: meshCoreContacts,
                               protocolFilter: _trigger.protocolFilter,
                               myNodeNum: myNodeNum,
                               onChanged: (updated) {

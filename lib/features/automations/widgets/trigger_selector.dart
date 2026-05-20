@@ -10,6 +10,8 @@ import '../../../core/widgets/chip_selector.dart';
 import '../../../core/widgets/meshcore_contact_selector_sheet.dart';
 import '../../../core/widgets/node_selector_sheet.dart';
 import '../../../models/mesh_models.dart';
+import '../../../models/meshcore_contact.dart';
+import '../../../providers/meshcore_message_providers.dart';
 import '../../settings/geofence_picker_screen.dart';
 import '../models/automation.dart';
 
@@ -18,12 +20,19 @@ class TriggerSelector extends StatefulWidget {
   final AutomationTrigger trigger;
   final void Function(AutomationTrigger trigger) onChanged;
   final List<MeshNode> availableNodes;
+  // MeshCore contacts surface when the trigger is pinned to
+  // `protocolFilter=meshcore`. Default `const []` keeps existing
+  // call sites that aren't yet meshcore-aware compiling without a
+  // behaviour change (meshcore branch just shows the empty-state
+  // label).
+  final List<MeshCoreContact> availableMeshCoreContacts;
 
   const TriggerSelector({
     super.key,
     required this.trigger,
     required this.onChanged,
     this.availableNodes = const [],
+    this.availableMeshCoreContacts = const [],
   });
 
   @override
@@ -524,11 +533,39 @@ class _TriggerSelectorState extends State<TriggerSelector> {
 
   Widget _buildNodeFilterConfig(BuildContext context) {
     final selectedNodeNum = widget.trigger.nodeNum;
-    final selectedNode = selectedNodeNum != null
+    final isMeshCore =
+        widget.trigger.protocolFilter == TriggerProtocolFilter.meshcore;
+
+    // Two parallel paths: meshcore filter resolves the selection
+    // against `availableMeshCoreContacts` using the pubkey-prefix
+    // int that the contact selector wrote into `nodeNum`. Otherwise
+    // we fall through to the Meshtastic `availableNodes` lookup.
+    // Both produce a `(displayName, subtitle)` pair that the tile
+    // renders without leaking protocol details into the layout.
+    final MeshNode? selectedMeshtasticNode =
+        (!isMeshCore && selectedNodeNum != null)
         ? widget.availableNodes
               .where((n) => n.nodeNum == selectedNodeNum)
               .firstOrNull
         : null;
+    final MeshCoreContact? selectedMeshCoreContact =
+        (isMeshCore && selectedNodeNum != null)
+        ? widget.availableMeshCoreContacts
+              .where(
+                (c) => meshCoreSenderIdFromKey(c.publicKey) == selectedNodeNum,
+              )
+              .firstOrNull
+        : null;
+    final hasSelection =
+        selectedMeshtasticNode != null || selectedMeshCoreContact != null;
+    final selectionLabel =
+        selectedMeshtasticNode?.longName ??
+        selectedMeshtasticNode?.shortName ??
+        selectedMeshCoreContact?.name ??
+        context.l10n.automationTriggerAnyNode;
+    final selectionSubtitle = selectedMeshtasticNode != null
+        ? '!${selectedMeshtasticNode.nodeNum.toRadixString(16)}'
+        : selectedMeshCoreContact?.publicKeyHex.substring(0, 8);
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -565,15 +602,19 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: selectedNode != null
+                      color: hasSelection
                           ? AccentColors.blue.withValues(alpha: 0.2)
                           : SemanticColors.disabled.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(AppTheme.radius8),
                     ),
                     child: Icon(
-                      selectedNode != null ? Icons.router : Icons.all_inclusive,
+                      hasSelection
+                          ? (isMeshCore
+                                ? Icons.contact_page_outlined
+                                : Icons.router)
+                          : Icons.all_inclusive,
                       size: 18,
-                      color: selectedNode != null
+                      color: hasSelection
                           ? AccentColors.blue
                           : SemanticColors.disabled,
                     ),
@@ -584,19 +625,17 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          selectedNode?.longName ??
-                              selectedNode?.shortName ??
-                              context.l10n.automationTriggerAnyNode,
+                          selectionLabel,
                           style: TextStyle(
                             fontWeight: FontWeight.w500,
-                            color: selectedNode != null
+                            color: hasSelection
                                 ? context.textPrimary
                                 : SemanticColors.disabled,
                           ),
                         ),
-                        if (selectedNode != null)
+                        if (selectionSubtitle != null)
                           Text(
-                            '!${selectedNode.nodeNum.toRadixString(16)}',
+                            selectionSubtitle,
                             style: TextStyle(
                               color: SemanticColors.muted,
                               fontSize: 12,
@@ -605,7 +644,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                       ],
                     ),
                   ),
-                  if (selectedNode != null)
+                  if (hasSelection)
                     GestureDetector(
                       onTap: () {
                         // Clear node filter

@@ -13,7 +13,9 @@ import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/meshcore_contact_selector_sheet.dart';
 import '../../../core/widgets/node_selector_sheet.dart';
 import '../../../models/mesh_models.dart';
+import '../../../models/meshcore_contact.dart';
 import '../../../models/presence_confidence.dart';
+import '../../../providers/meshcore_message_providers.dart';
 import '../../../providers/presence_providers.dart';
 import '../../../providers/splash_mesh_provider.dart';
 import '../../../services/audio/rtttl_library_service.dart';
@@ -58,6 +60,12 @@ class ActionEditor extends ConsumerStatefulWidget {
   // When the editor branches on protocolFilter==meshcore it shows
   // these instead.
   final List<MeshCoreChannelOption> availableMeshCoreChannels;
+  // Parallel for contacts. Used when `protocolFilter==meshcore` to
+  // resolve the picked `targetNodeNum` (a pubkey-prefix int written
+  // by the contact selector) back to a name + hex prefix for the
+  // target tile label. Without this the tile shows "Select Node"
+  // even after the user picked a contact.
+  final List<MeshCoreContact> availableMeshCoreContacts;
 
   const ActionEditor({
     super.key,
@@ -72,6 +80,7 @@ class ActionEditor extends ConsumerStatefulWidget {
     this.myNodeNum,
     this.protocolFilter = TriggerProtocolFilter.any,
     this.availableMeshCoreChannels = const [],
+    this.availableMeshCoreContacts = const [],
   });
 
   @override
@@ -313,11 +322,27 @@ class _ActionEditorState extends ConsumerState<ActionEditor>
     } else {
       final selectedNodeNum = widget.action.targetNodeNum;
       if (selectedNodeNum != null) {
-        final node = nodes.firstWhere(
-          (n) => n.nodeNum == selectedNodeNum,
-          orElse: () => MeshNode(nodeNum: selectedNodeNum),
-        );
-        targetDisplay = node.displayName;
+        if (isMeshCore) {
+          // MeshCore branch: `targetNodeNum` is the contact's
+          // pubkey-prefix int (`meshCoreSenderIdFromKey`). Resolve
+          // back to the contact's display name; fall back to the
+          // hex prefix so the tile never goes blank even if the
+          // contact list hasn't loaded yet.
+          final contact = widget.availableMeshCoreContacts
+              .where(
+                (c) => meshCoreSenderIdFromKey(c.publicKey) == selectedNodeNum,
+              )
+              .firstOrNull;
+          targetDisplay =
+              contact?.name ??
+              '!${selectedNodeNum.toRadixString(16).padLeft(8, '0')}';
+        } else {
+          final node = nodes.firstWhere(
+            (n) => n.nodeNum == selectedNodeNum,
+            orElse: () => MeshNode(nodeNum: selectedNodeNum),
+          );
+          targetDisplay = node.displayName;
+        }
       } else {
         targetDisplay = context.l10n.automationActionSelectNodePlaceholder;
       }
