@@ -56440,9 +56440,9 @@
     "@statusConfiguring": {
         "description": "Top status banner shown while the BLE link is up but the Meshtastic protocol has not finished its two-phase handshake (linkConnected, handshakePhase1, or handshakePhase2). Brand casing: SocialMesh."
     },
-    "statusDegraded": "Connection is still recovering. Tap to reconnect.",
+    "statusDegraded": "Connection is still recovering",
     "@statusDegraded": {
-        "description": "Top status banner shown when the readiness watchdog gave up after a failed session rebuild. Tappable to manually reconnect."
+        "description": "Top status banner shown when the readiness watchdog gave up after a failed session rebuild. The trailing button (Cancel / Connect) communicates the tap action; the message describes state only, no 'Tap to X' suffix."
     },
     "txBlockedNotReady": "Still configuring SocialMesh. Try again in a moment.",
     "@txBlockedNotReady": {

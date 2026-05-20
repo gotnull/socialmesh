@@ -10517,7 +10517,7 @@
   "socialWarningsTapReview": "Tiene {count} advertencia(s): toque para revisar",
   "socialYourStory": "Tu historia",
   "statusConfiguring": "Configurando SocialMesh…",
-  "statusDegraded": "La conexión aún se está recuperando. Toque para reconectarse.",
+  "statusDegraded": "La conexión aún se está recuperando",
   "stlSignatureInvalid": "Firma no válida",
   "stlSignatureValid": "Firma verificada",
   "stlSigningSubtitle": "Firmar transferencias salientes con su clave de identidad",

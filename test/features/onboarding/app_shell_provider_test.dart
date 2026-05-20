@@ -8,26 +8,27 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/features/onboarding/app_shell_provider.dart';
 import 'package:socialmesh/features/onboarding/meshtastic_onboarding_flow.dart';
 import 'package:socialmesh/features/onboarding/meshtastic_onboarding_state.dart';
-import 'package:socialmesh/generated/meshtastic/config.pbenum.dart'
-    as config_pbenum;
 import 'package:socialmesh/providers/app_providers.dart';
 
 import '_onboarding_test_harness.dart';
 
-/// Pins every onboarding-state -> AppShell mapping the user-spec calls
-/// out:
-///   - connecting / checkingConfig -> scanner
-///   - regionRequired / writingRegion / awaitingReboot /
-///     awaitingReconnect / awaitingReadiness -> regionPicker
-///   - ready -> mainShell
-///   - failed / pairingInvalidated -> scanner
-///   - cancelled -> scanner
-///
-/// Also pins:
-///   - flag OFF preserves legacy appInit-driven routing (so
-///     existing screens continue to render unchanged)
-///   - splash / error / age / onboarding / terms init states ALWAYS
-///     win over coordinator state (boot-lifecycle gates)
+// Pins every onboarding-state -> AppShell mapping:
+//   - connecting / checkingConfig -> scanner
+//   - ready -> mainShell
+//   - failed / pairingInvalidated -> scanner
+//   - cancelled -> scanner
+//
+// The region-flow phases (regionRequired / writingRegion /
+// awaitingReboot / awaitingReconnect / awaitingReadiness) are
+// unreachable: the flow's `_checkRegionForReady` always promotes
+// straight to OnboardingReady regardless of the device's region.
+// Region selection for UNSET devices is owned by MainShell's inline
+// picker (driven by `needsRegionSetupProvider`), not by a shell swap,
+// so there is no `AppShell.regionPicker` enum value to assert on.
+//
+// Also pins:
+//   - splash / error / age / onboarding / terms init states ALWAYS
+//     win over coordinator state (boot-lifecycle gates)
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -56,84 +57,6 @@ void main() {
           .debugForceState(OnboardingCheckingConfig(testDevice()));
 
       expect(container.read(appShellProvider).shell, AppShell.scanner);
-    });
-
-    test('OnboardingRegionRequired -> AppShell.regionPicker', () {
-      final container = _container();
-      addTearDown(container.dispose);
-      _setAppInit(container, AppInitState.needsScanner);
-      container
-          .read(meshtasticOnboardingFlowProvider.notifier)
-          .debugForceState(OnboardingRegionRequired(testDevice()));
-
-      expect(container.read(appShellProvider).shell, AppShell.regionPicker);
-    });
-
-    test(
-      'OnboardingWritingRegion -> AppShell.regionPicker (stay on picker)',
-      () {
-        final container = _container();
-        addTearDown(container.dispose);
-        _setAppInit(container, AppInitState.needsScanner);
-        container
-            .read(meshtasticOnboardingFlowProvider.notifier)
-            .debugForceState(
-              OnboardingWritingRegion(
-                testDevice(),
-                config_pbenum.Config_LoRaConfig_RegionCode.ANZ,
-              ),
-            );
-
-        expect(container.read(appShellProvider).shell, AppShell.regionPicker);
-      },
-    );
-
-    test('OnboardingAwaitingReboot -> AppShell.regionPicker', () {
-      final container = _container();
-      addTearDown(container.dispose);
-      _setAppInit(container, AppInitState.needsScanner);
-      container
-          .read(meshtasticOnboardingFlowProvider.notifier)
-          .debugForceState(
-            OnboardingAwaitingReboot(
-              testDevice(),
-              config_pbenum.Config_LoRaConfig_RegionCode.ANZ,
-            ),
-          );
-
-      expect(container.read(appShellProvider).shell, AppShell.regionPicker);
-    });
-
-    test('OnboardingAwaitingReconnect -> AppShell.regionPicker', () {
-      final container = _container();
-      addTearDown(container.dispose);
-      _setAppInit(container, AppInitState.needsScanner);
-      container
-          .read(meshtasticOnboardingFlowProvider.notifier)
-          .debugForceState(
-            OnboardingAwaitingReconnect(
-              testDevice(),
-              config_pbenum.Config_LoRaConfig_RegionCode.ANZ,
-            ),
-          );
-
-      expect(container.read(appShellProvider).shell, AppShell.regionPicker);
-    });
-
-    test('OnboardingAwaitingReadiness -> AppShell.regionPicker', () {
-      final container = _container();
-      addTearDown(container.dispose);
-      _setAppInit(container, AppInitState.needsScanner);
-      container
-          .read(meshtasticOnboardingFlowProvider.notifier)
-          .debugForceState(
-            OnboardingAwaitingReadiness(
-              testDevice(),
-              config_pbenum.Config_LoRaConfig_RegionCode.ANZ,
-            ),
-          );
-
-      expect(container.read(appShellProvider).shell, AppShell.regionPicker);
     });
 
     test(

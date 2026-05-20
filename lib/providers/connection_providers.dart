@@ -2809,6 +2809,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           }
         },
         isUserDisconnected: () => _userDisconnected,
+        isRebootExpected: () => ref.read(rebootExpectedProvider),
         deviceName: device.name,
       );
     }

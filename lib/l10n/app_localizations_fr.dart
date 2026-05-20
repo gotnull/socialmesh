@@ -43082,8 +43082,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get statusConfiguring => 'Configuration de SocialMesh...';
 
   @override
-  String get statusDegraded =>
-      'La connexion est en cours de rétablissement. Appuyer pour se reconnecter.';
+  String get statusDegraded => 'La connexion est en cours de rétablissement';
 
   @override
   String get txBlockedNotReady =>

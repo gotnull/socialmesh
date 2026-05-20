@@ -377,20 +377,25 @@ class _MeshCoreDeviceSheetContentState
     userDisconnectedNotifier.setUserDisconnected(true);
     autoReconnectNotifier.setState(AutoReconnectState.idle);
 
+    // setNeedsScanner drives the existing home `_AppRouter` to render
+    // Scanner via `appShellProvider`. Pop screens stacked on top
+    // instead of pushNamedAndRemoveUntil('/app'), which would create
+    // a SECOND AppRouter on top of the persistent home route - the
+    // two would then diverge as state changes.
     appInitNotifier.setNeedsScanner();
     final rootNav = navigatorKey.currentState;
     if (rootNav != null) {
       AppLogging.connection(
-        'MESHCORE_DISCONNECT_ROUTE_REPLACE_SCANNER source=device_sheet '
-        'method=pushNamedAndRemoveUntil dest=/app',
+        'MESHCORE_DISCONNECT_ROUTE_POP_TO_ROOT source=device_sheet '
+        'method=popUntil(isFirst)',
       );
-      rootNav.pushNamedAndRemoveUntil('/app', (route) => false);
+      rootNav.popUntil((route) => route.isFirst);
     } else if (context.mounted) {
       AppLogging.connection(
-        'MESHCORE_DISCONNECT_ROUTE_REPLACE_SCANNER source=device_sheet '
+        'MESHCORE_DISCONNECT_ROUTE_POP_TO_ROOT source=device_sheet '
         'method=local_fallback (navigatorKey.currentState=null)',
       );
-      Navigator.of(context).pushNamedAndRemoveUntil('/app', (route) => false);
+      Navigator.of(context).popUntil((route) => route.isFirst);
     }
 
     await coordinator.disconnect();

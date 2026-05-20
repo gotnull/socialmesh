@@ -652,12 +652,22 @@ class _MainShellState extends ConsumerState<MainShell> {
     }
 
     // If connected but region is UNSET, force region selection
-    // This catches firmware updates/resets that clear the region
-    // BUT: skip this during auto-reconnect if user already configured region before
-    // The device config might not have loaded yet, and we don't want a loop
-    if (isConnected && needsRegionSetup && !regionConfigured) {
+    // This catches firmware updates / factory resets / never-configured
+    // devices that have a UNSET region. The `!regionConfigured` second-
+    // guess was removed because it could lock out the picker for a
+    // device that genuinely needed setup: any prior code path that
+    // persisted `regionConfigured=true` without an actual successful
+    // apply (a bug fixed in `_persistAndDismiss`) would leave the
+    // device stranded on the nodes screen with no way to set its
+    // region. `needsRegionSetupProvider` already gates on
+    // `regionAsync.isLoading`, so the brief-UNSET-during-reconnect
+    // race the old guard was protecting against is no longer a
+    // concern - the picker only renders when the device has settled
+    // on a confirmed UNSET region.
+    if (isConnected && needsRegionSetup) {
       AppLogging.app(
-        '⚠️ MainShell: Connected but region is UNSET and not configured - forcing region setup',
+        '⚠️ MainShell: Connected but region is UNSET '
+        '(regionConfigured=$regionConfigured) - forcing region setup',
       );
       // CRITICAL: User has already been through onboarding, so screen should pop after selection
       return const RegionSelectionScreen(isInitialSetup: false);
@@ -736,26 +746,28 @@ class _MainShellState extends ConsumerState<MainShell> {
                   .startBackgroundConnection();
             },
             onGoToScanner: () {
-              // Route-replace to the scanner via the declarative router
-              // (mirrors the disconnect-button flow). Using the root
-              // navigator + setNeedsScanner avoids ending up with a
-              // scanner pushed on top of a still-mounted MainShell.
+              // setNeedsScanner triggers the existing home `_AppRouter`
+              // to rebuild and render ScannerScreen via
+              // `appShellProvider`. Pop any screens stacked on top of
+              // the AppRouter so the user actually sees it.
+              // `pushNamedAndRemoveUntil('/app', ...)` would create a
+              // SECOND AppRouter on top of the persistent home route
+              // - the two AppRouters then diverge as state changes
+              // and the one on top is stuck on stale state.
               ref.read(appInitProvider.notifier).setNeedsScanner();
               final nav = navigatorKey.currentState;
               if (nav != null) {
                 AppLogging.connection(
-                  'RECONNECT_CANCEL_ROUTE_REPLACE_SCANNER source=banner '
-                  'method=pushNamedAndRemoveUntil dest=/app',
+                  'RECONNECT_CANCEL_ROUTE_POP_TO_ROOT source=banner '
+                  'method=popUntil(isFirst)',
                 );
-                nav.pushNamedAndRemoveUntil('/app', (route) => false);
+                nav.popUntil((route) => route.isFirst);
               } else {
                 AppLogging.connection(
-                  'RECONNECT_CANCEL_ROUTE_REPLACE_SCANNER source=banner '
+                  'RECONNECT_CANCEL_ROUTE_POP_TO_ROOT source=banner '
                   'method=local_fallback (navigatorKey.currentState=null)',
                 );
-                Navigator.of(
-                  context,
-                ).pushNamedAndRemoveUntil('/app', (route) => false);
+                Navigator.of(context).popUntil((route) => route.isFirst);
               }
             },
             deviceState: deviceState,

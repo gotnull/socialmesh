@@ -394,26 +394,30 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
             // the rebuild and previously triggered a provider-during-
             // build assertion when `setNeedsScanner` rebuilt
             // `_AppRouter` mid-pop.
+            // setNeedsScanner drives the existing home `_AppRouter` to
+            // render Scanner declaratively. Just pop screens stacked
+            // on top of the AppRouter; do NOT pushNamedAndRemoveUntil
+            // `/app`, which creates a second AppRouter on top of the
+            // persistent home route (the two then diverge as state
+            // advances).
             final nav = navigatorKey.currentState;
             ref.read(appInitProvider.notifier).setNeedsScanner();
             if (nav != null) {
               AppLogging.connection('DEVICE_SHEET_SCAN_NAV_CONTEXT root=true');
               AppLogging.connection(
-                'DEVICE_SHEET_SCAN_ROUTE_REPLACE_SCANNER source=device_sheet '
-                'method=pushNamedAndRemoveUntil dest=/app',
+                'DEVICE_SHEET_SCAN_ROUTE_POP_TO_ROOT source=device_sheet '
+                'method=popUntil(isFirst)',
               );
-              nav.pushNamedAndRemoveUntil('/app', (route) => false);
+              nav.popUntil((route) => route.isFirst);
             } else {
               AppLogging.connection(
                 'DEVICE_SHEET_SCAN_NAV_CONTEXT root=false fallback=local',
               );
               AppLogging.connection(
-                'DEVICE_SHEET_SCAN_ROUTE_REPLACE_SCANNER source=device_sheet '
+                'DEVICE_SHEET_SCAN_ROUTE_POP_TO_ROOT source=device_sheet '
                 'method=local_fallback (navigatorKey.currentState=null)',
               );
-              Navigator.of(
-                context,
-              ).pushNamedAndRemoveUntil('/app', (route) => false);
+              Navigator.of(context).popUntil((route) => route.isFirst);
             }
           },
           icon: Icon(Icons.bluetooth_searching, size: 20),
@@ -477,17 +481,22 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent>
       // transport disconnect proceeds in the background; userDisconnected
       // and autoReconnectState are already set above, so the Scanner
       // sees the right state when it mounts.
+      // setNeedsScanner drives the existing home `_AppRouter` to
+      // render Scanner via `appShellProvider`. Pop screens stacked on
+      // top instead of pushNamedAndRemoveUntil('/app'), which would
+      // create a SECOND AppRouter on top of the persistent home
+      // route - the two would then diverge as state changes.
       ref.read(appInitProvider.notifier).setNeedsScanner();
       final nav = navigatorKey.currentState;
       if (nav != null) {
         AppLogging.connection(
-          'DISCONNECT_ROUTE_REPLACE_SCANNER source=device_sheet '
-          'method=pushNamedAndRemoveUntil dest=/app',
+          'DISCONNECT_ROUTE_POP_TO_ROOT source=device_sheet '
+          'method=popUntil(isFirst)',
         );
-        nav.pushNamedAndRemoveUntil('/app', (route) => false);
+        nav.popUntil((route) => route.isFirst);
       } else {
         AppLogging.connection(
-          'DISCONNECT_ROUTE_REPLACE_SCANNER source=device_sheet '
+          'DISCONNECT_ROUTE_POP_TO_ROOT source=device_sheet '
           'method=declarative_only (navigatorKey.currentState=null)',
         );
       }

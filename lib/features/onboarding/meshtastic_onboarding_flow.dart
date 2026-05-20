@@ -183,66 +183,24 @@ class MeshtasticOnboardingFlow extends Notifier<MeshtasticOnboardingState> {
     _transitionTo(OnboardingConnecting(device), reason: 'connect');
   }
 
-  /// Region picker submit. Transitions to [OnboardingWritingRegion]
-  /// and tells the protocol service to write the region. The coordinator
-  /// then leans on its connection-state listener to detect the expected
-  /// reboot disconnect.
+  /// Deprecated: this entry point is no longer reachable from
+  /// production code. The region picker on MainShell now writes the
+  /// region directly via `regionConfigProvider.applyRegion()`, which
+  /// owns its own write/reboot/reconnect state machine independently
+  /// of this flow. Kept for binary back-compat with any cached
+  /// imports; transitions the flow to Failed if anyone still calls
+  /// it.
+  @Deprecated(
+    'Region selection is owned by RegionConfigNotifier.applyRegion, '
+    'not by the onboarding flow. This method is dead-end.',
+  )
   Future<void> selectRegion(
     config_pbenum.Config_LoRaConfig_RegionCode region,
   ) async {
-    final current = state;
-    if (current is! OnboardingRegionRequired) {
-      AppLogging.connection(
-        'ONBOARDING_FLOW: select_region ignored phase=${current.phase.name}',
-      );
-      return;
-    }
-    final target = current.target;
     AppLogging.connection(
-      'ONBOARDING_FLOW: select_region region=${region.name} target=${target.id}',
+      'ONBOARDING_FLOW: select_region called on deprecated path '
+      'region=${region.name} - no-op',
     );
-    _transitionTo(
-      OnboardingWritingRegion(target, region),
-      reason: 'select_region',
-    );
-    _armPhaseTimer(_timeouts.regionWrite, () {
-      if (state is! OnboardingWritingRegion) return;
-      AppLogging.connection('ONBOARDING_FLOW: timeout phase=writingRegion');
-      _transitionTo(
-        const OnboardingFailed(OnboardingFailureReason.regionWriteFailed),
-        reason: 'writingRegion_timeout',
-      );
-    });
-
-    final protocol = ref.read(protocolServiceProvider);
-    try {
-      await protocol.setRegion(region);
-      // Successful wire write: arm the reboot-watch window. The
-      // device may not actually reboot for a couple of seconds; the
-      // listener catches the disconnect when it lands.
-      if (state is! OnboardingWritingRegion) return;
-      _transitionTo(
-        OnboardingAwaitingReboot(target, region),
-        reason: 'setRegion_acknowledged',
-      );
-      _armPhaseTimer(_timeouts.awaitReboot, () {
-        if (state is! OnboardingAwaitingReboot) return;
-        AppLogging.connection('ONBOARDING_FLOW: timeout phase=awaitingReboot');
-        _transitionTo(
-          const OnboardingFailed(OnboardingFailureReason.rebootTimeout),
-          reason: 'awaitingReboot_timeout',
-        );
-      });
-    } catch (e) {
-      AppLogging.connection('ONBOARDING_FLOW: write_region_failed err=$e');
-      _transitionTo(
-        OnboardingFailed(
-          OnboardingFailureReason.regionWriteFailed,
-          detail: e.toString(),
-        ),
-        reason: 'setRegion_threw',
-      );
-    }
   }
 
   /// User backed out of the region picker (back gesture / cancel).
@@ -515,24 +473,21 @@ class MeshtasticOnboardingFlow extends Notifier<MeshtasticOnboardingState> {
   /// protocol service before our listener attached can otherwise
   /// stall the flow.
   void _checkRegionForReady(DeviceInfo target) {
-    final region = ref.read(protocolServiceProvider).currentRegion;
-    if (region == null) return;
-    if (region == config_pbenum.Config_LoRaConfig_RegionCode.UNSET) {
-      AppLogging.connection(
-        'ONBOARDING_FLOW: region_required target=${target.id} '
-        'reason=sync_check_unset',
-      );
-      _transitionTo(
-        OnboardingRegionRequired(target),
-        reason: 'region_unset_sync',
-      );
-    } else {
-      AppLogging.connection(
-        'ONBOARDING_FLOW: ready target=${target.id} '
-        'reason=region_already_set_sync',
-      );
-      _completeReady(target);
-    }
+    // The onboarding flow no longer gates ready on the device having a
+    // region set. Region selection is handled exclusively by MainShell's
+    // inline picker (driven by `needsRegionSetupProvider`), which works
+    // identically whether the device was just connected via onboarding
+    // or via auto-reconnect. Keeping the regionRequired -> writingRegion
+    // -> awaitingReboot -> awaitingReconnect -> awaitingReadiness state
+    // chain in the flow caused dual-mount races with MainShell, an
+    // ever-growing series of fail-safes, and ultimately a stuck UI.
+    // The inline picker covers MainShell's body when region is UNSET,
+    // so the user can't bypass it.
+    AppLogging.connection(
+      'ONBOARDING_FLOW: ready target=${target.id} '
+      'reason=ready_inline_picker_handles_region',
+    );
+    _completeReady(target);
   }
 
   void _completeReady(DeviceInfo target) {

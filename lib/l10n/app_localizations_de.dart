@@ -42894,8 +42894,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get statusConfiguring => 'SocialMesh wird konfiguriert...';
 
   @override
-  String get statusDegraded =>
-      'Verbindung wird noch wiederhergestellt. Tippen Sie, um erneut zu verbinden.';
+  String get statusDegraded => 'Verbindung wird noch wiederhergestellt';
 
   @override
   String get txBlockedNotReady =>

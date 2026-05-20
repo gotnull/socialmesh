@@ -44032,7 +44032,7 @@
   "socialWarningsTapReview": "Você tem {count} alerta(s) - toque para revisar",
   "socialYourStory": "Seu story",
   "statusConfiguring": "A configurar o SocialMesh…",
-  "statusDegraded": "A ligação ainda está a recuperar. Toca para te reconectares.",
+  "statusDegraded": "A ligação ainda está a recuperar",
   "stlSignatureInvalid": "Assinatura inválida",
   "stlSignatureValid": "Assinatura verificada",
   "stlSigningSubtitle": "Assinar transferências enviadas com a sua chave de identidade",

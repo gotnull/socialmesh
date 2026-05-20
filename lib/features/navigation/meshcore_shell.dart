@@ -908,20 +908,27 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
   /// Used by the drawer Disconnect, the device-sheet Disconnect, and
   /// `_goToScanner` (the banner Cancel flow).
   void _routeToScanner() {
+    // setNeedsScanner triggers the existing home `_AppRouter` to
+    // rebuild and render ScannerScreen via the declarative
+    // `appShellProvider` flow. We only need to pop screens stacked
+    // on top of the AppRouter. `pushNamedAndRemoveUntil('/app', ...)`
+    // would create a SECOND AppRouter on top of the persistent home
+    // route, with its own ScannerScreen, and the two AppRouters would
+    // then diverge as the flow advances.
     ref.read(appInitProvider.notifier).setNeedsScanner();
     final nav = navigatorKey.currentState;
     if (nav != null) {
       AppLogging.connection(
-        'MESHCORE_DISCONNECT_ROUTE_REPLACE_SCANNER source=shell '
-        'method=pushNamedAndRemoveUntil dest=/app',
+        'MESHCORE_DISCONNECT_ROUTE_POP_TO_ROOT source=shell '
+        'method=popUntil(isFirst)',
       );
-      nav.pushNamedAndRemoveUntil('/app', (route) => false);
+      nav.popUntil((route) => route.isFirst);
     } else {
       AppLogging.connection(
-        'MESHCORE_DISCONNECT_ROUTE_REPLACE_SCANNER source=shell '
+        'MESHCORE_DISCONNECT_ROUTE_POP_TO_ROOT source=shell '
         'method=local_fallback (navigatorKey.currentState=null)',
       );
-      Navigator.of(context).pushNamedAndRemoveUntil('/app', (route) => false);
+      Navigator.of(context).popUntil((route) => route.isFirst);
     }
   }
 

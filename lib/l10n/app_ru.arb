@@ -10888,7 +10888,7 @@
   "socialWarningsTapReview": "У вас {count} предупреждение(-й) - нажмите для просмотра",
   "socialYourStory": "Ваша история",
   "statusConfiguring": "Настройка SocialMesh…",
-  "statusDegraded": "Соединение восстанавливается. Нажмите, чтобы переподключиться.",
+  "statusDegraded": "Соединение восстанавливается",
   "stlSignatureInvalid": "Недействительная подпись",
   "stlSignatureValid": "Подпись подтверждена",
   "stlSigningSubtitle": "Подписывать исходящие передачи ключом вашей идентификации",

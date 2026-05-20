@@ -222,15 +222,22 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
       '🌍 RegionSelection: Apply confirmed — checking device connection',
     );
 
-    // Check if device is still connected before attempting to apply region
+    // Check if device is still connected before attempting to apply region.
+    // The button is also gated on `isDeviceConnected` in build(), but this
+    // guard catches the race where the device disconnected between the
+    // tap and the confirmation dialog returning. We surface a snackbar
+    // here on top of the inline error message because the inline message
+    // sits at the top of the form - users on a long picker often miss it.
     final connectionState = ref.read(conn.deviceConnectionProvider);
     if (!connectionState.isConnected) {
       AppLogging.connection(
         '🌍 RegionSelection: BLOCKED — device disconnected before apply',
       );
+      final blockedMessage = context.l10n.regionSelectionDeviceDisconnected;
       safeSetState(() {
-        _errorMessage = context.l10n.regionSelectionDeviceDisconnected;
+        _errorMessage = blockedMessage;
       });
+      showErrorSnackBar(context, blockedMessage);
       return;
     }
 
@@ -280,7 +287,16 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
     }
   }
 
-  /// Non-initial path: persist setting, dismiss, fire apply in background.
+  /// Non-initial path: persist setting, fire apply, STAY MOUNTED with
+  /// the Applying overlay until the apply actually completes, then
+  /// dismiss. Previously this path popped synchronously and fired
+  /// applyRegion in the background, which caused the screen to vanish
+  /// the instant the user tapped Save - giving zero feedback that the
+  /// region was actually being written + the device was rebooting.
+  /// The initial-setup path (driven by the onboarding coordinator)
+  /// already stays mounted through the writingRegion / awaitingReboot /
+  /// awaitingReconnect / awaitingReadiness phases; this brings the
+  /// non-initial path in line.
   Future<void> _persistAndDismiss({
     required SettingsService settings,
     required SettingsRefreshNotifier settingsRefresh,
@@ -303,48 +319,65 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
         'regionAlreadySet=$regionAlreadySet, selected=$_selectedRegion',
       );
 
-      // Persist regionConfigured BEFORE apply so MainShell's inline
-      // guard clears immediately on rebuild
+      if (shouldSkipApply) {
+        // Region already set on device or already applied this session;
+        // nothing to wait for. Persist `regionConfigured` then dismiss.
+        await settings.setRegionConfigured(true);
+        settingsRefresh.refresh();
+        if (!mounted) return;
+        AppLogging.connection('✅ _persistAndDismiss: skip apply, dismissing');
+        _popOrSetReady(navigator);
+        return;
+      }
+
+      // Start global reboot countdown — banner persists across
+      // navigation and auto-cancels when the device reconnects.
+      ref
+          .read(countdownProvider.notifier)
+          .startDeviceRebootCountdown(reason: 'region changed');
+
+      // AWAIT the apply BEFORE flipping `regionConfigured`. Setting
+      // `regionConfigured=true` early would immediately fail MainShell's
+      // inline guard (`needsRegionSetup && !regionConfigured`) and
+      // unmount the picker before the apply even starts - the exact
+      // symptom that made the user see the screen dismiss itself with
+      // no progress feedback. `applyRegion` drives the full write ->
+      // reboot -> reconnect cycle and only completes when the device
+      // is back online with the new region (or the apply has failed).
+      // While we await, `_applying = true` keeps the Applying...
+      // overlay visible.
+      AppLogging.connection(
+        '🌍 RegionSelection: awaiting applyRegion(${_selectedRegion!.name})',
+      );
+      try {
+        await regionNotifier.applyRegion(
+          _selectedRegion!,
+          reason: 'settings_change',
+        );
+      } catch (e) {
+        AppLogging.app('⚠️ Foreground region apply failed: $e');
+        if (!mounted) return;
+        safeSetState(() {
+          _applying = false;
+          _errorMessage = context.l10n.regionSelectionSetRegionError(
+            e.toString(),
+          );
+        });
+        showErrorSnackBar(context, _errorMessage!);
+        return;
+      }
+
+      // Apply succeeded - now safe to flip `regionConfigured`. MainShell
+      // will rebuild without the inline picker on its next pass and the
+      // user lands back on the nodes view (or wherever they came from).
       await settings.setRegionConfigured(true);
       settingsRefresh.refresh();
 
-      // Dismiss this screen: pop if pushed (Settings), otherwise
-      // navigate to main. If the scanner used pushReplacement and
-      // this screen is the sole route, canPop() is false — in that
-      // case set appInit to ready so the router shows MainShell
-      // instead of leaving the user stranded on "Applying...".
-      if (navigator.canPop()) {
-        AppLogging.connection(
-          '✅ _persistAndDismiss: popping RegionSelectionScreen',
-        );
-        navigator.pop();
-      } else {
-        AppLogging.connection(
-          '✅ _persistAndDismiss: cannot pop (root route) — '
-          'setting appInit to ready so router shows MainShell',
-        );
-        if (!mounted) return;
-        ref.read(appInitProvider.notifier).setReady();
-      }
-
-      // Fire applyRegion in background. The notifier is a Riverpod-
-      // managed object; its ref stays valid regardless of widget
-      // lifecycle. Errors surface via connection state banners.
-      if (!shouldSkipApply) {
-        // Start global reboot countdown — banner persists across
-        // navigation and auto-cancels when the device reconnects.
-        ref
-            .read(countdownProvider.notifier)
-            .startDeviceRebootCountdown(reason: 'region changed');
-
-        unawaited(
-          regionNotifier
-              .applyRegion(_selectedRegion!, reason: 'settings_change')
-              .catchError((Object e) {
-                AppLogging.app('⚠️ Background region apply failed: $e');
-              }),
-        );
-      }
+      AppLogging.connection(
+        '✅ _persistAndDismiss: applyRegion completed, dismissing',
+      );
+      if (!mounted) return;
+      _popOrSetReady(navigator);
     } on Exception catch (e) {
       // Unlock the UI so the user can retry
       safeSetState(() => _applying = false);
@@ -354,6 +387,24 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
         _errorMessage = message;
       });
       showErrorSnackBar(context, message);
+    }
+  }
+
+  /// Pop the picker if it was pushed (Settings entry), otherwise mark
+  /// appInit ready so the router shows MainShell. Mirrors the legacy
+  /// dismiss path from `_persistAndDismiss`.
+  void _popOrSetReady(NavigatorState navigator) {
+    if (navigator.canPop()) {
+      AppLogging.connection(
+        '✅ _persistAndDismiss: popping RegionSelectionScreen',
+      );
+      navigator.pop();
+    } else {
+      AppLogging.connection(
+        '✅ _persistAndDismiss: cannot pop (root route) — '
+        'setting appInit to ready so router shows MainShell',
+      );
+      ref.read(appInitProvider.notifier).setReady();
     }
   }
 
@@ -371,6 +422,17 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
   @override
   Widget build(BuildContext context) {
     final regionState = ref.watch(regionConfigProvider);
+    // Watch the underlying connection state so the Apply button stays
+    // disabled while the transport is reconnecting / restoring. The
+    // picker can be opened during the RESTORE window (transport up,
+    // protocol still hydrating) - tapping Apply then hits the
+    // "BLOCKED - device disconnected before apply" guard in
+    // `_saveRegion` and bails silently. Watching here means the button
+    // greys out until the device is genuinely ready, so the user can't
+    // tap into the silent-bail path in the first place.
+    final isDeviceConnected = ref
+        .watch(conn.deviceConnectionProvider)
+        .isConnected;
     final isApplying =
         _applying || regionState.applyStatus == RegionApplyStatus.applying;
     final statusText = regionState.applyStatus == RegionApplyStatus.failed
@@ -509,7 +571,10 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
                         width: double.infinity,
                         child: ElevatedButton(
                           key: regionSelectionApplyButtonKey,
-                          onPressed: _selectedRegion != null && !isApplying
+                          onPressed:
+                              _selectedRegion != null &&
+                                  !isApplying &&
+                                  isDeviceConnected
                               ? _saveRegion
                               : null,
                           style: ElevatedButton.styleFrom(
@@ -677,14 +742,10 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
                     ),
                   ),
                 ],
-                if (isSelected) ...[
-                  const SizedBox(width: AppTheme.spacing12),
-                  Icon(
-                    Icons.check_circle,
-                    color: context.accentColor,
-                    size: 24,
-                  ),
-                ],
+                // No check_circle trailing icon: the selected state is
+                // already conveyed by the row's accent-colored border
+                // and the highlighted frequency badge - a third visual
+                // selection cue was redundant.
               ],
             ),
           ),

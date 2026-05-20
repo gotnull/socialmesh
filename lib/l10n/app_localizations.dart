@@ -74117,10 +74117,10 @@ abstract class AppLocalizations {
   /// **'Configuring SocialMesh…'**
   String get statusConfiguring;
 
-  /// Top status banner shown when the readiness watchdog gave up after a failed session rebuild. Tappable to manually reconnect.
+  /// Top status banner shown when the readiness watchdog gave up after a failed session rebuild. The trailing button (Cancel / Connect) communicates the tap action; the message describes state only, no 'Tap to X' suffix.
   ///
   /// In en, this message translates to:
-  /// **'Connection is still recovering. Tap to reconnect.'**
+  /// **'Connection is still recovering'**
   String get statusDegraded;
 
   /// Snackbar shown when the user tries to send a message or traceroute while the protocol is not yet operational. Brand casing: SocialMesh.

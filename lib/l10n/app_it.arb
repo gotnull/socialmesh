@@ -44032,7 +44032,7 @@
   "socialWarningsTapReview": "Hai {count} avviso/i - tocca per esaminare",
   "socialYourStory": "La tua storia",
   "statusConfiguring": "Configurazione di SocialMesh in corso…",
-  "statusDegraded": "La connessione è ancora in fase di ripristino. Tocca per riconnetterti.",
+  "statusDegraded": "La connessione è ancora in fase di ripristino",
   "stlSignatureInvalid": "Firma non valida",
   "stlSignatureValid": "Firma verificata",
   "stlSigningSubtitle": "Firma i trasferimenti in uscita con la tua chiave di identità",

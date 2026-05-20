@@ -42778,8 +42778,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get statusConfiguring => 'Configurazione di SocialMesh in corso…';
 
   @override
-  String get statusDegraded =>
-      'La connessione è ancora in fase di ripristino. Tocca per riconnetterti.';
+  String get statusDegraded => 'La connessione è ancora in fase di ripristino';
 
   @override
   String get txBlockedNotReady =>

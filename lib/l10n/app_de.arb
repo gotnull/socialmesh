@@ -10517,7 +10517,7 @@
   "socialWarningsTapReview": "Sie haben {count} Verwarnung(en) - tippen zum Überprüfen",
   "socialYourStory": "Ihre Story",
   "statusConfiguring": "SocialMesh wird konfiguriert...",
-  "statusDegraded": "Verbindung wird noch wiederhergestellt. Tippen Sie, um erneut zu verbinden.",
+  "statusDegraded": "Verbindung wird noch wiederhergestellt",
   "stlSignatureInvalid": "Ungültige Signatur",
   "stlSignatureValid": "Signatur verifiziert",
   "stlSigningSubtitle": "Ausgehende Übertragungen mit Ihrem Identitätsschlüssel signieren",

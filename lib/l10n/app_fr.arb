@@ -10517,7 +10517,7 @@
   "socialWarningsTapReview": "Vous avez {count} avertissement(s) - appuyez pour consulter",
   "socialYourStory": "Votre story",
   "statusConfiguring": "Configuration de SocialMesh...",
-  "statusDegraded": "La connexion est en cours de rétablissement. Appuyer pour se reconnecter.",
+  "statusDegraded": "La connexion est en cours de rétablissement",
   "stlSignatureInvalid": "Signature invalide",
   "stlSignatureValid": "Signature vérifiée",
   "stlSigningSubtitle": "Signez les transferts sortants avec votre clé d'identité",

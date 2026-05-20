@@ -130,7 +130,6 @@ import 'features/aether/screens/aether_flight_detail_screen.dart';
 import 'features/aether/providers/aether_providers.dart';
 import 'features/aether/models/aether_flight.dart';
 import 'features/onboarding/app_shell_provider.dart';
-import 'features/device/region_selection_screen.dart';
 // import 'features/intro/intro_screen.dart';
 import 'models/route.dart' as route_model;
 import 'core/navigation.dart';
@@ -1913,13 +1912,17 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         home: const _AppRouter(),
         routes: {
           // Reset route: replaces the entire nav stack with _AppRouter,
-          // which reads appInitProvider and shows the correct screen
-          // (Scanner when needsScanner, MainShell when ready, etc.).
-          // Used by device_sheet disconnect to guarantee navigation
-          // to Scanner — the declarative setNeedsScanner + popUntil
-          // approach was unreliable because _AppRouter's widget swap
-          // didn't always propagate through the navigator frame.
-          '/app': (context) => const _AppRouter(),
+          // which reads appInitProvider and shows the correct screen.
+          // The route widget carries an explicit ValueKey so it does
+          // NOT collide with `home: const _AppRouter()` (no key) under
+          // Flutter's element-matching: same runtimeType but different
+          // keys keeps the route boundary's State separate from the
+          // home's State. The widget itself is still const-constructible
+          // (ValueKey is const), so the builder returns the SAME
+          // canonical instance on every call, which is what prevents
+          // the routes-map rebuild from triggering an Element swap on
+          // every frame.
+          '/app': (context) => const _AppRouter(key: ValueKey('app_root')),
           '/scanner': (context) => const ScannerScreen(),
           '/messages': (context) => const MessagingScreen(),
           '/channels': (context) => const ChannelsScreen(),
@@ -2161,13 +2164,28 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
   }
 }
 
-/// Stateful host so we can latch a single redirect when the device is
-/// disconnected. A naive `Consumer.builder + postFrame +
-/// pushReplacementNamed` redirect loops: every Riverpod state change
-/// rebuilds the Consumer, schedules another postFrame, fires another
-/// nav, mounting a fresh ScannerScreen each time (logs.txt evidence
-/// showed 16+ scanner mounts from one factory-reset). The latch
-/// ensures the redirect fires exactly once per mount.
+// Stateful host so we can latch a single pop when the device is
+// disconnected. A naive `Consumer.builder + postFrame + nav` would
+// loop: every Riverpod state change rebuilds the Consumer, schedules
+// another postFrame, fires another nav. The latch ensures the pop
+// fires exactly once per mount.
+//
+// Pop semantics: this widget pops back to the home AppRouter root
+// (`popUntil((r) => r.isFirst)`) rather than pushing a fresh /scanner
+// route. The home AppRouter renders the right shell via
+// `appShellProvider` from its single canonical mount point:
+//
+//   - intentional disconnect (factory reset, manual disconnect):
+//     appInit is already `needsScanner`, so the home AppRouter
+//     renders Scanner.
+//   - transient disconnect (signal flap, peripheral reboot): appInit
+//     stays `ready`, so the home AppRouter renders MainShell with
+//     the recovery banner.
+//
+// Pushing a new `/scanner` route would mount a SECOND AppRouter
+// stack on top of the persistent home AppRouter and fork the shell
+// hierarchy, exactly like the `pushNamedAndRemoveUntil('/app')`
+// pattern this codebase removed elsewhere.
 class _ProtectedRouteHost extends ConsumerStatefulWidget {
   final String routeName;
   final Widget screen;
@@ -2180,7 +2198,7 @@ class _ProtectedRouteHost extends ConsumerStatefulWidget {
 }
 
 class _ProtectedRouteHostState extends ConsumerState<_ProtectedRouteHost> {
-  bool _redirectScheduled = false;
+  bool _popScheduled = false;
 
   @override
   Widget build(BuildContext context) {
@@ -2190,20 +2208,18 @@ class _ProtectedRouteHostState extends ConsumerState<_ProtectedRouteHost> {
       return widget.screen;
     }
 
-    if (_redirectScheduled) {
-      // Already redirected once — don't pile on more navs while the
-      // route swap is in flight.
+    if (_popScheduled) {
       return const SizedBox.shrink();
     }
-    _redirectScheduled = true;
+    _popScheduled = true;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       AppLogging.connection(
-        'PROTECTED_ROUTE_REDIRECT route=${widget.routeName} → /scanner '
+        'PROTECTED_ROUTE_POP route=${widget.routeName} method=popUntil(isFirst) '
         '(device disconnected)',
       );
-      Navigator.of(context).pushReplacementNamed('/scanner');
+      Navigator.of(context).popUntil((route) => route.isFirst);
     });
     return const SizedBox.shrink();
   }
@@ -2967,7 +2983,7 @@ class _ProfileDisplayNameLoader extends ConsumerWidget {
 /// NOTE: With deferred connection, MainShell is shown as soon as app is 'ready'.
 /// Device connection happens asynchronously via DeviceConnectionNotifier.
 class _AppRouter extends ConsumerStatefulWidget {
-  const _AppRouter();
+  const _AppRouter({super.key});
 
   @override
   ConsumerState<_AppRouter> createState() => _AppRouterState();
@@ -2981,12 +2997,27 @@ class _AppRouterState extends ConsumerState<_AppRouter> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAppReady();
     });
-    // Diagnostic: explicit ref.listen on appInitProvider AND
-    // appShellProvider to verify Riverpod is notifying this widget
-    // when state changes. ref.listen always fires on state change,
-    // independent of whether ref.watch triggers a build. If these
-    // fire but build() does not, the rebuild path is broken; if
-    // these don't fire either, the subscription itself is broken.
+    // Diagnostic listeners. `ref.watch(appShellProvider)` in build()
+    // is the actual rebuild driver; these listeners just log
+    // transitions so the route changes are observable in the log.
+    //
+    // History note: this State used to also force `setState()` from
+    // multiple layers of listeners (appShell + flow + appInit) as a
+    // fail-safe for a dispose-race where `ref.watch` dep tracking
+    // could go silent after navigator dances like
+    // `pushNamedAndRemoveUntil('/app', ...)`. That entire class of
+    // bug was retired in two stages:
+    //   1. All `pushNamedAndRemoveUntil('/app')` callsites became
+    //      `popUntil((r) => r.isFirst)`, so there's no more route-stack
+    //      swap that triggers the dep-tracking reset.
+    //   2. The onboarding flow's region states (regionRequired /
+    //      writingRegion / awaitingReboot / awaitingReconnect /
+    //      awaitingReadiness) were collapsed into a direct
+    //      `connecting -> checkingConfig -> ready` flow. Region
+    //      selection lives entirely on MainShell's inline picker now,
+    //      driven by `needsRegionSetupProvider`. AppRouter only
+    //      switches between `splash | scanner | mainShell`, which is
+    //      a tiny shell graph that `ref.watch` handles without help.
     ref.listenManual<AppInitState>(appInitProvider, (previous, next) {
       AppLogging.connection(
         'APP_ROUTER_LISTEN: appInit prev=$previous next=$next '
@@ -3065,11 +3096,6 @@ class _AppRouterState extends ConsumerState<_AppRouter> {
         return const LegalAcceptanceScreen();
       case AppShell.scanner:
         return const ScannerScreen();
-      case AppShell.regionPicker:
-        // Onboarding flow drives the region picker. The picker reads
-        // the coordinator state for progress, calls flow.selectRegion
-        // on submit, and calls flow.cancel on back. No self-pop.
-        return const RegionSelectionScreen(isInitialSetup: true);
       case AppShell.mainShell:
         return const AppRootShell();
     }

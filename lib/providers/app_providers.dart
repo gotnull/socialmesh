@@ -7040,6 +7040,20 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
     );
   }
 
+  // Wipes in-memory region-flow state back to its initial shape so a
+  // subsequent reconnect to the SAME hardware doesn't carry the
+  // pre-wipe `regionChoice` + `applyStatus=applied` forward. Used by
+  // the factory-reset paths after the device's actual region has been
+  // wiped to UNSET. Safe to call after the calling widget unmounts -
+  // notifiers outlive the State that captures them.
+  void reset() {
+    final sessionId = ref.read(deviceConnectionProvider).connectionSessionId;
+    state = RegionConfigState(connectionSessionId: sessionId);
+    AppLogging.connection(
+      '🌍 REGION_FLOW reset session=$sessionId reason=factory_reset',
+    );
+  }
+
   Future<void> applyRegion(
     config_pbenum.Config_LoRaConfig_RegionCode region, {
     String reason = 'user_action',
@@ -7425,8 +7439,18 @@ final needsRegionSetupProvider = Provider<bool>((ref) {
     return false;
   }
 
-  // Only need setup if we're idle (not applying/applied) for this session
-  if (regionState.connectionSessionId != sessionId) return false;
+  // Session-mismatch case: deviceConnectionProvider just rotated its
+  // connectionSessionId (e.g. markAsPaired fired after a fresh BLE
+  // connect), and the regionConfigProvider hasn't caught up yet. The
+  // device region is UNSET; the right answer is "yes, this session
+  // still needs setup". Returning false here was the source of a
+  // picker-auto-dismiss race: MainShell's inline guard
+  // (`isConnected && needsRegionSetup && !regionConfigured`) flipped
+  // false for the brief window between the connection session bump
+  // and the region notifier's `new_session` event landing, which
+  // unmounted RegionSelectionScreen even though the user was actively
+  // looking at it.
+  if (regionState.connectionSessionId != sessionId) return true;
   return regionState.applyStatus == RegionApplyStatus.idle;
 });
 

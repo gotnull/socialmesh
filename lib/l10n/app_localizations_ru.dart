@@ -42764,8 +42764,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get statusConfiguring => 'Настройка SocialMesh…';
 
   @override
-  String get statusDegraded =>
-      'Соединение восстанавливается. Нажмите, чтобы переподключиться.';
+  String get statusDegraded => 'Соединение восстанавливается';
 
   @override
   String get txBlockedNotReady =>

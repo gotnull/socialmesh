@@ -42773,8 +42773,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get statusConfiguring => 'Налаштування SocialMesh…';
 
   @override
-  String get statusDegraded =>
-      'З\'єднання все ще відновлюється. Натисніть для повторного підключення.';
+  String get statusDegraded => 'З\'єднання все ще відновлюється';
 
   @override
   String get txBlockedNotReady =>

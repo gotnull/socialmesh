@@ -47,10 +47,6 @@ enum AppShell {
   /// / checking config / surfacing failure or pairing-invalidation).
   scanner,
 
-  /// Region picker. Coordinator is in regionRequired / writingRegion /
-  /// awaitingReboot / awaitingReconnect / awaitingReadiness.
-  regionPicker,
-
   /// Fully ready: MainShell or MeshCoreShell via AppRootShell.
   mainShell,
 }
@@ -134,16 +130,37 @@ final appShellProvider = Provider<AppShellResolution>((ref) {
     case OnboardingAwaitingReboot():
     case OnboardingAwaitingReconnect():
     case OnboardingAwaitingReadiness():
-      return const AppShellResolution(
-        AppShell.regionPicker,
-        'flow:region_in_flight',
-      );
+      // Region-flow phases NO LONGER swap the shell. The picker is
+      // pushed as a fullscreen MaterialPageRoute by the coordinator
+      // listener in `_AppRouterState.initState` whenever the flow
+      // enters one of these phases, and popped on
+      // OnboardingReady/Failed. The shell underneath stays on
+      // mainShell so MainShell doesn't get disposed mid-flow (which
+      // was the source of every dual-mount race we fought) and so
+      // the user lands on mainShell cleanly when the picker pops.
+      return _legacyReadyShell(ref, reason: 'flow:region_in_flight');
     case OnboardingReady():
       // Terms gate is checked from `_AppRouter` once we say mainShell.
       // The provider just signals readiness.
       return _legacyReadyShell(ref, reason: 'flow:ready');
     case OnboardingPairingInvalidated():
+      return const AppShellResolution(
+        AppShell.scanner,
+        'flow:terminal_recover',
+      );
     case OnboardingFailed():
+      // If appInit reached `ready` while the flow was failing (e.g. the
+      // device wrote its region and rebooted, then reconnected JUST
+      // after `awaitingReconnect` timed out), the user is actually in
+      // a healthy connected state - we should land them on mainShell
+      // rather than forcing them back to the scanner. The scanner-as-
+      // recovery route is only useful when the device hasn't actually
+      // come back online. `flow:ready` would be cleaner but the flow
+      // notifier doesn't auto-transition out of `failed` on a late
+      // reconnect, so this fall-through is the recovery path.
+      if (initState == AppInitState.ready) {
+        return _legacyReadyShell(ref, reason: 'flow:failed+appInit:ready');
+      }
       return const AppShellResolution(
         AppShell.scanner,
         'flow:terminal_recover',

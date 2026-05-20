@@ -42972,8 +42972,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get statusConfiguring => 'Configurando SocialMesh…';
 
   @override
-  String get statusDegraded =>
-      'La conexión aún se está recuperando. Toque para reconectarse.';
+  String get statusDegraded => 'La conexión aún se está recuperando';
 
   @override
   String get txBlockedNotReady =>

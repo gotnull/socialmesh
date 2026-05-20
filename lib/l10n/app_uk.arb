@@ -10517,7 +10517,7 @@
   "socialWarningsTapReview": "У вас {count} попередження(нь) - торкніться для перегляду",
   "socialYourStory": "Ваша історія",
   "statusConfiguring": "Налаштування SocialMesh…",
-  "statusDegraded": "З'єднання все ще відновлюється. Натисніть для повторного підключення.",
+  "statusDegraded": "З'єднання все ще відновлюється",
   "stlSignatureInvalid": "Недійсний підпис",
   "stlSignatureValid": "Підпис перевірено",
   "stlSigningSubtitle": "Підписуйте вихідні передачі своїм ключем ідентичності",

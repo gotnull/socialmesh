@@ -1119,13 +1119,19 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection>
         '${navState != null ? "EXISTS" : "NULL"}',
       );
 
+      // popUntil(isFirst) instead of pushNamedAndRemoveUntil('/app'):
+      // pushing /app creates a SECOND _AppRouter on top of the
+      // persistent `home:` route, leaving two AppRouters mounted that
+      // diverge as state changes. The downstream `initialize()` call
+      // drives the existing home AppRouter through the fresh-install
+      // flow declaratively.
       if (navState != null) {
-        navState.pushNamedAndRemoveUntil('/app', (route) => false);
-        AppLogging.auth('deleteAccount - pushNamedAndRemoveUntil dispatched');
+        navState.popUntil((route) => route.isFirst);
+        AppLogging.auth('deleteAccount - popUntil(isFirst) dispatched');
       } else {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           final fallback = navigatorKey.currentState;
-          fallback?.pushNamedAndRemoveUntil('/app', (route) => false);
+          fallback?.popUntil((route) => route.isFirst);
         });
       }
 

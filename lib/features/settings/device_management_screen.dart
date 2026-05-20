@@ -404,6 +404,15 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                         final autoReconnectNotifier = ref.read(
                           autoReconnectStateProvider.notifier,
                         );
+                        // Capture the region-flow notifier upfront: the
+                        // post-reset device reboot disconnects the link
+                        // asynchronously, which can flip activeProtocol
+                        // and unmount MainShell (and this State) mid-action.
+                        // Holding a notifier reference survives that;
+                        // `ref.invalidate` would throw on unmount.
+                        final regionConfigNotifier = ref.read(
+                          regionConfigProvider.notifier,
+                        );
                         AppLogging.connection(
                           '🔧 DeviceManagement: clearing local region '
                           '+ channels state',
@@ -422,6 +431,18 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                         AppLogging.connection(
                           '🔧 DeviceManagement: Local channels cleared — '
                           'expecting device disconnect shortly',
+                        );
+                        // Wipe the region-flow notifier so the
+                        // post-reboot reconnect doesn't see a stale
+                        // `applyStatus=applied` paired with the same
+                        // targetDeviceId. Without this,
+                        // `needsRegionSetupProvider` short-circuits to
+                        // false and the inline picker never shows
+                        // even though the device's region just got
+                        // wiped to UNSET.
+                        regionConfigNotifier.reset();
+                        AppLogging.connection(
+                          '🔧 DeviceManagement: regionConfigProvider reset',
                         );
                         if (!mounted) return;
                         autoReconnectNotifier.setState(AutoReconnectState.idle);
@@ -492,6 +513,15 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                       final autoReconnectNotifier = ref.read(
                         autoReconnectStateProvider.notifier,
                       );
+                      // Capture this BEFORE the await: transport.disconnect
+                      // flips activeProtocol to none, which changes the
+                      // AppRootShell's KeyedSubtree key and unmounts
+                      // MainShell along with this DeviceManagementScreen
+                      // mid-action. Holding a notifier reference is safe
+                      // across the unmount; `ref.invalidate(...)` is not.
+                      final regionConfigNotifier = ref.read(
+                        regionConfigProvider.notifier,
+                      );
 
                       // CRITICAL: Follow the same disconnect-first pattern as
                       // manual disconnect (device_sheet.dart). If we navigate
@@ -550,25 +580,44 @@ class _DeviceManagementScreenState extends ConsumerState<DeviceManagementScreen>
                         '🔧 DeviceManagement: Local nodes + channels cleared',
                       );
 
-                      // 6. Set app state and navigate. Same route-first
-                      //    pattern as device_sheet._disconnect:
-                      //    `setNeedsScanner` first so the fresh
-                      //    `_AppRouter` reads the correct state on
-                      //    mount, then `pushNamedAndRemoveUntil` to
-                      //    swap the entire stack (clearing the device-
-                      //    management route below — Scanner becomes
-                      //    the bottom of the stack with no back arrow).
+                      // Wipe the region-flow notifier. Its in-memory
+                      // state carries `regionChoice` +
+                      // `applyStatus=applied` from the last apply that
+                      // ran against the now-wiped device. Without this,
+                      // the post-reset reconnect would see
+                      // `applyStatus=applied` + targetDeviceId matching
+                      // the same hardware ID and `needsRegionSetupProvider`
+                      // would short-circuit to false, suppressing the
+                      // inline picker even though the device's actual
+                      // region just got wiped to UNSET. Uses the captured
+                      // notifier reference because `ref` is unsafe here:
+                      // the transport.disconnect above flipped
+                      // activeProtocol, which unmounted MainShell and
+                      // this State along with it.
+                      regionConfigNotifier.reset();
+                      AppLogging.connection(
+                        '🔧 DeviceManagement: regionConfigProvider reset',
+                      );
+
+                      // 6. Set app state and pop screens stacked on top
+                      //    of the home `_AppRouter` route. `setNeedsScanner`
+                      //    drives the existing AppRouter to rebuild and
+                      //    render `ScannerScreen` via the declarative
+                      //    `appShellProvider` flow. `popUntil(isFirst)`
+                      //    leaves the single home AppRouter intact so
+                      //    the declarative rebuild path drives every
+                      //    subsequent shell transition; pushing a fresh
+                      //    `/app` route would mount a second AppRouter
+                      //    on top of the persistent `home:` one and
+                      //    fork the shell hierarchy.
                       appInitNotifier.setNeedsScanner();
                       AppLogging.connection(
-                        'FACTORY_RESET_ROUTE_REPLACE_SCANNER '
-                        'method=pushNamedAndRemoveUntil dest=/app',
+                        'FACTORY_RESET_ROUTE_POP_TO_ROOT '
+                        'method=popUntil(isFirst)',
                       );
 
                       if (mounted) {
-                        navigator.pushNamedAndRemoveUntil(
-                          '/app',
-                          (route) => false,
-                        );
+                        navigator.popUntil((route) => route.isFirst);
                       }
                     },
                     warningMessage:

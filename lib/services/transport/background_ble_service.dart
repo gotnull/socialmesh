@@ -270,26 +270,49 @@ typedef ReconnectCallback = Future<bool> Function();
 /// Callback that checks whether the user explicitly disconnected.
 typedef UserDisconnectedCheck = bool Function();
 
+/// Callback that checks whether a device reboot is currently expected (e.g.
+/// the app just wrote a config change to the local node and the radio is
+/// rebooting). Drives tighter retry timing in the post-reboot reconnect
+/// window.
+typedef RebootExpectedCheck = bool Function();
+
 /// Manages exponential-backoff reconnection attempts when the BLE connection
 /// drops while the app is backgrounded.
 ///
-/// The manager is Riverpod-free. The [ReconnectCallback] and
-/// [UserDisconnectedCheck] are injected by the provider layer when the
-/// foreground service starts.
+/// The manager is Riverpod-free. The [ReconnectCallback],
+/// [UserDisconnectedCheck], and [RebootExpectedCheck] are injected by the
+/// provider layer when the foreground service starts.
 class BackgroundReconnectManager {
   Timer? _retryTimer;
   int _attempt = 0;
   bool _active = false;
+  List<Duration> _activeDelays = _backoffDelaysDefault;
 
-  /// Backoff delays for each attempt (5 s, 15 s, 45 s).
-  static const List<Duration> _backoffDelays = [
+  /// Default backoff delays (unknown disconnect cause): 5 s, 15 s, 45 s.
+  static const List<Duration> _backoffDelaysDefault = [
     Duration(seconds: 5),
     Duration(seconds: 15),
     Duration(seconds: 45),
   ];
 
-  /// Maximum number of reconnect attempts.
-  static int get maxAttempts => _backoffDelays.length;
+  /// Backoff delays when a device reboot is expected (e.g. region apply,
+  /// node-db reset, factory reset). Initial wait gives the Meshtastic
+  /// radio time to finish booting and re-advertise (~8-15 s); subsequent
+  /// retries fire faster because the device is known to be coming back,
+  /// and FlutterBluePlus's connect() blocks for 15 s on a non-advertising
+  /// peripheral so a missed first attempt should retry sooner, not later.
+  static const List<Duration> _backoffDelaysRebootExpected = [
+    Duration(seconds: 8),
+    Duration(seconds: 5),
+    Duration(seconds: 5),
+    Duration(seconds: 5),
+    Duration(seconds: 5),
+  ];
+
+  /// Maximum number of reconnect attempts in the longer (reboot-aware)
+  /// schedule. Used by callers that need a stable upper bound regardless
+  /// of the schedule that ends up active at runtime.
+  static int get maxAttempts => _backoffDelaysRebootExpected.length;
 
   /// Current attempt index (0-based). Useful for logging/UI.
   int get attempt => _attempt;
@@ -300,6 +323,7 @@ class BackgroundReconnectManager {
   StreamSubscription<DeviceConnectionState>? _stateSubscription;
   ReconnectCallback? _reconnect;
   UserDisconnectedCheck? _isUserDisconnected;
+  RebootExpectedCheck? _isRebootExpected;
   String _deviceName = '';
 
   /// Begin observing [transportStateStream] for unexpected disconnects.
@@ -307,17 +331,24 @@ class BackgroundReconnectManager {
   /// When a disconnect is detected (and the user did not manually disconnect),
   /// the manager will attempt reconnection with exponential backoff.
   ///
+  /// [isRebootExpected] selects the tighter backoff schedule when the
+  /// disconnect was triggered by a known impending device reboot (region
+  /// apply, factory reset, node-db reset, any config write). Optional;
+  /// when omitted, the default backoff is used for every disconnect.
+  ///
   /// Call [dispose] or [cancel] to stop listening.
   void observe({
     required Stream<DeviceConnectionState> transportStateStream,
     required ReconnectCallback reconnect,
     required UserDisconnectedCheck isUserDisconnected,
     required String deviceName,
+    RebootExpectedCheck? isRebootExpected,
   }) {
     // Tear down any previous observer.
     _stateSubscription?.cancel();
     _reconnect = reconnect;
     _isUserDisconnected = isUserDisconnected;
+    _isRebootExpected = isRebootExpected;
     _deviceName = deviceName;
 
     _stateSubscription = transportStateStream.listen((state) {
@@ -351,9 +382,14 @@ class BackgroundReconnectManager {
       return;
     }
 
+    final rebootExpected = _isRebootExpected?.call() ?? false;
+    _activeDelays = rebootExpected
+        ? _backoffDelaysRebootExpected
+        : _backoffDelaysDefault;
     AppLogging.ble(
       'BackgroundReconnectManager: unexpected disconnect, '
-      'starting reconnect cycle',
+      'starting reconnect cycle (rebootExpected=$rebootExpected, '
+      'schedule=${_activeDelays.map((d) => '${d.inSeconds}s').join('/')})',
     );
     _attempt = 0;
     _active = true;
@@ -375,14 +411,14 @@ class BackgroundReconnectManager {
   }
 
   void _scheduleNextAttempt() {
-    if (_attempt >= _backoffDelays.length) {
+    if (_attempt >= _activeDelays.length) {
       _onReconnectExhausted();
       return;
     }
 
-    final delay = _backoffDelays[_attempt];
+    final delay = _activeDelays[_attempt];
     AppLogging.ble(
-      'BackgroundReconnectManager: attempt ${_attempt + 1}/${_backoffDelays.length} '
+      'BackgroundReconnectManager: attempt ${_attempt + 1}/${_activeDelays.length} '
       'in ${delay.inSeconds}s',
     );
 
@@ -402,7 +438,7 @@ class BackgroundReconnectManager {
 
     AppLogging.ble(
       'BackgroundReconnectManager: attempting reconnect '
-      '(attempt ${_attempt + 1}/${_backoffDelays.length})',
+      '(attempt ${_attempt + 1}/${_activeDelays.length})',
     );
 
     final success = await (_reconnect?.call() ?? Future.value(false));
@@ -419,7 +455,7 @@ class BackgroundReconnectManager {
 
   void _onReconnectExhausted() {
     AppLogging.ble(
-      'BackgroundReconnectManager: all ${_backoffDelays.length} attempts '
+      'BackgroundReconnectManager: all ${_activeDelays.length} attempts '
       'exhausted, stopping service',
     );
     _active = false;
