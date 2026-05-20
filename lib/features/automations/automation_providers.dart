@@ -583,8 +583,24 @@ class AutomationsNotifier extends Notifier<AsyncValue<List<Automation>>> {
     ref.read(_logRevisionProvider.notifier).bump();
   }
 
-  Future<void> addFromTemplate(String templateId) async {
-    final automation = AutomationRepository.createTemplate(templateId);
+  Future<void> addFromTemplate(
+    String templateId, {
+    TriggerProtocolFilter protocolFilter = TriggerProtocolFilter.any,
+  }) async {
+    var automation = AutomationRepository.createTemplate(templateId);
+    if (protocolFilter != TriggerProtocolFilter.any) {
+      // `protocolFilter` lives inside `AutomationTrigger.config` as its
+      // serialised enum-name string; rewrite the config map to pin the
+      // template to the requested protocol.
+      automation = automation.copyWith(
+        trigger: automation.trigger.copyWith(
+          config: {
+            ...automation.trigger.config,
+            'protocolFilter': protocolFilter.name,
+          },
+        ),
+      );
+    }
     await addAutomation(automation);
   }
 }

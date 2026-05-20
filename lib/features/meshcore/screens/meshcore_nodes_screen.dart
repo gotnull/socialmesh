@@ -245,7 +245,7 @@ class _MeshCoreNodesScreenState extends ConsumerState<MeshCoreNodesScreen>
         actionLabel: l10n.meshcoreContactsFilteredEmptyAction,
         actionIcon: Icons.clear_all_rounded,
         onAction: () => setState(() => _activeFilter = _MeshCoreNodeFilter.all),
-        accentColor: AccentColors.cyan,
+        accentColor: context.accentColor,
       ),
     );
   }
@@ -272,7 +272,7 @@ class _MeshCoreNodesScreenState extends ConsumerState<MeshCoreNodesScreen>
         actionLabel: context.l10n.meshcoreAddContactButton,
         actionIcon: Icons.person_add_rounded,
         onAction: _showAddContactOptions,
-        accentColor: AccentColors.cyan,
+        accentColor: context.accentColor,
       ),
     );
   }

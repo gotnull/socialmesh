@@ -72,6 +72,22 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
     _loadMapStyle();
   }
 
+  // Resolve the picker's active filter from the connected protocol.
+  // Mirrors the helper in `automations_screen.dart`. Used by
+  // `_loadConfig` to seed `_protocolFilter` for users who have never
+  // tapped the protocol scope pill.
+  TriggerProtocolFilter _activeProtocolFilter() {
+    final active = ref.read(activeProtocolProvider);
+    switch (active) {
+      case ActiveProtocol.meshcore:
+        return TriggerProtocolFilter.meshcore;
+      case ActiveProtocol.meshtastic:
+        return TriggerProtocolFilter.meshtastic;
+      case ActiveProtocol.none:
+        return TriggerProtocolFilter.any;
+    }
+  }
+
   void _loadConfig() {
     final iftttService = ref.read(iftttServiceProvider);
     final config = iftttService.config;
@@ -82,10 +98,23 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen>
     _geofenceLatController.text = config.geofenceLat?.toStringAsFixed(6) ?? '';
     _geofenceLonController.text = config.geofenceLon?.toStringAsFixed(6) ?? '';
 
+    // When the saved config is still on the default `any` filter, seed
+    // the picker from the active shell so a MeshCore user lands on
+    // MeshCore-filtered toggles without having to tap the protocol pill
+    // themselves. Once the user explicitly picks a filter via the pill
+    // (and saves), `config.protocolFilter` becomes non-`any` and wins.
+    final saved = config.protocolFilter;
+    final activeFilter = _activeProtocolFilter();
+    final seededFilter =
+        saved == TriggerProtocolFilter.any &&
+            activeFilter != TriggerProtocolFilter.any
+        ? activeFilter
+        : saved;
+
     safeSetState(() {
       _enabled = config.enabled;
       _webhookMode = config.webhookMode;
-      _protocolFilter = config.protocolFilter;
+      _protocolFilter = seededFilter;
       _messageReceived = config.messageReceived;
       _nodeOnline = config.nodeOnline;
       _nodeOffline = config.nodeOffline;

@@ -183,7 +183,7 @@ class _MeshCoreMessagingScreenState
         actionIcon: Icons.clear_all_rounded,
         onAction: () =>
             setState(() => _activeFilter = _MeshCoreConversationFilter.all),
-        accentColor: AccentColors.cyan,
+        accentColor: context.accentColor,
       ),
     );
   }
@@ -205,7 +205,7 @@ class _MeshCoreMessagingScreenState
         titlePrefix: context.l10n.meshcoreMessagingEmptyTitlePrefix,
         titleKeyword: context.l10n.meshcoreMessagingEmptyTitleKeyword,
         titleSuffix: context.l10n.meshcoreMessagingEmptyTitleSuffix,
-        accentColor: AccentColors.cyan,
+        accentColor: context.accentColor,
       ),
     );
   }

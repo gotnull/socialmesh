@@ -105,14 +105,27 @@ class AutomationsScreen extends ConsumerWidget {
           ),
         ],
         slivers: automationsAsync.when(
-          data: (automations) {
+          data: (allAutomations) {
+            // Hide automations whose `trigger.protocolFilter` is pinned
+            // to the OTHER protocol from the active shell. They still
+            // exist in storage and re-appear when the shell switches
+            // back; the editor will not silently delete them. This is
+            // a view filter only.
+            final activeFilter = _activeProtocolFilter(ref);
+            final automations = allAutomations.where((a) {
+              final pinned = a.trigger.protocolFilter;
+              if (pinned == TriggerProtocolFilter.any) return true;
+              if (activeFilter == TriggerProtocolFilter.any) return true;
+              return pinned == activeFilter;
+            }).toList();
             if (automations.isEmpty) {
               AppLogging.automations('screen RENDER -> EMPTY (Quick Start)');
               return _buildEmptyStateSlivers(context, ref);
             }
             AppLogging.automations(
               'screen RENDER -> LIST '
-              '(count=${automations.length})',
+              '(count=${automations.length} '
+              'hidden=${allAutomations.length - automations.length})',
             );
             return _buildAutomationsListSlivers(
               context,
@@ -334,7 +347,19 @@ class AutomationsScreen extends ConsumerWidget {
     WidgetRef ref,
     bool hasAutomationsPack,
   ) {
-    final templates = AutomationRepository.templates;
+    final activeFilter = _activeProtocolFilter(ref);
+    // When pinned to MeshCore, drop templates whose underlying trigger
+    // cannot fire on MeshCore (e.g. `low_battery_alert` uses
+    // `TriggerType.batteryLow`, unsupported on MeshCore per the
+    // compatibility matrix). Templates without a known trigger mapping
+    // are kept (caller-side override).
+    final templates = AutomationRepository.templates.where((template) {
+      if (activeFilter != TriggerProtocolFilter.meshcore) return true;
+      final triggerType = AutomationRepository.templateTriggerType(template.id);
+      if (triggerType == null) return true;
+      return triggerType.supportOn(TriggerProtocol.meshcore) !=
+          ProtocolSupport.unsupported;
+    }).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -455,7 +480,10 @@ class AutomationsScreen extends ConsumerWidget {
     WidgetRef ref,
     bool hasAutomationsPack,
   ) {
-    final triggersByCategory = _getTriggersByCategory();
+    final activeFilter = _activeProtocolFilter(ref);
+    final triggersByCategory = _getTriggersByCategory(
+      activeFilter: activeFilter,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -561,13 +589,41 @@ class AutomationsScreen extends ConsumerWidget {
     );
   }
 
-  Map<String, List<TriggerType>> _getTriggersByCategory() {
+  // Active-protocol-aware grouping. When the user is in the MeshCore
+  // shell (`activeProtocolProvider == meshcore`), trigger types that
+  // are `unsupported` on MeshCore (battery telemetry, sensor) drop out
+  // of the grouped list entirely. `partial` triggers still surface so
+  // the user can pick them, with a "Limited on MeshCore" warning chip
+  // applied at render time.
+  Map<String, List<TriggerType>> _getTriggersByCategory({
+    TriggerProtocolFilter activeFilter = TriggerProtocolFilter.any,
+  }) {
     final grouped = <String, List<TriggerType>>{};
     for (final type in TriggerType.values) {
+      if (activeFilter == TriggerProtocolFilter.meshcore &&
+          type.supportOn(TriggerProtocol.meshcore) ==
+              ProtocolSupport.unsupported) {
+        continue;
+      }
       final category = type.category;
       grouped.putIfAbsent(category, () => []).add(type);
     }
     return grouped;
+  }
+
+  // Resolve the picker's active filter from the connected protocol.
+  // `none` (no device) falls back to `any` so the screen still shows
+  // every trigger for a freshly-installed user with no radio paired.
+  TriggerProtocolFilter _activeProtocolFilter(WidgetRef ref) {
+    final active = ref.watch(activeProtocolProvider);
+    switch (active) {
+      case ActiveProtocol.meshcore:
+        return TriggerProtocolFilter.meshcore;
+      case ActiveProtocol.meshtastic:
+        return TriggerProtocolFilter.meshtastic;
+      case ActiveProtocol.none:
+        return TriggerProtocolFilter.any;
+    }
   }
 
   static const _categoryOrder = [
@@ -802,9 +858,31 @@ class AutomationsScreen extends ConsumerWidget {
       return;
     }
 
+    // Pre-pin the protocol filter from the active shell so the editor
+    // opens with MeshCore-only (or Meshtastic-only) trigger / action
+    // pickers when the user is connected to a single protocol. Falls
+    // back to `any` when no device is paired.
+    final activeFilter = _activeProtocolFilter(ref);
+    Automation? seed;
+    if (activeFilter != TriggerProtocolFilter.any) {
+      seed = Automation(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        name: '',
+        trigger: AutomationTrigger(
+          type: TriggerType.messageReceived,
+          config: {'protocolFilter': activeFilter.name},
+        ),
+        actions: const [AutomationAction(type: ActionType.pushNotification)],
+        enabled: true,
+        createdAt: DateTime.now(),
+      );
+    }
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const AutomationEditorScreen()),
+      MaterialPageRoute(
+        builder: (context) =>
+            AutomationEditorScreen(automation: seed, isNew: seed != null),
+      ),
     );
   }
 
@@ -824,12 +902,20 @@ class AutomationsScreen extends ConsumerWidget {
       return;
     }
 
-    // Create a new automation with pre-filled trigger type
+    // Create a new automation with pre-filled trigger type. Inherit
+    // the active shell's protocol filter so the editor opens already
+    // pinned (and the matrix gating drives the downstream pickers).
+    final activeFilter = _activeProtocolFilter(ref);
     final automation = Automation(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: '${triggerType.displayName} Alert',
       description: triggerType.defaultDescription,
-      trigger: AutomationTrigger(type: triggerType),
+      trigger: AutomationTrigger(
+        type: triggerType,
+        config: activeFilter == TriggerProtocolFilter.any
+            ? const {}
+            : {'protocolFilter': activeFilter.name},
+      ),
       actions: [const AutomationAction(type: ActionType.pushNotification)],
       enabled: true,
       createdAt: DateTime.now(),
@@ -872,7 +958,10 @@ class AutomationsScreen extends ConsumerWidget {
       return;
     }
 
-    await ref.read(automationsProvider.notifier).addFromTemplate(templateId);
+    final activeFilter = _activeProtocolFilter(ref);
+    await ref
+        .read(automationsProvider.notifier)
+        .addFromTemplate(templateId, protocolFilter: activeFilter);
     if (context.mounted) {
       showSuccessSnackBar(
         context,

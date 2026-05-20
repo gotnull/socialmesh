@@ -672,6 +672,34 @@ class AutomationRepository extends ChangeNotifier {
     }
   }
 
+  /// Returns the primary `TriggerType` used by [templateId], or `null`
+  /// if no template matches. Used by the Automations screen to drive
+  /// protocol-aware filtering: templates whose trigger is `unsupported`
+  /// on the active protocol are hidden from the Quick Start list so a
+  /// MeshCore user never sees `low_battery_alert` as a suggestion.
+  static TriggerType? templateTriggerType(String templateId) {
+    switch (templateId) {
+      case 'low_battery_alert':
+        return TriggerType.batteryLow;
+      case 'node_offline_alert':
+        return TriggerType.nodeOffline;
+      case 'geofence_exit':
+        return TriggerType.geofenceExit;
+      case 'sos_response':
+        return TriggerType.messageContains;
+      case 'dead_mans_switch':
+        return TriggerType.nodeSilent;
+      case 'weather_report':
+        return TriggerType.scheduled;
+      case 'channel_monitor':
+        return TriggerType.channelActivity;
+      case 'emergency_beacon':
+        return TriggerType.messageContains;
+      default:
+        return null;
+    }
+  }
+
   /// Get available templates
   static List<({String id, String name, String description, IconData icon})>
   get templates {
