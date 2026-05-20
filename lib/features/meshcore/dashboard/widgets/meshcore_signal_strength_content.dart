@@ -8,6 +8,7 @@ import '../../../../core/l10n/l10n_extension.dart';
 import '../../../../core/theme.dart';
 import '../../../../models/meshcore_contact.dart';
 import '../../../../providers/meshcore_providers.dart';
+import 'meshcore_widget_empty_state.dart';
 
 /// MeshCore-flavoured equivalent of `SignalStrengthContent`. Meshtastic
 /// has a continuous RSSI stream from the active radio; MeshCore peers
@@ -29,27 +30,9 @@ class MeshCoreSignalStrengthContent extends ConsumerWidget {
         .toList();
 
     if (contactsWithSnr.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(AppTheme.spacing24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.signal_cellular_off_rounded,
-              size: 32,
-              color: context.textTertiary,
-            ),
-            const SizedBox(height: AppTheme.spacing8),
-            Text(
-              l10n.meshcoreWidgetSignalEmpty,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: context.textSecondary,
-              ),
-            ),
-          ],
-        ),
+      return MeshCoreWidgetEmptyState(
+        icon: Icons.signal_cellular_off_rounded,
+        title: l10n.meshcoreWidgetSignalEmpty,
       );
     }
 

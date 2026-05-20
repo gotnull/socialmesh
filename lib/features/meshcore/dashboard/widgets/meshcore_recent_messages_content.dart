@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/l10n/l10n_extension.dart';
 import '../../../../core/theme.dart';
 import '../../../../providers/meshcore_message_providers.dart';
+import 'meshcore_widget_empty_state.dart';
 
 /// MeshCore-flavoured equivalent of `RecentMessagesContent`. Top 5
 /// conversations sorted by most-recent message time, showing name +
@@ -28,23 +29,9 @@ class MeshCoreRecentMessagesContent extends ConsumerWidget {
     final top = withMessages.take(5).toList();
 
     if (top.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(AppTheme.spacing24),
-        child: Column(
-          children: [
-            Icon(
-              Icons.chat_bubble_outline,
-              size: 32,
-              color: context.textTertiary,
-            ),
-            const SizedBox(height: AppTheme.spacing8),
-            Text(
-              l10n.meshcoreNoMessagesYet,
-              style: TextStyle(color: context.textTertiary, fontSize: 13),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+      return MeshCoreWidgetEmptyState(
+        icon: Icons.chat_bubble_outline,
+        title: l10n.meshcoreNoMessagesYet,
       );
     }
 

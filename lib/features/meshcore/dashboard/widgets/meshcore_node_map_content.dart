@@ -16,6 +16,7 @@ import '../../../../providers/app_providers.dart';
 import '../../../../providers/meshcore_providers.dart';
 import '../../../navigation/meshcore_shell.dart';
 import '../../widgets/meshcore_sigil_avatar.dart';
+import 'meshcore_widget_empty_state.dart';
 
 /// MeshCore-flavoured equivalent of `NodeMapContent`. Compact map embed
 /// that renders contacts with a known location. Tapping the surface
@@ -195,34 +196,10 @@ class MeshCoreNodeMapContent extends ConsumerWidget {
 
   Widget _buildEmptyState(BuildContext context) {
     final l10n = context.l10n;
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.map_outlined,
-            size: 32,
-            color: context.textTertiary.withValues(alpha: 0.5),
-          ),
-          const SizedBox(height: AppTheme.spacing8),
-          Text(
-            l10n.meshcoreWidgetNodeMapEmptyTitle,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: context.textSecondary,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing4),
-          Text(
-            l10n.meshcoreWidgetNodeMapEmptySubtitle,
-            style: Theme.of(
-              context,
-            ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+    return MeshCoreWidgetEmptyState(
+      icon: Icons.map_outlined,
+      title: l10n.meshcoreWidgetNodeMapEmptyTitle,
+      subtitle: l10n.meshcoreWidgetNodeMapEmptySubtitle,
     );
   }
 
