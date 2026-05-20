@@ -58,6 +58,91 @@ void main() {
     },
   );
 
+  test(
+    'device switch: prev=connected (other device) -> next=connected (target) '
+    'advances the flow via connectionSessionId edge',
+    () async {
+      // Regression: a user disconnecting from device A while device B was
+      // also still recorded as `connected` would leave the
+      // OnboardingConnecting listener wedged. The state-edge guard
+      // `previous.state != connected` blocks because both prev and next
+      // are `connected`, so the session-id advance is the only signal
+      // that the target just landed. Without that branch the user gets
+      // stuck on Scanner indefinitely.
+      final protocol = FakeOnboardingProtocolService();
+      final container = buildOnboardingTestContainer(protocol: protocol);
+      addTearDown(container.dispose);
+
+      // Seed the deviceConnectionProvider as already-connected to a
+      // prior device (simulates a stale auto-reconnect that landed
+      // before the user tapped a different target).
+      final priorDevice = testDevice(id: 'prior-device');
+      setConnectionState(
+        container,
+        state: DevicePairingState.connected,
+        device: priorDevice,
+        sessionId: 1,
+      );
+      await pumpMicrotasks();
+
+      // User taps the new target.
+      final newTarget = testDevice(id: 'new-target');
+      container
+          .read(meshtasticOnboardingFlowProvider.notifier)
+          .connect(newTarget);
+
+      // markAsPaired for the new target bumps sessionId but raw state
+      // stays `connected`.
+      setConnectionState(
+        container,
+        state: DevicePairingState.connected,
+        device: newTarget,
+        sessionId: 2,
+      );
+      await pumpMicrotasks();
+
+      expect(
+        container.read(meshtasticOnboardingFlowProvider),
+        isA<OnboardingCheckingConfig>(),
+        reason:
+            'Device switch with prev=connected (other device) and next='
+            "connected (target) must advance via the connectionSessionId "
+            "edge so the flow does not wedge on Scanner.",
+      );
+    },
+  );
+
+  test('session edge guard requires next.device.id matches target', () async {
+    // Negative case: even if connectionSessionId advances, the flow
+    // must NOT advance when next.device.id is a different device. A
+    // background reconnect to an unrelated device cannot accidentally
+    // pull a manual-connect flow forward.
+    final protocol = FakeOnboardingProtocolService();
+    final container = buildOnboardingTestContainer(protocol: protocol);
+    addTearDown(container.dispose);
+
+    final target = testDevice(id: 'tapped-target');
+    container.read(meshtasticOnboardingFlowProvider.notifier).connect(target);
+
+    // sessionId advances but device.id does not match target.
+    final otherDevice = testDevice(id: 'unrelated');
+    setConnectionState(
+      container,
+      state: DevicePairingState.connected,
+      device: otherDevice,
+      sessionId: 7,
+    );
+    await pumpMicrotasks();
+
+    expect(
+      container.read(meshtasticOnboardingFlowProvider),
+      isA<OnboardingConnecting>(),
+      reason:
+          'A connected event for an unrelated device must not advance '
+          'the manual-connect flow even when the session id changes.',
+    );
+  });
+
   test('UNSET region during checkingConfig -> regionRequired', () async {
     final protocol = FakeOnboardingProtocolService();
     final container = buildOnboardingTestContainer(protocol: protocol);

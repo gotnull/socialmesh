@@ -308,9 +308,26 @@ class MeshtasticOnboardingFlow extends Notifier<MeshtasticOnboardingState> {
       case OnboardingConnecting(:final target):
         // Scanner is doing transport.connect + protocol.start. Once
         // pairing-state hits `connected`, BLE link + protocol bootstrap
-        // are done; move into config-check.
-        if (next.state == DevicePairingState.connected &&
-            (previous?.state != DevicePairingState.connected)) {
+        // are done; move into config-check. Two edges count as "the
+        // target just landed":
+        //   (a) Classic `connecting -> connected`: previous state was
+        //       anything other than `connected`.
+        //   (b) Device switch: previous state was still `connected`
+        //       (to a *different* device) when the user tapped this
+        //       target, so `markAsPaired` bumps `connectionSessionId`
+        //       but the raw state stays `connected`. Without this
+        //       branch the listener wedges - the `prev != connected`
+        //       guard never fires and the shell stays on scanner.
+        // Both edges require `next.device.id == target.id` so a stale
+        // reconnect to an unrelated device cannot accidentally advance
+        // the flow.
+        final reachedTarget =
+            next.state == DevicePairingState.connected &&
+            next.device?.id == target.id;
+        final stateEdge = previous?.state != DevicePairingState.connected;
+        final sessionAdvanced =
+            previous?.connectionSessionId != next.connectionSessionId;
+        if (reachedTarget && (stateEdge || sessionAdvanced)) {
           _transitionTo(
             OnboardingCheckingConfig(target),
             reason: 'transport_connected',
