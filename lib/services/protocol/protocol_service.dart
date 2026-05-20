@@ -3941,8 +3941,14 @@ class ProtocolService {
       // (no GPS, no phone sync) may report rxTime as 0 or a small uptime
       // value. Historical messages replayed on connect inherit whatever
       // rxTime the device stored at original receipt — if the device had
-      // no clock then, rxTime will be invalid.
-      final timestamp = _plausibleTimestamp(packet);
+      // no clock then, rxTime will be invalid. Pass useChronologicalFallback
+      // so unknown-time packets sink to the top of the conversation rather
+      // than being re-stamped to DateTime.now() and out-sorting freshly-sent
+      // outbound messages.
+      final timestamp = _plausibleTimestamp(
+        packet,
+        useChronologicalFallback: true,
+      );
 
       final message = Message(
         id: Message.deterministicId(packetId: packet.id, fromNode: packet.from),
@@ -8876,8 +8882,22 @@ class ProtocolService {
   /// - after [_minPlausibleEpoch] (2020-01-01)
   /// - not more than [_maxFutureSlack] seconds into the future
   ///
-  /// Falls back to [DateTime.now] with a diagnostic log otherwise.
-  static DateTime _plausibleTimestamp(pb.MeshPacket packet) {
+  /// When validation fails the caller picks the fallback:
+  /// - `useChronologicalFallback: false` (default): returns
+  ///   [DateTime.now], i.e. "we just learned about this packet". Used by
+  ///   the lastHeard path so a brand-new node still surfaces as freshly
+  ///   heard; the monotonic guard in [_monotonicLastHeard] prevents a
+  ///   buffered packet from rewinding an existing node's lastHeard.
+  /// - `useChronologicalFallback: true`: returns the
+  ///   [_minPlausibleEpoch] sentinel (2020-01-01). Used by the chat
+  ///   message decode path so packets whose firmware lacked a clock
+  ///   sink to the top of the conversation as "unknown old time"
+  ///   instead of being re-stamped to now and out-sorting the user's
+  ///   own recently-sent outbound message.
+  static DateTime _plausibleTimestamp(
+    pb.MeshPacket packet, {
+    bool useChronologicalFallback = false,
+  }) {
     if (packet.hasRxTime() && packet.rxTime > 0) {
       final rxEpoch = packet.rxTime; // seconds since 1970
       final nowEpoch = DateTime.now().millisecondsSinceEpoch ~/ 1000;
@@ -8885,18 +8905,31 @@ class ProtocolService {
           rxEpoch <= nowEpoch + _maxFutureSlack) {
         return DateTime.fromMillisecondsSinceEpoch(rxEpoch * 1000);
       }
-      AppLogging.protocol(
-        'Implausible rxTime=$rxEpoch from=${packet.from} '
-        'packetId=${packet.id} — falling back to local time',
-      );
-    } else {
-      AppLogging.protocol(
-        'Missing rxTime from=${packet.from} packetId=${packet.id} '
-        '— using local time (device may lack a time source)',
-      );
     }
-    return DateTime.now();
+    final fallback = useChronologicalFallback
+        ? DateTime.fromMillisecondsSinceEpoch(_minPlausibleEpoch * 1000)
+        : DateTime.now();
+    final rxTimeRepr = packet.hasRxTime() ? '${packet.rxTime}' : 'missing';
+    AppLogging.protocol(
+      'rxTime fallback: from=${packet.from} packetId=${packet.id} '
+      'rxTime=$rxTimeRepr fallback=$fallback '
+      'chronological=$useChronologicalFallback',
+    );
+    return fallback;
   }
+
+  @visibleForTesting
+  static DateTime debugPlausibleTimestamp(
+    pb.MeshPacket packet, {
+    bool useChronologicalFallback = false,
+  }) => _plausibleTimestamp(
+    packet,
+    useChronologicalFallback: useChronologicalFallback,
+  );
+
+  @visibleForTesting
+  static DateTime get debugChronologicalFallbackSentinel =>
+      DateTime.fromMillisecondsSinceEpoch(_minPlausibleEpoch * 1000);
 
   /// Local-only: set the device time to a specific Unix timestamp.
   ///

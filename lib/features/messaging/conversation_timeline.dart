@@ -640,6 +640,24 @@ List<ConversationTimelineRow> buildConversationTimelineRows(
     if (a.isOrphanPlaceholder != b.isOrphanPlaceholder) {
       return a.isOrphanPlaceholder ? 1 : -1;
     }
+    // Tiebreak by Meshtastic packetId numerically so the comparator does
+    // not accidentally let outbound digit IDs ('1747654920123') sort
+    // against inbound deterministic IDs ('pkt-<hex>-<hex>') via a string
+    // compare — that path produced the user-reported "my message sorts
+    // mid-list" symptom when timestamps collided. When only one side has
+    // a packetId, the row with a real packet (settled outbound echo or
+    // inbound) sorts after a still-pending outbound at the same
+    // timestamp, matching user intent ("my just-sent message goes last").
+    final aPacketId = a.message?.packetId;
+    final bPacketId = b.message?.packetId;
+    if (aPacketId != null && bPacketId != null) {
+      final packetCompare = aPacketId.compareTo(bPacketId);
+      if (packetCompare != 0) return packetCompare;
+    } else if (aPacketId != null) {
+      return -1;
+    } else if (bPacketId != null) {
+      return 1;
+    }
     return a.key.compareTo(b.key);
   });
 

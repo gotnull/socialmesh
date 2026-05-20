@@ -322,7 +322,15 @@ class BackgroundMessageProcessor {
   ///
   /// Mirrors [ProtocolService._plausibleTimestamp] so foreground and
   /// background paths produce identical timestamps for the same packet.
-  static DateTime _plausibleTimestamp(pb.MeshPacket packet) {
+  ///
+  /// When validation fails, `useChronologicalFallback: true` returns the
+  /// [_minPlausibleEpoch] sentinel so unknown-time chat packets sink to
+  /// the top of the conversation rather than being re-stamped to
+  /// [DateTime.now] and appearing newer than freshly-sent local messages.
+  static DateTime _plausibleTimestamp(
+    pb.MeshPacket packet, {
+    bool useChronologicalFallback = false,
+  }) {
     if (packet.hasRxTime() && packet.rxTime > 0) {
       final rxEpoch = packet.rxTime;
       final nowEpoch = DateTime.now().millisecondsSinceEpoch ~/ 1000;
@@ -330,12 +338,18 @@ class BackgroundMessageProcessor {
           rxEpoch <= nowEpoch + _maxFutureSlack) {
         return DateTime.fromMillisecondsSinceEpoch(rxEpoch * 1000);
       }
-      AppLogging.ble(
-        'BackgroundMessageProcessor: implausible rxTime=$rxEpoch '
-        'from=${packet.from} — falling back to local time',
-      );
     }
-    return DateTime.now();
+    final fallback = useChronologicalFallback
+        ? DateTime.fromMillisecondsSinceEpoch(_minPlausibleEpoch * 1000)
+        : DateTime.now();
+    final rxTimeRepr = packet.hasRxTime() ? '${packet.rxTime}' : 'missing';
+    AppLogging.ble(
+      'BackgroundMessageProcessor: rxTime fallback '
+      'from=${packet.from} packetId=${packet.id} '
+      'rxTime=$rxTimeRepr fallback=$fallback '
+      'chronological=$useChronologicalFallback',
+    );
+    return fallback;
   }
 
   Future<void> _handleTextMessage(pb.MeshPacket packet, pb.Data data) async {
@@ -393,8 +407,13 @@ class BackgroundMessageProcessor {
     //
     // Validate plausibility: devices without a time source may report 0
     // or a small uptime value. Reject anything before 2020-01-01 or more
-    // than 1 day into the future.
-    final timestamp = _plausibleTimestamp(packet);
+    // than 1 day into the future. useChronologicalFallback: true keeps
+    // chat ordering correct when the firmware lacks a clock by sinking
+    // those packets to the epoch sentinel.
+    final timestamp = _plausibleTimestamp(
+      packet,
+      useChronologicalFallback: true,
+    );
 
     final message = Message(
       id: Message.deterministicId(packetId: packet.id, fromNode: packet.from),
