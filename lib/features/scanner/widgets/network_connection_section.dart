@@ -15,6 +15,7 @@ import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/chip_selector.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../models/mesh_device.dart';
 import '../../../models/network_endpoint.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/connection_providers.dart';
@@ -23,6 +24,7 @@ import '../../../providers/network_endpoint_providers.dart';
 import '../../../services/haptic_service.dart';
 import '../../../services/transport/network_transport.dart';
 import '../../../utils/snackbar.dart';
+import 'protocol_badge.dart';
 
 /// Network connection section shown in the scanner screen.
 ///
@@ -447,29 +449,8 @@ class _EndpointCard extends StatelessWidget {
                           if (endpoint.protocol ==
                               NetworkEndpointProtocol.meshcore) ...[
                             const SizedBox(width: AppTheme.spacing8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AccentColors.purple.withValues(
-                                  alpha: 0.15,
-                                ),
-                                borderRadius: BorderRadius.circular(
-                                  AppTheme.radius4,
-                                ),
-                              ),
-                              child: Text(
-                                // Brand identifier; not localized.
-                                'MeshCore', // lint-allow: hardcoded-string
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: AccentColors.purple,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
+                            const ProtocolBadge(
+                              protocolType: MeshProtocolType.meshcore,
                             ),
                           ],
                         ],
@@ -635,7 +616,7 @@ class _AddEndpointFormState extends ConsumerState<_AddEndpointForm>
                     value: NetworkEndpointProtocol.meshcore,
                     label: l10n.networkProtocolMeshcoreDev,
                     icon: Icons.developer_mode,
-                    color: AccentColors.purple,
+                    color: AccentColors.cyan,
                   ),
                 ],
               ),
