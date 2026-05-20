@@ -42,8 +42,19 @@ class MeshCoreContactsScreen extends ConsumerStatefulWidget {
   // TabBarView. Mirrors `MessagingScreen.embedded`. Outer container
   // owns the app bar + tab selector when embedded.
   final bool embedded;
+  // When `true`, filter the contact list to only those with at least
+  // one persisted conversation (DM thread with messages). This is the
+  // "Messages -> Contacts" sub-tab role. When `false` (default), the
+  // full discovered-peer roster renders - that's the standalone Nodes
+  // tab role. Mirrors Meshtastic's MessagingScreen vs NodesScreen
+  // split into a single parameterised screen.
+  final bool conversationsOnly;
 
-  const MeshCoreContactsScreen({super.key, this.embedded = false});
+  const MeshCoreContactsScreen({
+    super.key,
+    this.embedded = false,
+    this.conversationsOnly = false,
+  });
 
   @override
   ConsumerState<MeshCoreContactsScreen> createState() =>
@@ -77,7 +88,15 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
     final deviceName = linkStatus.deviceName ?? 'MeshCore';
     final contactsState = ref.watch(meshCoreContactsProvider);
 
-    final allContacts = contactsState.contacts;
+    // Conversations-only mode (Messages -> Contacts sub-tab): keep
+    // only contacts whose pubkey has at least one persisted DM
+    // conversation. The conversations provider's contact entries are
+    // keyed by `publicKeyHex`; channel entries are excluded. Mirrors
+    // Meshtastic's MessagingScreen which shows DM threads, not the
+    // broader node roster.
+    final allContacts = widget.conversationsOnly
+        ? _filterToContactsWithConversations(contactsState.contacts)
+        : contactsState.contacts;
     var contacts = _applyFilter(allContacts);
     if (_searchQuery.isNotEmpty) {
       contacts = contacts.where((c) {
@@ -200,6 +219,25 @@ class _MeshCoreContactsScreenState extends ConsumerState<MeshCoreContactsScreen>
         body: body,
       ),
     );
+  }
+
+  // Restrict to contacts whose pubkey is present in the conversations
+  // provider's contact entries (channels excluded). Used by the
+  // Messages -> Contacts sub-tab to render only DM threads, not the
+  // full discovered roster.
+  List<MeshCoreContact> _filterToContactsWithConversations(
+    List<MeshCoreContact> contacts,
+  ) {
+    final convoIds = ref
+        .watch(meshCoreConversationsProvider)
+        .conversations
+        .where((c) => !c.isChannel)
+        .map((c) => c.id.toLowerCase())
+        .toSet();
+    if (convoIds.isEmpty) return const [];
+    return contacts
+        .where((c) => convoIds.contains(c.publicKeyHex.toLowerCase()))
+        .toList();
   }
 
   List<MeshCoreContact> _applyFilter(List<MeshCoreContact> contacts) {

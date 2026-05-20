@@ -93,7 +93,11 @@ class _MeshCoreMessagesContainerScreenState
           child: TabBarView(
             controller: _tabController,
             children: const [
-              MeshCoreContactsScreen(embedded: true),
+              // Contacts sub-tab inside Messages: only contacts with
+              // an active DM conversation. The full roster (every
+              // discovered peer) lives on the standalone Nodes
+              // top-level tab.
+              MeshCoreContactsScreen(embedded: true, conversationsOnly: true),
               MeshCoreChannelsScreen(embedded: true),
             ],
           ),

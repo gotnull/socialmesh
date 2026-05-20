@@ -11,6 +11,7 @@ import '../../core/navigation.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/legal_document_sheet.dart';
 import '../../core/widgets/qr_share_sheet.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../providers/app_providers.dart';
@@ -29,7 +30,8 @@ import '../meshcore/screens/meshcore_map_screen.dart';
 import '../meshcore/screens/meshcore_settings_screen.dart';
 import '../meshcore/screens/meshcore_qr_scanner_screen.dart';
 import '../meshcore/widgets/meshcore_device_sheet.dart';
-import '../meshcore/widgets/meshcore_drawer_menu_tile.dart';
+import 'widgets/drawer_menu_tile.dart';
+import 'widgets/drawer_sticky_header.dart';
 import '../settings/ifttt_config_screen.dart';
 import '../settings/ringtone_screen.dart';
 import '../settings/theme_settings_screen.dart';
@@ -519,10 +521,17 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
         (currentMode == ThemeMode.system &&
             MediaQuery.platformBrightnessOf(context) == Brightness.dark);
     final dividerAlpha = isDark ? 0.1 : 0.2;
+    final l10n = context.l10n;
 
+    // Drawer structure mirrors `_MainDrawer` in `main_shell.dart`:
+    // header -> divider -> Expanded(CustomScrollView with sliver
+    // sections) -> divider -> footer Row(settings cog). Each section
+    // uses `SliverPersistentHeader(DrawerStickyHeaderDelegate)` for
+    // the section title and `SliverList` of canonical `DrawerMenuTile`
+    // entries. Customization (reorder / hide) is Meshtastic-only
+    // today and intentionally out of scope here.
     return Drawer(
       backgroundColor: theme.scaffoldBackgroundColor,
-      // Same rounded corners as MainShell
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           topRight: Radius.circular(24),
@@ -531,236 +540,293 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
       ),
       child: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Node Info Header - matches MainShell _DrawerNodeHeader.
-            // D-S3: tapping the sigil avatar opens the device sheet
-            // (the MeshCore "this is me" surface, analogous to
-            // Meshtastic's NodeDexDetailScreen of self).
             MeshCoreDrawerNodeHeader(
               onSelfTap: () {
-                Navigator.of(context).maybePop(); // close the drawer
+                Navigator.of(context).maybePop();
                 showMeshCoreDeviceSheet(context);
               },
             ),
-
-            // Divider after header
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Divider(
                 color: theme.dividerColor.withValues(alpha: dividerAlpha),
               ),
             ),
-
-            // Menu items
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                children: [
-                  // MeshCore section header
-                  _buildSectionHeader(
-                    context.l10n.meshcoreShellDrawerSectionHeader,
-                  ),
+              child: CustomScrollView(
+                slivers: [
+                  const SliverPadding(padding: EdgeInsets.only(top: 8)),
 
-                  MeshCoreDrawerMenuTile(
-                    icon: Icons.person_add_rounded,
-                    label: context.l10n.meshcoreShellDrawerAddContact,
-                    iconColor: AccentColors.cyan,
-                    onTap: () {
-                      ref.haptics.tabChange();
-                      Navigator.pop(context);
-                      _showAddContact();
-                    },
-                  ),
-                  const SizedBox(height: AppTheme.spacing4),
-                  MeshCoreDrawerMenuTile(
-                    icon: Icons.add_rounded,
-                    label: context.l10n.meshcoreShellDrawerAddChannel,
-                    iconColor: context.accentColor,
-                    onTap: () {
-                      ref.haptics.tabChange();
-                      Navigator.pop(context);
-                      _showAddChannel();
-                    },
-                  ),
-                  const SizedBox(height: AppTheme.spacing4),
-                  MeshCoreDrawerMenuTile(
-                    icon: Icons.radar_rounded,
-                    label: context.l10n.meshcoreShellDrawerDiscoverContacts,
-                    iconColor: AccentColors.green,
-                    onTap: () {
-                      ref.haptics.tabChange();
-                      Navigator.pop(context);
-                      _showDiscoverContacts();
-                    },
-                  ),
-                  const SizedBox(height: AppTheme.spacing4),
-                  MeshCoreDrawerMenuTile(
-                    icon: Icons.qr_code_rounded,
-                    label: context.l10n.meshcoreShellDrawerMyContactCode,
-                    iconColor: AccentColors.orange,
-                    onTap: () {
-                      ref.haptics.tabChange();
-                      Navigator.pop(context);
-                      _showMyContactCode();
-                    },
-                  ),
-
-                  const SizedBox(height: AppTheme.spacing8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Divider(
-                      color: theme.dividerColor.withValues(alpha: dividerAlpha),
+                  // MESHCORE section: protocol-specific entries that
+                  // only make sense in the MeshCore shell.
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: DrawerStickyHeaderDelegate(
+                      title: l10n.meshcoreShellDrawerSectionHeader,
+                      theme: theme,
                     ),
                   ),
-                  const SizedBox(height: AppTheme.spacing8),
-
-                  MeshCoreDrawerMenuTile(
-                    icon: Icons.build_outlined,
-                    label: context.l10n.meshcoreShellNavTools,
-                    iconColor: SemanticColors.muted,
-                    onTap: () {
-                      ref.haptics.tabChange();
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                          builder: (_) => const MeshCoreToolsScreen(),
-                        ),
-                      );
-                    },
+                  _buildSectionTiles(
+                    theme: theme,
+                    dividerAlpha: dividerAlpha,
+                    isLastSection: false,
+                    tiles: [
+                      DrawerMenuTile(
+                        icon: Icons.person_add_rounded,
+                        label: l10n.meshcoreShellDrawerAddContact,
+                        isSelected: false,
+                        iconColor: AccentColors.cyan,
+                        onTap: () {
+                          ref.haptics.tabChange();
+                          Navigator.pop(context);
+                          _showAddContact();
+                        },
+                      ),
+                      DrawerMenuTile(
+                        icon: Icons.add_rounded,
+                        label: l10n.meshcoreShellDrawerAddChannel,
+                        isSelected: false,
+                        iconColor: context.accentColor,
+                        onTap: () {
+                          ref.haptics.tabChange();
+                          Navigator.pop(context);
+                          _showAddChannel();
+                        },
+                      ),
+                      DrawerMenuTile(
+                        icon: Icons.radar_rounded,
+                        label: l10n.meshcoreShellDrawerDiscoverContacts,
+                        isSelected: false,
+                        iconColor: AccentColors.green,
+                        onTap: () {
+                          ref.haptics.tabChange();
+                          Navigator.pop(context);
+                          _showDiscoverContacts();
+                        },
+                      ),
+                      DrawerMenuTile(
+                        icon: Icons.qr_code_rounded,
+                        label: l10n.meshcoreShellDrawerMyContactCode,
+                        isSelected: false,
+                        iconColor: AccentColors.orange,
+                        onTap: () {
+                          ref.haptics.tabChange();
+                          Navigator.pop(context);
+                          _showMyContactCode();
+                        },
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: AppTheme.spacing4),
-                  MeshCoreDrawerMenuTile(
-                    icon: Icons.settings_outlined,
-                    label: context.l10n.meshcoreShellDrawerSettings,
-                    iconColor: SemanticColors.muted,
+
+                  // TOOLS section: Tools + Settings sit under a Tools
+                  // header so the section breaks read consistently
+                  // with Meshtastic's grouped layout.
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: DrawerStickyHeaderDelegate(
+                      title: l10n.navigationSectionTools,
+                      theme: theme,
+                    ),
+                  ),
+                  _buildSectionTiles(
+                    theme: theme,
+                    dividerAlpha: dividerAlpha,
+                    isLastSection: false,
+                    tiles: [
+                      DrawerMenuTile(
+                        icon: Icons.build_outlined,
+                        label: l10n.meshcoreShellNavTools,
+                        isSelected: false,
+                        iconColor: SemanticColors.muted,
+                        onTap: () {
+                          ref.haptics.tabChange();
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => const MeshCoreToolsScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+
+                  // PREMIUM section: cross-protocol entries that
+                  // landed during Phases 3-4. `isLocked` reflects the
+                  // user's `hasFeatureProvider` for each entitlement.
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: DrawerStickyHeaderDelegate(
+                      title: l10n.navigationSectionPremium,
+                      theme: theme,
+                    ),
+                  ),
+                  _buildSectionTiles(
+                    theme: theme,
+                    dividerAlpha: dividerAlpha,
+                    isLastSection: true,
+                    tiles: [
+                      DrawerMenuTile(
+                        icon: Icons.palette_outlined,
+                        label: l10n.navigationThemePack,
+                        isSelected: false,
+                        isPremium: true,
+                        isLocked: !ref.watch(
+                          hasFeatureProvider(PremiumFeature.premiumThemes),
+                        ),
+                        iconColor: AccentColors.purple,
+                        onTap: () {
+                          ref.haptics.tabChange();
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => const ThemeSettingsScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      DrawerMenuTile(
+                        icon: Icons.music_note_outlined,
+                        label: l10n.navigationRingtonePack,
+                        isSelected: false,
+                        isPremium: true,
+                        isLocked: !ref.watch(
+                          hasFeatureProvider(PremiumFeature.customRingtones),
+                        ),
+                        iconColor: AccentColors.pink,
+                        onTap: () {
+                          ref.haptics.tabChange();
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => const RingtoneScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      DrawerMenuTile(
+                        icon: Icons.widgets_outlined,
+                        label: l10n.navigationWidgets,
+                        isSelected: false,
+                        isPremium: true,
+                        isLocked: !ref.watch(
+                          hasFeatureProvider(PremiumFeature.homeWidgets),
+                        ),
+                        iconColor: AccentColors.coral,
+                        onTap: () {
+                          ref.haptics.tabChange();
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => const WidgetBuilderScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      DrawerMenuTile(
+                        icon: Icons.auto_awesome,
+                        label: l10n.navigationAutomations,
+                        isSelected: false,
+                        isPremium: true,
+                        isLocked: !ref.watch(
+                          hasFeatureProvider(PremiumFeature.automations),
+                        ),
+                        iconColor: AccentColors.yellow,
+                        onTap: () {
+                          ref.haptics.tabChange();
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => const AutomationsScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      DrawerMenuTile(
+                        icon: Icons.webhook_outlined,
+                        label: l10n.navigationIftttIntegration,
+                        isSelected: false,
+                        isPremium: true,
+                        isLocked: !ref.watch(
+                          hasFeatureProvider(PremiumFeature.iftttIntegration),
+                        ),
+                        iconColor: AccentColors.sky,
+                        onTap: () {
+                          ref.haptics.tabChange();
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => const IftttConfigScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+
+                  // Bottom Help & Support tile, matches MainShell.
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: Divider(
+                        color: theme.dividerColor.withValues(
+                          alpha: dividerAlpha,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    sliver: SliverToBoxAdapter(
+                      child: DrawerMenuTile(
+                        icon: Icons.help_outline,
+                        label: l10n.navigationHelpSupport,
+                        isSelected: false,
+                        iconColor: AccentColors.blue,
+                        onTap: () {
+                          ref.haptics.tabChange();
+                          Navigator.of(context).pop();
+                          LegalDocumentSheet.showSupport(context);
+                        },
+                      ),
+                    ),
+                  ),
+                  const SliverPadding(padding: EdgeInsets.only(bottom: 8)),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Divider(
+                color: theme.dividerColor.withValues(alpha: dividerAlpha),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppTheme.spacing16,
+                12,
+                16,
+                16,
+              ),
+              child: Row(
+                children: [
+                  _MeshCoreSettingsCog(
                     onTap: () {
-                      ref.haptics.tabChange();
                       Navigator.pop(context);
                       Navigator.push(
                         context,
                         MaterialPageRoute<void>(
                           builder: (_) => const MeshCoreSettingsScreen(),
-                        ),
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: AppTheme.spacing8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Divider(
-                      color: theme.dividerColor.withValues(alpha: dividerAlpha),
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spacing8),
-
-                  // PREMIUM section - mirrors MainShell drawer. Each
-                  // entry routes to the canonical cross-protocol screen
-                  // that landed during Phases 3-4: Automations + IFTTT
-                  // now read meshcore events natively, Theme / Ringtone
-                  // / Widget Builder are already protocol-agnostic. The
-                  // `isLocked` flag drives a small lock badge mirroring
-                  // `DrawerMenuTile.isLocked` so unowned tiles read
-                  // consistently across both shells. Tap still routes
-                  // through; entitlement enforcement happens inside the
-                  // destination screen (paywall sheet).
-                  _buildSectionHeader(context.l10n.navigationSectionPremium),
-
-                  MeshCoreDrawerMenuTile(
-                    icon: Icons.palette_outlined,
-                    label: context.l10n.navigationThemePack,
-                    iconColor: AccentColors.purple,
-                    isLocked: !ref.watch(
-                      hasFeatureProvider(PremiumFeature.premiumThemes),
-                    ),
-                    onTap: () {
-                      ref.haptics.tabChange();
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                          builder: (_) => const ThemeSettingsScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: AppTheme.spacing4),
-                  MeshCoreDrawerMenuTile(
-                    icon: Icons.music_note_outlined,
-                    label: context.l10n.navigationRingtonePack,
-                    iconColor: AccentColors.pink,
-                    isLocked: !ref.watch(
-                      hasFeatureProvider(PremiumFeature.customRingtones),
-                    ),
-                    onTap: () {
-                      ref.haptics.tabChange();
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                          builder: (_) => const RingtoneScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: AppTheme.spacing4),
-                  MeshCoreDrawerMenuTile(
-                    icon: Icons.widgets_outlined,
-                    label: context.l10n.navigationWidgets,
-                    iconColor: AccentColors.coral,
-                    isLocked: !ref.watch(
-                      hasFeatureProvider(PremiumFeature.homeWidgets),
-                    ),
-                    onTap: () {
-                      ref.haptics.tabChange();
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                          builder: (_) => const WidgetBuilderScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: AppTheme.spacing4),
-                  MeshCoreDrawerMenuTile(
-                    icon: Icons.auto_awesome,
-                    label: context.l10n.navigationAutomations,
-                    iconColor: AccentColors.yellow,
-                    isLocked: !ref.watch(
-                      hasFeatureProvider(PremiumFeature.automations),
-                    ),
-                    onTap: () {
-                      ref.haptics.tabChange();
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                          builder: (_) => const AutomationsScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: AppTheme.spacing4),
-                  MeshCoreDrawerMenuTile(
-                    icon: Icons.webhook_outlined,
-                    label: context.l10n.navigationIftttIntegration,
-                    iconColor: AccentColors.sky,
-                    isLocked: !ref.watch(
-                      hasFeatureProvider(PremiumFeature.iftttIntegration),
-                    ),
-                    onTap: () {
-                      ref.haptics.tabChange();
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                          builder: (_) => const IftttConfigScreen(),
                         ),
                       );
                     },
@@ -774,27 +840,37 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 12, bottom: 8, top: 8),
-      child: Row(
-        children: [
-          Icon(
-            Icons.router_rounded,
-            size: 14,
-            color: AccentColors.cyan.withValues(alpha: 0.7),
-          ),
-          const SizedBox(width: AppTheme.spacing6),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 1.2,
-              color: AccentColors.cyan.withValues(alpha: 0.7),
-            ),
-          ),
-        ],
+  // Builds a section's SliverList with the canonical Meshtastic
+  // inter-tile spacing (`SizedBox(height: spacing4)` between
+  // consecutive tiles) plus a section-end divider when the section
+  // isn't the last one. Mirrors the per-section render in
+  // `MainShell._buildDrawerMenuSlivers` so the visual rhythm between
+  // tiles + section breaks reads identically across both shells.
+  Widget _buildSectionTiles({
+    required ThemeData theme,
+    required double dividerAlpha,
+    required List<Widget> tiles,
+    required bool isLastSection,
+  }) {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final isLastInSection = index == tiles.length - 1;
+          return Column(
+            children: [
+              tiles[index],
+              if (!isLastInSection) const SizedBox(height: AppTheme.spacing4),
+              if (isLastInSection && !isLastSection)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, bottom: 4),
+                  child: Divider(
+                    color: theme.dividerColor.withValues(alpha: dividerAlpha),
+                  ),
+                ),
+            ],
+          );
+        }, childCount: tiles.length),
       ),
     );
   }
@@ -916,6 +992,42 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
       subtitle: context.l10n.meshcoreShellScanToAddContact,
       qrData: shareCode,
       infoText: context.l10n.meshcoreShellShareContactInfo,
+    );
+  }
+}
+
+// Circular settings-cog button shown in the drawer footer, mirroring
+// `_SettingsButton` in MainShell. Same shape (44x44 circle with a
+// hairline border) so the two shells' footer rhythm matches.
+class _MeshCoreSettingsCog extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _MeshCoreSettingsCog({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: theme.dividerColor.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: Icon(
+          Icons.settings_outlined,
+          size: 22,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+        ),
+      ),
     );
   }
 }
