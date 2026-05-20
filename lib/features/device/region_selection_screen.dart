@@ -16,7 +16,6 @@ import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../providers/app_providers.dart';
-import '../../providers/connection_providers.dart' as conn;
 import '../../generated/meshtastic/config.pbenum.dart';
 import '../onboarding/meshtastic_onboarding_flow.dart';
 import '../onboarding/meshtastic_onboarding_state.dart';
@@ -222,14 +221,16 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
       '🌍 RegionSelection: Apply confirmed — checking device connection',
     );
 
-    // Check if device is still connected before attempting to apply region.
-    // The button is also gated on `isDeviceConnected` in build(), but this
-    // guard catches the race where the device disconnected between the
-    // tap and the confirmation dialog returning. We surface a snackbar
-    // here on top of the inline error message because the inline message
-    // sits at the top of the form - users on a long picker often miss it.
-    final connectionState = ref.read(conn.deviceConnectionProvider);
-    if (!connectionState.isConnected) {
+    // Check if the BLE link is still up before attempting to apply
+    // region. The button is also gated on `isLinkConnectedProvider` in
+    // build(), but this guard catches the race where BLE dropped
+    // between the tap and the confirmation dialog returning. We
+    // surface a snackbar here on top of the inline error message
+    // because the inline message sits at the top of the form - users
+    // on a long picker often miss it. Match the build-time gate's
+    // provider so the two checks agree.
+    final isLinkUp = ref.read(isLinkConnectedProvider);
+    if (!isLinkUp) {
       AppLogging.connection(
         '🌍 RegionSelection: BLOCKED — device disconnected before apply',
       );
@@ -422,17 +423,18 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
   @override
   Widget build(BuildContext context) {
     final regionState = ref.watch(regionConfigProvider);
-    // Watch the underlying connection state so the Apply button stays
-    // disabled while the transport is reconnecting / restoring. The
-    // picker can be opened during the RESTORE window (transport up,
-    // protocol still hydrating) - tapping Apply then hits the
-    // "BLOCKED - device disconnected before apply" guard in
-    // `_saveRegion` and bails silently. Watching here means the button
-    // greys out until the device is genuinely ready, so the user can't
-    // tap into the silent-bail path in the first place.
-    final isDeviceConnected = ref
-        .watch(conn.deviceConnectionProvider)
-        .isConnected;
+    // Watch the transport-level link state so the Apply button stays
+    // disabled while BLE is reconnecting / restoring, but stays enabled
+    // in steady-state operation. We deliberately use
+    // `isLinkConnectedProvider` (transport-level) rather than
+    // `deviceConnectionProvider.isConnected` (DevicePairingState):
+    // the pairing state machine transitions configuring -> connected
+    // only via `markAsPaired`, which doesn't re-fire on every reconnect
+    // path. Gating on that strict value left the button stuck disabled
+    // whenever the most recent reconnect landed in `configuring` and
+    // never advanced - even though the link was fully usable for
+    // messages, nodes, and admin commands.
+    final isDeviceConnected = ref.watch(isLinkConnectedProvider);
     final isApplying =
         _applying || regionState.applyStatus == RegionApplyStatus.applying;
     final statusText = regionState.applyStatus == RegionApplyStatus.failed
