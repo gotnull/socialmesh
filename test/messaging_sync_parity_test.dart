@@ -30,6 +30,15 @@ import 'package:socialmesh/core/transport.dart';
 int _testDbSeq = 0;
 final _testPid = pid;
 
+// Chronological-fallback sentinel: 2020-01-01 UTC. The chat decode path
+// (ProtocolService + BackgroundMessageProcessor) stamps packets with
+// missing or implausible rxTime to this value so they sink to the top of
+// the conversation instead of out-sorting freshly sent local messages.
+// Mirrors `_minPlausibleEpoch` (1577836800) in both services.
+final DateTime _chronologicalSentinel = DateTime.fromMillisecondsSinceEpoch(
+  1577836800 * 1000,
+);
+
 String _uniqueTestDbPath(String prefix) {
   final dir = Directory.systemTemp.path;
   return p.join(dir, '${prefix}_${_testPid}_${_testDbSeq++}.db');
@@ -238,7 +247,7 @@ void main() {
       );
     });
 
-    test('rxTime before 2020 is rejected — falls back to now', () async {
+    test('rxTime before 2020 sinks to chronological sentinel', () async {
       final processor = BackgroundMessageProcessor.instance;
       processor.initForTest(messageDb: msgDb, dedupeStore: dedupeStore);
       processor.start(transport);
@@ -246,8 +255,6 @@ void main() {
 
       // Epoch 100 — clearly a device-uptime value, not a real timestamp.
       const rxTime = 100;
-
-      final before = DateTime.now().subtract(const Duration(seconds: 2));
 
       transport.emitData(
         _buildTextPacket(
@@ -262,17 +269,14 @@ void main() {
 
       final msgs = await msgDb.loadConversation('channel:0');
       expect(msgs, isNotEmpty);
-      // Timestamp must be approximately now, not epoch 100.
-      expect(msgs.first.timestamp.isAfter(before), isTrue);
+      expect(msgs.first.timestamp, _chronologicalSentinel);
     });
 
-    test('rxTime = 0 falls back to now', () async {
+    test('rxTime = 0 sinks to chronological sentinel', () async {
       final processor = BackgroundMessageProcessor.instance;
       processor.initForTest(messageDb: msgDb, dedupeStore: dedupeStore);
       processor.start(transport);
       processor.processingEnabled = true;
-
-      final before = DateTime.now().subtract(const Duration(seconds: 2));
 
       transport.emitData(
         _buildTextPacket(
@@ -287,43 +291,37 @@ void main() {
 
       final msgs = await msgDb.loadConversation('channel:0');
       expect(msgs, isNotEmpty);
-      expect(msgs.first.timestamp.isAfter(before), isTrue);
+      expect(msgs.first.timestamp, _chronologicalSentinel);
     });
 
-    test('future rxTime beyond tolerance is rejected', () async {
-      final processor = BackgroundMessageProcessor.instance;
-      processor.initForTest(messageDb: msgDb, dedupeStore: dedupeStore);
-      processor.start(transport);
-      processor.processingEnabled = true;
+    test(
+      'future rxTime beyond tolerance sinks to chronological sentinel',
+      () async {
+        final processor = BackgroundMessageProcessor.instance;
+        processor.initForTest(messageDb: msgDb, dedupeStore: dedupeStore);
+        processor.start(transport);
+        processor.processingEnabled = true;
 
-      // 2 days into the future — beyond the 1-day tolerance.
-      final futureEpoch =
-          (DateTime.now().millisecondsSinceEpoch ~/ 1000) + 172800;
+        // 2 days into the future — beyond the 1-day tolerance.
+        final futureEpoch =
+            (DateTime.now().millisecondsSinceEpoch ~/ 1000) + 172800;
 
-      final before = DateTime.now().subtract(const Duration(seconds: 2));
+        transport.emitData(
+          _buildTextPacket(
+            from: 0xDD,
+            to: 0xFFFFFFFF,
+            text: 'Future message',
+            packetId: 40,
+            rxTime: futureEpoch,
+          ),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 250));
 
-      transport.emitData(
-        _buildTextPacket(
-          from: 0xDD,
-          to: 0xFFFFFFFF,
-          text: 'Future message',
-          packetId: 40,
-          rxTime: futureEpoch,
-        ),
-      );
-      await Future<void>.delayed(const Duration(milliseconds: 250));
-
-      final msgs = await msgDb.loadConversation('channel:0');
-      expect(msgs, isNotEmpty);
-      expect(msgs.first.timestamp.isAfter(before), isTrue);
-      // And it must NOT be 2 days in the future.
-      expect(
-        msgs.first.timestamp.isBefore(
-          DateTime.now().add(const Duration(minutes: 1)),
-        ),
-        isTrue,
-      );
-    });
+        final msgs = await msgDb.loadConversation('channel:0');
+        expect(msgs, isNotEmpty);
+        expect(msgs.first.timestamp, _chronologicalSentinel);
+      },
+    );
   });
 
   // ---------------------------------------------------------------------------

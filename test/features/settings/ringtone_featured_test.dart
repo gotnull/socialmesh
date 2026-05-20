@@ -78,11 +78,18 @@ void main() {
 
     test('expansion footer renders only when there are hidden presets', () {
       expect(
-        source.contains('if (_builtInPresets.length > _featuredBuiltInCount)'),
+        source.contains('if (builtInRingtonePresets.length >'),
         true,
         reason:
             'Footer should not render when the curated set already covers '
             'every preset (e.g. if someone trims the master list to 8).',
+      );
+      expect(
+        source.contains('_featuredBuiltInCount) ...['),
+        true,
+        reason:
+            'Slice gate on the footer must use _featuredBuiltInCount, not '
+            'a magic number.',
       );
     });
 
