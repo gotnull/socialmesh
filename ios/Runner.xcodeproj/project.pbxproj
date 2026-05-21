@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0DC5757C67788DA2FE09AB29 /* SocialMeshWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 15B1B5C311A2D2A7EB10695E /* SocialMeshWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		1B1BAF1ABCD21D26BA483BE4 /* WatchConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01E3CE2E4BB311147F5157D7 /* WatchConnectivityManager.swift */; };
 		1DB2F1309E481576C45308A0 /* WatchSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AA34C079969D175E704E52D /* WatchSnapshot.swift */; };
@@ -71,27 +70,9 @@
 			remoteGlobalIDString = 97C146ED1CF9000F007C117D;
 			remoteInfo = Runner;
 		};
-		90A0144165F4A3C248BB455F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 7C5EE8B93CB6FAF1D321AE41;
-			remoteInfo = SocialMeshWatch;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		085AF9297BB425434BB92BE3 /* Embed Watch Content */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
-			dstSubfolderSpec = 16;
-			files = (
-				0DC5757C67788DA2FE09AB29 /* SocialMeshWatch.app in Embed Watch Content */,
-			);
-			name = "Embed Watch Content";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		9705A1C41CF9048500538489 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -192,7 +173,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		BD61F0342EDD022E00456D76 /* Exceptions for "SocialmeshWidgets" folder in "SocialmeshWidgetsExtension" target */ = {
+		BD61F0342EDD022E00456D76 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -202,18 +183,7 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		BD61F0342EDD022E00456D75 /* SocialmeshWidgets */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				BD61F0342EDD022E00456D76 /* Exceptions for "SocialmeshWidgets" folder in "SocialmeshWidgetsExtension" target */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = SocialmeshWidgets;
-			sourceTree = "<group>";
-		};
+		BD61F0342EDD022E00456D75 /* SocialmeshWidgets */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (BD61F0342EDD022E00456D76 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = SocialmeshWidgets; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -269,7 +239,6 @@
 				1B4A35DAB251E0F520DE190F /* WatchIntentResult.swift */,
 				9AA34C079969D175E704E52D /* WatchSnapshot.swift */,
 			);
-			name = Models;
 			path = Models;
 			sourceTree = "<group>";
 		};
@@ -301,7 +270,6 @@
 				E5B16966013C8FEB1A1882A8 /* StatusView.swift */,
 				B9DE29609EA34A5528BDB600 /* UnavailableView.swift */,
 			);
-			name = Views;
 			path = Views;
 			sourceTree = "<group>";
 		};
@@ -312,7 +280,6 @@
 				C6E64F927859BB383A71156B /* WatchCompanionCodec.swift */,
 				6C77513A7C0D2613F64C0311 /* WatchCompanionLogger.swift */,
 			);
-			name = WatchCompanion;
 			path = WatchCompanion;
 			sourceTree = "<group>";
 		};
@@ -422,7 +389,6 @@
 				01E3CE2E4BB311147F5157D7 /* WatchConnectivityManager.swift */,
 				27552A30DC4BB14B5896B0E1 /* WatchSnapshotStore.swift */,
 			);
-			name = SocialMeshWatch;
 			path = SocialMeshWatch;
 			sourceTree = "<group>";
 		};
@@ -692,9 +658,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -747,9 +717,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -892,12 +866,6 @@
 			isa = PBXTargetDependency;
 			target = 97C146ED1CF9000F007C117D /* Runner */;
 			targetProxy = 331C8085294A63A400263BE5 /* PBXContainerItemProxy */;
-		};
-		EC7ACCE08B4BEB193E004DDD /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = SocialMeshWatch;
-			target = 7C5EE8B93CB6FAF1D321AE41 /* SocialMeshWatch */;
-			targetProxy = 90A0144165F4A3C248BB455F /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1280,11 +1248,12 @@
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGNING_REQUIRED = NO;
 				CODE_SIGN_IDENTITY = "-";
-				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "-";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=watchsimulator*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = U336GVDWCE;
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = SocialMesh;
@@ -1322,11 +1291,12 @@
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGNING_REQUIRED = NO;
 				CODE_SIGN_IDENTITY = "-";
-				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "-";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=watchsimulator*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = U336GVDWCE;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"DEBUG=1",
@@ -1504,11 +1474,12 @@
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGNING_REQUIRED = NO;
 				CODE_SIGN_IDENTITY = "-";
-				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "-";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=watchsimulator*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = U336GVDWCE;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"DEBUG=1",
