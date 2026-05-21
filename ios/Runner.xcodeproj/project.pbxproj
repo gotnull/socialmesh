@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
+		183F16DE212BB5E0C27FCD76 /* SocialMeshWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 15B1B5C311A2D2A7EB10695E /* SocialMeshWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, CodeSignOnCopy, ); }; };
 		1B1BAF1ABCD21D26BA483BE4 /* WatchConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01E3CE2E4BB311147F5157D7 /* WatchConnectivityManager.swift */; };
 		1DB2F1309E481576C45308A0 /* WatchSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AA34C079969D175E704E52D /* WatchSnapshot.swift */; };
 		30C93E22396F57AF33A9F084 /* ChannelPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D386C32858D5CB580A1B890 /* ChannelPickerView.swift */; };
@@ -70,9 +71,27 @@
 			remoteGlobalIDString = 97C146ED1CF9000F007C117D;
 			remoteInfo = Runner;
 		};
+		A754240D746708EEFB79DA2B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7C5EE8B93CB6FAF1D321AE41;
+			remoteInfo = SocialMeshWatch;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		79948208BAC711F143147990 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				183F16DE212BB5E0C27FCD76 /* SocialMeshWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		9705A1C41CF9048500538489 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -482,10 +501,12 @@
 				688DA636C73DEB3A360CE409 /* [CP] Embed Pods Frameworks */,
 				33B79513130A668675830E43 /* [CP] Copy Pods Resources */,
 				26D800772C6C696E0B1725A7 /* [SocialMesh] Re-sign Embedded Frameworks */,
+				79948208BAC711F143147990 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				08097EF6F49AB670F8F6FF13 /* PBXTargetDependency */,
 			);
 			name = Runner;
 			productName = Runner;
@@ -873,6 +894,12 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		08097EF6F49AB670F8F6FF13 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = SocialMeshWatch;
+			target = 7C5EE8B93CB6FAF1D321AE41 /* SocialMeshWatch */;
+			targetProxy = A754240D746708EEFB79DA2B /* PBXContainerItemProxy */;
+		};
 		331C8086294A63A400263BE5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 97C146ED1CF9000F007C117D /* Runner */;
