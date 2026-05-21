@@ -496,12 +496,12 @@
 				97C146EC1CF9000F007C117D /* Resources */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				BD61F0432EDD022F00456D75 /* Embed Foundation Extensions */,
+				79948208BAC711F143147990 /* Embed Watch Content */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 				DFB3BF32316542B73400B6C0 /* FlutterFire: "flutterfire upload-crashlytics-symbols" */,
 				688DA636C73DEB3A360CE409 /* [CP] Embed Pods Frameworks */,
 				33B79513130A668675830E43 /* [CP] Copy Pods Resources */,
 				26D800772C6C696E0B1725A7 /* [SocialMesh] Re-sign Embedded Frameworks */,
-				79948208BAC711F143147990 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
