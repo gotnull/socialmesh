@@ -19,6 +19,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:socialmesh/core/logging.dart';
 
+import 'models/watch_companion_channel_preview.dart';
 import 'models/watch_companion_intent.dart';
 import 'models/watch_companion_intent_result.dart';
 import 'models/watch_companion_snapshot.dart';
@@ -184,9 +185,21 @@ class WatchCompanionChannelBridge {
         _NativeMethods.pushSnapshot,
         snap.toJson(),
       );
+      final defaultIdx = snap.channels
+          .firstWhere(
+            (c) => c.isDefault,
+            orElse: () => const WatchCompanionChannelPreview(
+              index: -1,
+              name: '',
+              isDefault: false,
+            ),
+          )
+          .index;
       AppLogging.watchCompanion(
         'bridge: snapshot pushed (gen=${snap.generatedAt} '
-        'status=${snap.connection.status.name})',
+        'status=${snap.connection.status.name} '
+        'channels=${snap.channels.length} '
+        'defaultCh=$defaultIdx)',
       );
     } on PlatformException catch (e) {
       AppLogging.watchCompanion(
