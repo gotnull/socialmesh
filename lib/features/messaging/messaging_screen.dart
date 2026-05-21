@@ -35,7 +35,6 @@ import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/auto_scroll_text.dart';
 import '../../core/widgets/chat_bubble_text.dart';
-import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/ico_help_system.dart';
@@ -65,6 +64,7 @@ import '../../providers/translation_providers.dart';
 import '../../core/widgets/premium_feature_gate.dart';
 import '../../services/translation/translation_models.dart';
 import '../../services/storage/conversation_read_position.dart';
+import '../../services/protocol/protocol_service.dart';
 import '../../services/protocol/text_message_payload_budget.dart';
 import '../timeline/message_timeline_screen.dart';
 
@@ -873,49 +873,27 @@ class _ContactTile extends StatelessWidget {
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          blendColor.withValues(alpha: 0.12),
-                          blendColor.withValues(alpha: 0.03),
-                        ],
-                      ),
+                      color: blendColor.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                 ),
-                // Layer 2: Border (favorites only)
+                // Layer 2: Border (favorites only) — uniform accent on all
+                // four edges, matching StatusFilterChip.
                 if (contact.isFavorite)
                   Positioned.fill(
-                    child: GradientBorderContainer(
-                      borderRadius: 12,
-                      borderWidth: 1,
-                      accentOpacity: 1.0,
-                      accentColor: AccentColors.yellow,
-                      defaultBorderColor: Colors.transparent,
-                      backgroundColor: Colors.transparent,
-                      child: const SizedBox.expand(),
-                    ),
-                  ),
-                // Layer 3: Bottom-right corner blend into background
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: const Alignment(-0.2, -0.2),
-                          end: Alignment.bottomRight,
-                          colors: [
-                            context.background.withValues(alpha: 0),
-                            context.background.withValues(alpha: 0.85),
-                          ],
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
+                          border: Border.all(color: AccentColors.yellow),
                         ),
                       ),
                     ),
                   ),
-                ),
-                // Layer 4: Content — fully opaque on top
+                // Layer 3: Content
                 cardContent,
               ],
             ),
@@ -993,6 +971,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   /// resets to 0 the next time the screen mounts.
   int _initialUnreadCount = 0;
 
+  ProviderSubscription<AsyncValue<OperationalReadiness>>?
+  _readinessAutoResendSub;
+
   @override
   void initState() {
     super.initState();
@@ -1008,6 +989,45 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       }
     });
     _searchController.addListener(_onSearchChanged);
+
+    // When Meshtastic readiness transitions to `ready`, auto-resend any
+    // messages that previously failed because the protocol wasn't ready
+    // (errorMessage == txBlockedNotReady). User taps Send once during the
+    // handshake window; we resend automatically when the radio is ready.
+    _readinessAutoResendSub = ref
+        .listenManual<AsyncValue<OperationalReadiness>>(
+          meshtasticReadinessProvider,
+          (previous, next) {
+            final prev = previous?.asData?.value;
+            final curr = next.asData?.value;
+            if (prev != OperationalReadiness.ready &&
+                curr == OperationalReadiness.ready) {
+              _resendReadinessBlockedMessages();
+            }
+          },
+        );
+  }
+
+  void _resendReadinessBlockedMessages() {
+    if (!mounted) return;
+    final sentinel = context.l10n.txBlockedNotReady;
+    final blocked = ref
+        .read(messagesProvider)
+        .where(
+          (m) => m.status == MessageStatus.failed && m.errorMessage == sentinel,
+        )
+        .toList();
+    if (blocked.isEmpty) return;
+    AppLogging.messages(
+      '📤 AUTO_RESEND readiness=ready, resending ${blocked.length} '
+      'readiness-blocked message(s)',
+    );
+    for (final msg in blocked) {
+      AppLogging.messages(
+        '📤 AUTO_RESEND triggering retry for messageId=${msg.id}',
+      );
+      _retryMessage(msg);
+    }
   }
 
   /// Snapshot the unread message count for this conversation BEFORE
@@ -1096,6 +1116,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     );
     _highlightTimer?.cancel();
     _saveReadPositionTimer?.cancel();
+    _readinessAutoResendSub?.close();
     _searchController.removeListener(_onSearchChanged);
     _messageController.dispose();
     _searchController.dispose();
@@ -1665,6 +1686,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     final messagesNotifier = ref.read(messagesProvider.notifier);
     final connectionState = ref.read(connectionStateProvider);
     final offlineQueue = ref.read(offlineQueueProvider);
+    final lastDeviceProtocol = ref
+        .read(settingsServiceProvider)
+        .asData
+        ?.value
+        .lastDeviceProtocol;
+    AppLogging.messages(
+      '📤 SEND_TAP type=${widget.type} channel=${widget.channelIndex} '
+      'nodeNum=${widget.nodeNum} lastProtocol=$lastDeviceProtocol '
+      'connectionState=${connectionState.asData?.value} '
+      'protocolReadiness=${ref.read(protocolServiceProvider).readiness} '
+      'configurationComplete=${ref.read(protocolServiceProvider).configurationComplete} '
+      'transportConnected=${ref.read(protocolServiceProvider).isConnected}',
+    );
     final protocol = ref.read(protocolServiceProvider);
     final haptics = ref.read(hapticServiceProvider);
 
@@ -1754,6 +1788,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       return;
     }
 
+    AppLogging.messages(
+      '📤 SEND_DISPATCH messageId=$messageId type=${widget.type} '
+      'to=0x${to.toRadixString(16)} channel=$channel '
+      'textBytes=${textPayloadBudget.utf8Bytes} wantAck=$wantAck '
+      'protocolReadiness=${protocol.readiness} '
+      'configurationComplete=${protocol.configurationComplete}',
+    );
+
     try {
       int packetId;
 
@@ -1806,10 +1848,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         (m) => m.id == messageId,
       );
       if (currentMsg == null || currentMsg.status == MessageStatus.delivered) {
+        AppLogging.messages(
+          '📤 SEND_OK messageId=$messageId packetId=$packetId '
+          'currentStatus=${currentMsg?.status} (skip-update)',
+        );
         _trackMessageSentForReview();
         return;
       }
 
+      AppLogging.messages(
+        '📤 SEND_OK messageId=$messageId packetId=$packetId '
+        'status=pending->sent',
+      );
       // Update status to sent with packet ID and sentAt for DM timeout tracking
       messagesNotifier.updateMessage(
         messageId,
@@ -1824,24 +1874,34 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
       // Track message sent for review prompt
       _trackMessageSentForReview();
-    } catch (e) {
+    } catch (e, st) {
+      AppLogging.messages(
+        '📤 SEND_FAIL messageId=$messageId error=$e '
+        'protocolReadiness=${protocol.readiness} '
+        'configurationComplete=${protocol.configurationComplete} '
+        'transportConnected=${protocol.isConnected}',
+      );
+      AppLogging.messages('📤 SEND_FAIL_STACK $st');
+
       // Check mounted after await before updating state
       if (!mounted) return;
 
-      // Readiness gate (Step 6c): if TX was blocked because the
-      // Meshtastic protocol has not finished its handshake, surface the
-      // friendly snackbar and leave the message in `pending` so the
-      // user can resend after the banner clears.
-      if (maybeShowTxBlockedSnackBar(context, e)) {
-        return;
-      }
-
-      // Update status to failed with error
+      // Surface the readiness-gate snackbar when applicable; either way, mark
+      // the optimistic bubble failed so it cannot spin forever in `pending`.
+      // Use the localised readiness message for the failed-state error text
+      // when that was the cause, instead of leaking the raw StateError.
+      final isReadinessBlocked = maybeShowTxBlockedSnackBar(context, e);
+      AppLogging.messages(
+        '📤 SEND_FAIL_KIND messageId=$messageId '
+        'readinessBlocked=$isReadinessBlocked',
+      );
       messagesNotifier.updateMessage(
         messageId,
         pendingMessage.copyWith(
           status: MessageStatus.failed,
-          errorMessage: e.toString(),
+          errorMessage: isReadinessBlocked
+              ? context.l10n.txBlockedNotReady
+              : e.toString(),
         ),
       );
     }
@@ -1883,6 +1943,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     final offlineQueue = ref.read(offlineQueueProvider);
     final protocol = ref.read(protocolServiceProvider);
 
+    AppLogging.messages(
+      '📤 RETRY_TAP messageId=${message.id} isBroadcast=${message.isBroadcast} '
+      'channel=${message.channel} to=0x${message.to.toRadixString(16)} '
+      'connectionState=${connectionState.asData?.value} '
+      'protocolReadiness=${protocol.readiness} '
+      'configurationComplete=${protocol.configurationComplete} '
+      'transportConnected=${protocol.isConnected}',
+    );
+
     // Update to pending, clear error
     messagesNotifier.updateMessage(
       message.id,
@@ -1916,6 +1985,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       return;
     }
 
+    AppLogging.messages(
+      '📤 RETRY_DISPATCH messageId=${message.id} '
+      'isBroadcast=${message.isBroadcast} '
+      'protocolReadiness=${protocol.readiness} '
+      'retryCount=${message.retryCount}',
+    );
+
     try {
       int packetId;
 
@@ -1947,6 +2023,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       // Check mounted after await before updating state
       if (!mounted) return;
 
+      AppLogging.messages(
+        '📤 RETRY_OK messageId=${message.id} packetId=$packetId',
+      );
       messagesNotifier.updateMessage(
         message.id,
         message.copyWith(
@@ -1959,21 +2038,38 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           retryCount: message.retryCount + 1,
         ),
       );
-    } catch (e) {
+    } catch (e, st) {
+      AppLogging.messages(
+        '📤 RETRY_FAIL messageId=${message.id} error=$e '
+        'protocolReadiness=${protocol.readiness} '
+        'configurationComplete=${protocol.configurationComplete} '
+        'transportConnected=${protocol.isConnected}',
+      );
+      AppLogging.messages('📤 RETRY_FAIL_STACK $st');
+
       // Check mounted after await before updating state
       if (!mounted) return;
 
-      // Readiness gate (Step 6c): same friendly snackbar as the
-      // initial-send catch.
-      if (maybeShowTxBlockedSnackBar(context, e)) {
-        return;
+      // Retry is silent on readiness-gate failures — the user already saw
+      // the snackbar on the original Send. Mark the bubble failed with the
+      // localised readiness message; the readiness->ready auto-resend
+      // listener will pick it up and dispatch again as soon as the radio is
+      // ready. For non-readiness errors, surface the generic snackbar.
+      final isReadinessBlocked = isTxBlockedNotReadyError(e);
+      if (!isReadinessBlocked) {
+        maybeShowTxBlockedSnackBar(context, e);
       }
-
+      AppLogging.messages(
+        '📤 RETRY_FAIL_KIND messageId=${message.id} '
+        'readinessBlocked=$isReadinessBlocked',
+      );
       messagesNotifier.updateMessage(
         message.id,
         message.copyWith(
           status: MessageStatus.failed,
-          errorMessage: e.toString(),
+          errorMessage: isReadinessBlocked
+              ? context.l10n.txBlockedNotReady
+              : e.toString(),
         ),
       );
     }

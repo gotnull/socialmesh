@@ -127,6 +127,14 @@ void showBugSnackBar(
   );
 }
 
+// Pure detection of the [StateError] thrown by
+// `ProtocolService._assertOperational` when the Meshtastic readiness state
+// is not yet `ready`. Use when you need to react to the error (mark a
+// message failed silently, etc.) WITHOUT showing the snackbar.
+bool isTxBlockedNotReadyError(Object error) {
+  return error is StateError && error.message.contains('protocol not ready');
+}
+
 /// If [error] is a [StateError] thrown by `ProtocolService._assertOperational`
 /// (i.e. a TX path was blocked because the Meshtastic readiness state is
 /// not yet `ready`), surface the friendly localised snackbar and return
