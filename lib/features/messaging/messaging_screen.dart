@@ -2129,8 +2129,37 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       context,
       channel,
       ref: ref,
-      displayTitle: widget.title,
+      // Use the live-resolved title so a sheet opened right after a
+      // channel rename gets the fresh name, not the stale widget.title
+      // captured at ChatScreen construction.
+      displayTitle: _resolveAppBarTitle(context, channels),
     );
+  }
+
+  /// Resolve the live AppBar title for this conversation. For channel
+  /// conversations, looks up the channel by index in [channels] and
+  /// applies the same empty-name fallback the rest of the app uses
+  /// (see channel_selector_sheet.dart): empty name on channel 0 -> the
+  /// localized "Primary" label; empty name on any other channel ->
+  /// "Channel N". For DMs, falls through to [widget.title] (the
+  /// contact name captured at construction; no equivalent live
+  /// provider rename exists today).
+  String _resolveAppBarTitle(
+    BuildContext context,
+    List<ChannelConfig> channels,
+  ) {
+    if (widget.type != ConversationType.channel ||
+        widget.channelIndex == null) {
+      return widget.title;
+    }
+    final channel = channels.firstWhereOrNull(
+      (c) => c.index == widget.channelIndex,
+    );
+    if (channel == null) return widget.title;
+    if (channel.name.isNotEmpty) return channel.name;
+    return channel.index == 0
+        ? context.l10n.channelsPrimaryChannelName
+        : context.l10n.channelsDefaultChannelName(channel.index);
   }
 
   @override
@@ -2343,13 +2372,31 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      AutoScrollText(
-                        widget.title,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: context.textPrimary,
-                        ),
+                      // For channels, the title in the AppBar must
+                      // reflect rename edits live. Wrapping just the
+                      // AutoScrollText in a Consumer keeps the existing
+                      // `ref.read(channelsProvider)` discipline in the
+                      // outer build (which is hot-path on every
+                      // messagesProvider tick) and only rebuilds this
+                      // one widget when channelsProvider changes. DMs
+                      // fall through to widget.title since there is no
+                      // equivalent live-rename source for contact
+                      // names today.
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final liveTitle = _resolveAppBarTitle(
+                            context,
+                            ref.watch(channelsProvider),
+                          );
+                          return AutoScrollText(
+                            liveTitle,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: context.textPrimary,
+                            ),
+                          );
+                        },
                       ),
                       Text(
                         widget.type == ConversationType.channel
