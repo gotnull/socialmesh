@@ -368,6 +368,29 @@ class WhatsNewRegistry {
         ),
       ],
     ),
+
+    // v1.41.0 — Apple Watch companion
+    WhatsNewPayload(
+      version: '1.41.0',
+      headline: "What's New in SocialMesh",
+      subtitle: 'Version 1.41.0',
+      items: [
+        WhatsNewItem(
+          id: 'apple_watch_companion_intro',
+          title: 'Apple Watch companion',
+          description:
+              'Send canned messages from your Apple Watch when paired with '
+              'this iPhone. Pick the default channel in Settings → Apple '
+              'Watch; you can still choose a different channel on the '
+              'Watch each time. Sends use the same readiness and '
+              'rate-limit checks as the on-phone composer.',
+          icon: Icons.watch_outlined,
+          iconColor: Color(0xFF34D399), // green-emerald
+          deepLinkRoute: '/settings/watch',
+          ctaLabel: 'Open Watch settings',
+        ),
+      ],
+    ),
   ];
 
   // ===========================================================================
@@ -521,6 +544,8 @@ class WhatsNewRegistry {
         return l10n.whatsNewVersion1300Subtitle;
       case '1.36.0':
         return l10n.whatsNewVersion1360Subtitle;
+      case '1.41.0':
+        return l10n.whatsNewVersion1410Subtitle;
       default:
         return null;
     }
@@ -578,6 +603,10 @@ class WhatsNewRegistry {
         title = l10n.whatsNewDeviceShopTitle;
         description = l10n.whatsNewDeviceShopDescription;
         ctaLabel = l10n.whatsNewCtaOpenDeviceShop;
+      case 'apple_watch_companion_intro':
+        title = l10n.whatsNewAppleWatchCompanionTitle;
+        description = l10n.whatsNewAppleWatchCompanionDescription;
+        ctaLabel = l10n.whatsNewCtaOpenWatchSettings;
       default:
         return i;
     }

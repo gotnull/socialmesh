@@ -40563,6 +40563,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get whatsNewCtaOpenDeviceShop => 'Open Device Shop';
 
   @override
+  String get whatsNewVersion1410Subtitle => 'Version 1.41.0';
+
+  @override
+  String get whatsNewAppleWatchCompanionTitle => 'Apple Watch companion';
+
+  @override
+  String get whatsNewAppleWatchCompanionDescription =>
+      'Send canned messages from your Apple Watch when paired with this iPhone. Pick the default channel in Settings → Apple Watch; you can still choose a different channel on the Watch each time. Sends use the same readiness and rate-limit checks as the on-phone composer.';
+
+  @override
+  String get whatsNewCtaOpenWatchSettings => 'Open Watch settings';
+
+  @override
   String get meshFeedTitle => 'Mesh Feed';
 
   @override

@@ -41315,6 +41315,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get whatsNewCtaOpenDeviceShop => 'Ouvrir la boutique d\'appareils';
 
   @override
+  String get whatsNewVersion1410Subtitle => 'Version 1.41.0';
+
+  @override
+  String get whatsNewAppleWatchCompanionTitle => 'Compagnon Apple Watch';
+
+  @override
+  String get whatsNewAppleWatchCompanionDescription =>
+      'Envoyez des messages préenregistrés depuis votre Apple Watch lorsqu\'elle est jumelée à cet iPhone. Choisissez le canal par défaut dans Réglages → Apple Watch ; vous pouvez toujours sélectionner un autre canal sur la Watch à chaque fois. Les envois utilisent les mêmes vérifications de disponibilité et de limite de débit que le compositeur sur le téléphone.';
+
+  @override
+  String get whatsNewCtaOpenWatchSettings => 'Ouvrir les réglages Watch';
+
+  @override
   String get meshFeedTitle => 'Fil du mesh';
 
   @override

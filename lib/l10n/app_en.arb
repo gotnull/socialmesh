@@ -54173,6 +54173,22 @@
     "@whatsNewCtaOpenDeviceShop": {
         "description": "CTA button label to open the Device Shop screen from What's New."
     },
+    "whatsNewVersion1410Subtitle": "Version 1.41.0",
+    "@whatsNewVersion1410Subtitle": {
+        "description": "Subtitle for the What's New popup for version 1.41.0."
+    },
+    "whatsNewAppleWatchCompanionTitle": "Apple Watch companion",
+    "@whatsNewAppleWatchCompanionTitle": {
+        "description": "Title for the Apple Watch companion app feature in What's New. 'Apple Watch' is an Apple brand name; keep it verbatim in every locale."
+    },
+    "whatsNewAppleWatchCompanionDescription": "Send canned messages from your Apple Watch when paired with this iPhone. Pick the default channel in Settings → Apple Watch; you can still choose a different channel on the Watch each time. Sends use the same readiness and rate-limit checks as the on-phone composer.",
+    "@whatsNewAppleWatchCompanionDescription": {
+        "description": "Description for the Apple Watch companion app feature in What's New. Brand names 'Apple Watch', 'iPhone', and 'SocialMesh' stay verbatim."
+    },
+    "whatsNewCtaOpenWatchSettings": "Open Watch settings",
+    "@whatsNewCtaOpenWatchSettings": {
+        "description": "CTA button label to open the Apple Watch companion settings screen from What's New."
+    },
     "meshFeedTitle": "Mesh Feed",
     "@meshFeedTitle": {
         "description": "Title for the mesh feed screen."

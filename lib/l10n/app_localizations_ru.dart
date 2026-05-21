@@ -41006,6 +41006,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get whatsNewCtaOpenDeviceShop => 'Открыть магазин устройств';
 
   @override
+  String get whatsNewVersion1410Subtitle => 'Версия 1.41.0';
+
+  @override
+  String get whatsNewAppleWatchCompanionTitle => 'Компаньон для Apple Watch';
+
+  @override
+  String get whatsNewAppleWatchCompanionDescription =>
+      'Отправляйте заготовленные сообщения с Apple Watch, когда они сопряжены с этим iPhone. Выберите канал по умолчанию в Настройках → Apple Watch; каждый раз вы можете выбрать другой канал прямо на Watch. Отправка проходит те же проверки готовности и лимита частоты, что и редактор на телефоне.';
+
+  @override
+  String get whatsNewCtaOpenWatchSettings => 'Открыть настройки Watch';
+
+  @override
   String get meshFeedTitle => 'Лента сети';
 
   @override

@@ -70973,6 +70973,30 @@ abstract class AppLocalizations {
   /// **'Open Device Shop'**
   String get whatsNewCtaOpenDeviceShop;
 
+  /// Subtitle for the What's New popup for version 1.41.0.
+  ///
+  /// In en, this message translates to:
+  /// **'Version 1.41.0'**
+  String get whatsNewVersion1410Subtitle;
+
+  /// Title for the Apple Watch companion app feature in What's New. 'Apple Watch' is an Apple brand name; keep it verbatim in every locale.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Watch companion'**
+  String get whatsNewAppleWatchCompanionTitle;
+
+  /// Description for the Apple Watch companion app feature in What's New. Brand names 'Apple Watch', 'iPhone', and 'SocialMesh' stay verbatim.
+  ///
+  /// In en, this message translates to:
+  /// **'Send canned messages from your Apple Watch when paired with this iPhone. Pick the default channel in Settings → Apple Watch; you can still choose a different channel on the Watch each time. Sends use the same readiness and rate-limit checks as the on-phone composer.'**
+  String get whatsNewAppleWatchCompanionDescription;
+
+  /// CTA button label to open the Apple Watch companion settings screen from What's New.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Watch settings'**
+  String get whatsNewCtaOpenWatchSettings;
+
   /// Title for the mesh feed screen.
   ///
   /// In en, this message translates to:
