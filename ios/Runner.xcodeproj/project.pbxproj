@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		183F16DE212BB5E0C27FCD76 /* SocialMeshWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 15B1B5C311A2D2A7EB10695E /* SocialMeshWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, CodeSignOnCopy, ); }; };
+		185BE9088397E5C649031A01 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1DE574B90CEAC3698FDDCCB9 /* Assets.xcassets */; };
 		1B1BAF1ABCD21D26BA483BE4 /* WatchConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01E3CE2E4BB311147F5157D7 /* WatchConnectivityManager.swift */; };
 		1DB2F1309E481576C45308A0 /* WatchSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AA34C079969D175E704E52D /* WatchSnapshot.swift */; };
 		30C93E22396F57AF33A9F084 /* ChannelPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D386C32858D5CB580A1B890 /* ChannelPickerView.swift */; };
@@ -124,6 +125,7 @@
 		15B1B5C311A2D2A7EB10695E /* SocialMeshWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SocialMeshWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		18BF47B0FEEEB85611CED697 /* WatchConnectivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WatchConnectivity.framework; path = System/Library/Frameworks/WatchConnectivity.framework; sourceTree = SDKROOT; };
 		1B4A35DAB251E0F520DE190F /* WatchIntentResult.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchIntentResult.swift; sourceTree = "<group>"; };
+		1DE574B90CEAC3698FDDCCB9 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		207060DC7251ABBE1DD4FCCB /* WatchCompanionBridge.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchCompanionBridge.swift; sourceTree = "<group>"; };
 		27552A30DC4BB14B5896B0E1 /* WatchSnapshotStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchSnapshotStore.swift; sourceTree = "<group>"; };
 		28698ABB14A3935357B44E3B /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
@@ -418,6 +420,7 @@
 				2EF3516E7B5DE020750D389F /* SocialMeshWatchApp.swift */,
 				01E3CE2E4BB311147F5157D7 /* WatchConnectivityManager.swift */,
 				27552A30DC4BB14B5896B0E1 /* WatchSnapshotStore.swift */,
+				1DE574B90CEAC3698FDDCCB9 /* Assets.xcassets */,
 			);
 			path = SocialMeshWatch;
 			sourceTree = "<group>";
@@ -611,6 +614,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				185BE9088397E5C649031A01 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
