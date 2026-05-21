@@ -137,7 +137,7 @@ dependencies:
   flutter_foreground_task: ^9.2.2
 
   # In-app review
-  in_app_review: ^2.0.10
+  in_app_review: ^2.0.12
   pretty_qr_code: ^3.6.0
   emoji_picker_flutter: ^4.4.0
   ffi: ^2.2.0
