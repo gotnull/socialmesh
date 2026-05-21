@@ -269,7 +269,17 @@ final class WatchCompanionBridge: NSObject {
       WatchCompanionLog.info(
         "intent result for req=\(requestId): accepted=\(acceptedStr) diag=\(diag)"
       )
-      replyHandler(resultDict)
+      // Dart-side `WatchCompanionIntentResult.toJson()` emits every
+      // optional field (userVisibleReason, diagnosticReason) as `null`
+      // when unset; the MethodChannel codec materialises those as
+      // NSNull on this side. WCSession reply payloads must be plist-
+      // compatible, and NSNull triggers the sender's errorHandler with
+      // payloadUnsupportedTypes — surfacing on the Watch as
+      // `watch_send_error` even though the intent processed cleanly.
+      // Strip before handoff, same as the outbound snapshot path.
+      let cleaned = WatchCompanionBridge.stripNSNull(resultDict)
+        as? [String: Any] ?? resultDict
+      replyHandler(cleaned)
     }
   }
 

@@ -53,6 +53,12 @@ enum WatchCompanionCodec {
   /// where the bridge cannot or must not forward the intent to Dart.
   /// Mirrors the Dart-side `WatchCompanionIntentResult.toJson()` shape
   /// (version 1) so the Watch decodes it with the same model class.
+  ///
+  /// Optional fields are omitted (not set to NSNull) because WCSession
+  /// reply payloads must be plist-compatible — NSNull is rejected and
+  /// triggers the sender's errorHandler with payloadUnsupportedTypes,
+  /// surfacing on the Watch as `watch_send_error`. The Watch decoder
+  /// uses `decodeIfPresent`, so absent keys decode as nil.
   static func buildRejection(
     requestId: String,
     diagnosticReason: String,
@@ -67,8 +73,6 @@ enum WatchCompanionCodec {
     ]
     if let reason = userVisibleReason {
       dict["userVisibleReason"] = reason
-    } else {
-      dict["userVisibleReason"] = NSNull()
     }
     return dict
   }
