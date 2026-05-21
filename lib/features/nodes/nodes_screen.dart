@@ -1340,24 +1340,7 @@ class _NodeCard extends ConsumerWidget {
                       child: const SizedBox.expand(),
                     ),
                   ),
-                // Layer 3: Bottom-right corner blend into background
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: const Alignment(-0.2, -0.2),
-                          end: Alignment.bottomRight,
-                          colors: [
-                            context.background.withValues(alpha: 0),
-                            context.background.withValues(alpha: 0.85),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                // Layer 4: Content — fully opaque on top
+                // Layer 3: Content
                 Padding(
                   padding: const EdgeInsets.all(AppTheme.spacing16),
                   child: _buildCardContent(
