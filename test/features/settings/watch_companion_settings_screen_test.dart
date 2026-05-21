@@ -162,5 +162,56 @@ void main() {
 
       expect(settings.watchDefaultChannelIndex, 2);
     });
+
+    testWidgets('tapping a chip invalidates watchDefaultChannelIndexProvider '
+        'so downstream consumers (snapshot composer, bridge) see the '
+        'new index without waiting for an unrelated upstream tick', (
+      tester,
+    ) async {
+      // Regression for a silent-stale bug: a SharedPreferences write
+      // doesn't notify Riverpod. Without the invalidate after the
+      // write in _setDefaultChannel, downstream providers keep
+      // reporting the old default until something else triggers a
+      // rebuild. The Watch then shows the old default channel
+      // pre-selected even though the setting was changed.
+      final settings = await _settingsServiceWithMocks();
+      final container = ProviderContainer(
+        overrides: [
+          settingsServiceProvider.overrideWith((ref) async => settings),
+          watchCompanionFeatureFlagsProvider.overrideWith(
+            (ref) => const WatchCompanionFeatureFlags(enabled: true),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      // Initial value.
+      expect(container.read(watchDefaultChannelIndexProvider), 0);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const WatchCompanionSettingsScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Channel 3'));
+      await tester.pumpAndSettle();
+
+      expect(
+        container.read(watchDefaultChannelIndexProvider),
+        3,
+        reason:
+            'After the chip tap, the derived provider must reflect '
+            'the new persisted value. If this fails, the invalidate '
+            'in _setDefaultChannel is gone or the provider lookup '
+            'path regressed.',
+      );
+    });
   });
 }

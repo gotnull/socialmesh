@@ -14,7 +14,6 @@ import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/glass_scaffold.dart';
-import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../core/widgets/search_filter_header.dart';
@@ -1304,40 +1303,37 @@ class _NodeCard extends ConsumerWidget {
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          blendColor.withValues(alpha: 0.12),
-                          blendColor.withValues(alpha: 0.03),
-                        ],
-                      ),
+                      color: blendColor.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                 ),
-                // Layer 2: Border (owner + favorite nodes)
+                // Layer 2: Border (owner + favorite nodes) — uniform accent
+                // on all four edges, matching StatusFilterChip.
                 if (isMyNode)
                   Positioned.fill(
-                    child: GradientBorderContainer(
-                      borderRadius: 12,
-                      borderWidth: 1,
-                      accentOpacity: 1.0,
-                      defaultBorderColor: Colors.transparent,
-                      backgroundColor: Colors.transparent,
-                      child: const SizedBox.expand(),
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
+                          border: Border.all(color: context.accentColor),
+                        ),
+                      ),
                     ),
                   )
                 else if (node.isFavorite)
                   Positioned.fill(
-                    child: GradientBorderContainer(
-                      borderRadius: 12,
-                      borderWidth: 1,
-                      accentOpacity: 1.0,
-                      accentColor: AccentColors.yellow,
-                      defaultBorderColor: Colors.transparent,
-                      backgroundColor: Colors.transparent,
-                      child: const SizedBox.expand(),
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
+                          border: Border.all(color: AccentColors.yellow),
+                        ),
+                      ),
                     ),
                   ),
                 // Layer 3: Content

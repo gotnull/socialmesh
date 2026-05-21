@@ -66,6 +66,12 @@ class _WatchCompanionSettingsScreenState
       final settings = await ref.read(settingsServiceProvider.future);
       if (!mounted) return;
       await settings.setWatchDefaultChannelIndex(index);
+      if (!mounted) return;
+      // SharedPreferences writes don't notify Riverpod. Invalidate the
+      // derived provider so the watch snapshot composer (and the
+      // bridge's next push to the Watch) picks up the new default
+      // channel without waiting for an unrelated upstream tick.
+      ref.invalidate(watchDefaultChannelIndexProvider);
     } catch (e) {
       if (!mounted) return;
       showErrorSnackBar(context, '$e');

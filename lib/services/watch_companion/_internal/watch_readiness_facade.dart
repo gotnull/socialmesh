@@ -62,13 +62,14 @@ final watchReadinessFacadeProvider = Provider<WatchCompanionConnectionState>((
           status: WatchCompanionConnectionStatus.connecting,
           activeProtocolDisplayName: displayName,
           activeDeviceName: deviceName,
-          readinessReason: 'readiness_loading',
         ),
+        // Readiness stream errored: treat as disconnected for the
+        // user (we don't know what's happening, so don't pretend
+        // we're "degraded but working").
         error: (e, _) => WatchCompanionConnectionState(
-          status: WatchCompanionConnectionStatus.degraded,
+          status: WatchCompanionConnectionStatus.disconnected,
           activeProtocolDisplayName: displayName,
           activeDeviceName: deviceName,
-          readinessReason: 'readiness_error',
         ),
       );
 
@@ -81,13 +82,14 @@ final watchReadinessFacadeProvider = Provider<WatchCompanionConnectionState>((
           status: WatchCompanionConnectionStatus.connecting,
           activeProtocolDisplayName: displayName,
           activeDeviceName: deviceName,
-          readinessReason: 'readiness_loading',
         ),
+        // Readiness stream errored: treat as disconnected for the
+        // user (we don't know what's happening, so don't pretend
+        // we're "degraded but working").
         error: (e, _) => WatchCompanionConnectionState(
-          status: WatchCompanionConnectionStatus.degraded,
+          status: WatchCompanionConnectionStatus.disconnected,
           activeProtocolDisplayName: displayName,
           activeDeviceName: deviceName,
-          readinessReason: 'readiness_error',
         ),
       );
   }
@@ -108,11 +110,14 @@ WatchCompanionConnectionState _mapMeshtasticReadiness(
     case OperationalReadiness.linkConnected:
     case OperationalReadiness.handshakePhase1:
     case OperationalReadiness.handshakePhase2:
+      // readinessReason is intentionally null: the "Connecting" status
+      // word + device name + protocol name already tell the user
+      // everything they need at a glance. Leaking enum names like
+      // "handshakePhase1" into the UI is noise without explanation.
       return WatchCompanionConnectionState(
         status: WatchCompanionConnectionStatus.connecting,
         activeProtocolDisplayName: displayName,
         activeDeviceName: deviceName,
-        readinessReason: readiness.name,
       );
     case OperationalReadiness.ready:
       return WatchCompanionConnectionState(
@@ -121,11 +126,18 @@ WatchCompanionConnectionState _mapMeshtasticReadiness(
         activeDeviceName: deviceName,
       );
     case OperationalReadiness.degraded:
+      // OperationalReadiness.degraded fires when the BLE/TCP
+      // transport drops mid-handshake (protocol_service.dart:1548 is
+      // the only producer). That's "we lost the link, will retry",
+      // not "we have a link but it's impaired" — so the Watch
+      // should surface plain "Disconnected" instead of an alarming
+      // orange-triangle "Degraded" state. If a future readiness path
+      // ever means truly-degraded (link up but unhealthy), reinstate
+      // .degraded here with UX testing.
       return WatchCompanionConnectionState(
-        status: WatchCompanionConnectionStatus.degraded,
+        status: WatchCompanionConnectionStatus.disconnected,
         activeProtocolDisplayName: displayName,
         activeDeviceName: deviceName,
-        readinessReason: 'degraded',
       );
   }
 }
@@ -146,11 +158,11 @@ WatchCompanionConnectionState _mapMeshCoreState(
     case MeshConnectionState.scanning:
     case MeshConnectionState.connecting:
     case MeshConnectionState.identifying:
+      // See the equivalent Meshtastic branch above: status word alone.
       return WatchCompanionConnectionState(
         status: WatchCompanionConnectionStatus.connecting,
         activeProtocolDisplayName: displayName,
         activeDeviceName: deviceName,
-        readinessReason: state.name,
       );
     case MeshConnectionState.connected:
       return WatchCompanionConnectionState(
@@ -159,11 +171,14 @@ WatchCompanionConnectionState _mapMeshCoreState(
         activeDeviceName: deviceName,
       );
     case MeshConnectionState.error:
+      // Same rationale as the Meshtastic .degraded path: an error
+      // in the MeshCore connection state machine means we lost the
+      // link, not that we have an impaired-but-working one. "Disconnected"
+      // is the honest user-facing label.
       return WatchCompanionConnectionState(
-        status: WatchCompanionConnectionStatus.degraded,
+        status: WatchCompanionConnectionStatus.disconnected,
         activeProtocolDisplayName: displayName,
         activeDeviceName: deviceName,
-        readinessReason: 'error',
       );
   }
 }

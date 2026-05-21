@@ -42,6 +42,18 @@ struct QuickMessageView: View {
       }
       .navigationTitle("Send")
       .navigationBarTitleDisplayMode(.inline)
+      // Clear any per-session channel pick when the phone-side
+      // default changes (user updated Settings -> Watch -> Default
+      // channel). Without this, _effectiveChannel keeps preferring
+      // the stale pickedChannel forever — the new phone setting
+      // would only take effect on a fresh app launch, which is
+      // exactly the "Channel 1 isn't applying" symptom the developer
+      // hit. Phone-side intent wins over the per-session pick.
+      .onChange(
+        of: store.latestSnapshot?.channels.first(where: { $0.isDefault })?.index
+      ) { _, _ in
+        pickedChannel = nil
+      }
     }
   }
 

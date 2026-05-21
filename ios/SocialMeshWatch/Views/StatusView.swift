@@ -14,9 +14,20 @@ struct StatusView: View {
     NavigationStack {
       VStack(spacing: 8) {
         if let snap = store.latestSnapshot {
+          // Subtle animation while connecting: SF Symbols'
+          // variable-color effect animates the antenna bars in
+          // sequence so the user has a clear "something is in
+          // progress" cue without us leaking enum names into the
+          // UI. Idle / ready / disconnected / degraded keep the
+          // static icon (they're settled or attention states, not
+          // active-progress states).
           _statusIcon(for: snap.connection.status)
             .font(.largeTitle)
             .foregroundStyle(_statusColor(for: snap.connection.status))
+            .symbolEffect(
+              .variableColor.iterative.reversing,
+              isActive: snap.connection.status == .connecting
+            )
             .padding(.top, 4)
 
           Text(_statusLabel(for: snap.connection.status))
