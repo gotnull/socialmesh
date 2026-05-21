@@ -1065,6 +1065,135 @@ void main() {
       expect(log.targetSnrTowards, isNull);
       expect(log.originSnrBack, isNull);
     });
+
+    // Defensive cases — firmware may send malformed SNR arrays (truncated
+    // by transit, or overlong from a future variant). The parser must
+    // never crash and must preserve confidently mappable values; the
+    // production parser logs an anomaly via AppLogging.protocol for
+    // both shapes (not asserted here — debugPrint isn't captured by
+    // the test harness without extra plumbing).
+
+    test('truncated SNR arrays (snr.len < route.len) do not crash and '
+        'trailing hops get null SNR', () {
+      final routeDiscovery = pb.RouteDiscovery(
+        route: [0x11111111, 0x22222222, 0x33333333],
+        snrTowards: [40], // only 1 entry for 3 hops
+        routeBack: [0xAAAAAAAA, 0xBBBBBBBB],
+        snrBack: [], // none at all
+      );
+
+      final parsed = pb.RouteDiscovery.fromBuffer(
+        routeDiscovery.writeToBuffer(),
+      );
+
+      final forwardRoute = parsed.route.toList();
+      final forwardSnr = parsed.snrTowards.toList();
+      final backRoute = parsed.routeBack.toList();
+      final backSnr = parsed.snrBack.toList();
+
+      // Same per-hop loop as _handleTracerouteMessage.
+      final forwardHops = <TraceRouteHop>[];
+      for (var i = 0; i < forwardRoute.length; i++) {
+        final snrRaw = i < forwardSnr.length ? forwardSnr[i] : null;
+        forwardHops.add(
+          TraceRouteHop(
+            nodeNum: forwardRoute[i],
+            snr: snrRaw != null ? snrRaw / 4.0 : null,
+          ),
+        );
+      }
+      final backHops = <TraceRouteHop>[];
+      for (var i = 0; i < backRoute.length; i++) {
+        final snrRaw = i < backSnr.length ? backSnr[i] : null;
+        backHops.add(
+          TraceRouteHop(
+            nodeNum: backRoute[i],
+            snr: snrRaw != null ? snrRaw / 4.0 : null,
+            back: true,
+          ),
+        );
+      }
+      final targetSnrTowards = forwardSnr.length > forwardRoute.length
+          ? forwardSnr.last / 4.0
+          : null;
+      final originSnrBack = backSnr.length > backRoute.length
+          ? backSnr.last / 4.0
+          : null;
+
+      // Confidently mappable values preserved
+      expect(forwardHops.length, 3);
+      expect(forwardHops[0].snr, 10.0);
+      expect(forwardHops[1].snr, isNull);
+      expect(forwardHops[2].snr, isNull);
+
+      expect(backHops.length, 2);
+      expect(backHops[0].snr, isNull);
+      expect(backHops[1].snr, isNull);
+
+      // No endpoint invented when the arrays are short.
+      expect(targetSnrTowards, isNull);
+      expect(originSnrBack, isNull);
+    });
+
+    test('overlong SNR arrays (snr.len > route.len + 1) preserve hops + '
+        'last entry as endpoint, drop middle', () {
+      final routeDiscovery = pb.RouteDiscovery(
+        route: [0x11111111], // 1 intermediate
+        // 4 entries (3 extras): hop, [phantom, phantom], endpoint
+        snrTowards: [40, 16, 8, 24],
+        routeBack: [0xAAAAAAAA],
+        // 3 entries (2 extras): hop, [phantom], endpoint
+        snrBack: [-4, -8, 12],
+      );
+
+      final parsed = pb.RouteDiscovery.fromBuffer(
+        routeDiscovery.writeToBuffer(),
+      );
+
+      final forwardRoute = parsed.route.toList();
+      final forwardSnr = parsed.snrTowards.toList();
+      final backRoute = parsed.routeBack.toList();
+      final backSnr = parsed.snrBack.toList();
+
+      final forwardHops = <TraceRouteHop>[];
+      for (var i = 0; i < forwardRoute.length; i++) {
+        final snrRaw = i < forwardSnr.length ? forwardSnr[i] : null;
+        forwardHops.add(
+          TraceRouteHop(
+            nodeNum: forwardRoute[i],
+            snr: snrRaw != null ? snrRaw / 4.0 : null,
+          ),
+        );
+      }
+      final backHops = <TraceRouteHop>[];
+      for (var i = 0; i < backRoute.length; i++) {
+        final snrRaw = i < backSnr.length ? backSnr[i] : null;
+        backHops.add(
+          TraceRouteHop(
+            nodeNum: backRoute[i],
+            snr: snrRaw != null ? snrRaw / 4.0 : null,
+            back: true,
+          ),
+        );
+      }
+      final targetSnrTowards = forwardSnr.length > forwardRoute.length
+          ? forwardSnr.last / 4.0
+          : null;
+      final originSnrBack = backSnr.length > backRoute.length
+          ? backSnr.last / 4.0
+          : null;
+
+      // First N route entries get their first N SNRs.
+      expect(forwardHops, hasLength(1));
+      expect(forwardHops.first.snr, 10.0);
+      expect(backHops, hasLength(1));
+      expect(backHops.first.snr, -1.0);
+
+      // Endpoint takes the LAST entry — middle entries silently dropped
+      // (logged as anomaly in production via AppLogging.protocol).
+      expect(targetSnrTowards, 6.0); // 24 / 4.0
+      expect(originSnrBack, 3.0); // 12 / 4.0
+    });
   });
 
   group('Traceroute SQLite endpoint SNR persistence', () {

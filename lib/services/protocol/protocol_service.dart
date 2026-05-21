@@ -2700,12 +2700,55 @@ class ProtocolService {
       // entry to each SNR list: the target's reception SNR of the
       // forward query, and the origin's reception SNR of the reply.
       // Both are scaled x4 like the per-hop values.
+      //
+      // We defensively support firmware that omits the endpoint entry
+      // (snr.length == route.length, legacy / partial responder),
+      // includes one (the documented modern shape), or sends a
+      // malformed list. Length mismatches are logged so future field
+      // reports can pin down a misbehaving firmware variant without
+      // a parser regression.
       final targetSnrTowards = forwardSnr.length > forwardRoute.length
           ? forwardSnr.last / 4.0
           : null;
       final originSnrBack = backSnr.length > backRoute.length
           ? backSnr.last / 4.0
           : null;
+
+      if (forwardSnr.length < forwardRoute.length) {
+        AppLogging.protocol(
+          'Traceroute SNR towards truncated for '
+          '${targetNode.toRadixString(16)}: ${forwardSnr.length} SNRs '
+          'for ${forwardRoute.length} forward hops; trailing hops '
+          'have null SNR',
+        );
+      } else if (forwardSnr.length > forwardRoute.length + 1) {
+        final dropped = forwardSnr.length - forwardRoute.length - 1;
+        AppLogging.protocol(
+          'Traceroute SNR towards overlong for '
+          '${targetNode.toRadixString(16)}: ${forwardSnr.length} SNRs '
+          'for ${forwardRoute.length} forward hops; mapped first '
+          '${forwardRoute.length} to hops + last as endpoint, '
+          'dropped $dropped middle entries',
+        );
+      }
+
+      if (backSnr.length < backRoute.length) {
+        AppLogging.protocol(
+          'Traceroute SNR back truncated for '
+          '${targetNode.toRadixString(16)}: ${backSnr.length} SNRs '
+          'for ${backRoute.length} return hops; trailing hops have '
+          'null SNR',
+        );
+      } else if (backSnr.length > backRoute.length + 1) {
+        final dropped = backSnr.length - backRoute.length - 1;
+        AppLogging.protocol(
+          'Traceroute SNR back overlong for '
+          '${targetNode.toRadixString(16)}: ${backSnr.length} SNRs '
+          'for ${backRoute.length} return hops; mapped first '
+          '${backRoute.length} to hops + last as endpoint, dropped '
+          '$dropped middle entries',
+        );
+      }
 
       // Aggregate SNR from the received packet (already in dB)
       final rxSnr = packet.hasRxSnr() ? packet.rxSnr.toDouble() : null;
