@@ -61,8 +61,8 @@ void main() {
       expect(
         source.contains(
           'if (log.response &&\n'
-          '              forwardHops.isEmpty &&\n'
-          '              returnHops.isEmpty &&\n'
+          '              !hasAnyForward &&\n'
+          '              !hasAnyReturn &&\n'
           '              log.hopsTowards == 0 &&\n'
           '              log.hopsBack == 0)',
         ),
