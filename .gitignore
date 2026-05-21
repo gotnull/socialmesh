@@ -5,6 +5,7 @@
 logs.txt
 logs_android.txt
 .translation-scratch/
+*.bak
 *.class
 *.log
 *.pyc

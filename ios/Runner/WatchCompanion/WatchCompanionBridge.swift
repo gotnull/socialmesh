@@ -163,10 +163,17 @@ final class WatchCompanionBridge: NSObject {
       return
     }
 
+    // WCSession.updateApplicationContext only accepts plist-compatible
+    // types (NSString, NSNumber, NSDate, NSData, NSArray, NSDictionary).
+    // NSNull is NOT supported and surfaces as
+    // "Payload contains unsupported type." The Dart-side snapshot has
+    // nullable fields (readinessReason, channelIndex, hops, ...) that
+    // MethodChannel marshals as NSNull. Strip them before handoff.
+    let cleaned = WatchCompanionBridge.stripNSNull(dict) as? [String: Any] ?? dict
     let session = WCSession.default
     do {
-      try session.updateApplicationContext(dict)
-      let gen = (dict["generatedAt"] as? Int).map(String.init) ?? "?"
+      try session.updateApplicationContext(cleaned)
+      let gen = (cleaned["generatedAt"] as? Int).map(String.init) ?? "?"
       WatchCompanionLog.info(
         "snapshot pushed via updateApplicationContext (gen=\(gen) "
         + "reachable=\(session.isReachable) paired=\(session.isPaired) "
@@ -234,7 +241,10 @@ final class WatchCompanionBridge: NSObject {
         ))
         return
       }
-      if rawResult is FlutterMethodNotImplemented {
+      // `FlutterMethodNotImplemented` is a singleton NSObject from the
+      // Flutter engine, not a Swift type; identity compare it rather
+      // than using `is`.
+      if (rawResult as AnyObject) === FlutterMethodNotImplemented {
         WatchCompanionLog.error(
           "Dart handler returned FlutterMethodNotImplemented req=\(requestId)"
         )
@@ -272,6 +282,29 @@ final class WatchCompanionBridge: NSObject {
     ]
     guard let channel = methodChannel else { return }
     channel.invokeMethod("onSessionStateChanged", arguments: payload)
+  }
+
+  /// Recursively rebuild a dictionary/array tree without any NSNull
+  /// values. WCSession.updateApplicationContext throws "Payload
+  /// contains unsupported type" when handed an NSNull anywhere in the
+  /// payload. The Dart-side snapshot freely encodes nil-valued fields
+  /// (readinessReason, channelIndex, hops, ...) which the
+  /// FlutterMethodChannel codec materialises as NSNull on this side.
+  static func stripNSNull(_ value: Any) -> Any? {
+    if value is NSNull { return nil }
+    if let dict = value as? [String: Any] {
+      var out: [String: Any] = [:]
+      for (k, v) in dict {
+        if let cleaned = stripNSNull(v) {
+          out[k] = cleaned
+        }
+      }
+      return out
+    }
+    if let arr = value as? [Any] {
+      return arr.compactMap { stripNSNull($0) }
+    }
+    return value
   }
 
   private func activationStateName(_ state: WCSessionActivationState) -> String {

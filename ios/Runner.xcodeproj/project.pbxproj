@@ -7,16 +7,30 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0DC5757C67788DA2FE09AB29 /* SocialMeshWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 15B1B5C311A2D2A7EB10695E /* SocialMeshWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
+		1B1BAF1ABCD21D26BA483BE4 /* WatchConnectivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01E3CE2E4BB311147F5157D7 /* WatchConnectivityManager.swift */; };
+		1DB2F1309E481576C45308A0 /* WatchSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AA34C079969D175E704E52D /* WatchSnapshot.swift */; };
+		30C93E22396F57AF33A9F084 /* ChannelPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D386C32858D5CB580A1B890 /* ChannelPickerView.swift */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
+		376EF8DDA00E098703C86195 /* InboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6383323257C943D0B3664D6 /* InboxView.swift */; };
 		383C04B43512B23878A24034 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 086144CADDD33946257DB070 /* Pods_Runner.framework */; };
+		386029B53AD8B262C9E35529 /* WatchCompanionLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C77513A7C0D2613F64C0311 /* WatchCompanionLogger.swift */; };
+		3A7207EA1B04F4B229F27BDC /* QuickMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4CAC49F2E17EC77F96F453D /* QuickMessageView.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
+		40CA86D6D85BD8895FD3533B /* WatchIntentResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B4A35DAB251E0F520DE190F /* WatchIntentResult.swift */; };
+		4903A777BE1D0ADAF541DBE3 /* UnavailableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9DE29609EA34A5528BDB600 /* UnavailableView.swift */; };
 		5EDAF0889B4512A1AC8D6BE1 /* sip_handshake_accepted.caf in Resources */ = {isa = PBXBuildFile; fileRef = EC8278F02D47C99F8BEC115B /* sip_handshake_accepted.caf */; };
 		66D48815D2741E6097F3D434 /* sip_handshake_request.caf in Resources */ = {isa = PBXBuildFile; fileRef = 82126BB40327C4B92161BACD /* sip_handshake_request.caf */; };
+		723EEA6702A74BE1E601EB01 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 35A8DC3F136572F6A2978C56 /* Foundation.framework */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
+		825D564F5F2F1723A24700C4 /* WatchCompanionCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6E64F927859BB383A71156B /* WatchCompanionCodec.swift */; };
+		860D456DBBDF3DF9E95F3608 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58F41A30827CD07F64F79AA9 /* RootView.swift */; };
+		89C763C1050CBBD9EC5105DB /* WatchCompanionBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 207060DC7251ABBE1DD4FCCB /* WatchCompanionBridge.swift */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
+		A2F94733B66DF1EDD204E054 /* WatchIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69ECD66A678088B1F1781BC6 /* WatchIntent.swift */; };
 		AI0001012024120800000001 /* AppIntentErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000010 /* AppIntentErrors.swift */; };
 		AI00010120241208000000010 /* ShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI00010120241208000000100 /* ShortcutsProvider.swift */; };
 		AI00010120241208000000011 /* RunAutomationIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI00010120241208000000110 /* RunAutomationIntent.swift */; };
@@ -32,14 +46,19 @@
 		AI0001012024120800000007 /* OpenNodeIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000070 /* OpenNodeIntent.swift */; };
 		AI0001012024120800000008 /* OpenMapIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000080 /* OpenMapIntent.swift */; };
 		AI0001012024120800000009 /* OpenMessagesIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000090 /* OpenMessagesIntent.swift */; };
+		B90D72408AFD5B467E6CA6A7 /* WatchConnectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18BF47B0FEEEB85611CED697 /* WatchConnectivity.framework */; };
 		BB540D0117DE198FC429CB4F /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 98B546599890E89A86B6BADF /* Pods_RunnerTests.framework */; };
 		BD01B77A2F32F9D0004EA220 /* AdSupport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BD01B7792F32F9D0004EA220 /* AdSupport.framework */; };
 		BD61F0312EDD022E00456D75 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BD61F0302EDD022E00456D75 /* WidgetKit.framework */; };
 		BD61F0332EDD022E00456D75 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BD61F0322EDD022E00456D75 /* SwiftUI.framework */; };
 		BD61F0422EDD022F00456D75 /* SocialmeshWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = BD61F02F2EDD022E00456D75 /* SocialmeshWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C2C0DEC220260313000000F2 /* Codec2Symbols.c in Sources */ = {isa = PBXBuildFile; fileRef = C2C0DEC220260313000000F1 /* Codec2Symbols.c */; };
+		CEB87B8B9E1368AA9C7B7AEC /* NodesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D244EC97454F3E5B52E85F55 /* NodesView.swift */; };
 		D5C1D636C7F2A568A037C3D0 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = BEFF18A377E3CA3D364CF1AB /* GoogleService-Info.plist */; };
+		DAE123A98AE5383B50133E1F /* SocialMeshWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF3516E7B5DE020750D389F /* SocialMeshWatchApp.swift */; };
 		DEAA1B73E64596EF83F0313D /* sip_handshake_declined.caf in Resources */ = {isa = PBXBuildFile; fileRef = E2EF6E9623189449B1E7103A /* sip_handshake_declined.caf */; };
+		E310A2F8DE73F6FB5E9AB2DC /* WatchSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27552A30DC4BB14B5896B0E1 /* WatchSnapshotStore.swift */; };
+		E3DA58E007D6A6388FB809E7 /* StatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5B16966013C8FEB1A1882A8 /* StatusView.swift */; };
 		NSE001012026011200000001 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = NSE001012026011200000010 /* NotificationService.swift */; };
 		NSE001012026011200000002 /* NotificationServiceExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = NSE001012026011200000020 /* NotificationServiceExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
@@ -52,9 +71,27 @@
 			remoteGlobalIDString = 97C146ED1CF9000F007C117D;
 			remoteInfo = Runner;
 		};
+		90A0144165F4A3C248BB455F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7C5EE8B93CB6FAF1D321AE41;
+			remoteInfo = SocialMeshWatch;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		085AF9297BB425434BB92BE3 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				0DC5757C67788DA2FE09AB29 /* SocialMeshWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		9705A1C41CF9048500538489 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -80,14 +117,26 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		01E3CE2E4BB311147F5157D7 /* WatchConnectivityManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchConnectivityManager.swift; sourceTree = "<group>"; };
 		086144CADDD33946257DB070 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
+		15B1B5C311A2D2A7EB10695E /* SocialMeshWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SocialMeshWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		18BF47B0FEEEB85611CED697 /* WatchConnectivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WatchConnectivity.framework; path = System/Library/Frameworks/WatchConnectivity.framework; sourceTree = SDKROOT; };
+		1B4A35DAB251E0F520DE190F /* WatchIntentResult.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchIntentResult.swift; sourceTree = "<group>"; };
+		207060DC7251ABBE1DD4FCCB /* WatchCompanionBridge.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchCompanionBridge.swift; sourceTree = "<group>"; };
+		27552A30DC4BB14B5896B0E1 /* WatchSnapshotStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchSnapshotStore.swift; sourceTree = "<group>"; };
 		28698ABB14A3935357B44E3B /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
+		2EF3516E7B5DE020750D389F /* SocialMeshWatchApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SocialMeshWatchApp.swift; sourceTree = "<group>"; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		35A8DC3F136572F6A2978C56 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/WatchOS.platform/Developer/SDKs/WatchOS11.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
+		3D386C32858D5CB580A1B890 /* ChannelPickerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChannelPickerView.swift; sourceTree = "<group>"; };
+		58F41A30827CD07F64F79AA9 /* RootView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		5C015155113781567DE56738 /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
+		69ECD66A678088B1F1781BC6 /* WatchIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchIntent.swift; sourceTree = "<group>"; };
+		6C77513A7C0D2613F64C0311 /* WatchCompanionLogger.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchCompanionLogger.swift; sourceTree = "<group>"; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
@@ -100,6 +149,7 @@
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		98B546599890E89A86B6BADF /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		9AA34C079969D175E704E52D /* WatchSnapshot.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchSnapshot.swift; sourceTree = "<group>"; };
 		A1D16ABD6103CC58C59B0DD8 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 		AI0001012024120800000010 /* AppIntentErrors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntentErrors.swift; sourceTree = "<group>"; };
 		AI00010120241208000000100 /* ShortcutsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsProvider.swift; sourceTree = "<group>"; };
@@ -116,6 +166,7 @@
 		AI0001012024120800000070 /* OpenNodeIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenNodeIntent.swift; sourceTree = "<group>"; };
 		AI0001012024120800000080 /* OpenMapIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMapIntent.swift; sourceTree = "<group>"; };
 		AI0001012024120800000090 /* OpenMessagesIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMessagesIntent.swift; sourceTree = "<group>"; };
+		B9DE29609EA34A5528BDB600 /* UnavailableView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnavailableView.swift; sourceTree = "<group>"; };
 		BC8DE48014C7C6A055684E9E /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		BD01B7792F32F9D0004EA220 /* AdSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdSupport.framework; path = System/Library/Frameworks/AdSupport.framework; sourceTree = SDKROOT; };
 		BD61F02F2EDD022E00456D75 /* SocialmeshWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SocialmeshWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -125,9 +176,14 @@
 		BDE822F82EDD033500DE666E /* SocialmeshWidgetsExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SocialmeshWidgetsExtension.entitlements; sourceTree = "<group>"; };
 		BEFF18A377E3CA3D364CF1AB /* GoogleService-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Runner/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		C2C0DEC220260313000000F1 /* Codec2Symbols.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Codec2Symbols.c; sourceTree = "<group>"; };
+		C4CAC49F2E17EC77F96F453D /* QuickMessageView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuickMessageView.swift; sourceTree = "<group>"; };
+		C6383323257C943D0B3664D6 /* InboxView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InboxView.swift; sourceTree = "<group>"; };
+		C6E64F927859BB383A71156B /* WatchCompanionCodec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchCompanionCodec.swift; sourceTree = "<group>"; };
+		D244EC97454F3E5B52E85F55 /* NodesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NodesView.swift; sourceTree = "<group>"; };
 		D3465C317F5D107C6D2AA20D /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		D8CB7BB13DF7ED035C9A0469 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 		E2EF6E9623189449B1E7103A /* sip_handshake_declined.caf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = sip_handshake_declined.caf; sourceTree = "<group>"; };
+		E5B16966013C8FEB1A1882A8 /* StatusView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StatusView.swift; sourceTree = "<group>"; };
 		EC8278F02D47C99F8BEC115B /* sip_handshake_accepted.caf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = sip_handshake_accepted.caf; sourceTree = "<group>"; };
 		NSE001012026011200000010 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		NSE001012026011200000011 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -187,6 +243,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E14AFC267B97D95D8D19E304 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				723EEA6702A74BE1E601EB01 /* Foundation.framework in Frameworks */,
+				B90D72408AFD5B467E6CA6A7 /* WatchConnectivity.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		NSE001012026011200000060 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -197,12 +262,58 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1867C7ABA2BB5E728AB3FF54 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				69ECD66A678088B1F1781BC6 /* WatchIntent.swift */,
+				1B4A35DAB251E0F520DE190F /* WatchIntentResult.swift */,
+				9AA34C079969D175E704E52D /* WatchSnapshot.swift */,
+			);
+			name = Models;
+			path = Models;
+			sourceTree = "<group>";
+		};
+		2D45EA00F9156985172BFAC4 /* watchOS */ = {
+			isa = PBXGroup;
+			children = (
+				35A8DC3F136572F6A2978C56 /* Foundation.framework */,
+				18BF47B0FEEEB85611CED697 /* WatchConnectivity.framework */,
+			);
+			name = watchOS;
+			sourceTree = "<group>";
+		};
 		331C8082294A63A400263BE5 /* RunnerTests */ = {
 			isa = PBXGroup;
 			children = (
 				331C807B294A618700263BE5 /* RunnerTests.swift */,
 			);
 			path = RunnerTests;
+			sourceTree = "<group>";
+		};
+		3D98F52F43A2A538F4B718A0 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				3D386C32858D5CB580A1B890 /* ChannelPickerView.swift */,
+				C6383323257C943D0B3664D6 /* InboxView.swift */,
+				D244EC97454F3E5B52E85F55 /* NodesView.swift */,
+				C4CAC49F2E17EC77F96F453D /* QuickMessageView.swift */,
+				58F41A30827CD07F64F79AA9 /* RootView.swift */,
+				E5B16966013C8FEB1A1882A8 /* StatusView.swift */,
+				B9DE29609EA34A5528BDB600 /* UnavailableView.swift */,
+			);
+			name = Views;
+			path = Views;
+			sourceTree = "<group>";
+		};
+		89800D3B87EE50C5A5322C98 /* WatchCompanion */ = {
+			isa = PBXGroup;
+			children = (
+				207060DC7251ABBE1DD4FCCB /* WatchCompanionBridge.swift */,
+				C6E64F927859BB383A71156B /* WatchCompanionCodec.swift */,
+				6C77513A7C0D2613F64C0311 /* WatchCompanionLogger.swift */,
+			);
+			name = WatchCompanion;
+			path = WatchCompanion;
 			sourceTree = "<group>";
 		};
 		9740EEB11CF90186004384FC /* Flutter */ = {
@@ -229,6 +340,8 @@
 				9D2BE260A89A75ABBC900896 /* Pods */,
 				EFDDA3AC0E4C446E71E36131 /* Frameworks */,
 				BEFF18A377E3CA3D364CF1AB /* GoogleService-Info.plist */,
+				15B1B5C311A2D2A7EB10695E /* SocialMeshWatch.app */,
+				B504F992B6325DE10574C635 /* SocialMeshWatch */,
 			);
 			sourceTree = "<group>";
 		};
@@ -260,6 +373,7 @@
 				82126BB40327C4B92161BACD /* sip_handshake_request.caf */,
 				EC8278F02D47C99F8BEC115B /* sip_handshake_accepted.caf */,
 				E2EF6E9623189449B1E7103A /* sip_handshake_declined.caf */,
+				89800D3B87EE50C5A5322C98 /* WatchCompanion */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -299,6 +413,19 @@
 			path = AppIntents;
 			sourceTree = "<group>";
 		};
+		B504F992B6325DE10574C635 /* SocialMeshWatch */ = {
+			isa = PBXGroup;
+			children = (
+				1867C7ABA2BB5E728AB3FF54 /* Models */,
+				3D98F52F43A2A538F4B718A0 /* Views */,
+				2EF3516E7B5DE020750D389F /* SocialMeshWatchApp.swift */,
+				01E3CE2E4BB311147F5157D7 /* WatchConnectivityManager.swift */,
+				27552A30DC4BB14B5896B0E1 /* WatchSnapshotStore.swift */,
+			);
+			name = SocialMeshWatch;
+			path = SocialMeshWatch;
+			sourceTree = "<group>";
+		};
 		EFDDA3AC0E4C446E71E36131 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -307,6 +434,7 @@
 				BD61F0322EDD022E00456D75 /* SwiftUI.framework */,
 				086144CADDD33946257DB070 /* Pods_Runner.framework */,
 				98B546599890E89A86B6BADF /* Pods_RunnerTests.framework */,
+				2D45EA00F9156985172BFAC4 /* watchOS */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -342,6 +470,23 @@
 			productName = RunnerTests;
 			productReference = 331C8081294A63A400263BE5 /* RunnerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		7C5EE8B93CB6FAF1D321AE41 /* SocialMeshWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 42A7656610D8E0F83F82D8A4 /* Build configuration list for PBXNativeTarget "SocialMeshWatch" */;
+			buildPhases = (
+				A589167EA32F97B04BDA86E0 /* Sources */,
+				E14AFC267B97D95D8D19E304 /* Frameworks */,
+				451D4BD4B8AF27881E1ECB08 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SocialMeshWatch;
+			productName = SocialMeshWatch;
+			productReference = 15B1B5C311A2D2A7EB10695E /* SocialMeshWatch.app */;
+			productType = "com.apple.product-type.application";
 		};
 		97C146ED1CF9000F007C117D /* Runner */ = {
 			isa = PBXNativeTarget;
@@ -451,12 +596,20 @@
 				331C8080294A63A400263BE5 /* RunnerTests */,
 				BD61F02E2EDD022E00456D75 /* SocialmeshWidgetsExtension */,
 				NSE001012026011200000040 /* NotificationServiceExtension */,
+				7C5EE8B93CB6FAF1D321AE41 /* SocialMeshWatch */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		331C807F294A63A400263BE5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		451D4BD4B8AF27881E1ECB08 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -691,6 +844,29 @@
 				AI00010120241208000000013 /* RestartNodeIntent.swift in Sources */,
 				AI00010120241208000000014 /* DisconnectNodeIntent.swift in Sources */,
 				AI00010120241208000000015 /* TracerouteIntent.swift in Sources */,
+				89C763C1050CBBD9EC5105DB /* WatchCompanionBridge.swift in Sources */,
+				825D564F5F2F1723A24700C4 /* WatchCompanionCodec.swift in Sources */,
+				386029B53AD8B262C9E35529 /* WatchCompanionLogger.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A589167EA32F97B04BDA86E0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A2F94733B66DF1EDD204E054 /* WatchIntent.swift in Sources */,
+				40CA86D6D85BD8895FD3533B /* WatchIntentResult.swift in Sources */,
+				1DB2F1309E481576C45308A0 /* WatchSnapshot.swift in Sources */,
+				DAE123A98AE5383B50133E1F /* SocialMeshWatchApp.swift in Sources */,
+				30C93E22396F57AF33A9F084 /* ChannelPickerView.swift in Sources */,
+				376EF8DDA00E098703C86195 /* InboxView.swift in Sources */,
+				CEB87B8B9E1368AA9C7B7AEC /* NodesView.swift in Sources */,
+				3A7207EA1B04F4B229F27BDC /* QuickMessageView.swift in Sources */,
+				860D456DBBDF3DF9E95F3608 /* RootView.swift in Sources */,
+				E3DA58E007D6A6388FB809E7 /* StatusView.swift in Sources */,
+				4903A777BE1D0ADAF541DBE3 /* UnavailableView.swift in Sources */,
+				1B1BAF1ABCD21D26BA483BE4 /* WatchConnectivityManager.swift in Sources */,
+				E310A2F8DE73F6FB5E9AB2DC /* WatchSnapshotStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -716,6 +892,12 @@
 			isa = PBXTargetDependency;
 			target = 97C146ED1CF9000F007C117D /* Runner */;
 			targetProxy = 331C8085294A63A400263BE5 /* PBXContainerItemProxy */;
+		};
+		EC7ACCE08B4BEB193E004DDD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = SocialMeshWatch;
+			target = 7C5EE8B93CB6FAF1D321AE41 /* SocialMeshWatch */;
+			targetProxy = 90A0144165F4A3C248BB455F /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1088,6 +1270,92 @@
 			};
 			name = Release;
 		};
+		AD34B2A8A710ADE76C15EBA1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "-";
+				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "-";
+				"CODE_SIGN_IDENTITY[sdk=watchsimulator*]" = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = SocialMesh;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKApplication = YES;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.gotnull.socialmesh;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh.watchkitapp;
+				PRODUCT_NAME = SocialMeshWatch;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		BB374C226D9BD0947E083A4B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "-";
+				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "-";
+				"CODE_SIGN_IDENTITY[sdk=watchsimulator*]" = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = SocialMesh;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKApplication = YES;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.gotnull.socialmesh;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh.watchkitapp;
+				PRODUCT_NAME = SocialMeshWatch;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
 		BD61F0442EDD022F00456D75 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1226,6 +1494,51 @@
 			};
 			name = Profile;
 		};
+		ED2A2332ABD929764E86179F /* Profile */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "-";
+				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "-";
+				"CODE_SIGN_IDENTITY[sdk=watchsimulator*]" = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = SocialMesh;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKApplication = YES;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.gotnull.socialmesh;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gotnull.socialmesh.watchkitapp;
+				PRODUCT_NAME = SocialMeshWatch;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Profile;
+		};
 		NSE001012026011200000081 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1352,6 +1665,16 @@
 				331C8088294A63A400263BE5 /* Debug */,
 				331C8089294A63A400263BE5 /* Release */,
 				331C808A294A63A400263BE5 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		42A7656610D8E0F83F82D8A4 /* Build configuration list for PBXNativeTarget "SocialMeshWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AD34B2A8A710ADE76C15EBA1 /* Release */,
+				BB374C226D9BD0947E083A4B /* Debug */,
+				ED2A2332ABD929764E86179F /* Profile */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
