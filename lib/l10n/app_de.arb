@@ -12397,5 +12397,17 @@
   "meshcoreWidgetNodeMapDescription": "Kompakte Kartenansicht der Kontakte mit Standort",
   "meshcoreWidgetNodeMapTapToExpand": "Tippen zum Erweitern",
   "meshcoreWidgetNodeMapEmptyTitle": "Keine GPS-Daten",
-  "meshcoreWidgetNodeMapEmptySubtitle": "Kontakte erscheinen hier, sobald sie eine Position senden"
+  "meshcoreWidgetNodeMapEmptySubtitle": "Kontakte erscheinen hier, sobald sie eine Position senden",
+  "watchSettingsTitle": "Apple Watch",
+  "watchSettingsHubSubtitle": "Watch-Companion-Einstellungen",
+  "watchSettingsSectionStatus": "STATUS",
+  "watchSettingsSectionQuickSend": "SCHNELLSENDEN-STANDARDS",
+  "watchSettingsStatusLabel": "Companion",
+  "watchSettingsStatusEnabled": "Aktiviert",
+  "watchSettingsStatusDisabled": "Deaktiviert",
+  "watchSettingsDefaultChannelTitle": "Standardkanal",
+  "watchSettingsDefaultChannelSubtitle": "Vorausgewählt beim Senden vordefinierter Nachrichten von Ihrer Apple Watch. Sie können auf der Watch jedes Mal einen anderen Kanal wählen.",
+  "watchSettingsChannelChipLabel": "Kanal {n}",
+  "watchSettingsAboutTitle": "Über",
+  "watchSettingsAboutBody": "Senden Sie vordefinierte Nachrichten von Ihrer Apple Watch, wenn sie mit diesem iPhone gekoppelt ist. Sendungen durchlaufen dieselben Bereitschafts- und Ratenlimit-Prüfungen wie der Verfasser auf dem Telefon."
 }

@@ -74560,6 +74560,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'LoRa mesh has no offline signal. Status is inferred.'**
   String get presenceInferenceTooltip;
+
+  /// Title of the Apple Watch companion settings screen and of the tile in the settings hub that opens it. 'Apple Watch' is an Apple brand name; keep it verbatim in every locale.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Watch'**
+  String get watchSettingsTitle;
+
+  /// Subtitle on the settings-hub tile that opens the Apple Watch companion screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch companion preferences'**
+  String get watchSettingsHubSubtitle;
+
+  /// Uppercase section header above the status row in the Apple Watch settings screen.
+  ///
+  /// In en, this message translates to:
+  /// **'STATUS'**
+  String get watchSettingsSectionStatus;
+
+  /// Uppercase section header above the default-channel picker in the Apple Watch settings screen.
+  ///
+  /// In en, this message translates to:
+  /// **'QUICK-SEND DEFAULTS'**
+  String get watchSettingsSectionQuickSend;
+
+  /// Label on the read-only row that shows whether the Watch companion surface is enabled via the WATCH_COMPANION_ENABLED feature flag.
+  ///
+  /// In en, this message translates to:
+  /// **'Companion'**
+  String get watchSettingsStatusLabel;
+
+  /// Value of the companion-status row when the WATCH_COMPANION_ENABLED feature flag is on.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get watchSettingsStatusEnabled;
+
+  /// Value of the companion-status row when the WATCH_COMPANION_ENABLED feature flag is off.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get watchSettingsStatusDisabled;
+
+  /// Title of the picker that selects which channel index is pre-selected on the Watch quick-send screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Default channel'**
+  String get watchSettingsDefaultChannelTitle;
+
+  /// Subtitle under the default-channel picker, explaining its role.
+  ///
+  /// In en, this message translates to:
+  /// **'Pre-selected when sending canned messages from your Apple Watch. You can still pick a different channel each time on the Watch.'**
+  String get watchSettingsDefaultChannelSubtitle;
+
+  /// Label for one chip in the default-channel picker. {n} is the channel index (0-7).
+  ///
+  /// In en, this message translates to:
+  /// **'Channel {n}'**
+  String watchSettingsChannelChipLabel(int n);
+
+  /// Section header above the explanatory About paragraph at the bottom of the Apple Watch settings screen.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get watchSettingsAboutTitle;
+
+  /// Explanatory paragraph at the bottom of the Apple Watch settings screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Send canned messages from your Apple Watch when paired with this iPhone. Sends go through the same readiness and rate-limit checks as the on-phone composer.'**
+  String get watchSettingsAboutBody;
 }
 
 class _AppLocalizationsDelegate

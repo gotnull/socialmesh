@@ -104,6 +104,7 @@ import 'network_endpoints_screen.dart';
 import 'reticulum_bridge_screen.dart';
 import 'reticulum_diagnostics_screen.dart';
 import 'translation_settings_screen.dart';
+import 'watch_companion_settings_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   /// Optional search query to pre-fill on open, allowing callers to
@@ -616,6 +617,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               MaterialPageRoute(builder: (_) => const TakSettingsScreen()),
             ),
           ),
+
+        // Apple Watch companion (iOS only). The screen itself stays
+        // visible on every platform so the developer can browse the
+        // feature surface from any device; the underlying bridge is
+        // a no-op on non-iOS builds.
+        _SearchableSettingItem(
+          icon: Icons.watch_outlined,
+          title: context.l10n.watchSettingsTitle,
+          subtitle: context.l10n.watchSettingsHubSubtitle,
+          keywords: [
+            'apple watch',
+            'watch',
+            'companion',
+            'wearable',
+            'quick send',
+          ],
+          section: context.l10n.settingsSectionConnection,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const WatchCompanionSettingsScreen(),
+            ),
+          ),
+        ),
 
         // Haptic Feedback
         _SearchableSettingItem(

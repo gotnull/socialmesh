@@ -56755,5 +56755,59 @@
     "presenceInferenceTooltip": "LoRa mesh has no offline signal. Status is inferred.",
     "@presenceInferenceTooltip": {
         "description": "Tooltip shown next to inferred presence badges to explain why status is approximate."
+    },
+    "watchSettingsTitle": "Apple Watch",
+    "@watchSettingsTitle": {
+        "description": "Title of the Apple Watch companion settings screen and of the tile in the settings hub that opens it. 'Apple Watch' is an Apple brand name; keep it verbatim in every locale."
+    },
+    "watchSettingsHubSubtitle": "Watch companion preferences",
+    "@watchSettingsHubSubtitle": {
+        "description": "Subtitle on the settings-hub tile that opens the Apple Watch companion screen."
+    },
+    "watchSettingsSectionStatus": "STATUS",
+    "@watchSettingsSectionStatus": {
+        "description": "Uppercase section header above the status row in the Apple Watch settings screen."
+    },
+    "watchSettingsSectionQuickSend": "QUICK-SEND DEFAULTS",
+    "@watchSettingsSectionQuickSend": {
+        "description": "Uppercase section header above the default-channel picker in the Apple Watch settings screen."
+    },
+    "watchSettingsStatusLabel": "Companion",
+    "@watchSettingsStatusLabel": {
+        "description": "Label on the read-only row that shows whether the Watch companion surface is enabled via the WATCH_COMPANION_ENABLED feature flag."
+    },
+    "watchSettingsStatusEnabled": "Enabled",
+    "@watchSettingsStatusEnabled": {
+        "description": "Value of the companion-status row when the WATCH_COMPANION_ENABLED feature flag is on."
+    },
+    "watchSettingsStatusDisabled": "Disabled",
+    "@watchSettingsStatusDisabled": {
+        "description": "Value of the companion-status row when the WATCH_COMPANION_ENABLED feature flag is off."
+    },
+    "watchSettingsDefaultChannelTitle": "Default channel",
+    "@watchSettingsDefaultChannelTitle": {
+        "description": "Title of the picker that selects which channel index is pre-selected on the Watch quick-send screen."
+    },
+    "watchSettingsDefaultChannelSubtitle": "Pre-selected when sending canned messages from your Apple Watch. You can still pick a different channel each time on the Watch.",
+    "@watchSettingsDefaultChannelSubtitle": {
+        "description": "Subtitle under the default-channel picker, explaining its role."
+    },
+    "watchSettingsChannelChipLabel": "Channel {n}",
+    "@watchSettingsChannelChipLabel": {
+        "description": "Label for one chip in the default-channel picker. {n} is the channel index (0-7).",
+        "placeholders": {
+            "n": {
+                "type": "int",
+                "example": "0"
+            }
+        }
+    },
+    "watchSettingsAboutTitle": "About",
+    "@watchSettingsAboutTitle": {
+        "description": "Section header above the explanatory About paragraph at the bottom of the Apple Watch settings screen."
+    },
+    "watchSettingsAboutBody": "Send canned messages from your Apple Watch when paired with this iPhone. Sends go through the same readiness and rate-limit checks as the on-phone composer.",
+    "@watchSettingsAboutBody": {
+        "description": "Explanatory paragraph at the bottom of the Apple Watch settings screen."
     }
 }

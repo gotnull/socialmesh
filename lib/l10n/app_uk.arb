@@ -12397,5 +12397,17 @@
   "meshcoreWidgetNodeMapDescription": "Компактний вигляд контактів із координатами",
   "meshcoreWidgetNodeMapTapToExpand": "Натисніть, щоб розгорнути",
   "meshcoreWidgetNodeMapEmptyTitle": "Немає даних GPS",
-  "meshcoreWidgetNodeMapEmptySubtitle": "Контакти з'являться тут, коли передадуть свою позицію"
+  "meshcoreWidgetNodeMapEmptySubtitle": "Контакти з'являться тут, коли передадуть свою позицію",
+  "watchSettingsTitle": "Apple Watch",
+  "watchSettingsHubSubtitle": "Налаштування компаньйона для Watch",
+  "watchSettingsSectionStatus": "СТАТУС",
+  "watchSettingsSectionQuickSend": "ЗА ЗАМОВЧУВАННЯМ ШВИДКОГО НАДСИЛАННЯ",
+  "watchSettingsStatusLabel": "Компаньйон",
+  "watchSettingsStatusEnabled": "Увімкнено",
+  "watchSettingsStatusDisabled": "Вимкнено",
+  "watchSettingsDefaultChannelTitle": "Канал за замовчуванням",
+  "watchSettingsDefaultChannelSubtitle": "Попередньо обрано під час надсилання готових повідомлень з вашого Apple Watch. На Watch ви все одно можете щоразу обрати інший канал.",
+  "watchSettingsChannelChipLabel": "Канал {n}",
+  "watchSettingsAboutTitle": "Про компаньйона",
+  "watchSettingsAboutBody": "Надсилайте готові повідомлення з вашого Apple Watch, коли його з'єднано з цим iPhone. Надсилання проходять ті самі перевірки готовності та обмеження швидкості, що й редактор на телефоні."
 }

@@ -43223,4 +43223,45 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get presenceInferenceTooltip =>
       'La malla LoRa no tiene señal de desconexión. El estado se infiere.';
+
+  @override
+  String get watchSettingsTitle => 'Apple Watch';
+
+  @override
+  String get watchSettingsHubSubtitle =>
+      'Preferencias del companion para Watch';
+
+  @override
+  String get watchSettingsSectionStatus => 'ESTADO';
+
+  @override
+  String get watchSettingsSectionQuickSend => 'PREDETERMINADOS DE ENVÍO RÁPIDO';
+
+  @override
+  String get watchSettingsStatusLabel => 'Companion';
+
+  @override
+  String get watchSettingsStatusEnabled => 'Activado';
+
+  @override
+  String get watchSettingsStatusDisabled => 'Desactivado';
+
+  @override
+  String get watchSettingsDefaultChannelTitle => 'Canal predeterminado';
+
+  @override
+  String get watchSettingsDefaultChannelSubtitle =>
+      'Preseleccionado al enviar mensajes predefinidos desde tu Apple Watch. Aún puedes elegir un canal diferente cada vez en la Watch.';
+
+  @override
+  String watchSettingsChannelChipLabel(int n) {
+    return 'Canal $n';
+  }
+
+  @override
+  String get watchSettingsAboutTitle => 'Acerca de';
+
+  @override
+  String get watchSettingsAboutBody =>
+      'Envía mensajes predefinidos desde tu Apple Watch cuando esté vinculada con este iPhone. Los envíos pasan por las mismas comprobaciones de disponibilidad y límite de velocidad que el redactor del teléfono.';
 }

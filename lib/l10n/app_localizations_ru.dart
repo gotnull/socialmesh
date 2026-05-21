@@ -43016,4 +43016,45 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get presenceInferenceTooltip =>
       'В LoRa-сети нет офлайн-сигнала. Статус определяется по последней активности.';
+
+  @override
+  String get watchSettingsTitle => 'Apple Watch';
+
+  @override
+  String get watchSettingsHubSubtitle =>
+      'Настройки приложения-компаньона для Watch';
+
+  @override
+  String get watchSettingsSectionStatus => 'СТАТУС';
+
+  @override
+  String get watchSettingsSectionQuickSend => 'НАСТРОЙКИ БЫСТРОЙ ОТПРАВКИ';
+
+  @override
+  String get watchSettingsStatusLabel => 'Компаньон';
+
+  @override
+  String get watchSettingsStatusEnabled => 'Включено';
+
+  @override
+  String get watchSettingsStatusDisabled => 'Отключено';
+
+  @override
+  String get watchSettingsDefaultChannelTitle => 'Канал по умолчанию';
+
+  @override
+  String get watchSettingsDefaultChannelSubtitle =>
+      'Выбирается по умолчанию при отправке готовых сообщений с Apple Watch. На Watch вы по-прежнему можете каждый раз выбирать другой канал.';
+
+  @override
+  String watchSettingsChannelChipLabel(int n) {
+    return 'Канал $n';
+  }
+
+  @override
+  String get watchSettingsAboutTitle => 'О компаньоне';
+
+  @override
+  String get watchSettingsAboutBody =>
+      'Отправляйте готовые сообщения с Apple Watch при сопряжении с этим iPhone. Отправка проходит те же проверки готовности и лимита скорости, что и редактор на телефоне.';
 }

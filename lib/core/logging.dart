@@ -109,6 +109,7 @@ class AppLogging {
   static bool? _meshcoreLoggingEnabled;
   static bool? _meshcoreLoggingLocationEnabled;
   static bool? _platformLoggingEnabled;
+  static bool? _watchCompanionLoggingEnabled;
   static bool? _forceEmptyStates;
   static Logger? _bleLogger;
   static Logger? _mapLogger;
@@ -1019,6 +1020,23 @@ class AppLogging {
     if (platformLoggingEnabled) debugPrint('Platform: $message');
   }
 
+  /// Apple Watch companion bridge. Default-on in debug, default-off in
+  /// release; explicit env var always wins. Mirrors [meshcoreLoggingEnabled]
+  /// so a developer running a debug build can see WC session activation,
+  /// reachability flips, snapshot pushes, and intent dispatch without
+  /// flipping any flag, while release builds stay quiet.
+  static bool get watchCompanionLoggingEnabled {
+    _watchCompanionLoggingEnabled ??=
+        _safeGetEnv('WATCH_COMPANION_LOGGING_ENABLED')?.toLowerCase() ==
+            'true' ||
+        (_safeGetEnv('WATCH_COMPANION_LOGGING_ENABLED') == null && kDebugMode);
+    return _watchCompanionLoggingEnabled!;
+  }
+
+  static void watchCompanion(String message) {
+    if (watchCompanionLoggingEnabled) debugPrint('WatchCompanion: $message');
+  }
+
   /// Short fingerprint for a public-key byte string suitable for log
   /// lines. Format: `<lenB:first4…last4hex>`. Empty/null renders as
   /// `0B:none`. Keys ≤8 bytes are emitted in full hex (still safe — too
@@ -1160,6 +1178,7 @@ class AppLogging {
     _meshcoreLoggingEnabled = null;
     _meshcoreLoggingLocationEnabled = null;
     _platformLoggingEnabled = null;
+    _watchCompanionLoggingEnabled = null;
   }
 
   static void reset() {
@@ -1229,6 +1248,7 @@ class AppLogging {
     _meshcoreLoggingEnabled = null;
     _meshcoreLoggingLocationEnabled = null;
     _platformLoggingEnabled = null;
+    _watchCompanionLoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }

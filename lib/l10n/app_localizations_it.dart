@@ -43030,4 +43030,44 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get presenceInferenceTooltip =>
       'La rete LoRa non ha un segnale offline. Lo stato è dedotto.';
+
+  @override
+  String get watchSettingsTitle => 'Apple Watch';
+
+  @override
+  String get watchSettingsHubSubtitle => 'Preferenze companion Apple Watch';
+
+  @override
+  String get watchSettingsSectionStatus => 'STATO';
+
+  @override
+  String get watchSettingsSectionQuickSend => 'PREDEFINITI INVIO RAPIDO';
+
+  @override
+  String get watchSettingsStatusLabel => 'Companion';
+
+  @override
+  String get watchSettingsStatusEnabled => 'Attivato';
+
+  @override
+  String get watchSettingsStatusDisabled => 'Disattivato';
+
+  @override
+  String get watchSettingsDefaultChannelTitle => 'Canale predefinito';
+
+  @override
+  String get watchSettingsDefaultChannelSubtitle =>
+      'Preselezionato quando invii messaggi predefiniti dall\'Apple Watch. Puoi comunque scegliere un canale diverso ogni volta dalla Watch.';
+
+  @override
+  String watchSettingsChannelChipLabel(int n) {
+    return 'Canale $n';
+  }
+
+  @override
+  String get watchSettingsAboutTitle => 'Informazioni';
+
+  @override
+  String get watchSettingsAboutBody =>
+      'Invia messaggi predefiniti dall\'Apple Watch quando è abbinata a questo iPhone. Gli invii passano per gli stessi controlli di prontezza e limite di velocità del compositore sul telefono.';
 }

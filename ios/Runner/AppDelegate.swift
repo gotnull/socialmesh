@@ -55,6 +55,17 @@ import os
       }
     }
 
+    // Apple Watch companion bridge. Sets up the
+    // com.socialmesh/watch_companion MethodChannel; Dart drives the
+    // WCSession lifecycle from there (activate, push, deactivate),
+    // so registering the channel handler here is safe even on devices
+    // without a paired Watch and even when the WATCH_COMPANION_ENABLED
+    // flag is off. The Dart-side bridge starter checks that flag and
+    // simply never calls activateSession when disabled.
+    if let controller = window?.rootViewController as? FlutterViewController {
+      WatchCompanionBridge.shared.setup(with: controller)
+    }
+
     // Dart → os_log bridge.
     // Flutter's `print`/`debugPrint` goes to Dart VM stderr, which is
     // invisible to `xcrun simctl log stream` and the xcodebuild MCP log

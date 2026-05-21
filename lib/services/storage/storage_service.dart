@@ -246,6 +246,18 @@ class SettingsService {
 
   int get themeMode => _preferences.getInt('theme_mode') ?? 2; // Default dark
 
+  // Apple Watch companion: the channel index pre-selected on the Watch
+  // quick-send screen. The Watch may still let the user pick a different
+  // channel for an individual send; this is just the default. Defaults to
+  // 0 (the primary channel) for any user who has not visited the Watch
+  // settings screen.
+  Future<void> setWatchDefaultChannelIndex(int index) async {
+    await _preferences.setInt('watch_default_channel_index', index);
+  }
+
+  int get watchDefaultChannelIndex =>
+      _preferences.getInt('watch_default_channel_index') ?? 0;
+
   // Preferred Locale (null = system default)
   Future<void> setPreferredLocale(String? localeCode) async {
     if (localeCode != null) {

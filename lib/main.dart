@@ -23,6 +23,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:socialmesh/services/transport/background_ble_service.dart';
+import 'package:socialmesh/services/watch_companion/watch_companion_providers.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector3;
 import 'package:socialmesh/features/scanner/widgets/connecting_animation.dart';
 import 'firebase_options.dart';
@@ -642,6 +643,14 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       _initializePushNotificationNavigation();
       // Initialize glyph service (Nothing Phone)
       _initializeGlyphService();
+      // Start the Apple Watch companion bridge (iOS only). The bridge
+      // is internally gated on WCSession.isSupported() and on the
+      // WATCH_COMPANION_ENABLED feature flag; on Android / iPad-only
+      // builds this resolves to a no-op. Idempotent: safe under hot
+      // restart.
+      if (Platform.isIOS) {
+        unawaited(ref.read(watchCompanionChannelBridgeProvider).start());
+      }
     });
   }
 

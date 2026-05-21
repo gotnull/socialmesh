@@ -45541,5 +45541,17 @@
   "meshcoreWidgetNodeMapDescription": "Vista compacta dos contactos com localização",
   "meshcoreWidgetNodeMapTapToExpand": "Toca para expandir",
   "meshcoreWidgetNodeMapEmptyTitle": "Sem dados GPS",
-  "meshcoreWidgetNodeMapEmptySubtitle": "Os contactos aparecerão aqui assim que anunciarem uma posição"
+  "meshcoreWidgetNodeMapEmptySubtitle": "Os contactos aparecerão aqui assim que anunciarem uma posição",
+  "watchSettingsTitle": "Apple Watch",
+  "watchSettingsHubSubtitle": "Preferências do companion para Watch",
+  "watchSettingsSectionStatus": "ESTADO",
+  "watchSettingsSectionQuickSend": "PADRÕES DE ENVIO RÁPIDO",
+  "watchSettingsStatusLabel": "Companion",
+  "watchSettingsStatusEnabled": "Ativado",
+  "watchSettingsStatusDisabled": "Desativado",
+  "watchSettingsDefaultChannelTitle": "Canal padrão",
+  "watchSettingsDefaultChannelSubtitle": "Pré-selecionado ao enviar mensagens predefinidas do seu Apple Watch. Pode escolher um canal diferente a cada vez no Watch.",
+  "watchSettingsChannelChipLabel": "Canal {n}",
+  "watchSettingsAboutTitle": "Sobre",
+  "watchSettingsAboutBody": "Envie mensagens predefinidas do seu Apple Watch quando emparelhado com este iPhone. Os envios passam pelas mesmas verificações de prontidão e limite de taxa do redator no telefone."
 }
