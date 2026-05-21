@@ -206,6 +206,25 @@ class WatchCompanionChannelBridge {
         AppLogging.watchCompanion(
           'bridge: native session state changed: ${call.arguments}',
         );
+        // When the paired Watch's app transitions from not-installed
+        // (or not-reachable) to installed AND reachable, any earlier
+        // pushSnapshot calls failed silently with
+        // WCErrorCodeWatchAppNotInstalled. Re-push the latest cached
+        // snapshot so the Watch UI exits its "Waiting for phone"
+        // state without needing an upstream provider change.
+        final args = call.arguments;
+        if (args is Map &&
+            args['isWatchAppInstalled'] == true &&
+            args['isReachable'] == true) {
+          final service = _readService();
+          final cached = service.latestSnapshot;
+          if (cached != null) {
+            AppLogging.watchCompanion(
+              'bridge: re-pushing cached snapshot after Watch came online',
+            );
+            unawaited(_pushSnapshot(cached));
+          }
+        }
         return null;
 
       default:
