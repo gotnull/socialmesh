@@ -22,13 +22,6 @@ import '../../utils/snackbar.dart';
 class WatchCompanionSettingsScreen extends ConsumerStatefulWidget {
   const WatchCompanionSettingsScreen({super.key});
 
-  /// Number of channel chips rendered in the picker. Meshtastic
-  /// supports up to 8 channels (indices 0-7); MeshCore is single-channel
-  /// today but the persisted value is still an int so the same picker
-  /// works for both. Slice 6's Watch UI picks from the snapshot's live
-  /// channel list at send time; this screen just sets the pre-select.
-  static const int channelCount = 8;
-
   @override
   ConsumerState<WatchCompanionSettingsScreen> createState() =>
       _WatchCompanionSettingsScreenState();
@@ -144,15 +137,24 @@ class _WatchCompanionSettingsScreenState
 
   Widget _buildQuickSendSection(BuildContext context) {
     final l10n = context.l10n;
-    final options = List<ChipOption<int>>.generate(
-      WatchCompanionSettingsScreen.channelCount,
-      (i) => ChipOption<int>(
-        value: i,
-        label: l10n.watchSettingsChannelChipLabel(i),
-        icon: Icons.tag,
-        color: context.accentColor,
-      ),
+    // Drive chip list from the same channels facade the Watch's
+    // snapshot composer uses. The user can only pick a default
+    // channel that actually exists on the active radio, eliminating
+    // the silent "Channel N doesn't exist on your radio so the Watch
+    // falls back to Primary" confusion.
+    final availableChannels = ref.watch(
+      watchCompanionAvailableChannelsProvider,
     );
+    final options = availableChannels
+        .map(
+          (c) => ChipOption<int>(
+            value: c.index,
+            label: c.name,
+            icon: Icons.tag,
+            color: context.accentColor,
+          ),
+        )
+        .toList(growable: false);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -221,11 +223,28 @@ class _WatchCompanionSettingsScreenState
                   ],
                 ),
                 const SizedBox(height: AppTheme.spacing16),
-                ChipSelector<int>(
-                  value: _defaultChannel,
-                  options: options,
-                  onChanged: _setDefaultChannel,
-                ),
+                if (options.isEmpty)
+                  // No channels available means either no protocol is
+                  // active or the active radio has not advertised any
+                  // channel config yet. Show a helpful placeholder
+                  // instead of an empty ChipSelector so the user
+                  // knows what to do next. The persisted setting
+                  // (whatever index they picked previously) survives
+                  // and re-applies as soon as a channel with that
+                  // index appears in the snapshot.
+                  Text(
+                    l10n.watchSettingsChannelsUnavailable,
+                    style: context.bodySmallStyle?.copyWith(
+                      color: context.textTertiary,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  )
+                else
+                  ChipSelector<int>(
+                    value: _defaultChannel,
+                    options: options,
+                    onChanged: _setDefaultChannel,
+                  ),
               ],
             ),
           ),

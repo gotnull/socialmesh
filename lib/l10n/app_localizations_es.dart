@@ -43264,4 +43264,8 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get watchSettingsAboutBody =>
       'Envía mensajes predefinidos desde tu Apple Watch cuando esté vinculada con este iPhone. Los envíos pasan por las mismas comprobaciones de disponibilidad y límite de velocidad que el redactor del teléfono.';
+
+  @override
+  String get watchSettingsChannelsUnavailable =>
+      'Conecta una radio para elegir un canal predeterminado.';
 }

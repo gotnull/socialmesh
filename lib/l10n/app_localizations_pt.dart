@@ -43044,4 +43044,8 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get watchSettingsAboutBody =>
       'Envie mensagens predefinidas do seu Apple Watch quando emparelhado com este iPhone. Os envios passam pelas mesmas verificações de prontidão e limite de taxa do redator no telefone.';
+
+  @override
+  String get watchSettingsChannelsUnavailable =>
+      'Conecte um rádio para escolher um canal padrão.';
 }

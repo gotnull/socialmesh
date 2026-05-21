@@ -6,6 +6,8 @@ import 'package:socialmesh/providers/app_providers.dart'
     show settingsServiceProvider;
 
 import '_internal/composing_watch_companion_service.dart';
+import '_internal/watch_channels_facade.dart';
+import 'models/watch_companion_channel_preview.dart';
 import 'models/watch_companion_snapshot.dart';
 import 'watch_companion_channel_bridge.dart';
 import 'watch_companion_feature_flags.dart';
@@ -85,3 +87,18 @@ final watchDefaultChannelIndexProvider = Provider<int>((ref) {
     orElse: () => 0,
   );
 });
+
+/// Public projection of the channels currently available to the Watch
+/// surface (protocol-resolved + empty-name-fallback applied). Consumed
+/// by Settings -> Watch so the default-channel picker only renders
+/// chips for indices that actually exist on the active radio, instead
+/// of presenting 0-7 unconditionally and silently dropping
+/// non-configured picks.
+///
+/// Re-exports the internal facade so the settings screen and the
+/// snapshot composer share one source of truth for "what channels
+/// does the Watch know about right now" — they cannot drift.
+final watchCompanionAvailableChannelsProvider =
+    Provider<List<WatchCompanionChannelPreview>>((ref) {
+      return ref.watch(watchChannelsFacadeProvider);
+    });

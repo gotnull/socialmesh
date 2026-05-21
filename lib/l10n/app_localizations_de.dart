@@ -43191,4 +43191,8 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get watchSettingsAboutBody =>
       'Senden Sie vordefinierte Nachrichten von Ihrer Apple Watch, wenn sie mit diesem iPhone gekoppelt ist. Sendungen durchlaufen dieselben Bereitschafts- und Ratenlimit-Prüfungen wie der Verfasser auf dem Telefon.';
+
+  @override
+  String get watchSettingsChannelsUnavailable =>
+      'Verbinden Sie ein Funkgerät, um einen Standardkanal zu wählen.';
 }

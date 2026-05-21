@@ -56809,5 +56809,9 @@
     "watchSettingsAboutBody": "Send canned messages from your Apple Watch when paired with this iPhone. Sends go through the same readiness and rate-limit checks as the on-phone composer.",
     "@watchSettingsAboutBody": {
         "description": "Explanatory paragraph at the bottom of the Apple Watch settings screen."
+    },
+    "watchSettingsChannelsUnavailable": "Connect a radio to choose a default channel.",
+    "@watchSettingsChannelsUnavailable": {
+        "description": "Placeholder shown in the Apple Watch settings screen's default-channel picker when no protocol is active or the active radio has not advertised any channel config yet."
     }
 }

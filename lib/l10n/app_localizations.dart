@@ -74632,6 +74632,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send canned messages from your Apple Watch when paired with this iPhone. Sends go through the same readiness and rate-limit checks as the on-phone composer.'**
   String get watchSettingsAboutBody;
+
+  /// Placeholder shown in the Apple Watch settings screen's default-channel picker when no protocol is active or the active radio has not advertised any channel config yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a radio to choose a default channel.'**
+  String get watchSettingsChannelsUnavailable;
 }
 
 class _AppLocalizationsDelegate

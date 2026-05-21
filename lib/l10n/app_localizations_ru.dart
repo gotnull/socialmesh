@@ -43057,4 +43057,8 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get watchSettingsAboutBody =>
       'Отправляйте готовые сообщения с Apple Watch при сопряжении с этим iPhone. Отправка проходит те же проверки готовности и лимита скорости, что и редактор на телефоне.';
+
+  @override
+  String get watchSettingsChannelsUnavailable =>
+      'Подключите радиостанцию, чтобы выбрать канал по умолчанию.';
 }

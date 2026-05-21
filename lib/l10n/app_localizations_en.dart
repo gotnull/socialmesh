@@ -42585,4 +42585,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get watchSettingsAboutBody =>
       'Send canned messages from your Apple Watch when paired with this iPhone. Sends go through the same readiness and rate-limit checks as the on-phone composer.';
+
+  @override
+  String get watchSettingsChannelsUnavailable =>
+      'Connect a radio to choose a default channel.';
 }

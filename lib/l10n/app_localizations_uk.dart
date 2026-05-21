@@ -43068,4 +43068,8 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get watchSettingsAboutBody =>
       'Надсилайте готові повідомлення з вашого Apple Watch, коли його з\'єднано з цим iPhone. Надсилання проходять ті самі перевірки готовності та обмеження швидкості, що й редактор на телефоні.';
+
+  @override
+  String get watchSettingsChannelsUnavailable =>
+      'Під\'єднайте радіо, щоб обрати канал за замовчуванням.';
 }

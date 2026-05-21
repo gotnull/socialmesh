@@ -45553,5 +45553,6 @@
   "watchSettingsDefaultChannelSubtitle": "Pré-selecionado ao enviar mensagens predefinidas do seu Apple Watch. Pode escolher um canal diferente a cada vez no Watch.",
   "watchSettingsChannelChipLabel": "Canal {n}",
   "watchSettingsAboutTitle": "Sobre",
-  "watchSettingsAboutBody": "Envie mensagens predefinidas do seu Apple Watch quando emparelhado com este iPhone. Os envios passam pelas mesmas verificações de prontidão e limite de taxa do redator no telefone."
+  "watchSettingsAboutBody": "Envie mensagens predefinidas do seu Apple Watch quando emparelhado com este iPhone. Os envios passam pelas mesmas verificações de prontidão e limite de taxa do redator no telefone.",
+  "watchSettingsChannelsUnavailable": "Conecte um rádio para escolher um canal padrão."
 }

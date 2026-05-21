@@ -12409,5 +12409,6 @@
   "watchSettingsDefaultChannelSubtitle": "Выбирается по умолчанию при отправке готовых сообщений с Apple Watch. На Watch вы по-прежнему можете каждый раз выбирать другой канал.",
   "watchSettingsChannelChipLabel": "Канал {n}",
   "watchSettingsAboutTitle": "О компаньоне",
-  "watchSettingsAboutBody": "Отправляйте готовые сообщения с Apple Watch при сопряжении с этим iPhone. Отправка проходит те же проверки готовности и лимита скорости, что и редактор на телефоне."
+  "watchSettingsAboutBody": "Отправляйте готовые сообщения с Apple Watch при сопряжении с этим iPhone. Отправка проходит те же проверки готовности и лимита скорости, что и редактор на телефоне.",
+  "watchSettingsChannelsUnavailable": "Подключите радиостанцию, чтобы выбрать канал по умолчанию."
 }

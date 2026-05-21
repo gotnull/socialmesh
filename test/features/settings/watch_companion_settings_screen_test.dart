@@ -10,6 +10,7 @@ import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:socialmesh/providers/app_providers.dart'
     show settingsServiceProvider;
 import 'package:socialmesh/services/storage/storage_service.dart';
+import 'package:socialmesh/services/watch_companion/models/watch_companion_channel_preview.dart';
 import 'package:socialmesh/services/watch_companion/watch_companion_feature_flags.dart';
 import 'package:socialmesh/services/watch_companion/watch_companion_providers.dart';
 
@@ -24,13 +25,28 @@ Future<SettingsService> _settingsServiceWithMocks([
   return s;
 }
 
-Widget _wrap({required SettingsService settings, required bool flagsEnabled}) {
+/// Default test channel set — three channels covering the common
+/// "Meshtastic radio with Primary + a couple of named channels"
+/// scenario. Tests that need a specific shape (empty, single-channel,
+/// non-zero indices) pass an explicit override to [_wrap].
+const List<WatchCompanionChannelPreview> _defaultTestChannels = [
+  WatchCompanionChannelPreview(index: 0, name: 'Primary', isDefault: true),
+  WatchCompanionChannelPreview(index: 1, name: 'admin', isDefault: false),
+  WatchCompanionChannelPreview(index: 2, name: 'mesh-AU', isDefault: false),
+];
+
+Widget _wrap({
+  required SettingsService settings,
+  required bool flagsEnabled,
+  List<WatchCompanionChannelPreview> channels = _defaultTestChannels,
+}) {
   return ProviderScope(
     overrides: [
       settingsServiceProvider.overrideWith((ref) async => settings),
       watchCompanionFeatureFlagsProvider.overrideWith(
         (ref) => WatchCompanionFeatureFlags(enabled: flagsEnabled),
       ),
+      watchCompanionAvailableChannelsProvider.overrideWith((ref) => channels),
     ],
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -112,14 +128,21 @@ void main() {
       // Channel picker tile heading.
       expect(find.text('Default channel'), findsOneWidget);
 
-      // Every chip label "Channel N" for N in 0..7.
-      for (var i = 0; i < WatchCompanionSettingsScreen.channelCount; i++) {
+      // Each chip's label is the channel's actual name (Primary,
+      // admin, mesh-AU) — driven by the available-channels provider
+      // override in _wrap, not by index-generated "Channel N".
+      for (final channel in _defaultTestChannels) {
         expect(
-          find.text('Channel $i'),
+          find.text(channel.name),
           findsOneWidget,
-          reason: 'expected one "Channel $i" chip',
+          reason: 'expected one "${channel.name}" chip',
         );
       }
+      // Indices that don't exist on the (test) radio do NOT appear.
+      // This is the regression-resistance for the "Channel 1 doesn't
+      // exist but the picker offers it anyway" confusion.
+      expect(find.text('Channel 5'), findsNothing);
+      expect(find.text('Channel 7'), findsNothing);
     });
 
     testWidgets('reflects disabled feature flag in the status row', (
@@ -136,16 +159,16 @@ void main() {
 
     testWidgets('seeds the picker with the persisted value', (tester) async {
       final settings = await _settingsServiceWithMocks({
-        'watch_default_channel_index': 4,
+        'watch_default_channel_index': 2,
       });
 
       await tester.pumpWidget(_wrap(settings: settings, flagsEnabled: true));
       await tester.pumpAndSettle();
 
-      // Channel 4 chip is present (sanity), and the persisted value is
-      // what the screen booted with.
-      expect(find.text('Channel 4'), findsOneWidget);
-      expect(settings.watchDefaultChannelIndex, 4);
+      // mesh-AU is index 2 in the test channel set; persisted value
+      // matches; chip is present.
+      expect(find.text('mesh-AU'), findsOneWidget);
+      expect(settings.watchDefaultChannelIndex, 2);
     });
 
     testWidgets('tapping a different channel chip persists the new value', (
@@ -157,10 +180,11 @@ void main() {
       await tester.pumpWidget(_wrap(settings: settings, flagsEnabled: true));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Channel 2'));
+      // admin is index 1 in the default test channel set.
+      await tester.tap(find.text('admin'));
       await tester.pumpAndSettle();
 
-      expect(settings.watchDefaultChannelIndex, 2);
+      expect(settings.watchDefaultChannelIndex, 1);
     });
 
     testWidgets('tapping a chip invalidates watchDefaultChannelIndexProvider '
@@ -181,6 +205,9 @@ void main() {
           watchCompanionFeatureFlagsProvider.overrideWith(
             (ref) => const WatchCompanionFeatureFlags(enabled: true),
           ),
+          watchCompanionAvailableChannelsProvider.overrideWith(
+            (ref) => _defaultTestChannels,
+          ),
         ],
       );
       addTearDown(container.dispose);
@@ -200,12 +227,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Channel 3'));
+      // mesh-AU is index 2 in the test channel set.
+      await tester.tap(find.text('mesh-AU'));
       await tester.pumpAndSettle();
 
       expect(
         container.read(watchDefaultChannelIndexProvider),
-        3,
+        2,
         reason:
             'After the chip tap, the derived provider must reflect '
             'the new persisted value. If this fails, the invalidate '
@@ -213,5 +241,33 @@ void main() {
             'path regressed.',
       );
     });
+
+    testWidgets(
+      'renders empty-state placeholder when no channels are available',
+      (tester) async {
+        // Mirrors the production scenario where no protocol is active
+        // (or the active radio has not advertised channel config yet).
+        // The user should see helpful guidance instead of an empty
+        // ChipSelector or — worse — a list of channel indices that
+        // do not exist on their radio.
+        final settings = await _settingsServiceWithMocks();
+        await tester.pumpWidget(
+          _wrap(
+            settings: settings,
+            flagsEnabled: true,
+            channels: const <WatchCompanionChannelPreview>[],
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('Connect a radio to choose a default channel.'),
+          findsOneWidget,
+        );
+        // No channel chips of any kind.
+        expect(find.text('Primary'), findsNothing);
+        expect(find.text('admin'), findsNothing);
+      },
+    );
   });
 }
