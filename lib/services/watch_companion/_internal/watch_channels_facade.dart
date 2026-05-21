@@ -41,7 +41,14 @@ final watchChannelsFacadeProvider =
               .map(
                 (c) => WatchCompanionChannelPreview(
                   index: c.index,
-                  name: c.name.isNotEmpty ? c.name : 'channel_${c.index}',
+                  // Match the phone-side canonical fallback in
+                  // channel_selector_sheet.dart: empty name on channel
+                  // 0 -> "Primary"; empty name on any other channel ->
+                  // "Channel N". Keeps the Watch picker labels in
+                  // sync with what the phone UI shows.
+                  name: c.name.isNotEmpty
+                      ? c.name
+                      : (c.index == 0 ? 'Primary' : 'Channel ${c.index}'),
                   isDefault: c.index == defaultIndex,
                 ),
               )
