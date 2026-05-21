@@ -5566,6 +5566,16 @@ class MessagesNotifier extends Notifier<List<Message>> {
     _storage?.clearMessages();
   }
 
+  /// Delete every locally-stored message belonging to a specific
+  /// channel index. Returns the number of in-memory rows filtered
+  /// out. DMs (channel == null) are unaffected.
+  Future<int> deleteChannelMessages(int channelIndex) async {
+    final removed = state.where((m) => m.channel == channelIndex).length;
+    state = state.where((m) => m.channel != channelIndex).toList();
+    await _storage?.deleteMessagesForChannel(channelIndex);
+    return removed;
+  }
+
   List<Message> getMessagesForNode(int nodeNum) {
     return state.where((m) => m.from == nodeNum || m.to == nodeNum).toList();
   }

@@ -388,6 +388,8 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
       TracerouteTables.colOriginLongitude: run.originLongitude,
       TracerouteTables.colTargetLatitude: run.targetLatitude,
       TracerouteTables.colTargetLongitude: run.targetLongitude,
+      TracerouteTables.colTargetSnrTowards: run.targetSnrTowards,
+      TracerouteTables.colOriginSnrBack: run.originSnrBack,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
@@ -488,6 +490,8 @@ class SqliteTracerouteRepository implements TracerouteHistoryRepository {
       originLongitude: row[TracerouteTables.colOriginLongitude] as double?,
       targetLatitude: row[TracerouteTables.colTargetLatitude] as double?,
       targetLongitude: row[TracerouteTables.colTargetLongitude] as double?,
+      targetSnrTowards: row[TracerouteTables.colTargetSnrTowards] as double?,
+      originSnrBack: row[TracerouteTables.colOriginSnrBack] as double?,
     );
   }
 

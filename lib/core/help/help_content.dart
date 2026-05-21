@@ -1531,7 +1531,7 @@ class HelpContent {
       HelpStep(
         id: 'traceroute_results',
         bubbleText:
-            "Results show **forward** and **return** hop paths with per-hop **SNR** (signal-to-noise ratio). This lets you correlate route quality with link performance.",
+            "Results show **forward** and **return** hop paths. Each row reads \"heard at X dB\" — the **SNR** that node measured on its inbound packet. The final row in each section is the endpoint (the target on the forward path, you on the return path), so even a direct connection shows both reception SNRs.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(

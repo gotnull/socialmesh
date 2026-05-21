@@ -3164,6 +3164,24 @@ class AppLocalizationsRu extends AppLocalizations {
   String get channelFormUplinkTitle => 'Восходящий канал включён';
 
   @override
+  String get channelOptionsClearMessages => 'Очистить сообщения';
+
+  @override
+  String get channelOptionsClearMessagesConfirm => 'Очистить';
+
+  @override
+  String get channelOptionsClearMessagesConfirmation =>
+      'Это удалит все сохранённые сообщения этого канала на этом устройстве. На устройствах других людей они останутся. Это действие нельзя отменить.';
+
+  @override
+  String channelOptionsClearMessagesSuccess(String channel) {
+    return 'Сообщения очищены из $channel';
+  }
+
+  @override
+  String get channelOptionsClearMessagesTitle => 'Очистить все сообщения?';
+
+  @override
   String get channelOptionsCopyButton => 'Копировать';
 
   @override
@@ -23026,6 +23044,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get telemetryTracerouteResponseBadge => 'Ответ';
 
   @override
+  String telemetryTracerouteHopSnrHeard(String snr) {
+    return 'получено при $snr дБ';
+  }
+
+  @override
   String get telemetryTracerouteReturnPath => 'Обратный путь';
 
   @override
@@ -23033,6 +23056,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get telemetryTracerouteTo => 'Кому';
+
+  @override
+  String get telemetryTracerouteYouLabel => 'Вы';
 
   @override
   String get telemetryTryAdjustingFilters =>
@@ -34514,7 +34540,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get helpTracerouteResultsBubble =>
-      'Результаты показывают пути переходов **туда** и **обратно** с **SNR** (отношение сигнал/шум) на каждом переходе. Это позволяет соотнести качество маршрута с производительностью связи.';
+      'Результаты показывают пути переходов **туда** и **обратно**. Каждая строка содержит \"получено при X дБ\" — **SNR**, который этот узел измерил у входящего пакета. Последняя строка каждой секции — это конечная точка (цель на прямом пути, вы на обратном пути), поэтому даже прямое соединение показывает оба SNR приёма.';
 
   @override
   String get helpTracerouteHistoryBubble =>

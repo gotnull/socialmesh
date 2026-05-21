@@ -366,6 +366,15 @@ class TraceRouteLog extends TelemetryLogEntry {
   final double? targetLatitude;
   final double? targetLongitude;
 
+  // SNR endpoint values. Meshtastic's RouteDiscovery message appends
+  // one extra SNR entry beyond the intermediate-hop list in each
+  // direction: the target's reception of the query (forward terminus)
+  // and the origin's reception of the reply (back terminus). Older
+  // SocialMesh builds dropped both, which manifested as missing SNR
+  // for direct connections and incomplete multi-hop traceroutes.
+  final double? targetSnrTowards;
+  final double? originSnrBack;
+
   TraceRouteLog({
     super.id,
     required super.nodeNum,
@@ -382,6 +391,8 @@ class TraceRouteLog extends TelemetryLogEntry {
     this.originLongitude,
     this.targetLatitude,
     this.targetLongitude,
+    this.targetSnrTowards,
+    this.originSnrBack,
   });
 
   factory TraceRouteLog.fromJson(Map<String, dynamic> json) {
@@ -407,6 +418,8 @@ class TraceRouteLog extends TelemetryLogEntry {
       originLongitude: (json['originLongitude'] as num?)?.toDouble(),
       targetLatitude: (json['targetLatitude'] as num?)?.toDouble(),
       targetLongitude: (json['targetLongitude'] as num?)?.toDouble(),
+      targetSnrTowards: (json['targetSnrTowards'] as num?)?.toDouble(),
+      originSnrBack: (json['originSnrBack'] as num?)?.toDouble(),
     );
   }
 
@@ -427,6 +440,8 @@ class TraceRouteLog extends TelemetryLogEntry {
     'originLongitude': _sanitizeDouble(originLongitude),
     'targetLatitude': _sanitizeDouble(targetLatitude),
     'targetLongitude': _sanitizeDouble(targetLongitude),
+    'targetSnrTowards': _sanitizeDouble(targetSnrTowards),
+    'originSnrBack': _sanitizeDouble(originSnrBack),
   };
 }
 

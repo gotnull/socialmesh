@@ -500,8 +500,13 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
     final hasUnread = report.hasUnreadResponses;
     final canReply = _canReply(report);
 
+    final headerRadius = _isExpanded
+        ? const BorderRadius.vertical(top: Radius.circular(AppTheme.radius12))
+        : BorderRadius.circular(AppTheme.radius12);
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: context.card,
         borderRadius: BorderRadius.circular(AppTheme.radius12),
@@ -515,109 +520,118 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header — always visible, tappable to expand
-          InkWell(
-            onTap: () {
-              HapticFeedback.selectionClick();
-              safeSetState(() => _isExpanded = !_isExpanded);
-              if (_isExpanded && hasUnread) {
-                _markAsRead();
-              }
-            },
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            child: Padding(
-              padding: const EdgeInsets.all(AppTheme.spacing16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          report.description.length > 80
-                              ? '${report.description.substring(0, 77)}…'
-                              : report.description,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: context.textPrimary,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: AppTheme.spacing8),
-                      if (hasUnread)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: context.accentColor,
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radius10,
-                            ),
-                          ),
+          // Header — always visible, tappable to expand. Wrapped in a local
+          // Material so the InkWell splash paints + clips against this card's
+          // border radius, not the far-up app Material.
+          Material(
+            color: Colors.transparent,
+            borderRadius: headerRadius,
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () {
+                HapticFeedback.selectionClick();
+                safeSetState(() => _isExpanded = !_isExpanded);
+                if (_isExpanded && hasUnread) {
+                  _markAsRead();
+                }
+              },
+              borderRadius: headerRadius,
+              child: Padding(
+                padding: const EdgeInsets.all(AppTheme.spacing16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
                           child: Text(
-                            '${report.unreadCount}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
+                            report.description.length > 80
+                                ? '${report.description.substring(0, 77)}…'
+                                : report.description,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: context.textPrimary,
                             ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                      Icon(
-                        _isExpanded ? Icons.expand_less : Icons.expand_more,
-                        color: context.textTertiary,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppTheme.spacing8),
-                  Row(
-                    children: [
-                      _StatusChip(status: report.status),
-                      const Spacer(),
-                      if (responsesLoaded && hasResponses) ...[
+                        const SizedBox(width: AppTheme.spacing8),
+                        if (hasUnread)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: context.accentColor,
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius10,
+                              ),
+                            ),
+                            child: Text(
+                              '${report.unreadCount}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
                         Icon(
-                          Icons.chat_bubble_outline,
-                          size: 14,
+                          _isExpanded ? Icons.expand_less : Icons.expand_more,
                           color: context.textTertiary,
                         ),
-                        const SizedBox(width: AppTheme.spacing4),
+                      ],
+                    ),
+                    const SizedBox(height: AppTheme.spacing8),
+                    Row(
+                      children: [
+                        _StatusChip(status: report.status),
+                        const Spacer(),
+                        if (responsesLoaded && hasResponses) ...[
+                          Icon(
+                            Icons.chat_bubble_outline,
+                            size: 14,
+                            color: context.textTertiary,
+                          ),
+                          const SizedBox(width: AppTheme.spacing4),
+                          Text(
+                            '${report.responses.length}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: context.textTertiary,
+                            ),
+                          ),
+                          const SizedBox(width: AppTheme.spacing12),
+                        ],
                         Text(
-                          '${report.responses.length}',
+                          dateFormat.format(report.createdAt),
                           style: TextStyle(
                             fontSize: 12,
                             color: context.textTertiary,
                           ),
                         ),
-                        const SizedBox(width: AppTheme.spacing12),
                       ],
+                    ),
+                    if (report.appVersion != null ||
+                        report.platform != null) ...[
+                      const SizedBox(height: AppTheme.spacing4),
                       Text(
-                        dateFormat.format(report.createdAt),
+                        [
+                          if (report.platform != null) report.platform,
+                          if (report.appVersion != null)
+                            'v${report.appVersion}',
+                        ].join(' · '),
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 11,
                           color: context.textTertiary,
                         ),
                       ),
                     ],
-                  ),
-                  if (report.appVersion != null || report.platform != null) ...[
-                    const SizedBox(height: AppTheme.spacing4),
-                    Text(
-                      [
-                        if (report.platform != null) report.platform,
-                        if (report.appVersion != null) 'v${report.appVersion}',
-                      ].join(' · '),
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: context.textTertiary,
-                      ),
-                    ),
                   ],
-                ],
+                ),
               ),
             ),
           ),

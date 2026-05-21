@@ -4,7 +4,7 @@
 // Traceroute Database — SQLite schema and lifecycle management.
 //
 // Database: traceroute_history.db
-// Schema version: 4
+// Schema version: 5
 //
 // Tables:
 //   - traceroute_runs: each traceroute attempt (pending or completed)
@@ -23,7 +23,7 @@ import '../../core/logging.dart';
 ///
 /// Bump this when adding tables, columns, or indices.
 /// Migration logic runs in [_onUpgrade].
-const int tracerouteSchemaVersion = 4;
+const int tracerouteSchemaVersion = 5;
 
 /// Table and column name constants for Traceroute SQLite schema.
 abstract final class TracerouteTables {
@@ -42,6 +42,8 @@ abstract final class TracerouteTables {
   static const colOriginLongitude = 'origin_longitude';
   static const colTargetLatitude = 'target_latitude';
   static const colTargetLongitude = 'target_longitude';
+  static const colTargetSnrTowards = 'target_snr_towards';
+  static const colOriginSnrBack = 'origin_snr_back';
 
   // -- traceroute_hops --
   static const hops = 'traceroute_hops';
@@ -182,7 +184,9 @@ class TracerouteDatabase {
         ${TracerouteTables.colOriginLatitude} REAL,
         ${TracerouteTables.colOriginLongitude} REAL,
         ${TracerouteTables.colTargetLatitude} REAL,
-        ${TracerouteTables.colTargetLongitude} REAL
+        ${TracerouteTables.colTargetLongitude} REAL,
+        ${TracerouteTables.colTargetSnrTowards} REAL,
+        ${TracerouteTables.colOriginSnrBack} REAL
       )
     ''');
 
@@ -268,6 +272,16 @@ class TracerouteDatabase {
       await db.execute(
         'ALTER TABLE ${TracerouteTables.runs} '
         'ADD COLUMN ${TracerouteTables.colTargetLongitude} REAL', // lint-allow: hardcoded-string
+      );
+    }
+    if (oldVersion < 5) {
+      await db.execute(
+        'ALTER TABLE ${TracerouteTables.runs} '
+        'ADD COLUMN ${TracerouteTables.colTargetSnrTowards} REAL', // lint-allow: hardcoded-string
+      );
+      await db.execute(
+        'ALTER TABLE ${TracerouteTables.runs} '
+        'ADD COLUMN ${TracerouteTables.colOriginSnrBack} REAL', // lint-allow: hardcoded-string
       );
     }
   }

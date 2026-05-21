@@ -2696,6 +2696,17 @@ class ProtocolService {
         );
       }
 
+      // Endpoint SNRs. Meshtastic's RouteDiscovery appends one extra
+      // entry to each SNR list: the target's reception SNR of the
+      // forward query, and the origin's reception SNR of the reply.
+      // Both are scaled x4 like the per-hop values.
+      final targetSnrTowards = forwardSnr.length > forwardRoute.length
+          ? forwardSnr.last / 4.0
+          : null;
+      final originSnrBack = backSnr.length > backRoute.length
+          ? backSnr.last / 4.0
+          : null;
+
       // Aggregate SNR from the received packet (already in dB)
       final rxSnr = packet.hasRxSnr() ? packet.rxSnr.toDouble() : null;
 
@@ -2734,6 +2745,8 @@ class ProtocolService {
         originLongitude: originLon,
         targetLatitude: targetLat,
         targetLongitude: targetLon,
+        targetSnrTowards: targetSnrTowards,
+        originSnrBack: originSnrBack,
       );
 
       AppLogging.protocol(

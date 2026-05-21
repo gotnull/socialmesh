@@ -436,6 +436,7 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
                       (context, index) => _TraceRouteCard(
                         log: filtered[index],
                         allNodes: nodes,
+                        myNodeNum: ref.watch(myNodeNumProvider),
                       ),
                       childCount: filtered.length,
                     ),
@@ -712,8 +713,13 @@ bool _hasMapData(TraceRouteLog log, Map<int, dynamic> allNodes) {
 class _TraceRouteCard extends StatelessWidget {
   final TraceRouteLog log;
   final Map<int, dynamic> allNodes;
+  final int? myNodeNum;
 
-  const _TraceRouteCard({required this.log, required this.allNodes});
+  const _TraceRouteCard({
+    required this.log,
+    required this.allNodes,
+    required this.myNodeNum,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -725,6 +731,37 @@ class _TraceRouteCard extends StatelessWidget {
 
     final forwardHops = log.hops.where((h) => !h.back).toList();
     final returnHops = log.hops.where((h) => h.back).toList();
+
+    // Resolve our local node's display name for the return-path
+    // terminus. Falls back to a localised "You" label when the node
+    // table doesn't yet have an entry for the local device.
+    final myNode = myNodeNum != null ? allNodes[myNodeNum] : null;
+    final myName =
+        myNode?.displayName ?? context.l10n.telemetryTracerouteYouLabel;
+
+    // Endpoint SNR rows. Meshtastic's RouteDiscovery appends one
+    // extra SNR entry beyond the intermediate-hop list in each
+    // direction (target's reception of the query, origin's
+    // reception of the reply). Render them as terminal hops so the
+    // user can see every per-link SNR including the endpoints.
+    final forwardTerminal = log.targetSnrTowards != null
+        ? TraceRouteHop(
+            nodeNum: log.targetNode,
+            name: destName,
+            snr: log.targetSnrTowards,
+          )
+        : null;
+    final returnTerminal = log.originSnrBack != null
+        ? TraceRouteHop(
+            nodeNum: myNodeNum ?? 0,
+            name: myName,
+            snr: log.originSnrBack,
+            back: true,
+          )
+        : null;
+
+    final hasAnyForward = forwardHops.isNotEmpty || forwardTerminal != null;
+    final hasAnyReturn = returnHops.isNotEmpty || returnTerminal != null;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -849,7 +886,7 @@ class _TraceRouteCard extends StatelessWidget {
             ),
 
           // Forward route path
-          if (forwardHops.isNotEmpty) ...[
+          if (hasAnyForward) ...[
             const SizedBox(height: AppTheme.spacing12),
             const Divider(color: Colors.white12, height: 1),
             const SizedBox(height: AppTheme.spacing12),
@@ -859,11 +896,13 @@ class _TraceRouteCard extends StatelessWidget {
               color: AccentColors.teal,
               hops: forwardHops,
               allNodes: allNodes,
+              terminusHop: forwardTerminal,
+              terminusIcon: Icons.flag,
             ),
           ],
 
           // Return route path
-          if (returnHops.isNotEmpty) ...[
+          if (hasAnyReturn) ...[
             const SizedBox(height: AppTheme.spacing12),
             const Divider(color: Colors.white12, height: 1),
             const SizedBox(height: AppTheme.spacing12),
@@ -873,13 +912,15 @@ class _TraceRouteCard extends StatelessWidget {
               color: AccentColors.purple,
               hops: returnHops,
               allNodes: allNodes,
+              terminusHop: returnTerminal,
+              terminusIcon: Icons.smartphone,
             ),
           ],
 
           // No hops hint for responses with zero hops (direct connection)
           if (log.response &&
-              forwardHops.isEmpty &&
-              returnHops.isEmpty &&
+              !hasAnyForward &&
+              !hasAnyReturn &&
               log.hopsTowards == 0 &&
               log.hopsBack == 0) ...[
             const SizedBox(height: AppTheme.spacing8),
@@ -939,6 +980,12 @@ class _RoutePathSection extends StatelessWidget {
   final Color color;
   final List<TraceRouteHop> hops;
   final Map<int, dynamic> allNodes;
+  // Optional endpoint row appended after the numbered intermediates.
+  // Renders with [terminusIcon] in the chip instead of a position
+  // number so the user can tell the target / local-device apart from
+  // an intermediate relay at a glance.
+  final TraceRouteHop? terminusHop;
+  final IconData? terminusIcon;
 
   const _RoutePathSection({
     required this.title,
@@ -946,10 +993,13 @@ class _RoutePathSection extends StatelessWidget {
     required this.color,
     required this.hops,
     required this.allNodes,
+    this.terminusHop,
+    this.terminusIcon,
   });
 
   @override
   Widget build(BuildContext context) {
+    final hasTerminus = terminusHop != null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -974,9 +1024,10 @@ class _RoutePathSection extends StatelessWidget {
           final hop = entry.value;
           final hopNode = allNodes[hop.nodeNum];
           final hopName =
+              hop.name ??
               hopNode?.displayName ??
               NodeDisplayNameResolver.defaultName(hop.nodeNum);
-          final isLast = index == hops.length - 1;
+          final isLast = index == hops.length - 1 && !hasTerminus;
 
           return _HopItem(
             index: index + 1,
@@ -986,6 +1037,17 @@ class _RoutePathSection extends StatelessWidget {
             color: color,
           );
         }),
+        if (hasTerminus)
+          _HopItem(
+            terminusIcon: terminusIcon ?? Icons.flag,
+            name:
+                terminusHop!.name ??
+                allNodes[terminusHop!.nodeNum]?.displayName ??
+                NodeDisplayNameResolver.defaultName(terminusHop!.nodeNum),
+            snr: terminusHop!.snr,
+            isLast: true,
+            color: color,
+          ),
       ],
     );
   }
@@ -1075,19 +1137,24 @@ class _HopCountChip extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _HopItem extends StatelessWidget {
-  final int index;
+  final int? index;
+  final IconData? terminusIcon;
   final String name;
   final double? snr;
   final bool isLast;
   final Color color;
 
   const _HopItem({
-    required this.index,
+    this.index,
+    this.terminusIcon,
     required this.name,
     this.snr,
     this.isLast = false,
     required this.color,
-  });
+  }) : assert(
+         index != null || terminusIcon != null,
+         'Either index or terminusIcon must be provided',
+       );
 
   @override
   Widget build(BuildContext context) {
@@ -1105,14 +1172,16 @@ class _HopItem extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Center(
-                  child: Text(
-                    '$index',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: color,
-                    ),
-                  ),
+                  child: terminusIcon != null
+                      ? Icon(terminusIcon, size: 14, color: color)
+                      : Text(
+                          '$index',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: color,
+                          ),
+                        ),
                 ),
               ),
               if (!isLast)
@@ -1143,7 +1212,9 @@ class _HopItem extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(left: 8),
                       child: Text(
-                        '${snr!.toStringAsFixed(1)} dB',
+                        context.l10n.telemetryTracerouteHopSnrHeard(
+                          snr!.toStringAsFixed(1),
+                        ),
                         style: TextStyle(
                           fontSize: 12,
                           color: context.textSecondary,

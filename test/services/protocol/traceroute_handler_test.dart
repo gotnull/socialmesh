@@ -7,6 +7,8 @@ import 'package:path/path.dart' as p;
 import 'package:socialmesh/generated/meshtastic/mesh.pb.dart' as pb;
 import 'package:socialmesh/models/telemetry_log.dart';
 import 'package:socialmesh/services/storage/telemetry_database.dart';
+import 'package:socialmesh/services/storage/traceroute_database.dart';
+import 'package:socialmesh/services/storage/traceroute_repository.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 int _testDbSeq = 0;
@@ -940,5 +942,191 @@ void main() {
         expect(logs[1].hopsTowards, 2);
       },
     );
+  });
+
+  // Issue #142 — RouteDiscovery appends one extra SNR entry beyond the
+  // intermediate-hop list in each direction: target's reception of the
+  // forward query (forwardSnr.last) and origin's reception of the reply
+  // (snrBack.last). Older builds dropped both. These tests pin the new
+  // parser behaviour and verify storage round-trip.
+  group('Traceroute endpoint SNR capture', () {
+    test('parser captures target endpoint SNR when forwardSnr has one extra '
+        'entry beyond the intermediate route', () {
+      final routeDiscovery = pb.RouteDiscovery(
+        route: [0x11111111, 0x22222222],
+        // 3 entries for 2 intermediate hops: A, B, target
+        snrTowards: [40, -8, 28], // 10.0, -2.0, 7.0 dB
+        routeBack: [0x33333333],
+        snrBack: [24, 12], // 6.0, 3.0 dB (last is origin reception)
+      );
+
+      final parsed = pb.RouteDiscovery.fromBuffer(
+        routeDiscovery.writeToBuffer(),
+      );
+
+      final forwardRoute = parsed.route.toList();
+      final forwardSnr = parsed.snrTowards.toList();
+      final backRoute = parsed.routeBack.toList();
+      final backSnr = parsed.snrBack.toList();
+
+      final targetSnrTowards = forwardSnr.length > forwardRoute.length
+          ? forwardSnr.last / 4.0
+          : null;
+      final originSnrBack = backSnr.length > backRoute.length
+          ? backSnr.last / 4.0
+          : null;
+
+      expect(targetSnrTowards, 7.0);
+      expect(originSnrBack, 3.0);
+    });
+
+    test('direct connection (zero intermediate hops) captures both endpoint '
+        'SNRs from the single-entry SNR arrays', () {
+      final routeDiscovery = pb.RouteDiscovery(
+        snrTowards: [32], // 8.0 dB — target heard our query
+        snrBack: [-12], // -3.0 dB — we heard the reply
+      );
+
+      final parsed = pb.RouteDiscovery.fromBuffer(
+        routeDiscovery.writeToBuffer(),
+      );
+
+      final forwardRoute = parsed.route.toList();
+      final forwardSnr = parsed.snrTowards.toList();
+      final backRoute = parsed.routeBack.toList();
+      final backSnr = parsed.snrBack.toList();
+
+      final targetSnrTowards = forwardSnr.length > forwardRoute.length
+          ? forwardSnr.last / 4.0
+          : null;
+      final originSnrBack = backSnr.length > backRoute.length
+          ? backSnr.last / 4.0
+          : null;
+
+      expect(forwardRoute, isEmpty);
+      expect(backRoute, isEmpty);
+      expect(targetSnrTowards, 8.0);
+      expect(originSnrBack, -3.0);
+    });
+
+    test('when SNR list has exactly as many entries as intermediate hops, '
+        'endpoint SNRs are null (legacy / partial responder)', () {
+      final routeDiscovery = pb.RouteDiscovery(
+        route: [0x11111111],
+        snrTowards: [40], // exactly 1 — no endpoint entry
+        routeBack: [0x22222222],
+        snrBack: [16],
+      );
+
+      final parsed = pb.RouteDiscovery.fromBuffer(
+        routeDiscovery.writeToBuffer(),
+      );
+
+      final forwardRoute = parsed.route.toList();
+      final forwardSnr = parsed.snrTowards.toList();
+      final backRoute = parsed.routeBack.toList();
+      final backSnr = parsed.snrBack.toList();
+
+      final targetSnrTowards = forwardSnr.length > forwardRoute.length
+          ? forwardSnr.last / 4.0
+          : null;
+      final originSnrBack = backSnr.length > backRoute.length
+          ? backSnr.last / 4.0
+          : null;
+
+      expect(targetSnrTowards, isNull);
+      expect(originSnrBack, isNull);
+    });
+
+    test('TraceRouteLog JSON roundtrip preserves endpoint SNR fields', () {
+      final original = TraceRouteLog(
+        nodeNum: 0xAABBCCDD,
+        targetNode: 0xAABBCCDD,
+        response: true,
+        hopsTowards: 1,
+        hopsBack: 0,
+        hops: [TraceRouteHop(nodeNum: 0x11111111, snr: 10.0)],
+        snr: 7.5,
+        targetSnrTowards: 8.25,
+        originSnrBack: -3.5,
+      );
+
+      final restored = TraceRouteLog.fromJson(original.toJson());
+      expect(restored.targetSnrTowards, 8.25);
+      expect(restored.originSnrBack, -3.5);
+    });
+
+    test('TraceRouteLog.fromJson missing endpoint fields defaults to null', () {
+      final log = TraceRouteLog.fromJson({
+        'nodeNum': 1,
+        'targetNode': 1,
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      });
+      expect(log.targetSnrTowards, isNull);
+      expect(log.originSnrBack, isNull);
+    });
+  });
+
+  group('Traceroute SQLite endpoint SNR persistence', () {
+    late TracerouteDatabase database;
+    late SqliteTracerouteRepository repository;
+
+    setUp(() async {
+      database = TracerouteDatabase(
+        dbPathOverride: p.join(
+          Directory.systemTemp.path,
+          'traceroute_endpoint_${_testPid}_${_testDbSeq++}.db',
+        ),
+      );
+      await database.open();
+      repository = SqliteTracerouteRepository(database);
+    });
+
+    tearDown(() async {
+      await repository.close();
+    });
+
+    test(
+      'saveRun + listRuns preserves targetSnrTowards / originSnrBack',
+      () async {
+        const targetNode = 0xCAFEBABE;
+        final log = TraceRouteLog(
+          nodeNum: targetNode,
+          targetNode: targetNode,
+          response: true,
+          hopsTowards: 1,
+          hopsBack: 0,
+          hops: [TraceRouteHop(nodeNum: 0x11111111, snr: 10.0)],
+          snr: 7.5,
+          targetSnrTowards: 8.25,
+          originSnrBack: -3.5,
+        );
+
+        await repository.saveRun(log);
+        final loaded = await repository.listRuns(targetNodeId: targetNode);
+
+        expect(loaded.length, 1);
+        expect(loaded.first.targetSnrTowards, 8.25);
+        expect(loaded.first.originSnrBack, -3.5);
+      },
+    );
+
+    test('endpoint SNRs default to null when not provided', () async {
+      const targetNode = 0xDEADBEEF;
+      final log = TraceRouteLog(
+        nodeNum: targetNode,
+        targetNode: targetNode,
+        response: true,
+        hopsTowards: 0,
+        hopsBack: 0,
+      );
+
+      await repository.saveRun(log);
+      final loaded = await repository.listRuns(targetNodeId: targetNode);
+
+      expect(loaded.length, 1);
+      expect(loaded.first.targetSnrTowards, isNull);
+      expect(loaded.first.originSnrBack, isNull);
+    });
   });
 }

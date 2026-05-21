@@ -3173,6 +3173,24 @@ class AppLocalizationsUk extends AppLocalizations {
   String get channelFormUplinkTitle => 'Завантаження вгору увімкнено';
 
   @override
+  String get channelOptionsClearMessages => 'Очистити повідомлення';
+
+  @override
+  String get channelOptionsClearMessagesConfirm => 'Очистити';
+
+  @override
+  String get channelOptionsClearMessagesConfirmation =>
+      'Це видалить усі збережені повідомлення цього каналу на цьому пристрої. На пристроях інших людей вони залишаться. Цю дію не можна скасувати.';
+
+  @override
+  String channelOptionsClearMessagesSuccess(String channel) {
+    return 'Повідомлення очищено з $channel';
+  }
+
+  @override
+  String get channelOptionsClearMessagesTitle => 'Очистити всі повідомлення?';
+
+  @override
   String get channelOptionsCopyButton => 'Копіювати';
 
   @override
@@ -23038,6 +23056,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get telemetryTracerouteResponseBadge => 'Відповідь';
 
   @override
+  String telemetryTracerouteHopSnrHeard(String snr) {
+    return 'отримано при $snr дБ';
+  }
+
+  @override
   String get telemetryTracerouteReturnPath => 'Зворотний шлях';
 
   @override
@@ -23045,6 +23068,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get telemetryTracerouteTo => 'До';
+
+  @override
+  String get telemetryTracerouteYouLabel => 'Ви';
 
   @override
   String get telemetryTryAdjustingFilters =>
@@ -34526,7 +34552,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get helpTracerouteResultsBubble =>
-      'Результати показують шляхи переходів **вперед** та **назад** зі значеннями **SNR** на кожному переході (співвідношення сигнал/шум). Це дає змогу співвіднести якість маршруту з продуктивністю зв\'язку.';
+      'Результати показують шляхи переходів **вперед** та **назад**. Кожен рядок містить \"отримано при X дБ\" — **SNR**, який цей вузол виміряв у вхідному пакеті. Останній рядок кожної секції — це кінцева точка (ціль на прямому шляху, ви на зворотному шляху), тож навіть пряме з\'єднання показує обидва SNR прийому.';
 
   @override
   String get helpTracerouteHistoryBubble =>

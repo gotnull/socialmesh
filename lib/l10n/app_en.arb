@@ -4157,6 +4157,31 @@
     "@channelFormUplinkTitle": {
         "description": "Uplink = sending local mesh messages to an internet MQTT broker."
     },
+    "channelOptionsClearMessages": "Clear Messages",
+    "@channelOptionsClearMessages": {
+        "description": "Channel options menu item label that removes every locally-stored message in this channel."
+    },
+    "channelOptionsClearMessagesConfirm": "Clear",
+    "@channelOptionsClearMessagesConfirm": {
+        "description": "Destructive button label on the channel clear-messages confirmation sheet."
+    },
+    "channelOptionsClearMessagesConfirmation": "This removes all stored messages from this channel on this device. It does not remove them from anyone else's device. This action cannot be undone.",
+    "@channelOptionsClearMessagesConfirmation": {
+        "description": "Body text on the channel clear-messages confirmation sheet."
+    },
+    "channelOptionsClearMessagesSuccess": "Messages cleared from {channel}",
+    "@channelOptionsClearMessagesSuccess": {
+        "placeholders": {
+            "channel": {
+                "type": "String"
+            }
+        },
+        "description": "Snackbar shown after a channel's locally-stored messages are cleared. Parameters: {channel} = channel display name."
+    },
+    "channelOptionsClearMessagesTitle": "Clear all messages?",
+    "@channelOptionsClearMessagesTitle": {
+        "description": "Title of the channel clear-messages confirmation sheet."
+    },
     "channelOptionsCopyButton": "Copy",
     "@channelOptionsCopyButton": {
         "description": "Button label in channel configuration"
@@ -31099,6 +31124,15 @@
     "@telemetryTracerouteResponseBadge": {
         "description": "Badge label when a traceroute received a response."
     },
+    "telemetryTracerouteHopSnrHeard": "heard at {snr} dB",
+    "@telemetryTracerouteHopSnrHeard": {
+        "placeholders": {
+            "snr": {
+                "type": "String"
+            }
+        },
+        "description": "Per-hop SNR label in a traceroute card. {snr} is the formatted decibel value (already includes one decimal place, e.g. \"9.8\"). The phrasing communicates that the SNR is what *this hop* measured on its inbound packet, so the direction is unambiguous without a tooltip."
+    },
     "telemetryTracerouteReturnPath": "Return Path",
     "@telemetryTracerouteReturnPath": {
         "description": "Section title for the return hop path in a traceroute card."
@@ -31110,6 +31144,10 @@
     "telemetryTracerouteTo": "To",
     "@telemetryTracerouteTo": {
         "description": "Label for the destination node in a traceroute card."
+    },
+    "telemetryTracerouteYouLabel": "You",
+    "@telemetryTracerouteYouLabel": {
+        "description": "Placeholder name used for the local node on the return path of a traceroute when the node table has no display name for the local device."
     },
     "telemetryTryAdjustingFilters": "Try adjusting your search or filters",
     "@telemetryTryAdjustingFilters": {
@@ -45811,7 +45849,7 @@
     "@helpTracerouteCooldownBubble": {
         "description": "Help bubble text for step traceroute_cooldown"
     },
-    "helpTracerouteResultsBubble": "Results show **forward** and **return** hop paths with per-hop **SNR** (signal-to-noise ratio). This lets you correlate route quality with link performance.",
+    "helpTracerouteResultsBubble": "Results show **forward** and **return** hop paths. Each row reads \"heard at X dB\" — the **SNR** that node measured on its inbound packet. The final row in each section is the endpoint (the target on the forward path, you on the return path), so even a direct connection shows both reception SNRs.",
     "@helpTracerouteResultsBubble": {
         "description": "Help bubble text for step traceroute_results"
     },

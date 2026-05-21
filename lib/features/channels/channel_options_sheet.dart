@@ -76,6 +76,12 @@ Future<void> showChannelOptionsSheet(
       value: 'invite',
       enabled: channel.psk.isNotEmpty,
     ),
+    BottomSheetAction(
+      icon: Icons.delete_sweep,
+      label: context.l10n.channelOptionsClearMessages,
+      value: 'clear_messages',
+      isDestructive: true,
+    ),
     if (channel.index != 0)
       BottomSheetAction(
         icon: Icons.delete,
@@ -130,9 +136,40 @@ Future<void> showChannelOptionsSheet(
         ref: ref,
         displayTitle: displayTitle,
       );
+    case 'clear_messages':
+      await _clearChannelMessages(context, channel, ref, channelName);
     case 'delete':
       _deleteChannel(context, channel, ref);
   }
+}
+
+/// Confirms and deletes every locally-stored message in this
+/// channel. Local-only — does not affect any other device or
+/// the radio. Mirrors the global "Clear Messages" pattern in
+/// settings_screen.dart.
+Future<void> _clearChannelMessages(
+  BuildContext context,
+  ChannelConfig channel,
+  WidgetRef ref,
+  String channelName,
+) async {
+  final confirmed = await AppBottomSheet.showConfirm(
+    context: context,
+    title: context.l10n.channelOptionsClearMessagesTitle,
+    message: context.l10n.channelOptionsClearMessagesConfirmation,
+    confirmLabel: context.l10n.channelOptionsClearMessagesConfirm,
+    isDestructive: true,
+  );
+  if (confirmed != true || !context.mounted) return;
+
+  await ref
+      .read(messagesProvider.notifier)
+      .deleteChannelMessages(channel.index);
+  if (!context.mounted) return;
+  showSuccessSnackBar(
+    context,
+    context.l10n.channelOptionsClearMessagesSuccess(channelName),
+  );
 }
 
 /// Generates a local Meshtastic-compatible channel URL for QR sharing.

@@ -3182,6 +3182,24 @@ class AppLocalizationsDe extends AppLocalizations {
   String get channelFormUplinkTitle => 'Uplink Aktiv';
 
   @override
+  String get channelOptionsClearMessages => 'Nachrichten löschen';
+
+  @override
+  String get channelOptionsClearMessagesConfirm => 'Löschen';
+
+  @override
+  String get channelOptionsClearMessagesConfirmation =>
+      'Dadurch werden alle gespeicherten Nachrichten dieses Kanals auf diesem Gerät gelöscht. Auf den Geräten anderer Personen bleiben sie erhalten. Diese Aktion kann nicht rückgängig gemacht werden.';
+
+  @override
+  String channelOptionsClearMessagesSuccess(String channel) {
+    return 'Nachrichten aus $channel gelöscht';
+  }
+
+  @override
+  String get channelOptionsClearMessagesTitle => 'Alle Nachrichten löschen?';
+
+  @override
   String get channelOptionsCopyButton => 'Kopieren';
 
   @override
@@ -23095,6 +23113,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get telemetryTracerouteResponseBadge => 'Antwort';
 
   @override
+  String telemetryTracerouteHopSnrHeard(String snr) {
+    return 'empfangen mit $snr dB';
+  }
+
+  @override
   String get telemetryTracerouteReturnPath => 'Rückpfad';
 
   @override
@@ -23102,6 +23125,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get telemetryTracerouteTo => 'An';
+
+  @override
+  String get telemetryTracerouteYouLabel => 'Sie';
 
   @override
   String get telemetryTryAdjustingFilters =>
@@ -34616,7 +34642,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get helpTracerouteResultsBubble =>
-      'Ergebnisse zeigen **Vorwärts**- und **Rückwärts**-Hop-Pfade mit **SNR** (Signal-Rausch-Verhältnis) pro Hop. So können Sie die Routenqualität mit der Verbindungsleistung korrelieren.';
+      'Ergebnisse zeigen **Vorwärts**- und **Rückwärts**-Hop-Pfade. Jede Zeile lautet \"empfangen mit X dB\" — der **SNR**, den dieser Knoten an seinem eingehenden Paket gemessen hat. Die letzte Zeile jedes Abschnitts ist der Endpunkt (das Ziel auf dem Vorwärtspfad, Sie auf dem Rückwärtspfad), sodass selbst eine direkte Verbindung beide Empfangs-SNRs anzeigt.';
 
   @override
   String get helpTracerouteHistoryBubble =>

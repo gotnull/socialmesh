@@ -114,11 +114,12 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen>
       title: context.l10n.privacySettingsTitle,
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.all(AppTheme.spacing16),
+          padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               // Info card
               Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
                 padding: const EdgeInsets.all(AppTheme.spacing16),
                 decoration: BoxDecoration(
                   color: context.card,

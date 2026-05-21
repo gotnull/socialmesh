@@ -3131,6 +3131,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get channelFormUplinkTitle => 'Uplink Enabled';
 
   @override
+  String get channelOptionsClearMessages => 'Clear Messages';
+
+  @override
+  String get channelOptionsClearMessagesConfirm => 'Clear';
+
+  @override
+  String get channelOptionsClearMessagesConfirmation =>
+      'This removes all stored messages from this channel on this device. It does not remove them from anyone else\'s device. This action cannot be undone.';
+
+  @override
+  String channelOptionsClearMessagesSuccess(String channel) {
+    return 'Messages cleared from $channel';
+  }
+
+  @override
+  String get channelOptionsClearMessagesTitle => 'Clear all messages?';
+
+  @override
   String get channelOptionsCopyButton => 'Copy';
 
   @override
@@ -22786,6 +22804,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get telemetryTracerouteResponseBadge => 'Response';
 
   @override
+  String telemetryTracerouteHopSnrHeard(String snr) {
+    return 'heard at $snr dB';
+  }
+
+  @override
   String get telemetryTracerouteReturnPath => 'Return Path';
 
   @override
@@ -22793,6 +22816,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get telemetryTracerouteTo => 'To';
+
+  @override
+  String get telemetryTracerouteYouLabel => 'You';
 
   @override
   String get telemetryTryAdjustingFilters =>
@@ -34117,7 +34143,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpTracerouteResultsBubble =>
-      'Results show **forward** and **return** hop paths with per-hop **SNR** (signal-to-noise ratio). This lets you correlate route quality with link performance.';
+      'Results show **forward** and **return** hop paths. Each row reads \"heard at X dB\" — the **SNR** that node measured on its inbound packet. The final row in each section is the endpoint (the target on the forward path, you on the return path), so even a direct connection shows both reception SNRs.';
 
   @override
   String get helpTracerouteHistoryBubble =>

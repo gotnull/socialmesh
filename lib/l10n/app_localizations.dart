@@ -5610,6 +5610,36 @@ abstract class AppLocalizations {
   /// **'Uplink Enabled'**
   String get channelFormUplinkTitle;
 
+  /// Channel options menu item label that removes every locally-stored message in this channel.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Messages'**
+  String get channelOptionsClearMessages;
+
+  /// Destructive button label on the channel clear-messages confirmation sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get channelOptionsClearMessagesConfirm;
+
+  /// Body text on the channel clear-messages confirmation sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes all stored messages from this channel on this device. It does not remove them from anyone else\'s device. This action cannot be undone.'**
+  String get channelOptionsClearMessagesConfirmation;
+
+  /// Snackbar shown after a channel's locally-stored messages are cleared. Parameters: {channel} = channel display name.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages cleared from {channel}'**
+  String channelOptionsClearMessagesSuccess(String channel);
+
+  /// Title of the channel clear-messages confirmation sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all messages?'**
+  String get channelOptionsClearMessagesTitle;
+
   /// Button label in channel configuration
   ///
   /// In en, this message translates to:
@@ -39848,6 +39878,12 @@ abstract class AppLocalizations {
   /// **'Response'**
   String get telemetryTracerouteResponseBadge;
 
+  /// Per-hop SNR label in a traceroute card. {snr} is the formatted decibel value (already includes one decimal place, e.g. "9.8"). The phrasing communicates that the SNR is what *this hop* measured on its inbound packet, so the direction is unambiguous without a tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'heard at {snr} dB'**
+  String telemetryTracerouteHopSnrHeard(String snr);
+
   /// Section title for the return hop path in a traceroute card.
   ///
   /// In en, this message translates to:
@@ -39865,6 +39901,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'To'**
   String get telemetryTracerouteTo;
+
+  /// Placeholder name used for the local node on the return path of a traceroute when the node table has no display name for the local device.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get telemetryTracerouteYouLabel;
 
   /// Empty-state subtitle suggesting the user change filters.
   ///
@@ -59968,7 +60010,7 @@ abstract class AppLocalizations {
   /// Help bubble text for step traceroute_results
   ///
   /// In en, this message translates to:
-  /// **'Results show **forward** and **return** hop paths with per-hop **SNR** (signal-to-noise ratio). This lets you correlate route quality with link performance.'**
+  /// **'Results show **forward** and **return** hop paths. Each row reads \"heard at X dB\" — the **SNR** that node measured on its inbound packet. The final row in each section is the endpoint (the target on the forward path, you on the return path), so even a direct connection shows both reception SNRs.'**
   String get helpTracerouteResultsBubble;
 
   /// Help bubble text for step traceroute_history

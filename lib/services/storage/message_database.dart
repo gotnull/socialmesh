@@ -624,6 +624,20 @@ class MessageDatabase {
     AppLogging.storage('Cleared all messages');
   }
 
+  /// Delete every stored message for a specific channel index.
+  ///
+  /// Returns the number of rows removed. DM rows (where `channel` is
+  /// null) are unaffected — they live in their own conversation key.
+  Future<int> deleteMessagesForChannel(int channelIndex) async {
+    final removed = await _database.delete(
+      _tableName,
+      where: 'channel = ?',
+      whereArgs: [channelIndex],
+    );
+    AppLogging.storage('Cleared $removed messages from channel $channelIndex');
+    return removed;
+  }
+
   /// Close the database.
   Future<void> close() async {
     await _db?.close();

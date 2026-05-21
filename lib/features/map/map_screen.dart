@@ -2424,11 +2424,15 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         },
                       ),
                     ),
-                  // Node count indicator - hide in location only mode and measure mode
+                  // Node count indicator - hide in location only mode, measure
+                  // mode, and traceroute mode (in traceroute the count refers
+                  // to the global NodeDB which is unrelated to the route, and
+                  // its top-left position collides with the route banners).
                   if (!_showNodeList &&
                       !_showFilters &&
                       !widget.locationOnlyMode &&
-                      !_measureMode)
+                      !_measureMode &&
+                      widget.tracerouteLog == null)
                     Positioned(
                       left: _mapPadding,
                       top: _mapPadding,

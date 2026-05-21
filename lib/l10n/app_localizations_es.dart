@@ -3198,6 +3198,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String get channelFormUplinkTitle => 'Enlace ascendente activado';
 
   @override
+  String get channelOptionsClearMessages => 'Borrar mensajes';
+
+  @override
+  String get channelOptionsClearMessagesConfirm => 'Borrar';
+
+  @override
+  String get channelOptionsClearMessagesConfirmation =>
+      'Esto eliminará todos los mensajes almacenados de este canal en este dispositivo. No se eliminarán de los dispositivos de otras personas. Esta acción no se puede deshacer.';
+
+  @override
+  String channelOptionsClearMessagesSuccess(String channel) {
+    return 'Mensajes borrados de $channel';
+  }
+
+  @override
+  String get channelOptionsClearMessagesTitle => '¿Borrar todos los mensajes?';
+
+  @override
   String get channelOptionsCopyButton => 'Copiar';
 
   @override
@@ -23137,6 +23155,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get telemetryTracerouteResponseBadge => 'Respuesta';
 
   @override
+  String telemetryTracerouteHopSnrHeard(String snr) {
+    return 'recibido a $snr dB';
+  }
+
+  @override
   String get telemetryTracerouteReturnPath => 'Ruta de retorno';
 
   @override
@@ -23144,6 +23167,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get telemetryTracerouteTo => 'Para';
+
+  @override
+  String get telemetryTracerouteYouLabel => 'Tú';
 
   @override
   String get telemetryTryAdjustingFilters =>
@@ -34686,7 +34712,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get helpTracerouteResultsBubble =>
-      'Los resultados muestran las rutas de saltos de **ida** y **vuelta** con el **SNR** por salto (relación señal a ruido). Esto le permite correlacionar la calidad de la ruta con el rendimiento del enlace.';
+      'Los resultados muestran las rutas de saltos de **ida** y **vuelta**. Cada fila dice \"recibido a X dB\" — el **SNR** que ese nodo midió en su paquete entrante. La última fila de cada sección es el extremo (el destino en la ruta de ida, tú en la ruta de vuelta), así que incluso una conexión directa muestra ambos SNR de recepción.';
 
   @override
   String get helpTracerouteHistoryBubble =>
