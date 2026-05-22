@@ -141,7 +141,7 @@ class CanvasColorHud extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface.withValues(alpha: 0.78),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radius20),
         border: Border.all(
           color: theme.dividerColor.withValues(alpha: 0.45),
           width: 0.6,

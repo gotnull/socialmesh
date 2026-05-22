@@ -12456,7 +12456,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshCanvasHelpLongPressBody =>
-      'Подивіться, хто й коли намалював клітинку (з’явиться у наступному білді).';
+      'Подивіться, хто й коли намалював клітинку (з\'явиться у наступному білді).';
 
   @override
   String get meshCanvasHelpCommunityTitle => 'Публічно за задумом';
