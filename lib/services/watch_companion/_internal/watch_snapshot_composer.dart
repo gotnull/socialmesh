@@ -8,6 +8,8 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/logging.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
+import 'package:socialmesh/providers/locale_provider.dart';
 
 import '../models/watch_companion_capabilities.dart';
 import '../models/watch_companion_channel_preview.dart';
@@ -85,13 +87,18 @@ final watchSnapshotComposerProvider = Provider<WatchCompanionSnapshot>((ref) {
     nodesHasData: cappedNodes.isNotEmpty,
   );
 
+  // Watch the in-app locale picker so the snapshot rebuilds (and the
+  // Watch receives fresh canned-message labels) whenever the user
+  // changes the language in Appearance & Accessibility settings.
+  ref.watch(localeProvider);
+
   return WatchCompanionSnapshot(
     generatedAt: DateTime.now().millisecondsSinceEpoch,
     connection: connection,
     inbox: cappedInbox,
     nodes: cappedNodes,
     channels: channels,
-    cannedMessages: buildCannedMessages(),
+    cannedMessages: buildCannedMessages(safeL10n()),
     capabilities: capabilities,
   );
 });

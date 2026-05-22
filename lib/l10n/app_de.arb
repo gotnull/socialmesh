@@ -12422,5 +12422,11 @@
   "watchSettingsChannelChipLabel": "Kanal {n}",
   "watchSettingsAboutTitle": "Über",
   "watchSettingsAboutBody": "Senden Sie vordefinierte Nachrichten von Ihrer Apple Watch, wenn sie mit diesem iPhone gekoppelt ist. Sendungen durchlaufen dieselben Bereitschafts- und Ratenlimit-Prüfungen wie der Verfasser auf dem Telefon.",
-  "watchSettingsChannelsUnavailable": "Verbinden Sie ein Funkgerät, um einen Standardkanal zu wählen."
+  "watchSettingsChannelsUnavailable": "Verbinden Sie ein Funkgerät, um einen Standardkanal zu wählen.",
+  "watchCannedOnMyWay": "Bin unterwegs",
+  "watchCannedImOk": "Mir geht's gut",
+  "watchCannedNeedHelp": "Brauche Hilfe",
+  "watchCannedAtCamp": "Im Camp",
+  "watchCannedBatteryLow": "Akku schwach",
+  "watchCannedMessageReceived": "Nachricht erhalten"
 }

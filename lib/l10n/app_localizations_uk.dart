@@ -43114,4 +43114,22 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get watchSettingsChannelsUnavailable =>
       'Під\'єднайте радіо, щоб обрати канал за замовчуванням.';
+
+  @override
+  String get watchCannedOnMyWay => 'Я в дорозі';
+
+  @override
+  String get watchCannedImOk => 'Я в порядку';
+
+  @override
+  String get watchCannedNeedHelp => 'Потрібна допомога';
+
+  @override
+  String get watchCannedAtCamp => 'У таборі';
+
+  @override
+  String get watchCannedBatteryLow => 'Низький заряд';
+
+  @override
+  String get watchCannedMessageReceived => 'Повідомлення отримано';
 }

@@ -45566,5 +45566,11 @@
   "watchSettingsChannelChipLabel": "Canal {n}",
   "watchSettingsAboutTitle": "Sobre",
   "watchSettingsAboutBody": "Envie mensagens predefinidas do seu Apple Watch quando emparelhado com este iPhone. Os envios passam pelas mesmas verificações de prontidão e limite de taxa do redator no telefone.",
-  "watchSettingsChannelsUnavailable": "Conecte um rádio para escolher um canal padrão."
+  "watchSettingsChannelsUnavailable": "Conecte um rádio para escolher um canal padrão.",
+  "watchCannedOnMyWay": "A caminho",
+  "watchCannedImOk": "Estou bem",
+  "watchCannedNeedHelp": "Preciso de ajuda",
+  "watchCannedAtCamp": "No acampamento",
+  "watchCannedBatteryLow": "Bateria fraca",
+  "watchCannedMessageReceived": "Mensagem recebida"
 }

@@ -43238,4 +43238,22 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get watchSettingsChannelsUnavailable =>
       'Verbinden Sie ein Funkgerät, um einen Standardkanal zu wählen.';
+
+  @override
+  String get watchCannedOnMyWay => 'Bin unterwegs';
+
+  @override
+  String get watchCannedImOk => 'Mir geht\'s gut';
+
+  @override
+  String get watchCannedNeedHelp => 'Brauche Hilfe';
+
+  @override
+  String get watchCannedAtCamp => 'Im Camp';
+
+  @override
+  String get watchCannedBatteryLow => 'Akku schwach';
+
+  @override
+  String get watchCannedMessageReceived => 'Nachricht erhalten';
 }

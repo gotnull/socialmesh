@@ -56871,5 +56871,29 @@
     "watchSettingsChannelsUnavailable": "Connect a radio to choose a default channel.",
     "@watchSettingsChannelsUnavailable": {
         "description": "Placeholder shown in the Apple Watch settings screen's default-channel picker when no protocol is active or the active radio has not advertised any channel config yet."
+    },
+    "watchCannedOnMyWay": "On my way",
+    "@watchCannedOnMyWay": {
+        "description": "Apple Watch canned-message label. Sent as a channel broadcast when the user taps the row on the Watch. Keep it short enough to fit the Apple Watch Series tile."
+    },
+    "watchCannedImOk": "I'm OK",
+    "@watchCannedImOk": {
+        "description": "Apple Watch canned-message label for the safety check-in row. Short, reassuring. Used as the body text when the Watch sends the sendImOk intent."
+    },
+    "watchCannedNeedHelp": "Need help",
+    "@watchCannedNeedHelp": {
+        "description": "Apple Watch canned-message label for a help/assistance request. Sent as plain text on the active channel; not an emergency button by itself."
+    },
+    "watchCannedAtCamp": "At camp",
+    "@watchCannedAtCamp": {
+        "description": "Apple Watch canned-message label for arrived-at-basecamp. Used in field and group scenarios; keep it under ~12 characters where possible."
+    },
+    "watchCannedBatteryLow": "Battery low",
+    "@watchCannedBatteryLow": {
+        "description": "Apple Watch canned-message label warning others that the user's device battery is running low. Short, status-only."
+    },
+    "watchCannedMessageReceived": "Message received",
+    "@watchCannedMessageReceived": {
+        "description": "Apple Watch canned-message label used as an acknowledgement reply. Equivalent to a brief 'roger that'."
     }
 }

@@ -43090,4 +43090,22 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get watchSettingsChannelsUnavailable =>
       'Conecte um rádio para escolher um canal padrão.';
+
+  @override
+  String get watchCannedOnMyWay => 'A caminho';
+
+  @override
+  String get watchCannedImOk => 'Estou bem';
+
+  @override
+  String get watchCannedNeedHelp => 'Preciso de ajuda';
+
+  @override
+  String get watchCannedAtCamp => 'No acampamento';
+
+  @override
+  String get watchCannedBatteryLow => 'Bateria fraca';
+
+  @override
+  String get watchCannedMessageReceived => 'Mensagem recebida';
 }

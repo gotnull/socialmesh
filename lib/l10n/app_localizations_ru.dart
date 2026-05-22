@@ -43103,4 +43103,22 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get watchSettingsChannelsUnavailable =>
       'Подключите радиостанцию, чтобы выбрать канал по умолчанию.';
+
+  @override
+  String get watchCannedOnMyWay => 'Уже в пути';
+
+  @override
+  String get watchCannedImOk => 'Я в порядке';
+
+  @override
+  String get watchCannedNeedHelp => 'Нужна помощь';
+
+  @override
+  String get watchCannedAtCamp => 'В лагере';
+
+  @override
+  String get watchCannedBatteryLow => 'Низкий заряд';
+
+  @override
+  String get watchCannedMessageReceived => 'Сообщение получено';
 }

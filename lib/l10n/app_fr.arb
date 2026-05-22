@@ -12422,5 +12422,11 @@
   "watchSettingsChannelChipLabel": "Canal {n}",
   "watchSettingsAboutTitle": "À propos",
   "watchSettingsAboutBody": "Envoyez des messages prédéfinis depuis votre Apple Watch lorsqu'elle est appariée à cet iPhone. Les envois passent par les mêmes vérifications de disponibilité et de limite de débit que le compositeur du téléphone.",
-  "watchSettingsChannelsUnavailable": "Connectez une radio pour choisir un canal par défaut."
+  "watchSettingsChannelsUnavailable": "Connectez une radio pour choisir un canal par défaut.",
+  "watchCannedOnMyWay": "J'arrive",
+  "watchCannedImOk": "Je vais bien",
+  "watchCannedNeedHelp": "Besoin d'aide",
+  "watchCannedAtCamp": "Au camp",
+  "watchCannedBatteryLow": "Batterie faible",
+  "watchCannedMessageReceived": "Message reçu"
 }

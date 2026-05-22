@@ -74710,6 +74710,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connect a radio to choose a default channel.'**
   String get watchSettingsChannelsUnavailable;
+
+  /// Apple Watch canned-message label. Sent as a channel broadcast when the user taps the row on the Watch. Keep it short enough to fit the Apple Watch Series tile.
+  ///
+  /// In en, this message translates to:
+  /// **'On my way'**
+  String get watchCannedOnMyWay;
+
+  /// Apple Watch canned-message label for the safety check-in row. Short, reassuring. Used as the body text when the Watch sends the sendImOk intent.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m OK'**
+  String get watchCannedImOk;
+
+  /// Apple Watch canned-message label for a help/assistance request. Sent as plain text on the active channel; not an emergency button by itself.
+  ///
+  /// In en, this message translates to:
+  /// **'Need help'**
+  String get watchCannedNeedHelp;
+
+  /// Apple Watch canned-message label for arrived-at-basecamp. Used in field and group scenarios; keep it under ~12 characters where possible.
+  ///
+  /// In en, this message translates to:
+  /// **'At camp'**
+  String get watchCannedAtCamp;
+
+  /// Apple Watch canned-message label warning others that the user's device battery is running low. Short, status-only.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery low'**
+  String get watchCannedBatteryLow;
+
+  /// Apple Watch canned-message label used as an acknowledgement reply. Equivalent to a brief 'roger that'.
+  ///
+  /// In en, this message translates to:
+  /// **'Message received'**
+  String get watchCannedMessageReceived;
 }
 
 class _AppLocalizationsDelegate

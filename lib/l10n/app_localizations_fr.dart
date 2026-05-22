@@ -43423,4 +43423,22 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get watchSettingsChannelsUnavailable =>
       'Connectez une radio pour choisir un canal par défaut.';
+
+  @override
+  String get watchCannedOnMyWay => 'J\'arrive';
+
+  @override
+  String get watchCannedImOk => 'Je vais bien';
+
+  @override
+  String get watchCannedNeedHelp => 'Besoin d\'aide';
+
+  @override
+  String get watchCannedAtCamp => 'Au camp';
+
+  @override
+  String get watchCannedBatteryLow => 'Batterie faible';
+
+  @override
+  String get watchCannedMessageReceived => 'Message reçu';
 }

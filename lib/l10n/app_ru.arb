@@ -12422,5 +12422,11 @@
   "watchSettingsChannelChipLabel": "Канал {n}",
   "watchSettingsAboutTitle": "О компаньоне",
   "watchSettingsAboutBody": "Отправляйте готовые сообщения с Apple Watch при сопряжении с этим iPhone. Отправка проходит те же проверки готовности и лимита скорости, что и редактор на телефоне.",
-  "watchSettingsChannelsUnavailable": "Подключите радиостанцию, чтобы выбрать канал по умолчанию."
+  "watchSettingsChannelsUnavailable": "Подключите радиостанцию, чтобы выбрать канал по умолчанию.",
+  "watchCannedOnMyWay": "Уже в пути",
+  "watchCannedImOk": "Я в порядке",
+  "watchCannedNeedHelp": "Нужна помощь",
+  "watchCannedAtCamp": "В лагере",
+  "watchCannedBatteryLow": "Низкий заряд",
+  "watchCannedMessageReceived": "Сообщение получено"
 }

@@ -32,6 +32,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/logging.dart';
 import 'package:socialmesh/core/meshcore_constants.dart';
+import 'package:socialmesh/l10n/l10n_utils.dart';
 import 'package:socialmesh/models/mesh_models.dart' show MessageSource;
 import 'package:socialmesh/providers/app_providers.dart'
     show ActiveProtocol, activeProtocolProvider, protocolServiceProvider;
@@ -182,10 +183,10 @@ class WatchSendFacade {
       return _reject(intent, 'canned_key_unknown');
     }
 
-    // Body text comes from the canned-messages composer (English in
-    // this slice; Slice 5 wires locale-resolution). Looking up by key
-    // is total because we just validated the key above.
-    final cannedMessages = buildCannedMessages();
+    // Body text comes from the canned-messages composer, resolved
+    // against the active phone locale. Looking up by key is total
+    // because we just validated the key above.
+    final cannedMessages = buildCannedMessages(safeL10n());
     final text = cannedMessages.firstWhere((m) => m.key == cannedKey).label;
 
     // 3. Readiness gate. The phone-side protocol services also enforce
