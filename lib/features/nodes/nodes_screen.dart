@@ -798,7 +798,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
       _NodeSection(context.l10n.nodesScreenSectionFavorites, favorites),
       _NodeSection(context.l10n.nodesScreenSectionActive, active),
       _NodeSection(context.l10n.nodesScreenSectionSeenRecently, fading),
-      _NodeSection(context.l10n.nodesScreenSectionInactive, inactive),
+      _NodeSection(context.l10n.nodesScreenSectionQuiet, inactive),
       _NodeSection(context.l10n.nodesScreenSectionUnknown, unknown),
     ];
   }

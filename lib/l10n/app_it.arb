@@ -21226,8 +21226,8 @@
   "@nodesScreenSectionFavorites": {
     "description": "Section header for favorite nodes."
   },
-  "@nodesScreenSectionInactive": {
-    "description": "Section header for inactive nodes."
+  "@nodesScreenSectionQuiet": {
+    "description": "Section header for nodes that were heard 10-60 minutes ago (PresenceConfidence.stale). Rendered as 'Quiet' rather than 'Inactive' because the node was still recently on the air."
   },
   "@nodesScreenSectionSeenRecently": {
     "description": "Section header for recently seen nodes."
@@ -40913,7 +40913,7 @@
   "nodesScreenSectionCharging": "In carica",
   "nodesScreenSectionDiscovering": "Scoperta in corso",
   "nodesScreenSectionFavorites": "Preferiti",
-  "nodesScreenSectionInactive": "Inattivi",
+  "nodesScreenSectionQuiet": "Tranquillo",
   "nodesScreenSectionSeenRecently": "Visti di recente",
   "nodesScreenSectionSignalMedium": "Medio (da -10 a 0 dB)",
   "nodesScreenSectionSignalStrong": "Forte (>0 dB)",
@@ -41620,7 +41620,7 @@
   "presenceShowAll": "Mostra tutti i nodi",
   "presenceStatusActive": "Attivo",
   "presenceStatusHint": "Cosa stai facendo?",
-  "presenceStatusInactive": "Inattivo",
+  "presenceStatusQuiet": "Tranquillo",
   "presenceStatusLabel": "Stato",
   "presenceStatusNotSet": "Non impostato",
   "presenceStatusUnknown": "Sconosciuto",

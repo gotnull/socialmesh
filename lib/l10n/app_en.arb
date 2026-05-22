@@ -21486,9 +21486,9 @@
     "@nodesScreenSectionFavorites": {
         "description": "Section header for favorite nodes."
     },
-    "nodesScreenSectionInactive": "Inactive",
-    "@nodesScreenSectionInactive": {
-        "description": "Section header for inactive nodes."
+    "nodesScreenSectionQuiet": "Quiet",
+    "@nodesScreenSectionQuiet": {
+        "description": "Section header for nodes that were heard 10-60 minutes ago (PresenceConfidence.stale). Rendered as 'Quiet' rather than 'Inactive' because the node was still recently on the air."
     },
     "nodesScreenSectionSeenRecently": "Seen Recently",
     "@nodesScreenSectionSeenRecently": {
@@ -56788,9 +56788,9 @@
     "@presenceStatusActive": {
         "description": "Presence badge on node cards when the node is currently active."
     },
-    "presenceStatusInactive": "Inactive",
-    "@presenceStatusInactive": {
-        "description": "Presence badge on node cards when the node is stale (not heard for a long while)."
+    "presenceStatusQuiet": "Quiet",
+    "@presenceStatusQuiet": {
+        "description": "Per-card presence sub-label for the 10-60 minute band (PresenceConfidence.stale). Rendered as 'Quiet' rather than 'Inactive' because the node was still heard recently."
     },
     "presenceStatusUnknown": "Unknown",
     "@presenceStatusUnknown": {

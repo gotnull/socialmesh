@@ -27,7 +27,7 @@ String presenceStatusText(PresenceConfidence confidence, Duration? age) {
       if (ago.isEmpty) return l10n.presenceSeenJustNow;
       return l10n.presenceSeenAgo(ago);
     case PresenceConfidence.stale:
-      return l10n.presenceStatusInactive;
+      return l10n.presenceStatusQuiet;
     case PresenceConfidence.unknown:
       return l10n.presenceStatusUnknown;
   }

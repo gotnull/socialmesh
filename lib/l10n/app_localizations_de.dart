@@ -15958,7 +15958,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get nodesScreenSectionFavorites => 'Favoriten';
 
   @override
-  String get nodesScreenSectionInactive => 'Inaktiv';
+  String get nodesScreenSectionQuiet => 'Ruhig';
 
   @override
   String get nodesScreenSectionSeenRecently => 'Kürzlich gesehen';
@@ -43178,7 +43178,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get presenceStatusActive => 'Aktiv';
 
   @override
-  String get presenceStatusInactive => 'Inaktiv';
+  String get presenceStatusQuiet => 'Ruhig';
 
   @override
   String get presenceStatusUnknown => 'Unbekannt';

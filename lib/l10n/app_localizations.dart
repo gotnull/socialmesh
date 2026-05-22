@@ -27380,11 +27380,11 @@ abstract class AppLocalizations {
   /// **'Favorites'**
   String get nodesScreenSectionFavorites;
 
-  /// Section header for inactive nodes.
+  /// Section header for nodes that were heard 10-60 minutes ago (PresenceConfidence.stale). Rendered as 'Quiet' rather than 'Inactive' because the node was still recently on the air.
   ///
   /// In en, this message translates to:
-  /// **'Inactive'**
-  String get nodesScreenSectionInactive;
+  /// **'Quiet'**
+  String get nodesScreenSectionQuiet;
 
   /// Section header for recently seen nodes.
   ///
@@ -74603,11 +74603,11 @@ abstract class AppLocalizations {
   /// **'Active'**
   String get presenceStatusActive;
 
-  /// Presence badge on node cards when the node is stale (not heard for a long while).
+  /// Per-card presence sub-label for the 10-60 minute band (PresenceConfidence.stale). Rendered as 'Quiet' rather than 'Inactive' because the node was still heard recently.
   ///
   /// In en, this message translates to:
-  /// **'Inactive'**
-  String get presenceStatusInactive;
+  /// **'Quiet'**
+  String get presenceStatusQuiet;
 
   /// Presence badge on node cards when the activity state cannot be inferred.
   ///

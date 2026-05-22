@@ -16022,7 +16022,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get nodesScreenSectionFavorites => 'Favoris';
 
   @override
-  String get nodesScreenSectionInactive => 'Inactif';
+  String get nodesScreenSectionQuiet => 'Calme';
 
   @override
   String get nodesScreenSectionSeenRecently => 'Vus récemment';
@@ -43363,7 +43363,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get presenceStatusActive => 'Actif';
 
   @override
-  String get presenceStatusInactive => 'Inactif';
+  String get presenceStatusQuiet => 'Calme';
 
   @override
   String get presenceStatusUnknown => 'Inconnu';

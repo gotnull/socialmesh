@@ -15926,7 +15926,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get nodesScreenSectionFavorites => 'Обрані';
 
   @override
-  String get nodesScreenSectionInactive => 'Неактивні';
+  String get nodesScreenSectionQuiet => 'Тихий';
 
   @override
   String get nodesScreenSectionSeenRecently => 'Нещодавно виявлені';
@@ -43053,7 +43053,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get presenceStatusActive => 'Активний';
 
   @override
-  String get presenceStatusInactive => 'Неактивний';
+  String get presenceStatusQuiet => 'Тихий';
 
   @override
   String get presenceStatusUnknown => 'Невідомо';

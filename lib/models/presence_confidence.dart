@@ -278,7 +278,9 @@ extension PresenceConfidenceText on PresenceConfidence {
       case PresenceConfidence.fading:
         return 'Seen recently'; // lint-allow: hardcoded-string
       case PresenceConfidence.stale:
-        return 'Inactive';
+        // 10-60 min band: rendered "Quiet" not "Inactive" because the node
+        // was still heard recently. "Inactive" wrongly implies offline.
+        return 'Quiet'; // lint-allow: hardcoded-string
       case PresenceConfidence.unknown:
         return 'Unknown';
     }
