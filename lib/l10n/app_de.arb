@@ -7935,6 +7935,7 @@
   "positionRequestedFrom": "Position von {name} angefordert",
   "powerConfigAdcMultiplier": "ADC-Multiplikator",
   "powerConfigAdcMultiplierHint": "Spannungsteilerverhältnis (2,0 - 6,0)",
+  "powerConfigAdcMultiplierRangeError": "Muss zwischen 2,0 und 6,0 liegen",
   "powerConfigAdcMultiplierOverride": "ADC-Multiplikator-Override",
   "powerConfigAdcMultiplierOverrideSubtitle": "Spannungsteilerverhältnis für Akkuanzeige überschreiben",
   "powerConfigDeepSleep": "Tiefschlaf-Dauer",

@@ -50331,6 +50331,12 @@ abstract class AppLocalizations {
   /// **'Voltage divider ratio (2.0 - 6.0)'**
   String get powerConfigAdcMultiplierHint;
 
+  /// Inline validation error shown under the ADC multiplier field when the typed value is outside the firmware-supported range of 2.0 to 6.0.
+  ///
+  /// In en, this message translates to:
+  /// **'Must be between 2.0 and 6.0'**
+  String get powerConfigAdcMultiplierRangeError;
+
   /// UI text: power config section sleep
   ///
   /// In en, this message translates to:

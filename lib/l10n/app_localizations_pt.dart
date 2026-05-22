@@ -28911,6 +28911,9 @@ class AppLocalizationsPt extends AppLocalizations {
       'Razão do divisor de tensão (2.0 - 6.0)';
 
   @override
+  String get powerConfigAdcMultiplierRangeError => 'Deve estar entre 2,0 e 6,0';
+
+  @override
   String get powerConfigSectionSleep => 'CONFIGURAÇÕES DE SUSPENSÃO';
 
   @override

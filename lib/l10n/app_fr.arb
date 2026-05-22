@@ -7935,6 +7935,7 @@
   "positionRequestedFrom": "Position demandée depuis {name}",
   "powerConfigAdcMultiplier": "Multiplicateur ADC",
   "powerConfigAdcMultiplierHint": "Rapport du diviseur de tension (2,0 - 6,0)",
+  "powerConfigAdcMultiplierRangeError": "Doit être compris entre 2,0 et 6,0",
   "powerConfigAdcMultiplierOverride": "Remplacement du multiplicateur ADC",
   "powerConfigAdcMultiplierOverrideSubtitle": "Remplacer le rapport du diviseur de tension pour la lecture de la batterie",
   "powerConfigDeepSleep": "Durée du sommeil profond",

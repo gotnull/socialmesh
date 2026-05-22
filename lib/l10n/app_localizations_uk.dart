@@ -28938,6 +28938,9 @@ class AppLocalizationsUk extends AppLocalizations {
       'Коефіцієнт подільника напруги (2.0 - 6.0)';
 
   @override
+  String get powerConfigAdcMultiplierRangeError => 'Має бути від 2,0 до 6,0';
+
+  @override
   String get powerConfigSectionSleep => 'НАЛАШТУВАННЯ СНУ';
 
   @override

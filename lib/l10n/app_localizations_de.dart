@@ -29011,6 +29011,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Spannungsteilerverhältnis (2,0 - 6,0)';
 
   @override
+  String get powerConfigAdcMultiplierRangeError =>
+      'Muss zwischen 2,0 und 6,0 liegen';
+
+  @override
   String get powerConfigSectionSleep => 'SCHLAF-EINSTELLUNGEN';
 
   @override

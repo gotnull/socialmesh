@@ -31,6 +31,13 @@ class PowerConfigScreen extends ConsumerStatefulWidget {
 
 class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
     with LifecycleSafeMixin {
+  // Firmware-documented range for adcMultiplierOverride. Values outside this
+  // range are rejected by Meshtastic firmware; the protobuf comment at
+  // config.pb.dart explicitly states "between 2 and 6".
+  static const double _adcMultiplierMin = 2.0;
+  static const double _adcMultiplierMax = 6.0;
+  static const double _adcMultiplierDefault = 3.2;
+
   void _dismissKeyboard() {
     FocusScope.of(context).unfocus();
   }
@@ -45,6 +52,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
   int _shutdownAfterSecs = 0;
   bool _adcOverride = false;
   double _adcMultiplier = 0.0;
+  bool _adcMultiplierInvalid = false;
 
   // Stable controller/focus for ADC multiplier field to avoid
   // per-keystroke remount (matching radio_config_screen frequency pattern).
@@ -61,6 +69,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
     _adcController = TextEditingController();
     _adcFocusNode = FocusNode();
     _adcFocusNode.addListener(_onAdcFocusChanged);
+    _adcController.addListener(_onAdcTextChanged);
     _loadCurrentConfig();
   }
 
@@ -68,26 +77,52 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
   void dispose() {
     _configSubscription?.cancel();
     _adcFocusNode.removeListener(_onAdcFocusChanged);
+    _adcController.removeListener(_onAdcTextChanged);
     _adcFocusNode.dispose();
     _adcController.dispose();
     super.dispose();
   }
 
-  /// Commit the ADC multiplier value when the field loses focus,
-  /// matching the frequency override pattern in radio_config_screen.
-  /// Locale-aware parse so users on IT / DE / FR / RU / ES keyboards
-  /// who type a comma decimal separator (e.g. "2,5") are accepted.
+  // Live validation: keep _adcMultiplier in sync with the field and flip an
+  // invalid flag when the typed value is outside the firmware-supported
+  // range, so the user sees why Save is blocked instead of silently writing
+  // a stale value to the device. The localized error string is resolved at
+  // render time; this listener runs synchronously during initState's async
+  // load chain, so it must not touch InheritedWidget lookups.
+  void _onAdcTextChanged() {
+    final raw = _adcController.text;
+    final bool invalid;
+    double? committed;
+    if (raw.isEmpty) {
+      invalid = false;
+    } else {
+      final parsed = NumberFormatUtils.tryParseLocaleDouble(raw);
+      final inRange =
+          parsed != null &&
+          parsed >= _adcMultiplierMin &&
+          parsed <= _adcMultiplierMax;
+      invalid = !inRange;
+      if (inRange) committed = parsed;
+    }
+    if (invalid == _adcMultiplierInvalid && committed == null) return;
+    setState(() {
+      _adcMultiplierInvalid = invalid;
+      if (committed != null) _adcMultiplier = committed;
+    });
+  }
+
+  // Locale-aware parse so users on IT / DE / FR / RU / ES keyboards who type
+  // a comma decimal separator (e.g. "2,5") see the canonical dot form on
+  // commit. Only normalise when the current text parses to a valid in-range
+  // value; if not, leave what the user typed alone so the inline error stays
+  // anchored to the actual input.
   void _onAdcFocusChanged() {
-    if (!_adcFocusNode.hasFocus) {
-      final parsed = NumberFormatUtils.tryParseLocaleDouble(
-        _adcController.text,
-      );
-      final value = (parsed != null && parsed >= 2.0 && parsed <= 6.0)
-          ? parsed
-          : _adcMultiplier;
-      setState(() => _adcMultiplier = value);
-      // Normalize the displayed text on commit (always dot-separated).
-      _adcController.text = value.toStringAsFixed(2);
+    if (_adcFocusNode.hasFocus) return;
+    if (!_adcMultiplierInvalid && _adcController.text.isNotEmpty) {
+      final normalised = _adcMultiplier.toStringAsFixed(2);
+      if (_adcController.text != normalised) {
+        _adcController.text = normalised;
+      }
     }
   }
 
@@ -163,15 +198,15 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
     }
   }
 
+  bool get _adcInvalid => _adcOverride && _adcMultiplierInvalid;
+
   Future<void> _saveConfig() async {
-    // Commit any in-progress ADC multiplier text before saving,
-    // in case the user taps Save while the field still has focus.
-    // Locale-aware parse: accepts both "2.5" and "2,5".
-    final adcParsed = NumberFormatUtils.tryParseLocaleDouble(
-      _adcController.text,
-    );
-    if (adcParsed != null && adcParsed >= 2.0 && adcParsed <= 6.0) {
-      _adcMultiplier = adcParsed;
+    // Block submit when override is ON but the typed value is out of range.
+    // The inline error under the field already tells the user why; haptic
+    // gives the missed-tap signal without firing a redundant snackbar.
+    if (_adcInvalid) {
+      HapticFeedback.heavyImpact();
+      return;
     }
 
     final protocol = ref.read(protocolServiceProvider);
@@ -232,13 +267,15 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: TextButton(
-              onPressed: _saving ? null : _saveConfig,
+              onPressed: (_saving || _adcInvalid) ? null : _saveConfig,
               child: _saving
                   ? LoadingIndicator(size: 20)
                   : Text(
                       context.l10n.powerConfigSave,
                       style: TextStyle(
-                        color: context.accentColor,
+                        color: _adcInvalid
+                            ? context.textTertiary
+                            : context.accentColor,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -344,7 +381,9 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
                             setState(() {
                               _adcOverride = value;
                               if (value && _adcMultiplier == 0.0) {
-                                _adcMultiplier = 3.2; // Default ratio
+                                _adcMultiplier = _adcMultiplierDefault;
+                                _adcController.text = _adcMultiplier
+                                    .toStringAsFixed(2);
                               }
                             });
                           },
@@ -427,7 +466,19 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
                                             AppTheme.radius8,
                                           ),
                                           borderSide: BorderSide(
-                                            color: context.border,
+                                            color: _adcMultiplierInvalid
+                                                ? SemanticColors.error
+                                                : context.border,
+                                          ),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            AppTheme.radius8,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: _adcMultiplierInvalid
+                                                ? SemanticColors.error
+                                                : context.accentColor,
                                           ),
                                         ),
                                         counterText: '',
@@ -438,10 +489,19 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
                               ),
                               SizedBox(height: AppTheme.spacing4),
                               Text(
-                                context.l10n.powerConfigAdcMultiplierHint,
+                                _adcMultiplierInvalid
+                                    ? context
+                                          .l10n
+                                          .powerConfigAdcMultiplierRangeError
+                                    : context.l10n.powerConfigAdcMultiplierHint,
                                 style: TextStyle(
-                                  color: context.textSecondary,
+                                  color: _adcMultiplierInvalid
+                                      ? SemanticColors.error
+                                      : context.textSecondary,
                                   fontSize: 12,
+                                  fontWeight: _adcMultiplierInvalid
+                                      ? FontWeight.w500
+                                      : FontWeight.normal,
                                 ),
                               ),
                             ],

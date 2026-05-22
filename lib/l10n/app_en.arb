@@ -38764,6 +38764,10 @@
     "@powerConfigAdcMultiplierHint": {
         "description": "Input field hint text"
     },
+    "powerConfigAdcMultiplierRangeError": "Must be between 2.0 and 6.0",
+    "@powerConfigAdcMultiplierRangeError": {
+        "description": "Inline validation error shown under the ADC multiplier field when the typed value is outside the firmware-supported range of 2.0 to 6.0."
+    },
     "powerConfigSectionSleep": "SLEEP SETTINGS",
     "@powerConfigSectionSleep": {
         "description": "UI text: power config section sleep"

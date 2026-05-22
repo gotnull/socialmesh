@@ -7935,6 +7935,7 @@
   "positionRequestedFrom": "Позицію запрошено від {name}",
   "powerConfigAdcMultiplier": "Множник ADC",
   "powerConfigAdcMultiplierHint": "Коефіцієнт подільника напруги (2.0 - 6.0)",
+  "powerConfigAdcMultiplierRangeError": "Має бути від 2,0 до 6,0",
   "powerConfigAdcMultiplierOverride": "Перевизначення множника ADC",
   "powerConfigAdcMultiplierOverrideSubtitle": "Перевизначити коефіцієнт подільника напруги для зчитування акумулятора",
   "powerConfigDeepSleep": "Тривалість глибокого сну",

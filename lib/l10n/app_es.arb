@@ -7935,6 +7935,7 @@
   "positionRequestedFrom": "Posición solicitada a {name}",
   "powerConfigAdcMultiplier": "Multiplicador ADC",
   "powerConfigAdcMultiplierHint": "Relación del divisor de voltaje (2.0 - 6.0)",
+  "powerConfigAdcMultiplierRangeError": "Debe estar entre 2,0 y 6,0",
   "powerConfigAdcMultiplierOverride": "Anulación del multiplicador ADC",
   "powerConfigAdcMultiplierOverrideSubtitle": "Anular la relación del divisor de voltaje para la lectura de batería",
   "powerConfigDeepSleep": "Duración del sueño profundo",

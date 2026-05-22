@@ -28595,6 +28595,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Voltage divider ratio (2.0 - 6.0)';
 
   @override
+  String get powerConfigAdcMultiplierRangeError =>
+      'Must be between 2.0 and 6.0';
+
+  @override
   String get powerConfigSectionSleep => 'SLEEP SETTINGS';
 
   @override

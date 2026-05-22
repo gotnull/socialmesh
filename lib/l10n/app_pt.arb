@@ -41448,6 +41448,7 @@
   "positionRequestedFrom": "Posição solicitada de {name}",
   "powerConfigAdcMultiplier": "Multiplicador ADC",
   "powerConfigAdcMultiplierHint": "Razão do divisor de tensão (2.0 - 6.0)",
+  "powerConfigAdcMultiplierRangeError": "Deve estar entre 2,0 e 6,0",
   "powerConfigAdcMultiplierOverride": "Substituir multiplicador ADC",
   "powerConfigAdcMultiplierOverrideSubtitle": "Substituir razão do divisor de tensão para leitura da bateria",
   "powerConfigDeepSleep": "Duração da suspensão profunda",

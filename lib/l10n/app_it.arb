@@ -41448,6 +41448,7 @@
   "positionRequestedFrom": "Posizione richiesta da {name}",
   "powerConfigAdcMultiplier": "Moltiplicatore ADC",
   "powerConfigAdcMultiplierHint": "Rapporto divisore di tensione (2.0 - 6.0)",
+  "powerConfigAdcMultiplierRangeError": "Deve essere compreso tra 2,0 e 6,0",
   "powerConfigAdcMultiplierOverride": "Override moltiplicatore ADC",
   "powerConfigAdcMultiplierOverrideSubtitle": "Sovrascrivi il rapporto del divisore di tensione per la lettura della batteria",
   "powerConfigDeepSleep": "Durata sospensione profonda",

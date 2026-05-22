@@ -29064,6 +29064,9 @@ class AppLocalizationsEs extends AppLocalizations {
       'Relación del divisor de voltaje (2.0 - 6.0)';
 
   @override
+  String get powerConfigAdcMultiplierRangeError => 'Debe estar entre 2,0 y 6,0';
+
+  @override
   String get powerConfigSectionSleep => 'AJUSTES DE SUSPENSIÓN';
 
   @override

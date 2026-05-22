@@ -8304,6 +8304,7 @@
   "positionRequestedFrom": "Запрос позиции от {name}",
   "powerConfigAdcMultiplier": "Множитель ADC",
   "powerConfigAdcMultiplierHint": "Коэффициент делителя напряжения (2.0 - 6.0)",
+  "powerConfigAdcMultiplierRangeError": "Должно быть от 2,0 до 6,0",
   "powerConfigAdcMultiplierOverride": "Переопределение множителя ADC",
   "powerConfigAdcMultiplierOverrideSubtitle": "Переопределить коэффициент делителя напряжения для измерения заряда батареи",
   "powerConfigDeepSleep": "Длительность глубокого сна",

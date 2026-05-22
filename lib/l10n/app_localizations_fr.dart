@@ -29149,6 +29149,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Rapport du diviseur de tension (2,0 - 6,0)';
 
   @override
+  String get powerConfigAdcMultiplierRangeError =>
+      'Doit être compris entre 2,0 et 6,0';
+
+  @override
   String get powerConfigSectionSleep => 'PARAMÈTRES DE VEILLE';
 
   @override
