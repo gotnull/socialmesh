@@ -60,7 +60,11 @@ class _FakeProtocolService implements ProtocolService {
   }
 
   @override
-  Future<bool> sendSipPayload(Uint8List payload, SipMessageType type) async {
+  Future<bool> sendSipPayload(
+    Uint8List payload,
+    SipMessageType type, {
+    int channelIndex = 0,
+  }) async {
     sent.add((bytes: payload, type: type));
     return true;
   }

@@ -159,6 +159,10 @@ abstract final class MrrpServiceId {
   /// pet.v1 — opt-in compact owner-pet public state (~8 B per peer).
   static const int petV1 = 0x00000005;
 
+  /// canvas.v1 — collaborative pixel canvas (MeshCanvas).
+  /// Spec: docs/canvas/CANVAS_V0_1.md.
+  static const int canvasV1 = 0x00000007;
+
   /// echo.test — harness-only echo service.
   static const int echoTest = 0xFFFF0001;
 
@@ -175,6 +179,8 @@ abstract final class MrrpServiceId {
         return 'incident.v1'; // lint-allow: hardcoded-string
       case petV1:
         return 'pet.v1'; // lint-allow: hardcoded-string
+      case canvasV1:
+        return 'canvas.v1'; // lint-allow: hardcoded-string
       case echoTest:
         return 'echo.test'; // lint-allow: hardcoded-string
       default:

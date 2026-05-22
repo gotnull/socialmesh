@@ -41,6 +41,7 @@ import 'socialmesh/sm_presence.dart';
 import 'socialmesh/sm_signal.dart';
 import 'sip/mrrp_codec.dart';
 import 'sip/mrrp_engine.dart';
+import 'sip/mrrp_types.dart';
 import 'sip/peer_safety_gate.dart';
 import 'sip/sip_codec.dart';
 import 'sip/sip_constants.dart';
@@ -640,7 +641,8 @@ class ProtocolService {
       [];
 
   static const int _kMrrpStartupBufferMax = 16;
-  final List<({int senderNodeId, SipFrame frame})> _mrrpStartupBuffer = [];
+  final List<({int senderNodeId, int channelIndex, SipFrame frame})>
+  _mrrpStartupBuffer = [];
 
   // Overlay v0.2 ingress hook. `null` when the overlay attachment
   // provider has not attached yet, or when OVERLAY_LINK_ENABLED is off
@@ -659,6 +661,33 @@ class ProtocolService {
   /// hook for "overlay traffic vanished mysteriously" diagnostics
   /// (P2 caveat). Logged at rate-limited intervals — never per-frame.
   int _overlayStartupBufferDrops = 0;
+
+  // ---------------------------------------------------------------------------
+  // canvas.v1 direct ingress hook (S6)
+  // ---------------------------------------------------------------------------
+  //
+  // canvas.v1 frames are demuxed out of the engine path inside
+  // [_handleMrrpPacket]. This bypass exists because:
+  //   1. The engine's request/response model emits a response per
+  //      inbound REQUEST, which doubles airtime for fire-and-forget
+  //      canvas broadcasts.
+  //   2. The engine enforces a global 4 frames / 60 s per-sender cap
+  //      (`MrrpConstants.mrrpMaxInboundRequestsPerSenderPer60s`) that
+  //      is too tight for canvas's 12-cap to ever be reached.
+  //   3. The engine path drops the Meshtastic `packet.channel`; canvas
+  //      must validate `(canvas_id, channelIndex)` binding.
+  //
+  // The hook receives `(senderNodeId, channelIndex, canvasPayload)`
+  // where canvasPayload is the MRRP frame's inner payload (the bytes
+  // CanvasCodec produces). The S5 `MrrpServiceCanvas.applyInbound`
+  // method matches this signature exactly. Hook is null until the
+  // provider layer (per-app init) calls [attachCanvasInbound].
+  Future<void> Function(
+    int senderNodeId,
+    int channelIndex,
+    Uint8List canvasPayload,
+  )?
+  _canvasInbound;
 
   /// Next drop count at which an aggregate log line will fire.
   /// Doubles each time to keep logs bounded even under sustained loss.
@@ -828,7 +857,7 @@ class ProtocolService {
       'MRRP_STARTUP: draining ${buffered.length} buffered mrrpData frame(s)',
     );
     for (final item in buffered) {
-      _handleMrrpPacket(item.senderNodeId, item.frame);
+      _handleMrrpPacket(item.senderNodeId, item.channelIndex, item.frame);
     }
     AppLogging.mrrp('MRRP_STARTUP: drain complete');
   }
@@ -856,6 +885,29 @@ class ProtocolService {
     } else {
       AppLogging.overlay('ProtocolService: overlay ingress detached');
     }
+  }
+
+  /// Attach the canvas.v1 direct-ingress handler.
+  ///
+  /// The handler receives `(senderNodeId, channelIndex, canvasPayload)`
+  /// where canvasPayload is the MRRP frame's inner payload bytes.
+  /// `null` detaches; the demux silently drops canvas frames until a
+  /// new handler attaches. Bind from `ref.onDispose` so the reference
+  /// is nulled on provider teardown.
+  void attachCanvasInbound(
+    Future<void> Function(
+      int senderNodeId,
+      int channelIndex,
+      Uint8List canvasPayload,
+    )?
+    handler,
+  ) {
+    _canvasInbound = handler;
+    AppLogging.meshCanvas(
+      handler != null
+          ? 'ProtocolService: canvas.v1 ingress attached'
+          : 'ProtocolService: canvas.v1 ingress detached',
+    );
   }
 
   /// Drain overlay frames buffered before [attachOverlayInbound].
@@ -6069,11 +6121,25 @@ class ProtocolService {
   ///
   /// The [payload] must be an already-encoded SIP frame (magic bytes included).
   /// Returns true if the packet was queued for send.
-  Future<bool> sendSipPacket(Uint8List payload) async {
+  ///
+  /// [channelIndex] selects which Meshtastic channel (0..7) the broadcast
+  /// rides. Defaults to 0 (primary), preserving the pre-canvas behaviour
+  /// of every SIP / MRRP / overlay send path that does not pass an explicit
+  /// channel. Out-of-range values (negative or >7) are rejected with a log
+  /// and the send returns false; callers MUST clamp or validate before
+  /// reaching this point.
+  Future<bool> sendSipPacket(Uint8List payload, {int channelIndex = 0}) async {
     if (_myNodeNum == null || !_transport.isConnected) {
       AppLogging.sip(
         'SIP_TX: not connected (myNodeNum=$_myNodeNum, '
         'connected=${_transport.isConnected})',
+      );
+      return false;
+    }
+
+    if (channelIndex < 0 || channelIndex > 7) {
+      AppLogging.sip(
+        'SIP_TX: invalid channelIndex=$channelIndex (expected 0..7)',
       );
       return false;
     }
@@ -6090,6 +6156,7 @@ class ProtocolService {
       to: 0xFFFFFFFF,
       data: data,
       packetId: packetId,
+      channel: channelIndex,
     );
     packet.hopLimit = 3;
 
@@ -6099,7 +6166,8 @@ class ProtocolService {
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
 
     AppLogging.sip(
-      'SIP_TX: sent ${payload.length}B, packetId=$packetId (broadcast)',
+      'SIP_TX: sent ${payload.length}B, packetId=$packetId '
+      '(broadcast, channel=$channelIndex)',
     );
     return true;
   }
@@ -6241,7 +6309,7 @@ class ProtocolService {
 
       // ----- MRRP -----
       case SipMessageType.mrrpData:
-        _handleMrrpPacket(senderNodeId, frame);
+        _handleMrrpPacket(senderNodeId, packet.channel, frame);
 
       case SipMessageType.error:
         AppLogging.sip(
@@ -6252,7 +6320,12 @@ class ProtocolService {
   }
 
   /// Handle an inbound MRRP frame embedded in a SIP mrrpData packet.
-  void _handleMrrpPacket(int senderNodeId, SipFrame frame) {
+  ///
+  /// [channelIndex] is the Meshtastic `packet.channel` of the originating
+  /// frame. It is required (not optional) so the canvas demux can bind
+  /// canvases to their channel. Existing services that ignore channel
+  /// continue to ignore it via the engine path.
+  void _handleMrrpPacket(int senderNodeId, int channelIndex, SipFrame frame) {
     // Overlay v0.2 pre-filter. MRRP v0.2 link frames use
     // version_minor=2 and msg_type 0x20..0x27 — none of which the
     // MRRP v0.1 engine recognises, so a v0.1-only peer would drop
@@ -6292,13 +6365,58 @@ class ProtocolService {
       return;
     }
 
+    // canvas.v1 direct demux. canvas frames are fire-and-forget
+    // broadcasts that must NOT generate an MRRP response, must NOT be
+    // throttled by the engine's global 4 / 60 s per-sender request cap,
+    // and MUST preserve the originating channelIndex. Sniff the
+    // service_id without doing a full MRRP decode; full decoding +
+    // canvas codec validation lives inside [MrrpServiceCanvas].
+    if (MrrpCodec.sniffServiceId(frame.payload) == MrrpServiceId.canvasV1) {
+      final canvasHandler = _canvasInbound;
+      if (canvasHandler == null) {
+        AppLogging.meshCanvas(
+          'canvas frame dropped: no handler attached '
+          '(sender=0x${senderNodeId.toRadixString(16)}, '
+          'channel=$channelIndex)',
+        );
+        return;
+      }
+      // Pull the inner canvas payload out via the full MRRP decoder so
+      // a malformed frame (bad payload_len, truncated TLVs, etc.)
+      // returns null and we drop cleanly rather than handing bad bytes
+      // to the canvas codec.
+      final mrrpFrame = MrrpCodec.decode(frame.payload);
+      if (mrrpFrame == null) {
+        AppLogging.meshCanvas(
+          'canvas frame dropped: MRRP decode failed '
+          '(sender=0x${senderNodeId.toRadixString(16)})',
+        );
+        return;
+      }
+      AppLogging.meshCanvas(
+        'canvas.v1 frame routed direct: '
+        'sender=0x${senderNodeId.toRadixString(16)} '
+        'channel=$channelIndex action=0x'
+        '${mrrpFrame.actionId.toRadixString(16).padLeft(4, '0')} '
+        'payload=${mrrpFrame.payload.length}B',
+      );
+      // Fire-and-forget — apply happens on the canvas handler's own
+      // sliding-window cap. Errors are logged inside the handler.
+      unawaited(canvasHandler(senderNodeId, channelIndex, mrrpFrame.payload));
+      return;
+    }
+
     final engine = _mrrpEngine;
     if (engine == null) {
       // Buffer early MRRP frames so they survive the gap between BLE connect
       // and mrrpEngineProvider being built (when a Mesh Explorer or harness
       // screen is first opened).
       if (_mrrpStartupBuffer.length < _kMrrpStartupBufferMax) {
-        _mrrpStartupBuffer.add((senderNodeId: senderNodeId, frame: frame));
+        _mrrpStartupBuffer.add((
+          senderNodeId: senderNodeId,
+          channelIndex: channelIndex,
+          frame: frame,
+        ));
         AppLogging.mrrp(
           'MRRP_STARTUP: buffering early mrrpData frame '
           '(${_mrrpStartupBuffer.length}/$_kMrrpStartupBufferMax)',
@@ -6416,6 +6534,18 @@ class ProtocolService {
     _handleSipPacket(packet, payload);
   }
 
+  /// Intended for unit tests only. Drives [_handleMrrpPacket] directly,
+  /// skipping the SIP discovery gate so canvas/MRRP demux tests don't
+  /// need to instantiate a full discovery engine.
+  @visibleForTesting
+  void injectMrrpFrameForTest(
+    int senderNodeId,
+    int channelIndex,
+    SipFrame frame,
+  ) {
+    _handleMrrpPacket(senderNodeId, channelIndex, frame);
+  }
+
   /// Number of SIP frames currently held in the pre-attachment startup buffer.
   ///
   /// A non-zero value means [attachSipDiscovery] has not been called yet and
@@ -6437,8 +6567,15 @@ class ProtocolService {
   void clearStartupBuffersForTest() => _clearStartupBuffers();
 
   /// Send a SIP packet and record the TX counter.
-  Future<bool> _sendSipAndCount(Uint8List payload, SipMessageType type) async {
-    final ok = await sendSipPacket(payload);
+  ///
+  /// [channelIndex] is forwarded to [sendSipPacket]; defaults to 0 to
+  /// preserve existing primary-channel behaviour.
+  Future<bool> _sendSipAndCount(
+    Uint8List payload,
+    SipMessageType type, {
+    int channelIndex = 0,
+  }) async {
+    final ok = await sendSipPacket(payload, channelIndex: channelIndex);
     if (ok) {
       _sipCounters?.recordTx(type, payload.length);
     }
@@ -6460,7 +6597,16 @@ class ProtocolService {
   /// behaviour degrades gracefully to [_sendSipAndCount]. When the
   /// limiter refuses the send, the bytes are dropped, the throttle
   /// counter is incremented, and `false` is returned — no exceptions.
-  Future<bool> sendSipGated(Uint8List encoded, SipMessageType type) async {
+  ///
+  /// [channelIndex] selects the Meshtastic channel (0..7). Defaults to 0,
+  /// preserving existing primary-channel behaviour for every current caller
+  /// that omits the argument. Used by canvas.v1 (and any future per-channel
+  /// MRRP service) to broadcast on a specific channel.
+  Future<bool> sendSipGated(
+    Uint8List encoded,
+    SipMessageType type, {
+    int channelIndex = 0,
+  }) async {
     final limiter = _sipRateLimiter;
     if (limiter != null) {
       if (!limiter.canSend(encoded.length)) {
@@ -6474,7 +6620,7 @@ class ProtocolService {
       }
       limiter.recordSend(encoded.length);
     }
-    return _sendSipAndCount(encoded, type);
+    return _sendSipAndCount(encoded, type, channelIndex: channelIndex);
   }
 
   /// Wrap a raw payload in a SIP frame envelope and send it on-air.
@@ -6483,7 +6629,14 @@ class ProtocolService {
   /// [SipCodec.encode], then transmits the wire bytes. Used by MRRP
   /// providers to send MRRP data wrapped in the SIP framing that the
   /// receive side ([_handleSipPacket] → [SipCodec.decode]) expects.
-  Future<bool> sendSipPayload(Uint8List payload, SipMessageType type) {
+  ///
+  /// [channelIndex] selects the Meshtastic channel (0..7). Defaults to 0,
+  /// preserving existing primary-channel behaviour.
+  Future<bool> sendSipPayload(
+    Uint8List payload,
+    SipMessageType type, {
+    int channelIndex = 0,
+  }) {
     final frame = SipFrame(
       versionMajor: SipConstants.sipVersionMajor,
       versionMinor: SipConstants.sipVersionMinor,
@@ -6498,7 +6651,7 @@ class ProtocolService {
     );
     final encoded = SipCodec.encode(frame);
     if (encoded == null) return Future.value(false);
-    return _sendSipAndCount(encoded, type);
+    return _sendSipAndCount(encoded, type, channelIndex: channelIndex);
   }
 
   /// Accept an incoming SIP handshake request from [peerNodeId].

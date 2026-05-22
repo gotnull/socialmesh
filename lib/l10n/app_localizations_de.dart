@@ -12433,6 +12433,81 @@ class AppLocalizationsDe extends AppLocalizations {
   String get nodeboardDrawerLabel => 'NodeBoard';
 
   @override
+  String get meshCanvasDrawerLabel => 'MeshCanvas';
+
+  @override
+  String get meshCanvasPlaceholderTitle => 'MeshCanvas';
+
+  @override
+  String get meshCanvasPlaceholderSubtitle =>
+      'Demnächst verfügbar: kollaborative Pixel-Leinwand über das Mesh';
+
+  @override
+  String get meshCanvasHelpTitle => 'Über MeshCanvas';
+
+  @override
+  String get meshCanvasHelpIntro =>
+      'Eine geteilte Pixelwand für das Mesh. Male eine Zelle und beobachte, wie sich die Leinwand füllt, während Knoten in der Nähe dieselbe Fläche von ihren eigenen Geräten aus bemalen. Keine Server, keine Konten, nur Funk und Pixel.';
+
+  @override
+  String get meshCanvasHelpLocalCanvasTitle => 'Lokale Geräte-Leinwand';
+
+  @override
+  String get meshCanvasHelpLocalCanvasBody =>
+      'Dein privater 128-mal-128-Sandkasten. Pixel bleiben auf diesem Gerät und werden nie gesendet. Ideal zum Aufwärmen.';
+
+  @override
+  String get meshCanvasHelpMeshCanvasTitle => 'Mesh-Leinwand';
+
+  @override
+  String get meshCanvasHelpMeshCanvasBody =>
+      'Eine geteilte 128-mal-128-Tafel pro Kanal. Jeder Pinselstrich ist ein kleiner Mesh-Frame; die Tafel gleicht sich auf allen Zuhörern des Kanals an.';
+
+  @override
+  String get meshCanvasHelpTapToPaintTitle => 'Tippen zum Malen';
+
+  @override
+  String get meshCanvasHelpTapToPaintBody =>
+      'Tippe eine Zelle an, um sie in der aktiven Farbe zu bemalen. Tippe das transparente Feld an, um zu löschen.';
+
+  @override
+  String get meshCanvasHelpPanZoomTitle => 'Schwenken und kneifen';
+
+  @override
+  String get meshCanvasHelpPanZoomBody =>
+      'Ziehen zum Schwenken, Kneifen zum Zoomen. Die Tafel schwebt in offenem Raum, damit du immer die Ränder siehst.';
+
+  @override
+  String get meshCanvasHelpLongPressTitle => 'Gedrückt halten zum Prüfen';
+
+  @override
+  String get meshCanvasHelpLongPressBody =>
+      'Sieh, wer eine Zelle wann bemalt hat (kommt in einem späteren Build).';
+
+  @override
+  String get meshCanvasHelpCommunityTitle => 'Öffentlich gewollt';
+
+  @override
+  String get meshCanvasHelpCommunityBody =>
+      'Pixel sind im Mesh bewusst öffentlich. Es gibt keinen Bearbeitungsverlauf zu gewinnen. Der Spaß ist die Wand, nicht der Sieg.';
+
+  @override
+  String get meshCanvasHelpTooltip => 'Über MeshCanvas';
+
+  @override
+  String get meshCanvasIdentityLocal => 'Lokale Geräte-Leinwand';
+
+  @override
+  String get meshCanvasIdentityLocalSubtitle =>
+      'Offline-Sandkasten - Pixel bleiben lokal';
+
+  @override
+  String get meshCanvasRecentLabel => 'Zuletzt';
+
+  @override
+  String get meshCanvasHudEraserLabel => 'Radierer';
+
+  @override
   String get nodeboardTitle => 'NodeBoard';
 
   @override

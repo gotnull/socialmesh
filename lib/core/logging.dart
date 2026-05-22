@@ -110,6 +110,7 @@ class AppLogging {
   static bool? _meshcoreLoggingLocationEnabled;
   static bool? _platformLoggingEnabled;
   static bool? _watchCompanionLoggingEnabled;
+  static bool? _meshCanvasLoggingEnabled;
   static bool? _forceEmptyStates;
   static Logger? _bleLogger;
   static Logger? _mapLogger;
@@ -305,6 +306,12 @@ class AppLogging {
     _petLoggingEnabled ??=
         _safeGetEnv('PET_LOGGING_ENABLED')?.toLowerCase() == 'true';
     return _petLoggingEnabled!;
+  }
+
+  static bool get meshCanvasLoggingEnabled {
+    _meshCanvasLoggingEnabled ??=
+        _safeGetEnv('MESH_CANVAS_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    return _meshCanvasLoggingEnabled!;
   }
 
   static bool get mfaLoggingEnabled {
@@ -542,6 +549,10 @@ class AppLogging {
 
   static void pet(String message) {
     if (petLoggingEnabled) debugPrint('Pet: $message');
+  }
+
+  static void meshCanvas(String message) {
+    if (meshCanvasLoggingEnabled) debugPrint('MeshCanvas: $message');
   }
 
   /// Always-on Cloud Sync logging channel.
@@ -1179,6 +1190,7 @@ class AppLogging {
     _meshcoreLoggingLocationEnabled = null;
     _platformLoggingEnabled = null;
     _watchCompanionLoggingEnabled = null;
+    _meshCanvasLoggingEnabled = null;
   }
 
   static void reset() {

@@ -16439,6 +16439,94 @@
     "@nodeboardDrawerLabel": {
         "description": "Label for the NodeBoard drawer item."
     },
+    "meshCanvasDrawerLabel": "MeshCanvas",
+    "@meshCanvasDrawerLabel": {
+        "description": "Label for the MeshCanvas drawer item. Brand name, kept verbatim across all locales."
+    },
+    "meshCanvasPlaceholderTitle": "MeshCanvas",
+    "@meshCanvasPlaceholderTitle": {
+        "description": "Title for the MeshCanvas placeholder screen. Brand name, kept verbatim across all locales."
+    },
+    "meshCanvasPlaceholderSubtitle": "Coming soon: collaborative pixel canvas over mesh",
+    "@meshCanvasPlaceholderSubtitle": {
+        "description": "Body line under the MeshCanvas placeholder screen title."
+    },
+    "meshCanvasHelpTitle": "About MeshCanvas",
+    "@meshCanvasHelpTitle": {
+        "description": "Title of the MeshCanvas help sheet that explains the feature in a retro packet-radio tone."
+    },
+    "meshCanvasHelpIntro": "A shared pixel wall for the mesh. Paint a cell, watch the canvas fill in as nearby nodes commit the same surface from their own devices. No servers, no accounts, just radio and pixels.",
+    "@meshCanvasHelpIntro": {
+        "description": "Opening paragraph of the MeshCanvas help sheet. Retro packet-radio / BBS tone, community-oriented. Should land in 2 short sentences."
+    },
+    "meshCanvasHelpLocalCanvasTitle": "Local Device Canvas",
+    "@meshCanvasHelpLocalCanvasTitle": {
+        "description": "Row title in the help sheet for the offline sandbox canvas."
+    },
+    "meshCanvasHelpLocalCanvasBody": "Your private 128 by 128 sandbox. Paints stay on this device, never broadcast. Great for warming up.",
+    "@meshCanvasHelpLocalCanvasBody": {
+        "description": "Row body in the help sheet describing the Local Device Canvas. Keep the dimensions verbatim across locales."
+    },
+    "meshCanvasHelpMeshCanvasTitle": "Mesh Canvas",
+    "@meshCanvasHelpMeshCanvasTitle": {
+        "description": "Row title in the help sheet for the shared mesh canvas."
+    },
+    "meshCanvasHelpMeshCanvasBody": "One shared 128 by 128 board per channel. Every paint is one tiny mesh frame; the board converges across all listeners on the channel.",
+    "@meshCanvasHelpMeshCanvasBody": {
+        "description": "Row body in the help sheet describing the Mesh Canvas. Keep the dimensions verbatim across locales."
+    },
+    "meshCanvasHelpTapToPaintTitle": "Tap to paint",
+    "@meshCanvasHelpTapToPaintTitle": {
+        "description": "Row title in the help sheet for tap-to-paint interaction."
+    },
+    "meshCanvasHelpTapToPaintBody": "Tap a cell to paint it with the active colour. Tap the transparent swatch to erase.",
+    "@meshCanvasHelpTapToPaintBody": {
+        "description": "Row body in the help sheet describing tap-to-paint."
+    },
+    "meshCanvasHelpPanZoomTitle": "Pan and pinch",
+    "@meshCanvasHelpPanZoomTitle": {
+        "description": "Row title in the help sheet for pan-and-pinch-zoom interaction."
+    },
+    "meshCanvasHelpPanZoomBody": "Drag to pan, pinch to zoom. The board floats inside open space so you always know where the edges are.",
+    "@meshCanvasHelpPanZoomBody": {
+        "description": "Row body in the help sheet describing pan + pinch zoom."
+    },
+    "meshCanvasHelpLongPressTitle": "Long-press to inspect",
+    "@meshCanvasHelpLongPressTitle": {
+        "description": "Row title in the help sheet for long-press inspect interaction."
+    },
+    "meshCanvasHelpLongPressBody": "See who painted a cell and when (coming in a later build).",
+    "@meshCanvasHelpLongPressBody": {
+        "description": "Row body in the help sheet describing long-press to inspect. v0.1 only logs; full inspector lands in S7.D."
+    },
+    "meshCanvasHelpCommunityTitle": "Public by design",
+    "@meshCanvasHelpCommunityTitle": {
+        "description": "Row title in the help sheet framing the community / collaborative philosophy."
+    },
+    "meshCanvasHelpCommunityBody": "Pixels are deliberately public on the mesh. There is no edit history fight to win. The fun is the wall, not the win.",
+    "@meshCanvasHelpCommunityBody": {
+        "description": "Row body in the help sheet. Sets community / collaborative tone. Two short sentences."
+    },
+    "meshCanvasHelpTooltip": "About MeshCanvas",
+    "@meshCanvasHelpTooltip": {
+        "description": "Tooltip for the info button in the MeshCanvas viewer app bar."
+    },
+    "meshCanvasIdentityLocal": "Local Device Canvas",
+    "@meshCanvasIdentityLocal": {
+        "description": "Label for the canvas identity chip when viewing the local sandbox canvas."
+    },
+    "meshCanvasIdentityLocalSubtitle": "Offline sandbox - paints remain local",
+    "@meshCanvasIdentityLocalSubtitle": {
+        "description": "Subtitle for the canvas identity chip on the local sandbox canvas. Tone is atmospheric, not alarming."
+    },
+    "meshCanvasRecentLabel": "Recent",
+    "@meshCanvasRecentLabel": {
+        "description": "Section label for the recently used colour rail at the top of the MeshCanvas palette sheet."
+    },
+    "meshCanvasHudEraserLabel": "Eraser",
+    "@meshCanvasHudEraserLabel": {
+        "description": "Label shown in the selected colour HUD pill when the transparent / erase swatch is active."
+    },
     "nodeboardTitle": "NodeBoard",
     "@nodeboardTitle": {
         "description": "Title for the NodeBoard feature."

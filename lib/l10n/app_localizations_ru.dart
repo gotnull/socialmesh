@@ -12393,6 +12393,81 @@ class AppLocalizationsRu extends AppLocalizations {
   String get nodeboardDrawerLabel => 'NodeBoard';
 
   @override
+  String get meshCanvasDrawerLabel => 'MeshCanvas';
+
+  @override
+  String get meshCanvasPlaceholderTitle => 'MeshCanvas';
+
+  @override
+  String get meshCanvasPlaceholderSubtitle =>
+      'Скоро: совместный пиксельный холст по mesh-сети';
+
+  @override
+  String get meshCanvasHelpTitle => 'О MeshCanvas';
+
+  @override
+  String get meshCanvasHelpIntro =>
+      'Общая пиксельная стена для mesh-сети. Закрашивайте клетку и наблюдайте, как холст заполняется, пока соседние узлы вкладываются в ту же поверхность со своих устройств. Никаких серверов, никаких аккаунтов - только радио и пиксели.';
+
+  @override
+  String get meshCanvasHelpLocalCanvasTitle => 'Локальный холст устройства';
+
+  @override
+  String get meshCanvasHelpLocalCanvasBody =>
+      'Ваша личная песочница 128 на 128. Пиксели остаются на этом устройстве и никогда не передаются. Отлично подходит для разминки.';
+
+  @override
+  String get meshCanvasHelpMeshCanvasTitle => 'Mesh-холст';
+
+  @override
+  String get meshCanvasHelpMeshCanvasBody =>
+      'Одна общая доска 128 на 128 на канал. Каждый мазок - это крошечный mesh-кадр; доска синхронизируется на всех слушателях канала.';
+
+  @override
+  String get meshCanvasHelpTapToPaintTitle => 'Касание для рисования';
+
+  @override
+  String get meshCanvasHelpTapToPaintBody =>
+      'Коснитесь клетки, чтобы закрасить её активным цветом. Коснитесь прозрачного образца, чтобы стереть.';
+
+  @override
+  String get meshCanvasHelpPanZoomTitle => 'Перетаскивание и щипок';
+
+  @override
+  String get meshCanvasHelpPanZoomBody =>
+      'Перетаскивайте для прокрутки, сжимайте для масштабирования. Доска плавает в открытом пространстве, чтобы вы всегда видели её края.';
+
+  @override
+  String get meshCanvasHelpLongPressTitle => 'Удержание для проверки';
+
+  @override
+  String get meshCanvasHelpLongPressBody =>
+      'Посмотрите, кто и когда закрасил клетку (появится в следующей сборке).';
+
+  @override
+  String get meshCanvasHelpCommunityTitle => 'Публично по замыслу';
+
+  @override
+  String get meshCanvasHelpCommunityBody =>
+      'Пиксели намеренно публичны в mesh-сети. Здесь нет битвы истории правок, которую нужно выиграть. Веселье - это стена, а не победа.';
+
+  @override
+  String get meshCanvasHelpTooltip => 'О MeshCanvas';
+
+  @override
+  String get meshCanvasIdentityLocal => 'Локальный холст устройства';
+
+  @override
+  String get meshCanvasIdentityLocalSubtitle =>
+      'Офлайн-песочница - пиксели остаются локальными';
+
+  @override
+  String get meshCanvasRecentLabel => 'Недавние';
+
+  @override
+  String get meshCanvasHudEraserLabel => 'Ластик';
+
+  @override
   String get nodeboardTitle => 'NodeBoard';
 
   @override

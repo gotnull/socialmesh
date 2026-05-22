@@ -12496,6 +12496,81 @@ class AppLocalizationsFr extends AppLocalizations {
   String get nodeboardDrawerLabel => 'NodeBoard';
 
   @override
+  String get meshCanvasDrawerLabel => 'MeshCanvas';
+
+  @override
+  String get meshCanvasPlaceholderTitle => 'MeshCanvas';
+
+  @override
+  String get meshCanvasPlaceholderSubtitle =>
+      'Bientôt disponible : toile de pixels collaborative sur le mesh';
+
+  @override
+  String get meshCanvasHelpTitle => 'À propos de MeshCanvas';
+
+  @override
+  String get meshCanvasHelpIntro =>
+      'Un mur de pixels partagé pour le mesh. Peignez une cellule et regardez la toile se remplir à mesure que les nœuds voisins contribuent à la même surface depuis leurs propres appareils. Aucun serveur, aucun compte, juste de la radio et des pixels.';
+
+  @override
+  String get meshCanvasHelpLocalCanvasTitle => 'Toile Locale de l\'Appareil';
+
+  @override
+  String get meshCanvasHelpLocalCanvasBody =>
+      'Votre bac à sable privé de 128 par 128. Les pixels restent sur cet appareil et ne sont jamais diffusés. Idéal pour s\'échauffer.';
+
+  @override
+  String get meshCanvasHelpMeshCanvasTitle => 'Toile du Mesh';
+
+  @override
+  String get meshCanvasHelpMeshCanvasBody =>
+      'Un tableau partagé de 128 par 128 par canal. Chaque coup de pinceau est un petit frame mesh ; le tableau converge sur tous les auditeurs du canal.';
+
+  @override
+  String get meshCanvasHelpTapToPaintTitle => 'Toucher pour peindre';
+
+  @override
+  String get meshCanvasHelpTapToPaintBody =>
+      'Touchez une cellule pour la peindre avec la couleur active. Touchez l\'échantillon transparent pour effacer.';
+
+  @override
+  String get meshCanvasHelpPanZoomTitle => 'Glisser et pincer';
+
+  @override
+  String get meshCanvasHelpPanZoomBody =>
+      'Glissez pour déplacer, pincez pour zoomer. Le tableau flotte dans un espace ouvert afin que vous voyiez toujours les bords.';
+
+  @override
+  String get meshCanvasHelpLongPressTitle => 'Appui long pour inspecter';
+
+  @override
+  String get meshCanvasHelpLongPressBody =>
+      'Voyez qui a peint une cellule et quand (à venir dans une version ultérieure).';
+
+  @override
+  String get meshCanvasHelpCommunityTitle => 'Public par conception';
+
+  @override
+  String get meshCanvasHelpCommunityBody =>
+      'Les pixels sont délibérément publics sur le mesh. Il n\'y a pas de bataille d\'historique d\'édition à gagner. Le plaisir, c\'est le mur, pas la victoire.';
+
+  @override
+  String get meshCanvasHelpTooltip => 'À propos de MeshCanvas';
+
+  @override
+  String get meshCanvasIdentityLocal => 'Toile Locale de l\'Appareil';
+
+  @override
+  String get meshCanvasIdentityLocalSubtitle =>
+      'Bac à sable hors ligne - les pixels restent locaux';
+
+  @override
+  String get meshCanvasRecentLabel => 'Récents';
+
+  @override
+  String get meshCanvasHudEraserLabel => 'Gomme';
+
+  @override
   String get nodeboardTitle => 'NodeBoard';
 
   @override

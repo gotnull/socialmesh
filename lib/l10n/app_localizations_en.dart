@@ -12255,6 +12255,81 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nodeboardDrawerLabel => 'NodeBoard';
 
   @override
+  String get meshCanvasDrawerLabel => 'MeshCanvas';
+
+  @override
+  String get meshCanvasPlaceholderTitle => 'MeshCanvas';
+
+  @override
+  String get meshCanvasPlaceholderSubtitle =>
+      'Coming soon: collaborative pixel canvas over mesh';
+
+  @override
+  String get meshCanvasHelpTitle => 'About MeshCanvas';
+
+  @override
+  String get meshCanvasHelpIntro =>
+      'A shared pixel wall for the mesh. Paint a cell, watch the canvas fill in as nearby nodes commit the same surface from their own devices. No servers, no accounts, just radio and pixels.';
+
+  @override
+  String get meshCanvasHelpLocalCanvasTitle => 'Local Device Canvas';
+
+  @override
+  String get meshCanvasHelpLocalCanvasBody =>
+      'Your private 128 by 128 sandbox. Paints stay on this device, never broadcast. Great for warming up.';
+
+  @override
+  String get meshCanvasHelpMeshCanvasTitle => 'Mesh Canvas';
+
+  @override
+  String get meshCanvasHelpMeshCanvasBody =>
+      'One shared 128 by 128 board per channel. Every paint is one tiny mesh frame; the board converges across all listeners on the channel.';
+
+  @override
+  String get meshCanvasHelpTapToPaintTitle => 'Tap to paint';
+
+  @override
+  String get meshCanvasHelpTapToPaintBody =>
+      'Tap a cell to paint it with the active colour. Tap the transparent swatch to erase.';
+
+  @override
+  String get meshCanvasHelpPanZoomTitle => 'Pan and pinch';
+
+  @override
+  String get meshCanvasHelpPanZoomBody =>
+      'Drag to pan, pinch to zoom. The board floats inside open space so you always know where the edges are.';
+
+  @override
+  String get meshCanvasHelpLongPressTitle => 'Long-press to inspect';
+
+  @override
+  String get meshCanvasHelpLongPressBody =>
+      'See who painted a cell and when (coming in a later build).';
+
+  @override
+  String get meshCanvasHelpCommunityTitle => 'Public by design';
+
+  @override
+  String get meshCanvasHelpCommunityBody =>
+      'Pixels are deliberately public on the mesh. There is no edit history fight to win. The fun is the wall, not the win.';
+
+  @override
+  String get meshCanvasHelpTooltip => 'About MeshCanvas';
+
+  @override
+  String get meshCanvasIdentityLocal => 'Local Device Canvas';
+
+  @override
+  String get meshCanvasIdentityLocalSubtitle =>
+      'Offline sandbox - paints remain local';
+
+  @override
+  String get meshCanvasRecentLabel => 'Recent';
+
+  @override
+  String get meshCanvasHudEraserLabel => 'Eraser';
+
+  @override
   String get nodeboardTitle => 'NodeBoard';
 
   @override

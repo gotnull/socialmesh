@@ -12396,6 +12396,81 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nodeboardDrawerLabel => 'NodeBoard';
 
   @override
+  String get meshCanvasDrawerLabel => 'MeshCanvas';
+
+  @override
+  String get meshCanvasPlaceholderTitle => 'MeshCanvas';
+
+  @override
+  String get meshCanvasPlaceholderSubtitle =>
+      'Em breve: tela de pixels colaborativa sobre a malha';
+
+  @override
+  String get meshCanvasHelpTitle => 'Sobre o MeshCanvas';
+
+  @override
+  String get meshCanvasHelpIntro =>
+      'Um mural de pixels compartilhado para a malha. Pinte uma célula e veja a tela se preencher conforme os nós próximos contribuem para a mesma superfície a partir dos próprios dispositivos. Sem servidores, sem contas, apenas rádio e pixels.';
+
+  @override
+  String get meshCanvasHelpLocalCanvasTitle => 'Tela Local do Dispositivo';
+
+  @override
+  String get meshCanvasHelpLocalCanvasBody =>
+      'Sua área de testes privada de 128 por 128. Os pixels ficam neste dispositivo e nunca são transmitidos. Ótima para aquecer.';
+
+  @override
+  String get meshCanvasHelpMeshCanvasTitle => 'Tela da Malha';
+
+  @override
+  String get meshCanvasHelpMeshCanvasBody =>
+      'Um quadro compartilhado de 128 por 128 por canal. Cada pincelada é um pequeno frame da malha; o quadro converge em todos os ouvintes do canal.';
+
+  @override
+  String get meshCanvasHelpTapToPaintTitle => 'Toque para pintar';
+
+  @override
+  String get meshCanvasHelpTapToPaintBody =>
+      'Toque uma célula para pintá-la com a cor ativa. Toque a amostra transparente para apagar.';
+
+  @override
+  String get meshCanvasHelpPanZoomTitle => 'Arraste e pince';
+
+  @override
+  String get meshCanvasHelpPanZoomBody =>
+      'Arraste para deslocar, pince para dar zoom. O quadro flutua em espaço aberto para que você sempre veja as bordas.';
+
+  @override
+  String get meshCanvasHelpLongPressTitle => 'Pressione longo para inspecionar';
+
+  @override
+  String get meshCanvasHelpLongPressBody =>
+      'Veja quem pintou uma célula e quando (chegará em uma versão posterior).';
+
+  @override
+  String get meshCanvasHelpCommunityTitle => 'Público por design';
+
+  @override
+  String get meshCanvasHelpCommunityBody =>
+      'Os pixels são deliberadamente públicos na malha. Não há briga de histórico de edição para ganhar. A graça é o mural, não a vitória.';
+
+  @override
+  String get meshCanvasHelpTooltip => 'Sobre o MeshCanvas';
+
+  @override
+  String get meshCanvasIdentityLocal => 'Tela Local do Dispositivo';
+
+  @override
+  String get meshCanvasIdentityLocalSubtitle =>
+      'Área de testes offline - os pixels permanecem locais';
+
+  @override
+  String get meshCanvasRecentLabel => 'Recentes';
+
+  @override
+  String get meshCanvasHudEraserLabel => 'Borracha';
+
+  @override
   String get nodeboardTitle => 'NodeBoard';
 
   @override

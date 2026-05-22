@@ -61,6 +61,7 @@ import '../mesh_health/widgets/mesh_health_dashboard.dart';
 import '../signals/signals.dart';
 import '../profile/profile_screen.dart';
 import '../debug/device_logs_screen.dart';
+import '../mesh_canvas/screens/mesh_canvas_placeholder_screen.dart';
 import '../nodedex/map/nodedex_map_screen.dart';
 import '../nodedex/screens/nodedex_screen.dart';
 import '../operations/presentation/operations_screen.dart';
@@ -1323,6 +1324,16 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
         iconColor: AccentColors.emerald,
         requiresConnection: false,
         whatsNewBadgeKey: 'operations',
+      ),
+    if (AppFeatureFlags.isMeshCanvasEnabled)
+      DrawerMenuItem(
+        id: 'mesh_canvas',
+        icon: Icons.grid_view_outlined,
+        label: l10n.meshCanvasDrawerLabel,
+        screen: const MeshCanvasPlaceholderScreen(),
+        iconColor: AccentColors.purple,
+        requiresConnection: false,
+        whatsNewBadgeKey: 'mesh_canvas',
       ),
     DrawerMenuItem(
       id: 'presence',

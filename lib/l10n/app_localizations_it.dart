@@ -12405,6 +12405,81 @@ class AppLocalizationsIt extends AppLocalizations {
   String get nodeboardDrawerLabel => 'NodeBoard';
 
   @override
+  String get meshCanvasDrawerLabel => 'MeshCanvas';
+
+  @override
+  String get meshCanvasPlaceholderTitle => 'MeshCanvas';
+
+  @override
+  String get meshCanvasPlaceholderSubtitle =>
+      'Prossimamente: tela di pixel collaborativa sulla rete mesh';
+
+  @override
+  String get meshCanvasHelpTitle => 'Informazioni su MeshCanvas';
+
+  @override
+  String get meshCanvasHelpIntro =>
+      'Un muro di pixel condiviso per il mesh. Dipingi una cella e guarda la tela riempirsi mentre i nodi vicini contribuiscono alla stessa superficie dai loro dispositivi. Nessun server, nessun account, solo radio e pixel.';
+
+  @override
+  String get meshCanvasHelpLocalCanvasTitle => 'Tela Locale del Dispositivo';
+
+  @override
+  String get meshCanvasHelpLocalCanvasBody =>
+      'La tua sandbox privata da 128 per 128. I pixel restano su questo dispositivo e non vengono mai trasmessi. Ottima per scaldarsi.';
+
+  @override
+  String get meshCanvasHelpMeshCanvasTitle => 'Tela Mesh';
+
+  @override
+  String get meshCanvasHelpMeshCanvasBody =>
+      'Una lavagna condivisa da 128 per 128 per canale. Ogni pennellata è un piccolo frame mesh; la lavagna converge su tutti gli ascoltatori del canale.';
+
+  @override
+  String get meshCanvasHelpTapToPaintTitle => 'Tocca per dipingere';
+
+  @override
+  String get meshCanvasHelpTapToPaintBody =>
+      'Tocca una cella per dipingerla con il colore attivo. Tocca lo swatch trasparente per cancellare.';
+
+  @override
+  String get meshCanvasHelpPanZoomTitle => 'Trascina e pizzica';
+
+  @override
+  String get meshCanvasHelpPanZoomBody =>
+      'Trascina per spostare, pizzica per ingrandire. La lavagna fluttua in spazio aperto così vedi sempre i bordi.';
+
+  @override
+  String get meshCanvasHelpLongPressTitle => 'Tieni premuto per ispezionare';
+
+  @override
+  String get meshCanvasHelpLongPressBody =>
+      'Vedi chi ha dipinto una cella e quando (in arrivo in una build successiva).';
+
+  @override
+  String get meshCanvasHelpCommunityTitle => 'Pubblico per scelta';
+
+  @override
+  String get meshCanvasHelpCommunityBody =>
+      'I pixel sono volutamente pubblici sul mesh. Non c\'è una battaglia di cronologia di modifiche da vincere. Il bello è il muro, non la vittoria.';
+
+  @override
+  String get meshCanvasHelpTooltip => 'Informazioni su MeshCanvas';
+
+  @override
+  String get meshCanvasIdentityLocal => 'Tela Locale del Dispositivo';
+
+  @override
+  String get meshCanvasIdentityLocalSubtitle =>
+      'Sandbox offline - i pixel restano locali';
+
+  @override
+  String get meshCanvasRecentLabel => 'Recenti';
+
+  @override
+  String get meshCanvasHudEraserLabel => 'Gomma';
+
+  @override
   String get nodeboardTitle => 'NodeBoard';
 
   @override

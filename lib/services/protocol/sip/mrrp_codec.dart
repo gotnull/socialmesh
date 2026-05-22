@@ -29,6 +29,22 @@ abstract final class MrrpCodec {
         data[1] == MrrpConstants.mrrpMagicByte1;
   }
 
+  /// Read the `service_id` field (bytes 12..15, u32 LE) without doing
+  /// a full frame decode. Returns null when [data] isn't a recognisable
+  /// MRRP frame OR is too short to carry the field.
+  ///
+  /// Used by `ProtocolService._handleMrrpPacket` to demux canvas.v1
+  /// frames out of the engine path before the global per-sender request
+  /// throttle and the request/response dispatcher get involved.
+  static int? sniffServiceId(Uint8List data) {
+    if (data.length < 16) return null;
+    if (data[0] != MrrpConstants.mrrpMagicByte0 ||
+        data[1] != MrrpConstants.mrrpMagicByte1) {
+      return null;
+    }
+    return data[12] | (data[13] << 8) | (data[14] << 16) | (data[15] << 24);
+  }
+
   /// Encode an [MrrpFrame] to wire bytes.
   ///
   /// Returns null if the encoded frame would exceed [SipConstants.sipMaxPayload].

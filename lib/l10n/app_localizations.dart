@@ -21478,6 +21478,138 @@ abstract class AppLocalizations {
   /// **'NodeBoard'**
   String get nodeboardDrawerLabel;
 
+  /// Label for the MeshCanvas drawer item. Brand name, kept verbatim across all locales.
+  ///
+  /// In en, this message translates to:
+  /// **'MeshCanvas'**
+  String get meshCanvasDrawerLabel;
+
+  /// Title for the MeshCanvas placeholder screen. Brand name, kept verbatim across all locales.
+  ///
+  /// In en, this message translates to:
+  /// **'MeshCanvas'**
+  String get meshCanvasPlaceholderTitle;
+
+  /// Body line under the MeshCanvas placeholder screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon: collaborative pixel canvas over mesh'**
+  String get meshCanvasPlaceholderSubtitle;
+
+  /// Title of the MeshCanvas help sheet that explains the feature in a retro packet-radio tone.
+  ///
+  /// In en, this message translates to:
+  /// **'About MeshCanvas'**
+  String get meshCanvasHelpTitle;
+
+  /// Opening paragraph of the MeshCanvas help sheet. Retro packet-radio / BBS tone, community-oriented. Should land in 2 short sentences.
+  ///
+  /// In en, this message translates to:
+  /// **'A shared pixel wall for the mesh. Paint a cell, watch the canvas fill in as nearby nodes commit the same surface from their own devices. No servers, no accounts, just radio and pixels.'**
+  String get meshCanvasHelpIntro;
+
+  /// Row title in the help sheet for the offline sandbox canvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Device Canvas'**
+  String get meshCanvasHelpLocalCanvasTitle;
+
+  /// Row body in the help sheet describing the Local Device Canvas. Keep the dimensions verbatim across locales.
+  ///
+  /// In en, this message translates to:
+  /// **'Your private 128 by 128 sandbox. Paints stay on this device, never broadcast. Great for warming up.'**
+  String get meshCanvasHelpLocalCanvasBody;
+
+  /// Row title in the help sheet for the shared mesh canvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh Canvas'**
+  String get meshCanvasHelpMeshCanvasTitle;
+
+  /// Row body in the help sheet describing the Mesh Canvas. Keep the dimensions verbatim across locales.
+  ///
+  /// In en, this message translates to:
+  /// **'One shared 128 by 128 board per channel. Every paint is one tiny mesh frame; the board converges across all listeners on the channel.'**
+  String get meshCanvasHelpMeshCanvasBody;
+
+  /// Row title in the help sheet for tap-to-paint interaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to paint'**
+  String get meshCanvasHelpTapToPaintTitle;
+
+  /// Row body in the help sheet describing tap-to-paint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a cell to paint it with the active colour. Tap the transparent swatch to erase.'**
+  String get meshCanvasHelpTapToPaintBody;
+
+  /// Row title in the help sheet for pan-and-pinch-zoom interaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Pan and pinch'**
+  String get meshCanvasHelpPanZoomTitle;
+
+  /// Row body in the help sheet describing pan + pinch zoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to pan, pinch to zoom. The board floats inside open space so you always know where the edges are.'**
+  String get meshCanvasHelpPanZoomBody;
+
+  /// Row title in the help sheet for long-press inspect interaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press to inspect'**
+  String get meshCanvasHelpLongPressTitle;
+
+  /// Row body in the help sheet describing long-press to inspect. v0.1 only logs; full inspector lands in S7.D.
+  ///
+  /// In en, this message translates to:
+  /// **'See who painted a cell and when (coming in a later build).'**
+  String get meshCanvasHelpLongPressBody;
+
+  /// Row title in the help sheet framing the community / collaborative philosophy.
+  ///
+  /// In en, this message translates to:
+  /// **'Public by design'**
+  String get meshCanvasHelpCommunityTitle;
+
+  /// Row body in the help sheet. Sets community / collaborative tone. Two short sentences.
+  ///
+  /// In en, this message translates to:
+  /// **'Pixels are deliberately public on the mesh. There is no edit history fight to win. The fun is the wall, not the win.'**
+  String get meshCanvasHelpCommunityBody;
+
+  /// Tooltip for the info button in the MeshCanvas viewer app bar.
+  ///
+  /// In en, this message translates to:
+  /// **'About MeshCanvas'**
+  String get meshCanvasHelpTooltip;
+
+  /// Label for the canvas identity chip when viewing the local sandbox canvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Device Canvas'**
+  String get meshCanvasIdentityLocal;
+
+  /// Subtitle for the canvas identity chip on the local sandbox canvas. Tone is atmospheric, not alarming.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline sandbox - paints remain local'**
+  String get meshCanvasIdentityLocalSubtitle;
+
+  /// Section label for the recently used colour rail at the top of the MeshCanvas palette sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get meshCanvasRecentLabel;
+
+  /// Label shown in the selected colour HUD pill when the transparent / erase swatch is active.
+  ///
+  /// In en, this message translates to:
+  /// **'Eraser'**
+  String get meshCanvasHudEraserLabel;
+
   /// Title for the NodeBoard feature.
   ///
   /// In en, this message translates to:

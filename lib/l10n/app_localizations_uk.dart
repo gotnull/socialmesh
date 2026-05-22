@@ -12407,6 +12407,81 @@ class AppLocalizationsUk extends AppLocalizations {
   String get nodeboardDrawerLabel => 'NodeBoard';
 
   @override
+  String get meshCanvasDrawerLabel => 'MeshCanvas';
+
+  @override
+  String get meshCanvasPlaceholderTitle => 'MeshCanvas';
+
+  @override
+  String get meshCanvasPlaceholderSubtitle =>
+      'Незабаром: спільне піксельне полотно через mesh-мережу';
+
+  @override
+  String get meshCanvasHelpTitle => 'Про MeshCanvas';
+
+  @override
+  String get meshCanvasHelpIntro =>
+      'Спільна піксельна стіна для mesh-мережі. Малюйте клітинку та спостерігайте, як полотно наповнюється, поки сусідні вузли долучаються до тієї ж поверхні зі своїх пристроїв. Без серверів, без облікових записів - лише радіо й пікселі.';
+
+  @override
+  String get meshCanvasHelpLocalCanvasTitle => 'Локальне полотно пристрою';
+
+  @override
+  String get meshCanvasHelpLocalCanvasBody =>
+      'Ваша приватна пісочниця 128 на 128. Пікселі залишаються на цьому пристрої і ніколи не передаються. Чудово для розминки.';
+
+  @override
+  String get meshCanvasHelpMeshCanvasTitle => 'Mesh-полотно';
+
+  @override
+  String get meshCanvasHelpMeshCanvasBody =>
+      'Одне спільне поле 128 на 128 на канал. Кожен мазок - це крихітний mesh-кадр; поле синхронізується на всіх слухачах каналу.';
+
+  @override
+  String get meshCanvasHelpTapToPaintTitle => 'Торкніться, щоб малювати';
+
+  @override
+  String get meshCanvasHelpTapToPaintBody =>
+      'Торкніться клітинки, щоб залити її активним кольором. Торкніться прозорого зразка, щоб стерти.';
+
+  @override
+  String get meshCanvasHelpPanZoomTitle => 'Перетягуйте та зведіть пальці';
+
+  @override
+  String get meshCanvasHelpPanZoomBody =>
+      'Перетягуйте для прокрутки, зведіть пальці для масштабування. Поле плаває у відкритому просторі, тож ви завжди бачите його краї.';
+
+  @override
+  String get meshCanvasHelpLongPressTitle => 'Утримуйте для перегляду';
+
+  @override
+  String get meshCanvasHelpLongPressBody =>
+      'Подивіться, хто й коли намалював клітинку (з’явиться у наступному білді).';
+
+  @override
+  String get meshCanvasHelpCommunityTitle => 'Публічно за задумом';
+
+  @override
+  String get meshCanvasHelpCommunityBody =>
+      'Пікселі навмисно публічні в mesh-мережі. Тут немає битви історії правок, яку треба виграти. Веселощі - це стіна, а не перемога.';
+
+  @override
+  String get meshCanvasHelpTooltip => 'Про MeshCanvas';
+
+  @override
+  String get meshCanvasIdentityLocal => 'Локальне полотно пристрою';
+
+  @override
+  String get meshCanvasIdentityLocalSubtitle =>
+      'Офлайн-пісочниця - пікселі залишаються локальними';
+
+  @override
+  String get meshCanvasRecentLabel => 'Останні';
+
+  @override
+  String get meshCanvasHudEraserLabel => 'Гумка';
+
+  @override
   String get nodeboardTitle => 'NodeBoard';
 
   @override

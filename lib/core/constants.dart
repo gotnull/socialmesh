@@ -450,6 +450,22 @@ class AppFeatureFlags {
     }
   }
 
+  /// Whether the MeshCanvas feature is enabled.
+  ///
+  /// Set `MESH_CANVAS_ENABLED=true` in `.env` to enable. Default: false
+  /// (drawer entry hidden, inbound frames still demuxed by
+  /// `ProtocolService` but apply path is a no-op). MeshCanvas v0.1 is
+  /// Meshtastic-only; the drawer tile NEVER appears in the MeshCore
+  /// shell regardless of this flag.
+  static bool get isMeshCanvasEnabled {
+    try {
+      final raw = dotenv.env['MESH_CANVAS_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Whether the SIP (SocialMesh Identity Protocol) feature is enabled.
   /// Set `SIP_ENABLED=true` (or `HANDSHAKE_ENABLED=true`) in `.env`.
   /// Default: false — SIP UI is hidden unless explicitly enabled.

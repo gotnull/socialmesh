@@ -12466,6 +12466,82 @@ class AppLocalizationsEs extends AppLocalizations {
   String get nodeboardDrawerLabel => 'NodeBoard';
 
   @override
+  String get meshCanvasDrawerLabel => 'MeshCanvas';
+
+  @override
+  String get meshCanvasPlaceholderTitle => 'MeshCanvas';
+
+  @override
+  String get meshCanvasPlaceholderSubtitle =>
+      'Próximamente: lienzo de píxeles colaborativo sobre la malla';
+
+  @override
+  String get meshCanvasHelpTitle => 'Acerca de MeshCanvas';
+
+  @override
+  String get meshCanvasHelpIntro =>
+      'Un muro de píxeles compartido para la malla. Pinta una celda y observa cómo el lienzo se llena a medida que los nodos cercanos contribuyen a la misma superficie desde sus propios dispositivos. Sin servidores, sin cuentas, solo radio y píxeles.';
+
+  @override
+  String get meshCanvasHelpLocalCanvasTitle => 'Lienzo Local del Dispositivo';
+
+  @override
+  String get meshCanvasHelpLocalCanvasBody =>
+      'Tu zona de pruebas privada de 128 por 128. Los píxeles se quedan en este dispositivo y nunca se difunden. Genial para calentar.';
+
+  @override
+  String get meshCanvasHelpMeshCanvasTitle => 'Lienzo de Malla';
+
+  @override
+  String get meshCanvasHelpMeshCanvasBody =>
+      'Un tablero compartido de 128 por 128 por canal. Cada pincelada es un pequeño frame de malla; el tablero converge en todos los oyentes del canal.';
+
+  @override
+  String get meshCanvasHelpTapToPaintTitle => 'Tocar para pintar';
+
+  @override
+  String get meshCanvasHelpTapToPaintBody =>
+      'Toca una celda para pintarla con el color activo. Toca la muestra transparente para borrar.';
+
+  @override
+  String get meshCanvasHelpPanZoomTitle => 'Desplazar y pellizcar';
+
+  @override
+  String get meshCanvasHelpPanZoomBody =>
+      'Arrastra para desplazar, pellizca para hacer zoom. El tablero flota en espacio abierto para que siempre veas los bordes.';
+
+  @override
+  String get meshCanvasHelpLongPressTitle =>
+      'Pulsación larga para inspeccionar';
+
+  @override
+  String get meshCanvasHelpLongPressBody =>
+      'Ve quién pintó una celda y cuándo (próximamente en una versión posterior).';
+
+  @override
+  String get meshCanvasHelpCommunityTitle => 'Público por diseño';
+
+  @override
+  String get meshCanvasHelpCommunityBody =>
+      'Los píxeles son deliberadamente públicos en la malla. No hay una pelea de historial de ediciones que ganar. La diversión es el muro, no la victoria.';
+
+  @override
+  String get meshCanvasHelpTooltip => 'Acerca de MeshCanvas';
+
+  @override
+  String get meshCanvasIdentityLocal => 'Lienzo Local del Dispositivo';
+
+  @override
+  String get meshCanvasIdentityLocalSubtitle =>
+      'Zona de pruebas sin conexión - los píxeles permanecen locales';
+
+  @override
+  String get meshCanvasRecentLabel => 'Recientes';
+
+  @override
+  String get meshCanvasHudEraserLabel => 'Borrador';
+
+  @override
   String get nodeboardTitle => 'NodeBoard';
 
   @override
