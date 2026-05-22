@@ -21610,6 +21610,132 @@ abstract class AppLocalizations {
   /// **'Eraser'**
   String get meshCanvasHudEraserLabel;
 
+  /// Title of the tile inspector sheet. Includes the integer canvas-space coordinates.
+  ///
+  /// In en, this message translates to:
+  /// **'Pixel ({x}, {y})'**
+  String meshCanvasInspectorTitle(int x, int y);
+
+  /// Row label in the tile inspector for the cell's currently displayed colour.
+  ///
+  /// In en, this message translates to:
+  /// **'Current colour'**
+  String get meshCanvasInspectorCurrentColorLabel;
+
+  /// Shown in the tile inspector when the cell has never been painted.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty cell'**
+  String get meshCanvasInspectorEmptyCellLabel;
+
+  /// Row label in the tile inspector for the last node to paint this cell.
+  ///
+  /// In en, this message translates to:
+  /// **'Last painter'**
+  String get meshCanvasInspectorLastPainterLabel;
+
+  /// Value shown for the Last painter row when the canvas is the Local Device Canvas (every paint is the local user).
+  ///
+  /// In en, this message translates to:
+  /// **'You (local)'**
+  String get meshCanvasInspectorAuthorLocal;
+
+  /// Value shown for the Last painter row when the painter is a remote node. nodeNum is the 8-character hex node id; the leading bang prefix is conventional in Meshtastic.
+  ///
+  /// In en, this message translates to:
+  /// **'Node !{nodeNum}'**
+  String meshCanvasInspectorAuthorNode(String nodeNum);
+
+  /// Row label in the tile inspector for the relative timestamp of the most recent accepted paint at this cell.
+  ///
+  /// In en, this message translates to:
+  /// **'Last painted'**
+  String get meshCanvasInspectorLastPaintedLabel;
+
+  /// Section heading above the per-cell op history list in the tile inspector.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent history'**
+  String get meshCanvasInspectorHistoryHeading;
+
+  /// Placeholder text shown when no applied_op rows exist for the inspected cell.
+  ///
+  /// In en, this message translates to:
+  /// **'No history yet for this cell.'**
+  String get meshCanvasInspectorHistoryEmpty;
+
+  /// Chip selector label for the Local canvases tab on the MeshCanvas overview screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Local'**
+  String get meshCanvasOverviewTabLocal;
+
+  /// Chip selector label for the Mesh canvases tab on the MeshCanvas overview screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh'**
+  String get meshCanvasOverviewTabMesh;
+
+  /// Scope label on a mesh-canvas card showing which Meshtastic channel index hosts it.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel {channelIndex}'**
+  String meshCanvasOverviewChannelLabel(int channelIndex);
+
+  /// Last-activity value shown on a canvas card when no paint has ever landed.
+  ///
+  /// In en, this message translates to:
+  /// **'Never painted'**
+  String get meshCanvasOverviewNeverPainted;
+
+  /// Painted-cell count on a canvas card. Excludes default-color cells.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{0 cells} =1{1 cell} other{{count} cells}}'**
+  String meshCanvasOverviewCellCount(int count);
+
+  /// Plain prefix of the Mesh empty-state title. The widget's pad() helper inserts a single space before the gradient keyword — do NOT add a trailing space here or the gradient WidgetSpan will render a visible double-space gap. Empty-state fires only when zero Meshtastic channels are configured; once channels exist the latent-channel list renders instead.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get meshCanvasOverviewEmptyTitlePrefix;
+
+  /// Gradient-animated keyword of the Mesh empty-state title. Single word only — multi-word keywords render with baseline-gap artifacts inside the gradient WidgetSpan.
+  ///
+  /// In en, this message translates to:
+  /// **'channels'**
+  String get meshCanvasOverviewEmptyTitleKeyword;
+
+  /// Plain suffix after the gradient keyword. No leading space — the widget pad() helper handles spacing.
+  ///
+  /// In en, this message translates to:
+  /// **'yet'**
+  String get meshCanvasOverviewEmptyTitleSuffix;
+
+  /// First cycling tagline. Packet-radio / mesh-native voice; treats provisioning as part of the ritual, not as a setup-guide instruction.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring a Meshtastic channel online and its canvas wakes up.'**
+  String get meshCanvasOverviewEmptyTagline1;
+
+  /// Second cycling tagline. Names the v0.1 architecture in one beat — no central anything, the channel is the artifact.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel is canvas. No cloud, no admins, no global wall.'**
+  String get meshCanvasOverviewEmptyTagline2;
+
+  /// Third cycling tagline. Compressed mesh-radio aphorism.
+  ///
+  /// In en, this message translates to:
+  /// **'One radio frame, one pixel.'**
+  String get meshCanvasOverviewEmptyTagline3;
+
+  /// Subtitle shown on a latent channel-canvas row in the Mesh tab when no paint has landed. Replaces the misleading 'waiting for discovery' framing.
+  ///
+  /// In en, this message translates to:
+  /// **'No paints yet - seed the first pixel'**
+  String get meshCanvasOverviewChannelDormantHint;
+
   /// Title for the NodeBoard feature.
   ///
   /// In en, this message translates to:

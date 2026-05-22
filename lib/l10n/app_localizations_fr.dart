@@ -12571,6 +12571,88 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meshCanvasHudEraserLabel => 'Gomme';
 
   @override
+  String meshCanvasInspectorTitle(int x, int y) {
+    return 'Pixel ($x, $y)';
+  }
+
+  @override
+  String get meshCanvasInspectorCurrentColorLabel => 'Couleur actuelle';
+
+  @override
+  String get meshCanvasInspectorEmptyCellLabel => 'Cellule vide';
+
+  @override
+  String get meshCanvasInspectorLastPainterLabel => 'Dernier peintre';
+
+  @override
+  String get meshCanvasInspectorAuthorLocal => 'Vous (local)';
+
+  @override
+  String meshCanvasInspectorAuthorNode(String nodeNum) {
+    return 'Nœud !$nodeNum';
+  }
+
+  @override
+  String get meshCanvasInspectorLastPaintedLabel => 'Peinte la dernière fois';
+
+  @override
+  String get meshCanvasInspectorHistoryHeading => 'Historique récent';
+
+  @override
+  String get meshCanvasInspectorHistoryEmpty =>
+      'Pas encore d\'historique pour cette cellule.';
+
+  @override
+  String get meshCanvasOverviewTabLocal => 'Local';
+
+  @override
+  String get meshCanvasOverviewTabMesh => 'Mesh';
+
+  @override
+  String meshCanvasOverviewChannelLabel(int channelIndex) {
+    return 'Canal $channelIndex';
+  }
+
+  @override
+  String get meshCanvasOverviewNeverPainted => 'Jamais peinte';
+
+  @override
+  String meshCanvasOverviewCellCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cellules',
+      one: '1 cellule',
+      zero: '0 cellule',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCanvasOverviewEmptyTitlePrefix => 'Aucun';
+
+  @override
+  String get meshCanvasOverviewEmptyTitleKeyword => 'canal';
+
+  @override
+  String get meshCanvasOverviewEmptyTitleSuffix => 'encore';
+
+  @override
+  String get meshCanvasOverviewEmptyTagline1 =>
+      'Active un canal Meshtastic et sa toile se réveille.';
+
+  @override
+  String get meshCanvasOverviewEmptyTagline2 =>
+      'Canal == toile. Pas de cloud, pas d\'admin, pas de mur global.';
+
+  @override
+  String get meshCanvasOverviewEmptyTagline3 => 'Une trame radio, un pixel.';
+
+  @override
+  String get meshCanvasOverviewChannelDormantHint =>
+      'Encore aucun pixel - sème le premier';
+
+  @override
   String get nodeboardTitle => 'NodeBoard';
 
   @override

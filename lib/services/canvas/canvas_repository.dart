@@ -377,6 +377,39 @@ class CanvasRepository {
     return rows.map(_appliedFromRow).toList(growable: false);
   }
 
+  /// Read the current cell at (`x`, `y`) for a canvas, or null when
+  /// the cell has never been painted (the sparse table omits default-
+  /// colour cells). Used by the S7.D tile inspector.
+  Future<CanvasCell?> getCellAt(int canvasLocalId, int x, int y) async {
+    final rows = await _database.query(
+      CanvasTables.cell,
+      where: 'canvas_id = ? AND x = ? AND y = ?',
+      whereArgs: [canvasLocalId, x, y],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return _cellFromRow(rows.first);
+  }
+
+  /// Read the per-cell op history for (`x`, `y`) on a canvas, newest
+  /// `op_ts` first. The `idx_applied_canvas_cell` index makes this
+  /// cheap even on a busy canvas. Used by the S7.D tile inspector.
+  Future<List<AppliedCanvasOp>> getCellHistory(
+    int canvasLocalId,
+    int x,
+    int y, {
+    int limit = 10,
+  }) async {
+    final rows = await _database.query(
+      CanvasTables.appliedOp,
+      where: 'canvas_id = ? AND x = ? AND y = ?',
+      whereArgs: [canvasLocalId, x, y],
+      orderBy: 'op_ts DESC, id DESC',
+      limit: limit,
+    );
+    return rows.map(_appliedFromRow).toList(growable: false);
+  }
+
   // ---------------------------------------------------------------------------
   // Pending outbound queue
   // ---------------------------------------------------------------------------

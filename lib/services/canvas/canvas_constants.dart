@@ -7,6 +7,11 @@
 // matching spec revision and a database migration.
 library;
 
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:crypto/crypto.dart';
+
 /// canvas.db filename + current schema version.
 abstract final class CanvasDbConfig {
   static const String dbName = 'canvas.db';
@@ -109,3 +114,37 @@ const int kLocalCanvasIdSentinel = 0;
 int canvasTileIndexForCell(int x, int y) =>
     (y ~/ CanvasGeometry.tileSize) * CanvasGeometry.tilesPerRow +
     (x ~/ CanvasGeometry.tileSize);
+
+/// Derive the canonical `canvas_id` for a Meshtastic channel canvas.
+///
+/// Wire contract (CANVAS_V0_1.md §3):
+///
+/// ```
+/// canvas_id = first 8 bytes (little-endian u64) of
+///             SHA-256(channel_psk_bytes_or_empty || canvas_name_utf8)
+/// ```
+///
+/// `channelPsk` may be empty (default-keyed channel) — the SHA-256 input
+/// just becomes the UTF-8 name in that case. The function is pure: two
+/// devices with the same `(psk, name)` always derive the same id, which
+/// is what makes channel-bound canvases converge without negotiation.
+///
+/// Returned as a Dart `int`. SQLite's INTEGER column is a 64-bit signed
+/// type, so values with the high bit set arrive in storage as negative
+/// numbers; that is fine — the canvas table never reasons about sign,
+/// only equality.
+int deriveCanvasIdFromChannel({
+  required List<int> channelPsk,
+  required String canvasName,
+}) {
+  final input = BytesBuilder()
+    ..add(channelPsk)
+    ..add(utf8.encode(canvasName));
+  final digest = sha256.convert(input.toBytes());
+  // First 8 bytes as little-endian u64.
+  var id = 0;
+  for (var i = 0; i < 8; i++) {
+    id |= (digest.bytes[i] & 0xff) << (i * 8);
+  }
+  return id;
+}

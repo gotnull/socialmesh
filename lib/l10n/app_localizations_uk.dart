@@ -12482,6 +12482,91 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshCanvasHudEraserLabel => 'Гумка';
 
   @override
+  String meshCanvasInspectorTitle(int x, int y) {
+    return 'Піксель ($x, $y)';
+  }
+
+  @override
+  String get meshCanvasInspectorCurrentColorLabel => 'Поточний колір';
+
+  @override
+  String get meshCanvasInspectorEmptyCellLabel => 'Порожня клітинка';
+
+  @override
+  String get meshCanvasInspectorLastPainterLabel => 'Останній автор';
+
+  @override
+  String get meshCanvasInspectorAuthorLocal => 'Ви (локально)';
+
+  @override
+  String meshCanvasInspectorAuthorNode(String nodeNum) {
+    return 'Вузол !$nodeNum';
+  }
+
+  @override
+  String get meshCanvasInspectorLastPaintedLabel => 'Остання заливка';
+
+  @override
+  String get meshCanvasInspectorHistoryHeading => 'Недавня історія';
+
+  @override
+  String get meshCanvasInspectorHistoryEmpty =>
+      'Поки немає історії для цієї клітинки.';
+
+  @override
+  String get meshCanvasOverviewTabLocal => 'Локальний';
+
+  @override
+  String get meshCanvasOverviewTabMesh => 'Mesh';
+
+  @override
+  String meshCanvasOverviewChannelLabel(int channelIndex) {
+    return 'Канал $channelIndex';
+  }
+
+  @override
+  String get meshCanvasOverviewNeverPainted => 'Ніколи не малювали';
+
+  @override
+  String meshCanvasOverviewCellCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count клітинки',
+      many: '$count клітинок',
+      few: '$count клітинки',
+      one: '1 клітинка',
+      zero: '0 клітинок',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCanvasOverviewEmptyTitlePrefix => 'Поки немає';
+
+  @override
+  String get meshCanvasOverviewEmptyTitleKeyword => 'каналів';
+
+  @override
+  String get meshCanvasOverviewEmptyTitleSuffix => '';
+
+  @override
+  String get meshCanvasOverviewEmptyTagline1 =>
+      'Підніми Meshtastic-канал - і його полотно оживе.';
+
+  @override
+  String get meshCanvasOverviewEmptyTagline2 =>
+      'Канал - це полотно. Жодної хмари, жодних адмінів, жодної глобальної стіни.';
+
+  @override
+  String get meshCanvasOverviewEmptyTagline3 =>
+      'Один радіокадр - один піксель.';
+
+  @override
+  String get meshCanvasOverviewChannelDormantHint =>
+      'Поки немає пікселів - посійте перший';
+
+  @override
   String get nodeboardTitle => 'NodeBoard';
 
   @override

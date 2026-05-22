@@ -12330,6 +12330,87 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshCanvasHudEraserLabel => 'Eraser';
 
   @override
+  String meshCanvasInspectorTitle(int x, int y) {
+    return 'Pixel ($x, $y)';
+  }
+
+  @override
+  String get meshCanvasInspectorCurrentColorLabel => 'Current colour';
+
+  @override
+  String get meshCanvasInspectorEmptyCellLabel => 'Empty cell';
+
+  @override
+  String get meshCanvasInspectorLastPainterLabel => 'Last painter';
+
+  @override
+  String get meshCanvasInspectorAuthorLocal => 'You (local)';
+
+  @override
+  String meshCanvasInspectorAuthorNode(String nodeNum) {
+    return 'Node !$nodeNum';
+  }
+
+  @override
+  String get meshCanvasInspectorLastPaintedLabel => 'Last painted';
+
+  @override
+  String get meshCanvasInspectorHistoryHeading => 'Recent history';
+
+  @override
+  String get meshCanvasInspectorHistoryEmpty => 'No history yet for this cell.';
+
+  @override
+  String get meshCanvasOverviewTabLocal => 'Local';
+
+  @override
+  String get meshCanvasOverviewTabMesh => 'Mesh';
+
+  @override
+  String meshCanvasOverviewChannelLabel(int channelIndex) {
+    return 'Channel $channelIndex';
+  }
+
+  @override
+  String get meshCanvasOverviewNeverPainted => 'Never painted';
+
+  @override
+  String meshCanvasOverviewCellCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cells',
+      one: '1 cell',
+      zero: '0 cells',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCanvasOverviewEmptyTitlePrefix => 'No';
+
+  @override
+  String get meshCanvasOverviewEmptyTitleKeyword => 'channels';
+
+  @override
+  String get meshCanvasOverviewEmptyTitleSuffix => 'yet';
+
+  @override
+  String get meshCanvasOverviewEmptyTagline1 =>
+      'Bring a Meshtastic channel online and its canvas wakes up.';
+
+  @override
+  String get meshCanvasOverviewEmptyTagline2 =>
+      'Channel is canvas. No cloud, no admins, no global wall.';
+
+  @override
+  String get meshCanvasOverviewEmptyTagline3 => 'One radio frame, one pixel.';
+
+  @override
+  String get meshCanvasOverviewChannelDormantHint =>
+      'No paints yet - seed the first pixel';
+
+  @override
   String get nodeboardTitle => 'NodeBoard';
 
   @override

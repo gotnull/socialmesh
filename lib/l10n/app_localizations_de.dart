@@ -12508,6 +12508,88 @@ class AppLocalizationsDe extends AppLocalizations {
   String get meshCanvasHudEraserLabel => 'Radierer';
 
   @override
+  String meshCanvasInspectorTitle(int x, int y) {
+    return 'Pixel ($x, $y)';
+  }
+
+  @override
+  String get meshCanvasInspectorCurrentColorLabel => 'Aktuelle Farbe';
+
+  @override
+  String get meshCanvasInspectorEmptyCellLabel => 'Leere Zelle';
+
+  @override
+  String get meshCanvasInspectorLastPainterLabel => 'Letzter Maler';
+
+  @override
+  String get meshCanvasInspectorAuthorLocal => 'Du (lokal)';
+
+  @override
+  String meshCanvasInspectorAuthorNode(String nodeNum) {
+    return 'Knoten !$nodeNum';
+  }
+
+  @override
+  String get meshCanvasInspectorLastPaintedLabel => 'Zuletzt gemalt';
+
+  @override
+  String get meshCanvasInspectorHistoryHeading => 'Verlauf';
+
+  @override
+  String get meshCanvasInspectorHistoryEmpty =>
+      'Noch kein Verlauf für diese Zelle.';
+
+  @override
+  String get meshCanvasOverviewTabLocal => 'Lokal';
+
+  @override
+  String get meshCanvasOverviewTabMesh => 'Mesh';
+
+  @override
+  String meshCanvasOverviewChannelLabel(int channelIndex) {
+    return 'Kanal $channelIndex';
+  }
+
+  @override
+  String get meshCanvasOverviewNeverPainted => 'Nie bemalt';
+
+  @override
+  String meshCanvasOverviewCellCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Zellen',
+      one: '1 Zelle',
+      zero: '0 Zellen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCanvasOverviewEmptyTitlePrefix => 'Noch keine';
+
+  @override
+  String get meshCanvasOverviewEmptyTitleKeyword => 'Kanäle';
+
+  @override
+  String get meshCanvasOverviewEmptyTitleSuffix => '';
+
+  @override
+  String get meshCanvasOverviewEmptyTagline1 =>
+      'Schalte einen Meshtastic-Kanal frei und seine Leinwand erwacht.';
+
+  @override
+  String get meshCanvasOverviewEmptyTagline2 =>
+      'Kanal ist Leinwand. Keine Cloud, keine Admins, keine globale Wand.';
+
+  @override
+  String get meshCanvasOverviewEmptyTagline3 => 'Ein Funkframe, ein Pixel.';
+
+  @override
+  String get meshCanvasOverviewChannelDormantHint =>
+      'Noch keine Pixel - setze den ersten';
+
+  @override
   String get nodeboardTitle => 'NodeBoard';
 
   @override

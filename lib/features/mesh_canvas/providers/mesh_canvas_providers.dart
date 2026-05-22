@@ -4,9 +4,10 @@
 // Riverpod scaffolding for the MeshCanvas feature.
 //
 // Spec anchor: docs/canvas/CANVAS_V0_1.md §S0 product invariants.
-// S7.A scope: only the providers needed to drive the viewer over the
-// Local Device Canvas. Mesh Canvas send path (S7-final), digest /
-// sync (S9), and the full provider graph land in later slices.
+// S8 wired the production protocol stack — paint ops on a Mesh
+// Canvas now enqueue, drain through the canvas governor + SIP
+// limiter, and ride out as canvas.v1 MRRP frames. Digest / sync
+// catch-up lands in S9.
 //
 // Riverpod conventions in this codebase (lib/providers/CLAUDE.md):
 //   - Riverpod 3.x only; no StateNotifier / StateProvider /
@@ -20,9 +21,18 @@ library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/canvas/canvas_palette.dart';
+import '../../../core/logging.dart';
+import '../../../models/mesh_models.dart';
+import '../../../providers/app_providers.dart';
+import '../../../providers/sip_providers.dart';
+import '../../../services/canvas/canvas_constants.dart';
 import '../../../services/canvas/canvas_database.dart';
 import '../../../services/canvas/canvas_models.dart';
+import '../../../services/canvas/canvas_outbound_channel_impl.dart';
+import '../../../services/canvas/canvas_outbound_governor.dart';
 import '../../../services/canvas/canvas_repository.dart';
+import '../../../services/canvas/canvas_send_coordinator.dart';
+import '../../../services/canvas/mrrp_service_canvas.dart';
 
 /// Owns the `canvas.db` connection for the app's lifetime.
 final canvasDatabaseProvider = FutureProvider<CanvasDatabase>((ref) async {
@@ -42,11 +52,22 @@ final canvasRepositoryProvider = FutureProvider<CanvasRepository>((ref) async {
 });
 
 /// The auto-created Local Device Canvas (`scope = 'local'`). Always
-/// returns a row — created on first read, returned thereafter. Mesh
-/// canvas list lookups land in S7.C.
+/// returns a row — created on first read, returned thereafter.
 final localDeviceCanvasProvider = FutureProvider<CanvasSummary>((ref) async {
   final repo = await ref.watch(canvasRepositoryProvider.future);
   return repo.getOrCreateLocalCanvas();
+});
+
+/// All canvases known to this device, newest-activity first. Drives
+/// the S7.C overview list. The Local Device Canvas is auto-created
+/// on first read so the local section always has something to show
+/// — fresh installs would otherwise land on an awkward empty state
+/// for the only canvas every user definitely owns.
+final canvasListProvider = FutureProvider<List<CanvasSummary>>((ref) async {
+  // Ensure the local sandbox exists before we list.
+  await ref.watch(localDeviceCanvasProvider.future);
+  final repo = await ref.watch(canvasRepositoryProvider.future);
+  return repo.listCanvases();
 });
 
 /// Painted cells for a specific canvas. The S7.A viewer reads this for
@@ -148,4 +169,189 @@ class LocalCanvasOpSeqNotifier extends Notifier<int> {
     state = (state + 1) & 0xFF;
     return next;
   }
+}
+
+// ---------------------------------------------------------------------------
+// S8: Mesh Canvas send/receive wiring
+// ---------------------------------------------------------------------------
+
+/// Feature-level 250 B / 60 s outbound airtime governor (§S0.rate.9
+/// of CANVAS_V0_1.md). Lives for the app's lifetime — the budget is
+/// per-device, not per-session.
+final canvasOutboundGovernorProvider = Provider<CanvasOutboundGovernor>((ref) {
+  return CanvasOutboundGovernor();
+});
+
+/// Production binding from the canvas send pipeline to ProtocolService
+/// via the SIP rate limiter. The coordinator hands this an encoded
+/// canvas payload; this adapter wraps it in MRRP + SIP, pre-accounts
+/// against the SIP limiter, and ships it through
+/// `protocol.sendSipGated(channelIndex:)`.
+final canvasOutboundChannelProvider = Provider<ProductionCanvasOutboundChannel>(
+  (ref) {
+    final protocol = ref.read(protocolServiceProvider);
+    final sipLimiter = ref.read(sipRateLimiterProvider);
+    return ProductionCanvasOutboundChannel(
+      sender: ProtocolServiceCanvasSipSender(protocol),
+      sipRateLimiter: sipLimiter,
+    );
+  },
+);
+
+/// Drains `pending_op` rows, batches them, and ships them through the
+/// canvas governor → SIP limiter → wire. The viewer's paint handler
+/// kicks a drain after every mesh-canvas paint; this provider also
+/// schedules a 5-second tick to flush ops that prior drains had to
+/// back off on (governor or SIP limiter at capacity).
+final canvasSendCoordinatorProvider = FutureProvider<CanvasSendCoordinator>((
+  ref,
+) async {
+  final repo = await ref.watch(canvasRepositoryProvider.future);
+  final governor = ref.read(canvasOutboundGovernorProvider);
+  final outbound = ref.read(canvasOutboundChannelProvider);
+  final coordinator = CanvasSendCoordinator(
+    repository: repo,
+    governor: governor,
+    outbound: outbound,
+    localNodeNumProvider: () => ref.read(myNodeNumProvider),
+  );
+  return coordinator;
+});
+
+/// Decoder + repository-apply layer for inbound canvas frames. The
+/// production attach hook in [canvasProtocolWiringProvider] funnels
+/// every inbound canvas payload from ProtocolService through this
+/// handler's `applyInbound`.
+final mrrpServiceCanvasProvider = FutureProvider<MrrpServiceCanvas>((
+  ref,
+) async {
+  final repo = await ref.watch(canvasRepositoryProvider.future);
+  return MrrpServiceCanvas(repository: repo);
+});
+
+/// Side-effect provider: attaches the inbound canvas handler to
+/// ProtocolService and tears it down when this provider is disposed.
+/// Materialised by the canvas overview screen on first build so the
+/// app does not pay the wiring cost when the user never opens the
+/// feature. After the first watch, the hook stays attached for the
+/// app's lifetime (the provider container outlives the screen).
+final canvasProtocolWiringProvider = FutureProvider<void>((ref) async {
+  final protocol = ref.read(protocolServiceProvider);
+  final mrrpService = await ref.watch(mrrpServiceCanvasProvider.future);
+  protocol.attachCanvasInbound((
+    int senderNodeId,
+    int channelIndex,
+    payload,
+  ) async {
+    await mrrpService.applyInbound(
+      canvasPayload: payload,
+      senderNodeId: senderNodeId,
+      channelIndex: channelIndex,
+    );
+  });
+  ref.onDispose(() {
+    protocol.attachCanvasInbound(null);
+  });
+  AppLogging.meshCanvas('canvas inbound hook attached to ProtocolService');
+});
+
+// ---------------------------------------------------------------------------
+// Latent channel canvases (S8 activation-model correction)
+// ---------------------------------------------------------------------------
+
+/// One Meshtastic-channel-bound canvas row for the overview Mesh tab.
+///
+/// Every configured channel produces one of these, whether or not a
+/// canvas row exists yet in the local `canvas` table. Two states:
+///
+///   - **Dormant** (`materialised` is null): no canvas row in the
+///     local DB yet, no peer activity heard. The overview renders a
+///     "No paints yet - seed the first pixel" copy. Tapping the row
+///     calls `repo.getOrCreateMeshCanvas(canvasId, channelIndex,
+///     name)` and pushes the viewer — the canvas row is only
+///     persisted at first interaction, NOT eagerly at app boot.
+///
+///   - **Live** (`materialised` set): a canvas row already exists,
+///     either because the local user has painted or because a peer's
+///     paint frame arrived. The overview renders the cell count +
+///     last-activity hint.
+///
+/// The key insight: the channel IS the canvas. We never wait for
+/// discovery before showing a row. CANVAS_V0_1.md §3 makes the
+/// derivation deterministic — both sides compute the same
+/// `canvas_id` independently from `(channel_psk, canvas_name)`.
+class LatentChannelCanvas {
+  final int channelIndex;
+  final String channelName;
+  final int canvasId;
+
+  /// The materialised canvas row, if one exists. Null until first
+  /// paint (local or inbound from a peer).
+  final CanvasSummary? materialised;
+
+  const LatentChannelCanvas({
+    required this.channelIndex,
+    required this.channelName,
+    required this.canvasId,
+    required this.materialised,
+  });
+
+  /// Whether any paint has ever landed on this canvas — used by the
+  /// overview to switch between dormant + active row copy.
+  bool get isDormant => materialised == null || materialised!.cellCount == 0;
+}
+
+/// All channel-bound mesh canvases visible in the overview's Mesh tab.
+///
+/// Source of truth is `channelsProvider` (the configured Meshtastic
+/// channels). For each channel we compute the canonical `canvas_id`
+/// via [deriveCanvasIdFromChannel] and merge in any matching
+/// `canvas` table row from [canvasListProvider]. Channels without a
+/// table row appear as dormant entries — the user can still tap them
+/// to seed a paint.
+///
+/// Ordering: by channel index ascending (Primary first, then 1..7).
+final latentChannelCanvasesProvider = FutureProvider<List<LatentChannelCanvas>>(
+  (ref) async {
+    final channels = ref.watch(channelsProvider);
+    final canvases = await ref.watch(canvasListProvider.future);
+    final byKey = <(int, int), CanvasSummary>{
+      for (final c in canvases)
+        if (c.scope == CanvasScope.mesh && c.channelIndex != null)
+          (c.channelIndex!, c.canvasId): c,
+    };
+
+    final result = <LatentChannelCanvas>[];
+    for (final channel in channels) {
+      // Channel name defaults to "Primary" for index 0 when the
+      // firmware reports an empty name. The same default is used
+      // on the receive side, so both sides compute matching ids.
+      final name = _channelDisplayName(channel);
+      final canvasId = deriveCanvasIdFromChannel(
+        channelPsk: channel.psk,
+        canvasName: name,
+      );
+      result.add(
+        LatentChannelCanvas(
+          channelIndex: channel.index,
+          channelName: name,
+          canvasId: canvasId,
+          materialised: byKey[(channel.index, canvasId)],
+        ),
+      );
+    }
+    result.sort((a, b) => a.channelIndex.compareTo(b.channelIndex));
+    return result;
+  },
+);
+
+/// Display name for a [ChannelConfig] when building a channel-bound
+/// canvas row. Index 0 with an empty firmware name renders as
+/// "Primary" to match Meshtastic UX conventions; everything else
+/// uses the configured name verbatim. Pure so the canvas_id
+/// derivation stays deterministic per (psk, name).
+String _channelDisplayName(ChannelConfig channel) {
+  if (channel.name.isNotEmpty) return channel.name;
+  if (channel.index == 0) return 'Primary'; // lint-allow: hardcoded-string
+  return 'Channel ${channel.index}'; // lint-allow: hardcoded-string
 }

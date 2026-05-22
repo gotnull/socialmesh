@@ -35,7 +35,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:socialmesh/features/mesh_canvas/providers/mesh_canvas_providers.dart';
-import 'package:socialmesh/features/mesh_canvas/screens/mesh_canvas_placeholder_screen.dart';
+import 'package:socialmesh/features/mesh_canvas/screens/mesh_canvas_viewer_screen.dart';
 import 'package:socialmesh/features/mesh_canvas/widgets/canvas_color_strip.dart';
 import 'package:socialmesh/features/mesh_canvas/widgets/canvas_viewer.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
@@ -75,7 +75,7 @@ Future<void> _pumpPlaceholder(WidgetTester tester) async {
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const MeshCanvasPlaceholderScreen(),
+        home: const MeshCanvasViewerScreen(canvas: fakeCanvas),
       ),
     ),
   );

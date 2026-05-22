@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// Smoke tests for the S6 MeshCanvas placeholder screen + drawer
-// isolation invariants. Full drawer-rendering interaction tests live
-// in S7 once the production UI lands; for S6 we only need to confirm:
-//   - the placeholder screen renders without crashing,
-//   - the MeshCore shell does NOT import or reference the placeholder.
+// Smoke tests for the MeshCanvas overview screen + drawer isolation
+// invariants. As of S7.C the drawer entry points to the overview
+// screen (the prior placeholder/viewer was renamed and pulled inside
+// the list cards). We pin:
+//   - the overview screen renders without crashing,
+//   - the MeshCore shell does NOT import or reference any MeshCanvas
+//     screen or transitive identifier (Meshtastic-only invariant).
 library;
 
 import 'dart:io';
@@ -16,18 +18,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:socialmesh/features/mesh_canvas/providers/mesh_canvas_providers.dart';
-import 'package:socialmesh/features/mesh_canvas/screens/mesh_canvas_placeholder_screen.dart';
+import 'package:socialmesh/features/mesh_canvas/screens/mesh_canvas_overview_screen.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:socialmesh/services/canvas/canvas_models.dart';
 
 void main() {
-  testWidgets('MeshCanvasPlaceholderScreen renders without exceptions', (
+  testWidgets('MeshCanvasOverviewScreen renders without exceptions', (
     tester,
   ) async {
-    // S7.A replaced the placeholder body with the live r/place viewer
-    // over the Local Device Canvas. To smoke-test "renders without
-    // throwing" without opening a real SQLite file, override the
-    // canvas + cells providers with synthetic data.
     const fakeCanvas = CanvasSummary(
       localId: 1,
       canvasId: 0,
@@ -48,10 +46,11 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          localDeviceCanvasProvider.overrideWith((ref) async => fakeCanvas),
-          canvasCellsProvider(
-            1,
-          ).overrideWith((ref) async => const <CanvasCell>[]),
+          // Short-circuit the full provider chain (db open → list)
+          // so the test doesn't have to touch sqflite-FFI.
+          canvasListProvider.overrideWith(
+            (ref) async => const <CanvasSummary>[fakeCanvas],
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: const [
@@ -61,41 +60,44 @@ void main() {
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const MeshCanvasPlaceholderScreen(),
+          home: const MeshCanvasOverviewScreen(),
         ),
       ),
     );
     await tester.pumpAndSettle();
     // The app-bar title renders the brand string.
     expect(find.text('MeshCanvas'), findsOneWidget);
+    // The Local Sandbox row from the fake list renders.
+    expect(find.text('Local Sandbox'), findsOneWidget);
   });
 
-  test(
-    'MeshCoreShell does not import or reference MeshCanvasPlaceholderScreen',
-    () {
-      // Static source-scan: assert by file content rather than
-      // import-graph analysis since the import graph would only show
-      // transitive references.
-      final file = File(
-        'lib/features/navigation/meshcore_shell.dart',
-      ).readAsStringSync();
-      expect(
-        file,
-        isNot(contains('MeshCanvasPlaceholderScreen')),
-        reason:
-            'MeshCanvas is Meshtastic-only in v0.1; MeshCoreShell must not '
-            'reference the placeholder screen.',
-      );
-      expect(
-        file,
-        isNot(contains('mesh_canvas_placeholder_screen')),
-        reason: 'No transitive imports of the placeholder either.',
-      );
-      expect(
-        file,
-        isNot(contains('isMeshCanvasEnabled')),
-        reason: 'MeshCore shell must not check the canvas feature flag.',
-      );
-    },
-  );
+  test('MeshCoreShell does not import or reference any MeshCanvas screen', () {
+    final file = File(
+      'lib/features/navigation/meshcore_shell.dart',
+    ).readAsStringSync();
+    expect(
+      file,
+      isNot(contains('MeshCanvasOverviewScreen')),
+      reason:
+          'MeshCanvas is Meshtastic-only in v0.1; MeshCoreShell must not '
+          'reference the overview screen.',
+    );
+    expect(
+      file,
+      isNot(contains('MeshCanvasViewerScreen')),
+      reason:
+          'MeshCanvas is Meshtastic-only in v0.1; MeshCoreShell must not '
+          'reference the viewer screen.',
+    );
+    expect(
+      file,
+      isNot(contains('mesh_canvas/')),
+      reason: 'No transitive imports of the mesh_canvas feature.',
+    );
+    expect(
+      file,
+      isNot(contains('isMeshCanvasEnabled')),
+      reason: 'MeshCore shell must not check the canvas feature flag.',
+    );
+  });
 }

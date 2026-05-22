@@ -16527,6 +16527,103 @@
     "@meshCanvasHudEraserLabel": {
         "description": "Label shown in the selected colour HUD pill when the transparent / erase swatch is active."
     },
+    "meshCanvasInspectorTitle": "Pixel ({x}, {y})",
+    "@meshCanvasInspectorTitle": {
+        "description": "Title of the tile inspector sheet. Includes the integer canvas-space coordinates.",
+        "placeholders": {
+            "x": {"type": "int"},
+            "y": {"type": "int"}
+        }
+    },
+    "meshCanvasInspectorCurrentColorLabel": "Current colour",
+    "@meshCanvasInspectorCurrentColorLabel": {
+        "description": "Row label in the tile inspector for the cell's currently displayed colour."
+    },
+    "meshCanvasInspectorEmptyCellLabel": "Empty cell",
+    "@meshCanvasInspectorEmptyCellLabel": {
+        "description": "Shown in the tile inspector when the cell has never been painted."
+    },
+    "meshCanvasInspectorLastPainterLabel": "Last painter",
+    "@meshCanvasInspectorLastPainterLabel": {
+        "description": "Row label in the tile inspector for the last node to paint this cell."
+    },
+    "meshCanvasInspectorAuthorLocal": "You (local)",
+    "@meshCanvasInspectorAuthorLocal": {
+        "description": "Value shown for the Last painter row when the canvas is the Local Device Canvas (every paint is the local user)."
+    },
+    "meshCanvasInspectorAuthorNode": "Node !{nodeNum}",
+    "@meshCanvasInspectorAuthorNode": {
+        "description": "Value shown for the Last painter row when the painter is a remote node. nodeNum is the 8-character hex node id; the leading bang prefix is conventional in Meshtastic.",
+        "placeholders": {
+            "nodeNum": {"type": "String"}
+        }
+    },
+    "meshCanvasInspectorLastPaintedLabel": "Last painted",
+    "@meshCanvasInspectorLastPaintedLabel": {
+        "description": "Row label in the tile inspector for the relative timestamp of the most recent accepted paint at this cell."
+    },
+    "meshCanvasInspectorHistoryHeading": "Recent history",
+    "@meshCanvasInspectorHistoryHeading": {
+        "description": "Section heading above the per-cell op history list in the tile inspector."
+    },
+    "meshCanvasInspectorHistoryEmpty": "No history yet for this cell.",
+    "@meshCanvasInspectorHistoryEmpty": {
+        "description": "Placeholder text shown when no applied_op rows exist for the inspected cell."
+    },
+    "meshCanvasOverviewTabLocal": "Local",
+    "@meshCanvasOverviewTabLocal": {
+        "description": "Chip selector label for the Local canvases tab on the MeshCanvas overview screen."
+    },
+    "meshCanvasOverviewTabMesh": "Mesh",
+    "@meshCanvasOverviewTabMesh": {
+        "description": "Chip selector label for the Mesh canvases tab on the MeshCanvas overview screen."
+    },
+    "meshCanvasOverviewChannelLabel": "Channel {channelIndex}",
+    "@meshCanvasOverviewChannelLabel": {
+        "description": "Scope label on a mesh-canvas card showing which Meshtastic channel index hosts it.",
+        "placeholders": {
+            "channelIndex": {"type": "int"}
+        }
+    },
+    "meshCanvasOverviewNeverPainted": "Never painted",
+    "@meshCanvasOverviewNeverPainted": {
+        "description": "Last-activity value shown on a canvas card when no paint has ever landed."
+    },
+    "meshCanvasOverviewCellCount": "{count, plural, =0{0 cells} =1{1 cell} other{{count} cells}}",
+    "@meshCanvasOverviewCellCount": {
+        "description": "Painted-cell count on a canvas card. Excludes default-color cells.",
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "meshCanvasOverviewEmptyTitlePrefix": "No",
+    "@meshCanvasOverviewEmptyTitlePrefix": {
+        "description": "Plain prefix of the Mesh empty-state title. The widget's pad() helper inserts a single space before the gradient keyword — do NOT add a trailing space here or the gradient WidgetSpan will render a visible double-space gap. Empty-state fires only when zero Meshtastic channels are configured; once channels exist the latent-channel list renders instead."
+    },
+    "meshCanvasOverviewEmptyTitleKeyword": "channels",
+    "@meshCanvasOverviewEmptyTitleKeyword": {
+        "description": "Gradient-animated keyword of the Mesh empty-state title. Single word only — multi-word keywords render with baseline-gap artifacts inside the gradient WidgetSpan."
+    },
+    "meshCanvasOverviewEmptyTitleSuffix": "yet",
+    "@meshCanvasOverviewEmptyTitleSuffix": {
+        "description": "Plain suffix after the gradient keyword. No leading space — the widget pad() helper handles spacing."
+    },
+    "meshCanvasOverviewEmptyTagline1": "Bring a Meshtastic channel online and its canvas wakes up.",
+    "@meshCanvasOverviewEmptyTagline1": {
+        "description": "First cycling tagline. Packet-radio / mesh-native voice; treats provisioning as part of the ritual, not as a setup-guide instruction."
+    },
+    "meshCanvasOverviewEmptyTagline2": "Channel is canvas. No cloud, no admins, no global wall.",
+    "@meshCanvasOverviewEmptyTagline2": {
+        "description": "Second cycling tagline. Names the v0.1 architecture in one beat — no central anything, the channel is the artifact."
+    },
+    "meshCanvasOverviewEmptyTagline3": "One radio frame, one pixel.",
+    "@meshCanvasOverviewEmptyTagline3": {
+        "description": "Third cycling tagline. Compressed mesh-radio aphorism."
+    },
+    "meshCanvasOverviewChannelDormantHint": "No paints yet - seed the first pixel",
+    "@meshCanvasOverviewChannelDormantHint": {
+        "description": "Subtitle shown on a latent channel-canvas row in the Mesh tab when no paint has landed. Replaces the misleading 'waiting for discovery' framing."
+    },
     "nodeboardTitle": "NodeBoard",
     "@nodeboardTitle": {
         "description": "Title for the NodeBoard feature."
