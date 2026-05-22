@@ -414,9 +414,18 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
     // Resume auto-reconnect if WE were the one driving the scan. Use
     // the captured notifier reference (taken at initState) so we don't
-    // depend on `ref.read` working during widget teardown.
+    // depend on `ref.read` working during widget teardown. Defer the
+    // actual state write via Future.microtask so the mutation happens
+    // AFTER BuildOwner.finalizeTree completes — writing state during
+    // finalize trips Riverpod's "Tried to modify a provider while the
+    // widget tree was building" assertion (Crashlytics
+    // 88594eb858cbccdc06d041dc0fcbbafe). Capturing the notifier above
+    // protects against ref invalidation; this microtask hop protects
+    // against the separate "no provider mutations during finalize"
+    // rule.
     if (_scanWorkStarted) {
-      _manualScanNotifier.setActive(false);
+      final notifier = _manualScanNotifier;
+      Future.microtask(() => notifier.setActive(false));
       AppLogging.connection(
         'BLE_SCAN_AUTORECONNECT_RESUMED reason=scanner_dispose',
       );
