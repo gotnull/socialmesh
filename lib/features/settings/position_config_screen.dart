@@ -7,6 +7,7 @@ import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/chip_selector.dart';
 import '../../core/widgets/settings_primitives.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -492,10 +493,18 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                           ),
                         ),
                         SizedBox(height: AppTheme.spacing8),
-                        _DiscreteIntervalSelector(
+                        ChipSelector<int>(
+                          scrollable: true,
                           value: _positionBroadcastSecs,
-                          intervals: _kBroadcastIntervals,
-                          formatLabel: _formatDuration,
+                          options: [
+                            for (final v in _kBroadcastIntervals)
+                              ChipOption<int>(
+                                value: v,
+                                label: _formatDuration(v),
+                                icon: Icons.schedule,
+                                color: context.accentColor,
+                              ),
+                          ],
                           onChanged: (v) =>
                               setState(() => _positionBroadcastSecs = v),
                         ),
@@ -529,10 +538,18 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                             ),
                           ),
                           SizedBox(height: AppTheme.spacing8),
-                          _DiscreteIntervalSelector(
+                          ChipSelector<int>(
+                            scrollable: true,
                             value: _gpsUpdateInterval,
-                            intervals: _kGpsUpdateIntervals,
-                            formatLabel: _formatGpsInterval,
+                            options: [
+                              for (final v in _kGpsUpdateIntervals)
+                                ChipOption<int>(
+                                  value: v,
+                                  label: _formatGpsInterval(v),
+                                  icon: Icons.schedule,
+                                  color: context.accentColor,
+                                ),
+                            ],
                             onChanged: (v) =>
                                 setState(() => _gpsUpdateInterval = v),
                           ),
@@ -926,10 +943,18 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
                             ),
                           ),
                           SizedBox(height: AppTheme.spacing8),
-                          _DiscreteIntervalSelector(
+                          ChipSelector<int>(
+                            scrollable: true,
                             value: _smartMinimumIntervalSecs,
-                            intervals: _kSmartMinIntervals,
-                            formatLabel: _formatDuration,
+                            options: [
+                              for (final v in _kSmartMinIntervals)
+                                ChipOption<int>(
+                                  value: v,
+                                  label: _formatDuration(v),
+                                  icon: Icons.schedule,
+                                  color: context.accentColor,
+                                ),
+                            ],
                             onChanged: (v) =>
                                 setState(() => _smartMinimumIntervalSecs = v),
                           ),
@@ -1370,62 +1395,6 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen>
     if (seconds == 0) return context.l10n.positionConfigIntervalDefault;
     if (seconds >= 2147483647) return context.l10n.positionConfigIntervalOnBoot;
     return _formatDuration(seconds);
-  }
-}
-
-/// A horizontally-scrolling row of tappable interval chips that replaces the
-/// continuous sliders. Each chip shows a formatted label. The selected chip is
-/// highlighted with the accent colour.
-class _DiscreteIntervalSelector extends StatelessWidget {
-  final int value;
-  final List<int> intervals;
-  final String Function(int) formatLabel;
-  final ValueChanged<int> onChanged;
-
-  const _DiscreteIntervalSelector({
-    required this.value,
-    required this.intervals,
-    required this.formatLabel,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: intervals.map((v) {
-          final selected = v == value;
-          return Padding(
-            padding: const EdgeInsets.only(right: 6),
-            child: ChoiceChip(
-              label: Text(
-                formatLabel(v),
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                  color: selected ? Colors.white : context.textPrimary,
-                ),
-              ),
-              selected: selected,
-              showCheckmark: false,
-              selectedColor: context.accentColor,
-              backgroundColor: context.background,
-              side: BorderSide(
-                color: selected ? context.accentColor : context.border,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radius8),
-              ),
-              onSelected: (_) {
-                HapticFeedback.selectionClick();
-                onChanged(v);
-              },
-            ),
-          );
-        }).toList(),
-      ),
-    );
   }
 }
 

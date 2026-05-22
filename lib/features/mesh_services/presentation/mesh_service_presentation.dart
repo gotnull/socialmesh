@@ -6,6 +6,7 @@ library;
 import 'package:flutter/material.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/chip_selector.dart';
 import '../../../core/widgets/loading_indicator.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/mesh_service_instance.dart';
@@ -520,22 +521,36 @@ class _SignalPresentationSpec extends MeshServicePresentationSpec {
     MeshServiceComposeController controller,
     Color accentColor,
   ) {
-    return Wrap(
-      spacing: AppTheme.spacing8,
-      runSpacing: AppTheme.spacing8,
-      children: [
+    final disabled =
+        controller.isPublishing || controller.onSignalKindChanged == null;
+    return ChipSelector<MeshServiceSignalKind>(
+      value: controller.signalKind,
+      options: [
         for (final kind in MeshServiceSignalKind.values)
-          ChoiceChip(
-            label: Text(meshServiceSignalKindName(l10n, kind)),
-            selected: controller.signalKind == kind,
-            onSelected:
-                controller.isPublishing ||
-                    controller.onSignalKindChanged == null
-                ? null
-                : (_) => controller.onSignalKindChanged!(kind),
+          ChipOption<MeshServiceSignalKind>(
+            value: kind,
+            label: meshServiceSignalKindName(l10n, kind),
+            icon: _signalKindIcon(kind),
+            color: accentColor,
           ),
       ],
+      onChanged: disabled ? null : (k) => controller.onSignalKindChanged!(k),
     );
+  }
+
+  IconData _signalKindIcon(MeshServiceSignalKind kind) {
+    switch (kind) {
+      case MeshServiceSignalKind.checkIn:
+        return Icons.check_circle_outline;
+      case MeshServiceSignalKind.needHelp:
+        return Icons.sos;
+      case MeshServiceSignalKind.hazard:
+        return Icons.warning_amber_outlined;
+      case MeshServiceSignalKind.meetHere:
+        return Icons.location_on_outlined;
+      case MeshServiceSignalKind.relayActive:
+        return Icons.cell_tower;
+    }
   }
 
   @override

@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/core/auth/permission_provider.dart';
 import 'package:socialmesh/core/auth/permission_service.dart';
 import 'package:socialmesh/core/auth/role.dart';
+import 'package:socialmesh/core/widgets/status_filter_chip.dart';
 import 'package:socialmesh/features/incidents/screens/create_incident_screen.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
 
@@ -92,11 +93,13 @@ void main() {
       await tester.pumpAndSettle();
 
       // Routine chip should be selected by default
-      final routineChip = find.widgetWithText(ChoiceChip, 'Routine');
+      final routineChip = find.widgetWithText(StatusFilterChip, 'Routine');
       expect(routineChip, findsOneWidget);
 
-      final ChoiceChip chip = tester.widget<ChoiceChip>(routineChip);
-      expect(chip.selected, isTrue);
+      final StatusFilterChip chip = tester.widget<StatusFilterChip>(
+        routineChip,
+      );
+      expect(chip.isSelected, isTrue);
     });
 
     testWidgets('defaults to operational classification', (tester) async {
@@ -117,11 +120,16 @@ void main() {
       await tester.pumpAndSettle();
 
       // Operational chip should be selected by default
-      final operationalChip = find.widgetWithText(ChoiceChip, 'Operational');
+      final operationalChip = find.widgetWithText(
+        StatusFilterChip,
+        'Operational',
+      );
       expect(operationalChip, findsOneWidget);
 
-      final ChoiceChip chip = tester.widget<ChoiceChip>(operationalChip);
-      expect(chip.selected, isTrue);
+      final StatusFilterChip chip = tester.widget<StatusFilterChip>(
+        operationalChip,
+      );
+      expect(chip.isSelected, isTrue);
     });
 
     testWidgets('location capture button shown (optional)', (tester) async {

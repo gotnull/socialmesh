@@ -12,6 +12,7 @@ import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/bottom_action_bar.dart';
+import '../../../core/widgets/chip_selector.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/permission_gate.dart';
 import '../../../providers/app_providers.dart';
@@ -206,56 +207,39 @@ class _CreateIncidentScreenState extends ConsumerState<CreateIncidentScreen>
 
   Widget _buildPrioritySelector(BuildContext context) {
     final l10n = context.l10n;
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: IncidentPriority.values.map((p) {
-        final isSelected = _priority == p;
-        final color = _priorityColor(p);
-        return ChoiceChip(
-          label: Text(p.displayLabel(l10n)),
-          selected: isSelected,
-          onSelected: (_) {
-            ref.haptics.toggle();
-            safeSetState(() => _priority = p);
-          },
-          labelStyle: TextStyle(
-            fontSize: 13,
-            color: isSelected ? Colors.white : context.textSecondary,
+    return ChipSelector<IncidentPriority>(
+      value: _priority,
+      options: [
+        for (final p in IncidentPriority.values)
+          ChipOption<IncidentPriority>(
+            value: p,
+            label: p.displayLabel(l10n),
+            color: _priorityColor(p),
           ),
-          selectedColor: color,
-          backgroundColor: context.card,
-          side: BorderSide(color: context.border),
-          showCheckmark: false,
-        );
-      }).toList(),
+      ],
+      onChanged: (p) {
+        ref.haptics.toggle();
+        safeSetState(() => _priority = p);
+      },
     );
   }
 
   Widget _buildClassificationSelector(BuildContext context) {
     final l10n = context.l10n;
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: IncidentClassification.values.map((c) {
-        final isSelected = _classification == c;
-        return ChoiceChip(
-          label: Text(c.displayLabel(l10n)),
-          selected: isSelected,
-          onSelected: (_) {
-            ref.haptics.toggle();
-            safeSetState(() => _classification = c);
-          },
-          labelStyle: TextStyle(
-            fontSize: 13,
-            color: isSelected ? Colors.white : context.textSecondary,
+    return ChipSelector<IncidentClassification>(
+      value: _classification,
+      options: [
+        for (final c in IncidentClassification.values)
+          ChipOption<IncidentClassification>(
+            value: c,
+            label: c.displayLabel(l10n),
+            color: context.accentColor,
           ),
-          selectedColor: Theme.of(context).colorScheme.primary,
-          backgroundColor: context.card,
-          side: BorderSide(color: context.border),
-          showCheckmark: false,
-        );
-      }).toList(),
+      ],
+      onChanged: (c) {
+        ref.haptics.toggle();
+        safeSetState(() => _classification = c);
+      },
     );
   }
 

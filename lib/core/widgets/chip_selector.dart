@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
+import 'edge_fade.dart';
 import 'status_filter_chip.dart';
 
 /// One option in a [ChipSelector] — the displayable face of a `T` value.
@@ -15,13 +16,17 @@ class ChipOption<T> {
   const ChipOption({
     required this.value,
     required this.label,
-    required this.icon,
+    this.icon,
     required this.color,
   });
 
   final T value;
   final String label;
-  final IconData icon;
+
+  /// Leading glyph. When null, the chip renders a small filled circle
+  /// in [color] instead — useful for severity/status pickers where the
+  /// color itself carries the meaning.
+  final IconData? icon;
   final Color color;
 }
 
@@ -51,6 +56,7 @@ class ChipSelector<T> extends StatelessWidget {
     required this.onChanged,
     this.enabled = true,
     this.alignment = WrapAlignment.center,
+    this.scrollable = false,
   });
 
   /// Currently selected value. Pass `null` if your `T` is nullable and
@@ -71,12 +77,52 @@ class ChipSelector<T> extends StatelessWidget {
   final bool enabled;
 
   /// Wrap alignment. Defaults to centered, which is what every callsite
-  /// in the app currently wants.
+  /// in the app currently wants. Ignored when [scrollable] is true.
   final WrapAlignment alignment;
+
+  /// When true, the chips render in a single horizontal scroll row with
+  /// an [EdgeFade.end] indicator on the right edge, instead of wrapping
+  /// onto multiple lines. Use this for pickers with many short options
+  /// (e.g. duration intervals) where wrapping to 2-3 rows feels heavy.
+  final bool scrollable;
 
   @override
   Widget build(BuildContext context) {
     final canTap = enabled && onChanged != null;
+    final chips = <Widget>[
+      for (final option in options)
+        StatusFilterChip(
+          label: option.label,
+          icon: option.icon,
+          color: option.color,
+          isSelected: option.value == value,
+          onTap: canTap ? () => onChanged!(option.value) : () {},
+        ),
+    ];
+
+    if (scrollable) {
+      // EdgeFade.end always renders a right-edge fade — visually
+      // signals "more options exist off-screen" without depending on a
+      // ScrollController to check overflow. Negligible visual cost when
+      // the chips actually fit on one row.
+      return EdgeFade.end(
+        fadeColor: context.background,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.only(right: AppTheme.spacing16),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = 0; i < chips.length; i++) ...[
+                if (i > 0) const SizedBox(width: AppTheme.spacing8),
+                chips[i],
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+
     // SizedBox + Center is the explicit recipe for centering: the
     // SizedBox claims full width from the parent (a Column with
     // CrossAxisAlignment.start otherwise leaves the Wrap with only its
@@ -91,16 +137,7 @@ class ChipSelector<T> extends StatelessWidget {
           alignment: alignment,
           spacing: AppTheme.spacing8,
           runSpacing: AppTheme.spacing8,
-          children: [
-            for (final option in options)
-              StatusFilterChip(
-                label: option.label,
-                icon: option.icon,
-                color: option.color,
-                isSelected: option.value == value,
-                onTap: canTap ? () => onChanged!(option.value) : () {},
-              ),
-          ],
+          children: chips,
         ),
       ),
     );
