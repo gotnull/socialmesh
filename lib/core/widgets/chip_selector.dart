@@ -57,6 +57,7 @@ class ChipSelector<T> extends StatelessWidget {
     this.enabled = true,
     this.alignment = WrapAlignment.center,
     this.scrollable = false,
+    this.fadeColor,
   });
 
   /// Currently selected value. Pass `null` if your `T` is nullable and
@@ -86,6 +87,14 @@ class ChipSelector<T> extends StatelessWidget {
   /// (e.g. duration intervals) where wrapping to 2-3 rows feels heavy.
   final bool scrollable;
 
+  /// Color the right-edge fade blends into when [scrollable] is true.
+  /// Must match the surface colour of the surrounding container, or the
+  /// fade will appear as a dark vertical band. Defaults to
+  /// `context.card` because every chip-selector callsite in the app
+  /// currently lives inside a `_FieldGroupCard`-style card. Pass
+  /// `context.background` when the chips sit directly on the scaffold.
+  final Color? fadeColor;
+
   @override
   Widget build(BuildContext context) {
     final canTap = enabled && onChanged != null;
@@ -106,7 +115,7 @@ class ChipSelector<T> extends StatelessWidget {
       // ScrollController to check overflow. Negligible visual cost when
       // the chips actually fit on one row.
       return EdgeFade.end(
-        fadeColor: context.background,
+        fadeColor: fadeColor ?? context.card,
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.only(right: AppTheme.spacing16),
