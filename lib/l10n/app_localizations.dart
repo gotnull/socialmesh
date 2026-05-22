@@ -21682,16 +21682,22 @@ abstract class AppLocalizations {
   /// **'Channel {channelIndex}'**
   String meshCanvasOverviewChannelLabel(int channelIndex);
 
-  /// Last-activity value shown on a canvas card when no paint has ever landed.
+  /// Last-activity value shown on a canvas card when no paint has ever landed. Single word; reads cleanly inside a middle-dot metadata cluster ('Idle · Stays on device').
   ///
   /// In en, this message translates to:
-  /// **'Never painted'**
+  /// **'Idle'**
   String get meshCanvasOverviewNeverPainted;
 
-  /// Painted-cell count on a canvas card. Excludes default-color cells.
+  /// Activity-row value on the Local card when no paint has landed. Atmospheric reminder that the sandbox is private. Middle-dot separator.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =0{0 cells} =1{1 cell} other{{count} cells}}'**
+  /// **'Idle · Stays on device'**
+  String get meshCanvasOverviewLocalIdleHint;
+
+  /// Painted-cell count fragment on a canvas card. Renders inside a middle-dot metadata cluster ('17 painted · 2h ago'). Excludes default-color cells.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{0 painted} =1{1 painted} other{{count} painted}}'**
   String meshCanvasOverviewCellCount(int count);
 
   /// Plain prefix of the Mesh empty-state title. The widget's pad() helper inserts a single space before the gradient keyword — do NOT add a trailing space here or the gradient WidgetSpan will render a visible double-space gap. Empty-state fires only when zero Meshtastic channels are configured; once channels exist the latent-channel list renders instead.
@@ -21730,11 +21736,17 @@ abstract class AppLocalizations {
   /// **'One radio frame, one pixel.'**
   String get meshCanvasOverviewEmptyTagline3;
 
-  /// Subtitle shown on a latent channel-canvas row in the Mesh tab when no paint has landed. Replaces the misleading 'waiting for discovery' framing.
+  /// Activity-cluster fragment shown on a latent channel-canvas row in the Mesh tab when no paint has landed. Rendered inside a middle-dot metadata cluster: 'Channel 0 · Dormant · Seed first pixel'. Uses U+00B7 middle dot.
   ///
   /// In en, this message translates to:
-  /// **'No paints yet - seed the first pixel'**
+  /// **'Dormant · Seed first pixel'**
   String get meshCanvasOverviewChannelDormantHint;
+
+  /// Small uppercase section header above the list of channel canvas cards in the Mesh tab. Communicates the typed surface: every row below is a channel canvas. Atmospheric / packet-radio register; keep short.
+  ///
+  /// In en, this message translates to:
+  /// **'CHANNEL CANVASES'**
+  String get meshCanvasOverviewMeshSectionHeader;
 
   /// Title for the NodeBoard feature.
   ///

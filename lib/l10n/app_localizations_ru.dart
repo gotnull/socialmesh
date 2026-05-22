@@ -12511,18 +12511,21 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get meshCanvasOverviewNeverPainted => 'Никогда не окрашивали';
+  String get meshCanvasOverviewNeverPainted => 'Спит';
+
+  @override
+  String get meshCanvasOverviewLocalIdleHint => 'Спит · Остаётся на устройстве';
 
   @override
   String meshCanvasOverviewCellCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count клетки',
-      many: '$count клеток',
-      few: '$count клетки',
-      one: '1 клетка',
-      zero: '0 клеток',
+      other: '$count закрашено',
+      many: '$count закрашено',
+      few: '$count закрашено',
+      one: '1 закрашено',
+      zero: '0 закрашено',
     );
     return '$_temp0';
   }
@@ -12550,7 +12553,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get meshCanvasOverviewChannelDormantHint =>
-      'Пока нет пикселей - посейте первый';
+      'Спит · Посей первый пиксель';
+
+  @override
+  String get meshCanvasOverviewMeshSectionHeader => 'ХОЛСТЫ КАНАЛОВ';
 
   @override
   String get nodeboardTitle => 'NodeBoard';

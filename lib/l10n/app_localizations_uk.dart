@@ -12525,18 +12525,22 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get meshCanvasOverviewNeverPainted => 'Ніколи не малювали';
+  String get meshCanvasOverviewNeverPainted => 'Спить';
+
+  @override
+  String get meshCanvasOverviewLocalIdleHint =>
+      'Спить · Залишається на пристрої';
 
   @override
   String meshCanvasOverviewCellCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count клітинки',
-      many: '$count клітинок',
-      few: '$count клітинки',
-      one: '1 клітинка',
-      zero: '0 клітинок',
+      other: '$count зафарбовано',
+      many: '$count зафарбовано',
+      few: '$count зафарбовано',
+      one: '1 зафарбовано',
+      zero: '0 зафарбовано',
     );
     return '$_temp0';
   }
@@ -12564,7 +12568,10 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshCanvasOverviewChannelDormantHint =>
-      'Поки немає пікселів - посійте перший';
+      'Спить · Посій перший піксель';
+
+  @override
+  String get meshCanvasOverviewMeshSectionHeader => 'ПОЛОТНА КАНАЛІВ';
 
   @override
   String get nodeboardTitle => 'NodeBoard';

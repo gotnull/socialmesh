@@ -12372,16 +12372,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get meshCanvasOverviewNeverPainted => 'Never painted';
+  String get meshCanvasOverviewNeverPainted => 'Idle';
+
+  @override
+  String get meshCanvasOverviewLocalIdleHint => 'Idle · Stays on device';
 
   @override
   String meshCanvasOverviewCellCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count cells',
-      one: '1 cell',
-      zero: '0 cells',
+      other: '$count painted',
+      one: '1 painted',
+      zero: '0 painted',
     );
     return '$_temp0';
   }
@@ -12408,7 +12411,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meshCanvasOverviewChannelDormantHint =>
-      'No paints yet - seed the first pixel';
+      'Dormant · Seed first pixel';
+
+  @override
+  String get meshCanvasOverviewMeshSectionHeader => 'CHANNEL CANVASES';
 
   @override
   String get nodeboardTitle => 'NodeBoard';

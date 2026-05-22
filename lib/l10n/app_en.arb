@@ -16585,13 +16585,17 @@
             "channelIndex": {"type": "int"}
         }
     },
-    "meshCanvasOverviewNeverPainted": "Never painted",
+    "meshCanvasOverviewNeverPainted": "Idle",
     "@meshCanvasOverviewNeverPainted": {
-        "description": "Last-activity value shown on a canvas card when no paint has ever landed."
+        "description": "Last-activity value shown on a canvas card when no paint has ever landed. Single word; reads cleanly inside a middle-dot metadata cluster ('Idle · Stays on device')."
     },
-    "meshCanvasOverviewCellCount": "{count, plural, =0{0 cells} =1{1 cell} other{{count} cells}}",
+    "meshCanvasOverviewLocalIdleHint": "Idle · Stays on device",
+    "@meshCanvasOverviewLocalIdleHint": {
+        "description": "Activity-row value on the Local card when no paint has landed. Atmospheric reminder that the sandbox is private. Middle-dot separator."
+    },
+    "meshCanvasOverviewCellCount": "{count, plural, =0{0 painted} =1{1 painted} other{{count} painted}}",
     "@meshCanvasOverviewCellCount": {
-        "description": "Painted-cell count on a canvas card. Excludes default-color cells.",
+        "description": "Painted-cell count fragment on a canvas card. Renders inside a middle-dot metadata cluster ('17 painted · 2h ago'). Excludes default-color cells.",
         "placeholders": {
             "count": {"type": "int"}
         }
@@ -16620,9 +16624,13 @@
     "@meshCanvasOverviewEmptyTagline3": {
         "description": "Third cycling tagline. Compressed mesh-radio aphorism."
     },
-    "meshCanvasOverviewChannelDormantHint": "No paints yet - seed the first pixel",
+    "meshCanvasOverviewChannelDormantHint": "Dormant · Seed first pixel",
     "@meshCanvasOverviewChannelDormantHint": {
-        "description": "Subtitle shown on a latent channel-canvas row in the Mesh tab when no paint has landed. Replaces the misleading 'waiting for discovery' framing."
+        "description": "Activity-cluster fragment shown on a latent channel-canvas row in the Mesh tab when no paint has landed. Rendered inside a middle-dot metadata cluster: 'Channel 0 · Dormant · Seed first pixel'. Uses U+00B7 middle dot."
+    },
+    "meshCanvasOverviewMeshSectionHeader": "CHANNEL CANVASES",
+    "@meshCanvasOverviewMeshSectionHeader": {
+        "description": "Small uppercase section header above the list of channel canvas cards in the Mesh tab. Communicates the typed surface: every row below is a channel canvas. Atmospheric / packet-radio register; keep short."
     },
     "nodeboardTitle": "NodeBoard",
     "@nodeboardTitle": {

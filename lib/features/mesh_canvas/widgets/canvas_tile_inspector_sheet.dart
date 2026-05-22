@@ -32,6 +32,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/canvas/canvas_palette.dart';
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/info_table.dart';
@@ -84,7 +85,8 @@ class _CanvasTileInspectorSheet extends ConsumerStatefulWidget {
 }
 
 class _CanvasTileInspectorSheetState
-    extends ConsumerState<_CanvasTileInspectorSheet> {
+    extends ConsumerState<_CanvasTileInspectorSheet>
+    with LifecycleSafeMixin<_CanvasTileInspectorSheet> {
   Future<_InspectorData>? _future;
 
   @override
@@ -110,7 +112,6 @@ class _CanvasTileInspectorSheetState
 
   @override
   Widget build(BuildContext context) {
-    final l = context.l10n;
     return FutureBuilder<_InspectorData>(
       future: _future,
       builder: (context, snapshot) {
@@ -128,7 +129,6 @@ class _CanvasTileInspectorSheetState
           x: widget.x,
           y: widget.y,
           data: snapshot.data!,
-          l: l,
         );
       },
     );
@@ -141,8 +141,6 @@ class _InspectorBody extends StatelessWidget {
   final int x;
   final int y;
   final _InspectorData data;
-  // ignore: library_private_types_in_public_api
-  final dynamic l;
 
   const _InspectorBody({
     required this.scrollController,
@@ -150,58 +148,60 @@ class _InspectorBody extends StatelessWidget {
     required this.x,
     required this.y,
     required this.data,
-    required this.l,
   });
 
-  String _authorLabel(int authorNodeNum) {
+  String _authorLabel(BuildContext context, int authorNodeNum) {
+    final l = context.l10n;
     if (canvas.scope == CanvasScope.local) {
-      return l.meshCanvasInspectorAuthorLocal as String;
+      return l.meshCanvasInspectorAuthorLocal;
     }
     final hex = authorNodeNum.toUnsigned(32).toRadixString(16).padLeft(8, '0');
-    return l.meshCanvasInspectorAuthorNode(hex) as String;
+    return l.meshCanvasInspectorAuthorNode(hex);
   }
 
-  String _relative(int unixSeconds) {
+  String _relative(BuildContext context, int unixSeconds) {
+    final l = context.l10n;
     final ts = DateTime.fromMillisecondsSinceEpoch(unixSeconds * 1000);
     final delta = DateTime.now().difference(ts);
-    if (delta.inMinutes < 1) return l.nodedexRelativeJustNow as String;
+    if (delta.inMinutes < 1) return l.nodedexRelativeJustNow;
     if (delta.inMinutes < 60) {
-      return l.nodedexRelativeMinutesAgo(delta.inMinutes) as String;
+      return l.nodedexRelativeMinutesAgo(delta.inMinutes);
     }
     if (delta.inHours < 24) {
-      return l.nodedexRelativeHoursAgo(delta.inHours) as String;
+      return l.nodedexRelativeHoursAgo(delta.inHours);
     }
     if (delta.inDays < 30) {
-      return l.nodedexRelativeDaysAgo(delta.inDays) as String;
+      return l.nodedexRelativeDaysAgo(delta.inDays);
     }
-    return l.nodedexRelativeMonthsAgo(delta.inDays ~/ 30) as String;
+    return l.nodedexRelativeMonthsAgo(delta.inDays ~/ 30);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final cell = data.cell;
     final history = data.history;
 
     final currentColorValue = cell == null
-        ? l.meshCanvasInspectorEmptyCellLabel as String
+        ? l.meshCanvasInspectorEmptyCellLabel
         : SocialMeshPalette.nameOf(cell.color);
 
     final rows = <InfoTableRow>[
       InfoTableRow(
         icon: Icons.palette_outlined,
-        label: l.meshCanvasInspectorCurrentColorLabel as String,
+        label: l.meshCanvasInspectorCurrentColorLabel,
         value: currentColorValue,
       ),
       if (cell != null) ...[
         InfoTableRow(
           icon: Icons.person_outline,
-          label: l.meshCanvasInspectorLastPainterLabel as String,
-          value: _authorLabel(cell.lastAuthor),
+          label: l.meshCanvasInspectorLastPainterLabel,
+          value: _authorLabel(context, cell.lastAuthor),
         ),
         InfoTableRow(
           icon: Icons.schedule_outlined,
-          label: l.meshCanvasInspectorLastPaintedLabel as String,
-          value: _relative(cell.lastTs),
+          label: l.meshCanvasInspectorLastPaintedLabel,
+          value: _relative(context, cell.lastTs),
         ),
       ],
     ];
@@ -216,13 +216,13 @@ class _InspectorBody extends StatelessWidget {
       ),
       children: [
         SectionTitle(
-          title: (l.meshCanvasInspectorTitle(x, y) as String),
+          title: l.meshCanvasInspectorTitle(x, y),
           leadingIcon: Icons.center_focus_strong_outlined,
         ),
         InfoTable(rows: rows),
         const SizedBox(height: AppTheme.spacing16),
         SectionTitle(
-          title: l.meshCanvasInspectorHistoryHeading as String,
+          title: l.meshCanvasInspectorHistoryHeading,
           leadingIcon: Icons.history,
         ),
         if (history.isEmpty)
@@ -232,7 +232,7 @@ class _InspectorBody extends StatelessWidget {
               vertical: AppTheme.spacing8,
             ),
             child: Text(
-              l.meshCanvasInspectorHistoryEmpty as String,
+              l.meshCanvasInspectorHistoryEmpty,
               style: TextStyle(
                 fontSize: 13,
                 color: context.textTertiary,
@@ -246,9 +246,9 @@ class _InspectorBody extends StatelessWidget {
                 .map(
                   (op) => InfoTableRow(
                     icon: Icons.brush_outlined,
-                    label: _authorLabel(op.authorNodeNum),
+                    label: _authorLabel(context, op.authorNodeNum),
                     value:
-                        '${SocialMeshPalette.nameOf(op.color)} · ${_relative(op.opTs)}',
+                        '${SocialMeshPalette.nameOf(op.color)} · ${_relative(context, op.opTs)}',
                   ),
                 )
                 .toList(),

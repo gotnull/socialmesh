@@ -46,11 +46,17 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          // Short-circuit the full provider chain (db open → list)
-          // so the test doesn't have to touch sqflite-FFI.
+          // Short-circuit the full provider chain (db open → list /
+          // sandbox) so the test doesn't have to touch sqflite-FFI.
           canvasListProvider.overrideWith(
             (ref) async => const <CanvasSummary>[fakeCanvas],
           ),
+          localDeviceCanvasProvider.overrideWith((ref) async => fakeCanvas),
+          // The Local tab renders the viewport inline, which reads
+          // cells for the local canvas.
+          canvasCellsProvider(
+            fakeCanvas.localId,
+          ).overrideWith((ref) async => const <CanvasCell>[]),
         ],
         child: MaterialApp(
           localizationsDelegates: const [
@@ -64,11 +70,13 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
     // The app-bar title renders the brand string.
     expect(find.text('MeshCanvas'), findsOneWidget);
-    // The Local Sandbox row from the fake list renders.
-    expect(find.text('Local Sandbox'), findsOneWidget);
+    // Local tab is the default; viewport identity chip says
+    // "Local Device Canvas".
+    expect(find.text('Local Device Canvas'), findsWidgets);
   });
 
   test('MeshCoreShell does not import or reference any MeshCanvas screen', () {
