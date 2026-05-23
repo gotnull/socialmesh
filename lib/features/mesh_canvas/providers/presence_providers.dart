@@ -124,33 +124,18 @@ final presenceEmitCoordinatorProvider = FutureProvider<PresenceEmitCoordinator>(
     final cache = ref.watch(presenceCacheProvider);
     final governor = ref.read(canvasOutboundGovernorProvider);
     final outbound = ref.read(canvasOutboundChannelProvider);
-    final repo = await ref.watch(canvasRepositoryProvider.future);
+    // Touch the repo provider so the coordinator chain stays
+    // dependency-coherent with the canvas database lifecycle, even
+    // though we no longer query the repository directly from this
+    // coordinator (the paint-queue gate was removed at P5 after
+    // sim verification — see _attemptEmit comment).
+    await ref.watch(canvasRepositoryProvider.future);
 
     final coordinator = PresenceEmitCoordinator(
       cache: cache,
       governor: governor,
       outbound: outbound,
       localNodeNumProvider: () => ref.read(myNodeNumProvider),
-      hasPendingPaints: (canvasLocalId) async {
-        // Transient repository errors (e.g. db not yet initialised
-        // during early boot or in test harnesses that mock the repo
-        // without a real database) should silently report "no
-        // paints pending" rather than tear down the emit pipeline.
-        // Real pending paints surface naturally on the next tick
-        // once the repo is healthy.
-        try {
-          final rows = await repo.getPendingOpsForCanvas(
-            canvasLocalId,
-            limit: 1,
-          );
-          return rows.isNotEmpty;
-        } catch (err) {
-          AppLogging.meshCanvas(
-            'presence hasPendingPaints repo error treated as empty: $err',
-          );
-          return false;
-        }
-      },
     );
 
     ref.onDispose(coordinator.dispose);

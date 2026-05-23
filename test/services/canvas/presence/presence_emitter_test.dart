@@ -55,16 +55,6 @@ class _FakeClock {
   void set(int ms) => _nowMs = ms;
 }
 
-class _PendingPaintsStub {
-  bool returnValue = false;
-  int callCount = 0;
-
-  Future<bool> call(int canvasLocalId) async {
-    callCount++;
-    return returnValue;
-  }
-}
-
 const int _kCanvasLocalId = 1;
 const int _kChannel = 0;
 const int _kCanvasId = 0x1122334455667788;
@@ -76,20 +66,17 @@ const int _kLocalNode = 0xAABBCCDD;
   CanvasOutboundGovernor governor,
   _FakeChannel channel,
   _FakeClock clock,
-  _PendingPaintsStub paintQueue,
 })
 _buildHarness({int? localNodeNum = _kLocalNode, int initialNowMs = 1_000_000}) {
   final clock = _FakeClock(initialNowMs);
   final governor = CanvasOutboundGovernor(nowMs: clock.now);
   final channel = _FakeChannel();
   final cache = PresenceCache();
-  final paintQueue = _PendingPaintsStub();
   final coordinator = PresenceEmitCoordinator(
     cache: cache,
     governor: governor,
     outbound: channel,
     localNodeNumProvider: () => localNodeNum,
-    hasPendingPaints: paintQueue.call,
     nowMs: clock.now,
   );
   return (
@@ -98,7 +85,6 @@ _buildHarness({int? localNodeNum = _kLocalNode, int initialNowMs = 1_000_000}) {
     governor: governor,
     channel: channel,
     clock: clock,
-    paintQueue: paintQueue,
   );
 }
 
@@ -421,18 +407,14 @@ void main() {
   });
 
   group('PresenceEmitCoordinator anti-starvation', () {
-    test('pending paint queue blocks the emit', () async {
-      final h = _buildHarness();
-      h.paintQueue.returnValue = true;
-      await h.coordinator.attachViewer(
-        canvasLocalId: _kCanvasLocalId,
-        channelIndex: _kChannel,
-        canvasId: _kCanvasId,
-      );
-      expect(h.channel.sent, isEmpty);
-      // Cache seed still happens synchronously even when wire blocked.
-      expect(h.cache.debugEntryCount, 1);
-    });
+    // Note: an earlier "pending paint queue blocks the emit" test was
+    // removed at P5 sim verification. The gate it pinned was broken
+    // in practice: presence notify is triggered BY a paint enqueue,
+    // so the queue is always non-empty at notify time and presence
+    // would never broadcast. The byte-level gates (canvas governor +
+    // SIP limiter) already enforce anti-starvation: presence is 24 B
+    // per frame, capped at 4 / 60 s = 96 B / 60 s, leaving paint at
+    // least 154 B / 60 s of governor headroom in every window.
 
     test('canvas governor headroom < 96 B blocks the emit', () async {
       final h = _buildHarness();

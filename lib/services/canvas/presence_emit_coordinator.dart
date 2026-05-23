@@ -42,11 +42,6 @@ import 'canvas_send_coordinator.dart'
 import 'presence_cache.dart';
 import 'presence_models.dart';
 
-/// Predicate returning whether a canvas has any pending paint ops
-/// queued. Wired by the provider layer to a thin repo call; tests
-/// pass a controllable stub.
-typedef HasPendingPaintsPredicate = Future<bool> Function(int canvasLocalId);
-
 /// Cadence and throttling constants. See CANVAS_PRESENCE_V0_1.md §3.1.
 abstract final class PresenceEmitTiming {
   /// Heartbeat cadence: any-state re-emit at least every 90 seconds
@@ -126,7 +121,6 @@ class PresenceEmitCoordinator {
   final CanvasOutboundGovernor _governor;
   final CanvasOutboundChannel _outbound;
   final int? Function() _localNodeNumProvider;
-  final HasPendingPaintsPredicate _hasPendingPaints;
   final int Function() _nowMs;
 
   final Map<int, _ViewerSession> _sessions = <int, _ViewerSession>{};
@@ -138,13 +132,11 @@ class PresenceEmitCoordinator {
     required CanvasOutboundGovernor governor,
     required CanvasOutboundChannel outbound,
     required int? Function() localNodeNumProvider,
-    required HasPendingPaintsPredicate hasPendingPaints,
     int Function()? nowMs,
   }) : _cache = cache,
        _governor = governor,
        _outbound = outbound,
        _localNodeNumProvider = localNodeNumProvider,
-       _hasPendingPaints = hasPendingPaints,
        _nowMs = nowMs ?? (() => DateTime.now().millisecondsSinceEpoch);
 
   /// Number of currently attached viewer sessions. Test introspection.
@@ -444,18 +436,16 @@ class PresenceEmitCoordinator {
       return false;
     }
 
-    // 4. Anti-starvation: paint queue must be empty.
-    final paintQueueHot = await _hasPendingPaints(session.canvasLocalId);
-    if (paintQueueHot) {
-      AppLogging.meshCanvas(
-        'presence defer: paint queue not empty '
-        'canvas=${session.canvasLocalId}',
-      );
-      return false;
-    }
-
-    // 5. Anti-starvation: governor headroom must reserve at least
-    // 96 B for paints.
+    // 4. Anti-starvation: governor headroom must reserve at least
+    // 96 B for paints. The earlier paint-queue gate was removed
+    // (P5 sim verification) — because presence is activity-driven
+    // by paint itself, that gate always tripped after the
+    // notifyPaintEnqueued path's freshly enqueued row, and presence
+    // never broadcast. The byte-level gates (canvas governor +
+    // SIP limiter) already enforce real anti-starvation: presence
+    // is 24 B per frame, capped at 4 / 60 s = 96 B / 60 s, leaving
+    // paint at least 154 B / 60 s of governor headroom in every
+    // window.
     if (_governor.remainingBytes < PresenceEmitTiming.governorHeadroomBytes) {
       AppLogging.meshCanvas(
         'presence defer: governor remaining='
