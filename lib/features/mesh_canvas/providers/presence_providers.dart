@@ -35,6 +35,7 @@ import '../../../providers/app_providers.dart';
 import '../../../services/canvas/presence_cache.dart';
 import '../../../services/canvas/presence_emit_coordinator.dart';
 import '../../../services/canvas/presence_models.dart';
+import 'mesh_canvas_participation_providers.dart';
 import 'mesh_canvas_providers.dart';
 
 /// Singleton presence cache. Owns the broadcast change stream that
@@ -136,6 +137,13 @@ final presenceEmitCoordinatorProvider = FutureProvider<PresenceEmitCoordinator>(
       governor: governor,
       outbound: outbound,
       localNodeNumProvider: () => ref.read(myNodeNumProvider),
+      // Participation + sharing gate
+      // (CANVAS_PARTICIPATION_V0_1.md §5.4). Presence requires BOTH
+      // bits on. Participation alone is not enough — sharing is
+      // explicitly conservative-default after Join.
+      canEmit: () =>
+          ref.read(meshCanvasParticipationEnabledProvider) &&
+          ref.read(meshCanvasPresenceSharingEnabledProvider),
     );
 
     ref.onDispose(coordinator.dispose);

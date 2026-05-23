@@ -12580,6 +12580,89 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meshCanvasHudEraserLabel => 'Gomme';
 
   @override
+  String get meshCanvasOnboardingTitle => 'MeshCanvas';
+
+  @override
+  String get meshCanvasOnboardingIntro =>
+      'Un mur de pixels partagé, porté par les radios à proximité.';
+
+  @override
+  String get meshCanvasOnboardingRowLocalTitle => 'Toile locale de l\'appareil';
+
+  @override
+  String get meshCanvasOnboardingRowLocalBody =>
+      'Un bac à sable privé sur ce téléphone. Les pixels restent sur l\'appareil. Aucun temps d\'antenne utilisé.';
+
+  @override
+  String get meshCanvasOnboardingRowMeshTitle => 'Toiles maillées';
+
+  @override
+  String get meshCanvasOnboardingRowMeshBody =>
+      'Une toile par canal Meshtastic sur lequel vous êtes. Les pixels voyagent sur ce canal. Utilise une petite quantité de temps d\'antenne du maillage.';
+
+  @override
+  String get meshCanvasOnboardingRowPresenceTitle => 'Présence (optionnelle)';
+
+  @override
+  String get meshCanvasOnboardingRowPresenceBody =>
+      'Indique aux autres que vous regardez ou peignez. Désactivée par défaut. Votre présence est temporaire et s\'estompe automatiquement. Vous pouvez l\'activer plus tard dans les paramètres.';
+
+  @override
+  String get meshCanvasOnboardingActionExplore => 'Explorer en local';
+
+  @override
+  String get meshCanvasOnboardingActionJoin => 'Rejoindre MeshCanvas';
+
+  @override
+  String get meshCanvasParticipationCtaTitle => 'Rejoindre les toiles maillées';
+
+  @override
+  String get meshCanvasParticipationCtaBody =>
+      'Les pixels voyagent sur votre canal. Utilise une petite quantité de temps d\'antenne du maillage.';
+
+  @override
+  String get meshCanvasParticipationCtaAction => 'Activer quand vous êtes prêt';
+
+  @override
+  String get meshCanvasParticipationSettingsTitle => 'Paramètres MeshCanvas';
+
+  @override
+  String get meshCanvasParticipationSectionParticipation => 'PARTICIPATION';
+
+  @override
+  String get meshCanvasParticipationToggleParticipationTitle =>
+      'Participation au maillage';
+
+  @override
+  String get meshCanvasParticipationToggleParticipationBody =>
+      'Peindre sur les toiles de canal. Utilise du temps d\'antenne.';
+
+  @override
+  String get meshCanvasParticipationTogglePresenceTitle =>
+      'Partager ma présence';
+
+  @override
+  String get meshCanvasParticipationTogglePresenceBody =>
+      'Laisser les autres voir quand vous regardez ou peignez.';
+
+  @override
+  String get meshCanvasParticipationTogglePresenceDisabledTooltip =>
+      'Activez d\'abord la participation au maillage.';
+
+  @override
+  String get meshCanvasParticipationSectionAbout => 'À PROPOS';
+
+  @override
+  String get meshCanvasParticipationAboutHelp => 'Qu\'est-ce que MeshCanvas ?';
+
+  @override
+  String get meshCanvasParticipationAboutReplayOnboarding =>
+      'Revoir la présentation';
+
+  @override
+  String get meshCanvasParticipationSettingsTooltip => 'Paramètres MeshCanvas';
+
+  @override
   String get meshCanvasVitalsScopeMesh => 'TOILE MAILLÉE';
 
   @override

@@ -12489,6 +12489,91 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshCanvasHudEraserLabel => 'Гумка';
 
   @override
+  String get meshCanvasOnboardingTitle => 'MeshCanvas';
+
+  @override
+  String get meshCanvasOnboardingIntro =>
+      'Спільна піксельна стіна, яку несуть найближчі радіостанції.';
+
+  @override
+  String get meshCanvasOnboardingRowLocalTitle => 'Локальне полотно пристрою';
+
+  @override
+  String get meshCanvasOnboardingRowLocalBody =>
+      'Приватна пісочниця на цьому телефоні. Пікселі залишаються на пристрої. Ефірний час не використовується.';
+
+  @override
+  String get meshCanvasOnboardingRowMeshTitle => 'Mesh-полотна';
+
+  @override
+  String get meshCanvasOnboardingRowMeshBody =>
+      'Одне полотно на кожен канал Meshtastic, у якому ви перебуваєте. Пікселі мандрують цим каналом. Використовує невелику кількість ефірного часу меш-мережі.';
+
+  @override
+  String get meshCanvasOnboardingRowPresenceTitle =>
+      'Присутність (опціонально)';
+
+  @override
+  String get meshCanvasOnboardingRowPresenceBody =>
+      'Показує іншим, що ви переглядаєте або малюєте. За замовчуванням вимкнено. Ваша присутність тимчасова й автоматично зникає. Ви можете увімкнути її пізніше в налаштуваннях.';
+
+  @override
+  String get meshCanvasOnboardingActionExplore => 'Досліджувати локально';
+
+  @override
+  String get meshCanvasOnboardingActionJoin => 'Приєднатися до MeshCanvas';
+
+  @override
+  String get meshCanvasParticipationCtaTitle => 'Приєднатися до mesh-полотен';
+
+  @override
+  String get meshCanvasParticipationCtaBody =>
+      'Пікселі мандрують вашим каналом. Використовує невелику кількість ефірного часу меш-мережі.';
+
+  @override
+  String get meshCanvasParticipationCtaAction =>
+      'Увімкнути, коли будете готові';
+
+  @override
+  String get meshCanvasParticipationSettingsTitle => 'Налаштування MeshCanvas';
+
+  @override
+  String get meshCanvasParticipationSectionParticipation => 'УЧАСТЬ';
+
+  @override
+  String get meshCanvasParticipationToggleParticipationTitle => 'Участь у mesh';
+
+  @override
+  String get meshCanvasParticipationToggleParticipationBody =>
+      'Малювати на полотнах каналів. Використовує ефірний час mesh.';
+
+  @override
+  String get meshCanvasParticipationTogglePresenceTitle =>
+      'Поділитися моєю присутністю';
+
+  @override
+  String get meshCanvasParticipationTogglePresenceBody =>
+      'Дозволити іншим бачити, коли ви переглядаєте або малюєте.';
+
+  @override
+  String get meshCanvasParticipationTogglePresenceDisabledTooltip =>
+      'Спершу увімкніть участь у mesh.';
+
+  @override
+  String get meshCanvasParticipationSectionAbout => 'ПРО ДОДАТОК';
+
+  @override
+  String get meshCanvasParticipationAboutHelp => 'Що таке MeshCanvas?';
+
+  @override
+  String get meshCanvasParticipationAboutReplayOnboarding =>
+      'Переглянути введення знову';
+
+  @override
+  String get meshCanvasParticipationSettingsTooltip =>
+      'Налаштування MeshCanvas';
+
+  @override
   String get meshCanvasVitalsScopeMesh => 'MESH-ПОЛОТНО';
 
   @override

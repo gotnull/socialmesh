@@ -20,7 +20,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:socialmesh/features/mesh_canvas/providers/mesh_canvas_participation_providers.dart';
 import 'package:socialmesh/features/mesh_canvas/providers/mesh_canvas_providers.dart';
 import 'package:socialmesh/features/mesh_canvas/screens/mesh_canvas_viewer_screen.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
@@ -138,7 +140,16 @@ Future<_RecordingCanvasRepository> _pumpViewer(
   WidgetTester tester, {
   required CanvasSummary canvas,
   int? myNodeNum = 0x0864,
+  bool participationEnabled = true,
 }) async {
+  // Seed the participation prefs BEFORE the provider container resolves
+  // its AsyncNotifier. Default `true` so existing dispatch tests stay
+  // green; the gate test below passes `false` explicitly.
+  SharedPreferences.setMockInitialValues({
+    'mesh_canvas.participation.onboarding_seen': true,
+    'mesh_canvas.participation.enabled': participationEnabled,
+    'mesh_canvas.participation.presence_sharing_enabled': false,
+  });
   final repo = _RecordingCanvasRepository();
   final container = ProviderContainer(
     overrides: [
@@ -152,11 +163,10 @@ Future<_RecordingCanvasRepository> _pumpViewer(
     ],
   );
   addTearDown(container.dispose);
-  // Pre-warm the async repo so the viewer's `ref.read(...).asData?.value`
-  // synchronous read returns the fake instead of skipping on "repository
-  // not ready" — in production the overview screen has already
-  // materialised the chain before the viewer pushes.
+  // Pre-warm the async repo + participation provider so the viewer's
+  // synchronous `ref.read(...)` reads return the seeded values.
   await container.read(canvasRepositoryProvider.future);
+  await container.read(meshCanvasParticipationProvider.future);
 
   await tester.pumpWidget(
     UncontrolledProviderScope(
@@ -234,6 +244,53 @@ void main() {
         await tester.pump(const Duration(milliseconds: 200));
 
         expect(repo.calls, isEmpty);
+      },
+    );
+
+    // S4 participation gate — defence in depth. The Mesh tab in the
+    // overview hides the channel list while participation is off, but
+    // a deep-link / programmatic push could otherwise surface this
+    // viewer. The paint handler MUST silently skip the enqueue.
+    // Spec: docs/canvas/CANVAS_PARTICIPATION_V0_1.md §5.3 + §8 I4.
+    testWidgets(
+      'Mesh Canvas tap with participation disabled is silently blocked — '
+      'no enqueue happens even if the viewer is somehow surfaced',
+      (tester) async {
+        final repo = await _pumpViewer(
+          tester,
+          canvas: _meshCanvas,
+          participationEnabled: false,
+        );
+
+        await tester.tap(find.byType(MeshCanvasViewerScreen));
+        await tester.pump(const Duration(milliseconds: 200));
+
+        expect(
+          repo.calls,
+          isEmpty,
+          reason: 'participation gate must block mesh paint enqueue',
+        );
+      },
+    );
+
+    // I2 Local Canvas immunity — Local paint MUST work even when
+    // participation is off. The Local sandbox is private + offline
+    // and must remain available regardless of participation settings.
+    testWidgets(
+      'Local Device Canvas tap with participation disabled still works — '
+      'Local sandbox is independent of participation settings (I2)',
+      (tester) async {
+        final repo = await _pumpViewer(
+          tester,
+          canvas: _localCanvas,
+          participationEnabled: false,
+        );
+
+        await tester.tap(find.byType(MeshCanvasViewerScreen));
+        await tester.pump(const Duration(milliseconds: 200));
+
+        expect(repo.calls, hasLength(1));
+        expect(repo.calls.single.method, 'paintLocal');
       },
     );
   });

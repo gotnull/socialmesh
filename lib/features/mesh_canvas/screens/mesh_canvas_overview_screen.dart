@@ -39,6 +39,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animated_empty_state.dart';
 import '../../../core/widgets/chip_selector.dart';
@@ -49,9 +50,13 @@ import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/staggered_list_tile.dart';
 import '../../../services/canvas/canvas_models.dart';
 import '../../../services/haptic_service.dart';
+import '../providers/mesh_canvas_participation_providers.dart';
 import '../providers/mesh_canvas_providers.dart';
 import '../widgets/canvas_help_sheet.dart';
 import '../widgets/canvas_overview_hero_card.dart';
+import '../widgets/canvas_participation_disabled_card.dart';
+import '../widgets/canvas_participation_onboarding_sheet.dart';
+import '../widgets/canvas_participation_settings_sheet.dart';
 import '../widgets/canvas_viewport_body.dart';
 import '../widgets/channel_canvas_thumbnail.dart';
 import 'mesh_canvas_viewer_screen.dart';
@@ -72,21 +77,76 @@ class _OverviewTabNotifier extends Notifier<_OverviewTab> {
   void select(_OverviewTab tab) => state = tab;
 }
 
-class MeshCanvasOverviewScreen extends ConsumerWidget {
+class MeshCanvasOverviewScreen extends ConsumerStatefulWidget {
   const MeshCanvasOverviewScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MeshCanvasOverviewScreen> createState() =>
+      _MeshCanvasOverviewScreenState();
+}
+
+class _MeshCanvasOverviewScreenState
+    extends ConsumerState<MeshCanvasOverviewScreen>
+    with LifecycleSafeMixin<MeshCanvasOverviewScreen> {
+  bool _onboardingShown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // First-run participation onboarding: post-frame so the screen's
+    // GlassScaffold is mounted before the sheet pushes its route.
+    // `meshCanvasParticipationProvider` resolves to AsyncLoading on
+    // cold start; we re-check after the AsyncData lands via build().
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeShowOnboarding();
+    });
+  }
+
+  void _maybeShowOnboarding() {
+    if (!mounted) return;
+    if (_onboardingShown) return;
+    final settings = ref.read(meshCanvasParticipationProvider).asData?.value;
+    // Wait for the AsyncNotifier to resolve. The build() watches the
+    // provider, so a future rebuild after AsyncData lands will call
+    // this again via the post-frame callback re-scheduled there.
+    if (settings == null) return;
+    if (settings.onboardingSeen) {
+      _onboardingShown = true;
+      return;
+    }
+    _onboardingShown = true;
+    AppLogging.meshCanvas('participation: showing first-run onboarding sheet');
+    showCanvasParticipationOnboardingSheet(context: context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final activeTab = ref.watch(_overviewTabProvider);
     // Materialise the canvas inbound attach exactly once, when the
     // user enters the feature.
     ref.watch(canvasProtocolWiringProvider);
+    // Re-check onboarding after every settings rebuild so the first
+    // AsyncData (post-cold-start) triggers the sheet exactly once.
+    ref.listen(meshCanvasParticipationProvider, (_, _) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _maybeShowOnboarding();
+      });
+    });
     final l = context.l10n;
 
     return GlassScaffold(
       title: l.meshCanvasPlaceholderTitle,
       physics: const NeverScrollableScrollPhysics(),
       actions: [
+        IconButton(
+          key: const ValueKey('mesh-canvas-overview-settings'),
+          tooltip: l.meshCanvasParticipationSettingsTooltip,
+          icon: const Icon(Icons.tune_rounded),
+          onPressed: () {
+            ref.haptics.buttonTap();
+            showCanvasParticipationSettingsSheet(context: context);
+          },
+        ),
         IconButton(
           key: const ValueKey('mesh-canvas-overview-help'),
           tooltip: l.meshCanvasHelpTooltip,
@@ -165,11 +225,26 @@ class _LocalTabContent extends ConsumerWidget {
 }
 
 /// Mesh mode body — lists channel canvases (latent or live).
+///
+/// IA gate (CANVAS_PARTICIPATION_V0_1.md §5.2): when the user has not
+/// opted into mesh participation, this widget renders ONLY the calm
+/// "Join mesh canvases" CTA card. No hero, no PRIMARY COMMONS, no
+/// OTHER CHANNELS — hiding the channel list entirely prevents any
+/// tap that would surface a viewer (and therefore a presence /
+/// attach / send) before consent.
 class _MeshTabContent extends ConsumerWidget {
   const _MeshTabContent();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final participationEnabled = ref.watch(
+      meshCanvasParticipationEnabledProvider,
+    );
+    if (!participationEnabled) {
+      return const SingleChildScrollView(
+        child: CanvasParticipationDisabledCard(),
+      );
+    }
     final latentAsync = ref.watch(latentChannelCanvasesProvider);
     return latentAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),

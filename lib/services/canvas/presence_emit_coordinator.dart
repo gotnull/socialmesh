@@ -121,6 +121,21 @@ class PresenceEmitCoordinator {
   final CanvasOutboundGovernor _governor;
   final CanvasOutboundChannel _outbound;
   final int? Function() _localNodeNumProvider;
+
+  /// Hard participation + sharing gate (CANVAS_PARTICIPATION_V0_1.md
+  /// §5.4). Returns `true` ONLY when both
+  /// `meshCanvasParticipationEnabledProvider` AND
+  /// `meshCanvasPresenceSharingEnabledProvider` are on. Every public
+  /// method short-circuits when this returns `false`:
+  ///   - `attachViewer` is a full no-op (no self seed in cache, no
+  ///     session-id, no wire emit). Per locked design decision: when
+  ///     the user is not sharing, they do not exist in the cache.
+  ///   - `notifyInteraction` / `notifyPaintEnqueued` are no-ops.
+  ///   - `tick` heartbeat skips both sweep + outbound work.
+  ///   - `detachViewer` is a no-op (nothing to evict, no leaving frame).
+  /// Default `() => true` so pre-S5 tests that construct the
+  /// coordinator without the gate stay green.
+  final bool Function() _canEmit;
   final int Function() _nowMs;
 
   final Map<int, _ViewerSession> _sessions = <int, _ViewerSession>{};
@@ -132,11 +147,13 @@ class PresenceEmitCoordinator {
     required CanvasOutboundGovernor governor,
     required CanvasOutboundChannel outbound,
     required int? Function() localNodeNumProvider,
+    bool Function()? canEmit,
     int Function()? nowMs,
   }) : _cache = cache,
        _governor = governor,
        _outbound = outbound,
        _localNodeNumProvider = localNodeNumProvider,
+       _canEmit = canEmit ?? (() => true),
        _nowMs = nowMs ?? (() => DateTime.now().millisecondsSinceEpoch);
 
   /// Number of currently attached viewer sessions. Test introspection.
@@ -174,6 +191,16 @@ class PresenceEmitCoordinator {
     required int canvasId,
   }) async {
     if (_disposed) return;
+    if (!_canEmit()) {
+      // CANVAS_PARTICIPATION_V0_1.md §5.4: skip self seed entirely.
+      // No cache mutation, no session, no wire emit. If sharing is
+      // off, the user does not exist in this graph.
+      AppLogging.meshCanvas(
+        'presence attachViewer skipped: sharing disabled '
+        'canvas=$canvasLocalId',
+      );
+      return;
+    }
     final localNodeNum = _localNodeNumProvider();
     if (localNodeNum == null) {
       AppLogging.meshCanvas(
@@ -232,6 +259,7 @@ class PresenceEmitCoordinator {
   /// starvation. Returns true if the wire emit succeeded.
   Future<bool> notifyInteraction(int canvasLocalId) async {
     if (_disposed) return false;
+    if (!_canEmit()) return false;
     final session = _sessions[canvasLocalId];
     if (session == null) return false;
     final nowMs = _nowMs();
@@ -256,6 +284,7 @@ class PresenceEmitCoordinator {
   /// starvation. Returns true if the wire emit succeeded.
   Future<bool> notifyPaintEnqueued(int canvasLocalId) async {
     if (_disposed) return false;
+    if (!_canEmit()) return false;
     final session = _sessions[canvasLocalId];
     if (session == null) return false;
     final nowMs = _nowMs();
@@ -284,6 +313,7 @@ class PresenceEmitCoordinator {
   /// drives natural decay back toward viewing.
   Future<int> tick({int? nowMs}) async {
     if (_disposed) return 0;
+    if (!_canEmit()) return 0;
     final now = nowMs ?? _nowMs();
     var sent = 0;
     // Snapshot keys because awaits inside the loop may mutate _sessions
@@ -333,6 +363,7 @@ class PresenceEmitCoordinator {
   /// viewing/active/painting was emitted").
   Future<void> detachViewer(int canvasLocalId) async {
     if (_disposed) return;
+    if (!_canEmit()) return;
     final session = _sessions.remove(canvasLocalId);
     if (session == null) return;
     _cache.evict(

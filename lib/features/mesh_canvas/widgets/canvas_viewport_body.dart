@@ -34,6 +34,7 @@ import '../../../services/canvas/canvas_constants.dart';
 import '../../../services/canvas/canvas_models.dart';
 import '../../../services/canvas/presence_emit_coordinator.dart';
 import '../../../services/haptic_service.dart';
+import '../providers/mesh_canvas_participation_providers.dart';
 import '../providers/mesh_canvas_providers.dart';
 import '../providers/presence_providers.dart';
 import 'canvas_color_strip.dart';
@@ -84,6 +85,22 @@ class CanvasViewportBody extends ConsumerWidget {
         opSeq: opSeq,
       );
     } else {
+      // Mesh Canvas: defence-in-depth participation gate. The Mesh
+      // tab in the overview hides the channel list when participation
+      // is off, but a deep-link / programmatic push could otherwise
+      // surface this viewer. Hard-block enqueue here so no
+      // `pending_op` row can land while participation is disabled.
+      // See docs/canvas/CANVAS_PARTICIPATION_V0_1.md §5.3.
+      final participationEnabled = ref.read(
+        meshCanvasParticipationEnabledProvider,
+      );
+      if (!participationEnabled) {
+        AppLogging.meshCanvas(
+          'mesh paint blocked: participation disabled '
+          '(canvas=${canvas.localId})',
+        );
+        return;
+      }
       // Mesh Canvas: enqueue into `pending_op` AND apply to local
       // `cell` / `applied_op` in one transaction. The local node_num
       // is the real author for mesh canvases — receivers use it for

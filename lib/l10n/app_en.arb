@@ -16535,6 +16535,102 @@
     "@meshCanvasHudEraserLabel": {
         "description": "Label shown in the selected colour HUD pill when the transparent / erase swatch is active."
     },
+    "meshCanvasOnboardingTitle": "MeshCanvas",
+    "@meshCanvasOnboardingTitle": {
+        "description": "Title of the MeshCanvas first-run participation onboarding bottom sheet."
+    },
+    "meshCanvasOnboardingIntro": "A shared pixel wall carried by nearby radios.",
+    "@meshCanvasOnboardingIntro": {
+        "description": "Intro line under the onboarding sheet title. Sets the mesh-native / packet-radio mental model."
+    },
+    "meshCanvasOnboardingRowLocalTitle": "Local Device Canvas",
+    "@meshCanvasOnboardingRowLocalTitle": {
+        "description": "Title of the Local Device Canvas explainer row in the MeshCanvas onboarding sheet."
+    },
+    "meshCanvasOnboardingRowLocalBody": "A private sandbox on this phone. Paints stay on the device. No airtime used.",
+    "@meshCanvasOnboardingRowLocalBody": {
+        "description": "Body of the Local Device Canvas explainer row in the MeshCanvas onboarding sheet."
+    },
+    "meshCanvasOnboardingRowMeshTitle": "Mesh canvases",
+    "@meshCanvasOnboardingRowMeshTitle": {
+        "description": "Title of the Mesh canvases explainer row in the MeshCanvas onboarding sheet."
+    },
+    "meshCanvasOnboardingRowMeshBody": "One canvas per Meshtastic channel you're on. Paints travel on that channel. Uses a small amount of mesh airtime.",
+    "@meshCanvasOnboardingRowMeshBody": {
+        "description": "Body of the Mesh canvases explainer row in the MeshCanvas onboarding sheet."
+    },
+    "meshCanvasOnboardingRowPresenceTitle": "Presence (optional)",
+    "@meshCanvasOnboardingRowPresenceTitle": {
+        "description": "Title of the Presence explainer row in the MeshCanvas onboarding sheet. Marks the optional opt-in nature."
+    },
+    "meshCanvasOnboardingRowPresenceBody": "Show others that you're viewing or painting. Off by default. Your presence is temporary and fades automatically. You can enable this later in settings.",
+    "@meshCanvasOnboardingRowPresenceBody": {
+        "description": "Body of the Presence explainer row in the MeshCanvas onboarding sheet. Sets expectations that presence is conservative-default."
+    },
+    "meshCanvasOnboardingActionExplore": "Explore locally",
+    "@meshCanvasOnboardingActionExplore": {
+        "description": "Secondary action on the MeshCanvas onboarding sheet. Opts into Local Device Canvas only — no mesh participation, no presence sharing."
+    },
+    "meshCanvasOnboardingActionJoin": "Join MeshCanvas",
+    "@meshCanvasOnboardingActionJoin": {
+        "description": "Primary action on the MeshCanvas onboarding sheet. Opts into mesh canvas participation; presence sharing remains off until separately enabled in settings."
+    },
+    "meshCanvasParticipationCtaTitle": "Join mesh canvases",
+    "@meshCanvasParticipationCtaTitle": {
+        "description": "Title of the calm CTA card shown on the MeshCanvas Mesh tab while mesh participation is disabled."
+    },
+    "meshCanvasParticipationCtaBody": "Paints travel on your channel. Uses a small amount of mesh airtime.",
+    "@meshCanvasParticipationCtaBody": {
+        "description": "Body copy on the calm CTA card. Sets expectation that joining will use a small amount of mesh airtime."
+    },
+    "meshCanvasParticipationCtaAction": "Enable when you're ready",
+    "@meshCanvasParticipationCtaAction": {
+        "description": "Action label on the calm CTA card. Tapping flips mesh participation on."
+    },
+    "meshCanvasParticipationSettingsTitle": "MeshCanvas settings",
+    "@meshCanvasParticipationSettingsTitle": {
+        "description": "Title of the MeshCanvas participation settings bottom sheet."
+    },
+    "meshCanvasParticipationSectionParticipation": "PARTICIPATION",
+    "@meshCanvasParticipationSectionParticipation": {
+        "description": "Uppercase section header above the participation + presence toggles in the MeshCanvas settings sheet."
+    },
+    "meshCanvasParticipationToggleParticipationTitle": "Mesh participation",
+    "@meshCanvasParticipationToggleParticipationTitle": {
+        "description": "Title of the mesh participation toggle row in the MeshCanvas settings sheet."
+    },
+    "meshCanvasParticipationToggleParticipationBody": "Paint on channel canvases. Uses mesh airtime.",
+    "@meshCanvasParticipationToggleParticipationBody": {
+        "description": "Subtitle of the mesh participation toggle row."
+    },
+    "meshCanvasParticipationTogglePresenceTitle": "Share my presence",
+    "@meshCanvasParticipationTogglePresenceTitle": {
+        "description": "Title of the presence sharing toggle row in the MeshCanvas settings sheet."
+    },
+    "meshCanvasParticipationTogglePresenceBody": "Let others see when you're viewing or painting.",
+    "@meshCanvasParticipationTogglePresenceBody": {
+        "description": "Subtitle of the presence sharing toggle row."
+    },
+    "meshCanvasParticipationTogglePresenceDisabledTooltip": "Enable mesh participation first.",
+    "@meshCanvasParticipationTogglePresenceDisabledTooltip": {
+        "description": "Tooltip / inline hint shown when the presence sharing toggle is disabled because mesh participation is off."
+    },
+    "meshCanvasParticipationSectionAbout": "ABOUT",
+    "@meshCanvasParticipationSectionAbout": {
+        "description": "Uppercase section header above the About rows (help + replay onboarding) in the MeshCanvas settings sheet."
+    },
+    "meshCanvasParticipationAboutHelp": "What is MeshCanvas?",
+    "@meshCanvasParticipationAboutHelp": {
+        "description": "Tappable row in the About section that opens the canonical MeshCanvas help sheet."
+    },
+    "meshCanvasParticipationAboutReplayOnboarding": "Replay onboarding",
+    "@meshCanvasParticipationAboutReplayOnboarding": {
+        "description": "Tappable row in the About section that re-opens the first-run participation onboarding sheet."
+    },
+    "meshCanvasParticipationSettingsTooltip": "MeshCanvas settings",
+    "@meshCanvasParticipationSettingsTooltip": {
+        "description": "Tooltip for the settings icon in the MeshCanvas overview app bar that opens the participation settings sheet."
+    },
     "meshCanvasVitalsScopeMesh": "MESH CANVAS",
     "@meshCanvasVitalsScopeMesh": {
         "description": "Uppercase scope badge at the top-left of the MeshCanvas viewer vitals bar. Identifies the surface as a per-channel mesh canvas."

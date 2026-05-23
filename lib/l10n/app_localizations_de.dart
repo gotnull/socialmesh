@@ -12516,6 +12516,91 @@ class AppLocalizationsDe extends AppLocalizations {
   String get meshCanvasHudEraserLabel => 'Radierer';
 
   @override
+  String get meshCanvasOnboardingTitle => 'MeshCanvas';
+
+  @override
+  String get meshCanvasOnboardingIntro =>
+      'Eine geteilte Pixelwand, getragen von nahen Funkgeräten.';
+
+  @override
+  String get meshCanvasOnboardingRowLocalTitle => 'Lokale Geräte-Leinwand';
+
+  @override
+  String get meshCanvasOnboardingRowLocalBody =>
+      'Ein privater Sandkasten auf diesem Telefon. Pixel bleiben auf dem Gerät. Kein Funk-Verbrauch.';
+
+  @override
+  String get meshCanvasOnboardingRowMeshTitle => 'Mesh-Leinwände';
+
+  @override
+  String get meshCanvasOnboardingRowMeshBody =>
+      'Eine Leinwand pro Meshtastic-Kanal, auf dem du bist. Pixel reisen über diesen Kanal. Verbraucht etwas Funk-Sendezeit.';
+
+  @override
+  String get meshCanvasOnboardingRowPresenceTitle => 'Präsenz (optional)';
+
+  @override
+  String get meshCanvasOnboardingRowPresenceBody =>
+      'Zeigt anderen, dass du gerade ansiehst oder malst. Standardmäßig aus. Deine Präsenz ist flüchtig und verblasst automatisch. Du kannst sie später in den Einstellungen aktivieren.';
+
+  @override
+  String get meshCanvasOnboardingActionExplore => 'Lokal erkunden';
+
+  @override
+  String get meshCanvasOnboardingActionJoin => 'MeshCanvas beitreten';
+
+  @override
+  String get meshCanvasParticipationCtaTitle => 'Mesh-Leinwänden beitreten';
+
+  @override
+  String get meshCanvasParticipationCtaBody =>
+      'Pixel reisen über deinen Kanal. Verbraucht etwas Funk-Sendezeit.';
+
+  @override
+  String get meshCanvasParticipationCtaAction =>
+      'Aktivieren, wenn du bereit bist';
+
+  @override
+  String get meshCanvasParticipationSettingsTitle => 'MeshCanvas-Einstellungen';
+
+  @override
+  String get meshCanvasParticipationSectionParticipation => 'TEILNAHME';
+
+  @override
+  String get meshCanvasParticipationToggleParticipationTitle =>
+      'Mesh-Teilnahme';
+
+  @override
+  String get meshCanvasParticipationToggleParticipationBody =>
+      'Auf Kanal-Leinwänden malen. Verbraucht Funk-Sendezeit.';
+
+  @override
+  String get meshCanvasParticipationTogglePresenceTitle =>
+      'Meine Präsenz teilen';
+
+  @override
+  String get meshCanvasParticipationTogglePresenceBody =>
+      'Andere sehen, wenn du ansiehst oder malst.';
+
+  @override
+  String get meshCanvasParticipationTogglePresenceDisabledTooltip =>
+      'Aktiviere zuerst die Mesh-Teilnahme.';
+
+  @override
+  String get meshCanvasParticipationSectionAbout => 'ÜBER';
+
+  @override
+  String get meshCanvasParticipationAboutHelp => 'Was ist MeshCanvas?';
+
+  @override
+  String get meshCanvasParticipationAboutReplayOnboarding =>
+      'Einführung erneut anzeigen';
+
+  @override
+  String get meshCanvasParticipationSettingsTooltip =>
+      'MeshCanvas-Einstellungen';
+
+  @override
   String get meshCanvasVitalsScopeMesh => 'MESH-LEINWAND';
 
   @override

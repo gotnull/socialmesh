@@ -19,6 +19,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:socialmesh/core/widgets/animated_empty_state.dart';
 import 'package:socialmesh/features/mesh_canvas/providers/mesh_canvas_providers.dart';
@@ -71,7 +72,21 @@ Future<void> _pumpOverview(
   WidgetTester tester, {
   List<CanvasSummary> canvases = const [_localCanvas],
   List<ChannelConfig> channels = const [],
+  bool onboardingSeen = true,
+  bool participationEnabled = true,
+  bool presenceSharingEnabled = false,
 }) async {
+  // Seed SharedPreferences so the participation AsyncNotifier resolves
+  // synchronously into the expected state for the test scenario. The
+  // default mirrors the "user has already opted into mesh
+  // participation" state because most of these tests pre-date the
+  // participation gate and exercise the Mesh tab list directly.
+  SharedPreferences.setMockInitialValues({
+    'mesh_canvas.participation.onboarding_seen': onboardingSeen,
+    'mesh_canvas.participation.enabled': participationEnabled,
+    'mesh_canvas.participation.presence_sharing_enabled':
+        presenceSharingEnabled,
+  });
   // Build a unique set of canvas-cell overrides — the Local tab reads
   // canvasCellsProvider(_localCanvas.localId) AND every canvas in the
   // fixture; dedupe so Riverpod doesn't reject a double-override.
@@ -287,5 +302,119 @@ void main() {
       // A MeshCanvasViewerScreen route was pushed.
       expect(find.byType(MeshCanvasViewerScreen), findsOneWidget);
     });
+  });
+
+  // ────────────────────────────────────────────────────────────────
+  // S3 — participation gate + first-run trigger.
+  // Spec: docs/canvas/CANVAS_PARTICIPATION_V0_1.md §5.1 + §5.2.
+  // ────────────────────────────────────────────────────────────────
+  group('MeshCanvasOverviewScreen — participation gate', () {
+    testWidgets(
+      'Mesh tab with participation disabled renders the calm CTA card '
+      'and NO channel list — channels stay hidden until explicit opt-in',
+      (tester) async {
+        await _pumpOverview(
+          tester,
+          channels: [
+            _channel(0, name: 'Primary', psk: const [1]),
+          ],
+          participationEnabled: false,
+        );
+
+        await tester.tap(find.text('Mesh'));
+        await tester.pumpAndSettle();
+
+        // The calm CTA card is present.
+        expect(find.text('Join mesh canvases'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('mesh-canvas-participation-enable')),
+          findsOneWidget,
+        );
+        // PRIMARY COMMONS / channel name MUST NOT appear — the entire
+        // channel list is suppressed until the user opts in.
+        expect(find.text('PRIMARY COMMONS'), findsNothing);
+        expect(find.text('Primary'), findsNothing);
+        expect(find.byType(ChannelCanvasThumbnail), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'tapping the calm CTA flips participation on and the channel list '
+      'appears on the next pump',
+      (tester) async {
+        await _pumpOverview(
+          tester,
+          channels: [
+            _channel(0, name: 'Primary', psk: const [1]),
+          ],
+          participationEnabled: false,
+        );
+
+        await tester.tap(find.text('Mesh'));
+        await tester.pumpAndSettle();
+        expect(find.text('Join mesh canvases'), findsOneWidget);
+
+        await tester.tap(
+          find.byKey(const ValueKey('mesh-canvas-participation-enable')),
+        );
+        await tester.pumpAndSettle();
+
+        // Channel list now visible.
+        expect(find.text('PRIMARY COMMONS'), findsOneWidget);
+        expect(find.text('Primary'), findsOneWidget);
+        expect(find.text('Join mesh canvases'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'onboardingSeen=false → onboarding sheet appears on overview mount',
+      (tester) async {
+        await _pumpOverview(
+          tester,
+          channels: [
+            _channel(0, name: 'Primary', psk: const [1]),
+          ],
+          onboardingSeen: false,
+          participationEnabled: false,
+        );
+        // Drain the post-frame callback + sheet animation.
+        await tester.pumpAndSettle();
+
+        // Sheet body marker — both CTAs uniquely identify the sheet.
+        expect(
+          find.byKey(const ValueKey('mesh-canvas-onboarding-explore')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('mesh-canvas-onboarding-join')),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'onboardingSeen=true → onboarding sheet does NOT appear on mount',
+      (tester) async {
+        await _pumpOverview(
+          tester,
+          channels: [
+            _channel(0, name: 'Primary', psk: const [1]),
+          ],
+          onboardingSeen: true,
+          participationEnabled: true,
+        );
+        await tester.pumpAndSettle();
+
+        // Neither CTA is present — sheet stayed shut.
+        expect(
+          find.byKey(const ValueKey('mesh-canvas-onboarding-explore')),
+          findsNothing,
+        );
+        expect(
+          find.byKey(const ValueKey('mesh-canvas-onboarding-join')),
+          findsNothing,
+        );
+      },
+    );
   });
 }

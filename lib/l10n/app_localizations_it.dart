@@ -12488,6 +12488,90 @@ class AppLocalizationsIt extends AppLocalizations {
   String get meshCanvasHudEraserLabel => 'Gomma';
 
   @override
+  String get meshCanvasOnboardingTitle => 'MeshCanvas';
+
+  @override
+  String get meshCanvasOnboardingIntro =>
+      'Un muro di pixel condiviso, trasportato dalle radio vicine.';
+
+  @override
+  String get meshCanvasOnboardingRowLocalTitle => 'Tela locale del dispositivo';
+
+  @override
+  String get meshCanvasOnboardingRowLocalBody =>
+      'Una sandbox privata su questo telefono. I pixel restano sul dispositivo. Nessun tempo d\'antenna utilizzato.';
+
+  @override
+  String get meshCanvasOnboardingRowMeshTitle => 'Tele mesh';
+
+  @override
+  String get meshCanvasOnboardingRowMeshBody =>
+      'Una tela per ogni canale Meshtastic su cui sei. I pixel viaggiano su quel canale. Usa una piccola quantità di tempo d\'antenna della mesh.';
+
+  @override
+  String get meshCanvasOnboardingRowPresenceTitle => 'Presenza (opzionale)';
+
+  @override
+  String get meshCanvasOnboardingRowPresenceBody =>
+      'Mostra agli altri che stai guardando o dipingendo. Disattivata per impostazione predefinita. La tua presenza è temporanea e svanisce automaticamente. Puoi attivarla più tardi nelle impostazioni.';
+
+  @override
+  String get meshCanvasOnboardingActionExplore => 'Esplora in locale';
+
+  @override
+  String get meshCanvasOnboardingActionJoin => 'Entra in MeshCanvas';
+
+  @override
+  String get meshCanvasParticipationCtaTitle => 'Entra nelle tele mesh';
+
+  @override
+  String get meshCanvasParticipationCtaBody =>
+      'I pixel viaggiano sul tuo canale. Usa una piccola quantità di tempo d\'antenna della mesh.';
+
+  @override
+  String get meshCanvasParticipationCtaAction => 'Attiva quando sei pronto';
+
+  @override
+  String get meshCanvasParticipationSettingsTitle => 'Impostazioni MeshCanvas';
+
+  @override
+  String get meshCanvasParticipationSectionParticipation => 'PARTECIPAZIONE';
+
+  @override
+  String get meshCanvasParticipationToggleParticipationTitle =>
+      'Partecipazione alla mesh';
+
+  @override
+  String get meshCanvasParticipationToggleParticipationBody =>
+      'Dipingi sulle tele del canale. Usa tempo d\'antenna della mesh.';
+
+  @override
+  String get meshCanvasParticipationTogglePresenceTitle =>
+      'Condividi la mia presenza';
+
+  @override
+  String get meshCanvasParticipationTogglePresenceBody =>
+      'Lascia che gli altri vedano quando stai guardando o dipingendo.';
+
+  @override
+  String get meshCanvasParticipationTogglePresenceDisabledTooltip =>
+      'Attiva prima la partecipazione alla mesh.';
+
+  @override
+  String get meshCanvasParticipationSectionAbout => 'INFORMAZIONI';
+
+  @override
+  String get meshCanvasParticipationAboutHelp => 'Cos\'è MeshCanvas?';
+
+  @override
+  String get meshCanvasParticipationAboutReplayOnboarding =>
+      'Rivedi l\'introduzione';
+
+  @override
+  String get meshCanvasParticipationSettingsTooltip =>
+      'Impostazioni MeshCanvas';
+
+  @override
   String get meshCanvasVitalsScopeMesh => 'TELA MESH';
 
   @override

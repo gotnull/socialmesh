@@ -33,6 +33,7 @@ import '../../../services/canvas/canvas_outbound_governor.dart';
 import '../../../services/canvas/canvas_repository.dart';
 import '../../../services/canvas/canvas_send_coordinator.dart';
 import '../../../services/canvas/mrrp_service_canvas.dart';
+import 'mesh_canvas_participation_providers.dart';
 import 'presence_providers.dart';
 
 /// Owns the `canvas.db` connection for the app's lifetime.
@@ -215,6 +216,11 @@ final canvasSendCoordinatorProvider = FutureProvider<CanvasSendCoordinator>((
     governor: governor,
     outbound: outbound,
     localNodeNumProvider: () => ref.read(myNodeNumProvider),
+    // Participation gate (CANVAS_PARTICIPATION_V0_1.md §5.3): drain()
+    // skips silently when the user has not opted into mesh
+    // participation. Rows stay in `pending_op` and resume on the
+    // next drain after re-enable.
+    canSend: () => ref.read(meshCanvasParticipationEnabledProvider),
   );
   return coordinator;
 });

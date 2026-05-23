@@ -12337,6 +12337,88 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshCanvasHudEraserLabel => 'Eraser';
 
   @override
+  String get meshCanvasOnboardingTitle => 'MeshCanvas';
+
+  @override
+  String get meshCanvasOnboardingIntro =>
+      'A shared pixel wall carried by nearby radios.';
+
+  @override
+  String get meshCanvasOnboardingRowLocalTitle => 'Local Device Canvas';
+
+  @override
+  String get meshCanvasOnboardingRowLocalBody =>
+      'A private sandbox on this phone. Paints stay on the device. No airtime used.';
+
+  @override
+  String get meshCanvasOnboardingRowMeshTitle => 'Mesh canvases';
+
+  @override
+  String get meshCanvasOnboardingRowMeshBody =>
+      'One canvas per Meshtastic channel you\'re on. Paints travel on that channel. Uses a small amount of mesh airtime.';
+
+  @override
+  String get meshCanvasOnboardingRowPresenceTitle => 'Presence (optional)';
+
+  @override
+  String get meshCanvasOnboardingRowPresenceBody =>
+      'Show others that you\'re viewing or painting. Off by default. Your presence is temporary and fades automatically. You can enable this later in settings.';
+
+  @override
+  String get meshCanvasOnboardingActionExplore => 'Explore locally';
+
+  @override
+  String get meshCanvasOnboardingActionJoin => 'Join MeshCanvas';
+
+  @override
+  String get meshCanvasParticipationCtaTitle => 'Join mesh canvases';
+
+  @override
+  String get meshCanvasParticipationCtaBody =>
+      'Paints travel on your channel. Uses a small amount of mesh airtime.';
+
+  @override
+  String get meshCanvasParticipationCtaAction => 'Enable when you\'re ready';
+
+  @override
+  String get meshCanvasParticipationSettingsTitle => 'MeshCanvas settings';
+
+  @override
+  String get meshCanvasParticipationSectionParticipation => 'PARTICIPATION';
+
+  @override
+  String get meshCanvasParticipationToggleParticipationTitle =>
+      'Mesh participation';
+
+  @override
+  String get meshCanvasParticipationToggleParticipationBody =>
+      'Paint on channel canvases. Uses mesh airtime.';
+
+  @override
+  String get meshCanvasParticipationTogglePresenceTitle => 'Share my presence';
+
+  @override
+  String get meshCanvasParticipationTogglePresenceBody =>
+      'Let others see when you\'re viewing or painting.';
+
+  @override
+  String get meshCanvasParticipationTogglePresenceDisabledTooltip =>
+      'Enable mesh participation first.';
+
+  @override
+  String get meshCanvasParticipationSectionAbout => 'ABOUT';
+
+  @override
+  String get meshCanvasParticipationAboutHelp => 'What is MeshCanvas?';
+
+  @override
+  String get meshCanvasParticipationAboutReplayOnboarding =>
+      'Replay onboarding';
+
+  @override
+  String get meshCanvasParticipationSettingsTooltip => 'MeshCanvas settings';
+
+  @override
   String get meshCanvasVitalsScopeMesh => 'MESH CANVAS';
 
   @override

@@ -21622,6 +21622,150 @@ abstract class AppLocalizations {
   /// **'Eraser'**
   String get meshCanvasHudEraserLabel;
 
+  /// Title of the MeshCanvas first-run participation onboarding bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'MeshCanvas'**
+  String get meshCanvasOnboardingTitle;
+
+  /// Intro line under the onboarding sheet title. Sets the mesh-native / packet-radio mental model.
+  ///
+  /// In en, this message translates to:
+  /// **'A shared pixel wall carried by nearby radios.'**
+  String get meshCanvasOnboardingIntro;
+
+  /// Title of the Local Device Canvas explainer row in the MeshCanvas onboarding sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Device Canvas'**
+  String get meshCanvasOnboardingRowLocalTitle;
+
+  /// Body of the Local Device Canvas explainer row in the MeshCanvas onboarding sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'A private sandbox on this phone. Paints stay on the device. No airtime used.'**
+  String get meshCanvasOnboardingRowLocalBody;
+
+  /// Title of the Mesh canvases explainer row in the MeshCanvas onboarding sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh canvases'**
+  String get meshCanvasOnboardingRowMeshTitle;
+
+  /// Body of the Mesh canvases explainer row in the MeshCanvas onboarding sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'One canvas per Meshtastic channel you\'re on. Paints travel on that channel. Uses a small amount of mesh airtime.'**
+  String get meshCanvasOnboardingRowMeshBody;
+
+  /// Title of the Presence explainer row in the MeshCanvas onboarding sheet. Marks the optional opt-in nature.
+  ///
+  /// In en, this message translates to:
+  /// **'Presence (optional)'**
+  String get meshCanvasOnboardingRowPresenceTitle;
+
+  /// Body of the Presence explainer row in the MeshCanvas onboarding sheet. Sets expectations that presence is conservative-default.
+  ///
+  /// In en, this message translates to:
+  /// **'Show others that you\'re viewing or painting. Off by default. Your presence is temporary and fades automatically. You can enable this later in settings.'**
+  String get meshCanvasOnboardingRowPresenceBody;
+
+  /// Secondary action on the MeshCanvas onboarding sheet. Opts into Local Device Canvas only — no mesh participation, no presence sharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore locally'**
+  String get meshCanvasOnboardingActionExplore;
+
+  /// Primary action on the MeshCanvas onboarding sheet. Opts into mesh canvas participation; presence sharing remains off until separately enabled in settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Join MeshCanvas'**
+  String get meshCanvasOnboardingActionJoin;
+
+  /// Title of the calm CTA card shown on the MeshCanvas Mesh tab while mesh participation is disabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Join mesh canvases'**
+  String get meshCanvasParticipationCtaTitle;
+
+  /// Body copy on the calm CTA card. Sets expectation that joining will use a small amount of mesh airtime.
+  ///
+  /// In en, this message translates to:
+  /// **'Paints travel on your channel. Uses a small amount of mesh airtime.'**
+  String get meshCanvasParticipationCtaBody;
+
+  /// Action label on the calm CTA card. Tapping flips mesh participation on.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable when you\'re ready'**
+  String get meshCanvasParticipationCtaAction;
+
+  /// Title of the MeshCanvas participation settings bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'MeshCanvas settings'**
+  String get meshCanvasParticipationSettingsTitle;
+
+  /// Uppercase section header above the participation + presence toggles in the MeshCanvas settings sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'PARTICIPATION'**
+  String get meshCanvasParticipationSectionParticipation;
+
+  /// Title of the mesh participation toggle row in the MeshCanvas settings sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh participation'**
+  String get meshCanvasParticipationToggleParticipationTitle;
+
+  /// Subtitle of the mesh participation toggle row.
+  ///
+  /// In en, this message translates to:
+  /// **'Paint on channel canvases. Uses mesh airtime.'**
+  String get meshCanvasParticipationToggleParticipationBody;
+
+  /// Title of the presence sharing toggle row in the MeshCanvas settings sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Share my presence'**
+  String get meshCanvasParticipationTogglePresenceTitle;
+
+  /// Subtitle of the presence sharing toggle row.
+  ///
+  /// In en, this message translates to:
+  /// **'Let others see when you\'re viewing or painting.'**
+  String get meshCanvasParticipationTogglePresenceBody;
+
+  /// Tooltip / inline hint shown when the presence sharing toggle is disabled because mesh participation is off.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable mesh participation first.'**
+  String get meshCanvasParticipationTogglePresenceDisabledTooltip;
+
+  /// Uppercase section header above the About rows (help + replay onboarding) in the MeshCanvas settings sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'ABOUT'**
+  String get meshCanvasParticipationSectionAbout;
+
+  /// Tappable row in the About section that opens the canonical MeshCanvas help sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'What is MeshCanvas?'**
+  String get meshCanvasParticipationAboutHelp;
+
+  /// Tappable row in the About section that re-opens the first-run participation onboarding sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay onboarding'**
+  String get meshCanvasParticipationAboutReplayOnboarding;
+
+  /// Tooltip for the settings icon in the MeshCanvas overview app bar that opens the participation settings sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'MeshCanvas settings'**
+  String get meshCanvasParticipationSettingsTooltip;
+
   /// Uppercase scope badge at the top-left of the MeshCanvas viewer vitals bar. Identifies the surface as a per-channel mesh canvas.
   ///
   /// In en, this message translates to:

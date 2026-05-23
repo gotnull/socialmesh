@@ -139,6 +139,15 @@ class CanvasSendCoordinator {
   final CanvasOutboundGovernor _governor;
   final CanvasOutboundChannel _outbound;
   final int? Function() _localNodeNumProvider;
+
+  /// Participation gate (CANVAS_PARTICIPATION_V0_1.md §5.3). Returns
+  /// `true` when the user has opted into mesh participation. `drain`
+  /// silently skips when this returns `false` and leaves rows in
+  /// `pending_op` untouched (re-enabling participation later resumes
+  /// the queue; we never drop user work). Default `() => true` keeps
+  /// pre-existing tests that construct the coordinator without the
+  /// gate green.
+  final bool Function() _canSend;
   final int Function() _nowMs;
   final _BatchSeqCounter _batchSeq = _BatchSeqCounter();
 
@@ -170,11 +179,13 @@ class CanvasSendCoordinator {
     required CanvasOutboundGovernor governor,
     required CanvasOutboundChannel outbound,
     required int? Function() localNodeNumProvider,
+    bool Function()? canSend,
     int Function()? nowMs,
   }) : _repository = repository,
        _governor = governor,
        _outbound = outbound,
        _localNodeNumProvider = localNodeNumProvider,
+       _canSend = canSend ?? (() => true),
        _nowMs = nowMs ?? (() => DateTime.now().millisecondsSinceEpoch);
 
   /// Maximum number of frames to emit in a single drain pass. Caps
@@ -191,6 +202,15 @@ class CanvasSendCoordinator {
   /// [maxFrames] frames have been emitted.
   Future<int> drain({int maxFrames = defaultMaxFramesPerDrain}) async {
     if (maxFrames <= 0) return 0;
+    if (!_canSend()) {
+      // Participation off — leave `pending_op` rows in place so they
+      // resume on re-enable. NEVER drop user work here.
+      // CANVAS_PARTICIPATION_V0_1.md §5.3.
+      AppLogging.meshCanvas(
+        'drain skipped: participation disabled', // lint-allow: hardcoded-string
+      );
+      return 0;
+    }
     final localNodeNum = _localNodeNumProvider();
     if (localNodeNum == null) {
       AppLogging.meshCanvas(

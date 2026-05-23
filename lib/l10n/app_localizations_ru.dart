@@ -12475,6 +12475,90 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshCanvasHudEraserLabel => 'Ластик';
 
   @override
+  String get meshCanvasOnboardingTitle => 'MeshCanvas';
+
+  @override
+  String get meshCanvasOnboardingIntro =>
+      'Общая пиксельная стена, которую несут ближайшие рации.';
+
+  @override
+  String get meshCanvasOnboardingRowLocalTitle => 'Локальный холст устройства';
+
+  @override
+  String get meshCanvasOnboardingRowLocalBody =>
+      'Частная песочница на этом телефоне. Пиксели остаются на устройстве. Эфирное время не используется.';
+
+  @override
+  String get meshCanvasOnboardingRowMeshTitle => 'Mesh-холсты';
+
+  @override
+  String get meshCanvasOnboardingRowMeshBody =>
+      'Один холст на каждый канал Meshtastic, в котором вы находитесь. Пиксели передаются по этому каналу. Использует небольшое количество эфирного времени меш-сети.';
+
+  @override
+  String get meshCanvasOnboardingRowPresenceTitle => 'Присутствие (по желанию)';
+
+  @override
+  String get meshCanvasOnboardingRowPresenceBody =>
+      'Показывает другим, что вы смотрите или рисуете. По умолчанию выключено. Ваше присутствие временное и автоматически исчезает. Вы можете включить его позже в настройках.';
+
+  @override
+  String get meshCanvasOnboardingActionExplore => 'Исследовать локально';
+
+  @override
+  String get meshCanvasOnboardingActionJoin => 'Присоединиться к MeshCanvas';
+
+  @override
+  String get meshCanvasParticipationCtaTitle => 'Присоединиться к mesh-холстам';
+
+  @override
+  String get meshCanvasParticipationCtaBody =>
+      'Пиксели передаются по вашему каналу. Использует небольшое количество эфирного времени меш-сети.';
+
+  @override
+  String get meshCanvasParticipationCtaAction =>
+      'Включить, когда будете готовы';
+
+  @override
+  String get meshCanvasParticipationSettingsTitle => 'Настройки MeshCanvas';
+
+  @override
+  String get meshCanvasParticipationSectionParticipation => 'УЧАСТИЕ';
+
+  @override
+  String get meshCanvasParticipationToggleParticipationTitle =>
+      'Участие в mesh';
+
+  @override
+  String get meshCanvasParticipationToggleParticipationBody =>
+      'Рисовать на холстах каналов. Использует эфирное время mesh.';
+
+  @override
+  String get meshCanvasParticipationTogglePresenceTitle =>
+      'Поделиться моим присутствием';
+
+  @override
+  String get meshCanvasParticipationTogglePresenceBody =>
+      'Позволить другим видеть, когда вы смотрите или рисуете.';
+
+  @override
+  String get meshCanvasParticipationTogglePresenceDisabledTooltip =>
+      'Сначала включите участие в mesh.';
+
+  @override
+  String get meshCanvasParticipationSectionAbout => 'О ПРОГРАММЕ';
+
+  @override
+  String get meshCanvasParticipationAboutHelp => 'Что такое MeshCanvas?';
+
+  @override
+  String get meshCanvasParticipationAboutReplayOnboarding =>
+      'Повторить ознакомление';
+
+  @override
+  String get meshCanvasParticipationSettingsTooltip => 'Настройки MeshCanvas';
+
+  @override
   String get meshCanvasVitalsScopeMesh => 'MESH-ХОЛСТ';
 
   @override
