@@ -12574,6 +12574,38 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshCanvasOverviewMeshSectionHeader => 'ПОЛОТНА КАНАЛІВ';
 
   @override
+  String get meshCanvasOverviewHeroBigUnit => 'пікселів намальовано';
+
+  @override
+  String meshCanvasOverviewHeroChannelsChip(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count каналів',
+      one: '1 канал',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshCanvasOverviewHeroLiveChip(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count активних',
+      one: '1 активний',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCanvasOverviewHeroSubtitleQuiet =>
+      'полотна каналів готові · малюй, щоб почати';
+
+  @override
+  String get meshCanvasOverviewHeroSubtitleActive => 'по всій мережі';
+
+  @override
   String meshCanvasPresenceCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

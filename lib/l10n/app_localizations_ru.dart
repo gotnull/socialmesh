@@ -12559,6 +12559,38 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshCanvasOverviewMeshSectionHeader => 'ХОЛСТЫ КАНАЛОВ';
 
   @override
+  String get meshCanvasOverviewHeroBigUnit => 'пикселей нарисовано';
+
+  @override
+  String meshCanvasOverviewHeroChannelsChip(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count каналов',
+      one: '1 канал',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshCanvasOverviewHeroLiveChip(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count активных',
+      one: '1 активный',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCanvasOverviewHeroSubtitleQuiet =>
+      'холсты каналов готовы · рисуй, чтобы начать';
+
+  @override
+  String get meshCanvasOverviewHeroSubtitleActive => 'по всему мешу';
+
+  @override
   String meshCanvasPresenceCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

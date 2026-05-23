@@ -15,8 +15,6 @@
 // This screen is purely additive — it reads from nodeDexProvider
 // and nodesProvider without modifying any existing functionality.
 
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,7 +33,9 @@ import '../../../providers/help_providers.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/ico_help_system.dart';
+import '../../../core/widgets/metric_chip.dart';
 import '../../../core/widgets/search_filter_header.dart';
+import '../../../core/widgets/staggered_list_tile.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/status_filter_chip.dart';
 import '../../../core/widgets/skeleton_config.dart';
@@ -491,7 +491,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
               onTap: () => _openDetail(entry, node),
             );
             if (reduceMotion) return tile;
-            return _StaggeredListTile(index: index, child: tile);
+            return StaggeredListTile(index: index, child: tile);
           }, childCount: myEntry.length),
         ),
       ],
@@ -515,7 +515,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
             );
             if (reduceMotion) return tile;
             // Offset by myEntry count so the stagger cascade is continuous.
-            return _StaggeredListTile(
+            return StaggeredListTile(
               index: myEntry.length + index,
               child: tile,
             );
@@ -1214,7 +1214,7 @@ class _NodeDexListTile extends ConsumerWidget {
                             size: TrustIndicatorSize.compact,
                           ),
                         // Encounter count
-                        _MetricChip(
+                        MetricChip(
                           icon: Icons.repeat,
                           value: entry.encounterCount.toString(),
                           tooltip: context.l10n.nodedexEncountersCount(
@@ -1222,7 +1222,7 @@ class _NodeDexListTile extends ConsumerWidget {
                           ),
                         ),
                         if (entry.maxDistanceSeen != null)
-                          _MetricChip(
+                          MetricChip(
                             icon: Icons.straighten,
                             value: _shortDistance(entry.maxDistanceSeen!),
                             tooltip: context.l10n.nodedexMaxRange(
@@ -1396,50 +1396,9 @@ class _DiscoveryAgeBadge extends StatelessWidget {
 }
 
 /// Compact metric chip showing an icon and value.
-class _MetricChip extends StatelessWidget {
-  final IconData icon;
-  final String value;
-  final String tooltip;
-
-  const _MetricChip({
-    required this.icon,
-    required this.value,
-    required this.tooltip,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = context.textTertiary;
-    return Tooltip(
-      message: tooltip,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(AppTheme.radius10),
-          border: Border.all(color: color.withValues(alpha: 0.25), width: 0.5),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 11, color: color),
-            const SizedBox(width: AppTheme.spacing3),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: color,
-                fontFamily: AppTheme.fontFamily,
-                letterSpacing: 0.2,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+// `_MetricChip` extracted to `lib/core/widgets/metric_chip.dart` so
+// MeshCanvas and any future feature can use the same primitive
+// without cross-feature import or duplication.
 
 /// Compact chip showing the radio preset a node was observed on.
 class _RadioPresetChip extends StatelessWidget {
@@ -1705,84 +1664,9 @@ class _PresetOption extends StatelessWidget {
 /// Each tile slides in from the right with a slight vertical offset and
 /// fades in, creating a cascading reveal effect. The stagger delay is
 /// capped so large lists don't wait forever.
-class _StaggeredListTile extends StatefulWidget {
-  final int index;
-  final Widget child;
-
-  const _StaggeredListTile({required this.index, required this.child});
-
-  @override
-  State<_StaggeredListTile> createState() => _StaggeredListTileState();
-}
-
-class _StaggeredListTileState extends State<_StaggeredListTile>
-    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _fade;
-  late final Animation<Offset> _slide;
-  bool _hasAnimated = false;
-
-  @override
-  bool get wantKeepAlive => _hasAnimated;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 320),
-    );
-
-    _fade = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.0, 0.7, curve: Curves.easeOut),
-    );
-
-    _slide = Tween<Offset>(
-      begin: const Offset(0.0, 0.08), // subtle rise from below
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
-
-    // Stagger delay: 40ms per tile, capped at 400ms.
-    // Use post-frame callback so the delay starts after the first frame
-    // renders, preventing Future.delayed from firing on a disposed widget.
-    final delay = math.min(widget.index * 40, 400);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (delay == 0) {
-        _controller.forward();
-        _hasAnimated = true;
-        updateKeepAlive();
-      } else {
-        Future.delayed(Duration(milliseconds: delay), () {
-          if (!mounted) return;
-          _controller.forward();
-          _hasAnimated = true;
-          updateKeepAlive();
-        });
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    super.build(context); // Required by AutomaticKeepAliveClientMixin
-    // If already animated (e.g. scrolled back into view), show without anim.
-    if (_hasAnimated && _controller.isCompleted) {
-      return widget.child;
-    }
-    return FadeTransition(
-      opacity: _fade,
-      child: SlideTransition(position: _slide, child: widget.child),
-    );
-  }
-}
+// `_StaggeredListTile` extracted to
+// `lib/core/widgets/staggered_list_tile.dart` so MeshCanvas and any
+// future feature can use the same primitive without duplication.
 
 // =============================================================================
 // Empty state

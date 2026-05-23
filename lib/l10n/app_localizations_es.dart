@@ -12631,6 +12631,38 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshCanvasOverviewMeshSectionHeader => 'LIENZOS DE CANAL';
 
   @override
+  String get meshCanvasOverviewHeroBigUnit => 'píxeles pintados';
+
+  @override
+  String meshCanvasOverviewHeroChannelsChip(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count canales',
+      one: '1 canal',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshCanvasOverviewHeroLiveChip(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count activos',
+      one: '1 activo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCanvasOverviewHeroSubtitleQuiet =>
+      'lienzos de canal listos · pinta para empezar';
+
+  @override
+  String get meshCanvasOverviewHeroSubtitleActive => 'en la malla';
+
+  @override
   String meshCanvasPresenceCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

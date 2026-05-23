@@ -12597,6 +12597,38 @@ class AppLocalizationsDe extends AppLocalizations {
   String get meshCanvasOverviewMeshSectionHeader => 'KANAL-LEINWÄNDE';
 
   @override
+  String get meshCanvasOverviewHeroBigUnit => 'Pixel gemalt';
+
+  @override
+  String meshCanvasOverviewHeroChannelsChip(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Kanäle',
+      one: '1 Kanal',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshCanvasOverviewHeroLiveChip(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count aktiv',
+      one: '1 aktiv',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCanvasOverviewHeroSubtitleQuiet =>
+      'Kanal-Leinwände bereit · zum Starten malen';
+
+  @override
+  String get meshCanvasOverviewHeroSubtitleActive => 'über das Mesh';
+
+  @override
   String meshCanvasPresenceCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

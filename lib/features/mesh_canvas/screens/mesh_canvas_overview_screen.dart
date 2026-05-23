@@ -43,10 +43,15 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animated_empty_state.dart';
 import '../../../core/widgets/chip_selector.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../core/widgets/gradient_border_container.dart';
+import '../../../core/widgets/metric_chip.dart';
+import '../../../core/widgets/section_header.dart';
+import '../../../core/widgets/staggered_list_tile.dart';
 import '../../../services/canvas/canvas_models.dart';
 import '../../../services/haptic_service.dart';
 import '../providers/mesh_canvas_providers.dart';
 import '../widgets/canvas_help_sheet.dart';
+import '../widgets/canvas_overview_hero_card.dart';
 import '../widgets/canvas_viewport_body.dart';
 import '../widgets/channel_canvas_thumbnail.dart';
 import 'mesh_canvas_viewer_screen.dart';
@@ -178,30 +183,36 @@ class _MeshTabContent extends ConsumerWidget {
       ),
       data: (rows) {
         if (rows.isEmpty) return const _OverviewEmptyState();
-        // Section header + cards. Section header gives vertical
-        // rhythm and signals "this is a typed surface, not a list
-        // of canvases-in-general" — every row below is a channel
-        // canvas.
+        // Aggregate stats for the hero card: total mesh channels
+        // configured, how many have a materialised canvas with any
+        // paint history, and the cumulative painted-cell count
+        // across every mesh canvas.
+        var liveCount = 0;
+        var totalPaintedCells = 0;
+        for (final row in rows) {
+          final m = row.materialised;
+          if (m == null) continue;
+          if (m.cellCount > 0) liveCount++;
+          totalPaintedCells += m.cellCount;
+        }
         return CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppTheme.spacing16,
-                  AppTheme.spacing8,
-                  AppTheme.spacing16,
-                  AppTheme.spacing8,
-                ),
-                child: Text(
-                  context.l10n.meshCanvasOverviewMeshSectionHeader,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: context.textTertiary,
-                    fontFamily: AppTheme.fontFamily,
-                    letterSpacing: 1.4,
-                  ),
-                ),
+              child: CanvasOverviewHeroCard(
+                channelCount: rows.length,
+                liveCount: liveCount,
+                totalPaintedCells: totalPaintedCells,
+              ),
+            ),
+            // Pinned blurred section header — same primitive
+            // NodeDex / Presence / Capacity use. Count badge matches
+            // the latent-channel count (channels surfaced, not just
+            // live canvases).
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: SectionHeaderDelegate(
+                title: context.l10n.meshCanvasOverviewMeshSectionHeader,
+                count: rows.length,
               ),
             ),
             SliverPadding(
@@ -215,8 +226,10 @@ class _MeshTabContent extends ConsumerWidget {
                 itemCount: rows.length,
                 separatorBuilder: (_, _) =>
                     const SizedBox(height: AppTheme.spacing12),
-                itemBuilder: (context, index) =>
-                    _LatentChannelCard(latent: rows[index]),
+                itemBuilder: (context, index) => StaggeredListTile(
+                  index: index,
+                  child: _LatentChannelCard(latent: rows[index]),
+                ),
               ),
             ),
           ],
@@ -343,21 +356,33 @@ class _LatentChannelCard extends ConsumerWidget {
           )
         : _LiveThumbnail(canvasLocalId: latent.materialised!.localId);
 
-    return Material(
-      color: context.card,
-      borderRadius: BorderRadius.circular(AppTheme.radius12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-        onTap: () => _open(context, ref),
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spacing12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              thumbnail,
-              const SizedBox(width: AppTheme.spacing16),
-              Expanded(child: _ChannelCardText(latent: latent)),
-            ],
+    // Live channels render with a stronger accent border to draw the
+    // eye toward channels that already have activity. Dormant
+    // channels use a quieter accentOpacity so they recede.
+    final isLive =
+        latent.materialised != null && latent.materialised!.cellCount > 0;
+    return GradientBorderContainer(
+      borderRadius: AppTheme.radius16,
+      borderWidth: 1.0,
+      accentOpacity: isLive ? 0.55 : 0.25,
+      enableDepthBlend: isLive,
+      depthBlendOpacity: 0.10,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppTheme.radius16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppTheme.radius16),
+          onTap: () => _open(context, ref),
+          child: Padding(
+            padding: const EdgeInsets.all(AppTheme.spacing12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                thumbnail,
+                const SizedBox(width: AppTheme.spacing16),
+                Expanded(child: _ChannelCardText(latent: latent)),
+              ],
+            ),
           ),
         ),
       ),
@@ -485,16 +510,20 @@ class _ActiveMetadata extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final m = latent.materialised!;
-    final count = l.meshCanvasOverviewCellCount(m.cellCount);
-    final when = _relativeActivityCluster(context, m.lastOpAtMs);
-    return Text(
-      '$count · $when', // lint-allow: hardcoded-string
-      style: TextStyle(
-        fontSize: 12,
-        color: context.textSecondary,
-        fontFamily: AppTheme.fontFamily,
-        letterSpacing: 0.2,
-      ),
+    return Wrap(
+      spacing: AppTheme.spacing6,
+      runSpacing: AppTheme.spacing6,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        MetricChip(
+          icon: Icons.brush_outlined,
+          value: l.meshCanvasOverviewCellCount(m.cellCount),
+        ),
+        MetricChip(
+          icon: Icons.schedule,
+          value: _relativeActivityCluster(context, m.lastOpAtMs),
+        ),
+      ],
     );
   }
 }

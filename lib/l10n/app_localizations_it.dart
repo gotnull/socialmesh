@@ -12569,6 +12569,38 @@ class AppLocalizationsIt extends AppLocalizations {
   String get meshCanvasOverviewMeshSectionHeader => 'TELE DEL CANALE';
 
   @override
+  String get meshCanvasOverviewHeroBigUnit => 'pixel dipinti';
+
+  @override
+  String meshCanvasOverviewHeroChannelsChip(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count canali',
+      one: '1 canale',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshCanvasOverviewHeroLiveChip(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attivi',
+      one: '1 attivo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCanvasOverviewHeroSubtitleQuiet =>
+      'tele di canale pronte · dipingi per iniziare';
+
+  @override
+  String get meshCanvasOverviewHeroSubtitleActive => 'attraverso la mesh';
+
+  @override
   String meshCanvasPresenceCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

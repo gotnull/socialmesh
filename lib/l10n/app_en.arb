@@ -16632,6 +16632,36 @@
     "@meshCanvasOverviewMeshSectionHeader": {
         "description": "Small uppercase section header above the list of channel canvas cards in the Mesh tab. Communicates the typed surface: every row below is a channel canvas. Atmospheric / packet-radio register; keep short."
     },
+    "meshCanvasOverviewHeroBigUnit": "pixels painted",
+    "@meshCanvasOverviewHeroBigUnit": {
+        "description": "Unit label beside the large painted-pixel count in the Mesh tab hero stats card. Reads as 'N pixels painted'. Mesh-native register."
+    },
+    "meshCanvasOverviewHeroChannelsChip": "{count, plural, =1{1 channel} other{{count} channels}}",
+    "@meshCanvasOverviewHeroChannelsChip": {
+        "description": "Status chip in the Mesh tab hero stats card showing how many Meshtastic channels are configured / surfaced as latent canvases.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshCanvasOverviewHeroLiveChip": "{count, plural, =1{1 live} other{{count} live}}",
+    "@meshCanvasOverviewHeroLiveChip": {
+        "description": "Status chip in the Mesh tab hero stats card showing how many of the configured channels have a materialised canvas with at least one painted cell.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshCanvasOverviewHeroSubtitleQuiet": "channel canvases ready · paint to begin",
+    "@meshCanvasOverviewHeroSubtitleQuiet": {
+        "description": "Mesh tab hero subtitle when no mesh canvases have any painted cells yet. Mesh-native tone, no SaaS language."
+    },
+    "meshCanvasOverviewHeroSubtitleActive": "across the mesh",
+    "@meshCanvasOverviewHeroSubtitleActive": {
+        "description": "Mesh tab hero subtitle when at least one mesh canvas has paint activity. Reads as 'N pixels painted across the mesh'."
+    },
     "meshCanvasPresenceCount": "{count, plural, =1{1 radio here} other{{count} radios here}}",
     "@meshCanvasPresenceCount": {
         "description": "Pill label on the canvas HUD presence strip when no one is painting. Mesh-native tone. Singular form is special-cased so we never render '1 radios'. Banned: SaaS collaboration vocabulary (users / collaborate / community / online / active members).",

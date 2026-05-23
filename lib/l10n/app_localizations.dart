@@ -21748,6 +21748,36 @@ abstract class AppLocalizations {
   /// **'CHANNEL CANVASES'**
   String get meshCanvasOverviewMeshSectionHeader;
 
+  /// Unit label beside the large painted-pixel count in the Mesh tab hero stats card. Reads as 'N pixels painted'. Mesh-native register.
+  ///
+  /// In en, this message translates to:
+  /// **'pixels painted'**
+  String get meshCanvasOverviewHeroBigUnit;
+
+  /// Status chip in the Mesh tab hero stats card showing how many Meshtastic channels are configured / surfaced as latent canvases.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 channel} other{{count} channels}}'**
+  String meshCanvasOverviewHeroChannelsChip(int count);
+
+  /// Status chip in the Mesh tab hero stats card showing how many of the configured channels have a materialised canvas with at least one painted cell.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 live} other{{count} live}}'**
+  String meshCanvasOverviewHeroLiveChip(int count);
+
+  /// Mesh tab hero subtitle when no mesh canvases have any painted cells yet. Mesh-native tone, no SaaS language.
+  ///
+  /// In en, this message translates to:
+  /// **'channel canvases ready · paint to begin'**
+  String get meshCanvasOverviewHeroSubtitleQuiet;
+
+  /// Mesh tab hero subtitle when at least one mesh canvas has paint activity. Reads as 'N pixels painted across the mesh'.
+  ///
+  /// In en, this message translates to:
+  /// **'across the mesh'**
+  String get meshCanvasOverviewHeroSubtitleActive;
+
   /// Pill label on the canvas HUD presence strip when no one is painting. Mesh-native tone. Singular form is special-cased so we never render '1 radios'. Banned: SaaS collaboration vocabulary (users / collaborate / community / online / active members).
   ///
   /// In en, this message translates to:

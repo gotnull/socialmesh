@@ -12417,6 +12417,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshCanvasOverviewMeshSectionHeader => 'CHANNEL CANVASES';
 
   @override
+  String get meshCanvasOverviewHeroBigUnit => 'pixels painted';
+
+  @override
+  String meshCanvasOverviewHeroChannelsChip(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count channels',
+      one: '1 channel',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshCanvasOverviewHeroLiveChip(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count live',
+      one: '1 live',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCanvasOverviewHeroSubtitleQuiet =>
+      'channel canvases ready · paint to begin';
+
+  @override
+  String get meshCanvasOverviewHeroSubtitleActive => 'across the mesh';
+
+  @override
   String meshCanvasPresenceCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
