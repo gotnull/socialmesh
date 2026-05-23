@@ -573,8 +573,18 @@ class _PresenceLifecycleHostState extends ConsumerState<_PresenceLifecycleHost>
     if (!mounted) return;
     final asyncCoord = ref.read(canvasSendCoordinatorProvider);
     final sendCoord = asyncCoord.asData?.value;
-    if (sendCoord == null) return;
-    unawaited(sendCoord.drain());
+    if (sendCoord != null) {
+      unawaited(sendCoord.drain());
+    }
+    // Resume any sender-side raw-band jobs whose subsequent bands
+    // were governor-deferred on the prior tick. CANVAS_SYNC_V0_1
+    // §11.2 — bands ship across drain cycles instead of being
+    // silently dropped after band 0.
+    final asyncSync = ref.read(canvasSyncCoordinatorProvider);
+    final syncCoord = asyncSync.asData?.value;
+    if (syncCoord != null) {
+      unawaited(syncCoord.drainRawBands());
+    }
   }
 
   @override

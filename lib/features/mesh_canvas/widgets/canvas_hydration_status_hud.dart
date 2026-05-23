@@ -45,11 +45,19 @@ class CanvasHydrationStatusHud extends ConsumerWidget {
     if (state == null || state == MeshCanvasHydrationState.idle) {
       return const SizedBox.shrink();
     }
+    // Raw-band progress (when a tile is partially hydrated): null
+    // means no in-progress band sets. The pill renders the X/8
+    // suffix when progress is available AND state is recovering
+    // or syncing. CANVAS_SYNC_V0_1.md §11.5.
+    final progressAsync = ref.watch(
+      meshCanvasBandProgressProvider(canvasLocalId),
+    );
+    final progress = progressAsync.asData?.value;
     return Semantics(
       label: _tooltipFor(context, state),
       child: Tooltip(
         message: _tooltipFor(context, state),
-        child: _HydrationPill(state: state),
+        child: _HydrationPill(state: state, bandProgress: progress),
       ),
     );
   }
@@ -71,8 +79,9 @@ class CanvasHydrationStatusHud extends ConsumerWidget {
 
 class _HydrationPill extends StatelessWidget {
   final MeshCanvasHydrationState state;
+  final ({int received, int total})? bandProgress;
 
-  const _HydrationPill({required this.state});
+  const _HydrationPill({required this.state, this.bandProgress});
 
   @override
   Widget build(BuildContext context) {
@@ -87,12 +96,18 @@ class _HydrationPill extends StatelessWidget {
     final tint = isAccent ? accent : context.textTertiary;
     final fill = tint.withValues(alpha: 0.12);
     final border = tint.withValues(alpha: 0.32);
-    final label = switch (state) {
+    final baseLabel = switch (state) {
       MeshCanvasHydrationState.idle => '',
       MeshCanvasHydrationState.recovering => l.meshCanvasHydrationRecovering,
       MeshCanvasHydrationState.syncing => l.meshCanvasHydrationSyncing,
       MeshCanvasHydrationState.quiet => l.meshCanvasHydrationQuiet,
     };
+    // Append `N/8` band progress when a raw tile is mid-flight AND
+    // we're in a recovery state. quiet/idle never show progress
+    // (they don't have any). Spec §11.5.
+    final label = (bandProgress != null && isAccent)
+        ? '$baseLabel ${bandProgress!.received}/${bandProgress!.total}'
+        : baseLabel;
     final iconData = switch (state) {
       MeshCanvasHydrationState.idle => Icons.brush_outlined,
       MeshCanvasHydrationState.recovering => Icons.download_outlined,

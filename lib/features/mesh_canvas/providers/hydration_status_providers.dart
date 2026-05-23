@@ -33,3 +33,21 @@ final meshCanvasHydrationStatusProvider =
         yield coordinator.hydrationStateFor(canvasLocalId);
       }
     });
+
+/// Raw-band reception progress for the canvas — `(received, total)`
+/// for the lowest-completion in-progress band set, or `null` when no
+/// raw-band sets are pending. HUD reads this alongside the
+/// hydration state to render `recovering 3/8` style chrome.
+/// Spec: CANVAS_SYNC_V0_1.md §11.5.
+final meshCanvasBandProgressProvider =
+    StreamProvider.family<({int received, int total})?, int>((
+      ref,
+      canvasLocalId,
+    ) async* {
+      final coordinator = await ref.watch(canvasSyncCoordinatorProvider.future);
+      yield coordinator.bandProgressForCanvas(canvasLocalId);
+      await for (final id in coordinator.changes) {
+        if (id != canvasLocalId) continue;
+        yield coordinator.bandProgressForCanvas(canvasLocalId);
+      }
+    });

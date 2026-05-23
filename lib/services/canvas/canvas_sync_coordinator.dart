@@ -83,6 +83,73 @@ class _PeerRequestWindow {
   _PeerRequestWindow(this.peerNodeNum);
 }
 
+/// One in-flight raw-band response job. Sender-side state — the 8
+/// pre-encoded band payloads sit here until they each successfully
+/// pass the governor + SIP limiter on their way out. Bands ship in
+/// order; `nextBandIndex` advances after each success. A successive
+/// drain tick (every 5 s from the lifecycle host) resumes from
+/// wherever the previous tick stopped.
+///
+/// Spec anchor: CANVAS_SYNC_V0_1.md §11.2.
+class _RawBandJob {
+  final int canvasId;
+  final int channelIndex;
+  final int peerNodeNum;
+  final int tileX;
+  final int tileY;
+  final List<Uint8List> bandPayloads;
+  int nextBandIndex;
+
+  _RawBandJob({
+    required this.canvasId,
+    required this.channelIndex,
+    required this.peerNodeNum,
+    required this.tileX,
+    required this.tileY,
+    required this.bandPayloads,
+  }) : nextBandIndex = 0;
+
+  int get totalBands => bandPayloads.length;
+  bool get complete => nextBandIndex >= bandPayloads.length;
+}
+
+/// One in-flight raw-band reception set. Receiver-side state — a
+/// bitmask of which bands have landed, the first-band-arrived
+/// timestamp, and a retry timer that fires if the set is still
+/// incomplete after 30 s.
+///
+/// Spec anchor: CANVAS_SYNC_V0_1.md §11.3.
+class _RawBandReceiveSet {
+  final int peerNodeNum;
+  final int tileX;
+  final int tileY;
+  int receivedBitmask;
+  final int firstReceivedAtMs;
+  Timer? retryTimer;
+  bool retryFired;
+
+  _RawBandReceiveSet({
+    required this.peerNodeNum,
+    required this.tileX,
+    required this.tileY,
+    required this.firstReceivedAtMs,
+  }) : receivedBitmask = 0,
+       retryTimer = null,
+       retryFired = false;
+
+  bool get complete => receivedBitmask == 0xFF;
+
+  int get receivedCount {
+    var count = 0;
+    var bits = receivedBitmask;
+    while (bits != 0) {
+      count += bits & 1;
+      bits >>= 1;
+    }
+    return count;
+  }
+}
+
 class CanvasSyncCoordinator {
   final CanvasRepository _repository;
   final CanvasOutboundChannel _outbound;
@@ -110,6 +177,14 @@ class CanvasSyncCoordinator {
   /// also empty.
   final Map<int, bool> _peerEmptyObserved = {};
 
+  /// Sender-side: pending raw-band response jobs, keyed by canvas
+  /// then by "$peer:$tileX:$tileY". Spec §11.2.
+  final Map<int, Map<String, _RawBandJob>> _rawBandJobsByCanvas = {};
+
+  /// Receiver-side: in-progress raw-band reception sets, keyed by
+  /// canvas then by "$peer:$tileX:$tileY". Spec §11.3.
+  final Map<int, Map<String, _RawBandReceiveSet>> _rawBandReceiveByCanvas = {};
+
   /// Stream controller broadcasting hydration-state changes per canvas.
   /// UI watches via `hydrationStateFor`.
   final StreamController<int> _hydrationChanges =
@@ -126,6 +201,13 @@ class CanvasSyncCoordinator {
   /// pending state so we may re-request later (e.g. after the peer
   /// re-emits a digest).
   static const Duration requestTimeout = Duration(seconds: 60);
+
+  /// Receiver-side raw-band reception timeout. If a band set hasn't
+  /// completed within this window of the first band landing, the
+  /// receiver re-emits one sync_request for the tile (and gives up
+  /// after that one retry — the next viewer mount picks up any
+  /// further missing bands via the digest cycle). Spec §11.3.
+  static const Duration rawBandReceiveTimeout = Duration(seconds: 30);
 
   CanvasSyncCoordinator({
     required CanvasRepository repository,
@@ -422,32 +504,162 @@ class CanvasSyncCoordinator {
         ),
       );
     } else {
-      // 8 bands of 32 wide × 4 tall = 128 cells each.
-      for (
-        var band = 0;
-        band < CanvasWireFormat.syncResponseRawBandCount;
-        band++
-      ) {
-        final offset = band * CanvasWireFormat.syncResponseRawBandCells;
-        final slice = Uint8List.fromList(
-          raster.sublist(
-            offset,
-            offset + CanvasWireFormat.syncResponseRawBandCells,
-          ),
-        );
-        await _sendSyncResponse(
-          canvasId: op.canvasId,
-          channelIndex: channelIndex,
-          op: CanvasSyncResponseOp(
-            canvasId: op.canvasId,
-            tileX: op.tileX,
-            tileY: op.tileY,
-            body: CanvasSyncResponseRawBandBody(bandIndex: band, cells: slice),
-          ),
-        );
-      }
+      // Dense tile → 8 raw bands. Enqueue all 8 pre-encoded payloads
+      // under a single job, then attempt immediate drain. Bands that
+      // can't ship right now (governor closed) stay queued; the
+      // periodic drainRawBands() tick from the lifecycle host ships
+      // them across subsequent windows. CANVAS_SYNC_V0_1.md §11.2.
+      await _enqueueRawBandJob(
+        canvas: canvas,
+        channelIndex: channelIndex,
+        peerNodeNum: senderNodeId,
+        op: op,
+        raster: raster,
+      );
+      await _drainRawBands(canvas.localId);
     }
   }
+
+  /// Pre-encode 8 raw-band payloads for a tile and enqueue them as a
+  /// single resumable job. Duplicate sync_request for the same
+  /// (peer, tile) finds an existing job → log + return (the
+  /// existing job is already working on it; sending another set
+  /// would waste airtime).
+  Future<void> _enqueueRawBandJob({
+    required CanvasSummary canvas,
+    required int channelIndex,
+    required int peerNodeNum,
+    required CanvasSyncRequestOp op,
+    required Uint8List raster,
+  }) async {
+    final jobs = _rawBandJobsByCanvas.putIfAbsent(canvas.localId, () => {});
+    final key = _jobKey(peerNodeNum, op.tileX, op.tileY);
+    if (jobs.containsKey(key)) {
+      AppLogging.meshCanvas(
+        'sync raw_band_queue duplicate_sync_request '
+        'canvas=${canvas.localId} tile=${op.tileX},${op.tileY} '
+        'peer=0x${peerNodeNum.toRadixString(16)}',
+      );
+      return;
+    }
+    final payloads = <Uint8List>[];
+    for (
+      var band = 0;
+      band < CanvasWireFormat.syncResponseRawBandCount;
+      band++
+    ) {
+      final offset = band * CanvasWireFormat.syncResponseRawBandCells;
+      final slice = Uint8List.fromList(
+        raster.sublist(
+          offset,
+          offset + CanvasWireFormat.syncResponseRawBandCells,
+        ),
+      );
+      final encoded = CanvasCodec.encodeSyncResponse(
+        CanvasSyncResponseOp(
+          canvasId: op.canvasId,
+          tileX: op.tileX,
+          tileY: op.tileY,
+          body: CanvasSyncResponseRawBandBody(bandIndex: band, cells: slice),
+        ),
+      );
+      if (encoded == null) {
+        AppLogging.meshCanvas(
+          'sync raw_band_queue drop_reason=encode_failed band=$band '
+          'tile=${op.tileX},${op.tileY}',
+        );
+        return;
+      }
+      payloads.add(encoded);
+    }
+    jobs[key] = _RawBandJob(
+      canvasId: op.canvasId,
+      channelIndex: channelIndex,
+      peerNodeNum: peerNodeNum,
+      tileX: op.tileX,
+      tileY: op.tileY,
+      bandPayloads: payloads,
+    );
+    AppLogging.meshCanvas(
+      'sync raw_band_queue size=${payloads.length} '
+      'canvas=${canvas.localId} tile=${op.tileX},${op.tileY} '
+      'peer=0x${peerNodeNum.toRadixString(16)}',
+    );
+  }
+
+  /// Ship as many bands as the governor allows for every job under
+  /// [canvasLocalId]. Stops on the first governor refusal, leaving
+  /// remaining bands queued for the next call.
+  Future<int> _drainRawBands(int canvasLocalId) async {
+    final jobs = _rawBandJobsByCanvas[canvasLocalId];
+    if (jobs == null || jobs.isEmpty) return 0;
+    var shipped = 0;
+    final keysSnapshot = jobs.keys.toList();
+    for (final key in keysSnapshot) {
+      final job = jobs[key];
+      if (job == null) continue;
+      while (!job.complete) {
+        final payload = job.bandPayloads[job.nextBandIndex];
+        if (!_governor.canSend(payload.length)) {
+          AppLogging.meshCanvas(
+            'sync raw_band_deferred_governor '
+            'remaining=${job.totalBands - job.nextBandIndex} '
+            'canvas=$canvasLocalId tile=${job.tileX},${job.tileY} '
+            'peer=0x${job.peerNodeNum.toRadixString(16)}',
+          );
+          return shipped;
+        }
+        final res = await _outbound.sendCanvasPayload(
+          canvasPayload: payload,
+          channelIndex: job.channelIndex,
+        );
+        if (res.outcome != CanvasSendOutcome.sent) {
+          AppLogging.meshCanvas(
+            'sync raw_band_deferred_governor '
+            'reason=${res.outcome.name} '
+            'remaining=${job.totalBands - job.nextBandIndex} '
+            'canvas=$canvasLocalId tile=${job.tileX},${job.tileY}',
+          );
+          return shipped;
+        }
+        _governor.recordSend(payload.length);
+        final bandIndex = job.nextBandIndex;
+        job.nextBandIndex++;
+        shipped++;
+        AppLogging.meshCanvas(
+          'sync raw_band_sent ${bandIndex + 1}/${job.totalBands} '
+          'canvas=$canvasLocalId tile=${job.tileX},${job.tileY} '
+          'peer=0x${job.peerNodeNum.toRadixString(16)} '
+          'payload=${payload.length}B',
+        );
+      }
+      jobs.remove(key);
+      AppLogging.meshCanvas(
+        'sync raw_band_drained canvas=$canvasLocalId '
+        'tile=${job.tileX},${job.tileY} '
+        'peer=0x${job.peerNodeNum.toRadixString(16)}',
+      );
+    }
+    if (jobs.isEmpty) {
+      _rawBandJobsByCanvas.remove(canvasLocalId);
+    }
+    return shipped;
+  }
+
+  /// Public drain entry point — the viewer lifecycle host calls
+  /// this on its periodic 5 s tick alongside the send coordinator's
+  /// own drain. Iterates every canvas with pending raw-band jobs.
+  Future<int> drainRawBands() async {
+    var totalShipped = 0;
+    final canvasIds = _rawBandJobsByCanvas.keys.toList();
+    for (final id in canvasIds) {
+      totalShipped += await _drainRawBands(id);
+    }
+    return totalShipped;
+  }
+
+  String _jobKey(int peerNodeNum, int tileX, int tileY) =>
+      '$peerNodeNum:$tileX:$tileY';
 
   Future<void> _sendSyncResponse({
     required int canvasId,
@@ -561,10 +773,121 @@ class CanvasSyncCoordinator {
       'reconstructed=${reconstructed.length} applied=$applied',
     );
 
-    // Mark this tile as resolved in the pending map.
+    // Track band completion per (peer, tile). For RLE responses the
+    // tile is complete on the single arrival; for raw bands we need
+    // all 8 to clear pending state and stop showing `recovering`.
+    final body = op.body;
     final pending = _pendingTiles(canvas.localId);
     final tileIdx = op.tileY * CanvasGeometry.tilesPerRow + op.tileX;
-    pending.remove(tileIdx);
+
+    if (body is CanvasSyncResponseRleBody) {
+      // RLE = single frame = whole tile delivered.
+      pending.remove(tileIdx);
+      return;
+    }
+    if (body is! CanvasSyncResponseRawBandBody) return;
+
+    // Raw band — update bitmask, retry on incomplete after 30 s.
+    _registerRawBandReceived(
+      canvas: canvas,
+      senderNodeId: senderNodeId,
+      channelIndex: channelIndex,
+      op: op,
+      bandIndex: body.bandIndex,
+      now: now,
+    );
+  }
+
+  /// Track a single raw-band arrival under its (peer, tile) set.
+  /// When the set reaches all 8 bands, clear the pending tile state.
+  /// Otherwise arm a 30 s retry that re-issues a sync_request for
+  /// the tile.
+  void _registerRawBandReceived({
+    required CanvasSummary canvas,
+    required int senderNodeId,
+    required int channelIndex,
+    required CanvasSyncResponseOp op,
+    required int bandIndex,
+    required int now,
+  }) {
+    final sets = _rawBandReceiveByCanvas.putIfAbsent(canvas.localId, () => {});
+    final key = _jobKey(senderNodeId, op.tileX, op.tileY);
+    var set = sets[key];
+    if (set == null) {
+      set = _RawBandReceiveSet(
+        peerNodeNum: senderNodeId,
+        tileX: op.tileX,
+        tileY: op.tileY,
+        firstReceivedAtMs: now,
+      );
+      sets[key] = set;
+    }
+    set.receivedBitmask |= (1 << bandIndex);
+    AppLogging.meshCanvas(
+      'sync raw_band_received ${set.receivedCount}/8 '
+      'canvas=${canvas.localId} tile=${op.tileX},${op.tileY} '
+      'band=$bandIndex from peer=0x${senderNodeId.toRadixString(16)}',
+    );
+
+    if (set.complete) {
+      AppLogging.meshCanvas(
+        'sync raw_band_complete canvas=${canvas.localId} '
+        'tile=${op.tileX},${op.tileY} '
+        'peer=0x${senderNodeId.toRadixString(16)}',
+      );
+      set.retryTimer?.cancel();
+      sets.remove(key);
+      if (sets.isEmpty) {
+        _rawBandReceiveByCanvas.remove(canvas.localId);
+      }
+      // Now the tile is genuinely done — release pending state.
+      final pending = _pendingTiles(canvas.localId);
+      final tileIdx = op.tileY * CanvasGeometry.tilesPerRow + op.tileX;
+      pending.remove(tileIdx);
+      _hydrationChanges.add(canvas.localId);
+      return;
+    }
+
+    // Arm the retry timer once. After it fires, re-issue exactly one
+    // sync_request for the tile; subsequent failures wait for the
+    // next viewer-mount digest cycle.
+    if (set.retryTimer != null || set.retryFired) return;
+    set.retryTimer = Timer(rawBandReceiveTimeout, () async {
+      final liveSets = _rawBandReceiveByCanvas[canvas.localId];
+      final liveSet = liveSets?[key];
+      if (liveSet == null || liveSet.complete) return;
+      liveSet.retryFired = true;
+      AppLogging.meshCanvas(
+        'sync raw_band_missing_retry canvas=${canvas.localId} '
+        'tile=${op.tileX},${op.tileY} '
+        'received=${liveSet.receivedCount}/8 '
+        'peer=0x${senderNodeId.toRadixString(16)}',
+      );
+      // Whole-tile re-request — wire spec doesn't carry per-band
+      // re-request. Sender's job dedupes if a pending one exists.
+      final reqPayload = CanvasCodec.encodeSyncRequest(
+        CanvasSyncRequestOp(
+          canvasId: op.canvasId,
+          tileX: op.tileX,
+          tileY: op.tileY,
+        ),
+      );
+      if (reqPayload == null) return;
+      if (!_governor.canSend(reqPayload.length)) {
+        AppLogging.meshCanvas(
+          'sync raw_band_missing_retry drop_reason=governor_closed '
+          'tile=${op.tileX},${op.tileY}',
+        );
+        return;
+      }
+      final res = await _outbound.sendCanvasPayload(
+        canvasPayload: reqPayload,
+        channelIndex: channelIndex,
+      );
+      if (res.outcome == CanvasSendOutcome.sent) {
+        _governor.recordSend(reqPayload.length);
+      }
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -574,17 +897,47 @@ class CanvasSyncCoordinator {
   MeshCanvasHydrationState hydrationStateFor(int canvasLocalId) {
     final pending = _pendingByCanvas[canvasLocalId];
     final hasPending = pending != null && pending.isNotEmpty;
+    final rawJobs = _rawBandJobsByCanvas[canvasLocalId];
+    final hasOutboundBands = rawJobs != null && rawJobs.isNotEmpty;
+    final rawSets = _rawBandReceiveByCanvas[canvasLocalId];
+    final hasInboundBands = rawSets != null && rawSets.isNotEmpty;
     final lastBand = _lastBandAtMs[canvasLocalId];
     final now = _nowMs();
     final actively =
         lastBand != null &&
         (now - lastBand) <= syncingActivityWindow.inMilliseconds;
+    // `syncing` wins when bands are actively landing (recent activity)
+    // — gives the user the "ink arriving" feedback.
     if (actively) return MeshCanvasHydrationState.syncing;
-    if (hasPending) return MeshCanvasHydrationState.recovering;
+    // `recovering` covers every other in-flight category: tile
+    // requests waiting on a first response, sender-side raw-band
+    // jobs still queued, and receiver-side raw-band sets still
+    // incomplete. Showing `quiet` while any of these are live would
+    // lie to the user — sync work IS in progress, the wire just
+    // hasn't ticked into the last 10 s window.
+    if (hasPending || hasOutboundBands || hasInboundBands) {
+      return MeshCanvasHydrationState.recovering;
+    }
     if (_peerEmptyObserved[canvasLocalId] == true) {
       return MeshCanvasHydrationState.quiet;
     }
     return MeshCanvasHydrationState.idle;
+  }
+
+  /// Lowest-completion in-progress raw-band set's `(received, total)`
+  /// for this canvas. Returns null when no raw bands are pending.
+  /// HUD reads this to render `recovering 3/8` style progress.
+  /// Spec §11.5.
+  ({int received, int total})? bandProgressForCanvas(int canvasLocalId) {
+    final sets = _rawBandReceiveByCanvas[canvasLocalId];
+    if (sets == null || sets.isEmpty) return null;
+    var minReceived = 8;
+    for (final set in sets.values) {
+      if (set.receivedCount < minReceived) {
+        minReceived = set.receivedCount;
+      }
+    }
+    return (received: minReceived, total: 8);
   }
 
   void dispose() {
@@ -593,6 +946,13 @@ class CanvasSyncCoordinator {
     _peerWindowByCanvas.clear();
     _lastBandAtMs.clear();
     _peerEmptyObserved.clear();
+    _rawBandJobsByCanvas.clear();
+    for (final sets in _rawBandReceiveByCanvas.values) {
+      for (final set in sets.values) {
+        set.retryTimer?.cancel();
+      }
+    }
+    _rawBandReceiveByCanvas.clear();
   }
 
   // ---------------------------------------------------------------------------
