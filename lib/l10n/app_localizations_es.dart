@@ -12549,6 +12549,43 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshCanvasHudEraserLabel => 'Borrador';
 
   @override
+  String get meshCanvasVitalsScopeMesh => 'LIENZO MESH';
+
+  @override
+  String get meshCanvasVitalsScopeLocal => 'ZONA LOCAL';
+
+  @override
+  String meshCanvasVitalsDimensions(int width, int height) {
+    return '$width × $height';
+  }
+
+  @override
+  String meshCanvasVitalsPainted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count PINTADOS',
+      one: '1 PINTADO',
+      zero: '0 PINTADOS',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshCanvasVitalsLive(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ACTIVOS',
+      one: '1 ACTIVO',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCanvasVitalsQuiet => 'EN SILENCIO';
+
+  @override
   String meshCanvasInspectorTitle(int x, int y) {
     return 'Píxel ($x, $y)';
   }

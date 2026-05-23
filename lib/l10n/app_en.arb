@@ -16535,6 +16535,40 @@
     "@meshCanvasHudEraserLabel": {
         "description": "Label shown in the selected colour HUD pill when the transparent / erase swatch is active."
     },
+    "meshCanvasVitalsScopeMesh": "MESH CANVAS",
+    "@meshCanvasVitalsScopeMesh": {
+        "description": "Uppercase scope badge at the top-left of the MeshCanvas viewer vitals bar. Identifies the surface as a per-channel mesh canvas."
+    },
+    "meshCanvasVitalsScopeLocal": "LOCAL SANDBOX",
+    "@meshCanvasVitalsScopeLocal": {
+        "description": "Uppercase scope badge at the top-left of the MeshCanvas viewer vitals bar for the offline local sandbox."
+    },
+    "meshCanvasVitalsDimensions": "{width} × {height}",
+    "@meshCanvasVitalsDimensions": {
+        "description": "Canvas pixel dimensions stat in the vitals bar (e.g. 128 x 128). Uses narrow no-break spaces and a multiplication sign for typographic crispness.",
+        "placeholders": {
+            "width": {"type": "int"},
+            "height": {"type": "int"}
+        }
+    },
+    "meshCanvasVitalsPainted": "{count, plural, =0{0 PAINTED} =1{1 PAINTED} other{{count} PAINTED}}",
+    "@meshCanvasVitalsPainted": {
+        "description": "Uppercase painted-cell count stat in the MeshCanvas viewer vitals bar.",
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "meshCanvasVitalsLive": "{count, plural, =1{1 LIVE} other{{count} LIVE}}",
+    "@meshCanvasVitalsLive": {
+        "description": "Uppercase live-peer count stat in the MeshCanvas viewer vitals bar. Only shown for mesh canvases.",
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "meshCanvasVitalsQuiet": "QUIET",
+    "@meshCanvasVitalsQuiet": {
+        "description": "Vitals bar status indicator when no remote peers are present on a mesh canvas."
+    },
     "meshCanvasInspectorTitle": "Pixel ({x}, {y})",
     "@meshCanvasInspectorTitle": {
         "description": "Title of the tile inspector sheet. Includes the integer canvas-space coordinates.",

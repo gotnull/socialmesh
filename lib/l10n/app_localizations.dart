@@ -21622,6 +21622,42 @@ abstract class AppLocalizations {
   /// **'Eraser'**
   String get meshCanvasHudEraserLabel;
 
+  /// Uppercase scope badge at the top-left of the MeshCanvas viewer vitals bar. Identifies the surface as a per-channel mesh canvas.
+  ///
+  /// In en, this message translates to:
+  /// **'MESH CANVAS'**
+  String get meshCanvasVitalsScopeMesh;
+
+  /// Uppercase scope badge at the top-left of the MeshCanvas viewer vitals bar for the offline local sandbox.
+  ///
+  /// In en, this message translates to:
+  /// **'LOCAL SANDBOX'**
+  String get meshCanvasVitalsScopeLocal;
+
+  /// Canvas pixel dimensions stat in the vitals bar (e.g. 128 x 128). Uses narrow no-break spaces and a multiplication sign for typographic crispness.
+  ///
+  /// In en, this message translates to:
+  /// **'{width} × {height}'**
+  String meshCanvasVitalsDimensions(int width, int height);
+
+  /// Uppercase painted-cell count stat in the MeshCanvas viewer vitals bar.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{0 PAINTED} =1{1 PAINTED} other{{count} PAINTED}}'**
+  String meshCanvasVitalsPainted(int count);
+
+  /// Uppercase live-peer count stat in the MeshCanvas viewer vitals bar. Only shown for mesh canvases.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 LIVE} other{{count} LIVE}}'**
+  String meshCanvasVitalsLive(int count);
+
+  /// Vitals bar status indicator when no remote peers are present on a mesh canvas.
+  ///
+  /// In en, this message translates to:
+  /// **'QUIET'**
+  String get meshCanvasVitalsQuiet;
+
   /// Title of the tile inspector sheet. Includes the integer canvas-space coordinates.
   ///
   /// In en, this message translates to:

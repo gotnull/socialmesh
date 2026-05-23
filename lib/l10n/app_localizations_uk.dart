@@ -12489,6 +12489,47 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshCanvasHudEraserLabel => 'Гумка';
 
   @override
+  String get meshCanvasVitalsScopeMesh => 'MESH-ПОЛОТНО';
+
+  @override
+  String get meshCanvasVitalsScopeLocal => 'ЛОКАЛЬНА ПІСОЧНИЦЯ';
+
+  @override
+  String meshCanvasVitalsDimensions(int width, int height) {
+    return '$width × $height';
+  }
+
+  @override
+  String meshCanvasVitalsPainted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ЗАФАРБОВАНО',
+      many: '$count ЗАФАРБОВАНО',
+      few: '$count ЗАФАРБОВАНІ',
+      one: '$count ЗАФАРБОВАНИЙ',
+      zero: '0 ЗАФАРБОВАНО',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshCanvasVitalsLive(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count В ЕФІРІ',
+      many: '$count В ЕФІРІ',
+      few: '$count В ЕФІРІ',
+      one: '$count В ЕФІРІ',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCanvasVitalsQuiet => 'ТИХО';
+
+  @override
   String meshCanvasInspectorTitle(int x, int y) {
     return 'Піксель ($x, $y)';
   }

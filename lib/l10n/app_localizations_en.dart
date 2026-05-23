@@ -12337,6 +12337,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshCanvasHudEraserLabel => 'Eraser';
 
   @override
+  String get meshCanvasVitalsScopeMesh => 'MESH CANVAS';
+
+  @override
+  String get meshCanvasVitalsScopeLocal => 'LOCAL SANDBOX';
+
+  @override
+  String meshCanvasVitalsDimensions(int width, int height) {
+    return '$width × $height';
+  }
+
+  @override
+  String meshCanvasVitalsPainted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count PAINTED',
+      one: '1 PAINTED',
+      zero: '0 PAINTED',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshCanvasVitalsLive(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count LIVE',
+      one: '1 LIVE',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCanvasVitalsQuiet => 'QUIET';
+
+  @override
   String meshCanvasInspectorTitle(int x, int y) {
     return 'Pixel ($x, $y)';
   }

@@ -223,6 +223,20 @@ class CanvasViewportBody extends ConsumerWidget {
 
     final column = Column(
       children: [
+        // Canvas vitals header — mirrors the channel card's stat
+        // density into the viewer surface. Anchored chrome (not a
+        // floating chip), small-caps monospace, accent rail on the
+        // left. Bridges the visual identity between the overview
+        // channel card and the live board.
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppTheme.spacing16,
+            AppTheme.spacing12,
+            AppTheme.spacing16,
+            0,
+          ),
+          child: _CanvasVitalsBar(canvas: canvas, paintedCount: cells.length),
+        ),
         Expanded(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -231,19 +245,16 @@ class CanvasViewportBody extends ConsumerWidget {
               AppTheme.spacing16,
               AppTheme.spacing12,
             ),
-            // Wrap the canvas surface in the same gradient-border
-            // chrome the Mesh tab cards use, so the painting board
-            // reads as a continuous packet-radio artifact with the
-            // channel-canvas-card grid. Without it the viewer
-            // felt like a plain bordered panel; with it the canvas
-            // sits inside a depth-blended frame that gives the
-            // surface premium presence.
+            // Canvas frame chrome — same gradient-border + depth-
+            // blend as the Mesh tab channel cards (consistency
+            // across the feature). Accent presence is the bridge
+            // between the channel card and the live board.
             child: GradientBorderContainer(
               borderRadius: AppTheme.radius16,
               borderWidth: 1.0,
-              accentOpacity: 0.09,
+              accentOpacity: 0.11,
               enableDepthBlend: true,
-              depthBlendOpacity: 0.015,
+              depthBlendOpacity: 0.02,
               backgroundColor: outsidePane,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(AppTheme.radius16 - 1),
@@ -254,7 +265,7 @@ class CanvasViewportBody extends ConsumerWidget {
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        Color.lerp(outsidePane, canvasSurface, 0.18) ??
+                        Color.lerp(outsidePane, canvasSurface, 0.10) ??
                             outsidePane,
                       ],
                     ),
@@ -333,20 +344,12 @@ class CanvasViewportBody extends ConsumerWidget {
                             ),
                           ),
                         ),
-                      // Persistent gesture-hint strip — small ambient
-                      // chips above the color HUD pill telling the
-                      // user "tap · paint", "drag · pan", "pinch ·
-                      // zoom", "hold · inspect". Always visible while
-                      // viewing; gives /r/place-style affordance
-                      // without an onboarding modal.
-                      Positioned(
-                        bottom: AppTheme.spacing12 + AppTheme.spacing20 + 12,
-                        left: 0,
-                        right: 0,
-                        child: IgnorePointer(
-                          child: Center(child: _CanvasGestureHintStrip()),
-                        ),
-                      ),
+                      // (Floating gesture-hint chip strip removed —
+                      // four ambient chips at varying positions read
+                      // as clutter, not affordance. The app bar (i)
+                      // icon + empty-canvas prompt + help sheet are
+                      // the explanation surface. /r/place principle
+                      // 17: "minimal mechanics, maximal emergence.")
                       Positioned(
                         bottom: AppTheme.spacing12,
                         left: 0,
@@ -531,61 +534,213 @@ class _CanvasEmptyPrompt extends StatelessWidget {
   }
 }
 
-/// Always-on gesture-hint chip strip mounted near the bottom of the
-/// canvas frame, above the colour HUD pill. Four small ambient
-/// chips communicate every primary canvas interaction (tap · paint,
-/// drag · pan, pinch · zoom, hold · inspect) so first-time users
-/// don't have to discover the help sheet to learn what the surface
-/// can do. Low opacity keeps the canvas the hero.
-class _CanvasGestureHintStrip extends StatelessWidget {
+/// Canvas vitals header strip rendered above the canvas frame.
+///
+/// Composition (left to right):
+///   - Scope rail: a thin accent bar + uppercase scope badge
+///     (MESH CANVAS / LOCAL SANDBOX). Identity tier — answers
+///     "what surface am I on?" without duplicating the app bar's
+///     channel name.
+///   - Dimensions stat: "128 × 128" in tertiary monospace.
+///   - Spacer.
+///   - Painted stat: cumulative non-default cell count. Accent
+///     tint when > 0 so the eye lands here first as the canvas
+///     fills up.
+///   - Live / quiet pill: mesh-scope only. Counts remote peers
+///     from [presenceCountProvider]; reads "QUIET" when zero so
+///     the strip never looks broken on an idle canvas.
+///
+/// All copy is uppercased small-caps JetBrainsMono, letter-spaced
+/// for status-line readability. Anchored chrome — never floats.
+class _CanvasVitalsBar extends ConsumerWidget {
+  final CanvasSummary canvas;
+  final int paintedCount;
+
+  const _CanvasVitalsBar({required this.canvas, required this.paintedCount});
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = context.l10n;
-    return Wrap(
-      spacing: AppTheme.spacing4,
-      runSpacing: AppTheme.spacing4,
-      alignment: WrapAlignment.center,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        _GestureHintChip(label: l.meshCanvasViewerGestureTap),
-        _GestureHintChip(label: l.meshCanvasViewerGestureDrag),
-        _GestureHintChip(label: l.meshCanvasViewerGesturePinch),
-        _GestureHintChip(label: l.meshCanvasViewerGestureHold),
-      ],
+    final accent = context.accentColor;
+    final isMesh = canvas.scope == CanvasScope.mesh;
+    final hasPaint = paintedCount > 0;
+
+    final scopeLabel = isMesh
+        ? l.meshCanvasVitalsScopeMesh
+        : l.meshCanvasVitalsScopeLocal;
+    final dimensions = l.meshCanvasVitalsDimensions(
+      canvas.width,
+      canvas.height,
+    );
+    final paintedLabel = l.meshCanvasVitalsPainted(paintedCount);
+
+    // Live-peer pill (mesh only). Reads remote-peer count from the
+    // presence selector so we never count self.
+    Widget? livePill;
+    if (isMesh) {
+      final counts = ref.watch(presenceCountProvider(canvas.localId));
+      final total = counts.total;
+      livePill = _VitalsPill(
+        label: total > 0
+            ? l.meshCanvasVitalsLive(total)
+            : l.meshCanvasVitalsQuiet,
+        color: total > 0 ? accent : context.textTertiary,
+        glow: total > 0,
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing12,
+        AppTheme.spacing8,
+        AppTheme.spacing10,
+        AppTheme.spacing8,
+      ),
+      decoration: BoxDecoration(
+        // Background: ~3% accent wash on the left fading to a
+        // neutral card surface on the right. Mirrors the channel
+        // card's depth-blend so the two surfaces read as siblings.
+        gradient: LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [
+            accent.withValues(alpha: 0.05),
+            context.card.withValues(alpha: 0.55),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(color: accent.withValues(alpha: 0.10), width: 0.5),
+      ),
+      child: Row(
+        children: [
+          // Identity rail: thin accent bar + scope badge.
+          Container(
+            width: AppTheme.spacing2,
+            height: AppTheme.spacing14,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(AppTheme.spacing1),
+            ),
+          ),
+          const SizedBox(width: AppTheme.spacing8),
+          Text(
+            scopeLabel,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: accent.withValues(alpha: 0.85),
+              letterSpacing: 1.2,
+              fontFamily: AppTheme.fontFamily,
+            ),
+          ),
+          const SizedBox(width: AppTheme.spacing8),
+          // Subtle divider dot between identity and dimensions.
+          Container(
+            width: AppTheme.spacing2,
+            height: AppTheme.spacing2,
+            decoration: BoxDecoration(
+              color: context.textTertiary.withValues(alpha: 0.45),
+              borderRadius: BorderRadius.circular(AppTheme.spacing1),
+            ),
+          ),
+          const SizedBox(width: AppTheme.spacing8),
+          Text(
+            dimensions,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              color: context.textTertiary.withValues(alpha: 0.85),
+              letterSpacing: 0.8,
+              fontFamily: AppTheme.fontFamily,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+          const Spacer(),
+          Text(
+            paintedLabel,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: hasPaint
+                  ? accent.withValues(alpha: 0.9)
+                  : context.textTertiary.withValues(alpha: 0.75),
+              letterSpacing: 1.0,
+              fontFamily: AppTheme.fontFamily,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+          if (livePill != null) ...[
+            const SizedBox(width: AppTheme.spacing8),
+            livePill,
+          ],
+        ],
+      ),
     );
   }
 }
 
-class _GestureHintChip extends StatelessWidget {
+/// Trailing live / quiet status pill on the vitals bar. Optional
+/// glow so a live count visually pulls the eye without screaming.
+class _VitalsPill extends StatelessWidget {
   final String label;
+  final Color color;
+  final bool glow;
 
-  const _GestureHintChip({required this.label});
+  const _VitalsPill({
+    required this.label,
+    required this.color,
+    required this.glow,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppTheme.spacing8,
-        vertical: AppTheme.spacing3,
+        vertical: 3,
       ),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(AppTheme.radius10),
+        color: glow
+            ? color.withValues(alpha: 0.14)
+            : color.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
         border: Border.all(
-          color: theme.dividerColor.withValues(alpha: 0.20),
+          color: color.withValues(alpha: glow ? 0.35 : 0.18),
           width: 0.5,
         ),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
-          color: context.textTertiary.withValues(alpha: 0.95),
-          letterSpacing: 0.3,
-          fontFamily: AppTheme.fontFamily,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 5,
+            height: 5,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: glow ? 1.0 : 0.6),
+              shape: BoxShape.circle,
+              boxShadow: glow
+                  ? [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.6),
+                        blurRadius: 4,
+                      ),
+                    ]
+                  : null,
+            ),
+          ),
+          const SizedBox(width: AppTheme.spacing6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: color,
+              letterSpacing: 1.0,
+              fontFamily: AppTheme.fontFamily,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
       ),
     );
   }
