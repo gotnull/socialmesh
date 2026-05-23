@@ -12574,6 +12574,39 @@ class AppLocalizationsUk extends AppLocalizations {
       'Налаштування MeshCanvas';
 
   @override
+  String meshCanvasTransmissionQueued(int count) {
+    return '$count у черзі';
+  }
+
+  @override
+  String get meshCanvasTransmissionCooling => 'охолоджується';
+
+  @override
+  String get meshCanvasTransmissionFull =>
+      'черга заповнена · зачекайте ефірний час';
+
+  @override
+  String meshCanvasTransmissionTooltipQueued(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count пікселів чекають на ефірний час',
+      many: '$count пікселів чекають на ефірний час',
+      few: '$count пікселі чекають на ефірний час',
+      one: '$count піксель чекає на ефірний час',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCanvasTransmissionTooltipCooling =>
+      'Ефірний час меш-мережі зайнятий. Малювання відновиться автоматично.';
+
+  @override
+  String get meshCanvasTransmissionTooltipFull =>
+      'Черга пікселів заповнена. Зачекайте трохи, поки меш-мережа наздожене.';
+
+  @override
   String get meshCanvasVitalsScopeMesh => 'MESH-ПОЛОТНО';
 
   @override

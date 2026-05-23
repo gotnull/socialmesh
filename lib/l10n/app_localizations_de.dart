@@ -12601,6 +12601,37 @@ class AppLocalizationsDe extends AppLocalizations {
       'MeshCanvas-Einstellungen';
 
   @override
+  String meshCanvasTransmissionQueued(int count) {
+    return '$count in Warteschlange';
+  }
+
+  @override
+  String get meshCanvasTransmissionCooling => 'kühlt ab';
+
+  @override
+  String get meshCanvasTransmissionFull =>
+      'Warteschlange voll · auf Sendezeit warten';
+
+  @override
+  String meshCanvasTransmissionTooltipQueued(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Pixel warten auf Sendezeit',
+      one: '1 Pixel wartet auf Sendezeit',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCanvasTransmissionTooltipCooling =>
+      'Mesh-Sendezeit ist ausgelastet. Das Malen wird automatisch fortgesetzt.';
+
+  @override
+  String get meshCanvasTransmissionTooltipFull =>
+      'Pixel-Warteschlange ist voll. Warte kurz, bis das Mesh aufgeholt hat.';
+
+  @override
   String get meshCanvasVitalsScopeMesh => 'MESH-LEINWAND';
 
   @override

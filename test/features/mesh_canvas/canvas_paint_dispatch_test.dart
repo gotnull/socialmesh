@@ -24,6 +24,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:socialmesh/features/mesh_canvas/providers/mesh_canvas_participation_providers.dart';
 import 'package:socialmesh/features/mesh_canvas/providers/mesh_canvas_providers.dart';
+import 'package:socialmesh/features/mesh_canvas/providers/transmission_status_providers.dart';
+import 'package:socialmesh/services/canvas/canvas_transmission_status_models.dart';
 import 'package:socialmesh/features/mesh_canvas/screens/mesh_canvas_viewer_screen.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:socialmesh/providers/app_providers.dart';
@@ -141,6 +143,7 @@ Future<_RecordingCanvasRepository> _pumpViewer(
   required CanvasSummary canvas,
   int? myNodeNum = 0x0864,
   bool participationEnabled = true,
+  MeshCanvasTransmissionStatus? transmissionStatus,
 }) async {
   // Seed the participation prefs BEFORE the provider container resolves
   // its AsyncNotifier. Default `true` so existing dispatch tests stay
@@ -160,6 +163,14 @@ Future<_RecordingCanvasRepository> _pumpViewer(
       myNodeNumProvider.overrideWith(
         () => _StubMyNodeNumNotifier(initial: myNodeNum),
       ),
+      // Force a transmission-status state when the test cares about
+      // the queue gate; otherwise let the real provider chain emit
+      // (which defaults to idle on a fresh DB).
+      if (transmissionStatus != null)
+        meshCanvasTransmissionStatusProvider(canvas.localId).overrideWith(
+          (ref) =>
+              Stream<MeshCanvasTransmissionStatus>.value(transmissionStatus),
+        ),
     ],
   );
   addTearDown(container.dispose);
@@ -284,6 +295,68 @@ void main() {
           tester,
           canvas: _localCanvas,
           participationEnabled: false,
+        );
+
+        await tester.tap(find.byType(MeshCanvasViewerScreen));
+        await tester.pump(const Duration(milliseconds: 200));
+
+        expect(repo.calls, hasLength(1));
+        expect(repo.calls.single.method, 'paintLocal');
+      },
+    );
+
+    // S4 queue-full block — UX soft cap at 32 pending.
+    // Spec: docs/canvas/CANVAS_TRANSMISSION_STATUS_V0_1.md §3.3.
+    testWidgets(
+      'Mesh Canvas tap with transmission severity=full is silently blocked '
+      '— soft UX cap prevents lossy collapse at the hard 256 cap',
+      (tester) async {
+        final repo = await _pumpViewer(
+          tester,
+          canvas: _meshCanvas,
+          transmissionStatus: const MeshCanvasTransmissionStatus(
+            pendingCount: 32,
+            oldestPendingAtMs: 1_000,
+            nextAttemptAtMs: 1_500,
+            isCanvasBudgetCooling: false,
+            isSipBudgetCooling: false,
+            canPaint: false,
+            severity: MeshCanvasTransmissionSeverity.full,
+          ),
+        );
+
+        await tester.tap(find.byType(MeshCanvasViewerScreen));
+        await tester.pump(const Duration(milliseconds: 200));
+
+        expect(
+          repo.calls,
+          isEmpty,
+          reason:
+              'queue-full gate must block mesh paint enqueue with a '
+              'soft-reject haptic only — no row added to pending_op',
+        );
+      },
+    );
+
+    // S4 — queue-full block does NOT affect Local Canvas.
+    // Local paints bypass the transmission status entirely because
+    // they never enqueue to `pending_op`.
+    testWidgets(
+      'Local Canvas paint with severity=full transmission state still works '
+      '— Local sandbox is independent of mesh transmission state',
+      (tester) async {
+        final repo = await _pumpViewer(
+          tester,
+          canvas: _localCanvas,
+          transmissionStatus: const MeshCanvasTransmissionStatus(
+            pendingCount: 32,
+            oldestPendingAtMs: 1_000,
+            nextAttemptAtMs: 1_500,
+            isCanvasBudgetCooling: false,
+            isSipBudgetCooling: false,
+            canPaint: false,
+            severity: MeshCanvasTransmissionSeverity.full,
+          ),
         );
 
         await tester.tap(find.byType(MeshCanvasViewerScreen));

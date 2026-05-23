@@ -25,6 +25,7 @@ import 'canvas_constants.dart';
 import 'canvas_database.dart';
 import 'canvas_merge.dart';
 import 'canvas_models.dart';
+import 'canvas_transmission_status_models.dart';
 
 /// Bundles a single inbound paint op for [CanvasRepository.applyInboundPaint].
 @immutable
@@ -413,6 +414,58 @@ class CanvasRepository {
   // ---------------------------------------------------------------------------
   // Pending outbound queue
   // ---------------------------------------------------------------------------
+
+  /// Aggregate pending-queue stats for one canvas in a single round
+  /// trip. Powers the transmission-status view model
+  /// (CANVAS_TRANSMISSION_STATUS_V0_1.md §5.1) without forcing three
+  /// separate queries on the 2-second tick.
+  Future<CanvasPendingStats> pendingStatsForCanvas(int canvasLocalId) async {
+    final rows = await _database.rawQuery(
+      'SELECT COUNT(*) AS count, '
+      'MIN(created_at_ms) AS oldest, '
+      'MIN(next_attempt_at_ms) AS next_attempt '
+      'FROM ${CanvasTables.pendingOp} '
+      'WHERE canvas_id = ?',
+      [canvasLocalId],
+    );
+    if (rows.isEmpty) return CanvasPendingStats.empty;
+    final row = rows.first;
+    final count = (row['count'] as int?) ?? 0;
+    if (count == 0) return CanvasPendingStats.empty;
+    return CanvasPendingStats(
+      count: count,
+      oldestCreatedAtMs: row['oldest'] as int?,
+      nextAttemptAtMs: row['next_attempt'] as int?,
+    );
+  }
+
+  /// Packed `y * widthCells + x` coordinates of every cell with a
+  /// row in `pending_op`. The painter uses this to render pending
+  /// cells at reduced opacity. Returns an empty set when the queue is
+  /// empty.
+  ///
+  /// [widthCells] is the canvas width (128 in v0.1). The caller passes
+  /// it so the packing matches the painter's coordinate scheme — keeps
+  /// the repository free of canvas-geometry knowledge.
+  Future<Set<int>> getPendingCellCoordinates(
+    int canvasLocalId, {
+    required int widthCells,
+  }) async {
+    final rows = await _database.query(
+      CanvasTables.pendingOp,
+      columns: const ['x', 'y'],
+      where: 'canvas_id = ?',
+      whereArgs: [canvasLocalId],
+    );
+    if (rows.isEmpty) return const <int>{};
+    final result = <int>{};
+    for (final row in rows) {
+      final x = row['x'] as int;
+      final y = row['y'] as int;
+      result.add(y * widthCells + x);
+    }
+    return result;
+  }
 
   /// Read queued ops for a canvas, oldest first.
   Future<List<PendingCanvasOp>> getPendingOpsForCanvas(

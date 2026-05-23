@@ -37,11 +37,13 @@ import '../../../services/haptic_service.dart';
 import '../providers/mesh_canvas_participation_providers.dart';
 import '../providers/mesh_canvas_providers.dart';
 import '../providers/presence_providers.dart';
+import '../providers/transmission_status_providers.dart';
 import 'canvas_color_strip.dart';
 import 'canvas_hud_overlays.dart';
 import 'canvas_palette_sheet.dart';
 import 'canvas_presence_strip.dart';
 import 'canvas_tile_inspector_sheet.dart';
+import 'canvas_transmission_status_hud.dart';
 import 'canvas_viewer.dart';
 
 class CanvasViewportBody extends ConsumerWidget {
@@ -99,6 +101,24 @@ class CanvasViewportBody extends ConsumerWidget {
           'mesh paint blocked: participation disabled '
           '(canvas=${canvas.localId})',
         );
+        return;
+      }
+      // Soft UX queue cap: when pending count is at or above the
+      // soft cap (32), block new paint taps with a soft-reject
+      // haptic. The HUD pill is already in `full` state by virtue
+      // of the same selector, so the user sees the chrome reason
+      // immediately. No snackbar.
+      // CANVAS_TRANSMISSION_STATUS_V0_1.md §3.3.
+      final transmissionStatus = ref
+          .read(meshCanvasTransmissionStatusProvider(canvas.localId))
+          .asData
+          ?.value;
+      if (transmissionStatus != null && !transmissionStatus.canPaint) {
+        AppLogging.meshCanvas(
+          'mesh paint blocked: queue full at ${transmissionStatus.pendingCount} '
+          '(canvas=${canvas.localId})',
+        );
+        ref.haptics.itemSelect();
         return;
       }
       // Mesh Canvas: enqueue into `pending_op` AND apply to local
@@ -226,6 +246,18 @@ class CanvasViewportBody extends ConsumerWidget {
 
     final cells = cellsAsync.asData?.value ?? const <CanvasCell>[];
 
+    // Mesh-scope: pending cells render at reduced opacity so users
+    // see which paints are still in flight on the wire. Local-scope
+    // viewers never enqueue so the set is structurally empty —
+    // gated upstream by passing `const <int>{}` for the local case.
+    final pendingCells = canvas.scope == CanvasScope.mesh
+        ? (ref
+                  .watch(meshCanvasPendingCellsProvider(canvas.localId))
+                  .asData
+                  ?.value ??
+              const <int>{})
+        : const <int>{};
+
     final outsidePane = context.background;
     const canvasSurface = Color(0xFF161A22);
     const chunkLine = Color(0x14FFFFFF);
@@ -299,6 +331,7 @@ class CanvasViewportBody extends ConsumerWidget {
                           surfaceColor: canvasSurface,
                           chunkLineColor: chunkLine,
                           borderColor: surfaceRing,
+                          pendingCellIndices: pendingCells,
                           onTapPaint: (x, y) => _onTapPaint(
                             context: context,
                             ref: ref,
@@ -344,6 +377,20 @@ class CanvasViewportBody extends ConsumerWidget {
                           top: AppTheme.spacing12,
                           left: AppTheme.spacing12,
                           child: CanvasPresenceStrip(
+                            canvasLocalId: canvas.localId,
+                          ),
+                        ),
+                      // Transmission status HUD: top-right of canvas
+                      // frame, mirroring the presence strip on the
+                      // left. Hidden when severity is idle (zero
+                      // pending paints, no cooling). Mesh-scope only
+                      // — local canvas never enqueues so the HUD
+                      // would be structurally meaningless.
+                      if (canvas.scope == CanvasScope.mesh)
+                        Positioned(
+                          top: AppTheme.spacing12,
+                          right: AppTheme.spacing12,
+                          child: CanvasTransmissionStatusHud(
                             canvasLocalId: canvas.localId,
                           ),
                         ),

@@ -12663,6 +12663,37 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meshCanvasParticipationSettingsTooltip => 'Paramètres MeshCanvas';
 
   @override
+  String meshCanvasTransmissionQueued(int count) {
+    return '$count en attente';
+  }
+
+  @override
+  String get meshCanvasTransmissionCooling => 'refroidit';
+
+  @override
+  String get meshCanvasTransmissionFull =>
+      'file pleine · attendez le temps d\'antenne';
+
+  @override
+  String meshCanvasTransmissionTooltipQueued(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count pixels en attente du temps d\'antenne',
+      one: '1 pixel en attente du temps d\'antenne',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCanvasTransmissionTooltipCooling =>
+      'Le temps d\'antenne du maillage est occupé. La peinture reprend automatiquement.';
+
+  @override
+  String get meshCanvasTransmissionTooltipFull =>
+      'File de pixels pleine. Attendez un instant que le maillage rattrape.';
+
+  @override
   String get meshCanvasVitalsScopeMesh => 'TOILE MAILLÉE';
 
   @override

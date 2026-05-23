@@ -151,6 +151,19 @@ class CanvasSendCoordinator {
   final int Function() _nowMs;
   final _BatchSeqCounter _batchSeq = _BatchSeqCounter();
 
+  /// Most recent time the canvas governor refused a frame, in
+  /// `_nowMs` units. `null` until first denial. Used by the
+  /// transmission-status view model to derive
+  /// `isCanvasBudgetCooling` via an elapsed-time window
+  /// (CANVAS_TRANSMISSION_STATUS_V0_1.md §2.2). The coordinator does
+  /// not clear this on success — the view model applies its own
+  /// decay threshold.
+  int? _lastGovernorDenialAtMs;
+
+  /// Most recent time the SIP rate limiter refused a canvas frame.
+  /// Same semantics as [_lastGovernorDenialAtMs].
+  int? _lastSipDenialAtMs;
+
   /// Per-batch backoff schedule: attempt 1 → 1 s, attempt 2 → 2 s,
   /// attempt 3 → 5 s, attempt 4 → 10 s, attempts ≥ 5 → 60 s. See
   /// CANVAS_V0_1.md §2 + the v0.1 plan §9.
@@ -295,6 +308,7 @@ class CanvasSendCoordinator {
       // a denied frame leaves the queue untouched and the next drain
       // call can pick the same rows up cleanly.
       if (!_governor.canSend(encoded.length)) {
+        _lastGovernorDenialAtMs = nowMs;
         for (final op in batchPlan.ops) {
           await _repository.markPendingDeferred(
             op.id,
@@ -343,6 +357,7 @@ class CanvasSendCoordinator {
           // SIP refused the frame. The bytes never went on-air, so
           // the canvas governor is NOT charged. Push rows back to
           // queued state with a backoff that does not bump attempts.
+          _lastSipDenialAtMs = nowMs;
           for (final op in batchPlan.ops) {
             await _repository.markPendingDeferred(
               op.id,
@@ -376,6 +391,18 @@ class CanvasSendCoordinator {
     }
     return framesSent;
   }
+
+  // ---------------------------------------------------------------------------
+  // Transmission-status read surface
+  // ---------------------------------------------------------------------------
+
+  /// Most recent canvas-governor denial timestamp, or null if the
+  /// governor has never refused a frame this session.
+  int? get lastGovernorDenialAtMs => _lastGovernorDenialAtMs;
+
+  /// Most recent SIP rate-limiter denial timestamp, or null if the
+  /// SIP limiter has never refused a frame this session.
+  int? get lastSipDenialAtMs => _lastSipDenialAtMs;
 
   // ---------------------------------------------------------------------------
   // Test seams

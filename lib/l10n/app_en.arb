@@ -16631,6 +16631,36 @@
     "@meshCanvasParticipationSettingsTooltip": {
         "description": "Tooltip for the settings icon in the MeshCanvas overview app bar that opens the participation settings sheet."
     },
+    "meshCanvasTransmissionQueued": "{count} queued",
+    "@meshCanvasTransmissionQueued": {
+        "description": "MeshCanvas viewer HUD label when one or more paints are queued in flight but the wire is moving normally.",
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "meshCanvasTransmissionCooling": "cooling",
+    "@meshCanvasTransmissionCooling": {
+        "description": "MeshCanvas viewer HUD label when the canvas governor or SIP rate limiter is currently refusing frames. Paints are still accepted into the queue."
+    },
+    "meshCanvasTransmissionFull": "queue full · wait for airtime",
+    "@meshCanvasTransmissionFull": {
+        "description": "MeshCanvas viewer HUD label when the pending paint queue has hit the soft UX cap. New paint taps are blocked until the queue drains."
+    },
+    "meshCanvasTransmissionTooltipQueued": "{count, plural, =1{1 paint waiting for airtime} other{{count} paints waiting for airtime}}",
+    "@meshCanvasTransmissionTooltipQueued": {
+        "description": "Tooltip for the queued state of the MeshCanvas viewer transmission HUD.",
+        "placeholders": {
+            "count": {"type": "int"}
+        }
+    },
+    "meshCanvasTransmissionTooltipCooling": "Mesh airtime is busy. Painting resumes automatically.",
+    "@meshCanvasTransmissionTooltipCooling": {
+        "description": "Tooltip for the cooling state of the MeshCanvas viewer transmission HUD."
+    },
+    "meshCanvasTransmissionTooltipFull": "Paint queue full. Wait a moment for the mesh to catch up.",
+    "@meshCanvasTransmissionTooltipFull": {
+        "description": "Tooltip for the queue-full state of the MeshCanvas viewer transmission HUD."
+    },
     "meshCanvasVitalsScopeMesh": "MESH CANVAS",
     "@meshCanvasVitalsScopeMesh": {
         "description": "Uppercase scope badge at the top-left of the MeshCanvas viewer vitals bar. Identifies the surface as a per-channel mesh canvas."

@@ -12562,6 +12562,37 @@ class AppLocalizationsPt extends AppLocalizations {
       'Configurações do MeshCanvas';
 
   @override
+  String meshCanvasTransmissionQueued(int count) {
+    return '$count na fila';
+  }
+
+  @override
+  String get meshCanvasTransmissionCooling => 'esfriando';
+
+  @override
+  String get meshCanvasTransmissionFull =>
+      'fila cheia · aguarde tempo de antena';
+
+  @override
+  String meshCanvasTransmissionTooltipQueued(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count pixels aguardando tempo de antena',
+      one: '1 pixel aguardando tempo de antena',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCanvasTransmissionTooltipCooling =>
+      'O tempo de antena da mesh está ocupado. A pintura é retomada automaticamente.';
+
+  @override
+  String get meshCanvasTransmissionTooltipFull =>
+      'Fila de pixels cheia. Aguarde um momento para a mesh recuperar.';
+
+  @override
   String get meshCanvasVitalsScopeMesh => 'TELA MESH';
 
   @override

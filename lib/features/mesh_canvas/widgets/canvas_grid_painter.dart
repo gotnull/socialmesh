@@ -76,6 +76,22 @@ class CanvasGridPainter extends CustomPainter {
   final int widthCells;
   final int heightCells;
 
+  /// Cells with a pending outbound row in `pending_op`, packed as
+  /// `y * widthCells + x`. These paint at reduced opacity so users
+  /// see at a glance which paints are still in flight.
+  ///
+  /// Spec: CANVAS_TRANSMISSION_STATUS_V0_1.md §3.2.
+  ///
+  /// Empty (default) when the host viewport is local-scope OR the
+  /// queue is empty. The set is read from
+  /// `meshCanvasPendingCellsProvider` upstream.
+  final Set<int> pendingCellIndices;
+
+  /// Alpha multiplier applied to cells in [pendingCellIndices].
+  /// Defaults to 0.55 per CANVAS_TRANSMISSION_STATUS_V0_1.md §3.2.
+  /// Exposed for tests so they can assert the multiplier directly.
+  final double pendingOpacityFactor;
+
   const CanvasGridPainter({
     required this.cells,
     required this.palette,
@@ -86,6 +102,8 @@ class CanvasGridPainter extends CustomPainter {
     required this.borderColor,
     this.widthCells = 128,
     this.heightCells = 128,
+    this.pendingCellIndices = const <int>{},
+    this.pendingOpacityFactor = 0.55,
   });
 
   @override
@@ -121,13 +139,22 @@ class CanvasGridPainter extends CustomPainter {
     }
 
     // Layer 3: painted cells. Re-use a single Paint and mutate its
-    // colour to avoid per-cell allocation.
+    // colour to avoid per-cell allocation. Cells whose packed
+    // coordinate is in [pendingCellIndices] paint at reduced opacity
+    // so users see at a glance which paints are still in flight on
+    // the mesh — CANVAS_TRANSMISSION_STATUS_V0_1.md §3.2.
     final cellPaint = Paint();
+    final hasPending = pendingCellIndices.isNotEmpty;
     for (final cell in cells) {
       if (cell.color < 0 || cell.color >= palette.length) continue;
       final colour = palette[cell.color];
       if (colour.a == 0) continue; // transparent sentinel — skip
-      cellPaint.color = colour;
+      final isPending =
+          hasPending &&
+          pendingCellIndices.contains(cell.y * widthCells + cell.x);
+      cellPaint.color = isPending
+          ? colour.withValues(alpha: colour.a * pendingOpacityFactor)
+          : colour;
       canvas.drawRect(
         Rect.fromLTWH(cell.x * cellSize, cell.y * cellSize, cellSize, cellSize),
         cellPaint,
@@ -149,6 +176,8 @@ class CanvasGridPainter extends CustomPainter {
     // list reference on every state change; deep-equality would be
     // O(n) and we'd run it on every pan/zoom frame.
     if (!identical(old.cells, cells)) return true;
+    if (!identical(old.pendingCellIndices, pendingCellIndices)) return true;
+    if (old.pendingOpacityFactor != pendingOpacityFactor) return true;
     if (old.cellSize != cellSize) return true;
     if (old.outsideColor != outsideColor) return true;
     if (old.surfaceColor != surfaceColor) return true;

@@ -12572,6 +12572,37 @@ class AppLocalizationsIt extends AppLocalizations {
       'Impostazioni MeshCanvas';
 
   @override
+  String meshCanvasTransmissionQueued(int count) {
+    return '$count in coda';
+  }
+
+  @override
+  String get meshCanvasTransmissionCooling => 'raffreddamento';
+
+  @override
+  String get meshCanvasTransmissionFull =>
+      'coda piena · attendi il tempo d\'antenna';
+
+  @override
+  String meshCanvasTransmissionTooltipQueued(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count pixel in attesa di tempo d\'antenna',
+      one: '1 pixel in attesa di tempo d\'antenna',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCanvasTransmissionTooltipCooling =>
+      'Il tempo d\'antenna della mesh è occupato. La pittura riprende automaticamente.';
+
+  @override
+  String get meshCanvasTransmissionTooltipFull =>
+      'Coda di pixel piena. Attendi un momento che la mesh recuperi.';
+
+  @override
   String get meshCanvasVitalsScopeMesh => 'TELA MESH';
 
   @override

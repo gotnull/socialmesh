@@ -21766,6 +21766,42 @@ abstract class AppLocalizations {
   /// **'MeshCanvas settings'**
   String get meshCanvasParticipationSettingsTooltip;
 
+  /// MeshCanvas viewer HUD label when one or more paints are queued in flight but the wire is moving normally.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} queued'**
+  String meshCanvasTransmissionQueued(int count);
+
+  /// MeshCanvas viewer HUD label when the canvas governor or SIP rate limiter is currently refusing frames. Paints are still accepted into the queue.
+  ///
+  /// In en, this message translates to:
+  /// **'cooling'**
+  String get meshCanvasTransmissionCooling;
+
+  /// MeshCanvas viewer HUD label when the pending paint queue has hit the soft UX cap. New paint taps are blocked until the queue drains.
+  ///
+  /// In en, this message translates to:
+  /// **'queue full · wait for airtime'**
+  String get meshCanvasTransmissionFull;
+
+  /// Tooltip for the queued state of the MeshCanvas viewer transmission HUD.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 paint waiting for airtime} other{{count} paints waiting for airtime}}'**
+  String meshCanvasTransmissionTooltipQueued(int count);
+
+  /// Tooltip for the cooling state of the MeshCanvas viewer transmission HUD.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh airtime is busy. Painting resumes automatically.'**
+  String get meshCanvasTransmissionTooltipCooling;
+
+  /// Tooltip for the queue-full state of the MeshCanvas viewer transmission HUD.
+  ///
+  /// In en, this message translates to:
+  /// **'Paint queue full. Wait a moment for the mesh to catch up.'**
+  String get meshCanvasTransmissionTooltipFull;
+
   /// Uppercase scope badge at the top-left of the MeshCanvas viewer vitals bar. Identifies the surface as a per-channel mesh canvas.
   ///
   /// In en, this message translates to:

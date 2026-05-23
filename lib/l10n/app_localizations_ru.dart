@@ -12559,6 +12559,39 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshCanvasParticipationSettingsTooltip => 'Настройки MeshCanvas';
 
   @override
+  String meshCanvasTransmissionQueued(int count) {
+    return '$count в очереди';
+  }
+
+  @override
+  String get meshCanvasTransmissionCooling => 'охлаждается';
+
+  @override
+  String get meshCanvasTransmissionFull =>
+      'очередь заполнена · ждите эфирное время';
+
+  @override
+  String meshCanvasTransmissionTooltipQueued(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count пикселей ожидают эфирного времени',
+      many: '$count пикселей ожидают эфирного времени',
+      few: '$count пикселя ожидают эфирного времени',
+      one: '$count пиксель ожидает эфирного времени',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCanvasTransmissionTooltipCooling =>
+      'Эфирное время меш-сети занято. Рисование возобновится автоматически.';
+
+  @override
+  String get meshCanvasTransmissionTooltipFull =>
+      'Очередь пикселей заполнена. Подождите, пока меш-сеть наверстает.';
+
+  @override
   String get meshCanvasVitalsScopeMesh => 'MESH-ХОЛСТ';
 
   @override

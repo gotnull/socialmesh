@@ -12633,6 +12633,36 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshCanvasParticipationSettingsTooltip => 'Ajustes de MeshCanvas';
 
   @override
+  String meshCanvasTransmissionQueued(int count) {
+    return '$count en cola';
+  }
+
+  @override
+  String get meshCanvasTransmissionCooling => 'enfriando';
+
+  @override
+  String get meshCanvasTransmissionFull => 'cola llena · espera tiempo de aire';
+
+  @override
+  String meshCanvasTransmissionTooltipQueued(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count píxeles esperando tiempo de aire',
+      one: '1 píxel esperando tiempo de aire',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCanvasTransmissionTooltipCooling =>
+      'El tiempo de aire de la mesh está ocupado. La pintura se reanuda automáticamente.';
+
+  @override
+  String get meshCanvasTransmissionTooltipFull =>
+      'Cola de píxeles llena. Espera un momento a que la mesh se ponga al día.';
+
+  @override
   String get meshCanvasVitalsScopeMesh => 'LIENZO MESH';
 
   @override

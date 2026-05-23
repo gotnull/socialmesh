@@ -12419,6 +12419,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshCanvasParticipationSettingsTooltip => 'MeshCanvas settings';
 
   @override
+  String meshCanvasTransmissionQueued(int count) {
+    return '$count queued';
+  }
+
+  @override
+  String get meshCanvasTransmissionCooling => 'cooling';
+
+  @override
+  String get meshCanvasTransmissionFull => 'queue full · wait for airtime';
+
+  @override
+  String meshCanvasTransmissionTooltipQueued(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count paints waiting for airtime',
+      one: '1 paint waiting for airtime',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshCanvasTransmissionTooltipCooling =>
+      'Mesh airtime is busy. Painting resumes automatically.';
+
+  @override
+  String get meshCanvasTransmissionTooltipFull =>
+      'Paint queue full. Wait a moment for the mesh to catch up.';
+
+  @override
   String get meshCanvasVitalsScopeMesh => 'MESH CANVAS';
 
   @override

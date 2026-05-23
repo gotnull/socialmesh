@@ -110,6 +110,12 @@ class CanvasViewer extends StatefulWidget {
   /// Per-cell side length in logical pixels.
   final double cellSize;
 
+  /// Cells with a pending outbound row in `pending_op`, packed as
+  /// `y * widthCells + x`. The painter renders these at reduced
+  /// opacity (CANVAS_TRANSMISSION_STATUS_V0_1.md §3.2). Empty for
+  /// local-scope viewers — the host gates by scope upstream.
+  final Set<int> pendingCellIndices;
+
   /// Tap-to-paint callback. Fires with `(x, y)` in canvas-cell
   /// coordinates (0..widthCells-1, 0..heightCells-1). Out-of-bounds
   /// taps are filtered before this callback runs.
@@ -144,6 +150,7 @@ class CanvasViewer extends StatefulWidget {
     this.onTapPaint,
     this.onLongPressInspect,
     this.disableInitialFraming = false,
+    this.pendingCellIndices = const <int>{},
   });
 
   @override
@@ -281,6 +288,7 @@ class _CanvasViewerState extends State<CanvasViewer> {
                     borderColor: widget.borderColor,
                     widthCells: widget.widthCells,
                     heightCells: widget.heightCells,
+                    pendingCellIndices: widget.pendingCellIndices,
                   ),
                 ),
               ),
