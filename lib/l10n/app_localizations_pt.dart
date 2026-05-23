@@ -12410,49 +12410,56 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get meshCanvasHelpIntro =>
-      'Um mural de pixels compartilhado para a malha. Pinte uma célula e veja a tela se preencher conforme os nós próximos contribuem para a mesma superfície a partir dos próprios dispositivos. Sem servidores, sem contas, apenas rádio e pixels.';
+      'Um mural de pixels pintado a várias mãos por rádio LoRa. Cada canal Meshtastic tem sua própria tela de 128 por 128. Toque uma célula, envie um pequeno frame, veja-o se propagar por cada rádio próximo do canal. Sem servidores, sem contas, sem moderadores - apenas rádios e pixels.';
 
   @override
-  String get meshCanvasHelpLocalCanvasTitle => 'Tela Local do Dispositivo';
-
-  @override
-  String get meshCanvasHelpLocalCanvasBody =>
-      'Sua área de testes privada de 128 por 128. Os pixels ficam neste dispositivo e nunca são transmitidos. Ótima para aquecer.';
-
-  @override
-  String get meshCanvasHelpMeshCanvasTitle => 'Tela da Malha';
+  String get meshCanvasHelpMeshCanvasTitle => 'Telas da malha';
 
   @override
   String get meshCanvasHelpMeshCanvasBody =>
-      'Um quadro compartilhado de 128 por 128 por canal. Cada pincelada é um pequeno frame da malha; o quadro converge em todos os ouvintes do canal.';
+      'Uma tela por canal Meshtastic. Primary, LongFast, seus canais personalizados - cada um recebe sua própria tela de 128 por 128, compartilhada com cada nó ouvindo nesse canal. Não há mural global; as telas vivem e morrem com os canais que as hospedam.';
 
   @override
   String get meshCanvasHelpTapToPaintTitle => 'Toque para pintar';
 
   @override
   String get meshCanvasHelpTapToPaintBody =>
-      'Toque uma célula para pintá-la com a cor ativa. Toque a amostra transparente para apagar.';
+      'Toque uma célula para pintá-la com a cor ativa da barra de baixo. Toque a amostra transparente / silenciada na extrema esquerda da barra para apagar. Um toque, um pixel, um frame de rádio.';
 
   @override
-  String get meshCanvasHelpPanZoomTitle => 'Arraste e pince';
+  String get meshCanvasHelpPanZoomTitle => 'Arraste, pince, segure';
 
   @override
   String get meshCanvasHelpPanZoomBody =>
-      'Arraste para deslocar, pince para dar zoom. O quadro flutua em espaço aberto para que você sempre veja as bordas.';
+      'Arraste com um dedo para deslocar-se pela tela. Pince com dois dedos para dar zoom (0,5x a 16x). Segure uma célula para abrir o inspetor e ver quem a pintou e quando.';
 
   @override
-  String get meshCanvasHelpLongPressTitle => 'Pressione longo para inspecionar';
+  String get meshCanvasHelpFirstPaintTitle => 'A primeira tinta acorda a tela';
 
   @override
-  String get meshCanvasHelpLongPressBody =>
-      'Veja quem pintou uma célula e quando (chegará em uma versão posterior).';
+  String get meshCanvasHelpFirstPaintBody =>
+      'Cada tela de canal começa adormecida - uma grade vazia esperando seu primeiro pixel. No momento em que alguém no canal pinta, a tela acorda para todos os outros que estão ouvindo. A sua pode ser a primeira.';
 
   @override
-  String get meshCanvasHelpCommunityTitle => 'Público por design';
+  String get meshCanvasHelpTempoTitle => 'Lento de propósito';
+
+  @override
+  String get meshCanvasHelpTempoBody =>
+      'LoRa não é a internet. Espere segundos (USB / rádio próximo) a minutos (longo alcance) para que as pinturas se propaguem pela malha. Cada dispositivo se auto-limita para que o canal respire para DMs, sinais e outro tráfego. Seja paciente - o quadro se acumula.';
+
+  @override
+  String get meshCanvasHelpOverwriteTitle => 'Vence a pintura mais recente';
+
+  @override
+  String get meshCanvasHelpOverwriteBody =>
+      'Dois nós pintam a mesma célula? Vence a pintura com o carimbo de tempo mais recente. Sobreposições são intencionais - território e conflito fazem parte do mural. Não há histórico de edição para travar, nem admin para chamar.';
+
+  @override
+  String get meshCanvasHelpCommunityTitle => 'Público no canal';
 
   @override
   String get meshCanvasHelpCommunityBody =>
-      'Os pixels são deliberadamente públicos na malha. Não há briga de histórico de edição para ganhar. A graça é o mural, não a vitória.';
+      'Os pixels são deliberadamente públicos no canal que os hospeda. Sem admins, sem moderadores, sem mural global para policiar. Se você não diria no canal, não pinte. A graça é o mural, não a vitória.';
 
   @override
   String get meshCanvasHelpTooltip => 'Sobre o MeshCanvas';
@@ -12561,6 +12568,32 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get meshCanvasOverviewHeroBigUnit => 'pixels na malha';
+
+  @override
+  String get meshCanvasViewerEmptyMeshTitle =>
+      'Toque para semear o primeiro pixel';
+
+  @override
+  String get meshCanvasViewerEmptyMeshSubtitle =>
+      'A primeira tinta acorda a tela';
+
+  @override
+  String get meshCanvasViewerEmptyLocalTitle => 'Toque para pintar';
+
+  @override
+  String get meshCanvasViewerEmptyLocalSubtitle => 'Fica neste dispositivo';
+
+  @override
+  String get meshCanvasViewerGestureTap => 'toque · pinte';
+
+  @override
+  String get meshCanvasViewerGestureDrag => 'arraste · mova';
+
+  @override
+  String get meshCanvasViewerGesturePinch => 'belisque · zoom';
+
+  @override
+  String get meshCanvasViewerGestureHold => 'segure · inspecione';
 
   @override
   String meshCanvasOverviewHeroChannelsChip(int count) {

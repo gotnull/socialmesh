@@ -12269,49 +12269,56 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meshCanvasHelpIntro =>
-      'A shared pixel wall for the mesh. Paint a cell, watch the canvas fill in as nearby nodes commit the same surface from their own devices. No servers, no accounts, just radio and pixels.';
+      'A pixel wall co-painted over LoRa radio. Each Meshtastic channel gets its own 128 by 128 canvas, shared with every node listening on that channel. Tap a cell, send one tiny frame, watch it ripple across every nearby radio. No servers, no accounts, no moderators - just radios and pixels.';
 
   @override
-  String get meshCanvasHelpLocalCanvasTitle => 'Local Device Canvas';
-
-  @override
-  String get meshCanvasHelpLocalCanvasBody =>
-      'Your private 128 by 128 sandbox. Paints stay on this device, never broadcast. Great for warming up.';
-
-  @override
-  String get meshCanvasHelpMeshCanvasTitle => 'Mesh Canvas';
+  String get meshCanvasHelpMeshCanvasTitle => 'Mesh canvases';
 
   @override
   String get meshCanvasHelpMeshCanvasBody =>
-      'One shared 128 by 128 board per channel. Every paint is one tiny mesh frame; the board converges across all listeners on the channel.';
+      'One canvas per Meshtastic channel. Primary, LongFast, your custom channels - each gets its own 128 by 128 board shared with every node listening on that channel. There is no global wall; canvases live and die with the channels that host them.';
 
   @override
   String get meshCanvasHelpTapToPaintTitle => 'Tap to paint';
 
   @override
   String get meshCanvasHelpTapToPaintBody =>
-      'Tap a cell to paint it with the active colour. Tap the transparent swatch to erase.';
+      'Tap a cell to paint it with the active color from the strip below. Tap the transparent / mute swatch on the far left of the strip to erase. One tap, one pixel, one radio frame.';
 
   @override
-  String get meshCanvasHelpPanZoomTitle => 'Pan and pinch';
+  String get meshCanvasHelpPanZoomTitle => 'Pan, pinch, hold';
 
   @override
   String get meshCanvasHelpPanZoomBody =>
-      'Drag to pan, pinch to zoom. The board floats inside open space so you always know where the edges are.';
+      'Drag with one finger to pan around the board. Pinch with two fingers to zoom in and out (0.5x to 16x). Long-press any cell to open the tile inspector and see who painted it and when.';
 
   @override
-  String get meshCanvasHelpLongPressTitle => 'Long-press to inspect';
+  String get meshCanvasHelpFirstPaintTitle => 'First paint wakes the board';
 
   @override
-  String get meshCanvasHelpLongPressBody =>
-      'See who painted a cell and when (coming in a later build).';
+  String get meshCanvasHelpFirstPaintBody =>
+      'Every channel canvas starts dormant - an empty grid waiting for its first pixel. The moment anyone on the channel paints, the canvas wakes for everyone else listening. Yours might be the first.';
 
   @override
-  String get meshCanvasHelpCommunityTitle => 'Public by design';
+  String get meshCanvasHelpTempoTitle => 'Slow on purpose';
+
+  @override
+  String get meshCanvasHelpTempoBody =>
+      'LoRa is not the internet. Expect seconds (USB / nearby radio) to minutes (long-range) for paints to ripple across the mesh. Each device caps itself to keep the channel breathable for DMs, signals, and other traffic. Be patient - the board accumulates.';
+
+  @override
+  String get meshCanvasHelpOverwriteTitle => 'Newer paint wins';
+
+  @override
+  String get meshCanvasHelpOverwriteBody =>
+      'Two nodes paint the same cell? Whichever paint has the newer timestamp wins. Overwrites are intentional - territory and conflict are part of the wall. There is no edit history to lock in, no admin to call.';
+
+  @override
+  String get meshCanvasHelpCommunityTitle => 'Public on the channel';
 
   @override
   String get meshCanvasHelpCommunityBody =>
-      'Pixels are deliberately public on the mesh. There is no edit history fight to win. The fun is the wall, not the win.';
+      'Pixels are deliberately public on the channel that hosts them. No admins, no moderators, no global wall to police. If you would not say it on the channel, do not paint it. The fun is the wall, not the win.';
 
   @override
   String get meshCanvasHelpTooltip => 'About MeshCanvas';
@@ -12418,6 +12425,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meshCanvasOverviewHeroBigUnit => 'pixels on the mesh';
+
+  @override
+  String get meshCanvasViewerEmptyMeshTitle => 'Tap to seed the first pixel';
+
+  @override
+  String get meshCanvasViewerEmptyMeshSubtitle => 'First paint wakes the board';
+
+  @override
+  String get meshCanvasViewerEmptyLocalTitle => 'Tap to paint';
+
+  @override
+  String get meshCanvasViewerEmptyLocalSubtitle => 'Stays on this device';
+
+  @override
+  String get meshCanvasViewerGestureTap => 'tap · paint';
+
+  @override
+  String get meshCanvasViewerGestureDrag => 'drag · pan';
+
+  @override
+  String get meshCanvasViewerGesturePinch => 'pinch · zoom';
+
+  @override
+  String get meshCanvasViewerGestureHold => 'hold · inspect';
 
   @override
   String meshCanvasOverviewHeroChannelsChip(int count) {

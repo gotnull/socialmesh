@@ -241,9 +241,9 @@ class CanvasViewportBody extends ConsumerWidget {
             child: GradientBorderContainer(
               borderRadius: AppTheme.radius16,
               borderWidth: 1.0,
-              accentOpacity: 0.45,
+              accentOpacity: 0.22,
               enableDepthBlend: true,
-              depthBlendOpacity: 0.06,
+              depthBlendOpacity: 0.03,
               backgroundColor: outsidePane,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(AppTheme.radius16 - 1),
@@ -319,6 +319,34 @@ class CanvasViewportBody extends ConsumerWidget {
                             canvasLocalId: canvas.localId,
                           ),
                         ),
+                      // Atmospheric "first paint wakes the board"
+                      // prompt — center of the canvas frame, visible
+                      // only while there are zero painted cells.
+                      // Disappears the moment a real cell lands.
+                      // IgnorePointer so the tap goes through to the
+                      // canvas's GestureDetector.
+                      if (cells.isEmpty)
+                        Positioned.fill(
+                          child: IgnorePointer(
+                            child: _CanvasEmptyPrompt(
+                              isMeshScope: canvas.scope == CanvasScope.mesh,
+                            ),
+                          ),
+                        ),
+                      // Persistent gesture-hint strip — small ambient
+                      // chips above the color HUD pill telling the
+                      // user "tap · paint", "drag · pan", "pinch ·
+                      // zoom", "hold · inspect". Always visible while
+                      // viewing; gives /r/place-style affordance
+                      // without an onboarding modal.
+                      Positioned(
+                        bottom: AppTheme.spacing12 + AppTheme.spacing20 + 12,
+                        left: 0,
+                        right: 0,
+                        child: IgnorePointer(
+                          child: Center(child: _CanvasGestureHintStrip()),
+                        ),
+                      ),
                       Positioned(
                         bottom: AppTheme.spacing12,
                         left: 0,
@@ -446,4 +474,119 @@ class _PresenceLifecycleHostState extends ConsumerState<_PresenceLifecycleHost>
 
   @override
   Widget build(BuildContext context) => widget.child;
+}
+
+/// Centered atmospheric prompt shown on a fresh canvas with zero
+/// painted cells. /r/place principle 5 ("dormant space implies
+/// opportunity") + principle 18 ("empty states must feel latent,
+/// not dead"). Mounted as an IgnorePointer child of the canvas
+/// Stack so it never blocks a tap — the first tap drops a pixel
+/// and the prompt vanishes by data.
+class _CanvasEmptyPrompt extends StatelessWidget {
+  /// `true` for a Mesh canvas (uses the seed-the-board copy);
+  /// `false` for the Local Device Canvas (uses the private-sandbox
+  /// copy).
+  final bool isMeshScope;
+
+  const _CanvasEmptyPrompt({required this.isMeshScope});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final title = isMeshScope
+        ? l.meshCanvasViewerEmptyMeshTitle
+        : l.meshCanvasViewerEmptyLocalTitle;
+    final subtitle = isMeshScope
+        ? l.meshCanvasViewerEmptyMeshSubtitle
+        : l.meshCanvasViewerEmptyLocalSubtitle;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+              color: context.textPrimary.withValues(alpha: 0.85),
+              letterSpacing: 0.3,
+              fontFamily: AppTheme.fontFamily,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing8),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              color: context.textTertiary.withValues(alpha: 0.85),
+              letterSpacing: 0.4,
+              fontFamily: AppTheme.fontFamily,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Always-on gesture-hint chip strip mounted near the bottom of the
+/// canvas frame, above the colour HUD pill. Four small ambient
+/// chips communicate every primary canvas interaction (tap · paint,
+/// drag · pan, pinch · zoom, hold · inspect) so first-time users
+/// don't have to discover the help sheet to learn what the surface
+/// can do. Low opacity keeps the canvas the hero.
+class _CanvasGestureHintStrip extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return Wrap(
+      spacing: AppTheme.spacing4,
+      runSpacing: AppTheme.spacing4,
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        _GestureHintChip(label: l.meshCanvasViewerGestureTap),
+        _GestureHintChip(label: l.meshCanvasViewerGestureDrag),
+        _GestureHintChip(label: l.meshCanvasViewerGesturePinch),
+        _GestureHintChip(label: l.meshCanvasViewerGestureHold),
+      ],
+    );
+  }
+}
+
+class _GestureHintChip extends StatelessWidget {
+  final String label;
+
+  const _GestureHintChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing8,
+        vertical: AppTheme.spacing3,
+      ),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(AppTheme.radius10),
+        border: Border.all(
+          color: theme.dividerColor.withValues(alpha: 0.20),
+          width: 0.5,
+        ),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
+          color: context.textTertiary.withValues(alpha: 0.95),
+          letterSpacing: 0.3,
+          fontFamily: AppTheme.fontFamily,
+        ),
+      ),
+    );
+  }
 }

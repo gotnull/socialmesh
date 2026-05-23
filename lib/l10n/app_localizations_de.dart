@@ -12447,49 +12447,57 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get meshCanvasHelpIntro =>
-      'Eine geteilte Pixelwand für das Mesh. Male eine Zelle und beobachte, wie sich die Leinwand füllt, während Knoten in der Nähe dieselbe Fläche von ihren eigenen Geräten aus bemalen. Keine Server, keine Konten, nur Funk und Pixel.';
+      'Eine Pixelwand, gemeinsam über LoRa-Funk gemalt. Jeder Meshtastic-Kanal hat seine eigene 128-mal-128-Leinwand. Tippe eine Zelle, sende einen winzigen Frame, sieh ihn über jeden nahen Funk auf dem Kanal kreisen. Keine Server, keine Konten, keine Moderatoren - nur Funkgeräte und Pixel.';
 
   @override
-  String get meshCanvasHelpLocalCanvasTitle => 'Lokale Geräte-Leinwand';
-
-  @override
-  String get meshCanvasHelpLocalCanvasBody =>
-      'Dein privater 128-mal-128-Sandkasten. Pixel bleiben auf diesem Gerät und werden nie gesendet. Ideal zum Aufwärmen.';
-
-  @override
-  String get meshCanvasHelpMeshCanvasTitle => 'Mesh-Leinwand';
+  String get meshCanvasHelpMeshCanvasTitle => 'Mesh-Leinwände';
 
   @override
   String get meshCanvasHelpMeshCanvasBody =>
-      'Eine geteilte 128-mal-128-Tafel pro Kanal. Jeder Pinselstrich ist ein kleiner Mesh-Frame; die Tafel gleicht sich auf allen Zuhörern des Kanals an.';
+      'Eine Leinwand pro Meshtastic-Kanal. Primary, LongFast, deine eigenen Kanäle - jeder bekommt seine eigene 128-mal-128-Tafel, geteilt mit jedem Knoten, der auf dem Kanal lauscht. Es gibt keine globale Wand; Leinwände leben und sterben mit den Kanälen, die sie tragen.';
 
   @override
   String get meshCanvasHelpTapToPaintTitle => 'Tippen zum Malen';
 
   @override
   String get meshCanvasHelpTapToPaintBody =>
-      'Tippe eine Zelle an, um sie in der aktiven Farbe zu bemalen. Tippe das transparente Feld an, um zu löschen.';
+      'Tippe eine Zelle an, um sie in der aktiven Farbe aus der Leiste unten zu bemalen. Tippe das transparente / stummgeschaltete Feld ganz links der Leiste, um zu löschen. Ein Tipp, ein Pixel, ein Funkframe.';
 
   @override
-  String get meshCanvasHelpPanZoomTitle => 'Schwenken und kneifen';
+  String get meshCanvasHelpPanZoomTitle => 'Schwenken, kneifen, halten';
 
   @override
   String get meshCanvasHelpPanZoomBody =>
-      'Ziehen zum Schwenken, Kneifen zum Zoomen. Die Tafel schwebt in offenem Raum, damit du immer die Ränder siehst.';
+      'Mit einem Finger ziehen, um über das Brett zu schwenken. Mit zwei Fingern kneifen, um zu zoomen (0,5x bis 16x). Halte eine Zelle gedrückt, um den Inspektor zu öffnen und zu sehen, wer sie wann bemalt hat.';
 
   @override
-  String get meshCanvasHelpLongPressTitle => 'Gedrückt halten zum Prüfen';
+  String get meshCanvasHelpFirstPaintTitle =>
+      'Der erste Strich weckt das Brett';
 
   @override
-  String get meshCanvasHelpLongPressBody =>
-      'Sieh, wer eine Zelle wann bemalt hat (kommt in einem späteren Build).';
+  String get meshCanvasHelpFirstPaintBody =>
+      'Jede Kanal-Leinwand beginnt schlummernd - ein leeres Raster, das auf seinen ersten Pixel wartet. In dem Moment, in dem jemand auf dem Kanal malt, erwacht die Leinwand für alle anderen, die zuhören. Deiner könnte der erste sein.';
 
   @override
-  String get meshCanvasHelpCommunityTitle => 'Öffentlich gewollt';
+  String get meshCanvasHelpTempoTitle => 'Absichtlich langsam';
+
+  @override
+  String get meshCanvasHelpTempoBody =>
+      'LoRa ist nicht das Internet. Erwarte Sekunden (USB / nahes Funkgerät) bis Minuten (Langstrecke), bis sich Pixel über das Mesh ausbreiten. Jedes Gerät begrenzt sich selbst, damit der Kanal für DMs, Signale und anderen Verkehr atmen kann. Sei geduldig - das Brett füllt sich.';
+
+  @override
+  String get meshCanvasHelpOverwriteTitle => 'Neuer Strich gewinnt';
+
+  @override
+  String get meshCanvasHelpOverwriteBody =>
+      'Zwei Knoten malen dieselbe Zelle? Der Strich mit dem neueren Zeitstempel lebt. Überschreibungen sind gewollt - Territorium und Konflikt gehören zur Wand. Es gibt keinen Bearbeitungsverlauf zum Festnageln, keinen Admin zum Anrufen.';
+
+  @override
+  String get meshCanvasHelpCommunityTitle => 'Öffentlich im Kanal';
 
   @override
   String get meshCanvasHelpCommunityBody =>
-      'Pixel sind im Mesh bewusst öffentlich. Es gibt keinen Bearbeitungsverlauf zu gewinnen. Der Spaß ist die Wand, nicht der Sieg.';
+      'Pixel sind absichtlich öffentlich auf dem Kanal, der sie trägt. Keine Admins, keine Moderatoren, keine globale Wand zum Überwachen. Wenn du es nicht im Kanal sagen würdest, male es nicht. Der Spaß ist die Wand, nicht der Sieg.';
 
   @override
   String get meshCanvasHelpTooltip => 'Über MeshCanvas';
@@ -12598,6 +12606,32 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get meshCanvasOverviewHeroBigUnit => 'Pixel im Mesh';
+
+  @override
+  String get meshCanvasViewerEmptyMeshTitle =>
+      'Tippe, um das erste Pixel zu setzen';
+
+  @override
+  String get meshCanvasViewerEmptyMeshSubtitle =>
+      'Der erste Strich weckt das Brett';
+
+  @override
+  String get meshCanvasViewerEmptyLocalTitle => 'Tippe zum Malen';
+
+  @override
+  String get meshCanvasViewerEmptyLocalSubtitle => 'Bleibt auf diesem Gerät';
+
+  @override
+  String get meshCanvasViewerGestureTap => 'tippen · malen';
+
+  @override
+  String get meshCanvasViewerGestureDrag => 'ziehen · schwenken';
+
+  @override
+  String get meshCanvasViewerGesturePinch => 'kneifen · zoomen';
+
+  @override
+  String get meshCanvasViewerGestureHold => 'halten · prüfen';
 
   @override
   String meshCanvasOverviewHeroChannelsChip(int count) {

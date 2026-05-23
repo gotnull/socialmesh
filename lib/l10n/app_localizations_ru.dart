@@ -12407,49 +12407,56 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get meshCanvasHelpIntro =>
-      'Общая пиксельная стена для mesh-сети. Закрашивайте клетку и наблюдайте, как холст заполняется, пока соседние узлы вкладываются в ту же поверхность со своих устройств. Никаких серверов, никаких аккаунтов - только радио и пиксели.';
+      'Пиксельная стена, нарисованная сообща по радио LoRa. У каждого канала Meshtastic свой холст 128 на 128. Коснись клетки, отправь один крошечный кадр и наблюдай, как он расходится по всем ближним радио на канале. Никаких серверов, никаких аккаунтов, никаких модераторов - только радио и пиксели.';
 
   @override
-  String get meshCanvasHelpLocalCanvasTitle => 'Локальный холст устройства';
-
-  @override
-  String get meshCanvasHelpLocalCanvasBody =>
-      'Ваша личная песочница 128 на 128. Пиксели остаются на этом устройстве и никогда не передаются. Отлично подходит для разминки.';
-
-  @override
-  String get meshCanvasHelpMeshCanvasTitle => 'Mesh-холст';
+  String get meshCanvasHelpMeshCanvasTitle => 'Mesh-холсты';
 
   @override
   String get meshCanvasHelpMeshCanvasBody =>
-      'Одна общая доска 128 на 128 на канал. Каждый мазок - это крошечный mesh-кадр; доска синхронизируется на всех слушателях канала.';
+      'Один холст на канал Meshtastic. Primary, LongFast, твои пользовательские каналы - каждый получает свою доску 128 на 128, разделённую с каждым узлом, слушающим этот канал. Глобальной стены нет; холсты живут и умирают вместе с каналами, которые их несут.';
 
   @override
   String get meshCanvasHelpTapToPaintTitle => 'Касание для рисования';
 
   @override
   String get meshCanvasHelpTapToPaintBody =>
-      'Коснитесь клетки, чтобы закрасить её активным цветом. Коснитесь прозрачного образца, чтобы стереть.';
+      'Коснись клетки, чтобы закрасить её активным цветом из полосы внизу. Коснись прозрачного / отключённого образца с левого края полосы, чтобы стереть. Одно касание, один пиксель, один радиокадр.';
 
   @override
-  String get meshCanvasHelpPanZoomTitle => 'Перетаскивание и щипок';
+  String get meshCanvasHelpPanZoomTitle => 'Перетаскивай, щипай, удерживай';
 
   @override
   String get meshCanvasHelpPanZoomBody =>
-      'Перетаскивайте для прокрутки, сжимайте для масштабирования. Доска плавает в открытом пространстве, чтобы вы всегда видели её края.';
+      'Перетаскивай одним пальцем, чтобы перемещаться по доске. Щипай двумя пальцами, чтобы масштабировать (0,5x - 16x). Удерживай клетку, чтобы открыть инспектор и увидеть, кто и когда её нарисовал.';
 
   @override
-  String get meshCanvasHelpLongPressTitle => 'Удержание для проверки';
+  String get meshCanvasHelpFirstPaintTitle => 'Первый мазок будит холст';
 
   @override
-  String get meshCanvasHelpLongPressBody =>
-      'Посмотрите, кто и когда закрасил клетку (появится в следующей сборке).';
+  String get meshCanvasHelpFirstPaintBody =>
+      'Каждый холст канала начинает спящим - пустая сетка, ждущая первый пиксель. В тот момент, когда кто-то на канале рисует, холст просыпается для всех остальных, кто слушает. Твой может быть первым.';
 
   @override
-  String get meshCanvasHelpCommunityTitle => 'Публично по замыслу';
+  String get meshCanvasHelpTempoTitle => 'Медленно специально';
+
+  @override
+  String get meshCanvasHelpTempoBody =>
+      'LoRa - это не интернет. Жди секунды (USB / ближнее радио) до минут (дальняя дистанция), пока мазки разойдутся по мешу. Каждое устройство ограничивает себя, чтобы канал дышал для DM, сигналов и другого трафика. Будь терпелив - доска накапливается.';
+
+  @override
+  String get meshCanvasHelpOverwriteTitle => 'Побеждает более свежий мазок';
+
+  @override
+  String get meshCanvasHelpOverwriteBody =>
+      'Два узла рисуют ту же клетку? Живёт мазок с более свежим штампом времени. Перезаписи задуманы - территория и конфликт - часть стены. Нет истории правок, которую надо запереть, и нет админа, которого можно позвать.';
+
+  @override
+  String get meshCanvasHelpCommunityTitle => 'Публично в канале';
 
   @override
   String get meshCanvasHelpCommunityBody =>
-      'Пиксели намеренно публичны в mesh-сети. Здесь нет битвы истории правок, которую нужно выиграть. Веселье - это стена, а не победа.';
+      'Пиксели намеренно публичны в канале, который их несёт. Никаких админов, никаких модераторов, никакой глобальной стены для надзора. Если ты не сказал бы это в канале, не рисуй. Веселье - это стена, а не победа.';
 
   @override
   String get meshCanvasHelpTooltip => 'О MeshCanvas';
@@ -12560,6 +12567,32 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get meshCanvasOverviewHeroBigUnit => 'пикселей в меше';
+
+  @override
+  String get meshCanvasViewerEmptyMeshTitle =>
+      'Коснись, чтобы посадить первый пиксель';
+
+  @override
+  String get meshCanvasViewerEmptyMeshSubtitle => 'Первый мазок будит холст';
+
+  @override
+  String get meshCanvasViewerEmptyLocalTitle => 'Коснись, чтобы рисовать';
+
+  @override
+  String get meshCanvasViewerEmptyLocalSubtitle =>
+      'Остаётся на этом устройстве';
+
+  @override
+  String get meshCanvasViewerGestureTap => 'тап · рисовать';
+
+  @override
+  String get meshCanvasViewerGestureDrag => 'потяни · смещение';
+
+  @override
+  String get meshCanvasViewerGesturePinch => 'щипок · масштаб';
+
+  @override
+  String get meshCanvasViewerGestureHold => 'удержание · проверка';
 
   @override
   String meshCanvasOverviewHeroChannelsChip(int count) {

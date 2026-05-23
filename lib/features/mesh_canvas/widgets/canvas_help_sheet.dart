@@ -42,6 +42,7 @@ Future<void> showCanvasHelpSheet({required BuildContext context}) {
         title: l.meshCanvasHelpTitle,
         intro: l.meshCanvasHelpIntro,
         items: [
+          // Local vs Mesh — anchor the IA first.
           HelpSheetItem(
             icon: Icons.smartphone_outlined,
             title: l.meshCanvasHelpLocalCanvasTitle,
@@ -52,6 +53,13 @@ Future<void> showCanvasHelpSheet({required BuildContext context}) {
             title: l.meshCanvasHelpMeshCanvasTitle,
             description: l.meshCanvasHelpMeshCanvasBody,
           ),
+          // First paint wakes the board — /r/place dormancy.
+          HelpSheetItem(
+            icon: Icons.bolt_outlined,
+            title: l.meshCanvasHelpFirstPaintTitle,
+            description: l.meshCanvasHelpFirstPaintBody,
+          ),
+          // Gestures — primary then secondary.
           HelpSheetItem(
             icon: Icons.touch_app_outlined,
             title: l.meshCanvasHelpTapToPaintTitle,
@@ -62,11 +70,19 @@ Future<void> showCanvasHelpSheet({required BuildContext context}) {
             title: l.meshCanvasHelpPanZoomTitle,
             description: l.meshCanvasHelpPanZoomBody,
           ),
+          // Tempo — set expectations about LoRa pace.
           HelpSheetItem(
-            icon: Icons.info_outline,
-            title: l.meshCanvasHelpLongPressTitle,
-            description: l.meshCanvasHelpLongPressBody,
+            icon: Icons.timer_outlined,
+            title: l.meshCanvasHelpTempoTitle,
+            description: l.meshCanvasHelpTempoBody,
           ),
+          // Overwrites — /r/place conflict philosophy.
+          HelpSheetItem(
+            icon: Icons.layers_outlined,
+            title: l.meshCanvasHelpOverwriteTitle,
+            description: l.meshCanvasHelpOverwriteBody,
+          ),
+          // Etiquette + community.
           HelpSheetItem(
             icon: Icons.groups_outlined,
             title: l.meshCanvasHelpCommunityTitle,

@@ -21502,34 +21502,22 @@ abstract class AppLocalizations {
   /// **'About MeshCanvas'**
   String get meshCanvasHelpTitle;
 
-  /// Opening paragraph of the MeshCanvas help sheet. Retro packet-radio / BBS tone, community-oriented. Should land in 2 short sentences.
+  /// Opening paragraph of the MeshCanvas help sheet. Frames MeshCanvas as r/place adapted to LoRa: channel-scoped, slow, no central authority. Mesh-only — the Local Device Canvas is a developer / debug surface and is intentionally not surfaced in user-facing help.
   ///
   /// In en, this message translates to:
-  /// **'A shared pixel wall for the mesh. Paint a cell, watch the canvas fill in as nearby nodes commit the same surface from their own devices. No servers, no accounts, just radio and pixels.'**
+  /// **'A pixel wall co-painted over LoRa radio. Each Meshtastic channel gets its own 128 by 128 canvas, shared with every node listening on that channel. Tap a cell, send one tiny frame, watch it ripple across every nearby radio. No servers, no accounts, no moderators - just radios and pixels.'**
   String get meshCanvasHelpIntro;
 
-  /// Row title in the help sheet for the offline sandbox canvas.
+  /// Row title in the help sheet for the channel-bound mesh canvases. Plural because each Meshtastic channel gets one.
   ///
   /// In en, this message translates to:
-  /// **'Local Device Canvas'**
-  String get meshCanvasHelpLocalCanvasTitle;
-
-  /// Row body in the help sheet describing the Local Device Canvas. Keep the dimensions verbatim across locales.
-  ///
-  /// In en, this message translates to:
-  /// **'Your private 128 by 128 sandbox. Paints stay on this device, never broadcast. Great for warming up.'**
-  String get meshCanvasHelpLocalCanvasBody;
-
-  /// Row title in the help sheet for the shared mesh canvas.
-  ///
-  /// In en, this message translates to:
-  /// **'Mesh Canvas'**
+  /// **'Mesh canvases'**
   String get meshCanvasHelpMeshCanvasTitle;
 
-  /// Row body in the help sheet describing the Mesh Canvas. Keep the dimensions verbatim across locales.
+  /// Row body in the help sheet describing the per-channel canvas model. Keep the dimensions verbatim across locales. Communicates: channel = canvas; no worldwide / global / cross-channel surface.
   ///
   /// In en, this message translates to:
-  /// **'One shared 128 by 128 board per channel. Every paint is one tiny mesh frame; the board converges across all listeners on the channel.'**
+  /// **'One canvas per Meshtastic channel. Primary, LongFast, your custom channels - each gets its own 128 by 128 board shared with every node listening on that channel. There is no global wall; canvases live and die with the channels that host them.'**
   String get meshCanvasHelpMeshCanvasBody;
 
   /// Row title in the help sheet for tap-to-paint interaction.
@@ -21538,46 +21526,70 @@ abstract class AppLocalizations {
   /// **'Tap to paint'**
   String get meshCanvasHelpTapToPaintTitle;
 
-  /// Row body in the help sheet describing tap-to-paint.
+  /// Row body in the help sheet describing tap-to-paint. Emphasises the one-tap-one-frame /r/place mechanic so users understand each paint is a discrete LoRa broadcast.
   ///
   /// In en, this message translates to:
-  /// **'Tap a cell to paint it with the active colour. Tap the transparent swatch to erase.'**
+  /// **'Tap a cell to paint it with the active color from the strip below. Tap the transparent / mute swatch on the far left of the strip to erase. One tap, one pixel, one radio frame.'**
   String get meshCanvasHelpTapToPaintBody;
 
-  /// Row title in the help sheet for pan-and-pinch-zoom interaction.
+  /// Row title in the help sheet covering the three secondary gestures: pan, pinch-zoom, long-press inspect.
   ///
   /// In en, this message translates to:
-  /// **'Pan and pinch'**
+  /// **'Pan, pinch, hold'**
   String get meshCanvasHelpPanZoomTitle;
 
-  /// Row body in the help sheet describing pan + pinch zoom.
+  /// Row body in the help sheet describing pan + pinch zoom + long-press inspect together. Replaces the previous separate Long-press row; the inspector IS live and the help should reflect that.
   ///
   /// In en, this message translates to:
-  /// **'Drag to pan, pinch to zoom. The board floats inside open space so you always know where the edges are.'**
+  /// **'Drag with one finger to pan around the board. Pinch with two fingers to zoom in and out (0.5x to 16x). Long-press any cell to open the tile inspector and see who painted it and when.'**
   String get meshCanvasHelpPanZoomBody;
 
-  /// Row title in the help sheet for long-press inspect interaction.
+  /// Help-sheet row title explaining the dormant -> live transition. Mesh-native; communicates the /r/place principle 'dormant space implies opportunity'.
   ///
   /// In en, this message translates to:
-  /// **'Long-press to inspect'**
-  String get meshCanvasHelpLongPressTitle;
+  /// **'First paint wakes the board'**
+  String get meshCanvasHelpFirstPaintTitle;
 
-  /// Row body in the help sheet describing long-press to inspect. v0.1 only logs; full inspector lands in S7.D.
+  /// Help-sheet row body explaining channel-canvas dormancy. Atmospheric, /r/place register; encourages users to seed dormant channels.
   ///
   /// In en, this message translates to:
-  /// **'See who painted a cell and when (coming in a later build).'**
-  String get meshCanvasHelpLongPressBody;
+  /// **'Every channel canvas starts dormant - an empty grid waiting for its first pixel. The moment anyone on the channel paints, the canvas wakes for everyone else listening. Yours might be the first.'**
+  String get meshCanvasHelpFirstPaintBody;
 
-  /// Row title in the help sheet framing the community / collaborative philosophy.
+  /// Help-sheet row title framing LoRa's slow tempo as a feature, not a bug. Mesh-native register.
   ///
   /// In en, this message translates to:
-  /// **'Public by design'**
+  /// **'Slow on purpose'**
+  String get meshCanvasHelpTempoTitle;
+
+  /// Help-sheet row body explaining LoRa tempo + airtime rate limiting. Sets expectations that paints are not instant and the canvas is intentionally co-existing with other channel traffic.
+  ///
+  /// In en, this message translates to:
+  /// **'LoRa is not the internet. Expect seconds (USB / nearby radio) to minutes (long-range) for paints to ripple across the mesh. Each device caps itself to keep the channel breathable for DMs, signals, and other traffic. Be patient - the board accumulates.'**
+  String get meshCanvasHelpTempoBody;
+
+  /// Help-sheet row title describing the last-write-wins conflict-resolution model. /r/place principle 3 ('overwriteability is mandatory') + principle 10 ('conflict is healthy').
+  ///
+  /// In en, this message translates to:
+  /// **'Newer paint wins'**
+  String get meshCanvasHelpOverwriteTitle;
+
+  /// Help-sheet row body explaining LWW conflict resolution. Reassures users that overwrites are by design, not bugs; communicates the /r/place 'conflict is healthy' principle.
+  ///
+  /// In en, this message translates to:
+  /// **'Two nodes paint the same cell? Whichever paint has the newer timestamp wins. Overwrites are intentional - territory and conflict are part of the wall. There is no edit history to lock in, no admin to call.'**
+  String get meshCanvasHelpOverwriteBody;
+
+  /// Row title in the help sheet framing the etiquette / philosophy section. Mesh-native: channel-scoped not global; no central authority.
+  ///
+  /// In en, this message translates to:
+  /// **'Public on the channel'**
   String get meshCanvasHelpCommunityTitle;
 
-  /// Row body in the help sheet. Sets community / collaborative tone. Two short sentences.
+  /// Row body in the help sheet. Etiquette + philosophy. Replaces enterprise 'public by design' wording with mesh-native channel-scoped framing.
   ///
   /// In en, this message translates to:
-  /// **'Pixels are deliberately public on the mesh. There is no edit history fight to win. The fun is the wall, not the win.'**
+  /// **'Pixels are deliberately public on the channel that hosts them. No admins, no moderators, no global wall to police. If you would not say it on the channel, do not paint it. The fun is the wall, not the win.'**
   String get meshCanvasHelpCommunityBody;
 
   /// Tooltip for the info button in the MeshCanvas viewer app bar.
@@ -21753,6 +21765,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'pixels on the mesh'**
   String get meshCanvasOverviewHeroBigUnit;
+
+  /// Centered atmospheric prompt shown on a mesh canvas with zero painted cells. /r/place-style direct instruction: the user's first paint wakes the shared channel canvas. Lives inside the canvas surface as IgnorePointer text so taps pass through to paint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to seed the first pixel'**
+  String get meshCanvasViewerEmptyMeshTitle;
+
+  /// Smaller atmospheric line under the empty-mesh-canvas centered prompt. Communicates that the channel canvas is dormant until someone seeds it.
+  ///
+  /// In en, this message translates to:
+  /// **'First paint wakes the board'**
+  String get meshCanvasViewerEmptyMeshSubtitle;
+
+  /// Centered atmospheric prompt shown on the Local Device Canvas when it has zero painted cells. Local-only register — no channel / mesh language.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to paint'**
+  String get meshCanvasViewerEmptyLocalTitle;
+
+  /// Smaller line under the empty-local-canvas centered prompt. Reassures the user that the local sandbox never broadcasts.
+  ///
+  /// In en, this message translates to:
+  /// **'Stays on this device'**
+  String get meshCanvasViewerEmptyLocalSubtitle;
+
+  /// Compact gesture-hint chip shown inside the canvas frame. Tells the user that a single tap on a cell paints it with the active color.
+  ///
+  /// In en, this message translates to:
+  /// **'tap · paint'**
+  String get meshCanvasViewerGestureTap;
+
+  /// Compact gesture-hint chip shown inside the canvas frame. Tells the user that a single-finger drag pans the canvas surface.
+  ///
+  /// In en, this message translates to:
+  /// **'drag · pan'**
+  String get meshCanvasViewerGestureDrag;
+
+  /// Compact gesture-hint chip shown inside the canvas frame. Tells the user that a two-finger pinch zooms in and out of the canvas surface.
+  ///
+  /// In en, this message translates to:
+  /// **'pinch · zoom'**
+  String get meshCanvasViewerGesturePinch;
+
+  /// Compact gesture-hint chip shown inside the canvas frame. Tells the user that long-pressing a cell opens the tile inspector with last painter and history.
+  ///
+  /// In en, this message translates to:
+  /// **'hold · inspect'**
+  String get meshCanvasViewerGestureHold;
 
   /// Status chip in the Mesh tab hero stats card showing how many Meshtastic channels are configured / surfaced as latent canvases.
   ///
