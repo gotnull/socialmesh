@@ -145,13 +145,18 @@ void main() {
       await tester.tap(find.text('Mesh'));
       await tester.pumpAndSettle(const Duration(seconds: 2));
 
-      // Section header above the cards.
-      expect(find.text('CHANNEL CANVASES'), findsOneWidget);
-      // Each card has a thumbnail widget — proves we aren't
-      // shipping a settings-list row anymore.
+      // Primary channel (index 0) is treated as the commons; gets its
+      // own pinned section header.
+      expect(find.text('PRIMARY COMMONS'), findsOneWidget);
+      // The dominant Primary card still uses a ChannelCanvasThumbnail.
       expect(find.byType(ChannelCanvasThumbnail), findsOneWidget);
-      // Dormant copy from the dev's brief examples.
-      expect(find.text('Dormant · Seed first pixel'), findsOneWidget);
+      // Dormant Primary commons surfaces the CTA + hint pair from the
+      // v0.1 hierarchy brief.
+      expect(find.text('Seed the first pixel'), findsOneWidget);
+      expect(find.text('First paint wakes the board'), findsOneWidget);
+      // With only the Primary channel present, the secondary section
+      // must not render.
+      expect(find.text('OTHER CHANNELS'), findsNothing);
     });
 
     testWidgets('Mesh tab lists channel canvases — channel names appear only '
