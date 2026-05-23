@@ -305,11 +305,17 @@ void main() {
       },
     );
 
-    // S4 queue-full block — UX soft cap at 32 pending.
-    // Spec: docs/canvas/CANVAS_TRANSMISSION_STATUS_V0_1.md §3.3.
+    // Optimistic local painting remains valid even when the mesh
+    // queue is at the UX soft cap. The HUD pill communicates queue
+    // state as ambient chrome; the repository's hard 256 cap does
+    // lossy collapse if the queue actually fills. Spec anchor:
+    // CANVAS_PHILOSOPHY §3 ("preserve optimistic local painting").
+    // A previous build hard-blocked paint at the soft cap, which
+    // deadlocked any session that opened a canvas carrying a stale
+    // queue from a prior run with no drain in progress.
     testWidgets(
-      'Mesh Canvas tap with transmission severity=full is silently blocked '
-      '— soft UX cap prevents lossy collapse at the hard 256 cap',
+      'Mesh Canvas tap with transmission severity=full still enqueues — '
+      'optimistic local painting is preserved; HUD pill is informative chrome',
       (tester) async {
         final repo = await _pumpViewer(
           tester,
@@ -328,19 +334,14 @@ void main() {
         await tester.tap(find.byType(MeshCanvasViewerScreen));
         await tester.pump(const Duration(milliseconds: 200));
 
-        expect(
-          repo.calls,
-          isEmpty,
-          reason:
-              'queue-full gate must block mesh paint enqueue with a '
-              'soft-reject haptic only — no row added to pending_op',
-        );
+        expect(repo.calls, hasLength(1));
+        expect(repo.calls.single.method, 'enqueuePaint');
       },
     );
 
-    // S4 — queue-full block does NOT affect Local Canvas.
-    // Local paints bypass the transmission status entirely because
-    // they never enqueue to `pending_op`.
+    // Local Canvas paths remain unaffected by mesh transmission
+    // state (I2 — Local Canvas immunity). Confirms the local code
+    // path never even reads the transmission selector.
     testWidgets(
       'Local Canvas paint with severity=full transmission state still works '
       '— Local sandbox is independent of mesh transmission state',

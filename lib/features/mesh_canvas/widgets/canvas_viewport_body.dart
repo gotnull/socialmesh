@@ -103,24 +103,15 @@ class CanvasViewportBody extends ConsumerWidget {
         );
         return;
       }
-      // Soft UX queue cap: when pending count is at or above the
-      // soft cap (32), block new paint taps with a soft-reject
-      // haptic. The HUD pill is already in `full` state by virtue
-      // of the same selector, so the user sees the chrome reason
-      // immediately. No snackbar.
-      // CANVAS_TRANSMISSION_STATUS_V0_1.md §3.3.
-      final transmissionStatus = ref
-          .read(meshCanvasTransmissionStatusProvider(canvas.localId))
-          .asData
-          ?.value;
-      if (transmissionStatus != null && !transmissionStatus.canPaint) {
-        AppLogging.meshCanvas(
-          'mesh paint blocked: queue full at ${transmissionStatus.pendingCount} '
-          '(canvas=${canvas.localId})',
-        );
-        ref.haptics.itemSelect();
-        return;
-      }
+      // Optimistic local painting is mandatory — CANVAS_PHILOSOPHY
+      // §3 ("preserve optimistic local painting"). The transmission
+      // HUD already communicates queue + cooling state as ambient
+      // chrome; a hard block here turned into a permanent deadlock
+      // any time a session left behind a stale queue with nothing
+      // draining. Lossy collapse at the 256 hard cap remains the
+      // backstop. The HUD pill stays informative for the user; the
+      // repository handles airtime fairness via the governor + SIP
+      // limiter on the send side.
       // Mesh Canvas: enqueue into `pending_op` AND apply to local
       // `cell` / `applied_op` in one transaction. The local node_num
       // is the real author for mesh canvases — receivers use it for
@@ -493,6 +484,15 @@ class _PresenceLifecycleHost extends ConsumerStatefulWidget {
 class _PresenceLifecycleHostState extends ConsumerState<_PresenceLifecycleHost>
     with LifecycleSafeMixin<_PresenceLifecycleHost> {
   PresenceEmitCoordinator? _coordinator;
+  Timer? _drainTimer;
+
+  /// How often we re-kick the send coordinator while a mesh viewer
+  /// is mounted. Five seconds matches the governor's natural rate
+  /// of decay without spamming SQL / SIP. The timer is the ONLY way
+  /// a stale queue (rows accumulated while the user was offline or
+  /// idle in a prior session) drains — without it, opening a canvas
+  /// with N >= softCap pending rows used to deadlock paint input.
+  static const Duration _drainTickPeriod = Duration(seconds: 5);
 
   @override
   void initState() {
@@ -524,11 +524,29 @@ class _PresenceLifecycleHostState extends ConsumerState<_PresenceLifecycleHost>
         channelIndex: channelIndex,
         canvasId: canvas.canvasId,
       );
+      // Immediately kick the send coordinator on mount so any stale
+      // `pending_op` rows left over from a prior session start
+      // draining. Then schedule a 5 s periodic so the queue keeps
+      // moving while the user is on this canvas — even if they
+      // never paint another cell.
+      if (!mounted) return;
+      _kickDrain();
+      _drainTimer = Timer.periodic(_drainTickPeriod, (_) => _kickDrain());
     });
+  }
+
+  void _kickDrain() {
+    if (!mounted) return;
+    final asyncCoord = ref.read(canvasSendCoordinatorProvider);
+    final sendCoord = asyncCoord.asData?.value;
+    if (sendCoord == null) return;
+    unawaited(sendCoord.drain());
   }
 
   @override
   void dispose() {
+    _drainTimer?.cancel();
+    _drainTimer = null;
     final coordinator = _coordinator;
     if (coordinator != null) {
       // Best-effort detach. dispose() is synchronous so we cannot

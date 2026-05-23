@@ -101,62 +101,58 @@ void main() {
     });
   });
 
-  group('I3 — Queue-full block leaves pending_op untouched', () {
-    test('soft cap blocked paint does NOT add a row to pending_op '
-        '(repository invariants test)', () async {
-      // The actual paint-handler block lives in canvas_viewport_body
-      // and is covered by canvas_paint_dispatch_test. Here we
-      // assert the repository invariant: counting pending rows
-      // before AND after a refused-paint attempt is unchanged.
-      final db = CanvasDatabase(testDbPath: _uniqueTestDbPath());
-      await db.init();
-      addTearDown(db.close);
-      final repo = CanvasRepository(db);
-      final canvas = await repo.getOrCreateMeshCanvas(
-        canvasId: 0xC0DE,
-        channelIndex: 0,
-        name: 'Mesh',
-      );
-
-      // Pre-fill the queue to the soft cap.
-      for (var i = 0; i < MeshCanvasTransmissionStatus.softQueueCap; i++) {
-        await repo.enqueuePaint(
-          canvasLocalId: canvas.localId,
-          x: i,
-          y: 0,
-          color: 1,
-          authorNodeNum: 0x100,
-          opTs: 1000 + i,
-          opSeq: i,
+  group('I3 — Soft-cap is informative, not a hard block', () {
+    test(
+      'severity=full snapshot still has accurate pending count + cap '
+      'reference — the HUD pill can read both to render queue chrome',
+      () async {
+        final db = CanvasDatabase(testDbPath: _uniqueTestDbPath());
+        await db.init();
+        addTearDown(db.close);
+        final repo = CanvasRepository(db);
+        final canvas = await repo.getOrCreateMeshCanvas(
+          canvasId: 0xC0DE,
+          channelIndex: 0,
+          name: 'Mesh',
         );
-      }
 
-      final statsBefore = await repo.pendingStatsForCanvas(canvas.localId);
-      expect(statsBefore.count, MeshCanvasTransmissionStatus.softQueueCap);
+        // Pre-fill the queue to the soft cap.
+        for (var i = 0; i < MeshCanvasTransmissionStatus.softQueueCap; i++) {
+          await repo.enqueuePaint(
+            canvasLocalId: canvas.localId,
+            x: i,
+            y: 0,
+            color: 1,
+            authorNodeNum: 0x100,
+            opTs: 1000 + i,
+            opSeq: i,
+          );
+        }
 
-      // Simulate the paint handler's gate: read the status, see
-      // canPaint=false, return without enqueuing.
-      final governor = CanvasOutboundGovernor();
-      final coordinator = CanvasSendCoordinator(
-        repository: repo,
-        governor: governor,
-        outbound: _FakeChannel(),
-        localNodeNumProvider: () => 0x100,
-      );
-      final status = await computeTransmissionStatus(
-        repo: repo,
-        coordinator: coordinator,
-        governor: governor,
-        canvasLocalId: canvas.localId,
-      );
-      expect(status.severity, MeshCanvasTransmissionSeverity.full);
-      expect(status.canPaint, isFalse);
-      // The handler returns early here. NO enqueuePaint call. So
-      // count must be unchanged.
-
-      final statsAfter = await repo.pendingStatsForCanvas(canvas.localId);
-      expect(statsAfter.count, statsBefore.count);
-    });
+        final governor = CanvasOutboundGovernor();
+        final coordinator = CanvasSendCoordinator(
+          repository: repo,
+          governor: governor,
+          outbound: _FakeChannel(),
+          localNodeNumProvider: () => 0x100,
+        );
+        final status = await computeTransmissionStatus(
+          repo: repo,
+          coordinator: coordinator,
+          governor: governor,
+          canvasLocalId: canvas.localId,
+        );
+        expect(status.severity, MeshCanvasTransmissionSeverity.full);
+        expect(status.canPaint, isFalse);
+        expect(
+          status.pendingCount,
+          MeshCanvasTransmissionStatus.softQueueCap,
+          reason:
+              'view model still surfaces queue depth for HUD chrome even '
+              'though the paint handler no longer hard-blocks at the cap',
+        );
+      },
+    );
   });
 
   group('I4 — Cooling decay', () {
