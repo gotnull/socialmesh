@@ -12593,6 +12593,26 @@ class AppLocalizationsPt extends AppLocalizations {
       'Fila de pixels cheia. Aguarde um momento para a mesh recuperar.';
 
   @override
+  String get meshCanvasHydrationRecovering => 'recuperando pixels';
+
+  @override
+  String get meshCanvasHydrationSyncing => 'sincronizando blocos';
+
+  @override
+  String get meshCanvasHydrationQuiet => 'mesh em silêncio';
+
+  @override
+  String get meshCanvasHydrationTooltipRecovering =>
+      'Pedindo às rádios próximas os blocos faltantes.';
+
+  @override
+  String get meshCanvasHydrationTooltipSyncing => 'Recebendo pixels da mesh.';
+
+  @override
+  String get meshCanvasHydrationTooltipQuiet =>
+      'Nenhum pixel ouvido das rádios próximas.';
+
+  @override
   String get meshCanvasVitalsScopeMesh => 'TELA MESH';
 
   @override

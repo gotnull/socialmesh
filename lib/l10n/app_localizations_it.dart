@@ -12603,6 +12603,27 @@ class AppLocalizationsIt extends AppLocalizations {
       'Coda di pixel piena. Attendi un momento che la mesh recuperi.';
 
   @override
+  String get meshCanvasHydrationRecovering => 'recupero pixel';
+
+  @override
+  String get meshCanvasHydrationSyncing => 'sincronizzo tessere';
+
+  @override
+  String get meshCanvasHydrationQuiet => 'mesh silenziosa';
+
+  @override
+  String get meshCanvasHydrationTooltipRecovering =>
+      'Chiedo alle radio vicine le tessere mancanti.';
+
+  @override
+  String get meshCanvasHydrationTooltipSyncing =>
+      'Ricezione di pixel dalla mesh.';
+
+  @override
+  String get meshCanvasHydrationTooltipQuiet =>
+      'Nessun pixel sentito dalle radio vicine.';
+
+  @override
   String get meshCanvasVitalsScopeMesh => 'TELA MESH';
 
   @override

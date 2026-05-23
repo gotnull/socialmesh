@@ -23,6 +23,7 @@ import 'package:sqflite/sqflite.dart';
 import '../../core/logging.dart';
 import 'canvas_constants.dart';
 import 'canvas_database.dart';
+import 'canvas_digest_compute.dart';
 import 'canvas_merge.dart';
 import 'canvas_models.dart';
 import 'canvas_transmission_status_models.dart';
@@ -630,6 +631,26 @@ class CanvasRepository {
       where: 'id = ?',
       whereArgs: [canvasLocalId],
     );
+  }
+
+  /// Compute the current digests over a canvas's painted cells AND
+  /// write them back to the `canvas` row. Returns the freshly-computed
+  /// digest set so the caller can hand it to the wire emitter without
+  /// a second read.
+  ///
+  /// Cheap on small canvases (the BLAKE2s-128 of a few hundred cells
+  /// is sub-millisecond); for fully-painted boards we accept the
+  /// ~10ms cost — the caller (sync coordinator) gates this with the
+  /// canvas governor + jitter so it never lands on a hot UI frame.
+  Future<CanvasDigestSet> computeAndCacheDigests(int canvasLocalId) async {
+    final cells = await getCanvasCells(canvasLocalId);
+    final set = await computeCanvasDigests(cells);
+    await updateCanvasDigests(
+      canvasLocalId: canvasLocalId,
+      globalDigest: set.globalDigest,
+      tileDigests: set.tileDigests,
+    );
+    return set;
   }
 
   /// Selectively invalidate the digest cache for a given cell.

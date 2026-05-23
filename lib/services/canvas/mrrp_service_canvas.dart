@@ -51,6 +51,7 @@ import 'canvas_constants.dart';
 import 'canvas_inbound_limiter.dart';
 import 'canvas_models.dart';
 import 'canvas_repository.dart';
+import 'canvas_sync_coordinator.dart';
 import 'presence_cache.dart';
 import 'presence_models.dart';
 
@@ -173,6 +174,11 @@ class MrrpServiceCanvas implements MrrpServiceHandler {
   /// pill rebuild. Mirrors the `onCellApplied` pattern for paints.
   final void Function(int canvasLocalId)? _onPresenceChanged;
 
+  /// Optional sync coordinator. When attached, inbound canvas_digest,
+  /// sync_request, and sync_response frames delegate to it. Null in
+  /// pre-S9 tests; S9 production wiring sets it via the provider.
+  final CanvasSyncCoordinator? _syncCoordinator;
+
   MrrpServiceCanvas({
     required CanvasRepository repository,
     CanvasInboundLimiter? limiter,
@@ -181,13 +187,15 @@ class MrrpServiceCanvas implements MrrpServiceHandler {
     void Function(int canvasLocalId)? onCellApplied,
     PresenceCache? presenceCache,
     void Function(int canvasLocalId)? onPresenceChanged,
+    CanvasSyncCoordinator? syncCoordinator,
   }) : _repository = repository,
        _inboundLimiter = limiter ?? CanvasInboundLimiter(nowMs: nowMs),
        _nowMs = nowMs ?? (() => DateTime.now().millisecondsSinceEpoch),
        _channelNameForFallback = channelNameForFallback,
        _onCellApplied = onCellApplied,
        _presenceCache = presenceCache,
-       _onPresenceChanged = onPresenceChanged;
+       _onPresenceChanged = onPresenceChanged,
+       _syncCoordinator = syncCoordinator;
 
   @override
   int get serviceId => MrrpServiceId.canvasV1;
@@ -277,12 +285,29 @@ class MrrpServiceCanvas implements MrrpServiceHandler {
           channelIndex: channelIndex,
         );
       case CanvasAction.canvasDigest:
+        return _handleCanvasDigest(
+          payload: canvasPayload,
+          senderNodeId: senderNodeId,
+          channelIndex: channelIndex,
+        );
       case CanvasAction.syncRequest:
+        return _handleSyncRequest(
+          payload: canvasPayload,
+          senderNodeId: senderNodeId,
+          channelIndex: channelIndex,
+        );
       case CanvasAction.syncResponse:
+        return _handleSyncResponse(
+          payload: canvasPayload,
+          senderNodeId: senderNodeId,
+          channelIndex: channelIndex,
+        );
       case CanvasAction.canvasInfo:
-        // Decode-only no-op (S5; full handling lands in S9).
+        // canvas_info request/response not in v0.1 scope. S9 plumbs
+        // digest/sync; canvas_info remains a decode-only no-op for
+        // forward compat.
         AppLogging.meshCanvas(
-          'inbound ${action.name} from sender=0x'
+          'inbound canvas_info from sender=0x'
           '${senderNodeId.toRadixString(16)} '
           'channel=$channelIndex - decoded, no-op',
         );
@@ -290,6 +315,117 @@ class MrrpServiceCanvas implements MrrpServiceHandler {
           outcome: CanvasInboundOutcome.acceptedNoOp,
         );
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // S9: canvas_digest / sync_request / sync_response handlers. Each
+  // decodes via the codec and delegates to the [CanvasSyncCoordinator]
+  // when attached. The coordinator owns digest comparison, sync_request
+  // scheduling, sync_response generation, and the apply path through
+  // applyInboundPaint (so LWW + digest invalidation Just Work).
+  // ---------------------------------------------------------------------------
+
+  Future<CanvasInboundReport> _handleCanvasDigest({
+    required Uint8List payload,
+    required int senderNodeId,
+    required int channelIndex,
+  }) async {
+    final op = CanvasCodec.decodeCanvasDigest(payload);
+    if (op == null) {
+      AppLogging.meshCanvas(
+        'sync digest_received drop_reason=decode_failed '
+        'sender=0x${senderNodeId.toRadixString(16)}',
+      );
+      return const CanvasInboundReport(
+        outcome: CanvasInboundOutcome.decodeFailed,
+      );
+    }
+    final coord = _syncCoordinator;
+    if (coord == null) {
+      AppLogging.meshCanvas(
+        'sync digest_received drop_reason=coordinator_unattached '
+        'sender=0x${senderNodeId.toRadixString(16)}',
+      );
+      return const CanvasInboundReport(
+        outcome: CanvasInboundOutcome.acceptedNoOp,
+      );
+    }
+    await coord.handleInboundDigest(
+      senderNodeId: senderNodeId,
+      channelIndex: channelIndex,
+      op: op,
+    );
+    return const CanvasInboundReport(
+      outcome: CanvasInboundOutcome.acceptedNoOp,
+    );
+  }
+
+  Future<CanvasInboundReport> _handleSyncRequest({
+    required Uint8List payload,
+    required int senderNodeId,
+    required int channelIndex,
+  }) async {
+    final op = CanvasCodec.decodeSyncRequest(payload);
+    if (op == null) {
+      AppLogging.meshCanvas(
+        'sync sync_request_received drop_reason=decode_failed '
+        'sender=0x${senderNodeId.toRadixString(16)}',
+      );
+      return const CanvasInboundReport(
+        outcome: CanvasInboundOutcome.decodeFailed,
+      );
+    }
+    final coord = _syncCoordinator;
+    if (coord == null) {
+      AppLogging.meshCanvas(
+        'sync sync_request_received drop_reason=coordinator_unattached '
+        'sender=0x${senderNodeId.toRadixString(16)}',
+      );
+      return const CanvasInboundReport(
+        outcome: CanvasInboundOutcome.acceptedNoOp,
+      );
+    }
+    await coord.handleInboundSyncRequest(
+      senderNodeId: senderNodeId,
+      channelIndex: channelIndex,
+      op: op,
+    );
+    return const CanvasInboundReport(
+      outcome: CanvasInboundOutcome.acceptedNoOp,
+    );
+  }
+
+  Future<CanvasInboundReport> _handleSyncResponse({
+    required Uint8List payload,
+    required int senderNodeId,
+    required int channelIndex,
+  }) async {
+    final op = CanvasCodec.decodeSyncResponse(payload);
+    if (op == null) {
+      AppLogging.meshCanvas(
+        'sync sync_response_received drop_reason=decode_failed '
+        'sender=0x${senderNodeId.toRadixString(16)}',
+      );
+      return const CanvasInboundReport(
+        outcome: CanvasInboundOutcome.decodeFailed,
+      );
+    }
+    final coord = _syncCoordinator;
+    if (coord == null) {
+      AppLogging.meshCanvas(
+        'sync sync_response_received drop_reason=coordinator_unattached '
+        'sender=0x${senderNodeId.toRadixString(16)}',
+      );
+      return const CanvasInboundReport(
+        outcome: CanvasInboundOutcome.acceptedNoOp,
+      );
+    }
+    await coord.handleInboundSyncResponse(
+      senderNodeId: senderNodeId,
+      channelIndex: channelIndex,
+      op: op,
+    );
+    return const CanvasInboundReport(outcome: CanvasInboundOutcome.applied);
   }
 
   // ---------------------------------------------------------------------------

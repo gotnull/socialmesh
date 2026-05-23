@@ -12694,6 +12694,27 @@ class AppLocalizationsFr extends AppLocalizations {
       'File de pixels pleine. Attendez un instant que le maillage rattrape.';
 
   @override
+  String get meshCanvasHydrationRecovering => 'récupération des pixels';
+
+  @override
+  String get meshCanvasHydrationSyncing => 'synchronisation des tuiles';
+
+  @override
+  String get meshCanvasHydrationQuiet => 'maillage silencieux';
+
+  @override
+  String get meshCanvasHydrationTooltipRecovering =>
+      'Demande aux radios voisines les tuiles manquantes.';
+
+  @override
+  String get meshCanvasHydrationTooltipSyncing =>
+      'Réception de pixels du maillage.';
+
+  @override
+  String get meshCanvasHydrationTooltipQuiet =>
+      'Aucun pixel entendu des radios voisines.';
+
+  @override
   String get meshCanvasVitalsScopeMesh => 'TOILE MAILLÉE';
 
   @override

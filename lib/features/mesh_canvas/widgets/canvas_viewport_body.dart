@@ -40,6 +40,7 @@ import '../providers/presence_providers.dart';
 import '../providers/transmission_status_providers.dart';
 import 'canvas_color_strip.dart';
 import 'canvas_hud_overlays.dart';
+import 'canvas_hydration_status_hud.dart';
 import 'canvas_palette_sheet.dart';
 import 'canvas_presence_strip.dart';
 import 'canvas_tile_inspector_sheet.dart';
@@ -381,8 +382,23 @@ class CanvasViewportBody extends ConsumerWidget {
                         Positioned(
                           top: AppTheme.spacing12,
                           right: AppTheme.spacing12,
-                          child: CanvasTransmissionStatusHud(
-                            canvasLocalId: canvas.localId,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Hydration pill on top — surfaces the
+                              // peer-discovery + tile-sync state that
+                              // CanvasSyncCoordinator drives. Hidden
+                              // when idle (zero footprint on the
+                              // happy path).
+                              CanvasHydrationStatusHud(
+                                canvasLocalId: canvas.localId,
+                              ),
+                              const SizedBox(height: AppTheme.spacing6),
+                              CanvasTransmissionStatusHud(
+                                canvasLocalId: canvas.localId,
+                              ),
+                            ],
                           ),
                         ),
                       // Atmospheric "first paint wakes the board"
@@ -485,6 +501,7 @@ class _PresenceLifecycleHostState extends ConsumerState<_PresenceLifecycleHost>
     with LifecycleSafeMixin<_PresenceLifecycleHost> {
   PresenceEmitCoordinator? _coordinator;
   Timer? _drainTimer;
+  Timer? _digestEmitTimer;
 
   /// How often we re-kick the send coordinator while a mesh viewer
   /// is mounted. Five seconds matches the governor's natural rate
@@ -532,6 +549,23 @@ class _PresenceLifecycleHostState extends ConsumerState<_PresenceLifecycleHost>
       if (!mounted) return;
       _kickDrain();
       _drainTimer = Timer.periodic(_drainTickPeriod, (_) => _kickDrain());
+
+      // S9: schedule a canvas_digest emit with 3-5 s jitter so a
+      // fresh peer who joined slightly before us doesn't get a
+      // stampede of digests from everyone-at-once. The emit goes
+      // through the same governor + SIP limiter as paint frames.
+      final jitterMs = 3000 + (DateTime.now().millisecondsSinceEpoch % 2000);
+      _digestEmitTimer = Timer(Duration(milliseconds: jitterMs), () async {
+        if (!mounted) return;
+        final asyncSync = ref.read(canvasSyncCoordinatorProvider);
+        final sync = asyncSync.asData?.value;
+        if (sync == null) return;
+        await sync.emitDigest(
+          canvasLocalId: canvas.localId,
+          channelIndex: channelIndex,
+          canvasId: canvas.canvasId,
+        );
+      });
     });
   }
 
@@ -547,6 +581,8 @@ class _PresenceLifecycleHostState extends ConsumerState<_PresenceLifecycleHost>
   void dispose() {
     _drainTimer?.cancel();
     _drainTimer = null;
+    _digestEmitTimer?.cancel();
+    _digestEmitTimer = null;
     final coordinator = _coordinator;
     if (coordinator != null) {
       // Best-effort detach. dispose() is synchronous so we cannot

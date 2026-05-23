@@ -32,6 +32,7 @@ import '../../../services/canvas/canvas_outbound_channel_impl.dart';
 import '../../../services/canvas/canvas_outbound_governor.dart';
 import '../../../services/canvas/canvas_repository.dart';
 import '../../../services/canvas/canvas_send_coordinator.dart';
+import '../../../services/canvas/canvas_sync_coordinator.dart';
 import '../../../services/canvas/mrrp_service_canvas.dart';
 import 'mesh_canvas_participation_providers.dart';
 import 'presence_providers.dart';
@@ -225,6 +226,29 @@ final canvasSendCoordinatorProvider = FutureProvider<CanvasSendCoordinator>((
   return coordinator;
 });
 
+/// S9: sync coordinator. Owns the per-peer-per-tile state machine,
+/// digest emit on viewer mount, sync_request scheduling, and the
+/// sync_response apply path. Routed inbound by [MrrpServiceCanvas].
+final canvasSyncCoordinatorProvider = FutureProvider<CanvasSyncCoordinator>((
+  ref,
+) async {
+  final repo = await ref.watch(canvasRepositoryProvider.future);
+  final outbound = ref.read(canvasOutboundChannelProvider);
+  final governor = ref.read(canvasOutboundGovernorProvider);
+  final coordinator = CanvasSyncCoordinator(
+    repository: repo,
+    outbound: outbound,
+    governor: governor,
+    canEmit: () => ref.read(meshCanvasParticipationEnabledProvider),
+    onCellApplied: (canvasLocalId) {
+      ref.invalidate(canvasCellsProvider(canvasLocalId));
+      ref.invalidate(canvasListProvider);
+    },
+  );
+  ref.onDispose(coordinator.dispose);
+  return coordinator;
+});
+
 /// Decoder + repository-apply layer for inbound canvas frames. The
 /// production attach hook in [canvasProtocolWiringProvider] funnels
 /// every inbound canvas payload from ProtocolService through this
@@ -234,9 +258,11 @@ final mrrpServiceCanvasProvider = FutureProvider<MrrpServiceCanvas>((
 ) async {
   final repo = await ref.watch(canvasRepositoryProvider.future);
   final presenceCache = ref.watch(presenceCacheProvider);
+  final syncCoordinator = await ref.watch(canvasSyncCoordinatorProvider.future);
   return MrrpServiceCanvas(
     repository: repo,
     presenceCache: presenceCache,
+    syncCoordinator: syncCoordinator,
     // Fires once per inbound frame when at least one op landed. Without
     // this, cells write to SQLite but no viewer rebuilds: the user only
     // sees inbound paints after their own next tap kicks an invalidate.

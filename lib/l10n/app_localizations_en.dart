@@ -12449,6 +12449,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'Paint queue full. Wait a moment for the mesh to catch up.';
 
   @override
+  String get meshCanvasHydrationRecovering => 'recovering paint';
+
+  @override
+  String get meshCanvasHydrationSyncing => 'syncing tiles';
+
+  @override
+  String get meshCanvasHydrationQuiet => 'mesh quiet';
+
+  @override
+  String get meshCanvasHydrationTooltipRecovering =>
+      'Asking nearby radios for missing tiles.';
+
+  @override
+  String get meshCanvasHydrationTooltipSyncing =>
+      'Receiving paint from the mesh.';
+
+  @override
+  String get meshCanvasHydrationTooltipQuiet =>
+      'No paint heard from nearby radios.';
+
+  @override
   String get meshCanvasVitalsScopeMesh => 'MESH CANVAS';
 
   @override

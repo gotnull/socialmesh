@@ -21802,6 +21802,42 @@ abstract class AppLocalizations {
   /// **'Paint queue full. Wait a moment for the mesh to catch up.'**
   String get meshCanvasTransmissionTooltipFull;
 
+  /// MeshCanvas viewer hydration HUD label when one or more sync_request frames are in flight to peers, recovering existing canvas state.
+  ///
+  /// In en, this message translates to:
+  /// **'recovering paint'**
+  String get meshCanvasHydrationRecovering;
+
+  /// MeshCanvas viewer hydration HUD label while sync_response bands are actively arriving and being applied to the local canvas.
+  ///
+  /// In en, this message translates to:
+  /// **'syncing tiles'**
+  String get meshCanvasHydrationSyncing;
+
+  /// MeshCanvas viewer hydration HUD label when the local canvas is empty AND a peer has been observed reporting an empty canvas as well. Distinguishes 'genuinely empty mesh' from 'just haven't heard from anyone yet'.
+  ///
+  /// In en, this message translates to:
+  /// **'mesh quiet'**
+  String get meshCanvasHydrationQuiet;
+
+  /// Tooltip for the recovering state of the MeshCanvas viewer hydration HUD.
+  ///
+  /// In en, this message translates to:
+  /// **'Asking nearby radios for missing tiles.'**
+  String get meshCanvasHydrationTooltipRecovering;
+
+  /// Tooltip for the syncing state of the MeshCanvas viewer hydration HUD.
+  ///
+  /// In en, this message translates to:
+  /// **'Receiving paint from the mesh.'**
+  String get meshCanvasHydrationTooltipSyncing;
+
+  /// Tooltip for the quiet state of the MeshCanvas viewer hydration HUD.
+  ///
+  /// In en, this message translates to:
+  /// **'No paint heard from nearby radios.'**
+  String get meshCanvasHydrationTooltipQuiet;
+
   /// Uppercase scope badge at the top-left of the MeshCanvas viewer vitals bar. Identifies the surface as a per-channel mesh canvas.
   ///
   /// In en, this message translates to:

@@ -12663,6 +12663,27 @@ class AppLocalizationsEs extends AppLocalizations {
       'Cola de píxeles llena. Espera un momento a que la mesh se ponga al día.';
 
   @override
+  String get meshCanvasHydrationRecovering => 'recuperando píxeles';
+
+  @override
+  String get meshCanvasHydrationSyncing => 'sincronizando teselas';
+
+  @override
+  String get meshCanvasHydrationQuiet => 'mesh en silencio';
+
+  @override
+  String get meshCanvasHydrationTooltipRecovering =>
+      'Pidiendo a las radios cercanas las teselas que faltan.';
+
+  @override
+  String get meshCanvasHydrationTooltipSyncing =>
+      'Recibiendo píxeles de la mesh.';
+
+  @override
+  String get meshCanvasHydrationTooltipQuiet =>
+      'No se han oído píxeles de las radios cercanas.';
+
+  @override
   String get meshCanvasVitalsScopeMesh => 'LIENZO MESH';
 
   @override

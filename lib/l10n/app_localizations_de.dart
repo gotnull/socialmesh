@@ -12632,6 +12632,27 @@ class AppLocalizationsDe extends AppLocalizations {
       'Pixel-Warteschlange ist voll. Warte kurz, bis das Mesh aufgeholt hat.';
 
   @override
+  String get meshCanvasHydrationRecovering => 'stelle pixel wieder her';
+
+  @override
+  String get meshCanvasHydrationSyncing => 'synchronisiere kacheln';
+
+  @override
+  String get meshCanvasHydrationQuiet => 'mesh ist still';
+
+  @override
+  String get meshCanvasHydrationTooltipRecovering =>
+      'Frage nahegelegene Funkgeräte nach fehlenden Kacheln.';
+
+  @override
+  String get meshCanvasHydrationTooltipSyncing =>
+      'Empfange Pixel aus dem Mesh.';
+
+  @override
+  String get meshCanvasHydrationTooltipQuiet =>
+      'Keine Pixel von nahegelegenen Funkgeräten gehört.';
+
+  @override
   String get meshCanvasVitalsScopeMesh => 'MESH-LEINWAND';
 
   @override

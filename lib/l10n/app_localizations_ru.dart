@@ -12592,6 +12592,27 @@ class AppLocalizationsRu extends AppLocalizations {
       'Очередь пикселей заполнена. Подождите, пока меш-сеть наверстает.';
 
   @override
+  String get meshCanvasHydrationRecovering => 'восстанавливаю пиксели';
+
+  @override
+  String get meshCanvasHydrationSyncing => 'синхронизирую плитки';
+
+  @override
+  String get meshCanvasHydrationQuiet => 'меш тихо';
+
+  @override
+  String get meshCanvasHydrationTooltipRecovering =>
+      'Запрашиваю недостающие плитки у ближайших радиостанций.';
+
+  @override
+  String get meshCanvasHydrationTooltipSyncing =>
+      'Принимаю пиксели из меш-сети.';
+
+  @override
+  String get meshCanvasHydrationTooltipQuiet =>
+      'От ближайших радиостанций пикселей не слышно.';
+
+  @override
   String get meshCanvasVitalsScopeMesh => 'MESH-ХОЛСТ';
 
   @override
