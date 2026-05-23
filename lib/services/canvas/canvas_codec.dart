@@ -38,7 +38,8 @@ enum CanvasAction {
   canvasDigest(0x0003),
   syncRequest(0x0004),
   syncResponse(0x0005),
-  canvasInfo(0x0006);
+  canvasInfo(0x0006),
+  presence(0x0007);
 
   const CanvasAction(this.code);
 
@@ -258,6 +259,58 @@ class CanvasSyncResponseOp {
     required this.tileX,
     required this.tileY,
     required this.body,
+  });
+}
+
+/// Presence state on the wire byte at offset 16 of a presence frame.
+/// Source: docs/canvas/CANVAS_PRESENCE_V0_1.md §2.3.
+///
+/// Receivers MUST drop frames whose state byte is outside this enum.
+/// `leaving` is transient: it evicts the matching cache entry and is
+/// never stored as a persistent state value in the cache (cf. §4.1).
+enum PresenceState {
+  viewing(0x00),
+  active(0x01),
+  painting(0x02),
+  leaving(0x03);
+
+  const PresenceState(this.code);
+
+  final int code;
+
+  static PresenceState? fromCode(int code) {
+    for (final s in PresenceState.values) {
+      if (s.code == code) return s;
+    }
+    return null;
+  }
+}
+
+/// Presence advert (action 0x0007). Wire shape: 24 bytes.
+/// Source: docs/canvas/CANVAS_PRESENCE_V0_1.md §2.2.
+///
+/// Presence is inherently identity-bound; the anonymous-author flag
+/// is incompatible with presence and is rejected by the decoder
+/// (invariant P7).
+@immutable
+class CanvasPresenceOp {
+  final int canvasId;
+  final int authorId;
+  final PresenceState state;
+
+  /// u32 LE Unix seconds when the emitter produced this frame.
+  final int emitTs;
+
+  /// u16 LE seconds. Wire bounds are [60, 600] inclusive; decoder
+  /// rejects out-of-range values.
+  final int ttlSeconds;
+
+  const CanvasPresenceOp({
+    required this.canvasId,
+    required this.authorId,
+    required this.state,
+    required this.emitTs,
+    required this.ttlSeconds,
   });
 }
 
@@ -947,6 +1000,88 @@ abstract final class CanvasCodec {
       ownerId: ownerId,
       cellCount: cellCount,
       nameHint: nameHint,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // presence (action 0x0007) — 24 bytes
+  // ---------------------------------------------------------------------------
+
+  static Uint8List? encodePresence(CanvasPresenceOp op) {
+    if (op.ttlSeconds < CanvasPresenceLimits.ttlSecondsMin ||
+        op.ttlSeconds > CanvasPresenceLimits.ttlSecondsMax) {
+      AppLogging.meshCanvas(
+        'presence encode rejected: ttl_seconds=${op.ttlSeconds} '
+        'outside [${CanvasPresenceLimits.ttlSecondsMin}, '
+        '${CanvasPresenceLimits.ttlSecondsMax}]',
+      );
+      return null;
+    }
+    final buf = ByteData(24);
+    _writeCommonPrefix(
+      buf,
+      action: CanvasAction.presence,
+      canvasId: op.canvasId,
+      flags: 0,
+    );
+    buf.setUint32(12, op.authorId, Endian.little);
+    buf.setUint8(16, op.state.code);
+    buf.setUint32(17, op.emitTs, Endian.little);
+    buf.setUint16(21, op.ttlSeconds, Endian.little);
+    buf.setUint8(23, 0);
+    return buf.buffer.asUint8List();
+  }
+
+  static CanvasPresenceOp? decodePresence(Uint8List payload) {
+    if (!_checkCommonPrefix(
+      payload,
+      expectedAction: CanvasAction.presence,
+      expectedLen: 24,
+      expectBatchBit: false,
+    )) {
+      return null;
+    }
+    final flags = payload[3];
+    // Invariant P7: presence is inherently identity-bound. Anonymous
+    // presence is meaningless and a vector for grief; receivers MUST
+    // drop with debug log.
+    if ((flags & CanvasWireFormat.flagBitAnonymousAuthor) != 0) {
+      _logDecodeDrop('presence: anonymous_author flag set');
+      return null;
+    }
+    final buf = _viewOf(payload);
+    final canvasId = buf.getUint64(4, Endian.little);
+    final authorId = buf.getUint32(12, Endian.little);
+    final stateByte = payload[16];
+    final state = PresenceState.fromCode(stateByte);
+    if (state == null) {
+      _logDecodeDrop(
+        'presence: unknown state byte 0x${stateByte.toRadixString(16)}',
+      );
+      return null;
+    }
+    final emitTs = buf.getUint32(17, Endian.little);
+    final ttlSeconds = buf.getUint16(21, Endian.little);
+    if (ttlSeconds < CanvasPresenceLimits.ttlSecondsMin ||
+        ttlSeconds > CanvasPresenceLimits.ttlSecondsMax) {
+      _logDecodeDrop(
+        'presence: ttl_seconds=$ttlSeconds outside '
+        '[${CanvasPresenceLimits.ttlSecondsMin}, '
+        '${CanvasPresenceLimits.ttlSecondsMax}]',
+      );
+      return null;
+    }
+    final reserved = payload[23];
+    if (reserved != 0) {
+      _logDecodeDrop('presence: reserved byte != 0 ($reserved)');
+      return null;
+    }
+    return CanvasPresenceOp(
+      canvasId: canvasId,
+      authorId: authorId,
+      state: state,
+      emitTs: emitTs,
+      ttlSeconds: ttlSeconds,
     );
   }
 

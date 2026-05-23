@@ -123,7 +123,7 @@ void main() {
     });
 
     test(
-      'handler claims service id 0x00000007 and the six v0.1 actions',
+      'handler claims service id 0x00000007 and the seven v0.1 actions',
       () async {
         final h = await _buildHandler(label: 'actions');
         try {
@@ -135,6 +135,7 @@ void main() {
             0x0004,
             0x0005,
             0x0006,
+            0x0007,
           });
         } finally {
           await h.db.close();

@@ -87,6 +87,25 @@ abstract final class CanvasLimits {
   static const int opSeqModulus = 256;
 }
 
+/// Presence frame constraints per CANVAS_PRESENCE_V0_1.md §2.2 / §3.1.
+/// These bounds are wire-pinned: receivers MUST reject any presence
+/// frame whose `ttl_seconds` falls outside the inclusive [min, max]
+/// window. The default value is what the local emitter writes for
+/// every outgoing heartbeat (2x the 90s heartbeat cadence so one
+/// missed beat is tolerated before expiry).
+abstract final class CanvasPresenceLimits {
+  /// Minimum permitted `ttl_seconds` (inclusive). Receivers drop below.
+  static const int ttlSecondsMin = 60;
+
+  /// Maximum permitted `ttl_seconds` (inclusive). Receivers drop above.
+  static const int ttlSecondsMax = 600;
+
+  /// Default `ttl_seconds` emitted by the local heartbeat. Twice the
+  /// 90s refresh window so one missed heartbeat is tolerated before
+  /// the entry expires on a peer.
+  static const int ttlSecondsDefault = 180;
+}
+
 /// Retention windows for periodic GC. Repository exposes prune helpers
 /// that callers invoke from a background tick (S9 schedules it).
 abstract final class CanvasRetention {

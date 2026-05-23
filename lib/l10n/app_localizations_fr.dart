@@ -12660,6 +12660,49 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meshCanvasOverviewMeshSectionHeader => 'TOILES DE CANAL';
 
   @override
+  String meshCanvasPresenceCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count radios ici',
+      one: '1 radio ici',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshCanvasPresenceCountTight(int count) {
+    return '$count';
+  }
+
+  @override
+  String meshCanvasPresenceWithPainting(int count, int painting) {
+    return '$count ici · $painting peignent';
+  }
+
+  @override
+  String meshCanvasPresenceWithPaintingTight(int count, int painting) {
+    return '$count · $painting';
+  }
+
+  @override
+  String get meshCanvasPresenceSheetTitle => 'Ici maintenant';
+
+  @override
+  String get meshCanvasPresenceStateViewing => 'regarde';
+
+  @override
+  String get meshCanvasPresenceStateActive => 'actif';
+
+  @override
+  String get meshCanvasPresenceStatePainting => 'peint';
+
+  @override
+  String meshCanvasPresenceUnknownAuthor(String nodeHex) {
+    return '0x$nodeHex';
+  }
+
+  @override
   String get nodeboardTitle => 'NodeBoard';
 
   @override

@@ -12574,6 +12574,49 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshCanvasOverviewMeshSectionHeader => 'ПОЛОТНА КАНАЛІВ';
 
   @override
+  String meshCanvasPresenceCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count радіо тут',
+      one: '1 радіо тут',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshCanvasPresenceCountTight(int count) {
+    return '$count';
+  }
+
+  @override
+  String meshCanvasPresenceWithPainting(int count, int painting) {
+    return '$count тут · $painting малює';
+  }
+
+  @override
+  String meshCanvasPresenceWithPaintingTight(int count, int painting) {
+    return '$count · $painting';
+  }
+
+  @override
+  String get meshCanvasPresenceSheetTitle => 'Тут зараз';
+
+  @override
+  String get meshCanvasPresenceStateViewing => 'дивиться';
+
+  @override
+  String get meshCanvasPresenceStateActive => 'активний';
+
+  @override
+  String get meshCanvasPresenceStatePainting => 'малює';
+
+  @override
+  String meshCanvasPresenceUnknownAuthor(String nodeHex) {
+    return '0x$nodeHex';
+  }
+
+  @override
   String get nodeboardTitle => 'NodeBoard';
 
   @override

@@ -12559,6 +12559,49 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshCanvasOverviewMeshSectionHeader => 'ХОЛСТЫ КАНАЛОВ';
 
   @override
+  String meshCanvasPresenceCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count радио здесь',
+      one: '1 радио здесь',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshCanvasPresenceCountTight(int count) {
+    return '$count';
+  }
+
+  @override
+  String meshCanvasPresenceWithPainting(int count, int painting) {
+    return '$count здесь · $painting рисует';
+  }
+
+  @override
+  String meshCanvasPresenceWithPaintingTight(int count, int painting) {
+    return '$count · $painting';
+  }
+
+  @override
+  String get meshCanvasPresenceSheetTitle => 'Здесь сейчас';
+
+  @override
+  String get meshCanvasPresenceStateViewing => 'смотрит';
+
+  @override
+  String get meshCanvasPresenceStateActive => 'активен';
+
+  @override
+  String get meshCanvasPresenceStatePainting => 'рисует';
+
+  @override
+  String meshCanvasPresenceUnknownAuthor(String nodeHex) {
+    return '0x$nodeHex';
+  }
+
+  @override
   String get nodeboardTitle => 'NodeBoard';
 
   @override

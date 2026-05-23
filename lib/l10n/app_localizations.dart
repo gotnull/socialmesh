@@ -21748,6 +21748,60 @@ abstract class AppLocalizations {
   /// **'CHANNEL CANVASES'**
   String get meshCanvasOverviewMeshSectionHeader;
 
+  /// Pill label on the canvas HUD presence strip when no one is painting. Mesh-native tone. Singular form is special-cased so we never render '1 radios'. Banned: SaaS collaboration vocabulary (users / collaborate / community / online / active members).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 radio here} other{{count} radios here}}'**
+  String meshCanvasPresenceCount(int count);
+
+  /// Count-only pill label used in the tight-width collapse mode of the canvas HUD presence strip. Numeric only; avatars still convey the 'here' meaning visually.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}'**
+  String meshCanvasPresenceCountTight(int count);
+
+  /// Pill label when at least one peer is painting. 'painting' is a verb/state so it stays singular for all values of {painting} (e.g., '1 here · 1 painting', '6 here · 2 painting'). Separator is U+00B7 middle dot; never em-dash. Mesh-native register.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} here · {painting} painting'**
+  String meshCanvasPresenceWithPainting(int count, int painting);
+
+  /// Tight-width pill label when at least one peer is painting. Numeric only.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} · {painting}'**
+  String meshCanvasPresenceWithPaintingTight(int count, int painting);
+
+  /// Section title at the top of the bottom sheet that lists current viewers and painters for a channel canvas. Replaces 'Users collaborating' / 'Active members' style SaaS copy. Mesh-native, ambient register.
+  ///
+  /// In en, this message translates to:
+  /// **'Here right now'**
+  String get meshCanvasPresenceSheetTitle;
+
+  /// Lowercase state badge for a peer who has the canvas viewer open but is not interacting or painting. Used in the bottom-sheet listing.
+  ///
+  /// In en, this message translates to:
+  /// **'viewing'**
+  String get meshCanvasPresenceStateViewing;
+
+  /// Lowercase state badge for a peer who has interacted (panned, zoomed, opened the tile inspector, or tapped the palette) recently. Used in the bottom-sheet listing.
+  ///
+  /// In en, this message translates to:
+  /// **'active'**
+  String get meshCanvasPresenceStateActive;
+
+  /// Lowercase state badge for a peer who emitted a paint op recently. Verb/state form; stays singular regardless of how many peers are painting.
+  ///
+  /// In en, this message translates to:
+  /// **'painting'**
+  String get meshCanvasPresenceStatePainting;
+
+  /// Fallback display label for a peer whose name is not resolved via NodeDex. Renders the 8-character hex node id with a 0x prefix.
+  ///
+  /// In en, this message translates to:
+  /// **'0x{nodeHex}'**
+  String meshCanvasPresenceUnknownAuthor(String nodeHex);
+
   /// Title for the NodeBoard feature.
   ///
   /// In en, this message translates to:

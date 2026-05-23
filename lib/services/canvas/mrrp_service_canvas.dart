@@ -51,6 +51,8 @@ import 'canvas_constants.dart';
 import 'canvas_inbound_limiter.dart';
 import 'canvas_models.dart';
 import 'canvas_repository.dart';
+import 'presence_cache.dart';
+import 'presence_models.dart';
 
 // ---------------------------------------------------------------------------
 // Replay window constants
@@ -159,25 +161,42 @@ class MrrpServiceCanvas implements MrrpServiceHandler {
   /// invalidate.
   final void Function(int canvasLocalId)? _onCellApplied;
 
+  /// In-memory presence cache. Null in P1..P3 test paths; production
+  /// (and P4 onward) injects the singleton from the provider layer.
+  /// When null, presence frames are still validated and rate-limited
+  /// but no cache update happens and no callback fires.
+  final PresenceCache? _presenceCache;
+
+  /// Fires when an inbound presence frame mutated the cache (insert,
+  /// update, or evict via `leaving`). Provider layer wires this to
+  /// invalidate the canvas presence stream so the strip and overview
+  /// pill rebuild. Mirrors the `onCellApplied` pattern for paints.
+  final void Function(int canvasLocalId)? _onPresenceChanged;
+
   MrrpServiceCanvas({
     required CanvasRepository repository,
     CanvasInboundLimiter? limiter,
     int Function()? nowMs,
     String? Function(int channelIndex)? channelNameForFallback,
     void Function(int canvasLocalId)? onCellApplied,
+    PresenceCache? presenceCache,
+    void Function(int canvasLocalId)? onPresenceChanged,
   }) : _repository = repository,
        _inboundLimiter = limiter ?? CanvasInboundLimiter(nowMs: nowMs),
        _nowMs = nowMs ?? (() => DateTime.now().millisecondsSinceEpoch),
        _channelNameForFallback = channelNameForFallback,
-       _onCellApplied = onCellApplied;
+       _onCellApplied = onCellApplied,
+       _presenceCache = presenceCache,
+       _onPresenceChanged = onPresenceChanged;
 
   @override
   int get serviceId => MrrpServiceId.canvasV1;
 
-  /// All six v0.1 action IDs are claimed so the dispatcher routes them
-  /// here instead of returning ERROR(UNSUPPORTED). Actions outside
-  /// paint / paint_batch are decoded then no-op'd in S5; full handling
-  /// lands in S9.
+  /// All v0.1 action IDs are claimed so the dispatcher routes them
+  /// here instead of returning ERROR(UNSUPPORTED). paint, paint_batch
+  /// and presence have real handlers; digest, sync_request,
+  /// sync_response, canvas_info are decoded then no-op'd in S5 (full
+  /// handling lands in S9).
   @override
   Set<int> get supportedActions => const <int>{
     0x0001, // paint
@@ -186,6 +205,7 @@ class MrrpServiceCanvas implements MrrpServiceHandler {
     0x0004, // sync_request (S5 no-op; S9 implements)
     0x0005, // sync_response (S5 no-op; S9 implements)
     0x0006, // canvas_info (S5 no-op; S9 implements)
+    0x0007, // presence (P4 handler; provider wires cache callback)
   };
 
   /// Dispatcher-routed entry point. Channel context is not available
@@ -250,15 +270,21 @@ class MrrpServiceCanvas implements MrrpServiceHandler {
           senderNodeId: senderNodeId,
           channelIndex: channelIndex,
         );
+      case CanvasAction.presence:
+        return _handlePresence(
+          payload: canvasPayload,
+          senderNodeId: senderNodeId,
+          channelIndex: channelIndex,
+        );
       case CanvasAction.canvasDigest:
       case CanvasAction.syncRequest:
       case CanvasAction.syncResponse:
       case CanvasAction.canvasInfo:
-        // S5: decode-only no-op. Full handling lands in S9.
+        // Decode-only no-op (S5; full handling lands in S9).
         AppLogging.meshCanvas(
           'inbound ${action.name} from sender=0x'
           '${senderNodeId.toRadixString(16)} '
-          'channel=$channelIndex — decoded, no-op in S5',
+          'channel=$channelIndex - decoded, no-op',
         );
         return const CanvasInboundReport(
           outcome: CanvasInboundOutcome.acceptedNoOp,
@@ -422,6 +448,159 @@ class MrrpServiceCanvas implements MrrpServiceHandler {
       unappliedByRepositoryCount: unappliedByRepository,
       replayWindowRejectedCount: replayWindowRejected,
     );
+  }
+
+  // ---------------------------------------------------------------------------
+  // presence (P4)
+  // ---------------------------------------------------------------------------
+
+  /// Handle an inbound canvas.v1 presence frame (action 0x0007).
+  ///
+  /// Updates the in-memory [PresenceCache] only. NEVER writes
+  /// `cell`, `applied_op`, `pending_op`, or canvas-row state, and
+  /// NEVER invalidates digests (CANVAS_PRESENCE_V0_1.md invariants
+  /// P1 + P2). Unknown `canvas_id` for the inbound channelIndex is
+  /// dropped without auto-creating a canvas row (invariant P6); a
+  /// hostile sender cannot pollute the local overview list.
+  ///
+  /// emit_ts is gated tighter than paint frames: presence rejects
+  /// timestamps outside +/-5 minutes of `now` (paint allows -7 days /
+  /// +5 minutes). Rationale: presence is short-lived and a far-past
+  /// timestamp is garbage by definition.
+  Future<CanvasInboundReport> _handlePresence({
+    required Uint8List payload,
+    required int senderNodeId,
+    required int channelIndex,
+  }) async {
+    final op = CanvasCodec.decodePresence(payload);
+    if (op == null) {
+      AppLogging.meshCanvas(
+        'inbound presence: decode failed from sender=0x'
+        '${senderNodeId.toRadixString(16)}',
+      );
+      return const CanvasInboundReport(
+        outcome: CanvasInboundOutcome.decodeFailed,
+      );
+    }
+
+    if (channelIndex == kCanvasChannelIndexUnknown) {
+      AppLogging.meshCanvas(
+        'inbound presence dropped: no channel context '
+        '(dispatcher path; sender=0x'
+        '${senderNodeId.toRadixString(16)})',
+      );
+      return const CanvasInboundReport(
+        outcome: CanvasInboundOutcome.noChannelContext,
+      );
+    }
+    if (channelIndex < 0 || channelIndex > CanvasLimits.channelIndexMax) {
+      AppLogging.meshCanvas(
+        'inbound presence dropped: invalid channelIndex=$channelIndex',
+      );
+      return const CanvasInboundReport(
+        outcome: CanvasInboundOutcome.noChannelContext,
+      );
+    }
+    if (op.canvasId == kLocalCanvasIdSentinel) {
+      AppLogging.meshCanvas(
+        'inbound presence dropped: canvas_id=0 reserved for Local '
+        'Device Canvas (P8 isolation)',
+      );
+      return const CanvasInboundReport(
+        outcome: CanvasInboundOutcome.noChannelContext,
+      );
+    }
+
+    // Tighter emit_ts window (+/-5 minutes) than paint frames.
+    final nowSec = _nowMs() ~/ 1000;
+    const presenceWindowSec = 5 * 60;
+    if (op.emitTs < nowSec - presenceWindowSec ||
+        op.emitTs > nowSec + presenceWindowSec) {
+      AppLogging.meshCanvas(
+        'inbound presence dropped: emit_ts=${op.emitTs} outside '
+        '+/-${presenceWindowSec}s of now=$nowSec',
+      );
+      return const CanvasInboundReport(
+        outcome: CanvasInboundOutcome.staleReplayWindow,
+      );
+    }
+
+    // Look up the canvas WITHOUT auto-create. P6 invariant: a
+    // hostile sender flooding presence for unknown canvas_ids must
+    // not pollute the local overview list.
+    final canvas = await _findExistingMeshCanvas(
+      canvasId: op.canvasId,
+      channelIndex: channelIndex,
+    );
+    if (canvas == null) {
+      AppLogging.meshCanvas(
+        'inbound presence dropped: unknown canvas '
+        'canvas_id=0x${op.canvasId.toRadixString(16)} '
+        'channel=$channelIndex (no auto-create)',
+      );
+      return const CanvasInboundReport(
+        outcome: CanvasInboundOutcome.noChannelContext,
+      );
+    }
+    if (canvas.scope != CanvasScope.mesh) {
+      AppLogging.meshCanvas(
+        'inbound presence dropped: canvas scope is '
+        '${canvas.scope.storageName}, not mesh',
+      );
+      return const CanvasInboundReport(
+        outcome: CanvasInboundOutcome.noChannelContext,
+      );
+    }
+
+    // Apply to cache (or evict on leaving). The cache enforces LWW,
+    // downgrade rejection, self-source protection, ttl clamp, cap,
+    // and scope isolation.
+    var mutated = false;
+    final cache = _presenceCache;
+    if (cache != null) {
+      mutated = cache.upsert(
+        nodeNum: op.authorId,
+        canvasLocalId: canvas.localId,
+        channelIndex: channelIndex,
+        state: op.state,
+        emitTsSec: op.emitTs,
+        ttlSeconds: op.ttlSeconds,
+        source: PresenceSource.radio,
+        nowMs: _nowMs(),
+      );
+    }
+
+    if (mutated) {
+      _onPresenceChanged?.call(canvas.localId);
+    }
+
+    AppLogging.meshCanvas(
+      'inbound presence from sender=0x'
+      '${senderNodeId.toRadixString(16)} canvas=${canvas.localId} '
+      'channel=$channelIndex state=${op.state.name} '
+      'author=0x${op.authorId.toRadixString(16)} mutated=$mutated',
+    );
+
+    return const CanvasInboundReport(
+      outcome: CanvasInboundOutcome.acceptedNoOp,
+    );
+  }
+
+  /// Lookup-only mesh-canvas finder. Mirrors `_findOrCreateCanvas`
+  /// but never inserts a row. Used by the presence handler so an
+  /// unknown `(canvas_id, channelIndex)` pair drops silently rather
+  /// than materialising a canvas owned by an unknown peer.
+  Future<CanvasSummary?> _findExistingMeshCanvas({
+    required int canvasId,
+    required int channelIndex,
+  }) async {
+    final existing = await _repository.listCanvases(scope: CanvasScope.mesh);
+    for (final row in existing) {
+      if (row.canvasId == canvasId && row.channelIndex == channelIndex) {
+        return row;
+      }
+    }
+    return null;
   }
 
   // ---------------------------------------------------------------------------

@@ -16632,6 +16632,73 @@
     "@meshCanvasOverviewMeshSectionHeader": {
         "description": "Small uppercase section header above the list of channel canvas cards in the Mesh tab. Communicates the typed surface: every row below is a channel canvas. Atmospheric / packet-radio register; keep short."
     },
+    "meshCanvasPresenceCount": "{count, plural, =1{1 radio here} other{{count} radios here}}",
+    "@meshCanvasPresenceCount": {
+        "description": "Pill label on the canvas HUD presence strip when no one is painting. Mesh-native tone. Singular form is special-cased so we never render '1 radios'. Banned: SaaS collaboration vocabulary (users / collaborate / community / online / active members).",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshCanvasPresenceCountTight": "{count}",
+    "@meshCanvasPresenceCountTight": {
+        "description": "Count-only pill label used in the tight-width collapse mode of the canvas HUD presence strip. Numeric only; avatars still convey the 'here' meaning visually.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "meshCanvasPresenceWithPainting": "{count} here · {painting} painting",
+    "@meshCanvasPresenceWithPainting": {
+        "description": "Pill label when at least one peer is painting. 'painting' is a verb/state so it stays singular for all values of {painting} (e.g., '1 here · 1 painting', '6 here · 2 painting'). Separator is U+00B7 middle dot; never em-dash. Mesh-native register.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            },
+            "painting": {
+                "type": "int"
+            }
+        }
+    },
+    "meshCanvasPresenceWithPaintingTight": "{count} · {painting}",
+    "@meshCanvasPresenceWithPaintingTight": {
+        "description": "Tight-width pill label when at least one peer is painting. Numeric only.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            },
+            "painting": {
+                "type": "int"
+            }
+        }
+    },
+    "meshCanvasPresenceSheetTitle": "Here right now",
+    "@meshCanvasPresenceSheetTitle": {
+        "description": "Section title at the top of the bottom sheet that lists current viewers and painters for a channel canvas. Replaces 'Users collaborating' / 'Active members' style SaaS copy. Mesh-native, ambient register."
+    },
+    "meshCanvasPresenceStateViewing": "viewing",
+    "@meshCanvasPresenceStateViewing": {
+        "description": "Lowercase state badge for a peer who has the canvas viewer open but is not interacting or painting. Used in the bottom-sheet listing."
+    },
+    "meshCanvasPresenceStateActive": "active",
+    "@meshCanvasPresenceStateActive": {
+        "description": "Lowercase state badge for a peer who has interacted (panned, zoomed, opened the tile inspector, or tapped the palette) recently. Used in the bottom-sheet listing."
+    },
+    "meshCanvasPresenceStatePainting": "painting",
+    "@meshCanvasPresenceStatePainting": {
+        "description": "Lowercase state badge for a peer who emitted a paint op recently. Verb/state form; stays singular regardless of how many peers are painting."
+    },
+    "meshCanvasPresenceUnknownAuthor": "0x{nodeHex}",
+    "@meshCanvasPresenceUnknownAuthor": {
+        "description": "Fallback display label for a peer whose name is not resolved via NodeDex. Renders the 8-character hex node id with a 0x prefix.",
+        "placeholders": {
+            "nodeHex": {
+                "type": "String"
+            }
+        }
+    },
     "nodeboardTitle": "NodeBoard",
     "@nodeboardTitle": {
         "description": "Title for the NodeBoard feature."

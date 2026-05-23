@@ -26,14 +26,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/canvas/canvas_palette.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
+import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
+import '../../../services/canvas/canvas_constants.dart';
 import '../../../services/canvas/canvas_models.dart';
+import '../../../services/canvas/presence_emit_coordinator.dart';
 import '../../../services/haptic_service.dart';
 import '../providers/mesh_canvas_providers.dart';
+import '../providers/presence_providers.dart';
 import 'canvas_color_strip.dart';
 import 'canvas_hud_overlays.dart';
 import 'canvas_palette_sheet.dart';
+import 'canvas_presence_strip.dart';
 import 'canvas_tile_inspector_sheet.dart';
 import 'canvas_viewer.dart';
 
@@ -106,6 +111,9 @@ class CanvasViewportBody extends ConsumerWidget {
           canvasSendCoordinatorProvider.future,
         );
         unawaited(coordinator.drain());
+        // Refresh local self to painting + try the wire emit (subject
+        // to the canvas governor headroom + paint queue + SIP gates).
+        unawaited(_notifyPresencePaintEnqueued(ref));
       }
     }
     if (accepted) {
@@ -131,12 +139,40 @@ class CanvasViewportBody extends ConsumerWidget {
       'long-press inspect at ($x,$y) canvas=${canvas.localId}',
     );
     ref.haptics.longPress();
+    // Long-press counts as active engagement with the canvas surface;
+    // refresh local self toward `active` (subject to cache
+    // no-downgrade + presence throttles + anti-starvation gates).
+    unawaited(_notifyPresenceInteraction(ref));
     await showCanvasTileInspectorSheet(
       context: context,
       canvas: canvas,
       x: x,
       y: y,
     );
+  }
+
+  /// Presence-emitter helper. Mesh-scope only — local canvas never
+  /// emits presence (P8). Resolves the coordinator and notifies
+  /// painting; if the coordinator is not ready (link not up, etc.),
+  /// fail silently.
+  Future<void> _notifyPresencePaintEnqueued(WidgetRef ref) async {
+    if (canvas.scope != CanvasScope.mesh) return;
+    if (canvas.canvasId == kLocalCanvasIdSentinel) return;
+    final asyncCoord = ref.read(presenceEmitCoordinatorProvider);
+    final coordinator = asyncCoord.asData?.value;
+    if (coordinator == null) return;
+    await coordinator.notifyPaintEnqueued(canvas.localId);
+  }
+
+  /// Presence-emitter helper for active interactions (long-press,
+  /// palette tap). Same mesh-scope guard as the paint notifier.
+  Future<void> _notifyPresenceInteraction(WidgetRef ref) async {
+    if (canvas.scope != CanvasScope.mesh) return;
+    if (canvas.canvasId == kLocalCanvasIdSentinel) return;
+    final asyncCoord = ref.read(presenceEmitCoordinatorProvider);
+    final coordinator = asyncCoord.asData?.value;
+    if (coordinator == null) return;
+    await coordinator.notifyInteraction(canvas.localId);
   }
 
   /// Open the full 64-colour palette sheet from the strip's "More"
@@ -162,6 +198,7 @@ class CanvasViewportBody extends ConsumerWidget {
     if (picked == null) return;
     selectedColorNotifier.select(picked);
     haptics.itemSelect();
+    unawaited(_notifyPresenceInteraction(ref));
   }
 
   @override
@@ -182,8 +219,9 @@ class CanvasViewportBody extends ConsumerWidget {
     // a chip would imply the mesh canvas is somehow "owned by Local",
     // which it isn't.
     final showLocalIdentityChip = canvas.scope == CanvasScope.local;
+    final isMeshScope = canvas.scope == CanvasScope.mesh;
 
-    return Column(
+    final column = Column(
       children: [
         Expanded(
           child: Padding(
@@ -246,6 +284,25 @@ class CanvasViewportBody extends ConsumerWidget {
                           ),
                         ),
                       ),
+                    // Mesh-scope only: presence strip + emit-coordinator
+                    // lifecycle host. The host is an invisible
+                    // ConsumerStatefulWidget that owns the
+                    // attach/detach hooks; the strip self-hides when
+                    // there are zero remote peers.
+                    // Mesh-scope: presence strip at top-left of the
+                    // canvas surface, where the local-canvas identity
+                    // chip would otherwise sit. Strip self-hides when
+                    // there are no remote peers. Lifecycle host (which
+                    // owns attach/detach) is mounted OUTSIDE the
+                    // Stack, below.
+                    if (canvas.scope == CanvasScope.mesh)
+                      Positioned(
+                        top: AppTheme.spacing12,
+                        left: AppTheme.spacing12,
+                        child: CanvasPresenceStrip(
+                          canvasLocalId: canvas.localId,
+                        ),
+                      ),
                     Positioned(
                       bottom: AppTheme.spacing12,
                       left: 0,
@@ -279,5 +336,96 @@ class CanvasViewportBody extends ConsumerWidget {
         ),
       ],
     );
+
+    // Wrap the column in the presence lifecycle host for mesh
+    // canvases. Wrapping (rather than mounting inside the Stack)
+    // keeps the host OUT of the canvas hit-test path — even
+    // a 0-size Stack child can subtly disrupt InteractiveViewer
+    // gesture routing, which broke S8 paint dispatch tests during
+    // P5 bring-up.
+    if (isMeshScope) {
+      return _PresenceLifecycleHost(canvas: canvas, child: column);
+    }
+    return column;
   }
+}
+
+/// Transparent wrapper that owns the MeshCanvas presence emitter
+/// lifecycle.
+///
+/// Mounting this widget:
+///   - schedules the initial viewing wire emit via the presence emit
+///     coordinator (after the first frame);
+///   - synchronously seeds the local self entry in the cache via the
+///     coordinator's attachViewer path;
+///   - on dispose, best-effort detaches the viewer (which evicts
+///     self and emits a `leaving` frame iff a prior emit succeeded).
+///
+/// Renders [child] unchanged. By WRAPPING the viewer column instead
+/// of mounting as a separate Stack child, we keep this host out of
+/// the canvas hit-test path — early P5 bring-up showed that even a
+/// 0-size sibling in the canvas Stack can subtly disrupt the
+/// InteractiveViewer's tap routing.
+class _PresenceLifecycleHost extends ConsumerStatefulWidget {
+  final CanvasSummary canvas;
+  final Widget child;
+
+  const _PresenceLifecycleHost({required this.canvas, required this.child});
+
+  @override
+  ConsumerState<_PresenceLifecycleHost> createState() =>
+      _PresenceLifecycleHostState();
+}
+
+class _PresenceLifecycleHostState extends ConsumerState<_PresenceLifecycleHost>
+    with LifecycleSafeMixin<_PresenceLifecycleHost> {
+  PresenceEmitCoordinator? _coordinator;
+
+  @override
+  void initState() {
+    super.initState();
+    final canvas = widget.canvas;
+    if (canvas.scope != CanvasScope.mesh) return;
+    if (canvas.canvasId == kLocalCanvasIdSentinel) return;
+    final channelIndex = canvas.channelIndex;
+    if (channelIndex == null) return;
+
+    // Note on heartbeats: there is intentionally NO recurring Timer
+    // here. Heartbeats are activity-driven (notifyInteraction /
+    // notifyPaintEnqueued in the parent widget refresh the local
+    // self entry and attempt wire emits). Pure-idle viewers fade
+    // from peers naturally after the 180 s TTL elapses; the next
+    // interaction re-emits. Avoiding a long-lived periodic also
+    // keeps flutter_test's `_verifyInvariants` happy without
+    // requiring every viewer test to override providers.
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final coordinator = await ref.read(
+        presenceEmitCoordinatorProvider.future,
+      );
+      if (!mounted) return;
+      _coordinator = coordinator;
+      await coordinator.attachViewer(
+        canvasLocalId: canvas.localId,
+        channelIndex: channelIndex,
+        canvasId: canvas.canvasId,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    final coordinator = _coordinator;
+    if (coordinator != null) {
+      // Best-effort detach. dispose() is synchronous so we cannot
+      // await; the coordinator's detach path is itself async but the
+      // synchronous parts (session remove, cache evict) run first.
+      unawaited(coordinator.detachViewer(widget.canvas.localId));
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

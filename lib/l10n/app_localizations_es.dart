@@ -12631,6 +12631,49 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshCanvasOverviewMeshSectionHeader => 'LIENZOS DE CANAL';
 
   @override
+  String meshCanvasPresenceCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count radios aquí',
+      one: '1 radio aquí',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshCanvasPresenceCountTight(int count) {
+    return '$count';
+  }
+
+  @override
+  String meshCanvasPresenceWithPainting(int count, int painting) {
+    return '$count aquí · $painting pintando';
+  }
+
+  @override
+  String meshCanvasPresenceWithPaintingTight(int count, int painting) {
+    return '$count · $painting';
+  }
+
+  @override
+  String get meshCanvasPresenceSheetTitle => 'Aquí ahora';
+
+  @override
+  String get meshCanvasPresenceStateViewing => 'mirando';
+
+  @override
+  String get meshCanvasPresenceStateActive => 'activo';
+
+  @override
+  String get meshCanvasPresenceStatePainting => 'pintando';
+
+  @override
+  String meshCanvasPresenceUnknownAuthor(String nodeHex) {
+    return '0x$nodeHex';
+  }
+
+  @override
   String get nodeboardTitle => 'NodeBoard';
 
   @override

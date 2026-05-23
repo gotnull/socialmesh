@@ -33,6 +33,7 @@ import '../../../services/canvas/canvas_outbound_governor.dart';
 import '../../../services/canvas/canvas_repository.dart';
 import '../../../services/canvas/canvas_send_coordinator.dart';
 import '../../../services/canvas/mrrp_service_canvas.dart';
+import 'presence_providers.dart';
 
 /// Owns the `canvas.db` connection for the app's lifetime.
 final canvasDatabaseProvider = FutureProvider<CanvasDatabase>((ref) async {
@@ -226,8 +227,10 @@ final mrrpServiceCanvasProvider = FutureProvider<MrrpServiceCanvas>((
   ref,
 ) async {
   final repo = await ref.watch(canvasRepositoryProvider.future);
+  final presenceCache = ref.watch(presenceCacheProvider);
   return MrrpServiceCanvas(
     repository: repo,
+    presenceCache: presenceCache,
     // Fires once per inbound frame when at least one op landed. Without
     // this, cells write to SQLite but no viewer rebuilds: the user only
     // sees inbound paints after their own next tap kicks an invalidate.
@@ -238,6 +241,9 @@ final mrrpServiceCanvasProvider = FutureProvider<MrrpServiceCanvas>((
       ref.invalidate(canvasCellsProvider(canvasLocalId));
       ref.invalidate(canvasListProvider);
     },
+    // Inbound presence updates the cache directly; the cache's own
+    // changeStream drives canvasPresenceProvider re-emission, so no
+    // explicit ref.invalidate is needed here.
   );
 });
 
