@@ -12660,7 +12660,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meshCanvasOverviewMeshSectionHeader => 'TOILES DE CANAL';
 
   @override
-  String get meshCanvasOverviewHeroBigUnit => 'pixels peints';
+  String get meshCanvasOverviewHeroBigUnit => 'pixels sur le mesh';
 
   @override
   String meshCanvasOverviewHeroChannelsChip(int count) {
@@ -12689,7 +12689,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'toiles de canal prêtes · peindre pour commencer';
 
   @override
-  String get meshCanvasOverviewHeroSubtitleActive => 'à travers le mesh';
+  String get meshCanvasOverviewHeroSubtitleActive => 'encre dans les canaux';
 
   @override
   String meshCanvasPresenceCount(int count) {

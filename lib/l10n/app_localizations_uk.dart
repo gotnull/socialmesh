@@ -12574,7 +12574,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshCanvasOverviewMeshSectionHeader => 'ПОЛОТНА КАНАЛІВ';
 
   @override
-  String get meshCanvasOverviewHeroBigUnit => 'пікселів намальовано';
+  String get meshCanvasOverviewHeroBigUnit => 'пікселів у меші';
 
   @override
   String meshCanvasOverviewHeroChannelsChip(int count) {
@@ -12603,7 +12603,7 @@ class AppLocalizationsUk extends AppLocalizations {
       'полотна каналів готові · малюй, щоб почати';
 
   @override
-  String get meshCanvasOverviewHeroSubtitleActive => 'по всій мережі';
+  String get meshCanvasOverviewHeroSubtitleActive => 'чорнила в каналах';
 
   @override
   String meshCanvasPresenceCount(int count) {

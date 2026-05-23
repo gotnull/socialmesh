@@ -16632,9 +16632,9 @@
     "@meshCanvasOverviewMeshSectionHeader": {
         "description": "Small uppercase section header above the list of channel canvas cards in the Mesh tab. Communicates the typed surface: every row below is a channel canvas. Atmospheric / packet-radio register; keep short."
     },
-    "meshCanvasOverviewHeroBigUnit": "pixels painted",
+    "meshCanvasOverviewHeroBigUnit": "pixels on the mesh",
     "@meshCanvasOverviewHeroBigUnit": {
-        "description": "Unit label beside the large painted-pixel count in the Mesh tab hero stats card. Reads as 'N pixels painted'. Mesh-native register."
+        "description": "Unit label beside the large painted-pixel count in the Mesh tab hero stats card. Reads as 'N pixels on the mesh'. Mesh-native register; avoids enterprise / KPI phrasing like 'pixels painted'."
     },
     "meshCanvasOverviewHeroChannelsChip": "{count, plural, =1{1 channel} other{{count} channels}}",
     "@meshCanvasOverviewHeroChannelsChip": {
@@ -16658,7 +16658,7 @@
     "@meshCanvasOverviewHeroSubtitleQuiet": {
         "description": "Mesh tab hero subtitle when no mesh canvases have any painted cells yet. Mesh-native tone, no SaaS language."
     },
-    "meshCanvasOverviewHeroSubtitleActive": "across the mesh",
+    "meshCanvasOverviewHeroSubtitleActive": "ink across the channels",
     "@meshCanvasOverviewHeroSubtitleActive": {
         "description": "Mesh tab hero subtitle when at least one mesh canvas has paint activity. Reads as 'N pixels painted across the mesh'."
     },

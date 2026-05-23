@@ -12417,7 +12417,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshCanvasOverviewMeshSectionHeader => 'CHANNEL CANVASES';
 
   @override
-  String get meshCanvasOverviewHeroBigUnit => 'pixels painted';
+  String get meshCanvasOverviewHeroBigUnit => 'pixels on the mesh';
 
   @override
   String meshCanvasOverviewHeroChannelsChip(int count) {
@@ -12446,7 +12446,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'channel canvases ready · paint to begin';
 
   @override
-  String get meshCanvasOverviewHeroSubtitleActive => 'across the mesh';
+  String get meshCanvasOverviewHeroSubtitleActive => 'ink across the channels';
 
   @override
   String meshCanvasPresenceCount(int count) {

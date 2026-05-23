@@ -12597,7 +12597,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get meshCanvasOverviewMeshSectionHeader => 'KANAL-LEINWÄNDE';
 
   @override
-  String get meshCanvasOverviewHeroBigUnit => 'Pixel gemalt';
+  String get meshCanvasOverviewHeroBigUnit => 'Pixel im Mesh';
 
   @override
   String meshCanvasOverviewHeroChannelsChip(int count) {
@@ -12626,7 +12626,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Kanal-Leinwände bereit · zum Starten malen';
 
   @override
-  String get meshCanvasOverviewHeroSubtitleActive => 'über das Mesh';
+  String get meshCanvasOverviewHeroSubtitleActive => 'Farbe in den Kanälen';
 
   @override
   String meshCanvasPresenceCount(int count) {

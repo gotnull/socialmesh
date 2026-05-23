@@ -12569,7 +12569,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get meshCanvasOverviewMeshSectionHeader => 'TELE DEL CANALE';
 
   @override
-  String get meshCanvasOverviewHeroBigUnit => 'pixel dipinti';
+  String get meshCanvasOverviewHeroBigUnit => 'pixel sulla mesh';
 
   @override
   String meshCanvasOverviewHeroChannelsChip(int count) {
@@ -12598,7 +12598,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'tele di canale pronte · dipingi per iniziare';
 
   @override
-  String get meshCanvasOverviewHeroSubtitleActive => 'attraverso la mesh';
+  String get meshCanvasOverviewHeroSubtitleActive => 'inchiostro nei canali';
 
   @override
   String meshCanvasPresenceCount(int count) {

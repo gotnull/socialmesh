@@ -28,6 +28,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/gradient_border_container.dart';
 import '../../../providers/app_providers.dart';
 import '../../../services/canvas/canvas_constants.dart';
 import '../../../services/canvas/canvas_models.dart';
@@ -212,7 +213,6 @@ class CanvasViewportBody extends ConsumerWidget {
     const canvasSurface = Color(0xFF161A22);
     const chunkLine = Color(0x14FFFFFF);
     const surfaceRing = Color(0x66FFFFFF);
-    final frameBorder = context.textTertiary.withValues(alpha: 0.18);
 
     // Identity chip is intentionally Local-only. Mesh canvases carry
     // their identity in the app bar title (the channel name) — adding
@@ -231,92 +231,110 @@ class CanvasViewportBody extends ConsumerWidget {
               AppTheme.spacing16,
               AppTheme.spacing12,
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppTheme.radius16),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      outsidePane,
-                      Color.lerp(outsidePane, canvasSurface, 0.18) ??
-                          outsidePane,
+            // Wrap the canvas surface in the same gradient-border
+            // chrome the Mesh tab cards use, so the painting board
+            // reads as a continuous packet-radio artifact with the
+            // channel-canvas-card grid. Without it the viewer
+            // felt like a plain bordered panel; with it the canvas
+            // sits inside a depth-blended frame that gives the
+            // surface premium presence.
+            child: GradientBorderContainer(
+              borderRadius: AppTheme.radius16,
+              borderWidth: 1.0,
+              accentOpacity: 0.45,
+              enableDepthBlend: true,
+              depthBlendOpacity: 0.06,
+              backgroundColor: outsidePane,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppTheme.radius16 - 1),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Color.lerp(outsidePane, canvasSurface, 0.18) ??
+                            outsidePane,
+                      ],
+                    ),
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: CanvasViewer(
+                          cells: cells,
+                          palette: SocialMeshPalette.colors,
+                          widthCells: canvas.width,
+                          heightCells: canvas.height,
+                          outsideColor: outsidePane,
+                          surfaceColor: canvasSurface,
+                          chunkLineColor: chunkLine,
+                          borderColor: surfaceRing,
+                          onTapPaint: (x, y) => _onTapPaint(
+                            context: context,
+                            ref: ref,
+                            x: x,
+                            y: y,
+                          ),
+                          onLongPressInspect: (x, y) => _onLongPressInspect(
+                            context: context,
+                            ref: ref,
+                            x: x,
+                            y: y,
+                          ),
+                        ),
+                      ),
+                      if (showLocalIdentityChip)
+                        Positioned(
+                          top: AppTheme.spacing12,
+                          left: AppTheme.spacing12,
+                          child: IgnorePointer(
+                            // IgnorePointer so the chip never steals a tap
+                            // that was aiming for the canvas beneath.
+                            child: CanvasIdentityChip(
+                              icon: Icons.smartphone_outlined,
+                              label: context.l10n.meshCanvasIdentityLocal,
+                              subtitle:
+                                  context.l10n.meshCanvasIdentityLocalSubtitle,
+                            ),
+                          ),
+                        ),
+                      // Mesh-scope only: presence strip + emit-coordinator
+                      // lifecycle host. The host is an invisible
+                      // ConsumerStatefulWidget that owns the
+                      // attach/detach hooks; the strip self-hides when
+                      // there are zero remote peers.
+                      // Mesh-scope: presence strip at top-left of the
+                      // canvas surface, where the local-canvas identity
+                      // chip would otherwise sit. Strip self-hides when
+                      // there are no remote peers. Lifecycle host (which
+                      // owns attach/detach) is mounted OUTSIDE the
+                      // Stack, below.
+                      if (canvas.scope == CanvasScope.mesh)
+                        Positioned(
+                          top: AppTheme.spacing12,
+                          left: AppTheme.spacing12,
+                          child: CanvasPresenceStrip(
+                            canvasLocalId: canvas.localId,
+                          ),
+                        ),
+                      Positioned(
+                        bottom: AppTheme.spacing12,
+                        left: 0,
+                        right: 0,
+                        child: IgnorePointer(
+                          child: Center(
+                            child: CanvasColorHud(
+                              paletteIndex: selectedColor,
+                              eraserLabel:
+                                  context.l10n.meshCanvasHudEraserLabel,
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                  border: Border.all(color: frameBorder, width: 0.6),
-                  borderRadius: BorderRadius.circular(AppTheme.radius16),
-                ),
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: CanvasViewer(
-                        cells: cells,
-                        palette: SocialMeshPalette.colors,
-                        widthCells: canvas.width,
-                        heightCells: canvas.height,
-                        outsideColor: outsidePane,
-                        surfaceColor: canvasSurface,
-                        chunkLineColor: chunkLine,
-                        borderColor: surfaceRing,
-                        onTapPaint: (x, y) =>
-                            _onTapPaint(context: context, ref: ref, x: x, y: y),
-                        onLongPressInspect: (x, y) => _onLongPressInspect(
-                          context: context,
-                          ref: ref,
-                          x: x,
-                          y: y,
-                        ),
-                      ),
-                    ),
-                    if (showLocalIdentityChip)
-                      Positioned(
-                        top: AppTheme.spacing12,
-                        left: AppTheme.spacing12,
-                        child: IgnorePointer(
-                          // IgnorePointer so the chip never steals a tap
-                          // that was aiming for the canvas beneath.
-                          child: CanvasIdentityChip(
-                            icon: Icons.smartphone_outlined,
-                            label: context.l10n.meshCanvasIdentityLocal,
-                            subtitle:
-                                context.l10n.meshCanvasIdentityLocalSubtitle,
-                          ),
-                        ),
-                      ),
-                    // Mesh-scope only: presence strip + emit-coordinator
-                    // lifecycle host. The host is an invisible
-                    // ConsumerStatefulWidget that owns the
-                    // attach/detach hooks; the strip self-hides when
-                    // there are zero remote peers.
-                    // Mesh-scope: presence strip at top-left of the
-                    // canvas surface, where the local-canvas identity
-                    // chip would otherwise sit. Strip self-hides when
-                    // there are no remote peers. Lifecycle host (which
-                    // owns attach/detach) is mounted OUTSIDE the
-                    // Stack, below.
-                    if (canvas.scope == CanvasScope.mesh)
-                      Positioned(
-                        top: AppTheme.spacing12,
-                        left: AppTheme.spacing12,
-                        child: CanvasPresenceStrip(
-                          canvasLocalId: canvas.localId,
-                        ),
-                      ),
-                    Positioned(
-                      bottom: AppTheme.spacing12,
-                      left: 0,
-                      right: 0,
-                      child: IgnorePointer(
-                        child: Center(
-                          child: CanvasColorHud(
-                            paletteIndex: selectedColor,
-                            eraserLabel: context.l10n.meshCanvasHudEraserLabel,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ),

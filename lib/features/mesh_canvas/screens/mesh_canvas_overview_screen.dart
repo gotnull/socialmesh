@@ -515,12 +515,16 @@ class _ActiveMetadata extends StatelessWidget {
       runSpacing: AppTheme.spacing6,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
+        // `Icons.grain` reads as scattered pixels — packet-radio /
+        // graffiti-wall register, not enterprise stat-block.
         MetricChip(
-          icon: Icons.brush_outlined,
+          icon: Icons.grain,
           value: l.meshCanvasOverviewCellCount(m.cellCount),
         ),
+        // `Icons.history` reads as "last seen on the mesh" rather
+        // than a calendar/schedule.
         MetricChip(
-          icon: Icons.schedule,
+          icon: Icons.history,
           value: _relativeActivityCluster(context, m.lastOpAtMs),
         ),
       ],

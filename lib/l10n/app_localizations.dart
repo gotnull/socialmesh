@@ -21748,10 +21748,10 @@ abstract class AppLocalizations {
   /// **'CHANNEL CANVASES'**
   String get meshCanvasOverviewMeshSectionHeader;
 
-  /// Unit label beside the large painted-pixel count in the Mesh tab hero stats card. Reads as 'N pixels painted'. Mesh-native register.
+  /// Unit label beside the large painted-pixel count in the Mesh tab hero stats card. Reads as 'N pixels on the mesh'. Mesh-native register; avoids enterprise / KPI phrasing like 'pixels painted'.
   ///
   /// In en, this message translates to:
-  /// **'pixels painted'**
+  /// **'pixels on the mesh'**
   String get meshCanvasOverviewHeroBigUnit;
 
   /// Status chip in the Mesh tab hero stats card showing how many Meshtastic channels are configured / surfaced as latent canvases.
@@ -21775,7 +21775,7 @@ abstract class AppLocalizations {
   /// Mesh tab hero subtitle when at least one mesh canvas has paint activity. Reads as 'N pixels painted across the mesh'.
   ///
   /// In en, this message translates to:
-  /// **'across the mesh'**
+  /// **'ink across the channels'**
   String get meshCanvasOverviewHeroSubtitleActive;
 
   /// Pill label on the canvas HUD presence strip when no one is painting. Mesh-native tone. Singular form is special-cased so we never render '1 radios'. Banned: SaaS collaboration vocabulary (users / collaborate / community / online / active members).
