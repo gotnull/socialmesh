@@ -10,11 +10,13 @@
 //   - HIDDEN entirely when there are zero remote peers. Absence
 //     communicates solitude; we do NOT render an "alone" string.
 //   - HIDDEN entirely on Local Device Canvas (mount site enforces).
-//   - Up to 4 stacked TappableSigilAvatar (30 % overlap), then a
-//     `+N` overflow chip in the 4th slot.
-//   - Single soft 1.5 pt ring at 40 % opacity around painters.
-//     No continuous motion. The only animation is a 220 ms ease-in
-//     opacity fade between render frames; nothing recurs.
+//   - Avatar cluster is the canonical `AnimatedAvatarStack` from
+//     `lib/core/widgets/animated_avatar_stack.dart` — same primitive
+//     NodeDex co-seen uses. ClipOval + per-avatar border + dark-aware
+//     fill = the crisp NodeDex aesthetic. We pass `animationEnabled:
+//     false` to suppress its 5 s cycling because §7.6 bans persistent
+//     motion in this surface; the static layout still benefits from
+//     the primitive's clean rendering and overflow handling.
 //   - LayoutBuilder selects the collapse mode based on available
 //     width:
 //       width >= 220 pt :  avatars + textual pill
@@ -33,6 +35,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/animated_avatar_stack.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../services/canvas/presence_models.dart';
 import '../../../services/haptic_service.dart';
@@ -46,27 +49,11 @@ import 'canvas_presence_sheet.dart';
 const double _kNormalMinWidth = 220;
 const double _kTightMinWidth = 150;
 
-/// Maximum stacked avatars (slot 4 may be the `+N` overflow chip).
+/// Maximum stacked avatars before overflow "+N" kicks in.
 const int _kMaxAvatarSlots = 4;
 
-/// Avatar diameter in points.
-const double _kAvatarSize = 28;
-
-/// Horizontal overlap factor between adjacent avatars.
-const double _kAvatarOverlap = 0.30;
-
-/// Opacity thresholds. Mirrors the P4.5 token table.
-const Duration _kFreshWindow = Duration(seconds: 30);
-const Duration _kAgingWindow = Duration(seconds: 120);
-
-const double _kOpacityFresh = 1.00;
-const double _kOpacityAging = 0.70;
-const double _kOpacityNearExpiry = 0.45;
-
-const double _kPaintingRingOpacity = 0.40;
-const double _kPaintingRingWidth = 1.5;
-
-const Duration _kFadeDuration = Duration(milliseconds: 220);
+/// Avatar diameter in points. Matches NodeDex co-seen.
+const double _kAvatarSize = AvatarStackDefaults.avatarSize;
 
 class CanvasPresenceStrip extends ConsumerWidget {
   /// The canvas this strip reflects. P5 mount site (the viewer body)
@@ -139,11 +126,7 @@ class _StripBody extends ConsumerWidget {
         ref.haptics.itemSelect();
         _openSheet(context);
       },
-      child: AnimatedSwitcher(
-        duration: _kFadeDuration,
-        switchInCurve: Curves.easeOutCubic,
-        child: _buildForMode(context),
-      ),
+      child: _buildForMode(context),
     );
   }
 
@@ -151,29 +134,24 @@ class _StripBody extends ConsumerWidget {
     switch (mode) {
       case _CollapseMode.normal:
         return Row(
-          key: const ValueKey('presence-mode-normal'),
           mainAxisSize: MainAxisSize.min,
           children: [
-            _AvatarStack(entries: entries),
+            _AvatarCluster(entries: entries),
             const SizedBox(width: AppTheme.spacing8),
             _Pill(text: _normalText(context)),
           ],
         );
       case _CollapseMode.tight:
         return Row(
-          key: const ValueKey('presence-mode-tight'),
           mainAxisSize: MainAxisSize.min,
           children: [
-            _AvatarStack(entries: entries),
+            _AvatarCluster(entries: entries),
             const SizedBox(width: AppTheme.spacing8),
             _Pill(text: _tightText(context)),
           ],
         );
       case _CollapseMode.extreme:
-        return _Pill(
-          key: const ValueKey('presence-mode-extreme'),
-          text: _normalText(context),
-        );
+        return _Pill(text: _normalText(context));
     }
   }
 
@@ -210,126 +188,37 @@ class _StripBody extends ConsumerWidget {
   }
 }
 
-class _AvatarStack extends StatelessWidget {
+/// Wrapper that maps the presence entries into the canonical
+/// [AnimatedAvatarStack] used by NodeDex co-seen. Cycling animation
+/// is disabled to comply with §7.6 (no persistent motion in this
+/// surface), but the visual contract — bordered ClipOval, dark-aware
+/// fill, +N overflow — comes for free.
+class _AvatarCluster extends StatelessWidget {
   final List<PresenceEntry> entries;
 
-  const _AvatarStack({required this.entries});
+  const _AvatarCluster({required this.entries});
 
   @override
   Widget build(BuildContext context) {
-    final visible = entries.length > _kMaxAvatarSlots
-        ? entries.take(_kMaxAvatarSlots - 1).toList(growable: false)
-        : entries;
-    final overflow = entries.length > _kMaxAvatarSlots
-        ? entries.length - (_kMaxAvatarSlots - 1)
-        : 0;
-
-    final step = _kAvatarSize * (1 - _kAvatarOverlap);
-    final slotCount = visible.length + (overflow > 0 ? 1 : 0);
-    final stackWidth = slotCount == 0
-        ? 0.0
-        : _kAvatarSize + step * (slotCount - 1);
-
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
-
-    return SizedBox(
-      width: stackWidth,
-      height: _kAvatarSize,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          for (var i = 0; i < visible.length; i++)
-            Positioned(
-              left: i * step,
-              child: _PresenceAvatar(entry: visible[i], nowMs: nowMs),
+    final items = entries
+        .map(
+          (e) => AvatarStackItem(
+            id: e.nodeNum.toString(),
+            child: TappableSigilAvatar(
+              nodeNum: e.nodeNum,
+              size: _kAvatarSize - AvatarStackDefaults.borderWidth * 2,
+              enableTap: false,
             ),
-          if (overflow > 0)
-            Positioned(
-              left: visible.length * step,
-              child: _OverflowChip(remaining: overflow),
-            ),
-        ],
-      ),
-    );
-  }
-}
+          ),
+        )
+        .toList(growable: false);
 
-class _PresenceAvatar extends StatelessWidget {
-  final PresenceEntry entry;
-  final int nowMs;
-
-  const _PresenceAvatar({required this.entry, required this.nowMs});
-
-  @override
-  Widget build(BuildContext context) {
-    final ageMs = nowMs - entry.lastSeenMs;
-    final opacity = _opacityForAge(ageMs);
-    final isPainting = entry.state == PresenceState.painting;
-
-    final avatar = TappableSigilAvatar(
-      nodeNum: entry.nodeNum,
-      size: _kAvatarSize,
-      enableTap: false,
-    );
-
-    return AnimatedOpacity(
-      duration: _kFadeDuration,
-      curve: Curves.easeOutCubic,
-      opacity: opacity,
-      child: isPainting
-          ? Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  width: _kPaintingRingWidth,
-                  color: context.textPrimary.withValues(
-                    alpha: _kPaintingRingOpacity,
-                  ),
-                ),
-              ),
-              padding: EdgeInsets.zero,
-              child: avatar,
-            )
-          : avatar,
-    );
-  }
-
-  double _opacityForAge(int ageMs) {
-    if (ageMs < _kFreshWindow.inMilliseconds) return _kOpacityFresh;
-    if (ageMs < _kAgingWindow.inMilliseconds) return _kOpacityAging;
-    return _kOpacityNearExpiry;
-  }
-}
-
-class _OverflowChip extends StatelessWidget {
-  final int remaining;
-
-  const _OverflowChip({required this.remaining});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      width: _kAvatarSize,
-      height: _kAvatarSize,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface.withValues(alpha: 0.72),
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: theme.dividerColor.withValues(alpha: 0.4),
-          width: 0.6,
-        ),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        '+$remaining',
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: context.textSecondary,
-          fontFamily: AppTheme.fontFamily,
-        ),
-      ),
+    return AnimatedAvatarStack(
+      items: items,
+      maxVisible: _kMaxAvatarSlots,
+      avatarSize: _kAvatarSize,
+      animationEnabled: false,
+      showOverflowCount: true,
     );
   }
 }
@@ -337,7 +226,7 @@ class _OverflowChip extends StatelessWidget {
 class _Pill extends StatelessWidget {
   final String text;
 
-  const _Pill({super.key, required this.text});
+  const _Pill({required this.text});
 
   @override
   Widget build(BuildContext context) {
