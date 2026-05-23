@@ -183,10 +183,7 @@ class _MeshTabContent extends ConsumerWidget {
       ),
       data: (rows) {
         if (rows.isEmpty) return const _OverviewEmptyState();
-        // Aggregate stats for the hero card: total mesh channels
-        // configured, how many have a materialised canvas with any
-        // paint history, and the cumulative painted-cell count
-        // across every mesh canvas.
+        // Aggregate stats for the hero card.
         var liveCount = 0;
         var totalPaintedCells = 0;
         for (final row in rows) {
@@ -195,6 +192,23 @@ class _MeshTabContent extends ConsumerWidget {
           if (m.cellCount > 0) liveCount++;
           totalPaintedCells += m.cellCount;
         }
+        // IA hierarchy (v0.1): Primary (channel 0) is treated as the
+        // shared commons for this mesh — visually dominant, first
+        // section, strongest CTA. All other configured channels are
+        // surfaced as a secondary "OTHER CHANNELS" section so users
+        // understand they're private / quieter boards, not equally
+        // weighted alternatives to Primary. NO global / worldwide
+        // canvas is implied; Primary is the commons for THIS mesh.
+        LatentChannelCanvas? primary;
+        final others = <LatentChannelCanvas>[];
+        for (final row in rows) {
+          if (row.channelIndex == 0 && primary == null) {
+            primary = row;
+          } else {
+            others.add(row);
+          }
+        }
+        final l = context.l10n;
         return CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
@@ -204,34 +218,75 @@ class _MeshTabContent extends ConsumerWidget {
                 totalPaintedCells: totalPaintedCells,
               ),
             ),
-            // Pinned blurred section header — same primitive
-            // NodeDex / Presence / Capacity use. Count badge matches
-            // the latent-channel count (channels surfaced, not just
-            // live canvases).
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: SectionHeaderDelegate(
-                title: context.l10n.meshCanvasOverviewMeshSectionHeader,
-                count: rows.length,
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(
-                AppTheme.spacing16,
-                AppTheme.spacing4,
-                AppTheme.spacing16,
-                AppTheme.spacing24,
-              ),
-              sliver: SliverList.separated(
-                itemCount: rows.length,
-                separatorBuilder: (_, _) =>
-                    const SizedBox(height: AppTheme.spacing12),
-                itemBuilder: (context, index) => StaggeredListTile(
-                  index: index,
-                  child: _LatentChannelCard(latent: rows[index]),
+            if (primary != null) ...[
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: SectionHeaderDelegate(
+                  title: l.meshCanvasOverviewPrimaryCommonsSectionHeader,
                 ),
               ),
-            ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.spacing16,
+                  AppTheme.spacing4,
+                  AppTheme.spacing16,
+                  AppTheme.spacing20,
+                ),
+                sliver: SliverToBoxAdapter(
+                  child: StaggeredListTile(
+                    index: 0,
+                    child: _PrimaryCommonsCard(latent: primary),
+                  ),
+                ),
+              ),
+            ],
+            if (others.isNotEmpty) ...[
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: SectionHeaderDelegate(
+                  title: l.meshCanvasOverviewOtherChannelsSectionHeader,
+                  count: others.length,
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.spacing16,
+                    AppTheme.spacing4,
+                    AppTheme.spacing16,
+                    AppTheme.spacing8,
+                  ),
+                  child: Text(
+                    l.meshCanvasOverviewOtherChannelsSubtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.textTertiary,
+                      fontFamily: AppTheme.fontFamily,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.spacing16,
+                  AppTheme.spacing4,
+                  AppTheme.spacing16,
+                  AppTheme.spacing24,
+                ),
+                sliver: SliverList.separated(
+                  itemCount: others.length,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(height: AppTheme.spacing12),
+                  itemBuilder: (context, index) => StaggeredListTile(
+                    // Offset by 1 so the Primary card animates first,
+                    // then the secondary list cascades after.
+                    index: index + 1,
+                    child: _LatentChannelCard(latent: others[index]),
+                  ),
+                ),
+              ),
+            ],
           ],
         );
       },
@@ -286,6 +341,241 @@ String _relativeActivityCluster(BuildContext context, int lastOpAtMs) {
   return l.nodedexRelativeMonthsAgo(delta.inDays ~/ 30);
 }
 
+/// Dominant card for the Primary channel canvas — the "commons" for
+/// this mesh in v0.1.
+///
+/// Visually dominant relative to [_LatentChannelCard]: larger
+/// thumbnail (120 px), eyebrow `COMMONS` badge, dedicated subtitle,
+/// stronger accent presence, and a CTA pill that frames the canvas
+/// as the default place to start painting. Does NOT imply a global
+/// canvas — copy is scoped to "this mesh".
+class _PrimaryCommonsCard extends ConsumerWidget {
+  final LatentChannelCanvas latent;
+
+  const _PrimaryCommonsCard({required this.latent});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
+    final accent = context.accentColor;
+    final isLive =
+        latent.materialised != null && latent.materialised!.cellCount > 0;
+
+    final Widget thumbnail = latent.isDormant || latent.materialised == null
+        ? const ChannelCanvasThumbnail(
+            cells: <CanvasCell>[],
+            isDormant: true,
+            size: 120,
+          )
+        : _LiveThumbnail(
+            canvasLocalId: latent.materialised!.localId,
+            size: 120,
+          );
+
+    return GradientBorderContainer(
+      borderRadius: AppTheme.radius20,
+      borderWidth: 1.0,
+      // Stronger accent presence than the secondary cards (0.05 /
+      // 0.11) so Primary visually dominates as the commons.
+      accentOpacity: isLive ? 0.22 : 0.14,
+      enableDepthBlend: true,
+      depthBlendOpacity: 0.04,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppTheme.radius20),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppTheme.radius20),
+          onTap: () =>
+              _openLatentCanvas(context: context, ref: ref, latent: latent),
+          child: Padding(
+            padding: const EdgeInsets.all(AppTheme.spacing16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                thumbnail,
+                const SizedBox(width: AppTheme.spacing16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Eyebrow badge — distinguishes the commons
+                      // visually without claiming admin / ownership.
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacing8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: accent.withValues(alpha: 0.16),
+                          borderRadius: BorderRadius.circular(AppTheme.radius8),
+                          border: Border.all(
+                            color: accent.withValues(alpha: 0.32),
+                            width: 0.5,
+                          ),
+                        ),
+                        child: Text(
+                          l.meshCanvasOverviewPrimaryCommonsBadge,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: accent,
+                            letterSpacing: 1.2,
+                            fontFamily: AppTheme.fontFamily,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spacing8),
+                      Text(
+                        latent.channelName,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: context.textPrimary,
+                          fontFamily: AppTheme.fontFamily,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spacing4),
+                      Text(
+                        l.meshCanvasOverviewPrimaryCommonsSubtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.textSecondary,
+                          fontFamily: AppTheme.fontFamily,
+                          letterSpacing: 0.2,
+                          height: 1.3,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spacing12),
+                      if (latent.isDormant ||
+                          latent.materialised == null ||
+                          latent.materialised!.cellCount == 0)
+                        _PrimaryCommonsDormantCta(accent: accent)
+                      else
+                        _ActiveMetadata(latent: latent),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Dormant-state CTA cluster on the Primary commons card. Pill-shaped
+/// accent-filled "Seed the first pixel" button + a soft secondary
+/// "First paint wakes the board" hint underneath.
+class _PrimaryCommonsDormantCta extends StatelessWidget {
+  final Color accent;
+
+  const _PrimaryCommonsDormantCta({required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacing12,
+            vertical: AppTheme.spacing6,
+          ),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [
+                accent.withValues(alpha: 0.22),
+                accent.withValues(alpha: 0.12),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
+            border: Border.all(
+              color: accent.withValues(alpha: 0.45),
+              width: 0.5,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.brush_outlined, size: 13, color: accent),
+              const SizedBox(width: AppTheme.spacing6),
+              Text(
+                l.meshCanvasOverviewPrimaryCommonsDormantCta,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: accent,
+                  letterSpacing: 0.4,
+                  fontFamily: AppTheme.fontFamily,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing6),
+        Text(
+          l.meshCanvasOverviewPrimaryCommonsDormantHint,
+          style: TextStyle(
+            fontSize: 11,
+            color: context.textTertiary,
+            fontFamily: AppTheme.fontFamily,
+            letterSpacing: 0.3,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Shared open-canvas flow used by both card variants. Pulled into a
+/// free function so [_PrimaryCommonsCard] and [_LatentChannelCard] do
+/// not drift apart on the tap path.
+Future<void> _openLatentCanvas({
+  required BuildContext context,
+  required WidgetRef ref,
+  required LatentChannelCanvas latent,
+}) async {
+  ref.haptics.itemSelect();
+  final navigator = Navigator.of(context);
+  final existing = latent.materialised;
+  if (existing != null) {
+    await navigator.push(
+      MaterialPageRoute<void>(
+        builder: (_) => MeshCanvasViewerScreen(canvas: existing),
+      ),
+    );
+    return;
+  }
+  final repoAsync = ref.read(canvasRepositoryProvider);
+  final repo = repoAsync.asData?.value;
+  if (repo == null) {
+    AppLogging.meshCanvas(
+      'latent channel tap skipped: repository not ready '
+      '(channel=${latent.channelIndex})',
+    );
+    return;
+  }
+  final summary = await repo.getOrCreateMeshCanvas(
+    canvasId: latent.canvasId,
+    channelIndex: latent.channelIndex,
+    name: latent.channelName,
+  );
+  ref.invalidate(canvasListProvider);
+  if (!navigator.mounted) return;
+  await navigator.push(
+    MaterialPageRoute<void>(
+      builder: (_) => MeshCanvasViewerScreen(canvas: summary),
+    ),
+  );
+}
+
 /// Channel canvas card — the Mesh tab's primary surface.
 ///
 /// Replaces the prior settings-list row with a canvas-artifact card:
@@ -303,41 +593,6 @@ class _LatentChannelCard extends ConsumerWidget {
   final LatentChannelCanvas latent;
 
   const _LatentChannelCard({required this.latent});
-
-  Future<void> _open(BuildContext context, WidgetRef ref) async {
-    ref.haptics.itemSelect();
-    final navigator = Navigator.of(context);
-    final existing = latent.materialised;
-    if (existing != null) {
-      await navigator.push(
-        MaterialPageRoute<void>(
-          builder: (_) => MeshCanvasViewerScreen(canvas: existing),
-        ),
-      );
-      return;
-    }
-    final repoAsync = ref.read(canvasRepositoryProvider);
-    final repo = repoAsync.asData?.value;
-    if (repo == null) {
-      AppLogging.meshCanvas(
-        'latent channel tap skipped: repository not ready '
-        '(channel=${latent.channelIndex})',
-      );
-      return;
-    }
-    final summary = await repo.getOrCreateMeshCanvas(
-      canvasId: latent.canvasId,
-      channelIndex: latent.channelIndex,
-      name: latent.channelName,
-    );
-    ref.invalidate(canvasListProvider);
-    if (!navigator.mounted) return;
-    await navigator.push(
-      MaterialPageRoute<void>(
-        builder: (_) => MeshCanvasViewerScreen(canvas: summary),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -372,7 +627,8 @@ class _LatentChannelCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(AppTheme.radius16),
         child: InkWell(
           borderRadius: BorderRadius.circular(AppTheme.radius16),
-          onTap: () => _open(context, ref),
+          onTap: () =>
+              _openLatentCanvas(context: context, ref: ref, latent: latent),
           child: Padding(
             padding: const EdgeInsets.all(AppTheme.spacing12),
             child: Row(
@@ -397,8 +653,9 @@ class _LatentChannelCard extends ConsumerWidget {
 /// `_dependents.isEmpty: is not true`.
 class _LiveThumbnail extends ConsumerWidget {
   final int canvasLocalId;
+  final double size;
 
-  const _LiveThumbnail({required this.canvasLocalId});
+  const _LiveThumbnail({required this.canvasLocalId, this.size = 96});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -407,7 +664,7 @@ class _LiveThumbnail extends ConsumerWidget {
     return ChannelCanvasThumbnail(
       cells: cells,
       isDormant: cells.isEmpty,
-      size: 96,
+      size: size,
     );
   }
 }

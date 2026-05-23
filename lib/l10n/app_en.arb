@@ -16671,6 +16671,34 @@
         "description": "Activity-cluster fragment shown on a latent channel-canvas row in the Mesh tab when no paint has landed. Rendered inside a middle-dot metadata cluster: 'Channel 0 · Dormant · Seed first pixel'. Uses U+00B7 middle dot."
     },
     "meshCanvasOverviewMeshSectionHeader": "CHANNEL CANVASES",
+    "meshCanvasOverviewPrimaryCommonsSectionHeader": "PRIMARY COMMONS",
+    "@meshCanvasOverviewPrimaryCommonsSectionHeader": {
+        "description": "Section header above the dominant Primary channel card on the MeshCanvas overview Mesh tab. Treats channel 0 / Primary as the shared commons for this mesh."
+    },
+    "meshCanvasOverviewPrimaryCommonsBadge": "COMMONS",
+    "@meshCanvasOverviewPrimaryCommonsBadge": {
+        "description": "Small uppercase eyebrow badge inside the Primary commons card. Distinguishes the dominant card from the secondary 'other channels' list."
+    },
+    "meshCanvasOverviewPrimaryCommonsSubtitle": "The shared commons for this mesh",
+    "@meshCanvasOverviewPrimaryCommonsSubtitle": {
+        "description": "Subtitle on the Primary commons card. Frames channel 0 as the default mesh-wide canvas without implying a global / worldwide canvas."
+    },
+    "meshCanvasOverviewPrimaryCommonsDormantCta": "Seed the first pixel",
+    "@meshCanvasOverviewPrimaryCommonsDormantCta": {
+        "description": "Call-to-action on the Primary commons card when the canvas has zero painted cells. Encourages the first paint."
+    },
+    "meshCanvasOverviewPrimaryCommonsDormantHint": "First paint wakes the board",
+    "@meshCanvasOverviewPrimaryCommonsDormantHint": {
+        "description": "Subtle hint paired with the dormant CTA on the Primary commons card. /r/place dormancy framing."
+    },
+    "meshCanvasOverviewOtherChannelsSectionHeader": "OTHER CHANNELS",
+    "@meshCanvasOverviewOtherChannelsSectionHeader": {
+        "description": "Section header above the secondary list of non-primary channel canvases on the MeshCanvas overview Mesh tab."
+    },
+    "meshCanvasOverviewOtherChannelsSubtitle": "Private or quieter channel-bound boards",
+    "@meshCanvasOverviewOtherChannelsSubtitle": {
+        "description": "Caption shown under the 'OTHER CHANNELS' section header. Sets expectation that custom channel canvases are secondary to the Primary commons without implying admins or ownership."
+    },
     "@meshCanvasOverviewMeshSectionHeader": {
         "description": "Small uppercase section header above the list of channel canvas cards in the Mesh tab. Communicates the typed surface: every row below is a channel canvas. Atmospheric / packet-radio register; keep short."
     },

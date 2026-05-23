@@ -12675,6 +12675,31 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshCanvasOverviewMeshSectionHeader => 'LIENZOS DE CANAL';
 
   @override
+  String get meshCanvasOverviewPrimaryCommonsSectionHeader => 'COMUNES PRIMARY';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsBadge => 'COMUNES';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsSubtitle =>
+      'El espacio común compartido de esta mesh';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsDormantCta =>
+      'Sembrar el primer píxel';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsDormantHint =>
+      'La primera pincelada despierta el lienzo';
+
+  @override
+  String get meshCanvasOverviewOtherChannelsSectionHeader => 'OTROS CANALES';
+
+  @override
+  String get meshCanvasOverviewOtherChannelsSubtitle =>
+      'Lienzos privados o más tranquilos ligados a un canal';
+
+  @override
   String get meshCanvasOverviewHeroBigUnit => 'píxeles en la malla';
 
   @override

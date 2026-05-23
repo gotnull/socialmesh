@@ -12642,6 +12642,32 @@ class AppLocalizationsDe extends AppLocalizations {
   String get meshCanvasOverviewMeshSectionHeader => 'KANAL-LEINWÄNDE';
 
   @override
+  String get meshCanvasOverviewPrimaryCommonsSectionHeader =>
+      'GEMEINSCHAFT (PRIMARY)';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsBadge => 'COMMONS';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsSubtitle =>
+      'Die geteilte Gemeinschaft dieses Mesh';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsDormantCta =>
+      'Den ersten Pixel setzen';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsDormantHint =>
+      'Der erste Pinselstrich weckt die Wand';
+
+  @override
+  String get meshCanvasOverviewOtherChannelsSectionHeader => 'WEITERE KANÄLE';
+
+  @override
+  String get meshCanvasOverviewOtherChannelsSubtitle =>
+      'Private oder ruhigere kanalgebundene Flächen';
+
+  @override
   String get meshCanvasOverviewHeroBigUnit => 'Pixel im Mesh';
 
   @override

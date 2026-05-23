@@ -12604,6 +12604,32 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshCanvasOverviewMeshSectionHeader => 'TELAS DE CANAL';
 
   @override
+  String get meshCanvasOverviewPrimaryCommonsSectionHeader =>
+      'BEM COMUM PRIMARY';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsBadge => 'COMUM';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsSubtitle =>
+      'O espaço comum compartilhado desta mesh';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsDormantCta =>
+      'Semear o primeiro pixel';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsDormantHint =>
+      'A primeira pincelada desperta a tela';
+
+  @override
+  String get meshCanvasOverviewOtherChannelsSectionHeader => 'OUTROS CANAIS';
+
+  @override
+  String get meshCanvasOverviewOtherChannelsSubtitle =>
+      'Telas privadas ou mais silenciosas vinculadas a um canal';
+
+  @override
   String get meshCanvasOverviewHeroBigUnit => 'pixels na malha';
 
   @override

@@ -12614,6 +12614,32 @@ class AppLocalizationsIt extends AppLocalizations {
   String get meshCanvasOverviewMeshSectionHeader => 'TELE DEL CANALE';
 
   @override
+  String get meshCanvasOverviewPrimaryCommonsSectionHeader =>
+      'BENI COMUNI PRIMARY';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsBadge => 'COMUNI';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsSubtitle =>
+      'Lo spazio comune condiviso di questa mesh';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsDormantCta =>
+      'Posa il primo pixel';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsDormantHint =>
+      'La prima pennellata risveglia la tela';
+
+  @override
+  String get meshCanvasOverviewOtherChannelsSectionHeader => 'ALTRI CANALI';
+
+  @override
+  String get meshCanvasOverviewOtherChannelsSubtitle =>
+      'Tele private o più tranquille legate a un canale';
+
+  @override
   String get meshCanvasOverviewHeroBigUnit => 'pixel sulla mesh';
 
   @override

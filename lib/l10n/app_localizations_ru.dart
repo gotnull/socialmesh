@@ -12607,6 +12607,32 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshCanvasOverviewMeshSectionHeader => 'ХОЛСТЫ КАНАЛОВ';
 
   @override
+  String get meshCanvasOverviewPrimaryCommonsSectionHeader =>
+      'ОБЩЕСТВЕННЫЙ PRIMARY';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsBadge => 'ОБЩИЙ';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsSubtitle =>
+      'Общее пространство этой меш-сети';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsDormantCta =>
+      'Посадить первый пиксель';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsDormantHint =>
+      'Первая краска пробуждает доску';
+
+  @override
+  String get meshCanvasOverviewOtherChannelsSectionHeader => 'ДРУГИЕ КАНАЛЫ';
+
+  @override
+  String get meshCanvasOverviewOtherChannelsSubtitle =>
+      'Частные или более тихие холсты, привязанные к каналу';
+
+  @override
   String get meshCanvasOverviewHeroBigUnit => 'пикселей в меше';
 
   @override

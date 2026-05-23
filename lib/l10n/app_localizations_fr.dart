@@ -12706,6 +12706,31 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meshCanvasOverviewMeshSectionHeader => 'TOILES DE CANAL';
 
   @override
+  String get meshCanvasOverviewPrimaryCommonsSectionHeader => 'COMMUNS PRIMARY';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsBadge => 'COMMUNS';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsSubtitle =>
+      'L\'espace commun partagé de ce maillage';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsDormantCta =>
+      'Semer le premier pixel';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsDormantHint =>
+      'Le premier coup de pinceau réveille la toile';
+
+  @override
+  String get meshCanvasOverviewOtherChannelsSectionHeader => 'AUTRES CANAUX';
+
+  @override
+  String get meshCanvasOverviewOtherChannelsSubtitle =>
+      'Toiles privées ou plus discrètes liées à un canal';
+
+  @override
   String get meshCanvasOverviewHeroBigUnit => 'pixels sur le mesh';
 
   @override

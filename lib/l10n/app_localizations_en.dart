@@ -12461,6 +12461,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshCanvasOverviewMeshSectionHeader => 'CHANNEL CANVASES';
 
   @override
+  String get meshCanvasOverviewPrimaryCommonsSectionHeader => 'PRIMARY COMMONS';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsBadge => 'COMMONS';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsSubtitle =>
+      'The shared commons for this mesh';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsDormantCta =>
+      'Seed the first pixel';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsDormantHint =>
+      'First paint wakes the board';
+
+  @override
+  String get meshCanvasOverviewOtherChannelsSectionHeader => 'OTHER CHANNELS';
+
+  @override
+  String get meshCanvasOverviewOtherChannelsSubtitle =>
+      'Private or quieter channel-bound boards';
+
+  @override
   String get meshCanvasOverviewHeroBigUnit => 'pixels on the mesh';
 
   @override

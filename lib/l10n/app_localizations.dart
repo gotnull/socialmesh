@@ -21796,6 +21796,48 @@ abstract class AppLocalizations {
   /// **'CHANNEL CANVASES'**
   String get meshCanvasOverviewMeshSectionHeader;
 
+  /// Section header above the dominant Primary channel card on the MeshCanvas overview Mesh tab. Treats channel 0 / Primary as the shared commons for this mesh.
+  ///
+  /// In en, this message translates to:
+  /// **'PRIMARY COMMONS'**
+  String get meshCanvasOverviewPrimaryCommonsSectionHeader;
+
+  /// Small uppercase eyebrow badge inside the Primary commons card. Distinguishes the dominant card from the secondary 'other channels' list.
+  ///
+  /// In en, this message translates to:
+  /// **'COMMONS'**
+  String get meshCanvasOverviewPrimaryCommonsBadge;
+
+  /// Subtitle on the Primary commons card. Frames channel 0 as the default mesh-wide canvas without implying a global / worldwide canvas.
+  ///
+  /// In en, this message translates to:
+  /// **'The shared commons for this mesh'**
+  String get meshCanvasOverviewPrimaryCommonsSubtitle;
+
+  /// Call-to-action on the Primary commons card when the canvas has zero painted cells. Encourages the first paint.
+  ///
+  /// In en, this message translates to:
+  /// **'Seed the first pixel'**
+  String get meshCanvasOverviewPrimaryCommonsDormantCta;
+
+  /// Subtle hint paired with the dormant CTA on the Primary commons card. /r/place dormancy framing.
+  ///
+  /// In en, this message translates to:
+  /// **'First paint wakes the board'**
+  String get meshCanvasOverviewPrimaryCommonsDormantHint;
+
+  /// Section header above the secondary list of non-primary channel canvases on the MeshCanvas overview Mesh tab.
+  ///
+  /// In en, this message translates to:
+  /// **'OTHER CHANNELS'**
+  String get meshCanvasOverviewOtherChannelsSectionHeader;
+
+  /// Caption shown under the 'OTHER CHANNELS' section header. Sets expectation that custom channel canvases are secondary to the Primary commons without implying admins or ownership.
+  ///
+  /// In en, this message translates to:
+  /// **'Private or quieter channel-bound boards'**
+  String get meshCanvasOverviewOtherChannelsSubtitle;
+
   /// Unit label beside the large painted-pixel count in the Mesh tab hero stats card. Reads as 'N pixels on the mesh'. Mesh-native register; avoids enterprise / KPI phrasing like 'pixels painted'.
   ///
   /// In en, this message translates to:

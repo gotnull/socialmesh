@@ -12622,6 +12622,31 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshCanvasOverviewMeshSectionHeader => 'ПОЛОТНА КАНАЛІВ';
 
   @override
+  String get meshCanvasOverviewPrimaryCommonsSectionHeader => 'СПІЛЬНЕ PRIMARY';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsBadge => 'СПІЛЬНЕ';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsSubtitle =>
+      'Спільний простір цієї меш-мережі';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsDormantCta =>
+      'Посадити перший піксель';
+
+  @override
+  String get meshCanvasOverviewPrimaryCommonsDormantHint =>
+      'Перша фарба пробуджує дошку';
+
+  @override
+  String get meshCanvasOverviewOtherChannelsSectionHeader => 'ІНШІ КАНАЛИ';
+
+  @override
+  String get meshCanvasOverviewOtherChannelsSubtitle =>
+      'Приватні або тихіші полотна, прив\'язані до каналу';
+
+  @override
   String get meshCanvasOverviewHeroBigUnit => 'пікселів у меші';
 
   @override
