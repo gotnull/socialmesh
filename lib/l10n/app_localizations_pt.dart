@@ -12410,7 +12410,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get meshCanvasHelpIntro =>
-      'Um mural de pixels pintado a várias mãos por rádio LoRa. Cada canal Meshtastic tem sua própria tela de 128 por 128. Toque uma célula, envie um pequeno frame, veja-o se propagar por cada rádio próximo do canal. Sem servidores, sem contas, sem moderadores - apenas rádios e pixels.';
+      'Um mural de pixels pintado a várias mãos por rádio LoRa. Cada canal Meshtastic tem sua própria tela de 128 por 128, compartilhada com cada nó ouvindo nesse canal. Toque uma célula, envie um pequeno frame, veja-o se propagar por cada rádio próximo. Sem servidores, sem contas, sem moderadores - apenas rádios e pixels.';
 
   @override
   String get meshCanvasHelpMeshCanvasTitle => 'Telas da malha';

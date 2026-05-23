@@ -73,20 +73,20 @@ class CanvasOverviewHeroCard extends StatelessWidget {
           AppTheme.spacing20,
         ),
         decoration: BoxDecoration(
-          // Gradient + border alphas tuned to ~50% of the Capacity
-          // hero reference values — softer presence so the hero
-          // anchors the screen without dominating the channel cards
-          // below.
+          // Gradient + border alphas tuned to ~20% of the Capacity
+          // hero reference values (-80% from original). Barely-
+          // there accent presence so the hero is structural, not
+          // decorative.
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              accent.withValues(alpha: 0.08),
-              accent.withValues(alpha: 0.02),
+              accent.withValues(alpha: 0.03),
+              accent.withValues(alpha: 0.01),
             ],
           ),
           borderRadius: BorderRadius.circular(AppTheme.radius20),
-          border: Border.all(color: accent.withValues(alpha: 0.15), width: 0.5),
+          border: Border.all(color: accent.withValues(alpha: 0.06), width: 0.5),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

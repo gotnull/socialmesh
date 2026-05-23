@@ -241,9 +241,9 @@ class CanvasViewportBody extends ConsumerWidget {
             child: GradientBorderContainer(
               borderRadius: AppTheme.radius16,
               borderWidth: 1.0,
-              accentOpacity: 0.22,
+              accentOpacity: 0.09,
               enableDepthBlend: true,
-              depthBlendOpacity: 0.03,
+              depthBlendOpacity: 0.015,
               backgroundColor: outsidePane,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(AppTheme.radius16 - 1),

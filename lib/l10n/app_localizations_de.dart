@@ -12447,7 +12447,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get meshCanvasHelpIntro =>
-      'Eine Pixelwand, gemeinsam über LoRa-Funk gemalt. Jeder Meshtastic-Kanal hat seine eigene 128-mal-128-Leinwand. Tippe eine Zelle, sende einen winzigen Frame, sieh ihn über jeden nahen Funk auf dem Kanal kreisen. Keine Server, keine Konten, keine Moderatoren - nur Funkgeräte und Pixel.';
+      'Eine Pixelwand, gemeinsam über LoRa-Funk gemalt. Jeder Meshtastic-Kanal hat seine eigene 128-mal-128-Leinwand, geteilt mit jedem Knoten, der auf dem Kanal lauscht. Tippe eine Zelle, sende einen winzigen Frame, sieh ihn über jeden nahen Funk kreisen. Keine Server, keine Konten, keine Moderatoren - nur Funkgeräte und Pixel.';
 
   @override
   String get meshCanvasHelpMeshCanvasTitle => 'Mesh-Leinwände';

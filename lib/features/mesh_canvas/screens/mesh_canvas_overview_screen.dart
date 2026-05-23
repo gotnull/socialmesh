@@ -364,9 +364,9 @@ class _LatentChannelCard extends ConsumerWidget {
     return GradientBorderContainer(
       borderRadius: AppTheme.radius16,
       borderWidth: 1.0,
-      accentOpacity: isLive ? 0.28 : 0.12,
+      accentOpacity: isLive ? 0.11 : 0.05,
       enableDepthBlend: isLive,
-      depthBlendOpacity: 0.05,
+      depthBlendOpacity: 0.02,
       child: Material(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(AppTheme.radius16),

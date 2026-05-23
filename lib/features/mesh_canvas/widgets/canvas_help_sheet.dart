@@ -42,12 +42,10 @@ Future<void> showCanvasHelpSheet({required BuildContext context}) {
         title: l.meshCanvasHelpTitle,
         intro: l.meshCanvasHelpIntro,
         items: [
-          // Local vs Mesh — anchor the IA first.
-          HelpSheetItem(
-            icon: Icons.smartphone_outlined,
-            title: l.meshCanvasHelpLocalCanvasTitle,
-            description: l.meshCanvasHelpLocalCanvasBody,
-          ),
+          // The Local Device Canvas is intentionally NOT explained
+          // in user help. It is a developer / debug surface; the
+          // product is the per-channel mesh canvas. Help anchors
+          // the IA mesh-first.
           HelpSheetItem(
             icon: Icons.share_outlined,
             title: l.meshCanvasHelpMeshCanvasTitle,
