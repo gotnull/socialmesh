@@ -150,15 +150,26 @@ class MrrpServiceCanvas implements MrrpServiceHandler {
   /// canvases fall back to `"Canvas <channelIndex>"`.
   final String? Function(int channelIndex)? _channelNameForFallback;
 
+  /// Fires once per [applyInbound] call when at least one op was
+  /// accepted into canonical state. The provider layer wires this to
+  /// invalidate `canvasCellsProvider(canvasLocalId)` so live viewers
+  /// repaint without waiting for a local tap. Without it, inbound
+  /// paints land in SQLite but no viewer rebuilds — the user only
+  /// sees them after they themselves paint and trigger a manual
+  /// invalidate.
+  final void Function(int canvasLocalId)? _onCellApplied;
+
   MrrpServiceCanvas({
     required CanvasRepository repository,
     CanvasInboundLimiter? limiter,
     int Function()? nowMs,
     String? Function(int channelIndex)? channelNameForFallback,
+    void Function(int canvasLocalId)? onCellApplied,
   }) : _repository = repository,
        _inboundLimiter = limiter ?? CanvasInboundLimiter(nowMs: nowMs),
        _nowMs = nowMs ?? (() => DateTime.now().millisecondsSinceEpoch),
-       _channelNameForFallback = channelNameForFallback;
+       _channelNameForFallback = channelNameForFallback,
+       _onCellApplied = onCellApplied;
 
   @override
   int get serviceId => MrrpServiceId.canvasV1;
@@ -307,6 +318,10 @@ class MrrpServiceCanvas implements MrrpServiceHandler {
       opSeq: op.opSeq,
     );
 
+    if (accepted) {
+      _onCellApplied?.call(canvas.localId);
+    }
+
     return CanvasInboundReport(
       outcome: accepted
           ? CanvasInboundOutcome.applied
@@ -388,6 +403,10 @@ class MrrpServiceCanvas implements MrrpServiceHandler {
       'applied=$applied unapplied=$unappliedByRepository '
       'replay-window=$replayWindowRejected',
     );
+
+    if (applied > 0) {
+      _onCellApplied?.call(canvas.localId);
+    }
 
     final CanvasInboundOutcome outcome;
     if (applied > 0) {

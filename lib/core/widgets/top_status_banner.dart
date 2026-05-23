@@ -160,7 +160,12 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
         'RECONNECT_BANNER_VISIBLE reason=animate_in '
         'autoReconnectState=${widget.autoReconnectState.name}',
       );
-      widget.onVisibilityChanged?.call(true);
+      // _animateIn() fires from didUpdateWidget. Any synchronous
+      // onVisibilityChanged dispatch from here would call setState
+      // on the parent while the parent is still building, which
+      // Flutter rejects ("setState called during build"). Defer
+      // via the shared _notifyVisibility post-frame helper.
+      _notifyVisibility(true);
     }
   }
 

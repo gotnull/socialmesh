@@ -328,18 +328,20 @@ class _LatentChannelCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Live channels fetch their painted cells so the thumbnail can
-    // render a real glimpse of the board. Dormant channels skip the
-    // fetch — there is nothing to render.
-    final List<CanvasCell> cells;
-    if (latent.materialised != null && !latent.isDormant) {
-      final cellsAsync = ref.watch(
-        canvasCellsProvider(latent.materialised!.localId),
-      );
-      cells = cellsAsync.asData?.value ?? const <CanvasCell>[];
-    } else {
-      cells = const <CanvasCell>[];
-    }
+    // The thumbnail subtree differs by state:
+    //   - Live channel  → _LiveThumbnail watches canvasCellsProvider.
+    //   - Dormant       → static ChannelCanvasThumbnail with no cells.
+    // This split avoids a conditional ref.watch inside a single
+    // ConsumerWidget — that pattern produces stale Riverpod
+    // dependency tracking and the "_dependents.isEmpty: is not true"
+    // framework assertion when the conditional flips between builds.
+    final Widget thumbnail = latent.isDormant || latent.materialised == null
+        ? const ChannelCanvasThumbnail(
+            cells: <CanvasCell>[],
+            isDormant: true,
+            size: 96,
+          )
+        : _LiveThumbnail(canvasLocalId: latent.materialised!.localId);
 
     return Material(
       color: context.card,
@@ -352,17 +354,35 @@ class _LatentChannelCard extends ConsumerWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              ChannelCanvasThumbnail(
-                cells: cells,
-                isDormant: latent.isDormant,
-                size: 96,
-              ),
+              thumbnail,
               const SizedBox(width: AppTheme.spacing16),
               Expanded(child: _ChannelCardText(latent: latent)),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Watches the per-canvas cells provider and feeds them into a
+/// [ChannelCanvasThumbnail]. Always materialised for a known
+/// `canvasLocalId`, so its `ref.watch` is consistent across rebuilds
+/// — avoids the conditional-watch bug that crashed the sim with
+/// `_dependents.isEmpty: is not true`.
+class _LiveThumbnail extends ConsumerWidget {
+  final int canvasLocalId;
+
+  const _LiveThumbnail({required this.canvasLocalId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cellsAsync = ref.watch(canvasCellsProvider(canvasLocalId));
+    final cells = cellsAsync.asData?.value ?? const <CanvasCell>[];
+    return ChannelCanvasThumbnail(
+      cells: cells,
+      isDormant: cells.isEmpty,
+      size: 96,
     );
   }
 }

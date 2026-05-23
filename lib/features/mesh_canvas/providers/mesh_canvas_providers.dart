@@ -226,7 +226,19 @@ final mrrpServiceCanvasProvider = FutureProvider<MrrpServiceCanvas>((
   ref,
 ) async {
   final repo = await ref.watch(canvasRepositoryProvider.future);
-  return MrrpServiceCanvas(repository: repo);
+  return MrrpServiceCanvas(
+    repository: repo,
+    // Fires once per inbound frame when at least one op landed. Without
+    // this, cells write to SQLite but no viewer rebuilds: the user only
+    // sees inbound paints after their own next tap kicks an invalidate.
+    // canvasListProvider is invalidated alongside the cell stream so
+    // last_op_at_ms ordering, cell_count, and the latent->live
+    // transition all repaint on the overview in the same pass.
+    onCellApplied: (canvasLocalId) {
+      ref.invalidate(canvasCellsProvider(canvasLocalId));
+      ref.invalidate(canvasListProvider);
+    },
+  );
 });
 
 /// Side-effect provider: attaches the inbound canvas handler to
@@ -235,9 +247,20 @@ final mrrpServiceCanvasProvider = FutureProvider<MrrpServiceCanvas>((
 /// app does not pay the wiring cost when the user never opens the
 /// feature. After the first watch, the hook stays attached for the
 /// app's lifetime (the provider container outlives the screen).
+///
+/// Also force-materialises [sipDiscoveryProvider]. ProtocolService
+/// buffers every inbound SIP frame in a 16-entry startup queue
+/// until `attachSipDiscovery` is called — and `sipDiscoveryProvider`
+/// is what calls it. Without this watch the canvas frames arrive
+/// at the iPhone, get parked in the startup buffer, and never reach
+/// the canvas demux because nothing else on the MeshCanvas surface
+/// would have caused the SIP stack to attach.
 final canvasProtocolWiringProvider = FutureProvider<void>((ref) async {
   final protocol = ref.read(protocolServiceProvider);
   final mrrpService = await ref.watch(mrrpServiceCanvasProvider.future);
+  // Force SIP discovery to materialise so the startup buffer drains
+  // and inbound canvas frames stop being parked pre-attach.
+  ref.watch(sipDiscoveryProvider);
   protocol.attachCanvasInbound((
     int senderNodeId,
     int channelIndex,
