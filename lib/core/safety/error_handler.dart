@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io' show SocketException;
 import 'dart:ui' as ui;
 
-import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
@@ -483,30 +481,6 @@ class AppErrorHandler {
     } catch (_) {
       // Crashlytics not initialized - ignore
     }
-  }
-
-  /// Set user context for crash reports (sanitized).
-  static void setUserContext({String? userId, String? email, String? name}) {
-    try {
-      if (userId != null) {
-        // SHA-256 hash truncated to 16 hex chars — non-reversible, sufficient entropy.
-        final hash = sha256
-            .convert(utf8.encode(userId))
-            .toString()
-            .substring(0, 16);
-        FirebaseCrashlytics.instance.setUserIdentifier(hash);
-      }
-      // Don't set email or name to avoid PII in crash reports
-    } catch (_) {
-      // Crashlytics not initialized - ignore
-    }
-  }
-
-  /// Clear user context (on logout).
-  static void clearUserContext() {
-    try {
-      FirebaseCrashlytics.instance.setUserIdentifier('');
-    } catch (_) {}
   }
 
   /// Run a function with error protection - never throws, returns result or null.

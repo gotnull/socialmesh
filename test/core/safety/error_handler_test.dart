@@ -506,10 +506,6 @@ void main() {
         returnsNormally,
       );
     });
-
-    test('clearUserContext does not throw', () {
-      expect(() => AppErrorHandler.clearUserContext(), returnsNormally);
-    });
   });
 
   group('MQTT keep-alive socket error detection', () {
