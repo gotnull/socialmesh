@@ -174,7 +174,9 @@ class CanvasDigestOp {
   final Uint8List globalDigest;
   final int cellCount;
 
-  /// Exactly 128 bytes (16 tiles × 8 bytes each).
+  /// Concatenated per-tile digest blob, exactly
+  /// [CanvasDigestSizes.tilesConcatenatedBytes] bytes
+  /// (v0.1 64×64 → 32 bytes = 4 tiles × 8).
   final Uint8List tileDigests;
 
   const CanvasDigestOp({
@@ -576,7 +578,10 @@ abstract final class CanvasCodec {
   }
 
   // ---------------------------------------------------------------------------
-  // canvas_digest (action 0x0003) — 160 bytes
+  // canvas_digest (action 0x0003) — 64 bytes at v0.1 (12 prefix + 16
+  // global + 4 cellCount + tilesConcatenatedBytes). All offsets +
+  // lengths derive from CanvasDigestSizes so the encoder stays valid
+  // if CanvasGeometry tile count ever changes.
   // ---------------------------------------------------------------------------
 
   static Uint8List? encodeCanvasDigest(CanvasDigestOp op) {
@@ -594,7 +599,7 @@ abstract final class CanvasCodec {
       );
       return null;
     }
-    final buf = ByteData(160);
+    final buf = ByteData(CanvasDigestSizes.totalDigestPayloadBytes);
     _writeCommonPrefix(
       buf,
       action: CanvasAction.canvasDigest,
@@ -604,7 +609,11 @@ abstract final class CanvasCodec {
     final bytes = buf.buffer.asUint8List();
     bytes.setRange(12, 28, op.globalDigest);
     buf.setUint32(28, op.cellCount, Endian.little);
-    bytes.setRange(32, 160, op.tileDigests);
+    bytes.setRange(
+      32,
+      CanvasDigestSizes.totalDigestPayloadBytes,
+      op.tileDigests,
+    );
     return bytes;
   }
 
@@ -612,7 +621,7 @@ abstract final class CanvasCodec {
     if (!_checkCommonPrefix(
       payload,
       expectedAction: CanvasAction.canvasDigest,
-      expectedLen: 160,
+      expectedLen: CanvasDigestSizes.totalDigestPayloadBytes,
       expectBatchBit: false,
     )) {
       return null;
@@ -621,7 +630,9 @@ abstract final class CanvasCodec {
     final canvasId = buf.getUint64(4, Endian.little);
     final globalDigest = Uint8List.fromList(payload.sublist(12, 28));
     final cellCount = buf.getUint32(28, Endian.little);
-    final tileDigests = Uint8List.fromList(payload.sublist(32, 160));
+    final tileDigests = Uint8List.fromList(
+      payload.sublist(32, CanvasDigestSizes.totalDigestPayloadBytes),
+    );
     return CanvasDigestOp(
       canvasId: canvasId,
       globalDigest: globalDigest,
@@ -635,11 +646,12 @@ abstract final class CanvasCodec {
   // ---------------------------------------------------------------------------
 
   static Uint8List? encodeSyncRequest(CanvasSyncRequestOp op) {
+    final maxTile = CanvasGeometry.tilesPerRow - 1;
     if (op.tileX < 0 || op.tileX >= CanvasGeometry.tilesPerRow) {
-      throw ArgumentError.value(op.tileX, 'tileX', 'must be 0..3');
+      throw ArgumentError.value(op.tileX, 'tileX', 'must be 0..$maxTile');
     }
     if (op.tileY < 0 || op.tileY >= CanvasGeometry.tilesPerRow) {
-      throw ArgumentError.value(op.tileY, 'tileY', 'must be 0..3');
+      throw ArgumentError.value(op.tileY, 'tileY', 'must be 0..$maxTile');
     }
     final buf = ByteData(18);
     _writeCommonPrefix(
@@ -701,11 +713,12 @@ abstract final class CanvasCodec {
   // ---------------------------------------------------------------------------
 
   static Uint8List? encodeSyncResponse(CanvasSyncResponseOp op) {
+    final maxTile = CanvasGeometry.tilesPerRow - 1;
     if (op.tileX < 0 || op.tileX >= CanvasGeometry.tilesPerRow) {
-      throw ArgumentError.value(op.tileX, 'tileX', 'must be 0..3');
+      throw ArgumentError.value(op.tileX, 'tileX', 'must be 0..$maxTile');
     }
     if (op.tileY < 0 || op.tileY >= CanvasGeometry.tilesPerRow) {
-      throw ArgumentError.value(op.tileY, 'tileY', 'must be 0..3');
+      throw ArgumentError.value(op.tileY, 'tileY', 'must be 0..$maxTile');
     }
     final body = op.body;
     final int encoding;

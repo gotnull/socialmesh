@@ -12776,6 +12776,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'A primeira tinta acorda a tela';
 
   @override
+  String get meshCanvasViewerEmptyMeshHydratingTitle =>
+      'Ouvindo a tinta da malha';
+
+  @override
+  String get meshCanvasViewerEmptyMeshHydratingSubtitle =>
+      'Buscando pixels dos pares próximos';
+
+  @override
   String get meshCanvasViewerEmptyLocalTitle => 'Toque para pintar';
 
   @override

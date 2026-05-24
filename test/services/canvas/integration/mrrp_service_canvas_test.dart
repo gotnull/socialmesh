@@ -9,6 +9,7 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:socialmesh/services/canvas/canvas_codec.dart';
+import 'package:socialmesh/services/canvas/canvas_constants.dart';
 import 'package:socialmesh/services/canvas/canvas_database.dart';
 import 'package:socialmesh/services/canvas/canvas_inbound_limiter.dart';
 import 'package:socialmesh/services/canvas/canvas_models.dart';
@@ -493,7 +494,7 @@ void main() {
             canvasId: 0xAA,
             globalDigest: Uint8List(16),
             cellCount: 0,
-            tileDigests: Uint8List(128),
+            tileDigests: Uint8List(CanvasDigestSizes.tilesConcatenatedBytes),
           ),
         )!;
         final syncReqPayload = CanvasCodec.encodeSyncRequest(

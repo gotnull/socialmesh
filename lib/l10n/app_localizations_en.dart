@@ -12628,6 +12628,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshCanvasViewerEmptyMeshSubtitle => 'First paint wakes the board';
 
   @override
+  String get meshCanvasViewerEmptyMeshHydratingTitle =>
+      'Listening for mesh ink';
+
+  @override
+  String get meshCanvasViewerEmptyMeshHydratingSubtitle =>
+      'Pulling pixels from nearby peers';
+
+  @override
   String get meshCanvasViewerEmptyLocalTitle => 'Tap to paint';
 
   @override

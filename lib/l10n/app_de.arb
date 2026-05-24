@@ -4639,6 +4639,8 @@
   "meshCanvasOverviewHeroBigUnit": "Pixel im Mesh",
   "meshCanvasViewerEmptyMeshTitle": "Tippe, um das erste Pixel zu setzen",
   "meshCanvasViewerEmptyMeshSubtitle": "Der erste Strich weckt das Brett",
+  "meshCanvasViewerEmptyMeshHydratingTitle": "Höre auf Mesh-Tinte",
+  "meshCanvasViewerEmptyMeshHydratingSubtitle": "Pixel werden von nahen Peers geholt",
   "meshCanvasViewerEmptyLocalTitle": "Tippe zum Malen",
   "meshCanvasViewerEmptyLocalSubtitle": "Bleibt auf diesem Gerät",
   "meshCanvasViewerGestureTap": "tippen · malen",

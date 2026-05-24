@@ -37811,6 +37811,8 @@
   "meshCanvasOverviewHeroBigUnit": "pixels na malha",
   "meshCanvasViewerEmptyMeshTitle": "Toque para semear o primeiro pixel",
   "meshCanvasViewerEmptyMeshSubtitle": "A primeira tinta acorda a tela",
+  "meshCanvasViewerEmptyMeshHydratingTitle": "Ouvindo a tinta da malha",
+  "meshCanvasViewerEmptyMeshHydratingSubtitle": "Buscando pixels dos pares próximos",
   "meshCanvasViewerEmptyLocalTitle": "Toque para pintar",
   "meshCanvasViewerEmptyLocalSubtitle": "Fica neste dispositivo",
   "meshCanvasViewerGestureTap": "toque · pinte",

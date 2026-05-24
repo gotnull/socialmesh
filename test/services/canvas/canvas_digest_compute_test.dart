@@ -75,7 +75,8 @@ void main() {
       expect(set.cellCount, 1);
       expect(set.globalDigest, isNot(equals(emptySet.globalDigest)));
 
-      // Cell (35, 12) → tile (1, 0) → tile_idx = 0 * 4 + 1 = 1.
+      // Cell (35, 12) → tile (1, 0) → tile_idx =
+      // 0 * tilesPerRow(2) + 1 = 1.
       final affectedTile = canvasTileIndexForCell(35, 12);
       expect(affectedTile, 1);
 
@@ -151,8 +152,8 @@ void main() {
         'plus the global digest', () async {
       const baseCell = CanvasCell(
         canvasLocalId: 1,
-        x: 70,
-        y: 70,
+        x: 40,
+        y: 40,
         color: 1,
         lastTs: 1000,
         lastAuthor: 1,
@@ -160,8 +161,8 @@ void main() {
       );
       const flipped = CanvasCell(
         canvasLocalId: 1,
-        x: 70,
-        y: 70,
+        x: 40,
+        y: 40,
         color: 5,
         lastTs: 1000,
         lastAuthor: 1,
@@ -198,9 +199,10 @@ void main() {
 
       expect(a.globalDigest, isNot(equals(b.globalDigest)));
 
-      // Cell (70, 70) → tile (70/32, 70/32) = (2, 2) → idx = 2*4+2 = 10.
-      final affectedTile = canvasTileIndexForCell(70, 70);
-      expect(affectedTile, 10);
+      // Cell (40, 40) → tile (40/32, 40/32) = (1, 1) →
+      // idx = 1 * tilesPerRow(2) + 1 = 3.
+      final affectedTile = canvasTileIndexForCell(40, 40);
+      expect(affectedTile, 3);
 
       for (var t = 0; t < CanvasGeometry.tileCount; t++) {
         final offset = t * CanvasDigestSizes.tileBytes;

@@ -15,7 +15,17 @@ import 'package:crypto/crypto.dart';
 /// canvas.db filename + current schema version.
 abstract final class CanvasDbConfig {
   static const String dbName = 'canvas.db';
-  static const int dbVersion = 1;
+
+  /// Bumped to 2 for the v0.1 board-size reduction (128×128 → 64×64).
+  /// The wire format changes (canvas_digest 160B → 64B, tile_digests
+  /// 128B → 32B, tile range 0..3 → 0..1) make any prior `cell` rows
+  /// painted at coordinates ≥ 64 invalid for the new geometry, and
+  /// any cached digest blob the wrong size. The onUpgrade handler
+  /// drops every canvas table row; users opening a previously-used
+  /// build wake to a fresh canvas state — the protocol then
+  /// re-hydrates from peers via digest sync. This is acceptable per
+  /// the v0.1 board-size-reduction directive ("safe to wipe").
+  static const int dbVersion = 2;
 }
 
 /// SQLite table names for the canvas persistence layer.
@@ -29,21 +39,35 @@ abstract final class CanvasTables {
 
 /// Canvas geometry per CANVAS_V0_1.md §6.3. Changing any of these is a
 /// wire-format break and requires a new canvas.v? spec.
+///
+/// v0.1 launch dimensions: 64 × 64 cells, 2 × 2 tiles of 32 × 32 each.
+/// The original draft used 128 × 128 / 16 tiles, but real-hardware
+/// hydration tests showed the larger surface produced sparse,
+/// emotionally inactive boards under typical 2-20 user densities.
+/// 64 × 64 quadruples observed paint density at the same cell count
+/// (e.g., 316 cells → ~7.7 % occupancy vs ~1.9 %) and cuts the worst-
+/// case sync workload from 16 tiles to 4 — fewer mismatched tiles per
+/// digest cycle, fewer sync_requests, faster hydration on first run,
+/// less governor pressure, denser visible activity. Tile size stays
+/// 32 × 32 so the RLE / raw-band coordinate math, governor sizing,
+/// and codec byte layouts remain dimension-derived through these
+/// constants.
 abstract final class CanvasGeometry {
   /// Width of every canvas in cells.
-  static const int width = 128;
+  static const int width = 64;
 
   /// Height of every canvas in cells.
-  static const int height = 128;
+  static const int height = 64;
 
-  /// Side length of a tile in cells (32 × 32).
+  /// Side length of a tile in cells (32 × 32). Unchanged across the
+  /// 128→64 resize so RLE/raw-band encoding stays valid as-is.
   static const int tileSize = 32;
 
-  /// Number of tiles per row across the canvas (128 / 32 = 4).
-  static const int tilesPerRow = 4;
+  /// Number of tiles per row across the canvas (64 / 32 = 2).
+  static const int tilesPerRow = 2;
 
-  /// Total number of tiles per canvas (4 × 4 = 16).
-  static const int tileCount = 16;
+  /// Total number of tiles per canvas (2 × 2 = 4).
+  static const int tileCount = 4;
 }
 
 /// Digest sizes per CANVAS_V0_1.md §6.3 + §7.
@@ -54,9 +78,19 @@ abstract final class CanvasDigestSizes {
   /// Truncated per-tile digest length in bytes (BLAKE2s-128 → 8).
   static const int tileBytes = 8;
 
-  /// Concatenated tile digests length: 16 tiles × 8 bytes = 128.
+  /// Concatenated tile digests length:
+  ///   v0.1 64×64 → 4 tiles × 8 bytes = 32.
+  ///   (Was 16 × 8 = 128 during the 128×128 draft.)
   static const int tilesConcatenatedBytes =
       CanvasGeometry.tileCount * tileBytes;
+
+  /// Total canvas_digest payload length in bytes:
+  ///   12 (common prefix) + 16 (global) + 4 (cellCount) +
+  ///   tilesConcatenatedBytes (per-tile blob).
+  ///   v0.1 64×64 → 64 bytes. (Was 160 during the 128×128 draft.)
+  /// The codec slices and ByteData allocations derive from this so
+  /// future geometry changes only require updating CanvasGeometry.
+  static const int totalDigestPayloadBytes = 32 + tilesConcatenatedBytes;
 }
 
 /// Validation bounds enforced by the repository layer before any DB write.

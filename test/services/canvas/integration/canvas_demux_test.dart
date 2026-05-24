@@ -341,6 +341,110 @@ void main() {
     });
   });
 
+  test('duplicate canvas frame from same sender+channel within the echo '
+      'window fires the hook exactly once', () async {
+    await _withTempDb((_) async {
+      final protocol = await _openProtocol();
+      final captured = <_CapturedFrame>[];
+      protocol.attachCanvasInbound((sender, channel, payload) async {
+        captured.add(
+          _CapturedFrame(
+            senderNodeId: sender,
+            channelIndex: channel,
+            canvasPayload: payload,
+          ),
+        );
+      });
+
+      final canvasPayload = _samplePaint(canvasId: 0xDEDE, x: 5, y: 7);
+      // Inject the same MRRP-wrapped canvas frame twice from the same
+      // sender on the same channel. Real-world trigger: TCP gateway
+      // echoing its own broadcast back as a relay confirm.
+      protocol.injectMrrpFrameForTest(
+        0x42,
+        0,
+        _buildCanvasSipFrame(canvasPayload: canvasPayload, requestId: 1),
+      );
+      protocol.injectMrrpFrameForTest(
+        0x42,
+        0,
+        _buildCanvasSipFrame(canvasPayload: canvasPayload, requestId: 1),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(captured, hasLength(1));
+      expect(captured.single.senderNodeId, 0x42);
+
+      protocol.stop();
+    });
+  });
+
+  test('two distinct canvas frames from the same sender both reach the hook '
+      '(dedupe is content-scoped, not sender-scoped)', () async {
+    await _withTempDb((_) async {
+      final protocol = await _openProtocol();
+      final captured = <_CapturedFrame>[];
+      protocol.attachCanvasInbound((sender, channel, payload) async {
+        captured.add(
+          _CapturedFrame(
+            senderNodeId: sender,
+            channelIndex: channel,
+            canvasPayload: payload,
+          ),
+        );
+      });
+
+      final first = _samplePaint(canvasId: 0xAA, x: 1, y: 1);
+      final second = _samplePaint(canvasId: 0xAA, x: 2, y: 2);
+      protocol.injectMrrpFrameForTest(
+        0x42,
+        0,
+        _buildCanvasSipFrame(canvasPayload: first),
+      );
+      protocol.injectMrrpFrameForTest(
+        0x42,
+        0,
+        _buildCanvasSipFrame(canvasPayload: second),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(captured, hasLength(2));
+    });
+  });
+
+  test('identical canvas frame from different senders both reach the hook '
+      '(per-sender dedupe scope: no cross-sender false positive)', () async {
+    await _withTempDb((_) async {
+      final protocol = await _openProtocol();
+      final captured = <_CapturedFrame>[];
+      protocol.attachCanvasInbound((sender, channel, payload) async {
+        captured.add(
+          _CapturedFrame(
+            senderNodeId: sender,
+            channelIndex: channel,
+            canvasPayload: payload,
+          ),
+        );
+      });
+
+      final payload = _samplePaint(canvasId: 0xBB, x: 9, y: 9);
+      protocol.injectMrrpFrameForTest(
+        0x10,
+        0,
+        _buildCanvasSipFrame(canvasPayload: payload),
+      );
+      protocol.injectMrrpFrameForTest(
+        0x20,
+        0,
+        _buildCanvasSipFrame(canvasPayload: payload),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(captured, hasLength(2));
+      expect(captured.map((c) => c.senderNodeId).toSet(), {0x10, 0x20});
+    });
+  });
+
   test('attachCanvasInbound(null) detaches and stops routing', () async {
     await _withTempDb((_) async {
       final protocol = await _openProtocol();

@@ -12787,6 +12787,14 @@ class AppLocalizationsIt extends AppLocalizations {
       'La prima pittura risveglia la tela';
 
   @override
+  String get meshCanvasViewerEmptyMeshHydratingTitle =>
+      'In ascolto dell\'inchiostro mesh';
+
+  @override
+  String get meshCanvasViewerEmptyMeshHydratingSubtitle =>
+      'Recupero dei pixel dai peer vicini';
+
+  @override
   String get meshCanvasViewerEmptyLocalTitle => 'Tocca per dipingere';
 
   @override

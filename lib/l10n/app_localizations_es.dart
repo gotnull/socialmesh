@@ -12846,6 +12846,14 @@ class AppLocalizationsEs extends AppLocalizations {
       'La primera pintura despierta el lienzo';
 
   @override
+  String get meshCanvasViewerEmptyMeshHydratingTitle =>
+      'Escuchando la tinta de la malla';
+
+  @override
+  String get meshCanvasViewerEmptyMeshHydratingSubtitle =>
+      'Recogiendo píxeles de los pares cercanos';
+
+  @override
   String get meshCanvasViewerEmptyLocalTitle => 'Toca para pintar';
 
   @override

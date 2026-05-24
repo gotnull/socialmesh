@@ -150,6 +150,27 @@ class _RawBandReceiveSet {
   }
 }
 
+/// Per-canvas, per-peer queue entry for tiles that were stashed when
+/// the per-peer 4-per-minute cap closed mid-batch. Drained by
+/// [CanvasSyncCoordinator.drainDeferredSyncRequests] on the lifecycle
+/// host's periodic tick. The drain still consults the per-peer
+/// window so the throttle invariant is preserved.
+class _DeferredPeerSync {
+  final int peerNodeNum;
+  final int channelIndex;
+  final int canvasId;
+  final List<int> remainingTiles;
+  final int deferredAtMs;
+
+  const _DeferredPeerSync({
+    required this.peerNodeNum,
+    required this.channelIndex,
+    required this.canvasId,
+    required this.remainingTiles,
+    required this.deferredAtMs,
+  });
+}
+
 class CanvasSyncCoordinator {
   final CanvasRepository _repository;
   final CanvasOutboundChannel _outbound;
@@ -184,6 +205,15 @@ class CanvasSyncCoordinator {
   /// Receiver-side: in-progress raw-band reception sets, keyed by
   /// canvas then by "$peer:$tileX:$tileY". Spec §11.3.
   final Map<int, Map<String, _RawBandReceiveSet>> _rawBandReceiveByCanvas = {};
+
+  /// Per-canvas, per-peer queue of mismatched tile indices that were
+  /// not emitted because the per-peer 4-per-minute cap was full.
+  /// Drained by [drainDeferredSyncRequests] on the lifecycle host's
+  /// 5 s periodic tick. The deferred queue does NOT bypass the cap:
+  /// the drain still consults `_peerWindow` and only emits when a
+  /// slot has aged out. This preserves the spec invariant that sync
+  /// throttles naturally without a stampede.
+  final Map<int, Map<int, _DeferredPeerSync>> _deferredByCanvas = {};
 
   /// Stream controller broadcasting hydration-state changes per canvas.
   /// UI watches via `hydrationStateFor`.
@@ -379,12 +409,15 @@ class CanvasSyncCoordinator {
     window.requestTimestampsMs.removeWhere((t) => t < cutoff);
 
     var emitted = 0;
-    for (final tile in mismatchedTiles) {
+    var cappedIdx = mismatchedTiles.length;
+    for (var i = 0; i < mismatchedTiles.length; i++) {
+      final tile = mismatchedTiles[i];
       if (window.requestTimestampsMs.length >= maxRequestsPerPeerPerMinute) {
         AppLogging.meshCanvas(
           'sync sync_request drop_reason=per_peer_cap '
           'canvas=${canvas.localId} peer=0x${senderNodeId.toRadixString(16)}',
         );
+        cappedIdx = i;
         break;
       }
       final pending = _pendingTiles(canvas.localId);
@@ -405,6 +438,16 @@ class CanvasSyncCoordinator {
         );
         break;
       }
+      // Reserve the tile BEFORE the await so an interleaving
+      // handleInboundDigest call (driven by the peer's next digest
+      // arriving before this send completes) does not see the slot
+      // empty and emit a duplicate sync_request. The reservation is
+      // rolled back below if the send itself fails.
+      pending[tile] = _PendingTileRequest(
+        peerNodeNum: senderNodeId,
+        tileIndex: tile,
+        requestedAtMs: now,
+      );
       final res = await _outbound.sendCanvasPayload(
         canvasPayload: reqPayload,
         channelIndex: channelIndex,
@@ -412,17 +455,14 @@ class CanvasSyncCoordinator {
       if (res.outcome == CanvasSendOutcome.sent) {
         _governor.recordSend(reqPayload.length);
         window.requestTimestampsMs.add(now);
-        pending[tile] = _PendingTileRequest(
-          peerNodeNum: senderNodeId,
-          tileIndex: tile,
-          requestedAtMs: now,
-        );
         emitted++;
         AppLogging.meshCanvas(
           'sync sync_request_emit canvas=${canvas.localId} '
           'tile=$tileX,$tileY peer=0x${senderNodeId.toRadixString(16)}',
         );
       } else {
+        // Release the reservation so a future digest can re-issue.
+        pending.remove(tile);
         AppLogging.meshCanvas(
           'sync sync_request drop_reason=${res.outcome.name} '
           'canvas=${canvas.localId} tile=$tileX,$tileY',
@@ -432,6 +472,36 @@ class CanvasSyncCoordinator {
     }
     if (emitted > 0) {
       _hydrationChanges.add(canvas.localId);
+    }
+    // Stash leftovers (tiles past where the per-peer cap closed) so
+    // the lifecycle host's periodic drain re-attempts them when the
+    // cap window has room, without depending on a fresh digest from
+    // the peer.
+    if (cappedIdx < mismatchedTiles.length) {
+      final remaining = mismatchedTiles.sublist(cappedIdx);
+      final peerMap = _deferredByCanvas.putIfAbsent(canvas.localId, () => {});
+      final existing = peerMap[senderNodeId];
+      // Union with any prior deferred tiles to avoid losing tiles
+      // tracked from a previous deferred batch. Preserves FIFO via
+      // insertion order: already-deferred tiles stay at the front.
+      final union = <int>[
+        if (existing != null) ...existing.remainingTiles,
+        ...remaining.where(
+          (t) => existing == null || !existing.remainingTiles.contains(t),
+        ),
+      ];
+      peerMap[senderNodeId] = _DeferredPeerSync(
+        peerNodeNum: senderNodeId,
+        channelIndex: channelIndex,
+        canvasId: op.canvasId,
+        remainingTiles: union,
+        deferredAtMs: _nowMs(),
+      );
+      AppLogging.meshCanvas(
+        'sync sync_request_deferred canvas=${canvas.localId} '
+        'peer=0x${senderNodeId.toRadixString(16)} '
+        'remaining=${union.length}',
+      );
     }
   }
 
@@ -656,6 +726,134 @@ class CanvasSyncCoordinator {
       totalShipped += await _drainRawBands(id);
     }
     return totalShipped;
+  }
+
+  /// Re-attempt sync_requests for tiles that were stashed when the
+  /// per-peer 4-per-minute cap closed. Called on the lifecycle host's
+  /// periodic tick. Respects the cap — only emits when a cap slot
+  /// has aged out of the 60 s window. Returns the number of new
+  /// sync_requests sent.
+  Future<int> drainDeferredSyncRequests() async {
+    var totalShipped = 0;
+    final canvasIds = _deferredByCanvas.keys.toList();
+    for (final canvasLocalId in canvasIds) {
+      final peerMap = _deferredByCanvas[canvasLocalId];
+      if (peerMap == null || peerMap.isEmpty) continue;
+      final peerIds = peerMap.keys.toList();
+      for (final peerId in peerIds) {
+        final entry = peerMap[peerId];
+        if (entry == null) continue;
+        final shipped = await _drainDeferredForPeer(
+          canvasLocalId: canvasLocalId,
+          peerEntry: entry,
+        );
+        totalShipped += shipped;
+      }
+      // Prune canvases whose peer entries all drained.
+      if (peerMap.isEmpty) {
+        _deferredByCanvas.remove(canvasLocalId);
+      }
+    }
+    return totalShipped;
+  }
+
+  Future<int> _drainDeferredForPeer({
+    required int canvasLocalId,
+    required _DeferredPeerSync peerEntry,
+  }) async {
+    final peerMap = _deferredByCanvas[canvasLocalId];
+    if (peerMap == null) return 0;
+    final window = _peerWindow(canvasLocalId, peerEntry.peerNodeNum);
+    final now = _nowMs();
+    final cutoff = now - 60_000;
+    window.requestTimestampsMs.removeWhere((t) => t < cutoff);
+    if (window.requestTimestampsMs.length >= maxRequestsPerPeerPerMinute) {
+      // No cap slot has aged out yet. Leave the entry as-is; the next
+      // periodic tick will retry.
+      return 0;
+    }
+
+    final pending = _pendingTiles(canvasLocalId);
+    final survivors = <int>[];
+    var shipped = 0;
+    for (final tile in peerEntry.remainingTiles) {
+      if (window.requestTimestampsMs.length >= maxRequestsPerPeerPerMinute) {
+        survivors.add(tile);
+        continue;
+      }
+      // Skip if another path already has this tile in flight (e.g. a
+      // fresh digest arrived between defer and drain). Otherwise just
+      // emit: sync_response apply is idempotent under LWW, so the
+      // worst case where the tile has been satisfied since deferral
+      // is one harmless round trip.
+      if (pending.containsKey(tile)) {
+        continue;
+      }
+      final tileX = tile % CanvasGeometry.tilesPerRow;
+      final tileY = tile ~/ CanvasGeometry.tilesPerRow;
+      final reqPayload = CanvasCodec.encodeSyncRequest(
+        CanvasSyncRequestOp(
+          canvasId: peerEntry.canvasId,
+          tileX: tileX,
+          tileY: tileY,
+        ),
+      );
+      if (reqPayload == null) {
+        // Encoding failure is permanent — drop from queue.
+        continue;
+      }
+      if (!_governor.canSend(reqPayload.length)) {
+        AppLogging.meshCanvas(
+          'sync deferred drop_reason=governor_closed '
+          'canvas=$canvasLocalId tile=$tileX,$tileY',
+        );
+        survivors.add(tile);
+        break;
+      }
+      pending[tile] = _PendingTileRequest(
+        peerNodeNum: peerEntry.peerNodeNum,
+        tileIndex: tile,
+        requestedAtMs: now,
+      );
+      final res = await _outbound.sendCanvasPayload(
+        canvasPayload: reqPayload,
+        channelIndex: peerEntry.channelIndex,
+      );
+      if (res.outcome == CanvasSendOutcome.sent) {
+        _governor.recordSend(reqPayload.length);
+        window.requestTimestampsMs.add(now);
+        shipped++;
+        AppLogging.meshCanvas(
+          'sync sync_request_emit_deferred canvas=$canvasLocalId '
+          'tile=$tileX,$tileY '
+          'peer=0x${peerEntry.peerNodeNum.toRadixString(16)}',
+        );
+      } else {
+        pending.remove(tile);
+        AppLogging.meshCanvas(
+          'sync deferred drop_reason=${res.outcome.name} '
+          'canvas=$canvasLocalId tile=$tileX,$tileY',
+        );
+        survivors.add(tile);
+        break;
+      }
+    }
+
+    if (survivors.isEmpty) {
+      peerMap.remove(peerEntry.peerNodeNum);
+    } else {
+      peerMap[peerEntry.peerNodeNum] = _DeferredPeerSync(
+        peerNodeNum: peerEntry.peerNodeNum,
+        channelIndex: peerEntry.channelIndex,
+        canvasId: peerEntry.canvasId,
+        remainingTiles: survivors,
+        deferredAtMs: peerEntry.deferredAtMs,
+      );
+    }
+    if (shipped > 0) {
+      _hydrationChanges.add(canvasLocalId);
+    }
+    return shipped;
   }
 
   String _jobKey(int peerNodeNum, int tileX, int tileY) =>
@@ -915,7 +1113,9 @@ class CanvasSyncCoordinator {
     // incomplete. Showing `quiet` while any of these are live would
     // lie to the user — sync work IS in progress, the wire just
     // hasn't ticked into the last 10 s window.
-    if (hasPending || hasOutboundBands || hasInboundBands) {
+    final deferred = _deferredByCanvas[canvasLocalId];
+    final hasDeferred = deferred != null && deferred.isNotEmpty;
+    if (hasPending || hasOutboundBands || hasInboundBands || hasDeferred) {
       return MeshCanvasHydrationState.recovering;
     }
     if (_peerEmptyObserved[canvasLocalId] == true) {
@@ -947,6 +1147,7 @@ class CanvasSyncCoordinator {
     _lastBandAtMs.clear();
     _peerEmptyObserved.clear();
     _rawBandJobsByCanvas.clear();
+    _deferredByCanvas.clear();
     for (final sets in _rawBandReceiveByCanvas.values) {
       for (final set in sets.values) {
         set.retryTimer?.cancel();

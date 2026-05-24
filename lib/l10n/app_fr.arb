@@ -4639,6 +4639,8 @@
   "meshCanvasOverviewHeroBigUnit": "pixels sur le mesh",
   "meshCanvasViewerEmptyMeshTitle": "Appuie pour semer le premier pixel",
   "meshCanvasViewerEmptyMeshSubtitle": "La première peinture réveille la toile",
+  "meshCanvasViewerEmptyMeshHydratingTitle": "À l'écoute de l'encre du mesh",
+  "meshCanvasViewerEmptyMeshHydratingSubtitle": "Récupération des pixels auprès des pairs proches",
   "meshCanvasViewerEmptyLocalTitle": "Appuie pour peindre",
   "meshCanvasViewerEmptyLocalSubtitle": "Reste sur cet appareil",
   "meshCanvasViewerGestureTap": "appuyer · peindre",

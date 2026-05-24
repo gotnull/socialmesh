@@ -4667,6 +4667,8 @@
   "meshCanvasOverviewHeroBigUnit": "пикселей в меше",
   "meshCanvasViewerEmptyMeshTitle": "Коснись, чтобы посадить первый пиксель",
   "meshCanvasViewerEmptyMeshSubtitle": "Первый мазок будит холст",
+  "meshCanvasViewerEmptyMeshHydratingTitle": "Слушаем меш-чернила",
+  "meshCanvasViewerEmptyMeshHydratingSubtitle": "Забираем пиксели у ближайших узлов",
   "meshCanvasViewerEmptyLocalTitle": "Коснись, чтобы рисовать",
   "meshCanvasViewerEmptyLocalSubtitle": "Остаётся на этом устройстве",
   "meshCanvasViewerGestureTap": "тап · рисовать",

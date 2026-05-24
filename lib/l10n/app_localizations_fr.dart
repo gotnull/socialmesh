@@ -12877,6 +12877,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'La première peinture réveille la toile';
 
   @override
+  String get meshCanvasViewerEmptyMeshHydratingTitle =>
+      'À l\'écoute de l\'encre du mesh';
+
+  @override
+  String get meshCanvasViewerEmptyMeshHydratingSubtitle =>
+      'Récupération des pixels auprès des pairs proches';
+
+  @override
   String get meshCanvasViewerEmptyLocalTitle => 'Appuie pour peindre';
 
   @override

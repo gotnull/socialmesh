@@ -16858,11 +16858,19 @@
     },
     "meshCanvasViewerEmptyMeshTitle": "Tap to seed the first pixel",
     "@meshCanvasViewerEmptyMeshTitle": {
-        "description": "Centered atmospheric prompt shown on a mesh canvas with zero painted cells. /r/place-style direct instruction: the user's first paint wakes the shared channel canvas. Lives inside the canvas surface as IgnorePointer text so taps pass through to paint."
+        "description": "Centered atmospheric prompt shown on a mesh canvas with zero painted cells when no peer-sync work is in progress (hydration state idle or quiet). /r/place-style direct instruction: the user's first paint wakes the shared channel canvas. Lives inside the canvas surface as IgnorePointer text so taps pass through to paint."
     },
     "meshCanvasViewerEmptyMeshSubtitle": "First paint wakes the board",
     "@meshCanvasViewerEmptyMeshSubtitle": {
         "description": "Smaller atmospheric line under the empty-mesh-canvas centered prompt. Communicates that the channel canvas is dormant until someone seeds it."
+    },
+    "meshCanvasViewerEmptyMeshHydratingTitle": "Listening for mesh ink",
+    "@meshCanvasViewerEmptyMeshHydratingTitle": {
+        "description": "Centered atmospheric prompt shown on a mesh canvas with zero painted cells WHILE sync work is in progress (hydration state recovering or syncing). Replaces the 'Tap to seed' copy so we don't lie to the user that the board is dormant when pixels may land in seconds. The viewport is still tappable underneath — this is just an honest holding message."
+    },
+    "meshCanvasViewerEmptyMeshHydratingSubtitle": "Pulling pixels from nearby peers",
+    "@meshCanvasViewerEmptyMeshHydratingSubtitle": {
+        "description": "Smaller line under the empty-mesh-canvas hydrating prompt. Tells the user the device is actively asking peers for the current canvas state and pixels should arrive shortly."
     },
     "meshCanvasViewerEmptyLocalTitle": "Tap to paint",
     "@meshCanvasViewerEmptyLocalTitle": {

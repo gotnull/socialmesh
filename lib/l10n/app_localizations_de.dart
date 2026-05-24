@@ -12816,6 +12816,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Der erste Strich weckt das Brett';
 
   @override
+  String get meshCanvasViewerEmptyMeshHydratingTitle => 'Höre auf Mesh-Tinte';
+
+  @override
+  String get meshCanvasViewerEmptyMeshHydratingSubtitle =>
+      'Pixel werden von nahen Peers geholt';
+
+  @override
   String get meshCanvasViewerEmptyLocalTitle => 'Tippe zum Malen';
 
   @override

@@ -163,7 +163,7 @@ void main() {
       );
       final coords = await repo.getPendingCellCoordinates(
         canvas.localId,
-        widthCells: 128,
+        widthCells: 64,
       );
       expect(coords, isEmpty);
     });
@@ -199,11 +199,11 @@ void main() {
 
       final coords = await repo.getPendingCellCoordinates(
         canvas.localId,
-        widthCells: 128,
+        widthCells: 64,
       );
       expect(coords, hasLength(2));
-      expect(coords.contains(7 * 128 + 5), isTrue);
-      expect(coords.contains(0 * 128 + 10), isTrue);
+      expect(coords.contains(7 * 64 + 5), isTrue);
+      expect(coords.contains(0 * 64 + 10), isTrue);
     });
 
     test('once a row is sent the coord drops out of the set', () async {
@@ -235,7 +235,7 @@ void main() {
 
       final coords = await repo.getPendingCellCoordinates(
         canvas.localId,
-        widthCells: 128,
+        widthCells: 64,
       );
       expect(coords, isEmpty);
     });

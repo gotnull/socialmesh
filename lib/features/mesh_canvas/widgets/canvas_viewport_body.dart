@@ -32,8 +32,10 @@ import '../../../core/widgets/gradient_border_container.dart';
 import '../../../providers/app_providers.dart';
 import '../../../services/canvas/canvas_constants.dart';
 import '../../../services/canvas/canvas_models.dart';
+import '../../../services/canvas/canvas_sync_coordinator.dart';
 import '../../../services/canvas/presence_emit_coordinator.dart';
 import '../../../services/haptic_service.dart';
+import '../providers/hydration_status_providers.dart';
 import '../providers/mesh_canvas_participation_providers.dart';
 import '../providers/mesh_canvas_providers.dart';
 import '../providers/presence_providers.dart';
@@ -412,6 +414,7 @@ class CanvasViewportBody extends ConsumerWidget {
                           child: IgnorePointer(
                             child: _CanvasEmptyPrompt(
                               isMeshScope: canvas.scope == CanvasScope.mesh,
+                              canvasLocalId: canvas.localId,
                             ),
                           ),
                         ),
@@ -584,6 +587,12 @@ class _PresenceLifecycleHostState extends ConsumerState<_PresenceLifecycleHost>
     final syncCoord = asyncSync.asData?.value;
     if (syncCoord != null) {
       unawaited(syncCoord.drainRawBands());
+      // Also retry sync_requests that were stashed when the per-peer
+      // 4-per-minute cap closed mid-batch. Without this, convergence
+      // can stall if the peer stops re-emitting digests (e.g. their
+      // governor is full). The drain still consults the per-peer
+      // window, so the throttle invariant holds.
+      unawaited(syncCoord.drainDeferredSyncRequests());
     }
   }
 
@@ -613,23 +622,53 @@ class _PresenceLifecycleHostState extends ConsumerState<_PresenceLifecycleHost>
 /// not dead"). Mounted as an IgnorePointer child of the canvas
 /// Stack so it never blocks a tap — the first tap drops a pixel
 /// and the prompt vanishes by data.
-class _CanvasEmptyPrompt extends StatelessWidget {
+///
+/// Mesh-scope copy is hydration-aware: while the sync coordinator is
+/// `recovering` or `syncing`, the prompt reads "Listening for mesh
+/// ink" so we don't lie to the user that the board is dormant when
+/// pixels are about to arrive. `idle` / `quiet` keep the "Tap to
+/// seed the first pixel" copy because the mesh genuinely is silent.
+/// Local-scope copy stays unconditional (the local sandbox has no
+/// hydration concept). Spec: docs/canvas/CANVAS_SYNC_V0_1.md §6.1.
+class _CanvasEmptyPrompt extends ConsumerWidget {
   /// `true` for a Mesh canvas (uses the seed-the-board copy);
   /// `false` for the Local Device Canvas (uses the private-sandbox
   /// copy).
   final bool isMeshScope;
 
-  const _CanvasEmptyPrompt({required this.isMeshScope});
+  /// Canvas row id used to look up the per-canvas hydration state.
+  /// Ignored for the Local Device Canvas (no peers, no hydration).
+  final int canvasLocalId;
+
+  const _CanvasEmptyPrompt({
+    required this.isMeshScope,
+    required this.canvasLocalId,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = context.l10n;
-    final title = isMeshScope
-        ? l.meshCanvasViewerEmptyMeshTitle
-        : l.meshCanvasViewerEmptyLocalTitle;
-    final subtitle = isMeshScope
-        ? l.meshCanvasViewerEmptyMeshSubtitle
-        : l.meshCanvasViewerEmptyLocalSubtitle;
+    String title;
+    String subtitle;
+    if (isMeshScope) {
+      final hydration = ref
+          .watch(meshCanvasHydrationStatusProvider(canvasLocalId))
+          .asData
+          ?.value;
+      final hydrating =
+          hydration == MeshCanvasHydrationState.recovering ||
+          hydration == MeshCanvasHydrationState.syncing;
+      if (hydrating) {
+        title = l.meshCanvasViewerEmptyMeshHydratingTitle;
+        subtitle = l.meshCanvasViewerEmptyMeshHydratingSubtitle;
+      } else {
+        title = l.meshCanvasViewerEmptyMeshTitle;
+        subtitle = l.meshCanvasViewerEmptyMeshSubtitle;
+      }
+    } else {
+      title = l.meshCanvasViewerEmptyLocalTitle;
+      subtitle = l.meshCanvasViewerEmptyLocalSubtitle;
+    }
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,

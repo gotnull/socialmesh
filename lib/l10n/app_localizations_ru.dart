@@ -12781,6 +12781,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshCanvasViewerEmptyMeshSubtitle => 'Первый мазок будит холст';
 
   @override
+  String get meshCanvasViewerEmptyMeshHydratingTitle => 'Слушаем меш-чернила';
+
+  @override
+  String get meshCanvasViewerEmptyMeshHydratingSubtitle =>
+      'Забираем пиксели у ближайших узлов';
+
+  @override
   String get meshCanvasViewerEmptyLocalTitle => 'Коснись, чтобы рисовать';
 
   @override

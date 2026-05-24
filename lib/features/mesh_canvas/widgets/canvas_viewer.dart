@@ -36,6 +36,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../../../services/canvas/canvas_constants.dart';
 import '../../../services/canvas/canvas_models.dart';
 import 'canvas_grid_painter.dart';
 
@@ -140,8 +141,8 @@ class CanvasViewer extends StatefulWidget {
     super.key,
     required this.cells,
     required this.palette,
-    this.widthCells = 128,
-    this.heightCells = 128,
+    this.widthCells = CanvasGeometry.width,
+    this.heightCells = CanvasGeometry.height,
     this.outsideColor = const Color(0xFF0B0D11),
     this.surfaceColor = const Color(0xFF161A22),
     this.chunkLineColor = const Color(0x14FFFFFF),

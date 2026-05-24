@@ -7,6 +7,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:socialmesh/services/canvas/canvas_codec.dart';
+import 'package:socialmesh/services/canvas/canvas_constants.dart';
 
 /// Reference: the 8-byte u64 canvas_id at offset 4 of every payload,
 /// little-endian. This helper pins the exact byte sequence test
@@ -92,7 +93,8 @@ void main() {
     test('round-trip', () {
       const op = CanvasPaintOp(
         canvasId: 0xDEADBEEFCAFEBABE,
-        x: 127,
+        // Max valid x on v0.1 64×64 grid is CanvasLimits.cellCoordMax = 63.
+        x: 63,
         y: 0,
         color: 63,
         authorId: 1,
@@ -132,7 +134,8 @@ void main() {
         () => CanvasCodec.encodePaint(
           const CanvasPaintOp(
             canvasId: 0,
-            x: 128,
+            // One past the max (cellCoordMax = 63 for the v0.1 grid).
+            x: 64,
             y: 0,
             color: 0,
             authorId: 0,
@@ -405,7 +408,12 @@ void main() {
       final globalDigest = Uint8List.fromList(
         List<int>.generate(16, (i) => 0xA0 + i),
       );
-      final tileDigests = Uint8List.fromList(List<int>.generate(128, (i) => i));
+      // v0.1 64×64 → 4 tiles × 8 bytes = 32 byte tile digest blob.
+      // Constants derive from CanvasGeometry so future geometry
+      // changes only require updating that one place.
+      final tileDigests = Uint8List.fromList(
+        List<int>.generate(CanvasDigestSizes.tilesConcatenatedBytes, (i) => i),
+      );
       const canvasId = 0xCAFEBABE12345678;
       final op = CanvasDigestOp(
         canvasId: canvasId,
@@ -414,7 +422,7 @@ void main() {
         tileDigests: tileDigests,
       );
       final encoded = CanvasCodec.encodeCanvasDigest(op)!;
-      expect(encoded.length, 160);
+      expect(encoded.length, CanvasDigestSizes.totalDigestPayloadBytes);
       // Prefix
       expect(encoded.sublist(0, 12), <int>[
         0xCA,
@@ -427,13 +435,18 @@ void main() {
       expect(encoded.sublist(12, 28), globalDigest);
       // cell_count u32 LE at offset 28
       expect(encoded.sublist(28, 32), _u32LeBytes(0x11223344));
-      // tile_digests
-      expect(encoded.sublist(32, 160), tileDigests);
+      // tile_digests fills the remainder of the payload
+      expect(
+        encoded.sublist(32, CanvasDigestSizes.totalDigestPayloadBytes),
+        tileDigests,
+      );
     });
 
     test('round-trip', () {
       final globalDigest = Uint8List.fromList(List<int>.filled(16, 0xAA));
-      final tileDigests = Uint8List.fromList(List<int>.filled(128, 0xBB));
+      final tileDigests = Uint8List.fromList(
+        List<int>.filled(CanvasDigestSizes.tilesConcatenatedBytes, 0xBB),
+      );
       final op = CanvasDigestOp(
         canvasId: 1,
         globalDigest: globalDigest,
@@ -450,24 +463,28 @@ void main() {
     });
 
     test('encode rejects wrong digest blob lengths via null', () {
+      // Wrong global digest length (15 ≠ 16).
       expect(
         CanvasCodec.encodeCanvasDigest(
           CanvasDigestOp(
             canvasId: 0,
             globalDigest: Uint8List(15),
             cellCount: 0,
-            tileDigests: Uint8List(128),
+            tileDigests: Uint8List(CanvasDigestSizes.tilesConcatenatedBytes),
           ),
         ),
         isNull,
       );
+      // Wrong tile-digests blob length (one byte short).
       expect(
         CanvasCodec.encodeCanvasDigest(
           CanvasDigestOp(
             canvasId: 0,
             globalDigest: Uint8List(16),
             cellCount: 0,
-            tileDigests: Uint8List(127),
+            tileDigests: Uint8List(
+              CanvasDigestSizes.tilesConcatenatedBytes - 1,
+            ),
           ),
         ),
         isNull,
@@ -475,38 +492,39 @@ void main() {
     });
 
     test('decode rejects length mismatch', () {
-      expect(CanvasCodec.decodeCanvasDigest(Uint8List(159)), isNull);
-      expect(CanvasCodec.decodeCanvasDigest(Uint8List(161)), isNull);
+      final total = CanvasDigestSizes.totalDigestPayloadBytes;
+      expect(CanvasCodec.decodeCanvasDigest(Uint8List(total - 1)), isNull);
+      expect(CanvasCodec.decodeCanvasDigest(Uint8List(total + 1)), isNull);
     });
   });
 
   group('sync_request (action 0x0004)', () {
-    test('byte-exact for tile (2,1)', () {
+    test('byte-exact for tile (1,1) — bottom-right of v0.1 64×64 grid', () {
       const canvasId = 0xAA55AA55AA55AA55;
-      const op = CanvasSyncRequestOp(canvasId: canvasId, tileX: 2, tileY: 1);
+      const op = CanvasSyncRequestOp(canvasId: canvasId, tileX: 1, tileY: 1);
       final encoded = CanvasCodec.encodeSyncRequest(op)!;
       final expected = <int>[
         0xCA, 0x01, 0x04, 0x00,
         ..._u64LeBytes(canvasId),
-        64, 32, 64 + 31, 32 + 31, // x0,y0,x1,y1
+        32, 32, 32 + 31, 32 + 31, // x0,y0,x1,y1
         0, 0, // reserved
       ];
       expect(encoded, equals(Uint8List.fromList(expected)));
     });
 
-    test('round-trip for every valid tile (0..3 × 0..3)', () {
-      for (var ty = 0; ty < 4; ty++) {
-        for (var tx = 0; tx < 4; tx++) {
+    test('round-trip for every valid tile (0..tilesPerRow-1 in each axis)', () {
+      for (var ty = 0; ty < CanvasGeometry.tilesPerRow; ty++) {
+        for (var tx = 0; tx < CanvasGeometry.tilesPerRow; tx++) {
           final encoded = CanvasCodec.encodeSyncRequest(
             CanvasSyncRequestOp(canvasId: 7, tileX: tx, tileY: ty),
           )!;
           final decoded = CanvasCodec.decodeSyncRequest(encoded)!;
           expect(decoded.tileX, tx);
           expect(decoded.tileY, ty);
-          expect(decoded.x0, tx * 32);
-          expect(decoded.y0, ty * 32);
-          expect(decoded.x1, tx * 32 + 31);
-          expect(decoded.y1, ty * 32 + 31);
+          expect(decoded.x0, tx * CanvasGeometry.tileSize);
+          expect(decoded.y0, ty * CanvasGeometry.tileSize);
+          expect(decoded.x1, tx * CanvasGeometry.tileSize + 31);
+          expect(decoded.y1, ty * CanvasGeometry.tileSize + 31);
         }
       }
     });
@@ -602,7 +620,7 @@ void main() {
         final op = CanvasSyncResponseOp(
           canvasId: 1,
           tileX: 1,
-          tileY: 2,
+          tileY: 1,
           body: CanvasSyncResponseRleBody(runs: runs),
         );
         final decoded = CanvasCodec.decodeSyncResponse(
@@ -708,7 +726,7 @@ void main() {
           final op = CanvasSyncResponseOp(
             canvasId: 9,
             tileX: 1,
-            tileY: 2,
+            tileY: 1,
             body: CanvasSyncResponseRawBandBody(bandIndex: b, cells: cells),
           );
           final decoded = CanvasCodec.decodeSyncResponse(
@@ -993,7 +1011,7 @@ void main() {
           canvasId: canvasId,
           globalDigest: Uint8List(16),
           cellCount: 0,
-          tileDigests: Uint8List(128),
+          tileDigests: Uint8List(CanvasDigestSizes.tilesConcatenatedBytes),
         ),
       )!;
       expect(digestBytes.sublist(4, 12), expected);

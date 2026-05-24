@@ -37811,6 +37811,8 @@
   "meshCanvasOverviewHeroBigUnit": "pixel sulla mesh",
   "meshCanvasViewerEmptyMeshTitle": "Tocca per piantare il primo pixel",
   "meshCanvasViewerEmptyMeshSubtitle": "La prima pittura risveglia la tela",
+  "meshCanvasViewerEmptyMeshHydratingTitle": "In ascolto dell'inchiostro mesh",
+  "meshCanvasViewerEmptyMeshHydratingSubtitle": "Recupero dei pixel dai peer vicini",
   "meshCanvasViewerEmptyLocalTitle": "Tocca per dipingere",
   "meshCanvasViewerEmptyLocalSubtitle": "Resta su questo dispositivo",
   "meshCanvasViewerGestureTap": "tocca · dipingi",

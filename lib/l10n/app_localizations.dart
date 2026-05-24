@@ -22060,7 +22060,7 @@ abstract class AppLocalizations {
   /// **'pixels on the mesh'**
   String get meshCanvasOverviewHeroBigUnit;
 
-  /// Centered atmospheric prompt shown on a mesh canvas with zero painted cells. /r/place-style direct instruction: the user's first paint wakes the shared channel canvas. Lives inside the canvas surface as IgnorePointer text so taps pass through to paint.
+  /// Centered atmospheric prompt shown on a mesh canvas with zero painted cells when no peer-sync work is in progress (hydration state idle or quiet). /r/place-style direct instruction: the user's first paint wakes the shared channel canvas. Lives inside the canvas surface as IgnorePointer text so taps pass through to paint.
   ///
   /// In en, this message translates to:
   /// **'Tap to seed the first pixel'**
@@ -22071,6 +22071,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'First paint wakes the board'**
   String get meshCanvasViewerEmptyMeshSubtitle;
+
+  /// Centered atmospheric prompt shown on a mesh canvas with zero painted cells WHILE sync work is in progress (hydration state recovering or syncing). Replaces the 'Tap to seed' copy so we don't lie to the user that the board is dormant when pixels may land in seconds. The viewport is still tappable underneath — this is just an honest holding message.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening for mesh ink'**
+  String get meshCanvasViewerEmptyMeshHydratingTitle;
+
+  /// Smaller line under the empty-mesh-canvas hydrating prompt. Tells the user the device is actively asking peers for the current canvas state and pixels should arrive shortly.
+  ///
+  /// In en, this message translates to:
+  /// **'Pulling pixels from nearby peers'**
+  String get meshCanvasViewerEmptyMeshHydratingSubtitle;
 
   /// Centered atmospheric prompt shown on the Local Device Canvas when it has zero painted cells. Local-only register — no channel / mesh language.
   ///

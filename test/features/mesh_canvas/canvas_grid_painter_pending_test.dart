@@ -88,7 +88,7 @@ void main() {
         ),
       ];
       // Mark only (1, 2) as pending.
-      final pending = <int>{2 * 128 + 1};
+      final pending = <int>{2 * 64 + 1};
 
       final painter = CanvasGridPainter(
         cells: cells,
@@ -102,7 +102,7 @@ void main() {
       );
 
       final recording = _RecordingCanvas();
-      painter.paint(recording, const Size(128 * cellSize, 128 * cellSize));
+      painter.paint(recording, const Size(64 * cellSize, 64 * cellSize));
 
       final drawsByCell = {for (final d in recording.draws) d.rect.topLeft: d};
       // (1, 2) cell → pending → reduced alpha.
@@ -145,7 +145,7 @@ void main() {
     );
 
     final recording = _RecordingCanvas();
-    painter.paint(recording, const Size(128 * cellSize, 128 * cellSize));
+    painter.paint(recording, const Size(64 * cellSize, 64 * cellSize));
 
     final cellDraws = recording.draws
         .where((d) => d.rect.size == const Size(cellSize, cellSize))

@@ -34,6 +34,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../../../services/canvas/canvas_constants.dart';
 import '../../../services/canvas/canvas_models.dart';
 
 /// Chunk spacing (cells per chunk side). Matches the wire-format
@@ -100,8 +101,8 @@ class CanvasGridPainter extends CustomPainter {
     required this.surfaceColor,
     required this.chunkLineColor,
     required this.borderColor,
-    this.widthCells = 128,
-    this.heightCells = 128,
+    this.widthCells = CanvasGeometry.width,
+    this.heightCells = CanvasGeometry.height,
     this.pendingCellIndices = const <int>{},
     this.pendingOpacityFactor = 0.55,
   });

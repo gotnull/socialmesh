@@ -689,6 +689,27 @@ class ProtocolService {
   )?
   _canvasInbound;
 
+  // ---------------------------------------------------------------------------
+  // canvas.v1 short-TTL frame fingerprint cache (PRIVATE_APP dedupe gap)
+  // ---------------------------------------------------------------------------
+  //
+  // PRIVATE_APP packets do NOT pass through [MeshPacketDedupeStore] (which
+  // only fires for `channel_message` text), and canvas frames have no
+  // SIP-level nonce, so the same canvas packet can hit the canvas demux
+  // multiple times in a single ingest cluster (observed in the field
+  // when a TCP-gateway node echoes its own broadcast back as a relay
+  // confirm, with sub-millisecond gaps on the same packetId, well
+  // below LoRa airtime). Without dedupe, the receiver runs
+  // `_handleSyncRequest` twice and ships two identical sync_responses,
+  // doubling airtime and burning the canvas governor budget.
+  //
+  // Cache shape: short FIFO ring of `(senderNodeId, channelIndex,
+  // payloadHash, timestampMs)`. Lookup is O(N) over up to
+  // [_kCanvasFrameDedupeMax] entries: bounded and cheap.
+  static const int _kCanvasFrameDedupeMax = 64;
+  static const Duration _kCanvasFrameDedupeTtl = Duration(seconds: 5);
+  final List<_CanvasFrameFingerprint> _canvasFrameFingerprints = [];
+
   /// Next drop count at which an aggregate log line will fire.
   /// Doubles each time to keep logs bounded even under sustained loss.
   int _overlayStartupBufferNextLogAt = 1;
@@ -6325,6 +6346,58 @@ class ProtocolService {
   /// frame. It is required (not optional) so the canvas demux can bind
   /// canvases to their channel. Existing services that ignore channel
   /// continue to ignore it via the engine path.
+  /// Returns true iff a canvas frame with the same content fingerprint
+  /// has been seen from the same sender on the same channel within
+  /// [_kCanvasFrameDedupeTtl]. On false (cache miss), records the
+  /// fingerprint so the next ingest within the window is dropped.
+  /// O(N) over a bounded ring; see the [_canvasFrameFingerprints] doc
+  /// for the rationale.
+  bool _isCanvasFrameDuplicate(
+    int senderNodeId,
+    int channelIndex,
+    Uint8List payload,
+  ) {
+    final hash = _fnv1a64(payload);
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    final cutoff = nowMs - _kCanvasFrameDedupeTtl.inMilliseconds;
+    // Evict stale + scan for a match in one pass.
+    _canvasFrameFingerprints.removeWhere((f) => f.timestampMs < cutoff);
+    for (final f in _canvasFrameFingerprints) {
+      if (f.hash == hash &&
+          f.senderNodeId == senderNodeId &&
+          f.channelIndex == channelIndex) {
+        return true;
+      }
+    }
+    _canvasFrameFingerprints.add(
+      _CanvasFrameFingerprint(
+        senderNodeId: senderNodeId,
+        channelIndex: channelIndex,
+        hash: hash,
+        timestampMs: nowMs,
+      ),
+    );
+    if (_canvasFrameFingerprints.length > _kCanvasFrameDedupeMax) {
+      _canvasFrameFingerprints.removeAt(0);
+    }
+    return false;
+  }
+
+  /// 64-bit FNV-1a hash. Sufficient distribution for the canvas
+  /// short-TTL fingerprint ring (collisions across distinct frames
+  /// from the same sender within a 5 s window are astronomically
+  /// unlikely and would at worst drop one legitimate frame).
+  int _fnv1a64(Uint8List bytes) {
+    const offsetBasis = 0xcbf29ce484222325;
+    const prime = 0x100000001b3;
+    var hash = offsetBasis;
+    for (final b in bytes) {
+      hash ^= b;
+      hash = (hash * prime) & 0xFFFFFFFFFFFFFFFF;
+    }
+    return hash;
+  }
+
   void _handleMrrpPacket(int senderNodeId, int channelIndex, SipFrame frame) {
     // Overlay v0.2 pre-filter. MRRP v0.2 link frames use
     // version_minor=2 and msg_type 0x20..0x27 — none of which the
@@ -6378,6 +6451,18 @@ class ProtocolService {
           'canvas frame dropped: no handler attached '
           '(sender=0x${senderNodeId.toRadixString(16)}, '
           'channel=$channelIndex)',
+        );
+        return;
+      }
+      // PRIVATE_APP carries no Meshtastic-layer packet dedupe and canvas
+      // frames have no SIP-level nonce, so the canvas demux carries its
+      // own fingerprint cache to defend against ingest-cluster echoes
+      // (TCP gateway relay confirms, etc).
+      if (_isCanvasFrameDuplicate(senderNodeId, channelIndex, frame.payload)) {
+        AppLogging.meshCanvas(
+          'canvas frame dropped: duplicate within echo window '
+          '(sender=0x${senderNodeId.toRadixString(16)}, '
+          'channel=$channelIndex, payload=${frame.payload.length}B)',
         );
         return;
       }
@@ -10802,6 +10887,7 @@ class ProtocolService {
     _adminAckTracker.cancelAll();
     _adminSessions.clear();
     _syncedContactsThisSession.clear();
+    _canvasFrameFingerprints.clear();
     _rssiTimer?.cancel();
     _rssiTimer = null;
     _receiveStallTimer?.cancel();
@@ -10869,4 +10955,21 @@ enum OperationalReadiness {
   /// Transport disconnected mid-handshake, or a watchdog gave up after
   /// failed session rebuild. UI surfaces this as a "Tap to reconnect" CTA.
   degraded,
+}
+
+/// One entry in the canvas demux short-TTL fingerprint ring. Identifies
+/// a previously-seen canvas frame by its content hash, originating
+/// sender, and inbound channel. See [ProtocolService._canvasFrameFingerprints].
+class _CanvasFrameFingerprint {
+  final int senderNodeId;
+  final int channelIndex;
+  final int hash;
+  final int timestampMs;
+
+  const _CanvasFrameFingerprint({
+    required this.senderNodeId,
+    required this.channelIndex,
+    required this.hash,
+    required this.timestampMs,
+  });
 }

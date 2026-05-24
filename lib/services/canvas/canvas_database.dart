@@ -50,11 +50,25 @@ class CanvasDatabase {
         await _createSchema(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
-        // v0.1 is the only version. Future schema bumps land their
-        // migration steps here using additive nullable columns only.
-        AppLogging.meshCanvas(
-          'upgrade canvas.db v$oldVersion -> v$newVersion (no-op in v1)',
-        );
+        AppLogging.meshCanvas('upgrade canvas.db v$oldVersion -> v$newVersion');
+        // v1 → v2 (64×64 reduction): nuke every canvas row. Pre-v2
+        // cells may sit at coords ≥ 64 (no longer valid), and
+        // cached digest blobs were 128 bytes (now must be 32). No
+        // user-data loss concerns at this stage — v0.1 is still
+        // pre-launch. Local Device Canvas, Mesh canvases, pending
+        // ops, applied_op history, and peer digest cache all reset.
+        // Hydration from peers via canvas_digest sync re-populates
+        // mesh canvases naturally on next viewer mount.
+        if (oldVersion < 2 && newVersion >= 2) {
+          AppLogging.meshCanvas(
+            'canvas.db v1 → v2: wiping all rows for 128→64 resize',
+          );
+          await db.delete(CanvasTables.peerDigest);
+          await db.delete(CanvasTables.appliedOp);
+          await db.delete(CanvasTables.pendingOp);
+          await db.delete(CanvasTables.cell);
+          await db.delete(CanvasTables.canvas);
+        }
       },
     );
   }

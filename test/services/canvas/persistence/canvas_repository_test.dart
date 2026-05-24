@@ -599,7 +599,9 @@ void main() {
         // Seed both digest blobs with a non-zero pattern so we can
         // distinguish "cleared" from "untouched".
         final globalSeed = Uint8List.fromList(List.filled(16, 0xAB));
-        final tilesSeed = Uint8List.fromList(List.filled(128, 0xCD));
+        final tilesSeed = Uint8List.fromList(
+          List.filled(CanvasDigestSizes.tilesConcatenatedBytes, 0xCD),
+        );
         await h.repo.updateCanvasDigests(
           canvasLocalId: mesh.localId,
           globalDigest: globalSeed,
@@ -685,7 +687,9 @@ void main() {
           canvasLocalId: mesh.localId,
           peerNodeNum: 0x100,
           peerGlobalDigest: Uint8List.fromList(List.filled(16, 1)),
-          peerTileDigests: Uint8List.fromList(List.filled(128, 2)),
+          peerTileDigests: Uint8List.fromList(
+            List.filled(CanvasDigestSizes.tilesConcatenatedBytes, 2),
+          ),
           peerCellCount: 50,
           lastHeardAtMs: 1000,
         );
@@ -693,7 +697,9 @@ void main() {
           canvasLocalId: mesh.localId,
           peerNodeNum: 0x100,
           peerGlobalDigest: Uint8List.fromList(List.filled(16, 9)),
-          peerTileDigests: Uint8List.fromList(List.filled(128, 8)),
+          peerTileDigests: Uint8List.fromList(
+            List.filled(CanvasDigestSizes.tilesConcatenatedBytes, 8),
+          ),
           peerCellCount: 60,
           lastHeardAtMs: 2000,
         );

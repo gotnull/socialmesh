@@ -80,8 +80,8 @@ void main() {
     );
     await repo.paintLocal(
       canvasLocalId: canvas.localId,
-      x: 70,
-      y: 70,
+      x: 40,
+      y: 40,
       color: 5,
       authorNodeNum: 0x100,
       opTs: 1001,

@@ -12796,6 +12796,13 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshCanvasViewerEmptyMeshSubtitle => 'Перший мазок будить полотно';
 
   @override
+  String get meshCanvasViewerEmptyMeshHydratingTitle => 'Слухаємо меш-чорнила';
+
+  @override
+  String get meshCanvasViewerEmptyMeshHydratingSubtitle =>
+      'Забираємо пікселі у найближчих вузлів';
+
+  @override
   String get meshCanvasViewerEmptyLocalTitle => 'Торкнись, щоб малювати';
 
   @override

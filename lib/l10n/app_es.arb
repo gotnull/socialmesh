@@ -4639,6 +4639,8 @@
   "meshCanvasOverviewHeroBigUnit": "píxeles en la malla",
   "meshCanvasViewerEmptyMeshTitle": "Toca para sembrar el primer píxel",
   "meshCanvasViewerEmptyMeshSubtitle": "La primera pintura despierta el lienzo",
+  "meshCanvasViewerEmptyMeshHydratingTitle": "Escuchando la tinta de la malla",
+  "meshCanvasViewerEmptyMeshHydratingSubtitle": "Recogiendo píxeles de los pares cercanos",
   "meshCanvasViewerEmptyLocalTitle": "Toca para pintar",
   "meshCanvasViewerEmptyLocalSubtitle": "Queda en este dispositivo",
   "meshCanvasViewerGestureTap": "toca · pinta",
