@@ -304,8 +304,8 @@ class CanvasViewportBody extends ConsumerWidget {
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
                       colors: [
                         Colors.transparent,
                         Color.lerp(outsidePane, canvasSurface, 0.10) ??

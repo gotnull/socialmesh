@@ -809,6 +809,27 @@ class MrrpServiceCanvas implements MrrpServiceHandler {
     final existing = await _repository.listCanvases(scope: CanvasScope.mesh);
     for (final row in existing) {
       if (row.canvasId == canvasId && row.channelIndex == channelIndex) {
+        // Reconcile placeholder names. When SIP startup-buffer drains
+        // inbound paints before the device's channel config has loaded,
+        // the auto-create path mints the canvas as "Canvas $index" and
+        // that placeholder gets stuck in the DB. On every subsequent
+        // hit, if the real channel name is now available, rename the
+        // row so the viewer's app-bar title and overview chip show the
+        // correct name (e.g. "Primary" / "TestChannel").
+        final placeholder = 'Canvas $channelIndex';
+        if (row.name == placeholder) {
+          final realName = _channelNameForFallback?.call(channelIndex);
+          if (realName != null &&
+              realName.isNotEmpty &&
+              realName != placeholder) {
+            await _repository.renameCanvas(
+              localId: row.localId,
+              name: realName,
+            );
+            final refreshed = await _repository.getCanvasByLocalId(row.localId);
+            return refreshed ?? row;
+          }
+        }
         return row;
       }
     }

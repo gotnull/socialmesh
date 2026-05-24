@@ -35,10 +35,17 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../../../services/canvas/canvas_constants.dart';
 import '../../../services/canvas/canvas_models.dart';
 import 'canvas_grid_painter.dart';
+
+/// Pop-in animation window for freshly-arrived cells. Matches the
+/// painter's default [CanvasGridPainter.popDurationMs] and is used by
+/// the viewer to know how long to keep the ticker active after the
+/// last cell arrival.
+const Duration _kPopInDuration = Duration(milliseconds: 320);
 
 /// Default per-cell side length in logical pixels.
 ///
@@ -158,7 +165,8 @@ class CanvasViewer extends StatefulWidget {
   State<CanvasViewer> createState() => _CanvasViewerState();
 }
 
-class _CanvasViewerState extends State<CanvasViewer> {
+class _CanvasViewerState extends State<CanvasViewer>
+    with SingleTickerProviderStateMixin {
   late final TransformationController _transformController;
 
   /// Viewport size last seen by [_applyInitialFraming]. Used so we
@@ -166,14 +174,108 @@ class _CanvasViewerState extends State<CanvasViewer> {
   /// open/close shrinking the screen, etc.), not on every build.
   Size? _lastFramedSize;
 
+  /// Per-cell arrival timestamp map (packed coord -> ms since epoch).
+  /// Passed to the painter so each freshly-arrived cell renders with
+  /// a center-anchored easeOutBack pop-in over [_kPopInDuration].
+  /// Cells present on first build are stamped in the past so they
+  /// paint at their settled appearance immediately; cells diffed in
+  /// on later builds get the current timestamp and animate.
+  final Map<int, int> _cellArrivalMs = {};
+
+  /// Packed-coord set of cells seen on the previous build, used to
+  /// diff for new arrivals on the next build.
+  Set<int> _lastSeenCellKeys = const {};
+
+  /// Drives painter repaints during the animation window. The
+  /// painter subscribes via its `repaint:` super-arg; mutating the
+  /// notifier's value forces a frame without going through setState.
+  final ValueNotifier<int> _animTick = ValueNotifier<int>(0);
+
+  /// Ticker that pumps [_animTick] each frame while any cell is
+  /// mid-animation. Stops itself when the newest arrival is older
+  /// than [_kPopInDuration].
+  late final Ticker _animTicker;
+
+  /// Most recent cell arrival timestamp; the ticker uses it to know
+  /// when to stop pumping frames.
+  int _newestArrivalMs = 0;
+
   @override
   void initState() {
     super.initState();
     _transformController = TransformationController();
+    _animTicker = createTicker(_onAnimTick);
+    _seedArrivalsFromInitialCells();
+  }
+
+  void _seedArrivalsFromInitialCells() {
+    // Initial cells are pre-existing state, not new arrivals. Stamp
+    // them just past the animation window so they paint settled on
+    // first frame. Subsequent arrivals diffed in didUpdateWidget
+    // get a fresh `now` stamp and animate.
+    final pastMs =
+        DateTime.now().millisecondsSinceEpoch -
+        _kPopInDuration.inMilliseconds -
+        1;
+    final keys = <int>{};
+    for (final cell in widget.cells) {
+      final key = cell.y * widget.widthCells + cell.x;
+      _cellArrivalMs[key] = pastMs;
+      keys.add(key);
+    }
+    _lastSeenCellKeys = keys;
+  }
+
+  @override
+  void didUpdateWidget(CanvasViewer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Cells reference identity changes whenever the repository emits
+    // a new list (the same identity contract the painter relies on).
+    if (!identical(oldWidget.cells, widget.cells)) {
+      _diffCellsForArrivals();
+    }
+  }
+
+  void _diffCellsForArrivals() {
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    final currentKeys = <int>{};
+    var hasNewCell = false;
+    for (final cell in widget.cells) {
+      final key = cell.y * widget.widthCells + cell.x;
+      currentKeys.add(key);
+      if (!_lastSeenCellKeys.contains(key)) {
+        _cellArrivalMs[key] = nowMs;
+        hasNewCell = true;
+      }
+    }
+    // Evict arrival entries for cells that vanished (e.g. erased or
+    // overwritten by a different colour) so the map stays bounded.
+    _cellArrivalMs.removeWhere((key, _) => !currentKeys.contains(key));
+    _lastSeenCellKeys = currentKeys;
+    if (hasNewCell) {
+      _newestArrivalMs = nowMs;
+      if (!_animTicker.isActive) {
+        _animTicker.start();
+      }
+    }
+  }
+
+  void _onAnimTick(Duration _) {
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    if (nowMs - _newestArrivalMs > _kPopInDuration.inMilliseconds) {
+      // All cells have settled. Fire one final tick so the painter
+      // draws the settled frame, then stop pumping.
+      _animTick.value = nowMs;
+      _animTicker.stop();
+      return;
+    }
+    _animTick.value = nowMs;
   }
 
   @override
   void dispose() {
+    _animTicker.dispose();
+    _animTick.dispose();
     _transformController.dispose();
     super.dispose();
   }
@@ -290,6 +392,9 @@ class _CanvasViewerState extends State<CanvasViewer> {
                     widthCells: widget.widthCells,
                     heightCells: widget.heightCells,
                     pendingCellIndices: widget.pendingCellIndices,
+                    cellArrivalMs: _cellArrivalMs,
+                    popDurationMs: _kPopInDuration.inMilliseconds,
+                    repaint: _animTick,
                   ),
                 ),
               ),

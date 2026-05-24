@@ -93,7 +93,19 @@ class CanvasGridPainter extends CustomPainter {
   /// Exposed for tests so they can assert the multiplier directly.
   final double pendingOpacityFactor;
 
-  const CanvasGridPainter({
+  /// Optional per-cell arrival timestamp map (packed coord -> ms
+  /// since epoch). Cells whose age is under [popDurationMs] render
+  /// with a center-anchored scale + alpha pop-in. Cells missing
+  /// from the map paint at full size + alpha. Null disables the
+  /// animation entirely (used by tests + the local-scope viewer
+  /// when the host has no arrival tracker).
+  final Map<int, int>? cellArrivalMs;
+
+  /// Pop-in animation duration in ms. 320ms is the easeOutBack
+  /// sweet spot: snappy overshoot at ~80ms, fully settled by 320ms.
+  final int popDurationMs;
+
+  CanvasGridPainter({
     required this.cells,
     required this.palette,
     required this.cellSize,
@@ -105,6 +117,9 @@ class CanvasGridPainter extends CustomPainter {
     this.heightCells = CanvasGeometry.height,
     this.pendingCellIndices = const <int>{},
     this.pendingOpacityFactor = 0.55,
+    this.cellArrivalMs,
+    this.popDurationMs = 320,
+    super.repaint,
   });
 
   @override
@@ -143,23 +158,72 @@ class CanvasGridPainter extends CustomPainter {
     // colour to avoid per-cell allocation. Cells whose packed
     // coordinate is in [pendingCellIndices] paint at reduced opacity
     // so users see at a glance which paints are still in flight on
-    // the mesh — CANVAS_TRANSMISSION_STATUS_V0_1.md §3.2.
+    // the mesh (CANVAS_TRANSMISSION_STATUS_V0_1.md §3.2).
+    //
+    // Pop-in animation: cells whose packed coord exists in
+    // [cellArrivalMs] and whose age is under [popDurationMs] render
+    // with a center-anchored easeOutBack scale (snappy overshoot at
+    // ~80ms, fully settled by 320ms) and a linear alpha ramp over
+    // the first 50% of the window. Older cells paint at full size +
+    // alpha. Disabled entirely when [cellArrivalMs] is null.
     final cellPaint = Paint();
     final hasPending = pendingCellIndices.isNotEmpty;
+    final arrivals = cellArrivalMs;
+    final animEnabled = arrivals != null && arrivals.isNotEmpty;
+    final nowMs = animEnabled ? DateTime.now().millisecondsSinceEpoch : 0;
     for (final cell in cells) {
       if (cell.color < 0 || cell.color >= palette.length) continue;
       final colour = palette[cell.color];
-      if (colour.a == 0) continue; // transparent sentinel — skip
-      final isPending =
-          hasPending &&
-          pendingCellIndices.contains(cell.y * widthCells + cell.x);
-      cellPaint.color = isPending
-          ? colour.withValues(alpha: colour.a * pendingOpacityFactor)
-          : colour;
-      canvas.drawRect(
-        Rect.fromLTWH(cell.x * cellSize, cell.y * cellSize, cellSize, cellSize),
-        cellPaint,
-      );
+      if (colour.a == 0) continue; // transparent sentinel: skip
+      final key = cell.y * widthCells + cell.x;
+      final isPending = hasPending && pendingCellIndices.contains(key);
+      // Resolve pop-in animation state for this cell.
+      double scale = 1.0;
+      double alphaMul = 1.0;
+      if (animEnabled) {
+        final startMs = arrivals[key];
+        if (startMs != null) {
+          final age = nowMs - startMs;
+          if (age >= 0 && age < popDurationMs) {
+            final t = age / popDurationMs;
+            // easeOutBack: 0 -> overshoot ~1.1 -> 1.0. Curves can
+            // return slight negatives early in the window; clamp at
+            // 0 so the rect never inverts.
+            final eased = Curves.easeOutBack.transform(t);
+            scale = eased.clamp(0.0, 1.2);
+            // Alpha ramps in over the first half of the window so
+            // the cell starts faint and is fully opaque by the time
+            // it settles. Linear is fine for such a short ramp.
+            alphaMul = (t * 2).clamp(0.0, 1.0);
+          }
+        }
+      }
+      final effectiveAlpha = isPending
+          ? colour.a * pendingOpacityFactor * alphaMul
+          : colour.a * alphaMul;
+      cellPaint.color = colour.withValues(alpha: effectiveAlpha);
+      if (scale >= 1.0 && alphaMul >= 1.0) {
+        // Hot path: settled cell. Same allocation profile as before
+        // the animation feature landed.
+        canvas.drawRect(
+          Rect.fromLTWH(
+            cell.x * cellSize,
+            cell.y * cellSize,
+            cellSize,
+            cellSize,
+          ),
+          cellPaint,
+        );
+      } else {
+        // Animating: center-anchored scaled rect.
+        final cx = cell.x * cellSize + cellSize / 2;
+        final cy = cell.y * cellSize + cellSize / 2;
+        final half = (cellSize * scale) / 2;
+        canvas.drawRect(
+          Rect.fromLTRB(cx - half, cy - half, cx + half, cy + half),
+          cellPaint,
+        );
+      }
     }
 
     // Layer 4: surface border on top. Stays visible regardless of

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-// MeshCanvas repository — typed CRUD on top of CanvasDatabase.
+// MeshCanvas repository: typed CRUD on top of CanvasDatabase.
 //
 // Owns:
 //   - LWW conflict resolution (CANVAS_V0_1.md §8)
@@ -110,12 +110,21 @@ class CanvasRepository {
   }) async {
     _validateCanvasName(name);
     _validateChannelIndex(channelIndex);
+    // Fast path: row already exists.
     final existing = await _findCanvas(
       canvasId: canvasId,
       scope: CanvasScope.mesh,
       channelIndex: channelIndex,
     );
     if (existing != null) return existing;
+    // Race-safe create. Concurrent inbound paint frames (e.g. a SIP
+    // startup-buffer drain on a fresh install) can hit this method N
+    // times simultaneously, all see no existing row, and race the
+    // INSERT. Without ConflictAlgorithm.ignore the losing inserts
+    // throw `UNIQUE constraint failed`, the inbound op aborts, and
+    // 9-of-10 paints get silently dropped on bootstrap. With ignore,
+    // the conflicting insert returns 0 and we re-SELECT to find the
+    // row the winning insert created.
     final nowMs = nowMsOverride ?? DateTime.now().millisecondsSinceEpoch;
     final localId = await _database.insert(CanvasTables.canvas, {
       'canvas_id': canvasId,
@@ -132,12 +141,54 @@ class CanvasRepository {
       'global_digest': null,
       'tile_digests': null,
       'cell_count': 0,
-    });
-    AppLogging.meshCanvas(
-      'created mesh canvas localId=$localId canvasId=0x'
-      '${canvasId.toRadixString(16)} channel=$channelIndex',
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    if (localId > 0) {
+      AppLogging.meshCanvas(
+        'created mesh canvas localId=$localId canvasId=0x'
+        '${canvasId.toRadixString(16)} channel=$channelIndex',
+      );
+      return (await getCanvasByLocalId(localId))!;
+    }
+    // Conflict path: a concurrent caller won the create race. Re-find.
+    final concurrent = await _findCanvas(
+      canvasId: canvasId,
+      scope: CanvasScope.mesh,
+      channelIndex: channelIndex,
     );
-    return (await getCanvasByLocalId(localId))!;
+    if (concurrent != null) {
+      AppLogging.meshCanvas(
+        'getOrCreateMeshCanvas: concurrent create won, '
+        'reusing localId=${concurrent.localId} canvasId=0x'
+        '${canvasId.toRadixString(16)} channel=$channelIndex',
+      );
+      return concurrent;
+    }
+    // Should be unreachable: conflict means a row exists with the same
+    // unique key. Throw so a regression surfaces loudly instead of
+    // silently returning bad state.
+    throw StateError(
+      'getOrCreateMeshCanvas: insert ignored but re-find returned null '
+      'for canvasId=0x${canvasId.toRadixString(16)} channel=$channelIndex',
+    );
+  }
+
+  /// Update a canvas row's display name. Used by the MRRP service
+  /// handler to reconcile placeholder "Canvas N" names that were
+  /// minted before [channelNameForFallback] could resolve a real
+  /// Meshtastic channel name (e.g. when SIP startup-buffer drains
+  /// inbound paints before the device's channel config has loaded).
+  Future<void> renameCanvas({
+    required int localId,
+    required String name,
+  }) async {
+    _validateCanvasName(name);
+    await _database.update(
+      CanvasTables.canvas,
+      {'name': name},
+      where: 'id = ?',
+      whereArgs: [localId],
+    );
+    AppLogging.meshCanvas('renamed canvas localId=$localId to "$name"');
   }
 
   /// List canvases, optionally filtered by scope, ordered by recency.
@@ -263,7 +314,7 @@ class CanvasRepository {
       if (!accepted) return false;
 
       // Enforce queue cap BEFORE insert to keep depth ≤ cap. Oldest
-      // queued rows for this canvas are dropped — their cell-state
+      // queued rows for this canvas are dropped; their cell-state
       // effect has already been recorded by _applyOpInTransaction, so
       // peers catch up via digest sync per CANVAS_V0_1.md §9.
       await _enforcePendingQueueCap(txn, canvasLocalId);
@@ -446,7 +497,7 @@ class CanvasRepository {
   /// empty.
   ///
   /// [widthCells] is the canvas width (128 in v0.1). The caller passes
-  /// it so the packing matches the painter's coordinate scheme — keeps
+  /// it so the packing matches the painter's coordinate scheme; keeps
   /// the repository free of canvas-geometry knowledge.
   Future<Set<int>> getPendingCellCoordinates(
     int canvasLocalId, {
@@ -640,7 +691,7 @@ class CanvasRepository {
   ///
   /// Cheap on small canvases (the BLAKE2s-128 of a few hundred cells
   /// is sub-millisecond); for fully-painted boards we accept the
-  /// ~10ms cost — the caller (sync coordinator) gates this with the
+  /// ~10ms cost: the caller (sync coordinator) gates this with the
   /// canvas governor + jitter so it never lands on a hot UI frame.
   Future<CanvasDigestSet> computeAndCacheDigests(int canvasLocalId) async {
     final cells = await getCanvasCells(canvasLocalId);
@@ -690,7 +741,7 @@ class CanvasRepository {
     Uint8List? updatedTileDigests;
     if (existing != null) {
       if (existing.length != CanvasDigestSizes.tilesConcatenatedBytes) {
-        // Corrupted blob — refuse to mutate, just NULL it so the
+        // Corrupted blob: refuse to mutate, just NULL it so the
         // digest computer will rebuild from scratch.
         updatedTileDigests = null;
         AppLogging.meshCanvas(

@@ -263,6 +263,22 @@ final mrrpServiceCanvasProvider = FutureProvider<MrrpServiceCanvas>((
     repository: repo,
     presenceCache: presenceCache,
     syncCoordinator: syncCoordinator,
+    // Source the configured Meshtastic channel name so an auto-create
+    // triggered by an inbound paint frame names the canvas correctly
+    // (e.g. "Primary", "TestChannel") instead of the placeholder
+    // "Canvas $channelIndex". Without this hook the placeholder
+    // persists forever because nothing else renames it. Read (not
+    // watch) so service identity is stable; channel name changes
+    // post-create do not retroactively rename the canvas row.
+    channelNameForFallback: (channelIndex) {
+      final channels = ref.read(channelsProvider);
+      for (final c in channels) {
+        if (c.index == channelIndex && c.name.isNotEmpty) {
+          return c.name;
+        }
+      }
+      return null;
+    },
     // Fires once per inbound frame when at least one op landed. Without
     // this, cells write to SQLite but no viewer rebuilds: the user only
     // sees inbound paints after their own next tap kicks an invalidate.
