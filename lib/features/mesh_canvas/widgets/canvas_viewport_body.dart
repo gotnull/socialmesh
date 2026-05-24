@@ -718,42 +718,46 @@ class _CanvasEmptyPrompt extends ConsumerWidget {
       title = l.meshCanvasViewerEmptyLocalTitle;
       subtitle = l.meshCanvasViewerEmptyLocalSubtitle;
     }
-    // Padding inside Center constrains the text width to the canvas
-    // frame (canvasWidth - 2 * spacing24) so the subtitle wraps inside
-    // the visible board instead of overflowing past the surface ring.
-    // Without this the Center -> Column -> Text chain lets each Text
-    // grow to its intrinsic width and bleed beyond the frame.
+    // Padding + max-width constraint inside Center keeps the subtitle
+    // a comfortable paragraph block. The Stack rect this widget fills
+    // matches the canvas frame, so plain Padding alone can still let
+    // a long subtitle run right up to the surface ring on a wide
+    // canvas. The ConstrainedBox caps the text column at 280pt so the
+    // wrap point stays inside the frame regardless of viewport scale.
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: context.textPrimary.withValues(alpha: 0.85),
-                letterSpacing: 0.3,
-                height: 1.3,
-                fontFamily: AppTheme.fontFamily,
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing32),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 280),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: context.textPrimary.withValues(alpha: 0.85),
+                  letterSpacing: 0.3,
+                  height: 1.3,
+                  fontFamily: AppTheme.fontFamily,
+                ),
               ),
-            ),
-            const SizedBox(height: AppTheme.spacing8),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                color: context.textTertiary.withValues(alpha: 0.85),
-                letterSpacing: 0.3,
-                height: 1.4,
-                fontFamily: AppTheme.fontFamily,
+              const SizedBox(height: AppTheme.spacing8),
+              Text(
+                subtitle,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: context.textTertiary.withValues(alpha: 0.85),
+                  letterSpacing: 0.3,
+                  height: 1.4,
+                  fontFamily: AppTheme.fontFamily,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

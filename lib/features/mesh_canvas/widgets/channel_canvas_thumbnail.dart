@@ -136,25 +136,37 @@ class _ChannelCanvasThumbnailPainter extends CustomPainter {
     // Layer 3: painted cells, scaled to thumbnail space. Drop
     // index-0 (transparent / unpainted sentinel) and any out-of-
     // range palette indices.
+    //
+    // Visual treatment for dense canvases: each cell renders with a
+    // tiny inset so adjacent painted cells show a faint gap rather
+    // than smearing into a solid block, and at 0.78 alpha so the
+    // dominant colours blend toward a softer palette instead of full
+    // chromatic noise. Sparse canvases still read cleanly because
+    // isolated cells sit on the dark surface and the inset is below
+    // 1pt at thumbnail scale.
     if (cells.isNotEmpty) {
       final cellScale = surfaceRect.width / CanvasGeometry.width;
       // Cells are at minimum 1px so they actually paint at thumbnail
-      // scale (a 96pt thumbnail of a 128-cell board gives ~0.7
-      // logical px per cell — sub-pixel rendering would lose them).
+      // scale (a 96pt thumbnail of a 64-cell board gives ~1.4 logical
+      // px per cell — sub-pixel rendering would lose them).
       final cellPx = cellScale < 1 ? 1.0 : cellScale;
+      // Inset = 15% of cell size, capped so we never invert the rect
+      // on very small cellPx values.
+      final inset = (cellPx * 0.15).clamp(0.0, cellPx / 3);
+      final drawPx = cellPx - inset * 2;
       final cellPaint = Paint();
       for (final cell in cells) {
         if (cell.color <= 0) continue;
         if (cell.color >= SocialMeshPalette.colors.length) continue;
         final colour = SocialMeshPalette.colors[cell.color];
         if (colour.a == 0) continue;
-        cellPaint.color = colour;
+        cellPaint.color = colour.withValues(alpha: colour.a * 0.78);
         canvas.drawRect(
           Rect.fromLTWH(
-            surfaceRect.left + cell.x * cellScale,
-            surfaceRect.top + cell.y * cellScale,
-            cellPx,
-            cellPx,
+            surfaceRect.left + cell.x * cellScale + inset,
+            surfaceRect.top + cell.y * cellScale + inset,
+            drawPx,
+            drawPx,
           ),
           cellPaint,
         );
