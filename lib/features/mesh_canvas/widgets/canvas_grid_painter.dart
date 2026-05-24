@@ -217,17 +217,19 @@ class CanvasGridPainter extends CustomPainter {
         final startMs = arrivals[key];
         if (startMs != null) {
           final age = nowMs - startMs;
-          if (age >= 0 && age < popDurationMs) {
+          if (age < 0) {
+            // Color-change stagger: arrival is scheduled to start
+            // after the old color's vanish completes. Hide the new
+            // color completely during the wait so the user sees the
+            // old shrink to nothing FIRST, then the new pop in.
+            scale = 0.0;
+            alphaMul = 0.0;
+          } else if (age < popDurationMs) {
             final t = age / popDurationMs;
-            // easeOutBack: 0 -> overshoot ~1.1 -> 1.0. Curves can
-            // return slight negatives early in the window; clamp at
-            // 0 so the rect never inverts.
-            final eased = Curves.easeOutBack.transform(t);
-            scale = eased.clamp(0.0, 1.2);
-            // Alpha ramps in over the first half of the window so
-            // the cell starts faint and is fully opaque by the time
-            // it settles. Linear is fine for such a short ramp.
-            alphaMul = (t * 2).clamp(0.0, 1.0);
+            scale = _popInScale(t);
+            // Alpha ramps in across the first 40% so the cell is
+            // already visible by the time the scale settles.
+            alphaMul = (t / 0.4).clamp(0.0, 1.0);
           }
         }
       }
@@ -274,10 +276,9 @@ class CanvasGridPainter extends CustomPainter {
         final age = nowMs - v.startMs;
         if (age < 0 || age >= popDurationMs) continue;
         final t = age / popDurationMs;
-        // easeInBack: 1 -> -slight -> 0. Clamp at 0 so the rect never
-        // inverts on the brief negative overshoot.
-        final eased = Curves.easeInBack.transform(t);
-        final scale = (1.0 - eased).clamp(0.0, 1.0);
+        final scale = _popOutScale(t);
+        // Alpha decays linearly so the cell is mostly gone by the
+        // time the scale collapse hits zero.
         final alphaMul = (1.0 - t).clamp(0.0, 1.0);
         cellPaint.color = colour.withValues(alpha: colour.a * alphaMul);
         final cx = v.x * cellSize + cellSize / 2;
@@ -317,5 +318,43 @@ class CanvasGridPainter extends CustomPainter {
     if (old.heightCells != heightCells) return true;
     if (!identical(old.palette, palette)) return true;
     return false;
+  }
+
+  /// Pop-IN scale curve over `t` in [0, 1]. Three phases so the
+  /// growth is visible even at small (4-8pt) cell sizes:
+  ///   - 0..0.30: 0 -> 1.6 (fast burst, eased out)
+  ///   - 0.30..0.60: 1.6 -> 0.92 (overshoot snap back)
+  ///   - 0.60..1.00: 0.92 -> 1.0 (settle)
+  /// The 60% peak overshoot reads clearly on a 6pt cell where the
+  /// stock easeOutBack ~1.08 was invisible.
+  double _popInScale(double t) {
+    if (t < 0.30) {
+      final p = t / 0.30;
+      final eased = Curves.easeOut.transform(p);
+      return 1.6 * eased;
+    }
+    if (t < 0.60) {
+      final p = (t - 0.30) / 0.30;
+      final eased = Curves.easeInOut.transform(p);
+      return 1.6 - 0.68 * eased; // 1.6 -> 0.92
+    }
+    final p = (t - 0.60) / 0.40;
+    final eased = Curves.easeInOut.transform(p);
+    return 0.92 + 0.08 * eased; // 0.92 -> 1.0
+  }
+
+  /// Pop-OUT scale curve over `t` in [0, 1]. Brief grow then
+  /// collapse so the user sees a "burst" instead of a fade-shrink:
+  ///   - 0..0.25: 1.0 -> 1.35 (fast burst)
+  ///   - 0.25..1.00: 1.35 -> 0 (shrink, easeIn)
+  double _popOutScale(double t) {
+    if (t < 0.25) {
+      final p = t / 0.25;
+      final eased = Curves.easeOut.transform(p);
+      return 1.0 + 0.35 * eased;
+    }
+    final p = (t - 0.25) / 0.75;
+    final eased = Curves.easeIn.transform(p);
+    return (1.35 * (1.0 - eased)).clamp(0.0, 1.35);
   }
 }

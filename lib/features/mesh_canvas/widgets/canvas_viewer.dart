@@ -260,12 +260,18 @@ class _CanvasViewerState extends State<CanvasViewer>
         _cellArrivalMs[key] = nowMs;
         hasAnimation = true;
       } else if (prevColor != cell.color) {
-        // Color changed in place: pop the old color out + pop the new
-        // color in. Two animations on the same cell coord.
+        // Color changed in place: stagger the two animations so the
+        // user sees a distinct pop-out THEN pop-in instead of a
+        // crossfade. The new color's arrival timestamp is scheduled
+        // in the future; the painter renders it invisible until
+        // that moment, then runs the standard pop-in curve. The
+        // 55% offset lets the old color collapse most of the way
+        // before the new one starts growing.
         newVanishing.add(
           VanishingCell(x: cell.x, y: cell.y, color: prevColor, startMs: nowMs),
         );
-        _cellArrivalMs[key] = nowMs;
+        _cellArrivalMs[key] =
+            nowMs + (_kPopInDuration.inMilliseconds * 0.55).round();
         hasAnimation = true;
       }
     }
@@ -294,7 +300,21 @@ class _CanvasViewerState extends State<CanvasViewer>
     _vanishingCells = newVanishing;
     _lastSeenColorByKey = currentByKey;
     if (hasAnimation || _vanishingCells.isNotEmpty) {
-      _newestArrivalMs = nowMs;
+      // Track the LATEST animation finish moment, not just the diff
+      // time. Color-change arrivals are staggered into the future
+      // (see the prevColor != cell.color branch above), so they end
+      // later than `nowMs + popDuration`. Walk both maps to find the
+      // true tail and use that as the ticker shutoff.
+      var latestFinishMs = nowMs + _kPopInDuration.inMilliseconds;
+      for (final start in _cellArrivalMs.values) {
+        final end = start + _kPopInDuration.inMilliseconds;
+        if (end > latestFinishMs) latestFinishMs = end;
+      }
+      for (final v in _vanishingCells) {
+        final end = v.startMs + _kPopInDuration.inMilliseconds;
+        if (end > latestFinishMs) latestFinishMs = end;
+      }
+      _newestArrivalMs = latestFinishMs;
       if (!_animTicker.isActive) {
         _animTicker.start();
       }
@@ -303,7 +323,9 @@ class _CanvasViewerState extends State<CanvasViewer>
 
   void _onAnimTick(Duration _) {
     final nowMs = DateTime.now().millisecondsSinceEpoch;
-    if (nowMs - _newestArrivalMs > _kPopInDuration.inMilliseconds) {
+    // `_newestArrivalMs` is the absolute ms when the LAST animation
+    // (including any staggered color-change arrivals) finishes.
+    if (nowMs > _newestArrivalMs) {
       // All cells have settled. Fire one final tick so the painter
       // draws the settled frame, then stop pumping.
       _animTick.value = nowMs;
