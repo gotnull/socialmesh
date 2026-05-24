@@ -564,7 +564,6 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
       RevenueCatConfig.widgetPackProductId,
       RevenueCatConfig.automationsPackProductId,
       RevenueCatConfig.iftttPackProductId,
-      RevenueCatConfig.translationPackProductId,
     ].fold<double>(0, (sum, id) => sum + (storeProducts[id]?.price ?? 0));
 
     // Use actual store prices if available, otherwise fall back to model

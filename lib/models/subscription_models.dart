@@ -99,7 +99,6 @@ class OneTimePurchases {
     unlocksFeature: PremiumFeature.translation,
   );
 
-  /// Complete Pack - all features bundled at 25% off
   static const double bundlePrice = 14.99;
   static double get bundleSavings {
     final total = completePackPurchases.fold<double>(
@@ -117,15 +116,12 @@ class OneTimePurchases {
     return ((1 - bundlePrice / total) * 100).round();
   }
 
-  /// Purchases included in the Complete Pack bundle.
-  /// Translation Pack is included — grants feature unlock with managed allowance.
   static List<OneTimePurchase> get completePackPurchases => <OneTimePurchase>[
     themePack,
     ringtonePack,
     widgetPack,
     automationsPack,
     iftttPack,
-    translationPack,
   ];
 
   /// All individual purchases (includes Translation Pack, excludes bundle)
@@ -179,8 +175,6 @@ class PurchaseState {
     // Direct purchase check
     if (purchasedProductIds.contains(productId)) return true;
 
-    // If user owns Complete Pack, they have access to all bundled packs
-    // (including Translation Pack)
     if (purchasedProductIds.contains(RevenueCatConfig.completePackProductId)) {
       final bundledIds = OneTimePurchases.completePackPurchases
           .map((p) => p.productId)
