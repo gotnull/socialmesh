@@ -54,9 +54,13 @@ Future<void> showCanvasTileInspectorSheet({
 }) {
   return AppBottomSheet.showScrollable<void>(
     context: context,
-    initialChildSize: 0.7,
-    minChildSize: 0.4,
-    maxChildSize: 0.95,
+    // Sized for the typical case: 3 info rows + 1-3 history rows.
+    // The maxChildSize stays high so a busy cell with a long history
+    // can drag-expand without re-rendering. Was 0.7 / 0.4 / 0.95;
+    // 70% initial left ~half the sheet empty for the common case.
+    initialChildSize: 0.45,
+    minChildSize: 0.3,
+    maxChildSize: 0.9,
     builder: (controller) => _CanvasTileInspectorSheet(
       scrollController: controller,
       canvas: canvas,

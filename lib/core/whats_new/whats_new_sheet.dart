@@ -254,9 +254,12 @@ class _WhatsNewCarouselState extends ConsumerState<_WhatsNewCarousel> {
     final activeColor = _interpolatedColor(accentColor);
 
     return ConstrainedBox(
-      // Cap the sheet at 85% of screen height — tall enough for all
-      // content without any vertical scrolling.
-      constraints: BoxConstraints(maxHeight: screenHeight * 0.85),
+      // Cap the sheet at 65% of screen height. Even multi-item
+      // What's New payloads rarely need more than this, and each
+      // _WhatsNewPage already wraps its body in a SingleChildScroll
+      // for overflow safety. The previous 0.85 cap meant short
+      // single-item payloads left half the sheet visually empty.
+      constraints: BoxConstraints(maxHeight: screenHeight * 0.65),
       child: Container(
         // Matches AppBottomSheet.build() exactly
         decoration: BoxDecoration(
@@ -428,59 +431,82 @@ class _WhatsNewPage extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppTheme.spacing24, 0, 24, 8),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Ico mascot — SizedBox matches actual render size
-            SizedBox(
-              width: mascotRenderSize,
-              height: mascotRenderSize,
-              child: MeshNodeBrain(
-                mood: MeshBrainMood.excited,
-                size: mascotSize,
+      // Edge fade: ShaderMask uses BlendMode.dstIn so the gradient's
+      // alpha becomes the scroll-view's alpha. Top + bottom 6% of the
+      // viewport ramp from transparent to opaque, so when content
+      // extends past the visible region the user sees a soft fade
+      // signaling "there is more above/below." Fade zones are wide
+      // enough to read at a glance but short enough that single-page
+      // content still looks clean.
+      child: ShaderMask(
+        shaderCallback: (Rect bounds) {
+          return const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.transparent,
+              Colors.black,
+              Colors.black,
+              Colors.transparent,
+            ],
+            stops: [0.0, 0.06, 0.94, 1.0],
+          ).createShader(bounds);
+        },
+        blendMode: BlendMode.dstIn,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Ico mascot — SizedBox matches actual render size
+              SizedBox(
+                width: mascotRenderSize,
+                height: mascotRenderSize,
+                child: MeshNodeBrain(
+                  mood: MeshBrainMood.excited,
+                  size: mascotSize,
+                ),
               ),
-            ),
-            const SizedBox(height: AppTheme.spacing4),
-
-            // Headline
-            Text(
-              payload.headline,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                fontFamily: AppTheme.fontFamily,
-                color: context.textPrimary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-
-            // Subtitle
-            if (payload.subtitle != null) ...[
               const SizedBox(height: AppTheme.spacing4),
+
+              // Headline
               Text(
-                payload.subtitle!,
+                payload.headline,
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
                   fontFamily: AppTheme.fontFamily,
-                  color: context.textTertiary,
-                  letterSpacing: 0.5,
+                  color: context.textPrimary,
                 ),
                 textAlign: TextAlign.center,
               ),
-            ],
 
-            const SizedBox(height: AppTheme.spacing16),
+              // Subtitle
+              if (payload.subtitle != null) ...[
+                const SizedBox(height: AppTheme.spacing4),
+                Text(
+                  payload.subtitle!,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontFamily: AppTheme.fontFamily,
+                    color: context.textTertiary,
+                    letterSpacing: 0.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
 
-            // Feature items
-            ...payload.items.map(
-              (item) => _WhatsNewItemCard(
-                item: item,
-                onDismissSheet: onDismissSheet,
-                readOnly: readOnly,
+              const SizedBox(height: AppTheme.spacing16),
+
+              // Feature items
+              ...payload.items.map(
+                (item) => _WhatsNewItemCard(
+                  item: item,
+                  onDismissSheet: onDismissSheet,
+                  readOnly: readOnly,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

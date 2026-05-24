@@ -26,7 +26,6 @@ library;
 import 'package:flutter/material.dart';
 
 import '../../../core/canvas/canvas_palette.dart';
-import '../../../core/theme.dart';
 import '../../../services/canvas/canvas_constants.dart';
 import '../../../services/canvas/canvas_models.dart';
 
@@ -63,17 +62,24 @@ class ChannelCanvasThumbnail extends StatelessWidget {
     this.size = 96,
   });
 
+  /// Corner radius applied to the outer clip AND the inner surface
+  /// ring. Picked to sit between the surrounding card radius (16) and
+  /// the previous sharp 8 — close enough to the card that the corners
+  /// stop reading as a mismatch.
+  static const double _thumbnailCornerRadius = 12;
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: size,
       height: size,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppTheme.radius8),
+        borderRadius: BorderRadius.circular(_thumbnailCornerRadius),
         child: CustomPaint(
           painter: _ChannelCanvasThumbnailPainter(
             cells: cells,
             isDormant: isDormant,
+            cornerRadius: _thumbnailCornerRadius,
           ),
           size: Size(size, size),
         ),
@@ -85,10 +91,12 @@ class ChannelCanvasThumbnail extends StatelessWidget {
 class _ChannelCanvasThumbnailPainter extends CustomPainter {
   final List<CanvasCell> cells;
   final bool isDormant;
+  final double cornerRadius;
 
   _ChannelCanvasThumbnailPainter({
     required this.cells,
     required this.isDormant,
+    required this.cornerRadius,
   });
 
   @override
@@ -97,11 +105,14 @@ class _ChannelCanvasThumbnailPainter extends CustomPainter {
     final h = size.height;
 
     // Layer 0: outer pane (slightly darker than the surface, mirrors
-    // the viewer's layered background).
+    // the viewer's layered background). The outer ClipRRect already
+    // rounds the visible corners, so this fill can stay a plain rect.
     canvas.drawRect(Offset.zero & size, Paint()..color = _outsideColor);
 
     // Layer 1: canvas surface. Inset slightly so the ring is visible
-    // around the whole board.
+    // around the whole board. Drawn as an RRect with a slightly tighter
+    // radius than the outer clip so the inner surface and the outer
+    // chrome both look rounded in concert.
     const inset = 2.0;
     final surfaceRect = Rect.fromLTWH(
       inset,
@@ -109,7 +120,11 @@ class _ChannelCanvasThumbnailPainter extends CustomPainter {
       w - inset * 2,
       h - inset * 2,
     );
-    canvas.drawRect(surfaceRect, Paint()..color = _surfaceColor);
+    final surfaceRadius = Radius.circular(
+      (cornerRadius - inset).clamp(0, cornerRadius),
+    );
+    final surfaceRRect = RRect.fromRectAndRadius(surfaceRect, surfaceRadius);
+    canvas.drawRRect(surfaceRRect, Paint()..color = _surfaceColor);
 
     // Layer 2: 32-cell chunk lattice. Three lines per axis at
     // 1/4-board intervals. Mirrors the viewer.
@@ -183,11 +198,13 @@ class _ChannelCanvasThumbnailPainter extends CustomPainter {
     }
 
     // Layer 5: surface border ring on top. Same tone as the viewer.
+    // Drawn as an RRect matching the inner surface so the corners
+    // don't read as a square frame inside the rounded clip.
     final ringPaint = Paint()
       ..color = _ringColor
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
-    canvas.drawRect(surfaceRect, ringPaint);
+    canvas.drawRRect(surfaceRRect, ringPaint);
   }
 
   @override

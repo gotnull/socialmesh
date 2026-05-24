@@ -113,6 +113,7 @@ import 'features/globe/globe_screen.dart';
 import 'features/reachability/mesh_reachability_screen.dart';
 import 'features/feedback/my_bug_reports_screen.dart';
 import 'features/admin/bug_reports/admin_bug_reports_screen.dart';
+import 'features/mesh_canvas/screens/mesh_canvas_overview_screen.dart';
 import 'features/sip/sip_hub_screen.dart';
 import 'features/sip/sip_dm_screen.dart';
 import 'providers/sip_providers.dart';
@@ -1474,17 +1475,11 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
 
         case 'sip_handshake_request':
         case 'sip_handshake_declined':
-        case 'sip_peer_found':
-          // The SIP hub already surfaces:
-          //   - inbound HS_HELLO consent banners (request),
-          //   - declined-handshake state on the peer card (declined),
-          //   - newly-discovered peers in the nearby section (found).
-          // Push the hub so any of those land in front of the user —
-          // unless the hub is ALREADY the topmost route, in which
-          // case a second push stacks a duplicate Handshake screen
-          // on top of the existing one (visible as two AppBars
-          // titled "Handshake" stacked) and tapping back lands the
-          // user back on the same screen they started on.
+          // Handshake-specific notifications always route to SipHub.
+          // The SIP hub surfaces inbound HS_HELLO consent banners
+          // (request) and declined-handshake state on the peer card
+          // (declined). Skip the push when already on the hub so
+          // back-tapping doesn't reveal a stack of duplicate hubs.
           // Consent is still a manual tap — never auto-accepted.
           if (!_topRouteIsSipHub(navigator)) {
             navigator.push(
@@ -1493,6 +1488,42 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
                 settings: const RouteSettings(name: _kSipHubRouteName),
               ),
             );
+          }
+          break;
+
+        case 'sip_peer_found':
+          // Peer-discovery notifications route to whichever surface
+          // the operator has enabled. The notification body itself is
+          // already feature-aware (see selectPeerFoundBody); the tap
+          // destination must match so a MeshCanvas-only user lands on
+          // MeshCanvas, not on a Handshake hub they cannot use.
+          //
+          //   - Handshake on (with or without MeshCanvas) → SipHub.
+          //     Hub is the canonical peer-connect surface; MeshCanvas
+          //     is reachable from the drawer.
+          //   - Handshake off, MeshCanvas on → MeshCanvas overview.
+          //   - Both off → no-op (the body selector also returns null
+          //     in this case so the notification never fires).
+          if (AppFeatureFlags.isHandshakeEnabled) {
+            if (!_topRouteIsSipHub(navigator)) {
+              navigator.push(
+                MaterialPageRoute(
+                  builder: (_) => const SipHubScreen(),
+                  settings: const RouteSettings(name: _kSipHubRouteName),
+                ),
+              );
+            }
+          } else if (AppFeatureFlags.isMeshCanvasEnabled) {
+            if (!_topRouteIsMeshCanvasOverview(navigator)) {
+              navigator.push(
+                MaterialPageRoute(
+                  builder: (_) => const MeshCanvasOverviewScreen(),
+                  settings: const RouteSettings(
+                    name: _kMeshCanvasOverviewRouteName,
+                  ),
+                ),
+              );
+            }
           }
           break;
 
@@ -1553,6 +1584,8 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
   /// the hub was reached via the drawer or pushed from a previous
   /// notification, the same name is used.
   static const String _kSipHubRouteName = 'SipHubScreen';
+  static const String _kMeshCanvasOverviewRouteName =
+      'MeshCanvasOverviewScreen';
 
   /// True if the topmost route on [navigator]'s stack is a
   /// [SipHubScreen] (identified by the [_kSipHubRouteName] tag).
@@ -1563,6 +1596,16 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     navigator.popUntil((route) {
       top = route.settings.name == _kSipHubRouteName;
       return true; // stop iteration immediately, no actual pop
+    });
+    return top;
+  }
+
+  /// Mirror of [_topRouteIsSipHub] for the MeshCanvas overview.
+  bool _topRouteIsMeshCanvasOverview(NavigatorState navigator) {
+    var top = false;
+    navigator.popUntil((route) {
+      top = route.settings.name == _kMeshCanvasOverviewRouteName;
+      return true;
     });
     return top;
   }
