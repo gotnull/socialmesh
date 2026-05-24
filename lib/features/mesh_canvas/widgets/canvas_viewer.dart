@@ -271,7 +271,7 @@ class _CanvasViewerState extends State<CanvasViewer>
           VanishingCell(x: cell.x, y: cell.y, color: prevColor, startMs: nowMs),
         );
         _cellArrivalMs[key] =
-            nowMs + (_kPopInDuration.inMilliseconds * 0.55).round();
+            nowMs + (_kPopInDuration.inMilliseconds * 0.35).round();
         hasAnimation = true;
       }
     }

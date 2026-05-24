@@ -227,9 +227,9 @@ class CanvasGridPainter extends CustomPainter {
           } else if (age < popDurationMs) {
             final t = age / popDurationMs;
             scale = _popInScale(t);
-            // Alpha ramps in across the first 40% so the cell is
-            // already visible by the time the scale settles.
-            alphaMul = (t / 0.4).clamp(0.0, 1.0);
+            // Alpha ramps in across the first 50% so the fade-in
+            // matches the gentler scale curve.
+            alphaMul = (t / 0.5).clamp(0.0, 1.0);
           }
         }
       }
@@ -320,41 +320,36 @@ class CanvasGridPainter extends CustomPainter {
     return false;
   }
 
-  /// Pop-IN scale curve over `t` in [0, 1]. Three phases so the
-  /// growth is visible even at small (4-8pt) cell sizes:
-  ///   - 0..0.30: 0 -> 1.6 (fast burst, eased out)
-  ///   - 0.30..0.60: 1.6 -> 0.92 (overshoot snap back)
-  ///   - 0.60..1.00: 0.92 -> 1.0 (settle)
-  /// The 60% peak overshoot reads clearly on a 6pt cell where the
-  /// stock easeOutBack ~1.08 was invisible.
+  /// Pop-IN scale curve over `t` in [0, 1]. Two phases: a mild
+  /// overshoot to make the growth visible at small (4-8pt) cell
+  /// sizes, then a gentle settle. No undershoot snap-back; that
+  /// reads as jittery on a board of dozens of cells animating.
+  ///   - 0..0.40: 0 -> 1.25 (eased grow with light overshoot)
+  ///   - 0.40..1.00: 1.25 -> 1.0 (gentle ease back)
   double _popInScale(double t) {
-    if (t < 0.30) {
-      final p = t / 0.30;
+    if (t < 0.40) {
+      final p = t / 0.40;
       final eased = Curves.easeOut.transform(p);
-      return 1.6 * eased;
+      return 1.25 * eased;
     }
-    if (t < 0.60) {
-      final p = (t - 0.30) / 0.30;
-      final eased = Curves.easeInOut.transform(p);
-      return 1.6 - 0.68 * eased; // 1.6 -> 0.92
-    }
-    final p = (t - 0.60) / 0.40;
+    final p = (t - 0.40) / 0.60;
     final eased = Curves.easeInOut.transform(p);
-    return 0.92 + 0.08 * eased; // 0.92 -> 1.0
+    return 1.25 - 0.25 * eased; // 1.25 -> 1.00
   }
 
-  /// Pop-OUT scale curve over `t` in [0, 1]. Brief grow then
-  /// collapse so the user sees a "burst" instead of a fade-shrink:
-  ///   - 0..0.25: 1.0 -> 1.35 (fast burst)
-  ///   - 0.25..1.00: 1.35 -> 0 (shrink, easeIn)
+  /// Pop-OUT scale curve over `t` in [0, 1]. Subtle puff then
+  /// collapse so the user sees a hint of motion before the cell
+  /// shrinks away:
+  ///   - 0..0.20: 1.0 -> 1.10 (light puff)
+  ///   - 0.20..1.00: 1.10 -> 0 (shrink, easeIn)
   double _popOutScale(double t) {
-    if (t < 0.25) {
-      final p = t / 0.25;
+    if (t < 0.20) {
+      final p = t / 0.20;
       final eased = Curves.easeOut.transform(p);
-      return 1.0 + 0.35 * eased;
+      return 1.0 + 0.10 * eased;
     }
-    final p = (t - 0.25) / 0.75;
+    final p = (t - 0.20) / 0.80;
     final eased = Curves.easeIn.transform(p);
-    return (1.35 * (1.0 - eased)).clamp(0.0, 1.35);
+    return (1.10 * (1.0 - eased)).clamp(0.0, 1.10);
   }
 }
