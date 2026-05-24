@@ -103,10 +103,13 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
       }
     });
 
-    test('external complete_pack expands to all 6 individual packs', () {
+    test('external complete_pack expands to all bundled individual packs', () {
       // Mirror of the previous test for the external pipeline. Without
       // expansion at the merge, a complete_pack-via-BMC user would only
       // unlock the literal complete_pack id and miss the bundled packs.
+      // Note: the translation pack has been retired from the catalog
+      // and is intentionally NOT bundled into complete_pack; the test
+      // covers only the features that ARE in the current bundle.
       final merged = mergePurchaseStateForTest(const PurchaseState(), {
         'complete_pack',
       });
@@ -114,7 +117,6 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
         expect(merged.purchasedProductIds, contains(p.productId));
       }
       expect(merged.hasFeature(PremiumFeature.customRingtones), isTrue);
-      expect(merged.hasFeature(PremiumFeature.translation), isTrue);
     });
 
     test('external never overrides — additive only', () {
