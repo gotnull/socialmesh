@@ -159,7 +159,15 @@ class _ChannelCanvasThumbnailPainter extends CustomPainter {
     // chromatic noise. Sparse canvases still read cleanly because
     // isolated cells sit on the dark surface and the inset is below
     // 1pt at thumbnail scale.
+    //
+    // The cell pass is clipped to the rounded surface rect so cells
+    // near the corners do not bleed past the rounded boundary as
+    // jagged square fragments. Without this clip the outer ClipRRect
+    // still cuts off the part that escapes, but the user sees the
+    // half-clipped cell silhouettes as a ragged corner.
     if (cells.isNotEmpty) {
+      canvas.save();
+      canvas.clipRRect(surfaceRRect);
       final cellScale = surfaceRect.width / CanvasGeometry.width;
       // Cells are at minimum 1px so they actually paint at thumbnail
       // scale (a 96pt thumbnail of a 64-cell board gives ~1.4 logical
@@ -186,6 +194,7 @@ class _ChannelCanvasThumbnailPainter extends CustomPainter {
           cellPaint,
         );
       }
+      canvas.restore();
     }
 
     // Layer 4: dormant seed marker. A faint 3pt dot in the centre of
