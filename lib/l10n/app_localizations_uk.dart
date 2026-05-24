@@ -7228,6 +7228,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get mapHidePositionHistory => 'Сховати історію положень';
 
   @override
+  String get mapHideDistanceLabels => 'Сховати мітки відстані';
+
+  @override
   String get mapHideRangeCircles => 'Сховати кола дальності';
 
   @override
@@ -7489,6 +7492,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get mapShowPositionHistory => 'Показати історію положень';
+
+  @override
+  String get mapShowDistanceLabels => 'Показати мітки відстані';
 
   @override
   String get mapShowRangeCircles => 'Показати кола дальності';

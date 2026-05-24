@@ -7247,6 +7247,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get mapHidePositionHistory => 'Positionsverlauf ausblenden';
 
   @override
+  String get mapHideDistanceLabels => 'Entfernungsbeschriftungen ausblenden';
+
+  @override
   String get mapHideRangeCircles => 'Reichweitenkreise ausblenden';
 
   @override
@@ -7504,6 +7507,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get mapShowPositionHistory => 'Positionsverlauf anzeigen';
+
+  @override
+  String get mapShowDistanceLabels => 'Entfernungsbeschriftungen anzeigen';
 
   @override
   String get mapShowRangeCircles => 'Reichweitenkreise anzeigen';

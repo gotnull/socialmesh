@@ -7215,6 +7215,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get mapHidePositionHistory => 'Скрыть историю положений';
 
   @override
+  String get mapHideDistanceLabels => 'Скрыть метки расстояния';
+
+  @override
   String get mapHideRangeCircles => 'Скрыть круги дальности';
 
   @override
@@ -7476,6 +7479,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get mapShowPositionHistory => 'Показать историю положений';
+
+  @override
+  String get mapShowDistanceLabels => 'Показать метки расстояния';
 
   @override
   String get mapShowRangeCircles => 'Показать круги дальности';

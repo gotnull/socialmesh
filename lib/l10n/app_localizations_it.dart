@@ -7225,6 +7225,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get mapHidePositionHistory => 'Nascondi cronologia posizioni';
 
   @override
+  String get mapHideDistanceLabels => 'Nascondi etichette distanza';
+
+  @override
   String get mapHideRangeCircles => 'Nascondi cerchi di portata';
 
   @override
@@ -7484,6 +7487,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get mapShowPositionHistory => 'Mostra cronologia posizioni';
+
+  @override
+  String get mapShowDistanceLabels => 'Mostra etichette distanza';
 
   @override
   String get mapShowRangeCircles => 'Mostra cerchi di portata';

@@ -9639,6 +9639,10 @@
     "@mapHidePositionHistory": {
         "description": "Text displayed in map view"
     },
+    "mapHideDistanceLabels": "Hide distance labels",
+    "@mapHideDistanceLabels": {
+        "description": "Map menu action that hides the pink pill-shaped distance labels (e.g. \"5.0km\") drawn between your node and every other nearby node."
+    },
     "mapHideRangeCircles": "Hide range circles",
     "@mapHideRangeCircles": {
         "description": "Text displayed in map view"
@@ -9982,6 +9986,10 @@
     "mapShowPositionHistory": "Show position history",
     "@mapShowPositionHistory": {
         "description": "Text displayed in map view"
+    },
+    "mapShowDistanceLabels": "Show distance labels",
+    "@mapShowDistanceLabels": {
+        "description": "Map menu action that shows the pink pill-shaped distance labels (e.g. \"5.0km\") drawn between your node and every other nearby node."
     },
     "mapShowRangeCircles": "Show range circles",
     "@mapShowRangeCircles": {

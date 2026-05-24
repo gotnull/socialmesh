@@ -152,6 +152,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   bool _showConnectionLines = false;
   bool _showPositionHistory = false;
   bool _showSatelliteLabels = true;
+  bool _showDistanceLabels = true;
 
   /// When true in traceroute mode, only nodes part of the route are shown.
   bool _tracerouteRouteOnly = false;
@@ -259,6 +260,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _connectionMaxDistance = settings.mapConnectionMaxDistance;
         _showSatelliteLabels = settings.satelliteLabelsEnabled;
         _clusterMarkers = settings.mapClusterMarkers;
+        _showDistanceLabels = settings.mapShowDistanceLabels;
       });
     }
   }
@@ -280,6 +282,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     await settings.setMapConnectionMaxDistance(_connectionMaxDistance);
     await settings.setSatelliteLabelsEnabled(_showSatelliteLabels);
     await settings.setMapClusterMarkers(_clusterMarkers);
+    await settings.setMapShowDistanceLabels(_showDistanceLabels);
   }
 
   /// Animate camera to a specific location with smooth easing
@@ -1027,6 +1030,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   setState(() => _showRangeCircles = !_showRangeCircles);
                   unawaited(_saveMapLayerSettings());
                   break;
+                case 'distance_labels':
+                  setState(() => _showDistanceLabels = !_showDistanceLabels);
+                  unawaited(_saveMapLayerSettings());
+                  break;
                 case 'history':
                   setState(() => _showPositionHistory = !_showPositionHistory);
                   unawaited(_saveMapLayerSettings());
@@ -1362,6 +1369,28 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         _showRangeCircles
                             ? context.l10n.mapHideRangeCircles
                             : context.l10n.mapShowRangeCircles,
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'distance_labels',
+                  child: Row(
+                    children: [
+                      Icon(
+                        _showDistanceLabels
+                            ? Icons.straighten
+                            : Icons.straighten_outlined,
+                        size: 18,
+                        color: _showDistanceLabels
+                            ? context.accentColor
+                            : context.textSecondary,
+                      ),
+                      SizedBox(width: AppTheme.spacing8),
+                      Text(
+                        _showDistanceLabels
+                            ? context.l10n.mapHideDistanceLabels
+                            : context.l10n.mapShowDistanceLabels,
                       ),
                     ],
                   ),
@@ -1974,7 +2003,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           ]),
                         ),
                       // Distance labels layer - hide in location only mode
-                      if (!widget.locationOnlyMode)
+                      if (!widget.locationOnlyMode && _showDistanceLabels)
                         MarkerLayer(
                           rotate: true,
                           markers: finiteMarkers(

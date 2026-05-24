@@ -12658,6 +12658,12 @@ abstract class AppLocalizations {
   /// **'Hide position history'**
   String get mapHidePositionHistory;
 
+  /// Map menu action that hides the pink pill-shaped distance labels (e.g. "5.0km") drawn between your node and every other nearby node.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide distance labels'**
+  String get mapHideDistanceLabels;
+
   /// Text displayed in map view
   ///
   /// In en, this message translates to:
@@ -13100,6 +13106,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show position history'**
   String get mapShowPositionHistory;
+
+  /// Map menu action that shows the pink pill-shaped distance labels (e.g. "5.0km") drawn between your node and every other nearby node.
+  ///
+  /// In en, this message translates to:
+  /// **'Show distance labels'**
+  String get mapShowDistanceLabels;
 
   /// Text displayed in map view
   ///

@@ -7286,6 +7286,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mapHidePositionHistory => 'Masquer l\'historique de position';
 
   @override
+  String get mapHideDistanceLabels => 'Masquer les étiquettes de distance';
+
+  @override
   String get mapHideRangeCircles => 'Masquer les cercles de portée';
 
   @override
@@ -7549,6 +7552,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get mapShowPositionHistory => 'Afficher l\'historique de position';
+
+  @override
+  String get mapShowDistanceLabels => 'Afficher les étiquettes de distance';
 
   @override
   String get mapShowRangeCircles => 'Afficher les cercles de portée';

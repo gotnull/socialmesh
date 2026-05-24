@@ -596,6 +596,16 @@ class SettingsService {
   bool get mapShowRangeCircles =>
       _preferences.getBool('map_show_range_circles') ?? false;
 
+  // Inter-node distance pills (pink badges at the midpoint of each
+  // neighbor line showing km to that node). Defaults to true: the
+  // labels were the original behaviour before the toggle existed.
+  Future<void> setMapShowDistanceLabels(bool enabled) async {
+    await _preferences.setBool('map_show_distance_labels', enabled);
+  }
+
+  bool get mapShowDistanceLabels =>
+      _preferences.getBool('map_show_distance_labels') ?? true;
+
   // Reference labels overlay above satellite imagery (boundaries + place
   // names from Esri). Defaults to true: directly answers user feedback that
   // village / town / city names should be visible in satellite mode.

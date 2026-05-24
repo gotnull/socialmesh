@@ -7211,6 +7211,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get mapHidePositionHistory => 'Ocultar histórico de posições';
 
   @override
+  String get mapHideDistanceLabels => 'Ocultar rótulos de distância';
+
+  @override
   String get mapHideRangeCircles => 'Ocultar círculos de alcance';
 
   @override
@@ -7470,6 +7473,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get mapShowPositionHistory => 'Mostrar histórico de posições';
+
+  @override
+  String get mapShowDistanceLabels => 'Mostrar rótulos de distância';
 
   @override
   String get mapShowRangeCircles => 'Mostrar círculos de alcance';
