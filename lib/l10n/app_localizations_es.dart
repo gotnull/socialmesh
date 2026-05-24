@@ -20709,14 +20709,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get signalSignInRequiredToComment =>
-      'Se requiere iniciar sesión para comentar';
+      'Inicia sesión para comentar con tu perfil';
 
   @override
   String get signalSignInToViewMedia =>
       'Inicie sesión para ver los medios adjuntos';
 
   @override
-  String get signalSignInToVote => 'Inicie sesión para votar en respuestas';
+  String get signalSignInToVote =>
+      'Vota con tu perfil - inicia sesión para activarlo';
 
   @override
   String signalSignalsNearbyCount(int count) {
@@ -27748,6 +27749,42 @@ class AppLocalizationsEs extends AppLocalizations {
   String get themeSettingsNewCount => '5 nuevos';
 
   @override
+  String get privacyChoiceTitle => 'Privacidad y diagnósticos';
+
+  @override
+  String get privacyChoiceDescription =>
+      'SocialMesh funciona completamente sin conexión. Los diagnósticos son opcionales y nunca se vinculan a tu identidad, perfil o mensajes.';
+
+  @override
+  String get privacyChoiceOptionOffTitle =>
+      'Mantener diagnósticos desactivados';
+
+  @override
+  String get privacyChoiceOptionOffDescription =>
+      'No se envían datos de uso ni informes de fallos desde tu dispositivo.';
+
+  @override
+  String get privacyChoiceOptionCrashTitle => 'Solo informes de fallos';
+
+  @override
+  String get privacyChoiceOptionCrashDescription =>
+      'Ayúdanos a detectar fallos. No se recopila análisis de uso.';
+
+  @override
+  String get privacyChoiceOptionFullTitle => 'Ayuda a mejorar SocialMesh';
+
+  @override
+  String get privacyChoiceOptionFullDescription =>
+      'Comparte análisis de uso anónimos e informes de fallos.';
+
+  @override
+  String get privacyChoiceFooter =>
+      'Puedes cambiar esto en cualquier momento en Ajustes > Privacidad.';
+
+  @override
+  String get privacyChoiceRecommendedBadge => 'RECOMENDADO';
+
+  @override
   String get privacySettingsTitle => 'Privacidad';
 
   @override
@@ -29952,7 +29989,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get accountSubSignInToSync =>
-      'Inicie sesión para sincronizar en todos sus dispositivos';
+      'La sincronización entre dispositivos es opcional - inicia sesión para activarla';
 
   @override
   String get accountSubLocalDataAvailable =>

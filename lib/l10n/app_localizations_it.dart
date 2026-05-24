@@ -20625,14 +20625,15 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get signalSignInRequiredToComment =>
-      'Accesso richiesto per commentare';
+      'Accedi per commentare con il tuo profilo';
 
   @override
   String get signalSignInToViewMedia =>
       'Accedi per visualizzare i media allegati';
 
   @override
-  String get signalSignInToVote => 'Accedi per votare le risposte';
+  String get signalSignInToVote =>
+      'Vota con il tuo profilo - accedi per attivarlo';
 
   @override
   String signalSignalsNearbyCount(int count) {
@@ -27627,6 +27628,42 @@ class AppLocalizationsIt extends AppLocalizations {
   String get themeSettingsNewCount => '5 nuovi';
 
   @override
+  String get privacyChoiceTitle => 'Privacy e diagnostica';
+
+  @override
+  String get privacyChoiceDescription =>
+      'SocialMesh funziona completamente offline. I dati di diagnostica sono opzionali e non vengono mai collegati alla tua identità, al profilo o ai messaggi.';
+
+  @override
+  String get privacyChoiceOptionOffTitle =>
+      'Mantieni la diagnostica disattivata';
+
+  @override
+  String get privacyChoiceOptionOffDescription =>
+      'Nessun dato di utilizzo o rapporto di crash lascia il tuo dispositivo.';
+
+  @override
+  String get privacyChoiceOptionCrashTitle => 'Solo rapporti di crash';
+
+  @override
+  String get privacyChoiceOptionCrashDescription =>
+      'Aiutaci a rilevare i crash. Nessuna analisi di utilizzo viene raccolta.';
+
+  @override
+  String get privacyChoiceOptionFullTitle => 'Aiuta a migliorare SocialMesh';
+
+  @override
+  String get privacyChoiceOptionFullDescription =>
+      'Condividi analisi di utilizzo anonime e rapporti di crash.';
+
+  @override
+  String get privacyChoiceFooter =>
+      'Puoi modificarlo in qualsiasi momento in Impostazioni > Privacy.';
+
+  @override
+  String get privacyChoiceRecommendedBadge => 'CONSIGLIATO';
+
+  @override
   String get privacySettingsTitle => 'Privacy';
 
   @override
@@ -29818,7 +29855,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get accountSubSignInToSync =>
-      'Accedi per sincronizzare su più dispositivi';
+      'La sincronizzazione tra dispositivi è opzionale - accedi per attivarla';
 
   @override
   String get accountSubLocalDataAvailable =>

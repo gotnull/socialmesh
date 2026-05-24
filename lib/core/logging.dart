@@ -61,6 +61,7 @@ class AppLogging {
   static bool? _settingsLoggingEnabled;
   static bool? _debugLoggingEnabled;
   static bool? _authLoggingEnabled;
+  static bool? _privacyLoggingEnabled;
   static bool? _socialLoggingEnabled;
   static bool? _storageLoggingEnabled;
   static bool? _permissionsLoggingEnabled;
@@ -246,6 +247,15 @@ class AppLogging {
     _authLoggingEnabled ??=
         _safeGetEnv('AUTH_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _authLoggingEnabled!;
+  }
+
+  /// Privacy / analytics-consent observability — consent load, toggle
+  /// changes, prompt show / dismiss, migration runs. Never log identifiers,
+  /// emails, profile data, or precise location.
+  static bool get privacyLoggingEnabled {
+    _privacyLoggingEnabled ??=
+        _safeGetEnv('PRIVACY_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    return _privacyLoggingEnabled!;
   }
 
   static bool get socialLoggingEnabled {
@@ -509,6 +519,10 @@ class AppLogging {
 
   static void auth(String message) {
     if (authLoggingEnabled) debugPrint('Auth: $message');
+  }
+
+  static void privacy(String message) {
+    if (privacyLoggingEnabled) debugPrint('Privacy: $message');
   }
 
   static void social(String message) {
@@ -1155,6 +1169,7 @@ class AppLogging {
     _settingsLoggingEnabled = null;
     _debugLoggingEnabled = null;
     _authLoggingEnabled = null;
+    _privacyLoggingEnabled = null;
     _socialLoggingEnabled = null;
     _storageLoggingEnabled = null;
     _permissionsLoggingEnabled = null;
@@ -1231,6 +1246,7 @@ class AppLogging {
     _settingsLoggingEnabled = null;
     _debugLoggingEnabled = null;
     _authLoggingEnabled = null;
+    _privacyLoggingEnabled = null;
     _socialLoggingEnabled = null;
     _storageLoggingEnabled = null;
     _permissionsLoggingEnabled = null;

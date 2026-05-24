@@ -20627,14 +20627,15 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get signalSignInRequiredToComment =>
-      'Для коментування потрібно увійти';
+      'Увійдіть, щоб коментувати зі свого профілю';
 
   @override
   String get signalSignInToViewMedia =>
       'Увійдіть, щоб переглянути прикріплені медіа';
 
   @override
-  String get signalSignInToVote => 'Увійдіть, щоб голосувати за відповіді';
+  String get signalSignInToVote =>
+      'Голосуйте зі свого профілю - увійдіть, щоб увімкнути';
 
   @override
   String signalSignalsNearbyCount(int count) {
@@ -27644,6 +27645,41 @@ class AppLocalizationsUk extends AppLocalizations {
   String get themeSettingsNewCount => '5 нових';
 
   @override
+  String get privacyChoiceTitle => 'Конфіденційність і діагностика';
+
+  @override
+  String get privacyChoiceDescription =>
+      'SocialMesh працює повністю офлайн. Діагностика необов\'язкова й ніколи не прив\'язана до вашої особи, профілю чи повідомлень.';
+
+  @override
+  String get privacyChoiceOptionOffTitle => 'Залишити діагностику вимкненою';
+
+  @override
+  String get privacyChoiceOptionOffDescription =>
+      'Дані використання та звіти про збої не залишають ваш пристрій.';
+
+  @override
+  String get privacyChoiceOptionCrashTitle => 'Лише звіти про збої';
+
+  @override
+  String get privacyChoiceOptionCrashDescription =>
+      'Допоможіть нам виявляти збої. Аналітика використання не збирається.';
+
+  @override
+  String get privacyChoiceOptionFullTitle => 'Допомогти покращити SocialMesh';
+
+  @override
+  String get privacyChoiceOptionFullDescription =>
+      'Діліться анонімною аналітикою використання та звітами про збої.';
+
+  @override
+  String get privacyChoiceFooter =>
+      'Ви можете змінити це будь-коли в Налаштування > Конфіденційність.';
+
+  @override
+  String get privacyChoiceRecommendedBadge => 'РЕКОМЕНДОВАНО';
+
+  @override
   String get privacySettingsTitle => 'Конфіденційність';
 
   @override
@@ -29829,7 +29865,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get accountSubSignInToSync =>
-      'Увійдіть для синхронізації між пристроями';
+      'Синхронізація між пристроями необов\'язкова - увійдіть, щоб увімкнути';
 
   @override
   String get accountSubLocalDataAvailable =>

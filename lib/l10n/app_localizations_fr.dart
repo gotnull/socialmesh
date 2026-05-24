@@ -20757,14 +20757,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get signalSignInRequiredToComment =>
-      'Connexion requise pour commenter';
+      'Connectez-vous pour commenter avec votre profil';
 
   @override
   String get signalSignInToViewMedia =>
       'Connectez-vous pour voir les médias joints';
 
   @override
-  String get signalSignInToVote => 'Connectez-vous pour voter sur les réponses';
+  String get signalSignInToVote =>
+      'Voter avec votre profil - connectez-vous pour l\'activer';
 
   @override
   String signalSignalsNearbyCount(int count) {
@@ -27830,6 +27831,41 @@ class AppLocalizationsFr extends AppLocalizations {
   String get themeSettingsNewCount => '5 nouveaux';
 
   @override
+  String get privacyChoiceTitle => 'Confidentialité et diagnostics';
+
+  @override
+  String get privacyChoiceDescription =>
+      'SocialMesh fonctionne entièrement hors connexion. Les diagnostics sont facultatifs et ne sont jamais liés à votre identité, votre profil ou vos messages.';
+
+  @override
+  String get privacyChoiceOptionOffTitle => 'Garder les diagnostics désactivés';
+
+  @override
+  String get privacyChoiceOptionOffDescription =>
+      'Aucune donnée d\'utilisation ni rapport de plantage ne quitte votre appareil.';
+
+  @override
+  String get privacyChoiceOptionCrashTitle => 'Rapports de plantage uniquement';
+
+  @override
+  String get privacyChoiceOptionCrashDescription =>
+      'Aidez-nous à détecter les plantages. Aucune analyse d\'utilisation n\'est collectée.';
+
+  @override
+  String get privacyChoiceOptionFullTitle => 'Aider à améliorer SocialMesh';
+
+  @override
+  String get privacyChoiceOptionFullDescription =>
+      'Partager des analyses d\'utilisation anonymes et des rapports de plantage.';
+
+  @override
+  String get privacyChoiceFooter =>
+      'Vous pouvez modifier ce choix à tout moment dans Réglages > Confidentialité.';
+
+  @override
+  String get privacyChoiceRecommendedBadge => 'RECOMMANDÉ';
+
+  @override
   String get privacySettingsTitle => 'Confidentialité';
 
   @override
@@ -30038,7 +30074,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get accountSubSignInToSync =>
-      'Connectez-vous pour synchroniser sur tous vos appareils';
+      'La synchronisation entre appareils est facultative - connectez-vous pour l\'activer';
 
   @override
   String get accountSubLocalDataAvailable =>

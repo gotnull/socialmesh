@@ -20395,13 +20395,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sign in for images and comments';
 
   @override
-  String get signalSignInRequiredToComment => 'Sign in required to comment';
+  String get signalSignInRequiredToComment =>
+      'Sign in to comment with your profile';
 
   @override
   String get signalSignInToViewMedia => 'Sign in to view attached media';
 
   @override
-  String get signalSignInToVote => 'Sign in to vote on responses';
+  String get signalSignInToVote => 'Vote with your profile - sign in to enable';
 
   @override
   String signalSignalsNearbyCount(int count) {
@@ -27313,6 +27314,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeSettingsNewCount => '5 new';
 
   @override
+  String get privacyChoiceTitle => 'Privacy & diagnostics';
+
+  @override
+  String get privacyChoiceDescription =>
+      'SocialMesh works fully offline. Diagnostics are optional and never tied to your identity, profile, or messages.';
+
+  @override
+  String get privacyChoiceOptionOffTitle => 'Keep diagnostics off';
+
+  @override
+  String get privacyChoiceOptionOffDescription =>
+      'No usage data or crash reports leave your device.';
+
+  @override
+  String get privacyChoiceOptionCrashTitle => 'Crash reports only';
+
+  @override
+  String get privacyChoiceOptionCrashDescription =>
+      'Help us catch crashes. No usage analytics is collected.';
+
+  @override
+  String get privacyChoiceOptionFullTitle => 'Help improve SocialMesh';
+
+  @override
+  String get privacyChoiceOptionFullDescription =>
+      'Share anonymous usage analytics and crash reports.';
+
+  @override
+  String get privacyChoiceFooter =>
+      'You can change this anytime in Settings > Privacy.';
+
+  @override
+  String get privacyChoiceRecommendedBadge => 'RECOMMENDED';
+
+  @override
   String get privacySettingsTitle => 'Privacy';
 
   @override
@@ -29469,7 +29505,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountSubSignOutBtn => 'Sign Out';
 
   @override
-  String get accountSubSignInToSync => 'Sign in to sync across devices';
+  String get accountSubSignInToSync =>
+      'Sync across devices is optional - sign in to enable';
 
   @override
   String get accountSubLocalDataAvailable =>

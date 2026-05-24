@@ -85,6 +85,7 @@ import '../../providers/activity_providers.dart';
 import '../../providers/mesh_explorer_providers.dart';
 import '../../providers/whats_new_providers.dart';
 import '../../core/whats_new/whats_new_sheet.dart';
+import '../legal/privacy_choice_sheet.dart';
 import 'widgets/drawer_admin_section.dart';
 import 'widgets/drawer_enterprise_section.dart';
 import 'providers/bottom_tab_providers.dart';
@@ -386,8 +387,14 @@ class _MainShellState extends ConsumerState<MainShell> {
                 .whenOrNull(data: (settings) => settings.regionConfigured) ??
             false;
         if (needsRegion && !regionConfigured) {
-          AppLogging.app('WhatsNew: suppressed — region setup still needed');
+          AppLogging.app('WhatsNew: suppressed - region setup still needed');
         } else {
+          // Surface the privacy choice prompt first if the user has not
+          // yet made an explicit consent decision. Self-guards on
+          // hasMadeChoice so it is a no-op once the user has picked.
+          // What's New still runs after; the prompts stack cleanly via
+          // their own post-frame callbacks.
+          PrivacyChoiceSheet.showIfNeeded();
           WhatsNewSheet.showIfNeeded();
         }
 

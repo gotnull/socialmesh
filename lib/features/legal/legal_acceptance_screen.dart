@@ -16,7 +16,6 @@ import '../../providers/app_providers.dart';
 import '../../providers/remote_legal_versions_provider.dart';
 import '../../providers/terms_acceptance_provider.dart';
 import '../../services/haptic_service.dart';
-import '../../services/privacy_consent_service.dart';
 
 /// Full-screen terms and privacy acceptance gate.
 ///
@@ -74,16 +73,13 @@ class _LegalAcceptanceScreenState extends ConsumerState<LegalAcceptanceScreen>
 
     if (!mounted) return;
 
-    // Enable analytics and Crashlytics now that the user has consented.
-    // Persists consent to SharedPreferences so cold launches re-apply it.
-    final consent = await ref.read(privacyConsentServiceProvider.future);
-    await consent.grantConsentOnAcceptance();
-
-    if (!mounted) return;
-
     // Re-run app initialisation so _AppRouter rebuilds.
     // initialize() will see onboarding done, terms now accepted,
     // and advance to needsScanner or ready as appropriate.
+    //
+    // Analytics and Crashlytics consent is collected separately via
+    // PrivacyChoiceSheet, surfaced post-onboarding by MainShell. Terms
+    // acceptance no longer implicitly enables telemetry.
     appInit.initialize();
   }
 

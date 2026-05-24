@@ -20613,13 +20613,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'Entre para imagens e comentários';
 
   @override
-  String get signalSignInRequiredToComment => 'Login necessário para comentar';
+  String get signalSignInRequiredToComment =>
+      'Entre para comentar com seu perfil';
 
   @override
   String get signalSignInToViewMedia => 'Entre para ver a mídia anexada';
 
   @override
-  String get signalSignInToVote => 'Entre para votar nas respostas';
+  String get signalSignInToVote => 'Vote com seu perfil - entre para ativar';
 
   @override
   String signalSignalsNearbyCount(int count) {
@@ -27612,6 +27613,41 @@ class AppLocalizationsPt extends AppLocalizations {
   String get themeSettingsNewCount => '5 novos';
 
   @override
+  String get privacyChoiceTitle => 'Privacidade e diagnóstico';
+
+  @override
+  String get privacyChoiceDescription =>
+      'O SocialMesh funciona totalmente offline. Os diagnósticos são opcionais e nunca são vinculados à sua identidade, perfil ou mensagens.';
+
+  @override
+  String get privacyChoiceOptionOffTitle => 'Manter diagnóstico desativado';
+
+  @override
+  String get privacyChoiceOptionOffDescription =>
+      'Nenhum dado de uso ou relatório de falhas sai do seu dispositivo.';
+
+  @override
+  String get privacyChoiceOptionCrashTitle => 'Apenas relatórios de falha';
+
+  @override
+  String get privacyChoiceOptionCrashDescription =>
+      'Ajude-nos a detectar falhas. Nenhuma análise de uso é coletada.';
+
+  @override
+  String get privacyChoiceOptionFullTitle => 'Ajude a melhorar o SocialMesh';
+
+  @override
+  String get privacyChoiceOptionFullDescription =>
+      'Compartilhe análises de uso anônimas e relatórios de falha.';
+
+  @override
+  String get privacyChoiceFooter =>
+      'Você pode alterar isto a qualquer momento em Configurações > Privacidade.';
+
+  @override
+  String get privacyChoiceRecommendedBadge => 'RECOMENDADO';
+
+  @override
   String get privacySettingsTitle => 'Privacidade';
 
   @override
@@ -29796,7 +29832,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get accountSubSignInToSync =>
-      'Entre para sincronizar entre dispositivos';
+      'A sincronização entre dispositivos é opcional - entre para ativá-la';
 
   @override
   String get accountSubLocalDataAvailable =>

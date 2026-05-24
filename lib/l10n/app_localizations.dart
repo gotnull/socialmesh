@@ -35525,7 +35525,7 @@ abstract class AppLocalizations {
   /// Text displayed in signals
   ///
   /// In en, this message translates to:
-  /// **'Sign in required to comment'**
+  /// **'Sign in to comment with your profile'**
   String get signalSignInRequiredToComment;
 
   /// Text displayed in signals
@@ -35537,7 +35537,7 @@ abstract class AppLocalizations {
   /// Text displayed in signals
   ///
   /// In en, this message translates to:
-  /// **'Sign in to vote on responses'**
+  /// **'Vote with your profile - sign in to enable'**
   String get signalSignInToVote;
 
   /// Count of nearby mesh signals
@@ -47860,6 +47860,66 @@ abstract class AppLocalizations {
   /// **'5 new'**
   String get themeSettingsNewCount;
 
+  /// Title of the one-time consent choice sheet shown after onboarding.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy & diagnostics'**
+  String get privacyChoiceTitle;
+
+  /// Body copy on the privacy choice sheet explaining what diagnostics mean.
+  ///
+  /// In en, this message translates to:
+  /// **'SocialMesh works fully offline. Diagnostics are optional and never tied to your identity, profile, or messages.'**
+  String get privacyChoiceDescription;
+
+  /// Privacy choice sheet option: opt out of all analytics and crash reporting.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep diagnostics off'**
+  String get privacyChoiceOptionOffTitle;
+
+  /// Subtitle for the off option on the privacy choice sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'No usage data or crash reports leave your device.'**
+  String get privacyChoiceOptionOffDescription;
+
+  /// Privacy choice sheet option: send crash diagnostics but no usage analytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Crash reports only'**
+  String get privacyChoiceOptionCrashTitle;
+
+  /// Subtitle for the crash-only option on the privacy choice sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Help us catch crashes. No usage analytics is collected.'**
+  String get privacyChoiceOptionCrashDescription;
+
+  /// Privacy choice sheet option: enable both anonymous usage analytics and crash diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Help improve SocialMesh'**
+  String get privacyChoiceOptionFullTitle;
+
+  /// Subtitle for the full-opt-in option on the privacy choice sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Share anonymous usage analytics and crash reports.'**
+  String get privacyChoiceOptionFullDescription;
+
+  /// Footer note on the privacy choice sheet telling the user where to revisit the decision.
+  ///
+  /// In en, this message translates to:
+  /// **'You can change this anytime in Settings > Privacy.'**
+  String get privacyChoiceFooter;
+
+  /// Short badge label on the recommended privacy choice option.
+  ///
+  /// In en, this message translates to:
+  /// **'RECOMMENDED'**
+  String get privacyChoiceRecommendedBadge;
+
   /// Screen or section title
   ///
   /// In en, this message translates to:
@@ -51774,7 +51834,7 @@ abstract class AppLocalizations {
   /// Text displayed in account management
   ///
   /// In en, this message translates to:
-  /// **'Sign in to sync across devices'**
+  /// **'Sync across devices is optional - sign in to enable'**
   String get accountSubSignInToSync;
 
   /// Text displayed in account management
