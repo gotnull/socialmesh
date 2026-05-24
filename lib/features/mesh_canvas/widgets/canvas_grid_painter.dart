@@ -320,12 +320,34 @@ class CanvasGridPainter extends CustomPainter {
     return false;
   }
 
-  /// Pop-IN scale curve: smooth easeOutCubic from 0 to 1.0. No
-  /// overshoot. The cell simply grows into existence; visibility
-  /// comes from the scale-from-zero ramp, not a punch.
-  double _popInScale(double t) => Curves.easeOutCubic.transform(t);
+  /// Pop-IN scale curve: smooth grow with a hint of bounce so the
+  /// cell lands with a little life. Two phases, peak at 1.15:
+  ///   - 0..0.45: 0 -> 1.15 (eased grow with subtle overshoot)
+  ///   - 0.45..1.00: 1.15 -> 1.0 (gentle settle)
+  double _popInScale(double t) {
+    if (t < 0.45) {
+      final p = t / 0.45;
+      final eased = Curves.easeOut.transform(p);
+      return 1.15 * eased;
+    }
+    final p = (t - 0.45) / 0.55;
+    final eased = Curves.easeInOut.transform(p);
+    return 1.15 - 0.15 * eased; // 1.15 -> 1.00
+  }
 
-  /// Pop-OUT scale curve: smooth easeIn from 1.0 to 0. No puff.
-  /// The cell shrinks out cleanly with no preceding swell.
-  double _popOutScale(double t) => 1.0 - Curves.easeIn.transform(t);
+  /// Pop-OUT scale curve: very subtle puff then collapse. The hint
+  /// of motion before the cell vanishes prevents it from reading as
+  /// "snapped away":
+  ///   - 0..0.20: 1.0 -> 1.05 (tiny swell)
+  ///   - 0.20..1.00: 1.05 -> 0 (shrink, easeIn)
+  double _popOutScale(double t) {
+    if (t < 0.20) {
+      final p = t / 0.20;
+      final eased = Curves.easeOut.transform(p);
+      return 1.0 + 0.05 * eased;
+    }
+    final p = (t - 0.20) / 0.80;
+    final eased = Curves.easeIn.transform(p);
+    return (1.05 * (1.0 - eased)).clamp(0.0, 1.05);
+  }
 }
