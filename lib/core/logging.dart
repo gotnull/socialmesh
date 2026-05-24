@@ -249,7 +249,7 @@ class AppLogging {
     return _authLoggingEnabled!;
   }
 
-  /// Privacy / analytics-consent observability — consent load, toggle
+  /// Privacy / analytics-consent observability: consent load, toggle
   /// changes, prompt show / dismiss, migration runs. Never log identifiers,
   /// emails, profile data, or precise location.
   static bool get privacyLoggingEnabled {
