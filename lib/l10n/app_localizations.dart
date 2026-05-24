@@ -21517,7 +21517,7 @@ abstract class AppLocalizations {
   /// Opening paragraph of the MeshCanvas help sheet. Frames MeshCanvas as r/place adapted to LoRa: channel-scoped, slow, no central authority. Mesh-only — the Local Device Canvas is a developer / debug surface and is intentionally not surfaced in user-facing help.
   ///
   /// In en, this message translates to:
-  /// **'A pixel wall co-painted over LoRa radio. Each Meshtastic channel gets its own 128 by 128 canvas, shared with every node listening on that channel. Tap a cell, send one tiny frame, watch it ripple across every nearby radio. No servers, no accounts, no moderators - just radios and pixels.'**
+  /// **'A shared pixel canvas painted live by everyone on your Meshtastic channel. Each tap sends one tiny radio frame to nearby devices, who paint the same pixel on their own canvas. No servers, no accounts, no admins; just LoRa radios and pixels.'**
   String get meshCanvasHelpIntro;
 
   /// Row title in the help sheet for the channel-bound mesh canvases. Plural because each Meshtastic channel gets one.
@@ -21529,7 +21529,7 @@ abstract class AppLocalizations {
   /// Row body in the help sheet describing the per-channel canvas model. Keep the dimensions verbatim across locales. Communicates: channel = canvas; no worldwide / global / cross-channel surface.
   ///
   /// In en, this message translates to:
-  /// **'One canvas per Meshtastic channel. Primary, LongFast, your custom channels - each gets its own 128 by 128 board shared with every node listening on that channel. There is no global wall; canvases live and die with the channels that host them.'**
+  /// **'One canvas per Meshtastic channel. Primary, LongFast, your custom channels: each gets its own 64 by 64 board shared with every device listening on that channel. There is no global wall; canvases live and die with the channels that host them.'**
   String get meshCanvasHelpMeshCanvasBody;
 
   /// Row title in the help sheet for tap-to-paint interaction.
@@ -21541,7 +21541,7 @@ abstract class AppLocalizations {
   /// Row body in the help sheet describing tap-to-paint. Emphasises the one-tap-one-frame /r/place mechanic so users understand each paint is a discrete LoRa broadcast.
   ///
   /// In en, this message translates to:
-  /// **'Tap a cell to paint it with the active color from the strip below. Tap the transparent / mute swatch on the far left of the strip to erase. One tap, one pixel, one radio frame.'**
+  /// **'Tap a cell to paint it with the active color from the strip below. Tap the transparent / eraser swatch on the far left of the strip to clear a cell. One tap, one pixel, one radio frame.'**
   String get meshCanvasHelpTapToPaintBody;
 
   /// Row title in the help sheet covering the three secondary gestures: pan, pinch-zoom, long-press inspect.
@@ -21553,7 +21553,7 @@ abstract class AppLocalizations {
   /// Row body in the help sheet describing pan + pinch zoom + long-press inspect together. Replaces the previous separate Long-press row; the inspector IS live and the help should reflect that.
   ///
   /// In en, this message translates to:
-  /// **'Drag with one finger to pan around the board. Pinch with two fingers to zoom in and out (0.5x to 16x). Long-press any cell to open the tile inspector and see who painted it and when.'**
+  /// **'Drag with one finger to pan around the board. Pinch with two fingers to zoom in or out. Long-press any cell to open the tile inspector and see who painted it and when.'**
   String get meshCanvasHelpPanZoomBody;
 
   /// Help-sheet row title explaining the dormant -> live transition. Mesh-native; communicates the /r/place principle 'dormant space implies opportunity'.
@@ -21565,7 +21565,7 @@ abstract class AppLocalizations {
   /// Help-sheet row body explaining channel-canvas dormancy. Atmospheric, /r/place register; encourages users to seed dormant channels.
   ///
   /// In en, this message translates to:
-  /// **'Every channel canvas starts dormant - an empty grid waiting for its first pixel. The moment anyone on the channel paints, the canvas wakes for everyone else listening. Yours might be the first.'**
+  /// **'Every channel canvas starts dormant: an empty grid waiting for its first pixel. The moment anyone on the channel paints, the canvas wakes for everyone else listening. Yours might be the first.'**
   String get meshCanvasHelpFirstPaintBody;
 
   /// Help-sheet row title framing LoRa's slow tempo as a feature, not a bug. Mesh-native register.
@@ -21577,7 +21577,7 @@ abstract class AppLocalizations {
   /// Help-sheet row body explaining LoRa tempo + airtime rate limiting. Sets expectations that paints are not instant and the canvas is intentionally co-existing with other channel traffic.
   ///
   /// In en, this message translates to:
-  /// **'LoRa is not the internet. Expect seconds (USB / nearby radio) to minutes (long-range) for paints to ripple across the mesh. Each device caps itself to keep the channel breathable for DMs, signals, and other traffic. Be patient - the board accumulates.'**
+  /// **'LoRa radio is not the internet. Expect seconds (USB or nearby device) to minutes (long-range) for paints to ripple across the mesh. Each device limits itself to about 250 bytes per minute so canvas traffic does not crowd out DMs, signals, or other channel use. Be patient; the board accumulates.'**
   String get meshCanvasHelpTempoBody;
 
   /// Help-sheet row title describing the last-write-wins conflict-resolution model. /r/place principle 3 ('overwriteability is mandatory') + principle 10 ('conflict is healthy').
@@ -21589,7 +21589,7 @@ abstract class AppLocalizations {
   /// Help-sheet row body explaining LWW conflict resolution. Reassures users that overwrites are by design, not bugs; communicates the /r/place 'conflict is healthy' principle.
   ///
   /// In en, this message translates to:
-  /// **'Two nodes paint the same cell? Whichever paint has the newer timestamp wins. Overwrites are intentional - territory and conflict are part of the wall. There is no edit history to lock in, no admin to call.'**
+  /// **'Two devices paint the same cell? Whichever paint has the newer timestamp wins. Overwrites are intentional: territory and conflict are part of the wall. There is no edit history to lock in, no admin to call.'**
   String get meshCanvasHelpOverwriteBody;
 
   /// Row title in the help sheet framing the etiquette / philosophy section. Mesh-native: channel-scoped not global; no central authority.
@@ -21601,8 +21601,32 @@ abstract class AppLocalizations {
   /// Row body in the help sheet. Etiquette + philosophy. Replaces enterprise 'public by design' wording with mesh-native channel-scoped framing.
   ///
   /// In en, this message translates to:
-  /// **'Pixels are deliberately public on the channel that hosts them. No admins, no moderators, no global wall to police. If you would not say it on the channel, do not paint it. The fun is the wall, not the win.'**
+  /// **'Pixels are public on the channel that hosts them. There are no admins, no moderators, no global wall to police. If you would not say it on the channel, do not paint it. The fun is the wall, not the win.'**
   String get meshCanvasHelpCommunityBody;
+
+  /// Help sheet row title introducing the status pill (top-right of the canvas viewer) that surfaces sync + send state to the user.
+  ///
+  /// In en, this message translates to:
+  /// **'Status pill'**
+  String get meshCanvasHelpStatusTitle;
+
+  /// Help sheet row body explaining every label that can appear in the status pill (hydration + transmission HUD states). Long-press the pill in the viewer for the same info per state.
+  ///
+  /// In en, this message translates to:
+  /// **'A small pill appears in the top corner while the canvas is doing work. \'Catching up\' means asking nearby devices for pixels you do not have yet. \'Receiving pixels\' means a nearby device is sending you state right now (look for the shimmer on the tiles being filled). \'No one painting\' means nobody else has painted on this channel recently. \'Slowing down\' or \'Queue full\' means your own paints are temporarily waiting for radio airtime.'**
+  String get meshCanvasHelpStatusBody;
+
+  /// Help sheet row title introducing the sharing toggle. Reinforces that nothing leaves the device until the user opts in.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing is opt-in'**
+  String get meshCanvasHelpSharingTitle;
+
+  /// Help sheet row body explaining the sharing toggle. The privacy beat: nothing broadcasts until the user opts in. Mirrors the participation onboarding sheet's sharing-off-by-default beat.
+  ///
+  /// In en, this message translates to:
+  /// **'When you first join MeshCanvas, sharing is off. You can paint and watch the canvas privately. To send your paints out over the mesh radio, turn the sharing switch on in MeshCanvas settings. You can toggle it back off at any time; canvases you have seen stay on your device.'**
+  String get meshCanvasHelpSharingBody;
 
   /// Tooltip for the info button in the MeshCanvas viewer app bar.
   ///
@@ -21643,7 +21667,7 @@ abstract class AppLocalizations {
   /// Intro line under the onboarding sheet title. Sets the mesh-native / packet-radio mental model.
   ///
   /// In en, this message translates to:
-  /// **'A shared pixel wall carried by nearby radios.'**
+  /// **'MeshCanvas is a shared pixel canvas painted live by everyone on your Meshtastic channel, carried over slow LoRa radio. There are no servers, no accounts, no moderators. Pick how you want to start: keep things private on this device, or join the mesh and watch the canvas fill in.'**
   String get meshCanvasOnboardingIntro;
 
   /// Title of the Local Device Canvas explainer row in the MeshCanvas onboarding sheet.
@@ -21655,7 +21679,7 @@ abstract class AppLocalizations {
   /// Body of the Local Device Canvas explainer row in the MeshCanvas onboarding sheet.
   ///
   /// In en, this message translates to:
-  /// **'A private sandbox on this phone. Paints stay on the device. No airtime used.'**
+  /// **'A private sandbox on this device. Paint whatever you like to learn the tools. Nothing leaves the device; no airtime is used. You can join the mesh later.'**
   String get meshCanvasOnboardingRowLocalBody;
 
   /// Title of the Mesh canvases explainer row in the MeshCanvas onboarding sheet.
@@ -21667,7 +21691,7 @@ abstract class AppLocalizations {
   /// Body of the Mesh canvases explainer row in the MeshCanvas onboarding sheet.
   ///
   /// In en, this message translates to:
-  /// **'One canvas per Meshtastic channel you\'re on. Paints travel on that channel. Uses a small amount of mesh airtime.'**
+  /// **'One canvas per Meshtastic channel you\'re on. Joining lets you VIEW the work others have painted. Your own pixels stay on this device until you turn the Sharing switch ON in MeshCanvas settings; that\'s an explicit second step so nothing broadcasts by accident.'**
   String get meshCanvasOnboardingRowMeshBody;
 
   /// Title of the Presence explainer row in the MeshCanvas onboarding sheet. Marks the optional opt-in nature.
@@ -21679,7 +21703,7 @@ abstract class AppLocalizations {
   /// Body of the Presence explainer row in the MeshCanvas onboarding sheet. Sets expectations that presence is conservative-default.
   ///
   /// In en, this message translates to:
-  /// **'Show others that you\'re viewing or painting. Off by default. Your presence is temporary and fades automatically. You can enable this later in settings.'**
+  /// **'Show other devices that you\'re currently looking at or painting on a canvas. Off by default. When you do enable it, your presence is ephemeral; it never persists and fades automatically when you leave. Toggle from MeshCanvas settings any time.'**
   String get meshCanvasOnboardingRowPresenceBody;
 
   /// Secondary action on the MeshCanvas onboarding sheet. Opts into Local Device Canvas only — no mesh participation, no presence sharing.
@@ -21787,67 +21811,67 @@ abstract class AppLocalizations {
   /// MeshCanvas viewer HUD label when the canvas governor or SIP rate limiter is currently refusing frames. Paints are still accepted into the queue.
   ///
   /// In en, this message translates to:
-  /// **'cooling'**
+  /// **'Slowing down'**
   String get meshCanvasTransmissionCooling;
 
   /// MeshCanvas viewer HUD label when the pending paint queue has hit the soft UX cap. New paint taps are blocked until the queue drains.
   ///
   /// In en, this message translates to:
-  /// **'queue full · wait for airtime'**
+  /// **'Queue full'**
   String get meshCanvasTransmissionFull;
 
   /// Tooltip for the queued state of the MeshCanvas viewer transmission HUD.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 paint waiting for airtime} other{{count} paints waiting for airtime}}'**
+  /// **'{count, plural, =1{1 pixel waiting to broadcast over the mesh} other{{count} pixels waiting to broadcast over the mesh}}'**
   String meshCanvasTransmissionTooltipQueued(int count);
 
   /// Tooltip for the cooling state of the MeshCanvas viewer transmission HUD.
   ///
   /// In en, this message translates to:
-  /// **'Mesh airtime is busy. Painting resumes automatically.'**
+  /// **'The mesh radio is at its airtime limit. Your pixels will go out as soon as there is room. Keep painting; your taps are saved.'**
   String get meshCanvasTransmissionTooltipCooling;
 
   /// Tooltip for the queue-full state of the MeshCanvas viewer transmission HUD.
   ///
   /// In en, this message translates to:
-  /// **'Paint queue full. Wait a moment for the mesh to catch up.'**
+  /// **'You have painted faster than the mesh can broadcast. Pause a moment and the queue will drain.'**
   String get meshCanvasTransmissionTooltipFull;
 
   /// MeshCanvas viewer hydration HUD label when one or more sync_request frames are in flight to peers, recovering existing canvas state.
   ///
   /// In en, this message translates to:
-  /// **'recovering paint'**
+  /// **'Catching up'**
   String get meshCanvasHydrationRecovering;
 
   /// MeshCanvas viewer hydration HUD label while sync_response bands are actively arriving and being applied to the local canvas.
   ///
   /// In en, this message translates to:
-  /// **'syncing tiles'**
+  /// **'Receiving pixels'**
   String get meshCanvasHydrationSyncing;
 
   /// MeshCanvas viewer hydration HUD label when the local canvas is empty AND a peer has been observed reporting an empty canvas as well. Distinguishes 'genuinely empty mesh' from 'just haven't heard from anyone yet'.
   ///
   /// In en, this message translates to:
-  /// **'mesh quiet'**
+  /// **'No one painting'**
   String get meshCanvasHydrationQuiet;
 
   /// Tooltip for the recovering state of the MeshCanvas viewer hydration HUD.
   ///
   /// In en, this message translates to:
-  /// **'Asking nearby radios for missing tiles.'**
+  /// **'Asking nearby devices for any pixels you do not have yet. Pixels arrive when the mesh radio has room.'**
   String get meshCanvasHydrationTooltipRecovering;
 
   /// Tooltip for the syncing state of the MeshCanvas viewer hydration HUD.
   ///
   /// In en, this message translates to:
-  /// **'Receiving paint from the mesh.'**
+  /// **'Pixels from a nearby device are landing on your canvas now. This can take a moment over slow LoRa radio.'**
   String get meshCanvasHydrationTooltipSyncing;
 
   /// Tooltip for the quiet state of the MeshCanvas viewer hydration HUD.
   ///
   /// In en, this message translates to:
-  /// **'No paint heard from nearby radios.'**
+  /// **'Nobody else has painted on this channel recently. Your taps will be the first thing other devices see when they tune in.'**
   String get meshCanvasHydrationTooltipQuiet;
 
   /// Uppercase scope badge at the top-left of the MeshCanvas viewer vitals bar. Identifies the surface as a per-channel mesh canvas.
@@ -22075,25 +22099,25 @@ abstract class AppLocalizations {
   /// Centered atmospheric prompt shown on a mesh canvas with zero painted cells when no peer-sync work is in progress (hydration state idle or quiet). /r/place-style direct instruction: the user's first paint wakes the shared channel canvas. Lives inside the canvas surface as IgnorePointer text so taps pass through to paint.
   ///
   /// In en, this message translates to:
-  /// **'Tap to seed the first pixel'**
+  /// **'No pixels here yet. Tap to start.'**
   String get meshCanvasViewerEmptyMeshTitle;
 
   /// Smaller atmospheric line under the empty-mesh-canvas centered prompt. Communicates that the channel canvas is dormant until someone seeds it.
   ///
   /// In en, this message translates to:
-  /// **'First paint wakes the board'**
+  /// **'Your first paint will broadcast over the mesh radio to everyone tuned to this channel.'**
   String get meshCanvasViewerEmptyMeshSubtitle;
 
   /// Centered atmospheric prompt shown on a mesh canvas with zero painted cells WHILE sync work is in progress (hydration state recovering or syncing). Replaces the 'Tap to seed' copy so we don't lie to the user that the board is dormant when pixels may land in seconds. The viewport is still tappable underneath — this is just an honest holding message.
   ///
   /// In en, this message translates to:
-  /// **'Listening for mesh ink'**
+  /// **'Looking for paint from nearby devices…'**
   String get meshCanvasViewerEmptyMeshHydratingTitle;
 
   /// Smaller line under the empty-mesh-canvas hydrating prompt. Tells the user the device is actively asking peers for the current canvas state and pixels should arrive shortly.
   ///
   /// In en, this message translates to:
-  /// **'Pulling pixels from nearby peers'**
+  /// **'If anyone else has painted this canvas, their pixels will appear in a moment.'**
   String get meshCanvasViewerEmptyMeshHydratingSubtitle;
 
   /// Centered atmospheric prompt shown on the Local Device Canvas when it has zero painted cells. Local-only register — no channel / mesh language.
@@ -66971,11 +66995,23 @@ abstract class AppLocalizations {
   /// **'Peer found nearby'**
   String get notificationSipPeerFoundTitle;
 
-  /// Notification body when a new SIP peer is discovered.
+  /// Notification body when a new SIP peer is discovered AND the operator has Handshake enabled but MeshCanvas disabled. Speaks specifically to the Handshake feature.
   ///
   /// In en, this message translates to:
   /// **'A Handshake peer is in range. Open Handshake to connect.'**
   String get notificationSipPeerFoundBody;
+
+  /// Notification body when a new SIP peer is discovered AND the operator has MeshCanvas enabled but Handshake disabled. Speaks specifically to the MeshCanvas feature.
+  ///
+  /// In en, this message translates to:
+  /// **'A MeshCanvas peer is in range. Open MeshCanvas to see what they\'re painting.'**
+  String get notificationMeshCanvasPeerFoundBody;
+
+  /// Notification body when a new SIP peer is discovered AND the operator has BOTH Handshake and MeshCanvas enabled. Generic phrasing that does not privilege either feature.
+  ///
+  /// In en, this message translates to:
+  /// **'A nearby device is reachable on the mesh. Open Handshake to connect or MeshCanvas to paint together.'**
+  String get notificationMeshPeerFoundBody;
 
   /// Notification title when the opponent has moved in a SIP Play game and it is now the local user's turn.
   ///

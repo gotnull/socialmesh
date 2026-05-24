@@ -252,6 +252,18 @@ class CanvasViewportBody extends ConsumerWidget {
               const <int>{})
         : const <int>{};
 
+    // Tile indices currently mid-sync from a peer. Drives the
+    // shimmer overlay in the painter. Local canvases never sync
+    // from peers, so we gate by scope to keep the painter's hot
+    // path branch-free for the local sandbox.
+    final syncingTiles = canvas.scope == CanvasScope.mesh
+        ? (ref
+                  .watch(meshCanvasSyncingTilesProvider(canvas.localId))
+                  .asData
+                  ?.value ??
+              const <int>{})
+        : const <int>{};
+
     final outsidePane = context.background;
     const canvasSurface = Color(0xFF161A22);
     const chunkLine = Color(0x14FFFFFF);
@@ -326,6 +338,7 @@ class CanvasViewportBody extends ConsumerWidget {
                           chunkLineColor: chunkLine,
                           borderColor: surfaceRing,
                           pendingCellIndices: pendingCells,
+                          syncingTileIndices: syncingTiles,
                           onTapPaint: (x, y) => _onTapPaint(
                             context: context,
                             ref: ref,

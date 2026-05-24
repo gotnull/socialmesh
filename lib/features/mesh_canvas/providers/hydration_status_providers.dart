@@ -51,3 +51,20 @@ final meshCanvasBandProgressProvider =
         yield coordinator.bandProgressForCanvas(canvasLocalId);
       }
     });
+
+/// Tile indices currently receiving raw-band sync_responses for the
+/// canvas. The viewport overlay paints an animated shimmer over each
+/// tile in this set so the user sees WHERE pixels are landing instead
+/// of just a generic "syncing" pill. Empty set when no raw-band sync
+/// is in flight. Drives the shimmer overlay in canvas_viewport_body.
+final meshCanvasSyncingTilesProvider = StreamProvider.family<Set<int>, int>((
+  ref,
+  canvasLocalId,
+) async* {
+  final coordinator = await ref.watch(canvasSyncCoordinatorProvider.future);
+  yield coordinator.syncingTilesFor(canvasLocalId);
+  await for (final id in coordinator.changes) {
+    if (id != canvasLocalId) continue;
+    yield coordinator.syncingTilesFor(canvasLocalId);
+  }
+});

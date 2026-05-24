@@ -12427,56 +12427,70 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshCanvasHelpIntro =>
-      'Піксельна стіна, намальована спільно через радіо LoRa. У кожного каналу Meshtastic своє полотно 128 на 128, що ділиться з кожним вузлом, який слухає на цьому каналі. Торкнись клітинки, надішли один крихітний кадр і дивись, як він розходиться по всіх ближніх радіо. Без серверів, без облікових записів, без модераторів - лише радіо й пікселі.';
+      'Спільне піксельне полотно, яке наживо малюють усі на твоєму каналі Meshtastic. Кожне торкання надсилає один крихітний радіокадр найближчим пристроям, і вони малюють той самий піксель на своєму полотні. Без серверів, без облікових записів, без модераторів; лише LoRa-радіо й пікселі.';
 
   @override
   String get meshCanvasHelpMeshCanvasTitle => 'Mesh-полотна';
 
   @override
   String get meshCanvasHelpMeshCanvasBody =>
-      'Одне полотно на канал Meshtastic. Primary, LongFast, ваші користувацькі канали - кожен отримує своє полотно 128 на 128, що ділиться з кожним вузлом, який слухає на цьому каналі. Глобальної стіни немає; полотна живуть і вмирають разом із каналами, що їх несуть.';
+      'Одне полотно на канал Meshtastic. Primary, LongFast, ваші користувацькі канали: кожен отримує своє полотно 64 на 64, що ділиться з кожним пристроєм, який слухає на цьому каналі. Глобальної стіни немає; полотна живуть і вмирають разом із каналами, що їх несуть.';
 
   @override
   String get meshCanvasHelpTapToPaintTitle => 'Торкніться, щоб малювати';
 
   @override
   String get meshCanvasHelpTapToPaintBody =>
-      'Торкнись клітинки, щоб залити її активним кольором із панелі внизу. Торкнись прозорого / вимкненого зразка з лівого краю панелі, щоб стерти. Один дотик, один піксель, один радіокадр.';
+      'Торкнись клітинки, щоб залити її активним кольором із панелі внизу. Торкнись прозорого / гумкового зразка з лівого краю панелі, щоб очистити клітинку. Один дотик, один піксель, один радіокадр.';
 
   @override
   String get meshCanvasHelpPanZoomTitle => 'Тягни, щипай, утримуй';
 
   @override
   String get meshCanvasHelpPanZoomBody =>
-      'Тягни одним пальцем, щоб рухатися по дошці. Щипай двома пальцями, щоб масштабувати (0,5x - 16x). Утримуй клітинку, щоб відкрити інспектор і побачити, хто і коли її намалював.';
+      'Тягни одним пальцем, щоб рухатися по дошці. Щипай двома пальцями, щоб наблизити або віддалити. Утримуй клітинку, щоб відкрити інспектор і побачити, хто і коли її намалював.';
 
   @override
   String get meshCanvasHelpFirstPaintTitle => 'Перший мазок будить полотно';
 
   @override
   String get meshCanvasHelpFirstPaintBody =>
-      'Кожне полотно каналу починає спати - порожня сітка, що чекає на свій перший піксель. У ту мить, коли хтось на каналі малює, полотно прокидається для всіх інших, хто слухає. Твій може бути першим.';
+      'Кожне полотно каналу починає спати: порожня сітка, що чекає на свій перший піксель. У ту мить, коли хтось на каналі малює, полотно прокидається для всіх інших, хто слухає. Твій може бути першим.';
 
   @override
   String get meshCanvasHelpTempoTitle => 'Повільно навмисно';
 
   @override
   String get meshCanvasHelpTempoBody =>
-      'LoRa - це не інтернет. Очікуй секунди (USB / ближнє радіо) до хвилин (далека відстань), доки мазки розійдуться по мережі. Кожен пристрій сам себе обмежує, щоб канал дихав для DM, сигналів та іншого трафіку. Будь терплячий - дошка накопичується.';
+      'LoRa-радіо — це не інтернет. Очікуй секунди (USB або ближній пристрій) до хвилин (далека відстань), доки мазки розійдуться по мережі. Кожен пристрій сам себе обмежує приблизно до 250 байт на хвилину, щоб трафік полотна не витісняв DM, сигнали чи інше використання каналу. Будь терплячий; дошка накопичується.';
 
   @override
   String get meshCanvasHelpOverwriteTitle => 'Перемагає свіжіший мазок';
 
   @override
   String get meshCanvasHelpOverwriteBody =>
-      'Два вузли малюють ту саму клітинку? Живе мазок зі свіжішою міткою часу. Перезаписи задумані - територія та конфлікт - частина стіни. Немає історії правок, яку треба замикати, немає адміна, якого можна викликати.';
+      'Два пристрої малюють ту саму клітинку? Перемагає мазок зі свіжішою міткою часу. Перезаписи задумані: територія та конфлікт — частина стіни. Немає історії правок, яку треба замикати, немає адміна, якого можна викликати.';
 
   @override
   String get meshCanvasHelpCommunityTitle => 'Публічно в каналі';
 
   @override
   String get meshCanvasHelpCommunityBody =>
-      'Пікселі навмисно публічні в каналі, що їх несе. Без адмінів, без модераторів, без глобальної стіни для нагляду. Якщо не сказав би в каналі, не малюй. Веселощі - це стіна, а не перемога.';
+      'Пікселі публічні в каналі, що їх несе. Немає адмінів, немає модераторів, немає глобальної стіни для нагляду. Якщо не сказав би в каналі, не малюй. Веселощі — це стіна, а не перемога.';
+
+  @override
+  String get meshCanvasHelpStatusTitle => 'Пігулка статусу';
+
+  @override
+  String get meshCanvasHelpStatusBody =>
+      'Маленька пігулка з\'являється у верхньому кутку, поки полотно працює. «Оновлення» означає, що у найближчих пристроїв запитуються пікселі, яких у тебе ще немає. «Отримання пікселів» означає, що найближчий пристрій надсилає тобі стан зараз (придивись до мерехтіння на плитках, що заповнюються). «Ніхто не малює» означає, що більше ніхто не малював на цьому каналі останнім часом. «Сповільнення» або «Черга заповнена» означає, що твої власні мазки тимчасово чекають на ефірний час радіо.';
+
+  @override
+  String get meshCanvasHelpSharingTitle => 'Поширення за згодою';
+
+  @override
+  String get meshCanvasHelpSharingBody =>
+      'Коли ти вперше приєднуєшся до MeshCanvas, поширення вимкнено. Ти можеш малювати й дивитися полотно приватно. Щоб надсилати свої мазки по меш-радіо, увімкни перемикач поширення у налаштуваннях MeshCanvas. Ти можеш вимкнути його будь-коли; полотна, які ти бачив, залишаються на твоєму пристрої.';
 
   @override
   String get meshCanvasHelpTooltip => 'Про MeshCanvas';
@@ -12499,21 +12513,21 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshCanvasOnboardingIntro =>
-      'Спільна піксельна стіна, яку несуть найближчі радіостанції.';
+      'MeshCanvas — це спільне піксельне полотно, яке наживо малюють усі на твоєму каналі Meshtastic, доставлене повільним LoRa-радіо. Без серверів, без облікових записів, без модераторів. Обери, як почати: залишайся приватним на цьому пристрої або приєднуйся до мешу і дивись, як полотно наповнюється.';
 
   @override
   String get meshCanvasOnboardingRowLocalTitle => 'Локальне полотно пристрою';
 
   @override
   String get meshCanvasOnboardingRowLocalBody =>
-      'Приватна пісочниця на цьому телефоні. Пікселі залишаються на пристрої. Ефірний час не використовується.';
+      'Приватна пісочниця на цьому пристрої. Малюй що хочеш, щоб освоїти інструменти. Ніщо не залишає пристрій; ефірний час не використовується. Приєднатися до мережі можна пізніше.';
 
   @override
   String get meshCanvasOnboardingRowMeshTitle => 'Mesh-полотна';
 
   @override
   String get meshCanvasOnboardingRowMeshBody =>
-      'Одне полотно на кожен канал Meshtastic, у якому ви перебуваєте. Пікселі мандрують цим каналом. Використовує невелику кількість ефірного часу меш-мережі.';
+      'Одне полотно на кожен канал Meshtastic, у якому ти перебуваєш. Приєднання дозволяє БАЧИТИ роботу інших. Твої власні пікселі залишаються на цьому пристрої, поки ти не увімкнеш перемикач Поширення в налаштуваннях MeshCanvas; явний другий крок, щоб ніщо не пішло в ефір випадково.';
 
   @override
   String get meshCanvasOnboardingRowPresenceTitle =>
@@ -12521,7 +12535,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshCanvasOnboardingRowPresenceBody =>
-      'Показує іншим, що ви переглядаєте або малюєте. За замовчуванням вимкнено. Ваша присутність тимчасова й автоматично зникає. Ви можете увімкнути її пізніше в налаштуваннях.';
+      'Показує іншим пристроям, що ти зараз дивишся або малюєш на полотні. За замовчуванням вимкнено. Коли ти вмикаєш, твоя присутність ефемерна; вона ніколи не зберігається й автоматично зникає, коли ти йдеш. Перемикай у налаштуваннях MeshCanvas будь-коли.';
 
   @override
   String get meshCanvasOnboardingActionExplore => 'Досліджувати локально';
@@ -12585,53 +12599,52 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get meshCanvasTransmissionCooling => 'охолоджується';
+  String get meshCanvasTransmissionCooling => 'Сповільнення';
 
   @override
-  String get meshCanvasTransmissionFull =>
-      'черга заповнена · зачекайте ефірний час';
+  String get meshCanvasTransmissionFull => 'Черга заповнена';
 
   @override
   String meshCanvasTransmissionTooltipQueued(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count пікселів чекають на ефірний час',
-      many: '$count пікселів чекають на ефірний час',
-      few: '$count пікселі чекають на ефірний час',
-      one: '$count піксель чекає на ефірний час',
+      other: '$count пікселів чекають на передавання у меш-мережу',
+      many: '$count пікселів чекають на передавання у меш-мережу',
+      few: '$count пікселі чекають на передавання у меш-мережу',
+      one: '$count піксель чекає на передавання у меш-мережу',
     );
     return '$_temp0';
   }
 
   @override
   String get meshCanvasTransmissionTooltipCooling =>
-      'Ефірний час меш-мережі зайнятий. Малювання відновиться автоматично.';
+      'Меш-радіо досягло межі ефірного часу. Пікселі підуть, щойно з\'явиться місце. Малюйте далі — ваші торкання збережено.';
 
   @override
   String get meshCanvasTransmissionTooltipFull =>
-      'Черга пікселів заповнена. Зачекайте трохи, поки меш-мережа наздожене.';
+      'Ви малюєте швидше, ніж меш встигає передавати. Зробіть паузу, і черга спорожніє.';
 
   @override
-  String get meshCanvasHydrationRecovering => 'відновлюю пікселі';
+  String get meshCanvasHydrationRecovering => 'Оновлення';
 
   @override
-  String get meshCanvasHydrationSyncing => 'синхронізую плитки';
+  String get meshCanvasHydrationSyncing => 'Отримання пікселів';
 
   @override
-  String get meshCanvasHydrationQuiet => 'меш тихо';
+  String get meshCanvasHydrationQuiet => 'Ніхто не малює';
 
   @override
   String get meshCanvasHydrationTooltipRecovering =>
-      'Запитую найближчі радіостанції про відсутні плитки.';
+      'Запитую у найближчих пристроїв пікселі, яких у вас ще немає. Вони прийдуть, щойно у меш-радіо буде місце.';
 
   @override
   String get meshCanvasHydrationTooltipSyncing =>
-      'Отримую пікселі з меш-мережі.';
+      'Пікселі з найближчого пристрою зараз приземляються на ваше полотно. По повільному LoRa-радіо це може зайняти хвилину.';
 
   @override
   String get meshCanvasHydrationTooltipQuiet =>
-      'Від найближчих радіостанцій пікселів не чути.';
+      'Більше ніхто не малював на цьому каналі останнім часом. Ваші торкання стануть першим, що побачать інші пристрої, коли під\'єднаються.';
 
   @override
   String get meshCanvasVitalsScopeMesh => 'MESH-ПОЛОТНО';
@@ -12796,17 +12809,19 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshCanvasViewerEmptyMeshTitle =>
-      'Торкнись, щоб посадити перший піксель';
+      'Тут ще немає пікселів. Торкніться, щоб почати.';
 
   @override
-  String get meshCanvasViewerEmptyMeshSubtitle => 'Перший мазок будить полотно';
+  String get meshCanvasViewerEmptyMeshSubtitle =>
+      'Ваш перший піксель буде передано по меш-радіо всім, хто налаштований на цей канал.';
 
   @override
-  String get meshCanvasViewerEmptyMeshHydratingTitle => 'Слухаємо меш-чорнила';
+  String get meshCanvasViewerEmptyMeshHydratingTitle =>
+      'Шукаю пікселі у найближчих пристроїв…';
 
   @override
   String get meshCanvasViewerEmptyMeshHydratingSubtitle =>
-      'Забираємо пікселі у найближчих вузлів';
+      'Якщо хтось інший вже малював на цьому полотні, його пікселі з\'являться за мить.';
 
   @override
   String get meshCanvasViewerEmptyLocalTitle => 'Торкнись, щоб малювати';
@@ -38783,6 +38798,14 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get notificationSipPeerFoundBody =>
       'Піер для рукостискання в зоні досяжності. Відкрийте Handshake, щоб підключитися.';
+
+  @override
+  String get notificationMeshCanvasPeerFoundBody =>
+      'Піер MeshCanvas у зоні досяжності. Відкрий MeshCanvas, щоб побачити, що він малює.';
+
+  @override
+  String get notificationMeshPeerFoundBody =>
+      'Найближчий пристрій доступний у меш-мережі. Відкрий Handshake для з\'єднання або MeshCanvas, щоб малювати разом.';
 
   @override
   String get notificationSipPlayTurnTitle => 'Ваш хід';

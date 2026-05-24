@@ -156,10 +156,10 @@ void main() {
       await tester.pumpAndSettle();
 
       // The sheet's title is "About MeshCanvas" (same as the tooltip)
-      // and the intro paragraph frames MeshCanvas as a pixel wall
-      // co-painted over LoRa.
+      // and the intro paragraph frames MeshCanvas as a pixel canvas
+      // painted over LoRa.
       expect(
-        find.textContaining('pixel wall', findRichText: true),
+        find.textContaining('pixel canvas', findRichText: true),
         findsOneWidget,
       );
       // The first explanatory row's title is Local Device Canvas.

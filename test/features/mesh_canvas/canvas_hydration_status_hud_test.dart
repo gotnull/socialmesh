@@ -61,27 +61,27 @@ void main() {
     await _pumpHud(tester, MeshCanvasHydrationState.idle);
     await tester.pumpAndSettle();
 
-    expect(find.text('recovering paint'), findsNothing);
-    expect(find.text('syncing tiles'), findsNothing);
-    expect(find.text('mesh quiet'), findsNothing);
+    expect(find.text('Catching up'), findsNothing);
+    expect(find.text('Receiving pixels'), findsNothing);
+    expect(find.text('No one painting'), findsNothing);
   });
 
   testWidgets('recovering state shows the recovering label', (tester) async {
     await _pumpHud(tester, MeshCanvasHydrationState.recovering);
     await tester.pumpAndSettle();
-    expect(find.text('recovering paint'), findsOneWidget);
+    expect(find.text('Catching up'), findsOneWidget);
   });
 
   testWidgets('syncing state shows the syncing label', (tester) async {
     await _pumpHud(tester, MeshCanvasHydrationState.syncing);
     await tester.pumpAndSettle();
-    expect(find.text('syncing tiles'), findsOneWidget);
+    expect(find.text('Receiving pixels'), findsOneWidget);
   });
 
   testWidgets('quiet state shows the quiet label', (tester) async {
     await _pumpHud(tester, MeshCanvasHydrationState.quiet);
     await tester.pumpAndSettle();
-    expect(find.text('mesh quiet'), findsOneWidget);
+    expect(find.text('No one painting'), findsOneWidget);
   });
 
   testWidgets(

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import '../../core/constants.dart';
 import '../../core/logging.dart';
 import 'dart:async';
 import 'dart:io';
@@ -1983,6 +1984,29 @@ class NotificationService {
     if (!_initialized) return;
     if (_shouldSuppressForDedupe('sip_peer_found', peerNodeId)) return;
 
+    // Pick the right copy based on which feature subsystems the
+    // operator has enabled in .env. SIP_ENABLED is implicitly true
+    // whenever HANDSHAKE_ENABLED or MESH_CANVAS_ENABLED is on
+    // (see AppFeatureFlags.isSipEnabled), so this notification can
+    // fire for a MeshCanvas-only build where the old "open Handshake"
+    // wording would be misleading. With neither feature enabled we
+    // also have no surface to direct the user to, so suppress.
+    final handshakeOn = AppFeatureFlags.isHandshakeEnabled;
+    final meshCanvasOn = AppFeatureFlags.isMeshCanvasEnabled;
+    final String body;
+    if (handshakeOn && meshCanvasOn) {
+      body = _l10n.notificationMeshPeerFoundBody;
+    } else if (meshCanvasOn) {
+      body = _l10n.notificationMeshCanvasPeerFoundBody;
+    } else if (handshakeOn) {
+      body = _l10n.notificationSipPeerFoundBody;
+    } else {
+      // Neither surface is enabled — discovery still ran (SIP came up
+      // via some other path) but the user has nowhere to act on this
+      // notification. Silently drop.
+      return;
+    }
+
     final androidDetails = AndroidNotificationDetails(
       'sip_discovery',
       'Peer Discovery', // lint-allow: hardcoded-string
@@ -2014,7 +2038,7 @@ class NotificationService {
     await _notifications.show(
       id: notificationId,
       title: _l10n.notificationSipPeerFoundTitle,
-      body: _l10n.notificationSipPeerFoundBody,
+      body: body,
       notificationDetails: notificationDetails,
       payload: 'sip_peer_found:$peerNodeId',
     );

@@ -124,6 +124,13 @@ class CanvasViewer extends StatefulWidget {
   /// local-scope viewers — the host gates by scope upstream.
   final Set<int> pendingCellIndices;
 
+  /// Tile indices currently receiving raw-band sync_responses (packed
+  /// `tileY * tilesPerRow + tileX`). The painter renders a diagonal
+  /// shimmer sweep across each tile rect so the user sees exactly
+  /// which regions are filling in. Empty / null disables the
+  /// shimmer overlay. Empty for local-scope canvases (no mesh sync).
+  final Set<int> syncingTileIndices;
+
   /// Tap-to-paint callback. Fires with `(x, y)` in canvas-cell
   /// coordinates (0..widthCells-1, 0..heightCells-1). Out-of-bounds
   /// taps are filtered before this callback runs.
@@ -159,6 +166,7 @@ class CanvasViewer extends StatefulWidget {
     this.onLongPressInspect,
     this.disableInitialFraming = false,
     this.pendingCellIndices = const <int>{},
+    this.syncingTileIndices = const <int>{},
   });
 
   @override
@@ -244,6 +252,14 @@ class _CanvasViewerState extends State<CanvasViewer>
     if (!identical(oldWidget.cells, widget.cells)) {
       _diffCellsForArrivals();
     }
+    // Keep the ticker alive while any tile is mid-shimmer so the
+    // sweep animates smoothly. The pop-in/pop-out machinery already
+    // starts/stops the ticker for cell arrivals; shimmer just
+    // piggybacks on the same pump.
+    if (widget.syncingTileIndices.isNotEmpty && !_animTicker.isActive) {
+      _newestArrivalMs = DateTime.now().millisecondsSinceEpoch + 60_000;
+      _animTicker.start();
+    }
   }
 
   void _diffCellsForArrivals() {
@@ -323,6 +339,13 @@ class _CanvasViewerState extends State<CanvasViewer>
 
   void _onAnimTick(Duration _) {
     final nowMs = DateTime.now().millisecondsSinceEpoch;
+    // Shimmer requires the ticker to keep pumping. If any tile is
+    // mid-sync, never stop regardless of how long pop-in/out has
+    // been settled. Otherwise honour the existing settle window.
+    if (widget.syncingTileIndices.isNotEmpty) {
+      _animTick.value = nowMs;
+      return;
+    }
     // `_newestArrivalMs` is the absolute ms when the LAST animation
     // (including any staggered color-change arrivals) finishes.
     if (nowMs > _newestArrivalMs) {
@@ -457,6 +480,7 @@ class _CanvasViewerState extends State<CanvasViewer>
                     pendingCellIndices: widget.pendingCellIndices,
                     cellArrivalMs: _cellArrivalMs,
                     vanishingCells: _vanishingCells,
+                    syncingTileIndices: widget.syncingTileIndices,
                     popDurationMs: _kPopInDuration.inMilliseconds,
                     repaint: _animTick,
                   ),

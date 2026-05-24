@@ -1461,7 +1461,12 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
         iconColor: AccentColors.orange,
         requiresConnection: false,
       ),
-    if (AppFeatureFlags.isSipEnabled)
+    // Handshake drawer entry. Gated on isHandshakeEnabled (the user's
+    // intent flag for the Handshake feature) NOT isSipEnabled (the
+    // SIP transport availability). Since MeshCanvas also implicitly
+    // turns on SIP transport, gating on isSipEnabled would leak the
+    // Handshake UI into a MeshCanvas-only build.
+    if (AppFeatureFlags.isHandshakeEnabled)
       DrawerMenuItem(
         id: 'sip',
         icon: Icons.wifi_tethering,

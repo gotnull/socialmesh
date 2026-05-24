@@ -756,7 +756,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           section: context.l10n.settingsSectionNotifications,
           hasSwitch: true,
         ),
-        if (AppFeatureFlags.isSipEnabled)
+        // Handshake-specific (SIP Play game turn notifications). Gate
+        // on the Handshake intent flag so the row stays hidden in
+        // MeshCanvas-only builds that turn SIP transport on implicitly.
+        if (AppFeatureFlags.isHandshakeEnabled)
           _SearchableSettingItem(
             icon: Icons.casino_outlined,
             title: context.l10n.settingsSearchGameTurnsTitle,
@@ -858,7 +861,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               },
             ),
           ),
-        if (AppFeatureFlags.isSipEnabled)
+        // Handshake-specific (STL signing covers handshake identity).
+        // Gate on Handshake intent so MeshCanvas-only configs do not
+        // surface this row.
+        if (AppFeatureFlags.isHandshakeEnabled)
           _SearchableSettingItem(
             icon: Icons.verified_user,
             title: context.l10n.stlSigningTitle,
@@ -2735,8 +2741,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             // the Handshake hub itself is gated in the
                             // drawer). When the env flag is off, SIP
                             // Play isn't reachable so the toggle would
-                            // be inert.
-                            if (AppFeatureFlags.isSipEnabled)
+                            // be inert. Gate on Handshake intent (not
+                            // isSipEnabled) so MeshCanvas-only configs
+                            // do not show this Handshake-feature row.
+                            if (AppFeatureFlags.isHandshakeEnabled)
                               _SettingsTile(
                                 icon: Icons.casino_outlined,
                                 title: context.l10n.settingsTileGameTurnsTitle,

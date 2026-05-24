@@ -12453,28 +12453,28 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get meshCanvasHelpIntro =>
-      'Eine Pixelwand, gemeinsam über LoRa-Funk gemalt. Jeder Meshtastic-Kanal hat seine eigene 128-mal-128-Leinwand, geteilt mit jedem Knoten, der auf dem Kanal lauscht. Tippe eine Zelle, sende einen winzigen Frame, sieh ihn über jeden nahen Funk kreisen. Keine Server, keine Konten, keine Moderatoren - nur Funkgeräte und Pixel.';
+      'Eine gemeinsame Pixelleinwand, live bemalt von allen auf deinem Meshtastic-Kanal. Jeder Tipp sendet einen winzigen Funkrahmen an nahe Geräte, die denselben Pixel auf ihrer eigenen Leinwand setzen. Keine Server, keine Konten, keine Moderatoren; nur LoRa-Funkgeräte und Pixel.';
 
   @override
   String get meshCanvasHelpMeshCanvasTitle => 'Mesh-Leinwände';
 
   @override
   String get meshCanvasHelpMeshCanvasBody =>
-      'Eine Leinwand pro Meshtastic-Kanal. Primary, LongFast, deine eigenen Kanäle - jeder bekommt seine eigene 128-mal-128-Tafel, geteilt mit jedem Knoten, der auf dem Kanal lauscht. Es gibt keine globale Wand; Leinwände leben und sterben mit den Kanälen, die sie tragen.';
+      'Eine Leinwand pro Meshtastic-Kanal. Primary, LongFast, deine eigenen Kanäle: jeder bekommt seine eigene 64-mal-64-Tafel, geteilt mit jedem Gerät, das auf dem Kanal lauscht. Es gibt keine globale Wand; Leinwände leben und sterben mit den Kanälen, die sie tragen.';
 
   @override
   String get meshCanvasHelpTapToPaintTitle => 'Tippen zum Malen';
 
   @override
   String get meshCanvasHelpTapToPaintBody =>
-      'Tippe eine Zelle an, um sie in der aktiven Farbe aus der Leiste unten zu bemalen. Tippe das transparente / stummgeschaltete Feld ganz links der Leiste, um zu löschen. Ein Tipp, ein Pixel, ein Funkframe.';
+      'Tippe eine Zelle an, um sie in der aktiven Farbe aus der Leiste unten zu bemalen. Tippe das transparente / Radierer-Feld ganz links in der Leiste, um eine Zelle zu löschen. Ein Tipp, ein Pixel, ein Funkrahmen.';
 
   @override
   String get meshCanvasHelpPanZoomTitle => 'Schwenken, kneifen, halten';
 
   @override
   String get meshCanvasHelpPanZoomBody =>
-      'Mit einem Finger ziehen, um über das Brett zu schwenken. Mit zwei Fingern kneifen, um zu zoomen (0,5x bis 16x). Halte eine Zelle gedrückt, um den Inspektor zu öffnen und zu sehen, wer sie wann bemalt hat.';
+      'Mit einem Finger ziehen, um über das Brett zu schwenken. Mit zwei Fingern kneifen, um hinein- oder herauszuzoomen. Halte eine Zelle gedrückt, um den Inspektor zu öffnen und zu sehen, wer sie wann bemalt hat.';
 
   @override
   String get meshCanvasHelpFirstPaintTitle =>
@@ -12482,28 +12482,42 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get meshCanvasHelpFirstPaintBody =>
-      'Jede Kanal-Leinwand beginnt schlummernd - ein leeres Raster, das auf seinen ersten Pixel wartet. In dem Moment, in dem jemand auf dem Kanal malt, erwacht die Leinwand für alle anderen, die zuhören. Deiner könnte der erste sein.';
+      'Jede Kanal-Leinwand beginnt schlummernd: ein leeres Raster, das auf seinen ersten Pixel wartet. In dem Moment, in dem jemand auf dem Kanal malt, erwacht die Leinwand für alle anderen, die zuhören. Deiner könnte der erste sein.';
 
   @override
   String get meshCanvasHelpTempoTitle => 'Absichtlich langsam';
 
   @override
   String get meshCanvasHelpTempoBody =>
-      'LoRa ist nicht das Internet. Erwarte Sekunden (USB / nahes Funkgerät) bis Minuten (Langstrecke), bis sich Pixel über das Mesh ausbreiten. Jedes Gerät begrenzt sich selbst, damit der Kanal für DMs, Signale und anderen Verkehr atmen kann. Sei geduldig - das Brett füllt sich.';
+      'LoRa-Funk ist nicht das Internet. Erwarte Sekunden (USB oder nahes Gerät) bis Minuten (Langstrecke), bis sich Pixel über das Mesh ausbreiten. Jedes Gerät begrenzt sich selbst auf etwa 250 Bytes pro Minute, damit der Kanal-Verkehr DMs, Signale oder andere Kanalnutzung nicht verdrängt. Sei geduldig; das Brett füllt sich.';
 
   @override
   String get meshCanvasHelpOverwriteTitle => 'Neuer Strich gewinnt';
 
   @override
   String get meshCanvasHelpOverwriteBody =>
-      'Zwei Knoten malen dieselbe Zelle? Der Strich mit dem neueren Zeitstempel lebt. Überschreibungen sind gewollt - Territorium und Konflikt gehören zur Wand. Es gibt keinen Bearbeitungsverlauf zum Festnageln, keinen Admin zum Anrufen.';
+      'Zwei Geräte malen dieselbe Zelle? Der Strich mit dem neueren Zeitstempel gewinnt. Überschreibungen sind gewollt: Territorium und Konflikt gehören zur Wand. Es gibt keinen Bearbeitungsverlauf zum Festnageln, keinen Admin zum Anrufen.';
 
   @override
   String get meshCanvasHelpCommunityTitle => 'Öffentlich im Kanal';
 
   @override
   String get meshCanvasHelpCommunityBody =>
-      'Pixel sind absichtlich öffentlich auf dem Kanal, der sie trägt. Keine Admins, keine Moderatoren, keine globale Wand zum Überwachen. Wenn du es nicht im Kanal sagen würdest, male es nicht. Der Spaß ist die Wand, nicht der Sieg.';
+      'Pixel sind öffentlich auf dem Kanal, der sie trägt. Es gibt keine Admins, keine Moderatoren, keine globale Wand zum Überwachen. Wenn du es nicht im Kanal sagen würdest, male es nicht. Der Spaß ist die Wand, nicht der Sieg.';
+
+  @override
+  String get meshCanvasHelpStatusTitle => 'Status-Pille';
+
+  @override
+  String get meshCanvasHelpStatusBody =>
+      'Eine kleine Pille erscheint in der oberen Ecke, während die Leinwand arbeitet. \'Wird aktualisiert\' bedeutet, dass nahegelegene Geräte nach Pixeln gefragt werden, die du noch nicht hast. \'Pixel werden empfangen\' bedeutet, dass ein nahegelegenes Gerät dir gerade Zustand sendet (achte auf das Schimmern auf den Kacheln, die gefüllt werden). \'Niemand malt gerade\' bedeutet, dass kürzlich niemand anderes auf diesem Kanal gemalt hat. \'Wird langsamer\' oder \'Warteschlange voll\' bedeutet, dass deine eigenen Pixel vorübergehend auf Funk-Sendezeit warten.';
+
+  @override
+  String get meshCanvasHelpSharingTitle => 'Teilen ist Opt-in';
+
+  @override
+  String get meshCanvasHelpSharingBody =>
+      'Wenn du MeshCanvas zum ersten Mal beitrittst, ist das Teilen aus. Du kannst privat malen und die Leinwand beobachten. Um deine Pixel über das Mesh-Funk zu senden, schalte den Teilen-Schalter in den MeshCanvas-Einstellungen ein. Du kannst ihn jederzeit wieder ausschalten; Leinwände, die du gesehen hast, bleiben auf deinem Gerät.';
 
   @override
   String get meshCanvasHelpTooltip => 'Über MeshCanvas';
@@ -12526,28 +12540,28 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get meshCanvasOnboardingIntro =>
-      'Eine geteilte Pixelwand, getragen von nahen Funkgeräten.';
+      'MeshCanvas ist eine gemeinsame Pixelleinwand, live bemalt von allen auf deinem Meshtastic-Kanal, getragen über langsames LoRa-Funk. Keine Server, keine Konten, keine Moderatoren. Wähle, wie du starten möchtest: privat auf diesem Gerät bleiben oder dem Mesh beitreten und zusehen, wie sich die Leinwand füllt.';
 
   @override
   String get meshCanvasOnboardingRowLocalTitle => 'Lokale Geräte-Leinwand';
 
   @override
   String get meshCanvasOnboardingRowLocalBody =>
-      'Ein privater Sandkasten auf diesem Telefon. Pixel bleiben auf dem Gerät. Kein Funk-Verbrauch.';
+      'Ein privater Sandkasten auf diesem Gerät. Male, was du magst, um die Werkzeuge kennenzulernen. Nichts verlässt das Gerät; keine Funk-Sendezeit wird verbraucht. Du kannst später dem Mesh beitreten.';
 
   @override
   String get meshCanvasOnboardingRowMeshTitle => 'Mesh-Leinwände';
 
   @override
   String get meshCanvasOnboardingRowMeshBody =>
-      'Eine Leinwand pro Meshtastic-Kanal, auf dem du bist. Pixel reisen über diesen Kanal. Verbraucht etwas Funk-Sendezeit.';
+      'Eine Leinwand pro Meshtastic-Kanal, auf dem du bist. Beitreten lässt dich die Arbeit anderer SEHEN. Deine eigenen Pixel bleiben auf diesem Gerät, bis du den Teilen-Schalter in den MeshCanvas-Einstellungen einschaltest; ein expliziter zweiter Schritt, damit nichts versehentlich gesendet wird.';
 
   @override
   String get meshCanvasOnboardingRowPresenceTitle => 'Präsenz (optional)';
 
   @override
   String get meshCanvasOnboardingRowPresenceBody =>
-      'Zeigt anderen, dass du gerade ansiehst oder malst. Standardmäßig aus. Deine Präsenz ist flüchtig und verblasst automatisch. Du kannst sie später in den Einstellungen aktivieren.';
+      'Zeige anderen Geräten, dass du gerade eine Leinwand ansiehst oder bemalst. Standardmäßig aus. Wenn du es aktivierst, ist deine Präsenz flüchtig; sie wird nie gespeichert und verblasst automatisch, wenn du gehst. Schalte sie jederzeit in den MeshCanvas-Einstellungen um.';
 
   @override
   String get meshCanvasOnboardingActionExplore => 'Lokal erkunden';
@@ -12612,51 +12626,50 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get meshCanvasTransmissionCooling => 'kühlt ab';
+  String get meshCanvasTransmissionCooling => 'Wird langsamer';
 
   @override
-  String get meshCanvasTransmissionFull =>
-      'Warteschlange voll · auf Sendezeit warten';
+  String get meshCanvasTransmissionFull => 'Warteschlange voll';
 
   @override
   String meshCanvasTransmissionTooltipQueued(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Pixel warten auf Sendezeit',
-      one: '1 Pixel wartet auf Sendezeit',
+      other: '$count Pixel warten auf die Übertragung über das Mesh',
+      one: '1 Pixel wartet auf die Übertragung über das Mesh',
     );
     return '$_temp0';
   }
 
   @override
   String get meshCanvasTransmissionTooltipCooling =>
-      'Mesh-Sendezeit ist ausgelastet. Das Malen wird automatisch fortgesetzt.';
+      'Das Mesh-Funkgerät hat sein Sendezeitlimit erreicht. Deine Pixel gehen raus, sobald wieder Platz ist. Mal ruhig weiter, deine Eingaben werden gespeichert.';
 
   @override
   String get meshCanvasTransmissionTooltipFull =>
-      'Pixel-Warteschlange ist voll. Warte kurz, bis das Mesh aufgeholt hat.';
+      'Du hast schneller gemalt, als das Mesh übertragen kann. Halte kurz inne, und die Warteschlange leert sich.';
 
   @override
-  String get meshCanvasHydrationRecovering => 'stelle pixel wieder her';
+  String get meshCanvasHydrationRecovering => 'Wird aktualisiert';
 
   @override
-  String get meshCanvasHydrationSyncing => 'synchronisiere kacheln';
+  String get meshCanvasHydrationSyncing => 'Pixel werden empfangen';
 
   @override
-  String get meshCanvasHydrationQuiet => 'mesh ist still';
+  String get meshCanvasHydrationQuiet => 'Niemand malt gerade';
 
   @override
   String get meshCanvasHydrationTooltipRecovering =>
-      'Frage nahegelegene Funkgeräte nach fehlenden Kacheln.';
+      'Frage nahegelegene Geräte nach Pixeln, die du noch nicht hast. Pixel kommen an, sobald das Mesh-Funkgerät Platz hat.';
 
   @override
   String get meshCanvasHydrationTooltipSyncing =>
-      'Empfange Pixel aus dem Mesh.';
+      'Pixel von einem nahegelegenen Gerät landen gerade auf deiner Leinwand. Über das langsame LoRa-Funk kann das einen Moment dauern.';
 
   @override
   String get meshCanvasHydrationTooltipQuiet =>
-      'Keine Pixel von nahegelegenen Funkgeräten gehört.';
+      'Niemand sonst hat in letzter Zeit auf diesem Kanal gemalt. Deine Eingaben werden das Erste sein, was andere Geräte sehen, wenn sie sich verbinden.';
 
   @override
   String get meshCanvasVitalsScopeMesh => 'MESH-LEINWAND';
@@ -12815,18 +12828,19 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get meshCanvasViewerEmptyMeshTitle =>
-      'Tippe, um das erste Pixel zu setzen';
+      'Noch keine Pixel hier. Tippe zum Starten.';
 
   @override
   String get meshCanvasViewerEmptyMeshSubtitle =>
-      'Der erste Strich weckt das Brett';
+      'Dein erstes Pixel wird über das Mesh-Funk an alle auf diesem Kanal gesendet.';
 
   @override
-  String get meshCanvasViewerEmptyMeshHydratingTitle => 'Höre auf Mesh-Tinte';
+  String get meshCanvasViewerEmptyMeshHydratingTitle =>
+      'Suche nach Pixeln von nahegelegenen Geräten…';
 
   @override
   String get meshCanvasViewerEmptyMeshHydratingSubtitle =>
-      'Pixel werden von nahen Peers geholt';
+      'Falls jemand anderes diese Leinwand bemalt hat, erscheinen seine Pixel gleich.';
 
   @override
   String get meshCanvasViewerEmptyLocalTitle => 'Tippe zum Malen';
@@ -38875,6 +38889,14 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get notificationSipPeerFoundBody =>
       'Ein Handshake-Peer ist in Reichweite. Öffnen Sie Handshake, um eine Verbindung herzustellen.';
+
+  @override
+  String get notificationMeshCanvasPeerFoundBody =>
+      'Ein MeshCanvas-Peer ist in Reichweite. Öffne MeshCanvas, um zu sehen, was er gerade malt.';
+
+  @override
+  String get notificationMeshPeerFoundBody =>
+      'Ein nahegelegenes Gerät ist über das Mesh erreichbar. Öffne Handshake zum Verbinden oder MeshCanvas zum gemeinsamen Malen.';
 
   @override
   String get notificationSipPlayTurnTitle => 'Sie sind dran';

@@ -32,6 +32,8 @@
 // O(1) per repaint regardless of cell count.
 library;
 
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 
 import '../../../services/canvas/canvas_constants.dart';
@@ -134,6 +136,23 @@ class CanvasGridPainter extends CustomPainter {
   /// sweet spot: snappy overshoot at ~80ms, fully settled by 320ms.
   final int popDurationMs;
 
+  /// Tile indices (packed as `tileY * tilesPerRow + tileX`) that are
+  /// currently receiving raw-band sync_responses from a peer. The
+  /// painter draws a diagonal shimmer sweep across each rect so the
+  /// user sees WHERE pixels are landing instead of just a generic
+  /// "syncing" pill. Null or empty = no shimmer.
+  final Set<int>? syncingTileIndices;
+
+  /// Color of the shimmer sweep applied to syncing tiles. Defaults
+  /// to white at low alpha so it reads as a pass of light over the
+  /// tile regardless of the underlying cells.
+  final Color shimmerColor;
+
+  /// Shimmer sweep period in ms. One full diagonal traversal takes
+  /// this long; the sweep then wraps and repeats while a tile is in
+  /// [syncingTileIndices].
+  final int shimmerPeriodMs;
+
   CanvasGridPainter({
     required this.cells,
     required this.palette,
@@ -149,6 +168,9 @@ class CanvasGridPainter extends CustomPainter {
     this.cellArrivalMs,
     this.vanishingCells,
     this.popDurationMs = 320,
+    this.syncingTileIndices,
+    this.shimmerColor = const Color(0x33FFFFFF),
+    this.shimmerPeriodMs = 1400,
     super.repaint,
   });
 
@@ -291,6 +313,50 @@ class CanvasGridPainter extends CustomPainter {
       }
     }
 
+    // Layer 3c: shimmer overlay on syncing tiles. Diagonal gradient
+    // sweep over each tile rect currently receiving raw-band
+    // sync_responses. The sweep loops every [shimmerPeriodMs] so the
+    // user sees WHERE pixels are landing instead of only a generic
+    // "Receiving pixels" pill. Spec: CANVAS_SYNC_V0_1.md (S0.ux.30).
+    final syncing = syncingTileIndices;
+    if (syncing != null && syncing.isNotEmpty) {
+      final liveNowMs = nowMs == 0
+          ? DateTime.now().millisecondsSinceEpoch
+          : nowMs;
+      final phase = (liveNowMs % shimmerPeriodMs) / shimmerPeriodMs;
+      final tilePx = CanvasGeometry.tileSize * cellSize;
+      final transparentShimmer = shimmerColor.withValues(alpha: 0);
+      for (final tileIdx in syncing) {
+        final tileX = tileIdx % CanvasGeometry.tilesPerRow;
+        final tileY = tileIdx ~/ CanvasGeometry.tilesPerRow;
+        final tileLeft = tileX * tilePx;
+        final tileTop = tileY * tilePx;
+        final tileRect = Rect.fromLTWH(tileLeft, tileTop, tilePx, tilePx);
+        // Diagonal sweep: band travels from top-left-off-tile to
+        // bottom-right-off-tile. `phase` parameterises that travel.
+        // Endpoints are computed in canvas-pixel space so the band
+        // width is constant regardless of tile size.
+        final bandWidth = tilePx * 0.6;
+        final travel = -bandWidth + phase * (tilePx + 2 * bandWidth);
+        final bandStart = Offset(tileLeft + travel, tileTop + travel);
+        final bandEnd = Offset(
+          tileLeft + travel + bandWidth,
+          tileTop + travel + bandWidth,
+        );
+        final shimmer = Paint()
+          ..shader = ui.Gradient.linear(
+            bandStart,
+            bandEnd,
+            [transparentShimmer, shimmerColor, transparentShimmer],
+            const [0.0, 0.5, 1.0],
+          );
+        canvas.save();
+        canvas.clipRect(tileRect);
+        canvas.drawRect(tileRect, shimmer);
+        canvas.restore();
+      }
+    }
+
     // Layer 4: surface border on top. Stays visible regardless of
     // cell density.
     final borderPaint = Paint()
@@ -307,6 +373,7 @@ class CanvasGridPainter extends CustomPainter {
     // O(n) and we'd run it on every pan/zoom frame.
     if (!identical(old.cells, cells)) return true;
     if (!identical(old.vanishingCells, vanishingCells)) return true;
+    if (!identical(old.syncingTileIndices, syncingTileIndices)) return true;
     if (!identical(old.pendingCellIndices, pendingCellIndices)) return true;
     if (old.pendingOpacityFactor != pendingOpacityFactor) return true;
     if (old.cellSize != cellSize) return true;

@@ -86,6 +86,22 @@ Future<void> showCanvasHelpSheet({required BuildContext context}) {
             title: l.meshCanvasHelpCommunityTitle,
             description: l.meshCanvasHelpCommunityBody,
           ),
+          // Status pill explainer — covers every hydration +
+          // transmission HUD label so the user has a mental model
+          // for the chrome that appears while painting.
+          HelpSheetItem(
+            icon: Icons.info_outline,
+            title: l.meshCanvasHelpStatusTitle,
+            description: l.meshCanvasHelpStatusBody,
+          ),
+          // Sharing-off-by-default privacy beat. Mirrors the
+          // participation onboarding sheet so a user who skipped
+          // the onboarding still discovers the toggle here.
+          HelpSheetItem(
+            icon: Icons.shield_outlined,
+            title: l.meshCanvasHelpSharingTitle,
+            description: l.meshCanvasHelpSharingBody,
+          ),
         ],
       );
     },

@@ -16463,7 +16463,7 @@
     "@meshCanvasHelpTitle": {
         "description": "Title of the MeshCanvas help sheet that explains the feature in a retro packet-radio tone."
     },
-    "meshCanvasHelpIntro": "A pixel wall co-painted over LoRa radio. Each Meshtastic channel gets its own 128 by 128 canvas, shared with every node listening on that channel. Tap a cell, send one tiny frame, watch it ripple across every nearby radio. No servers, no accounts, no moderators - just radios and pixels.",
+    "meshCanvasHelpIntro": "A shared pixel canvas painted live by everyone on your Meshtastic channel. Each tap sends one tiny radio frame to nearby devices, who paint the same pixel on their own canvas. No servers, no accounts, no admins; just LoRa radios and pixels.",
     "@meshCanvasHelpIntro": {
         "description": "Opening paragraph of the MeshCanvas help sheet. Frames MeshCanvas as r/place adapted to LoRa: channel-scoped, slow, no central authority. Mesh-only — the Local Device Canvas is a developer / debug surface and is intentionally not surfaced in user-facing help."
     },
@@ -16471,7 +16471,7 @@
     "@meshCanvasHelpMeshCanvasTitle": {
         "description": "Row title in the help sheet for the channel-bound mesh canvases. Plural because each Meshtastic channel gets one."
     },
-    "meshCanvasHelpMeshCanvasBody": "One canvas per Meshtastic channel. Primary, LongFast, your custom channels - each gets its own 128 by 128 board shared with every node listening on that channel. There is no global wall; canvases live and die with the channels that host them.",
+    "meshCanvasHelpMeshCanvasBody": "One canvas per Meshtastic channel. Primary, LongFast, your custom channels: each gets its own 64 by 64 board shared with every device listening on that channel. There is no global wall; canvases live and die with the channels that host them.",
     "@meshCanvasHelpMeshCanvasBody": {
         "description": "Row body in the help sheet describing the per-channel canvas model. Keep the dimensions verbatim across locales. Communicates: channel = canvas; no worldwide / global / cross-channel surface."
     },
@@ -16479,7 +16479,7 @@
     "@meshCanvasHelpTapToPaintTitle": {
         "description": "Row title in the help sheet for tap-to-paint interaction."
     },
-    "meshCanvasHelpTapToPaintBody": "Tap a cell to paint it with the active color from the strip below. Tap the transparent / mute swatch on the far left of the strip to erase. One tap, one pixel, one radio frame.",
+    "meshCanvasHelpTapToPaintBody": "Tap a cell to paint it with the active color from the strip below. Tap the transparent / eraser swatch on the far left of the strip to clear a cell. One tap, one pixel, one radio frame.",
     "@meshCanvasHelpTapToPaintBody": {
         "description": "Row body in the help sheet describing tap-to-paint. Emphasises the one-tap-one-frame /r/place mechanic so users understand each paint is a discrete LoRa broadcast."
     },
@@ -16487,7 +16487,7 @@
     "@meshCanvasHelpPanZoomTitle": {
         "description": "Row title in the help sheet covering the three secondary gestures: pan, pinch-zoom, long-press inspect."
     },
-    "meshCanvasHelpPanZoomBody": "Drag with one finger to pan around the board. Pinch with two fingers to zoom in and out (0.5x to 16x). Long-press any cell to open the tile inspector and see who painted it and when.",
+    "meshCanvasHelpPanZoomBody": "Drag with one finger to pan around the board. Pinch with two fingers to zoom in or out. Long-press any cell to open the tile inspector and see who painted it and when.",
     "@meshCanvasHelpPanZoomBody": {
         "description": "Row body in the help sheet describing pan + pinch zoom + long-press inspect together. Replaces the previous separate Long-press row; the inspector IS live and the help should reflect that."
     },
@@ -16495,7 +16495,7 @@
     "@meshCanvasHelpFirstPaintTitle": {
         "description": "Help-sheet row title explaining the dormant -> live transition. Mesh-native; communicates the /r/place principle 'dormant space implies opportunity'."
     },
-    "meshCanvasHelpFirstPaintBody": "Every channel canvas starts dormant - an empty grid waiting for its first pixel. The moment anyone on the channel paints, the canvas wakes for everyone else listening. Yours might be the first.",
+    "meshCanvasHelpFirstPaintBody": "Every channel canvas starts dormant: an empty grid waiting for its first pixel. The moment anyone on the channel paints, the canvas wakes for everyone else listening. Yours might be the first.",
     "@meshCanvasHelpFirstPaintBody": {
         "description": "Help-sheet row body explaining channel-canvas dormancy. Atmospheric, /r/place register; encourages users to seed dormant channels."
     },
@@ -16503,7 +16503,7 @@
     "@meshCanvasHelpTempoTitle": {
         "description": "Help-sheet row title framing LoRa's slow tempo as a feature, not a bug. Mesh-native register."
     },
-    "meshCanvasHelpTempoBody": "LoRa is not the internet. Expect seconds (USB / nearby radio) to minutes (long-range) for paints to ripple across the mesh. Each device caps itself to keep the channel breathable for DMs, signals, and other traffic. Be patient - the board accumulates.",
+    "meshCanvasHelpTempoBody": "LoRa radio is not the internet. Expect seconds (USB or nearby device) to minutes (long-range) for paints to ripple across the mesh. Each device limits itself to about 250 bytes per minute so canvas traffic does not crowd out DMs, signals, or other channel use. Be patient; the board accumulates.",
     "@meshCanvasHelpTempoBody": {
         "description": "Help-sheet row body explaining LoRa tempo + airtime rate limiting. Sets expectations that paints are not instant and the canvas is intentionally co-existing with other channel traffic."
     },
@@ -16511,7 +16511,7 @@
     "@meshCanvasHelpOverwriteTitle": {
         "description": "Help-sheet row title describing the last-write-wins conflict-resolution model. /r/place principle 3 ('overwriteability is mandatory') + principle 10 ('conflict is healthy')."
     },
-    "meshCanvasHelpOverwriteBody": "Two nodes paint the same cell? Whichever paint has the newer timestamp wins. Overwrites are intentional - territory and conflict are part of the wall. There is no edit history to lock in, no admin to call.",
+    "meshCanvasHelpOverwriteBody": "Two devices paint the same cell? Whichever paint has the newer timestamp wins. Overwrites are intentional: territory and conflict are part of the wall. There is no edit history to lock in, no admin to call.",
     "@meshCanvasHelpOverwriteBody": {
         "description": "Help-sheet row body explaining LWW conflict resolution. Reassures users that overwrites are by design, not bugs; communicates the /r/place 'conflict is healthy' principle."
     },
@@ -16519,9 +16519,25 @@
     "@meshCanvasHelpCommunityTitle": {
         "description": "Row title in the help sheet framing the etiquette / philosophy section. Mesh-native: channel-scoped not global; no central authority."
     },
-    "meshCanvasHelpCommunityBody": "Pixels are deliberately public on the channel that hosts them. No admins, no moderators, no global wall to police. If you would not say it on the channel, do not paint it. The fun is the wall, not the win.",
+    "meshCanvasHelpCommunityBody": "Pixels are public on the channel that hosts them. There are no admins, no moderators, no global wall to police. If you would not say it on the channel, do not paint it. The fun is the wall, not the win.",
     "@meshCanvasHelpCommunityBody": {
         "description": "Row body in the help sheet. Etiquette + philosophy. Replaces enterprise 'public by design' wording with mesh-native channel-scoped framing."
+    },
+    "meshCanvasHelpStatusTitle": "Status pill",
+    "@meshCanvasHelpStatusTitle": {
+        "description": "Help sheet row title introducing the status pill (top-right of the canvas viewer) that surfaces sync + send state to the user."
+    },
+    "meshCanvasHelpStatusBody": "A small pill appears in the top corner while the canvas is doing work. 'Catching up' means asking nearby devices for pixels you do not have yet. 'Receiving pixels' means a nearby device is sending you state right now (look for the shimmer on the tiles being filled). 'No one painting' means nobody else has painted on this channel recently. 'Slowing down' or 'Queue full' means your own paints are temporarily waiting for radio airtime.",
+    "@meshCanvasHelpStatusBody": {
+        "description": "Help sheet row body explaining every label that can appear in the status pill (hydration + transmission HUD states). Long-press the pill in the viewer for the same info per state."
+    },
+    "meshCanvasHelpSharingTitle": "Sharing is opt-in",
+    "@meshCanvasHelpSharingTitle": {
+        "description": "Help sheet row title introducing the sharing toggle. Reinforces that nothing leaves the device until the user opts in."
+    },
+    "meshCanvasHelpSharingBody": "When you first join MeshCanvas, sharing is off. You can paint and watch the canvas privately. To send your paints out over the mesh radio, turn the sharing switch on in MeshCanvas settings. You can toggle it back off at any time; canvases you have seen stay on your device.",
+    "@meshCanvasHelpSharingBody": {
+        "description": "Help sheet row body explaining the sharing toggle. The privacy beat: nothing broadcasts until the user opts in. Mirrors the participation onboarding sheet's sharing-off-by-default beat."
     },
     "meshCanvasHelpTooltip": "About MeshCanvas",
     "@meshCanvasHelpTooltip": {
@@ -16547,7 +16563,7 @@
     "@meshCanvasOnboardingTitle": {
         "description": "Title of the MeshCanvas first-run participation onboarding bottom sheet."
     },
-    "meshCanvasOnboardingIntro": "A shared pixel wall carried by nearby radios.",
+    "meshCanvasOnboardingIntro": "MeshCanvas is a shared pixel canvas painted live by everyone on your Meshtastic channel, carried over slow LoRa radio. There are no servers, no accounts, no moderators. Pick how you want to start: keep things private on this device, or join the mesh and watch the canvas fill in.",
     "@meshCanvasOnboardingIntro": {
         "description": "Intro line under the onboarding sheet title. Sets the mesh-native / packet-radio mental model."
     },
@@ -16555,7 +16571,7 @@
     "@meshCanvasOnboardingRowLocalTitle": {
         "description": "Title of the Local Device Canvas explainer row in the MeshCanvas onboarding sheet."
     },
-    "meshCanvasOnboardingRowLocalBody": "A private sandbox on this phone. Paints stay on the device. No airtime used.",
+    "meshCanvasOnboardingRowLocalBody": "A private sandbox on this device. Paint whatever you like to learn the tools. Nothing leaves the device; no airtime is used. You can join the mesh later.",
     "@meshCanvasOnboardingRowLocalBody": {
         "description": "Body of the Local Device Canvas explainer row in the MeshCanvas onboarding sheet."
     },
@@ -16563,7 +16579,7 @@
     "@meshCanvasOnboardingRowMeshTitle": {
         "description": "Title of the Mesh canvases explainer row in the MeshCanvas onboarding sheet."
     },
-    "meshCanvasOnboardingRowMeshBody": "One canvas per Meshtastic channel you're on. Paints travel on that channel. Uses a small amount of mesh airtime.",
+    "meshCanvasOnboardingRowMeshBody": "One canvas per Meshtastic channel you're on. Joining lets you VIEW the work others have painted. Your own pixels stay on this device until you turn the Sharing switch ON in MeshCanvas settings; that's an explicit second step so nothing broadcasts by accident.",
     "@meshCanvasOnboardingRowMeshBody": {
         "description": "Body of the Mesh canvases explainer row in the MeshCanvas onboarding sheet."
     },
@@ -16571,7 +16587,7 @@
     "@meshCanvasOnboardingRowPresenceTitle": {
         "description": "Title of the Presence explainer row in the MeshCanvas onboarding sheet. Marks the optional opt-in nature."
     },
-    "meshCanvasOnboardingRowPresenceBody": "Show others that you're viewing or painting. Off by default. Your presence is temporary and fades automatically. You can enable this later in settings.",
+    "meshCanvasOnboardingRowPresenceBody": "Show other devices that you're currently looking at or painting on a canvas. Off by default. When you do enable it, your presence is ephemeral; it never persists and fades automatically when you leave. Toggle from MeshCanvas settings any time.",
     "@meshCanvasOnboardingRowPresenceBody": {
         "description": "Body of the Presence explainer row in the MeshCanvas onboarding sheet. Sets expectations that presence is conservative-default."
     },
@@ -16646,50 +16662,50 @@
             "count": {"type": "int"}
         }
     },
-    "meshCanvasTransmissionCooling": "cooling",
+    "meshCanvasTransmissionCooling": "Slowing down",
     "@meshCanvasTransmissionCooling": {
         "description": "MeshCanvas viewer HUD label when the canvas governor or SIP rate limiter is currently refusing frames. Paints are still accepted into the queue."
     },
-    "meshCanvasTransmissionFull": "queue full · wait for airtime",
+    "meshCanvasTransmissionFull": "Queue full",
     "@meshCanvasTransmissionFull": {
         "description": "MeshCanvas viewer HUD label when the pending paint queue has hit the soft UX cap. New paint taps are blocked until the queue drains."
     },
-    "meshCanvasTransmissionTooltipQueued": "{count, plural, =1{1 paint waiting for airtime} other{{count} paints waiting for airtime}}",
+    "meshCanvasTransmissionTooltipQueued": "{count, plural, =1{1 pixel waiting to broadcast over the mesh} other{{count} pixels waiting to broadcast over the mesh}}",
     "@meshCanvasTransmissionTooltipQueued": {
         "description": "Tooltip for the queued state of the MeshCanvas viewer transmission HUD.",
         "placeholders": {
             "count": {"type": "int"}
         }
     },
-    "meshCanvasTransmissionTooltipCooling": "Mesh airtime is busy. Painting resumes automatically.",
+    "meshCanvasTransmissionTooltipCooling": "The mesh radio is at its airtime limit. Your pixels will go out as soon as there is room. Keep painting; your taps are saved.",
     "@meshCanvasTransmissionTooltipCooling": {
         "description": "Tooltip for the cooling state of the MeshCanvas viewer transmission HUD."
     },
-    "meshCanvasTransmissionTooltipFull": "Paint queue full. Wait a moment for the mesh to catch up.",
+    "meshCanvasTransmissionTooltipFull": "You have painted faster than the mesh can broadcast. Pause a moment and the queue will drain.",
     "@meshCanvasTransmissionTooltipFull": {
         "description": "Tooltip for the queue-full state of the MeshCanvas viewer transmission HUD."
     },
-    "meshCanvasHydrationRecovering": "recovering paint",
+    "meshCanvasHydrationRecovering": "Catching up",
     "@meshCanvasHydrationRecovering": {
         "description": "MeshCanvas viewer hydration HUD label when one or more sync_request frames are in flight to peers, recovering existing canvas state."
     },
-    "meshCanvasHydrationSyncing": "syncing tiles",
+    "meshCanvasHydrationSyncing": "Receiving pixels",
     "@meshCanvasHydrationSyncing": {
         "description": "MeshCanvas viewer hydration HUD label while sync_response bands are actively arriving and being applied to the local canvas."
     },
-    "meshCanvasHydrationQuiet": "mesh quiet",
+    "meshCanvasHydrationQuiet": "No one painting",
     "@meshCanvasHydrationQuiet": {
         "description": "MeshCanvas viewer hydration HUD label when the local canvas is empty AND a peer has been observed reporting an empty canvas as well. Distinguishes 'genuinely empty mesh' from 'just haven't heard from anyone yet'."
     },
-    "meshCanvasHydrationTooltipRecovering": "Asking nearby radios for missing tiles.",
+    "meshCanvasHydrationTooltipRecovering": "Asking nearby devices for any pixels you do not have yet. Pixels arrive when the mesh radio has room.",
     "@meshCanvasHydrationTooltipRecovering": {
         "description": "Tooltip for the recovering state of the MeshCanvas viewer hydration HUD."
     },
-    "meshCanvasHydrationTooltipSyncing": "Receiving paint from the mesh.",
+    "meshCanvasHydrationTooltipSyncing": "Pixels from a nearby device are landing on your canvas now. This can take a moment over slow LoRa radio.",
     "@meshCanvasHydrationTooltipSyncing": {
         "description": "Tooltip for the syncing state of the MeshCanvas viewer hydration HUD."
     },
-    "meshCanvasHydrationTooltipQuiet": "No paint heard from nearby radios.",
+    "meshCanvasHydrationTooltipQuiet": "Nobody else has painted on this channel recently. Your taps will be the first thing other devices see when they tune in.",
     "@meshCanvasHydrationTooltipQuiet": {
         "description": "Tooltip for the quiet state of the MeshCanvas viewer hydration HUD."
     },
@@ -16864,19 +16880,19 @@
     "@meshCanvasOverviewHeroBigUnit": {
         "description": "Unit label beside the large painted-pixel count in the Mesh tab hero stats card. Reads as 'N pixels on the mesh'. Mesh-native register; avoids enterprise / KPI phrasing like 'pixels painted'."
     },
-    "meshCanvasViewerEmptyMeshTitle": "Tap to seed the first pixel",
+    "meshCanvasViewerEmptyMeshTitle": "No pixels here yet. Tap to start.",
     "@meshCanvasViewerEmptyMeshTitle": {
         "description": "Centered atmospheric prompt shown on a mesh canvas with zero painted cells when no peer-sync work is in progress (hydration state idle or quiet). /r/place-style direct instruction: the user's first paint wakes the shared channel canvas. Lives inside the canvas surface as IgnorePointer text so taps pass through to paint."
     },
-    "meshCanvasViewerEmptyMeshSubtitle": "First paint wakes the board",
+    "meshCanvasViewerEmptyMeshSubtitle": "Your first paint will broadcast over the mesh radio to everyone tuned to this channel.",
     "@meshCanvasViewerEmptyMeshSubtitle": {
         "description": "Smaller atmospheric line under the empty-mesh-canvas centered prompt. Communicates that the channel canvas is dormant until someone seeds it."
     },
-    "meshCanvasViewerEmptyMeshHydratingTitle": "Listening for mesh ink",
+    "meshCanvasViewerEmptyMeshHydratingTitle": "Looking for paint from nearby devices…",
     "@meshCanvasViewerEmptyMeshHydratingTitle": {
         "description": "Centered atmospheric prompt shown on a mesh canvas with zero painted cells WHILE sync work is in progress (hydration state recovering or syncing). Replaces the 'Tap to seed' copy so we don't lie to the user that the board is dormant when pixels may land in seconds. The viewport is still tappable underneath — this is just an honest holding message."
     },
-    "meshCanvasViewerEmptyMeshHydratingSubtitle": "Pulling pixels from nearby peers",
+    "meshCanvasViewerEmptyMeshHydratingSubtitle": "If anyone else has painted this canvas, their pixels will appear in a moment.",
     "@meshCanvasViewerEmptyMeshHydratingSubtitle": {
         "description": "Smaller line under the empty-mesh-canvas hydrating prompt. Tells the user the device is actively asking peers for the current canvas state and pixels should arrive shortly."
     },
@@ -51133,7 +51149,15 @@
     },
     "notificationSipPeerFoundBody": "A Handshake peer is in range. Open Handshake to connect.",
     "@notificationSipPeerFoundBody": {
-        "description": "Notification body when a new SIP peer is discovered."
+        "description": "Notification body when a new SIP peer is discovered AND the operator has Handshake enabled but MeshCanvas disabled. Speaks specifically to the Handshake feature."
+    },
+    "notificationMeshCanvasPeerFoundBody": "A MeshCanvas peer is in range. Open MeshCanvas to see what they're painting.",
+    "@notificationMeshCanvasPeerFoundBody": {
+        "description": "Notification body when a new SIP peer is discovered AND the operator has MeshCanvas enabled but Handshake disabled. Speaks specifically to the MeshCanvas feature."
+    },
+    "notificationMeshPeerFoundBody": "A nearby device is reachable on the mesh. Open Handshake to connect or MeshCanvas to paint together.",
+    "@notificationMeshPeerFoundBody": {
+        "description": "Notification body when a new SIP peer is discovered AND the operator has BOTH Handshake and MeshCanvas enabled. Generic phrasing that does not privilege either feature."
     },
     "notificationSipPlayTurnTitle": "Your turn",
     "@notificationSipPlayTurnTitle": {

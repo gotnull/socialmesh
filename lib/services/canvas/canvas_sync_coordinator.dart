@@ -1140,6 +1140,25 @@ class CanvasSyncCoordinator {
     return (received: minReceived, total: 8);
   }
 
+  /// Tile indices currently receiving raw-band sync_responses for the
+  /// canvas. The viewport overlay paints an animated shimmer over each
+  /// tile in this set so the user sees WHERE pixels are landing instead
+  /// of a single generic "syncing" pill. Returns an empty set when no
+  /// raw-band sets are in flight (RLE tile syncs complete in one frame
+  /// and don't shimmer; only multi-band raw syncs do, which is exactly
+  /// when the visual feedback matters). Indices use the canonical
+  /// `tileY * tilesPerRow + tileX` packing.
+  Set<int> syncingTilesFor(int canvasLocalId) {
+    final sets = _rawBandReceiveByCanvas[canvasLocalId];
+    if (sets == null || sets.isEmpty) return const <int>{};
+    final result = <int>{};
+    for (final set in sets.values) {
+      if (set.complete) continue;
+      result.add(set.tileY * CanvasGeometry.tilesPerRow + set.tileX);
+    }
+    return result;
+  }
+
   void dispose() {
     _hydrationChanges.close();
     _pendingByCanvas.clear();

@@ -12275,56 +12275,70 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meshCanvasHelpIntro =>
-      'A pixel wall co-painted over LoRa radio. Each Meshtastic channel gets its own 128 by 128 canvas, shared with every node listening on that channel. Tap a cell, send one tiny frame, watch it ripple across every nearby radio. No servers, no accounts, no moderators - just radios and pixels.';
+      'A shared pixel canvas painted live by everyone on your Meshtastic channel. Each tap sends one tiny radio frame to nearby devices, who paint the same pixel on their own canvas. No servers, no accounts, no admins; just LoRa radios and pixels.';
 
   @override
   String get meshCanvasHelpMeshCanvasTitle => 'Mesh canvases';
 
   @override
   String get meshCanvasHelpMeshCanvasBody =>
-      'One canvas per Meshtastic channel. Primary, LongFast, your custom channels - each gets its own 128 by 128 board shared with every node listening on that channel. There is no global wall; canvases live and die with the channels that host them.';
+      'One canvas per Meshtastic channel. Primary, LongFast, your custom channels: each gets its own 64 by 64 board shared with every device listening on that channel. There is no global wall; canvases live and die with the channels that host them.';
 
   @override
   String get meshCanvasHelpTapToPaintTitle => 'Tap to paint';
 
   @override
   String get meshCanvasHelpTapToPaintBody =>
-      'Tap a cell to paint it with the active color from the strip below. Tap the transparent / mute swatch on the far left of the strip to erase. One tap, one pixel, one radio frame.';
+      'Tap a cell to paint it with the active color from the strip below. Tap the transparent / eraser swatch on the far left of the strip to clear a cell. One tap, one pixel, one radio frame.';
 
   @override
   String get meshCanvasHelpPanZoomTitle => 'Pan, pinch, hold';
 
   @override
   String get meshCanvasHelpPanZoomBody =>
-      'Drag with one finger to pan around the board. Pinch with two fingers to zoom in and out (0.5x to 16x). Long-press any cell to open the tile inspector and see who painted it and when.';
+      'Drag with one finger to pan around the board. Pinch with two fingers to zoom in or out. Long-press any cell to open the tile inspector and see who painted it and when.';
 
   @override
   String get meshCanvasHelpFirstPaintTitle => 'First paint wakes the board';
 
   @override
   String get meshCanvasHelpFirstPaintBody =>
-      'Every channel canvas starts dormant - an empty grid waiting for its first pixel. The moment anyone on the channel paints, the canvas wakes for everyone else listening. Yours might be the first.';
+      'Every channel canvas starts dormant: an empty grid waiting for its first pixel. The moment anyone on the channel paints, the canvas wakes for everyone else listening. Yours might be the first.';
 
   @override
   String get meshCanvasHelpTempoTitle => 'Slow on purpose';
 
   @override
   String get meshCanvasHelpTempoBody =>
-      'LoRa is not the internet. Expect seconds (USB / nearby radio) to minutes (long-range) for paints to ripple across the mesh. Each device caps itself to keep the channel breathable for DMs, signals, and other traffic. Be patient - the board accumulates.';
+      'LoRa radio is not the internet. Expect seconds (USB or nearby device) to minutes (long-range) for paints to ripple across the mesh. Each device limits itself to about 250 bytes per minute so canvas traffic does not crowd out DMs, signals, or other channel use. Be patient; the board accumulates.';
 
   @override
   String get meshCanvasHelpOverwriteTitle => 'Newer paint wins';
 
   @override
   String get meshCanvasHelpOverwriteBody =>
-      'Two nodes paint the same cell? Whichever paint has the newer timestamp wins. Overwrites are intentional - territory and conflict are part of the wall. There is no edit history to lock in, no admin to call.';
+      'Two devices paint the same cell? Whichever paint has the newer timestamp wins. Overwrites are intentional: territory and conflict are part of the wall. There is no edit history to lock in, no admin to call.';
 
   @override
   String get meshCanvasHelpCommunityTitle => 'Public on the channel';
 
   @override
   String get meshCanvasHelpCommunityBody =>
-      'Pixels are deliberately public on the channel that hosts them. No admins, no moderators, no global wall to police. If you would not say it on the channel, do not paint it. The fun is the wall, not the win.';
+      'Pixels are public on the channel that hosts them. There are no admins, no moderators, no global wall to police. If you would not say it on the channel, do not paint it. The fun is the wall, not the win.';
+
+  @override
+  String get meshCanvasHelpStatusTitle => 'Status pill';
+
+  @override
+  String get meshCanvasHelpStatusBody =>
+      'A small pill appears in the top corner while the canvas is doing work. \'Catching up\' means asking nearby devices for pixels you do not have yet. \'Receiving pixels\' means a nearby device is sending you state right now (look for the shimmer on the tiles being filled). \'No one painting\' means nobody else has painted on this channel recently. \'Slowing down\' or \'Queue full\' means your own paints are temporarily waiting for radio airtime.';
+
+  @override
+  String get meshCanvasHelpSharingTitle => 'Sharing is opt-in';
+
+  @override
+  String get meshCanvasHelpSharingBody =>
+      'When you first join MeshCanvas, sharing is off. You can paint and watch the canvas privately. To send your paints out over the mesh radio, turn the sharing switch on in MeshCanvas settings. You can toggle it back off at any time; canvases you have seen stay on your device.';
 
   @override
   String get meshCanvasHelpTooltip => 'About MeshCanvas';
@@ -12347,28 +12361,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meshCanvasOnboardingIntro =>
-      'A shared pixel wall carried by nearby radios.';
+      'MeshCanvas is a shared pixel canvas painted live by everyone on your Meshtastic channel, carried over slow LoRa radio. There are no servers, no accounts, no moderators. Pick how you want to start: keep things private on this device, or join the mesh and watch the canvas fill in.';
 
   @override
   String get meshCanvasOnboardingRowLocalTitle => 'Local Device Canvas';
 
   @override
   String get meshCanvasOnboardingRowLocalBody =>
-      'A private sandbox on this phone. Paints stay on the device. No airtime used.';
+      'A private sandbox on this device. Paint whatever you like to learn the tools. Nothing leaves the device; no airtime is used. You can join the mesh later.';
 
   @override
   String get meshCanvasOnboardingRowMeshTitle => 'Mesh canvases';
 
   @override
   String get meshCanvasOnboardingRowMeshBody =>
-      'One canvas per Meshtastic channel you\'re on. Paints travel on that channel. Uses a small amount of mesh airtime.';
+      'One canvas per Meshtastic channel you\'re on. Joining lets you VIEW the work others have painted. Your own pixels stay on this device until you turn the Sharing switch ON in MeshCanvas settings; that\'s an explicit second step so nothing broadcasts by accident.';
 
   @override
   String get meshCanvasOnboardingRowPresenceTitle => 'Presence (optional)';
 
   @override
   String get meshCanvasOnboardingRowPresenceBody =>
-      'Show others that you\'re viewing or painting. Off by default. Your presence is temporary and fades automatically. You can enable this later in settings.';
+      'Show other devices that you\'re currently looking at or painting on a canvas. Off by default. When you do enable it, your presence is ephemeral; it never persists and fades automatically when you leave. Toggle from MeshCanvas settings any time.';
 
   @override
   String get meshCanvasOnboardingActionExplore => 'Explore locally';
@@ -12430,50 +12444,50 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get meshCanvasTransmissionCooling => 'cooling';
+  String get meshCanvasTransmissionCooling => 'Slowing down';
 
   @override
-  String get meshCanvasTransmissionFull => 'queue full · wait for airtime';
+  String get meshCanvasTransmissionFull => 'Queue full';
 
   @override
   String meshCanvasTransmissionTooltipQueued(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count paints waiting for airtime',
-      one: '1 paint waiting for airtime',
+      other: '$count pixels waiting to broadcast over the mesh',
+      one: '1 pixel waiting to broadcast over the mesh',
     );
     return '$_temp0';
   }
 
   @override
   String get meshCanvasTransmissionTooltipCooling =>
-      'Mesh airtime is busy. Painting resumes automatically.';
+      'The mesh radio is at its airtime limit. Your pixels will go out as soon as there is room. Keep painting; your taps are saved.';
 
   @override
   String get meshCanvasTransmissionTooltipFull =>
-      'Paint queue full. Wait a moment for the mesh to catch up.';
+      'You have painted faster than the mesh can broadcast. Pause a moment and the queue will drain.';
 
   @override
-  String get meshCanvasHydrationRecovering => 'recovering paint';
+  String get meshCanvasHydrationRecovering => 'Catching up';
 
   @override
-  String get meshCanvasHydrationSyncing => 'syncing tiles';
+  String get meshCanvasHydrationSyncing => 'Receiving pixels';
 
   @override
-  String get meshCanvasHydrationQuiet => 'mesh quiet';
+  String get meshCanvasHydrationQuiet => 'No one painting';
 
   @override
   String get meshCanvasHydrationTooltipRecovering =>
-      'Asking nearby radios for missing tiles.';
+      'Asking nearby devices for any pixels you do not have yet. Pixels arrive when the mesh radio has room.';
 
   @override
   String get meshCanvasHydrationTooltipSyncing =>
-      'Receiving paint from the mesh.';
+      'Pixels from a nearby device are landing on your canvas now. This can take a moment over slow LoRa radio.';
 
   @override
   String get meshCanvasHydrationTooltipQuiet =>
-      'No paint heard from nearby radios.';
+      'Nobody else has painted on this channel recently. Your taps will be the first thing other devices see when they tune in.';
 
   @override
   String get meshCanvasVitalsScopeMesh => 'MESH CANVAS';
@@ -12628,18 +12642,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshCanvasOverviewHeroBigUnit => 'pixels on the mesh';
 
   @override
-  String get meshCanvasViewerEmptyMeshTitle => 'Tap to seed the first pixel';
+  String get meshCanvasViewerEmptyMeshTitle =>
+      'No pixels here yet. Tap to start.';
 
   @override
-  String get meshCanvasViewerEmptyMeshSubtitle => 'First paint wakes the board';
+  String get meshCanvasViewerEmptyMeshSubtitle =>
+      'Your first paint will broadcast over the mesh radio to everyone tuned to this channel.';
 
   @override
   String get meshCanvasViewerEmptyMeshHydratingTitle =>
-      'Listening for mesh ink';
+      'Looking for paint from nearby devices…';
 
   @override
   String get meshCanvasViewerEmptyMeshHydratingSubtitle =>
-      'Pulling pixels from nearby peers';
+      'If anyone else has painted this canvas, their pixels will appear in a moment.';
 
   @override
   String get meshCanvasViewerEmptyLocalTitle => 'Tap to paint';
@@ -38337,6 +38353,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notificationSipPeerFoundBody =>
       'A Handshake peer is in range. Open Handshake to connect.';
+
+  @override
+  String get notificationMeshCanvasPeerFoundBody =>
+      'A MeshCanvas peer is in range. Open MeshCanvas to see what they\'re painting.';
+
+  @override
+  String get notificationMeshPeerFoundBody =>
+      'A nearby device is reachable on the mesh. Open Handshake to connect or MeshCanvas to paint together.';
 
   @override
   String get notificationSipPlayTurnTitle => 'Your turn';

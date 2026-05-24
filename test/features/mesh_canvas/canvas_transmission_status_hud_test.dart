@@ -68,8 +68,8 @@ void main() {
 
     // No labels of any severity should appear.
     expect(find.text('queued'), findsNothing);
-    expect(find.text('cooling'), findsNothing);
-    expect(find.textContaining('queue full'), findsNothing);
+    expect(find.text('Slowing down'), findsNothing);
+    expect(find.textContaining('Queue full'), findsNothing);
   });
 
   testWidgets('queued severity shows the queued label', (tester) async {
@@ -105,7 +105,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('cooling'), findsOneWidget);
+    expect(find.text('Slowing down'), findsOneWidget);
   });
 
   testWidgets('full severity shows the queue-full label', (tester) async {
@@ -123,7 +123,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('queue full'), findsOneWidget);
+    expect(find.textContaining('Queue full'), findsOneWidget);
   });
 
   testWidgets(

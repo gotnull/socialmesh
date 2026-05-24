@@ -92,7 +92,10 @@ void main() {
     expect(find.text('MeshCanvas'), findsWidgets);
     // Intro line.
     expect(
-      find.text('A shared pixel wall carried by nearby radios.'),
+      find.textContaining(
+        'MeshCanvas is a shared pixel canvas',
+        findRichText: true,
+      ),
       findsOneWidget,
     );
     // Three explainer rows.
