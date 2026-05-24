@@ -39,11 +39,6 @@ import 'package:flutter/material.dart';
 import '../../../services/canvas/canvas_constants.dart';
 import '../../../services/canvas/canvas_models.dart';
 
-/// Chunk spacing (cells per chunk side). Matches the wire-format
-/// tile boundary from CANVAS_V0_1.md §6.3 so the lattice maps
-/// directly to sync_request rects.
-const int _kChunkSizeCells = 32;
-
 /// One cell mid-vanish: the cell was painted last build but is gone
 /// (erased or overwritten) this build. The painter renders it with
 /// a reverse easeInBack scale + linear alpha fade so the user sees
@@ -189,21 +184,53 @@ class CanvasGridPainter extends CustomPainter {
     // Layer 1: canvas surface fill — the board itself.
     canvas.drawRect(surfaceRect, Paint()..color = surfaceColor);
 
-    // Layer 2: 32-cell chunk lattice. Subtle hairlines on the
-    // surface only (not the surrounding margin). Vertical lines at
-    // x = 32, 64, 96 cells; horizontal lines at y = 32, 64, 96.
-    final chunkPaint = Paint()
-      ..color = chunkLineColor
-      ..strokeWidth = 0.6
-      ..style = PaintingStyle.stroke;
-    final chunkPx = _kChunkSizeCells * cellSize;
-    for (var i = 1; i * _kChunkSizeCells < widthCells; i++) {
-      final x = i * chunkPx;
-      canvas.drawLine(Offset(x, 0), Offset(x, canvasH), chunkPaint);
-    }
-    for (var j = 1; j * _kChunkSizeCells < heightCells; j++) {
-      final y = j * chunkPx;
-      canvas.drawLine(Offset(0, y), Offset(canvasW, y), chunkPaint);
+    // Layer 2 (chunk lattice) intentionally removed. The semi-
+    // transparent tile-boundary lines let painted cells underneath
+    // bleed through and read as ragged stripes across the canvas.
+    // The outer surface ring delimits the board; tile geometry is
+    // a debugging concern that does not belong in the user-facing
+    // painter. The `chunkLineColor` constructor param is preserved
+    // for back-compat with existing test fixtures and may be used
+    // again if a future build re-introduces an opaque lattice.
+
+    // Layer 2b: shimmer overlay on syncing tiles. Diagonal gradient
+    // sweep over each tile rect currently receiving raw-band
+    // sync_responses. Rendered BEFORE the cell layer so painted
+    // cells overlay the shimmer cleanly — only the still-unpainted
+    // surface of a syncing tile shows the pulse. As pixels land,
+    // the shimmer naturally shrinks to fit the remaining empty area.
+    // Spec: CANVAS_SYNC_V0_1.md (S0.ux.30).
+    final syncing = syncingTileIndices;
+    if (syncing != null && syncing.isNotEmpty) {
+      final liveNowMs = DateTime.now().millisecondsSinceEpoch;
+      final phase = (liveNowMs % shimmerPeriodMs) / shimmerPeriodMs;
+      final tilePx = CanvasGeometry.tileSize * cellSize;
+      final transparentShimmer = shimmerColor.withValues(alpha: 0);
+      for (final tileIdx in syncing) {
+        final tileX = tileIdx % CanvasGeometry.tilesPerRow;
+        final tileY = tileIdx ~/ CanvasGeometry.tilesPerRow;
+        final tileLeft = tileX * tilePx;
+        final tileTop = tileY * tilePx;
+        final tileRect = Rect.fromLTWH(tileLeft, tileTop, tilePx, tilePx);
+        final bandWidth = tilePx * 0.6;
+        final travel = -bandWidth + phase * (tilePx + 2 * bandWidth);
+        final bandStart = Offset(tileLeft + travel, tileTop + travel);
+        final bandEnd = Offset(
+          tileLeft + travel + bandWidth,
+          tileTop + travel + bandWidth,
+        );
+        final shimmer = Paint()
+          ..shader = ui.Gradient.linear(
+            bandStart,
+            bandEnd,
+            [transparentShimmer, shimmerColor, transparentShimmer],
+            const [0.0, 0.5, 1.0],
+          );
+        canvas.save();
+        canvas.clipRect(tileRect);
+        canvas.drawRect(tileRect, shimmer);
+        canvas.restore();
+      }
     }
 
     // Layer 3: painted cells. Re-use a single Paint and mutate its
@@ -282,7 +309,6 @@ class CanvasGridPainter extends CustomPainter {
         );
       }
     }
-
     // Layer 3b: pop-out for vanishing cells. Cells that were painted
     // last build but are gone this build (erase, overwrite to
     // transparent, inbound LWW dispatch from a peer who cleared them)
@@ -313,57 +339,17 @@ class CanvasGridPainter extends CustomPainter {
       }
     }
 
-    // Layer 3c: shimmer overlay on syncing tiles. Diagonal gradient
-    // sweep over each tile rect currently receiving raw-band
-    // sync_responses. The sweep loops every [shimmerPeriodMs] so the
-    // user sees WHERE pixels are landing instead of only a generic
-    // "Receiving pixels" pill. Spec: CANVAS_SYNC_V0_1.md (S0.ux.30).
-    final syncing = syncingTileIndices;
-    if (syncing != null && syncing.isNotEmpty) {
-      final liveNowMs = nowMs == 0
-          ? DateTime.now().millisecondsSinceEpoch
-          : nowMs;
-      final phase = (liveNowMs % shimmerPeriodMs) / shimmerPeriodMs;
-      final tilePx = CanvasGeometry.tileSize * cellSize;
-      final transparentShimmer = shimmerColor.withValues(alpha: 0);
-      for (final tileIdx in syncing) {
-        final tileX = tileIdx % CanvasGeometry.tilesPerRow;
-        final tileY = tileIdx ~/ CanvasGeometry.tilesPerRow;
-        final tileLeft = tileX * tilePx;
-        final tileTop = tileY * tilePx;
-        final tileRect = Rect.fromLTWH(tileLeft, tileTop, tilePx, tilePx);
-        // Diagonal sweep: band travels from top-left-off-tile to
-        // bottom-right-off-tile. `phase` parameterises that travel.
-        // Endpoints are computed in canvas-pixel space so the band
-        // width is constant regardless of tile size.
-        final bandWidth = tilePx * 0.6;
-        final travel = -bandWidth + phase * (tilePx + 2 * bandWidth);
-        final bandStart = Offset(tileLeft + travel, tileTop + travel);
-        final bandEnd = Offset(
-          tileLeft + travel + bandWidth,
-          tileTop + travel + bandWidth,
-        );
-        final shimmer = Paint()
-          ..shader = ui.Gradient.linear(
-            bandStart,
-            bandEnd,
-            [transparentShimmer, shimmerColor, transparentShimmer],
-            const [0.0, 0.5, 1.0],
-          );
-        canvas.save();
-        canvas.clipRect(tileRect);
-        canvas.drawRect(tileRect, shimmer);
-        canvas.restore();
-      }
-    }
-
-    // Layer 4: surface border on top. Stays visible regardless of
-    // cell density.
+    // Layer 4: surface border ring (perimeter). Drawn on a rect
+    // inflated by 1pt so the stroke sits ENTIRELY outside the cell
+    // area: cells render to their full extent without being clipped,
+    // and there is no cell pixel underneath the stroke to bleed
+    // through. The 1pt inflation puts the stroke's inner edge a
+    // hair beyond the outermost cell coordinate.
     final borderPaint = Paint()
       ..color = borderColor
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
-    canvas.drawRect(surfaceRect, borderPaint);
+    canvas.drawRect(surfaceRect.inflate(1), borderPaint);
   }
 
   @override

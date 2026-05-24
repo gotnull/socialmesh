@@ -33,8 +33,12 @@ import '../../../services/canvas/canvas_models.dart';
 /// thumbnail and the actual canvas read as the same artifact.
 const Color _surfaceColor = Color(0xFF161A22);
 const Color _outsideColor = Color(0xFF0B0D11);
-const Color _chunkLineColor = Color(0x14FFFFFF);
-const Color _ringColor = Color(0x66FFFFFF);
+
+/// Near-opaque ring tone so dense canvases do not show pixel
+/// patterns through the inner border. Was 0x66FFFFFF (~40% white)
+/// which let painted cells bleed through the stroke and read as a
+/// ragged corner silhouette.
+const Color _ringColor = Color(0xCCAEB3BD);
 
 /// Faint pulse marker shown at the centre of a dormant channel
 /// thumbnail. Communicates "first paint goes here" without being a
@@ -126,27 +130,11 @@ class _ChannelCanvasThumbnailPainter extends CustomPainter {
     final surfaceRRect = RRect.fromRectAndRadius(surfaceRect, surfaceRadius);
     canvas.drawRRect(surfaceRRect, Paint()..color = _surfaceColor);
 
-    // Layer 2: 32-cell chunk lattice. Three lines per axis at
-    // 1/4-board intervals. Mirrors the viewer.
-    final chunkPaint = Paint()
-      ..color = _chunkLineColor
-      ..strokeWidth = 0.5
-      ..style = PaintingStyle.stroke;
-    for (var i = 1; i <= 3; i++) {
-      final t = i / 4.0;
-      final x = surfaceRect.left + surfaceRect.width * t;
-      final y = surfaceRect.top + surfaceRect.height * t;
-      canvas.drawLine(
-        Offset(x, surfaceRect.top),
-        Offset(x, surfaceRect.bottom),
-        chunkPaint,
-      );
-      canvas.drawLine(
-        Offset(surfaceRect.left, y),
-        Offset(surfaceRect.right, y),
-        chunkPaint,
-      );
-    }
+    // Layer 2 (chunk lattice) intentionally removed. Mirrors the
+    // live viewer: the semi-transparent tile-boundary lines let
+    // painted cells underneath bleed through, reading as ragged
+    // stripes across the thumbnail. The outer surface ring
+    // delimits the board on its own.
 
     // Layer 3: painted cells, scaled to thumbnail space. Drop
     // index-0 (transparent / unpainted sentinel) and any out-of-
@@ -206,9 +194,12 @@ class _ChannelCanvasThumbnailPainter extends CustomPainter {
       canvas.drawCircle(center, 3, Paint()..color = _dormantSeedColor);
     }
 
-    // Layer 5: surface border ring on top. Same tone as the viewer.
-    // Drawn as an RRect matching the inner surface so the corners
-    // don't read as a square frame inside the rounded clip.
+    // Layer 5: surface border ring on top. Same shape as the live
+    // viewer's border so a thumbnail and the eventual painted board
+    // read as the same artifact. Drawn as an RRect matching the
+    // inner surface, with a near-opaque tone (see [_ringColor]) so
+    // edge cells do not bleed through the stroke into a ragged
+    // corner silhouette.
     final ringPaint = Paint()
       ..color = _ringColor
       ..strokeWidth = 1

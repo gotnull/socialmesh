@@ -303,7 +303,10 @@ class CanvasViewportBody extends ConsumerWidget {
     final outsidePane = context.background;
     const canvasSurface = Color(0xFF161A22);
     const chunkLine = Color(0x14FFFFFF);
-    const surfaceRing = Color(0x66FFFFFF);
+    // Near-opaque so painted cells right at the canvas edge do not
+    // bleed through the ring stroke. Was 0x66 (~40% white) which
+    // showed pixel patterns through the border at high cell density.
+    const surfaceRing = Color(0xCCAEB3BD);
 
     // Identity chip is intentionally Local-only. Mesh canvases carry
     // their identity in the app bar title (the channel name) — adding
