@@ -682,33 +682,43 @@ class _CanvasEmptyPrompt extends ConsumerWidget {
       title = l.meshCanvasViewerEmptyLocalTitle;
       subtitle = l.meshCanvasViewerEmptyLocalSubtitle;
     }
+    // Padding inside Center constrains the text width to the canvas
+    // frame (canvasWidth - 2 * spacing24) so the subtitle wraps inside
+    // the visible board instead of overflowing past the surface ring.
+    // Without this the Center -> Column -> Text chain lets each Text
+    // grow to its intrinsic width and bleed beyond the frame.
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-              color: context.textPrimary.withValues(alpha: 0.85),
-              letterSpacing: 0.3,
-              fontFamily: AppTheme.fontFamily,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: context.textPrimary.withValues(alpha: 0.85),
+                letterSpacing: 0.3,
+                height: 1.3,
+                fontFamily: AppTheme.fontFamily,
+              ),
             ),
-          ),
-          const SizedBox(height: AppTheme.spacing8),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              color: context.textTertiary.withValues(alpha: 0.85),
-              letterSpacing: 0.4,
-              fontFamily: AppTheme.fontFamily,
+            const SizedBox(height: AppTheme.spacing8),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                color: context.textTertiary.withValues(alpha: 0.85),
+                letterSpacing: 0.3,
+                height: 1.4,
+                fontFamily: AppTheme.fontFamily,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
