@@ -469,8 +469,14 @@ class AppFeatureFlags {
   /// Whether the SIP (SocialMesh Identity Protocol) feature is enabled.
   /// Set `SIP_ENABLED=true` (or `HANDSHAKE_ENABLED=true`) in `.env`.
   /// Default: false — SIP UI is hidden unless explicitly enabled.
+  ///
+  /// MeshCanvas frames ride SIP-wrapped MRRP, so [isMeshCanvasEnabled]
+  /// also implicitly enables SIP. The handshake/secure-DM surfaces
+  /// stay off unless `HANDSHAKE_ENABLED=true`; only the wire transport
+  /// turns on.
   static bool get isSipEnabled {
     if (isHandshakeEnabled) return true;
+    if (isMeshCanvasEnabled) return true;
     try {
       final raw = dotenv.env['SIP_ENABLED']?.toLowerCase().trim();
       return raw == 'true' || raw == '1';
@@ -508,9 +514,15 @@ class AppFeatureFlags {
   /// Whether the MRRP (Mesh Request/Response Protocol) feature is enabled.
   /// Set `MRRP_ENABLED=true` (or `HANDSHAKE_ENABLED=true`) in `.env`.
   /// Requires [isSipEnabled] to be true. Default: false.
+  ///
+  /// MeshCanvas rides MRRP, so [isMeshCanvasEnabled] also implicitly
+  /// enables it. Same scope rule as [isSipEnabled]: only the wire
+  /// transport turns on; harness UI / handshake-only surfaces stay
+  /// gated on their own flags.
   static bool get isMrrpEnabled {
     if (!isSipEnabled) return false;
     if (isHandshakeEnabled) return true;
+    if (isMeshCanvasEnabled) return true;
     try {
       final raw = dotenv.env['MRRP_ENABLED']?.toLowerCase().trim();
       return raw == 'true' || raw == '1';

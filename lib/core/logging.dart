@@ -695,9 +695,20 @@ class AppLogging {
     return _handshakeLoggingEnabled!;
   }
 
+  /// True when the operator has EXPLICITLY set
+  /// `MESH_CANVAS_LOGGING_ENABLED=true`. Distinct from
+  /// [meshCanvasLoggingEnabled] (which defaults ON when missing).
+  /// Used by the SIP and MRRP logging shorthands so turning canvas
+  /// logging on opts you into the underlying transport traces too,
+  /// without accidentally enabling those streams for everyone whose
+  /// .env omits the flag.
+  static bool get _meshCanvasLoggingExplicitlyEnabled =>
+      _safeGetEnv('MESH_CANVAS_LOGGING_ENABLED')?.toLowerCase() == 'true';
+
   static bool get sipLoggingEnabled {
     _sipLoggingEnabled ??=
         handshakeLoggingEnabled ||
+        _meshCanvasLoggingExplicitlyEnabled ||
         _safeGetEnv('SIP_LOGGING_ENABLED')?.toLowerCase() == 'true';
     return _sipLoggingEnabled!;
   }
@@ -760,10 +771,14 @@ class AppLogging {
   }
 
   /// MRRP protocol debug logging.
-  /// Enable with MRRP_DEBUG=true in .env file.
+  /// Enable with MRRP_DEBUG=true in .env file. Also turned on by
+  /// HANDSHAKE_LOGGING_ENABLED or an explicit MESH_CANVAS_LOGGING_ENABLED
+  /// since canvas frames ride MRRP and the transport traces are usually
+  /// the missing context when triaging canvas issues.
   static bool get mrrpDebugEnabled {
     _mrrpDebugEnabled ??=
         handshakeLoggingEnabled ||
+        _meshCanvasLoggingExplicitlyEnabled ||
         _safeGetEnv('MRRP_DEBUG')?.toLowerCase() == 'true';
     return _mrrpDebugEnabled!;
   }
