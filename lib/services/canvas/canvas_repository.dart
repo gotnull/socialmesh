@@ -313,6 +313,38 @@ class CanvasRepository {
       );
       if (!accepted) return false;
 
+      // Coalesce: if there is already a queued row for this cell on
+      // this canvas, UPDATE it in place instead of inserting a second
+      // row. Latest local intent wins. Stops a user who taps the same
+      // cell repeatedly from growing the queue with obsolete ops.
+      // Only queued rows (state == 0) are coalesced; in_flight or
+      // failed rows are left alone so we don't race with a send.
+      final existing = await txn.query(
+        CanvasTables.pendingOp,
+        columns: const ['id'],
+        where: 'canvas_id = ? AND x = ? AND y = ? AND state = ?',
+        whereArgs: [canvasLocalId, x, y, PendingOpState.queued.storageCode],
+        limit: 1,
+      );
+      if (existing.isNotEmpty) {
+        final id = existing.first['id'] as int;
+        await txn.update(
+          CanvasTables.pendingOp,
+          {
+            'color': color,
+            'op_ts': opTs,
+            'op_seq': opSeq,
+            'created_at_ms': nowMs,
+            'next_attempt_at_ms': nowMs,
+            'attempts': 0,
+            'last_error': null,
+          },
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+        return true;
+      }
+
       // Enforce queue cap BEFORE insert to keep depth ≤ cap. Oldest
       // queued rows for this canvas are dropped; their cell-state
       // effect has already been recorded by _applyOpInTransaction, so

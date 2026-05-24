@@ -106,15 +106,45 @@ class CanvasViewportBody extends ConsumerWidget {
         );
         return;
       }
-      // Optimistic local painting is mandatory — CANVAS_PHILOSOPHY
-      // §3 ("preserve optimistic local painting"). The transmission
-      // HUD already communicates queue + cooling state as ambient
-      // chrome; a hard block here turned into a permanent deadlock
-      // any time a session left behind a stale queue with nothing
-      // draining. Lossy collapse at the 256 hard cap remains the
-      // backstop. The HUD pill stays informative for the user; the
-      // repository handles airtime fairness via the governor + SIP
-      // limiter on the send side.
+      // Tap-layer scarcity. Mesh canvases enforce two interaction
+      // gates so users can't generate confetti faster than the radio
+      // can carry it:
+      //   1. Cadence: at most one accepted tap per
+      //      CanvasCadence.meshTapInterval per canvas.
+      //   2. Queue full: at most 32 (softQueueCap) outstanding
+      //      pending_op rows.
+      // Both checks are silent rejections — no enqueue, no cell
+      // mutation, light haptic. The HUD pill is the user-facing
+      // explanation. The periodic drain timer in
+      // _PresenceLifecycleHost is the deadlock backstop for the
+      // queue-full case: even if the user closes and reopens the
+      // viewer, the next drain tick will work through the queue.
+      // Capture cadence here BEFORE any await so the post-enqueue
+      // `recordTap` call doesn't reach back through `ref` after the
+      // `await repo.enqueuePaint(...)` below — async-safety lint
+      // forbids that pattern.
+      final cadence = ref.read(meshCanvasPaintCadenceProvider);
+      if (cadence.isCoolingDown(canvas.localId)) {
+        AppLogging.meshCanvas(
+          'mesh paint blocked: cadence cooling '
+          '(canvas=${canvas.localId}, '
+          'msUntilReady=${cadence.msUntilReady(canvas.localId)})',
+        );
+        unawaited(ref.haptics.warning());
+        return;
+      }
+      final txStatus = ref
+          .read(meshCanvasTransmissionStatusProvider(canvas.localId))
+          .asData
+          ?.value;
+      if (txStatus != null && !txStatus.canPaint) {
+        AppLogging.meshCanvas(
+          'mesh paint blocked: queue full '
+          '(canvas=${canvas.localId}, pending=${txStatus.pendingCount})',
+        );
+        unawaited(ref.haptics.warning());
+        return;
+      }
       // Mesh Canvas: enqueue into `pending_op` AND apply to local
       // `cell` / `applied_op` in one transaction. The local node_num
       // is the real author for mesh canvases — receivers use it for
@@ -136,6 +166,12 @@ class CanvasViewportBody extends ConsumerWidget {
         opSeq: opSeq,
       );
       if (accepted) {
+        // Mark the cadence window so the next tap inside
+        // CanvasCadence.meshTapInterval is rejected by the gate
+        // above. Recording AFTER enqueue means an LWW reject does
+        // not consume a cadence slot. Uses the `cadence` captured
+        // before the await so we don't touch `ref` post-await.
+        cadence.recordTap(canvas.localId);
         // Kick the send coordinator — it respects both the canvas
         // governor and the SIP rate limiter, so worst case is the
         // row sits in pending_op until the next drain.

@@ -25,10 +25,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../services/canvas/canvas_constants.dart';
 import '../../../services/canvas/canvas_outbound_governor.dart';
+import '../../../services/canvas/canvas_paint_cadence.dart';
 import '../../../services/canvas/canvas_repository.dart';
 import '../../../services/canvas/canvas_send_coordinator.dart';
 import '../../../services/canvas/canvas_transmission_status_models.dart';
 import 'mesh_canvas_providers.dart';
+
+/// Singleton cadence gate. Per-canvas in-memory tap timestamps; held
+/// alive for the app's lifetime so a viewer rebuild doesn't reset the
+/// cooldown the user just landed.
+final meshCanvasPaintCadenceProvider = Provider<CanvasPaintCadence>((ref) {
+  final cadence = CanvasPaintCadence();
+  ref.onDispose(cadence.dispose);
+  return cadence;
+});
 
 /// Cadence at which the view model re-polls the repository + governor
 /// + coordinator. Two seconds is the sweet spot: fast enough that
@@ -54,18 +64,27 @@ final meshCanvasTransmissionStatusProvider =
       final repo = await ref.watch(canvasRepositoryProvider.future);
       final coordinator = await ref.watch(canvasSendCoordinatorProvider.future);
       final governor = ref.read(canvasOutboundGovernorProvider);
+      final cadence = ref.read(meshCanvasPaintCadenceProvider);
 
       yield await computeTransmissionStatus(
         repo: repo,
         coordinator: coordinator,
         governor: governor,
+        cadence: cadence,
         canvasLocalId: canvasLocalId,
       );
+      // Periodic poll re-evaluates cadence cooling alongside queue +
+      // governor + SIP state. The HUD takes up to one tick period to
+      // drop back from `cooling` to a recovered severity, which is
+      // tolerable for a 2.5 s cooldown window vs the cost of carrying
+      // a hand-rolled stream merge that leaked Timers under widget
+      // tests.
       await for (final _ in Stream<void>.periodic(_kStatusTickPeriod)) {
         yield await computeTransmissionStatus(
           repo: repo,
           coordinator: coordinator,
           governor: governor,
+          cadence: cadence,
           canvasLocalId: canvasLocalId,
         );
       }
@@ -81,6 +100,7 @@ Future<MeshCanvasTransmissionStatus> computeTransmissionStatus({
   required CanvasSendCoordinator coordinator,
   required CanvasOutboundGovernor governor,
   required int canvasLocalId,
+  CanvasPaintCadence? cadence,
   int? nowMsOverride,
 }) async {
   final stats = await repo.pendingStatsForCanvas(canvasLocalId);
@@ -92,6 +112,7 @@ Future<MeshCanvasTransmissionStatus> computeTransmissionStatus({
     governorRemainingBytes: governor.remainingBytes,
     lastSipDenialAtMs: coordinator.lastSipDenialAtMs,
     nowMs: nowMs,
+    isCadenceCooling: cadence?.isCoolingDown(canvasLocalId) ?? false,
   );
 }
 

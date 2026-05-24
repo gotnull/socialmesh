@@ -63,6 +63,13 @@ class MeshCanvasTransmissionStatus {
   /// coordinator's `lastSipDenialAtMs`.
   final bool isSipBudgetCooling;
 
+  /// Tap-cadence cooldown is currently active for the canvas. Mesh-
+  /// scope only. When true, new mesh paint taps are silently rejected
+  /// without enqueue or cell mutation. Separate from the airtime
+  /// cooling signals because the cause is interaction pacing, not
+  /// wire pressure — but the resulting severity is the same.
+  final bool isCadenceCooling;
+
   /// Whether the user is allowed to enqueue more mesh paints. Mirrors
   /// `severity != full`. Exposed as its own field so paint handlers
   /// don't have to know the severity rules.
@@ -79,6 +86,7 @@ class MeshCanvasTransmissionStatus {
     required this.isSipBudgetCooling,
     required this.canPaint,
     required this.severity,
+    this.isCadenceCooling = false,
   });
 
   /// Canonical idle state — used for local-scope viewers, empty
@@ -89,6 +97,7 @@ class MeshCanvasTransmissionStatus {
     nextAttemptAtMs: null,
     isCanvasBudgetCooling: false,
     isSipBudgetCooling: false,
+    isCadenceCooling: false,
     canPaint: true,
     severity: MeshCanvasTransmissionSeverity.idle,
   );
@@ -120,6 +129,7 @@ class MeshCanvasTransmissionStatus {
     required int governorRemainingBytes,
     required int? lastSipDenialAtMs,
     required int nowMs,
+    bool isCadenceCooling = false,
   }) {
     final isCanvasBudgetCooling = governorRemainingBytes < minPaintBytes;
     final isSipBudgetCooling =
@@ -129,7 +139,9 @@ class MeshCanvasTransmissionStatus {
     final MeshCanvasTransmissionSeverity severity;
     if (pendingCount >= softQueueCap) {
       severity = MeshCanvasTransmissionSeverity.full;
-    } else if (isCanvasBudgetCooling || isSipBudgetCooling) {
+    } else if (isCanvasBudgetCooling ||
+        isSipBudgetCooling ||
+        isCadenceCooling) {
       severity = MeshCanvasTransmissionSeverity.cooling;
     } else if (pendingCount > 0) {
       severity = MeshCanvasTransmissionSeverity.queued;
@@ -137,13 +149,21 @@ class MeshCanvasTransmissionStatus {
       severity = MeshCanvasTransmissionSeverity.idle;
     }
 
+    // canPaint reflects what the tap handler should do, not just
+    // whether the queue is full. Cadence cooling AND queue-full both
+    // block fresh taps; the user sees the HUD instead of getting a
+    // surprise no-op cell mutation.
+    final canPaint =
+        severity != MeshCanvasTransmissionSeverity.full && !isCadenceCooling;
+
     return MeshCanvasTransmissionStatus(
       pendingCount: pendingCount,
       oldestPendingAtMs: oldestPendingAtMs,
       nextAttemptAtMs: nextAttemptAtMs,
       isCanvasBudgetCooling: isCanvasBudgetCooling,
       isSipBudgetCooling: isSipBudgetCooling,
-      canPaint: severity != MeshCanvasTransmissionSeverity.full,
+      isCadenceCooling: isCadenceCooling,
+      canPaint: canPaint,
       severity: severity,
     );
   }
@@ -157,6 +177,7 @@ class MeshCanvasTransmissionStatus {
         other.nextAttemptAtMs == nextAttemptAtMs &&
         other.isCanvasBudgetCooling == isCanvasBudgetCooling &&
         other.isSipBudgetCooling == isSipBudgetCooling &&
+        other.isCadenceCooling == isCadenceCooling &&
         other.canPaint == canPaint &&
         other.severity == severity;
   }
@@ -168,6 +189,7 @@ class MeshCanvasTransmissionStatus {
     nextAttemptAtMs,
     isCanvasBudgetCooling,
     isSipBudgetCooling,
+    isCadenceCooling,
     canPaint,
     severity,
   );

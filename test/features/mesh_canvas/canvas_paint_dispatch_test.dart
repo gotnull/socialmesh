@@ -305,17 +305,16 @@ void main() {
       },
     );
 
-    // Optimistic local painting remains valid even when the mesh
-    // queue is at the UX soft cap. The HUD pill communicates queue
-    // state as ambient chrome; the repository's hard 256 cap does
-    // lossy collapse if the queue actually fills. Spec anchor:
-    // CANVAS_PHILOSOPHY §3 ("preserve optimistic local painting").
-    // A previous build hard-blocked paint at the soft cap, which
-    // deadlocked any session that opened a canvas carrying a stale
-    // queue from a prior run with no drain in progress.
+    // Tap-layer scarcity: when the mesh transmission HUD is at
+    // severity=full (pending queue >= softQueueCap), the paint
+    // handler MUST silently reject the tap. No `enqueuePaint` call,
+    // no local cell mutation. The HUD pill is the user-facing
+    // explanation; the periodic drain timer in the lifecycle host
+    // is the deadlock backstop. Spec: anti-spam brief item 2
+    // ("Queue-aware paint blocking").
     testWidgets(
-      'Mesh Canvas tap with transmission severity=full still enqueues — '
-      'optimistic local painting is preserved; HUD pill is informative chrome',
+      'Mesh Canvas tap with transmission severity=full is silently rejected — '
+      'no enqueue, no cell mutation; HUD pill explains why',
       (tester) async {
         final repo = await _pumpViewer(
           tester,
@@ -334,8 +333,13 @@ void main() {
         await tester.tap(find.byType(MeshCanvasViewerScreen));
         await tester.pump(const Duration(milliseconds: 200));
 
-        expect(repo.calls, hasLength(1));
-        expect(repo.calls.single.method, 'enqueuePaint');
+        expect(
+          repo.calls,
+          isEmpty,
+          reason:
+              'severity=full must block fresh mesh paint taps; the '
+              'queue gate is the user-visible scarcity mechanism.',
+        );
       },
     );
 

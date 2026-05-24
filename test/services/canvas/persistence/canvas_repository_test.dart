@@ -187,6 +187,95 @@ void main() {
         await h.db.close();
       }
     });
+
+    // Coalescing: tapping the same cell while an earlier pending row
+    // is still queued must NOT grow the queue. The earlier row is
+    // updated in place with the latest color / op_ts / op_seq.
+    // Prevents users from filling pending_op with obsolete paints
+    // when they hammer a single cell. Spec: anti-spam brief item 4.
+    test(
+      'coalesces same-cell repaints into the existing pending row',
+      () async {
+        final h = await _open();
+        try {
+          final mesh = await h.repo.getOrCreateMeshCanvas(
+            canvasId: 0xCD,
+            channelIndex: 0,
+            name: 'Mesh',
+          );
+          await h.repo.enqueuePaint(
+            canvasLocalId: mesh.localId,
+            x: 5,
+            y: 7,
+            color: 10,
+            authorNodeNum: 0x200,
+            opTs: 100,
+            opSeq: 1,
+            createdAtMsOverride: 1_000,
+          );
+          // Same cell, fresher tap. Should overwrite the existing row.
+          await h.repo.enqueuePaint(
+            canvasLocalId: mesh.localId,
+            x: 5,
+            y: 7,
+            color: 42,
+            authorNodeNum: 0x200,
+            opTs: 200,
+            opSeq: 2,
+            createdAtMsOverride: 2_000,
+          );
+
+          final pending = await h.repo.getPendingOpsForCanvas(mesh.localId);
+          expect(
+            pending.length,
+            1,
+            reason: 'same-cell repaint must coalesce, not grow the queue',
+          );
+          expect(pending.first.color, 42, reason: 'latest local intent wins');
+          expect(pending.first.opTs, 200);
+          expect(pending.first.opSeq, 2);
+        } finally {
+          await h.db.close();
+        }
+      },
+    );
+
+    test('different cells stay as separate pending rows', () async {
+      final h = await _open();
+      try {
+        final mesh = await h.repo.getOrCreateMeshCanvas(
+          canvasId: 0xCE,
+          channelIndex: 0,
+          name: 'Mesh',
+        );
+        await h.repo.enqueuePaint(
+          canvasLocalId: mesh.localId,
+          x: 1,
+          y: 1,
+          color: 5,
+          authorNodeNum: 0x200,
+          opTs: 100,
+          opSeq: 1,
+        );
+        await h.repo.enqueuePaint(
+          canvasLocalId: mesh.localId,
+          x: 2,
+          y: 2,
+          color: 5,
+          authorNodeNum: 0x200,
+          opTs: 100,
+          opSeq: 2,
+        );
+        final pending = await h.repo.getPendingOpsForCanvas(mesh.localId);
+        expect(
+          pending.length,
+          2,
+          reason: 'distinct cells must remain distinct pending rows',
+        );
+      } finally {
+        await h.db.close();
+      }
+    });
   });
 
   group('LWW comparator (applyInboundPaint)', () {

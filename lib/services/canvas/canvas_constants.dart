@@ -150,6 +150,23 @@ abstract final class CanvasRetention {
   static const Duration peerDigestAge = Duration(days: 7);
 }
 
+/// Mesh-canvas paint-cadence pacing. Tap-layer scarcity that makes
+/// every mesh pixel feel deliberate instead of confetti spray.
+/// Applies ONLY to mesh-scope canvases; the Local Device Canvas
+/// stays unmetered (it never broadcasts and never enqueues).
+abstract final class CanvasCadence {
+  /// Minimum interval between accepted mesh paint taps on a given
+  /// canvas. Below this window the tap is silently rejected: no
+  /// `pending_op` row is enqueued and the local `cell` is NOT
+  /// mutated. The HUD surfaces this as a `cooling` severity so the
+  /// user sees airtime pressure, not punishment.
+  ///
+  /// 2.5 s = once every ~24 paints per minute per user per canvas,
+  /// well below the 21-op paint_batch cap and the 250 B/min canvas
+  /// governor. Tunable here without touching wire formats.
+  static const Duration meshTapInterval = Duration(milliseconds: 2500);
+}
+
 /// Default palette identifier shipped with v0.1. Wire-rejected by
 /// receivers when `palette_id != 1`, per CANVAS_V0_1.md §11 / I4.
 const int kCanvasDefaultPaletteId = 1;
