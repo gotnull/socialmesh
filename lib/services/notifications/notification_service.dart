@@ -16,6 +16,36 @@ import '../audio/notification_sound_service.dart';
 import 'package:socialmesh/core/theme.dart';
 import 'package:socialmesh/l10n/l10n_utils.dart';
 
+/// Pick the right body copy for the "peer found nearby" OS notification
+/// based on which feature subsystems the operator has enabled.
+///
+///   - Handshake ON + MeshCanvas OFF -> Handshake-specific body
+///   - Handshake OFF + MeshCanvas ON -> MeshCanvas-specific body
+///   - Both ON                       -> Combined / generic body
+///   - Both OFF                      -> null (caller should drop the
+///                                          notification entirely; no
+///                                          surface exists for the user
+///                                          to act on)
+///
+/// Exposed as a top-level function so a focused unit test can pin the
+/// branching without spinning up the whole NotificationService stack.
+String? selectPeerFoundBody({
+  required bool handshakeEnabled,
+  required bool meshCanvasEnabled,
+  required AppLocalizations l10n,
+}) {
+  if (handshakeEnabled && meshCanvasEnabled) {
+    return l10n.notificationMeshPeerFoundBody;
+  }
+  if (meshCanvasEnabled) {
+    return l10n.notificationMeshCanvasPeerFoundBody;
+  }
+  if (handshakeEnabled) {
+    return l10n.notificationSipPeerFoundBody;
+  }
+  return null;
+}
+
 /// Represents a pending message notification for batching
 class PendingMessageNotification {
   final String senderName;
@@ -1991,21 +2021,12 @@ class NotificationService {
     // fire for a MeshCanvas-only build where the old "open Handshake"
     // wording would be misleading. With neither feature enabled we
     // also have no surface to direct the user to, so suppress.
-    final handshakeOn = AppFeatureFlags.isHandshakeEnabled;
-    final meshCanvasOn = AppFeatureFlags.isMeshCanvasEnabled;
-    final String body;
-    if (handshakeOn && meshCanvasOn) {
-      body = _l10n.notificationMeshPeerFoundBody;
-    } else if (meshCanvasOn) {
-      body = _l10n.notificationMeshCanvasPeerFoundBody;
-    } else if (handshakeOn) {
-      body = _l10n.notificationSipPeerFoundBody;
-    } else {
-      // Neither surface is enabled — discovery still ran (SIP came up
-      // via some other path) but the user has nowhere to act on this
-      // notification. Silently drop.
-      return;
-    }
+    final body = selectPeerFoundBody(
+      handshakeEnabled: AppFeatureFlags.isHandshakeEnabled,
+      meshCanvasEnabled: AppFeatureFlags.isMeshCanvasEnabled,
+      l10n: _l10n,
+    );
+    if (body == null) return;
 
     final androidDetails = AndroidNotificationDetails(
       'sip_discovery',
