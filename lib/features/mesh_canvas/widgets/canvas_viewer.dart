@@ -182,9 +182,19 @@ class _CanvasViewerState extends State<CanvasViewer>
   /// on later builds get the current timestamp and animate.
   final Map<int, int> _cellArrivalMs = {};
 
-  /// Packed-coord set of cells seen on the previous build, used to
-  /// diff for new arrivals on the next build.
-  Set<int> _lastSeenCellKeys = const {};
+  /// Packed-coord -> palette index of cells seen on the previous
+  /// build. Used to diff for arrivals AND vanishes between builds:
+  /// keys present last time but absent now feed [_vanishingCells]
+  /// for the pop-out animation; keys present both times with a
+  /// changed color trigger both a pop-out (old color) and a pop-in
+  /// (new color).
+  Map<int, int> _lastSeenColorByKey = const {};
+
+  /// List of cells currently popping OUT. Built fresh on every diff
+  /// so the painter's identity-based [shouldRepaint] picks up the
+  /// change. The viewer evicts entries once they age past
+  /// [_kPopInDuration].
+  List<VanishingCell> _vanishingCells = const [];
 
   /// Drives painter repaints during the animation window. The
   /// painter subscribes via its `repaint:` super-arg; mutating the
@@ -217,13 +227,13 @@ class _CanvasViewerState extends State<CanvasViewer>
         DateTime.now().millisecondsSinceEpoch -
         _kPopInDuration.inMilliseconds -
         1;
-    final keys = <int>{};
+    final colors = <int, int>{};
     for (final cell in widget.cells) {
       final key = cell.y * widget.widthCells + cell.x;
       _cellArrivalMs[key] = pastMs;
-      keys.add(key);
+      colors[key] = cell.color;
     }
-    _lastSeenCellKeys = keys;
+    _lastSeenColorByKey = colors;
   }
 
   @override
@@ -238,21 +248,52 @@ class _CanvasViewerState extends State<CanvasViewer>
 
   void _diffCellsForArrivals() {
     final nowMs = DateTime.now().millisecondsSinceEpoch;
-    final currentKeys = <int>{};
-    var hasNewCell = false;
+    final currentByKey = <int, int>{};
+    final newVanishing = <VanishingCell>[];
+    var hasAnimation = false;
+    // Forward pass: detect arrivals + color-change transitions.
     for (final cell in widget.cells) {
       final key = cell.y * widget.widthCells + cell.x;
-      currentKeys.add(key);
-      if (!_lastSeenCellKeys.contains(key)) {
+      currentByKey[key] = cell.color;
+      final prevColor = _lastSeenColorByKey[key];
+      if (prevColor == null) {
         _cellArrivalMs[key] = nowMs;
-        hasNewCell = true;
+        hasAnimation = true;
+      } else if (prevColor != cell.color) {
+        // Color changed in place: pop the old color out + pop the new
+        // color in. Two animations on the same cell coord.
+        newVanishing.add(
+          VanishingCell(x: cell.x, y: cell.y, color: prevColor, startMs: nowMs),
+        );
+        _cellArrivalMs[key] = nowMs;
+        hasAnimation = true;
       }
     }
-    // Evict arrival entries for cells that vanished (e.g. erased or
-    // overwritten by a different colour) so the map stays bounded.
-    _cellArrivalMs.removeWhere((key, _) => !currentKeys.contains(key));
-    _lastSeenCellKeys = currentKeys;
-    if (hasNewCell) {
+    // Reverse pass: detect cells that vanished (in last build, gone
+    // in current). These are the erase / overwrite-to-transparent /
+    // LWW-dispatched-clear cases the user wanted animated.
+    for (final entry in _lastSeenColorByKey.entries) {
+      if (currentByKey.containsKey(entry.key)) continue;
+      final x = entry.key % widget.widthCells;
+      final y = entry.key ~/ widget.widthCells;
+      newVanishing.add(
+        VanishingCell(x: x, y: y, color: entry.value, startMs: nowMs),
+      );
+      _cellArrivalMs.remove(entry.key);
+      hasAnimation = true;
+    }
+    // Carry forward any still-animating vanish entries from the prior
+    // diff so a series of fast diffs doesn't drop mid-animation
+    // entries. Evict entries that have aged past the window.
+    final cutoffMs = nowMs - _kPopInDuration.inMilliseconds;
+    for (final v in _vanishingCells) {
+      if (v.startMs >= cutoffMs) {
+        newVanishing.add(v);
+      }
+    }
+    _vanishingCells = newVanishing;
+    _lastSeenColorByKey = currentByKey;
+    if (hasAnimation || _vanishingCells.isNotEmpty) {
       _newestArrivalMs = nowMs;
       if (!_animTicker.isActive) {
         _animTicker.start();
@@ -393,6 +434,7 @@ class _CanvasViewerState extends State<CanvasViewer>
                     heightCells: widget.heightCells,
                     pendingCellIndices: widget.pendingCellIndices,
                     cellArrivalMs: _cellArrivalMs,
+                    vanishingCells: _vanishingCells,
                     popDurationMs: _kPopInDuration.inMilliseconds,
                     repaint: _animTick,
                   ),

@@ -42,6 +42,26 @@ import '../../../services/canvas/canvas_models.dart';
 /// directly to sync_request rects.
 const int _kChunkSizeCells = 32;
 
+/// One cell mid-vanish: the cell was painted last build but is gone
+/// (erased or overwritten) this build. The painter renders it with
+/// a reverse easeInBack scale + linear alpha fade so the user sees
+/// the pixel "pop out" instead of disappearing instantly. Carries a
+/// snapshot of the cell's last-known color because the live
+/// `cells` list no longer contains it.
+class VanishingCell {
+  final int x;
+  final int y;
+  final int color;
+  final int startMs;
+
+  const VanishingCell({
+    required this.x,
+    required this.y,
+    required this.color,
+    required this.startMs,
+  });
+}
+
 class CanvasGridPainter extends CustomPainter {
   /// All painted (non-default-colour) cells for the current canvas.
   /// MUST be a fresh list reference whenever the underlying state
@@ -101,7 +121,16 @@ class CanvasGridPainter extends CustomPainter {
   /// when the host has no arrival tracker).
   final Map<int, int>? cellArrivalMs;
 
-  /// Pop-in animation duration in ms. 320ms is the easeOutBack
+  /// Optional list of cells currently popping OUT (erased on local
+  /// or inbound from a peer). Each entry carries the cell's last-
+  /// known color, packed coord, and the timestamp the vanish was
+  /// observed. The painter renders them with a reverse easeInBack
+  /// scale + linear alpha fade over [popDurationMs]. Entries older
+  /// than the window are skipped (the viewer should evict them on
+  /// its next diff but the painter is defensive).
+  final List<VanishingCell>? vanishingCells;
+
+  /// Pop-in/out animation duration in ms. 320ms is the easeOutBack
   /// sweet spot: snappy overshoot at ~80ms, fully settled by 320ms.
   final int popDurationMs;
 
@@ -118,6 +147,7 @@ class CanvasGridPainter extends CustomPainter {
     this.pendingCellIndices = const <int>{},
     this.pendingOpacityFactor = 0.55,
     this.cellArrivalMs,
+    this.vanishingCells,
     this.popDurationMs = 320,
     super.repaint,
   });
@@ -169,7 +199,10 @@ class CanvasGridPainter extends CustomPainter {
     final cellPaint = Paint();
     final hasPending = pendingCellIndices.isNotEmpty;
     final arrivals = cellArrivalMs;
-    final animEnabled = arrivals != null && arrivals.isNotEmpty;
+    final vanishing = vanishingCells;
+    final animEnabled =
+        (arrivals != null && arrivals.isNotEmpty) ||
+        (vanishing != null && vanishing.isNotEmpty);
     final nowMs = animEnabled ? DateTime.now().millisecondsSinceEpoch : 0;
     for (final cell in cells) {
       if (cell.color < 0 || cell.color >= palette.length) continue;
@@ -180,7 +213,7 @@ class CanvasGridPainter extends CustomPainter {
       // Resolve pop-in animation state for this cell.
       double scale = 1.0;
       double alphaMul = 1.0;
-      if (animEnabled) {
+      if (arrivals != null && arrivals.isNotEmpty) {
         final startMs = arrivals[key];
         if (startMs != null) {
           final age = nowMs - startMs;
@@ -226,6 +259,37 @@ class CanvasGridPainter extends CustomPainter {
       }
     }
 
+    // Layer 3b: pop-out for vanishing cells. Cells that were painted
+    // last build but are gone this build (erase, overwrite to
+    // transparent, inbound LWW dispatch from a peer who cleared them)
+    // render with a reverse easeInBack scale + linear alpha fade so
+    // the user sees the pixel deflate instead of disappearing
+    // instantly. Entries older than [popDurationMs] are skipped as
+    // defense in depth (the viewer evicts them on its diff tick).
+    if (vanishing != null && vanishing.isNotEmpty) {
+      for (final v in vanishing) {
+        if (v.color < 0 || v.color >= palette.length) continue;
+        final colour = palette[v.color];
+        if (colour.a == 0) continue;
+        final age = nowMs - v.startMs;
+        if (age < 0 || age >= popDurationMs) continue;
+        final t = age / popDurationMs;
+        // easeInBack: 1 -> -slight -> 0. Clamp at 0 so the rect never
+        // inverts on the brief negative overshoot.
+        final eased = Curves.easeInBack.transform(t);
+        final scale = (1.0 - eased).clamp(0.0, 1.0);
+        final alphaMul = (1.0 - t).clamp(0.0, 1.0);
+        cellPaint.color = colour.withValues(alpha: colour.a * alphaMul);
+        final cx = v.x * cellSize + cellSize / 2;
+        final cy = v.y * cellSize + cellSize / 2;
+        final half = (cellSize * scale) / 2;
+        canvas.drawRect(
+          Rect.fromLTRB(cx - half, cy - half, cx + half, cy + half),
+          cellPaint,
+        );
+      }
+    }
+
     // Layer 4: surface border on top. Stays visible regardless of
     // cell density.
     final borderPaint = Paint()
@@ -241,6 +305,7 @@ class CanvasGridPainter extends CustomPainter {
     // list reference on every state change; deep-equality would be
     // O(n) and we'd run it on every pan/zoom frame.
     if (!identical(old.cells, cells)) return true;
+    if (!identical(old.vanishingCells, vanishingCells)) return true;
     if (!identical(old.pendingCellIndices, pendingCellIndices)) return true;
     if (old.pendingOpacityFactor != pendingOpacityFactor) return true;
     if (old.cellSize != cellSize) return true;
