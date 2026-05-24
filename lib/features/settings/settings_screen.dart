@@ -363,6 +363,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           ),
         ),
 
+        // Privacy (Analytics + Crashlytics consent)
+        _SearchableSettingItem(
+          icon: Icons.shield_outlined,
+          title: context.l10n.settingsTilePrivacyTitle,
+          subtitle: context.l10n.settingsTilePrivacySubtitle,
+          keywords: [
+            'privacy',
+            'analytics',
+            'crash',
+            'crashlytics',
+            'diagnostics',
+            'data',
+            'consent',
+            'firebase',
+            'tracking',
+            'opt-in',
+            'opt-out',
+            'gdpr',
+          ],
+          section: context.l10n.settingsSectionAccount,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const PrivacySettingsScreen()),
+          ),
+        ),
+
         // Age Group
         _SearchableSettingItem(
           icon: Icons.cake_outlined,

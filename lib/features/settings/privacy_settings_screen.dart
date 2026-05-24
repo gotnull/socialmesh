@@ -7,10 +7,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
-import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/legal_document_sheet.dart';
+import '../../core/widgets/settings_primitives.dart';
 import '../../services/privacy_consent_service.dart';
 import '../../utils/snackbar.dart';
 
@@ -117,14 +118,7 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen>
           padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
-              // Info card
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                padding: const EdgeInsets.all(AppTheme.spacing16),
-                decoration: BoxDecoration(
-                  color: context.card,
-                  borderRadius: BorderRadius.circular(AppTheme.radius12),
-                ),
+              FieldGroupCard(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -145,240 +139,64 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen>
                   ],
                 ),
               ),
-              const SizedBox(height: AppTheme.spacing24),
-
-              // Section header
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  context.l10n.privacySettingsDataCollection,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: context.textTertiary,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1.2,
-                  ),
-                ),
+              const SizedBox(height: AppTheme.spacing16),
+              SettingsSectionHeader(
+                title: context.l10n.privacySettingsDataCollection,
               ),
-              const SizedBox(height: AppTheme.spacing8),
-
-              // Analytics toggle
-              _PrivacyToggleTile(
+              SettingsTile(
                 icon: Icons.analytics_outlined,
                 title: context.l10n.privacySettingsUsageAnalytics,
                 subtitle: context.l10n.privacySettingsUsageAnalyticsSubtitle,
-                value: _analyticsEnabled,
-                onChanged: _consentService != null ? _toggleAnalytics : null,
+                trailing: ThemedSwitch(
+                  value: _analyticsEnabled,
+                  onChanged: _consentService != null ? _toggleAnalytics : null,
+                ),
               ),
-
-              const SizedBox(height: AppTheme.spacing4),
-
-              // Crashlytics toggle
-              _PrivacyToggleTile(
+              SettingsTile(
                 icon: Icons.bug_report_outlined,
                 title: context.l10n.privacySettingsCrashReporting,
                 subtitle: context.l10n.privacySettingsCrashReportingSubtitle,
-                value: _crashlyticsEnabled,
-                onChanged: _consentService != null ? _toggleCrashlytics : null,
-              ),
-
-              const SizedBox(height: AppTheme.spacing24),
-
-              // Privacy Policy link
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: context.card,
-                  borderRadius: BorderRadius.circular(AppTheme.radius12),
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(AppTheme.radius12),
-                  clipBehavior: Clip.antiAlias,
-                  child: InkWell(
-                    onTap: () => LegalDocumentSheet.showPrivacy(context),
-                    borderRadius: BorderRadius.circular(AppTheme.radius12),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.description_outlined,
-                            color: context.textSecondary,
-                          ),
-                          const SizedBox(width: AppTheme.spacing16),
-                          Expanded(
-                            child: Text(
-                              context.l10n.privacySettingsPrivacyPolicy,
-                              style: Theme.of(context).textTheme.titleSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                    color: context.textPrimary,
-                                  ),
-                            ),
-                          ),
-                          Icon(
-                            Icons.chevron_right,
-                            color: context.textTertiary,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                trailing: ThemedSwitch(
+                  value: _crashlyticsEnabled,
+                  onChanged: _consentService != null
+                      ? _toggleCrashlytics
+                      : null,
                 ),
               ),
-              const SizedBox(height: AppTheme.spacing24),
-
-              // Third-party services disclosure
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  context.l10n.privacySettingsThirdPartyServices,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: context.textTertiary,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1.2,
-                  ),
+              const SizedBox(height: AppTheme.spacing16),
+              SettingsTile(
+                icon: Icons.description_outlined,
+                title: context.l10n.privacySettingsPrivacyPolicy,
+                trailing: Icon(
+                  Icons.chevron_right,
+                  color: context.textTertiary,
                 ),
+                onTap: () => LegalDocumentSheet.showPrivacy(context),
               ),
-              const SizedBox(height: AppTheme.spacing8),
-              _ThirdPartyInfoTile(
+              const SizedBox(height: AppTheme.spacing16),
+              SettingsSectionHeader(
+                title: context.l10n.privacySettingsThirdPartyServices,
+              ),
+              SettingsTile(
+                icon: Icons.cloud_outlined,
                 title: context.l10n.privacySettingsFirebaseTitle,
-                categories: context.l10n.privacySettingsFirebaseCategories,
+                subtitle: context.l10n.privacySettingsFirebaseCategories,
               ),
-              _ThirdPartyInfoTile(
+              SettingsTile(
+                icon: Icons.cloud_outlined,
                 title: context.l10n.privacySettingsRevenueCatTitle,
-                categories: context.l10n.privacySettingsRevenueCatCategories,
+                subtitle: context.l10n.privacySettingsRevenueCatCategories,
               ),
-              _ThirdPartyInfoTile(
+              SettingsTile(
+                icon: Icons.cloud_outlined,
                 title: context.l10n.privacySettingsSigilTitle,
-                categories: context.l10n.privacySettingsSigilCategories,
+                subtitle: context.l10n.privacySettingsSigilCategories,
               ),
-
               const SizedBox(height: AppTheme.spacing32),
             ]),
           ),
         ),
       ],
-    );
-  }
-}
-
-/// Reusable toggle tile for privacy settings.
-class _PrivacyToggleTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final bool value;
-  final ValueChanged<bool>? onChanged;
-
-  const _PrivacyToggleTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.value,
-    this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Icon(icon, color: context.textSecondary),
-            ),
-            const SizedBox(width: AppTheme.spacing16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: context.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spacing2),
-                  Text(
-                    subtitle,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: context.textTertiary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: AppTheme.spacing8),
-            ThemedSwitch(value: value, onChanged: onChanged),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Read-only info tile for third-party service disclosures.
-class _ThirdPartyInfoTile extends StatelessWidget {
-  final String title;
-  final String categories;
-
-  const _ThirdPartyInfoTile({required this.title, required this.categories});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Icon(Icons.cloud_outlined, color: context.textSecondary),
-            ),
-            const SizedBox(width: AppTheme.spacing16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: context.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spacing2),
-                  Text(
-                    categories,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: context.textTertiary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
