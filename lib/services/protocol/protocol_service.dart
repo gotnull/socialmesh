@@ -118,7 +118,9 @@ class DetectionSensorEvent {
     int senderNodeId,
     List<int> payload,
   ) {
-    final text = sanitizeExternalText(utf8.decode(payload));
+    final text = sanitizeExternalText(
+      utf8.decode(payload, allowMalformed: true),
+    );
     // Detection sensor format is typically "SensorName: Detected" or "SensorName: Clear"
     final parts = text.split(':');
     final sensorName = parts.isNotEmpty ? parts[0].trim() : 'Unknown Sensor';

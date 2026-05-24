@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../utils/text_sanitizer.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -2106,9 +2107,7 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
   String _initialsFor(String value, {required String fallback}) {
     final trimmed = value.trim();
     if (trimmed.isEmpty) return fallback;
-    return trimmed.length >= 2
-        ? trimmed.substring(0, 2).toUpperCase()
-        : trimmed.toUpperCase();
+    return safeTruncate(trimmed, 2).toUpperCase();
   }
 
   Color _senderColor(MeshCoreMessage message) {

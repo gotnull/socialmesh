@@ -9,6 +9,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/node_avatar.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_providers.dart';
+import '../../../utils/text_sanitizer.dart';
 import 'meshcore_sigil_avatar.dart';
 
 /// Node info header for the MeshCore drawer that shows current node
@@ -50,8 +51,8 @@ class MeshCoreDrawerNodeHeader extends ConsumerWidget {
     final pubKey = selfInfo.selfInfo?.pubKey;
     final hasSigilKey = pubKey != null && pubKey.length >= 4;
 
-    final initials = nodeName.length >= 2
-        ? nodeName.substring(0, 2).toUpperCase()
+    final initials = nodeName.characters.length >= 2
+        ? safeTruncate(nodeName, 2).toUpperCase()
         : context.l10n.meshcoreShellDefaultInitials;
 
     final statusBadge = Container(

@@ -38,6 +38,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
+import '../../../utils/text_sanitizer.dart';
 import '../models/nodedex_entry.dart';
 import '../widgets/sigil_card.dart';
 import 'album_constants.dart';
@@ -850,9 +851,7 @@ class _TraitCompletionRow extends StatelessWidget {
                       builder: (context) {
                         final label = trait.displayLabel(context.l10n);
                         return Text(
-                          label
-                              .substring(0, math.min(3, label.length))
-                              .toUpperCase(),
+                          safeTruncate(label, 3).toUpperCase(),
                           style: TextStyle(
                             fontSize: 6,
                             fontWeight: FontWeight.w600,

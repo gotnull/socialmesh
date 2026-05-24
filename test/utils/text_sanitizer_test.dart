@@ -254,6 +254,95 @@ void main() {
     });
   });
 
+  group('safeTruncate', () {
+    test('returns empty for empty input', () {
+      expect(safeTruncate('', 10), '');
+    });
+
+    test('returns empty for zero maxLength', () {
+      expect(safeTruncate('hello', 0), '');
+    });
+
+    test('returns input unchanged when shorter than maxLength', () {
+      expect(safeTruncate('hi', 10), 'hi');
+    });
+
+    test('returns input unchanged when equal to maxLength', () {
+      expect(safeTruncate('hello', 5), 'hello');
+    });
+
+    test('truncates ASCII without ellipsis', () {
+      expect(safeTruncate('hello world', 5), 'hello');
+    });
+
+    test('avatar-initials shape: ASCII passes through', () {
+      expect(safeTruncate('Alice', 2), 'Al');
+    });
+
+    test('avatar-initials shape: emoji-led name keeps emoji intact', () {
+      // The exact crash pattern from Crashlytics 1d31a53e: substring(0, 2) on
+      // a string with an emoji in the first position would split the high/low
+      // surrogate pair and feed a lone surrogate to _NativeParagraphBuilder.
+      // safeTruncate uses grapheme clusters, so the emoji stays whole.
+      const input = '😃Alice';
+      final result = safeTruncate(input, 2);
+      expect(result, '😃A');
+      expect(_hasLoneSurrogate(result), isFalse);
+    });
+
+    test('avatar-initials shape: name ending in emoji at the cut', () {
+      // 'A😃rest' with substring(0, 2) leaves A + lone high surrogate.
+      const input = 'A😃rest';
+      final result = safeTruncate(input, 2);
+      expect(result, 'A😃');
+      expect(_hasLoneSurrogate(result), isFalse);
+    });
+
+    test('avatar-initials shape: flag emoji (regional indicator pair)', () {
+      // Flag emoji are two regional indicator code points, each a surrogate
+      // pair, four UTF-16 code units total. substring(0, 2) on '🇺🇸AB' leaves
+      // the first regional indicator's high+low pair (renders as a box, not
+      // a flag, but at least not lone-surrogate). Grapheme-safe truncation
+      // keeps the flag whole.
+      const input = '🇺🇸AB';
+      final result = safeTruncate(input, 2);
+      expect(result, '🇺🇸A');
+      expect(_hasLoneSurrogate(result), isFalse);
+    });
+
+    test('avatar-initials shape: ZWJ family emoji stays whole', () {
+      // '👨‍👩‍👧‍👦' is a single grapheme cluster made of 4 emoji joined by ZWJ,
+      // 11 UTF-16 code units total. substring(0, 2) would shred it.
+      const input = '👨‍👩‍👧‍👦Family';
+      final result = safeTruncate(input, 2);
+      expect(result, '👨‍👩‍👧‍👦F');
+      expect(_hasLoneSurrogate(result), isFalse);
+    });
+
+    test('avatar-initials shape: combining mark (e + acute) stays whole', () {
+      // 'é' renders as 'é' but is two code units. substring(0, 1) on
+      // 'éf' would yield bare 'e' (legal but visually wrong).
+      const input = 'éfg';
+      final result = safeTruncate(input, 2);
+      expect(result, 'éf');
+    });
+
+    test('lone high surrogate input: does not throw, returns safely', () {
+      // Defensive: even if the caller hands us already-malformed input,
+      // we must not crash. The truncation respects Characters semantics.
+      final input = 'A\uD800B';
+      final result = safeTruncate(input, 2);
+      expect(
+        result.codeUnits.length,
+        lessThanOrEqualTo(input.codeUnits.length),
+      );
+    });
+
+    test('CJK text: counts characters, not code units', () {
+      expect(safeTruncate('日本語テスト', 3), '日本語');
+    });
+  });
+
   group('safeTruncateCodeUnits', () {
     test('returns input when shorter than limit', () {
       const input = 'hello';
@@ -349,4 +438,22 @@ void main() {
       );
     });
   });
+}
+
+bool _hasLoneSurrogate(String s) {
+  final units = s.codeUnits;
+  for (var i = 0; i < units.length; i++) {
+    final u = units[i];
+    final isHigh = u >= 0xD800 && u <= 0xDBFF;
+    final isLow = u >= 0xDC00 && u <= 0xDFFF;
+    if (isHigh) {
+      if (i + 1 >= units.length) return true;
+      final next = units[i + 1];
+      if (next < 0xDC00 || next > 0xDFFF) return true;
+      i++;
+      continue;
+    }
+    if (isLow) return true;
+  }
+  return false;
 }

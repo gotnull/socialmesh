@@ -10,6 +10,7 @@ import '../../../core/safety/safe_image.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/user_avatar.dart';
+import '../../../utils/text_sanitizer.dart';
 import '../../../core/logging.dart';
 import '../../nodedex/widgets/tappable_sigil_avatar.dart';
 import '../../../models/social.dart';
@@ -70,19 +71,14 @@ class SignalGridCard extends ConsumerWidget {
             node.shortName ??
             '!$hexId'; // lint-allow: hardcoded-string
         authorShortName = node.shortName ?? shortHex;
-        if (authorName.length > 12) {
-          authorName = '${authorName.substring(0, 11)}…';
-        }
+        authorName = safeSubstring(authorName, 11);
         avatarColor = Color((node.hardwareModel?.hashCode ?? 0) | 0xFF000000);
       } else {
         authorName = '!$hexId';
         authorShortName = shortHex;
       }
     } else if (signal.authorSnapshot != null) {
-      authorName = signal.authorSnapshot!.displayName;
-      if (authorName.length > 12) {
-        authorName = '${authorName.substring(0, 11)}…';
-      }
+      authorName = safeSubstring(signal.authorSnapshot!.displayName, 11);
       avatarUrl = signal.authorSnapshot!.avatarUrl;
     }
 

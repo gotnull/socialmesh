@@ -8,6 +8,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/l10n_extension.dart';
+import '../../utils/text_sanitizer.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector3;
 import '../../core/theme.dart';
@@ -1480,10 +1481,7 @@ class _PremiumNodeAvatarState extends State<_PremiumNodeAvatar>
                 child: Center(
                   child: widget.shortName.isNotEmpty
                       ? Text(
-                          widget.shortName.substring(
-                            0,
-                            widget.shortName.length.clamp(0, 2),
-                          ),
+                          safeTruncate(widget.shortName, 2),
                           style: TextStyle(
                             color: context.accentColor,
                             fontSize: 18,

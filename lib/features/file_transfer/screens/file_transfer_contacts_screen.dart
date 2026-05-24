@@ -13,6 +13,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
 
 import '../../../core/safety/lifecycle_mixin.dart';
+import '../../../utils/text_sanitizer.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/gradient_border_container.dart';
@@ -787,11 +788,7 @@ class _ContactTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final shortText =
-        contact.shortName ??
-        (contact.displayName.length >= 2
-            ? contact.displayName.substring(0, 2)
-            : contact.displayName);
+    final shortText = contact.shortName ?? safeTruncate(contact.displayName, 2);
 
     final subtitle = contact.hasTransfers
         ? '${contact.transferCount} '
@@ -1024,11 +1021,7 @@ class _ContactDetailSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final shortText =
-        contact.shortName ??
-        (contact.displayName.length >= 2
-            ? contact.displayName.substring(0, 2)
-            : contact.displayName);
+    final shortText = contact.shortName ?? safeTruncate(contact.displayName, 2);
 
     final isActive = contact.presence.isActive;
 

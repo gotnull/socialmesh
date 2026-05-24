@@ -12,6 +12,7 @@ import '../../../utils/time_format.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+import '../../../utils/text_sanitizer.dart';
 import '../../../core/widgets/search_filter_header.dart';
 import '../../../core/widgets/status_filter_chip.dart';
 import '../../../core/widgets/fullscreen_gallery.dart';
@@ -433,7 +434,7 @@ class _ReportCard extends StatelessWidget {
     final statusColor = _statusColor();
     final statusLabel = _statusLabel(context);
     final desc = report.description;
-    final preview = desc.length > 120 ? '${desc.substring(0, 117)}…' : desc;
+    final preview = safeSubstring(desc, 117);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),

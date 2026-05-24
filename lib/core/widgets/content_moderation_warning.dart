@@ -331,8 +331,11 @@ class _ContentModerationWarningContent extends StatelessWidget {
             .replaceAll('_', ' ')
             .split(' ')
             .map((word) {
-              if (word.isEmpty) return word;
-              return '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}';
+              final chars = word.characters;
+              if (chars.isEmpty) return word;
+              final first = chars.first;
+              final rest = chars.skip(1).string;
+              return '${first.toUpperCase()}${rest.toLowerCase()}';
             })
             .join(' ');
     }

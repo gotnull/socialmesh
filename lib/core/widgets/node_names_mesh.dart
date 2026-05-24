@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/theme.dart';
 
 import '../../providers/app_providers.dart';
+import '../../utils/text_sanitizer.dart';
 import 'animated_mesh_node.dart';
 
 /// A mesh node that displays discovered node names orbiting around it during initialization.
@@ -443,12 +444,7 @@ class _OrbitingChipsPainter extends CustomPainter {
   }
 
   String _formatName(String name) {
-    // Clean up and truncate
-    final cleaned = name.trim();
-    if (cleaned.length > 12) {
-      return '${cleaned.substring(0, 10)}…';
-    }
-    return cleaned;
+    return safeSubstring(name.trim(), 10);
   }
 
   @override

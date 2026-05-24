@@ -24,6 +24,7 @@ import '../../../core/constants.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../models/presence_confidence.dart';
+import '../../../utils/text_sanitizer.dart';
 import '../models/node_activity_event.dart';
 import '../providers/nodedex_providers.dart';
 
@@ -425,10 +426,8 @@ class _TimelineEventTile extends StatelessWidget {
     return '${meters.round()} m';
   }
 
-  static String _truncate(String text, int maxLength) {
-    if (text.length <= maxLength) return text;
-    return '${text.substring(0, maxLength - 1)}\u2026';
-  }
+  static String _truncate(String text, int maxLength) =>
+      safeSubstring(text, maxLength - 1);
 
   static String _formatTimestamp(BuildContext context, DateTime ts) {
     final now = DateTime.now();

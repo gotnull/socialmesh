@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../utils/text_sanitizer.dart';
 import '../theme.dart';
 
 /// Universal reusable avatar widget for displaying user/profile images.
@@ -181,9 +182,7 @@ class UserAvatar extends StatelessWidget {
       child: Center(
         child: initials != null && initials!.isNotEmpty
             ? Text(
-                initials!.length > 2
-                    ? initials!.substring(0, 2).toUpperCase()
-                    : initials!.toUpperCase(),
+                safeTruncate(initials!, 2).toUpperCase(),
                 style: TextStyle(
                   fontSize: innerSize * 0.4,
                   fontWeight: FontWeight.bold,
