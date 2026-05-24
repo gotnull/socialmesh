@@ -231,7 +231,7 @@ void main() {
         limit: 8,
       );
       expect(queued, hasLength(1));
-      await repo.markPendingSent(queued.first.id);
+      await repo.markPendingSent(queued.first.id, queued.first.canvasLocalId);
 
       final coords = await repo.getPendingCellCoordinates(
         canvas.localId,

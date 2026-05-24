@@ -558,13 +558,15 @@ class _PresenceLifecycleHostState extends ConsumerState<_PresenceLifecycleHost>
   Timer? _drainTimer;
   Timer? _digestEmitTimer;
 
-  /// How often we re-kick the send coordinator while a mesh viewer
-  /// is mounted. Five seconds matches the governor's natural rate
-  /// of decay without spamming SQL / SIP. The timer is the ONLY way
-  /// a stale queue (rows accumulated while the user was offline or
-  /// idle in a prior session) drains — without it, opening a canvas
-  /// with N >= softCap pending rows used to deadlock paint input.
-  static const Duration _drainTickPeriod = Duration(seconds: 5);
+  /// Backstop period for re-kicking the send coordinator while a
+  /// mesh viewer is mounted. Paint actions kick drain directly on
+  /// enqueue, so this timer only fires for (a) stale rows the user
+  /// left behind from an offline session, (b) SIP-backoff retries
+  /// after a denial, and (c) raw-band sync continuation when the
+  /// governor was full mid-batch. 30 s gives the governor and SIP
+  /// limiter plenty of time to recover between wakes without
+  /// burning battery on idle DB queries.
+  static const Duration _drainTickPeriod = Duration(seconds: 30);
 
   @override
   void initState() {

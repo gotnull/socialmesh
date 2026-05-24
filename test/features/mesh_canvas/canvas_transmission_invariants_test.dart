@@ -220,7 +220,7 @@ void main() {
           limit: 64,
         );
         for (final op in queued) {
-          await repo.markPendingSent(op.id);
+          await repo.markPendingSent(op.id, op.canvasLocalId);
         }
         status = await computeTransmissionStatus(
           repo: repo,

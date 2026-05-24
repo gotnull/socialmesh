@@ -615,7 +615,7 @@ void main() {
         );
         final pending = await h.repo.getPendingOpsForCanvas(mesh.localId);
         expect(pending, hasLength(1));
-        await h.repo.markPendingSent(pending.first.id);
+        await h.repo.markPendingSent(pending.first.id, mesh.localId);
         final after = await h.repo.getPendingOpsForCanvas(mesh.localId);
         expect(after, isEmpty);
       } finally {
@@ -649,6 +649,7 @@ void main() {
         for (var i = 0; i < 4; i++) {
           await h.repo.markPendingFailed(
             pending.id,
+            mesh.localId,
             error: 'timeout', // lint-allow: hardcoded-string
             nextAttemptAtMs: 9000 + i,
           );
@@ -664,6 +665,7 @@ void main() {
         // 5th failure trips terminal.
         await h.repo.markPendingFailed(
           pending.id,
+          mesh.localId,
           error: 'timeout', // lint-allow: hardcoded-string
           nextAttemptAtMs: 9999,
         );

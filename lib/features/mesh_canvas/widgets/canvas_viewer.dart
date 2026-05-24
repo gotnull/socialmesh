@@ -255,9 +255,12 @@ class _CanvasViewerState extends State<CanvasViewer>
     // Keep the ticker alive while any tile is mid-shimmer so the
     // sweep animates smoothly. The pop-in/pop-out machinery already
     // starts/stops the ticker for cell arrivals; shimmer just
-    // piggybacks on the same pump.
+    // piggybacks on the same pump. Do NOT extend `_newestArrivalMs`
+    // here — `_onAnimTick` checks the shimmer set live and pumps
+    // while it is non-empty; when the set empties, the ticker stops
+    // immediately instead of ghost-pumping at 60Hz for 60s
+    // (the previous +60_000 hack burned battery).
     if (widget.syncingTileIndices.isNotEmpty && !_animTicker.isActive) {
-      _newestArrivalMs = DateTime.now().millisecondsSinceEpoch + 60_000;
       _animTicker.start();
     }
   }

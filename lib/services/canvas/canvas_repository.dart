@@ -17,6 +17,8 @@
 //   - feature flag resolution or providers (slice S6)
 library;
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -56,6 +58,31 @@ class CanvasRepository {
   CanvasRepository(this._db);
 
   Database get _database => _db.database;
+
+  /// Broadcasts the canvas localId whenever the `pending_op` table is
+  /// mutated for that canvas (insert, update, delete). Lets the
+  /// transmission-status + pending-cells providers stay event-driven
+  /// instead of polling every 2 s. Long-lived because the repository
+  /// itself lives for the app's lifetime.
+  final StreamController<int> _pendingChanges =
+      StreamController<int>.broadcast();
+
+  /// Stream of canvas localIds with pending-queue state changes.
+  Stream<int> get pendingChangeStream => _pendingChanges.stream;
+
+  void _notifyPending(int canvasLocalId) {
+    if (_pendingChanges.isClosed) return;
+    _pendingChanges.add(canvasLocalId);
+  }
+
+  /// Closes the pending-change broadcast. Tests call this to keep
+  /// flutter_test's "no leaked streams" invariant happy. Production
+  /// process exit doesn't bother.
+  Future<void> dispose() async {
+    if (!_pendingChanges.isClosed) {
+      await _pendingChanges.close();
+    }
+  }
 
   // ---------------------------------------------------------------------------
   // Canvas row CRUD
@@ -298,7 +325,7 @@ class CanvasRepository {
     final nowMs = createdAtMsOverride ?? DateTime.now().millisecondsSinceEpoch;
     final receivedAtMs = receivedAtMsOverride ?? nowMs;
 
-    return _database.transaction((txn) async {
+    final accepted = await _database.transaction((txn) async {
       final accepted = await _applyOpInTransaction(
         txn: txn,
         canvasLocalId: canvasLocalId,
@@ -366,6 +393,8 @@ class CanvasRepository {
       });
       return true;
     });
+    if (accepted) _notifyPending(canvasLocalId);
+    return accepted;
   }
 
   /// Apply an inbound paint op received from a peer.
@@ -584,24 +613,28 @@ class CanvasRepository {
   }
 
   /// Mark an in-flight op as sent. Row is deleted; audit lives in
-  /// `applied_op`.
-  Future<void> markPendingSent(int pendingOpId) async {
+  /// `applied_op`. `canvasLocalId` is required so the change broadcast
+  /// can wake event-driven listeners (transmission HUD, pending-cells
+  /// painter overlay) without polling.
+  Future<void> markPendingSent(int pendingOpId, int canvasLocalId) async {
     await _database.delete(
       CanvasTables.pendingOp,
       where: 'id = ?',
       whereArgs: [pendingOpId],
     );
+    _notifyPending(canvasLocalId);
   }
 
   /// Mark an op as in-flight. Used by the send coordinator immediately
   /// before handing the frame to the transport.
-  Future<void> markPendingInFlight(int pendingOpId) async {
+  Future<void> markPendingInFlight(int pendingOpId, int canvasLocalId) async {
     await _database.update(
       CanvasTables.pendingOp,
       {'state': PendingOpState.inFlight.storageCode},
       where: 'id = ?',
       whereArgs: [pendingOpId],
     );
+    _notifyPending(canvasLocalId);
   }
 
   /// Defer a row back to the queued pool without incrementing `attempts`.
@@ -612,7 +645,8 @@ class CanvasRepository {
   /// untouched. Rate-limited rows MUST NOT count toward the `maxAttempts`
   /// terminal cap.
   Future<void> markPendingDeferred(
-    int pendingOpId, {
+    int pendingOpId,
+    int canvasLocalId, {
     required int nextAttemptAtMs,
   }) async {
     await _database.update(
@@ -624,13 +658,15 @@ class CanvasRepository {
       where: 'id = ?',
       whereArgs: [pendingOpId],
     );
+    _notifyPending(canvasLocalId);
   }
 
   /// Record a send failure. Increments `attempts`, advances
   /// `next_attempt_at_ms`, transitions to `failedTerminal` after the
   /// configured max attempts.
   Future<void> markPendingFailed(
-    int pendingOpId, {
+    int pendingOpId,
+    int canvasLocalId, {
     required String error,
     required int nextAttemptAtMs,
     int maxAttempts = 5,
@@ -658,6 +694,7 @@ class CanvasRepository {
       where: 'id = ?',
       whereArgs: [pendingOpId],
     );
+    _notifyPending(canvasLocalId);
   }
 
   /// Enforce the per-canvas pending queue cap. Drops oldest queued rows

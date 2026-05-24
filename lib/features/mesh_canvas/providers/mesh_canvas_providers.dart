@@ -51,7 +51,9 @@ final canvasDatabaseProvider = FutureProvider<CanvasDatabase>((ref) async {
 /// Typed CRUD layer over [canvasDatabaseProvider].
 final canvasRepositoryProvider = FutureProvider<CanvasRepository>((ref) async {
   final db = await ref.watch(canvasDatabaseProvider.future);
-  return CanvasRepository(db);
+  final repo = CanvasRepository(db);
+  ref.onDispose(repo.dispose);
+  return repo;
 });
 
 /// The auto-created Local Device Canvas (`scope = 'local'`). Always

@@ -66,17 +66,18 @@ class CanvasPaintCadence {
 
   /// Record an accepted paint tap. Subsequent `isCoolingDown` checks
   /// for this canvas will return `true` until the interval elapses.
-  /// Also schedules a microtask emit on [changes] so the HUD repaints.
+  /// Emits on [changes] so the HUD repaints immediately.
+  ///
+  /// No expiry timer is scheduled here. flutter_test's invariants
+  /// check runs BEFORE addTearDown(container.dispose), so a long-
+  /// lived Timer owned by the cadence singleton trips the
+  /// "Timer still pending" assertion. Cooling-state decay is handled
+  /// by the transmission-status provider's short fallback heartbeat
+  /// instead, which costs a few extra wakes but isolates the
+  /// scheduling concern from this pure state object.
   void recordTap(int canvasLocalId) {
     _lastAcceptedMs[canvasLocalId] = _nowMs();
     _emit(canvasLocalId);
-    // No expiry timer is scheduled here. The transmission status
-    // provider polls every 2s and re-evaluates `isCoolingDown`, so
-    // the HUD drops back to a non-cooling severity within one poll
-    // cycle of the cooldown elapsing. Scheduling a Timer here was
-    // tried but caused widget-test framework "Timer still pending
-    // after dispose" failures because addTearDown fires after the
-    // invariant check.
   }
 
   void _emit(int canvasLocalId) {

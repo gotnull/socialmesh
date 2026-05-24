@@ -297,6 +297,7 @@ class CanvasSendCoordinator {
         for (final op in batchPlan.ops) {
           await _repository.markPendingFailed(
             op.id,
+            op.canvasLocalId,
             error: _errorEncodeFailed,
             nextAttemptAtMs: nowMs + _backoffForAttempts(99),
           );
@@ -312,6 +313,7 @@ class CanvasSendCoordinator {
         for (final op in batchPlan.ops) {
           await _repository.markPendingDeferred(
             op.id,
+            op.canvasLocalId,
             nextAttemptAtMs: nowMs + _governorBackoff.inMilliseconds,
           );
         }
@@ -327,7 +329,7 @@ class CanvasSendCoordinator {
       // Mark every contributing row inFlight so a concurrent drain
       // call cannot re-pick them.
       for (final op in batchPlan.ops) {
-        await _repository.markPendingInFlight(op.id);
+        await _repository.markPendingInFlight(op.id, op.canvasLocalId);
       }
 
       AppLogging.meshCanvas(
@@ -345,7 +347,7 @@ class CanvasSendCoordinator {
         case CanvasSendOutcome.sent:
           _governor.recordSend(encoded.length);
           for (final op in batchPlan.ops) {
-            await _repository.markPendingSent(op.id);
+            await _repository.markPendingSent(op.id, op.canvasLocalId);
           }
           framesSent++;
           AppLogging.meshCanvas(
@@ -361,6 +363,7 @@ class CanvasSendCoordinator {
           for (final op in batchPlan.ops) {
             await _repository.markPendingDeferred(
               op.id,
+              op.canvasLocalId,
               nextAttemptAtMs: nowMs + _sipBackoff.inMilliseconds,
             );
           }
@@ -377,6 +380,7 @@ class CanvasSendCoordinator {
             final nextAttemptAtMs = nowMs + _backoffForAttempts(op.attempts);
             await _repository.markPendingFailed(
               op.id,
+              op.canvasLocalId,
               error: result.reason ?? 'transient-failure',
               nextAttemptAtMs: nextAttemptAtMs,
             );
@@ -431,7 +435,7 @@ class CanvasSendCoordinator {
   }) async {
     final victims = pool.where((op) => op.canvasLocalId == canvasLocalId);
     for (final op in victims) {
-      await _repository.markPendingSent(op.id);
+      await _repository.markPendingSent(op.id, op.canvasLocalId);
     }
     AppLogging.meshCanvas(
       'drain discarded ${victims.length} orphan rows '
