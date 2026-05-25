@@ -32,6 +32,7 @@
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		A2F94733B66DF1EDD204E054 /* WatchIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69ECD66A678088B1F1781BC6 /* WatchIntent.swift */; };
+		A4F5E6D7C8B9A0F1E2D3C4B5 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B5C4D3E2F1A0B9C8D7E6F5A4 /* PrivacyInfo.xcprivacy */; };
 		AI0001012024120800000001 /* AppIntentErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI0001012024120800000010 /* AppIntentErrors.swift */; };
 		AI00010120241208000000010 /* ShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI00010120241208000000100 /* ShortcutsProvider.swift */; };
 		AI00010120241208000000011 /* RunAutomationIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI00010120241208000000110 /* RunAutomationIntent.swift */; };
@@ -56,7 +57,6 @@
 		C2C0DEC220260313000000F2 /* Codec2Symbols.c in Sources */ = {isa = PBXBuildFile; fileRef = C2C0DEC220260313000000F1 /* Codec2Symbols.c */; };
 		CEB87B8B9E1368AA9C7B7AEC /* NodesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D244EC97454F3E5B52E85F55 /* NodesView.swift */; };
 		D5C1D636C7F2A568A037C3D0 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = BEFF18A377E3CA3D364CF1AB /* GoogleService-Info.plist */; };
-		A4F5E6D7C8B9A0F1E2D3C4B5 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B5C4D3E2F1A0B9C8D7E6F5A4 /* PrivacyInfo.xcprivacy */; };
 		DAE123A98AE5383B50133E1F /* SocialMeshWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF3516E7B5DE020750D389F /* SocialMeshWatchApp.swift */; };
 		DEAA1B73E64596EF83F0313D /* sip_handshake_declined.caf in Resources */ = {isa = PBXBuildFile; fileRef = E2EF6E9623189449B1E7103A /* sip_handshake_declined.caf */; };
 		E310A2F8DE73F6FB5E9AB2DC /* WatchSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27552A30DC4BB14B5896B0E1 /* WatchSnapshotStore.swift */; };
@@ -169,6 +169,7 @@
 		AI0001012024120800000070 /* OpenNodeIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenNodeIntent.swift; sourceTree = "<group>"; };
 		AI0001012024120800000080 /* OpenMapIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMapIntent.swift; sourceTree = "<group>"; };
 		AI0001012024120800000090 /* OpenMessagesIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMessagesIntent.swift; sourceTree = "<group>"; };
+		B5C4D3E2F1A0B9C8D7E6F5A4 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		B9DE29609EA34A5528BDB600 /* UnavailableView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UnavailableView.swift; sourceTree = "<group>"; };
 		BC8DE48014C7C6A055684E9E /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		BD01B7792F32F9D0004EA220 /* AdSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdSupport.framework; path = System/Library/Frameworks/AdSupport.framework; sourceTree = SDKROOT; };
@@ -178,7 +179,6 @@
 		BDE822F72EDD030000DE666E /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
 		BDE822F82EDD033500DE666E /* SocialmeshWidgetsExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SocialmeshWidgetsExtension.entitlements; sourceTree = "<group>"; };
 		BEFF18A377E3CA3D364CF1AB /* GoogleService-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Runner/GoogleService-Info.plist"; sourceTree = "<group>"; };
-		B5C4D3E2F1A0B9C8D7E6F5A4 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		C2C0DEC220260313000000F1 /* Codec2Symbols.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Codec2Symbols.c; sourceTree = "<group>"; };
 		C4CAC49F2E17EC77F96F453D /* QuickMessageView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuickMessageView.swift; sourceTree = "<group>"; };
 		C6383323257C943D0B3664D6 /* InboxView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InboxView.swift; sourceTree = "<group>"; };
@@ -494,8 +494,8 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 97C147051CF9000F007C117D /* Build configuration list for PBXNativeTarget "Runner" */;
 			buildPhases = (
-				7E81E37679984CE1F776D301 /* [CP] Check Pods Manifest.lock */,
 				19524F3B8ADAD37DB42CB40F /* [SocialMesh] Check native-assets platform */,
+				7E81E37679984CE1F776D301 /* [CP] Check Pods Manifest.lock */,
 				9740EEB61CF901F6004384FC /* Run Script */,
 				97C146EA1CF9000F007C117D /* Sources */,
 				97C146EB1CF9000F007C117D /* Frameworks */,
