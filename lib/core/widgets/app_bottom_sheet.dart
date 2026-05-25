@@ -474,6 +474,15 @@ class AppBottomSheet extends StatelessWidget {
 // Scale-pop wrapper layered on top of Flutter's slide. Flutter hardcodes
 // the modal bottom sheet slide curve (decelerate), so the bounce arrival
 // is added here as a one-shot scale tween anchored to the bottom edge.
+// Subtle bounce-in arrival for bottom sheets. When `enabled` is false
+// (reduced-motion accessibility, widget tests, etc.) the wrapper is a
+// pass-through: no AnimationController is constructed and no Ticker is
+// registered with the SchedulerBinding. The earlier implementation
+// always created the controller eagerly and just skipped `.forward()`
+// when disabled, which left a live (muted) Ticker attached to the
+// sheet's element subtree. That broke widget tests of consumers that
+// open a sheet: pump-driven tests hung indefinitely waiting for a
+// frame that never arrived.
 class _BounceInWrapper extends StatefulWidget {
   final Widget child;
   final bool enabled;
@@ -486,38 +495,37 @@ class _BounceInWrapper extends StatefulWidget {
 
 class _BounceInWrapperState extends State<_BounceInWrapper>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _scale;
+  AnimationController? _controller;
+  Animation<double>? _scale;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    if (!widget.enabled) return;
+    final controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 420),
     );
+    _controller = controller;
     _scale = Tween<double>(
       begin: 0.94,
       end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
-    if (widget.enabled) {
-      _controller.forward();
-    } else {
-      _controller.value = 1.0;
-    }
+    ).animate(CurvedAnimation(parent: controller, curve: Curves.easeOutBack));
+    controller.forward();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.enabled) return widget.child;
+    final scale = _scale;
+    if (!widget.enabled || scale == null) return widget.child;
     return ScaleTransition(
-      scale: _scale,
+      scale: scale,
       alignment: Alignment.bottomCenter,
       child: widget.child,
     );
