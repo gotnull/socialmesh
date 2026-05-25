@@ -822,13 +822,8 @@ class AutomationsScreen extends ConsumerWidget {
       return;
     }
 
-    showModalBottomSheet(
+    AppBottomSheet.showRaw<void>(
       context: context,
-      backgroundColor: context.surface,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (context) => _AddAutomationSheet(
         onCreateNew: () {
           Navigator.pop(context);
@@ -1037,13 +1032,8 @@ class AutomationsScreen extends ConsumerWidget {
   }
 
   void _showExecutionLog(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
+    AppBottomSheet.showRaw<void>(
       context: context,
-      backgroundColor: context.surface,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (_) => AutomationHistorySheet(
         onClear: () {
           ref.read(automationsProvider.notifier).clearExecutionLog();
@@ -1095,59 +1085,67 @@ class _AddAutomationSheet extends ConsumerWidget {
       minChildSize: 0.4,
       maxChildSize: 0.95,
       expand: false,
-      builder: (context, scrollController) => Column(
-        children: [
-          // Handle
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: SemanticColors.muted,
-                borderRadius: BorderRadius.circular(AppTheme.radius2),
+      builder: (context, scrollController) => Container(
+        decoration: BoxDecoration(
+          color: context.surface,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppTheme.radius20),
+          ),
+        ),
+        child: Column(
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: SemanticColors.muted,
+                  borderRadius: BorderRadius.circular(AppTheme.radius2),
+                ),
               ),
             ),
-          ),
-          // Title
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Text(
-                  context.l10n.automationScreenAddAutomation,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
-          // Scrollable content - matches empty state UI
-          Expanded(
-            child: ListView(
-              controller: scrollController,
+            // Title
+            Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                // Create from scratch - same style as empty state
-                _buildCreateFromScratchCard(context),
-
-                const SizedBox(height: AppTheme.spacing24),
-
-                // Quick Start Templates - same style as empty state
-                _buildTemplatesSection(context),
-
-                const SizedBox(height: AppTheme.spacing24),
-
-                // Start with a Trigger - same style as empty state
-                _buildTriggerCategoriesSection(context),
-
-                SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
-              ],
+              child: Row(
+                children: [
+                  Text(
+                    context.l10n.automationScreenAddAutomation,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: AppTheme.spacing16),
+            // Scrollable content - matches empty state UI
+            Expanded(
+              child: ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  // Create from scratch - same style as empty state
+                  _buildCreateFromScratchCard(context),
+
+                  const SizedBox(height: AppTheme.spacing24),
+
+                  // Quick Start Templates - same style as empty state
+                  _buildTemplatesSection(context),
+
+                  const SizedBox(height: AppTheme.spacing24),
+
+                  // Start with a Trigger - same style as empty state
+                  _buildTriggerCategoriesSection(context),
+
+                  SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

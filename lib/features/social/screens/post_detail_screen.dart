@@ -467,10 +467,11 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
     final currentUser = ref.read(currentUserProvider);
     final isOwnPost = currentUser?.uid == post.authorId;
 
-    showModalBottomSheet(
+    AppBottomSheet.show<void>(
       context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
+      padding: EdgeInsets.zero,
+      child: Builder(
+        builder: (ctx) => Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (isOwnPost)
@@ -974,23 +975,13 @@ class _CommentTileState extends ConsumerState<_CommentTile>
   void _showOptionsMenu(BuildContext context, bool isOwnComment) {
     final theme = Theme.of(context);
 
-    showModalBottomSheet(
+    AppBottomSheet.show<void>(
       context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
+      padding: EdgeInsets.zero,
+      child: Builder(
+        builder: (ctx) => Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Handle bar
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(top: 12, bottom: 8),
-              decoration: BoxDecoration(
-                color: theme.hintColor.withAlpha(80),
-                borderRadius: BorderRadius.circular(AppTheme.radius2),
-              ),
-            ),
-
             // Delete option - only for own comments
             if (isOwnComment)
               ListTile(

@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/search_filter_header.dart';
 import '../../../core/widgets/status_filter_chip.dart';
@@ -838,10 +839,8 @@ class _UserPurchasesAdminScreenState
   }
 
   void _showUserDetail(_UserWithPurchases user) {
-    showModalBottomSheet(
+    AppBottomSheet.showRaw<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (context) => _UserDetailSheet(user: user),
     );
   }

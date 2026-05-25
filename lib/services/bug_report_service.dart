@@ -22,6 +22,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/logging.dart';
 import '../core/transport.dart';
 import '../core/navigation.dart';
+import '../core/widgets/app_bottom_sheet.dart';
 import '../features/feedback/report_bug_sheet.dart';
 import '../models/mesh_models.dart';
 import '../providers/app_providers.dart';
@@ -127,10 +128,8 @@ class BugReportService with WidgetsBindingObserver {
     }
 
     final rootContext = context;
-    final proceed = await showModalBottomSheet<bool>(
+    final proceed = await AppBottomSheet.showRaw<bool>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (sheetContext) {
         return ReportBugPromptSheet(
           onToggleShake: setEnabled,
@@ -150,10 +149,8 @@ class BugReportService with WidgetsBindingObserver {
       return;
     }
 
-    await showModalBottomSheet<void>(
+    await AppBottomSheet.showRaw<void>(
       context: rootContext,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (sheetContext) {
         return ReportBugSheet(
           initialScreenshot: screenshotBytes,

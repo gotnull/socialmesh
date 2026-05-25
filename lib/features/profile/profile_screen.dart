@@ -128,11 +128,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   }
 
   Future<void> _showEditSheet(BuildContext context) async {
-    await showModalBottomSheet<bool>(
+    await AppBottomSheet.showRaw<bool>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.6),
       builder: (context) => const _EditProfileSheet(),
     );
 

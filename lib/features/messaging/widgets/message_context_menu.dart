@@ -12,6 +12,7 @@ import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/transport_path.dart';
 import '../../../models/mesh_models.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../providers/app_providers.dart';
 import '../../../services/haptic_service.dart';
 import '../../../core/logging.dart';
@@ -540,10 +541,8 @@ Future<void> showMessageContextMenu(
 }) {
   HapticFeedback.selectionClick();
 
-  return showModalBottomSheet(
+  return AppBottomSheet.showRaw<void>(
     context: context,
-    backgroundColor: Colors.transparent,
-    isScrollControlled: true,
     builder: (context) => Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
@@ -613,10 +612,8 @@ class _MoreEmojiButton extends StatelessWidget {
   }
 
   void _showEmojiPicker(BuildContext outerContext) {
-    showModalBottomSheet<String>(
+    AppBottomSheet.showRaw<String>(
       context: outerContext,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
       builder: (sheetCtx) => DraggableScrollableSheet(
         initialChildSize: 0.45,
         minChildSize: 0.3,

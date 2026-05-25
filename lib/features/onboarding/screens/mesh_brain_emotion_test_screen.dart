@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/splash_mesh_provider.dart';
 import '../widgets/mesh_node_brain.dart';
@@ -368,9 +369,8 @@ class _MeshBrainEmotionTestScreenState
   }
 
   void _showSettingsSheet() {
-    showModalBottomSheet(
+    AppBottomSheet.showRaw<void>(
       context: context,
-      backgroundColor: Colors.transparent,
       builder: (context) => _buildSettingsSheet(),
     );
   }

@@ -1637,13 +1637,8 @@ class _ReviewsSection extends ConsumerWidget {
     final displayName = ref.read(profileDisplayNameProvider);
     final profile = ref.read(userProfileProvider).value;
 
-    showModalBottomSheet(
+    AppBottomSheet.showRaw<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: context.card,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (context) => _WriteReviewSheet(
         productId: productId,
         userId: user.uid,
@@ -1842,7 +1837,13 @@ class _WriteReviewSheetState extends ConsumerState<_WriteReviewSheet>
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return Container(
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppTheme.radius20),
+        ),
+      ),
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),

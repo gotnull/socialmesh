@@ -293,114 +293,97 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
     final errors = result.errors;
     final warnings = result.warnings;
 
-    showModalBottomSheet(
+    AppBottomSheet.show<void>(
       context: context,
-      backgroundColor: context.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spacing16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[600],
-                    borderRadius: BorderRadius.circular(AppTheme.radius2),
+      child: Builder(
+        builder: (sheetContext) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  color: AppTheme.errorRed,
+                  size: 24,
+                ),
+                const SizedBox(width: AppTheme.spacing8),
+                Text(
+                  context.l10n.automationFlowCompilationIssues,
+                  style: Theme.of(
+                    sheetContext,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.spacing16),
+            if (errors.isNotEmpty) ...[
+              Text(
+                context.l10n.automationFlowErrors,
+                style: Theme.of(sheetContext).textTheme.titleSmall?.copyWith(
+                  color: AppTheme.errorRed,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing8),
+              ...errors.map(
+                (e) => Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.close,
+                        size: 16,
+                        color: AppTheme.errorRed,
+                      ),
+                      const SizedBox(width: AppTheme.spacing8),
+                      Expanded(
+                        child: Text(
+                          e.message,
+                          style: TextStyle(color: context.textSecondary),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.error_outline,
-                    color: AppTheme.errorRed,
-                    size: 24,
-                  ),
-                  const SizedBox(width: AppTheme.spacing8),
-                  Text(
-                    context.l10n.automationFlowCompilationIssues,
-                    style: Theme.of(sheetContext).textTheme.titleLarge
-                        ?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppTheme.spacing16),
-              if (errors.isNotEmpty) ...[
-                Text(
-                  context.l10n.automationFlowErrors,
-                  style: Theme.of(sheetContext).textTheme.titleSmall?.copyWith(
-                    color: AppTheme.errorRed,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacing8),
-                ...errors.map(
-                  (e) => Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(
-                          Icons.close,
-                          size: 16,
-                          color: AppTheme.errorRed,
-                        ),
-                        const SizedBox(width: AppTheme.spacing8),
-                        Expanded(
-                          child: Text(
-                            e.message,
-                            style: TextStyle(color: context.textSecondary),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-              if (warnings.isNotEmpty) ...[
-                const SizedBox(height: AppTheme.spacing12),
-                Text(
-                  context.l10n.automationFlowWarnings,
-                  style: Theme.of(sheetContext).textTheme.titleSmall?.copyWith(
-                    color: AppTheme.warningYellow,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacing8),
-                ...warnings.map(
-                  (w) => Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(
-                          Icons.warning_amber,
-                          size: 16,
-                          color: AppTheme.warningYellow,
-                        ),
-                        const SizedBox(width: AppTheme.spacing8),
-                        Expanded(
-                          child: Text(
-                            w.message,
-                            style: TextStyle(color: context.textSecondary),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-              const SizedBox(height: AppTheme.spacing16),
             ],
-          ),
+            if (warnings.isNotEmpty) ...[
+              const SizedBox(height: AppTheme.spacing12),
+              Text(
+                context.l10n.automationFlowWarnings,
+                style: Theme.of(sheetContext).textTheme.titleSmall?.copyWith(
+                  color: AppTheme.warningYellow,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing8),
+              ...warnings.map(
+                (w) => Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.warning_amber,
+                        size: 16,
+                        color: AppTheme.warningYellow,
+                      ),
+                      const SizedBox(width: AppTheme.spacing8),
+                      Expanded(
+                        child: Text(
+                          w.message,
+                          style: TextStyle(color: context.textSecondary),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: AppTheme.spacing16),
+          ],
         ),
       ),
     );

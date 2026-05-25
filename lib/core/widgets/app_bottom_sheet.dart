@@ -110,6 +110,41 @@ class AppBottomSheet extends StatelessWidget {
     );
   }
 
+  // Raw modal entry point for sheets that supply their own visual shell
+  // (transparent backgrounds, custom container widgets, floating panels).
+  // Skips the canonical drag-pill + Container shell but keeps modal route
+  // management, haptic, disableAnimations handling, and the bounce arrival.
+  // Prefer [show] / [showScrollable] / [showActions] / [showConfirm] /
+  // [showPicker] when the canonical shell fits.
+  static Future<T?> showRaw<T>({
+    required BuildContext context,
+    required WidgetBuilder builder,
+    bool isDismissible = true,
+    bool isScrollControlled = true,
+  }) {
+    HapticFeedback.lightImpact();
+    final disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    return showModalBottomSheet<T>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: isScrollControlled,
+      isDismissible: isDismissible,
+      enableDrag: isDismissible,
+      transitionAnimationController: AnimationController(
+        vsync: Navigator.of(context),
+        duration: disableAnimations
+            ? Duration.zero
+            : const Duration(milliseconds: 350),
+        reverseDuration: disableAnimations
+            ? Duration.zero
+            : const Duration(milliseconds: 250),
+      ),
+      builder: (ctx) =>
+          _BounceInWrapper(enabled: !disableAnimations, child: builder(ctx)),
+    );
+  }
+
   /// Shows a scrollable bottom sheet with drag handle.
   ///
   /// Optionally provide [title] to pin a header above the scrollable content,

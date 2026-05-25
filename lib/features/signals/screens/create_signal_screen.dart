@@ -453,75 +453,53 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
 
   void _showIntentPicker() {
     _dismissKeyboard();
-    showModalBottomSheet<void>(
+    AppBottomSheet.show<void>(
       context: context,
-      backgroundColor: context.background,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(ctx).size.height * 0.7,
-          ),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppTheme.spacing20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: context.border,
-                      borderRadius: BorderRadius.circular(AppTheme.radius2),
+      maxHeightFraction: 0.7,
+      child: Builder(
+        builder: (ctx) => SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                context.l10n.signalYourIntent,
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing4),
+              Text(
+                context.l10n.signalLetOthersKnowIntent,
+                style: TextStyle(color: context.textTertiary, fontSize: 13),
+              ),
+              const SizedBox(height: AppTheme.spacing16),
+              ...PresenceIntent.values
+                  .where((i) => i != PresenceIntent.unknown)
+                  .map(
+                    (intent) => _IntentOption(
+                      intent: intent,
+                      isSelected: _selectedIntent == intent,
+                      onTap: () {
+                        setState(() => _selectedIntent = intent);
+                        Navigator.pop(ctx);
+                      },
                     ),
                   ),
-                ),
-                const SizedBox(height: AppTheme.spacing20),
-                Text(
-                  context.l10n.signalYourIntent,
-                  style: TextStyle(
-                    color: context.textPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacing4),
-                Text(
-                  context.l10n.signalLetOthersKnowIntent,
-                  style: TextStyle(color: context.textTertiary, fontSize: 13),
-                ),
-                const SizedBox(height: AppTheme.spacing16),
-                ...PresenceIntent.values
-                    .where((i) => i != PresenceIntent.unknown)
-                    .map(
-                      (intent) => _IntentOption(
-                        intent: intent,
-                        isSelected: _selectedIntent == intent,
-                        onTap: () {
-                          setState(() => _selectedIntent = intent);
-                          Navigator.pop(ctx);
-                        },
-                      ),
-                    ),
-                const SizedBox(height: AppTheme.spacing8),
-                // Clear option
-                _IntentOption(
-                  intent: PresenceIntent.unknown,
-                  isSelected: _selectedIntent == PresenceIntent.unknown,
-                  label: context.l10n.signalNoIntent,
-                  onTap: () {
-                    setState(() => _selectedIntent = PresenceIntent.unknown);
-                    Navigator.pop(ctx);
-                  },
-                ),
-                const SizedBox(height: AppTheme.spacing12),
-              ],
-            ),
+              const SizedBox(height: AppTheme.spacing8),
+              _IntentOption(
+                intent: PresenceIntent.unknown,
+                isSelected: _selectedIntent == PresenceIntent.unknown,
+                label: context.l10n.signalNoIntent,
+                onTap: () {
+                  setState(() => _selectedIntent = PresenceIntent.unknown);
+                  Navigator.pop(ctx);
+                },
+              ),
+              const SizedBox(height: AppTheme.spacing12),
+            ],
           ),
         ),
       ),
@@ -563,10 +541,8 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
 
     // Show media picker bottom sheet
     if (!mounted) return;
-    final result = await showModalBottomSheet<_MediaPickerResult?>(
+    final result = await AppBottomSheet.showRaw<_MediaPickerResult?>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (context) => const _MediaPickerSheet(),
     );
 
@@ -1204,54 +1180,35 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
   }
 
   void _showTTLPicker(BuildContext context) {
-    showModalBottomSheet<void>(
+    AppBottomSheet.show<void>(
       context: context,
-      backgroundColor: context.background,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spacing20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: context.border,
-                    borderRadius: BorderRadius.circular(AppTheme.radius2),
-                  ),
-                ),
+      child: Builder(
+        builder: (ctx) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.l10n.signalDuration,
+              style: TextStyle(
+                color: context.textPrimary,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
               ),
-              const SizedBox(height: AppTheme.spacing20),
-              Text(
-                context.l10n.signalDuration,
-                style: TextStyle(
-                  color: context.textPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: AppTheme.spacing4),
-              Text(
-                context.l10n.signalDurationSubtitle,
-                style: TextStyle(color: context.textTertiary, fontSize: 13),
-              ),
-              const SizedBox(height: AppTheme.spacing20),
-              TTLSelector(
-                selectedMinutes: _ttlMinutes,
-                onChanged: (minutes) {
-                  setState(() => _ttlMinutes = minutes);
-                  Navigator.of(ctx).pop();
-                },
-              ),
-              const SizedBox(height: AppTheme.spacing12),
-            ],
-          ),
+            ),
+            const SizedBox(height: AppTheme.spacing4),
+            Text(
+              context.l10n.signalDurationSubtitle,
+              style: TextStyle(color: context.textTertiary, fontSize: 13),
+            ),
+            const SizedBox(height: AppTheme.spacing20),
+            TTLSelector(
+              selectedMinutes: _ttlMinutes,
+              onChanged: (minutes) {
+                setState(() => _ttlMinutes = minutes);
+                Navigator.of(ctx).pop();
+              },
+            ),
+          ],
         ),
       ),
     );

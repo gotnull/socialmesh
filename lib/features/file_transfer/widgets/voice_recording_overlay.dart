@@ -403,54 +403,31 @@ class _VoiceRecordingOverlayState extends State<VoiceRecordingOverlay>
     if (notifier == null) return;
 
     final current = notifier.value;
-    final picked = await showModalBottomSheet<VoiceQuality>(
+    final picked = await AppBottomSheet.show<VoiceQuality>(
       context: context,
-      backgroundColor: const Color(0xFF1A1A2E),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppTheme.radius20),
-        ),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppTheme.spacing24,
-            vertical: AppTheme.spacing16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(AppTheme.radius2),
-                  ),
-                ),
+      child: Builder(
+        builder: (ctx) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              ctx.l10n.voiceQualityPickerTitle,
+              style: TextStyle(
+                color: ctx.textPrimary,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
               ),
-              const SizedBox(height: AppTheme.spacing16),
-              Text(
-                ctx.l10n.voiceQualityPickerTitle,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
+            ),
+            const SizedBox(height: AppTheme.spacing16),
+            for (final q in VoiceQuality.values)
+              _QualityOption(
+                quality: q,
+                label: _qualityLabel(ctx, q),
+                isSelected: q == current,
+                onTap: () => Navigator.of(ctx).pop(q),
               ),
-              const SizedBox(height: AppTheme.spacing16),
-              for (final q in VoiceQuality.values)
-                _QualityOption(
-                  quality: q,
-                  label: _qualityLabel(ctx, q),
-                  isSelected: q == current,
-                  onTap: () => Navigator.of(ctx).pop(q),
-                ),
-              const SizedBox(height: AppTheme.spacing8),
-            ],
-          ),
+            const SizedBox(height: AppTheme.spacing8),
+          ],
         ),
       ),
     );

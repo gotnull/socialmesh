@@ -13,6 +13,7 @@ import '../../services/subscription/subscription_service.dart';
 import '../../utils/snackbar.dart';
 import '../theme.dart';
 import 'animations.dart';
+import 'app_bottom_sheet.dart';
 
 // =============================================================================
 // PREMIUM GATING v2 - Unified Premium Gating Components
@@ -465,13 +466,8 @@ Future<bool> showPremiumInfoSheet({
   required PremiumFeature feature,
   String? customDescription,
 }) async {
-  final result = await showModalBottomSheet<bool>(
+  final result = await AppBottomSheet.showRaw<bool>(
     context: context,
-    backgroundColor: context.surface,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
     builder: (context) => PremiumInfoSheet(
       feature: feature,
       customDescription: customDescription,
@@ -757,216 +753,226 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet>
       minChildSize: 0.4,
       maxChildSize: 0.85,
       expand: false,
-      builder: (context, scrollController) => Column(
-        children: [
-          // Handle bar
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: SemanticColors.muted,
-                borderRadius: BorderRadius.circular(AppTheme.radius2),
+      builder: (context, scrollController) => Container(
+        decoration: BoxDecoration(
+          color: context.surface,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppTheme.radius20),
+          ),
+        ),
+        child: Column(
+          children: [
+            // Handle bar
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: SemanticColors.muted,
+                  borderRadius: BorderRadius.circular(AppTheme.radius2),
+                ),
               ),
             ),
-          ),
 
-          Expanded(
-            child: ListView(
-              controller: scrollController,
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              children: [
-                // Feature icon
-                Center(
-                  child: Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          context.accentColor,
-                          context.accentColor.withValues(alpha: 0.7),
+            Expanded(
+              child: ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                children: [
+                  // Feature icon
+                  Center(
+                    child: Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            context.accentColor,
+                            context.accentColor.withValues(alpha: 0.7),
+                          ],
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: context.accentColor.withValues(alpha: 0.25),
+                            blurRadius: 20,
+                            spreadRadius: 4,
+                          ),
                         ],
                       ),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: context.accentColor.withValues(alpha: 0.25),
-                          blurRadius: 20,
-                          spreadRadius: 4,
-                        ),
-                      ],
+                      child: Icon(_featureIcon, size: 36, color: Colors.white),
                     ),
-                    child: Icon(_featureIcon, size: 36, color: Colors.white),
                   ),
-                ),
-                const SizedBox(height: AppTheme.spacing20),
+                  const SizedBox(height: AppTheme.spacing20),
 
-                // Headline
-                Text(
-                  _headline,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
+                  // Headline
+                  Text(
+                    _headline,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppTheme.spacing8),
+                  const SizedBox(height: AppTheme.spacing8),
 
-                // Description
-                Text(
-                  _description,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: context.textSecondary,
+                  // Description
+                  Text(
+                    _description,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: context.textSecondary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppTheme.spacing24),
+                  const SizedBox(height: AppTheme.spacing24),
 
-                // Benefits
-                ..._benefits.map(
-                  (b) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: context.accentColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radius10,
+                  // Benefits
+                  ..._benefits.map(
+                    (b) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: context.accentColor.withValues(
+                                alpha: 0.15,
+                              ),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius10,
+                              ),
+                            ),
+                            child: Icon(
+                              b.icon,
+                              color: context.accentColor,
+                              size: 20,
                             ),
                           ),
-                          child: Icon(
-                            b.icon,
-                            color: context.accentColor,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: AppTheme.spacing12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                b.title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
+                          const SizedBox(width: AppTheme.spacing12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  b.title,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                b.subtitle,
-                                style: TextStyle(
-                                  color: context.textSecondary,
-                                  fontSize: 12,
+                                Text(
+                                  b.subtitle,
+                                  style: TextStyle(
+                                    color: context.textSecondary,
+                                    fontSize: 12,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacing20),
-
-                // Purchase button
-                BouncyTap(
-                  onTap: _isLoading ? null : _handlePurchase,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          context.accentColor,
-                          context.accentColor.withValues(alpha: 0.8),
                         ],
                       ),
-                      borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: context.accentColor.withValues(alpha: 0.25),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
                     ),
-                    child: _isLoading
-                        ? const Center(
-                            child: SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            ),
-                          )
-                        : Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(_featureIcon, color: Colors.white),
-                              const SizedBox(width: AppTheme.spacing8),
-                              Text(
-                                context.l10n.premiumUnlockFor(displayPrice),
-                                style: const TextStyle(
+                  ),
+                  const SizedBox(height: AppTheme.spacing20),
+
+                  // Purchase button
+                  BouncyTap(
+                    onTap: _isLoading ? null : _handlePurchase,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            context.accentColor,
+                            context.accentColor.withValues(alpha: 0.8),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: context.accentColor.withValues(alpha: 0.25),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: _isLoading
+                          ? const Center(
+                              child: SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
                                   color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
                                 ),
                               ),
-                            ],
-                          ),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(_featureIcon, color: Colors.white),
+                                const SizedBox(width: AppTheme.spacing8),
+                                Text(
+                                  context.l10n.premiumUnlockFor(displayPrice),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppTheme.spacing8),
+                  const SizedBox(height: AppTheme.spacing8),
 
-                // One-time purchase note
-                Text(
-                  context.l10n.premiumOneTimePurchase,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: context.textTertiary, fontSize: 12),
-                ),
-                const SizedBox(height: AppTheme.spacing12),
+                  // One-time purchase note
+                  Text(
+                    context.l10n.premiumOneTimePurchase,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: context.textTertiary, fontSize: 12),
+                  ),
+                  const SizedBox(height: AppTheme.spacing12),
 
-                // Secondary actions
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextButton(
-                      onPressed: _isLoading ? null : _handleRestore,
-                      child: Text(
-                        context.l10n.premiumRestorePurchases,
-                        style: TextStyle(
-                          color: context.textSecondary,
-                          fontSize: 13,
+                  // Secondary actions
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TextButton(
+                        onPressed: _isLoading ? null : _handleRestore,
+                        child: Text(
+                          context.l10n.premiumRestorePurchases,
+                          style: TextStyle(
+                            color: context.textSecondary,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: AppTheme.spacing16),
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(false),
-                      child: Text(
-                        context.l10n.premiumNotNow,
-                        style: TextStyle(
-                          color: context.textTertiary,
-                          fontSize: 13,
+                      const SizedBox(width: AppTheme.spacing16),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: Text(
+                          context.l10n.premiumNotNow,
+                          style: TextStyle(
+                            color: context.textTertiary,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
 
-                SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
-              ],
+                  SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

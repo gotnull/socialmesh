@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/chip_selector.dart';
 import '../../../core/widgets/meshcore_contact_selector_sheet.dart';
 import '../../../core/widgets/node_selector_sheet.dart';
@@ -1150,50 +1151,15 @@ class _TriggerSelectorState extends State<TriggerSelector> {
   }
 
   void _showTriggerTypePicker(BuildContext context) {
-    showModalBottomSheet(
+    AppBottomSheet.showScrollable<void>(
       context: context,
-      backgroundColor: context.surface,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (context, scrollController) => SafeArea(
-          top: false,
-          child: Column(
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: SemanticColors.muted,
-                  borderRadius: BorderRadius.circular(AppTheme.radius2),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  context.l10n.automationTriggerSelectTrigger,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ),
-              const SizedBox(height: AppTheme.spacing8),
-              Expanded(
-                child: ListView(
-                  controller: scrollController,
-                  children: _buildTriggerList(context),
-                ),
-              ),
-            ],
-          ),
-        ),
+      initialChildSize: 0.7,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      title: context.l10n.automationTriggerSelectTrigger,
+      builder: (scrollController) => ListView(
+        controller: scrollController,
+        children: _buildTriggerList(context),
       ),
     );
   }

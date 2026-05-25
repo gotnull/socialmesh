@@ -311,112 +311,60 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
   }
 
   void _showElementPicker() {
-    showModalBottomSheet(
+    AppBottomSheet.showScrollable<void>(
       context: context,
-      backgroundColor: context.card,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.5,
-        minChildSize: 0.3,
-        maxChildSize: 0.7,
-        expand: false,
-        builder: (context, scrollController) => Column(
-          children: [
-            // Handle
-            Center(
-              child: Container(
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: context.border,
-                  borderRadius: BorderRadius.circular(AppTheme.radius2),
-                ),
+      initialChildSize: 0.5,
+      minChildSize: 0.3,
+      maxChildSize: 0.7,
+      title: context.l10n.widgetBuilderAddBlock,
+      builder: (scrollController) => ListView(
+        controller: scrollController,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          _buildBlockPickerSection(
+            context.l10n.widgetBuilderSectionDisplayBlocks,
+            [
+              _BlockItem(
+                'info',
+                context.l10n.widgetBuilderBlockInfoBlock,
+                Icons.info_outline,
+                context.l10n.widgetBuilderBlockInfoBlockDesc,
               ),
-            ),
-            // Title
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.add_box_outlined,
-                    size: 20,
-                    color: context.accentColor,
-                  ),
-                  const SizedBox(width: AppTheme.spacing8),
-                  Text(
-                    context.l10n.widgetBuilderAddBlock,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: context.textPrimary,
-                    ),
-                  ),
-                ],
+              _BlockItem(
+                'metric',
+                context.l10n.widgetBuilderBlockMetric,
+                Icons.trending_up,
+                context.l10n.widgetBuilderBlockMetricDesc,
               ),
-            ),
-            const SizedBox(height: AppTheme.spacing16),
-            // Simplified block grid
-            Expanded(
-              child: ListView(
-                controller: scrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  _buildBlockPickerSection(
-                    context.l10n.widgetBuilderSectionDisplayBlocks,
-                    [
-                      _BlockItem(
-                        'info',
-                        context.l10n.widgetBuilderBlockInfoBlock,
-                        Icons.info_outline,
-                        context.l10n.widgetBuilderBlockInfoBlockDesc,
-                      ),
-                      _BlockItem(
-                        'metric',
-                        context.l10n.widgetBuilderBlockMetric,
-                        Icons.trending_up,
-                        context.l10n.widgetBuilderBlockMetricDesc,
-                      ),
-                      _BlockItem(
-                        'status',
-                        context.l10n.widgetBuilderBlockStatus,
-                        Icons.circle,
-                        context.l10n.widgetBuilderBlockStatusDesc,
-                      ),
-                    ],
-                  ),
-                  _buildBlockPickerSection(
-                    context.l10n.widgetBuilderSectionActionBlocks,
-                    [
-                      _BlockItem(
-                        'action_button',
-                        context.l10n.widgetBuilderBlockActionButton,
-                        Icons.touch_app,
-                        context.l10n.widgetBuilderBlockActionButtonDesc,
-                      ),
-                    ],
-                  ),
-                  _buildBlockPickerSection(
-                    context.l10n.widgetBuilderSectionLayout,
-                    [
-                      _BlockItem(
-                        'row',
-                        context.l10n.widgetBuilderBlockNewRow,
-                        Icons.view_column,
-                        context.l10n.widgetBuilderBlockNewRowDesc,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppTheme.spacing16),
-                ],
+              _BlockItem(
+                'status',
+                context.l10n.widgetBuilderBlockStatus,
+                Icons.circle,
+                context.l10n.widgetBuilderBlockStatusDesc,
               ),
+            ],
+          ),
+          _buildBlockPickerSection(
+            context.l10n.widgetBuilderSectionActionBlocks,
+            [
+              _BlockItem(
+                'action_button',
+                context.l10n.widgetBuilderBlockActionButton,
+                Icons.touch_app,
+                context.l10n.widgetBuilderBlockActionButtonDesc,
+              ),
+            ],
+          ),
+          _buildBlockPickerSection(context.l10n.widgetBuilderSectionLayout, [
+            _BlockItem(
+              'row',
+              context.l10n.widgetBuilderBlockNewRow,
+              Icons.view_column,
+              context.l10n.widgetBuilderBlockNewRowDesc,
             ),
-          ],
-        ),
+          ]),
+          const SizedBox(height: AppTheme.spacing16),
+        ],
       ),
     );
   }
@@ -445,82 +393,60 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
 
   /// Show dialog to add a child element to a layout container
   void _showAddChildDialog(ElementSchema parent) {
-    showModalBottomSheet(
+    AppBottomSheet.show<void>(
       context: context,
-      backgroundColor: context.card,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing16,
+        0,
+        AppTheme.spacing16,
+        AppTheme.spacing24,
       ),
-      builder: (ctx) => SafeArea(
-        child: Column(
+      child: Builder(
+        builder: (ctx) => Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Handle
-            Center(
-              child: Container(
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: context.border,
-                  borderRadius: BorderRadius.circular(AppTheme.radius2),
-                ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                context.l10n.widgetBuilderWhatToAdd,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: context.textPrimary,
-                ),
+            Text(
+              context.l10n.widgetBuilderWhatToAdd,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
               ),
             ),
             const SizedBox(height: AppTheme.spacing20),
-            // Simple, clear options with visual previews
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                children: [
-                  _buildSimpleAddOption(
-                    ctx,
-                    parent,
-                    ElementType.text,
-                    context.l10n.widgetBuilderAddText,
-                    context.l10n.widgetBuilderAddTextDesc,
-                    Icons.text_fields,
-                  ),
-                  _buildSimpleAddOption(
-                    ctx,
-                    parent,
-                    ElementType.icon,
-                    context.l10n.widgetBuilderAddIcon,
-                    context.l10n.widgetBuilderAddIconDesc,
-                    Icons.emoji_emotions_outlined,
-                  ),
-                  _buildSimpleAddOption(
-                    ctx,
-                    parent,
-                    ElementType.gauge,
-                    context.l10n.widgetBuilderAddProgressBar,
-                    context.l10n.widgetBuilderAddProgressBarDesc,
-                    Icons.linear_scale,
-                  ),
-                  _buildSimpleAddOption(
-                    ctx,
-                    parent,
-                    ElementType.spacer,
-                    context.l10n.widgetBuilderAddSpace,
-                    context.l10n.widgetBuilderAddSpaceDesc,
-                    Icons.expand,
-                  ),
-                ],
-              ),
+            _buildSimpleAddOption(
+              ctx,
+              parent,
+              ElementType.text,
+              context.l10n.widgetBuilderAddText,
+              context.l10n.widgetBuilderAddTextDesc,
+              Icons.text_fields,
             ),
-            const SizedBox(height: AppTheme.spacing24),
+            _buildSimpleAddOption(
+              ctx,
+              parent,
+              ElementType.icon,
+              context.l10n.widgetBuilderAddIcon,
+              context.l10n.widgetBuilderAddIconDesc,
+              Icons.emoji_emotions_outlined,
+            ),
+            _buildSimpleAddOption(
+              ctx,
+              parent,
+              ElementType.gauge,
+              context.l10n.widgetBuilderAddProgressBar,
+              context.l10n.widgetBuilderAddProgressBarDesc,
+              Icons.linear_scale,
+            ),
+            _buildSimpleAddOption(
+              ctx,
+              parent,
+              ElementType.spacer,
+              context.l10n.widgetBuilderAddSpace,
+              context.l10n.widgetBuilderAddSpaceDesc,
+              Icons.expand,
+            ),
           ],
         ),
       ),
@@ -932,13 +858,8 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
   void _showPropertySheet() {
     if (_selectedElementId == null) return;
 
-    showModalBottomSheet(
+    AppBottomSheet.showRaw<void>(
       context: context,
-      backgroundColor: context.card,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (context) {
         // Calculate safe area and keyboard height
         final mediaQuery = MediaQuery.of(context);
@@ -954,147 +875,155 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen>
             minChildSize: 0.5,
             maxChildSize: maxSheetHeight.clamp(0.85, 0.95),
             expand: false,
-            builder: (context, scrollController) => StatefulBuilder(
-              builder: (context, setSheetState) {
-                // Store the sheet's setState so we can call it from _updateElement
-                _sheetSetState = setSheetState;
+            builder: (context, scrollController) => Container(
+              decoration: BoxDecoration(
+                color: context.card,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(AppTheme.radius16),
+                ),
+              ),
+              child: StatefulBuilder(
+                builder: (context, setSheetState) {
+                  // Store the sheet's setState so we can call it from _updateElement
+                  _sheetSetState = setSheetState;
 
-                // Get fresh element data each rebuild
-                final element = _findElementById(
-                  _schema.root,
-                  _selectedElementId!,
-                );
-                if (element == null) {
-                  return Center(
-                    child: Text(context.l10n.widgetBuilderElementNotFound),
+                  // Get fresh element data each rebuild
+                  final element = _findElementById(
+                    _schema.root,
+                    _selectedElementId!,
                   );
-                }
+                  if (element == null) {
+                    return Center(
+                      child: Text(context.l10n.widgetBuilderElementNotFound),
+                    );
+                  }
 
-                return Column(
-                  children: [
-                    // Handle + Live preview row
-                    Container(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppTheme.spacing16,
-                        8,
-                        16,
-                        0,
-                      ),
-                      child: Column(
-                        children: [
-                          // Drag handle
-                          Center(
-                            child: Container(
-                              width: 40,
-                              height: 4,
-                              decoration: BoxDecoration(
-                                color: context.border,
-                                borderRadius: BorderRadius.circular(
-                                  AppTheme.radius2,
+                  return Column(
+                    children: [
+                      // Handle + Live preview row
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppTheme.spacing16,
+                          8,
+                          16,
+                          0,
+                        ),
+                        child: Column(
+                          children: [
+                            // Drag handle
+                            Center(
+                              child: Container(
+                                width: 40,
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: context.border,
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radius2,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          SizedBox(height: AppTheme.spacing12),
-                          // Full widget preview - EXACT same size as canvas
-                          SizedBox(
-                            height: _getPreviewHeight(),
-                            width: double.infinity,
-                            child: WidgetRenderer(
-                              schema: _schema,
-                              accentColor: context.accentColor,
-                              usePlaceholderData: true,
-                              isPreview: false,
-                              enableActions: false,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: AppTheme.spacing8),
-                    // Breadcrumb path showing where in hierarchy
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: _buildElementBreadcrumb(element),
-                    ),
-                    const SizedBox(height: AppTheme.spacing8),
-                    // Title row
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.tune,
-                            size: 18,
-                            color: context.accentColor,
-                          ),
-                          const SizedBox(width: AppTheme.spacing8),
-                          Text(
-                            _getElementTypeName(element.type),
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: context.textPrimary,
-                            ),
-                          ),
-                          const Spacer(),
-                          IconButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                              _deleteElement(element.id);
-                            },
-                            icon: Icon(
-                              Icons.delete_outline,
-                              color: AppTheme.errorRed,
-                              size: 20,
-                            ),
-                            visualDensity: VisualDensity.compact,
-                          ),
-                        ],
-                      ),
-                    ),
-                    Divider(height: 1, color: context.border),
-                    // Properties
-                    Expanded(
-                      child: ListView(
-                        controller: scrollController,
-                        padding: const EdgeInsets.all(AppTheme.spacing16),
-                        children: [
-                          _buildPropertySection(
-                            'Content',
-                            _buildContentProperties(element),
-                          ),
-                          // Only show binding for bindable elements (text, gauge, chart)
-                          if (_shouldShowBinding(element)) ...[
-                            const SizedBox(height: AppTheme.spacing16),
-                            _buildPropertySection(
-                              'Data Binding', // lint-allow: hardcoded-string
-                              _buildBindingProperties(element),
+                            SizedBox(height: AppTheme.spacing12),
+                            // Full widget preview - EXACT same size as canvas
+                            SizedBox(
+                              height: _getPreviewHeight(),
+                              width: double.infinity,
+                              child: WidgetRenderer(
+                                schema: _schema,
+                                accentColor: context.accentColor,
+                                usePlaceholderData: true,
+                                isPreview: false,
+                                enableActions: false,
+                              ),
                             ),
                           ],
-                          // Only show actions for actionable elements (container, button)
-                          if (_isActionableElement(element.type)) ...[
-                            const SizedBox(height: AppTheme.spacing16),
-                            _buildPropertySection(
-                              'Action',
-                              _buildActionProperties(element),
-                            ),
-                          ],
-                          // Only show style for styleable elements
-                          if (_isStyleableElement(element.type)) ...[
-                            const SizedBox(height: AppTheme.spacing16),
-                            _buildPropertySection(
-                              'Style',
-                              _buildStyleProperties(element),
-                            ),
-                          ],
-                          const SizedBox(height: AppTheme.spacing32),
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
-                );
-              },
+                      SizedBox(height: AppTheme.spacing8),
+                      // Breadcrumb path showing where in hierarchy
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: _buildElementBreadcrumb(element),
+                      ),
+                      const SizedBox(height: AppTheme.spacing8),
+                      // Title row
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.tune,
+                              size: 18,
+                              color: context.accentColor,
+                            ),
+                            const SizedBox(width: AppTheme.spacing8),
+                            Text(
+                              _getElementTypeName(element.type),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: context.textPrimary,
+                              ),
+                            ),
+                            const Spacer(),
+                            IconButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                _deleteElement(element.id);
+                              },
+                              icon: Icon(
+                                Icons.delete_outline,
+                                color: AppTheme.errorRed,
+                                size: 20,
+                              ),
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Divider(height: 1, color: context.border),
+                      // Properties
+                      Expanded(
+                        child: ListView(
+                          controller: scrollController,
+                          padding: const EdgeInsets.all(AppTheme.spacing16),
+                          children: [
+                            _buildPropertySection(
+                              'Content',
+                              _buildContentProperties(element),
+                            ),
+                            // Only show binding for bindable elements (text, gauge, chart)
+                            if (_shouldShowBinding(element)) ...[
+                              const SizedBox(height: AppTheme.spacing16),
+                              _buildPropertySection(
+                                'Data Binding', // lint-allow: hardcoded-string
+                                _buildBindingProperties(element),
+                              ),
+                            ],
+                            // Only show actions for actionable elements (container, button)
+                            if (_isActionableElement(element.type)) ...[
+                              const SizedBox(height: AppTheme.spacing16),
+                              _buildPropertySection(
+                                'Action',
+                                _buildActionProperties(element),
+                              ),
+                            ],
+                            // Only show style for styleable elements
+                            if (_isStyleableElement(element.type)) ...[
+                              const SizedBox(height: AppTheme.spacing16),
+                              _buildPropertySection(
+                                'Style',
+                                _buildStyleProperties(element),
+                              ),
+                            ],
+                            const SizedBox(height: AppTheme.spacing32),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         );

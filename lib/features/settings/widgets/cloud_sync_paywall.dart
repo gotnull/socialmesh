@@ -12,6 +12,7 @@ import '../../../providers/cloud_sync_entitlement_providers.dart';
 import '../../../providers/connectivity_providers.dart';
 import '../../../providers/subscription_providers.dart';
 import '../../../services/subscription/cloud_sync_entitlement_service.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../utils/snackbar.dart';
 import '../../external_purchase/redeem_unlock_code_sheet.dart';
 import 'package:socialmesh/core/theme.dart';
@@ -344,10 +345,8 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall>
 
 /// Shows the cloud sync paywall as a bottom sheet
 Future<void> showCloudSyncPaywall(BuildContext context) {
-  return showModalBottomSheet(
+  return AppBottomSheet.showRaw<void>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
     builder: (context) => CloudSyncPaywall(
       onSubscribed: () => Navigator.of(context).pop(),
       onDismiss: () => Navigator.of(context).pop(),

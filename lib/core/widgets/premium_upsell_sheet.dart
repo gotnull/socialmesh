@@ -312,237 +312,251 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet>
       minChildSize: 0.5,
       maxChildSize: 0.9,
       expand: false,
-      builder: (context, scrollController) => Column(
-        children: [
-          // Handle
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: SemanticColors.muted,
-                borderRadius: BorderRadius.circular(AppTheme.radius2),
+      builder: (context, scrollController) => Container(
+        decoration: BoxDecoration(
+          color: context.surface,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppTheme.radius20),
+          ),
+        ),
+        child: Column(
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: SemanticColors.muted,
+                  borderRadius: BorderRadius.circular(AppTheme.radius2),
+                ),
               ),
             ),
-          ),
 
-          Expanded(
-            child: ListView(
-              controller: scrollController,
-              clipBehavior: Clip.none,
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.spacing20,
-              ),
-              children: [
-                // Premium icon
-                Center(
-                  child: Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [AppTheme.warningYellow, AccentColors.orange],
-                      ),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.warningYellow.withValues(alpha: 0.3),
-                          blurRadius: 20,
-                          spreadRadius: 4,
+            Expanded(
+              child: ListView(
+                controller: scrollController,
+                clipBehavior: Clip.none,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing20,
+                ),
+                children: [
+                  // Premium icon
+                  Center(
+                    child: Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [AppTheme.warningYellow, AccentColors.orange],
                         ),
-                      ],
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.warningYellow.withValues(
+                              alpha: 0.3,
+                            ),
+                            blurRadius: 20,
+                            spreadRadius: 4,
+                          ),
+                        ],
+                      ),
+                      child: Icon(_featureIcon, size: 40, color: Colors.white),
                     ),
-                    child: Icon(_featureIcon, size: 40, color: Colors.white),
                   ),
-                ),
 
-                const SizedBox(height: AppTheme.spacing20),
+                  const SizedBox(height: AppTheme.spacing20),
 
-                // Headline
-                Text(
-                  _headline,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
+                  // Headline
+                  Text(
+                    _headline,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: AppTheme.spacing8),
+                  const SizedBox(height: AppTheme.spacing8),
 
-                // Subtitle
-                Text(
-                  _subtitle,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: context.textSecondary,
+                  // Subtitle
+                  Text(
+                    _subtitle,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: context.textSecondary,
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: AppTheme.spacing24),
+                  const SizedBox(height: AppTheme.spacing24),
 
-                // Benefits list
-                ..._benefits.map(
-                  (benefit) => Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
+                  // Benefits list
+                  ..._benefits.map(
+                    (benefit) => Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: context.accentColor.withValues(
+                                alpha: 0.15,
+                              ),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius12,
+                              ),
+                            ),
+                            child: Icon(
+                              benefit.icon,
+                              color: context.accentColor,
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(width: AppTheme.spacing12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  benefit.title,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                Text(
+                                  benefit.description,
+                                  style: TextStyle(
+                                    color: context.textSecondary,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: AppTheme.spacing8),
+
+                  // "Your automation is safe" message
+                  Container(
+                    padding: const EdgeInsets.all(AppTheme.spacing12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.successGreen.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                      border: Border.all(
+                        color: AppTheme.successGreen.withValues(alpha: 0.3),
+                      ),
+                    ),
                     child: Row(
                       children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: context.accentColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radius12,
-                            ),
-                          ),
-                          child: Icon(
-                            benefit.icon,
-                            color: context.accentColor,
-                            size: 22,
-                          ),
+                        Icon(
+                          Icons.check_circle,
+                          color: AppTheme.successGreen,
+                          size: 20,
                         ),
-                        const SizedBox(width: AppTheme.spacing12),
+                        const SizedBox(width: AppTheme.spacing8),
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                benefit.title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 15,
-                                ),
-                              ),
-                              Text(
-                                benefit.description,
-                                style: TextStyle(
-                                  color: context.textSecondary,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: AppTheme.spacing8),
-
-                // "Your automation is safe" message
-                Container(
-                  padding: const EdgeInsets.all(AppTheme.spacing12),
-                  decoration: BoxDecoration(
-                    color: AppTheme.successGreen.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppTheme.radius12),
-                    border: Border.all(
-                      color: AppTheme.successGreen.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.check_circle,
-                        color: AppTheme.successGreen,
-                        size: 20,
-                      ),
-                      const SizedBox(width: AppTheme.spacing8),
-                      Expanded(
-                        child: Text(
-                          context.l10n.premiumConfigSaved,
-                          style: TextStyle(
-                            color: AppTheme.successGreen,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: AppTheme.spacing24),
-
-                // Purchase button
-                BouncyTap(
-                  onTap: _isLoading ? null : _handlePurchase,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [AppTheme.warningYellow, AccentColors.orange],
-                      ),
-                      borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.warningYellow.withValues(alpha: 0.3),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: _isLoading
-                        ? const Center(
-                            child: SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
+                          child: Text(
+                            context.l10n.premiumConfigSaved,
+                            style: TextStyle(
+                              color: AppTheme.successGreen,
+                              fontSize: 13,
                             ),
-                          )
-                        : Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(_featureIcon, color: Colors.white),
-                              const SizedBox(width: AppTheme.spacing8),
-                              Text(
-                                context.l10n.premiumUnlockFor(displayPrice),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
                           ),
-                  ),
-                ),
-
-                const SizedBox(height: AppTheme.spacing12),
-
-                // One-time purchase note
-                Text(
-                  context.l10n.premiumOneTimePurchase,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: context.textTertiary, fontSize: 12),
-                ),
-
-                const SizedBox(height: AppTheme.spacing16),
-
-                // Restore purchases
-                TextButton(
-                  onPressed: _isLoading ? null : _handleRestore,
-                  child: Text(
-                    context.l10n.premiumRestorePurchases,
-                    style: TextStyle(
-                      color: context.textSecondary,
-                      fontSize: 14,
+                        ),
+                      ],
                     ),
                   ),
-                ),
 
-                // Bottom padding
-                SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
-              ],
+                  const SizedBox(height: AppTheme.spacing24),
+
+                  // Purchase button
+                  BouncyTap(
+                    onTap: _isLoading ? null : _handlePurchase,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [AppTheme.warningYellow, AccentColors.orange],
+                        ),
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.warningYellow.withValues(
+                              alpha: 0.3,
+                            ),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: _isLoading
+                          ? const Center(
+                              child: SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(_featureIcon, color: Colors.white),
+                                const SizedBox(width: AppTheme.spacing8),
+                                Text(
+                                  context.l10n.premiumUnlockFor(displayPrice),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+
+                  const SizedBox(height: AppTheme.spacing12),
+
+                  // One-time purchase note
+                  Text(
+                    context.l10n.premiumOneTimePurchase,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: context.textTertiary, fontSize: 12),
+                  ),
+
+                  const SizedBox(height: AppTheme.spacing16),
+
+                  // Restore purchases
+                  TextButton(
+                    onPressed: _isLoading ? null : _handleRestore,
+                    child: Text(
+                      context.l10n.premiumRestorePurchases,
+                      style: TextStyle(
+                        color: context.textSecondary,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+
+                  // Bottom padding
+                  SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

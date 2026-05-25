@@ -30,79 +30,89 @@ class AutomationHistorySheet extends StatelessWidget {
           minChildSize: 0.5,
           maxChildSize: 0.95,
           expand: false,
-          builder: (context, scrollController) => SafeArea(
-            top: false,
-            child: Column(
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.symmetric(
-                    vertical: AppTheme.spacing12,
+          builder: (context, scrollController) => Container(
+            decoration: BoxDecoration(
+              color: context.surface,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppTheme.radius20),
+              ),
+            ),
+            child: SafeArea(
+              top: false,
+              child: Column(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.symmetric(
+                      vertical: AppTheme.spacing12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: SemanticColors.muted,
+                      borderRadius: BorderRadius.circular(AppTheme.radius2),
+                    ),
                   ),
-                  decoration: BoxDecoration(
-                    color: SemanticColors.muted,
-                    borderRadius: BorderRadius.circular(AppTheme.radius2),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.spacing16,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        consumerContext.l10n.automationScreenExecutionLog,
-                        style: Theme.of(consumerContext).textTheme.titleLarge
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      if (history.isNotEmpty)
-                        TextButton(
-                          onPressed: () async {
-                            final confirmed = await AppBottomSheet.showConfirm(
-                              context: consumerContext,
-                              title: consumerContext
-                                  .l10n
-                                  .automationScreenClearLogTitle,
-                              message: consumerContext
-                                  .l10n
-                                  .automationScreenClearLogMessage,
-                              confirmLabel:
-                                  consumerContext.l10n.automationScreenClear,
-                              isDestructive: true,
-                            );
-                            if (confirmed == true) {
-                              onClear();
-                            }
-                          },
-                          child: Text(
-                            consumerContext.l10n.automationScreenClear,
-                          ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing16,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          consumerContext.l10n.automationScreenExecutionLog,
+                          style: Theme.of(consumerContext).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
-                    ],
-                  ),
-                ),
-                const Divider(),
-                Expanded(
-                  child: history.isEmpty
-                      ? Center(
-                          child: Text(
-                            consumerContext.l10n.automationHistoryEmpty,
-                            style: const TextStyle(
-                              color: SemanticColors.disabled,
+                        if (history.isNotEmpty)
+                          TextButton(
+                            onPressed: () async {
+                              final confirmed =
+                                  await AppBottomSheet.showConfirm(
+                                    context: consumerContext,
+                                    title: consumerContext
+                                        .l10n
+                                        .automationScreenClearLogTitle,
+                                    message: consumerContext
+                                        .l10n
+                                        .automationScreenClearLogMessage,
+                                    confirmLabel: consumerContext
+                                        .l10n
+                                        .automationScreenClear,
+                                    isDestructive: true,
+                                  );
+                              if (confirmed == true) {
+                                onClear();
+                              }
+                            },
+                            child: Text(
+                              consumerContext.l10n.automationScreenClear,
                             ),
                           ),
-                        )
-                      : ListView.builder(
-                          controller: scrollController,
-                          itemCount: history.length,
-                          itemBuilder: (context, index) {
-                            return _HistoryRow(entry: history[index]);
-                          },
-                        ),
-                ),
-              ],
+                      ],
+                    ),
+                  ),
+                  const Divider(),
+                  Expanded(
+                    child: history.isEmpty
+                        ? Center(
+                            child: Text(
+                              consumerContext.l10n.automationHistoryEmpty,
+                              style: const TextStyle(
+                                color: SemanticColors.disabled,
+                              ),
+                            ),
+                          )
+                        : ListView.builder(
+                            controller: scrollController,
+                            itemCount: history.length,
+                            itemBuilder: (context, index) {
+                              return _HistoryRow(entry: history[index]);
+                            },
+                          ),
+                  ),
+                ],
+              ),
             ),
           ),
         );

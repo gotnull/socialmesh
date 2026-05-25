@@ -3581,10 +3581,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen>
     // Use centralized threshold picker colors
     final thresholdColors = ChartColors.thresholdPickerColors;
 
-    showModalBottomSheet(
+    AppBottomSheet.showRaw<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
         builder: (context, setSheetState) => Padding(
           padding: EdgeInsets.only(

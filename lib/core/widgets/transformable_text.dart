@@ -159,10 +159,8 @@ class TransformableTextState extends State<TransformableText> {
   void _showTextEditor() {
     final controller = TextEditingController(text: widget.text);
 
-    showModalBottomSheet<String>(
+    AppBottomSheet.showRaw<String>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (context) => _TextEditorSheet(
         controller: controller,
         textColor: widget.textColor,

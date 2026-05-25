@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../services/haptic_service.dart';
 import '../../../services/tak/identity_registry.dart';
 import '../../../services/tak/providers/tak_bridge_providers.dart';
@@ -117,17 +118,16 @@ class _IdentityTile extends ConsumerWidget {
       text: identity.overrideCallsign ?? '',
     );
 
-    showModalBottomSheet<void>(
+    AppBottomSheet.show<void>(
       context: context,
-      isScrollControlled: true,
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
-          left: AppTheme.spacing16,
-          right: AppTheme.spacing16,
-          top: AppTheme.spacing16,
-        ),
-        child: Column(
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing16,
+        0,
+        AppTheme.spacing16,
+        AppTheme.spacing16,
+      ),
+      child: Builder(
+        builder: (sheetContext) => Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -157,7 +157,6 @@ class _IdentityTile extends ConsumerWidget {
               },
               child: Text(l10n.commonSave),
             ),
-            const SizedBox(height: AppTheme.spacing16),
           ],
         ),
       ),

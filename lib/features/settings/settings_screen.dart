@@ -3780,70 +3780,61 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       settingsService.hapticIntensity,
     );
 
-    showModalBottomSheet(
+    AppBottomSheet.show<void>(
       context: context,
-      backgroundColor: context.card,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: EdgeInsets.all(AppTheme.spacing16),
-              child: Text(
-                context.l10n.settingsHapticIntensityTitle,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: context.textPrimary,
-                ),
+      padding: EdgeInsets.zero,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.all(AppTheme.spacing16),
+            child: Text(
+              context.l10n.settingsHapticIntensityTitle,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
               ),
             ),
-            ...HapticIntensity.values.map((intensity) {
-              final isSelected = intensity == currentIntensity;
-              return ListTile(
-                leading: Icon(
-                  isSelected
-                      ? Icons.radio_button_checked
-                      : Icons.radio_button_unchecked,
+          ),
+          ...HapticIntensity.values.map((intensity) {
+            final isSelected = intensity == currentIntensity;
+            return ListTile(
+              leading: Icon(
+                isSelected
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+                color: isSelected ? context.accentColor : context.textTertiary,
+              ),
+              title: Text(
+                intensity.label,
+                style: TextStyle(
                   color: isSelected
-                      ? context.accentColor
-                      : context.textTertiary,
+                      ? context.textPrimary
+                      : context.textSecondary,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 ),
-                title: Text(
-                  intensity.label,
-                  style: TextStyle(
-                    color: isSelected
-                        ? context.textPrimary
-                        : context.textSecondary,
-                    fontWeight: isSelected
-                        ? FontWeight.w600
-                        : FontWeight.normal,
-                  ),
-                ),
-                subtitle: Text(
-                  _hapticIntensityDescription(intensity),
-                  style: TextStyle(color: context.textTertiary, fontSize: 12),
-                ),
-                onTap: () async {
-                  await settingsService.setHapticIntensity(intensity.value);
-                  ref
-                      .read(userProfileProvider.notifier)
-                      .updatePreferences(
-                        UserPreferences(hapticIntensity: intensity.value),
-                      );
-                  ref.haptics.toggle();
-                  safeSetState(() {});
-                  if (context.mounted) Navigator.pop(context);
-                },
-              );
-            }),
-            const SizedBox(height: AppTheme.spacing16),
-          ],
-        ),
+              ),
+              subtitle: Text(
+                _hapticIntensityDescription(intensity),
+                style: TextStyle(color: context.textTertiary, fontSize: 12),
+              ),
+              onTap: () async {
+                await settingsService.setHapticIntensity(intensity.value);
+                ref
+                    .read(userProfileProvider.notifier)
+                    .updatePreferences(
+                      UserPreferences(hapticIntensity: intensity.value),
+                    );
+                ref.haptics.toggle();
+                safeSetState(() {});
+                if (context.mounted) Navigator.pop(context);
+              },
+            );
+          }),
+          const SizedBox(height: AppTheme.spacing16),
+        ],
       ),
     );
   }

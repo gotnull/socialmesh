@@ -305,14 +305,8 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
   }
 
   void _showCounters() {
-    showModalBottomSheet<void>(
+    AppBottomSheet.showRaw<void>(
       context: context,
-      backgroundColor: context.card,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppTheme.radius16),
-        ),
-      ),
       builder: (ctx) => const _SipCountersSheet(),
     );
   }
@@ -1838,7 +1832,13 @@ class _SipCountersSheet extends ConsumerWidget {
     final entries = counters.toDisplayEntries();
     final nonZero = entries.where((e) => e.value > 0).toList();
 
-    return Padding(
+    return Container(
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppTheme.radius16),
+        ),
+      ),
       padding: EdgeInsets.only(
         left: AppTheme.spacing16,
         right: AppTheme.spacing16,

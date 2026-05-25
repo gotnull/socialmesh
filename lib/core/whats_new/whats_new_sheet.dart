@@ -25,6 +25,7 @@ import '../l10n/l10n_extension.dart';
 import '../navigation.dart';
 import '../theme.dart';
 import '../widgets/animations.dart';
+import '../widgets/app_bottom_sheet.dart';
 import 'whats_new_registry.dart';
 
 /// Presents the What's New bottom sheet as a swipeable carousel of all
@@ -54,17 +55,8 @@ class WhatsNewSheet {
   static Future<void> showHistory(BuildContext context) async {
     HapticFeedback.mediumImpact();
 
-    await showModalBottomSheet<void>(
+    await AppBottomSheet.showRaw<void>(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      isDismissible: true,
-      enableDrag: true,
-      transitionAnimationController: AnimationController(
-        vsync: Navigator.of(context),
-        duration: const Duration(milliseconds: 400),
-        reverseDuration: const Duration(milliseconds: 300),
-      ),
       builder: (sheetContext) => _WhatsNewCarousel(
         readOnly: true,
         onDismiss: () => Navigator.of(sheetContext).pop(),
@@ -133,17 +125,8 @@ class WhatsNewSheet {
   ) async {
     HapticFeedback.mediumImpact();
 
-    await showModalBottomSheet<void>(
+    await AppBottomSheet.showRaw<void>(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      isDismissible: true,
-      enableDrag: true,
-      transitionAnimationController: AnimationController(
-        vsync: Navigator.of(context),
-        duration: const Duration(milliseconds: 400),
-        reverseDuration: const Duration(milliseconds: 300),
-      ),
       builder: (sheetContext) => _WhatsNewCarousel(
         readOnly: false,
         onDismiss: () {

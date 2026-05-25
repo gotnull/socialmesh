@@ -916,13 +916,8 @@ class _ActionEditorState extends ConsumerState<ActionEditor>
   }
 
   void _showSoundPicker(BuildContext context) {
-    showModalBottomSheet(
+    AppBottomSheet.showRaw<void>(
       context: context,
-      backgroundColor: context.surface,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (context) => _SoundPickerSheet(
         currentRtttl: widget.action.soundRtttl,
         onSelect: (item) {
@@ -1111,13 +1106,8 @@ class _ActionEditorState extends ConsumerState<ActionEditor>
   }
 
   void _showNotificationSoundPicker(BuildContext context) {
-    showModalBottomSheet(
+    AppBottomSheet.showRaw<void>(
       context: context,
-      backgroundColor: context.surface,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (context) => _SoundPickerSheet(
         currentRtttl: widget.action.notificationSoundRtttl,
         onSelect: (item) {
@@ -1621,219 +1611,234 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet>
       minChildSize: 0.5,
       maxChildSize: 0.9,
       expand: false,
-      builder: (context, scrollController) => Column(
-        children: [
-          // Handle bar
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(top: 12, bottom: 8),
-              decoration: BoxDecoration(
-                color: SemanticColors.muted,
-                borderRadius: BorderRadius.circular(AppTheme.radius2),
+      builder: (context, scrollController) => Container(
+        decoration: BoxDecoration(
+          color: context.surface,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppTheme.radius20),
+          ),
+        ),
+        child: Column(
+          children: [
+            // Handle bar
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(top: 12, bottom: 8),
+                decoration: BoxDecoration(
+                  color: SemanticColors.muted,
+                  borderRadius: BorderRadius.circular(AppTheme.radius2),
+                ),
               ),
             ),
-          ),
-          // Title
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AccentColors.orange.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(AppTheme.radius12),
-                  ),
-                  child: Icon(Icons.library_music, color: AccentColors.orange),
-                ),
-                const SizedBox(width: AppTheme.spacing12),
-                Text(
-                  context.l10n.automationActionSelectSound,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-          // Search field
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: TextField(
-              maxLength: 100,
-              controller: _searchController,
-              onChanged: _search,
-              decoration: InputDecoration(
-                hintText: context.l10n.automationActionSearchSounds,
-                prefixIcon: const Icon(Icons.search),
-                isDense: true,
-                filled: true,
-                fillColor: context.background,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radius12),
-                  borderSide: BorderSide.none,
-                ),
-                counterText: '',
-              ),
-            ),
-          ),
-          // Category label
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 4),
-            child: Row(
-              children: [
-                Text(
-                  _searchController.text.isEmpty
-                      ? context.l10n.automationActionSuggestions
-                      : context.l10n.automationActionSearchResults,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: context.textTertiary,
-                    letterSpacing: 1,
-                  ),
-                ),
-                SizedBox(width: AppTheme.spacing8),
-                Text(
-                  context.l10n.automationActionSoundsCount(displayItems.length),
-                  style: Theme.of(
-                    context,
-                  ).textTheme.labelSmall?.copyWith(color: context.textTertiary),
-                ),
-              ],
-            ),
-          ),
-          // Sound list
-          Expanded(
-            child: _isLoading
-                ? const ScreenLoadingIndicator()
-                : displayItems.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.search_off,
-                          size: 48,
-                          color: SemanticColors.muted,
-                        ),
-                        const SizedBox(height: AppTheme.spacing12),
-                        Text(
-                          context.l10n.automationActionNoSoundsFound,
-                          style: TextStyle(color: SemanticColors.muted),
-                        ),
-                      ],
+            // Title
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AccentColors.orange.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
-                  )
-                : ListView.builder(
-                    controller: scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    itemCount: displayItems.length,
-                    itemBuilder: (context, index) {
-                      final item = displayItems[index];
-                      final isSelected = item.rtttl == widget.currentRtttl;
-                      final isPlaying = item.rtttl == _playingRtttl;
+                    child: Icon(
+                      Icons.library_music,
+                      color: AccentColors.orange,
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing12),
+                  Text(
+                    context.l10n.automationActionSelectSound,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Search field
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: TextField(
+                maxLength: 100,
+                controller: _searchController,
+                onChanged: _search,
+                decoration: InputDecoration(
+                  hintText: context.l10n.automationActionSearchSounds,
+                  prefixIcon: const Icon(Icons.search),
+                  isDense: true,
+                  filled: true,
+                  fillColor: context.background,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
+                    borderSide: BorderSide.none,
+                  ),
+                  counterText: '',
+                ),
+              ),
+            ),
+            // Category label
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 8, 16, 4),
+              child: Row(
+                children: [
+                  Text(
+                    _searchController.text.isEmpty
+                        ? context.l10n.automationActionSuggestions
+                        : context.l10n.automationActionSearchResults,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: context.textTertiary,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  SizedBox(width: AppTheme.spacing8),
+                  Text(
+                    context.l10n.automationActionSoundsCount(
+                      displayItems.length,
+                    ),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: context.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Sound list
+            Expanded(
+              child: _isLoading
+                  ? const ScreenLoadingIndicator()
+                  : displayItems.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.search_off,
+                            size: 48,
+                            color: SemanticColors.muted,
+                          ),
+                          const SizedBox(height: AppTheme.spacing12),
+                          Text(
+                            context.l10n.automationActionNoSoundsFound,
+                            style: TextStyle(color: SemanticColors.muted),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: scrollController,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      itemCount: displayItems.length,
+                      itemBuilder: (context, index) {
+                        final item = displayItems[index];
+                        final isSelected = item.rtttl == widget.currentRtttl;
+                        final isPlaying = item.rtttl == _playingRtttl;
 
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: BouncyTap(
-                          onTap: () => widget.onSelect(item),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? AccentColors.orange.withValues(alpha: 0.15)
-                                  : context.card,
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.radius12,
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: BouncyTap(
+                            onTap: () => widget.onSelect(item),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
                               ),
-                              border: Border.all(
+                              decoration: BoxDecoration(
                                 color: isSelected
-                                    ? AccentColors.orange
-                                    : context.border,
+                                    ? AccentColors.orange.withValues(
+                                        alpha: 0.15,
+                                      )
+                                    : context.card,
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius12,
+                                ),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? AccentColors.orange
+                                      : context.border,
+                                ),
                               ),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? AccentColors.orange.withValues(
-                                            alpha: 0.2,
-                                          )
-                                        : context.background,
-                                    borderRadius: BorderRadius.circular(
-                                      AppTheme.radius10,
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? AccentColors.orange.withValues(
+                                              alpha: 0.2,
+                                            )
+                                          : context.background,
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radius10,
+                                      ),
+                                    ),
+                                    child: Icon(
+                                      Icons.music_note,
+                                      color: isSelected
+                                          ? AccentColors.orange
+                                          : context.textSecondary,
+                                      size: 20,
                                     ),
                                   ),
-                                  child: Icon(
-                                    Icons.music_note,
-                                    color: isSelected
-                                        ? AccentColors.orange
-                                        : context.textSecondary,
-                                    size: 20,
-                                  ),
-                                ),
-                                SizedBox(width: AppTheme.spacing12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item.formattedTitle,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w500,
-                                          color: isSelected
-                                              ? AccentColors.orange
-                                              : context.textPrimary,
-                                        ),
-                                      ),
-                                      if (item.subtitle != null)
+                                  SizedBox(width: AppTheme.spacing12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
                                         Text(
-                                          item.subtitle!,
+                                          item.formattedTitle,
                                           style: TextStyle(
-                                            fontSize: 11,
-                                            color: context.textTertiary,
+                                            fontWeight: FontWeight.w500,
+                                            color: isSelected
+                                                ? AccentColors.orange
+                                                : context.textPrimary,
                                           ),
                                         ),
-                                    ],
+                                        if (item.subtitle != null)
+                                          Text(
+                                            item.subtitle!,
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: context.textTertiary,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                IconButton(
-                                  onPressed: () => _playPreview(item),
-                                  icon: isPlaying
-                                      ? LoadingIndicator(size: 20)
-                                      : Icon(
-                                          Icons.play_circle_outline,
-                                          color: isSelected
-                                              ? AccentColors.orange
-                                              : context.textSecondary,
-                                        ),
-                                ),
-                                if (isSelected)
-                                  const Icon(
-                                    Icons.check_circle,
-                                    color: AccentColors.orange,
+                                  IconButton(
+                                    onPressed: () => _playPreview(item),
+                                    icon: isPlaying
+                                        ? LoadingIndicator(size: 20)
+                                        : Icon(
+                                            Icons.play_circle_outline,
+                                            color: isSelected
+                                                ? AccentColors.orange
+                                                : context.textSecondary,
+                                          ),
                                   ),
-                              ],
+                                  if (isSelected)
+                                    const Icon(
+                                      Icons.check_circle,
+                                      color: AccentColors.orange,
+                                    ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-          SizedBox(height: MediaQuery.of(context).padding.bottom),
-        ],
+                        );
+                      },
+                    ),
+            ),
+            SizedBox(height: MediaQuery.of(context).padding.bottom),
+          ],
+        ),
       ),
     );
   }

@@ -379,25 +379,13 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
   }
 
   void _showVisibilityPicker() {
-    showModalBottomSheet(
+    AppBottomSheet.show<void>(
       context: context,
-      backgroundColor: context.card,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Column(
+      padding: EdgeInsets.zero,
+      child: Builder(
+        builder: (ctx) => Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: context.border,
-                borderRadius: BorderRadius.circular(AppTheme.radius2),
-              ),
-            ),
             Padding(
               padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Text(
@@ -822,25 +810,13 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
   }
 
   Future<void> _addLocation() async {
-    showModalBottomSheet(
+    AppBottomSheet.show<void>(
       context: context,
-      backgroundColor: context.card,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Column(
+      padding: EdgeInsets.zero,
+      child: Builder(
+        builder: (ctx) => Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: context.border,
-                borderRadius: BorderRadius.circular(AppTheme.radius2),
-              ),
-            ),
             Padding(
               padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Text(

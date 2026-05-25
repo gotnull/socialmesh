@@ -173,9 +173,8 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
   }
 
   void _shareNode() {
-    showModalBottomSheet<void>(
+    AppBottomSheet.showRaw<void>(
       context: context,
-      backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         decoration: BoxDecoration(
           color: context.card,
@@ -364,9 +363,8 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
       return;
     }
 
-    showModalBottomSheet<void>(
+    AppBottomSheet.showRaw<void>(
       context: context,
-      backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         decoration: BoxDecoration(
           color: context.card,

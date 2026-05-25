@@ -10,6 +10,7 @@ import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
@@ -641,61 +642,54 @@ class _DetectionSensorConfigScreenState
   }
 
   void _showTriggerTypePicker() {
-    showModalBottomSheet(
+    AppBottomSheet.show<void>(
       context: context,
-      backgroundColor: context.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(AppTheme.spacing16),
-              child: Row(
-                children: [
-                  Text(
-                    context.l10n.detectionSensorTriggerType,
-                    style: TextStyle(
-                      color: context.textPrimary,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
+      padding: EdgeInsets.zero,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(AppTheme.spacing16),
+            child: Row(
+              children: [
+                Text(
+                  context.l10n.detectionSensorTriggerType,
+                  style: TextStyle(
+                    color: context.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
                   ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: Icon(Icons.close, color: context.textTertiary),
-                  ),
-                ],
-              ),
+                ),
+                const Spacer(),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(Icons.close, color: context.textTertiary),
+                ),
+              ],
             ),
-            Divider(height: 1, color: context.border),
-            ...module_pbenum
-                .ModuleConfig_DetectionSensorConfig_TriggerType
-                .values
-                .map((type) {
-                  return ListTile(
-                    title: Text(
-                      _getTriggerTypeDescription(type),
-                      style: TextStyle(
-                        color: _triggerType == type
-                            ? context.accentColor
-                            : context.textPrimary,
-                      ),
+          ),
+          Divider(height: 1, color: context.border),
+          ...module_pbenum.ModuleConfig_DetectionSensorConfig_TriggerType.values
+              .map((type) {
+                return ListTile(
+                  title: Text(
+                    _getTriggerTypeDescription(type),
+                    style: TextStyle(
+                      color: _triggerType == type
+                          ? context.accentColor
+                          : context.textPrimary,
                     ),
-                    trailing: _triggerType == type
-                        ? Icon(Icons.check, color: context.accentColor)
-                        : null,
-                    onTap: () {
-                      setState(() => _triggerType = type);
-                      Navigator.pop(context);
-                    },
-                  );
-                }),
-          ],
-        ),
+                  ),
+                  trailing: _triggerType == type
+                      ? Icon(Icons.check, color: context.accentColor)
+                      : null,
+                  onTap: () {
+                    setState(() => _triggerType = type);
+                    Navigator.pop(context);
+                  },
+                );
+              }),
+        ],
       ),
     );
   }

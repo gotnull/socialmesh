@@ -20,6 +20,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/widgets/animated_empty_state.dart';
 import '../../../core/widgets/animated_gradient_background.dart';
 import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../core/widgets/default_banner.dart';
 import '../../../core/widgets/edge_fade.dart';
@@ -1615,26 +1616,13 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
   }
 
   void _showBannerOptions(PublicProfile profile) {
-    showModalBottomSheet(
+    AppBottomSheet.show<void>(
       context: context,
-      backgroundColor: context.card,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => SafeArea(
-        child: Column(
+      padding: EdgeInsets.zero,
+      child: Builder(
+        builder: (context) => Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: AppTheme.spacing8),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: context.textTertiary,
-                borderRadius: BorderRadius.circular(AppTheme.radius2),
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing16),
             ListTile(
               leading: Icon(Icons.photo_library, color: context.accentColor),
               title: Text(
@@ -1776,26 +1764,13 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
 
   void _showProfileOptions(PublicProfile profile) {
     HapticFeedback.lightImpact();
-    showModalBottomSheet(
+    AppBottomSheet.show<void>(
       context: context,
-      backgroundColor: context.card,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => SafeArea(
-        child: Column(
+      padding: EdgeInsets.zero,
+      child: Builder(
+        builder: (context) => Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: AppTheme.spacing8),
-            Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: context.textTertiary.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(AppTheme.radius2),
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing16),
             ListTile(
               leading: const Icon(Icons.flag_outlined),
               title: Text(context.l10n.socialProfileReportLabel),

@@ -1623,68 +1623,60 @@ class _AccountSubscriptionsScreenState
       );
       return;
     }
-    showModalBottomSheet(
+    AppBottomSheet.show<void>(
       context: context,
-      backgroundColor: context.card,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(AppTheme.spacing24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              context.l10n.accountSubLinkAccountSheetTitle,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: context.textPrimary,
-              ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            context.l10n.accountSubLinkAccountSheetTitle,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: context.textPrimary,
             ),
-            SizedBox(height: AppTheme.spacing8),
-            Text(
-              context.l10n.accountSubLinkSignInMethod,
-              style: TextStyle(color: context.textSecondary),
-            ),
-            const SizedBox(height: AppTheme.spacing24),
-            _SocialSignInButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _signInWithGoogle(context);
-              },
-              icon: _GoogleLogo(),
-              label: context.l10n.accountSubLinkWithGoogle,
-              backgroundColor: Colors.white,
-              textColor: Colors.black87,
-            ),
-            if (Platform.isIOS || Platform.isMacOS) ...[
-              const SizedBox(height: AppTheme.spacing10),
-              _SocialSignInButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _signInWithApple(context);
-                },
-                icon: const Icon(Icons.apple, color: Colors.white, size: 22),
-                label: context.l10n.accountSubLinkWithApple,
-                backgroundColor: Colors.black,
-                textColor: Colors.white,
-              ),
-            ],
+          ),
+          SizedBox(height: AppTheme.spacing8),
+          Text(
+            context.l10n.accountSubLinkSignInMethod,
+            style: TextStyle(color: context.textSecondary),
+          ),
+          const SizedBox(height: AppTheme.spacing24),
+          _SocialSignInButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _signInWithGoogle(context);
+            },
+            icon: _GoogleLogo(),
+            label: context.l10n.accountSubLinkWithGoogle,
+            backgroundColor: Colors.white,
+            textColor: Colors.black87,
+          ),
+          if (Platform.isIOS || Platform.isMacOS) ...[
             const SizedBox(height: AppTheme.spacing10),
             _SocialSignInButton(
               onPressed: () {
                 Navigator.pop(context);
-                _signInWithTwitter(context);
+                _signInWithApple(context);
               },
-              icon: _XLogo(),
-              label: context.l10n.accountSubLinkWithX,
+              icon: const Icon(Icons.apple, color: Colors.white, size: 22),
+              label: context.l10n.accountSubLinkWithApple,
               backgroundColor: Colors.black,
               textColor: Colors.white,
             ),
-            const SizedBox(height: AppTheme.spacing24),
           ],
-        ),
+          const SizedBox(height: AppTheme.spacing10),
+          _SocialSignInButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _signInWithTwitter(context);
+            },
+            icon: _XLogo(),
+            label: context.l10n.accountSubLinkWithX,
+            backgroundColor: Colors.black,
+            textColor: Colors.white,
+          ),
+        ],
       ),
     );
   }
@@ -1695,10 +1687,8 @@ class _AccountSubscriptionsScreenState
       showErrorSnackBar(context, context.l10n.accountSubSubRequiresInternet);
       return;
     }
-    showModalBottomSheet(
+    AppBottomSheet.showRaw<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (context) => _CloudSyncPaywallSheet(
         onPurchaseStart: () {
           if (mounted) setState(() => _isPurchasing = true);

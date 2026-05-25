@@ -8,6 +8,7 @@ import '../../../core/constants.dart';
 import '../../../core/theme.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../services/haptic_service.dart';
 import '../../../services/tak/providers/tak_bridge_providers.dart';
@@ -337,21 +338,10 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
 
   void _showGatewayUrlEditor(BuildContext context, TakSettings settings) {
     _gatewayUrlController.text = settings.gatewayUrl;
-    showModalBottomSheet<void>(
+    AppBottomSheet.show<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: context.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          24,
-          24,
-          24,
-          24 + MediaQuery.of(sheetContext).viewInsets.bottom,
-        ),
-        child: Column(
+      child: Builder(
+        builder: (sheetContext) => Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -411,21 +401,10 @@ class _TakSettingsScreenState extends ConsumerState<TakSettingsScreen> {
 
   void _showCallsignEditor(BuildContext context, TakSettings settings) {
     _callsignController.text = settings.callsign;
-    showModalBottomSheet<void>(
+    AppBottomSheet.show<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: context.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          24,
-          24,
-          24,
-          24 + MediaQuery.of(sheetContext).viewInsets.bottom,
-        ),
-        child: Column(
+      child: Builder(
+        builder: (sheetContext) => Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

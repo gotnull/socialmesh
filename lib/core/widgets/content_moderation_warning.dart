@@ -50,18 +50,10 @@ class ContentModerationWarning extends StatelessWidget {
     BuildContext context, {
     required ContentModerationCheckResult result,
   }) async {
-    final action = await showModalBottomSheet<ContentModerationAction>(
+    final action = await AppBottomSheet.show<ContentModerationAction>(
       context: context,
       isDismissible: false,
-      enableDrag: false,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => AppBottomSheet(
-        child: SafeArea(
-          top: false,
-          child: _ContentModerationWarningContent(result: result),
-        ),
-      ),
+      child: _ContentModerationWarningContent(result: result),
     );
     return action ?? ContentModerationAction.cancel;
   }

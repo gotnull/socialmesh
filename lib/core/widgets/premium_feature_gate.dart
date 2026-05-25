@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/subscription_providers.dart';
 import '../theme.dart';
+import 'app_bottom_sheet.dart';
 import 'premium_upsell_sheet.dart';
 
 /// A widget that provides "look but don't touch" premium feature gating.
@@ -181,13 +182,8 @@ Future<bool> showPremiumUpsellSheet({
   required PremiumFeature feature,
   String? featureDescription,
 }) async {
-  final result = await showModalBottomSheet<bool>(
+  final result = await AppBottomSheet.showRaw<bool>(
     context: context,
-    backgroundColor: context.surface,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
     builder: (context) => PremiumUpsellSheet(
       feature: feature,
       featureDescription: featureDescription,

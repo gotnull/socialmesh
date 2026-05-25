@@ -302,63 +302,58 @@ class _TranslationSettingsScreenState
     final l10n = context.l10n;
     final controller = TextEditingController();
 
-    final result = await showModalBottomSheet<String>(
+    final result = await AppBottomSheet.show<String>(
       context: context,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: AppTheme.spacing16,
-            right: AppTheme.spacing16,
-            top: AppTheme.spacing24,
-            bottom:
-                MediaQuery.of(sheetContext).viewInsets.bottom +
-                AppTheme.spacing24,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.translationSettingsByoKeyLabel,
-                style: TextStyle(
-                  color: Theme.of(sheetContext).colorScheme.onSurface,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing16,
+        AppTheme.spacing8,
+        AppTheme.spacing16,
+        AppTheme.spacing24,
+      ),
+      child: Builder(
+        builder: (sheetContext) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.translationSettingsByoKeyLabel,
+              style: TextStyle(
+                color: Theme.of(sheetContext).colorScheme.onSurface,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing16),
+            TextField(
+              controller: controller,
+              maxLength: 256,
+              obscureText: true,
+              autocorrect: false,
+              enableSuggestions: false,
+              decoration: InputDecoration(
+                hintText: l10n.translationSettingsByoKeyHint,
+                counterText: '', // lint-allow: hardcoded-string
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
                 ),
               ),
-              const SizedBox(height: AppTheme.spacing16),
-              TextField(
-                controller: controller,
-                maxLength: 256,
-                obscureText: true,
-                autocorrect: false,
-                enableSuggestions: false,
-                decoration: InputDecoration(
-                  hintText: l10n.translationSettingsByoKeyHint,
-                  counterText: '', // lint-allow: hardcoded-string
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radius8),
-                  ),
-                ),
+            ),
+            const SizedBox(height: AppTheme.spacing16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () {
+                  final value = controller.text.trim();
+                  if (value.isNotEmpty) {
+                    Navigator.of(sheetContext).pop(value);
+                  }
+                },
+                child: Text(l10n.translationSettingsByoKeySaved),
               ),
-              const SizedBox(height: AppTheme.spacing16),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () {
-                    final value = controller.text.trim();
-                    if (value.isNotEmpty) {
-                      Navigator.of(sheetContext).pop(value);
-                    }
-                  },
-                  child: Text(l10n.translationSettingsByoKeySaved),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+            ),
+          ],
+        ),
+      ),
     );
 
     controller.dispose();

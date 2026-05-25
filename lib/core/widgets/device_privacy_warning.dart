@@ -35,22 +35,14 @@ class DevicePrivacyWarning extends StatelessWidget {
     required bool sharesLocation,
     required Config_PositionConfig? positionConfig,
   }) async {
-    final action = await showModalBottomSheet<DevicePrivacyAction>(
+    final action = await AppBottomSheet.show<DevicePrivacyAction>(
       context: context,
       isDismissible: false,
-      enableDrag: false,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => AppBottomSheet(
-        child: SafeArea(
-          top: false,
-          child: _DevicePrivacyWarningContent(
-            nodeNum: nodeNum,
-            deviceName: deviceName,
-            sharesLocation: sharesLocation,
-            positionConfig: positionConfig,
-          ),
-        ),
+      child: _DevicePrivacyWarningContent(
+        nodeNum: nodeNum,
+        deviceName: deviceName,
+        sharesLocation: sharesLocation,
+        positionConfig: positionConfig,
       ),
     );
     return action ?? DevicePrivacyAction.cancel;

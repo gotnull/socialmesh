@@ -201,28 +201,6 @@ mixin LifecycleSafeMixin<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     );
   }
 
-  /// Safely shows a bottom sheet only if mounted.
-  /// Returns the result or null if skipped.
-  Future<R?> safeShowModalBottomSheet<R>({
-    required WidgetBuilder builder,
-    bool isScrollControlled = false,
-    bool isDismissible = true,
-    bool enableDrag = true,
-    Color? backgroundColor,
-    ShapeBorder? shape,
-  }) async {
-    if (!mounted) return null;
-    return showModalBottomSheet<R>(
-      context: context,
-      isScrollControlled: isScrollControlled,
-      isDismissible: isDismissible,
-      enableDrag: enableDrag,
-      backgroundColor: backgroundColor,
-      shape: shape,
-      builder: builder,
-    );
-  }
-
   /// Executes an async operation with automatic lifecycle checking.
   ///
   /// This is the recommended pattern for async work in widgets:

@@ -515,96 +515,89 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen>
   void _showStepHelp() {
     final stepHelp = _WizardStepHelp.steps[_currentStep];
     final l10n = context.l10n;
-    showModalBottomSheet(
+    AppBottomSheet.show<void>(
       context: context,
-      backgroundColor: context.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spacing24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: stepHelp.color.withAlpha(51),
-                      borderRadius: BorderRadius.circular(AppTheme.radius12),
-                    ),
-                    child: Icon(stepHelp.icon, color: stepHelp.color),
+      child: Builder(
+        builder: (sheetContext) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: stepHelp.color.withAlpha(51),
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
-                  const SizedBox(width: AppTheme.spacing16),
-                  Expanded(
-                    child: Text(
-                      stepHelp.title(l10n),
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: context.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.close, color: context.textSecondary),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppTheme.spacing20),
-              Text(
-                stepHelp.content(l10n),
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: context.textSecondary,
-                  height: 1.5,
+                  child: Icon(stepHelp.icon, color: stepHelp.color),
                 ),
+                const SizedBox(width: AppTheme.spacing16),
+                Expanded(
+                  child: Text(
+                    stepHelp.title(l10n),
+                    style: Theme.of(sheetContext).textTheme.titleLarge
+                        ?.copyWith(
+                          color: sheetContext.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.close, color: sheetContext.textSecondary),
+                  onPressed: () => Navigator.pop(sheetContext),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.spacing20),
+            Text(
+              stepHelp.content(l10n),
+              style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
+                color: sheetContext.textSecondary,
+                height: 1.5,
               ),
-              const SizedBox(height: AppTheme.spacing16),
-              // Radio compliance link — contextual legal help
-              InkWell(
-                onTap: () {
-                  Navigator.pop(context);
-                  LegalDocumentSheet.showTermsSection(
-                    this.context,
-                    LegalConstants.anchorRadioCompliance,
-                  );
-                },
-                borderRadius: BorderRadius.circular(AppTheme.radius8),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.cell_tower,
-                        size: 18,
-                        color: context.accentColor,
-                      ),
-                      const SizedBox(width: AppTheme.spacing8),
-                      Expanded(
-                        child: Text(
-                          context.l10n.channelWizardRadioComplianceLink,
-                          style: TextStyle(
-                            color: context.accentColor,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
+            ),
+            const SizedBox(height: AppTheme.spacing16),
+            InkWell(
+              onTap: () {
+                Navigator.pop(sheetContext);
+                LegalDocumentSheet.showTermsSection(
+                  context,
+                  LegalConstants.anchorRadioCompliance,
+                );
+              },
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.cell_tower,
+                      size: 18,
+                      color: sheetContext.accentColor,
+                    ),
+                    const SizedBox(width: AppTheme.spacing8),
+                    Expanded(
+                      child: Text(
+                        sheetContext.l10n.channelWizardRadioComplianceLink,
+                        style: TextStyle(
+                          color: sheetContext.accentColor,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                      Icon(
-                        Icons.open_in_new,
-                        size: 16,
-                        color: context.accentColor,
-                      ),
-                    ],
-                  ),
+                    ),
+                    Icon(
+                      Icons.open_in_new,
+                      size: 16,
+                      color: sheetContext.accentColor,
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

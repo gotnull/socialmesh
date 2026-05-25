@@ -512,6 +512,20 @@ check_file() {
       "Material dialog — use AppBottomSheet, DatePickerSheet, or TimePickerSheet" \
       "error" true true
 
+    # BLOCK: Raw showModalBottomSheet — every modal sheet MUST route through
+    # AppBottomSheet (.show / .showScrollable / .showConfirm / .showPicker /
+    # .showActions) so global behaviour (bounce-in arrival animation,
+    # disableAnimations gate, drag-pill, safe-context handling) applies
+    # uniformly. Raw showModalBottomSheet callers bypass all of this.
+    # Exempt: lib/core/widgets/app_bottom_sheet.dart (the canonical wrapper).
+    if [[ "$file" != *"core/widgets/app_bottom_sheet.dart" ]]; then
+      grep_check "$file" \
+        '\bshowModalBottomSheet[[:space:]]*[<(]' \
+        "no-raw-modal-bottom-sheet" \
+        "Raw showModalBottomSheet — use AppBottomSheet.show / showScrollable / showConfirm / showPicker / showActions instead" \
+        "error" true true
+    fi
+
     # BLOCK: Raw SnackBar construction (use snackbar utilities instead)
     # The app has styled snackbar helpers (showInfoSnackBar, showErrorSnackBar,
     # showSuccessSnackBar, showWarningSnackBar, showActionSnackBar) and

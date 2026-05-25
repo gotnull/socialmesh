@@ -16,6 +16,7 @@ import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../utils/text_sanitizer.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../nodedex/widgets/tappable_node_avatar.dart';
 import '../../../core/widgets/search_filter_header.dart';
@@ -965,10 +966,8 @@ class _ContactDetailSheet extends StatelessWidget {
     // visible; fall back to a compact size when there's nothing to show.
     final initialSize = transfers.isNotEmpty ? 0.72 : 0.48;
 
-    showModalBottomSheet<void>(
+    AppBottomSheet.showRaw<void>(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
       builder: (_) => DraggableScrollableSheet(
         initialChildSize: initialSize,
         minChildSize: 0.35,
