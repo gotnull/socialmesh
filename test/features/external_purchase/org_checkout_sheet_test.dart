@@ -402,6 +402,10 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField), 'acme-eng-team');
+      // Pump for the controller listener + setState so the FilledButton
+      // re-enables (slice 10a: button is disabled until input passes
+      // client-side validation).
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Continue to payment'));
       await tester.pumpAndSettle();
 
@@ -441,6 +445,7 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField), '  ACME-Eng-Team  ');
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Continue to payment'));
       await tester.pumpAndSettle();
 
@@ -471,6 +476,10 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField), 'acme-eng-team');
+      // Pump for the controller listener + setState so the FilledButton
+      // re-enables (slice 10a: button is disabled until input passes
+      // client-side validation).
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Continue to payment'));
       await tester.pumpAndSettle();
 
@@ -507,6 +516,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), 'acme-eng-team');
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Continue to payment'));
     await tester.pumpAndSettle();
 
