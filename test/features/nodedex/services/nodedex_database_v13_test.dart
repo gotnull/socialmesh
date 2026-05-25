@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
-import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -23,7 +22,7 @@ void main() {
 
   group('v13 schema migration', () {
     test(
-      'fresh schema exposes v13 identity columns and the identity_history table',
+      'fresh schema exposes v13 identity columns and the identity_changes table',
       () async {
         final database = NodeDexDatabase(dbPathOverride: inMemoryDatabasePath);
         final store = NodeDexSqliteStore(database);
@@ -37,18 +36,20 @@ void main() {
         final entryColNames = entryCols.map((r) => r['name'] as String).toSet();
         expect(entryColNames, contains(NodeDexTables.colIdentityPubkey));
         expect(entryColNames, contains(NodeDexTables.colIdentityObservedAtMs));
-        expect(entryColNames, contains(NodeDexTables.colIdentityResetCount));
-        expect(entryColNames, contains(NodeDexTables.colLastIdentityResetAtMs));
+        expect(entryColNames, contains(NodeDexTables.colIdentityChangeCount));
+        expect(
+          entryColNames,
+          contains(NodeDexTables.colLastIdentityChangeAtMs),
+        );
 
-        final historyTables = await db.rawQuery(
-          "SELECT name FROM sqlite_master "
-          "WHERE type='table' AND name=?",
-          [NodeDexTables.identityHistory],
+        final changesTable = await db.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+          [NodeDexTables.identityChanges],
         );
         expect(
-          historyTables,
+          changesTable,
           hasLength(1),
-          reason: 'identity_history table must be created on fresh schema v13.',
+          reason: 'identity_changes table must be created on fresh schema v13.',
         );
       },
     );
@@ -68,8 +69,8 @@ void main() {
         sigil: SigilGenerator.generate(0xEAAFE4A5),
         identityPubkey: pubkey,
         identityObservedAt: observedAt,
-        identityResetCount: 2,
-        lastIdentityResetAt: observedAt,
+        identityChangeCount: 2,
+        lastIdentityChangeAt: observedAt,
       );
 
       await store.saveEntryImmediate(entry);
@@ -78,8 +79,8 @@ void main() {
       final r = reloaded.first;
       expect(r.identityPubkey, equals(pubkey));
       expect(r.identityObservedAt, observedAt);
-      expect(r.identityResetCount, 2);
-      expect(r.lastIdentityResetAt, observedAt);
+      expect(r.identityChangeCount, 2);
+      expect(r.lastIdentityChangeAt, observedAt);
     });
 
     test('null identity fields round-trip as null / 0 on a fresh row '
@@ -103,13 +104,13 @@ void main() {
       expect(r.identityPubkey, isNull);
       expect(r.identityObservedAt, isNull);
       expect(
-        r.identityResetCount,
+        r.identityChangeCount,
         0,
         reason:
-            'Reset counter must default to 0 so the banner only fires when '
+            'Change counter must default to 0 so the banner only fires when '
             'a real rotation has been recorded.',
       );
-      expect(r.lastIdentityResetAt, isNull);
+      expect(r.lastIdentityChangeAt, isNull);
     });
 
     test('migration from a simulated v12-shaped database', () async {
@@ -167,8 +168,6 @@ void main() {
       final v13Db = await wrapper.open();
       addTearDown(wrapper.close);
 
-      // New identity columns exist and the pre-existing row has the expected
-      // legacy defaults: pubkey NULL, reset_count 0 (NOT NULL DEFAULT 0).
       final cols = await v13Db.rawQuery(
         'PRAGMA table_info(${NodeDexTables.entries})',
       );
@@ -178,8 +177,8 @@ void main() {
         containsAll([
           NodeDexTables.colIdentityPubkey,
           NodeDexTables.colIdentityObservedAtMs,
-          NodeDexTables.colIdentityResetCount,
-          NodeDexTables.colLastIdentityResetAtMs,
+          NodeDexTables.colIdentityChangeCount,
+          NodeDexTables.colLastIdentityChangeAtMs,
         ]),
       );
 
@@ -191,12 +190,12 @@ void main() {
       expect(row, hasLength(1));
       expect(row.first[NodeDexTables.colIdentityPubkey], isNull);
       expect(row.first[NodeDexTables.colIdentityObservedAtMs], isNull);
-      expect(row.first[NodeDexTables.colIdentityResetCount], 0);
-      expect(row.first[NodeDexTables.colLastIdentityResetAtMs], isNull);
+      expect(row.first[NodeDexTables.colIdentityChangeCount], 0);
+      expect(row.first[NodeDexTables.colLastIdentityChangeAtMs], isNull);
 
-      // identity_history table exists and is empty.
-      final historyRows = await v13Db.query(NodeDexTables.identityHistory);
-      expect(historyRows, isEmpty);
+      // identity_changes table exists and is empty.
+      final changeRows = await v13Db.query(NodeDexTables.identityChanges);
+      expect(changeRows, isEmpty);
     });
   });
 
@@ -271,56 +270,60 @@ void main() {
       expect(result.outcome, IdentityResolutionOutcome.backfilled);
       expect(result.entry.identityPubkey, equals(pk));
       expect(result.entry.identityObservedAt, now);
-      // Stats are preserved on backfill.
+      // Stats preserved.
       expect(result.entry.encounterCount, 5);
       expect(result.entry.maxDistanceSeen, 100.0);
-      expect(result.entry.identityResetCount, 0);
-      expect(result.entry.lastIdentityResetAt, isNull);
+      // No change counter bump or change-log row for backfill.
+      expect(result.entry.identityChangeCount, 0);
+      expect(result.entry.lastIdentityChangeAt, isNull);
+      final changes = await store.getIdentityChanges(entry.nodeNum);
+      expect(changes, isEmpty);
     });
 
-    test('rotated: differing pubkey archives the prior snapshot, '
-        'resets accumulators, and bumps the reset counter', () async {
-      final oldPk = Uint8List.fromList(List.generate(32, (i) => i));
-      final entry = seedEntry(pubkey: oldPk);
-      await store.saveEntryImmediate(entry);
+    test(
+      'rotated: differing pubkey updates the active row in place, '
+      'preserves all stats, logs a change event, and bumps the counter',
+      () async {
+        final oldPk = Uint8List.fromList(List.generate(32, (i) => i));
+        final entry = seedEntry(pubkey: oldPk);
+        await store.saveEntryImmediate(entry);
 
-      final newPk = Uint8List.fromList(List.generate(32, (i) => 255 - i));
-      final now = DateTime(2026, 5, 25, 12, 0);
-      final result = await store.resolveIdentity(
-        existing: entry,
-        observedPubkey: newPk,
-        now: now,
-      );
+        final newPk = Uint8List.fromList(List.generate(32, (i) => 255 - i));
+        final now = DateTime(2026, 5, 25, 12, 0);
+        final result = await store.resolveIdentity(
+          existing: entry,
+          observedPubkey: newPk,
+          now: now,
+        );
 
-      expect(result.outcome, IdentityResolutionOutcome.rotated);
-      final reset = result.entry;
-      expect(reset.identityPubkey, equals(newPk));
-      expect(reset.identityObservedAt, now);
-      expect(reset.identityResetCount, 1);
-      expect(reset.lastIdentityResetAt, now);
-      // Fresh stats post-rotation.
-      expect(reset.firstSeen, now);
-      expect(reset.lastSeen, now);
-      expect(reset.encounterCount, 0);
-      expect(reset.maxDistanceSeen, isNull);
-      expect(reset.bestSnr, isNull);
-      expect(reset.bestRssi, isNull);
-      expect(reset.messageCount, 0);
-      expect(reset.encounters, isEmpty);
-      expect(reset.seenRegions, isEmpty);
+        expect(result.outcome, IdentityResolutionOutcome.rotated);
+        final rotated = result.entry;
+        expect(rotated.identityPubkey, equals(newPk));
+        expect(rotated.identityObservedAt, now);
+        expect(rotated.identityChangeCount, 1);
+        expect(rotated.lastIdentityChangeAt, now);
+        // Stats are intentionally preserved across rotation. The physical
+        // device is continuous: antenna, location and range stay valid.
+        expect(rotated.firstSeen, entry.firstSeen);
+        expect(rotated.lastSeen, entry.lastSeen);
+        expect(rotated.encounterCount, 5);
+        expect(rotated.maxDistanceSeen, 100.0);
+        expect(rotated.bestSnr, 5);
+        expect(rotated.bestRssi, -90);
+        expect(rotated.messageCount, 12);
 
-      // Archive table now has a snapshot of the prior identity.
-      final history = await store.getIdentityHistory(entry.nodeNum);
-      expect(history, hasLength(1));
-      final snap = history.first;
-      expect(snap.identityPubkey, equals(oldPk));
-      expect(snap.encounterCount, 5);
-      expect(snap.maxDistanceSeen, 100.0);
-      expect(snap.archivedAt, now);
-    });
+        // The change is logged for the activity timeline.
+        final changes = await store.getIdentityChanges(entry.nodeNum);
+        expect(changes, hasLength(1));
+        final change = changes.first;
+        expect(change.previousPubkey, equals(oldPk));
+        expect(change.newPubkey, equals(newPk));
+        expect(change.timestamp, now);
+      },
+    );
 
-    test('rotated twice in succession archives both prior identities '
-        'newest-first', () async {
+    test('two rotations in succession log both events newest-first '
+        'and stats remain accumulated through both', () async {
       final pk0 = Uint8List.fromList(List.generate(32, (i) => i));
       var entry = seedEntry(pubkey: pk0);
       await store.saveEntryImmediate(entry);
@@ -332,8 +335,9 @@ void main() {
         now: DateTime(2026, 5, 25, 10),
       );
       entry = result.entry;
-      // Simulate post-rotation observation accumulating more stats.
-      entry = entry.copyWith(encounterCount: 3, maxDistanceSeen: 50.0);
+      expect(entry.encounterCount, 5);
+      // Simulate one new encounter under pk1.
+      entry = entry.copyWith(encounterCount: 6, maxDistanceSeen: 120.0);
       await store.saveEntryImmediate(entry);
 
       final pk2 = Uint8List.fromList(List.generate(32, (i) => (i * 3) & 0xFF));
@@ -344,157 +348,29 @@ void main() {
       );
 
       expect(result.outcome, IdentityResolutionOutcome.rotated);
-      expect(result.entry.identityResetCount, 2);
+      expect(result.entry.identityChangeCount, 2);
+      // Stats accumulated through both rotations remain.
+      expect(result.entry.encounterCount, 6);
+      expect(result.entry.maxDistanceSeen, 120.0);
 
-      final history = await store.getIdentityHistory(entry.nodeNum);
-      expect(history, hasLength(2));
+      final changes = await store.getIdentityChanges(entry.nodeNum);
+      expect(changes, hasLength(2));
       // Newest-first.
-      expect(history[0].identityPubkey, equals(pk1));
-      expect(history[0].encounterCount, 3);
-      expect(history[1].identityPubkey, equals(pk0));
-      expect(history[1].encounterCount, 5);
+      expect(changes[0].previousPubkey, equals(pk1));
+      expect(changes[0].newPubkey, equals(pk2));
+      expect(changes[1].previousPubkey, equals(pk0));
+      expect(changes[1].newPubkey, equals(pk1));
     });
 
-    test('rotation deletes child rows for the node', () async {
+    test('rotation does NOT delete child rows for the node', () async {
       final oldPk = Uint8List.fromList(List.generate(32, (i) => i));
-      final entry = seedEntry(pubkey: oldPk);
-      await store.saveEntryImmediate(entry);
-
-      // Manually seed a child encounter + region for this node so we can
-      // confirm rotation clears them.
-      final db = database.database;
-      await db.insert(NodeDexTables.encounters, {
-        NodeDexTables.colNodeNum: entry.nodeNum,
-        NodeDexTables.colEncTsMs: DateTime(2026, 5, 20).millisecondsSinceEpoch,
-        NodeDexTables.colEncCreatedAtMs: DateTime(
-          2026,
-          5,
-          20,
-        ).millisecondsSinceEpoch,
-      });
-      await db.insert(NodeDexTables.seenRegions, {
-        NodeDexTables.colNodeNum: entry.nodeNum,
-        NodeDexTables.colRegionKey: 'g42_7',
-        NodeDexTables.colRegionLabel: 'EU868',
-        NodeDexTables.colRegionFirstSeenMs: DateTime(
-          2026,
-          5,
-          20,
-        ).millisecondsSinceEpoch,
-        NodeDexTables.colRegionLastSeenMs: DateTime(
-          2026,
-          5,
-          20,
-        ).millisecondsSinceEpoch,
-      });
-
-      final newPk = Uint8List.fromList(List.generate(32, (i) => 255 - i));
-      await store.resolveIdentity(
-        existing: entry,
-        observedPubkey: newPk,
-        now: DateTime(2026, 5, 25),
-      );
-
-      final encs = await db.query(
-        NodeDexTables.encounters,
-        where: '${NodeDexTables.colNodeNum} = ?',
-        whereArgs: [entry.nodeNum],
-      );
-      expect(encs, isEmpty, reason: 'rotation must clear encounters');
-      final regions = await db.query(
-        NodeDexTables.seenRegions,
-        where: '${NodeDexTables.colNodeNum} = ?',
-        whereArgs: [entry.nodeNum],
-      );
-      expect(regions, isEmpty, reason: 'rotation must clear regions');
-    });
-
-    test(
-      'rotation preserves user-curated metadata (note, social tag, nickname)',
-      () async {
-        final oldPk = Uint8List.fromList(List.generate(32, (i) => i));
-        final entry = NodeDexEntry(
-          nodeNum: 0xEAAFE4A5,
-          firstSeen: DateTime(2026, 5, 12),
-          lastSeen: DateTime(2026, 5, 25),
-          encounterCount: 5,
-          maxDistanceSeen: 100.0,
-          userNote: 'this is the megecho radio',
-          userNoteUpdatedAtMs: DateTime(2026, 5, 15).millisecondsSinceEpoch,
-          localNickname: 'MegEcho',
-          localNicknameUpdatedAtMs: DateTime(
-            2026,
-            5,
-            15,
-          ).millisecondsSinceEpoch,
-          sigil: SigilGenerator.generate(0xEAAFE4A5),
-          identityPubkey: oldPk,
-          identityObservedAt: DateTime(2026, 5, 12),
-          firstUsedAt: DateTime(2026, 5, 12),
-          lastUsedAt: DateTime(2026, 5, 25),
-        );
-        await store.saveEntryImmediate(entry);
-
-        final newPk = Uint8List.fromList(List.generate(32, (i) => 255 - i));
-        final result = await store.resolveIdentity(
-          existing: entry,
-          observedPubkey: newPk,
-          now: DateTime(2026, 5, 25),
-        );
-
-        expect(result.outcome, IdentityResolutionOutcome.rotated);
-        final reset = result.entry;
-        expect(reset.userNote, 'this is the megecho radio');
-        expect(reset.localNickname, 'MegEcho');
-        // Connection-identity timestamps survive — they track the phone's
-        // relationship to the nodeNum, not firmware state.
-        expect(reset.firstUsedAt, DateTime(2026, 5, 12));
-        expect(reset.lastUsedAt, DateTime(2026, 5, 25));
-      },
-    );
-
-    test(
-      'IdentityHistoryRecord.pubkeyFingerprint truncates correctly',
-      () async {
-        final pk = Uint8List.fromList([0xDE, 0xAD, 0xBE, 0xEF, 0x12, 0x34]);
-        final record = IdentityHistoryRecord(
-          historyId: 1,
-          nodeNum: 1,
-          identityPubkey: pk,
-          archivedAt: DateTime(2026, 5, 25),
-          firstSeen: DateTime(2026, 5, 12),
-          lastSeen: DateTime(2026, 5, 25),
-          encounterCount: 1,
-          messageCount: 0,
-          regionCount: 0,
-        );
-        expect(record.pubkeyFingerprint, 'deadbeef');
-      },
-    );
-
-    test(
-      'IdentityHistoryRecord.pubkeyFingerprint is null for legacy snapshot',
-      () async {
-        final record = IdentityHistoryRecord(
-          historyId: 1,
-          nodeNum: 1,
-          identityPubkey: null,
-          archivedAt: DateTime(2026, 5, 25),
-          firstSeen: DateTime(2026, 5, 12),
-          lastSeen: DateTime(2026, 5, 25),
-          encounterCount: 1,
-          messageCount: 0,
-          regionCount: 0,
-        );
-        expect(record.pubkeyFingerprint, isNull);
-      },
-    );
-
-    test('archived snapshot preserves encounters + regions JSON', () async {
-      final oldPk = Uint8List.fromList(List.generate(32, (i) => i));
+      // Build an entry whose child rows live in its own encounters /
+      // seenRegions lists (the canonical persistence path: saving the
+      // entry deletes-and-rewrites child tables from those lists, so
+      // raw out-of-band inserts wouldn't survive the next save).
       final encounter = EncounterRecord(
         timestamp: DateTime(2026, 5, 20),
-        distanceMeters: 35890.0,
+        distanceMeters: 100.0,
         snr: 5,
       );
       final region = SeenRegion(
@@ -509,7 +385,7 @@ void main() {
         firstSeen: DateTime(2026, 5, 12),
         lastSeen: DateTime(2026, 5, 25),
         encounterCount: 5,
-        maxDistanceSeen: 35890.0,
+        maxDistanceSeen: 100.0,
         sigil: SigilGenerator.generate(0xEAAFE4A5),
         identityPubkey: oldPk,
         identityObservedAt: DateTime(2026, 5, 12),
@@ -518,6 +394,14 @@ void main() {
       );
       await store.saveEntryImmediate(entry);
 
+      final db = database.database;
+      final encsBefore = await db.query(
+        NodeDexTables.encounters,
+        where: '${NodeDexTables.colNodeNum} = ?',
+        whereArgs: [entry.nodeNum],
+      );
+      expect(encsBefore, hasLength(1));
+
       final newPk = Uint8List.fromList(List.generate(32, (i) => 255 - i));
       await store.resolveIdentity(
         existing: entry,
@@ -525,15 +409,40 @@ void main() {
         now: DateTime(2026, 5, 25),
       );
 
-      final history = await store.getIdentityHistory(entry.nodeNum);
-      expect(history, hasLength(1));
-      final snap = history.first;
-      expect(snap.encountersJson, isNotNull);
-      expect(snap.seenRegionsJson, isNotNull);
-      final decodedEncs = jsonDecode(snap.encountersJson!) as List<dynamic>;
-      expect(decodedEncs, hasLength(1));
-      final decodedRegions = jsonDecode(snap.seenRegionsJson!) as List<dynamic>;
-      expect(decodedRegions, hasLength(1));
+      final encs = await db.query(
+        NodeDexTables.encounters,
+        where: '${NodeDexTables.colNodeNum} = ?',
+        whereArgs: [entry.nodeNum],
+      );
+      expect(
+        encs,
+        hasLength(1),
+        reason:
+            'rotation must NOT clear encounters - the physical device is '
+            'continuous and the observation history remains valid',
+      );
+      final regions = await db.query(
+        NodeDexTables.seenRegions,
+        where: '${NodeDexTables.colNodeNum} = ?',
+        whereArgs: [entry.nodeNum],
+      );
+      expect(regions, hasLength(1), reason: 'rotation must NOT clear regions');
     });
+
+    test(
+      'IdentityChangeRecord fingerprint helpers truncate correctly',
+      () async {
+        final pk = Uint8List.fromList([0xDE, 0xAD, 0xBE, 0xEF, 0x12, 0x34]);
+        final record = IdentityChangeRecord(
+          changeId: 1,
+          nodeNum: 1,
+          previousPubkey: null,
+          newPubkey: pk,
+          timestamp: DateTime(2026, 5, 25),
+        );
+        expect(record.newPubkeyFingerprint, 'deadbeef');
+        expect(record.previousPubkeyFingerprint, isNull);
+      },
+    );
   });
 }

@@ -431,8 +431,16 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     }
     _lastUsedFlushTime[nodeNum] = now;
 
+    // Backfill firstUsedAt from firstSeen when the column has never been
+    // stamped: firstUsedAt was added in schema v11, so entries that
+    // existed before that update had it written as NULL, and the first
+    // post-update call would otherwise stamp "now" and lose the real
+    // start date. For the self entry, firstSeen has been tracked since
+    // v1 and reflects when this phone first observed the node, which is
+    // what the user expects "First used" to mean. For brand-new self
+    // entries, firstSeen == now anyway, so the backfill is a no-op.
     final updated = entry.copyWith(
-      firstUsedAt: entry.firstUsedAt ?? now,
+      firstUsedAt: entry.firstUsedAt ?? entry.firstSeen,
       lastUsedAt: now,
     );
     state = {...state, nodeNum: updated};
@@ -514,8 +522,8 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
                 '!${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
             AppLogging.nodeDex(
               'Identity rotation detected: $hexId, '
-              'resetCount=${existing.identityResetCount}, '
-              'previous stats archived to identity history',
+              'changeCount=${existing.identityChangeCount}, '
+              'logged to nodedex_identity_changes (stats preserved)',
             );
           }
         }
@@ -1397,20 +1405,17 @@ final nodeDexProvider =
 /// Provider for a single NodeDex entry by node number.
 ///
 /// Returns null if the node has not been discovered yet.
-/// Loads the archived identity history for a node, newest-first.
-///
-/// Refreshed on every read (no live invalidation): the screen that
-/// consumes this is opened from a banner that itself only renders when
-/// `entry.identityResetCount > 0`, and rotations are rare enough that
-/// pull-to-refresh by re-opening the sheet is acceptable. The future
-/// resolves to an empty list when the node has never rotated.
-final nodeDexIdentityHistoryProvider =
-    FutureProvider.family<List<IdentityHistoryRecord>, int>((
+/// Loads the logged identity changes (pubkey rotations) for a node,
+/// newest-first. Powers the compact "Identity changes" sheet opened
+/// from the detail-screen banner when `entry.identityChangeCount > 0`.
+/// Resolves to an empty list when the node has never rotated.
+final nodeDexIdentityChangesProvider =
+    FutureProvider.family<List<IdentityChangeRecord>, int>((
       ref,
       nodeNum,
     ) async {
       final store = await ref.watch(nodeDexStoreProvider.future);
-      return store.getIdentityHistory(nodeNum);
+      return store.getIdentityChanges(nodeNum);
     });
 
 final nodeDexEntryProvider = Provider.family<NodeDexEntry?, int>((
@@ -1964,6 +1969,18 @@ Future<List<NodeActivityEvent>> _buildTimeline(Ref ref, int nodeNum) async {
           timestamp: DateTime.fromMillisecondsSinceEpoch(tsMs),
           fromState: from,
           toState: to,
+        ),
+      );
+    }
+
+    // 6. Identity changes (pubkey rotations) from SQLite.
+    final changes = await store.getIdentityChanges(nodeNum);
+    for (final change in changes) {
+      events.add(
+        IdentityChangeActivityEvent(
+          timestamp: change.timestamp,
+          previousPubkey: change.previousPubkey,
+          newPubkey: change.newPubkey,
         ),
       );
     }

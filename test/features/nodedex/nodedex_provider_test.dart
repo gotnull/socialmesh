@@ -681,10 +681,14 @@ void main() {
         equals(firstStamp),
         reason: 'reconnect within cooldown must not advance lastUsedAt',
       );
+      // firstUsedAt backfills from firstSeen so the displayed "First used"
+      // reflects when this phone first observed the node, not when the
+      // schema-v11 upgrade first stamped the column. Once stamped, the
+      // value must never move.
       expect(
         entry.firstUsedAt,
-        equals(firstStamp),
-        reason: 'firstUsedAt is set once and never moves',
+        equals(entry.firstSeen),
+        reason: 'firstUsedAt is stamped from firstSeen on the first emission',
       );
     });
 
@@ -723,7 +727,7 @@ void main() {
         equals(reconnect),
         reason: 'reconnect past cooldown must advance lastUsedAt',
       );
-      expect(entry.firstUsedAt, equals(firstStamp));
+      expect(entry.firstUsedAt, equals(entry.firstSeen));
     });
 
     test(
@@ -823,8 +827,10 @@ void main() {
         final initialOriginal = ctx.container.read(
           nodeDexProvider,
         )[_myNodeNum]!;
-        expect(initialOriginal.firstUsedAt, equals(firstStamp));
+        // firstUsedAt backfills from firstSeen on the first stamp.
+        expect(initialOriginal.firstUsedAt, equals(initialOriginal.firstSeen));
         expect(initialOriginal.lastUsedAt, equals(firstStamp));
+        final originalFirstUsedAt = initialOriginal.firstUsedAt;
 
         // Switch myNodeNum to a different device.
         await withClock(Clock.fixed(switchAt), () async {
@@ -844,14 +850,14 @@ void main() {
         );
         expect(
           state[_myNodeNum]!.firstUsedAt,
-          equals(firstStamp),
+          equals(originalFirstUsedAt),
           reason: 'previous self entry must retain its firstUsedAt',
         );
-        // Newly-self entry got its own firstUsedAt stamped.
+        // Newly-self entry got its own firstUsedAt stamped from its firstSeen.
         expect(
           state[otherNodeNum]!.firstUsedAt,
-          equals(switchAt),
-          reason: 'newly self entry must get firstUsedAt at switch time',
+          equals(state[otherNodeNum]!.firstSeen),
+          reason: 'newly self entry must backfill firstUsedAt from firstSeen',
         );
         expect(
           state[otherNodeNum]!.lastUsedAt,

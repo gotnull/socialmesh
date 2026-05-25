@@ -446,12 +446,12 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
           // node_num. The pre-rotation stats are archived to
           // nodedex_identity_history and accessible via the "View
           // history" action on the banner.
-          if (entry.identityResetCount > 0)
+          if (entry.identityChangeCount > 0)
             SliverToBoxAdapter(
               child: _DetailEntrance(
                 index: 7,
                 reduceMotion: reduceMotion,
-                child: _IdentityRotatedBanner(
+                child: _IdentityChangedBanner(
                   entry: entry,
                   nodeNum: widget.nodeNum,
                 ),
@@ -3620,25 +3620,23 @@ class _DetailEntranceState extends State<_DetailEntrance>
   }
 }
 
-/// Banner surfaced above the DISCOVERY card when a node's Meshtastic
-/// User.public_key has rotated since the last sighting. The prior
-/// stats have been archived to `nodedex_identity_history`; tapping
-/// "View history" opens the [_PastIdentitiesSheet] for review.
-class _IdentityRotatedBanner extends StatelessWidget {
+/// Informational banner surfaced above the DISCOVERY card when a
+/// node's Meshtastic User.public_key has rotated. The entry's stats
+/// are preserved across the rotation (the physical device is
+/// continuous); the banner exists only so the user knows the
+/// cryptographic identity changed. Tapping "View identity changes"
+/// opens the compact [_IdentityChangesSheet] listing the prior
+/// pubkeys with the dates they rotated.
+class _IdentityChangedBanner extends StatelessWidget {
   final NodeDexEntry entry;
   final int nodeNum;
 
-  const _IdentityRotatedBanner({required this.entry, required this.nodeNum});
+  const _IdentityChangedBanner({required this.entry, required this.nodeNum});
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final rotatedAt = entry.lastIdentityResetAt;
-    final dateLabel = rotatedAt != null
-        ? DateFormat.yMMMd(
-            Localizations.localeOf(context).toLanguageTag(),
-          ).format(rotatedAt)
-        : '';
+    final count = entry.identityChangeCount;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppTheme.spacing16,
@@ -3647,36 +3645,36 @@ class _IdentityRotatedBanner extends StatelessWidget {
         0,
       ),
       child: StatusBanner(
-        type: StatusBannerType.warning,
-        icon: Icons.history_toggle_off,
-        title: l10n.nodedexIdentityRotatedBanner(dateLabel),
-        subtitle: l10n.nodedexIdentityRotatedViewHistoryAction,
+        type: StatusBannerType.info,
+        icon: Icons.fingerprint,
+        title: l10n.nodedexIdentityChangedBannerTitle(count),
+        subtitle: l10n.nodedexIdentityChangedViewChangesAction,
         onTap: () {
           HapticFeedback.lightImpact();
-          _showPastIdentitiesSheet(context, nodeNum);
+          _showIdentityChangesSheet(context, nodeNum);
         },
       ),
     );
   }
 }
 
-void _showPastIdentitiesSheet(BuildContext context, int nodeNum) {
+void _showIdentityChangesSheet(BuildContext context, int nodeNum) {
   AppBottomSheet.showScrollable<void>(
     context: context,
-    title: context.l10n.nodedexIdentityHistorySheetTitle,
-    initialChildSize: 0.7,
-    minChildSize: 0.4,
-    maxChildSize: 0.95,
+    title: context.l10n.nodedexIdentityChangesSheetTitle,
+    initialChildSize: 0.55,
+    minChildSize: 0.3,
+    maxChildSize: 0.9,
     builder: (controller) =>
-        _PastIdentitiesSheet(nodeNum: nodeNum, scrollController: controller),
+        _IdentityChangesSheet(nodeNum: nodeNum, scrollController: controller),
   );
 }
 
-class _PastIdentitiesSheet extends ConsumerWidget {
+class _IdentityChangesSheet extends ConsumerWidget {
   final int nodeNum;
   final ScrollController scrollController;
 
-  const _PastIdentitiesSheet({
+  const _IdentityChangesSheet({
     required this.nodeNum,
     required this.scrollController,
   });
@@ -3684,10 +3682,10 @@ class _PastIdentitiesSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final historyAsync = ref.watch(nodeDexIdentityHistoryProvider(nodeNum));
-    return historyAsync.when(
-      data: (records) {
-        if (records.isEmpty) {
+    final changesAsync = ref.watch(nodeDexIdentityChangesProvider(nodeNum));
+    return changesAsync.when(
+      data: (changes) {
+        if (changes.isEmpty) {
           return ListView(
             controller: scrollController,
             padding: const EdgeInsets.fromLTRB(
@@ -3698,7 +3696,7 @@ class _PastIdentitiesSheet extends ConsumerWidget {
             ),
             children: [
               Text(
-                l10n.nodedexIdentityHistoryEmpty,
+                l10n.nodedexIdentityChangesEmpty,
                 style: TextStyle(
                   fontSize: 14,
                   color: context.textSecondary,
@@ -3709,11 +3707,27 @@ class _PastIdentitiesSheet extends ConsumerWidget {
           );
         }
 
-        final locale = Localizations.localeOf(context).toLanguageTag();
-        final dateFmt = DateFormat.yMMMd(locale).add_Hm();
-        final archivedFmt = DateFormat.yMMMd(locale);
+        final dateFmt = DateFormat.yMMMd(
+          Localizations.localeOf(context).toLanguageTag(),
+        ).add_Hm();
 
-        return ListView.builder(
+        final rows = <InfoTableRow>[
+          for (final change in changes)
+            InfoTableRow(
+              icon: Icons.fingerprint,
+              label: dateFmt.format(change.timestamp),
+              value: change.previousPubkeyFingerprint != null
+                  ? l10n.nodedexIdentityChangePubkeyPair(
+                      change.previousPubkeyFingerprint!,
+                      change.newPubkeyFingerprint,
+                    )
+                  : l10n.nodedexIdentityChangePubkeyFromUnknown(
+                      change.newPubkeyFingerprint,
+                    ),
+            ),
+        ];
+
+        return ListView(
           controller: scrollController,
           padding: const EdgeInsets.fromLTRB(
             AppTheme.spacing16,
@@ -3721,62 +3735,7 @@ class _PastIdentitiesSheet extends ConsumerWidget {
             AppTheme.spacing16,
             AppTheme.spacing24,
           ),
-          itemCount: records.length,
-          itemBuilder: (context, index) {
-            final r = records[index];
-            final fingerprint = r.pubkeyFingerprint;
-            final headerText = fingerprint != null
-                ? l10n.nodedexIdentityHistoryFingerprintLabel(fingerprint)
-                : l10n.nodedexIdentityHistoryFingerprintUnknown;
-            final infoRows = <InfoTableRow>[
-              InfoTableRow(
-                icon: Icons.login_outlined,
-                label: l10n.nodedexFirstDiscovered,
-                value: dateFmt.format(r.firstSeen),
-              ),
-              InfoTableRow(
-                icon: Icons.history,
-                label: l10n.nodedexLastSeen,
-                value: dateFmt.format(r.lastSeen),
-              ),
-              if (r.lastKnownHardware != null &&
-                  r.lastKnownHardware!.isNotEmpty)
-                InfoTableRow(
-                  icon: Icons.memory_outlined,
-                  label: l10n.nodedexHardwareLabel,
-                  value: r.lastKnownHardware!,
-                ),
-              if (r.lastKnownFirmware != null &&
-                  r.lastKnownFirmware!.isNotEmpty)
-                InfoTableRow(
-                  icon: Icons.system_update_outlined,
-                  label: l10n.nodedexFirmwareLabel,
-                  value: r.lastKnownFirmware!,
-                ),
-            ];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: AppTheme.spacing16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SectionTitle(title: headerText),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
-                    child: Text(
-                      '${l10n.nodedexIdentityHistoryArchivedAt(archivedFmt.format(r.archivedAt))}  ·  '
-                      '${l10n.nodedexIdentityHistoryStatsLine(r.encounterCount, r.regionCount)}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: context.textSecondary,
-                        fontFamily: AppTheme.fontFamily,
-                      ),
-                    ),
-                  ),
-                  InfoTable(rows: infoRows),
-                ],
-              ),
-            );
-          },
+          children: [InfoTable(rows: rows)],
         );
       },
       loading: () => const Center(

@@ -19967,14 +19967,12 @@
     "@nodedexHelpSignalRecords": {
         "description": "Text displayed in node management"
     },
-    "nodedexIdentityHistoryArchivedAt": "Archiviato il {date}",
-    "nodedexIdentityHistoryEmpty": "Nessuna identità precedente registrata.",
-    "nodedexIdentityHistoryFingerprintLabel": "Chiave pubblica {fingerprint}",
-    "nodedexIdentityHistoryFingerprintUnknown": "Chiave pubblica sconosciuta",
-    "nodedexIdentityHistorySheetTitle": "Identità precedenti",
-    "nodedexIdentityHistoryStatsLine": "{encounters} incontri · {regions} regioni",
-    "nodedexIdentityRotatedBanner": "Identità ruotata il {date}. Cronologia del dispositivo precedente archiviata.",
-    "nodedexIdentityRotatedViewHistoryAction": "Visualizza cronologia",
+    "nodedexIdentityChangePubkeyFromUnknown": "— → {newKey}",
+    "nodedexIdentityChangePubkeyPair": "{previous} → {newKey}",
+    "nodedexIdentityChangedBannerTitle": "{count, plural, =1{Identità cambiata una volta} other{Identità cambiata {count} volte}}",
+    "nodedexIdentityChangedViewChangesAction": "Vedi cambi di identità",
+    "nodedexIdentityChangesEmpty": "Nessun cambio di identità registrato.",
+    "nodedexIdentityChangesSheetTitle": "Cambi di identità",
     "@nodedexImportButtonLabelPlural": {
         "placeholders": {
             "count": {
@@ -20958,6 +20956,8 @@
         },
         "description": "Text in node management Parameters: {hours} = time duration."
     },
+    "nodedexTimelineIdentityChanged": "Identità cambiata: {previous} → {newKey}",
+    "nodedexTimelineIdentityChangedFromUnknown": "Identità registrata: {newKey}",
     "@nodedexTimelineJustNow": {
         "description": "Text displayed in node management"
     },

@@ -4913,6 +4913,48 @@ class AppLocalizationsFr extends AppLocalizations {
   String get drawerBadgeTryIt => 'ESSAYER';
 
   @override
+  String nodedexIdentityChangePubkeyFromUnknown(String newKey) {
+    return '— → $newKey';
+  }
+
+  @override
+  String nodedexIdentityChangePubkeyPair(String previous, String newKey) {
+    return '$previous → $newKey';
+  }
+
+  @override
+  String nodedexIdentityChangedBannerTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Identité changée $count fois',
+      one: 'Identité changée une fois',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get nodedexIdentityChangedViewChangesAction =>
+      'Voir les changements d\'identité';
+
+  @override
+  String get nodedexIdentityChangesEmpty =>
+      'Aucun changement d\'identité enregistré.';
+
+  @override
+  String get nodedexIdentityChangesSheetTitle => 'Changements d\'identité';
+
+  @override
+  String nodedexTimelineIdentityChanged(String previous, String newKey) {
+    return 'Identité changée : $previous → $newKey';
+  }
+
+  @override
+  String nodedexTimelineIdentityChangedFromUnknown(String newKey) {
+    return 'Identité enregistrée : $newKey';
+  }
+
+  @override
   String get requiresConnectionGuardDisconnected =>
       'Déconnecté de votre noeud - reconnectez-vous pour continuer.';
 
@@ -15285,40 +15327,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get nodedexHelpSignalRecords => 'Enregistrements de signal';
-
-  @override
-  String nodedexIdentityHistoryArchivedAt(String date) {
-    return 'Archivé le $date';
-  }
-
-  @override
-  String get nodedexIdentityHistoryEmpty =>
-      'Aucune identité antérieure enregistrée.';
-
-  @override
-  String nodedexIdentityHistoryFingerprintLabel(String fingerprint) {
-    return 'Clé publique $fingerprint';
-  }
-
-  @override
-  String get nodedexIdentityHistoryFingerprintUnknown =>
-      'Clé publique inconnue';
-
-  @override
-  String get nodedexIdentityHistorySheetTitle => 'Identités passées';
-
-  @override
-  String nodedexIdentityHistoryStatsLine(int encounters, int regions) {
-    return '$encounters rencontres · $regions régions';
-  }
-
-  @override
-  String nodedexIdentityRotatedBanner(String date) {
-    return 'Identité changée le $date. Historique de l\'appareil précédent archivé.';
-  }
-
-  @override
-  String get nodedexIdentityRotatedViewHistoryAction => 'Voir l\'historique';
 
   @override
   String nodedexImportButtonLabelPlural(int count) {

@@ -28,6 +28,11 @@ enum NodeActivityEventType {
 
   /// A noteworthy milestone (e.g. first seen, 100th encounter).
   milestone,
+
+  /// The node's Meshtastic User.public_key rotated (firmware reset /
+  /// factory wipe). Stats are preserved across the rotation, the
+  /// timeline entry marks when the cryptographic identity changed.
+  identityChange,
 }
 
 /// A single event in the node activity timeline.
@@ -164,4 +169,27 @@ class MilestoneActivityEvent extends NodeActivityEvent {
     required this.kind,
     required this.label,
   }) : super(type: NodeActivityEventType.milestone);
+}
+
+/// A Meshtastic identity rotation event.
+///
+/// Surfaced when the node's `User.public_key` is observed to differ
+/// from the previously stored one (firmware reset / factory wipe).
+/// The entry's observation stats are preserved across the rotation,
+/// because the physical device is continuous: the antenna hasn't
+/// moved and the encounter history remains valid. The timeline entry
+/// exists only to mark when the cryptographic identity changed.
+class IdentityChangeActivityEvent extends NodeActivityEvent {
+  /// The pubkey bound to the node prior to this rotation, or null if
+  /// the node had no recorded pubkey at the time of the change.
+  final Uint8List? previousPubkey;
+
+  /// The pubkey newly bound to the node by this rotation.
+  final Uint8List newPubkey;
+
+  const IdentityChangeActivityEvent({
+    required super.timestamp,
+    required this.previousPubkey,
+    required this.newPubkey,
+  }) : super(type: NodeActivityEventType.identityChange);
 }

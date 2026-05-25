@@ -319,6 +319,7 @@ class _TimelineEventTile extends StatelessWidget {
       PresenceChangeActivityEvent() => Icons.swap_vert,
       SignalActivityEvent() => Icons.bolt,
       MilestoneActivityEvent() => Icons.flag_outlined,
+      IdentityChangeActivityEvent() => Icons.fingerprint,
     };
   }
 
@@ -329,6 +330,7 @@ class _TimelineEventTile extends StatelessWidget {
       PresenceChangeActivityEvent() => AccentColors.orange,
       SignalActivityEvent() => AppTheme.primaryPurple,
       MilestoneActivityEvent() => AppTheme.warningYellow,
+      IdentityChangeActivityEvent() => AccentColors.orange,
     };
   }
 
@@ -368,7 +370,25 @@ class _TimelineEventTile extends StatelessWidget {
         _truncate(content, 60),
       ),
       MilestoneActivityEvent(:final label) => label,
+      IdentityChangeActivityEvent(:final previousPubkey, :final newPubkey) =>
+        previousPubkey != null
+            ? l10n.nodedexTimelineIdentityChanged(
+                _pubkeyFingerprint(previousPubkey),
+                _pubkeyFingerprint(newPubkey),
+              )
+            : l10n.nodedexTimelineIdentityChangedFromUnknown(
+                _pubkeyFingerprint(newPubkey),
+              ),
     };
+  }
+
+  static String _pubkeyFingerprint(Uint8List pk) {
+    final buf = StringBuffer();
+    final take = pk.length < 4 ? pk.length : 4;
+    for (var i = 0; i < take; i++) {
+      buf.write(pk[i].toRadixString(16).padLeft(2, '0'));
+    }
+    return buf.toString();
   }
 
   static String _encounterSessionText(

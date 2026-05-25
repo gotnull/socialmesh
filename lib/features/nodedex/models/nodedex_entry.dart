@@ -786,14 +786,18 @@ class NodeDexEntry {
   /// has never been observed.
   final DateTime? identityObservedAt;
 
-  /// Number of times this row's identity has rotated. Incremented every
-  /// time a different non-null pubkey replaces the previous one. Used by
-  /// the detail screen to surface a "Past identities" banner.
-  final int identityResetCount;
+  /// Number of times this row's Meshtastic pubkey has rotated. Incremented
+  /// each time a different non-null pubkey replaces the previous one
+  /// (firmware reset, factory wipe). The entry's observation stats are
+  /// preserved across rotation: the physical device is continuous. Used by
+  /// the detail screen to surface an info banner and a compact "Identity
+  /// changes" sheet listing the prior pubkeys with the dates they were
+  /// last observed.
+  final int identityChangeCount;
 
   /// Timestamp of the most recent identity rotation, or null if no
-  /// rotation has occurred.
-  final DateTime? lastIdentityResetAt;
+  /// rotation has been observed.
+  final DateTime? lastIdentityChangeAt;
 
   /// Maximum number of encounter records to retain.
   static const int maxEncounterRecords = 50;
@@ -845,8 +849,8 @@ class NodeDexEntry {
     this.lastUsedAt,
     this.identityPubkey,
     this.identityObservedAt,
-    this.identityResetCount = 0,
-    this.lastIdentityResetAt,
+    this.identityChangeCount = 0,
+    this.lastIdentityChangeAt,
   });
 
   /// Create a new entry for a freshly discovered node.
@@ -1004,9 +1008,9 @@ class NodeDexEntry {
     bool clearIdentityPubkey = false,
     DateTime? identityObservedAt,
     bool clearIdentityObservedAt = false,
-    int? identityResetCount,
-    DateTime? lastIdentityResetAt,
-    bool clearLastIdentityResetAt = false,
+    int? identityChangeCount,
+    DateTime? lastIdentityChangeAt,
+    bool clearLastIdentityChangeAt = false,
   }) {
     // Auto-stamp when socialTag changes via copyWith.
     final effectiveStMs = clearSocialTag || socialTag != null
@@ -1082,10 +1086,10 @@ class NodeDexEntry {
       identityObservedAt: clearIdentityObservedAt
           ? null
           : (identityObservedAt ?? this.identityObservedAt),
-      identityResetCount: identityResetCount ?? this.identityResetCount,
-      lastIdentityResetAt: clearLastIdentityResetAt
+      identityChangeCount: identityChangeCount ?? this.identityChangeCount,
+      lastIdentityChangeAt: clearLastIdentityChangeAt
           ? null
-          : (lastIdentityResetAt ?? this.lastIdentityResetAt),
+          : (lastIdentityChangeAt ?? this.lastIdentityChangeAt),
     );
   }
 
@@ -1474,19 +1478,19 @@ class NodeDexEntry {
       mergedIdentityPubkey = identityPubkey ?? other.identityPubkey;
       mergedIdentityObservedAt = null;
     }
-    final mergedIdentityResetCount =
-        identityResetCount > other.identityResetCount
-        ? identityResetCount
-        : other.identityResetCount;
-    final DateTime? mergedLastIdentityResetAt;
-    if (lastIdentityResetAt != null && other.lastIdentityResetAt != null) {
-      mergedLastIdentityResetAt =
-          lastIdentityResetAt!.isAfter(other.lastIdentityResetAt!)
-          ? lastIdentityResetAt
-          : other.lastIdentityResetAt;
+    final mergedIdentityChangeCount =
+        identityChangeCount > other.identityChangeCount
+        ? identityChangeCount
+        : other.identityChangeCount;
+    final DateTime? mergedLastIdentityChangeAt;
+    if (lastIdentityChangeAt != null && other.lastIdentityChangeAt != null) {
+      mergedLastIdentityChangeAt =
+          lastIdentityChangeAt!.isAfter(other.lastIdentityChangeAt!)
+          ? lastIdentityChangeAt
+          : other.lastIdentityChangeAt;
     } else {
-      mergedLastIdentityResetAt =
-          lastIdentityResetAt ?? other.lastIdentityResetAt;
+      mergedLastIdentityChangeAt =
+          lastIdentityChangeAt ?? other.lastIdentityChangeAt;
     }
 
     return NodeDexEntry(
@@ -1526,8 +1530,8 @@ class NodeDexEntry {
       lastUsedAt: mergedLastUsedAt,
       identityPubkey: mergedIdentityPubkey,
       identityObservedAt: mergedIdentityObservedAt,
-      identityResetCount: mergedIdentityResetCount,
-      lastIdentityResetAt: mergedLastIdentityResetAt,
+      identityChangeCount: mergedIdentityChangeCount,
+      lastIdentityChangeAt: mergedLastIdentityChangeAt,
     );
   }
 
@@ -1643,9 +1647,9 @@ class NodeDexEntry {
       if (identityPubkey != null) 'idpk': base64Encode(identityPubkey!),
       if (identityObservedAt != null)
         'idoa': identityObservedAt!.millisecondsSinceEpoch,
-      if (identityResetCount > 0) 'idrc': identityResetCount,
-      if (lastIdentityResetAt != null)
-        'idra': lastIdentityResetAt!.millisecondsSinceEpoch,
+      if (identityChangeCount > 0) 'idrc': identityChangeCount,
+      if (lastIdentityChangeAt != null)
+        'idra': lastIdentityChangeAt!.millisecondsSinceEpoch,
     };
   }
 
@@ -1739,8 +1743,8 @@ class NodeDexEntry {
       identityObservedAt: json['idoa'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['idoa'] as int)
           : null,
-      identityResetCount: json['idrc'] as int? ?? 0,
-      lastIdentityResetAt: json['idra'] != null
+      identityChangeCount: json['idrc'] as int? ?? 0,
+      lastIdentityChangeAt: json['idra'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['idra'] as int)
           : null,
     );
@@ -1844,95 +1848,52 @@ class IdentityResolution {
 }
 
 // =============================================================================
-// Identity History
+// Identity Change Log
 // =============================================================================
 
-/// Snapshot of a prior identity for a single node_num, captured at the
-/// moment that node_num was observed with a new Meshtastic User.public_key.
+/// One logged rotation of a node's Meshtastic User.public_key.
 ///
-/// Powers the "Past identities" sheet on the node detail screen. One
-/// record per past identity per node; the active identity lives on
-/// [NodeDexEntry] itself.
-class IdentityHistoryRecord {
-  /// SQLite row id of this archived record.
-  final int historyId;
+/// Recorded each time [NodeDexSqliteStore.resolveIdentity] detects that
+/// the observed pubkey differs from the row's stored pubkey. The entry's
+/// own stats are preserved across rotation (the physical device is
+/// continuous); this record exists only so the activity timeline and
+/// the "Identity changes" sheet can surface that the change happened.
+class IdentityChangeRecord {
+  /// SQLite row id of this change record.
+  final int changeId;
 
-  /// node_num the archived identity belonged to.
+  /// node_num the change was observed against.
   final int nodeNum;
 
-  /// Meshtastic User.public_key of the archived identity, or null when
-  /// the previous active row carried no observed pubkey (legacy data
-  /// archived because a fresh pubkey arrived for the first time).
-  final Uint8List? identityPubkey;
+  /// Pubkey that was previously bound to this node_num, or null when
+  /// this is the first time a pubkey was ever observed (backfill events
+  /// do NOT generate change records; this null only appears when an
+  /// entry's prior pubkey column itself was NULL at rotation time).
+  final Uint8List? previousPubkey;
 
-  /// When the active row was reset and this snapshot was archived.
-  final DateTime archivedAt;
+  /// The newly observed pubkey that replaced [previousPubkey].
+  final Uint8List newPubkey;
 
-  /// firstSeen of the archived identity.
-  final DateTime firstSeen;
+  /// When the rotation was detected.
+  final DateTime timestamp;
 
-  /// lastSeen of the archived identity.
-  final DateTime lastSeen;
-
-  /// Encounter count accumulated against the archived identity.
-  final int encounterCount;
-
-  /// Maximum distance (meters) observed under the archived identity.
-  final double? maxDistanceSeen;
-
-  /// Best SNR observed under the archived identity.
-  final int? bestSnr;
-
-  /// Best RSSI observed under the archived identity.
-  final int? bestRssi;
-
-  /// Message count accumulated against the archived identity.
-  final int messageCount;
-
-  /// Number of distinct regions seen under the archived identity.
-  final int regionCount;
-
-  /// JSON-serialized encounter records, preserved for forensic review.
-  final String? encountersJson;
-
-  /// JSON-serialized seen regions, preserved for forensic review.
-  final String? seenRegionsJson;
-
-  /// Last-known display name of the archived identity.
-  final String? lastKnownName;
-
-  /// Last-known hardware model string of the archived identity.
-  final String? lastKnownHardware;
-
-  /// Last-known firmware version of the archived identity.
-  final String? lastKnownFirmware;
-
-  const IdentityHistoryRecord({
-    required this.historyId,
+  const IdentityChangeRecord({
+    required this.changeId,
     required this.nodeNum,
-    required this.identityPubkey,
-    required this.archivedAt,
-    required this.firstSeen,
-    required this.lastSeen,
-    required this.encounterCount,
-    required this.messageCount,
-    required this.regionCount,
-    this.maxDistanceSeen,
-    this.bestSnr,
-    this.bestRssi,
-    this.encountersJson,
-    this.seenRegionsJson,
-    this.lastKnownName,
-    this.lastKnownHardware,
-    this.lastKnownFirmware,
+    required this.previousPubkey,
+    required this.newPubkey,
+    required this.timestamp,
   });
 
-  /// Truncated pubkey fingerprint suitable for compact UI display.
-  ///
-  /// Returns the first 8 hex chars of [identityPubkey], or null when no
-  /// pubkey is recorded.
-  String? get pubkeyFingerprint {
-    final pk = identityPubkey;
+  /// Truncated fingerprint of [previousPubkey] for compact UI display
+  /// (first 8 hex chars), or null when no prior pubkey was recorded.
+  String? get previousPubkeyFingerprint => _fingerprint(previousPubkey);
+
+  /// Truncated fingerprint of [newPubkey] for compact UI display
+  /// (first 8 hex chars).
+  String get newPubkeyFingerprint => _fingerprint(newPubkey)!;
+
+  static String? _fingerprint(Uint8List? pk) {
     if (pk == null || pk.isEmpty) return null;
     final buf = StringBuffer();
     final take = pk.length < 4 ? pk.length : 4;

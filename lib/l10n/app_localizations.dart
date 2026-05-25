@@ -8580,6 +8580,54 @@ abstract class AppLocalizations {
   /// **'TRY IT'**
   String get drawerBadgeTryIt;
 
+  /// A single row in the Identity changes sheet when no prior pubkey was recorded (legacy data, first observation).
+  ///
+  /// In en, this message translates to:
+  /// **'— → {newKey}'**
+  String nodedexIdentityChangePubkeyFromUnknown(String newKey);
+
+  /// A single row in the Identity changes sheet: shows the truncated previous pubkey fingerprint followed by the new one. {previous} and {newKey} are 8-hex-char fingerprints.
+  ///
+  /// In en, this message translates to:
+  /// **'{previous} → {newKey}'**
+  String nodedexIdentityChangePubkeyPair(String previous, String newKey);
+
+  /// Banner title on the node detail screen when a node has had identity rotations. {count} is the total number of rotations recorded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Identity changed once} other{Identity changed {count} times}}'**
+  String nodedexIdentityChangedBannerTitle(int count);
+
+  /// Action label on the identity-changed banner that opens the compact Identity changes sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'View identity changes'**
+  String get nodedexIdentityChangedViewChangesAction;
+
+  /// Empty state in the Identity changes sheet when no rotations have been recorded.
+  ///
+  /// In en, this message translates to:
+  /// **'No identity changes recorded.'**
+  String get nodedexIdentityChangesEmpty;
+
+  /// Title of the bottom sheet that lists prior identity rotations for a node.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity changes'**
+  String get nodedexIdentityChangesSheetTitle;
+
+  /// Activity-timeline summary line for an identity rotation event. {previous} and {newKey} are 8-hex-char fingerprints.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity changed: {previous} → {newKey}'**
+  String nodedexTimelineIdentityChanged(String previous, String newKey);
+
+  /// Activity-timeline summary line for an identity rotation event where no prior pubkey was recorded.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity recorded: {newKey}'**
+  String nodedexTimelineIdentityChangedFromUnknown(String newKey);
+
   /// Snackbar shown when a node-required screen is auto-popped because the device disconnected mid-session.
   ///
   /// In en, this message translates to:
@@ -26031,54 +26079,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Signal Records'**
   String get nodedexHelpSignalRecords;
-
-  /// Subtitle on a past-identity row in the Past Identities sheet. {date} is the formatted date the snapshot was archived.
-  ///
-  /// In en, this message translates to:
-  /// **'Archived {date}'**
-  String nodedexIdentityHistoryArchivedAt(String date);
-
-  /// Empty state shown in the Past Identities sheet when no rotations have been archived for this node.
-  ///
-  /// In en, this message translates to:
-  /// **'No prior identities recorded.'**
-  String get nodedexIdentityHistoryEmpty;
-
-  /// Label for an archived identity's truncated pubkey fingerprint. {fingerprint} is the first 8 hex chars of the public key.
-  ///
-  /// In en, this message translates to:
-  /// **'Pubkey {fingerprint}'**
-  String nodedexIdentityHistoryFingerprintLabel(String fingerprint);
-
-  /// Label shown when an archived identity has no recorded pubkey (legacy data).
-  ///
-  /// In en, this message translates to:
-  /// **'Pubkey unknown'**
-  String get nodedexIdentityHistoryFingerprintUnknown;
-
-  /// Title of the bottom sheet that lists archived prior identities for a node.
-  ///
-  /// In en, this message translates to:
-  /// **'Past identities'**
-  String get nodedexIdentityHistorySheetTitle;
-
-  /// Compact stats line for an archived identity row.
-  ///
-  /// In en, this message translates to:
-  /// **'{encounters} encounters · {regions} regions'**
-  String nodedexIdentityHistoryStatsLine(int encounters, int regions);
-
-  /// Banner shown above the discovery stats card when a node's public key has changed (firmware reset or factory wipe). {date} is the formatted local date of the most recent rotation.
-  ///
-  /// In en, this message translates to:
-  /// **'Identity rotated on {date}. Previous device history archived.'**
-  String nodedexIdentityRotatedBanner(String date);
-
-  /// Action label on the identity-rotated banner that opens the Past Identities sheet.
-  ///
-  /// In en, this message translates to:
-  /// **'View history'**
-  String get nodedexIdentityRotatedViewHistoryAction;
 
   /// Text in node management Parameters: {count} = numeric count.
   ///

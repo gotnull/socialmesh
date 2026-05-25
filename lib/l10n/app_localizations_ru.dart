@@ -4862,6 +4862,48 @@ class AppLocalizationsRu extends AppLocalizations {
   String get drawerBadgeTryIt => 'ПОПРОБОВАТЬ';
 
   @override
+  String nodedexIdentityChangePubkeyFromUnknown(String newKey) {
+    return '— → $newKey';
+  }
+
+  @override
+  String nodedexIdentityChangePubkeyPair(String previous, String newKey) {
+    return '$previous → $newKey';
+  }
+
+  @override
+  String nodedexIdentityChangedBannerTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Идентификатор изменён $count раз(а)',
+      one: 'Идентификатор изменён один раз',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get nodedexIdentityChangedViewChangesAction =>
+      'Показать смены идентификатора';
+
+  @override
+  String get nodedexIdentityChangesEmpty =>
+      'Смены идентификатора не зафиксированы.';
+
+  @override
+  String get nodedexIdentityChangesSheetTitle => 'Смены идентификатора';
+
+  @override
+  String nodedexTimelineIdentityChanged(String previous, String newKey) {
+    return 'Идентификатор изменён: $previous → $newKey';
+  }
+
+  @override
+  String nodedexTimelineIdentityChangedFromUnknown(String newKey) {
+    return 'Идентификатор зафиксирован: $newKey';
+  }
+
+  @override
   String get requiresConnectionGuardDisconnected =>
       'Нет подключения к вашему узлу - подключитесь снова, чтобы продолжить.';
 
@@ -15184,40 +15226,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get nodedexHelpSignalRecords => 'Записи сигнала';
-
-  @override
-  String nodedexIdentityHistoryArchivedAt(String date) {
-    return 'Архивировано $date';
-  }
-
-  @override
-  String get nodedexIdentityHistoryEmpty =>
-      'Прежние идентификаторы не зафиксированы.';
-
-  @override
-  String nodedexIdentityHistoryFingerprintLabel(String fingerprint) {
-    return 'Открытый ключ $fingerprint';
-  }
-
-  @override
-  String get nodedexIdentityHistoryFingerprintUnknown =>
-      'Открытый ключ неизвестен';
-
-  @override
-  String get nodedexIdentityHistorySheetTitle => 'Прошлые идентификаторы';
-
-  @override
-  String nodedexIdentityHistoryStatsLine(int encounters, int regions) {
-    return '$encounters встреч · $regions регионов';
-  }
-
-  @override
-  String nodedexIdentityRotatedBanner(String date) {
-    return 'Идентификатор изменён $date. История предыдущего устройства сохранена.';
-  }
-
-  @override
-  String get nodedexIdentityRotatedViewHistoryAction => 'Показать историю';
 
   @override
   String nodedexImportButtonLabelPlural(int count) {

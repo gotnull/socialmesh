@@ -193,7 +193,7 @@ class NodeDexSqliteStore {
         await txn.delete(NodeDexTables.coSeenEdges);
         await txn.delete(NodeDexTables.seenRegions);
         await txn.delete(NodeDexTables.encounters);
-        await txn.delete(NodeDexTables.identityHistory);
+        await txn.delete(NodeDexTables.identityChanges);
         await txn.delete(NodeDexTables.entries);
       });
       AppLogging.storage('NodeDexSqliteStore: Cleared all entries');
@@ -255,17 +255,14 @@ class NodeDexSqliteStore {
   ///   preserved. No DB write here — the caller's normal save
   ///   pipeline will pick up the change.
   /// - [IdentityResolutionOutcome.rotated]: the observed pubkey differs
-  ///   from the recorded one. A snapshot of the prior identity's stats
-  ///   is archived to [NodeDexTables.identityHistory], the row's
-  ///   encounters / seenRegions / coSeenEdges are deleted, and the
-  ///   entry's accumulators are reset in place. The fresh entry is
-  ///   persisted atomically in the same transaction; the cache is
-  ///   updated to match.
-  ///
-  /// User-curated fields (socialTag, userNote, localNickname) and
-  /// connection-identity timestamps (firstUsedAt, lastUsedAt) are
-  /// preserved across rotation. Sigil / lastKnown* are preserved
-  /// because the next live update will refresh them naturally.
+  ///   from the recorded one. The active row's pubkey column is updated
+  ///   in place, the change counter bumps, and a row is logged to
+  ///   [NodeDexTables.identityChanges] so the activity timeline surfaces
+  ///   the rotation. The entry's stats (encounters, regions, max range
+  ///   etc.) are NOT reset, because the physical device is continuous
+  ///   across a firmware reset: the antenna hasn't moved, range it can
+  ///   reach is unchanged, regions and encounter history remain valid.
+  ///   What rotates is the cryptographic identity only.
   Future<IdentityResolution> resolveIdentity({
     required NodeDexEntry existing,
     required Uint8List? observedPubkey,
@@ -304,87 +301,34 @@ class NodeDexSqliteStore {
       );
     }
 
-    // Rotation: archive snapshot + reset accumulators + persist atomically.
-    final snapshot = _buildIdentityHistoryRow(
-      entry: existing,
-      archivedAtMs: timestamp.millisecondsSinceEpoch,
-    );
-
-    final reset = NodeDexEntry(
-      nodeNum: existing.nodeNum,
-      firstSeen: timestamp,
-      lastSeen: timestamp,
-      encounterCount: 0,
-      maxDistanceSeen: null,
-      bestSnr: null,
-      bestRssi: null,
-      messageCount: 0,
-      // User-curated metadata survives — it's about the physical device,
-      // not the firmware-derived identity.
-      socialTag: existing.socialTag,
-      socialTagUpdatedAtMs: existing.socialTagUpdatedAtMs,
-      userNote: existing.userNote,
-      userNoteUpdatedAtMs: existing.userNoteUpdatedAtMs,
-      localNickname: existing.localNickname,
-      localNicknameUpdatedAtMs: existing.localNicknameUpdatedAtMs,
-      encounters: const [],
-      seenRegions: const [],
-      coSeenNodes: const {},
-      sigil: existing.sigil,
-      lastKnownName: existing.lastKnownName,
-      lastKnownHardware: existing.lastKnownHardware,
-      lastKnownRole: existing.lastKnownRole,
-      lastKnownFirmware: existing.lastKnownFirmware,
-      // SIP identity is bound to the SIP pubkey, not the Meshtastic
-      // protocol pubkey — separate concern, preserved across rotation.
-      sipCapable: existing.sipCapable,
-      sipPubkey: existing.sipPubkey,
-      sipPersonaId: existing.sipPersonaId,
-      sipIdentityState: existing.sipIdentityState,
-      sipDisplayName: existing.sipDisplayName,
-      mrrpServiceIds: existing.mrrpServiceIds,
-      // Connection-identity timestamps survive — they track when *this
-      // phone* connected to that nodeNum, independent of firmware state.
-      firstUsedAt: existing.firstUsedAt,
-      lastUsedAt: existing.lastUsedAt,
-      // Identity tracking: stamp the new pubkey and bump the reset counter.
+    // Rotation: log the change, update pubkey + counter in place.
+    // Stats are intentionally preserved because the physical device is
+    // continuous across a firmware reset (antenna, location, range and
+    // historical encounters all remain valid).
+    final rotated = existing.copyWith(
       identityPubkey: pk,
       identityObservedAt: timestamp,
-      identityResetCount: existing.identityResetCount + 1,
-      lastIdentityResetAt: timestamp,
+      identityChangeCount: existing.identityChangeCount + 1,
+      lastIdentityChangeAt: timestamp,
     );
 
     try {
       await _db.transaction((txn) async {
-        await txn.insert(NodeDexTables.identityHistory, snapshot);
-        await txn.delete(
-          NodeDexTables.encounters,
-          where: '${NodeDexTables.colNodeNum} = ?',
-          whereArgs: [existing.nodeNum],
-        );
-        await txn.delete(
-          NodeDexTables.seenRegions,
-          where: '${NodeDexTables.colNodeNum} = ?',
-          whereArgs: [existing.nodeNum],
-        );
-        await txn.delete(
-          NodeDexTables.coSeenEdges,
-          where:
-              '${NodeDexTables.colEdgeA} = ? OR ${NodeDexTables.colEdgeB} = ?',
-          whereArgs: [existing.nodeNum, existing.nodeNum],
-        );
-        await _upsertEntryInTxn(txn, reset);
+        await txn.insert(NodeDexTables.identityChanges, {
+          NodeDexTables.colNodeNum: existing.nodeNum,
+          NodeDexTables.colIcPreviousPubkey: current,
+          NodeDexTables.colIcNewPubkey: pk,
+          NodeDexTables.colIcTsMs: timestamp.millisecondsSinceEpoch,
+        });
+        await _upsertEntryInTxn(txn, rotated);
       });
-      _cache?[existing.nodeNum] = reset;
-      // Drop any pending save for this nodeNum — we just persisted the
-      // post-rotation entry, and a stale pre-rotation save would overwrite
-      // it with the old encounters list.
+      _cache?[existing.nodeNum] = rotated;
       _pendingSaves.remove(existing.nodeNum);
       AppLogging.nodeDex(
-        'Identity rotation persisted: node ${existing.nodeNum}, '
+        'Identity rotation logged: node ${existing.nodeNum}, '
         'prev=${_pubkeyFingerprint(current)}, '
         'next=${_pubkeyFingerprint(pk)}, '
-        'resetCount=${reset.identityResetCount}',
+        'changeCount=${rotated.identityChangeCount}',
       );
     } catch (e) {
       AppLogging.storage(
@@ -398,86 +342,44 @@ class NodeDexSqliteStore {
     }
 
     return IdentityResolution(
-      entry: reset,
+      entry: rotated,
       outcome: IdentityResolutionOutcome.rotated,
     );
   }
 
-  /// Load the archived identity history for [nodeNum], newest-first.
-  /// Returns an empty list if the node has never had an identity rotation.
-  Future<List<IdentityHistoryRecord>> getIdentityHistory(int nodeNum) async {
+  /// Load the logged identity changes for [nodeNum], newest-first.
+  /// Returns an empty list if the node has never had a recorded rotation.
+  Future<List<IdentityChangeRecord>> getIdentityChanges(int nodeNum) async {
     if (!_database.isOpen) return const [];
     try {
       final rows = await _db.query(
-        NodeDexTables.identityHistory,
+        NodeDexTables.identityChanges,
         where: '${NodeDexTables.colNodeNum} = ?',
         whereArgs: [nodeNum],
-        orderBy: '${NodeDexTables.colHistArchivedAtMs} DESC',
+        orderBy: '${NodeDexTables.colIcTsMs} DESC',
       );
-      return rows.map(_rowToIdentityHistoryRecord).toList();
+      return rows.map(_rowToIdentityChangeRecord).toList();
     } catch (e) {
       AppLogging.storage(
-        'NodeDexSqliteStore: getIdentityHistory failed for $nodeNum: $e',
+        'NodeDexSqliteStore: getIdentityChanges failed for $nodeNum: $e',
       );
       return const [];
     }
   }
 
-  Map<String, Object?> _buildIdentityHistoryRow({
-    required NodeDexEntry entry,
-    required int archivedAtMs,
-  }) {
-    return {
-      NodeDexTables.colNodeNum: entry.nodeNum,
-      NodeDexTables.colIdentityPubkey: entry.identityPubkey,
-      NodeDexTables.colHistArchivedAtMs: archivedAtMs,
-      NodeDexTables.colHistFirstSeenMs: entry.firstSeen.millisecondsSinceEpoch,
-      NodeDexTables.colHistLastSeenMs: entry.lastSeen.millisecondsSinceEpoch,
-      NodeDexTables.colHistEncounterCount: entry.encounterCount,
-      NodeDexTables.colHistMaxDistance: entry.maxDistanceSeen,
-      NodeDexTables.colHistBestSnr: entry.bestSnr,
-      NodeDexTables.colHistBestRssi: entry.bestRssi,
-      NodeDexTables.colHistMessageCount: entry.messageCount,
-      NodeDexTables.colHistRegionCount: entry.seenRegions.length,
-      NodeDexTables.colHistEncountersJson: entry.encounters.isEmpty
-          ? null
-          : jsonEncode(entry.encounters.map((e) => e.toJson()).toList()),
-      NodeDexTables.colHistSeenRegionsJson: entry.seenRegions.isEmpty
-          ? null
-          : jsonEncode(entry.seenRegions.map((r) => r.toJson()).toList()),
-      NodeDexTables.colHistLastKnownName: entry.lastKnownName,
-      NodeDexTables.colHistLastKnownHardware: entry.lastKnownHardware,
-      NodeDexTables.colHistLastKnownFirmware: entry.lastKnownFirmware,
-    };
-  }
-
-  IdentityHistoryRecord _rowToIdentityHistoryRecord(Map<String, Object?> row) {
-    final pk = row[NodeDexTables.colIdentityPubkey];
-    return IdentityHistoryRecord(
-      historyId: row[NodeDexTables.colHistId] as int,
+  IdentityChangeRecord _rowToIdentityChangeRecord(Map<String, Object?> row) {
+    final prev = row[NodeDexTables.colIcPreviousPubkey];
+    final next = row[NodeDexTables.colIcNewPubkey] as List<int>;
+    return IdentityChangeRecord(
+      changeId: row[NodeDexTables.colIcId] as int,
       nodeNum: row[NodeDexTables.colNodeNum] as int,
-      identityPubkey: pk == null ? null : Uint8List.fromList((pk as List<int>)),
-      archivedAt: DateTime.fromMillisecondsSinceEpoch(
-        row[NodeDexTables.colHistArchivedAtMs] as int,
+      previousPubkey: prev == null
+          ? null
+          : Uint8List.fromList((prev as List<int>)),
+      newPubkey: Uint8List.fromList(next),
+      timestamp: DateTime.fromMillisecondsSinceEpoch(
+        row[NodeDexTables.colIcTsMs] as int,
       ),
-      firstSeen: DateTime.fromMillisecondsSinceEpoch(
-        row[NodeDexTables.colHistFirstSeenMs] as int,
-      ),
-      lastSeen: DateTime.fromMillisecondsSinceEpoch(
-        row[NodeDexTables.colHistLastSeenMs] as int,
-      ),
-      encounterCount: row[NodeDexTables.colHistEncounterCount] as int,
-      maxDistanceSeen: (row[NodeDexTables.colHistMaxDistance] as num?)
-          ?.toDouble(),
-      bestSnr: row[NodeDexTables.colHistBestSnr] as int?,
-      bestRssi: row[NodeDexTables.colHistBestRssi] as int?,
-      messageCount: row[NodeDexTables.colHistMessageCount] as int,
-      regionCount: row[NodeDexTables.colHistRegionCount] as int,
-      encountersJson: row[NodeDexTables.colHistEncountersJson] as String?,
-      seenRegionsJson: row[NodeDexTables.colHistSeenRegionsJson] as String?,
-      lastKnownName: row[NodeDexTables.colHistLastKnownName] as String?,
-      lastKnownHardware: row[NodeDexTables.colHistLastKnownHardware] as String?,
-      lastKnownFirmware: row[NodeDexTables.colHistLastKnownFirmware] as String?,
     );
   }
 
@@ -739,9 +641,9 @@ class NodeDexSqliteStore {
       NodeDexTables.colIdentityPubkey: entry.identityPubkey,
       NodeDexTables.colIdentityObservedAtMs:
           entry.identityObservedAt?.millisecondsSinceEpoch,
-      NodeDexTables.colIdentityResetCount: entry.identityResetCount,
-      NodeDexTables.colLastIdentityResetAtMs:
-          entry.lastIdentityResetAt?.millisecondsSinceEpoch,
+      NodeDexTables.colIdentityChangeCount: entry.identityChangeCount,
+      NodeDexTables.colLastIdentityChangeAtMs:
+          entry.lastIdentityChangeAt?.millisecondsSinceEpoch,
     };
   }
 
@@ -889,10 +791,11 @@ class NodeDexSqliteStore {
               row[NodeDexTables.colIdentityObservedAtMs] as int,
             )
           : null,
-      identityResetCount: row[NodeDexTables.colIdentityResetCount] as int? ?? 0,
-      lastIdentityResetAt: row[NodeDexTables.colLastIdentityResetAtMs] != null
+      identityChangeCount:
+          row[NodeDexTables.colIdentityChangeCount] as int? ?? 0,
+      lastIdentityChangeAt: row[NodeDexTables.colLastIdentityChangeAtMs] != null
           ? DateTime.fromMillisecondsSinceEpoch(
-              row[NodeDexTables.colLastIdentityResetAtMs] as int,
+              row[NodeDexTables.colLastIdentityChangeAtMs] as int,
             )
           : null,
     );

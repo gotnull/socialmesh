@@ -1,4 +1,59 @@
 {
+    "@nodedexIdentityChangePubkeyFromUnknown": {
+        "placeholders": {
+            "newKey": {
+                "type": "String"
+            }
+        },
+        "description": "A single row in the Identity changes sheet when no prior pubkey was recorded (legacy data, first observation)."
+    },
+    "@nodedexIdentityChangePubkeyPair": {
+        "placeholders": {
+            "previous": {
+                "type": "String"
+            },
+            "newKey": {
+                "type": "String"
+            }
+        },
+        "description": "A single row in the Identity changes sheet: shows the truncated previous pubkey fingerprint followed by the new one. {previous} and {newKey} are 8-hex-char fingerprints."
+    },
+    "@nodedexIdentityChangedBannerTitle": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        },
+        "description": "Banner title on the node detail screen when a node has had identity rotations. {count} is the total number of rotations recorded."
+    },
+    "@nodedexIdentityChangedViewChangesAction": {
+        "description": "Action label on the identity-changed banner that opens the compact Identity changes sheet."
+    },
+    "@nodedexIdentityChangesEmpty": {
+        "description": "Empty state in the Identity changes sheet when no rotations have been recorded."
+    },
+    "@nodedexIdentityChangesSheetTitle": {
+        "description": "Title of the bottom sheet that lists prior identity rotations for a node."
+    },
+    "@nodedexTimelineIdentityChanged": {
+        "placeholders": {
+            "previous": {
+                "type": "String"
+            },
+            "newKey": {
+                "type": "String"
+            }
+        },
+        "description": "Activity-timeline summary line for an identity rotation event. {previous} and {newKey} are 8-hex-char fingerprints."
+    },
+    "@nodedexTimelineIdentityChangedFromUnknown": {
+        "placeholders": {
+            "newKey": {
+                "type": "String"
+            }
+        },
+        "description": "Activity-timeline summary line for an identity rotation event where no prior pubkey was recorded."
+    },
     "@@locale": "en",
     "adminProductsActivate": "Activate",
     "@adminProductsActivate": {
@@ -6358,6 +6413,14 @@
     "@drawerBadgeTryIt": {
         "description": "Badge label for premium features available to try in the drawer."
     },
+    "nodedexIdentityChangePubkeyFromUnknown": "— → {newKey}",
+    "nodedexIdentityChangePubkeyPair": "{previous} → {newKey}",
+    "nodedexIdentityChangedBannerTitle": "{count, plural, =1{Identity changed once} other{Identity changed {count} times}}",
+    "nodedexIdentityChangedViewChangesAction": "View identity changes",
+    "nodedexIdentityChangesEmpty": "No identity changes recorded.",
+    "nodedexIdentityChangesSheetTitle": "Identity changes",
+    "nodedexTimelineIdentityChanged": "Identity changed: {previous} → {newKey}",
+    "nodedexTimelineIdentityChangedFromUnknown": "Identity recorded: {newKey}",
     "requiresConnectionGuardDisconnected": "Disconnected from your node - reconnect to continue.",
     "@requiresConnectionGuardDisconnected": {
         "description": "Snackbar shown when a node-required screen is auto-popped because the device disconnected mid-session."
@@ -6729,7 +6792,9 @@
     "@bugResponseSheetReportedOn": {
         "description": "Small caption shown above the description of the original bug report in the quick sheet.",
         "placeholders": {
-            "date": { "type": "String" }
+            "date": {
+                "type": "String"
+            }
         }
     },
     "bugResponseSheetReplyLabel": "Reply",
@@ -6752,7 +6817,9 @@
     "@bugResponseSheetReplyFailed": {
         "description": "Error snackbar when sending a reply from the quick sheet fails.",
         "placeholders": {
-            "error": { "type": "String" }
+            "error": {
+                "type": "String"
+            }
         }
     },
     "bugResponseSheetViewFull": "View full bug report",
@@ -10598,7 +10665,9 @@
     "@meshcoreRepeaterCliTitle": {
         "description": "D49-B - title for the repeater CLI screen",
         "placeholders": {
-            "name": {"type": "String"}
+            "name": {
+                "type": "String"
+            }
         }
     },
     "meshcoreRepeaterCliEmptyTitle": "No commands yet",
@@ -10913,21 +10982,27 @@
     "@meshcoreRepeaterCliTimeoutSnackbar": {
         "description": "D49-B - snackbar shown when sendCliCommand times out",
         "placeholders": {
-            "seconds": {"type": "int"}
+            "seconds": {
+                "type": "int"
+            }
         }
     },
     "meshcoreRepeaterCliRateLimitedSnackbar": "Rate limit reached; try again in {seconds}s.",
     "@meshcoreRepeaterCliRateLimitedSnackbar": {
         "description": "D49-B - snackbar shown when the rate limiter rejects a CLI send",
         "placeholders": {
-            "seconds": {"type": "int"}
+            "seconds": {
+                "type": "int"
+            }
         }
     },
     "meshcoreRepeaterCliErrorSnackbar": "Could not send command: {error}.",
     "@meshcoreRepeaterCliErrorSnackbar": {
         "description": "D49-B - snackbar shown when sendCliCommand throws",
         "placeholders": {
-            "error": {"type": "String"}
+            "error": {
+                "type": "String"
+            }
         }
     },
     "meshcoreRepeaterAdminHubSettingsTile": "Settings",
@@ -11006,14 +11081,18 @@
     "@meshcoreRepeaterBinaryRpcResponseLength": {
         "description": "D49-D3 - byte count under the hex output",
         "placeholders": {
-            "count": {"type": "int"}
+            "count": {
+                "type": "int"
+            }
         }
     },
     "meshcoreRepeaterAdminSettingsTitle": "{name} settings",
     "@meshcoreRepeaterAdminSettingsTitle": {
         "description": "D49-C - title for the repeater admin settings screen",
         "placeholders": {
-            "name": {"type": "String"}
+            "name": {
+                "type": "String"
+            }
         }
     },
     "meshcoreRepeaterAdminSettingsRefreshAll": "Refresh all",
@@ -11084,22 +11163,30 @@
     "@meshcoreRepeaterAdminSettingsSavedSnackbar": {
         "description": "D49-C - summary snackbar after save",
         "placeholders": {
-            "saved": {"type": "int"},
-            "total": {"type": "int"}
+            "saved": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
         }
     },
     "meshcoreRepeaterAdminSettingsRefreshedSnackbar": "Refreshed {count} settings from the radio.",
     "@meshcoreRepeaterAdminSettingsRefreshedSnackbar": {
         "description": "D49-C - summary snackbar after refresh-all",
         "placeholders": {
-            "count": {"type": "int"}
+            "count": {
+                "type": "int"
+            }
         }
     },
     "meshcoreRepeaterAdminSettingsSaveFailedSnackbar": "Could not save settings: {error}.",
     "@meshcoreRepeaterAdminSettingsSaveFailedSnackbar": {
         "description": "D49-C - snackbar on save throw",
         "placeholders": {
-            "error": {"type": "String"}
+            "error": {
+                "type": "String"
+            }
         }
     },
     "meshcoreRepeaterAdminSettingsInvalidNumber": "Enter a whole number.",
@@ -11110,24 +11197,36 @@
     "@meshcoreRepeaterAdminSettingsOutOfRange": {
         "description": "D49-C - inline validation error for out-of-range integers",
         "placeholders": {
-            "min": {"type": "int"},
-            "max": {"type": "int"}
+            "min": {
+                "type": "int"
+            },
+            "max": {
+                "type": "int"
+            }
         }
     },
     "meshcoreRepeaterAdminSettingsOutOfRangeDecimal": "Value must be between {min} and {max}.",
     "@meshcoreRepeaterAdminSettingsOutOfRangeDecimal": {
         "description": "D49-D1 - inline validation error for out-of-range decimals (freq / lat / lon)",
         "placeholders": {
-            "min": {"type": "double"},
-            "max": {"type": "double"}
+            "min": {
+                "type": "double"
+            },
+            "max": {
+                "type": "double"
+            }
         }
     },
     "meshcoreRepeaterAdminSettingsSavedWithTimeoutsSnackbar": "Saved {saved} of {total} settings. Some commands timed out - the admin session may have expired.",
     "@meshcoreRepeaterAdminSettingsSavedWithTimeoutsSnackbar": {
         "description": "D49-D1 - summary snackbar when save partially times out; advises re-login",
         "placeholders": {
-            "saved": {"type": "int"},
-            "total": {"type": "int"}
+            "saved": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
         }
     },
     "meshcoreRepeaterAdminSettingsSectionRadio": "Radio",
@@ -12613,7 +12712,9 @@
     "@meshcoreManualPathTitle": {
         "description": "D34c-B-B - title for the manual N-hop path sheet",
         "placeholders": {
-            "name": {"type": "String"}
+            "name": {
+                "type": "String"
+            }
         }
     },
     "meshcoreManualPathHelper": "Type a comma-separated list of pubkey-prefix hex bytes (e.g. \"AB,CD\"), or tap a repeater below to append it.",
@@ -12628,8 +12729,12 @@
     "@meshcoreManualPathPreview": {
         "description": "D34c-B-B - parsed-bytes preview line under the input",
         "placeholders": {
-            "count": {"type": "int"},
-            "bytes": {"type": "String"}
+            "count": {
+                "type": "int"
+            },
+            "bytes": {
+                "type": "String"
+            }
         }
     },
     "meshcoreManualPathPreviewEmpty": "No hops parsed yet.",
@@ -12652,29 +12757,39 @@
     "@meshcoreManualPathInvalidToken": {
         "description": "D34c-B-B - inline error for an unparseable token",
         "placeholders": {
-            "token": {"type": "String"}
+            "token": {
+                "type": "String"
+            }
         }
     },
     "meshcoreManualPathTooLong": "{count} hops is too many; the firmware accepts at most 64.",
     "@meshcoreManualPathTooLong": {
         "description": "D34c-B-B - inline error for >64 hops",
         "placeholders": {
-            "count": {"type": "int"}
+            "count": {
+                "type": "int"
+            }
         }
     },
     "meshcoreManualPathApplySuccess": "{name} routing locked to {hops} manual hops.",
     "@meshcoreManualPathApplySuccess": {
         "description": "D34c-B-B - snackbar on successful apply",
         "placeholders": {
-            "name": {"type": "String"},
-            "hops": {"type": "int"}
+            "name": {
+                "type": "String"
+            },
+            "hops": {
+                "type": "int"
+            }
         }
     },
     "meshcoreManualPathApplyFailed": "Could not apply manual path for {name}.",
     "@meshcoreManualPathApplyFailed": {
         "description": "D34c-B-B - snackbar on apply failure",
         "placeholders": {
-            "name": {"type": "String"}
+            "name": {
+                "type": "String"
+            }
         }
     },
     "meshcorePathOverrideSetCustomPath": "Set custom path...",
@@ -13524,14 +13639,18 @@
     "@meshcorePathHistoryClearOverrideSuccess": {
         "description": "D34c-Bb - snackbar after a successful clear-override",
         "placeholders": {
-            "name": {"type": "String"}
+            "name": {
+                "type": "String"
+            }
         }
     },
     "meshcorePathHistoryClearOverrideFailed": "Could not clear the override for {name}.",
     "@meshcorePathHistoryClearOverrideFailed": {
         "description": "D34c-Bb - snackbar after a failed clear-override",
         "placeholders": {
-            "name": {"type": "String"}
+            "name": {
+                "type": "String"
+            }
         }
     },
     "meshcorePathHistoryTitle": "Path history",
@@ -13762,7 +13881,9 @@
     "@meshcoreDiagnosticsBundleFailed": {
         "description": "D-Q6 - snackbar on bundle-build failure",
         "placeholders": {
-            "error": {"type": "String"}
+            "error": {
+                "type": "String"
+            }
         }
     },
     "meshcoreBleDebugLogTool": "BLE debug log",
@@ -13781,7 +13902,9 @@
     "@meshcoreBleDebugLogEntryCount": {
         "description": "D-Q5 - header entry count badge",
         "placeholders": {
-            "count": {"type": "int"}
+            "count": {
+                "type": "int"
+            }
         }
     },
     "meshcoreBleDebugLogPaused": "Paused",
@@ -13840,7 +13963,9 @@
     "@meshcoreCommunityQrPreviewSubtitle": {
         "description": "D-Q7 - preview sheet subtitle showing the community name",
         "placeholders": {
-            "name": {"type": "String"}
+            "name": {
+                "type": "String"
+            }
         }
     },
     "meshcoreCommunityQrAddRow": "Add",
@@ -13855,7 +13980,9 @@
     "@meshcoreCommunityQrPskFingerprint": {
         "description": "D-Q7 - PSK preview line in each row",
         "placeholders": {
-            "fingerprint": {"type": "String"}
+            "fingerprint": {
+                "type": "String"
+            }
         }
     },
     "meshcoreCommunityQrAddHashtagSection": "Add a hashtag channel",
@@ -13882,7 +14009,9 @@
     "@meshcoreCommunityQrChannelAdded": {
         "description": "D-Q7 - success snackbar after a channel is written",
         "placeholders": {
-            "name": {"type": "String"}
+            "name": {
+                "type": "String"
+            }
         }
     },
     "meshcoreCommunityQrChannelAddFailed": "Could not add channel. Check the radio connection and try again.",
@@ -14185,8 +14314,12 @@
     "@meshcoreMapPinDropSubtitle": {
         "description": "D-Q10 - subtitle showing the dropped lat/lon",
         "placeholders": {
-            "lat": {"type": "String"},
-            "lon": {"type": "String"}
+            "lat": {
+                "type": "String"
+            },
+            "lon": {
+                "type": "String"
+            }
         }
     },
     "meshcoreMapPinDropLabelField": "Label",
@@ -14209,7 +14342,9 @@
     "@meshcoreMapPinDropped": {
         "description": "D-Q10 - success snackbar after a pin is saved",
         "placeholders": {
-            "label": {"type": "String"}
+            "label": {
+                "type": "String"
+            }
         }
     },
     "meshcoreMapPinRemove": "Remove pin",
@@ -14220,7 +14355,9 @@
     "@meshcoreMapPinRemoved": {
         "description": "D-Q10 - success snackbar after a pin is removed",
         "placeholders": {
-            "label": {"type": "String"}
+            "label": {
+                "type": "String"
+            }
         }
     },
     "meshcoreMaxTxPowerLabel": "Max TX Power",
@@ -14717,21 +14854,27 @@
     "@meshcoreContactAddFavoriteSuccess": {
         "description": "D-Q3 - snackbar after a successful add-favorite",
         "placeholders": {
-            "name": {"type": "String"}
+            "name": {
+                "type": "String"
+            }
         }
     },
     "meshcoreContactRemoveFavoriteSuccess": "Removed {name} from favorites.",
     "@meshcoreContactRemoveFavoriteSuccess": {
         "description": "D-Q3 - snackbar after a successful remove-favorite",
         "placeholders": {
-            "name": {"type": "String"}
+            "name": {
+                "type": "String"
+            }
         }
     },
     "meshcoreContactToggleFavoriteFailed": "Could not update favorite status for {name}.",
     "@meshcoreContactToggleFavoriteFailed": {
         "description": "D-Q3 - snackbar after a failed favorite toggle",
         "placeholders": {
-            "name": {"type": "String"}
+            "name": {
+                "type": "String"
+            }
         }
     },
     "meshcoreContactBlock": "Mute notifications",
@@ -14746,14 +14889,18 @@
     "@meshcoreContactBlockSuccess": {
         "description": "D-Q8 - snackbar after a successful block",
         "placeholders": {
-            "name": {"type": "String"}
+            "name": {
+                "type": "String"
+            }
         }
     },
     "meshcoreContactUnblockSuccess": "Notifications restored for {name}.",
     "@meshcoreContactUnblockSuccess": {
         "description": "D-Q8 - snackbar after a successful unblock",
         "placeholders": {
-            "name": {"type": "String"}
+            "name": {
+                "type": "String"
+            }
         }
     },
     "meshcoreContactBlockedBadge": "Muted",
@@ -15134,7 +15281,9 @@
     "@meshcoreWidgetChannelActivityUnnamedChannel": {
         "description": "Placeholder name for an unnamed MeshCore channel in the Channel Activity widget; {slot} is the firmware channel index",
         "placeholders": {
-            "slot": {"type": "int"}
+            "slot": {
+                "type": "int"
+            }
         }
     },
     "meshcoreWidgetChannelActivityNoActivity": "No recent activity",
@@ -15149,21 +15298,27 @@
     "@meshcoreWidgetChannelActivityMinutesAgo": {
         "description": "Relative time label for MeshCore Channel Activity rows; {minutes} is an int count of minutes since the last message",
         "placeholders": {
-            "minutes": {"type": "int"}
+            "minutes": {
+                "type": "int"
+            }
         }
     },
     "meshcoreWidgetChannelActivityHoursAgo": "{hours}h ago",
     "@meshcoreWidgetChannelActivityHoursAgo": {
         "description": "Relative time label for MeshCore Channel Activity rows; {hours} is an int count of hours since the last message",
         "placeholders": {
-            "hours": {"type": "int"}
+            "hours": {
+                "type": "int"
+            }
         }
     },
     "meshcoreWidgetChannelActivityDaysAgo": "{days}d ago",
     "@meshcoreWidgetChannelActivityDaysAgo": {
         "description": "Relative time label for MeshCore Channel Activity rows; {days} is an int count of days since the last message",
         "placeholders": {
-            "days": {"type": "int"}
+            "days": {
+                "type": "int"
+            }
         }
     },
     "meshcoreWidgetMeshHealthName": "Mesh Health",
@@ -16659,7 +16814,9 @@
     "@meshCanvasTransmissionQueued": {
         "description": "MeshCanvas viewer HUD label when one or more paints are queued in flight but the wire is moving normally.",
         "placeholders": {
-            "count": {"type": "int"}
+            "count": {
+                "type": "int"
+            }
         }
     },
     "meshCanvasTransmissionCooling": "Slowing down",
@@ -16674,7 +16831,9 @@
     "@meshCanvasTransmissionTooltipQueued": {
         "description": "Tooltip for the queued state of the MeshCanvas viewer transmission HUD.",
         "placeholders": {
-            "count": {"type": "int"}
+            "count": {
+                "type": "int"
+            }
         }
     },
     "meshCanvasTransmissionTooltipCooling": "The mesh radio is at its airtime limit. Your pixels will go out as soon as there is room. Keep painting; your taps are saved.",
@@ -16721,22 +16880,30 @@
     "@meshCanvasVitalsDimensions": {
         "description": "Canvas pixel dimensions stat in the vitals bar (e.g. 128 x 128). Uses narrow no-break spaces and a multiplication sign for typographic crispness.",
         "placeholders": {
-            "width": {"type": "int"},
-            "height": {"type": "int"}
+            "width": {
+                "type": "int"
+            },
+            "height": {
+                "type": "int"
+            }
         }
     },
     "meshCanvasVitalsPainted": "{count, plural, =0{0 PAINTED} =1{1 PAINTED} other{{count} PAINTED}}",
     "@meshCanvasVitalsPainted": {
         "description": "Uppercase painted-cell count stat in the MeshCanvas viewer vitals bar.",
         "placeholders": {
-            "count": {"type": "int"}
+            "count": {
+                "type": "int"
+            }
         }
     },
     "meshCanvasVitalsLive": "{count, plural, =1{1 LIVE} other{{count} LIVE}}",
     "@meshCanvasVitalsLive": {
         "description": "Uppercase live-peer count stat in the MeshCanvas viewer vitals bar. Only shown for mesh canvases.",
         "placeholders": {
-            "count": {"type": "int"}
+            "count": {
+                "type": "int"
+            }
         }
     },
     "meshCanvasVitalsQuiet": "QUIET",
@@ -16747,8 +16914,12 @@
     "@meshCanvasInspectorTitle": {
         "description": "Title of the tile inspector sheet. Includes the integer canvas-space coordinates.",
         "placeholders": {
-            "x": {"type": "int"},
-            "y": {"type": "int"}
+            "x": {
+                "type": "int"
+            },
+            "y": {
+                "type": "int"
+            }
         }
     },
     "meshCanvasInspectorCurrentColorLabel": "Current colour",
@@ -16771,7 +16942,9 @@
     "@meshCanvasInspectorAuthorNode": {
         "description": "Value shown for the Last painter row when the painter is a remote node. nodeNum is the 8-character hex node id; the leading bang prefix is conventional in Meshtastic.",
         "placeholders": {
-            "nodeNum": {"type": "String"}
+            "nodeNum": {
+                "type": "String"
+            }
         }
     },
     "meshCanvasInspectorLastPaintedLabel": "Last painted",
@@ -16798,7 +16971,9 @@
     "@meshCanvasOverviewChannelLabel": {
         "description": "Scope label on a mesh-canvas card showing which Meshtastic channel index hosts it.",
         "placeholders": {
-            "channelIndex": {"type": "int"}
+            "channelIndex": {
+                "type": "int"
+            }
         }
     },
     "meshCanvasOverviewNeverPainted": "Idle",
@@ -16813,7 +16988,9 @@
     "@meshCanvasOverviewCellCount": {
         "description": "Painted-cell count fragment on a canvas card. Renders inside a middle-dot metadata cluster ('17 painted · 2h ago'). Excludes default-color cells.",
         "placeholders": {
-            "count": {"type": "int"}
+            "count": {
+                "type": "int"
+            }
         }
     },
     "meshCanvasOverviewEmptyTitlePrefix": "No",
@@ -20310,61 +20487,6 @@
     "nodedexHelpSignalRecords": "Signal Records",
     "@nodedexHelpSignalRecords": {
         "description": "Text displayed in node management"
-    },
-    "nodedexIdentityHistoryArchivedAt": "Archived {date}",
-    "@nodedexIdentityHistoryArchivedAt": {
-        "placeholders": {
-            "date": {
-                "type": "String"
-            }
-        },
-        "description": "Subtitle on a past-identity row in the Past Identities sheet. {date} is the formatted date the snapshot was archived."
-    },
-    "nodedexIdentityHistoryEmpty": "No prior identities recorded.",
-    "@nodedexIdentityHistoryEmpty": {
-        "description": "Empty state shown in the Past Identities sheet when no rotations have been archived for this node."
-    },
-    "nodedexIdentityHistoryFingerprintLabel": "Pubkey {fingerprint}",
-    "@nodedexIdentityHistoryFingerprintLabel": {
-        "placeholders": {
-            "fingerprint": {
-                "type": "String"
-            }
-        },
-        "description": "Label for an archived identity's truncated pubkey fingerprint. {fingerprint} is the first 8 hex chars of the public key."
-    },
-    "nodedexIdentityHistoryFingerprintUnknown": "Pubkey unknown",
-    "@nodedexIdentityHistoryFingerprintUnknown": {
-        "description": "Label shown when an archived identity has no recorded pubkey (legacy data)."
-    },
-    "nodedexIdentityHistorySheetTitle": "Past identities",
-    "@nodedexIdentityHistorySheetTitle": {
-        "description": "Title of the bottom sheet that lists archived prior identities for a node."
-    },
-    "nodedexIdentityHistoryStatsLine": "{encounters} encounters · {regions} regions",
-    "@nodedexIdentityHistoryStatsLine": {
-        "placeholders": {
-            "encounters": {
-                "type": "int"
-            },
-            "regions": {
-                "type": "int"
-            }
-        },
-        "description": "Compact stats line for an archived identity row."
-    },
-    "nodedexIdentityRotatedBanner": "Identity rotated on {date}. Previous device history archived.",
-    "@nodedexIdentityRotatedBanner": {
-        "placeholders": {
-            "date": {
-                "type": "String"
-            }
-        },
-        "description": "Banner shown above the discovery stats card when a node's public key has changed (firmware reset or factory wipe). {date} is the formatted local date of the most recent rotation."
-    },
-    "nodedexIdentityRotatedViewHistoryAction": "View history",
-    "@nodedexIdentityRotatedViewHistoryAction": {
-        "description": "Action label on the identity-rotated banner that opens the Past Identities sheet."
     },
     "nodedexImportButtonLabelPlural": "Import {count} entries",
     "@nodedexImportButtonLabelPlural": {
