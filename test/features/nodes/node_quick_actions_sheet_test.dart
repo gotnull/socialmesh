@@ -38,7 +38,7 @@ void main() {
         true,
         reason:
             'Quick-action sheet must reuse the canonical actions API, not '
-            'showModalBottomSheet (banned by CLAUDE.md).',
+            'raw showModalBottomSheet, which CLAUDE.md bans.',
       );
       expect(
         sheetSource.contains('showModalBottomSheet'),

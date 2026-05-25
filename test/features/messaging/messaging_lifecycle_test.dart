@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:socialmesh/core/widgets/app_bottom_sheet.dart';
+
 /// Messaging Lifecycle Safety Tests
 ///
 /// These tests verify that messaging UI components handle lifecycle correctly:
@@ -255,33 +257,31 @@ class _BottomSheetContextTestScreen extends StatelessWidget {
             // Capture navigator before showing sheet
             final navigator = Navigator.of(context);
 
-            showModalBottomSheet(
+            AppBottomSheet.show<void>(
               context: context,
-              builder: (sheetContext) {
-                return Container(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('Sheet Content'),
-                      ElevatedButton(
-                        onPressed: () {
-                          // Use captured navigator, not sheetContext
-                          navigator.pop();
-                          navigator.push(
-                            MaterialPageRoute(
-                              builder: (_) => const Scaffold(
-                                body: Center(child: Text('New Screen')),
-                              ),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Sheet Content'),
+                    ElevatedButton(
+                      onPressed: () {
+                        // Use captured navigator, not sheetContext
+                        navigator.pop();
+                        navigator.push(
+                          MaterialPageRoute(
+                            builder: (_) => const Scaffold(
+                              body: Center(child: Text('New Screen')),
                             ),
-                          );
-                        },
-                        child: const Text('Pop and Navigate'),
-                      ),
-                    ],
-                  ),
-                );
-              },
+                          ),
+                        );
+                      },
+                      child: const Text('Pop and Navigate'),
+                    ),
+                  ],
+                ),
+              ),
             );
           },
           child: const Text('Show Sheet'),

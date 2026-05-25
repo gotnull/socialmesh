@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:socialmesh/core/safety/lifecycle_mixin.dart';
 import 'package:socialmesh/core/safety/safe_image.dart';
+import 'package:socialmesh/core/widgets/app_bottom_sheet.dart';
 
 void main() {
   group('LifecycleSafeMixin Tests', () {
@@ -381,9 +382,9 @@ void main() {
                 builder: (context) => Scaffold(
                   body: ElevatedButton(
                     onPressed: () {
-                      showModalBottomSheet(
+                      AppBottomSheet.show<void>(
                         context: context,
-                        builder: (context) => _TestBottomSheet(
+                        child: _TestBottomSheet(
                           onError: () => errorOccurred = true,
                         ),
                       );
