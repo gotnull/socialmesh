@@ -439,6 +439,13 @@ class AppBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      // Pin width: ScaleTransition (from _BounceInWrapper) passes loose
+      // constraints. Without width: infinity the Container collapses to
+      // the children's intrinsic min-width, rendering the sheet as a
+      // narrow card centered in the screen instead of edge-to-edge.
+      // Same rationale as `showScrollable`'s `Container(width: double
+      // .infinity, ...)` pin.
+      width: double.infinity,
       decoration: BoxDecoration(
         // Match `showScrollable` shell color: consistent `context
         // .background` across the entire sheet so the drag-pill area,
