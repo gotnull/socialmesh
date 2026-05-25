@@ -26246,6 +26246,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use lowercase letters, digits, and hyphens. 3 to 64 characters. Cannot start or end with a hyphen.';
 
   @override
+  String get orgCheckoutOrgIdReserved =>
+      'That id is reserved. Try a team-specific name like \'acme-eng-team\'.';
+
+  @override
   String get orgCheckoutError =>
       'Could not start the group license checkout. Try again or contact support.';
 

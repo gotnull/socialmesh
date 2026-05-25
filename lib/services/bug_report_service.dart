@@ -149,11 +149,23 @@ class BugReportService with WidgetsBindingObserver {
       return;
     }
 
+    final settings = await ref.read(settingsServiceProvider.future);
+    final initialDraft = settings.bugReportDraft;
+
+    if (!rootContext.mounted) {
+      _isShowing = false;
+      return;
+    }
+
     await AppBottomSheet.showRaw<void>(
       context: rootContext,
       builder: (sheetContext) {
         return ReportBugSheet(
           initialScreenshot: screenshotBytes,
+          initialDescription: initialDraft,
+          onDescriptionChanged: (value) {
+            settings.setBugReportDraft(value);
+          },
           onSubmit: _submitReport,
           onToggleShake: setEnabled,
           isShakeEnabled: _enabled,

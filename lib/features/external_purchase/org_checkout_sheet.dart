@@ -21,6 +21,7 @@
 //     stray call site never lands a half-built sheet on screen.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
 
@@ -58,6 +59,54 @@ final RegExp _licenseOrgIdPattern = RegExp(r'^[a-z0-9]([a-z0-9-]*[a-z0-9])?$');
 
 const int _licenseOrgIdMinLength = 3;
 const int _licenseOrgIdMaxLength = 64;
+
+/// Mirror of the slice-7 backend's `RESERVED_LICENSE_ORG_IDS` /
+/// `RESERVED_LICENSE_ORG_PREFIXES`. Checking client-side surfaces a
+/// specific "that id is reserved" message instead of the generic
+/// catch-all when the user picks a system / enterprise namespace.
+/// Server remains the source of truth - drift here only means the
+/// user sees the generic error after a network round-trip.
+const Set<String> _reservedLicenseOrgIds = {
+  'admin',
+  'enterprise',
+  'root',
+  'socialmesh',
+  'staff',
+  'support',
+  'system',
+};
+const List<String> _reservedLicenseOrgPrefixes = [
+  'admin-',
+  'enterprise-',
+  'socialmesh-',
+  'system-',
+];
+
+bool _isReservedLicenseOrgId(String slug) {
+  if (_reservedLicenseOrgIds.contains(slug)) return true;
+  for (final prefix in _reservedLicenseOrgPrefixes) {
+    if (slug.startsWith(prefix)) return true;
+  }
+  return false;
+}
+
+/// Input formatter that lowercases input as the user types so the
+/// visible field state matches what gets sent. Without this, users
+/// typing "Acme" see "Acme" but the server gets "acme" - confusing
+/// when the helper text says "lowercase letters only".
+class _LowercaseTextFormatter extends TextInputFormatter {
+  const _LowercaseTextFormatter();
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final lower = newValue.text.toLowerCase();
+    if (lower == newValue.text) return newValue;
+    return newValue.copyWith(text: lower);
+  }
+}
 
 /// Open the org checkout sheet. Returns the outcome (canceled when
 /// the user dismisses without submitting; success when the Payment
@@ -103,28 +152,86 @@ class _OrgCheckoutBodyState extends ConsumerState<_OrgCheckoutBody>
   String? _errorMessage;
 
   @override
+  void initState() {
+    super.initState();
+    // Drive button enabled / disabled state from the text field.
+    // Keeps the Continue-to-payment CTA off until the input passes
+    // slug + reserved-namespace validation, mirroring the slice 7
+    // backend rules so users never tap into a guaranteed-reject
+    // round-trip.
+    _controller.addListener(_onTextChanged);
+  }
+
+  @override
   void dispose() {
+    _controller.removeListener(_onTextChanged);
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
   }
 
-  // Mirrors the slice 7 server-side slug rule but only validates -
-  // the server is still the source of truth. Returns null when the
-  // input is unusable; otherwise a normalised slug we can send.
+  void _onTextChanged() {
+    // Repaint so the disabled-state recomputes against the new text.
+    // Also clear any stale error from a previous failed submit -
+    // the user is now editing, the old error no longer matches the
+    // current text.
+    if (_errorMessage != null) {
+      safeSetState(() {
+        _errorMessage = null;
+      });
+    } else if (mounted) {
+      safeSetState(() {});
+    }
+  }
+
+  // Mirrors the slice 7 server-side slug rule + reserved-namespace
+  // check. Returns null when the input is unusable; otherwise a
+  // normalised slug we can send. The server remains the source of
+  // truth - drift here only costs a network round-trip with a
+  // generic error.
   String? _validateLicenseOrgId(String raw) {
     final trimmed = raw.trim().toLowerCase();
     if (trimmed.length < _licenseOrgIdMinLength) return null;
     if (trimmed.length > _licenseOrgIdMaxLength) return null;
     if (!_licenseOrgIdPattern.hasMatch(trimmed)) return null;
+    if (_isReservedLicenseOrgId(trimmed)) return null;
     return trimmed;
+  }
+
+  // Returns true when the current input is usable for submission.
+  // Mirrors _validateLicenseOrgId but does not allocate the
+  // normalised slug - cheap to call from build() every paint.
+  bool get _isInputValid => _validateLicenseOrgId(_controller.text) != null;
+
+  // Returns the specific i18n error message for the current input
+  // state, or null when the input is either valid OR too short to
+  // surface an error yet (user is still mid-typing). Length-only
+  // failures stay silent so the field doesn't flash an error after
+  // the first keystroke. Pattern violations + reserved-namespace
+  // matches show their specific messages so the user knows what to
+  // change.
+  String? _inputErrorMessage(BuildContext context) {
+    final trimmed = _controller.text.trim().toLowerCase();
+    if (trimmed.isEmpty) return null;
+    if (trimmed.length < _licenseOrgIdMinLength) return null;
+    if (trimmed.length > _licenseOrgIdMaxLength) {
+      return context.l10n.orgCheckoutOrgIdInvalid;
+    }
+    if (!_licenseOrgIdPattern.hasMatch(trimmed)) {
+      return context.l10n.orgCheckoutOrgIdInvalid;
+    }
+    if (_isReservedLicenseOrgId(trimmed)) {
+      return context.l10n.orgCheckoutOrgIdReserved;
+    }
+    return null;
   }
 
   Future<void> _submit() async {
     final slug = _validateLicenseOrgId(_controller.text);
     if (slug == null) {
       safeSetState(() {
-        _errorMessage = context.l10n.orgCheckoutOrgIdInvalid;
+        _errorMessage =
+            _inputErrorMessage(context) ?? context.l10n.orgCheckoutOrgIdInvalid;
       });
       ref.haptics.error();
       return;
@@ -238,6 +345,7 @@ class _OrgCheckoutBodyState extends ConsumerState<_OrgCheckoutBody>
           enabled: !_submitting,
           maxLength: _licenseOrgIdMaxLength,
           textCapitalization: TextCapitalization.none,
+          inputFormatters: const [_LowercaseTextFormatter()],
           decoration: InputDecoration(
             labelText: context.l10n.orgCheckoutOrgIdLabel,
             hintText: context.l10n.orgCheckoutOrgIdHint,
@@ -256,7 +364,11 @@ class _OrgCheckoutBodyState extends ConsumerState<_OrgCheckoutBody>
               borderRadius: BorderRadius.circular(AppTheme.radius8),
               borderSide: BorderSide(color: context.accentColor),
             ),
-            errorText: _errorMessage,
+            // Server errors (set on submit failure) take precedence over
+            // inline input errors. Once the user starts editing,
+            // _onTextChanged clears _errorMessage so the inline
+            // _inputErrorMessage path takes back over.
+            errorText: _errorMessage ?? _inputErrorMessage(context),
             errorMaxLines: 3,
             counterText: '',
           ),
@@ -266,13 +378,18 @@ class _OrgCheckoutBodyState extends ConsumerState<_OrgCheckoutBody>
             color: context.textPrimary,
             fontFamily: AppTheme.fontFamily,
           ),
-          onSubmitted: (_) => _submitting ? null : _submit(),
+          onSubmitted: (_) =>
+              (_submitting || !_isInputValid) ? null : _submit(),
         ),
         const SizedBox(height: AppTheme.spacing20),
         SizedBox(
           width: double.infinity,
           child: FilledButton(
-            onPressed: _submitting ? null : _submit,
+            // Disabled until the user has typed a slug that passes
+            // every client-side check (length / pattern / non-reserved).
+            // Server still re-validates; this gate just prevents
+            // round-trips guaranteed to fail.
+            onPressed: (_submitting || !_isInputValid) ? null : _submit,
             style: FilledButton.styleFrom(
               backgroundColor: context.accentColor,
               foregroundColor: Colors.white,

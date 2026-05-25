@@ -20,6 +20,8 @@ class ReportBugSheet extends StatefulWidget {
     required this.onSubmit,
     required this.onToggleShake,
     required this.isShakeEnabled,
+    this.initialDescription,
+    this.onDescriptionChanged,
   });
 
   final Uint8List? initialScreenshot;
@@ -31,6 +33,15 @@ class ReportBugSheet extends StatefulWidget {
   onSubmit;
   final Future<void> Function(bool enabled) onToggleShake;
   final bool isShakeEnabled;
+
+  /// Pre-fills the description field. Used to restore a draft the user
+  /// started writing before the sheet was dismissed or the app was
+  /// backgrounded. Null on first open.
+  final String? initialDescription;
+
+  /// Fired on every text change so the host can persist the draft.
+  /// The sheet itself does not own the storage layer.
+  final ValueChanged<String>? onDescriptionChanged;
 
   @override
   State<ReportBugSheet> createState() => _ReportBugSheetState();
@@ -136,7 +147,7 @@ class _ReportBugPromptSheetState extends State<ReportBugPromptSheet> {
 }
 
 class _ReportBugSheetState extends State<ReportBugSheet> {
-  final _controller = TextEditingController();
+  late final TextEditingController _controller;
   final _descriptionFocusNode = FocusNode();
   bool _includeScreenshot = true;
   bool _isSending = false;
@@ -146,6 +157,7 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
   @override
   void initState() {
     super.initState();
+    _controller = TextEditingController(text: widget.initialDescription ?? '');
     _includeScreenshot = widget.initialScreenshot != null;
     _shakeEnabled = widget.isShakeEnabled;
   }
@@ -176,6 +188,10 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
         includeScreenshot: _includeScreenshot,
         screenshotBytes: widget.initialScreenshot,
       );
+
+      // Draft is only cleared on success — a thrown error keeps it so the
+      // user can retry without retyping.
+      widget.onDescriptionChanged?.call('');
 
       if (!mounted) return;
       // Close the sheet first
@@ -309,7 +325,8 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
                           ),
                           style: TextStyle(color: context.textPrimary),
                           onTapOutside: (_) => FocusScope.of(context).unfocus(),
-                          onChanged: (_) {
+                          onChanged: (value) {
+                            widget.onDescriptionChanged?.call(value);
                             if (_showDescriptionError) {
                               setState(() => _showDescriptionError = false);
                             }

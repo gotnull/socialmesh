@@ -26656,6 +26656,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Usa letras minúsculas, dígitos y guiones. De 3 a 64 caracteres. No puede empezar ni terminar con un guion.';
 
   @override
+  String get orgCheckoutOrgIdReserved =>
+      'Ese id está reservado. Prueba con un nombre específico de tu equipo como \'acme-eng-team\'.';
+
+  @override
   String get orgCheckoutError =>
       'No se pudo iniciar el proceso de compra de la licencia de grupo. Inténtalo de nuevo o contacta con soporte.';
 

@@ -45970,6 +45970,12 @@ abstract class AppLocalizations {
   /// **'Use lowercase letters, digits, and hyphens. 3 to 64 characters. Cannot start or end with a hyphen.'**
   String get orgCheckoutOrgIdInvalid;
 
+  /// Validation error when the entered license org id is in the reserved namespace (admin, enterprise, root, socialmesh, staff, support, system, or any of those with a hyphen suffix).
+  ///
+  /// In en, this message translates to:
+  /// **'That id is reserved. Try a team-specific name like \'acme-eng-team\'.'**
+  String get orgCheckoutOrgIdReserved;
+
   /// Error shown when the createCheckout callable rejects the org-pack request.
   ///
   /// In en, this message translates to:

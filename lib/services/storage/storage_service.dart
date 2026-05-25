@@ -310,6 +310,36 @@ class SettingsService {
   bool get shakeToReportEnabled =>
       _preferences.getBool('shake_to_report_enabled') ?? true;
 
+  // Bug report draft. Persisted so the in-progress description survives
+  // accidental sheet dismissal (drag-down, scroll-to-min, app backgrounding).
+  // Cleared after a successful submission.
+  String? get bugReportDraft => _preferences.getString('bug_report_draft');
+
+  Future<void> setBugReportDraft(String? value) async {
+    if (value == null || value.isEmpty) {
+      await _preferences.remove('bug_report_draft');
+    } else {
+      await _preferences.setString('bug_report_draft', value);
+    }
+  }
+
+  // Bug report reply draft, keyed per report id. Persisted so an in-progress
+  // reply in My Bug Reports survives list refreshes, scroll/recycling,
+  // navigation away, and app backgrounding. Cleared after a successful reply.
+  String _replyDraftKey(String reportId) => 'bug_report_reply_draft_$reportId';
+
+  String? bugReportReplyDraft(String reportId) =>
+      _preferences.getString(_replyDraftKey(reportId));
+
+  Future<void> setBugReportReplyDraft(String reportId, String? value) async {
+    final key = _replyDraftKey(reportId);
+    if (value == null || value.isEmpty) {
+      await _preferences.remove(key);
+    } else {
+      await _preferences.setString(key, value);
+    }
+  }
+
   // Notification: New Nodes
   Future<void> setNewNodeNotificationsEnabled(bool enabled) async {
     await _preferences.setBool('new_node_notifications_enabled', enabled);

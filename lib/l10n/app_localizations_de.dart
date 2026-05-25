@@ -26610,6 +26610,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Verwenden Sie Kleinbuchstaben, Ziffern und Bindestriche. 3 bis 64 Zeichen. Darf nicht mit einem Bindestrich beginnen oder enden.';
 
   @override
+  String get orgCheckoutOrgIdReserved =>
+      'Diese ID ist reserviert. Versuchen Sie einen teamspezifischen Namen wie \'acme-eng-team\'.';
+
+  @override
   String get orgCheckoutError =>
       'Der Gruppenlizenz-Checkout konnte nicht gestartet werden. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support.';
 

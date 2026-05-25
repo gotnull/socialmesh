@@ -41279,6 +41279,7 @@
     "orgCheckoutOrgIdHint": "acme-eng-team",
     "orgCheckoutOrgIdInvalid": "Usa lettere minuscole, cifre e trattini. Da 3 a 64 caratteri. Non può iniziare né terminare con un trattino.",
     "orgCheckoutOrgIdLabel": "ID organizzazione di licenza",
+    "orgCheckoutOrgIdReserved": "Questo ID è riservato. Prova un nome specifico del tuo team come 'acme-eng-team'.",
     "orgCheckoutSheetBody": "L'acquisto di un pacchetto di licenze configura un'organizzazione di licenze per il tuo team. I posti NON vengono assegnati automaticamente e non verrai aggiunto come membro. Distribuisci i codici posto per invitare i membri.",
     "orgCheckoutSheetTitle": "Acquista una licenza di gruppo",
     "orgCheckoutSubmit": "Continua al pagamento",

@@ -15,6 +15,7 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/screenshot_thumbnail.dart';
 import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/status_filter_chip.dart';
+import '../../providers/app_providers.dart';
 import '../../utils/snackbar.dart';
 import 'bug_report_repository.dart';
 
@@ -387,6 +388,14 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
     super.initState();
     _isExpanded = widget.initiallyExpanded;
     _replyFocusNode.addListener(_onReplyFocusChanged);
+    final draft = ref
+        .read(settingsServiceProvider)
+        .asData
+        ?.value
+        .bugReportReplyDraft(widget.report.id);
+    if (draft != null && draft.isNotEmpty) {
+      _replyController.text = draft;
+    }
     if (_isExpanded && widget.report.hasUnreadResponses) {
       _markAsRead();
     }
@@ -457,6 +466,14 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
 
     try {
       await repository.replyToReport(reportId: widget.report.id, message: text);
+
+      // Draft is only cleared on success — a thrown error keeps it so the
+      // user can retry without retyping.
+      ref
+          .read(settingsServiceProvider)
+          .asData
+          ?.value
+          .setBugReportReplyDraft(widget.report.id, null);
 
       if (!mounted) return;
       _replyController.clear();
@@ -838,6 +855,13 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
                         color: context.textPrimary,
                       ),
                       onTapOutside: (_) => FocusScope.of(context).unfocus(),
+                      onChanged: (value) {
+                        ref
+                            .read(settingsServiceProvider)
+                            .asData
+                            ?.value
+                            .setBugReportReplyDraft(widget.report.id, value);
+                      },
                     ),
                     const SizedBox(height: AppTheme.spacing8),
                     Row(

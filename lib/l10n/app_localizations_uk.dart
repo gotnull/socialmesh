@@ -26555,6 +26555,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Використовуйте малі літери, цифри та дефіси. Від 3 до 64 символів. Не може починатися або закінчуватися дефісом.';
 
   @override
+  String get orgCheckoutOrgIdReserved =>
+      'Цей ID зарезервований. Спробуйте назву, специфічну для вашої команди, наприклад \'acme-eng-team\'.';
+
+  @override
   String get orgCheckoutError =>
       'Не вдалося розпочати оформлення групової ліцензії. Повторіть спробу або зверніться до підтримки.';
 

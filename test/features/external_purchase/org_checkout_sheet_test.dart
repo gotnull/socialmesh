@@ -191,7 +191,7 @@ void main() {
   });
 
   testWidgets(
-    'submit with empty input shows validation error and does NOT call backend',
+    'submit button is disabled when input is empty (no backend call)',
     (tester) async {
       final invoker = _RecordingInvoker();
       final service = await _buildService(invoker);
@@ -207,20 +207,21 @@ void main() {
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
 
+      // Tap the disabled button - Flutter tester fires the hit but
+      // the onPressed callback is null, so no work happens.
       await tester.tap(find.text('Continue to payment'));
       await tester.pumpAndSettle();
 
-      expect(
-        find.textContaining('lowercase letters, digits, and hyphens'),
-        findsWidgets,
-      );
+      // The FilledButton's onPressed must be null when input is empty.
+      final btn = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(btn.onPressed, isNull);
       expect(invoker.calls, isEmpty);
     },
   );
 
   testWidgets(
-    'submit with malformed input shows validation error and does NOT call '
-    'backend',
+    'submit button stays disabled when input is malformed (underscores) '
+    'and shows inline error',
     (tester) async {
       final invoker = _RecordingInvoker();
       final service = await _buildService(invoker);
@@ -238,14 +239,132 @@ void main() {
 
       // Underscores aren't in the slug alphabet.
       await tester.enterText(find.byType(TextField), 'acme_eng_team');
-      await tester.tap(find.text('Continue to payment'));
       await tester.pumpAndSettle();
 
+      // Inline error message appears (errorText shown under the field).
       expect(
         find.textContaining('lowercase letters, digits, and hyphens'),
         findsWidgets,
       );
+      // Button is disabled.
+      final btn = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(btn.onPressed, isNull);
       expect(invoker.calls, isEmpty);
+    },
+  );
+
+  testWidgets(
+    'reserved namespace (socialmesh) shows specific error inline + button '
+    'stays disabled',
+    (tester) async {
+      // Slice 10a: client-side mirror of slice-7 backend reserved set.
+      // 'socialmesh' is the canonical example - was the original bug
+      // report on the org-checkout sheet that prompted this fix.
+      final invoker = _RecordingInvoker();
+      final service = await _buildService(invoker);
+
+      await tester.pumpWidget(
+        _hostApp(
+          service: service,
+          onReady: (ctx) {
+            showOrgCheckoutSheet(ctx, productId: 'community_pack_20seat');
+          },
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'socialmesh');
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('reserved'), findsWidgets);
+      final btn = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(btn.onPressed, isNull);
+      expect(invoker.calls, isEmpty);
+    },
+  );
+
+  testWidgets(
+    'reserved prefix (enterprise-pilot) shows specific error inline',
+    (tester) async {
+      final invoker = _RecordingInvoker();
+      final service = await _buildService(invoker);
+
+      await tester.pumpWidget(
+        _hostApp(
+          service: service,
+          onReady: (ctx) {
+            showOrgCheckoutSheet(ctx, productId: 'community_pack_20seat');
+          },
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'enterprise-pilot');
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('reserved'), findsWidgets);
+      final btn = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(btn.onPressed, isNull);
+      expect(invoker.calls, isEmpty);
+    },
+  );
+
+  testWidgets(
+    'lowercase formatter normalizes uppercase input as the user types',
+    (tester) async {
+      // Slice 10a: TextInputFormatter lowercases every keystroke so
+      // the visible field state always matches what gets sent to the
+      // backend. Previous behavior was lowercasing only at submit -
+      // confused users typing uppercase letters that appeared in the
+      // field unchanged.
+      final invoker = _RecordingInvoker();
+      final service = await _buildService(invoker);
+
+      await tester.pumpWidget(
+        _hostApp(
+          service: service,
+          onReady: (ctx) {
+            showOrgCheckoutSheet(ctx, productId: 'community_pack_20seat');
+          },
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      // Tap-enter uppercase; formatter should immediately lowercase.
+      await tester.enterText(find.byType(TextField), 'ACME-Eng-Team');
+      await tester.pumpAndSettle();
+
+      // The field's controller text should be lowercase.
+      final field = tester.widget<TextField>(find.byType(TextField));
+      expect(field.controller!.text, 'acme-eng-team');
+    },
+  );
+
+  testWidgets(
+    'submit button is enabled when input is a valid non-reserved slug',
+    (tester) async {
+      final invoker = _RecordingInvoker();
+      final service = await _buildService(invoker);
+
+      await tester.pumpWidget(
+        _hostApp(
+          service: service,
+          onReady: (ctx) {
+            showOrgCheckoutSheet(ctx, productId: 'community_pack_20seat');
+          },
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'acme-eng-team');
+      await tester.pumpAndSettle();
+
+      final btn = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(btn.onPressed, isNotNull);
     },
   );
 

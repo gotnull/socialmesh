@@ -26540,6 +26540,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Используйте строчные буквы, цифры и дефисы. От 3 до 64 символов. Не может начинаться или заканчиваться дефисом.';
 
   @override
+  String get orgCheckoutOrgIdReserved =>
+      'Этот ID зарезервирован. Попробуйте имя, относящееся к вашей команде, например \'acme-eng-team\'.';
+
+  @override
   String get orgCheckoutError =>
       'Не удалось запустить оформление групповой лицензии. Повторите попытку или обратитесь в поддержку.';
 

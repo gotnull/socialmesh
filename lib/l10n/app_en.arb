@@ -35673,6 +35673,10 @@
     "@orgCheckoutOrgIdInvalid": {
         "description": "Validation error when the entered license org id does not match the required slug format."
     },
+    "orgCheckoutOrgIdReserved": "That id is reserved. Try a team-specific name like 'acme-eng-team'.",
+    "@orgCheckoutOrgIdReserved": {
+        "description": "Validation error when the entered license org id is in the reserved namespace (admin, enterprise, root, socialmesh, staff, support, system, or any of those with a hyphen suffix)."
+    },
     "orgCheckoutError": "Could not start the group license checkout. Try again or contact support.",
     "@orgCheckoutError": {
         "description": "Error shown when the createCheckout callable rejects the org-pack request."

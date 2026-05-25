@@ -7775,6 +7775,7 @@
     "orgCheckoutOrgIdHint": "acme-eng-team",
     "orgCheckoutOrgIdInvalid": "Verwenden Sie Kleinbuchstaben, Ziffern und Bindestriche. 3 bis 64 Zeichen. Darf nicht mit einem Bindestrich beginnen oder enden.",
     "orgCheckoutOrgIdLabel": "Lizenz-Organisations-ID",
+    "orgCheckoutOrgIdReserved": "Diese ID ist reserviert. Versuchen Sie einen teamspezifischen Namen wie 'acme-eng-team'.",
     "orgCheckoutSheetBody": "Der Kauf eines Lizenzpakets richtet eine Lizenz-Organisation für Ihr Team ein. Plätze werden NICHT automatisch zugewiesen und Sie werden nicht als Mitglied hinzugefügt. Verteilen Sie Platz-Codes, um Mitglieder einzuladen.",
     "orgCheckoutSheetTitle": "Gruppenlizenz kaufen",
     "orgCheckoutSubmit": "Weiter zur Zahlung",

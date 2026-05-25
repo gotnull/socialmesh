@@ -26531,6 +26531,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Use letras minúsculas, dígitos e hifens. De 3 a 64 caracteres. Não pode começar nem terminar com um hífen.';
 
   @override
+  String get orgCheckoutOrgIdReserved =>
+      'Esse ID está reservado. Tente um nome específico da sua equipe como \'acme-eng-team\'.';
+
+  @override
   String get orgCheckoutError =>
       'Não foi possível iniciar o pagamento da licença de grupo. Tente novamente ou entre em contato com o suporte.';
 

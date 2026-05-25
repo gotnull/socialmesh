@@ -26547,6 +26547,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Usa lettere minuscole, cifre e trattini. Da 3 a 64 caratteri. Non può iniziare né terminare con un trattino.';
 
   @override
+  String get orgCheckoutOrgIdReserved =>
+      'Questo ID è riservato. Prova un nome specifico del tuo team come \'acme-eng-team\'.';
+
+  @override
   String get orgCheckoutError =>
       'Impossibile avviare il pagamento della licenza di gruppo. Riprova o contatta l\'assistenza.';
 

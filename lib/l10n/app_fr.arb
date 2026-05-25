@@ -7775,6 +7775,7 @@
     "orgCheckoutOrgIdHint": "acme-eng-team",
     "orgCheckoutOrgIdInvalid": "Utilisez des lettres minuscules, des chiffres et des tirets. 3 à 64 caractères. Ne peut pas commencer ni se terminer par un tiret.",
     "orgCheckoutOrgIdLabel": "Identifiant de l'organisation de licence",
+    "orgCheckoutOrgIdReserved": "Cet identifiant est réservé. Essayez un nom propre à votre équipe comme 'acme-eng-team'.",
     "orgCheckoutSheetBody": "L'achat d'un pack de licences configure une organisation de licences pour votre équipe. Les places ne sont PAS attribuées automatiquement et vous ne serez pas ajouté comme membre. Distribuez les codes de place pour inviter des membres.",
     "orgCheckoutSheetTitle": "Acheter une licence de groupe",
     "orgCheckoutSubmit": "Continuer vers le paiement",
