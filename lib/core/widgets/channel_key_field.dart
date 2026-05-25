@@ -218,7 +218,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                           : effectiveError != null
                           ? AppTheme.errorRed.withAlpha(38)
                           : context.background,
-                      borderRadius: BorderRadius.circular(AppTheme.radius10),
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                     child: Icon(
                       Icons.key,
@@ -288,17 +288,22 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
               ),
             ),
 
-            // Key input/display area
+            // Key input/display area.
+            // No neutral border: the darker background already
+            // separates this from the outer card, and an extra rounded
+            // ring sitting under the rounded icon container above
+            // produces a visible "double rounded" stack on the left
+            // edge. In the error state we draw a single solid 1.5px
+            // red border so the failure signal is unambiguous without
+            // competing with the icon container's curve.
             Container(
               margin: const EdgeInsets.fromLTRB(AppTheme.spacing16, 0, 16, 8),
               decoration: BoxDecoration(
                 color: context.background,
-                borderRadius: BorderRadius.circular(AppTheme.radius10),
-                border: Border.all(
-                  color: effectiveError != null
-                      ? AppTheme.errorRed.withAlpha(128)
-                      : context.border.withAlpha(128),
-                ),
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
+                border: effectiveError != null
+                    ? Border.all(color: AppTheme.errorRed, width: 1.5)
+                    : null,
               ),
               child: _isEditingKey && widget.editable
                   ? TextField(
@@ -318,7 +323,23 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                         fontWeight: FontWeight.w500,
                       ),
                       decoration: InputDecoration(
+                        // `border: InputBorder.none` alone is not enough:
+                        // the project's InputDecorationTheme defines
+                        // separate enabled/focused/error borders that
+                        // would otherwise render a rounded outline
+                        // inside our outer Container, producing the
+                        // mismatched-radius double-ring artefact when
+                        // the field is focused or in an error state.
+                        // Same reason for `filled: false`: the theme
+                        // turns `filled: true` on globally, which would
+                        // paint an inset rounded fill behind the text.
                         border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        errorBorder: InputBorder.none,
+                        focusedErrorBorder: InputBorder.none,
+                        disabledBorder: InputBorder.none,
+                        filled: false,
                         contentPadding: const EdgeInsets.all(
                           AppTheme.spacing16,
                         ),
