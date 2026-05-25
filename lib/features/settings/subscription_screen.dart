@@ -24,6 +24,7 @@ import '../automations/automations_screen.dart';
 import '../dashboard/widget_dashboard_screen.dart';
 import '../external_purchase/alternative_payment_link.dart';
 import '../external_purchase/payment_method_chooser_sheet.dart';
+import '../external_purchase/org_checkout_sheet.dart';
 import '../external_purchase/redeem_unlock_code_sheet.dart';
 import 'ifttt_config_screen.dart';
 import 'ringtone_screen.dart';
@@ -168,8 +169,31 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
               // Restore Purchases button (bottom)
               const RestorePurchasesButton(),
 
+              // Slice 10: self-serve org-pack checkout entry. Low-
+              // emphasis text link mirrors the redeem-code tile shape
+              // - primary store CTAs above remain the canonical path.
+              // Gated by GROUP_LICENSING_ENABLED + the sheet itself
+              // re-checks the flag (slice 9), so a stray render on a
+              // disabled build is a quiet no-op.
+              if (AppFeatureFlags.isGroupLicensingEnabled)
+                Center(
+                  child: TextButton(
+                    onPressed: () => showOrgCheckoutSheet(
+                      context,
+                      productId: RevenueCatConfig.themePackProductId,
+                    ),
+                    child: Text(
+                      context.l10n.orgCheckoutEntryAction,
+                      style: TextStyle(
+                        color: context.textTertiary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ),
+
               // Support fallback: redeem unlock code. Low-emphasis text
-              // link — primary CTAs above remain the canonical path.
+              // link - primary CTAs above remain the canonical path.
               // Stays visible whenever any external provider (Stripe
               // or BMC) is on, since codes route through the shared
               // entitlement merge regardless of which provider issued

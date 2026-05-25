@@ -329,4 +329,79 @@ TRANSLATION_ENABLED=false
       expect(find.text(_l10n.subscriptionOrBuyIndividually), findsNothing);
     });
   });
+
+  // Slice 10: subscription-screen entry-point for self-serve org-pack
+  // checkout. The tile gates on AppFeatureFlags.isGroupLicensingEnabled
+  // (read from dotenv at runtime) so toggling the env between tests
+  // flips visibility without re-pumping the whole provider tree.
+  group('SubscriptionScreen - slice 10 org checkout tile', () {
+    String? prevFlag;
+
+    setUp(() {
+      prevFlag = dotenv.env['GROUP_LICENSING_ENABLED'];
+    });
+
+    tearDown(() {
+      if (prevFlag == null) {
+        dotenv.env.remove('GROUP_LICENSING_ENABLED');
+      } else {
+        dotenv.env['GROUP_LICENSING_ENABLED'] = prevFlag!;
+      }
+    });
+
+    testWidgets('tile renders when GROUP_LICENSING_ENABLED=true', (
+      tester,
+    ) async {
+      dotenv.env['GROUP_LICENSING_ENABLED'] = 'true';
+
+      await tester.pumpWidget(_buildTestWidget());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // Scroll to the bottom-of-screen action row where the tile lives,
+      // alongside the existing "Have an unlock code?" tile.
+      await tester.scrollUntilVisible(
+        find.text(_l10n.orgCheckoutEntryAction),
+        300,
+      );
+      expect(find.text(_l10n.orgCheckoutEntryAction), findsOneWidget);
+    });
+
+    testWidgets('tile is suppressed when GROUP_LICENSING_ENABLED=false', (
+      tester,
+    ) async {
+      dotenv.env['GROUP_LICENSING_ENABLED'] = 'false';
+
+      await tester.pumpWidget(_buildTestWidget());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // The tile must not appear anywhere on the screen when the flag
+      // is off. Scroll the whole screen to be sure.
+      await tester.drag(
+        find.byType(SubscriptionScreen),
+        const Offset(0, -3000),
+      );
+      await tester.pump();
+
+      expect(find.text(_l10n.orgCheckoutEntryAction), findsNothing);
+    });
+
+    testWidgets('tile is suppressed when GROUP_LICENSING_ENABLED env is absent '
+        '(fail-closed default)', (tester) async {
+      dotenv.env.remove('GROUP_LICENSING_ENABLED');
+
+      await tester.pumpWidget(_buildTestWidget());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      await tester.drag(
+        find.byType(SubscriptionScreen),
+        const Offset(0, -3000),
+      );
+      await tester.pump();
+
+      expect(find.text(_l10n.orgCheckoutEntryAction), findsNothing);
+    });
+  });
 }
