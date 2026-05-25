@@ -94,7 +94,7 @@ dependencies:
   lottie: ^3.3.3
   scrollable_positioned_list: ^0.3.8
   flutter_map_marker_cluster: ^8.2.2
-  firebase_crashlytics: ^5.1.0
+  firebase_crashlytics: ^5.2.2
   firebase_core: ^4.8.0
   firebase_analytics: ^12.4.1
   firebase_auth: ^6.3.0
