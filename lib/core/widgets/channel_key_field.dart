@@ -438,13 +438,19 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                 ),
               ),
 
-            // Action buttons row
+            // Action buttons. A Wrap lets them flow onto a second line
+            // when the localised labels (e.g. German "Generieren" or
+            // any cramped device width) overflow the available row, so
+            // a long label can never push its neighbour's icon under
+            // its own text.
             if (widget.editable)
               Padding(
                 padding: const EdgeInsets.fromLTRB(AppTheme.spacing8, 8, 8, 12),
-                child: Row(
+                child: Wrap(
+                  spacing: AppTheme.spacing4,
+                  runSpacing: AppTheme.spacing4,
+                  alignment: WrapAlignment.spaceBetween,
                   children: [
-                    // Show/Hide toggle
                     _buildActionButton(
                       icon: _showKey ? Icons.visibility_off : Icons.visibility,
                       label: _showKey
@@ -453,8 +459,6 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                       onPressed: () => setState(() => _showKey = !_showKey),
                       isEnabled: true,
                     ),
-                    const SizedBox(width: AppTheme.spacing4),
-                    // Edit manually
                     _buildActionButton(
                       icon: Icons.edit,
                       label: context.l10n.channelKeyEdit,
@@ -466,20 +470,13 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                       },
                       isEnabled: !_isEditingKey,
                     ),
-                    if (widget.showGenerateButton) ...[
-                      const SizedBox(width: AppTheme.spacing4),
-                      // Regenerate — no snackbar; the field visibly
-                      // updates with the new key, which is its own
-                      // confirmation.
+                    if (widget.showGenerateButton)
                       _buildActionButton(
                         icon: Icons.refresh,
                         label: context.l10n.channelKeyGenerate,
                         onPressed: !_isEditingKey ? _generateRandomKey : null,
                         isEnabled: !_isEditingKey,
                       ),
-                    ],
-                    const SizedBox(width: AppTheme.spacing4),
-                    // Copy
                     _buildActionButton(
                       icon: Icons.copy,
                       label: context.l10n.channelKeyCopy,
@@ -518,37 +515,38 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
     required VoidCallback? onPressed,
     required bool isEnabled,
   }) {
-    return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(AppTheme.radius8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  icon,
-                  size: 16,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacing8,
+            vertical: 10,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 16,
+                color: isEnabled
+                    ? context.textSecondary
+                    : context.textTertiary.withAlpha(102),
+              ),
+              const SizedBox(width: AppTheme.spacing6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
                   color: isEnabled
                       ? context.textSecondary
                       : context.textTertiary.withAlpha(102),
                 ),
-                const SizedBox(width: AppTheme.spacing6),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: isEnabled
-                        ? context.textSecondary
-                        : context.textTertiary.withAlpha(102),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
