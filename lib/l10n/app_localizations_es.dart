@@ -26664,6 +26664,18 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se pudo iniciar el proceso de compra de la licencia de grupo. Inténtalo de nuevo o contacta con soporte.';
 
   @override
+  String get orgCheckoutOrgIdTaken =>
+      'Ese id ya está tomado por otro propietario. Elige un nombre diferente.';
+
+  @override
+  String get orgCheckoutOrgIdSuspended =>
+      'Esa organización de licencias está suspendida. Contacta con soporte para reactivarla.';
+
+  @override
+  String get orgCheckoutOrgIdBannedWord =>
+      'Ese id contiene una palabra que no podemos usar. Elige un nombre diferente.';
+
+  @override
   String get orgCheckoutEntryAction => 'Comprar como licencia grupal';
 
   @override

@@ -20,6 +20,7 @@
 //     With the flag off, [showOrgCheckoutSheet] is a quiet no-op so a
 //     stray call site never lands a half-built sheet on screen.
 
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -53,42 +54,18 @@ typedef OrgCheckoutLauncher =
 /// surfaces branch on the result.
 enum OrgCheckoutOutcome { success, canceled, error }
 
-/// Slug rules (slice 7 backend mirror): lowercase a-z, 0-9, hyphens,
-/// 3..64 chars, no leading / trailing hyphen, no double hyphens.
+/// Slug shape rules (slice 7 backend mirror): lowercase a-z, 0-9,
+/// hyphens, 3..64 chars, no leading / trailing hyphen, no double
+/// hyphens. Reserved-namespace and banned-word checks live ONLY on
+/// the server (slice 10b): the client used to mirror the reserved
+/// list, but that put two sources of truth in play and made every
+/// future banned-word addition a coordinated release. The server now
+/// returns a structured `details.reason` on rejection so the sheet can
+/// still render a specific message without owning the list.
 final RegExp _licenseOrgIdPattern = RegExp(r'^[a-z0-9]([a-z0-9-]*[a-z0-9])?$');
 
 const int _licenseOrgIdMinLength = 3;
 const int _licenseOrgIdMaxLength = 64;
-
-/// Mirror of the slice-7 backend's `RESERVED_LICENSE_ORG_IDS` /
-/// `RESERVED_LICENSE_ORG_PREFIXES`. Checking client-side surfaces a
-/// specific "that id is reserved" message instead of the generic
-/// catch-all when the user picks a system / enterprise namespace.
-/// Server remains the source of truth - drift here only means the
-/// user sees the generic error after a network round-trip.
-const Set<String> _reservedLicenseOrgIds = {
-  'admin',
-  'enterprise',
-  'root',
-  'socialmesh',
-  'staff',
-  'support',
-  'system',
-};
-const List<String> _reservedLicenseOrgPrefixes = [
-  'admin-',
-  'enterprise-',
-  'socialmesh-',
-  'system-',
-];
-
-bool _isReservedLicenseOrgId(String slug) {
-  if (_reservedLicenseOrgIds.contains(slug)) return true;
-  for (final prefix in _reservedLicenseOrgPrefixes) {
-    if (slug.startsWith(prefix)) return true;
-  }
-  return false;
-}
 
 /// Input formatter that lowercases input as the user types so the
 /// visible field state matches what gets sent. Without this, users
@@ -184,32 +161,27 @@ class _OrgCheckoutBodyState extends ConsumerState<_OrgCheckoutBody>
     }
   }
 
-  // Mirrors the slice 7 server-side slug rule + reserved-namespace
-  // check. Returns null when the input is unusable; otherwise a
-  // normalised slug we can send. The server remains the source of
-  // truth - drift here only costs a network round-trip with a
-  // generic error.
+  // Slug shape validation only: length + pattern. Reserved namespace
+  // + banned-word checks live on the server (slice 10b) so this sheet
+  // does not duplicate that list. Returns null when the shape is
+  // unusable; otherwise the normalised slug to send.
   String? _validateLicenseOrgId(String raw) {
     final trimmed = raw.trim().toLowerCase();
     if (trimmed.length < _licenseOrgIdMinLength) return null;
     if (trimmed.length > _licenseOrgIdMaxLength) return null;
     if (!_licenseOrgIdPattern.hasMatch(trimmed)) return null;
-    if (_isReservedLicenseOrgId(trimmed)) return null;
     return trimmed;
   }
 
-  // Returns true when the current input is usable for submission.
-  // Mirrors _validateLicenseOrgId but does not allocate the
-  // normalised slug - cheap to call from build() every paint.
+  // Returns true when the current input is shape-valid for
+  // submission. Cheap to call from build() every paint.
   bool get _isInputValid => _validateLicenseOrgId(_controller.text) != null;
 
-  // Returns the specific i18n error message for the current input
-  // state, or null when the input is either valid OR too short to
-  // surface an error yet (user is still mid-typing). Length-only
-  // failures stay silent so the field doesn't flash an error after
-  // the first keystroke. Pattern violations + reserved-namespace
-  // matches show their specific messages so the user knows what to
-  // change.
+  // Inline error for shape-only failures. Length-only failures stay
+  // silent so the field doesn't flash an error after the first
+  // keystroke. Pattern violations show a specific message so the user
+  // knows what to change. Reserved-namespace and banned-word errors
+  // are server-only now and arrive via the submit catch path.
   String? _inputErrorMessage(BuildContext context) {
     final trimmed = _controller.text.trim().toLowerCase();
     if (trimmed.isEmpty) return null;
@@ -220,10 +192,31 @@ class _OrgCheckoutBodyState extends ConsumerState<_OrgCheckoutBody>
     if (!_licenseOrgIdPattern.hasMatch(trimmed)) {
       return context.l10n.orgCheckoutOrgIdInvalid;
     }
-    if (_isReservedLicenseOrgId(trimmed)) {
-      return context.l10n.orgCheckoutOrgIdReserved;
-    }
     return null;
+  }
+
+  // Map a server-side rejection reason (carried on
+  // `FunctionsException.details.reason`) to a user-facing message.
+  // Unknown / missing reasons fall back to the generic error so the
+  // sheet never goes blank when the backend ships a new rejection
+  // category ahead of a client release.
+  String _serverErrorMessage(BuildContext context, Object? reason) {
+    switch (reason) {
+      case 'license-org-taken':
+        return context.l10n.orgCheckoutOrgIdTaken;
+      case 'license-org-suspended':
+        return context.l10n.orgCheckoutOrgIdSuspended;
+      case 'license-org-id-reserved-exact':
+      case 'license-org-id-reserved-prefix':
+      case 'license-org-id-reserved-substring':
+        return context.l10n.orgCheckoutOrgIdReserved;
+      case 'license-org-id-banned-word':
+        return context.l10n.orgCheckoutOrgIdBannedWord;
+      case 'license-org-id-malformed':
+        return context.l10n.orgCheckoutOrgIdInvalid;
+      default:
+        return context.l10n.orgCheckoutError;
+    }
   }
 
   Future<void> _submit() async {
@@ -263,6 +256,22 @@ class _OrgCheckoutBodyState extends ConsumerState<_OrgCheckoutBody>
       if (!mounted) return;
       ref.haptics.success();
       Navigator.of(context).pop(OrgCheckoutOutcome.success);
+    } on FirebaseFunctionsException catch (e) {
+      // Slice 10b: server returns structured `details.reason` so the
+      // sheet can render a specific message per rejection path
+      // (taken / suspended / reserved / banned / malformed) without
+      // owning the lists itself.
+      final details = e.details;
+      final reason = details is Map ? details['reason'] : null;
+      AppLogging.purchase(
+        '[OrgCheckoutSheet] checkout rejected code=${e.code} reason=$reason',
+      );
+      if (!mounted) return;
+      ref.haptics.error();
+      safeSetState(() {
+        _submitting = false;
+        _errorMessage = _serverErrorMessage(context, reason);
+      });
     } catch (e) {
       AppLogging.purchase('[OrgCheckoutSheet] checkout failed: $e');
       if (!mounted) return;

@@ -26618,6 +26618,18 @@ class AppLocalizationsDe extends AppLocalizations {
       'Der Gruppenlizenz-Checkout konnte nicht gestartet werden. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support.';
 
   @override
+  String get orgCheckoutOrgIdTaken =>
+      'Diese ID ist bereits von einem anderen Inhaber vergeben. Bitte wählen Sie einen anderen Namen.';
+
+  @override
+  String get orgCheckoutOrgIdSuspended =>
+      'Diese Lizenzorganisation ist gesperrt. Kontaktieren Sie den Support, um sie wieder zu aktivieren.';
+
+  @override
+  String get orgCheckoutOrgIdBannedWord =>
+      'Diese ID enthält ein nicht erlaubtes Wort. Bitte wählen Sie einen anderen Namen.';
+
+  @override
   String get orgCheckoutEntryAction => 'Als Gruppenlizenz kaufen';
 
   @override

@@ -26548,6 +26548,18 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось запустить оформление групповой лицензии. Повторите попытку или обратитесь в поддержку.';
 
   @override
+  String get orgCheckoutOrgIdTaken =>
+      'Этот ID уже занят другим владельцем. Выберите другое имя.';
+
+  @override
+  String get orgCheckoutOrgIdSuspended =>
+      'Эта организация лицензий приостановлена. Обратитесь в поддержку, чтобы возобновить её работу.';
+
+  @override
+  String get orgCheckoutOrgIdBannedWord =>
+      'Этот ID содержит слово, которое мы не можем использовать. Выберите другое имя.';
+
+  @override
   String get orgCheckoutEntryAction => 'Купить как групповую лицензию';
 
   @override

@@ -45982,6 +45982,24 @@ abstract class AppLocalizations {
   /// **'Could not start the group license checkout. Try again or contact support.'**
   String get orgCheckoutError;
 
+  /// Server-side validation error when the entered license org id is already owned by a different user.
+  ///
+  /// In en, this message translates to:
+  /// **'That id is already taken by another owner. Pick a different name.'**
+  String get orgCheckoutOrgIdTaken;
+
+  /// Server-side validation error when the entered license org id exists but has been suspended (typically after a refund cascade).
+  ///
+  /// In en, this message translates to:
+  /// **'That license org is suspended. Contact support to reactivate it.'**
+  String get orgCheckoutOrgIdSuspended;
+
+  /// Server-side validation error when the entered license org id matches a banned-words entry.
+  ///
+  /// In en, this message translates to:
+  /// **'That id contains a word we cannot use. Pick a different name.'**
+  String get orgCheckoutOrgIdBannedWord;
+
   /// Low-emphasis text link on the subscription screen that opens the org-pack checkout sheet. Sits alongside the 'Have an unlock code?' tile.
   ///
   /// In en, this message translates to:

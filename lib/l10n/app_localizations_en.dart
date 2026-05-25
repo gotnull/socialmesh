@@ -26254,6 +26254,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not start the group license checkout. Try again or contact support.';
 
   @override
+  String get orgCheckoutOrgIdTaken =>
+      'That id is already taken by another owner. Pick a different name.';
+
+  @override
+  String get orgCheckoutOrgIdSuspended =>
+      'That license org is suspended. Contact support to reactivate it.';
+
+  @override
+  String get orgCheckoutOrgIdBannedWord =>
+      'That id contains a word we cannot use. Pick a different name.';
+
+  @override
   String get orgCheckoutEntryAction => 'Buy as a group license';
 
   @override

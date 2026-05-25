@@ -26563,6 +26563,18 @@ class AppLocalizationsUk extends AppLocalizations {
       'Не вдалося розпочати оформлення групової ліцензії. Повторіть спробу або зверніться до підтримки.';
 
   @override
+  String get orgCheckoutOrgIdTaken =>
+      'Цей ID вже зайнятий іншим власником. Виберіть іншу назву.';
+
+  @override
+  String get orgCheckoutOrgIdSuspended =>
+      'Цю організацію ліцензій призупинено. Зверніться до підтримки, щоб її повторно активувати.';
+
+  @override
+  String get orgCheckoutOrgIdBannedWord =>
+      'Цей ID містить слово, яке ми не можемо використати. Виберіть іншу назву.';
+
+  @override
   String get orgCheckoutEntryAction => 'Придбати як групову ліцензію';
 
   @override

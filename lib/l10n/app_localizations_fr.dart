@@ -26739,6 +26739,18 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible de démarrer le paiement de la licence de groupe. Réessayez ou contactez le support.';
 
   @override
+  String get orgCheckoutOrgIdTaken =>
+      'Cet identifiant est déjà pris par un autre propriétaire. Choisissez un nom différent.';
+
+  @override
+  String get orgCheckoutOrgIdSuspended =>
+      'Cette organisation de licences est suspendue. Contactez le support pour la réactiver.';
+
+  @override
+  String get orgCheckoutOrgIdBannedWord =>
+      'Cet identifiant contient un mot que nous ne pouvons pas utiliser. Choisissez un nom différent.';
+
+  @override
   String get orgCheckoutEntryAction => 'Acheter en licence groupée';
 
   @override

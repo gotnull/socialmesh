@@ -17,6 +17,7 @@
 //   - error state shown on backend rejection
 //   - success closes the sheet with OrgCheckoutOutcome.success
 
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -254,47 +255,75 @@ void main() {
   );
 
   testWidgets(
-    'reserved namespace (socialmesh) shows specific error inline + button '
-    'stays disabled',
+    'reserved-substring server reason maps to "reserved" inline message',
     (tester) async {
-      // Slice 10a: client-side mirror of slice-7 backend reserved set.
-      // 'socialmesh' is the canonical example - was the original bug
-      // report on the org-checkout sheet that prompted this fix.
+      // Slice 10b: client mirror is gone. The button enables for any
+      // shape-valid slug; the server rejects with structured details
+      // and the sheet surfaces the specific i18n message.
       final invoker = _RecordingInvoker();
+      invoker.throwOnce(
+        FirebaseFunctionsException(
+          code: 'invalid-argument',
+          message: 'licenseOrgId is not available',
+          details: {'reason': 'license-org-id-reserved-substring'},
+        ),
+      );
       final service = await _buildService(invoker);
 
       await tester.pumpWidget(
         _hostApp(
           service: service,
           onReady: (ctx) {
-            showOrgCheckoutSheet(ctx, productId: 'community_pack_20seat');
+            showOrgCheckoutSheet(
+              ctx,
+              productId: 'community_pack_20seat',
+              launcher: (_, _, _) async {},
+            );
           },
         ),
       );
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), 'socialmesh');
+      // The substring "socialmesh" matches the server's reserved rule;
+      // the sheet itself no longer pre-checks this case.
+      await tester.enterText(find.byType(TextField), 'iamsocialmesh');
       await tester.pumpAndSettle();
 
+      // Button is now enabled (server is authoritative).
+      final btnBefore = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(btnBefore.onPressed, isNotNull);
+
+      await tester.tap(find.text('Continue to payment'));
+      await tester.pumpAndSettle();
+
+      expect(invoker.calls, hasLength(1));
       expect(find.textContaining('reserved'), findsWidgets);
-      final btn = tester.widget<FilledButton>(find.byType(FilledButton));
-      expect(btn.onPressed, isNull);
-      expect(invoker.calls, isEmpty);
     },
   );
 
   testWidgets(
-    'reserved prefix (enterprise-pilot) shows specific error inline',
+    'reserved-prefix server reason maps to "reserved" inline message',
     (tester) async {
       final invoker = _RecordingInvoker();
+      invoker.throwOnce(
+        FirebaseFunctionsException(
+          code: 'invalid-argument',
+          message: 'licenseOrgId is not available',
+          details: {'reason': 'license-org-id-reserved-prefix'},
+        ),
+      );
       final service = await _buildService(invoker);
 
       await tester.pumpWidget(
         _hostApp(
           service: service,
           onReady: (ctx) {
-            showOrgCheckoutSheet(ctx, productId: 'community_pack_20seat');
+            showOrgCheckoutSheet(
+              ctx,
+              productId: 'community_pack_20seat',
+              launcher: (_, _, _) async {},
+            );
           },
         ),
       );
@@ -304,12 +333,167 @@ void main() {
       await tester.enterText(find.byType(TextField), 'enterprise-pilot');
       await tester.pumpAndSettle();
 
+      // Button enabled; server gets the call.
+      final btnBefore = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(btnBefore.onPressed, isNotNull);
+
+      await tester.tap(find.text('Continue to payment'));
+      await tester.pumpAndSettle();
+
+      expect(invoker.calls, hasLength(1));
       expect(find.textContaining('reserved'), findsWidgets);
-      final btn = tester.widget<FilledButton>(find.byType(FilledButton));
-      expect(btn.onPressed, isNull);
-      expect(invoker.calls, isEmpty);
     },
   );
+
+  testWidgets(
+    'license-org-taken server reason maps to "already taken" inline message',
+    (tester) async {
+      final invoker = _RecordingInvoker();
+      invoker.throwOnce(
+        FirebaseFunctionsException(
+          code: 'failed-precondition',
+          message: 'License org id is already taken by another owner',
+          details: {'reason': 'license-org-taken'},
+        ),
+      );
+      final service = await _buildService(invoker);
+
+      await tester.pumpWidget(
+        _hostApp(
+          service: service,
+          onReady: (ctx) {
+            showOrgCheckoutSheet(
+              ctx,
+              productId: 'community_pack_20seat',
+              launcher: (_, _, _) async {},
+            );
+          },
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'acme-eng-team');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Continue to payment'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('already taken'), findsWidgets);
+    },
+  );
+
+  testWidgets(
+    'license-org-suspended server reason maps to suspended inline message',
+    (tester) async {
+      final invoker = _RecordingInvoker();
+      invoker.throwOnce(
+        FirebaseFunctionsException(
+          code: 'failed-precondition',
+          message: 'License org is suspended; contact support to reactivate',
+          details: {'reason': 'license-org-suspended'},
+        ),
+      );
+      final service = await _buildService(invoker);
+
+      await tester.pumpWidget(
+        _hostApp(
+          service: service,
+          onReady: (ctx) {
+            showOrgCheckoutSheet(
+              ctx,
+              productId: 'community_pack_20seat',
+              launcher: (_, _, _) async {},
+            );
+          },
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'acme-eng-team');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Continue to payment'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('suspended'), findsWidgets);
+    },
+  );
+
+  testWidgets(
+    'license-org-id-banned-word server reason maps to banned-word inline message',
+    (tester) async {
+      final invoker = _RecordingInvoker();
+      invoker.throwOnce(
+        FirebaseFunctionsException(
+          code: 'invalid-argument',
+          message: 'licenseOrgId is not available',
+          details: {'reason': 'license-org-id-banned-word'},
+        ),
+      );
+      final service = await _buildService(invoker);
+
+      await tester.pumpWidget(
+        _hostApp(
+          service: service,
+          onReady: (ctx) {
+            showOrgCheckoutSheet(
+              ctx,
+              productId: 'community_pack_20seat',
+              launcher: (_, _, _) async {},
+            );
+          },
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'plausible-slug');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Continue to payment'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('cannot use'), findsWidgets);
+    },
+  );
+
+  testWidgets('unknown server reason falls back to the generic error message', (
+    tester,
+  ) async {
+    final invoker = _RecordingInvoker();
+    invoker.throwOnce(
+      FirebaseFunctionsException(
+        code: 'internal',
+        message: 'something exploded',
+        details: {'reason': 'never-seen-before'},
+      ),
+    );
+    final service = await _buildService(invoker);
+
+    await tester.pumpWidget(
+      _hostApp(
+        service: service,
+        onReady: (ctx) {
+          showOrgCheckoutSheet(
+            ctx,
+            productId: 'community_pack_20seat',
+            launcher: (_, _, _) async {},
+          );
+        },
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'acme-eng-team');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Continue to payment'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('Could not start the group license checkout'),
+      findsWidgets,
+    );
+  });
 
   testWidgets(
     'lowercase formatter normalizes uppercase input as the user types',

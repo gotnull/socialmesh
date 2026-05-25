@@ -35681,6 +35681,18 @@
     "@orgCheckoutError": {
         "description": "Error shown when the createCheckout callable rejects the org-pack request."
     },
+    "orgCheckoutOrgIdTaken": "That id is already taken by another owner. Pick a different name.",
+    "@orgCheckoutOrgIdTaken": {
+        "description": "Server-side validation error when the entered license org id is already owned by a different user."
+    },
+    "orgCheckoutOrgIdSuspended": "That license org is suspended. Contact support to reactivate it.",
+    "@orgCheckoutOrgIdSuspended": {
+        "description": "Server-side validation error when the entered license org id exists but has been suspended (typically after a refund cascade)."
+    },
+    "orgCheckoutOrgIdBannedWord": "That id contains a word we cannot use. Pick a different name.",
+    "@orgCheckoutOrgIdBannedWord": {
+        "description": "Server-side validation error when the entered license org id matches a banned-words entry."
+    },
     "orgCheckoutEntryAction": "Buy as a group license",
     "@orgCheckoutEntryAction": {
         "description": "Low-emphasis text link on the subscription screen that opens the org-pack checkout sheet. Sits alongside the 'Have an unlock code?' tile."
