@@ -25625,9 +25625,6 @@
     "@settingsSearchClearAllMessagesTitle": {
         "description": "Title for the clear all messages search item."
     },
-    "@settingsSearchCommentsSubtitle": {
-        "description": "Subtitle for the Comments & mentions search item."
-    },
     "@settingsSearchDmNotificationsSubtitle": {
         "description": "Subtitle for the direct message notifications search item."
     },
@@ -25670,17 +25667,11 @@
     "@settingsSearchIftttPackTitle": {
         "description": "Fallback title for the IFTTT pack search item."
     },
-    "@settingsSearchLikesSubtitle": {
-        "description": "Subtitle for the Likes search item."
-    },
     "@settingsSearchLinkedDevicesSubtitle": {
         "description": "Subtitle for the Linked Devices search item."
     },
     "@settingsSearchLinkedDevicesTitle": {
         "description": "Title for the Linked Devices search item."
-    },
-    "@settingsSearchNewFollowersSubtitle": {
-        "description": "Subtitle for the New followers search item."
     },
     "@settingsSearchNewNodesNotificationsSubtitle": {
         "description": "Subtitle for the new nodes notifications search item."
@@ -42943,7 +42934,6 @@
     "settingsSearchClearAllDataSubtitle": "Elimina messaggi, impostazioni e chiavi",
     "settingsSearchClearAllMessagesSubtitle": "Elimina tutti i messaggi salvati",
     "settingsSearchClearAllMessagesTitle": "Cancella tutti i messaggi",
-    "settingsSearchCommentsSubtitle": "Notifiche push per commenti e @menzioni",
     "settingsSearchDmNotificationsSubtitle": "Notifica per i messaggi privati",
     "settingsSearchDmNotificationsTitle": "Notifiche messaggi diretti",
     "settingsSearchExportDataSubtitle": "Esporta messaggi e impostazioni",
@@ -42960,10 +42950,8 @@
     "settingsSearchHistoryLimitTitle": "Limite cronologia messaggi",
     "settingsSearchIftttPackSubtitle": "Integrazione con servizi esterni",
     "settingsSearchIftttPackTitle": "Pacchetto IFTTT",
-    "settingsSearchLikesSubtitle": "Notifiche push per i like ai post",
     "settingsSearchLinkedDevicesSubtitle": "Dispositivi Meshtastic collegati al tuo profilo",
     "settingsSearchLinkedDevicesTitle": "Dispositivi collegati",
-    "settingsSearchNewFollowersSubtitle": "Notifiche push quando qualcuno ti segue",
     "settingsSearchNewNodesNotificationsSubtitle": "Notifica quando nuovi nodi si uniscono alla rete mesh",
     "settingsSearchNewNodesNotificationsTitle": "Notifiche nuovi nodi",
     "settingsSearchNotificationSoundSubtitle": "Riproduci suono per le notifiche",

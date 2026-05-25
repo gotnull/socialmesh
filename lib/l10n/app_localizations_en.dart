@@ -18854,10 +18854,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSearchClearAllMessagesTitle => 'Clear all messages';
 
   @override
-  String get settingsSearchCommentsSubtitle =>
-      'Push notifications for comments and @mentions';
-
-  @override
   String get settingsSearchDmNotificationsSubtitle =>
       'Notify for private messages';
 
@@ -18912,18 +18908,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'One-tap message translation';
 
   @override
-  String get settingsSearchLikesSubtitle => 'Push notifications for post likes';
-
-  @override
   String get settingsSearchLinkedDevicesSubtitle =>
       'Meshtastic devices connected to your profile';
 
   @override
   String get settingsSearchLinkedDevicesTitle => 'Linked Devices';
-
-  @override
-  String get settingsSearchNewFollowersSubtitle =>
-      'Push notifications when someone follows you';
 
   @override
   String get settingsSearchNewNodesNotificationsSubtitle =>

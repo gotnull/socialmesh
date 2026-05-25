@@ -25610,10 +25610,6 @@
     "@settingsSearchClearAllMessagesTitle": {
         "description": "Title for the clear all messages search item."
     },
-    "settingsSearchCommentsSubtitle": "Push notifications for comments and @mentions",
-    "@settingsSearchCommentsSubtitle": {
-        "description": "Subtitle for the Comments & mentions search item."
-    },
     "settingsSearchDmNotificationsSubtitle": "Notify for private messages",
     "@settingsSearchDmNotificationsSubtitle": {
         "description": "Subtitle for the direct message notifications search item."
@@ -25678,10 +25674,6 @@
     "@settingsSearchTranslationPackSubtitle": {
         "description": "Subtitle for the Translation pack search item."
     },
-    "settingsSearchLikesSubtitle": "Push notifications for post likes",
-    "@settingsSearchLikesSubtitle": {
-        "description": "Subtitle for the Likes search item."
-    },
     "settingsSearchLinkedDevicesSubtitle": "Meshtastic devices connected to your profile",
     "@settingsSearchLinkedDevicesSubtitle": {
         "description": "Subtitle for the Linked Devices search item."
@@ -25689,10 +25681,6 @@
     "settingsSearchLinkedDevicesTitle": "Linked Devices",
     "@settingsSearchLinkedDevicesTitle": {
         "description": "Title for the Linked Devices search item."
-    },
-    "settingsSearchNewFollowersSubtitle": "Push notifications when someone follows you",
-    "@settingsSearchNewFollowersSubtitle": {
-        "description": "Subtitle for the New followers search item."
     },
     "settingsSearchNewNodesNotificationsSubtitle": "Notify when new nodes join the mesh",
     "@settingsSearchNewNodesNotificationsSubtitle": {

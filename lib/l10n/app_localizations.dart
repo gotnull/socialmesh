@@ -32768,12 +32768,6 @@ abstract class AppLocalizations {
   /// **'Clear all messages'**
   String get settingsSearchClearAllMessagesTitle;
 
-  /// Subtitle for the Comments & mentions search item.
-  ///
-  /// In en, this message translates to:
-  /// **'Push notifications for comments and @mentions'**
-  String get settingsSearchCommentsSubtitle;
-
   /// Subtitle for the direct message notifications search item.
   ///
   /// In en, this message translates to:
@@ -32870,12 +32864,6 @@ abstract class AppLocalizations {
   /// **'One-tap message translation'**
   String get settingsSearchTranslationPackSubtitle;
 
-  /// Subtitle for the Likes search item.
-  ///
-  /// In en, this message translates to:
-  /// **'Push notifications for post likes'**
-  String get settingsSearchLikesSubtitle;
-
   /// Subtitle for the Linked Devices search item.
   ///
   /// In en, this message translates to:
@@ -32887,12 +32875,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Linked Devices'**
   String get settingsSearchLinkedDevicesTitle;
-
-  /// Subtitle for the New followers search item.
-  ///
-  /// In en, this message translates to:
-  /// **'Push notifications when someone follows you'**
-  String get settingsSearchNewFollowersSubtitle;
 
   /// Subtitle for the new nodes notifications search item.
   ///

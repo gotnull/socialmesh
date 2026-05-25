@@ -19035,10 +19035,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsSearchClearAllMessagesTitle => 'Очистить все сообщения';
 
   @override
-  String get settingsSearchCommentsSubtitle =>
-      'Push-уведомления о комментариях и @упоминаниях';
-
-  @override
   String get settingsSearchDmNotificationsSubtitle =>
       'Уведомления о личных сообщениях';
 
@@ -19095,19 +19091,11 @@ class AppLocalizationsRu extends AppLocalizations {
       'Перевод сообщений одним нажатием';
 
   @override
-  String get settingsSearchLikesSubtitle =>
-      'Push-уведомления о лайках публикаций';
-
-  @override
   String get settingsSearchLinkedDevicesSubtitle =>
       'Устройства Meshtastic, привязанные к вашему профилю';
 
   @override
   String get settingsSearchLinkedDevicesTitle => 'Привязанные устройства';
-
-  @override
-  String get settingsSearchNewFollowersSubtitle =>
-      'Push-уведомления, когда кто-то подписывается на вас';
 
   @override
   String get settingsSearchNewNodesNotificationsSubtitle =>

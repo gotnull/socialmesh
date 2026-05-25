@@ -198,7 +198,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: context.l10n.settingsTileShakeToReportSubtitle,
           keywords: ['bug', 'report', 'shake', 'feedback', 'support'],
           section: context.l10n.settingsSectionFeedback,
-          hasSwitch: true,
           switchBuilder: (context, ref, settingsService) => ThemedSwitch(
             value: settingsService.shakeToReportEnabled,
             onChanged: (value) async {
@@ -396,32 +395,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: context.l10n.settingsAgeGroupSubtitleUnknown,
           keywords: ['age', 'minor', 'teen', 'adult', 'eligibility', 'safety'],
           section: context.l10n.settingsSectionAccount,
-        ),
-
-        // Social Notifications
-        _SearchableSettingItem(
-          icon: Icons.person_add_outlined,
-          title: context.l10n.settingsSocialNewFollowersTitle,
-          subtitle: context.l10n.settingsSearchNewFollowersSubtitle,
-          keywords: ['social', 'notification', 'follow', 'follower'],
-          section: context.l10n.settingsSectionSocialNotifications,
-          hasSwitch: true,
-        ),
-        _SearchableSettingItem(
-          icon: Icons.favorite_outline,
-          title: context.l10n.settingsSocialLikesTitle,
-          subtitle: context.l10n.settingsSearchLikesSubtitle,
-          keywords: ['social', 'notification', 'like', 'heart'],
-          section: context.l10n.settingsSectionSocialNotifications,
-          hasSwitch: true,
-        ),
-        _SearchableSettingItem(
-          icon: Icons.chat_bubble_outline,
-          title: context.l10n.settingsSocialCommentsTitle,
-          subtitle: context.l10n.settingsSearchCommentsSubtitle,
-          keywords: ['social', 'notification', 'comment', 'mention', 'reply'],
-          section: context.l10n.settingsSectionSocialNotifications,
-          hasSwitch: true,
+          onTap: () => _showAgeGroupPicker(context, ref),
         ),
         _SearchableSettingItem(
           icon: Icons.devices,
@@ -442,7 +416,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: context.l10n.settingsTileAutoReconnectSubtitle,
           keywords: ['bluetooth', 'connect', 'device', 'auto'],
           section: context.l10n.settingsSectionConnection,
-          hasSwitch: true,
+          switchBuilder: (context, ref, settingsService) => ThemedSwitch(
+            value: settingsService.autoReconnect,
+            onChanged: (value) async {
+              HapticFeedback.selectionClick();
+              await settingsService.setAutoReconnect(value);
+              safeSetState(() {});
+            },
+          ),
         ),
         _SearchableSettingItem(
           icon: Icons.bluetooth_connected,
@@ -477,7 +458,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             'share',
           ],
           section: context.l10n.settingsSectionConnection,
-          hasSwitch: true,
           switchBuilder: (context, ref, settingsService) => ThemedSwitch(
             value: settingsService.providePhoneLocation,
             onChanged: (value) async {
@@ -675,7 +655,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: context.l10n.settingsTileHapticFeedbackSubtitle,
           keywords: ['vibration', 'haptic', 'touch', 'feedback'],
           section: context.l10n.settingsSectionHapticFeedback,
-          hasSwitch: true,
+          switchBuilder: (context, ref, settingsService) => ThemedSwitch(
+            value: settingsService.hapticFeedbackEnabled,
+            onChanged: (value) async {
+              if (value) {
+                ref.haptics.toggle();
+              }
+              await settingsService.setHapticFeedbackEnabled(value);
+              ref
+                  .read(userProfileProvider.notifier)
+                  .updatePreferences(
+                    UserPreferences(hapticFeedbackEnabled: value),
+                  );
+              safeSetState(() {});
+            },
+          ),
         ),
         _SearchableSettingItem(
           icon: Icons.tune,
@@ -738,7 +732,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: context.l10n.settingsTileListAnimationsSubtitle,
           keywords: ['animation', 'motion', 'effect', 'slide', 'bounce'],
           section: context.l10n.settingsSectionAnimations,
-          hasSwitch: true,
+          switchBuilder: (context, ref, settingsService) => ThemedSwitch(
+            value: settingsService.animationsEnabled,
+            onChanged: (value) async {
+              HapticFeedback.selectionClick();
+              final profile = ref.read(userProfileProvider.notifier);
+              final refresh = ref.read(settingsRefreshProvider.notifier);
+              await settingsService.setAnimationsEnabled(value);
+              profile.updatePreferences(
+                UserPreferences(animationsEnabled: value),
+              );
+              refresh.refresh();
+              safeSetState(() {});
+            },
+          ),
         ),
         _SearchableSettingItem(
           icon: Icons.view_in_ar,
@@ -746,7 +753,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: context.l10n.settingsTile3dEffectsSubtitle,
           keywords: ['3d', 'depth', 'perspective', 'transform'],
           section: context.l10n.settingsSectionAnimations,
-          hasSwitch: true,
+          switchBuilder: (context, ref, settingsService) => ThemedSwitch(
+            value: settingsService.animations3DEnabled,
+            onChanged: (value) async {
+              HapticFeedback.selectionClick();
+              final profile = ref.read(userProfileProvider.notifier);
+              final refresh = ref.read(settingsRefreshProvider.notifier);
+              await settingsService.setAnimations3DEnabled(value);
+              profile.updatePreferences(
+                UserPreferences(animations3DEnabled: value),
+              );
+              refresh.refresh();
+              safeSetState(() {});
+            },
+          ),
         ),
 
         // Notifications
@@ -756,7 +776,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: context.l10n.settingsTilePushNotificationsSubtitle,
           keywords: ['notification', 'alert', 'push', 'notify'],
           section: context.l10n.settingsSectionNotifications,
-          hasSwitch: true,
+          switchBuilder: (context, ref, settingsService) => ThemedSwitch(
+            value: settingsService.notificationsEnabled,
+            onChanged: (value) async {
+              HapticFeedback.selectionClick();
+              await settingsService.setNotificationsEnabled(value);
+              ref
+                  .read(userProfileProvider.notifier)
+                  .updatePreferences(
+                    UserPreferences(notificationsEnabled: value),
+                  );
+              safeSetState(() {});
+            },
+          ),
         ),
         _SearchableSettingItem(
           icon: Icons.person_add_outlined,
@@ -764,7 +796,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: context.l10n.settingsSearchNewNodesNotificationsSubtitle,
           keywords: ['notification', 'node', 'join', 'new'],
           section: context.l10n.settingsSectionNotifications,
-          hasSwitch: true,
+          switchBuilder: (context, ref, settingsService) => ThemedSwitch(
+            value: settingsService.newNodeNotificationsEnabled,
+            onChanged: (value) async {
+              HapticFeedback.selectionClick();
+              await settingsService.setNewNodeNotificationsEnabled(value);
+              ref
+                  .read(userProfileProvider.notifier)
+                  .updatePreferences(
+                    UserPreferences(newNodeNotificationsEnabled: value),
+                  );
+              safeSetState(() {});
+            },
+          ),
         ),
         _SearchableSettingItem(
           icon: Icons.chat_bubble_outline,
@@ -772,7 +816,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: context.l10n.settingsSearchDmNotificationsSubtitle,
           keywords: ['notification', 'dm', 'direct', 'message', 'private'],
           section: context.l10n.settingsSectionNotifications,
-          hasSwitch: true,
+          switchBuilder: (context, ref, settingsService) => ThemedSwitch(
+            value: settingsService.directMessageNotificationsEnabled,
+            onChanged: (value) async {
+              HapticFeedback.selectionClick();
+              await settingsService.setDirectMessageNotificationsEnabled(value);
+              ref
+                  .read(userProfileProvider.notifier)
+                  .updatePreferences(
+                    UserPreferences(directMessageNotificationsEnabled: value),
+                  );
+              safeSetState(() {});
+            },
+          ),
         ),
         _SearchableSettingItem(
           icon: Icons.forum_outlined,
@@ -780,11 +836,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: context.l10n.settingsSearchChannelNotificationsSubtitle,
           keywords: ['notification', 'channel', 'broadcast', 'group'],
           section: context.l10n.settingsSectionNotifications,
-          hasSwitch: true,
+          switchBuilder: (context, ref, settingsService) => ThemedSwitch(
+            value: settingsService.channelMessageNotificationsEnabled,
+            onChanged: (value) async {
+              HapticFeedback.selectionClick();
+              await settingsService.setChannelMessageNotificationsEnabled(
+                value,
+              );
+              ref
+                  .read(userProfileProvider.notifier)
+                  .updatePreferences(
+                    UserPreferences(channelMessageNotificationsEnabled: value),
+                  );
+              safeSetState(() {});
+            },
+          ),
         ),
-        // Handshake-specific (SIP Play game turn notifications). Gate
-        // on the Handshake intent flag so the row stays hidden in
-        // MeshCanvas-only builds that turn SIP transport on implicitly.
+        // SIP Play game turn notifications. Gated on the Handshake intent
+        // flag so the row stays hidden in MeshCanvas-only builds that turn
+        // SIP transport on implicitly.
         if (AppFeatureFlags.isHandshakeEnabled)
           _SearchableSettingItem(
             icon: Icons.casino_outlined,
@@ -800,7 +870,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               'connect four',
             ],
             section: context.l10n.settingsSectionNotifications,
-            hasSwitch: true,
+            switchBuilder: (context, ref, settingsService) => ThemedSwitch(
+              value: settingsService.sipPlayTurnNotificationsEnabled,
+              onChanged: (value) async {
+                HapticFeedback.selectionClick();
+                await settingsService.setSipPlayTurnNotificationsEnabled(value);
+                ref
+                    .read(userProfileProvider.notifier)
+                    .updatePreferences(
+                      UserPreferences(sipPlayTurnNotificationsEnabled: value),
+                    );
+                safeSetState(() {});
+              },
+            ),
           ),
         _SearchableSettingItem(
           icon: Icons.volume_up_outlined,
@@ -808,7 +890,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: context.l10n.settingsSearchNotificationSoundSubtitle,
           keywords: ['sound', 'audio', 'alert', 'ring'],
           section: context.l10n.settingsSectionNotifications,
-          hasSwitch: true,
+          switchBuilder: (context, ref, settingsService) => ThemedSwitch(
+            value: settingsService.notificationSoundEnabled,
+            onChanged: (value) async {
+              HapticFeedback.selectionClick();
+              await settingsService.setNotificationSoundEnabled(value);
+              ref
+                  .read(userProfileProvider.notifier)
+                  .updatePreferences(
+                    UserPreferences(notificationSoundEnabled: value),
+                  );
+              safeSetState(() {});
+            },
+          ),
         ),
         _SearchableSettingItem(
           icon: Icons.vibration,
@@ -816,7 +910,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: context.l10n.settingsSearchNotificationVibrationSubtitle,
           keywords: ['vibrate', 'haptic', 'buzz'],
           section: context.l10n.settingsSectionNotifications,
-          hasSwitch: true,
+          switchBuilder: (context, ref, settingsService) => ThemedSwitch(
+            value: settingsService.notificationVibrationEnabled,
+            onChanged: (value) async {
+              HapticFeedback.selectionClick();
+              await settingsService.setNotificationVibrationEnabled(value);
+              ref
+                  .read(userProfileProvider.notifier)
+                  .updatePreferences(
+                    UserPreferences(notificationVibrationEnabled: value),
+                  );
+              safeSetState(() {});
+            },
+          ),
         ),
 
         // Messaging
@@ -853,7 +959,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             subtitle: context.l10n.settingsSearchFileTransferSubtitle,
             keywords: ['file', 'transfer', 'send', 'receive', 'share'],
             section: context.l10n.settingsSectionFileTransfer,
-            hasSwitch: true,
             switchBuilder: (context, ref, settingsService) => ThemedSwitch(
               value: settingsService.fileTransferEnabled,
               onChanged: (value) async {
@@ -877,7 +982,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               'automatic',
             ],
             section: context.l10n.settingsSectionFileTransfer,
-            hasSwitch: true,
             switchBuilder: (context, ref, settingsService) => ThemedSwitch(
               value: settingsService.fileTransferAutoAccept,
               onChanged: (value) async {
@@ -906,7 +1010,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               'transfer',
             ],
             section: context.l10n.settingsSectionFileTransfer,
-            hasSwitch: true,
             switchBuilder: (context, ref, settingsService) => ThemedSwitch(
               value: settingsService.stlSigningEnabled,
               onChanged: (value) async {
@@ -1621,22 +1724,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               size: 24,
                             ),
                           )
-                        : item.hasSwitch
-                        ? Icon(
-                            Icons.toggle_on_outlined,
-                            color: context.textTertiary,
-                            size: 24,
-                          )
                         : null,
-                    onTap:
-                        item.onTap ??
-                        () {
-                          // Clear search when tapping an item without onTap
-                          safeSetState(() {
-                            _searchQuery = '';
-                            _searchController.clear();
-                          });
-                        },
+                    onTap: item.onTap,
                   ),
                 ),
                 const SizedBox(height: AppTheme.spacing8),
@@ -4948,6 +5037,57 @@ class _SocialNotificationsSectionState
   }
 }
 
+Future<void> _showAgeGroupPicker(BuildContext context, WidgetRef ref) {
+  final policy = ref.read(ageSafetyPolicyProvider);
+  final notifier = ref.read(ageEligibilityProvider.notifier);
+  return AppBottomSheet.showPicker<AgeGroup>(
+    context: context,
+    title: context.l10n.settingsAgeGroupTitle,
+    items: const [AgeGroup.teen, AgeGroup.adult],
+    selectedItem:
+        policy.ageGroup == AgeGroup.unknown ||
+            policy.ageGroup == AgeGroup.under13
+        ? null
+        : policy.ageGroup,
+    itemBuilder: (group, isSelected) {
+      final label = switch (group) {
+        AgeGroup.teen => context.l10n.legalEligibilityOptionTeen,
+        AgeGroup.adult => context.l10n.legalEligibilityOptionAdult,
+        AgeGroup.under13 || AgeGroup.unknown => '',
+      };
+      final groupSubtitle = switch (group) {
+        AgeGroup.teen => context.l10n.legalEligibilityOptionTeenSubtitle,
+        AgeGroup.adult || AgeGroup.under13 || AgeGroup.unknown => '',
+      };
+      return ListTile(
+        leading: Icon(
+          isSelected
+              ? Icons.radio_button_checked
+              : Icons.radio_button_unchecked,
+          color: isSelected ? context.accentColor : context.textTertiary,
+        ),
+        title: Text(
+          label,
+          style: TextStyle(
+            color: context.textPrimary,
+            fontFamily: AppTheme.fontFamily,
+          ),
+        ),
+        subtitle: groupSubtitle.isNotEmpty
+            ? Text(
+                groupSubtitle,
+                style: TextStyle(color: context.textTertiary, fontSize: 12),
+              )
+            : null,
+      );
+    },
+  ).then((selected) {
+    if (selected != null) {
+      notifier.confirm(ageGroup: selected);
+    }
+  });
+}
+
 class _AgeGroupTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -4964,58 +5104,7 @@ class _AgeGroupTile extends ConsumerWidget {
       title: context.l10n.settingsAgeGroupTitle,
       subtitle: subtitle,
       trailing: Icon(Icons.chevron_right, color: context.textTertiary),
-      onTap: () {
-        final notifier = ref.read(ageEligibilityProvider.notifier);
-        AppBottomSheet.showPicker<AgeGroup>(
-          context: context,
-          title: context.l10n.settingsAgeGroupTitle,
-          items: const [AgeGroup.teen, AgeGroup.adult],
-          selectedItem:
-              policy.ageGroup == AgeGroup.unknown ||
-                  policy.ageGroup == AgeGroup.under13
-              ? null
-              : policy.ageGroup,
-          itemBuilder: (group, isSelected) {
-            final label = switch (group) {
-              AgeGroup.teen => context.l10n.legalEligibilityOptionTeen,
-              AgeGroup.adult => context.l10n.legalEligibilityOptionAdult,
-              AgeGroup.under13 || AgeGroup.unknown => '',
-            };
-            final groupSubtitle = switch (group) {
-              AgeGroup.teen => context.l10n.legalEligibilityOptionTeenSubtitle,
-              AgeGroup.adult || AgeGroup.under13 || AgeGroup.unknown => '',
-            };
-            return ListTile(
-              leading: Icon(
-                isSelected
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_unchecked,
-                color: isSelected ? context.accentColor : context.textTertiary,
-              ),
-              title: Text(
-                label,
-                style: TextStyle(
-                  color: context.textPrimary,
-                  fontFamily: AppTheme.fontFamily,
-                ),
-              ),
-              subtitle: groupSubtitle.isNotEmpty
-                  ? Text(
-                      groupSubtitle,
-                      style: TextStyle(
-                        color: context.textTertiary,
-                        fontSize: 12,
-                      ),
-                    )
-                  : null,
-            );
-          },
-        ).then((selected) {
-          if (selected != null) {
-            notifier.confirm(ageGroup: selected);
-          }
-        });
-      },
+      onTap: () => _showAgeGroupPicker(context, ref),
     );
   }
 }
@@ -5028,7 +5117,6 @@ class _SearchableSettingItem {
   final List<String> keywords;
   final String section;
   final VoidCallback? onTap;
-  final bool hasSwitch;
   final Widget Function(BuildContext, WidgetRef, SettingsService)?
   switchBuilder;
 
@@ -5039,7 +5127,6 @@ class _SearchableSettingItem {
     this.keywords = const [],
     required this.section,
     this.onTap,
-    this.hasSwitch = false,
     this.switchBuilder,
   });
 }

@@ -19170,10 +19170,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsSearchClearAllMessagesTitle => 'Effacer tous les messages';
 
   @override
-  String get settingsSearchCommentsSubtitle =>
-      'Notifications push pour les commentaires et les @mentions';
-
-  @override
   String get settingsSearchDmNotificationsSubtitle =>
       'Notifier pour les messages privés';
 
@@ -19232,19 +19228,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Traduction de messages en un seul geste';
 
   @override
-  String get settingsSearchLikesSubtitle =>
-      'Notifications push pour les mentions J\'aime';
-
-  @override
   String get settingsSearchLinkedDevicesSubtitle =>
       'Appareils Meshtastic connectés à votre profil';
 
   @override
   String get settingsSearchLinkedDevicesTitle => 'Appareils liés';
-
-  @override
-  String get settingsSearchNewFollowersSubtitle =>
-      'Notifications push lorsque quelqu\'un vous suit';
 
   @override
   String get settingsSearchNewNodesNotificationsSubtitle =>

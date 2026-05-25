@@ -19092,10 +19092,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsSearchClearAllMessagesTitle => 'Alle Nachrichten löschen';
 
   @override
-  String get settingsSearchCommentsSubtitle =>
-      'Push-Benachrichtigungen für Kommentare und @Erwähnungen';
-
-  @override
   String get settingsSearchDmNotificationsSubtitle =>
       'Benachrichtigung bei privaten Nachrichten';
 
@@ -19153,19 +19149,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Nachrichtenübersetzung per Fingertipp';
 
   @override
-  String get settingsSearchLikesSubtitle =>
-      'Push-Benachrichtigungen für Beitrags-Likes';
-
-  @override
   String get settingsSearchLinkedDevicesSubtitle =>
       'Mit Ihrem Profil verbundene Meshtastic-Geräte';
 
   @override
   String get settingsSearchLinkedDevicesTitle => 'Verknüpfte Geräte';
-
-  @override
-  String get settingsSearchNewFollowersSubtitle =>
-      'Push-Benachrichtigungen, wenn jemand Ihnen folgt';
 
   @override
   String get settingsSearchNewNodesNotificationsSubtitle =>
