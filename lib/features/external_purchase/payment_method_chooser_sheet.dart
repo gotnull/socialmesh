@@ -3,7 +3,7 @@
 
 import 'dart:io' show Platform;
 
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
@@ -21,6 +21,7 @@ import '../../services/haptic_service.dart';
 import '../../services/subscription/subscription_service.dart'
     show PurchaseResult;
 import '../../utils/snackbar.dart';
+import 'stripe_payment_sheet_launcher.dart';
 
 // Outcome of the chooser flow.
 //
@@ -161,55 +162,7 @@ Future<_PaymentMethodResult> _runStripePurchase(
       return _PaymentMethodResult.error;
     }
 
-    // Re-set the publishable key if the server returned one for the
-    // active mode that differs from the one we booted with. This is the
-    // mechanism that lets us flip test->live mode entirely server-side.
-    if (descriptor.publishableKey.isNotEmpty &&
-        descriptor.publishableKey != stripe.Stripe.publishableKey) {
-      AppLogging.purchase(
-        '[StripePurchase] re-setting publishable key from server response',
-      );
-      stripe.Stripe.publishableKey = descriptor.publishableKey;
-      await stripe.Stripe.instance.applySettings();
-    }
-
-    final merchantId = stripe.Stripe.merchantIdentifier ?? '';
-    final applePay = _shouldOfferApplePay(merchantId);
-    final googlePay = _shouldOfferGooglePay();
-    AppLogging.purchase(
-      '[StripePurchase] initPaymentSheet '
-      'applePay=$applePay googlePay=$googlePay '
-      'merchantId=${merchantId.isEmpty ? '<none>' : merchantId}',
-    );
-
-    await stripe.Stripe.instance.initPaymentSheet(
-      paymentSheetParameters: stripe.SetupPaymentSheetParameters(
-        paymentIntentClientSecret: descriptor.clientSecret,
-        merchantDisplayName: 'SocialMesh',
-        applePay: applePay
-            ? stripe.PaymentSheetApplePay(merchantCountryCode: 'AU')
-            : null,
-        googlePay: googlePay
-            ? stripe.PaymentSheetGooglePay(
-                merchantCountryCode: 'AU',
-                currencyCode: 'AUD',
-                // Sandbox network when STRIPE_USE_TEST_MODE=true on
-                // the backend - matches whatever publishable key the
-                // server returned.
-                testEnv: descriptor.publishableKey.startsWith('pk_test_'),
-              )
-            : null,
-        // Required for redirect-based methods on Android (Link's
-        // "Back to <app>" button, 3DS auth). The SDK uses this URL
-        // as the redirect target; DeepLinkManager intercepts the
-        // returning intent and forwards it to
-        // Stripe.instance.handleURLCallback so the Payment Sheet
-        // can complete. Must match Stripe.urlScheme set at boot.
-        returnURL: 'socialmesh://stripe-redirect',
-      ),
-    );
-    AppLogging.purchase('[StripePurchase] presentPaymentSheet');
-    await stripe.Stripe.instance.presentPaymentSheet();
+    await launchStripePaymentSheet(descriptor: descriptor);
 
     // Payment Sheet returned success. Kick the confirmation overlay so
     // the UI surfaces a spinner until the webhook lands; the entitlement
@@ -239,29 +192,6 @@ Future<_PaymentMethodResult> _runStripePurchase(
   } catch (e, st) {
     AppLogging.purchase('[StripePurchase] FAILED $e\n$st');
     return _PaymentMethodResult.error;
-  }
-}
-
-bool _shouldOfferApplePay(String merchantId) {
-  if (kIsWeb) return false;
-  if (merchantId.isEmpty) return false;
-  try {
-    return defaultTargetPlatform == TargetPlatform.iOS && Platform.isIOS;
-  } catch (_) {
-    return false;
-  }
-}
-
-bool _shouldOfferGooglePay() {
-  // Google Pay requires no app-side merchant identifier (Stripe owns
-  // the GP merchant on our behalf). Android-only - on iOS the user
-  // gets Apple Pay instead.
-  if (kIsWeb) return false;
-  try {
-    return defaultTargetPlatform == TargetPlatform.android &&
-        Platform.isAndroid;
-  } catch (_) {
-    return false;
   }
 }
 

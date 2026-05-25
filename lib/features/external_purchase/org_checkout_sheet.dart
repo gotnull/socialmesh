@@ -24,7 +24,6 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
 
 import '../../core/constants.dart';
 import '../../core/l10n/l10n_extension.dart';
@@ -36,6 +35,7 @@ import '../../providers/external_purchase_providers.dart';
 import '../../services/external_purchase/external_entitlement.dart';
 import '../../services/external_purchase/external_purchase_service.dart';
 import '../../services/haptic_service.dart';
+import 'stripe_payment_sheet_launcher.dart';
 
 /// Hand-off invoked after `createCheckout` returns a descriptor.
 /// Production passes the descriptor to the Stripe Payment Sheet and
@@ -283,37 +283,18 @@ class _OrgCheckoutBodyState extends ConsumerState<_OrgCheckoutBody>
     }
   }
 
-  // Default launcher: drive the Stripe Payment Sheet and kick the
-  // existing confirmation overlay via `service.handleDeepLink`. Lives
-  // alongside the widget so the personal-pack launcher
-  // (payment_method_chooser_sheet.dart) stays untouched - both
-  // launchers converge on the same `service` + `confirmationStream`
-  // downstream.
+  // Default launcher: delegates to the shared Stripe Payment Sheet
+  // helper so wallet config (Apple Pay / Google Pay / Link) stays in
+  // lockstep with the personal-pack chooser. Both flows must offer
+  // the same payment methods, otherwise users see a worse surface
+  // when buying a group license than buying the same product
+  // personally.
   Future<void> _defaultLauncher(
     WidgetRef _,
     ExternalPurchaseService service,
     CheckoutSessionDescriptor descriptor,
   ) async {
-    if (descriptor.provider != CheckoutProvider.stripe ||
-        descriptor.clientSecret.isEmpty) {
-      throw StateError(
-        'Org checkout returned a non-Stripe descriptor: '
-        'provider=${descriptor.provider}',
-      );
-    }
-    if (descriptor.publishableKey.isNotEmpty &&
-        descriptor.publishableKey != stripe.Stripe.publishableKey) {
-      stripe.Stripe.publishableKey = descriptor.publishableKey;
-      await stripe.Stripe.instance.applySettings();
-    }
-    await stripe.Stripe.instance.initPaymentSheet(
-      paymentSheetParameters: stripe.SetupPaymentSheetParameters(
-        paymentIntentClientSecret: descriptor.clientSecret,
-        merchantDisplayName: 'SocialMesh',
-        returnURL: 'socialmesh://stripe-redirect',
-      ),
-    );
-    await stripe.Stripe.instance.presentPaymentSheet();
+    await launchStripePaymentSheet(descriptor: descriptor);
     // Wake the confirmation overlay - polls for the webhook landing.
     service.handleDeepLink(descriptor.sessionId);
   }
