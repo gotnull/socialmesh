@@ -328,19 +328,7 @@ void main() {
       await tester.binding.setSurfaceSize(null);
     });
 
-    // SKIPPED: stack overflow during pump after tapping Intent.
-    // The screen's pump triggers ~67k recursive widget-mount frames
-    // (ComponentElement.mount -> Element.inflateWidget loop) when the
-    // bottom sheet opens with the full provider graph in scope. The
-    // recursion is reproducible only against CreateSignalScreen +
-    // signalConnectivityProvider + protocolServiceProvider +
-    // helpProvider together; the sheet itself works fine in isolation
-    // (see test/core/widgets/app_bottom_sheet_test.dart).
-    //
-    // Both `_BounceInWrapper`'s ticker init and the explicit
-    // transitionAnimationController have been ruled out. Root cause
-    // is not yet isolated. Re-enable once a smaller repro exists.
-    testWidgets('Intent picker opens bottom sheet', skip: true, (tester) async {
+    testWidgets('Intent picker opens bottom sheet', (tester) async {
       // Set a larger screen size to avoid overflow issues
       await tester.binding.setSurfaceSize(const Size(800, 1200));
 
@@ -391,11 +379,7 @@ void main() {
       await tester.binding.setSurfaceSize(null);
     });
 
-    // SKIPPED: same root cause as 'Intent picker opens bottom sheet'
-    // above. Opening the picker triggers the recursive mount.
-    testWidgets('selecting intent updates the row display', skip: true, (
-      tester,
-    ) async {
+    testWidgets('selecting intent updates the row display', (tester) async {
       // Set a larger screen size to avoid overflow issues
       await tester.binding.setSurfaceSize(const Size(800, 1200));
 

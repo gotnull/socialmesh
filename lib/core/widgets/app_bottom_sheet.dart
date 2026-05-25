@@ -72,14 +72,26 @@ class AppBottomSheet extends StatelessWidget {
 
     Widget content = useSafeArea ? SafeArea(top: false, child: child) : child;
 
-    // Constrain height if maxHeightFraction is specified
+    // Constrain height if maxHeightFraction is specified.
+    //
+    // The `final inner = content` capture is load-bearing: the
+    // Builder's closure captures the LOCAL `content` variable by
+    // reference, and the reassignment immediately below moves
+    // `content` to point at the Builder itself. Without `inner`,
+    // the Builder ends up returning `ConstrainedBox(child:
+    // content)` where `content === Builder` -> the Builder builds
+    // itself recursively until the widget tree mount stack
+    // overflows. Reproducible at runtime any time a sheet is
+    // opened with `maxHeightFraction` set (the intent picker on
+    // create_signal_screen was the loudest example).
     if (maxHeightFraction != null) {
+      final inner = content;
       content = Builder(
         builder: (context) => ConstrainedBox(
           constraints: BoxConstraints(
             maxHeight: MediaQuery.of(context).size.height * maxHeightFraction,
           ),
-          child: content,
+          child: inner,
         ),
       );
     }
@@ -90,15 +102,6 @@ class AppBottomSheet extends StatelessWidget {
       isScrollControlled: isScrollControlled,
       isDismissible: isDismissible,
       enableDrag: isDismissible,
-      transitionAnimationController: AnimationController(
-        vsync: Navigator.of(context),
-        duration: disableAnimations
-            ? Duration.zero
-            : const Duration(milliseconds: 350),
-        reverseDuration: disableAnimations
-            ? Duration.zero
-            : const Duration(milliseconds: 250),
-      ),
       builder: (context) => _BounceInWrapper(
         enabled: !disableAnimations,
         child: AppBottomSheet(
@@ -131,15 +134,6 @@ class AppBottomSheet extends StatelessWidget {
       isScrollControlled: isScrollControlled,
       isDismissible: isDismissible,
       enableDrag: isDismissible,
-      transitionAnimationController: AnimationController(
-        vsync: Navigator.of(context),
-        duration: disableAnimations
-            ? Duration.zero
-            : const Duration(milliseconds: 350),
-        reverseDuration: disableAnimations
-            ? Duration.zero
-            : const Duration(milliseconds: 250),
-      ),
       builder: (ctx) =>
           _BounceInWrapper(enabled: !disableAnimations, child: builder(ctx)),
     );
@@ -167,15 +161,6 @@ class AppBottomSheet extends StatelessWidget {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      transitionAnimationController: AnimationController(
-        vsync: Navigator.of(context),
-        duration: disableAnimations
-            ? Duration.zero
-            : const Duration(milliseconds: 350),
-        reverseDuration: disableAnimations
-            ? Duration.zero
-            : const Duration(milliseconds: 250),
-      ),
       builder: (context) => _BounceInWrapper(
         enabled: !disableAnimations,
         child: DraggableScrollableSheet(
