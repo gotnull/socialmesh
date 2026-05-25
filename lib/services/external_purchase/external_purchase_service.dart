@@ -196,21 +196,42 @@ class ExternalPurchaseService {
   /// should pass it explicitly so a future change to the default
   /// doesn't silently re-route in-progress purchase intents.
   ///
+  /// [subjectKind] + [licenseOrgId] gate the slice-7 self-serve
+  /// org-pack path. When [subjectKind] is `'org'`, the request carries
+  /// `subjectKind: 'org'` and (when provided) `licenseOrgId: <value>`
+  /// so the backend can validate ownership and the Stripe webhook
+  /// (slice 5a) can create the matching `license_orgs/{licenseOrgId}`
+  /// doc + org-owned entitlement.  When [subjectKind] is null or
+  /// `'user'`, the org keys are omitted entirely - existing personal
+  /// checkouts remain wire-identical to pre-slice-8 callers. The
+  /// backend rejects malformed / anonymous / reserved-namespace
+  /// org-pack requests with a `FunctionsException`; callers map
+  /// those exactly as they did before.
+  ///
   /// Throws if the backend rejects the productId (unknown product) or
   /// if the call fails for transport reasons. Callers should catch and
   /// surface a generic "couldn't start checkout" message.
   Future<CheckoutSessionDescriptor> createCheckout(
     String productId, {
     String? provider,
+    String? subjectKind,
+    String? licenseOrgId,
   }) async {
+    final isOrgPack = subjectKind == 'org';
     AppLogging.purchase(
       '[ExternalPurchaseService] createCheckout productId=$productId '
-      'provider=${provider ?? '<default>'}',
+      'provider=${provider ?? '<default>'} '
+      'subjectKind=${isOrgPack ? 'org' : 'user'}',
     );
     final identity = await _identityPayload();
     final response = await _invoker.call('createExternalCheckout', {
       'productId': productId,
       if (provider != null) 'provider': provider,
+      // Org metadata only when the caller explicitly opted in. The
+      // server treats absent `subjectKind` as `'user'`, so personal
+      // calls stay wire-identical to pre-slice-8 behaviour.
+      if (isOrgPack) 'subjectKind': 'org',
+      if (isOrgPack && licenseOrgId != null) 'licenseOrgId': licenseOrgId,
       ...identity,
     });
     final descriptor = CheckoutSessionDescriptor.fromJson(response);
@@ -273,13 +294,30 @@ class ExternalPurchaseService {
     }
   }
 
-  /// Redeem a support-issued unlock code.
+  /// Redeem a support-issued unlock code OR a group / community
+  /// licensing seat code.
+  ///
+  /// Prefix-routed: `LSEAT-...` codes call `redeemLicenseSeatCode`
+  /// (writes `org_seat_allocations/` + `license_orgs/{orgId}/members/{uid}`,
+  /// returns the seat's productId so the existing UI can show
+  /// "unlocked X" without caring about the licensing-vs-personal axis).
+  /// Everything else falls through to the existing `redeemUnlockCode`
+  /// path (writes `external_entitlements/`).
   ///
   /// Returns the granted product ids on success. Throws on invalid /
-  /// expired / exhausted codes — callers map the FunctionsException
+  /// expired / exhausted codes - callers map the FunctionsException
   /// codes to user-facing messages.
   Future<List<String>> redeemCode(String code) async {
-    AppLogging.purchase('[ExternalPurchaseService] redeemCode');
+    if (_isLicenseSeatCode(code)) {
+      return _redeemLicenseSeatCode(code);
+    }
+    return _redeemUnlockCode(code);
+  }
+
+  /// Personal-pack code path (existing). Matches `SM-XXXX-XXXX` and
+  /// any non-licensing prefix.
+  Future<List<String>> _redeemUnlockCode(String code) async {
+    AppLogging.purchase('[ExternalPurchaseService] redeemCode kind=personal');
     final identity = await _identityPayload();
     final response = await _invoker.call('redeemUnlockCode', {
       'code': code,
@@ -294,6 +332,46 @@ class ExternalPurchaseService {
     // Refresh so the cache reflects the new entitlements immediately.
     await refreshEntitlements();
     return productIds;
+  }
+
+  /// License seat code path (slice 4b). Calls `redeemLicenseSeatCode`
+  /// which transactionally allocates a seat and creates / updates a
+  /// member doc inside `license_orgs/`. Backend is idempotent on
+  /// `(uid, licenseOrgId, productId)`: a replay returns
+  /// `alreadyAllocated: true` without burning a seat-use.
+  Future<List<String>> _redeemLicenseSeatCode(String code) async {
+    AppLogging.purchase(
+      '[ExternalPurchaseService] redeemCode kind=license_seat',
+    );
+    // No deviceInstallId on this path: licensing is uid-scoped, the
+    // backend rejects anonymous callers, and adding device identity
+    // would muddy the audit trail without unlocking anything.
+    final response = await _invoker.call('redeemLicenseSeatCode', {
+      'code': code,
+    });
+    final productId = response['productId'] as String;
+    final alreadyAllocated = response['alreadyAllocated'] as bool? ?? false;
+    AppLogging.purchase(
+      '[ExternalPurchaseService] license_seat_redeemed '
+      'alreadyAllocated=$alreadyAllocated',
+    );
+    // Refresh so the user / seat providers and the cache filter
+    // re-derive with the new allocation. The Firestore streams behind
+    // `currentUserLicenseOrgIdsProvider` and
+    // `currentUserSeatAllocationsProvider` also pick up the change,
+    // but kicking the entitlement cache here means the gate flips at
+    // the same time as the personal-code path's flip.
+    await refreshEntitlements();
+    return [productId];
+  }
+
+  /// Codes starting with `LSEAT-` (case-insensitive, whitespace
+  /// tolerant) route through the licensing path. Anything else - empty
+  /// strings included - stays on the existing personal-pack path,
+  /// which already handles those failure modes.
+  static bool _isLicenseSeatCode(String code) {
+    final normalised = code.trim().toUpperCase();
+    return normalised.startsWith('LSEAT-') || normalised.startsWith('LSEAT ');
   }
 
   /// Bind every entitlement currently owned by this install to the

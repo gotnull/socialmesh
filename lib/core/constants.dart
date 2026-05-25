@@ -420,11 +420,28 @@ class AppFeatureFlags {
 
   /// Whether the Apple Wallet sigil card feature is enabled.
   /// Set `APPLE_WALLET_ENABLED=true` in `.env` to enable.
-  /// Default: false — wallet button is hidden until the Sigil API
+  /// Default: false - wallet button is hidden until the Sigil API
   /// wallet endpoint is production-ready.
   static bool get isAppleWalletEnabled {
     try {
       final raw = dotenv.env['APPLE_WALLET_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Whether group / community licensing groundwork is active.
+  /// Set `GROUP_LICENSING_ENABLED=true` in `.env` to enable.
+  /// Default: false. With the flag off, [currentUserLicenseOrgIdsProvider]
+  /// always yields an empty set even for signed-in users. This gate
+  /// fronts every future surface (license-org membership reads, seat
+  /// allocation, org-pack purchases) so a partial roll-out cannot
+  /// silently surface incomplete features. See
+  /// `docs/engineering/GROUP_LICENSING_FOUNDATION.md`.
+  static bool get isGroupLicensingEnabled {
+    try {
+      final raw = dotenv.env['GROUP_LICENSING_ENABLED']?.toLowerCase().trim();
       return raw == 'true' || raw == '1';
     } catch (_) {
       return false;

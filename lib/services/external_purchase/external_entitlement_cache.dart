@@ -17,6 +17,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging.dart';
+import '../../models/seat_allocation.dart';
 import 'external_entitlement.dart';
 
 class ExternalEntitlementCache {
@@ -31,7 +32,7 @@ class ExternalEntitlementCache {
   /// Read the cached entitlements. Returns an empty list if the cache
   /// has never been populated or fails to decode.
   ///
-  /// A decode failure clears the cache — a corrupted blob would
+  /// A decode failure clears the cache - a corrupted blob would
   /// otherwise stick around silently. Better to lose the cache and
   /// re-fetch from the backend than serve a half-parsed list.
   List<ExternalEntitlement> read() {
@@ -47,7 +48,7 @@ class ExternalEntitlementCache {
           .toList();
     } catch (e) {
       AppLogging.purchase(
-        '[ExternalEntitlementCache] Decode failed: $e — clearing cache',
+        '[ExternalEntitlementCache] Decode failed: $e - clearing cache',
       );
       _prefs.remove(_prefsKey);
       return const [];
@@ -66,9 +67,21 @@ class ExternalEntitlementCache {
       _refreshedAtKey,
       DateTime.now().toUtc().toIso8601String(),
     );
-    AppLogging.purchase(
-      '[ExternalEntitlementCache] Wrote ${entitlements.length} entitlements',
-    );
+    final orgCount = entitlements
+        .where((e) => e.ownerKind == OwnerKind.org)
+        .length;
+    if (orgCount > 0) {
+      final userCount = entitlements.length - orgCount;
+      AppLogging.purchase(
+        '[ExternalEntitlementCache] Wrote ${entitlements.length} entitlements '
+        '($userCount user-owned, $orgCount org-owned - org rows require '
+        'matching membership + seat allocation to grant)',
+      );
+    } else {
+      AppLogging.purchase(
+        '[ExternalEntitlementCache] Wrote ${entitlements.length} entitlements',
+      );
+    }
   }
 
   /// Last successful network refresh time, or null if never refreshed.
@@ -94,7 +107,45 @@ class ExternalEntitlementCache {
   /// Active product ids derived from the cache. The provider layer
   /// joins this with the store-side `purchasedProductIds` to compute
   /// effective access.
-  Set<String> activeProductIds() {
-    return read().where((e) => e.isActive).map((e) => e.productId).toSet();
+  ///
+  /// Ownership rules:
+  ///   - User-owned rows ([OwnerKind.user]) always admit when active.
+  ///   - Org-owned rows ([OwnerKind.org]) admit ONLY when BOTH:
+  ///     - the row's `orgId` is in [ownedOrgIds] (the current user is
+  ///       a member of the owning license-org), AND
+  ///     - the `(orgId, productId)` pair is in [ownedSeats] (the user
+  ///       has been allocated a seat for this specific product).
+  ///
+  /// The dual check is defence in depth: a stale seat row for a
+  /// license-org the user is no longer a member of must NOT grant
+  /// access. Both sources flow from independent providers
+  /// (`currentUserLicenseOrgIdsProvider` and
+  /// `currentUserSeatAllocationsProvider`); their intersection here
+  /// is what closes the loop.
+  ///
+  /// Both args default to empty so existing call sites continue to
+  /// drop org rows (fail-closed). The
+  /// `externalEntitlementsProvider` wires in the real values.
+  Set<String> activeProductIds({
+    Set<String> ownedOrgIds = const {},
+    Set<SeatAllocationRef> ownedSeats = const {},
+  }) {
+    return read()
+        .where((e) => e.isActive)
+        .where(
+          (e) => switch (e.ownerKind) {
+            OwnerKind.user => true,
+            OwnerKind.org => () {
+              final orgId = e.orgId;
+              if (orgId == null || orgId.isEmpty) return false;
+              if (!ownedOrgIds.contains(orgId)) return false;
+              return ownedSeats.contains(
+                SeatAllocationRef(orgId: orgId, productId: e.productId),
+              );
+            }(),
+          },
+        )
+        .map((e) => e.productId)
+        .toSet();
   }
 }

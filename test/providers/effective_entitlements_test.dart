@@ -10,7 +10,7 @@
 //
 //   1. Store entitlements (RC) alone unlock features.
 //   2. External entitlements alone unlock features.
-//   3. Both sources merge — neither is dropped.
+//   3. Both sources merge - neither is dropped.
 //   4. complete_pack from EITHER source expands to all 6 individual packs.
 //   5. External entitlements never override or revoke a store entitlement.
 //   6. The set returned is unmodifiable (callers can't accidentally mutate
@@ -19,9 +19,13 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/models/subscription_models.dart';
 import 'package:socialmesh/providers/external_purchase_providers.dart';
 import 'package:socialmesh/providers/subscription_providers.dart';
+import 'package:socialmesh/models/seat_allocation.dart';
+import 'package:socialmesh/services/external_purchase/external_entitlement.dart';
+import 'package:socialmesh/services/external_purchase/external_entitlement_cache.dart';
 
 class _FakePurchaseStateNotifier extends Notifier<PurchaseState>
     implements PurchaseStateNotifier {
@@ -106,7 +110,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
     );
   });
 
-  group('effectiveEntitlementsProvider — merge contract', () {
+  group('effectiveEntitlementsProvider - merge contract', () {
     test('store-only entitlement unlocks the feature', () async {
       final c = _container(
         storePurchases: {'theme_pack'},
@@ -132,7 +136,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
       c.dispose();
     });
 
-    test('both sources merge — union, not intersection', () async {
+    test('both sources merge - union, not intersection', () async {
       // The bug we're guarding against: if the merge ever flips to
       // intersection, a user who buys theme_pack on the App Store and
       // widget_pack via BMC would see neither unlocked.
@@ -227,6 +231,199 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
 
         expect(c.read(hasAllPremiumFeaturesProvider), isFalse);
         c.dispose();
+      },
+    );
+  });
+
+  group('effectiveEntitlementsProvider - ownership safety', () {
+    // End-to-end assertion: an org-owned entitlement parsed from the
+    // cache must not appear in the gate-feeding set, and therefore
+    // must not unlock any premium feature. Future group/community
+    // licensing will admit these rows only when a membership / seat
+    // model says the current user qualifies. Until then, the cache
+    // boundary fails closed.
+    test(
+      'org-owned cache rows never reach effectiveEntitlements (no membership)',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final cache = ExternalEntitlementCache(prefs);
+
+        final ts = DateTime.parse('2026-05-05T10:00:00.000Z');
+        await cache.write([
+          ExternalEntitlement(
+            productId: 'theme_pack',
+            status: ExternalEntitlementStatus.active,
+            provider: ExternalProvider.stripe,
+            grantedAt: ts,
+            lastVerifiedAt: ts,
+            sessionId: 'sess-user',
+          ),
+          ExternalEntitlement(
+            productId: 'widget_pack',
+            status: ExternalEntitlementStatus.active,
+            provider: ExternalProvider.stripe,
+            grantedAt: ts,
+            lastVerifiedAt: ts,
+            sessionId: 'sess-org',
+            ownerKind: OwnerKind.org,
+            orgId: 'acme-eng-team',
+          ),
+        ]);
+
+        final c = _container(
+          storePurchases: const {},
+          externalPurchases: cache.activeProductIds(),
+        );
+        await _pumpUntilData(c);
+
+        final union = c.read(effectiveEntitlementsProvider);
+        expect(union, contains('theme_pack'));
+        expect(
+          union,
+          isNot(contains('widget_pack')),
+          reason: 'org-owned widget_pack must not unlock without membership',
+        );
+        expect(c.read(hasPurchasedProvider('theme_pack')), isTrue);
+        expect(c.read(hasPurchasedProvider('widget_pack')), isFalse);
+        expect(c.read(hasFeatureProvider(PremiumFeature.homeWidgets)), isFalse);
+        c.dispose();
+      },
+    );
+
+    test(
+      'mixed store + user external + org external: org row stays excluded',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final cache = ExternalEntitlementCache(prefs);
+
+        final ts = DateTime.parse('2026-05-05T10:00:00.000Z');
+        await cache.write([
+          ExternalEntitlement(
+            productId: 'ringtone_pack',
+            status: ExternalEntitlementStatus.active,
+            provider: ExternalProvider.stripe,
+            grantedAt: ts,
+            lastVerifiedAt: ts,
+            sessionId: 'sess-user',
+          ),
+          ExternalEntitlement(
+            productId: 'automations_pack',
+            status: ExternalEntitlementStatus.active,
+            provider: ExternalProvider.stripe,
+            grantedAt: ts,
+            lastVerifiedAt: ts,
+            sessionId: 'sess-org',
+            ownerKind: OwnerKind.org,
+            orgId: 'acme-eng-team',
+          ),
+        ]);
+
+        final c = _container(
+          storePurchases: {'theme_pack'},
+          externalPurchases: cache.activeProductIds(),
+        );
+        await _pumpUntilData(c);
+
+        final union = c.read(effectiveEntitlementsProvider);
+        expect(union, containsAll({'theme_pack', 'ringtone_pack'}));
+        expect(union, isNot(contains('automations_pack')));
+      },
+    );
+
+    test(
+      'membership + matching seat UNLOCKS the org-owned entitlement',
+      () async {
+        // Slice 3 load-bearing assertion: when the cache filter is fed
+        // both ownedOrgIds AND a matching ownedSeats ref, the org row
+        // makes it through to effectiveEntitlementsProvider and the
+        // premium gate flips to true. This proves the end-to-end loop
+        // (membership + seat -> unlock) without any change to the gate
+        // call sites.
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final cache = ExternalEntitlementCache(prefs);
+
+        final ts = DateTime.parse('2026-05-05T10:00:00.000Z');
+        await cache.write([
+          ExternalEntitlement(
+            productId: 'widget_pack',
+            status: ExternalEntitlementStatus.active,
+            provider: ExternalProvider.stripe,
+            grantedAt: ts,
+            lastVerifiedAt: ts,
+            sessionId: 'sess-org',
+            ownerKind: OwnerKind.org,
+            orgId: 'acme-eng-team',
+          ),
+        ]);
+
+        final filtered = cache.activeProductIds(
+          ownedOrgIds: const {'acme-eng-team'},
+          ownedSeats: {
+            const SeatAllocationRef(
+              orgId: 'acme-eng-team',
+              productId: 'widget_pack',
+            ),
+          },
+        );
+        expect(filtered, {'widget_pack'});
+
+        final c = _container(
+          storePurchases: const {},
+          externalPurchases: filtered,
+        );
+        await _pumpUntilData(c);
+
+        final union = c.read(effectiveEntitlementsProvider);
+        expect(union, contains('widget_pack'));
+        expect(c.read(hasPurchasedProvider('widget_pack')), isTrue);
+        expect(c.read(hasFeatureProvider(PremiumFeature.homeWidgets)), isTrue);
+        c.dispose();
+      },
+    );
+
+    test(
+      'membership without matching seat still keeps the org row LOCKED',
+      () async {
+        // The companion to the unlock test: prove the loop is "AND",
+        // not "OR". Even with full org membership, removing the seat
+        // ref re-locks the entitlement.
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final cache = ExternalEntitlementCache(prefs);
+
+        final ts = DateTime.parse('2026-05-05T10:00:00.000Z');
+        await cache.write([
+          ExternalEntitlement(
+            productId: 'widget_pack',
+            status: ExternalEntitlementStatus.active,
+            provider: ExternalProvider.stripe,
+            grantedAt: ts,
+            lastVerifiedAt: ts,
+            sessionId: 'sess-org',
+            ownerKind: OwnerKind.org,
+            orgId: 'acme-eng-team',
+          ),
+        ]);
+
+        final filtered = cache.activeProductIds(
+          ownedOrgIds: const {'acme-eng-team'},
+          // No seat refs - membership alone is insufficient.
+        );
+        expect(filtered, isEmpty);
+
+        final c = _container(
+          storePurchases: const {},
+          externalPurchases: filtered,
+        );
+        await _pumpUntilData(c);
+
+        expect(
+          c.read(effectiveEntitlementsProvider),
+          isNot(contains('widget_pack')),
+        );
       },
     );
   });

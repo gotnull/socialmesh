@@ -27,10 +27,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/logging.dart';
+import '../models/seat_allocation.dart';
 import '../models/subscription_models.dart';
 import '../services/external_purchase/external_entitlement_cache.dart';
 import '../services/external_purchase/external_purchase_service.dart';
 import 'auth_providers.dart';
+import 'license_org_membership_providers.dart';
+import 'seat_allocation_providers.dart';
 import 'subscription_providers.dart';
 
 /// Singleton ExternalPurchaseService. Disposes the underlying service
@@ -87,20 +90,42 @@ final externalConfirmationStreamProvider = StreamProvider<ConfirmationState>((
 /// pipeline reaching `paid`, an unlock-code redemption, etc.) re-emits
 /// via the service's `activeProductIdsStream`. A network failure leaves
 /// the cache emission as the steady state.
+///
+/// Ownership-aware filter: the cache is asked to admit org-owned rows
+/// only when the user (a) belongs to the owning org AND (b) holds a
+/// matching seat allocation. Both contexts come from independent
+/// providers; either falling back to empty (loading, error, flag off,
+/// guest) keeps org rows excluded. The default no-arg variant of
+/// `cache.activeProductIds()` already drops every org row, so any
+/// race between this provider's first emission and the org/seat
+/// providers' resolution still fails closed.
 final externalEntitlementsProvider = StreamProvider<Set<String>>((ref) async* {
   final service = await ref.watch(externalPurchaseServiceProvider.future);
-  final initial = service.cachedActiveProductIds;
-  yield initial;
+
+  final ownedOrgIds = ref
+      .watch(currentUserLicenseOrgIdsProvider)
+      .maybeWhen(data: (s) => s, orElse: () => const <String>{});
+  final ownedSeats = ref
+      .watch(currentUserSeatAllocationsProvider)
+      .maybeWhen(data: (s) => s, orElse: () => const <SeatAllocationRef>{});
+
+  Set<String> derive() => service.cache.activeProductIds(
+    ownedOrgIds: ownedOrgIds,
+    ownedSeats: ownedSeats,
+  );
+
+  yield derive();
 
   // Kick a background refresh so the cache becomes consistent with the
   // server immediately after the provider is first observed. The
   // service push updates into activeProductIdsStream when the refresh
-  // lands, which yields below.
+  // lands; the payload (already-user-filtered) is treated as a "cache
+  // changed" trigger and we re-derive locally with current ownership
+  // context.
   unawaited(service.refreshEntitlements());
 
-  // Re-emit on every subsequent cache write.
-  await for (final set in service.activeProductIdsStream) {
-    yield set;
+  await for (final _ in service.activeProductIdsStream) {
+    yield derive();
   }
 });
 

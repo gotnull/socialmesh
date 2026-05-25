@@ -26482,6 +26482,34 @@ class AppLocalizationsRu extends AppLocalizations {
   String get dismiss => 'Закрыть';
 
   @override
+  String get orgCheckoutSheetTitle => 'Купить групповую лицензию';
+
+  @override
+  String get orgCheckoutSheetBody =>
+      'Покупка пакета лицензий создаёт организацию лицензий для вашей команды. Места НЕ назначаются автоматически, и вы не будете добавлены как участник. Распространяйте коды мест, чтобы приглашать участников.';
+
+  @override
+  String get orgCheckoutOrgIdLabel => 'ID организации лицензии';
+
+  @override
+  String get orgCheckoutOrgIdHint => 'acme-eng-team';
+
+  @override
+  String get orgCheckoutOrgIdHelp =>
+      'Строчные буквы, цифры и дефисы. От 3 до 64 символов. Используется для идентификации вашей команды в системе лицензирования.';
+
+  @override
+  String get orgCheckoutSubmit => 'Перейти к оплате';
+
+  @override
+  String get orgCheckoutOrgIdInvalid =>
+      'Используйте строчные буквы, цифры и дефисы. От 3 до 64 символов. Не может начинаться или заканчиваться дефисом.';
+
+  @override
+  String get orgCheckoutError =>
+      'Не удалось запустить оформление групповой лицензии. Повторите попытку или обратитесь в поддержку.';
+
+  @override
   String get premiumPurchaseError => 'Что-то пошло не так. Попробуйте ещё раз.';
 
   @override

@@ -26553,6 +26553,34 @@ class AppLocalizationsDe extends AppLocalizations {
   String get dismiss => 'Schließen';
 
   @override
+  String get orgCheckoutSheetTitle => 'Gruppenlizenz kaufen';
+
+  @override
+  String get orgCheckoutSheetBody =>
+      'Der Kauf eines Lizenzpakets richtet eine Lizenz-Organisation für Ihr Team ein. Plätze werden NICHT automatisch zugewiesen und Sie werden nicht als Mitglied hinzugefügt. Verteilen Sie Platz-Codes, um Mitglieder einzuladen.';
+
+  @override
+  String get orgCheckoutOrgIdLabel => 'Lizenz-Organisations-ID';
+
+  @override
+  String get orgCheckoutOrgIdHint => 'acme-eng-team';
+
+  @override
+  String get orgCheckoutOrgIdHelp =>
+      'Kleinbuchstaben, Ziffern und Bindestriche. 3 bis 64 Zeichen. Wird zur Identifizierung Ihres Teams im Lizenzsystem verwendet.';
+
+  @override
+  String get orgCheckoutSubmit => 'Weiter zur Zahlung';
+
+  @override
+  String get orgCheckoutOrgIdInvalid =>
+      'Verwenden Sie Kleinbuchstaben, Ziffern und Bindestriche. 3 bis 64 Zeichen. Darf nicht mit einem Bindestrich beginnen oder enden.';
+
+  @override
+  String get orgCheckoutError =>
+      'Der Gruppenlizenz-Checkout konnte nicht gestartet werden. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support.';
+
+  @override
   String get premiumPurchaseError =>
       'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.';
 

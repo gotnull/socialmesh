@@ -111,7 +111,7 @@ void main() {
     );
 
     test('reuses the same deviceInstallId across calls', () async {
-      // Stable identity is the whole point — a fresh id per call would
+      // Stable identity is the whole point - a fresh id per call would
       // mean the user's first checkout and second would be split
       // across two anonymous owners on the backend.
       invoker.scriptResponse('createExternalCheckout', _checkoutResponse('a'));
@@ -125,6 +125,84 @@ void main() {
       final secondId = invoker.calls[1].data['deviceInstallId'];
       expect(firstId, secondId);
     });
+
+    test('personal checkout payload omits subjectKind + licenseOrgId entirely '
+        '(slice 8 wire-compat)', () async {
+      // The pre-slice-8 wire never carried these keys. The personal
+      // path must keep that shape so backend logs and the
+      // existing webhook continue to behave identically.
+      invoker.scriptResponse('createExternalCheckout', _checkoutResponse('a'));
+      await buildService().createCheckout('theme_pack');
+      final data = invoker.calls.first.data;
+      expect(data.containsKey('subjectKind'), isFalse);
+      expect(data.containsKey('licenseOrgId'), isFalse);
+    });
+
+    test('explicit subjectKind="user" also suppresses org keys', () async {
+      // The server treats absent subjectKind as 'user', so the
+      // client may either omit or send 'user' with the same
+      // intent. Slice 8 contract: never send org keys for the
+      // user-side path, regardless of whether the caller passed
+      // 'user' explicitly or left it null.
+      invoker.scriptResponse('createExternalCheckout', _checkoutResponse('a'));
+      await buildService().createCheckout('theme_pack', subjectKind: 'user');
+      final data = invoker.calls.first.data;
+      expect(data.containsKey('subjectKind'), isFalse);
+      expect(data.containsKey('licenseOrgId'), isFalse);
+    });
+
+    test('org checkout sends subjectKind="org" + licenseOrgId', () async {
+      invoker.scriptResponse('createExternalCheckout', _checkoutResponse('a'));
+      await buildService().createCheckout(
+        'community_pack_20seat',
+        subjectKind: 'org',
+        licenseOrgId: 'acme-eng-team',
+      );
+      final data = invoker.calls.first.data;
+      expect(data['productId'], 'community_pack_20seat');
+      expect(data['subjectKind'], 'org');
+      expect(data['licenseOrgId'], 'acme-eng-team');
+      // Identity payload still carries deviceInstallId. The backend
+      // ignores it when auth.uid is present (slice 7 enforces
+      // uid-scoped sessions for org-pack); sending it here is
+      // harmless and keeps the personal/org wire shape unified.
+      expect(data['deviceInstallId'], isNotNull);
+    });
+
+    test('org checkout without licenseOrgId still sends subjectKind '
+        '(server validates)', () async {
+      // Client does not pre-validate; if the caller passes
+      // subjectKind="org" without a licenseOrgId, the request
+      // reaches the backend which rejects with invalid-argument
+      // (slice 7). This test pins that the client does not
+      // silently swallow the org intent.
+      invoker.scriptResponse('createExternalCheckout', _checkoutResponse('a'));
+      await buildService().createCheckout(
+        'community_pack_20seat',
+        subjectKind: 'org',
+      );
+      final data = invoker.calls.first.data;
+      expect(data['subjectKind'], 'org');
+      expect(data.containsKey('licenseOrgId'), isFalse);
+    });
+
+    test(
+      'server-side errors bubble unchanged from the org-pack path',
+      () async {
+        // Existing FunctionsException behaviour: the service does not
+        // wrap or transform backend errors. Slice 8 must NOT change
+        // that contract for org-pack calls.
+        invoker.scriptThrow(StateError('permission-denied'));
+        await expectLater(
+          buildService().createCheckout(
+            'community_pack_20seat',
+            subjectKind: 'org',
+            licenseOrgId: 'acme-eng-team',
+          ),
+          throwsA(isA<StateError>()),
+        );
+      },
+    );
   });
 
   // ---------------------------------------------------------------------------
@@ -226,7 +304,7 @@ void main() {
       final result = await service.redeemCode('SM-AB23-CD45');
 
       expect(result, ['theme_pack', 'widget_pack']);
-      // Cache must have been populated by the implicit refresh —
+      // Cache must have been populated by the implicit refresh -
       // otherwise the UI would still show "locked" until the next
       // app launch.
       expect(cache.activeProductIds(), {'theme_pack', 'widget_pack'});
@@ -235,6 +313,135 @@ void main() {
         'getExternalEntitlements',
       ]);
     });
+
+    test(
+      'non-LSEAT codes route through redeemUnlockCode (existing path unchanged)',
+      () async {
+        // Defence-in-depth: the slice 4b routing must NOT touch the
+        // personal-pack path for codes without the licensing prefix.
+        // Pre-existing customers using SM-XXXX-XXXX support codes
+        // continue to hit the same Cloud Function with the same
+        // identity payload.
+        invoker.scriptResponse('redeemUnlockCode', {
+          'productIds': ['theme_pack'],
+        });
+        invoker.scriptResponse('getExternalEntitlements', {
+          'ownerKind': 'install',
+          'entitlements': [_entitlementJson('theme_pack')],
+        });
+
+        final service = buildService();
+        await service.redeemCode('SM-AB23-CD45');
+
+        // First call MUST be redeemUnlockCode (not the licensing one).
+        expect(invoker.calls.first.name, 'redeemUnlockCode');
+        // Identity payload still carries deviceInstallId on this path.
+        expect(invoker.calls.first.data.containsKey('deviceInstallId'), isTrue);
+        // No licensing call.
+        expect(
+          invoker.calls.any((c) => c.name == 'redeemLicenseSeatCode'),
+          isFalse,
+        );
+      },
+    );
+
+    test(
+      'LSEAT- codes route through redeemLicenseSeatCode and refresh cache',
+      () async {
+        // Slice 4b happy path on the client. The backend returns a
+        // single allocation tied to one productId; the client adapts
+        // it into the same `List<String>` shape the UI expects from
+        // the personal path so call sites don't branch.
+        invoker.scriptResponse('redeemLicenseSeatCode', {
+          'allocationId': 'acme-eng-team__user-1__widget_pack',
+          'licenseOrgId': 'acme-eng-team',
+          'productId': 'widget_pack',
+          'alreadyAllocated': false,
+        });
+        invoker.scriptResponse('getExternalEntitlements', {
+          'ownerKind': 'install',
+          'entitlements': const [],
+        });
+
+        final service = buildService();
+        final result = await service.redeemCode('LSEAT-ABCD-EFGH');
+
+        expect(result, ['widget_pack']);
+        expect(invoker.calls.map((c) => c.name).toList(), [
+          'redeemLicenseSeatCode',
+          'getExternalEntitlements',
+        ]);
+        // Licensing path MUST NOT pass deviceInstallId. The Cloud
+        // Function rejects anonymous callers and the seat is bound to
+        // uid; sending an install id would muddy the audit trail.
+        expect(
+          invoker.calls.first.data.containsKey('deviceInstallId'),
+          isFalse,
+          reason: 'license seat redeem must not echo deviceInstallId',
+        );
+        expect(invoker.calls.first.data['code'], 'LSEAT-ABCD-EFGH');
+      },
+    );
+
+    test(
+      'LSEAT routing is case + whitespace insensitive on the prefix',
+      () async {
+        invoker.scriptResponse('redeemLicenseSeatCode', {
+          'allocationId': 'a__u__p',
+          'licenseOrgId': 'a',
+          'productId': 'widget_pack',
+          'alreadyAllocated': false,
+        });
+        invoker.scriptResponse('getExternalEntitlements', {
+          'ownerKind': 'install',
+          'entitlements': const [],
+        });
+
+        final service = buildService();
+        await service.redeemCode('  lseat-abcd-efgh  ');
+
+        expect(invoker.calls.first.name, 'redeemLicenseSeatCode');
+      },
+    );
+
+    test(
+      'LSEAT replay returns the same productId with alreadyAllocated=true',
+      () async {
+        invoker.scriptResponse('redeemLicenseSeatCode', {
+          'allocationId': 'a__u__p',
+          'licenseOrgId': 'a',
+          'productId': 'widget_pack',
+          'alreadyAllocated': true,
+        });
+        invoker.scriptResponse('getExternalEntitlements', {
+          'ownerKind': 'install',
+          'entitlements': const [],
+        });
+
+        final service = buildService();
+        final result = await service.redeemCode('LSEAT-RPLY-RPLY');
+
+        expect(result, ['widget_pack']);
+        // The service does not surface alreadyAllocated to the caller
+        // - the user-facing message is the same "you have widget_pack"
+        // either way, and the backend already de-duped on its side.
+      },
+    );
+
+    test(
+      'empty code falls through to the personal path (existing behavior)',
+      () async {
+        // An empty string is not a license seat code; the personal Cloud
+        // Function already rejects empty strings, so falling through
+        // preserves the existing error semantics. The slice 4b routing
+        // must NOT swallow this.
+        invoker.scriptThrow(StateError('empty code rejected by backend'));
+
+        final service = buildService();
+        await expectLater(service.redeemCode(''), throwsA(isA<StateError>()));
+        expect(invoker.calls.first.name, 'redeemUnlockCode');
+      },
+    );
   });
 
   // ---------------------------------------------------------------------------

@@ -26473,6 +26473,34 @@ class AppLocalizationsPt extends AppLocalizations {
   String get dismiss => 'Dispensar';
 
   @override
+  String get orgCheckoutSheetTitle => 'Comprar uma licença de grupo';
+
+  @override
+  String get orgCheckoutSheetBody =>
+      'Comprar um pacote de licenças configura uma organização de licenças para a sua equipe. Os lugares NÃO são atribuídos automaticamente e você não será adicionado como membro. Distribua códigos de lugar para convidar membros.';
+
+  @override
+  String get orgCheckoutOrgIdLabel => 'ID da organização de licença';
+
+  @override
+  String get orgCheckoutOrgIdHint => 'acme-eng-team';
+
+  @override
+  String get orgCheckoutOrgIdHelp =>
+      'Letras minúsculas, dígitos e hifens. De 3 a 64 caracteres. Usado para identificar sua equipe no sistema de licenças.';
+
+  @override
+  String get orgCheckoutSubmit => 'Continuar para o pagamento';
+
+  @override
+  String get orgCheckoutOrgIdInvalid =>
+      'Use letras minúsculas, dígitos e hifens. De 3 a 64 caracteres. Não pode começar nem terminar com um hífen.';
+
+  @override
+  String get orgCheckoutError =>
+      'Não foi possível iniciar o pagamento da licença de grupo. Tente novamente ou entre em contato com o suporte.';
+
+  @override
   String get premiumPurchaseError => 'Algo deu errado. Tente novamente.';
 
   @override

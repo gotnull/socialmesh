@@ -45880,6 +45880,54 @@ abstract class AppLocalizations {
   /// **'Dismiss'**
   String get dismiss;
 
+  /// Title of the org-pack checkout sheet (group / community licensing self-serve purchase).
+  ///
+  /// In en, this message translates to:
+  /// **'Buy a group license'**
+  String get orgCheckoutSheetTitle;
+
+  /// Body copy in the org checkout sheet. Sets expectations that seats are distributed separately via seat codes, not auto-allocated.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchasing a license pack sets up a license org for your team. Seats are NOT assigned automatically and you will not be added as a member. Distribute seat codes to invite members.'**
+  String get orgCheckoutSheetBody;
+
+  /// Text field label inside the org checkout sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'License org id'**
+  String get orgCheckoutOrgIdLabel;
+
+  /// Placeholder shown in the license org id text field.
+  ///
+  /// In en, this message translates to:
+  /// **'acme-eng-team'**
+  String get orgCheckoutOrgIdHint;
+
+  /// Helper text below the license org id field describing the slug format.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowercase letters, digits, and hyphens. 3 to 64 characters. Used to identify your team across the licensing system.'**
+  String get orgCheckoutOrgIdHelp;
+
+  /// Submit button label inside the org checkout sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to payment'**
+  String get orgCheckoutSubmit;
+
+  /// Validation error when the entered license org id does not match the required slug format.
+  ///
+  /// In en, this message translates to:
+  /// **'Use lowercase letters, digits, and hyphens. 3 to 64 characters. Cannot start or end with a hyphen.'**
+  String get orgCheckoutOrgIdInvalid;
+
+  /// Error shown when the createCheckout callable rejects the org-pack request.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start the group license checkout. Try again or contact support.'**
+  String get orgCheckoutError;
+
   /// Error message in premium features
   ///
   /// In en, this message translates to:

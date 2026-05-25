@@ -8,7 +8,7 @@
 
 /// Provider that fulfilled an external entitlement.
 ///
-/// Distinct from the App Store / Play Store / RevenueCat path — these
+/// Distinct from the App Store / Play Store / RevenueCat path - these
 /// are off-store payment providers (or `manual` for support-issued
 /// unlock codes). Stored as a tag on every entitlement so admin tools
 /// can filter and revoke per-provider if needed.
@@ -62,6 +62,37 @@ enum ExternalEntitlementStatus {
   }
 }
 
+// Legal owner of an external entitlement. Distinct from the backend's
+// `ownerKind: 'uid' | 'install'` storage-key namespace, which scopes
+// where the doc lives in Firestore (and is unrelated to who the legal
+// owner is). This axis answers: is the entitlement owned by an
+// individual user, or by an organisation that allocates seats to its
+// members?
+//
+// Wire key is `subjectKind` (not `ownerKind`) to avoid colliding with
+// the storage-key namespace. Default for absent / unknown values is
+// [user] so legacy rows that pre-date this field continue to grant as
+// they always have. Group/community licensing (seat allocation, org
+// membership, revocation) is intentionally not implemented in this
+// slice; org rows parse and round-trip safely but are filtered out at
+// the gate-feeding step until a membership model exists.
+enum OwnerKind {
+  user,
+  org;
+
+  static OwnerKind fromWire(String? value) {
+    switch (value) {
+      case 'org':
+        return OwnerKind.org;
+      case 'user':
+      default:
+        return OwnerKind.user;
+    }
+  }
+
+  String toWire() => name;
+}
+
 /// A single external entitlement.
 ///
 /// One per `productId` per owner. Buying complete_pack produces seven
@@ -73,6 +104,14 @@ class ExternalEntitlement {
   final DateTime grantedAt;
   final DateTime lastVerifiedAt;
   final String? sessionId;
+  // Legal owner type. Defaults to [OwnerKind.user] for legacy rows that
+  // pre-date the field; org-owned rows parse safely but are filtered
+  // out at the gate-feeding step until org membership lands.
+  final OwnerKind ownerKind;
+  // Only meaningful when [ownerKind] is [OwnerKind.org]. Identifies the
+  // organisation that owns the entitlement so a future membership /
+  // seat-allocation layer can decide whether the current user qualifies.
+  final String? orgId;
 
   const ExternalEntitlement({
     required this.productId,
@@ -81,6 +120,8 @@ class ExternalEntitlement {
     required this.grantedAt,
     required this.lastVerifiedAt,
     this.sessionId,
+    this.ownerKind = OwnerKind.user,
+    this.orgId,
   });
 
   bool get isActive => status == ExternalEntitlementStatus.active;
@@ -93,6 +134,8 @@ class ExternalEntitlement {
       grantedAt: DateTime.parse(json['grantedAt'] as String),
       lastVerifiedAt: DateTime.parse(json['lastVerifiedAt'] as String),
       sessionId: json['sessionId'] as String?,
+      ownerKind: OwnerKind.fromWire(json['subjectKind'] as String?),
+      orgId: json['orgId'] as String?,
     );
   }
 
@@ -103,6 +146,8 @@ class ExternalEntitlement {
     'grantedAt': grantedAt.toIso8601String(),
     'lastVerifiedAt': lastVerifiedAt.toIso8601String(),
     'sessionId': sessionId,
+    'subjectKind': ownerKind.toWire(),
+    'orgId': orgId,
   };
 
   ExternalEntitlement copyWith({
@@ -112,6 +157,8 @@ class ExternalEntitlement {
     DateTime? grantedAt,
     DateTime? lastVerifiedAt,
     String? sessionId,
+    OwnerKind? ownerKind,
+    String? orgId,
   }) {
     return ExternalEntitlement(
       productId: productId ?? this.productId,
@@ -120,6 +167,8 @@ class ExternalEntitlement {
       grantedAt: grantedAt ?? this.grantedAt,
       lastVerifiedAt: lastVerifiedAt ?? this.lastVerifiedAt,
       sessionId: sessionId ?? this.sessionId,
+      ownerKind: ownerKind ?? this.ownerKind,
+      orgId: orgId ?? this.orgId,
     );
   }
 
@@ -132,7 +181,9 @@ class ExternalEntitlement {
           provider == other.provider &&
           grantedAt == other.grantedAt &&
           lastVerifiedAt == other.lastVerifiedAt &&
-          sessionId == other.sessionId;
+          sessionId == other.sessionId &&
+          ownerKind == other.ownerKind &&
+          orgId == other.orgId;
 
   @override
   int get hashCode => Object.hash(
@@ -142,11 +193,14 @@ class ExternalEntitlement {
     grantedAt,
     lastVerifiedAt,
     sessionId,
+    ownerKind,
+    orgId,
   );
 
   @override
   String toString() =>
-      'ExternalEntitlement(productId: $productId, status: $status, provider: $provider)';
+      'ExternalEntitlement(productId: $productId, status: $status, '
+      'provider: $provider, ownerKind: $ownerKind)';
 }
 
 /// Status of an in-flight external checkout session.
@@ -203,7 +257,7 @@ enum CheckoutProvider {
   }
 }
 
-/// Result of `createExternalCheckout` — everything the UI needs to
+/// Result of `createExternalCheckout` - everything the UI needs to
 /// hand the user off to the chosen provider and later confirm the
 /// unlock.
 ///

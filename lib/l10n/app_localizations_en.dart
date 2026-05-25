@@ -26190,6 +26190,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dismiss => 'Dismiss';
 
   @override
+  String get orgCheckoutSheetTitle => 'Buy a group license';
+
+  @override
+  String get orgCheckoutSheetBody =>
+      'Purchasing a license pack sets up a license org for your team. Seats are NOT assigned automatically and you will not be added as a member. Distribute seat codes to invite members.';
+
+  @override
+  String get orgCheckoutOrgIdLabel => 'License org id';
+
+  @override
+  String get orgCheckoutOrgIdHint => 'acme-eng-team';
+
+  @override
+  String get orgCheckoutOrgIdHelp =>
+      'Lowercase letters, digits, and hyphens. 3 to 64 characters. Used to identify your team across the licensing system.';
+
+  @override
+  String get orgCheckoutSubmit => 'Continue to payment';
+
+  @override
+  String get orgCheckoutOrgIdInvalid =>
+      'Use lowercase letters, digits, and hyphens. 3 to 64 characters. Cannot start or end with a hyphen.';
+
+  @override
+  String get orgCheckoutError =>
+      'Could not start the group license checkout. Try again or contact support.';
+
+  @override
   String get premiumPurchaseError => 'Something went wrong. Please try again.';
 
   @override
