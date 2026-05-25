@@ -85,6 +85,11 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
   /// Optional per-node filter — set from widget.initialNodeNum, clearable.
   int? _filterNodeNum;
 
+  /// When a list row is tapped, the map flips on and centers on this log.
+  /// The serial bumps on every tap so re-tapping the same row re-centers.
+  PositionLog? _focusedLog;
+  int _focusSerial = 0;
+
   @override
   void initState() {
     super.initState();
@@ -420,6 +425,19 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
     } catch (e) {
       showErrorSnackBar(context, l10n.telemetryFailedToClear(e.toString()));
     }
+  }
+
+  // -----------------------------------------------------------------------
+  // Row tap → flip map on, center on this log
+  // -----------------------------------------------------------------------
+
+  void _focusLogOnMap(PositionLog log) {
+    HapticFeedback.selectionClick();
+    safeSetState(() {
+      _focusedLog = log;
+      _focusSerial++;
+      _showMap = true;
+    });
   }
 
   // -----------------------------------------------------------------------
@@ -761,6 +779,8 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
                           logs: filtered,
                           nodes: nodes,
                           mapStyle: _mapStyle,
+                          focusedLog: _focusedLog,
+                          focusSerial: _focusSerial,
                         ),
                       )
                     // List view
@@ -801,6 +821,7 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen>
                               log: log,
                               nodeName: nodeName,
                               distanceFromPrev: distance,
+                              onTap: () => _focusLogOnMap(log),
                             );
                           },
                         ),
@@ -909,10 +930,18 @@ class _PositionMapView extends StatefulWidget {
   final Map<int, dynamic> nodes;
   final MapTileStyle mapStyle;
 
+  /// When non-null, the map skips the auto-fit-to-bounds and centers on this
+  /// log instead. A change in [focusSerial] re-centers even if the same
+  /// [focusedLog] reference is supplied again.
+  final PositionLog? focusedLog;
+  final int focusSerial;
+
   const _PositionMapView({
     required this.logs,
     required this.nodes,
     required this.mapStyle,
+    this.focusedLog,
+    this.focusSerial = 0,
   });
 
   @override
@@ -935,13 +964,21 @@ class _PositionMapViewState extends State<_PositionMapView> {
       ? widget.logs
       : widget.logs.where((l) => l.nodeNum == _selectedNodeNum).toList();
 
+  /// Zoom level used when centering on a log handed in from the list view.
+  static const double _kFocusedZoom = 16.0;
+
   @override
   void initState() {
     super.initState();
-    // Auto-fit to bounds on first frame after map is ready
+    // First frame: either center on the row the user tapped from the list,
+    // or auto-fit to all visible logs.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_didInitialFit && mounted) {
-        _didInitialFit = true;
+      if (!mounted || _didInitialFit) return;
+      _didInitialFit = true;
+      final focused = widget.focusedLog;
+      if (focused != null) {
+        _focusOnLog(focused);
+      } else {
         _fitToVisible();
       }
     });
@@ -964,6 +1001,19 @@ class _PositionMapViewState extends State<_PositionMapView> {
         _selectedNodeNum = null;
       }
     }
+    // Re-center whenever a new focus request arrives, even on the same log.
+    final focused = widget.focusedLog;
+    if (focused != null && widget.focusSerial != oldWidget.focusSerial) {
+      _focusOnLog(focused);
+    }
+  }
+
+  void _focusOnLog(PositionLog log) {
+    final point = safeLatLng(log.latitude, log.longitude);
+    if (point == null) return;
+    _mapController.safeMove(point, _kFocusedZoom);
+    _currentZoom = _kFocusedZoom;
+    setState(() => _selectedLog = log);
   }
 
   void _fitToVisible() {
@@ -1292,9 +1342,14 @@ class _PositionMapViewState extends State<_PositionMapView> {
         ),
 
         // ----- Selected position info card OR stats bar (bottom) -----
+        // Lifted by spacing24 above the safe-area inset so the centered map
+        // attribution pill stays visible underneath it.
         if (!_showNodeList)
           Positioned(
-            bottom: MediaQuery.of(context).padding.bottom + AppTheme.spacing12,
+            bottom:
+                MediaQuery.of(context).padding.bottom +
+                AppTheme.spacing12 +
+                AppTheme.spacing24,
             left: AppTheme.spacing12,
             right: AppTheme.spacing12,
             child: _selectedLog != null
@@ -1859,11 +1914,13 @@ class _PositionCard extends StatelessWidget {
   final PositionLog log;
   final String nodeName;
   final double? distanceFromPrev;
+  final VoidCallback? onTap;
 
   const _PositionCard({
     required this.log,
     required this.nodeName,
     this.distanceFromPrev,
+    this.onTap,
   });
 
   @override
@@ -1871,96 +1928,100 @@ class _PositionCard extends StatelessWidget {
     final timeFormat = AppTimeFormat.timeWithSeconds(context);
     final dateFormat = DateFormat('MMM d');
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
-        border: Border.all(color: context.border.withValues(alpha: 0.3)),
-      ),
-      padding: const EdgeInsets.all(AppTheme.spacing12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header: node name + timestamp
-          Row(
-            children: [
-              Icon(Icons.location_on, size: 14, color: context.accentColor),
-              const SizedBox(width: AppTheme.spacing8),
-              Expanded(
-                child: Text(
-                  nodeName,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: context.textPrimary,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: context.surface,
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          border: Border.all(color: context.border.withValues(alpha: 0.3)),
+        ),
+        padding: const EdgeInsets.all(AppTheme.spacing12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header: node name + timestamp
+            Row(
+              children: [
+                Icon(Icons.location_on, size: 14, color: context.accentColor),
+                const SizedBox(width: AppTheme.spacing8),
+                Expanded(
+                  child: Text(
+                    nodeName,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: context.textPrimary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              Text(
-                '${dateFormat.format(log.timestamp)}  ${timeFormat.format(log.timestamp)}',
+                Text(
+                  '${dateFormat.format(log.timestamp)}  ${timeFormat.format(log.timestamp)}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: context.textTertiary,
+                    fontFamily: AppTheme.fontFamily,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: AppTheme.spacing4),
+
+            // Coordinates (compact, mono)
+            Padding(
+              padding: const EdgeInsets.only(left: 22),
+              child: Text(
+                '${log.latitude.toStringAsFixed(6)}, ${log.longitude.toStringAsFixed(6)}',
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: context.textTertiary,
+                  color: context.textSecondary,
                   fontFamily: AppTheme.fontFamily,
                 ),
               ),
-            ],
-          ),
-
-          const SizedBox(height: AppTheme.spacing4),
-
-          // Coordinates (compact, mono)
-          Padding(
-            padding: const EdgeInsets.only(left: 22),
-            child: Text(
-              '${log.latitude.toStringAsFixed(6)}, ${log.longitude.toStringAsFixed(6)}',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: context.textSecondary,
-                fontFamily: AppTheme.fontFamily,
-              ),
             ),
-          ),
 
-          const SizedBox(height: AppTheme.spacing8),
+            const SizedBox(height: AppTheme.spacing8),
 
-          // Metrics
-          Wrap(
-            spacing: AppTheme.spacing6,
-            runSpacing: AppTheme.spacing6,
-            children: [
-              if (log.altitude != null)
-                _InfoBadge(
-                  icon: Icons.terrain,
-                  value: '${log.altitude!.round()}m',
-                ),
-              if (log.satsInView != null)
-                _InfoBadge(
-                  icon: Icons.satellite_alt,
-                  value: '${log.satsInView} sats',
-                  color: log.satsInView! >= _kGoodFixMinSats
-                      ? AccentColors.green
-                      : null,
-                ),
-              if (log.speed != null && log.speed! > 0)
-                _InfoBadge(
-                  icon: Icons.speed,
-                  value: '${log.speed!.round()} km/h',
-                ),
-              if (distanceFromPrev != null)
-                _InfoBadge(
-                  icon: Icons.straighten,
-                  value: distanceFromPrev! < 1000
-                      ? '${distanceFromPrev!.toStringAsFixed(0)}m'
-                      : '${(distanceFromPrev! / 1000).toStringAsFixed(1)}km',
-                  color: AppTheme.primaryBlue,
-                ),
-            ],
-          ),
-        ],
+            // Metrics
+            Wrap(
+              spacing: AppTheme.spacing6,
+              runSpacing: AppTheme.spacing6,
+              children: [
+                if (log.altitude != null)
+                  _InfoBadge(
+                    icon: Icons.terrain,
+                    value: '${log.altitude!.round()}m',
+                  ),
+                if (log.satsInView != null)
+                  _InfoBadge(
+                    icon: Icons.satellite_alt,
+                    value: '${log.satsInView} sats',
+                    color: log.satsInView! >= _kGoodFixMinSats
+                        ? AccentColors.green
+                        : null,
+                  ),
+                if (log.speed != null && log.speed! > 0)
+                  _InfoBadge(
+                    icon: Icons.speed,
+                    value: '${log.speed!.round()} km/h',
+                  ),
+                if (distanceFromPrev != null)
+                  _InfoBadge(
+                    icon: Icons.straighten,
+                    value: distanceFromPrev! < 1000
+                        ? '${distanceFromPrev!.toStringAsFixed(0)}m'
+                        : '${(distanceFromPrev! / 1000).toStringAsFixed(1)}km',
+                    color: AppTheme.primaryBlue,
+                  ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
