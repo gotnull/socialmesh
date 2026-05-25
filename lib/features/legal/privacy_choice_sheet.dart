@@ -11,21 +11,23 @@ import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../services/privacy_consent_service.dart';
 
-/// One-shot privacy choice prompt.
-///
-/// Shown to the user after onboarding (post-frame from MainShell) when no
-/// explicit consent decision has been recorded yet. Offers three options:
-///
-/// - Keep diagnostics off:    analytics=false, crashlytics=false
-/// - Crash reports only:      analytics=false, crashlytics=true
-/// - Help improve SocialMesh: analytics=true,  crashlytics=true
-///
-/// All three options mark the user as having made an explicit choice, so
-/// the prompt is never shown again. The user can change their selection at
-/// any time via Settings -> Privacy. Swiping the sheet down without picking
-/// an option behaves the same as "Keep diagnostics off" - the privacy-safe
-/// default - and still marks the choice as made so the prompt does not
-/// re-appear.
+// One-shot privacy choice prompt.
+//
+// Shown to the user after onboarding (post-frame from MainShell) when no
+// explicit consent decision has been recorded yet. Offers three options:
+//
+// - Keep diagnostics off:    analytics=false, crashlytics=false
+// - Crash reports only:      analytics=false, crashlytics=true
+// - Help improve SocialMesh: analytics=true,  crashlytics=true
+//
+// All three options mark the user as having made an explicit choice, so
+// the prompt is never shown again. The user can change their selection at
+// any time via Settings -> Privacy. Swiping the sheet down without picking
+// an option behaves the same as "Keep diagnostics off" - the privacy-safe
+// default - and still marks the choice as made so the prompt does not
+// re-appear. Each option carries a neutral tag (max privacy / balanced /
+// most helpful) so the user can read the tradeoff without the app
+// moralizing the choice.
 class PrivacyChoiceSheet {
   PrivacyChoiceSheet._();
 
@@ -166,7 +168,7 @@ class _PrivacyChoicePanel extends StatelessWidget {
             icon: Icons.lock_outline,
             title: sheetContext.l10n.privacyChoiceOptionOffTitle,
             description: sheetContext.l10n.privacyChoiceOptionOffDescription,
-            recommended: true,
+            tag: sheetContext.l10n.privacyChoiceTagMaxPrivacy,
             onTap: () =>
                 Navigator.of(sheetContext).pop(_PrivacyChoiceResult.off),
           ),
@@ -175,6 +177,7 @@ class _PrivacyChoicePanel extends StatelessWidget {
             icon: Icons.bug_report_outlined,
             title: sheetContext.l10n.privacyChoiceOptionCrashTitle,
             description: sheetContext.l10n.privacyChoiceOptionCrashDescription,
+            tag: sheetContext.l10n.privacyChoiceTagBalanced,
             onTap: () =>
                 Navigator.of(sheetContext).pop(_PrivacyChoiceResult.crashOnly),
           ),
@@ -183,6 +186,7 @@ class _PrivacyChoicePanel extends StatelessWidget {
             icon: Icons.favorite_outline,
             title: sheetContext.l10n.privacyChoiceOptionFullTitle,
             description: sheetContext.l10n.privacyChoiceOptionFullDescription,
+            tag: sheetContext.l10n.privacyChoiceTagMostHelpful,
             onTap: () =>
                 Navigator.of(sheetContext).pop(_PrivacyChoiceResult.full),
           ),
@@ -204,21 +208,20 @@ class _ChoiceCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String description;
-  final bool recommended;
+  final String tag;
   final VoidCallback onTap;
 
   const _ChoiceCard({
     required this.icon,
     required this.title,
     required this.description,
+    required this.tag,
     required this.onTap,
-    this.recommended = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final accent = context.accentColor;
     return Material(
       color: context.card,
       borderRadius: BorderRadius.circular(AppTheme.radius12),
@@ -228,13 +231,7 @@ class _ChoiceCard extends StatelessWidget {
           HapticFeedback.selectionClick();
           onTap();
         },
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppTheme.radius12),
-            border: recommended
-                ? Border.all(color: accent.withValues(alpha: 0.5))
-                : null,
-          ),
+        child: Padding(
           padding: const EdgeInsets.all(AppTheme.spacing16),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,30 +254,28 @@ class _ChoiceCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                        if (recommended) ...[
-                          const SizedBox(width: AppTheme.spacing8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppTheme.spacing8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: accent.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.radius6,
-                              ),
-                            ),
-                            child: Text(
-                              context.l10n.privacyChoiceRecommendedBadge,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: accent,
-                                letterSpacing: 0.5,
-                              ),
+                        const SizedBox(width: AppTheme.spacing8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacing8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: context.textTertiary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius6,
                             ),
                           ),
-                        ],
+                          child: Text(
+                            tag,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: context.textSecondary,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: AppTheme.spacing4),

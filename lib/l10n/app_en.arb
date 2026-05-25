@@ -37081,9 +37081,17 @@
     "@privacyChoiceFooter": {
         "description": "Footer note on the privacy choice sheet telling the user where to revisit the decision."
     },
-    "privacyChoiceRecommendedBadge": "RECOMMENDED",
-    "@privacyChoiceRecommendedBadge": {
-        "description": "Short badge label on the recommended privacy choice option."
+    "privacyChoiceTagMaxPrivacy": "MAXIMUM PRIVACY",
+    "@privacyChoiceTagMaxPrivacy": {
+        "description": "Neutral badge label on the 'Keep diagnostics off' privacy choice option. Communicates the tradeoff without recommending."
+    },
+    "privacyChoiceTagBalanced": "BALANCED",
+    "@privacyChoiceTagBalanced": {
+        "description": "Neutral badge label on the 'Crash reports only' privacy choice option. Communicates the tradeoff without recommending."
+    },
+    "privacyChoiceTagMostHelpful": "MOST HELPFUL",
+    "@privacyChoiceTagMostHelpful": {
+        "description": "Neutral badge label on the 'Help improve SocialMesh' privacy choice option. Communicates the tradeoff without recommending."
     },
     "privacySettingsTitle": "Privacy",
     "@privacySettingsTitle": {

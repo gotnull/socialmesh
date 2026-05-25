@@ -27661,7 +27661,13 @@ class AppLocalizationsIt extends AppLocalizations {
       'Puoi modificarlo in qualsiasi momento in Impostazioni > Privacy.';
 
   @override
-  String get privacyChoiceRecommendedBadge => 'CONSIGLIATO';
+  String get privacyChoiceTagMaxPrivacy => 'PRIVACY MASSIMA';
+
+  @override
+  String get privacyChoiceTagBalanced => 'EQUILIBRATO';
+
+  @override
+  String get privacyChoiceTagMostHelpful => 'PIÙ UTILE';
 
   @override
   String get privacySettingsTitle => 'Privacy';

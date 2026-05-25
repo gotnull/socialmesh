@@ -47914,11 +47914,23 @@ abstract class AppLocalizations {
   /// **'You can change this anytime in Settings > Privacy.'**
   String get privacyChoiceFooter;
 
-  /// Short badge label on the recommended privacy choice option.
+  /// Neutral badge label on the 'Keep diagnostics off' privacy choice option. Communicates the tradeoff without recommending.
   ///
   /// In en, this message translates to:
-  /// **'RECOMMENDED'**
-  String get privacyChoiceRecommendedBadge;
+  /// **'MAXIMUM PRIVACY'**
+  String get privacyChoiceTagMaxPrivacy;
+
+  /// Neutral badge label on the 'Crash reports only' privacy choice option. Communicates the tradeoff without recommending.
+  ///
+  /// In en, this message translates to:
+  /// **'BALANCED'**
+  String get privacyChoiceTagBalanced;
+
+  /// Neutral badge label on the 'Help improve SocialMesh' privacy choice option. Communicates the tradeoff without recommending.
+  ///
+  /// In en, this message translates to:
+  /// **'MOST HELPFUL'**
+  String get privacyChoiceTagMostHelpful;
 
   /// Screen or section title
   ///

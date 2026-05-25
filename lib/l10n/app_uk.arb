@@ -12566,5 +12566,7 @@
     "privacyChoiceOptionFullTitle": "Допомогти покращити SocialMesh",
     "privacyChoiceOptionFullDescription": "Діліться анонімною аналітикою використання та звітами про збої.",
     "privacyChoiceFooter": "Ви можете змінити це будь-коли в Налаштування > Конфіденційність.",
-    "privacyChoiceRecommendedBadge": "РЕКОМЕНДОВАНО"
+    "privacyChoiceTagMaxPrivacy": "МАКСИМАЛЬНА ПРИВАТНІСТЬ",
+    "privacyChoiceTagBalanced": "ЗБАЛАНСОВАНО",
+    "privacyChoiceTagMostHelpful": "НАЙКОРИСНІШЕ"
 }

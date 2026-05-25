@@ -27346,7 +27346,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'You can change this anytime in Settings > Privacy.';
 
   @override
-  String get privacyChoiceRecommendedBadge => 'RECOMMENDED';
+  String get privacyChoiceTagMaxPrivacy => 'MAXIMUM PRIVACY';
+
+  @override
+  String get privacyChoiceTagBalanced => 'BALANCED';
+
+  @override
+  String get privacyChoiceTagMostHelpful => 'MOST HELPFUL';
 
   @override
   String get privacySettingsTitle => 'Privacy';

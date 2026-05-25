@@ -27664,7 +27664,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Вы можете изменить это в любое время в Настройки > Конфиденциальность.';
 
   @override
-  String get privacyChoiceRecommendedBadge => 'РЕКОМЕНДУЕТСЯ';
+  String get privacyChoiceTagMaxPrivacy => 'МАКСИМАЛЬНАЯ ПРИВАТНОСТЬ';
+
+  @override
+  String get privacyChoiceTagBalanced => 'СБАЛАНСИРОВАННО';
+
+  @override
+  String get privacyChoiceTagMostHelpful => 'МАКСИМАЛЬНАЯ ПОМОЩЬ';
 
   @override
   String get privacySettingsTitle => 'Конфиденциальность';

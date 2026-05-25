@@ -27863,7 +27863,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vous pouvez modifier ce choix à tout moment dans Réglages > Confidentialité.';
 
   @override
-  String get privacyChoiceRecommendedBadge => 'RECOMMANDÉ';
+  String get privacyChoiceTagMaxPrivacy => 'CONFIDENTIALITÉ MAXIMALE';
+
+  @override
+  String get privacyChoiceTagBalanced => 'ÉQUILIBRÉ';
+
+  @override
+  String get privacyChoiceTagMostHelpful => 'PLUS UTILE';
 
   @override
   String get privacySettingsTitle => 'Confidentialité';

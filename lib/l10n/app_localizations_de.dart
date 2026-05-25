@@ -27741,7 +27741,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Du kannst dies jederzeit unter Einstellungen > Datenschutz ändern.';
 
   @override
-  String get privacyChoiceRecommendedBadge => 'EMPFOHLEN';
+  String get privacyChoiceTagMaxPrivacy => 'MAXIMALER DATENSCHUTZ';
+
+  @override
+  String get privacyChoiceTagBalanced => 'AUSGEWOGEN';
+
+  @override
+  String get privacyChoiceTagMostHelpful => 'AM HILFREICHSTEN';
 
   @override
   String get privacySettingsTitle => 'Datenschutz';

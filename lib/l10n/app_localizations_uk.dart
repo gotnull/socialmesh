@@ -27677,7 +27677,13 @@ class AppLocalizationsUk extends AppLocalizations {
       'Ви можете змінити це будь-коли в Налаштування > Конфіденційність.';
 
   @override
-  String get privacyChoiceRecommendedBadge => 'РЕКОМЕНДОВАНО';
+  String get privacyChoiceTagMaxPrivacy => 'МАКСИМАЛЬНА ПРИВАТНІСТЬ';
+
+  @override
+  String get privacyChoiceTagBalanced => 'ЗБАЛАНСОВАНО';
+
+  @override
+  String get privacyChoiceTagMostHelpful => 'НАЙКОРИСНІШЕ';
 
   @override
   String get privacySettingsTitle => 'Конфіденційність';

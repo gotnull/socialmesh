@@ -45710,5 +45710,7 @@
     "privacyChoiceOptionFullTitle": "Ajude a melhorar o SocialMesh",
     "privacyChoiceOptionFullDescription": "Compartilhe análises de uso anônimas e relatórios de falha.",
     "privacyChoiceFooter": "Você pode alterar isto a qualquer momento em Configurações > Privacidade.",
-    "privacyChoiceRecommendedBadge": "RECOMENDADO"
+    "privacyChoiceTagMaxPrivacy": "PRIVACIDADE MÁXIMA",
+    "privacyChoiceTagBalanced": "EQUILIBRADO",
+    "privacyChoiceTagMostHelpful": "MAIS ÚTIL"
 }

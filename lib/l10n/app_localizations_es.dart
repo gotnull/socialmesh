@@ -27782,7 +27782,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Puedes cambiar esto en cualquier momento en Ajustes > Privacidad.';
 
   @override
-  String get privacyChoiceRecommendedBadge => 'RECOMENDADO';
+  String get privacyChoiceTagMaxPrivacy => 'PRIVACIDAD MÁXIMA';
+
+  @override
+  String get privacyChoiceTagBalanced => 'EQUILIBRADO';
+
+  @override
+  String get privacyChoiceTagMostHelpful => 'MÁS ÚTIL';
 
   @override
   String get privacySettingsTitle => 'Privacidad';
