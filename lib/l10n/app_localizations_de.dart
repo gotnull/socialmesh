@@ -15222,6 +15222,39 @@ class AppLocalizationsDe extends AppLocalizations {
   String get nodedexHelpSignalRecords => 'Signalaufzeichnungen';
 
   @override
+  String nodedexIdentityHistoryArchivedAt(String date) {
+    return 'Archiviert am $date';
+  }
+
+  @override
+  String get nodedexIdentityHistoryEmpty =>
+      'Keine früheren Identitäten erfasst.';
+
+  @override
+  String nodedexIdentityHistoryFingerprintLabel(String fingerprint) {
+    return 'Pubkey $fingerprint';
+  }
+
+  @override
+  String get nodedexIdentityHistoryFingerprintUnknown => 'Pubkey unbekannt';
+
+  @override
+  String get nodedexIdentityHistorySheetTitle => 'Frühere Identitäten';
+
+  @override
+  String nodedexIdentityHistoryStatsLine(int encounters, int regions) {
+    return '$encounters Begegnungen · $regions Regionen';
+  }
+
+  @override
+  String nodedexIdentityRotatedBanner(String date) {
+    return 'Identität gewechselt am $date. Vorheriger Geräteverlauf archiviert.';
+  }
+
+  @override
+  String get nodedexIdentityRotatedViewHistoryAction => 'Verlauf anzeigen';
+
+  @override
   String nodedexImportButtonLabelPlural(int count) {
     return '$count Einträge importieren';
   }
@@ -26579,6 +26612,9 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get orgCheckoutError =>
       'Der Gruppenlizenz-Checkout konnte nicht gestartet werden. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support.';
+
+  @override
+  String get orgCheckoutEntryAction => 'Als Gruppenlizenz kaufen';
 
   @override
   String get premiumPurchaseError =>

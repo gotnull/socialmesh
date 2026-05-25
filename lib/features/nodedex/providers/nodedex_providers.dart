@@ -453,11 +453,11 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
   /// - [NodeIngestSource.deviceDbSync] / [NodeIngestSource.initSeed] /
   ///   [NodeIngestSource.unknown] → metadata-only. lastSeen/encounter
   ///   counts/activity histograms are not inflated by reconnect replay.
-  void _handleNodesUpdate(
+  Future<void> _handleNodesUpdate(
     Map<int, MeshNode> previous,
     Map<int, MeshNode> current, {
     bool seedOnly = false,
-  }) {
+  }) async {
     if (_store == null) return;
 
     final myNodeNum = ref.read(myNodeNumProvider);
@@ -490,9 +490,36 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
       // myNodeNumProvider changes to the newly connected device.
       final isOwnNode = nodeNum == myNodeNum;
 
-      final existing = updated[nodeNum];
+      var existing = updated[nodeNum];
       final now = clock.now();
       final source = _classifyIngestSource(node, now, isInitSeed: seedOnly);
+
+      // Identity tracking: detect when a node's User.public_key has rotated
+      // across firmware reset / factory wipe. If so, the existing row's
+      // accumulators are archived and reset in place by the store before
+      // any further encounter logic runs against it.
+      if (existing != null) {
+        final observedPubkey = _extractIdentityPubkey(node);
+        if (observedPubkey != null) {
+          final resolution = await _store!.resolveIdentity(
+            existing: existing,
+            observedPubkey: observedPubkey,
+            now: now,
+          );
+          existing = resolution.entry;
+          updated[nodeNum] = existing;
+          if (resolution.outcome == IdentityResolutionOutcome.rotated) {
+            changed = true;
+            final hexId =
+                '!${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+            AppLogging.nodeDex(
+              'Identity rotation detected: $hexId, '
+              'resetCount=${existing.identityResetCount}, '
+              'previous stats archived to identity history',
+            );
+          }
+        }
+      }
 
       // Tally for the per-call summary log.
       switch (source) {
@@ -565,7 +592,17 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         final withRegion = isLive
             ? _addRegionFromNode(newEntry, node, timestamp: discoveryTimestamp)
             : newEntry;
-        updated[nodeNum] = withRegion;
+        // Stamp the active identity pubkey so subsequent observations can
+        // detect rotation. Safe to backfill at creation time — no prior
+        // identity to archive yet.
+        final observedPubkey = _extractIdentityPubkey(node);
+        final withIdentity = observedPubkey != null
+            ? withRegion.copyWith(
+                identityPubkey: observedPubkey,
+                identityObservedAt: now,
+              )
+            : withRegion;
+        updated[nodeNum] = withIdentity;
 
         // Only track encounters and co-seen for nodes that are
         // genuinely heard recently — stale entries from the device's
@@ -800,6 +837,16 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         'seedOnly=$seedOnly',
       );
     }
+  }
+
+  /// Extract the Meshtastic-protocol `User.public_key` bytes from a
+  /// [MeshNode]. Returns null when the node has no advertised pubkey
+  /// (pre-v2.5 firmware or unconfigured node). Empty pubkeys map to null
+  /// so a missing key never masks a real one in identity resolution.
+  Uint8List? _extractIdentityPubkey(MeshNode node) {
+    final pk = node.publicKey;
+    if (pk == null || pk.isEmpty) return null;
+    return Uint8List.fromList(pk);
   }
 
   /// Resolve a cacheable display name from a live MeshNode.
@@ -1350,6 +1397,22 @@ final nodeDexProvider =
 /// Provider for a single NodeDex entry by node number.
 ///
 /// Returns null if the node has not been discovered yet.
+/// Loads the archived identity history for a node, newest-first.
+///
+/// Refreshed on every read (no live invalidation): the screen that
+/// consumes this is opened from a banner that itself only renders when
+/// `entry.identityResetCount > 0`, and rotations are rare enough that
+/// pull-to-refresh by re-opening the sheet is acceptable. The future
+/// resolves to an empty list when the node has never rotated.
+final nodeDexIdentityHistoryProvider =
+    FutureProvider.family<List<IdentityHistoryRecord>, int>((
+      ref,
+      nodeNum,
+    ) async {
+      final store = await ref.watch(nodeDexStoreProvider.future);
+      return store.getIdentityHistory(nodeNum);
+    });
+
 final nodeDexEntryProvider = Provider.family<NodeDexEntry?, int>((
   ref,
   nodeNum,

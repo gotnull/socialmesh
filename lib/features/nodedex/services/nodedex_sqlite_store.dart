@@ -193,6 +193,7 @@ class NodeDexSqliteStore {
         await txn.delete(NodeDexTables.coSeenEdges);
         await txn.delete(NodeDexTables.seenRegions);
         await txn.delete(NodeDexTables.encounters);
+        await txn.delete(NodeDexTables.identityHistory);
         await txn.delete(NodeDexTables.entries);
       });
       AppLogging.storage('NodeDexSqliteStore: Cleared all entries');
@@ -237,6 +238,264 @@ class NodeDexSqliteStore {
       AppLogging.storage('NodeDexSqliteStore: Prune error: $e');
       return 0;
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Identity tracking (v13)
+  // ---------------------------------------------------------------------------
+
+  /// Resolve the active identity of [existing] against the latest observed
+  /// Meshtastic User.public_key. Three outcomes:
+  ///
+  /// - [IdentityResolutionOutcome.unchanged]: pubkey matches the row's
+  ///   recorded identity, or no pubkey was observed. The original entry
+  ///   is returned untouched.
+  /// - [IdentityResolutionOutcome.backfilled]: the row had no recorded
+  ///   pubkey and is now stamped with the observed one. Stats are
+  ///   preserved. No DB write here — the caller's normal save
+  ///   pipeline will pick up the change.
+  /// - [IdentityResolutionOutcome.rotated]: the observed pubkey differs
+  ///   from the recorded one. A snapshot of the prior identity's stats
+  ///   is archived to [NodeDexTables.identityHistory], the row's
+  ///   encounters / seenRegions / coSeenEdges are deleted, and the
+  ///   entry's accumulators are reset in place. The fresh entry is
+  ///   persisted atomically in the same transaction; the cache is
+  ///   updated to match.
+  ///
+  /// User-curated fields (socialTag, userNote, localNickname) and
+  /// connection-identity timestamps (firstUsedAt, lastUsedAt) are
+  /// preserved across rotation. Sigil / lastKnown* are preserved
+  /// because the next live update will refresh them naturally.
+  Future<IdentityResolution> resolveIdentity({
+    required NodeDexEntry existing,
+    required Uint8List? observedPubkey,
+    DateTime? now,
+  }) async {
+    final timestamp = now ?? DateTime.now();
+    final pk = observedPubkey;
+    if (pk == null || pk.isEmpty) {
+      return IdentityResolution(
+        entry: existing,
+        outcome: IdentityResolutionOutcome.unchanged,
+      );
+    }
+
+    final current = existing.identityPubkey;
+    if (current == null || current.isEmpty) {
+      final backfilled = existing.copyWith(
+        identityPubkey: pk,
+        identityObservedAt: timestamp,
+      );
+      _cache?[existing.nodeNum] = backfilled;
+      AppLogging.nodeDex(
+        'Identity backfilled: node ${existing.nodeNum}, '
+        'pubkey=${_pubkeyFingerprint(pk)}',
+      );
+      return IdentityResolution(
+        entry: backfilled,
+        outcome: IdentityResolutionOutcome.backfilled,
+      );
+    }
+
+    if (_pubkeysEqual(current, pk)) {
+      return IdentityResolution(
+        entry: existing,
+        outcome: IdentityResolutionOutcome.unchanged,
+      );
+    }
+
+    // Rotation: archive snapshot + reset accumulators + persist atomically.
+    final snapshot = _buildIdentityHistoryRow(
+      entry: existing,
+      archivedAtMs: timestamp.millisecondsSinceEpoch,
+    );
+
+    final reset = NodeDexEntry(
+      nodeNum: existing.nodeNum,
+      firstSeen: timestamp,
+      lastSeen: timestamp,
+      encounterCount: 0,
+      maxDistanceSeen: null,
+      bestSnr: null,
+      bestRssi: null,
+      messageCount: 0,
+      // User-curated metadata survives — it's about the physical device,
+      // not the firmware-derived identity.
+      socialTag: existing.socialTag,
+      socialTagUpdatedAtMs: existing.socialTagUpdatedAtMs,
+      userNote: existing.userNote,
+      userNoteUpdatedAtMs: existing.userNoteUpdatedAtMs,
+      localNickname: existing.localNickname,
+      localNicknameUpdatedAtMs: existing.localNicknameUpdatedAtMs,
+      encounters: const [],
+      seenRegions: const [],
+      coSeenNodes: const {},
+      sigil: existing.sigil,
+      lastKnownName: existing.lastKnownName,
+      lastKnownHardware: existing.lastKnownHardware,
+      lastKnownRole: existing.lastKnownRole,
+      lastKnownFirmware: existing.lastKnownFirmware,
+      // SIP identity is bound to the SIP pubkey, not the Meshtastic
+      // protocol pubkey — separate concern, preserved across rotation.
+      sipCapable: existing.sipCapable,
+      sipPubkey: existing.sipPubkey,
+      sipPersonaId: existing.sipPersonaId,
+      sipIdentityState: existing.sipIdentityState,
+      sipDisplayName: existing.sipDisplayName,
+      mrrpServiceIds: existing.mrrpServiceIds,
+      // Connection-identity timestamps survive — they track when *this
+      // phone* connected to that nodeNum, independent of firmware state.
+      firstUsedAt: existing.firstUsedAt,
+      lastUsedAt: existing.lastUsedAt,
+      // Identity tracking: stamp the new pubkey and bump the reset counter.
+      identityPubkey: pk,
+      identityObservedAt: timestamp,
+      identityResetCount: existing.identityResetCount + 1,
+      lastIdentityResetAt: timestamp,
+    );
+
+    try {
+      await _db.transaction((txn) async {
+        await txn.insert(NodeDexTables.identityHistory, snapshot);
+        await txn.delete(
+          NodeDexTables.encounters,
+          where: '${NodeDexTables.colNodeNum} = ?',
+          whereArgs: [existing.nodeNum],
+        );
+        await txn.delete(
+          NodeDexTables.seenRegions,
+          where: '${NodeDexTables.colNodeNum} = ?',
+          whereArgs: [existing.nodeNum],
+        );
+        await txn.delete(
+          NodeDexTables.coSeenEdges,
+          where:
+              '${NodeDexTables.colEdgeA} = ? OR ${NodeDexTables.colEdgeB} = ?',
+          whereArgs: [existing.nodeNum, existing.nodeNum],
+        );
+        await _upsertEntryInTxn(txn, reset);
+      });
+      _cache?[existing.nodeNum] = reset;
+      // Drop any pending save for this nodeNum — we just persisted the
+      // post-rotation entry, and a stale pre-rotation save would overwrite
+      // it with the old encounters list.
+      _pendingSaves.remove(existing.nodeNum);
+      AppLogging.nodeDex(
+        'Identity rotation persisted: node ${existing.nodeNum}, '
+        'prev=${_pubkeyFingerprint(current)}, '
+        'next=${_pubkeyFingerprint(pk)}, '
+        'resetCount=${reset.identityResetCount}',
+      );
+    } catch (e) {
+      AppLogging.storage(
+        'NodeDexSqliteStore: Identity rotation failed for '
+        'node ${existing.nodeNum}: $e',
+      );
+      return IdentityResolution(
+        entry: existing,
+        outcome: IdentityResolutionOutcome.unchanged,
+      );
+    }
+
+    return IdentityResolution(
+      entry: reset,
+      outcome: IdentityResolutionOutcome.rotated,
+    );
+  }
+
+  /// Load the archived identity history for [nodeNum], newest-first.
+  /// Returns an empty list if the node has never had an identity rotation.
+  Future<List<IdentityHistoryRecord>> getIdentityHistory(int nodeNum) async {
+    if (!_database.isOpen) return const [];
+    try {
+      final rows = await _db.query(
+        NodeDexTables.identityHistory,
+        where: '${NodeDexTables.colNodeNum} = ?',
+        whereArgs: [nodeNum],
+        orderBy: '${NodeDexTables.colHistArchivedAtMs} DESC',
+      );
+      return rows.map(_rowToIdentityHistoryRecord).toList();
+    } catch (e) {
+      AppLogging.storage(
+        'NodeDexSqliteStore: getIdentityHistory failed for $nodeNum: $e',
+      );
+      return const [];
+    }
+  }
+
+  Map<String, Object?> _buildIdentityHistoryRow({
+    required NodeDexEntry entry,
+    required int archivedAtMs,
+  }) {
+    return {
+      NodeDexTables.colNodeNum: entry.nodeNum,
+      NodeDexTables.colIdentityPubkey: entry.identityPubkey,
+      NodeDexTables.colHistArchivedAtMs: archivedAtMs,
+      NodeDexTables.colHistFirstSeenMs: entry.firstSeen.millisecondsSinceEpoch,
+      NodeDexTables.colHistLastSeenMs: entry.lastSeen.millisecondsSinceEpoch,
+      NodeDexTables.colHistEncounterCount: entry.encounterCount,
+      NodeDexTables.colHistMaxDistance: entry.maxDistanceSeen,
+      NodeDexTables.colHistBestSnr: entry.bestSnr,
+      NodeDexTables.colHistBestRssi: entry.bestRssi,
+      NodeDexTables.colHistMessageCount: entry.messageCount,
+      NodeDexTables.colHistRegionCount: entry.seenRegions.length,
+      NodeDexTables.colHistEncountersJson: entry.encounters.isEmpty
+          ? null
+          : jsonEncode(entry.encounters.map((e) => e.toJson()).toList()),
+      NodeDexTables.colHistSeenRegionsJson: entry.seenRegions.isEmpty
+          ? null
+          : jsonEncode(entry.seenRegions.map((r) => r.toJson()).toList()),
+      NodeDexTables.colHistLastKnownName: entry.lastKnownName,
+      NodeDexTables.colHistLastKnownHardware: entry.lastKnownHardware,
+      NodeDexTables.colHistLastKnownFirmware: entry.lastKnownFirmware,
+    };
+  }
+
+  IdentityHistoryRecord _rowToIdentityHistoryRecord(Map<String, Object?> row) {
+    final pk = row[NodeDexTables.colIdentityPubkey];
+    return IdentityHistoryRecord(
+      historyId: row[NodeDexTables.colHistId] as int,
+      nodeNum: row[NodeDexTables.colNodeNum] as int,
+      identityPubkey: pk == null ? null : Uint8List.fromList((pk as List<int>)),
+      archivedAt: DateTime.fromMillisecondsSinceEpoch(
+        row[NodeDexTables.colHistArchivedAtMs] as int,
+      ),
+      firstSeen: DateTime.fromMillisecondsSinceEpoch(
+        row[NodeDexTables.colHistFirstSeenMs] as int,
+      ),
+      lastSeen: DateTime.fromMillisecondsSinceEpoch(
+        row[NodeDexTables.colHistLastSeenMs] as int,
+      ),
+      encounterCount: row[NodeDexTables.colHistEncounterCount] as int,
+      maxDistanceSeen: (row[NodeDexTables.colHistMaxDistance] as num?)
+          ?.toDouble(),
+      bestSnr: row[NodeDexTables.colHistBestSnr] as int?,
+      bestRssi: row[NodeDexTables.colHistBestRssi] as int?,
+      messageCount: row[NodeDexTables.colHistMessageCount] as int,
+      regionCount: row[NodeDexTables.colHistRegionCount] as int,
+      encountersJson: row[NodeDexTables.colHistEncountersJson] as String?,
+      seenRegionsJson: row[NodeDexTables.colHistSeenRegionsJson] as String?,
+      lastKnownName: row[NodeDexTables.colHistLastKnownName] as String?,
+      lastKnownHardware: row[NodeDexTables.colHistLastKnownHardware] as String?,
+      lastKnownFirmware: row[NodeDexTables.colHistLastKnownFirmware] as String?,
+    );
+  }
+
+  static bool _pubkeysEqual(Uint8List a, Uint8List b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  static String _pubkeyFingerprint(Uint8List pk) {
+    final buf = StringBuffer();
+    final take = pk.length < 4 ? pk.length : 4;
+    for (var i = 0; i < take; i++) {
+      buf.write(pk[i].toRadixString(16).padLeft(2, '0'));
+    }
+    return buf.toString();
   }
 
   // ---------------------------------------------------------------------------
@@ -477,6 +736,12 @@ class NodeDexSqliteStore {
       NodeDexTables.colLastObservationSource:
           entry.lastObservationSource?.storageString,
       NodeDexTables.colLastHopsAway: entry.lastHopsAway,
+      NodeDexTables.colIdentityPubkey: entry.identityPubkey,
+      NodeDexTables.colIdentityObservedAtMs:
+          entry.identityObservedAt?.millisecondsSinceEpoch,
+      NodeDexTables.colIdentityResetCount: entry.identityResetCount,
+      NodeDexTables.colLastIdentityResetAtMs:
+          entry.lastIdentityResetAt?.millisecondsSinceEpoch,
     };
   }
 
@@ -612,6 +877,22 @@ class NodeDexSqliteStore {
       lastUsedAt: row[NodeDexTables.colLastUsedAtMs] != null
           ? DateTime.fromMillisecondsSinceEpoch(
               row[NodeDexTables.colLastUsedAtMs] as int,
+            )
+          : null,
+      identityPubkey: row[NodeDexTables.colIdentityPubkey] != null
+          ? Uint8List.fromList(
+              (row[NodeDexTables.colIdentityPubkey] as List<int>),
+            )
+          : null,
+      identityObservedAt: row[NodeDexTables.colIdentityObservedAtMs] != null
+          ? DateTime.fromMillisecondsSinceEpoch(
+              row[NodeDexTables.colIdentityObservedAtMs] as int,
+            )
+          : null,
+      identityResetCount: row[NodeDexTables.colIdentityResetCount] as int? ?? 0,
+      lastIdentityResetAt: row[NodeDexTables.colLastIdentityResetAtMs] != null
+          ? DateTime.fromMillisecondsSinceEpoch(
+              row[NodeDexTables.colLastIdentityResetAtMs] as int,
             )
           : null,
     );

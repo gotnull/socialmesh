@@ -15201,6 +15201,40 @@ class AppLocalizationsUk extends AppLocalizations {
   String get nodedexHelpSignalRecords => 'Записи сигналів';
 
   @override
+  String nodedexIdentityHistoryArchivedAt(String date) {
+    return 'Архівовано $date';
+  }
+
+  @override
+  String get nodedexIdentityHistoryEmpty =>
+      'Попередні ідентифікатори не зафіксовано.';
+
+  @override
+  String nodedexIdentityHistoryFingerprintLabel(String fingerprint) {
+    return 'Відкритий ключ $fingerprint';
+  }
+
+  @override
+  String get nodedexIdentityHistoryFingerprintUnknown =>
+      'Відкритий ключ невідомий';
+
+  @override
+  String get nodedexIdentityHistorySheetTitle => 'Минулі ідентифікатори';
+
+  @override
+  String nodedexIdentityHistoryStatsLine(int encounters, int regions) {
+    return '$encounters зустрічей · $regions регіонів';
+  }
+
+  @override
+  String nodedexIdentityRotatedBanner(String date) {
+    return 'Ідентифікатор змінено $date. Історію попереднього пристрою збережено.';
+  }
+
+  @override
+  String get nodedexIdentityRotatedViewHistoryAction => 'Переглянути історію';
+
+  @override
   String nodedexImportButtonLabelPlural(int count) {
     return 'Імпортувати $count записи';
   }
@@ -26523,6 +26557,9 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get orgCheckoutError =>
       'Не вдалося розпочати оформлення групової ліцензії. Повторіть спробу або зверніться до підтримки.';
+
+  @override
+  String get orgCheckoutEntryAction => 'Придбати як групову ліцензію';
 
   @override
   String get premiumPurchaseError =>

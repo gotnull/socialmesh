@@ -26032,6 +26032,54 @@ abstract class AppLocalizations {
   /// **'Signal Records'**
   String get nodedexHelpSignalRecords;
 
+  /// Subtitle on a past-identity row in the Past Identities sheet. {date} is the formatted date the snapshot was archived.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived {date}'**
+  String nodedexIdentityHistoryArchivedAt(String date);
+
+  /// Empty state shown in the Past Identities sheet when no rotations have been archived for this node.
+  ///
+  /// In en, this message translates to:
+  /// **'No prior identities recorded.'**
+  String get nodedexIdentityHistoryEmpty;
+
+  /// Label for an archived identity's truncated pubkey fingerprint. {fingerprint} is the first 8 hex chars of the public key.
+  ///
+  /// In en, this message translates to:
+  /// **'Pubkey {fingerprint}'**
+  String nodedexIdentityHistoryFingerprintLabel(String fingerprint);
+
+  /// Label shown when an archived identity has no recorded pubkey (legacy data).
+  ///
+  /// In en, this message translates to:
+  /// **'Pubkey unknown'**
+  String get nodedexIdentityHistoryFingerprintUnknown;
+
+  /// Title of the bottom sheet that lists archived prior identities for a node.
+  ///
+  /// In en, this message translates to:
+  /// **'Past identities'**
+  String get nodedexIdentityHistorySheetTitle;
+
+  /// Compact stats line for an archived identity row.
+  ///
+  /// In en, this message translates to:
+  /// **'{encounters} encounters · {regions} regions'**
+  String nodedexIdentityHistoryStatsLine(int encounters, int regions);
+
+  /// Banner shown above the discovery stats card when a node's public key has changed (firmware reset or factory wipe). {date} is the formatted local date of the most recent rotation.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity rotated on {date}. Previous device history archived.'**
+  String nodedexIdentityRotatedBanner(String date);
+
+  /// Action label on the identity-rotated banner that opens the Past Identities sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'View history'**
+  String get nodedexIdentityRotatedViewHistoryAction;
+
   /// Text in node management Parameters: {count} = numeric count.
   ///
   /// In en, this message translates to:
@@ -45927,6 +45975,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not start the group license checkout. Try again or contact support.'**
   String get orgCheckoutError;
+
+  /// Low-emphasis text link on the subscription screen that opens the org-pack checkout sheet. Sits alongside the 'Have an unlock code?' tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy as a group license'**
+  String get orgCheckoutEntryAction;
 
   /// Error message in premium features
   ///

@@ -39,6 +39,7 @@ import '../../../core/widgets/info_table.dart';
 
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/ico_help_system.dart';
+import '../../../core/widgets/status_banner.dart';
 import '../../../models/mesh_models.dart';
 import '../../../providers/app_providers.dart';
 
@@ -436,6 +437,23 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                     scoredTraits: scoredTraits,
                     showEvidence: disclosure.showTraitEvidence,
                   ),
+                ),
+              ),
+            ),
+
+          // Identity-rotated banner — surfaces when a firmware reset
+          // (factory wipe or pubkey rotation) was detected for this
+          // node_num. The pre-rotation stats are archived to
+          // nodedex_identity_history and accessible via the "View
+          // history" action on the banner.
+          if (entry.identityResetCount > 0)
+            SliverToBoxAdapter(
+              child: _DetailEntrance(
+                index: 7,
+                reduceMotion: reduceMotion,
+                child: _IdentityRotatedBanner(
+                  entry: entry,
+                  nodeNum: widget.nodeNum,
                 ),
               ),
             ),
@@ -3598,6 +3616,179 @@ class _DetailEntranceState extends State<_DetailEntrance>
     return FadeTransition(
       opacity: _fade,
       child: SlideTransition(position: _slide, child: widget.child),
+    );
+  }
+}
+
+/// Banner surfaced above the DISCOVERY card when a node's Meshtastic
+/// User.public_key has rotated since the last sighting. The prior
+/// stats have been archived to `nodedex_identity_history`; tapping
+/// "View history" opens the [_PastIdentitiesSheet] for review.
+class _IdentityRotatedBanner extends StatelessWidget {
+  final NodeDexEntry entry;
+  final int nodeNum;
+
+  const _IdentityRotatedBanner({required this.entry, required this.nodeNum});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final rotatedAt = entry.lastIdentityResetAt;
+    final dateLabel = rotatedAt != null
+        ? DateFormat.yMMMd(
+            Localizations.localeOf(context).toLanguageTag(),
+          ).format(rotatedAt)
+        : '';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing16,
+        AppTheme.spacing8,
+        AppTheme.spacing16,
+        0,
+      ),
+      child: StatusBanner(
+        type: StatusBannerType.warning,
+        icon: Icons.history_toggle_off,
+        title: l10n.nodedexIdentityRotatedBanner(dateLabel),
+        subtitle: l10n.nodedexIdentityRotatedViewHistoryAction,
+        onTap: () {
+          HapticFeedback.lightImpact();
+          _showPastIdentitiesSheet(context, nodeNum);
+        },
+      ),
+    );
+  }
+}
+
+void _showPastIdentitiesSheet(BuildContext context, int nodeNum) {
+  AppBottomSheet.showScrollable<void>(
+    context: context,
+    title: context.l10n.nodedexIdentityHistorySheetTitle,
+    initialChildSize: 0.7,
+    minChildSize: 0.4,
+    maxChildSize: 0.95,
+    builder: (controller) =>
+        _PastIdentitiesSheet(nodeNum: nodeNum, scrollController: controller),
+  );
+}
+
+class _PastIdentitiesSheet extends ConsumerWidget {
+  final int nodeNum;
+  final ScrollController scrollController;
+
+  const _PastIdentitiesSheet({
+    required this.nodeNum,
+    required this.scrollController,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final historyAsync = ref.watch(nodeDexIdentityHistoryProvider(nodeNum));
+    return historyAsync.when(
+      data: (records) {
+        if (records.isEmpty) {
+          return ListView(
+            controller: scrollController,
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing24,
+              AppTheme.spacing16,
+              AppTheme.spacing24,
+              AppTheme.spacing24,
+            ),
+            children: [
+              Text(
+                l10n.nodedexIdentityHistoryEmpty,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: context.textSecondary,
+                  fontFamily: AppTheme.fontFamily,
+                ),
+              ),
+            ],
+          );
+        }
+
+        final locale = Localizations.localeOf(context).toLanguageTag();
+        final dateFmt = DateFormat.yMMMd(locale).add_Hm();
+        final archivedFmt = DateFormat.yMMMd(locale);
+
+        return ListView.builder(
+          controller: scrollController,
+          padding: const EdgeInsets.fromLTRB(
+            AppTheme.spacing16,
+            AppTheme.spacing8,
+            AppTheme.spacing16,
+            AppTheme.spacing24,
+          ),
+          itemCount: records.length,
+          itemBuilder: (context, index) {
+            final r = records[index];
+            final fingerprint = r.pubkeyFingerprint;
+            final headerText = fingerprint != null
+                ? l10n.nodedexIdentityHistoryFingerprintLabel(fingerprint)
+                : l10n.nodedexIdentityHistoryFingerprintUnknown;
+            final infoRows = <InfoTableRow>[
+              InfoTableRow(
+                icon: Icons.login_outlined,
+                label: l10n.nodedexFirstDiscovered,
+                value: dateFmt.format(r.firstSeen),
+              ),
+              InfoTableRow(
+                icon: Icons.history,
+                label: l10n.nodedexLastSeen,
+                value: dateFmt.format(r.lastSeen),
+              ),
+              if (r.lastKnownHardware != null &&
+                  r.lastKnownHardware!.isNotEmpty)
+                InfoTableRow(
+                  icon: Icons.memory_outlined,
+                  label: l10n.nodedexHardwareLabel,
+                  value: r.lastKnownHardware!,
+                ),
+              if (r.lastKnownFirmware != null &&
+                  r.lastKnownFirmware!.isNotEmpty)
+                InfoTableRow(
+                  icon: Icons.system_update_outlined,
+                  label: l10n.nodedexFirmwareLabel,
+                  value: r.lastKnownFirmware!,
+                ),
+            ];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppTheme.spacing16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SectionTitle(title: headerText),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+                    child: Text(
+                      '${l10n.nodedexIdentityHistoryArchivedAt(archivedFmt.format(r.archivedAt))}  ·  '
+                      '${l10n.nodedexIdentityHistoryStatsLine(r.encounterCount, r.regionCount)}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textSecondary,
+                        fontFamily: AppTheme.fontFamily,
+                      ),
+                    ),
+                  ),
+                  InfoTable(rows: infoRows),
+                ],
+              ),
+            );
+          },
+        );
+      },
+      loading: () => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(AppTheme.spacing24),
+          child: CircularProgressIndicator(),
+        ),
+      ),
+      error: (e, _) => Padding(
+        padding: const EdgeInsets.all(AppTheme.spacing24),
+        child: Text('$e', style: TextStyle(color: context.textSecondary)),
+      ),
     );
   }
 }

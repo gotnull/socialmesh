@@ -20311,6 +20311,61 @@
     "@nodedexHelpSignalRecords": {
         "description": "Text displayed in node management"
     },
+    "nodedexIdentityHistoryArchivedAt": "Archived {date}",
+    "@nodedexIdentityHistoryArchivedAt": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        },
+        "description": "Subtitle on a past-identity row in the Past Identities sheet. {date} is the formatted date the snapshot was archived."
+    },
+    "nodedexIdentityHistoryEmpty": "No prior identities recorded.",
+    "@nodedexIdentityHistoryEmpty": {
+        "description": "Empty state shown in the Past Identities sheet when no rotations have been archived for this node."
+    },
+    "nodedexIdentityHistoryFingerprintLabel": "Pubkey {fingerprint}",
+    "@nodedexIdentityHistoryFingerprintLabel": {
+        "placeholders": {
+            "fingerprint": {
+                "type": "String"
+            }
+        },
+        "description": "Label for an archived identity's truncated pubkey fingerprint. {fingerprint} is the first 8 hex chars of the public key."
+    },
+    "nodedexIdentityHistoryFingerprintUnknown": "Pubkey unknown",
+    "@nodedexIdentityHistoryFingerprintUnknown": {
+        "description": "Label shown when an archived identity has no recorded pubkey (legacy data)."
+    },
+    "nodedexIdentityHistorySheetTitle": "Past identities",
+    "@nodedexIdentityHistorySheetTitle": {
+        "description": "Title of the bottom sheet that lists archived prior identities for a node."
+    },
+    "nodedexIdentityHistoryStatsLine": "{encounters} encounters · {regions} regions",
+    "@nodedexIdentityHistoryStatsLine": {
+        "placeholders": {
+            "encounters": {
+                "type": "int"
+            },
+            "regions": {
+                "type": "int"
+            }
+        },
+        "description": "Compact stats line for an archived identity row."
+    },
+    "nodedexIdentityRotatedBanner": "Identity rotated on {date}. Previous device history archived.",
+    "@nodedexIdentityRotatedBanner": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        },
+        "description": "Banner shown above the discovery stats card when a node's public key has changed (firmware reset or factory wipe). {date} is the formatted local date of the most recent rotation."
+    },
+    "nodedexIdentityRotatedViewHistoryAction": "View history",
+    "@nodedexIdentityRotatedViewHistoryAction": {
+        "description": "Action label on the identity-rotated banner that opens the Past Identities sheet."
+    },
     "nodedexImportButtonLabelPlural": "Import {count} entries",
     "@nodedexImportButtonLabelPlural": {
         "placeholders": {
@@ -35621,6 +35676,10 @@
     "orgCheckoutError": "Could not start the group license checkout. Try again or contact support.",
     "@orgCheckoutError": {
         "description": "Error shown when the createCheckout callable rejects the org-pack request."
+    },
+    "orgCheckoutEntryAction": "Buy as a group license",
+    "@orgCheckoutEntryAction": {
+        "description": "Low-emphasis text link on the subscription screen that opens the org-pack checkout sheet. Sits alongside the 'Have an unlock code?' tile."
     },
     "premiumPurchaseError": "Something went wrong. Please try again.",
     "@premiumPurchaseError": {

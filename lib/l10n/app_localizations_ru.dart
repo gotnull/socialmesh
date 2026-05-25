@@ -15186,6 +15186,40 @@ class AppLocalizationsRu extends AppLocalizations {
   String get nodedexHelpSignalRecords => 'Записи сигнала';
 
   @override
+  String nodedexIdentityHistoryArchivedAt(String date) {
+    return 'Архивировано $date';
+  }
+
+  @override
+  String get nodedexIdentityHistoryEmpty =>
+      'Прежние идентификаторы не зафиксированы.';
+
+  @override
+  String nodedexIdentityHistoryFingerprintLabel(String fingerprint) {
+    return 'Открытый ключ $fingerprint';
+  }
+
+  @override
+  String get nodedexIdentityHistoryFingerprintUnknown =>
+      'Открытый ключ неизвестен';
+
+  @override
+  String get nodedexIdentityHistorySheetTitle => 'Прошлые идентификаторы';
+
+  @override
+  String nodedexIdentityHistoryStatsLine(int encounters, int regions) {
+    return '$encounters встреч · $regions регионов';
+  }
+
+  @override
+  String nodedexIdentityRotatedBanner(String date) {
+    return 'Идентификатор изменён $date. История предыдущего устройства сохранена.';
+  }
+
+  @override
+  String get nodedexIdentityRotatedViewHistoryAction => 'Показать историю';
+
+  @override
   String nodedexImportButtonLabelPlural(int count) {
     return 'Импортировать $count записи';
   }
@@ -26508,6 +26542,9 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get orgCheckoutError =>
       'Не удалось запустить оформление групповой лицензии. Повторите попытку или обратитесь в поддержку.';
+
+  @override
+  String get orgCheckoutEntryAction => 'Купить как групповую лицензию';
 
   @override
   String get premiumPurchaseError => 'Что-то пошло не так. Попробуйте ещё раз.';

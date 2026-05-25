@@ -7,7 +7,7 @@
 // All tables, indices, and migration logic live here.
 //
 // Database: nodedex.db
-// Schema version: 12
+// Schema version: 13
 
 import 'dart:async';
 import 'dart:io';
@@ -22,7 +22,7 @@ import '../../../core/logging.dart';
 ///
 /// Bump this when adding tables, columns, or indices.
 /// Migration logic runs in [_onUpgrade].
-const int nodedexSchemaVersion = 12;
+const int nodedexSchemaVersion = 13;
 
 /// Table and column name constants for NodeDex SQLite schema.
 abstract final class NodeDexTables {
@@ -80,6 +80,37 @@ abstract final class NodeDexTables {
   // metadata when these are NULL on legacy entries.
   static const colLastObservationSource = 'last_observation_source';
   static const colLastHopsAway = 'last_hops_away';
+
+  // -- Identity tracking columns (v13) --
+  // Detect when a node's Meshtastic User.public_key rotates across firmware
+  // reset / factory wipe. node_num is preserved by firmware, but pubkey is
+  // re-derived from device entropy, so the active row would otherwise carry
+  // pre-reset stats indefinitely. Distinct from sip_pubkey (SIP-layer only).
+  static const colIdentityPubkey = 'identity_pubkey';
+  static const colIdentityObservedAtMs = 'identity_observed_at_ms';
+  static const colIdentityResetCount = 'identity_reset_count';
+  static const colLastIdentityResetAtMs = 'last_identity_reset_at_ms';
+
+  // -- nodedex_identity_history (v13) --
+  // Archive of stats captured at the moment of a detected identity rotation.
+  // One row per past identity per node_num, ordered newest-first by
+  // archived_at_ms. Powers the "Past identities" sheet.
+  static const identityHistory = 'nodedex_identity_history';
+  static const colHistId = 'history_id';
+  static const colHistArchivedAtMs = 'archived_at_ms';
+  static const colHistFirstSeenMs = 'first_seen_ms';
+  static const colHistLastSeenMs = 'last_seen_ms';
+  static const colHistEncounterCount = 'encounter_count';
+  static const colHistMaxDistance = 'max_distance';
+  static const colHistBestSnr = 'best_snr';
+  static const colHistBestRssi = 'best_rssi';
+  static const colHistMessageCount = 'message_count';
+  static const colHistRegionCount = 'region_count';
+  static const colHistEncountersJson = 'encounters_json';
+  static const colHistSeenRegionsJson = 'seen_regions_json';
+  static const colHistLastKnownName = 'last_known_name';
+  static const colHistLastKnownHardware = 'last_known_hardware';
+  static const colHistLastKnownFirmware = 'last_known_firmware';
 
   // -- nodedex_encounters --
   static const encounters = 'nodedex_encounters';
@@ -268,7 +299,11 @@ class NodeDexDatabase {
         ${NodeDexTables.colFirstUsedAtMs} INTEGER,                    -- v11
         ${NodeDexTables.colLastUsedAtMs} INTEGER,                     -- v11
         ${NodeDexTables.colLastObservationSource} TEXT,               -- v12
-        ${NodeDexTables.colLastHopsAway} INTEGER                      -- v12
+        ${NodeDexTables.colLastHopsAway} INTEGER,                     -- v12
+        ${NodeDexTables.colIdentityPubkey} BLOB,                      -- v13
+        ${NodeDexTables.colIdentityObservedAtMs} INTEGER,             -- v13
+        ${NodeDexTables.colIdentityResetCount} INTEGER NOT NULL DEFAULT 0,  -- v13
+        ${NodeDexTables.colLastIdentityResetAtMs} INTEGER             -- v13
       )
     ''');
     batch.execute(
@@ -379,6 +414,34 @@ class NodeDexDatabase {
       'CREATE INDEX idx_outbox_entity ' // lint-allow: hardcoded-string
       'ON ${NodeDexTables.syncOutbox}' // lint-allow: hardcoded-string
       '(${NodeDexTables.colOutboxEntityType}, ${NodeDexTables.colOutboxEntityId})',
+    );
+
+    // -- nodedex_identity_history (v13) --
+    batch.execute('''
+      CREATE TABLE ${NodeDexTables.identityHistory} (
+        ${NodeDexTables.colHistId} INTEGER PRIMARY KEY AUTOINCREMENT,
+        ${NodeDexTables.colNodeNum} INTEGER NOT NULL,
+        ${NodeDexTables.colIdentityPubkey} BLOB,
+        ${NodeDexTables.colHistArchivedAtMs} INTEGER NOT NULL,
+        ${NodeDexTables.colHistFirstSeenMs} INTEGER NOT NULL,
+        ${NodeDexTables.colHistLastSeenMs} INTEGER NOT NULL,
+        ${NodeDexTables.colHistEncounterCount} INTEGER NOT NULL,
+        ${NodeDexTables.colHistMaxDistance} REAL,
+        ${NodeDexTables.colHistBestSnr} INTEGER,
+        ${NodeDexTables.colHistBestRssi} INTEGER,
+        ${NodeDexTables.colHistMessageCount} INTEGER NOT NULL,
+        ${NodeDexTables.colHistRegionCount} INTEGER NOT NULL,
+        ${NodeDexTables.colHistEncountersJson} TEXT,
+        ${NodeDexTables.colHistSeenRegionsJson} TEXT,
+        ${NodeDexTables.colHistLastKnownName} TEXT,
+        ${NodeDexTables.colHistLastKnownHardware} TEXT,
+        ${NodeDexTables.colHistLastKnownFirmware} TEXT
+      )
+    ''');
+    batch.execute(
+      'CREATE INDEX idx_identity_history_node ' // lint-allow: hardcoded-string
+      'ON ${NodeDexTables.identityHistory}' // lint-allow: hardcoded-string
+      '(${NodeDexTables.colNodeNum}, ${NodeDexTables.colHistArchivedAtMs} DESC)',
     );
 
     await batch.commit(noResult: true);
@@ -585,6 +648,57 @@ class NodeDexDatabase {
         'NodeDexDatabase: v12 migration — added observation context columns',
       );
     }
+    if (oldVersion < 13) {
+      // v13: Identity tracking. Track the Meshtastic User.public_key per
+      // entry so a firmware reset (which preserves node_num but rotates
+      // pubkey) is detectable. On rotation the active row is reset in
+      // place and a snapshot is archived to nodedex_identity_history.
+      await db.execute(
+        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
+        'ADD COLUMN ${NodeDexTables.colIdentityPubkey} BLOB', // lint-allow: hardcoded-string
+      );
+      await db.execute(
+        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
+        'ADD COLUMN ${NodeDexTables.colIdentityObservedAtMs} INTEGER', // lint-allow: hardcoded-string
+      );
+      await db.execute(
+        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
+        'ADD COLUMN ${NodeDexTables.colIdentityResetCount} INTEGER NOT NULL DEFAULT 0', // lint-allow: hardcoded-string
+      );
+      await db.execute(
+        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
+        'ADD COLUMN ${NodeDexTables.colLastIdentityResetAtMs} INTEGER', // lint-allow: hardcoded-string
+      );
+      await db.execute('''
+        CREATE TABLE ${NodeDexTables.identityHistory} (
+          ${NodeDexTables.colHistId} INTEGER PRIMARY KEY AUTOINCREMENT,
+          ${NodeDexTables.colNodeNum} INTEGER NOT NULL,
+          ${NodeDexTables.colIdentityPubkey} BLOB,
+          ${NodeDexTables.colHistArchivedAtMs} INTEGER NOT NULL,
+          ${NodeDexTables.colHistFirstSeenMs} INTEGER NOT NULL,
+          ${NodeDexTables.colHistLastSeenMs} INTEGER NOT NULL,
+          ${NodeDexTables.colHistEncounterCount} INTEGER NOT NULL,
+          ${NodeDexTables.colHistMaxDistance} REAL,
+          ${NodeDexTables.colHistBestSnr} INTEGER,
+          ${NodeDexTables.colHistBestRssi} INTEGER,
+          ${NodeDexTables.colHistMessageCount} INTEGER NOT NULL,
+          ${NodeDexTables.colHistRegionCount} INTEGER NOT NULL,
+          ${NodeDexTables.colHistEncountersJson} TEXT,
+          ${NodeDexTables.colHistSeenRegionsJson} TEXT,
+          ${NodeDexTables.colHistLastKnownName} TEXT,
+          ${NodeDexTables.colHistLastKnownHardware} TEXT,
+          ${NodeDexTables.colHistLastKnownFirmware} TEXT
+        )
+      ''');
+      await db.execute(
+        'CREATE INDEX idx_identity_history_node ' // lint-allow: hardcoded-string
+        'ON ${NodeDexTables.identityHistory}' // lint-allow: hardcoded-string
+        '(${NodeDexTables.colNodeNum}, ${NodeDexTables.colHistArchivedAtMs} DESC)',
+      );
+      AppLogging.storage(
+        'NodeDexDatabase: v13 migration — added identity tracking columns + identity history table',
+      );
+    }
   }
 
   /// Handle downgrades by recreating.
@@ -645,5 +759,6 @@ class NodeDexDatabase {
     NodeDexTables.presenceTransitions,
     NodeDexTables.syncState,
     NodeDexTables.syncOutbox,
+    NodeDexTables.identityHistory,
   ];
 }

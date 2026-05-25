@@ -772,6 +772,29 @@ class NodeDexEntry {
   /// in the notifier to roughly one update per minute.
   final DateTime? lastUsedAt;
 
+  /// Meshtastic-protocol `User.public_key` bytes for the active identity
+  /// of this node_num. Used to detect identity rotation across firmware
+  /// reset / factory wipe: node_num is preserved but pubkey is re-derived.
+  /// Null for legacy entries observed before v13, or for pre-v2.5 firmware
+  /// that does not advertise a User.public_key. Distinct from [sipPubkey].
+  final Uint8List? identityPubkey;
+
+  /// When [identityPubkey] was first observed on this row.
+  ///
+  /// Set on backfill (legacy row first sees a pubkey) and on rotation
+  /// (new pubkey replaces the previous one in place). Null when pubkey
+  /// has never been observed.
+  final DateTime? identityObservedAt;
+
+  /// Number of times this row's identity has rotated. Incremented every
+  /// time a different non-null pubkey replaces the previous one. Used by
+  /// the detail screen to surface a "Past identities" banner.
+  final int identityResetCount;
+
+  /// Timestamp of the most recent identity rotation, or null if no
+  /// rotation has occurred.
+  final DateTime? lastIdentityResetAt;
+
   /// Maximum number of encounter records to retain.
   static const int maxEncounterRecords = 50;
 
@@ -820,6 +843,10 @@ class NodeDexEntry {
     this.lastHopsAway,
     this.firstUsedAt,
     this.lastUsedAt,
+    this.identityPubkey,
+    this.identityObservedAt,
+    this.identityResetCount = 0,
+    this.lastIdentityResetAt,
   });
 
   /// Create a new entry for a freshly discovered node.
@@ -973,6 +1000,13 @@ class NodeDexEntry {
     bool clearFirstUsedAt = false,
     DateTime? lastUsedAt,
     bool clearLastUsedAt = false,
+    Uint8List? identityPubkey,
+    bool clearIdentityPubkey = false,
+    DateTime? identityObservedAt,
+    bool clearIdentityObservedAt = false,
+    int? identityResetCount,
+    DateTime? lastIdentityResetAt,
+    bool clearLastIdentityResetAt = false,
   }) {
     // Auto-stamp when socialTag changes via copyWith.
     final effectiveStMs = clearSocialTag || socialTag != null
@@ -1042,6 +1076,16 @@ class NodeDexEntry {
           : (lastHopsAway ?? this.lastHopsAway),
       firstUsedAt: clearFirstUsedAt ? null : (firstUsedAt ?? this.firstUsedAt),
       lastUsedAt: clearLastUsedAt ? null : (lastUsedAt ?? this.lastUsedAt),
+      identityPubkey: clearIdentityPubkey
+          ? null
+          : (identityPubkey ?? this.identityPubkey),
+      identityObservedAt: clearIdentityObservedAt
+          ? null
+          : (identityObservedAt ?? this.identityObservedAt),
+      identityResetCount: identityResetCount ?? this.identityResetCount,
+      lastIdentityResetAt: clearLastIdentityResetAt
+          ? null
+          : (lastIdentityResetAt ?? this.lastIdentityResetAt),
     );
   }
 
@@ -1407,6 +1451,44 @@ class NodeDexEntry {
       mergedLastUsedAt = lastUsedAt ?? other.lastUsedAt;
     }
 
+    // Identity tracking: prefer the side with the more recent observation,
+    // and keep the max reset count + latest reset timestamp so a sync
+    // round-trip cannot rewind a rotation that has been recorded locally.
+    final Uint8List? mergedIdentityPubkey;
+    final DateTime? mergedIdentityObservedAt;
+    if (identityObservedAt != null && other.identityObservedAt != null) {
+      if (identityObservedAt!.isAfter(other.identityObservedAt!)) {
+        mergedIdentityPubkey = identityPubkey ?? other.identityPubkey;
+        mergedIdentityObservedAt = identityObservedAt;
+      } else {
+        mergedIdentityPubkey = other.identityPubkey ?? identityPubkey;
+        mergedIdentityObservedAt = other.identityObservedAt;
+      }
+    } else if (identityObservedAt != null) {
+      mergedIdentityPubkey = identityPubkey;
+      mergedIdentityObservedAt = identityObservedAt;
+    } else if (other.identityObservedAt != null) {
+      mergedIdentityPubkey = other.identityPubkey;
+      mergedIdentityObservedAt = other.identityObservedAt;
+    } else {
+      mergedIdentityPubkey = identityPubkey ?? other.identityPubkey;
+      mergedIdentityObservedAt = null;
+    }
+    final mergedIdentityResetCount =
+        identityResetCount > other.identityResetCount
+        ? identityResetCount
+        : other.identityResetCount;
+    final DateTime? mergedLastIdentityResetAt;
+    if (lastIdentityResetAt != null && other.lastIdentityResetAt != null) {
+      mergedLastIdentityResetAt =
+          lastIdentityResetAt!.isAfter(other.lastIdentityResetAt!)
+          ? lastIdentityResetAt
+          : other.lastIdentityResetAt;
+    } else {
+      mergedLastIdentityResetAt =
+          lastIdentityResetAt ?? other.lastIdentityResetAt;
+    }
+
     return NodeDexEntry(
       nodeNum: nodeNum,
       firstSeen: mergedFirstSeen,
@@ -1442,6 +1524,10 @@ class NodeDexEntry {
       lastHopsAway: mergedLastHopsAway,
       firstUsedAt: mergedFirstUsedAt,
       lastUsedAt: mergedLastUsedAt,
+      identityPubkey: mergedIdentityPubkey,
+      identityObservedAt: mergedIdentityObservedAt,
+      identityResetCount: mergedIdentityResetCount,
+      lastIdentityResetAt: mergedLastIdentityResetAt,
     );
   }
 
@@ -1554,6 +1640,12 @@ class NodeDexEntry {
       if (lastHopsAway != null) 'lha': lastHopsAway,
       if (firstUsedAt != null) 'fua': firstUsedAt!.millisecondsSinceEpoch,
       if (lastUsedAt != null) 'lua': lastUsedAt!.millisecondsSinceEpoch,
+      if (identityPubkey != null) 'idpk': base64Encode(identityPubkey!),
+      if (identityObservedAt != null)
+        'idoa': identityObservedAt!.millisecondsSinceEpoch,
+      if (identityResetCount > 0) 'idrc': identityResetCount,
+      if (lastIdentityResetAt != null)
+        'idra': lastIdentityResetAt!.millisecondsSinceEpoch,
     };
   }
 
@@ -1641,6 +1733,16 @@ class NodeDexEntry {
       lastUsedAt: json['lua'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['lua'] as int)
           : null,
+      identityPubkey: json['idpk'] != null
+          ? base64Decode(json['idpk'] as String)
+          : null,
+      identityObservedAt: json['idoa'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(json['idoa'] as int)
+          : null,
+      identityResetCount: json['idrc'] as int? ?? 0,
+      lastIdentityResetAt: json['idra'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(json['idra'] as int)
+          : null,
     );
   }
 
@@ -1701,6 +1803,144 @@ class NodeDexEntry {
       'encounters: $encounterCount, ' // lint-allow: hardcoded-string
       'regions: $regionCount, ' // lint-allow: hardcoded-string
       'tag: ${socialTag?.name ?? "none"})'; // lint-allow: hardcoded-string
+}
+
+// =============================================================================
+// Identity Resolution
+// =============================================================================
+
+/// Outcome of resolving a node's Meshtastic identity against the latest
+/// observed `User.public_key`.
+enum IdentityResolutionOutcome {
+  /// The observed pubkey matches the row's recorded identity, or no
+  /// pubkey was observed. Stats stand.
+  unchanged,
+
+  /// The row had no recorded pubkey; the observed value has been
+  /// stamped onto the row without resetting stats.
+  backfilled,
+
+  /// The observed pubkey differs from the row's recorded identity.
+  /// The row's prior stats have been archived to
+  /// `nodedex_identity_history` and the active row's accumulators
+  /// reset in place.
+  rotated,
+}
+
+/// Result of [NodeDexSqliteStore.resolveIdentity]: the entry to use
+/// for downstream updates plus what happened during resolution.
+class IdentityResolution {
+  /// The entry the caller should treat as authoritative going forward.
+  /// On [IdentityResolutionOutcome.rotated] this is already persisted;
+  /// on [IdentityResolutionOutcome.backfilled] the cache holds the
+  /// updated value but disk has not been written yet; on
+  /// [IdentityResolutionOutcome.unchanged] this is the input untouched.
+  final NodeDexEntry entry;
+
+  /// What happened during resolution.
+  final IdentityResolutionOutcome outcome;
+
+  const IdentityResolution({required this.entry, required this.outcome});
+}
+
+// =============================================================================
+// Identity History
+// =============================================================================
+
+/// Snapshot of a prior identity for a single node_num, captured at the
+/// moment that node_num was observed with a new Meshtastic User.public_key.
+///
+/// Powers the "Past identities" sheet on the node detail screen. One
+/// record per past identity per node; the active identity lives on
+/// [NodeDexEntry] itself.
+class IdentityHistoryRecord {
+  /// SQLite row id of this archived record.
+  final int historyId;
+
+  /// node_num the archived identity belonged to.
+  final int nodeNum;
+
+  /// Meshtastic User.public_key of the archived identity, or null when
+  /// the previous active row carried no observed pubkey (legacy data
+  /// archived because a fresh pubkey arrived for the first time).
+  final Uint8List? identityPubkey;
+
+  /// When the active row was reset and this snapshot was archived.
+  final DateTime archivedAt;
+
+  /// firstSeen of the archived identity.
+  final DateTime firstSeen;
+
+  /// lastSeen of the archived identity.
+  final DateTime lastSeen;
+
+  /// Encounter count accumulated against the archived identity.
+  final int encounterCount;
+
+  /// Maximum distance (meters) observed under the archived identity.
+  final double? maxDistanceSeen;
+
+  /// Best SNR observed under the archived identity.
+  final int? bestSnr;
+
+  /// Best RSSI observed under the archived identity.
+  final int? bestRssi;
+
+  /// Message count accumulated against the archived identity.
+  final int messageCount;
+
+  /// Number of distinct regions seen under the archived identity.
+  final int regionCount;
+
+  /// JSON-serialized encounter records, preserved for forensic review.
+  final String? encountersJson;
+
+  /// JSON-serialized seen regions, preserved for forensic review.
+  final String? seenRegionsJson;
+
+  /// Last-known display name of the archived identity.
+  final String? lastKnownName;
+
+  /// Last-known hardware model string of the archived identity.
+  final String? lastKnownHardware;
+
+  /// Last-known firmware version of the archived identity.
+  final String? lastKnownFirmware;
+
+  const IdentityHistoryRecord({
+    required this.historyId,
+    required this.nodeNum,
+    required this.identityPubkey,
+    required this.archivedAt,
+    required this.firstSeen,
+    required this.lastSeen,
+    required this.encounterCount,
+    required this.messageCount,
+    required this.regionCount,
+    this.maxDistanceSeen,
+    this.bestSnr,
+    this.bestRssi,
+    this.encountersJson,
+    this.seenRegionsJson,
+    this.lastKnownName,
+    this.lastKnownHardware,
+    this.lastKnownFirmware,
+  });
+
+  /// Truncated pubkey fingerprint suitable for compact UI display.
+  ///
+  /// Returns the first 8 hex chars of [identityPubkey], or null when no
+  /// pubkey is recorded.
+  String? get pubkeyFingerprint {
+    final pk = identityPubkey;
+    if (pk == null || pk.isEmpty) return null;
+    final buf = StringBuffer();
+    final take = pk.length < 4 ? pk.length : 4;
+    for (var i = 0; i < take; i++) {
+      buf.write(pk[i].toRadixString(16).padLeft(2, '0'));
+    }
+    return buf.toString();
+  }
 }
 
 /// Result of merging a single user-editable field.

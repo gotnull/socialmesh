@@ -19967,6 +19967,14 @@
     "@nodedexHelpSignalRecords": {
         "description": "Text displayed in node management"
     },
+    "nodedexIdentityHistoryArchivedAt": "Arquivado em {date}",
+    "nodedexIdentityHistoryEmpty": "Nenhuma identidade anterior registada.",
+    "nodedexIdentityHistoryFingerprintLabel": "Chave pública {fingerprint}",
+    "nodedexIdentityHistoryFingerprintUnknown": "Chave pública desconhecida",
+    "nodedexIdentityHistorySheetTitle": "Identidades anteriores",
+    "nodedexIdentityHistoryStatsLine": "{encounters} encontros · {regions} regiões",
+    "nodedexIdentityRotatedBanner": "Identidade rotacionada em {date}. Histórico do dispositivo anterior arquivado.",
+    "nodedexIdentityRotatedViewHistoryAction": "Ver histórico",
     "@nodedexImportButtonLabelPlural": {
         "placeholders": {
             "count": {
@@ -41266,6 +41274,7 @@
     "operationsSectionActive": "ATIVAS",
     "operationsSectionCompleted": "CONCLUÍDAS",
     "orgCheckoutError": "Não foi possível iniciar o pagamento da licença de grupo. Tente novamente ou entre em contato com o suporte.",
+    "orgCheckoutEntryAction": "Comprar como licença de grupo",
     "orgCheckoutOrgIdHelp": "Letras minúsculas, dígitos e hifens. De 3 a 64 caracteres. Usado para identificar sua equipe no sistema de licenças.",
     "orgCheckoutOrgIdHint": "acme-eng-team",
     "orgCheckoutOrgIdInvalid": "Use letras minúsculas, dígitos e hifens. De 3 a 64 caracteres. Não pode começar nem terminar com um hífen.",
