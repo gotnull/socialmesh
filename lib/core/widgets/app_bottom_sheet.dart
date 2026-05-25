@@ -99,10 +99,13 @@ class AppBottomSheet extends StatelessWidget {
             ? Duration.zero
             : const Duration(milliseconds: 250),
       ),
-      builder: (context) => AppBottomSheet(
-        padding: padding,
-        showDragPill: showDragPill,
-        child: content,
+      builder: (context) => _BounceInWrapper(
+        enabled: !disableAnimations,
+        child: AppBottomSheet(
+          padding: padding,
+          showDragPill: showDragPill,
+          child: content,
+        ),
       ),
     );
   }
@@ -138,69 +141,74 @@ class AppBottomSheet extends StatelessWidget {
             ? Duration.zero
             : const Duration(milliseconds: 250),
       ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: initialChildSize,
-        minChildSize: minChildSize,
-        maxChildSize: maxChildSize,
-        expand: false,
-        // The full-width pin is mandatory: during the dismiss
-        // animation `showModalBottomSheet`'s SlideTransition can
-        // briefly invalidate the inherited BoxConstraints. A
-        // Container with no explicit width then collapses to its
-        // children's intrinsic min-width, which renders the sheet
-        // as a thin vertical bar mid-dismiss before disappearing.
-        // Pinning to `double.infinity` keeps the sheet at screen
-        // width through the entire reverse animation.
-        builder: (context, scrollController) => Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            // Sheet shell uses `context.background` (darker) so the
-            // entire sheet — drag pill, body, button area — is one
-            // consistent dark surface. Nested cards (`context.card`,
-            // lighter) and `InfoTable`-style read-only blocks (`context
-            // .background` + border) both delineate naturally on top.
-            color: context.background,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              children: [
-                const _DragPill(),
-                // Pinned title row
-                if (title != null)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppTheme.spacing24,
-                      0,
-                      AppTheme.spacing24,
-                      AppTheme.spacing12,
-                    ),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: context.textPrimary,
+      builder: (context) => _BounceInWrapper(
+        enabled: !disableAnimations,
+        child: DraggableScrollableSheet(
+          initialChildSize: initialChildSize,
+          minChildSize: minChildSize,
+          maxChildSize: maxChildSize,
+          expand: false,
+          // The full-width pin is mandatory: during the dismiss
+          // animation `showModalBottomSheet`'s SlideTransition can
+          // briefly invalidate the inherited BoxConstraints. A
+          // Container with no explicit width then collapses to its
+          // children's intrinsic min-width, which renders the sheet
+          // as a thin vertical bar mid-dismiss before disappearing.
+          // Pinning to `double.infinity` keeps the sheet at screen
+          // width through the entire reverse animation.
+          builder: (context, scrollController) => Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              // Sheet shell uses `context.background` (darker) so the
+              // entire sheet — drag pill, body, button area — is one
+              // consistent dark surface. Nested cards (`context.card`,
+              // lighter) and `InfoTable`-style read-only blocks (`context
+              // .background` + border) both delineate naturally on top.
+              color: context.background,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
+            ),
+            child: SafeArea(
+              top: false,
+              child: Column(
+                children: [
+                  const _DragPill(),
+                  // Pinned title row
+                  if (title != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppTheme.spacing24,
+                        0,
+                        AppTheme.spacing24,
+                        AppTheme.spacing12,
+                      ),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: context.textPrimary,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                Expanded(child: builder(scrollController)),
-                // Pinned footer
-                if (footer != null)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppTheme.spacing24,
-                      AppTheme.spacing8,
-                      AppTheme.spacing24,
-                      AppTheme.spacing16,
+                  Expanded(child: builder(scrollController)),
+                  // Pinned footer
+                  if (footer != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppTheme.spacing24,
+                        AppTheme.spacing8,
+                        AppTheme.spacing24,
+                        AppTheme.spacing16,
+                      ),
+                      child: footer,
                     ),
-                    child: footer,
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -417,6 +425,59 @@ class AppBottomSheet extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// Scale-pop wrapper layered on top of Flutter's slide. Flutter hardcodes
+// the modal bottom sheet slide curve (decelerate), so the bounce arrival
+// is added here as a one-shot scale tween anchored to the bottom edge.
+class _BounceInWrapper extends StatefulWidget {
+  final Widget child;
+  final bool enabled;
+
+  const _BounceInWrapper({required this.child, required this.enabled});
+
+  @override
+  State<_BounceInWrapper> createState() => _BounceInWrapperState();
+}
+
+class _BounceInWrapperState extends State<_BounceInWrapper>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
+    );
+    _scale = Tween<double>(
+      begin: 0.94,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+    if (widget.enabled) {
+      _controller.forward();
+    } else {
+      _controller.value = 1.0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.enabled) return widget.child;
+    return ScaleTransition(
+      scale: _scale,
+      alignment: Alignment.bottomCenter,
+      child: widget.child,
     );
   }
 }
