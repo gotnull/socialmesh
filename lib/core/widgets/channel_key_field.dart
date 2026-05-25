@@ -71,6 +71,21 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
       widget.controller!.text = widget.keyBase64;
     }
     _validateAndDetectKey(_keyController.text);
+    // External writes to a shared controller (e.g. the wizard
+    // regenerating after a privacy-level change) must re-trigger
+    // validation so the badge, status colour, and wrong-length error
+    // reflect the new bytes instead of the previous edit's state.
+    _keyController.addListener(_onControllerTextChanged);
+  }
+
+  void _onControllerTextChanged() {
+    if (!mounted) return;
+    final priorBytes = _detectedKeyBytes;
+    final priorError = _keyValidationError;
+    _validateAndDetectKey(_keyController.text);
+    if (_detectedKeyBytes != priorBytes || _keyValidationError != priorError) {
+      setState(() {});
+    }
   }
 
   @override
@@ -89,6 +104,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
 
   @override
   void dispose() {
+    _keyController.removeListener(_onControllerTextChanged);
     _ownedController?.dispose();
     super.dispose();
   }
@@ -151,8 +167,24 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
 
   @override
   Widget build(BuildContext context) {
+    // Cross-check the detected size against the size the parent screen
+    // actually expects (e.g. Private = 16, Maximum = 32). The internal
+    // _keyValidationError only flags malformed base64 / non-standard
+    // sizes: it accepts 1/16/32 indiscriminately, which is too loose
+    // for the create-channel wizard where mis-sized keys silently
+    // disable Continue.
+    final detected = _detectedKeyBytes;
+    final expected = widget.expectedKeyBytes;
+    final sizeMismatch =
+        _keyValidationError == null &&
+        detected != null &&
+        expected > 0 &&
+        detected != expected;
+    final effectiveError = sizeMismatch
+        ? context.l10n.channelWizardKeyWrongLength(expected, detected)
+        : _keyValidationError;
     final hasValidKey =
-        _keyValidationError == null && _keyController.text.isNotEmpty;
+        effectiveError == null && _keyController.text.isNotEmpty;
     final detectedDisplay = _detectedKeyBytes != null
         ? ChannelKeyUtils.getKeySizeDetailedDisplay(_detectedKeyBytes!)
         : '';
@@ -183,7 +215,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                     decoration: BoxDecoration(
                       color: hasValidKey
                           ? _accentColor.withAlpha(38)
-                          : _keyValidationError != null
+                          : effectiveError != null
                           ? AppTheme.errorRed.withAlpha(38)
                           : context.background,
                       borderRadius: BorderRadius.circular(AppTheme.radius10),
@@ -192,7 +224,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                       Icons.key,
                       color: hasValidKey
                           ? _accentColor
-                          : _keyValidationError != null
+                          : effectiveError != null
                           ? AppTheme.errorRed
                           : context.textTertiary,
                       size: 20,
@@ -263,7 +295,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                 color: context.background,
                 borderRadius: BorderRadius.circular(AppTheme.radius10),
                 border: Border.all(
-                  color: _keyValidationError != null
+                  color: effectiveError != null
                       ? AppTheme.errorRed.withAlpha(128)
                       : context.border.withAlpha(128),
                 ),
@@ -356,7 +388,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
             ),
 
             // Validation error message
-            if (_keyValidationError != null)
+            if (effectiveError != null)
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppTheme.spacing16,
@@ -374,7 +406,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                     const SizedBox(width: AppTheme.spacing6),
                     Expanded(
                       child: Text(
-                        _keyValidationError!,
+                        effectiveError,
                         style: const TextStyle(
                           fontSize: 12,
                           color: AppTheme.errorRed,
