@@ -280,12 +280,16 @@ class _LicenseOrgAuditLogScreenState
                 color: context.textSecondary,
               ),
               const SizedBox(width: AppTheme.spacing8),
+              // Label stays muted so the eye lands on the selection,
+              // not the static word "Action". Colon is a UI-typographic
+              // separator (not localised content) so it sits in the
+              // Dart literal rather than the ARB string.
               Text(
-                l10n.licenseOrgAuditActionFilterLabel,
+                '${l10n.licenseOrgAuditActionFilterLabel}:',
                 style: TextStyle(
                   fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: context.textSecondary,
+                  fontWeight: FontWeight.w500,
+                  color: context.textTertiary,
                   fontFamily: AppTheme.fontFamily,
                 ),
               ),
@@ -295,6 +299,7 @@ class _LicenseOrgAuditLogScreenState
                   selectionLabel,
                   style: TextStyle(
                     fontSize: 13,
+                    fontWeight: FontWeight.w600,
                     color: context.textPrimary,
                     fontFamily: AppTheme.fontFamily,
                   ),

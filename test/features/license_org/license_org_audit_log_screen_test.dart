@@ -242,8 +242,9 @@ void main() {
         findsOneWidget,
       );
 
-      // Open the action picker by tapping the filter row.
-      await tester.tap(find.text(_l10n.licenseOrgAuditActionFilterLabel));
+      // Open the action picker by tapping the filter row. The row
+      // renders the label with a trailing colon as a UI separator.
+      await tester.tap(find.text('${_l10n.licenseOrgAuditActionFilterLabel}:'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 250));
       expect(
