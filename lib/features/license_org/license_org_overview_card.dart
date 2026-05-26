@@ -24,7 +24,9 @@ import '../../core/widgets/section_header.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/license_org.dart';
 import '../../models/license_org_membership.dart';
+import '../../providers/license_org_members_providers.dart';
 import '../../providers/license_org_overview_providers.dart';
+import 'license_org_members_sheet.dart';
 
 /// Reads the per-org providers for [orgId] and renders the canonical
 /// [SectionTitle] + [InfoTable] card.
@@ -102,6 +104,17 @@ class LicenseOrgOverviewCard extends ConsumerWidget {
             ),
           ],
         ),
+        // Trailing action area. Suspended orgs hide the View members
+        // button - the roster sheet would render empty + an
+        // explanatory state, but keeping the button visible would
+        // imply admin recourse that doesn't exist. The "Open in web
+        // admin" button is still gated on the future
+        // licenseOrgAdminWebEnabled flag and stays deferred.
+        if (status == LicenseOrgStatus.active)
+          Padding(
+            padding: const EdgeInsets.only(top: AppTheme.spacing12),
+            child: _ViewMembersButton(orgId: orgId),
+          ),
       ],
     );
   }
@@ -231,6 +244,93 @@ class _RolePill extends StatelessWidget {
           fontWeight: FontWeight.w700,
           color: color,
           letterSpacing: 0.8,
+        ),
+      ),
+    );
+  }
+}
+
+/// Trailing action button under the per-org InfoTable that opens the
+/// License Org Members sheet. Subtitle shows the live member count
+/// so the user can see at a glance whether their team has grown
+/// without opening the sheet. Hidden for suspended orgs by the
+/// caller.
+class _ViewMembersButton extends ConsumerWidget {
+  final String orgId;
+
+  const _ViewMembersButton({required this.orgId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final count = ref.watch(licenseOrgMemberCountProvider(orgId));
+    final l10n = context.l10n;
+    return Material(
+      color: context.card,
+      borderRadius: BorderRadius.circular(AppTheme.radius12),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => LicenseOrgMembersSheet.show(context, orgId),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacing16,
+            vertical: AppTheme.spacing12,
+          ),
+          // Center cross-axis alignment is correct here: the title +
+          // 1-line count subtitle is short enough that the icon
+          // container (36x36) dominates the row height, so centering
+          // makes the chevron sit at the visual midpoint - no
+          // off-balance "floating at the top" feel like a long-text
+          // tile would have. Multi-line tiles elsewhere still use
+          // CrossAxisAlignment.start per the auto-memory rule
+          // feedback_top_align_rows_with_multiline_text.md.
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: context.accentColor.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                ),
+                child: Icon(
+                  Icons.people_outline,
+                  color: context.accentColor,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l10n.licenseOrgOverviewViewMembersAction,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing2),
+                    Text(
+                      l10n.licenseOrgMembersCount(count),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: context.textTertiary,
+                size: 20,
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -43773,6 +43773,107 @@ class AppLocalizationsRu extends AppLocalizations {
   String get licenseOrgOverviewManageTileSubtitleOne => '1 орг.';
 
   @override
+  String get licenseOrgMembersTitle => 'Участники';
+
+  @override
+  String get licenseOrgMembersSectionActive => 'Активные участники';
+
+  @override
+  String licenseOrgMembersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count участников',
+      one: '1 участник',
+      zero: 'Нет участников',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licenseOrgMembersYouBadge => 'вы';
+
+  @override
+  String get licenseOrgMembersRoleOwner => 'Владелец';
+
+  @override
+  String get licenseOrgMembersRoleAdmin => 'Администратор';
+
+  @override
+  String get licenseOrgMembersRoleMember => 'Участник';
+
+  @override
+  String licenseOrgMembersJoinedRelative(String relativeTime) {
+    return 'присоединился $relativeTime';
+  }
+
+  @override
+  String get licenseOrgMembersJoinedToday => 'сегодня';
+
+  @override
+  String get licenseOrgMembersJoinedYesterday => 'вчера';
+
+  @override
+  String licenseOrgMembersJoinedDaysAgo(int days) {
+    return '$days дней назад';
+  }
+
+  @override
+  String licenseOrgMembersJoinedMonthsAgo(int months) {
+    return '$months месяцев назад';
+  }
+
+  @override
+  String licenseOrgMembersJoinedYearsAgo(int years) {
+    return '$years лет назад';
+  }
+
+  @override
+  String get licenseOrgMembersEmptyTitlePrefix => 'Пока нет других';
+
+  @override
+  String get licenseOrgMembersEmptyTitleKeyword => 'участников';
+
+  @override
+  String get licenseOrgMembersEmptyTitleSuffix => '';
+
+  @override
+  String get licenseOrgMembersEmptyTagline =>
+      'Пригласите людей через веб-админ, чтобы расширить группу.';
+
+  @override
+  String get licenseOrgMembersSuspendedTitlePrefix => 'Группа';
+
+  @override
+  String get licenseOrgMembersSuspendedTitleKeyword => 'на паузе';
+
+  @override
+  String get licenseOrgMembersSuspendedTitleSuffix => '';
+
+  @override
+  String get licenseOrgMembersSuspendedTagline =>
+      'Групповая лицензия приостановлена. Участники скрыты до восстановления лицензии.';
+
+  @override
+  String get licenseOrgMembersErrorTitlePrefix => 'Не удалось';
+
+  @override
+  String get licenseOrgMembersErrorTitleKeyword => 'загрузить';
+
+  @override
+  String get licenseOrgMembersErrorTitleSuffix => 'участников';
+
+  @override
+  String get licenseOrgMembersErrorTagline =>
+      'Проверьте подключение и повторите попытку.';
+
+  @override
+  String get licenseOrgMembersErrorRetry => 'Повторить';
+
+  @override
+  String get licenseOrgOverviewViewMembersAction => 'Просмотр участников';
+
+  @override
   String licenseOrgOverviewManageTileSubtitleMany(String count) {
     return '$count орг.';
   }

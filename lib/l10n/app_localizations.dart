@@ -75725,6 +75725,168 @@ abstract class AppLocalizations {
   /// **'1 org'**
   String get licenseOrgOverviewManageTileSubtitleOne;
 
+  /// Header title on the License Org Members sheet (slice N+4 roster). Pinned at the top of the AppBottomSheet.showScrollable sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get licenseOrgMembersTitle;
+
+  /// Section title above the active-member list in the License Org Members sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Active members'**
+  String get licenseOrgMembersSectionActive;
+
+  /// Pluralised count of active members for the License Org Members sheet header chip. Used as a scannable subtitle so the admin can spot fast whether the org has grown.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No members} =1{1 member} other{{count} members}}'**
+  String licenseOrgMembersCount(int count);
+
+  /// Inline badge rendered next to the current user's row in the License Org Members sheet so the viewer can pick themselves out at a glance.
+  ///
+  /// In en, this message translates to:
+  /// **'you'**
+  String get licenseOrgMembersYouBadge;
+
+  /// Role label on a member tile in the License Org Members sheet when the member is the org owner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get licenseOrgMembersRoleOwner;
+
+  /// Role label on a member tile in the License Org Members sheet when the member is an org admin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get licenseOrgMembersRoleAdmin;
+
+  /// Role label on a member tile in the License Org Members sheet when the member is a regular member.
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get licenseOrgMembersRoleMember;
+
+  /// Subtitle fragment on a member tile showing how long ago the member joined (e.g. 'joined 12 days ago'). The relativeTime placeholder is a pre-formatted phrase such as '12 days ago' or 'today'.
+  ///
+  /// In en, this message translates to:
+  /// **'joined {relativeTime}'**
+  String licenseOrgMembersJoinedRelative(String relativeTime);
+
+  /// Relative-time fragment used by the License Org Members sheet when the join date is within the current day.
+  ///
+  /// In en, this message translates to:
+  /// **'today'**
+  String get licenseOrgMembersJoinedToday;
+
+  /// Relative-time fragment used by the License Org Members sheet when the join date was the prior day.
+  ///
+  /// In en, this message translates to:
+  /// **'yesterday'**
+  String get licenseOrgMembersJoinedYesterday;
+
+  /// Relative-time fragment used by the License Org Members sheet for join dates 2..29 days ago.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days ago'**
+  String licenseOrgMembersJoinedDaysAgo(int days);
+
+  /// Relative-time fragment used by the License Org Members sheet for join dates 1..11 months ago.
+  ///
+  /// In en, this message translates to:
+  /// **'{months} months ago'**
+  String licenseOrgMembersJoinedMonthsAgo(int months);
+
+  /// Relative-time fragment used by the License Org Members sheet for join dates 1+ years ago.
+  ///
+  /// In en, this message translates to:
+  /// **'{years} years ago'**
+  String licenseOrgMembersJoinedYearsAgo(int years);
+
+  /// Empty-state title prefix on the License Org Members sheet. Combined with keyword + suffix to form 'No other members yet'.
+  ///
+  /// In en, this message translates to:
+  /// **'No other'**
+  String get licenseOrgMembersEmptyTitlePrefix;
+
+  /// Empty-state title gradient keyword on the License Org Members sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'members'**
+  String get licenseOrgMembersEmptyTitleKeyword;
+
+  /// Empty-state title suffix on the License Org Members sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'yet'**
+  String get licenseOrgMembersEmptyTitleSuffix;
+
+  /// Empty-state tagline on the License Org Members sheet. Points at the invite path (web admin for now; mobile invite UI lands in a later slice).
+  ///
+  /// In en, this message translates to:
+  /// **'Invite people from the web admin to grow your group.'**
+  String get licenseOrgMembersEmptyTagline;
+
+  /// Suspended-org title prefix on the License Org Members sheet. Combined with keyword + suffix to form 'Group paused'.
+  ///
+  /// In en, this message translates to:
+  /// **'Group'**
+  String get licenseOrgMembersSuspendedTitlePrefix;
+
+  /// Suspended-org title gradient keyword on the License Org Members sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'paused'**
+  String get licenseOrgMembersSuspendedTitleKeyword;
+
+  /// Suspended-org title suffix on the License Org Members sheet (empty in English so the keyword is the last word).
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get licenseOrgMembersSuspendedTitleSuffix;
+
+  /// Suspended-org tagline on the License Org Members sheet. Explains the privacy gate (members hidden) so the admin understands why the list is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'The group license is suspended. Members are hidden until the license is restored.'**
+  String get licenseOrgMembersSuspendedTagline;
+
+  /// Error-state title prefix on the License Org Members sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not'**
+  String get licenseOrgMembersErrorTitlePrefix;
+
+  /// Error-state title gradient keyword on the License Org Members sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'load'**
+  String get licenseOrgMembersErrorTitleKeyword;
+
+  /// Error-state title suffix on the License Org Members sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'members'**
+  String get licenseOrgMembersErrorTitleSuffix;
+
+  /// Error-state tagline on the License Org Members sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again.'**
+  String get licenseOrgMembersErrorTagline;
+
+  /// Retry action label on the License Org Members sheet error state.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get licenseOrgMembersErrorRetry;
+
+  /// Action button label on the License Org Overview per-org card that opens the License Org Members sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'View members'**
+  String get licenseOrgOverviewViewMembersAction;
+
   /// Subtitle on the 'Manage group licenses' tile when the current user belongs to two or more license orgs. The {count} placeholder is the org count.
   ///
   /// In en, this message translates to:

@@ -43785,6 +43785,107 @@ class AppLocalizationsUk extends AppLocalizations {
   String get licenseOrgOverviewManageTileSubtitleOne => '1 орг.';
 
   @override
+  String get licenseOrgMembersTitle => 'Учасники';
+
+  @override
+  String get licenseOrgMembersSectionActive => 'Активні учасники';
+
+  @override
+  String licenseOrgMembersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count учасників',
+      one: '1 учасник',
+      zero: 'Немає учасників',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licenseOrgMembersYouBadge => 'ви';
+
+  @override
+  String get licenseOrgMembersRoleOwner => 'Власник';
+
+  @override
+  String get licenseOrgMembersRoleAdmin => 'Адміністратор';
+
+  @override
+  String get licenseOrgMembersRoleMember => 'Учасник';
+
+  @override
+  String licenseOrgMembersJoinedRelative(String relativeTime) {
+    return 'приєднався $relativeTime';
+  }
+
+  @override
+  String get licenseOrgMembersJoinedToday => 'сьогодні';
+
+  @override
+  String get licenseOrgMembersJoinedYesterday => 'вчора';
+
+  @override
+  String licenseOrgMembersJoinedDaysAgo(int days) {
+    return '$days днів тому';
+  }
+
+  @override
+  String licenseOrgMembersJoinedMonthsAgo(int months) {
+    return '$months місяців тому';
+  }
+
+  @override
+  String licenseOrgMembersJoinedYearsAgo(int years) {
+    return '$years років тому';
+  }
+
+  @override
+  String get licenseOrgMembersEmptyTitlePrefix => 'Поки немає інших';
+
+  @override
+  String get licenseOrgMembersEmptyTitleKeyword => 'учасників';
+
+  @override
+  String get licenseOrgMembersEmptyTitleSuffix => '';
+
+  @override
+  String get licenseOrgMembersEmptyTagline =>
+      'Запросіть людей через веб-адмін, щоб розширити групу.';
+
+  @override
+  String get licenseOrgMembersSuspendedTitlePrefix => 'Група';
+
+  @override
+  String get licenseOrgMembersSuspendedTitleKeyword => 'на паузі';
+
+  @override
+  String get licenseOrgMembersSuspendedTitleSuffix => '';
+
+  @override
+  String get licenseOrgMembersSuspendedTagline =>
+      'Групова ліцензія призупинена. Учасників приховано до відновлення ліцензії.';
+
+  @override
+  String get licenseOrgMembersErrorTitlePrefix => 'Не вдалося';
+
+  @override
+  String get licenseOrgMembersErrorTitleKeyword => 'завантажити';
+
+  @override
+  String get licenseOrgMembersErrorTitleSuffix => 'учасників';
+
+  @override
+  String get licenseOrgMembersErrorTagline =>
+      'Перевірте з\'єднання та спробуйте ще раз.';
+
+  @override
+  String get licenseOrgMembersErrorRetry => 'Повторити';
+
+  @override
+  String get licenseOrgOverviewViewMembersAction => 'Переглянути учасників';
+
+  @override
   String licenseOrgOverviewManageTileSubtitleMany(String count) {
     return '$count орг.';
   }

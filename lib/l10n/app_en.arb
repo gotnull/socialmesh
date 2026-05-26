@@ -57763,6 +57763,144 @@
     "@licenseOrgOverviewManageTileSubtitleOne": {
         "description": "Subtitle on the 'Manage group licenses' tile when the current user belongs to exactly one license org. Short scannable metric, not a sentence."
     },
+    "licenseOrgMembersTitle": "Members",
+    "@licenseOrgMembersTitle": {
+        "description": "Header title on the License Org Members sheet (slice N+4 roster). Pinned at the top of the AppBottomSheet.showScrollable sheet."
+    },
+    "licenseOrgMembersSectionActive": "Active members",
+    "@licenseOrgMembersSectionActive": {
+        "description": "Section title above the active-member list in the License Org Members sheet."
+    },
+    "licenseOrgMembersCount": "{count, plural, =0{No members} =1{1 member} other{{count} members}}",
+    "@licenseOrgMembersCount": {
+        "description": "Pluralised count of active members for the License Org Members sheet header chip. Used as a scannable subtitle so the admin can spot fast whether the org has grown.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "example": "3"
+            }
+        }
+    },
+    "licenseOrgMembersYouBadge": "you",
+    "@licenseOrgMembersYouBadge": {
+        "description": "Inline badge rendered next to the current user's row in the License Org Members sheet so the viewer can pick themselves out at a glance."
+    },
+    "licenseOrgMembersRoleOwner": "Owner",
+    "@licenseOrgMembersRoleOwner": {
+        "description": "Role label on a member tile in the License Org Members sheet when the member is the org owner."
+    },
+    "licenseOrgMembersRoleAdmin": "Admin",
+    "@licenseOrgMembersRoleAdmin": {
+        "description": "Role label on a member tile in the License Org Members sheet when the member is an org admin."
+    },
+    "licenseOrgMembersRoleMember": "Member",
+    "@licenseOrgMembersRoleMember": {
+        "description": "Role label on a member tile in the License Org Members sheet when the member is a regular member."
+    },
+    "licenseOrgMembersJoinedRelative": "joined {relativeTime}",
+    "@licenseOrgMembersJoinedRelative": {
+        "description": "Subtitle fragment on a member tile showing how long ago the member joined (e.g. 'joined 12 days ago'). The relativeTime placeholder is a pre-formatted phrase such as '12 days ago' or 'today'.",
+        "placeholders": {
+            "relativeTime": {
+                "type": "String",
+                "example": "12 days ago"
+            }
+        }
+    },
+    "licenseOrgMembersJoinedToday": "today",
+    "@licenseOrgMembersJoinedToday": {
+        "description": "Relative-time fragment used by the License Org Members sheet when the join date is within the current day."
+    },
+    "licenseOrgMembersJoinedYesterday": "yesterday",
+    "@licenseOrgMembersJoinedYesterday": {
+        "description": "Relative-time fragment used by the License Org Members sheet when the join date was the prior day."
+    },
+    "licenseOrgMembersJoinedDaysAgo": "{days} days ago",
+    "@licenseOrgMembersJoinedDaysAgo": {
+        "description": "Relative-time fragment used by the License Org Members sheet for join dates 2..29 days ago.",
+        "placeholders": {
+            "days": {
+                "type": "int",
+                "example": "12"
+            }
+        }
+    },
+    "licenseOrgMembersJoinedMonthsAgo": "{months} months ago",
+    "@licenseOrgMembersJoinedMonthsAgo": {
+        "description": "Relative-time fragment used by the License Org Members sheet for join dates 1..11 months ago.",
+        "placeholders": {
+            "months": {
+                "type": "int",
+                "example": "3"
+            }
+        }
+    },
+    "licenseOrgMembersJoinedYearsAgo": "{years} years ago",
+    "@licenseOrgMembersJoinedYearsAgo": {
+        "description": "Relative-time fragment used by the License Org Members sheet for join dates 1+ years ago.",
+        "placeholders": {
+            "years": {
+                "type": "int",
+                "example": "2"
+            }
+        }
+    },
+    "licenseOrgMembersEmptyTitlePrefix": "No other",
+    "@licenseOrgMembersEmptyTitlePrefix": {
+        "description": "Empty-state title prefix on the License Org Members sheet. Combined with keyword + suffix to form 'No other members yet'."
+    },
+    "licenseOrgMembersEmptyTitleKeyword": "members",
+    "@licenseOrgMembersEmptyTitleKeyword": {
+        "description": "Empty-state title gradient keyword on the License Org Members sheet."
+    },
+    "licenseOrgMembersEmptyTitleSuffix": "yet",
+    "@licenseOrgMembersEmptyTitleSuffix": {
+        "description": "Empty-state title suffix on the License Org Members sheet."
+    },
+    "licenseOrgMembersEmptyTagline": "Invite people from the web admin to grow your group.",
+    "@licenseOrgMembersEmptyTagline": {
+        "description": "Empty-state tagline on the License Org Members sheet. Points at the invite path (web admin for now; mobile invite UI lands in a later slice)."
+    },
+    "licenseOrgMembersSuspendedTitlePrefix": "Group",
+    "@licenseOrgMembersSuspendedTitlePrefix": {
+        "description": "Suspended-org title prefix on the License Org Members sheet. Combined with keyword + suffix to form 'Group paused'."
+    },
+    "licenseOrgMembersSuspendedTitleKeyword": "paused",
+    "@licenseOrgMembersSuspendedTitleKeyword": {
+        "description": "Suspended-org title gradient keyword on the License Org Members sheet."
+    },
+    "licenseOrgMembersSuspendedTitleSuffix": "",
+    "@licenseOrgMembersSuspendedTitleSuffix": {
+        "description": "Suspended-org title suffix on the License Org Members sheet (empty in English so the keyword is the last word)."
+    },
+    "licenseOrgMembersSuspendedTagline": "The group license is suspended. Members are hidden until the license is restored.",
+    "@licenseOrgMembersSuspendedTagline": {
+        "description": "Suspended-org tagline on the License Org Members sheet. Explains the privacy gate (members hidden) so the admin understands why the list is empty."
+    },
+    "licenseOrgMembersErrorTitlePrefix": "Could not",
+    "@licenseOrgMembersErrorTitlePrefix": {
+        "description": "Error-state title prefix on the License Org Members sheet."
+    },
+    "licenseOrgMembersErrorTitleKeyword": "load",
+    "@licenseOrgMembersErrorTitleKeyword": {
+        "description": "Error-state title gradient keyword on the License Org Members sheet."
+    },
+    "licenseOrgMembersErrorTitleSuffix": "members",
+    "@licenseOrgMembersErrorTitleSuffix": {
+        "description": "Error-state title suffix on the License Org Members sheet."
+    },
+    "licenseOrgMembersErrorTagline": "Check your connection and try again.",
+    "@licenseOrgMembersErrorTagline": {
+        "description": "Error-state tagline on the License Org Members sheet."
+    },
+    "licenseOrgMembersErrorRetry": "Retry",
+    "@licenseOrgMembersErrorRetry": {
+        "description": "Retry action label on the License Org Members sheet error state."
+    },
+    "licenseOrgOverviewViewMembersAction": "View members",
+    "@licenseOrgOverviewViewMembersAction": {
+        "description": "Action button label on the License Org Overview per-org card that opens the License Org Members sheet."
+    },
     "licenseOrgOverviewManageTileSubtitleMany": "{count} orgs",
     "@licenseOrgOverviewManageTileSubtitleMany": {
         "description": "Subtitle on the 'Manage group licenses' tile when the current user belongs to two or more license orgs. The {count} placeholder is the org count.",

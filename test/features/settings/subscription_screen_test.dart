@@ -91,6 +91,10 @@ class _StubMembershipRepo implements LicenseOrgMembershipRepository {
   @override
   Stream<LicenseOrgMembership?> watchMembership(String orgId, String uid) =>
       Stream.value(null);
+
+  @override
+  Stream<List<LicenseOrgMembership>> membersForOrg(String orgId) =>
+      Stream.value(const <LicenseOrgMembership>[]);
 }
 
 class _FakeUser implements User {

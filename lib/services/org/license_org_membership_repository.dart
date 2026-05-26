@@ -45,6 +45,13 @@ abstract class LicenseOrgMembershipRepository {
   /// `license_orgs/{orgId}/members/{uid}`. Emits null when the doc is
   /// missing, malformed, or on any underlying error.
   Stream<LicenseOrgMembership?> watchMembership(String orgId, String uid);
+
+  /// Streams the full active-member roster for [orgId], ordered by
+  /// joinedAt ascending. Revoked / invited rows are filtered out at
+  /// the repository layer so consumers never need to apply the
+  /// status filter themselves. Empty list on missing org, suspended
+  /// org, or any underlying error.
+  Stream<List<LicenseOrgMembership>> membersForOrg(String orgId);
 }
 
 /// Firestore-backed implementation.
@@ -252,6 +259,52 @@ class FirestoreLicenseOrgMembershipRepository
               );
               if (controller.isClosed) return;
               controller.add(null);
+            },
+          );
+    };
+
+    controller.onCancel = () async {
+      await sub?.cancel();
+      sub = null;
+    };
+
+    return controller.stream;
+  }
+
+  @override
+  Stream<List<LicenseOrgMembership>> membersForOrg(String orgId) {
+    if (orgId.isEmpty) return Stream.value(const <LicenseOrgMembership>[]);
+
+    final controller = StreamController<List<LicenseOrgMembership>>();
+    StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? sub;
+
+    controller.onListen = () {
+      sub = _firestore
+          .collection('license_orgs')
+          .doc(orgId)
+          .collection('members')
+          .where('status', isEqualTo: 'active')
+          .orderBy('joinedAt')
+          .snapshots()
+          .listen(
+            (snap) {
+              if (controller.isClosed) return;
+              final result = <LicenseOrgMembership>[];
+              for (final doc in snap.docs) {
+                final m = LicenseOrgMembership.fromFirestore(doc);
+                if (m == null) continue;
+                if (!m.isAccessActive) continue;
+                result.add(m);
+              }
+              controller.add(result);
+            },
+            onError: (Object e) {
+              AppLogging.groupLicensing(
+                '[LicenseOrgMembershipRepo] membersForOrg stream error - '
+                'failing closed (error class: ${e.runtimeType})',
+              );
+              if (controller.isClosed) return;
+              controller.add(const <LicenseOrgMembership>[]);
             },
           );
     };

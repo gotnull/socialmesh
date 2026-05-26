@@ -43751,6 +43751,107 @@ class AppLocalizationsPt extends AppLocalizations {
   String get licenseOrgOverviewManageTileSubtitleOne => '1 org';
 
   @override
+  String get licenseOrgMembersTitle => 'Membros';
+
+  @override
+  String get licenseOrgMembersSectionActive => 'Membros ativos';
+
+  @override
+  String licenseOrgMembersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count membros',
+      one: '1 membro',
+      zero: 'Sem membros',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licenseOrgMembersYouBadge => 'você';
+
+  @override
+  String get licenseOrgMembersRoleOwner => 'Proprietário';
+
+  @override
+  String get licenseOrgMembersRoleAdmin => 'Administrador';
+
+  @override
+  String get licenseOrgMembersRoleMember => 'Membro';
+
+  @override
+  String licenseOrgMembersJoinedRelative(String relativeTime) {
+    return 'aderiu $relativeTime';
+  }
+
+  @override
+  String get licenseOrgMembersJoinedToday => 'hoje';
+
+  @override
+  String get licenseOrgMembersJoinedYesterday => 'ontem';
+
+  @override
+  String licenseOrgMembersJoinedDaysAgo(int days) {
+    return 'há $days dias';
+  }
+
+  @override
+  String licenseOrgMembersJoinedMonthsAgo(int months) {
+    return 'há $months meses';
+  }
+
+  @override
+  String licenseOrgMembersJoinedYearsAgo(int years) {
+    return 'há $years anos';
+  }
+
+  @override
+  String get licenseOrgMembersEmptyTitlePrefix => 'Ainda sem outros';
+
+  @override
+  String get licenseOrgMembersEmptyTitleKeyword => 'membros';
+
+  @override
+  String get licenseOrgMembersEmptyTitleSuffix => '';
+
+  @override
+  String get licenseOrgMembersEmptyTagline =>
+      'Convide pessoas a partir do admin web para fazer crescer o seu grupo.';
+
+  @override
+  String get licenseOrgMembersSuspendedTitlePrefix => 'Grupo';
+
+  @override
+  String get licenseOrgMembersSuspendedTitleKeyword => 'em pausa';
+
+  @override
+  String get licenseOrgMembersSuspendedTitleSuffix => '';
+
+  @override
+  String get licenseOrgMembersSuspendedTagline =>
+      'A licença de grupo está suspensa. Os membros estão ocultos até a licença ser restaurada.';
+
+  @override
+  String get licenseOrgMembersErrorTitlePrefix => 'Não foi possível';
+
+  @override
+  String get licenseOrgMembersErrorTitleKeyword => 'carregar';
+
+  @override
+  String get licenseOrgMembersErrorTitleSuffix => 'os membros';
+
+  @override
+  String get licenseOrgMembersErrorTagline =>
+      'Verifique a ligação e tente novamente.';
+
+  @override
+  String get licenseOrgMembersErrorRetry => 'Tentar novamente';
+
+  @override
+  String get licenseOrgOverviewViewMembersAction => 'Ver membros';
+
+  @override
   String licenseOrgOverviewManageTileSubtitleMany(String count) {
     return '$count orgs';
   }

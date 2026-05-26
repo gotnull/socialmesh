@@ -80,6 +80,10 @@ class _FakeRepo implements LicenseOrgMembershipRepository {
   @override
   Stream<LicenseOrgMembership?> watchMembership(String orgId, String uid) =>
       Stream.value(_memberships['$orgId/$uid']);
+
+  @override
+  Stream<List<LicenseOrgMembership>> membersForOrg(String orgId) =>
+      Stream.value(const <LicenseOrgMembership>[]);
 }
 
 class _FakeSeatRepo implements SeatAllocationRepository {
