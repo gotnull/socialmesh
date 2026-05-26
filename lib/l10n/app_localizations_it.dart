@@ -44114,7 +44114,8 @@ class AppLocalizationsIt extends AppLocalizations {
       'Riprova tra poco. I membri non attivi non possono vedere il registro.';
 
   @override
-  String get licenseOrgOverviewRecentActivityViewAll => 'Vedi tutta l’attività';
+  String get licenseOrgOverviewRecentActivityViewAll =>
+      'Vedi tutta l\'attività';
 
   @override
   String licenseOrgAuditFilterAllWithCount(int count) {

@@ -44101,7 +44101,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get licenseOrgAuditLogEmptyDescription =>
-      'Події аудиту з’являться тут, коли учасників запрошуватимуть, місця відкликатимуть і виконуватимуться інші дії адміністратора.';
+      'Події аудиту з\'являться тут, коли учасників запрошуватимуть, місця відкликатимуть і виконуватимуться інші дії адміністратора.';
 
   @override
   String get licenseOrgAuditLogFilteredEmptyTitle =>

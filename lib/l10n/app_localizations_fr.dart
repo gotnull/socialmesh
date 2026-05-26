@@ -44320,7 +44320,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get licenseOrgAuditOutcomeRejected => 'Rejeté';
 
   @override
-  String get licenseOrgAuditRelativeJustNow => 'à l’instant';
+  String get licenseOrgAuditRelativeJustNow => 'à l\'instant';
 
   @override
   String licenseOrgAuditRelativeMinutes(int count) {
@@ -44395,7 +44395,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get licenseOrgAuditLogEndOfFeed => 'Fin du flux.';
 
   @override
-  String get licenseOrgAuditLogEmptyTitle => 'Pas encore d’activité';
+  String get licenseOrgAuditLogEmptyTitle => 'Pas encore d\'activité';
 
   @override
   String get licenseOrgAuditLogEmptyDescription =>
@@ -44417,7 +44417,8 @@ class AppLocalizationsFr extends AppLocalizations {
       'Réessaie dans un instant. Les membres non actifs ne peuvent pas voir le journal d\'audit.';
 
   @override
-  String get licenseOrgOverviewRecentActivityViewAll => 'Voir toute l’activité';
+  String get licenseOrgOverviewRecentActivityViewAll =>
+      'Voir toute l\'activité';
 
   @override
   String licenseOrgAuditFilterAllWithCount(int count) {

@@ -45967,7 +45967,7 @@
     "@licenseOrgAuditLogErrorDescription": {
         "description": "Error state description on the Audit Log screen."
     },
-    "licenseOrgOverviewRecentActivityViewAll": "Vedi tutta l’attività",
+    "licenseOrgOverviewRecentActivityViewAll": "Vedi tutta l'attività",
     "@licenseOrgOverviewRecentActivityViewAll": {
         "description": "Tap target text below the Recent activity preview that pushes the Audit Log drill-in screen."
     },

@@ -12728,7 +12728,7 @@
     "@licenseOrgAuditOutcomeRejected": {
         "description": "Outcome pill label for rejected audit rows (with reasonCode)."
     },
-    "licenseOrgAuditRelativeJustNow": "à l’instant",
+    "licenseOrgAuditRelativeJustNow": "à l'instant",
     "@licenseOrgAuditRelativeJustNow": {
         "description": "Relative time label shown on an audit row that happened less than a minute ago."
     },
@@ -12808,7 +12808,7 @@
     "@licenseOrgAuditLogEndOfFeed": {
         "description": "Footer text shown when the user has scrolled to the end of the audit log."
     },
-    "licenseOrgAuditLogEmptyTitle": "Pas encore d’activité",
+    "licenseOrgAuditLogEmptyTitle": "Pas encore d'activité",
     "@licenseOrgAuditLogEmptyTitle": {
         "description": "Empty state title shown on the Audit Log screen when the org has zero audit events."
     },
@@ -12832,7 +12832,7 @@
     "@licenseOrgAuditLogErrorDescription": {
         "description": "Error state description on the Audit Log screen."
     },
-    "licenseOrgOverviewRecentActivityViewAll": "Voir toute l’activité",
+    "licenseOrgOverviewRecentActivityViewAll": "Voir toute l'activité",
     "@licenseOrgOverviewRecentActivityViewAll": {
         "description": "Tap target text below the Recent activity preview that pushes the Audit Log drill-in screen."
     },

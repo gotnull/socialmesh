@@ -12812,7 +12812,7 @@
     "@licenseOrgAuditLogEmptyTitle": {
         "description": "Empty state title shown on the Audit Log screen when the org has zero audit events."
     },
-    "licenseOrgAuditLogEmptyDescription": "Події аудиту з’являться тут, коли учасників запрошуватимуть, місця відкликатимуть і виконуватимуться інші дії адміністратора.",
+    "licenseOrgAuditLogEmptyDescription": "Події аудиту з'являться тут, коли учасників запрошуватимуть, місця відкликатимуть і виконуватимуться інші дії адміністратора.",
     "@licenseOrgAuditLogEmptyDescription": {
         "description": "Empty state description on the Audit Log screen."
     },
