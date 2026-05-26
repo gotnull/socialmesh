@@ -44123,6 +44123,15 @@ class AppLocalizationsUk extends AppLocalizations {
       'Показати всю активність';
 
   @override
+  String get licenseOrgAuditActionFilterLabel => 'Дія';
+
+  @override
+  String get licenseOrgAuditActionFilterAll => 'Усі дії';
+
+  @override
+  String get licenseOrgAuditActionFilterSheetTitle => 'Фільтр за дією';
+
+  @override
   String licenseOrgAuditFilterAllWithCount(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

@@ -44112,6 +44112,15 @@ class AppLocalizationsRu extends AppLocalizations {
       'Показать всю активность';
 
   @override
+  String get licenseOrgAuditActionFilterLabel => 'Действие';
+
+  @override
+  String get licenseOrgAuditActionFilterAll => 'Все действия';
+
+  @override
+  String get licenseOrgAuditActionFilterSheetTitle => 'Фильтр по действию';
+
+  @override
   String licenseOrgAuditFilterAllWithCount(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

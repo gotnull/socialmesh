@@ -217,5 +217,65 @@ void main() {
         findsOneWidget,
       );
     });
+
+    testWidgets('action picker filters list + updates outcome chip counts', (
+      tester,
+    ) async {
+      final repo = _StubRepo([
+        _event('e1', action: LicenseOrgAuditAction.memberJoined),
+        _event('e2', action: LicenseOrgAuditAction.memberJoined),
+        _event(
+          'e3',
+          action: LicenseOrgAuditAction.memberInvited,
+          outcome: LicenseOrgAuditOutcome.rejected,
+        ),
+        _event('e4', action: LicenseOrgAuditAction.seatCodeMinted),
+      ]);
+      await tester.pumpWidget(_buildTestWidget(repo: repo));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // Baseline: All actions => All (4), Success (3), Rejected (1).
+      expect(find.text(_l10n.licenseOrgAuditActionFilterAll), findsOneWidget);
+      expect(
+        find.text(_l10n.licenseOrgAuditFilterAllWithCount(4)),
+        findsOneWidget,
+      );
+
+      // Open the action picker by tapping the filter row.
+      await tester.tap(find.text(_l10n.licenseOrgAuditActionFilterLabel));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 250));
+      expect(
+        find.text(_l10n.licenseOrgAuditActionFilterSheetTitle),
+        findsOneWidget,
+      );
+
+      // Pick "Member joined". Picker rows have stable keys so the
+      // tap doesn't collide with audit-list rows that also display
+      // the same action label.
+      await tester.tap(
+        find.byKey(const Key('audit-action-picker-row-memberJoined')),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 250));
+
+      // List should now contain 2 member-joined rows; chip counts:
+      // All (2), Success (2), Rejected (0).
+      expect(
+        find.text(_l10n.licenseOrgAuditFilterAllWithCount(2)),
+        findsOneWidget,
+      );
+      expect(
+        find.text(_l10n.licenseOrgAuditFilterSuccessWithCount(2)),
+        findsOneWidget,
+      );
+      expect(
+        find.text(_l10n.licenseOrgAuditFilterRejectedWithCount(0)),
+        findsOneWidget,
+      );
+      // Filter row reflects the selection.
+      expect(find.text(_l10n.licenseOrgAuditActionMemberJoined), findsWidgets);
+    });
   });
 }

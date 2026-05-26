@@ -31,6 +31,7 @@ import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/safety.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animated_empty_state.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/chip_selector.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/section_header.dart';
@@ -39,6 +40,44 @@ import '../../models/license_org_audit_event.dart';
 import '../../providers/license_org_audit_providers.dart';
 
 enum _OutcomeFilter { all, success, rejected }
+
+/// Sentinel wrapper used by the action-filter picker. `value == null`
+/// means the user explicitly chose "All actions"; a `null` result from
+/// the picker `Future` (no wrapper at all) means the sheet was
+/// dismissed without selection.
+class _ActionPickerResult {
+  final LicenseOrgAuditAction? value;
+  const _ActionPickerResult(this.value);
+}
+
+String _actionLabel(AppLocalizations l10n, LicenseOrgAuditAction a) {
+  switch (a) {
+    case LicenseOrgAuditAction.seatCodeMinted:
+      return l10n.licenseOrgAuditActionSeatCodeMinted;
+    case LicenseOrgAuditAction.seatCodeRedeemed:
+      return l10n.licenseOrgAuditActionSeatCodeRedeemed;
+    case LicenseOrgAuditAction.seatCodeReplayed:
+      return l10n.licenseOrgAuditActionSeatCodeReplayed;
+    case LicenseOrgAuditAction.seatRevokedManual:
+      return l10n.licenseOrgAuditActionSeatRevokedManual;
+    case LicenseOrgAuditAction.seatReplacementMinted:
+      return l10n.licenseOrgAuditActionSeatReplacementMinted;
+    case LicenseOrgAuditAction.memberInvited:
+      return l10n.licenseOrgAuditActionMemberInvited;
+    case LicenseOrgAuditAction.memberJoined:
+      return l10n.licenseOrgAuditActionMemberJoined;
+    case LicenseOrgAuditAction.orgPurchased:
+      return l10n.licenseOrgAuditActionOrgPurchased;
+    case LicenseOrgAuditAction.orgOwnerCollision:
+      return l10n.licenseOrgAuditActionOrgOwnerCollision;
+    case LicenseOrgAuditAction.orgSeatRevokedRefund:
+      return l10n.licenseOrgAuditActionOrgSeatRevokedRefund;
+    case LicenseOrgAuditAction.orgSuspendedDrained:
+      return l10n.licenseOrgAuditActionOrgSuspendedDrained;
+    case LicenseOrgAuditAction.unknown:
+      return l10n.licenseOrgAuditActionUnknown;
+  }
+}
 
 class LicenseOrgAuditLogScreen extends ConsumerStatefulWidget {
   final String orgId;
@@ -60,6 +99,27 @@ class _LicenseOrgAuditLogScreenState
     with LifecycleSafeMixin {
   _OutcomeFilter _outcome = _OutcomeFilter.all;
 
+  // null = "All actions"; otherwise restricts the list to events with
+  // a matching `action`. Mirrors the web admin's `?action=` query
+  // param (web_admin/audit.html).
+  LicenseOrgAuditAction? _action;
+
+  // The unknown enum value is the fallback for unrecognised wire
+  // strings and is intentionally NOT exposed as a pickable filter.
+  static const List<LicenseOrgAuditAction> _pickableActions = [
+    LicenseOrgAuditAction.memberInvited,
+    LicenseOrgAuditAction.memberJoined,
+    LicenseOrgAuditAction.seatCodeMinted,
+    LicenseOrgAuditAction.seatCodeRedeemed,
+    LicenseOrgAuditAction.seatCodeReplayed,
+    LicenseOrgAuditAction.seatRevokedManual,
+    LicenseOrgAuditAction.seatReplacementMinted,
+    LicenseOrgAuditAction.orgPurchased,
+    LicenseOrgAuditAction.orgOwnerCollision,
+    LicenseOrgAuditAction.orgSeatRevokedRefund,
+    LicenseOrgAuditAction.orgSuspendedDrained,
+  ];
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -80,6 +140,8 @@ class _LicenseOrgAuditLogScreenState
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildHeader(context, l10n, state.events.length),
+              const SizedBox(height: AppTheme.spacing12),
+              _buildActionFilterRow(context, l10n),
               const SizedBox(height: AppTheme.spacing12),
               _buildFilter(context, l10n, state.events),
               const SizedBox(height: AppTheme.spacing12),
@@ -109,18 +171,29 @@ class _LicenseOrgAuditLogScreenState
   }
 
   List<LicenseOrgAuditEvent> _applyFilter(List<LicenseOrgAuditEvent> events) {
+    // Apply action filter first so outcome chip counts (computed
+    // against `_applyActionFilter(events)`) match the visible list.
+    final byAction = _applyActionFilter(events);
     switch (_outcome) {
       case _OutcomeFilter.all:
-        return events;
+        return byAction;
       case _OutcomeFilter.success:
-        return events
+        return byAction
             .where((e) => e.outcome == LicenseOrgAuditOutcome.success)
             .toList(growable: false);
       case _OutcomeFilter.rejected:
-        return events
+        return byAction
             .where((e) => e.outcome == LicenseOrgAuditOutcome.rejected)
             .toList(growable: false);
     }
+  }
+
+  List<LicenseOrgAuditEvent> _applyActionFilter(
+    List<LicenseOrgAuditEvent> events,
+  ) {
+    final a = _action;
+    if (a == null) return events;
+    return events.where((e) => e.action == a).toList(growable: false);
   }
 
   Widget _buildHeader(
@@ -144,10 +217,13 @@ class _LicenseOrgAuditLogScreenState
     AppLocalizations l10n,
     List<LicenseOrgAuditEvent> events,
   ) {
-    final successCount = events
+    // Counts must reflect the active action filter so the chip labels
+    // never claim more rows than the user will see after filtering.
+    final byAction = _applyActionFilter(events);
+    final successCount = byAction
         .where((e) => e.outcome == LicenseOrgAuditOutcome.success)
         .length;
-    final rejectedCount = events
+    final rejectedCount = byAction
         .where((e) => e.outcome == LicenseOrgAuditOutcome.rejected)
         .length;
 
@@ -158,7 +234,7 @@ class _LicenseOrgAuditLogScreenState
         options: [
           ChipOption(
             value: _OutcomeFilter.all,
-            label: l10n.licenseOrgAuditFilterAllWithCount(events.length),
+            label: l10n.licenseOrgAuditFilterAllWithCount(byAction.length),
             color: AccentColors.magenta,
           ),
           ChipOption(
@@ -175,6 +251,183 @@ class _LicenseOrgAuditLogScreenState
         onChanged: (v) => setState(() => _outcome = v),
       ),
     );
+  }
+
+  Widget _buildActionFilterRow(BuildContext context, AppLocalizations l10n) {
+    final selectionLabel = _action == null
+        ? l10n.licenseOrgAuditActionFilterAll
+        : _actionLabel(l10n, _action!);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+      child: InkWell(
+        onTap: () => _openActionPicker(context, l10n),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacing12,
+            vertical: AppTheme.spacing12,
+          ),
+          decoration: BoxDecoration(
+            color: context.card,
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+            border: Border.all(color: context.border),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.filter_list_outlined,
+                size: 18,
+                color: context.textSecondary,
+              ),
+              const SizedBox(width: AppTheme.spacing8),
+              Text(
+                l10n.licenseOrgAuditActionFilterLabel,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: context.textSecondary,
+                  fontFamily: AppTheme.fontFamily,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing8),
+              Expanded(
+                child: Text(
+                  selectionLabel,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: context.textPrimary,
+                    fontFamily: AppTheme.fontFamily,
+                  ),
+                ),
+              ),
+              Icon(Icons.expand_more, size: 18, color: context.textTertiary),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openActionPicker(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) async {
+    // Wrap the picked value so `null` from dismiss can be told apart
+    // from `null` meaning "the user tapped 'All actions'". Without
+    // this, dragging the sheet down by mistake would silently revert
+    // an active action filter.
+    final selected = await AppBottomSheet.show<_ActionPickerResult>(
+      context: context,
+      child: Builder(
+        builder: (sheetContext) {
+          Widget pickerRow({
+            required String label,
+            required bool selected,
+            required VoidCallback onTap,
+          }) {
+            return InkWell(
+              onTap: onTap,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing16,
+                  vertical: AppTheme.spacing12,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: sheetContext.textPrimary,
+                          fontFamily: AppTheme.fontFamily,
+                          fontWeight: selected
+                              ? FontWeight.w600
+                              : FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                    if (selected)
+                      Icon(
+                        Icons.check,
+                        size: 18,
+                        color: sheetContext.accentColor,
+                      ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.spacing16,
+                  AppTheme.spacing12,
+                  AppTheme.spacing16,
+                  AppTheme.spacing8,
+                ),
+                child: Text(
+                  key: const Key('audit-action-picker-title'),
+                  l10n.licenseOrgAuditActionFilterSheetTitle,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: sheetContext.textPrimary,
+                    fontFamily: AppTheme.fontFamily,
+                  ),
+                ),
+              ),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      KeyedSubtree(
+                        key: const Key('audit-action-picker-row-all'),
+                        child: pickerRow(
+                          label: l10n.licenseOrgAuditActionFilterAll,
+                          selected: _action == null,
+                          onTap: () => Navigator.of(sheetContext)
+                              .pop<_ActionPickerResult>(
+                                const _ActionPickerResult(null),
+                              ),
+                        ),
+                      ),
+                      for (final a in _pickableActions)
+                        KeyedSubtree(
+                          key: Key('audit-action-picker-row-${a.name}'),
+                          child: pickerRow(
+                            label: _actionLabel(l10n, a),
+                            selected: _action == a,
+                            onTap: () => Navigator.of(
+                              sheetContext,
+                            ).pop<_ActionPickerResult>(_ActionPickerResult(a)),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+    if (!mounted) return;
+    // `null` here means the sheet was dismissed (drag or scrim tap).
+    // Preserve the existing filter in that case.
+    if (selected == null) return;
+    setState(() {
+      _action = selected.value;
+      // Reset outcome filter when the action selection changes so the
+      // user doesn't land on a filtered-empty list whose chips were
+      // counted against a different action bucket.
+      _outcome = _OutcomeFilter.all;
+    });
   }
 
   Widget _buildLoadMore(
@@ -396,35 +649,6 @@ class _AuditLogRow extends StatelessWidget {
         return Icons.block_outlined;
       case LicenseOrgAuditAction.unknown:
         return Icons.history_outlined;
-    }
-  }
-
-  static String _actionLabel(AppLocalizations l10n, LicenseOrgAuditAction a) {
-    switch (a) {
-      case LicenseOrgAuditAction.seatCodeMinted:
-        return l10n.licenseOrgAuditActionSeatCodeMinted;
-      case LicenseOrgAuditAction.seatCodeRedeemed:
-        return l10n.licenseOrgAuditActionSeatCodeRedeemed;
-      case LicenseOrgAuditAction.seatCodeReplayed:
-        return l10n.licenseOrgAuditActionSeatCodeReplayed;
-      case LicenseOrgAuditAction.seatRevokedManual:
-        return l10n.licenseOrgAuditActionSeatRevokedManual;
-      case LicenseOrgAuditAction.seatReplacementMinted:
-        return l10n.licenseOrgAuditActionSeatReplacementMinted;
-      case LicenseOrgAuditAction.memberInvited:
-        return l10n.licenseOrgAuditActionMemberInvited;
-      case LicenseOrgAuditAction.memberJoined:
-        return l10n.licenseOrgAuditActionMemberJoined;
-      case LicenseOrgAuditAction.orgPurchased:
-        return l10n.licenseOrgAuditActionOrgPurchased;
-      case LicenseOrgAuditAction.orgOwnerCollision:
-        return l10n.licenseOrgAuditActionOrgOwnerCollision;
-      case LicenseOrgAuditAction.orgSeatRevokedRefund:
-        return l10n.licenseOrgAuditActionOrgSeatRevokedRefund;
-      case LicenseOrgAuditAction.orgSuspendedDrained:
-        return l10n.licenseOrgAuditActionOrgSuspendedDrained;
-      case LicenseOrgAuditAction.unknown:
-        return l10n.licenseOrgAuditActionUnknown;
     }
   }
 

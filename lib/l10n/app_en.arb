@@ -58164,6 +58164,18 @@
     "@licenseOrgOverviewRecentActivityViewAll": {
         "description": "Tap target text below the Recent activity preview on the License Org Overview card that pushes the full Audit Log drill-in screen."
     },
+    "licenseOrgAuditActionFilterLabel": "Action",
+    "@licenseOrgAuditActionFilterLabel": {
+        "description": "Label preceding the action-filter chip on the License Org Audit Log screen, e.g. 'Action: All actions'."
+    },
+    "licenseOrgAuditActionFilterAll": "All actions",
+    "@licenseOrgAuditActionFilterAll": {
+        "description": "Picker option that clears the action filter on the Audit Log screen, returning to no action-name restriction."
+    },
+    "licenseOrgAuditActionFilterSheetTitle": "Filter by action",
+    "@licenseOrgAuditActionFilterSheetTitle": {
+        "description": "Title of the bottom-sheet picker that lets the user pick which audit action to filter the Audit Log list by."
+    },
     "licenseOrgAuditFilterAllWithCount": "All ({count})",
     "@licenseOrgAuditFilterAllWithCount": {
         "description": "Outcome filter chip label for 'all events' on the Audit Log screen. The {count} placeholder is the total loaded events.",

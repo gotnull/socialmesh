@@ -12865,5 +12865,17 @@
                 "format": "decimalPattern"
             }
         }
+    },
+    "licenseOrgAuditActionFilterLabel": "Acción",
+    "@licenseOrgAuditActionFilterLabel": {
+        "description": "Label preceding the action-filter chip on the License Org Audit Log screen, e.g. 'Action: All actions'."
+    },
+    "licenseOrgAuditActionFilterAll": "Todas las acciones",
+    "@licenseOrgAuditActionFilterAll": {
+        "description": "Picker option that clears the action filter on the Audit Log screen, returning to no action-name restriction."
+    },
+    "licenseOrgAuditActionFilterSheetTitle": "Filtrar por acción",
+    "@licenseOrgAuditActionFilterSheetTitle": {
+        "description": "Title of the bottom-sheet picker that lets the user pick which audit action to filter the Audit Log list by."
     }
 }

@@ -44118,6 +44118,15 @@ class AppLocalizationsIt extends AppLocalizations {
       'Vedi tutta l\'attività';
 
   @override
+  String get licenseOrgAuditActionFilterLabel => 'Azione';
+
+  @override
+  String get licenseOrgAuditActionFilterAll => 'Tutte le azioni';
+
+  @override
+  String get licenseOrgAuditActionFilterSheetTitle => 'Filtra per azione';
+
+  @override
   String licenseOrgAuditFilterAllWithCount(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

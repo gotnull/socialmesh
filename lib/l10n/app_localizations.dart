@@ -76223,6 +76223,24 @@ abstract class AppLocalizations {
   /// **'View all activity'**
   String get licenseOrgOverviewRecentActivityViewAll;
 
+  /// Label preceding the action-filter chip on the License Org Audit Log screen, e.g. 'Action: All actions'.
+  ///
+  /// In en, this message translates to:
+  /// **'Action'**
+  String get licenseOrgAuditActionFilterLabel;
+
+  /// Picker option that clears the action filter on the Audit Log screen, returning to no action-name restriction.
+  ///
+  /// In en, this message translates to:
+  /// **'All actions'**
+  String get licenseOrgAuditActionFilterAll;
+
+  /// Title of the bottom-sheet picker that lets the user pick which audit action to filter the Audit Log list by.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by action'**
+  String get licenseOrgAuditActionFilterSheetTitle;
+
   /// Outcome filter chip label for 'all events' on the Audit Log screen. The {count} placeholder is the total loaded events.
   ///
   /// In en, this message translates to:
