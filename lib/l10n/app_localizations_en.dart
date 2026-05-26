@@ -26262,6 +26262,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not start the group license checkout. Try again or contact support.';
 
   @override
+  String get orgCheckoutSignInRequired =>
+      'Sign in with a permanent account before buying a group license. Anonymous sessions can\'t own an org.';
+
+  @override
   String get orgCheckoutOrgIdTaken =>
       'That id is already taken by another owner. Pick a different name.';
 

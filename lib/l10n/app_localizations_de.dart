@@ -26626,6 +26626,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Der Gruppenlizenz-Checkout konnte nicht gestartet werden. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support.';
 
   @override
+  String get orgCheckoutSignInRequired =>
+      'Melde dich mit einem permanenten Konto an, bevor du eine Gruppenlizenz kaufst. Anonyme Sitzungen können keine Org besitzen.';
+
+  @override
   String get orgCheckoutOrgIdTaken =>
       'Diese ID ist bereits von einem anderen Inhaber vergeben. Bitte wählen Sie einen anderen Namen.';
 

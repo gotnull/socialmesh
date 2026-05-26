@@ -35803,6 +35803,10 @@
     "@orgCheckoutError": {
         "description": "Error shown when the createCheckout callable rejects the org-pack request."
     },
+    "orgCheckoutSignInRequired": "Sign in with a permanent account before buying a group license. Anonymous sessions can't own an org.",
+    "@orgCheckoutSignInRequired": {
+        "description": "Error shown when the createCheckout callable rejects an org-pack request because the caller is unauthenticated or signed in anonymously. Maps to the 'org-pack-requires-signin' and 'org-pack-requires-permanent-account' server rejection reasons."
+    },
     "orgCheckoutOrgIdTaken": "That id is already taken by another owner. Pick a different name.",
     "@orgCheckoutOrgIdTaken": {
         "description": "Server-side validation error when the entered license org id is already owned by a different user."

@@ -12877,5 +12877,9 @@
     "licenseOrgAuditActionFilterSheetTitle": "Nach Aktion filtern",
     "@licenseOrgAuditActionFilterSheetTitle": {
         "description": "Title of the bottom-sheet picker that lets the user pick which audit action to filter the Audit Log list by."
+    },
+    "orgCheckoutSignInRequired": "Melde dich mit einem permanenten Konto an, bevor du eine Gruppenlizenz kaufst. Anonyme Sitzungen können keine Org besitzen.",
+    "@orgCheckoutSignInRequired": {
+        "description": "Error shown when the createCheckout callable rejects an org-pack request because the caller is unauthenticated or signed in anonymously. Maps to the 'org-pack-requires-signin' and 'org-pack-requires-permanent-account' server rejection reasons."
     }
 }

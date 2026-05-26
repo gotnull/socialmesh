@@ -26556,6 +26556,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось запустить оформление групповой лицензии. Повторите попытку или обратитесь в поддержку.';
 
   @override
+  String get orgCheckoutSignInRequired =>
+      'Войдите с постоянного аккаунта перед покупкой групповой лицензии. Анонимные сеансы не могут владеть организацией.';
+
+  @override
   String get orgCheckoutOrgIdTaken =>
       'Этот ID уже занят другим владельцем. Выберите другое имя.';
 

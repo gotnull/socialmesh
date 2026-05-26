@@ -214,6 +214,9 @@ class _OrgCheckoutBodyState extends ConsumerState<_OrgCheckoutBody>
         return context.l10n.orgCheckoutOrgIdBannedWord;
       case 'license-org-id-malformed':
         return context.l10n.orgCheckoutOrgIdInvalid;
+      case 'org-pack-requires-signin':
+      case 'org-pack-requires-permanent-account':
+        return context.l10n.orgCheckoutSignInRequired;
       default:
         return context.l10n.orgCheckoutError;
     }

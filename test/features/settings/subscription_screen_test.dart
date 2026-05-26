@@ -24,12 +24,18 @@ import 'package:socialmesh/services/org/license_org_membership_repository.dart';
 final _l10n = AppLocalizationsEn();
 
 /// Create a test-wrapped SubscriptionScreen with providers overridden.
+///
+/// Passes a default non-anonymous fake user via [currentUserProvider]
+/// so the auth-gated "Buy as a group license" tile stays visible in
+/// existing flag-only tests. Pass `user: null` to exercise the new
+/// auth gate explicitly.
 Widget _buildTestWidget({
   PurchaseState purchaseState = const PurchaseState(),
   bool isLoading = false,
   String? error,
   Map<String, StoreProductInfo> storeProducts = const {},
   bool isOnline = true,
+  User? user = _defaultFakeUser,
 }) {
   return ProviderScope(
     overrides: [
@@ -42,6 +48,7 @@ Widget _buildTestWidget({
       subscriptionErrorProvider.overrideWith(() => _TestErrorNotifier(error)),
       storeProductsProvider.overrideWith((ref) => Future.value(storeProducts)),
       isOnlineProvider.overrideWithValue(isOnline),
+      currentUserProvider.overrideWith((ref) => user),
     ],
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -51,6 +58,8 @@ Widget _buildTestWidget({
     ),
   );
 }
+
+const _defaultFakeUser = _FakeUser();
 
 class _TestPurchaseStateNotifier extends PurchaseStateNotifier {
   _TestPurchaseStateNotifier(this._state);
@@ -98,6 +107,8 @@ class _StubMembershipRepo implements LicenseOrgMembershipRepository {
 }
 
 class _FakeUser implements User {
+  const _FakeUser();
+
   @override
   String get uid => 'u1';
   @override
@@ -107,7 +118,22 @@ class _FakeUser implements User {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-Widget _buildTileTestWidget({required Set<String> orgIds}) {
+class _AnonFakeUser implements User {
+  const _AnonFakeUser();
+
+  @override
+  String get uid => 'anon-u1';
+  @override
+  bool get isAnonymous => true;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+Widget _buildTileTestWidget({
+  required Set<String> orgIds,
+  User? user = _defaultFakeUser,
+}) {
   return ProviderScope(
     overrides: [
       purchaseStateProvider.overrideWith(
@@ -121,7 +147,7 @@ Widget _buildTileTestWidget({required Set<String> orgIds}) {
         (ref) => Future.value(const <String, StoreProductInfo>{}),
       ),
       isOnlineProvider.overrideWithValue(true),
-      currentUserProvider.overrideWith((ref) => _FakeUser()),
+      currentUserProvider.overrideWith((ref) => user),
       licenseOrgMembershipRepositoryProvider.overrideWith(
         (ref) => _StubMembershipRepo(orgIds),
       ),
@@ -458,6 +484,46 @@ TRANSLATION_ENABLED=false
       dotenv.env.remove('GROUP_LICENSING_ENABLED');
 
       await tester.pumpWidget(_buildTestWidget());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      await tester.drag(
+        find.byType(SubscriptionScreen),
+        const Offset(0, -3000),
+      );
+      await tester.pump();
+
+      expect(find.text(_l10n.orgCheckoutEntryAction), findsNothing);
+    });
+
+    // Org ownership requires a permanent (non-anonymous) account.
+    // The backend rejects unauth + anon create-checkout calls with
+    // an HttpsError, so the Buy tile must hide itself in those states
+    // rather than offer a tap that can only land on an error.
+    testWidgets('tile is suppressed when the user is signed out', (
+      tester,
+    ) async {
+      dotenv.env['GROUP_LICENSING_ENABLED'] = 'true';
+
+      await tester.pumpWidget(_buildTestWidget(user: null));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      await tester.drag(
+        find.byType(SubscriptionScreen),
+        const Offset(0, -3000),
+      );
+      await tester.pump();
+
+      expect(find.text(_l10n.orgCheckoutEntryAction), findsNothing);
+    });
+
+    testWidgets('tile is suppressed when the user is anonymous', (
+      tester,
+    ) async {
+      dotenv.env['GROUP_LICENSING_ENABLED'] = 'true';
+
+      await tester.pumpWidget(_buildTestWidget(user: const _AnonFakeUser()));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 

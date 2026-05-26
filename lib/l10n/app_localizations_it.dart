@@ -26563,6 +26563,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Impossibile avviare il pagamento della licenza di gruppo. Riprova o contatta l\'assistenza.';
 
   @override
+  String get orgCheckoutSignInRequired =>
+      'Accedi con un account permanente prima di acquistare una licenza di gruppo. Le sessioni anonime non possono possedere un\'org.';
+
+  @override
   String get orgCheckoutOrgIdTaken =>
       'Questo ID è già preso da un altro proprietario. Scegli un nome diverso.';
 

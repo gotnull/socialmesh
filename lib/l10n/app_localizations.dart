@@ -45982,6 +45982,12 @@ abstract class AppLocalizations {
   /// **'Could not start the group license checkout. Try again or contact support.'**
   String get orgCheckoutError;
 
+  /// Error shown when the createCheckout callable rejects an org-pack request because the caller is unauthenticated or signed in anonymously. Maps to the 'org-pack-requires-signin' and 'org-pack-requires-permanent-account' server rejection reasons.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with a permanent account before buying a group license. Anonymous sessions can\'t own an org.'**
+  String get orgCheckoutSignInRequired;
+
   /// Server-side validation error when the entered license org id is already owned by a different user.
   ///
   /// In en, this message translates to:

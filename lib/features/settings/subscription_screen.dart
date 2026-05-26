@@ -17,6 +17,7 @@ import '../../core/widgets/animated_gold_button.dart';
 import '../../core/widgets/legal_document_sheet.dart';
 import '../../core/widgets/verified_badge.dart';
 import '../../models/subscription_models.dart';
+import '../../providers/auth_providers.dart';
 import '../../providers/subscription_providers.dart';
 import '../../services/audio/rtttl_library_service.dart';
 import '../../services/haptic_service.dart';
@@ -1399,6 +1400,17 @@ class _GroupLicensingEntries extends ConsumerWidget {
     );
     final orgCount = orgs.length;
 
+    // Org ownership requires a permanent (non-anonymous) account.
+    // The backend rejects unauthenticated + anonymous create-checkout
+    // calls with HttpsError, so hiding the entry tile avoids a tap
+    // that can only ever land on an error. The Manage tile stays
+    // visible when the user already belongs to an org (an edge case
+    // that the membership provider already fail-closes on flag off
+    // / signed-out, so it naturally hides itself for anon users).
+    final user = ref.watch(currentUserProvider);
+    final canBuyOrgPack =
+        user != null && !user.isAnonymous && user.uid.isNotEmpty;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1414,17 +1426,18 @@ class _GroupLicensingEntries extends ConsumerWidget {
             onTap: () =>
                 Navigator.of(context).push(LicenseOrgOverviewScreen.route()),
           ),
-          const SizedBox(height: AppTheme.spacing8),
+          if (canBuyOrgPack) const SizedBox(height: AppTheme.spacing8),
         ],
-        _GroupLicensingTile(
-          icon: Icons.add_business_outlined,
-          title: l10n.orgCheckoutEntryAction,
-          subtitle: l10n.licenseOrgOverviewBuyTileSubtitle,
-          onTap: () => showOrgCheckoutSheet(
-            context,
-            productId: RevenueCatConfig.themePackProductId,
+        if (canBuyOrgPack)
+          _GroupLicensingTile(
+            icon: Icons.add_business_outlined,
+            title: l10n.orgCheckoutEntryAction,
+            subtitle: l10n.licenseOrgOverviewBuyTileSubtitle,
+            onTap: () => showOrgCheckoutSheet(
+              context,
+              productId: RevenueCatConfig.themePackProductId,
+            ),
           ),
-        ),
       ],
     );
   }
