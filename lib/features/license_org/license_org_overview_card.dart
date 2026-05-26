@@ -324,11 +324,7 @@ class _ViewMembersButton extends ConsumerWidget {
                   ],
                 ),
               ),
-              Icon(
-                Icons.chevron_right,
-                color: context.textTertiary,
-                size: 20,
-              ),
+              Icon(Icons.chevron_right, color: context.textTertiary, size: 20),
             ],
           ),
         ),
