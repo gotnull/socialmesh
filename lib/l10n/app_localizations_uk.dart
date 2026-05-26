@@ -43767,4 +43767,80 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get watchCannedMessageReceived => 'Повідомлення отримано';
+
+  @override
+  String get licenseOrgOverviewTitle => 'Ваші групові ліцензії';
+
+  @override
+  String get licenseOrgOverviewEntryAction => 'Керувати груповими ліцензіями';
+
+  @override
+  String get licenseOrgOverviewEmptyTitlePrefix => 'Поки немає';
+
+  @override
+  String get licenseOrgOverviewEmptyTitleKeyword => 'групових ліцензій';
+
+  @override
+  String get licenseOrgOverviewEmptyTitleSuffix => '';
+
+  @override
+  String get licenseOrgOverviewEmptyTagline1 =>
+      'Активуйте код місця або придбайте груповий пакет, щоб керувати командою тут.';
+
+  @override
+  String get licenseOrgOverviewEmptyTagline2 =>
+      'Групові ліцензії дозволяють ділитися преміум-функціями з командою.';
+
+  @override
+  String get licenseOrgOverviewEmptyTagline3 =>
+      'Власники, адміністратори та учасники бачать один і той самий статус.';
+
+  @override
+  String get licenseOrgOverviewEmptyAction => 'Купити груповий пакет';
+
+  @override
+  String get licenseOrgOverviewErrorTitlePrefix => 'Не вдалося';
+
+  @override
+  String get licenseOrgOverviewErrorTitleKeyword => 'завантажити';
+
+  @override
+  String get licenseOrgOverviewErrorTitleSuffix => 'ваші ліцензії';
+
+  @override
+  String get licenseOrgOverviewErrorTagline =>
+      'Перевірте з\'єднання та спробуйте ще раз.';
+
+  @override
+  String get licenseOrgOverviewErrorAction => 'Повторити';
+
+  @override
+  String get licenseOrgOverviewRoleLabel => 'Роль';
+
+  @override
+  String get licenseOrgOverviewSeatsLabel => 'Ваші місця';
+
+  @override
+  String get licenseOrgOverviewStatusLabel => 'Статус';
+
+  @override
+  String get licenseOrgOverviewJoinedLabel => 'Дата приєднання';
+
+  @override
+  String get licenseOrgOverviewOrgIdLabel => 'ID організації';
+
+  @override
+  String get licenseOrgOverviewRoleOwner => 'Власник';
+
+  @override
+  String get licenseOrgOverviewRoleAdmin => 'Адміністратор';
+
+  @override
+  String get licenseOrgOverviewRoleMember => 'Учасник';
+
+  @override
+  String get licenseOrgOverviewStatusActive => 'Активна';
+
+  @override
+  String get licenseOrgOverviewStatusSuspended => 'Призупинена';
 }

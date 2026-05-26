@@ -75694,6 +75694,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Message received'**
   String get watchCannedMessageReceived;
+
+  /// App bar title for the License Org Overview screen. Surfaces the list of group / community licenses the signed-in user belongs to (owner, admin, or member). Gated by GROUP_LICENSING_ENABLED.
+  ///
+  /// In en, this message translates to:
+  /// **'Your group licenses'**
+  String get licenseOrgOverviewTitle;
+
+  /// Subscription-screen tile label that opens the License Org Overview screen. Visible only when the current user belongs to one or more license orgs.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage group licenses'**
+  String get licenseOrgOverviewEntryAction;
+
+  /// Empty-state title prefix on the License Org Overview screen, shown when the user has zero license orgs. Combined with keyword and suffix to form 'No group licenses yet'.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get licenseOrgOverviewEmptyTitlePrefix;
+
+  /// Empty-state title gradient keyword on the License Org Overview screen.
+  ///
+  /// In en, this message translates to:
+  /// **'group licenses'**
+  String get licenseOrgOverviewEmptyTitleKeyword;
+
+  /// Empty-state title suffix on the License Org Overview screen.
+  ///
+  /// In en, this message translates to:
+  /// **'yet'**
+  String get licenseOrgOverviewEmptyTitleSuffix;
+
+  /// First rotating tagline under the empty-state title on the License Org Overview screen. Explains the two ways a user becomes a license org member.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeem a seat code or buy a group pack to manage your team here.'**
+  String get licenseOrgOverviewEmptyTagline1;
+
+  /// Second rotating tagline on the License Org Overview empty state. Highlights the value proposition.
+  ///
+  /// In en, this message translates to:
+  /// **'Group licenses let you share premium features with teammates.'**
+  String get licenseOrgOverviewEmptyTagline2;
+
+  /// Third rotating tagline on the License Org Overview empty state. Reinforces transparency across roles.
+  ///
+  /// In en, this message translates to:
+  /// **'Owners, admins, and members all see the same org status.'**
+  String get licenseOrgOverviewEmptyTagline3;
+
+  /// Primary action label on the License Org Overview empty state. Opens the existing org checkout sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy a group pack'**
+  String get licenseOrgOverviewEmptyAction;
+
+  /// Error-state title prefix on the License Org Overview screen, shown when the membership stream errors. Combined with keyword and suffix to form 'Could not load your licenses'.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not'**
+  String get licenseOrgOverviewErrorTitlePrefix;
+
+  /// Error-state title gradient keyword on the License Org Overview screen.
+  ///
+  /// In en, this message translates to:
+  /// **'load'**
+  String get licenseOrgOverviewErrorTitleKeyword;
+
+  /// Error-state title suffix on the License Org Overview screen.
+  ///
+  /// In en, this message translates to:
+  /// **'your licenses'**
+  String get licenseOrgOverviewErrorTitleSuffix;
+
+  /// Single tagline under the error-state title on the License Org Overview screen. Suggests the most likely recovery action.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again.'**
+  String get licenseOrgOverviewErrorTagline;
+
+  /// Retry action label on the License Org Overview error state. Invalidates the membership and seat-allocation providers.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get licenseOrgOverviewErrorAction;
+
+  /// Row label on the License Org Overview per-org card showing the current user's role in that org (owner, admin, or member).
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get licenseOrgOverviewRoleLabel;
+
+  /// Row label on the License Org Overview per-org card showing how many active seats the current user holds inside that org. Scoped to the current user; the org-wide count is admin-only and lives in a separate sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Your seats'**
+  String get licenseOrgOverviewSeatsLabel;
+
+  /// Row label on the License Org Overview per-org card showing whether the org is currently active or suspended.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get licenseOrgOverviewStatusLabel;
+
+  /// Row label on the License Org Overview per-org card showing the date the current user joined that org.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined'**
+  String get licenseOrgOverviewJoinedLabel;
+
+  /// Row label on the License Org Overview per-org card showing the slug-style id of the org (e.g. acme-eng-team). Useful when the human-readable org name is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Org id'**
+  String get licenseOrgOverviewOrgIdLabel;
+
+  /// Role badge label rendered on the License Org Overview per-org card when the current user is the org owner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get licenseOrgOverviewRoleOwner;
+
+  /// Role badge label rendered on the License Org Overview per-org card when the current user is an org admin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get licenseOrgOverviewRoleAdmin;
+
+  /// Role badge label rendered on the License Org Overview per-org card when the current user is a regular org member.
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get licenseOrgOverviewRoleMember;
+
+  /// Status badge label rendered on the License Org Overview per-org card when the org status is active.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get licenseOrgOverviewStatusActive;
+
+  /// Status badge label rendered on the License Org Overview per-org card when the org status is suspended (e.g. after a refund cascade).
+  ///
+  /// In en, this message translates to:
+  /// **'Suspended'**
+  String get licenseOrgOverviewStatusSuspended;
 }
 
 class _AppLocalizationsDelegate

@@ -44067,4 +44067,80 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get watchCannedMessageReceived => 'Message reçu';
+
+  @override
+  String get licenseOrgOverviewTitle => 'Vos licences de groupe';
+
+  @override
+  String get licenseOrgOverviewEntryAction => 'Gérer les licences de groupe';
+
+  @override
+  String get licenseOrgOverviewEmptyTitlePrefix => 'Aucune';
+
+  @override
+  String get licenseOrgOverviewEmptyTitleKeyword => 'licence de groupe';
+
+  @override
+  String get licenseOrgOverviewEmptyTitleSuffix => 'pour le moment';
+
+  @override
+  String get licenseOrgOverviewEmptyTagline1 =>
+      'Utilisez un code de siège ou achetez un pack de groupe pour gérer votre équipe ici.';
+
+  @override
+  String get licenseOrgOverviewEmptyTagline2 =>
+      'Les licences de groupe permettent de partager les fonctionnalités premium avec votre équipe.';
+
+  @override
+  String get licenseOrgOverviewEmptyTagline3 =>
+      'Propriétaires, administrateurs et membres voient le même statut.';
+
+  @override
+  String get licenseOrgOverviewEmptyAction => 'Acheter un pack de groupe';
+
+  @override
+  String get licenseOrgOverviewErrorTitlePrefix => 'Impossible de';
+
+  @override
+  String get licenseOrgOverviewErrorTitleKeyword => 'charger';
+
+  @override
+  String get licenseOrgOverviewErrorTitleSuffix => 'vos licences';
+
+  @override
+  String get licenseOrgOverviewErrorTagline =>
+      'Vérifiez votre connexion puis réessayez.';
+
+  @override
+  String get licenseOrgOverviewErrorAction => 'Réessayer';
+
+  @override
+  String get licenseOrgOverviewRoleLabel => 'Rôle';
+
+  @override
+  String get licenseOrgOverviewSeatsLabel => 'Vos sièges';
+
+  @override
+  String get licenseOrgOverviewStatusLabel => 'Statut';
+
+  @override
+  String get licenseOrgOverviewJoinedLabel => 'Rejoint le';
+
+  @override
+  String get licenseOrgOverviewOrgIdLabel => 'ID d\'organisation';
+
+  @override
+  String get licenseOrgOverviewRoleOwner => 'Propriétaire';
+
+  @override
+  String get licenseOrgOverviewRoleAdmin => 'Administrateur';
+
+  @override
+  String get licenseOrgOverviewRoleMember => 'Membre';
+
+  @override
+  String get licenseOrgOverviewStatusActive => 'Active';
+
+  @override
+  String get licenseOrgOverviewStatusSuspended => 'Suspendue';
 }

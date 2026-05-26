@@ -26,6 +26,8 @@ import '../external_purchase/alternative_payment_link.dart';
 import '../external_purchase/payment_method_chooser_sheet.dart';
 import '../external_purchase/org_checkout_sheet.dart';
 import '../external_purchase/redeem_unlock_code_sheet.dart';
+import '../license_org/license_org_overview_screen.dart';
+import '../../providers/license_org_membership_providers.dart';
 import 'ifttt_config_screen.dart';
 import 'ringtone_screen.dart';
 import 'theme_settings_screen.dart';
@@ -191,6 +193,12 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
                     ),
                   ),
                 ),
+
+              // License Org Overview entry. Same flag gate as the buy
+              // tile, plus a non-empty membership check so users who
+              // have not joined any org keep seeing only the buy path.
+              if (AppFeatureFlags.isGroupLicensingEnabled)
+                _ManageGroupLicensesTile(),
 
               // Support fallback: redeem unlock code. Low-emphasis text
               // link - primary CTAs above remain the canonical path.
@@ -998,6 +1006,19 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
     if (!await _ensureOnlineForPurchase(bundleId)) return;
     if (!mounted) return;
 
+    final storeProducts = ref
+        .read(storeProductsProvider)
+        .when(
+          data: (data) => data,
+          loading: () => <String, StoreProductInfo>{},
+          error: (_, _) => <String, StoreProductInfo>{},
+        );
+    final appStorePriceDisplay =
+        storeProducts[bundleId]?.priceString ??
+        '\$${OneTimePurchases.bundlePrice.toStringAsFixed(2)}';
+    final stripePriceDisplay =
+        'USD ${OneTimePurchases.bundlePrice.toStringAsFixed(2)}';
+
     // Chunk C: route the bundle CTA through the chooser sheet, exactly
     // like every individual pack. The chooser handles already-owned
     // gracefully:
@@ -1015,7 +1036,9 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
       ref: ref,
       productId: bundleId,
       productName: 'Complete Pack',
-      priceAud: 14.99,
+      priceUsd: OneTimePurchases.bundlePrice,
+      appStorePriceDisplay: appStorePriceDisplay,
+      stripePriceDisplay: stripePriceDisplay,
       onSuccess: _showAllUnlockedCelebration,
     );
   }
@@ -1221,6 +1244,18 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
     if (!await _ensureOnlineForPurchase(purchase.productId)) return;
     if (!mounted) return;
 
+    final storeProducts = ref
+        .read(storeProductsProvider)
+        .when(
+          data: (data) => data,
+          loading: () => <String, StoreProductInfo>{},
+          error: (_, _) => <String, StoreProductInfo>{},
+        );
+    final appStorePriceDisplay =
+        storeProducts[purchase.productId]?.priceString ??
+        '\$${purchase.price.toStringAsFixed(2)}';
+    final stripePriceDisplay = 'USD ${purchase.price.toStringAsFixed(2)}';
+
     // Chunk C: route every pack CTA through the chooser sheet. When
     // Stripe is disabled, the chooser short-circuits straight to the
     // store IAP path, preserving pre-Chunk-C behavior.
@@ -1229,7 +1264,9 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
       ref: ref,
       productId: purchase.productId,
       productName: purchase.name,
-      priceAud: purchase.price,
+      priceUsd: purchase.price,
+      appStorePriceDisplay: appStorePriceDisplay,
+      stripePriceDisplay: stripePriceDisplay,
       onSuccess: () {
         // Check if all features are now unlocked.
         final purchaseState = ref.read(purchaseStateProvider);
@@ -1330,6 +1367,38 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Low-emphasis text-link tile that opens the License Org Overview
+/// screen. Visible only when the signed-in user belongs to one or more
+/// license orgs - a user with zero orgs still sees the sibling
+/// "Buy as a group license" tile.
+///
+/// Internally a [ConsumerWidget] so the watch on
+/// [currentUserLicenseOrgIdsProvider] only happens when this row is
+/// actually visible. Folds to [SizedBox.shrink] in loading / error /
+/// empty states so the divider above the legal links keeps its
+/// rhythm.
+class _ManageGroupLicensesTile extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final orgsAsync = ref.watch(currentUserLicenseOrgIdsProvider);
+    final hasOrgs = orgsAsync.maybeWhen(
+      data: (ids) => ids.isNotEmpty,
+      orElse: () => false,
+    );
+    if (!hasOrgs) return const SizedBox.shrink();
+    return Center(
+      child: TextButton(
+        onPressed: () =>
+            Navigator.of(context).push(LicenseOrgOverviewScreen.route()),
+        child: Text(
+          context.l10n.licenseOrgOverviewEntryAction,
+          style: TextStyle(color: context.textTertiary, fontSize: 12),
+        ),
       ),
     );
   }

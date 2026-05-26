@@ -65,7 +65,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
     test('themePack has correct properties', () {
       expect(OneTimePurchases.themePack.id, 'theme_pack');
       expect(OneTimePurchases.themePack.name, 'Theme Pack');
-      expect(OneTimePurchases.themePack.price, 4.99);
+      expect(OneTimePurchases.themePack.price, 2.99);
       expect(
         OneTimePurchases.themePack.unlocksFeature,
         PremiumFeature.premiumThemes,
@@ -85,7 +85,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
     test('widgetPack has correct properties', () {
       expect(OneTimePurchases.widgetPack.id, 'widget_pack');
       expect(OneTimePurchases.widgetPack.name, 'Widgets');
-      expect(OneTimePurchases.widgetPack.price, 4.99);
+      expect(OneTimePurchases.widgetPack.price, 3.99);
       expect(
         OneTimePurchases.widgetPack.unlocksFeature,
         PremiumFeature.homeWidgets,
@@ -105,7 +105,7 @@ COMPLETE_PACK_PRODUCT_ID=complete_pack
     test('iftttPack has correct properties', () {
       expect(OneTimePurchases.iftttPack.id, 'ifttt_pack');
       expect(OneTimePurchases.iftttPack.name, 'IFTTT Integration');
-      expect(OneTimePurchases.iftttPack.price, 2.99);
+      expect(OneTimePurchases.iftttPack.price, 3.99);
       expect(
         OneTimePurchases.iftttPack.unlocksFeature,
         PremiumFeature.iftttIntegration,

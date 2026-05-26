@@ -34,6 +34,17 @@ abstract class LicenseOrgMembershipRepository {
   /// Emits the current org-id set on subscribe, then re-emits on every
   /// underlying change. Empty set on null / empty uid.
   Stream<Set<String>> watchCurrentUserOrgIds(String uid);
+
+  /// Streams the [LicenseOrg] doc at `license_orgs/{orgId}`. Emits
+  /// null when the doc is missing, malformed, suspended, or on any
+  /// underlying error. Used by the Overview screen for read-only org
+  /// metadata (name, status, ownerUid, createdAt).
+  Stream<LicenseOrg?> watchLicenseOrg(String orgId);
+
+  /// Streams the per-user membership row at
+  /// `license_orgs/{orgId}/members/{uid}`. Emits null when the doc is
+  /// missing, malformed, or on any underlying error.
+  Stream<LicenseOrgMembership?> watchMembership(String orgId, String uid);
 }
 
 /// Firestore-backed implementation.
@@ -166,6 +177,88 @@ class FirestoreLicenseOrgMembershipRepository
       await memberSub?.cancel();
       ownedSub = null;
       memberSub = null;
+    };
+
+    return controller.stream;
+  }
+
+  @override
+  Stream<LicenseOrg?> watchLicenseOrg(String orgId) {
+    if (orgId.isEmpty) return Stream.value(null);
+
+    final controller = StreamController<LicenseOrg?>();
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? sub;
+
+    controller.onListen = () {
+      sub = _firestore
+          .collection('license_orgs')
+          .doc(orgId)
+          .snapshots()
+          .listen(
+            (snap) {
+              if (controller.isClosed) return;
+              if (!snap.exists) {
+                controller.add(null);
+                return;
+              }
+              controller.add(LicenseOrg.fromFirestore(snap));
+            },
+            onError: (Object e) {
+              AppLogging.purchase(
+                '[LicenseOrgMembershipRepo] watchLicenseOrg stream error - '
+                'failing closed (error class: ${e.runtimeType})',
+              );
+              if (controller.isClosed) return;
+              controller.add(null);
+            },
+          );
+    };
+
+    controller.onCancel = () async {
+      await sub?.cancel();
+      sub = null;
+    };
+
+    return controller.stream;
+  }
+
+  @override
+  Stream<LicenseOrgMembership?> watchMembership(String orgId, String uid) {
+    if (orgId.isEmpty || uid.isEmpty) return Stream.value(null);
+
+    final controller = StreamController<LicenseOrgMembership?>();
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? sub;
+
+    controller.onListen = () {
+      sub = _firestore
+          .collection('license_orgs')
+          .doc(orgId)
+          .collection('members')
+          .doc(uid)
+          .snapshots()
+          .listen(
+            (snap) {
+              if (controller.isClosed) return;
+              if (!snap.exists) {
+                controller.add(null);
+                return;
+              }
+              controller.add(LicenseOrgMembership.fromFirestore(snap));
+            },
+            onError: (Object e) {
+              AppLogging.purchase(
+                '[LicenseOrgMembershipRepo] watchMembership stream error - '
+                'failing closed (error class: ${e.runtimeType})',
+              );
+              if (controller.isClosed) return;
+              controller.add(null);
+            },
+          );
+    };
+
+    controller.onCancel = () async {
+      await sub?.cancel();
+      sub = null;
     };
 
     return controller.stream;

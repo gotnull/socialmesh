@@ -16,26 +16,18 @@ import '../../../core/widgets/search_filter_header.dart';
 import '../../../core/widgets/status_filter_chip.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../core/widgets/status_banner.dart';
+import '../../../generated/product_catalog.g.dart';
 import '../../../utils/snackbar.dart';
 
 /// Filter modes for the user list.
 enum _UserFilter { all, paying, free, excluded, anonymous, deleted }
 
-// Product prices in AUD for revenue calculation. Mirrors the canonical
-// RevenueCat prices and the backend PRODUCT_CATALOG in
-// `backend/functions/src/external_checkout.ts`. When a price changes
-// in RevenueCat, this map, the backend catalog, and the Stripe price
-// IDs in `backend/functions/.env` all change as a unit.
-const _productPricesAud = <String, double>{
-  'theme_pack': 4.99,
-  'ringtone_pack': 1.99,
-  'widget_pack': 4.99,
-  'automations_pack': 5.99,
-  'ifttt_pack': 4.99,
-  'complete_pack': 14.99,
-  'cloud_monthly': 2.99,
-  'cloud_yearly': 24.99,
-};
+// Product prices in USD for revenue calculation. Derived from the
+// canonical JSON catalog (config/product_catalog.json) via the codegen
+// in lib/generated/product_catalog.g.dart. When a price changes in
+// RevenueCat, edit the JSON and re-run scripts/gen_product_catalog.sh
+// (the pre-commit hook handles this automatically).
+const _productPricesUsd = ProductCatalog.pricesUsd;
 
 /// Admin screen to view Firebase users and their RevenueCat purchases
 class UserPurchasesAdminScreen extends ConsumerStatefulWidget {
@@ -95,7 +87,7 @@ class _UserPurchasesAdminScreenState
     double total = 0;
     for (final user in _users) {
       for (final purchase in user.purchases) {
-        total += _productPricesAud[purchase.productId] ?? 0;
+        total += _productPricesUsd[purchase.productId] ?? 0;
       }
     }
     return total;
@@ -107,7 +99,7 @@ class _UserPurchasesAdminScreenState
     for (final user in _users) {
       if (!_excludedUserIds.contains(user.userId)) continue;
       for (final purchase in user.purchases) {
-        total += _productPricesAud[purchase.productId] ?? 0;
+        total += _productPricesUsd[purchase.productId] ?? 0;
       }
     }
     return total;
@@ -163,7 +155,7 @@ class _UserPurchasesAdminScreenState
       for (final purchase in user.purchases) {
         if (purchase.purchasedAt != null &&
             purchase.purchasedAt!.isAfter(_last24hCutoff)) {
-          total += _productPricesAud[purchase.productId] ?? 0;
+          total += _productPricesUsd[purchase.productId] ?? 0;
         }
       }
     }
@@ -546,7 +538,7 @@ class _UserPurchasesAdminScreenState
                       style: TextStyle(color: context.textTertiary),
                     ),
                     TextSpan(
-                      text: 'A\$${_netRevenue.toStringAsFixed(2)}',
+                      text: '\$${_netRevenue.toStringAsFixed(2)}',
                       style: const TextStyle(color: Colors.green),
                     ),
                     TextSpan(
@@ -617,7 +609,7 @@ class _UserPurchasesAdminScreenState
             ),
             _StatCard(
               label: l10n.adminPurchasesStatArpu,
-              value: 'A\$${_arpu.toStringAsFixed(2)}',
+              value: '\$${_arpu.toStringAsFixed(2)}',
               icon: Icons.bar_chart,
               color: Colors.teal,
               tooltip: l10n.adminPurchasesStatArpuTooltip,
@@ -630,20 +622,20 @@ class _UserPurchasesAdminScreenState
           child: _buildStatRow([
             _StatCard(
               label: l10n.adminPurchasesStatGross,
-              value: 'A\$${_grossRevenue.toStringAsFixed(2)}',
+              value: '\$${_grossRevenue.toStringAsFixed(2)}',
               icon: Icons.account_balance_wallet,
               color: Colors.orange,
             ),
             if (_hasExclusions)
               _StatCard(
                 label: l10n.adminPurchasesStatExcluded,
-                value: '-A\$${_excludedRevenue.toStringAsFixed(2)}',
+                value: '-\$${_excludedRevenue.toStringAsFixed(2)}',
                 icon: Icons.money_off,
                 color: Colors.red,
               ),
             _StatCard(
               label: l10n.adminPurchasesStatNet,
-              value: 'A\$${_netRevenue.toStringAsFixed(2)}',
+              value: '\$${_netRevenue.toStringAsFixed(2)}',
               icon: Icons.attach_money,
               color: Colors.green,
             ),
@@ -667,7 +659,7 @@ class _UserPurchasesAdminScreenState
             ),
             _StatCard(
               label: l10n.adminPurchasesStatRevenue24h,
-              value: 'A\$${_revenueLast24h.toStringAsFixed(2)}',
+              value: '\$${_revenueLast24h.toStringAsFixed(2)}',
               icon: Icons.trending_up,
               color: Colors.green,
             ),
@@ -1669,11 +1661,11 @@ class _PurchaseTile extends StatelessWidget {
                 ),
                 const SizedBox(width: AppTheme.spacing12),
               ],
-              if (_productPricesAud.containsKey(purchase.productId)) ...[
+              if (_productPricesUsd.containsKey(purchase.productId)) ...[
                 Icon(Icons.attach_money, size: 12, color: context.textTertiary),
                 const SizedBox(width: AppTheme.spacing4),
                 Text(
-                  'A\$${_productPricesAud[purchase.productId]!.toStringAsFixed(2)}',
+                  '\$${_productPricesUsd[purchase.productId]!.toStringAsFixed(2)}',
                   style: context.captionStyle?.copyWith(
                     color: context.textSecondary,
                   ),

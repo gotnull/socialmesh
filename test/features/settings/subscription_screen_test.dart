@@ -9,10 +9,17 @@ import 'package:socialmesh/config/revenuecat_config.dart';
 import 'package:socialmesh/features/settings/subscription_screen.dart';
 import 'package:socialmesh/features/settings/widgets/restore_purchases_button.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:socialmesh/l10n/app_localizations_en.dart';
+import 'package:socialmesh/models/license_org.dart' show LicenseOrg;
+import 'package:socialmesh/models/license_org_membership.dart'
+    show LicenseOrgMembership;
 import 'package:socialmesh/models/subscription_models.dart';
+import 'package:socialmesh/providers/auth_providers.dart';
 import 'package:socialmesh/providers/connectivity_providers.dart';
+import 'package:socialmesh/providers/license_org_membership_providers.dart';
 import 'package:socialmesh/providers/subscription_providers.dart';
+import 'package:socialmesh/services/org/license_org_membership_repository.dart';
 
 final _l10n = AppLocalizationsEn();
 
@@ -67,6 +74,61 @@ class _TestErrorNotifier extends SubscriptionErrorNotifier {
 
   @override
   String? build() => _error;
+}
+
+class _StubMembershipRepo implements LicenseOrgMembershipRepository {
+  final Set<String> _orgIds;
+
+  _StubMembershipRepo(this._orgIds);
+
+  @override
+  Stream<Set<String>> watchCurrentUserOrgIds(String uid) =>
+      Stream.value(_orgIds);
+
+  @override
+  Stream<LicenseOrg?> watchLicenseOrg(String orgId) => Stream.value(null);
+
+  @override
+  Stream<LicenseOrgMembership?> watchMembership(String orgId, String uid) =>
+      Stream.value(null);
+}
+
+class _FakeUser implements User {
+  @override
+  String get uid => 'u1';
+  @override
+  bool get isAnonymous => false;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+Widget _buildTileTestWidget({required Set<String> orgIds}) {
+  return ProviderScope(
+    overrides: [
+      purchaseStateProvider.overrideWith(
+        () => _TestPurchaseStateNotifier(const PurchaseState()),
+      ),
+      subscriptionLoadingProvider.overrideWith(
+        () => _TestLoadingNotifier(false),
+      ),
+      subscriptionErrorProvider.overrideWith(() => _TestErrorNotifier(null)),
+      storeProductsProvider.overrideWith(
+        (ref) => Future.value(const <String, StoreProductInfo>{}),
+      ),
+      isOnlineProvider.overrideWithValue(true),
+      currentUserProvider.overrideWith((ref) => _FakeUser()),
+      licenseOrgMembershipRepositoryProvider.overrideWith(
+        (ref) => _StubMembershipRepo(orgIds),
+      ),
+    ],
+    child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      theme: ThemeData.dark(),
+      home: const SubscriptionScreen(),
+    ),
+  );
 }
 
 void main() {
@@ -402,6 +464,80 @@ TRANSLATION_ENABLED=false
       await tester.pump();
 
       expect(find.text(_l10n.orgCheckoutEntryAction), findsNothing);
+    });
+  });
+
+  // License Org Overview entry-point tile (this slice). Tile visibility
+  // is the AND of (a) AppFeatureFlags.isGroupLicensingEnabled and (b)
+  // currentUserLicenseOrgIdsProvider yielding a non-empty set.
+  group('SubscriptionScreen - License Org Overview entry tile', () {
+    String? prevFlag;
+
+    setUp(() {
+      prevFlag = dotenv.env['GROUP_LICENSING_ENABLED'];
+    });
+
+    tearDown(() {
+      if (prevFlag == null) {
+        dotenv.env.remove('GROUP_LICENSING_ENABLED');
+      } else {
+        dotenv.env['GROUP_LICENSING_ENABLED'] = prevFlag!;
+      }
+    });
+
+    testWidgets('tile renders when flag is on AND user belongs to an org', (
+      tester,
+    ) async {
+      dotenv.env['GROUP_LICENSING_ENABLED'] = 'true';
+
+      await tester.pumpWidget(_buildTileTestWidget(orgIds: const {'acme'}));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      await tester.scrollUntilVisible(
+        find.text(_l10n.licenseOrgOverviewEntryAction),
+        300,
+      );
+      expect(find.text(_l10n.licenseOrgOverviewEntryAction), findsOneWidget);
+    });
+
+    testWidgets('tile is suppressed when the user has zero orgs', (
+      tester,
+    ) async {
+      dotenv.env['GROUP_LICENSING_ENABLED'] = 'true';
+
+      await tester.pumpWidget(_buildTileTestWidget(orgIds: const <String>{}));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // The buy tile is in a lazy SliverChildListDelegate so it does
+      // not materialise until scrolled into view. Scroll until the
+      // sibling buy tile is on-screen; if the manage tile were going
+      // to render it would be in the same scroll window. The buy
+      // tile's own visibility is covered by the slice-10 group above.
+      await tester.scrollUntilVisible(
+        find.text(_l10n.orgCheckoutEntryAction),
+        300,
+      );
+      expect(find.text(_l10n.licenseOrgOverviewEntryAction), findsNothing);
+    });
+
+    testWidgets('tile is suppressed when the flag is off', (tester) async {
+      dotenv.env['GROUP_LICENSING_ENABLED'] = 'false';
+
+      // Even with a non-empty orgIds the flag gate hides the
+      // membership provider (yields empty), so the tile cannot show.
+      await tester.pumpWidget(_buildTileTestWidget(orgIds: const {'acme'}));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      await tester.drag(
+        find.byType(SubscriptionScreen),
+        const Offset(0, -3000),
+      );
+      await tester.pump();
+
+      expect(find.text(_l10n.licenseOrgOverviewEntryAction), findsNothing);
     });
   });
 }

@@ -21,6 +21,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:socialmesh/models/license_org.dart';
 import 'package:socialmesh/models/license_org_membership.dart';
 import 'package:socialmesh/models/subscription_models.dart';
 import 'package:socialmesh/providers/auth_providers.dart';
@@ -54,12 +55,29 @@ class _StubRepo implements LicenseOrgMembershipRepository {
   @override
   Stream<Set<String>> watchCurrentUserOrgIds(String uid) =>
       _byUid[uid] ?? Stream.value(const <String>{});
+
+  // Unused by this test file; the org / membership streams are
+  // exercised by license_org_overview_providers_test.dart. Stubbed
+  // here only to satisfy the interface contract.
+  @override
+  Stream<LicenseOrg?> watchLicenseOrg(String orgId) => Stream.value(null);
+
+  @override
+  Stream<LicenseOrgMembership?> watchMembership(String orgId, String uid) =>
+      Stream.value(null);
 }
 
 class _ThrowingRepo implements LicenseOrgMembershipRepository {
   @override
   Stream<Set<String>> watchCurrentUserOrgIds(String uid) =>
       Stream<Set<String>>.error(StateError('Firestore unavailable'));
+
+  @override
+  Stream<LicenseOrg?> watchLicenseOrg(String orgId) => Stream.value(null);
+
+  @override
+  Stream<LicenseOrgMembership?> watchMembership(String orgId, String uid) =>
+      Stream.value(null);
 }
 
 class _FakePurchaseStateNotifier extends Notifier<PurchaseState>

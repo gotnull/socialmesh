@@ -48,12 +48,15 @@ Future<void> showPaymentMethodChooserSheet({
   required WidgetRef ref,
   required String productId,
   required String productName,
-  required double priceAud,
+  required double priceUsd,
+  required String appStorePriceDisplay,
+  required String stripePriceDisplay,
   VoidCallback? onSuccess,
 }) async {
   AppLogging.purchase(
     '[PaymentChooser] open productId=$productId productName="$productName" '
-    'price=A\$${priceAud.toStringAsFixed(2)} '
+    'appStorePrice="$appStorePriceDisplay" stripePrice="$stripePriceDisplay" '
+    'canonical=\$${priceUsd.toStringAsFixed(2)} USD '
     'stripeEnabled=${AppFeatureFlags.isStripePurchasesEnabled}',
   );
 
@@ -79,7 +82,8 @@ Future<void> showPaymentMethodChooserSheet({
     child: _PaymentMethodChooserContent(
       productId: productId,
       productName: productName,
-      priceAud: priceAud,
+      appStorePriceDisplay: appStorePriceDisplay,
+      stripePriceDisplay: stripePriceDisplay,
     ),
   );
   if (!context.mounted) return;
@@ -202,12 +206,14 @@ Future<_PaymentMethodResult> _runStripePurchase(
 class _PaymentMethodChooserContent extends ConsumerStatefulWidget {
   final String productId;
   final String productName;
-  final double priceAud;
+  final String appStorePriceDisplay;
+  final String stripePriceDisplay;
 
   const _PaymentMethodChooserContent({
     required this.productId,
     required this.productName,
-    required this.priceAud,
+    required this.appStorePriceDisplay,
+    required this.stripePriceDisplay,
   });
 
   @override
@@ -263,7 +269,6 @@ class _PaymentMethodChooserContentState
 
   @override
   Widget build(BuildContext context) {
-    final price = 'A\$${widget.priceAud.toStringAsFixed(2)}';
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -288,30 +293,17 @@ class _PaymentMethodChooserContentState
             ),
           ),
         ),
+        // Product name only. Per-method prices land on each row below so
+        // the user sees what App Store vs Stripe will actually charge.
         Padding(
           padding: const EdgeInsets.only(bottom: AppTheme.spacing20),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  widget.productName,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: context.textTertiary,
-                    fontFamily: AppTheme.fontFamily,
-                  ),
-                ),
-              ),
-              Text(
-                price,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                  color: context.textSecondary,
-                  fontFamily: AppTheme.fontFamily,
-                ),
-              ),
-            ],
+          child: Text(
+            widget.productName,
+            style: TextStyle(
+              fontSize: 12,
+              color: context.textTertiary,
+              fontFamily: AppTheme.fontFamily,
+            ),
           ),
         ),
         // Grouped row stack: bordered card, divider between rows. This
@@ -334,6 +326,7 @@ class _PaymentMethodChooserContentState
                 icon: _storeIcon(),
                 label: _storeLabel(),
                 subtitle: context.l10n.paymentChooserStoreSubtitle,
+                trailingPrice: widget.appStorePriceDisplay,
                 enabled: _busy == null,
                 busy: _busy == _PaymentMethod.store,
                 onTap: () => _onPicked(_PaymentMethod.store),
@@ -349,6 +342,7 @@ class _PaymentMethodChooserContentState
                 icon: Icons.credit_card_outlined,
                 label: context.l10n.paymentChooserStripeLabel,
                 subtitle: context.l10n.paymentChooserStripeSubtitle,
+                trailingPrice: widget.stripePriceDisplay,
                 enabled: _busy == null,
                 busy: _busy == _PaymentMethod.stripe,
                 onTap: () => _onPicked(_PaymentMethod.stripe),
@@ -365,6 +359,7 @@ class _PaymentMethodRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final String subtitle;
+  final String trailingPrice;
   final bool enabled;
   final bool busy;
   final VoidCallback onTap;
@@ -373,6 +368,7 @@ class _PaymentMethodRow extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.subtitle,
+    required this.trailingPrice,
     required this.enabled,
     required this.busy,
     required this.onTap,
@@ -426,6 +422,17 @@ class _PaymentMethodRow extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Text(
+                trailingPrice,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                  color: foreground,
+                  fontFamily: AppTheme.fontFamily,
                 ),
               ),
               const SizedBox(width: AppTheme.spacing12),

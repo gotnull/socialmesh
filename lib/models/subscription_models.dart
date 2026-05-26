@@ -3,6 +3,7 @@
 // One-time purchase definitions and feature flags for monetization
 
 import '../config/revenuecat_config.dart';
+import '../generated/product_catalog.g.dart';
 
 /// Features that can be unlocked via one-time purchases
 enum PremiumFeature {
@@ -40,66 +41,66 @@ class OneTimePurchase {
 
 class OneTimePurchases {
   static OneTimePurchase get themePack => OneTimePurchase(
-    id: 'theme_pack',
-    name: 'Theme Pack',
+    id: ProductCatalog.themePack.id,
+    name: ProductCatalog.themePack.name,
     description:
         'Unlock 12 stunning accent colors to personalize every screen, button, and highlight throughout the app — make it truly yours', // lint-allow: hardcoded-string
-    price: 4.99,
+    price: ProductCatalog.themePack.priceUsd,
     productId: RevenueCatConfig.themePackProductId,
     unlocksFeature: PremiumFeature.premiumThemes,
   );
 
   static OneTimePurchase get ringtonePack => OneTimePurchase(
-    id: 'ringtone_pack',
-    name: 'Ringtone Pack',
+    id: ProductCatalog.ringtonePack.id,
+    name: ProductCatalog.ringtonePack.name,
     description:
         'Access a massive searchable library of thousands of RTTTL ringtones — from classic melodies to TV themes, movie scores, and video game soundtracks', // lint-allow: hardcoded-string
-    price: 1.99,
+    price: ProductCatalog.ringtonePack.priceUsd,
     productId: RevenueCatConfig.ringtonePackProductId,
     unlocksFeature: PremiumFeature.customRingtones,
   );
 
   static OneTimePurchase get widgetPack => OneTimePurchase(
-    id: 'widget_pack',
-    name: 'Widgets',
+    id: ProductCatalog.widgetPack.id,
+    name: ProductCatalog.widgetPack.name,
     description:
         'Build your own custom dashboard widgets with live data bindings, real-time charts, gauges, graphs, and status indicators — monitor battery, telemetry, environment sensors, and more at a glance', // lint-allow: hardcoded-string
-    price: 4.99,
+    price: ProductCatalog.widgetPack.priceUsd,
     productId: RevenueCatConfig.widgetPackProductId,
     unlocksFeature: PremiumFeature.homeWidgets,
   );
 
   static OneTimePurchase get automationsPack => OneTimePurchase(
-    id: 'automations_pack',
-    name: 'Automations',
+    id: ProductCatalog.automationsPack.id,
+    name: ProductCatalog.automationsPack.name,
     description:
         'Create powerful automation rules: auto-reply to messages, schedule broadcasts at specific times, trigger actions based on location or device events, and set up custom notification flows', // lint-allow: hardcoded-string
-    price: 4.99,
+    price: ProductCatalog.automationsPack.priceUsd,
     productId: RevenueCatConfig.automationsPackProductId,
     unlocksFeature: PremiumFeature.automations,
   );
 
   static OneTimePurchase get iftttPack => OneTimePurchase(
-    id: 'ifttt_pack',
-    name: 'IFTTT Integration',
+    id: ProductCatalog.iftttPack.id,
+    name: ProductCatalog.iftttPack.name,
     description:
         'Connect your mesh network to 700+ apps and services — trigger smart home devices, log events to spreadsheets, send Slack notifications, post to social media, and integrate with virtually anything', // lint-allow: hardcoded-string
-    price: 2.99,
+    price: ProductCatalog.iftttPack.priceUsd,
     productId: RevenueCatConfig.iftttPackProductId,
     unlocksFeature: PremiumFeature.iftttIntegration,
   );
 
   static OneTimePurchase get translationPack => OneTimePurchase(
-    id: 'translation_pack',
-    name: 'Translation Pack',
+    id: ProductCatalog.translationPack.id,
+    name: ProductCatalog.translationPack.name,
     description:
         'Unlock on-demand message translation with smart caching and privacy controls — includes a managed allowance, or bring your own API key for extended use', // lint-allow: hardcoded-string
-    price: 2.99,
+    price: ProductCatalog.translationPack.priceUsd,
     productId: RevenueCatConfig.translationPackProductId,
     unlocksFeature: PremiumFeature.translation,
   );
 
-  static const double bundlePrice = 14.99;
+  static double get bundlePrice => ProductCatalog.completePack.priceUsd;
   static double get bundleSavings {
     final total = completePackPurchases.fold<double>(
       0,
