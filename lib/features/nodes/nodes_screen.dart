@@ -1260,11 +1260,9 @@ class _NodeCard extends ConsumerWidget {
       case PresenceConfidence.active:
         return AccentColors.green;
       case PresenceConfidence.fading:
-        return AccentColors.orange;
       case PresenceConfidence.stale:
-        return AccentColors.slate;
       case PresenceConfidence.unknown:
-        return AccentColors.purple;
+        return context.textTertiary;
     }
   }
 
@@ -1299,43 +1297,28 @@ class _NodeCard extends ConsumerWidget {
             borderRadius: BorderRadius.circular(AppTheme.radius12),
             child: Stack(
               children: [
-                // Layer 1: Background blend matching chip/status colour
+                // Layer 1: Flat surface matching the canonical settings tile;
+                // category is signalled by the border, not a colour wash.
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: blendColor.withValues(alpha: 0.08),
+                      color: context.card,
                       borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                 ),
-                // Layer 2: Border (owner + favorite nodes) — uniform accent
-                // on all four edges, matching StatusFilterChip.
-                if (isMyNode)
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(
-                            AppTheme.radius12,
-                          ),
-                          border: Border.all(color: context.accentColor),
-                        ),
-                      ),
-                    ),
-                  )
-                else if (node.isFavorite)
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(
-                            AppTheme.radius12,
-                          ),
-                          border: Border.all(color: AccentColors.yellow),
-                        ),
+                // Layer 2: Category-coloured border. blendColor encodes
+                // owner / favorite / active / fading / quiet / unknown.
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
+                        border: Border.all(color: blendColor),
                       ),
                     ),
                   ),
+                ),
                 // Layer 3: Content
                 Padding(
                   padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -1755,11 +1738,9 @@ class _NodeCard extends ConsumerWidget {
   Color _presenceColor(BuildContext context, PresenceConfidence confidence) {
     switch (confidence) {
       case PresenceConfidence.active:
-        return context.accentColor;
+        return AccentColors.green;
       case PresenceConfidence.fading:
-        return AppTheme.warningYellow;
       case PresenceConfidence.stale:
-        return context.textSecondary;
       case PresenceConfidence.unknown:
         return context.textTertiary;
     }

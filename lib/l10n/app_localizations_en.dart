@@ -43456,6 +43456,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get licenseOrgInviteMintSubmit => 'Generate invite link';
 
   @override
+  String get licenseOrgInviteMintCopyAction => 'Copy link';
+
+  @override
   String get licenseOrgInviteMintCopySuccess => 'Invite link copied';
 
   @override

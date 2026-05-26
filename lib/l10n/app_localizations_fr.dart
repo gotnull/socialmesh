@@ -44256,6 +44256,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get licenseOrgInviteMintSubmit => 'Générer le lien d\'invitation';
 
   @override
+  String get licenseOrgInviteMintCopyAction => 'Copier le lien';
+
+  @override
   String get licenseOrgInviteMintCopySuccess => 'Lien d\'invitation copié';
 
   @override

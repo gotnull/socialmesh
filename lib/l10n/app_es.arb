@@ -4322,6 +4322,10 @@
     "licenseOrgInviteAcceptTitle": "Unirse a la licencia de grupo",
     "licenseOrgInviteDeclineButton": "Rechazar",
     "licenseOrgInviteMintAction": "Invitar miembro",
+    "licenseOrgInviteMintCopyAction": "Copiar enlace",
+    "@licenseOrgInviteMintCopyAction": {
+        "description": "Secondary action label on the mint-result card that copies the rendered invite URL to the clipboard."
+    },
     "licenseOrgInviteMintCopySuccess": "Enlace de invitación copiado",
     "licenseOrgInviteMintGenericError": "No se pudo crear la invitación. Inténtalo de nuevo.",
     "licenseOrgInviteMintProductLabel": "Producto del asiento",

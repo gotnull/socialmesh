@@ -44143,6 +44143,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get licenseOrgInviteMintSubmit => 'Generar enlace de invitación';
 
   @override
+  String get licenseOrgInviteMintCopyAction => 'Copiar enlace';
+
+  @override
   String get licenseOrgInviteMintCopySuccess => 'Enlace de invitación copiado';
 
   @override

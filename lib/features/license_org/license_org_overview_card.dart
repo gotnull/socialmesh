@@ -25,7 +25,9 @@ import '../../core/safety/safety.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/info_table.dart';
+import '../../core/widgets/primary_gradient_button.dart';
 import '../../core/widgets/section_header.dart';
+import '../../core/widgets/status_banner.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/license_org.dart';
 import '../../models/license_org_membership.dart';
@@ -474,12 +476,13 @@ class _InviteMintSheetState extends ConsumerState<_InviteMintSheet>
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final textTheme = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppTheme.spacing24,
+        AppTheme.spacing20,
         AppTheme.spacing8,
-        AppTheme.spacing24,
-        AppTheme.spacing24,
+        AppTheme.spacing20,
+        AppTheme.spacing20,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -487,17 +490,15 @@ class _InviteMintSheetState extends ConsumerState<_InviteMintSheet>
         children: [
           Text(
             l10n.licenseOrgInviteMintSheetTitle,
-            style: TextStyle(
-              fontSize: 20,
+            style: textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: AppTheme.spacing12),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             l10n.licenseOrgInviteMintSheetBody,
-            style: TextStyle(
-              fontSize: 14,
+            style: textTheme.bodyMedium?.copyWith(
               color: context.textSecondary,
               height: 1.4,
             ),
@@ -505,46 +506,21 @@ class _InviteMintSheetState extends ConsumerState<_InviteMintSheet>
           const SizedBox(height: AppTheme.spacing20),
           if (_acceptUrl == null) ...[
             if (_errorMessage != null) ...[
-              Container(
-                padding: const EdgeInsets.all(AppTheme.spacing12),
-                decoration: BoxDecoration(
-                  color: AppTheme.errorRed.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(AppTheme.radius12),
-                  border: Border.all(
-                    color: AppTheme.errorRed.withValues(alpha: 0.5),
-                  ),
-                ),
-                child: Text(
-                  _errorMessage!,
-                  style: TextStyle(color: AppTheme.errorRed, fontSize: 13),
-                ),
+              StatusBanner.error(
+                title: _errorMessage!,
+                margin: EdgeInsets.zero,
               ),
               const SizedBox(height: AppTheme.spacing12),
             ],
-            FilledButton.icon(
+            PrimaryGradientButton(
+              label: l10n.licenseOrgInviteMintSubmit,
+              icon: Icons.link,
+              isLoading: _busy,
               onPressed: _busy ? null : _mint,
-              icon: _busy
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.link),
-              label: Text(l10n.licenseOrgInviteMintSubmit),
-              style: FilledButton.styleFrom(
-                backgroundColor: context.accentColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radius12),
-                ),
-              ),
             ),
           ] else ...[
             Container(
+              width: double.infinity,
               padding: const EdgeInsets.all(AppTheme.spacing12),
               decoration: BoxDecoration(
                 color: context.card,
@@ -553,50 +529,29 @@ class _InviteMintSheetState extends ConsumerState<_InviteMintSheet>
               ),
               child: SelectableText(
                 _acceptUrl!,
-                style: TextStyle(
-                  fontSize: 13,
+                style: textTheme.bodySmall?.copyWith(
                   color: context.textPrimary,
                   fontFamily: AppTheme.fontFamily,
                 ),
               ),
             ),
-            const SizedBox(height: AppTheme.spacing12),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _copy,
-                    icon: const Icon(Icons.copy),
-                    label: Text(l10n.licenseOrgInviteMintCopySuccess),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: context.accentColor,
-                      side: BorderSide(
-                        color: context.accentColor.withValues(alpha: 0.5),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      ),
-                    ),
-                  ),
+            const SizedBox(height: AppTheme.spacing16),
+            PrimaryGradientButton(
+              label: l10n.licenseOrgInviteMintShareLabel,
+              icon: Icons.ios_share,
+              onPressed: _share,
+            ),
+            const SizedBox(height: AppTheme.spacing8),
+            TextButton.icon(
+              onPressed: _copy,
+              icon: const Icon(Icons.copy, size: AppTheme.spacing16),
+              label: Text(l10n.licenseOrgInviteMintCopyAction),
+              style: TextButton.styleFrom(
+                foregroundColor: context.textSecondary,
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppTheme.spacing12,
                 ),
-                const SizedBox(width: AppTheme.spacing12),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: _share,
-                    icon: const Icon(Icons.share_outlined),
-                    label: Text(l10n.licenseOrgInviteMintShareLabel),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: context.accentColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ],
         ],

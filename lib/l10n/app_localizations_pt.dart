@@ -43920,6 +43920,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get licenseOrgInviteMintSubmit => 'Gerar link de convite';
 
   @override
+  String get licenseOrgInviteMintCopyAction => 'Copiar link';
+
+  @override
   String get licenseOrgInviteMintCopySuccess => 'Link de convite copiado';
 
   @override

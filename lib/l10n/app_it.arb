@@ -37493,6 +37493,10 @@
     "licenseOrgInviteAcceptTitle": "Unisciti alla licenza di gruppo",
     "licenseOrgInviteDeclineButton": "Rifiuta",
     "licenseOrgInviteMintAction": "Invita un membro",
+    "licenseOrgInviteMintCopyAction": "Copia link",
+    "@licenseOrgInviteMintCopyAction": {
+        "description": "Secondary action label on the mint-result card that copies the rendered invite URL to the clipboard."
+    },
     "licenseOrgInviteMintCopySuccess": "Link di invito copiato",
     "licenseOrgInviteMintGenericError": "Impossibile creare l'invito. Riprova.",
     "licenseOrgInviteMintProductLabel": "Prodotto del posto",

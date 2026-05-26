@@ -43953,6 +43953,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get licenseOrgInviteMintSubmit => 'Створити посилання-запрошення';
 
   @override
+  String get licenseOrgInviteMintCopyAction => 'Скопіювати посилання';
+
+  @override
   String get licenseOrgInviteMintCopySuccess =>
       'Посилання-запрошення скопійовано';
 

@@ -76001,6 +76001,12 @@ abstract class AppLocalizations {
   /// **'Generate invite link'**
   String get licenseOrgInviteMintSubmit;
 
+  /// Secondary action label on the mint-result card that copies the rendered invite URL to the clipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get licenseOrgInviteMintCopyAction;
+
   /// Snackbar confirmation when the admin taps Copy on the rendered invite URL.
   ///
   /// In en, this message translates to:

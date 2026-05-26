@@ -43943,6 +43943,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get licenseOrgInviteMintSubmit => 'Создать ссылку-приглашение';
 
   @override
+  String get licenseOrgInviteMintCopyAction => 'Скопировать ссылку';
+
+  @override
   String get licenseOrgInviteMintCopySuccess =>
       'Ссылка-приглашение скопирована';
 
