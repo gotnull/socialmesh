@@ -76025,6 +76025,222 @@ abstract class AppLocalizations {
   /// **'Could not mint the invite. Please try again.'**
   String get licenseOrgInviteMintGenericError;
 
+  /// Section title for the recent-audit-events preview rendered on the License Org Overview screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent activity'**
+  String get licenseOrgOverviewRecentActivityTitle;
+
+  /// Human-readable label for the seat_code_minted audit action on the License Org Overview screen's Recent activity row.
+  ///
+  /// In en, this message translates to:
+  /// **'Seat code minted'**
+  String get licenseOrgAuditActionSeatCodeMinted;
+
+  /// Human-readable label for the seat_code_redeemed audit action.
+  ///
+  /// In en, this message translates to:
+  /// **'Seat code redeemed'**
+  String get licenseOrgAuditActionSeatCodeRedeemed;
+
+  /// Human-readable label for the seat_code_replayed audit action (idempotent re-redeem).
+  ///
+  /// In en, this message translates to:
+  /// **'Seat code already redeemed'**
+  String get licenseOrgAuditActionSeatCodeReplayed;
+
+  /// Human-readable label for the seat_revoked_manual audit action.
+  ///
+  /// In en, this message translates to:
+  /// **'Seat revoked'**
+  String get licenseOrgAuditActionSeatRevokedManual;
+
+  /// Human-readable label for the seat_replacement_minted audit action.
+  ///
+  /// In en, this message translates to:
+  /// **'Replacement code minted'**
+  String get licenseOrgAuditActionSeatReplacementMinted;
+
+  /// Human-readable label for the member_invited audit action.
+  ///
+  /// In en, this message translates to:
+  /// **'Member invited'**
+  String get licenseOrgAuditActionMemberInvited;
+
+  /// Human-readable label for the member_joined audit action.
+  ///
+  /// In en, this message translates to:
+  /// **'Member joined'**
+  String get licenseOrgAuditActionMemberJoined;
+
+  /// Human-readable label for the org_purchased audit action.
+  ///
+  /// In en, this message translates to:
+  /// **'License org purchased'**
+  String get licenseOrgAuditActionOrgPurchased;
+
+  /// Human-readable label for the org_owner_collision audit action.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner collision rejected'**
+  String get licenseOrgAuditActionOrgOwnerCollision;
+
+  /// Human-readable label for the org_seat_revoked_refund audit action.
+  ///
+  /// In en, this message translates to:
+  /// **'Seat revoked (refund)'**
+  String get licenseOrgAuditActionOrgSeatRevokedRefund;
+
+  /// Human-readable label for the org_suspended_drained audit action.
+  ///
+  /// In en, this message translates to:
+  /// **'Org suspended'**
+  String get licenseOrgAuditActionOrgSuspendedDrained;
+
+  /// Fallback label used when an audit row carries an action enum the mobile client has not been updated to render yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Other event'**
+  String get licenseOrgAuditActionUnknown;
+
+  /// Outcome pill label for successful audit rows.
+  ///
+  /// In en, this message translates to:
+  /// **'Success'**
+  String get licenseOrgAuditOutcomeSuccess;
+
+  /// Outcome pill label for rejected audit rows (with reasonCode).
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get licenseOrgAuditOutcomeRejected;
+
+  /// Relative time label shown on an audit row that happened less than a minute ago.
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get licenseOrgAuditRelativeJustNow;
+
+  /// Relative time label for audit rows N minutes old. {count} placeholder is the integer minute count.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m ago'**
+  String licenseOrgAuditRelativeMinutes(int count);
+
+  /// Relative time label for audit rows N hours old.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h ago'**
+  String licenseOrgAuditRelativeHours(int count);
+
+  /// Relative time label for audit rows N days old.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d ago'**
+  String licenseOrgAuditRelativeDays(int count);
+
+  /// Relative time label for audit rows N months old.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}mo ago'**
+  String licenseOrgAuditRelativeMonths(int count);
+
+  /// Relative time label for audit rows N years old.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}y ago'**
+  String licenseOrgAuditRelativeYears(int count);
+
+  /// App-bar title on the mobile License Org Audit Log drill-in screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Audit log'**
+  String get licenseOrgAuditLogScreenTitle;
+
+  /// Subtitle on the Audit Log screen showing the number of loaded events, with proper singular/plural forms (e.g. '1 event loaded' / '5 events loaded'). The {count} placeholder is the integer count.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 event loaded} other{{count} events loaded}}'**
+  String licenseOrgAuditLogSubtitle(int count);
+
+  /// Filter chip label for the 'all outcomes' option on the Audit Log screen.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get licenseOrgAuditFilterAll;
+
+  /// Label for the load-more pagination button at the bottom of the Audit Log list.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get licenseOrgAuditLogLoadMore;
+
+  /// Footer text shown when the user has scrolled to the end of the audit log (no more pages to load).
+  ///
+  /// In en, this message translates to:
+  /// **'End of feed.'**
+  String get licenseOrgAuditLogEndOfFeed;
+
+  /// Empty state title shown on the Audit Log screen when the org has zero audit events.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity yet'**
+  String get licenseOrgAuditLogEmptyTitle;
+
+  /// Empty state description on the Audit Log screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Audit events will appear here as members are invited, seats are revoked, and other admin actions land.'**
+  String get licenseOrgAuditLogEmptyDescription;
+
+  /// Empty state title when filters exclude every loaded event.
+  ///
+  /// In en, this message translates to:
+  /// **'No events match'**
+  String get licenseOrgAuditLogFilteredEmptyTitle;
+
+  /// Empty state description when filters exclude every loaded event.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a different outcome filter or load more events.'**
+  String get licenseOrgAuditLogFilteredEmptyDescription;
+
+  /// Error state title on the Audit Log screen when the Firestore read fails or the user does not have permission.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load audit log'**
+  String get licenseOrgAuditLogErrorTitle;
+
+  /// Error state description on the Audit Log screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again in a moment. Members who are not active in this org cannot see the audit log.'**
+  String get licenseOrgAuditLogErrorDescription;
+
+  /// Tap target text below the Recent activity preview on the License Org Overview card that pushes the full Audit Log drill-in screen.
+  ///
+  /// In en, this message translates to:
+  /// **'View all activity'**
+  String get licenseOrgOverviewRecentActivityViewAll;
+
+  /// Outcome filter chip label for 'all events' on the Audit Log screen. The {count} placeholder is the total loaded events.
+  ///
+  /// In en, this message translates to:
+  /// **'All ({count})'**
+  String licenseOrgAuditFilterAllWithCount(int count);
+
+  /// Outcome filter chip label for the 'success' outcome on the Audit Log screen. The {count} placeholder is the number of loaded success events.
+  ///
+  /// In en, this message translates to:
+  /// **'Success ({count})'**
+  String licenseOrgAuditFilterSuccessWithCount(int count);
+
+  /// Outcome filter chip label for the 'rejected' outcome on the Audit Log screen. The {count} placeholder is the number of loaded rejected events.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected ({count})'**
+  String licenseOrgAuditFilterRejectedWithCount(int count);
+
   /// Subtitle on the 'Manage group licenses' tile when the current user belongs to two or more license orgs. The {count} placeholder is the org count.
   ///
   /// In en, this message translates to:

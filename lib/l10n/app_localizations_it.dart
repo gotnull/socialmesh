@@ -43965,6 +43965,185 @@ class AppLocalizationsIt extends AppLocalizations {
       'Impossibile creare l\'invito. Riprova.';
 
   @override
+  String get licenseOrgOverviewRecentActivityTitle => 'Attività recente';
+
+  @override
+  String get licenseOrgAuditActionSeatCodeMinted => 'Codice licenza creato';
+
+  @override
+  String get licenseOrgAuditActionSeatCodeRedeemed =>
+      'Codice licenza riscattato';
+
+  @override
+  String get licenseOrgAuditActionSeatCodeReplayed =>
+      'Codice licenza già riscattato';
+
+  @override
+  String get licenseOrgAuditActionSeatRevokedManual => 'Posto revocato';
+
+  @override
+  String get licenseOrgAuditActionSeatReplacementMinted =>
+      'Codice sostitutivo creato';
+
+  @override
+  String get licenseOrgAuditActionMemberInvited => 'Membro invitato';
+
+  @override
+  String get licenseOrgAuditActionMemberJoined => 'Membro aggiunto';
+
+  @override
+  String get licenseOrgAuditActionOrgPurchased =>
+      'Organizzazione licenza acquistata';
+
+  @override
+  String get licenseOrgAuditActionOrgOwnerCollision =>
+      'Collisione proprietario rifiutata';
+
+  @override
+  String get licenseOrgAuditActionOrgSeatRevokedRefund =>
+      'Posto revocato (rimborso)';
+
+  @override
+  String get licenseOrgAuditActionOrgSuspendedDrained =>
+      'Organizzazione sospesa';
+
+  @override
+  String get licenseOrgAuditActionUnknown => 'Altro evento';
+
+  @override
+  String get licenseOrgAuditOutcomeSuccess => 'Successo';
+
+  @override
+  String get licenseOrgAuditOutcomeRejected => 'Rifiutato';
+
+  @override
+  String get licenseOrgAuditRelativeJustNow => 'ora';
+
+  @override
+  String licenseOrgAuditRelativeMinutes(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString min fa';
+  }
+
+  @override
+  String licenseOrgAuditRelativeHours(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString h fa';
+  }
+
+  @override
+  String licenseOrgAuditRelativeDays(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString g fa';
+  }
+
+  @override
+  String licenseOrgAuditRelativeMonths(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString mesi fa';
+  }
+
+  @override
+  String licenseOrgAuditRelativeYears(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString anni fa';
+  }
+
+  @override
+  String get licenseOrgAuditLogScreenTitle => 'Registro di audit';
+
+  @override
+  String licenseOrgAuditLogSubtitle(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString eventi caricati',
+      one: '1 evento caricato',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licenseOrgAuditFilterAll => 'Tutti';
+
+  @override
+  String get licenseOrgAuditLogLoadMore => 'Carica altri';
+
+  @override
+  String get licenseOrgAuditLogEndOfFeed => 'Fine del feed.';
+
+  @override
+  String get licenseOrgAuditLogEmptyTitle => 'Nessuna attività ancora';
+
+  @override
+  String get licenseOrgAuditLogEmptyDescription =>
+      'Gli eventi di audit appariranno qui quando i membri vengono invitati, i posti vengono revocati e si svolgono altre azioni admin.';
+
+  @override
+  String get licenseOrgAuditLogFilteredEmptyTitle =>
+      'Nessun evento corrispondente';
+
+  @override
+  String get licenseOrgAuditLogFilteredEmptyDescription =>
+      'Prova un altro filtro o carica altri eventi.';
+
+  @override
+  String get licenseOrgAuditLogErrorTitle => 'Impossibile caricare il registro';
+
+  @override
+  String get licenseOrgAuditLogErrorDescription =>
+      'Riprova tra poco. I membri non attivi non possono vedere il registro.';
+
+  @override
+  String get licenseOrgOverviewRecentActivityViewAll => 'Vedi tutta l’attività';
+
+  @override
+  String licenseOrgAuditFilterAllWithCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Tutti ($countString)';
+  }
+
+  @override
+  String licenseOrgAuditFilterSuccessWithCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Successi ($countString)';
+  }
+
+  @override
+  String licenseOrgAuditFilterRejectedWithCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Rifiutati ($countString)';
+  }
+
+  @override
   String licenseOrgOverviewManageTileSubtitleMany(String count) {
     return '$count org';
   }

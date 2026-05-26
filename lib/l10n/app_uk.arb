@@ -12667,5 +12667,203 @@
     "privacyChoiceFooter": "Ви можете змінити це будь-коли в Налаштування > Конфіденційність.",
     "privacyChoiceTagMaxPrivacy": "МАКСИМАЛЬНА ПРИВАТНІСТЬ",
     "privacyChoiceTagBalanced": "ЗБАЛАНСОВАНО",
-    "privacyChoiceTagMostHelpful": "НАЙКОРИСНІШЕ"
+    "privacyChoiceTagMostHelpful": "НАЙКОРИСНІШЕ",
+    "licenseOrgOverviewRecentActivityTitle": "Нещодавня активність",
+    "@licenseOrgOverviewRecentActivityTitle": {
+        "description": "Section title for the recent-audit-events preview rendered on the License Org Overview screen."
+    },
+    "licenseOrgAuditActionSeatCodeMinted": "Ліцензійний код створено",
+    "@licenseOrgAuditActionSeatCodeMinted": {
+        "description": "Human-readable label for the seat_code_minted audit action on the License Org Overview screen's Recent activity row."
+    },
+    "licenseOrgAuditActionSeatCodeRedeemed": "Ліцензійний код активовано",
+    "@licenseOrgAuditActionSeatCodeRedeemed": {
+        "description": "Human-readable label for the seat_code_redeemed audit action."
+    },
+    "licenseOrgAuditActionSeatCodeReplayed": "Ліцензійний код уже активовано",
+    "@licenseOrgAuditActionSeatCodeReplayed": {
+        "description": "Human-readable label for the seat_code_replayed audit action (idempotent re-redeem)."
+    },
+    "licenseOrgAuditActionSeatRevokedManual": "Місце відкликано",
+    "@licenseOrgAuditActionSeatRevokedManual": {
+        "description": "Human-readable label for the seat_revoked_manual audit action."
+    },
+    "licenseOrgAuditActionSeatReplacementMinted": "Запасний код створено",
+    "@licenseOrgAuditActionSeatReplacementMinted": {
+        "description": "Human-readable label for the seat_replacement_minted audit action."
+    },
+    "licenseOrgAuditActionMemberInvited": "Учасника запрошено",
+    "@licenseOrgAuditActionMemberInvited": {
+        "description": "Human-readable label for the member_invited audit action."
+    },
+    "licenseOrgAuditActionMemberJoined": "Учасник приєднався",
+    "@licenseOrgAuditActionMemberJoined": {
+        "description": "Human-readable label for the member_joined audit action."
+    },
+    "licenseOrgAuditActionOrgPurchased": "Ліцензійну організацію придбано",
+    "@licenseOrgAuditActionOrgPurchased": {
+        "description": "Human-readable label for the org_purchased audit action."
+    },
+    "licenseOrgAuditActionOrgOwnerCollision": "Конфлікт власника відхилено",
+    "@licenseOrgAuditActionOrgOwnerCollision": {
+        "description": "Human-readable label for the org_owner_collision audit action."
+    },
+    "licenseOrgAuditActionOrgSeatRevokedRefund": "Місце відкликано (повернення)",
+    "@licenseOrgAuditActionOrgSeatRevokedRefund": {
+        "description": "Human-readable label for the org_seat_revoked_refund audit action."
+    },
+    "licenseOrgAuditActionOrgSuspendedDrained": "Організацію призупинено",
+    "@licenseOrgAuditActionOrgSuspendedDrained": {
+        "description": "Human-readable label for the org_suspended_drained audit action."
+    },
+    "licenseOrgAuditActionUnknown": "Інша подія",
+    "@licenseOrgAuditActionUnknown": {
+        "description": "Fallback label used when an audit row carries an action enum the mobile client has not been updated to render yet."
+    },
+    "licenseOrgAuditOutcomeSuccess": "Успішно",
+    "@licenseOrgAuditOutcomeSuccess": {
+        "description": "Outcome pill label for successful audit rows."
+    },
+    "licenseOrgAuditOutcomeRejected": "Відхилено",
+    "@licenseOrgAuditOutcomeRejected": {
+        "description": "Outcome pill label for rejected audit rows (with reasonCode)."
+    },
+    "licenseOrgAuditRelativeJustNow": "щойно",
+    "@licenseOrgAuditRelativeJustNow": {
+        "description": "Relative time label shown on an audit row that happened less than a minute ago."
+    },
+    "licenseOrgAuditRelativeMinutes": "{count} хв тому",
+    "@licenseOrgAuditRelativeMinutes": {
+        "description": "Relative time label for audit rows N minutes old. {count} placeholder is the integer minute count.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "decimalPattern"
+            }
+        }
+    },
+    "licenseOrgAuditRelativeHours": "{count} год тому",
+    "@licenseOrgAuditRelativeHours": {
+        "description": "Relative time label for audit rows N hours old.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "decimalPattern"
+            }
+        }
+    },
+    "licenseOrgAuditRelativeDays": "{count} дн тому",
+    "@licenseOrgAuditRelativeDays": {
+        "description": "Relative time label for audit rows N days old.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "decimalPattern"
+            }
+        }
+    },
+    "licenseOrgAuditRelativeMonths": "{count} міс тому",
+    "@licenseOrgAuditRelativeMonths": {
+        "description": "Relative time label for audit rows N months old.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "decimalPattern"
+            }
+        }
+    },
+    "licenseOrgAuditRelativeYears": "{count} р тому",
+    "@licenseOrgAuditRelativeYears": {
+        "description": "Relative time label for audit rows N years old.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "decimalPattern"
+            }
+        }
+    },
+    "licenseOrgAuditLogScreenTitle": "Журнал аудиту",
+    "@licenseOrgAuditLogScreenTitle": {
+        "description": "App-bar title on the mobile License Org Audit Log drill-in screen."
+    },
+    "licenseOrgAuditLogSubtitle": "{count, plural, =1{1 подію завантажено} few{{count} події завантажено} many{{count} подій завантажено} other{{count} подій завантажено}}",
+    "@licenseOrgAuditLogSubtitle": {
+        "description": "Subtitle on the Audit Log screen showing the number of loaded events, with proper singular/plural forms (e.g. '1 event loaded' / '5 events loaded'). The {count} placeholder is the integer count.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "decimalPattern"
+            }
+        }
+    },
+    "licenseOrgAuditFilterAll": "Усі",
+    "@licenseOrgAuditFilterAll": {
+        "description": "Filter chip label for the 'all outcomes' option on the Audit Log screen."
+    },
+    "licenseOrgAuditLogLoadMore": "Завантажити ще",
+    "@licenseOrgAuditLogLoadMore": {
+        "description": "Label for the load-more pagination button at the bottom of the Audit Log list."
+    },
+    "licenseOrgAuditLogEndOfFeed": "Кінець стрічки.",
+    "@licenseOrgAuditLogEndOfFeed": {
+        "description": "Footer text shown when the user has scrolled to the end of the audit log."
+    },
+    "licenseOrgAuditLogEmptyTitle": "Активності ще немає",
+    "@licenseOrgAuditLogEmptyTitle": {
+        "description": "Empty state title shown on the Audit Log screen when the org has zero audit events."
+    },
+    "licenseOrgAuditLogEmptyDescription": "Події аудиту з’являться тут, коли учасників запрошуватимуть, місця відкликатимуть і виконуватимуться інші дії адміністратора.",
+    "@licenseOrgAuditLogEmptyDescription": {
+        "description": "Empty state description on the Audit Log screen."
+    },
+    "licenseOrgAuditLogFilteredEmptyTitle": "Жодна подія не збігається",
+    "@licenseOrgAuditLogFilteredEmptyTitle": {
+        "description": "Empty state title when filters exclude every loaded event."
+    },
+    "licenseOrgAuditLogFilteredEmptyDescription": "Спробуй інший фільтр або завантаж більше подій.",
+    "@licenseOrgAuditLogFilteredEmptyDescription": {
+        "description": "Empty state description when filters exclude every loaded event."
+    },
+    "licenseOrgAuditLogErrorTitle": "Не вдалося завантажити журнал",
+    "@licenseOrgAuditLogErrorTitle": {
+        "description": "Error state title on the Audit Log screen when the Firestore read fails or the user does not have permission."
+    },
+    "licenseOrgAuditLogErrorDescription": "Спробуй за хвилину. Неактивні учасники не можуть бачити журнал аудиту.",
+    "@licenseOrgAuditLogErrorDescription": {
+        "description": "Error state description on the Audit Log screen."
+    },
+    "licenseOrgOverviewRecentActivityViewAll": "Показати всю активність",
+    "@licenseOrgOverviewRecentActivityViewAll": {
+        "description": "Tap target text below the Recent activity preview that pushes the Audit Log drill-in screen."
+    },
+    "licenseOrgAuditFilterAllWithCount": "Усі ({count})",
+    "@licenseOrgAuditFilterAllWithCount": {
+        "description": "Outcome filter chip label for 'all events' on the Audit Log screen. The {count} placeholder is the total loaded events.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "decimalPattern"
+            }
+        }
+    },
+    "licenseOrgAuditFilterSuccessWithCount": "Успішні ({count})",
+    "@licenseOrgAuditFilterSuccessWithCount": {
+        "description": "Outcome filter chip label for the 'success' outcome on the Audit Log screen. The {count} placeholder is the number of loaded success events.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "decimalPattern"
+            }
+        }
+    },
+    "licenseOrgAuditFilterRejectedWithCount": "Відхилені ({count})",
+    "@licenseOrgAuditFilterRejectedWithCount": {
+        "description": "Outcome filter chip label for the 'rejected' outcome on the Audit Log screen. The {count} placeholder is the number of loaded rejected events.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "decimalPattern"
+            }
+        }
+    }
 }

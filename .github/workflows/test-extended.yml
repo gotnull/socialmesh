@@ -1,0 +1,212 @@
+# Extended test suite for the gitignored test directories
+# (backend Cloud Functions, jsdom auth-library tests, Playwright
+# regression suite for the admin console).
+#
+# These suites live inside `backend/`, `web_marketing/shared/__tests__/`,
+# and `web_admin/__tests__/playwright/` — all gitignored paths synced
+# from the private companion repo (github.com/gotnull/socialmesh-private)
+# via scripts/sync-private.sh. CI cannot see them without first cloning
+# the private repo, which requires an auth token.
+#
+# ONE-TIME SETUP (developer runs once):
+#
+#   1. Generate a fine-grained Personal Access Token on github.com:
+#        - Resource owner: gotnull (your account)
+#        - Repository access: Only select `socialmesh-private`
+#        - Permissions: Repository → Contents → Read-only
+#      (Or use a classic PAT with `repo` scope. Fine-grained preferred.)
+#
+#   2. Add it to the PUBLIC repo as a repository secret:
+#        gh secret set PRIVATE_REPO_TOKEN -R gotnull/socialmesh
+#      (Or via the GitHub UI: Settings → Secrets and variables → Actions.)
+#
+# Until the secret is present, every job's first step emits a `skip`
+# flag and all subsequent steps no-op. The main `ci.yml` (Flutter pub
+# get + analyze + test) continues to run on every PR regardless.
+
+name: Extended tests (gitignored dirs)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions: read-all
+
+jobs:
+  # =========================================================================
+  # Backend Cloud Functions — jest against in-memory Firestore mock.
+  # Covers slice N+5 invite callables + N+5+1 / N+5+1b revoke + reissue
+  # + the rejection-audit-rollback fix.
+  # =========================================================================
+  backend-functions-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Precheck — secret present?
+        id: precheck
+        env:
+          TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::notice::PRIVATE_REPO_TOKEN not configured; skipping backend tests. See test-extended.yml header for one-time setup."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        if: steps.precheck.outputs.skip != 'true'
+
+      - name: Clone private companion repo
+        if: steps.precheck.outputs.skip != 'true'
+        env:
+          TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+        run: git clone --depth 1 "https://x-access-token:${TOKEN}@github.com/gotnull/socialmesh-private.git" ../socialmesh-private
+
+      - name: Pull gitignored dirs
+        if: steps.precheck.outputs.skip != 'true'
+        run: bash scripts/sync-private.sh pull
+
+      - name: Setup Node
+        if: steps.precheck.outputs.skip != 'true'
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/functions/package-lock.json
+
+      - name: Install backend deps
+        if: steps.precheck.outputs.skip != 'true'
+        working-directory: backend/functions
+        run: npm ci --no-audit --no-fund
+
+      - name: Lint backend
+        if: steps.precheck.outputs.skip != 'true'
+        working-directory: backend/functions
+        run: npm run lint
+
+      - name: Build backend
+        if: steps.precheck.outputs.skip != 'true'
+        working-directory: backend/functions
+        run: npm run build
+
+      - name: Run backend jest tests
+        if: steps.precheck.outputs.skip != 'true'
+        working-directory: backend/functions
+        run: npx jest --ci --reporters=default --reporters=github-actions
+
+  # =========================================================================
+  # Web auth library — jsdom tests for shared/auth.js
+  # (setVerifyButtonState + two-signal gate fix).
+  # =========================================================================
+  web-jsdom-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Precheck — secret present?
+        id: precheck
+        env:
+          TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::notice::PRIVATE_REPO_TOKEN not configured; skipping jsdom tests."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        if: steps.precheck.outputs.skip != 'true'
+
+      - name: Clone private companion repo
+        if: steps.precheck.outputs.skip != 'true'
+        env:
+          TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+        run: git clone --depth 1 "https://x-access-token:${TOKEN}@github.com/gotnull/socialmesh-private.git" ../socialmesh-private
+
+      - name: Pull gitignored dirs
+        if: steps.precheck.outputs.skip != 'true'
+        run: bash scripts/sync-private.sh pull
+
+      - name: Setup Node
+        if: steps.precheck.outputs.skip != 'true'
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web_marketing/shared/__tests__/package-lock.json
+
+      - name: Install jsdom test deps
+        if: steps.precheck.outputs.skip != 'true'
+        working-directory: web_marketing/shared/__tests__
+        run: npm ci --no-audit --no-fund
+
+      - name: Run jsdom tests
+        if: steps.precheck.outputs.skip != 'true'
+        working-directory: web_marketing/shared/__tests__
+        run: npx jest --ci --reporters=default --reporters=github-actions
+
+  # =========================================================================
+  # Playwright suite — real-browser regression tests against the live
+  # deployed console + marketing site. Catches layout / font / CSS
+  # specificity bugs that the unit suites can't see.
+  # =========================================================================
+  web-playwright-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Precheck — secret present?
+        id: precheck
+        env:
+          TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::notice::PRIVATE_REPO_TOKEN not configured; skipping Playwright tests."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        if: steps.precheck.outputs.skip != 'true'
+
+      - name: Clone private companion repo
+        if: steps.precheck.outputs.skip != 'true'
+        env:
+          TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+        run: git clone --depth 1 "https://x-access-token:${TOKEN}@github.com/gotnull/socialmesh-private.git" ../socialmesh-private
+
+      - name: Pull gitignored dirs
+        if: steps.precheck.outputs.skip != 'true'
+        run: bash scripts/sync-private.sh pull
+
+      - name: Setup Node
+        if: steps.precheck.outputs.skip != 'true'
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web_admin/__tests__/playwright/package-lock.json
+
+      - name: Install Playwright deps
+        if: steps.precheck.outputs.skip != 'true'
+        working-directory: web_admin/__tests__/playwright
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Chromium browser
+        if: steps.precheck.outputs.skip != 'true'
+        working-directory: web_admin/__tests__/playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright suite (live deployment)
+        if: steps.precheck.outputs.skip != 'true'
+        working-directory: web_admin/__tests__/playwright
+        run: npx playwright test --reporter=github
+
+      - name: Upload Playwright report on failure
+        if: ${{ failure() && steps.precheck.outputs.skip != 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: web_admin/__tests__/playwright/playwright-report/
+          retention-days: 7

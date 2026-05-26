@@ -12667,5 +12667,203 @@
     "privacyChoiceFooter": "Du kannst dies jederzeit unter Einstellungen > Datenschutz ändern.",
     "privacyChoiceTagMaxPrivacy": "MAXIMALER DATENSCHUTZ",
     "privacyChoiceTagBalanced": "AUSGEWOGEN",
-    "privacyChoiceTagMostHelpful": "AM HILFREICHSTEN"
+    "privacyChoiceTagMostHelpful": "AM HILFREICHSTEN",
+    "licenseOrgOverviewRecentActivityTitle": "Letzte Aktivität",
+    "@licenseOrgOverviewRecentActivityTitle": {
+        "description": "Section title for the recent-audit-events preview rendered on the License Org Overview screen."
+    },
+    "licenseOrgAuditActionSeatCodeMinted": "Lizenz-Code erstellt",
+    "@licenseOrgAuditActionSeatCodeMinted": {
+        "description": "Human-readable label for the seat_code_minted audit action on the License Org Overview screen's Recent activity row."
+    },
+    "licenseOrgAuditActionSeatCodeRedeemed": "Lizenz-Code eingelöst",
+    "@licenseOrgAuditActionSeatCodeRedeemed": {
+        "description": "Human-readable label for the seat_code_redeemed audit action."
+    },
+    "licenseOrgAuditActionSeatCodeReplayed": "Lizenz-Code bereits eingelöst",
+    "@licenseOrgAuditActionSeatCodeReplayed": {
+        "description": "Human-readable label for the seat_code_replayed audit action (idempotent re-redeem)."
+    },
+    "licenseOrgAuditActionSeatRevokedManual": "Sitzplatz entzogen",
+    "@licenseOrgAuditActionSeatRevokedManual": {
+        "description": "Human-readable label for the seat_revoked_manual audit action."
+    },
+    "licenseOrgAuditActionSeatReplacementMinted": "Ersatz-Code erstellt",
+    "@licenseOrgAuditActionSeatReplacementMinted": {
+        "description": "Human-readable label for the seat_replacement_minted audit action."
+    },
+    "licenseOrgAuditActionMemberInvited": "Mitglied eingeladen",
+    "@licenseOrgAuditActionMemberInvited": {
+        "description": "Human-readable label for the member_invited audit action."
+    },
+    "licenseOrgAuditActionMemberJoined": "Mitglied beigetreten",
+    "@licenseOrgAuditActionMemberJoined": {
+        "description": "Human-readable label for the member_joined audit action."
+    },
+    "licenseOrgAuditActionOrgPurchased": "Lizenz-Organisation gekauft",
+    "@licenseOrgAuditActionOrgPurchased": {
+        "description": "Human-readable label for the org_purchased audit action."
+    },
+    "licenseOrgAuditActionOrgOwnerCollision": "Inhaber-Kollision abgelehnt",
+    "@licenseOrgAuditActionOrgOwnerCollision": {
+        "description": "Human-readable label for the org_owner_collision audit action."
+    },
+    "licenseOrgAuditActionOrgSeatRevokedRefund": "Sitzplatz entzogen (Erstattung)",
+    "@licenseOrgAuditActionOrgSeatRevokedRefund": {
+        "description": "Human-readable label for the org_seat_revoked_refund audit action."
+    },
+    "licenseOrgAuditActionOrgSuspendedDrained": "Organisation gesperrt",
+    "@licenseOrgAuditActionOrgSuspendedDrained": {
+        "description": "Human-readable label for the org_suspended_drained audit action."
+    },
+    "licenseOrgAuditActionUnknown": "Anderes Ereignis",
+    "@licenseOrgAuditActionUnknown": {
+        "description": "Fallback label used when an audit row carries an action enum the mobile client has not been updated to render yet."
+    },
+    "licenseOrgAuditOutcomeSuccess": "Erfolgreich",
+    "@licenseOrgAuditOutcomeSuccess": {
+        "description": "Outcome pill label for successful audit rows."
+    },
+    "licenseOrgAuditOutcomeRejected": "Abgelehnt",
+    "@licenseOrgAuditOutcomeRejected": {
+        "description": "Outcome pill label for rejected audit rows (with reasonCode)."
+    },
+    "licenseOrgAuditRelativeJustNow": "gerade eben",
+    "@licenseOrgAuditRelativeJustNow": {
+        "description": "Relative time label shown on an audit row that happened less than a minute ago."
+    },
+    "licenseOrgAuditRelativeMinutes": "vor {count} Min.",
+    "@licenseOrgAuditRelativeMinutes": {
+        "description": "Relative time label for audit rows N minutes old. {count} placeholder is the integer minute count.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "decimalPattern"
+            }
+        }
+    },
+    "licenseOrgAuditRelativeHours": "vor {count} Std.",
+    "@licenseOrgAuditRelativeHours": {
+        "description": "Relative time label for audit rows N hours old.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "decimalPattern"
+            }
+        }
+    },
+    "licenseOrgAuditRelativeDays": "vor {count} T.",
+    "@licenseOrgAuditRelativeDays": {
+        "description": "Relative time label for audit rows N days old.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "decimalPattern"
+            }
+        }
+    },
+    "licenseOrgAuditRelativeMonths": "vor {count} Mon.",
+    "@licenseOrgAuditRelativeMonths": {
+        "description": "Relative time label for audit rows N months old.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "decimalPattern"
+            }
+        }
+    },
+    "licenseOrgAuditRelativeYears": "vor {count} J.",
+    "@licenseOrgAuditRelativeYears": {
+        "description": "Relative time label for audit rows N years old.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "decimalPattern"
+            }
+        }
+    },
+    "licenseOrgAuditLogScreenTitle": "Audit-Protokoll",
+    "@licenseOrgAuditLogScreenTitle": {
+        "description": "App-bar title on the mobile License Org Audit Log drill-in screen."
+    },
+    "licenseOrgAuditLogSubtitle": "{count, plural, =1{1 Ereignis geladen} other{{count} Ereignisse geladen}}",
+    "@licenseOrgAuditLogSubtitle": {
+        "description": "Subtitle on the Audit Log screen showing the number of loaded events, with proper singular/plural forms (e.g. '1 event loaded' / '5 events loaded'). The {count} placeholder is the integer count.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "decimalPattern"
+            }
+        }
+    },
+    "licenseOrgAuditFilterAll": "Alle",
+    "@licenseOrgAuditFilterAll": {
+        "description": "Filter chip label for the 'all outcomes' option on the Audit Log screen."
+    },
+    "licenseOrgAuditLogLoadMore": "Mehr laden",
+    "@licenseOrgAuditLogLoadMore": {
+        "description": "Label for the load-more pagination button at the bottom of the Audit Log list."
+    },
+    "licenseOrgAuditLogEndOfFeed": "Ende des Feeds.",
+    "@licenseOrgAuditLogEndOfFeed": {
+        "description": "Footer text shown when the user has scrolled to the end of the audit log."
+    },
+    "licenseOrgAuditLogEmptyTitle": "Noch keine Aktivität",
+    "@licenseOrgAuditLogEmptyTitle": {
+        "description": "Empty state title shown on the Audit Log screen when the org has zero audit events."
+    },
+    "licenseOrgAuditLogEmptyDescription": "Audit-Ereignisse erscheinen hier, wenn Mitglieder eingeladen werden, Sitzplätze entzogen werden und andere Admin-Aktionen erfolgen.",
+    "@licenseOrgAuditLogEmptyDescription": {
+        "description": "Empty state description on the Audit Log screen."
+    },
+    "licenseOrgAuditLogFilteredEmptyTitle": "Keine passenden Ereignisse",
+    "@licenseOrgAuditLogFilteredEmptyTitle": {
+        "description": "Empty state title when filters exclude every loaded event."
+    },
+    "licenseOrgAuditLogFilteredEmptyDescription": "Versuche einen anderen Filter oder lade weitere Ereignisse.",
+    "@licenseOrgAuditLogFilteredEmptyDescription": {
+        "description": "Empty state description when filters exclude every loaded event."
+    },
+    "licenseOrgAuditLogErrorTitle": "Audit-Protokoll konnte nicht geladen werden",
+    "@licenseOrgAuditLogErrorTitle": {
+        "description": "Error state title on the Audit Log screen when the Firestore read fails or the user does not have permission."
+    },
+    "licenseOrgAuditLogErrorDescription": "Versuche es gleich erneut. Nicht aktive Mitglieder können das Audit-Protokoll nicht einsehen.",
+    "@licenseOrgAuditLogErrorDescription": {
+        "description": "Error state description on the Audit Log screen."
+    },
+    "licenseOrgOverviewRecentActivityViewAll": "Alle Aktivitäten anzeigen",
+    "@licenseOrgOverviewRecentActivityViewAll": {
+        "description": "Tap target text below the Recent activity preview that pushes the Audit Log drill-in screen."
+    },
+    "licenseOrgAuditFilterAllWithCount": "Alle ({count})",
+    "@licenseOrgAuditFilterAllWithCount": {
+        "description": "Outcome filter chip label for 'all events' on the Audit Log screen. The {count} placeholder is the total loaded events.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "decimalPattern"
+            }
+        }
+    },
+    "licenseOrgAuditFilterSuccessWithCount": "Erfolgreich ({count})",
+    "@licenseOrgAuditFilterSuccessWithCount": {
+        "description": "Outcome filter chip label for the 'success' outcome on the Audit Log screen. The {count} placeholder is the number of loaded success events.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "decimalPattern"
+            }
+        }
+    },
+    "licenseOrgAuditFilterRejectedWithCount": "Abgelehnt ({count})",
+    "@licenseOrgAuditFilterRejectedWithCount": {
+        "description": "Outcome filter chip label for the 'rejected' outcome on the Audit Log screen. The {count} placeholder is the number of loaded rejected events.",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "decimalPattern"
+            }
+        }
+    }
 }

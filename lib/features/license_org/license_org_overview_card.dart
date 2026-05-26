@@ -28,6 +28,8 @@ import '../../core/widgets/info_table.dart';
 import '../../core/widgets/primary_gradient_button.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/status_banner.dart';
+import '../../models/license_org_audit_event.dart';
+import '../../providers/license_org_audit_providers.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/license_org.dart';
 import '../../models/license_org_membership.dart';
@@ -35,6 +37,7 @@ import '../../providers/license_org_members_providers.dart';
 import '../../providers/license_org_overview_providers.dart';
 import '../../services/license_org/license_org_invite_service.dart';
 import '../../utils/snackbar.dart';
+import 'license_org_audit_log_screen.dart';
 import 'license_org_members_sheet.dart';
 
 /// Reads the per-org providers for [orgId] and renders the canonical
@@ -120,6 +123,8 @@ class LicenseOrgOverviewCard extends ConsumerWidget {
         // admin" button is still gated on the future
         // licenseOrgAdminWebEnabled flag and stays deferred.
         if (status == LicenseOrgStatus.active) ...[
+          const SizedBox(height: AppTheme.spacing16),
+          _RecentActivitySection(orgId: orgId),
           const SizedBox(height: AppTheme.spacing12),
           _ViewMembersButton(orgId: orgId),
           // Owner / admin can mint an invite link directly from the
@@ -416,6 +421,276 @@ Future<void> _showMintSheet(BuildContext context, String orgId) {
     context: context,
     child: _InviteMintSheet(orgId: orgId),
   );
+}
+
+/// Compact list of the 5 most recent audit events for the org.
+///
+/// Renders nothing (zero-height) when the underlying provider yields
+/// an empty list (signed out, suspended org, no events, permission
+/// denied). The Overview card never shows an empty placeholder for
+/// recent activity - the absence of the section is the empty state.
+///
+/// Mirrors the web admin's Recent activity card on the per-org
+/// detail page but with the bounded 5-row preview suited for the
+/// mobile Overview card height.
+class _RecentActivitySection extends ConsumerWidget {
+  final String orgId;
+
+  const _RecentActivitySection({required this.orgId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final eventsAsync = ref.watch(licenseOrgRecentAuditProvider(orgId));
+    final events = eventsAsync.maybeWhen(
+      data: (e) => e,
+      orElse: () => const <LicenseOrgAuditEvent>[],
+    );
+    if (events.isEmpty) return const SizedBox.shrink();
+
+    final l10n = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionTitle(title: l10n.licenseOrgOverviewRecentActivityTitle),
+        const SizedBox(height: AppTheme.spacing8),
+        Container(
+          decoration: BoxDecoration(
+            color: context.card,
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+            border: Border.all(color: context.border),
+          ),
+          child: Column(
+            children: [
+              for (var i = 0; i < events.length; i++) ...[
+                if (i > 0) Divider(color: context.border, height: 1),
+                _AuditRow(event: events[i]),
+              ],
+              Divider(color: context.border, height: 1),
+              InkWell(
+                onTap: () => Navigator.of(
+                  context,
+                ).push(LicenseOrgAuditLogScreen.route(orgId)),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(AppTheme.radius12),
+                  bottomRight: Radius.circular(AppTheme.radius12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing12,
+                    vertical: AppTheme.spacing12,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          l10n.licenseOrgOverviewRecentActivityViewAll,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: context.accentColor,
+                            fontFamily: AppTheme.fontFamily,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right,
+                        size: 18,
+                        color: context.accentColor,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AuditRow extends StatelessWidget {
+  final LicenseOrgAuditEvent event;
+
+  const _AuditRow({required this.event});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final isRejected = event.outcome == LicenseOrgAuditOutcome.rejected;
+    final outcomeColor = isRejected ? AppTheme.errorRed : AppTheme.successGreen;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing12,
+        vertical: AppTheme.spacing12,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(_iconFor(event.action), size: 20, color: context.textSecondary),
+          const SizedBox(width: AppTheme.spacing12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _actionLabel(l10n, event.action),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: context.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacing4),
+                Wrap(
+                  spacing: AppTheme.spacing8,
+                  runSpacing: AppTheme.spacing4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(
+                      event.actorDisplayLabel,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                        fontFamily: AppTheme.fontFamily,
+                      ),
+                    ),
+                    Text(
+                      '·',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                    Text(
+                      _relativeTime(l10n, event.tsServer),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                    if (isRejected && event.reasonCode != null) ...[
+                      Text(
+                        '·',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.textTertiary,
+                        ),
+                      ),
+                      Text(
+                        event.reasonCode!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.errorRed,
+                          fontFamily: AppTheme.fontFamily,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppTheme.spacing8),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.spacing8,
+              vertical: 3,
+            ),
+            decoration: BoxDecoration(
+              color: outcomeColor.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
+              border: Border.all(color: outcomeColor.withValues(alpha: 0.45)),
+            ),
+            child: Text(
+              isRejected
+                  ? l10n.licenseOrgAuditOutcomeRejected
+                  : l10n.licenseOrgAuditOutcomeSuccess,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: outcomeColor,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static IconData _iconFor(LicenseOrgAuditAction action) {
+    switch (action) {
+      case LicenseOrgAuditAction.memberInvited:
+        return Icons.mail_outline;
+      case LicenseOrgAuditAction.memberJoined:
+        return Icons.person_add_alt_1_outlined;
+      case LicenseOrgAuditAction.seatCodeMinted:
+      case LicenseOrgAuditAction.seatReplacementMinted:
+        return Icons.confirmation_number_outlined;
+      case LicenseOrgAuditAction.seatCodeRedeemed:
+      case LicenseOrgAuditAction.seatCodeReplayed:
+        return Icons.event_seat_outlined;
+      case LicenseOrgAuditAction.seatRevokedManual:
+      case LicenseOrgAuditAction.orgSeatRevokedRefund:
+        return Icons.remove_circle_outline;
+      case LicenseOrgAuditAction.orgPurchased:
+        return Icons.shopping_bag_outlined;
+      case LicenseOrgAuditAction.orgOwnerCollision:
+        return Icons.warning_amber_outlined;
+      case LicenseOrgAuditAction.orgSuspendedDrained:
+        return Icons.block_outlined;
+      case LicenseOrgAuditAction.unknown:
+        return Icons.history_outlined;
+    }
+  }
+
+  static String _actionLabel(AppLocalizations l10n, LicenseOrgAuditAction a) {
+    switch (a) {
+      case LicenseOrgAuditAction.seatCodeMinted:
+        return l10n.licenseOrgAuditActionSeatCodeMinted;
+      case LicenseOrgAuditAction.seatCodeRedeemed:
+        return l10n.licenseOrgAuditActionSeatCodeRedeemed;
+      case LicenseOrgAuditAction.seatCodeReplayed:
+        return l10n.licenseOrgAuditActionSeatCodeReplayed;
+      case LicenseOrgAuditAction.seatRevokedManual:
+        return l10n.licenseOrgAuditActionSeatRevokedManual;
+      case LicenseOrgAuditAction.seatReplacementMinted:
+        return l10n.licenseOrgAuditActionSeatReplacementMinted;
+      case LicenseOrgAuditAction.memberInvited:
+        return l10n.licenseOrgAuditActionMemberInvited;
+      case LicenseOrgAuditAction.memberJoined:
+        return l10n.licenseOrgAuditActionMemberJoined;
+      case LicenseOrgAuditAction.orgPurchased:
+        return l10n.licenseOrgAuditActionOrgPurchased;
+      case LicenseOrgAuditAction.orgOwnerCollision:
+        return l10n.licenseOrgAuditActionOrgOwnerCollision;
+      case LicenseOrgAuditAction.orgSeatRevokedRefund:
+        return l10n.licenseOrgAuditActionOrgSeatRevokedRefund;
+      case LicenseOrgAuditAction.orgSuspendedDrained:
+        return l10n.licenseOrgAuditActionOrgSuspendedDrained;
+      case LicenseOrgAuditAction.unknown:
+        return l10n.licenseOrgAuditActionUnknown;
+    }
+  }
+
+  static String _relativeTime(AppLocalizations l10n, DateTime? tsServer) {
+    if (tsServer == null) return l10n.licenseOrgAuditRelativeJustNow;
+    final diff = DateTime.now().toUtc().difference(tsServer);
+    if (diff.inSeconds < 60) return l10n.licenseOrgAuditRelativeJustNow;
+    if (diff.inMinutes < 60) {
+      return l10n.licenseOrgAuditRelativeMinutes(diff.inMinutes);
+    }
+    if (diff.inHours < 24) {
+      return l10n.licenseOrgAuditRelativeHours(diff.inHours);
+    }
+    if (diff.inDays < 30) {
+      return l10n.licenseOrgAuditRelativeDays(diff.inDays);
+    }
+    final months = diff.inDays ~/ 30;
+    if (months < 12) return l10n.licenseOrgAuditRelativeMonths(months);
+    return l10n.licenseOrgAuditRelativeYears(months ~/ 12);
+  }
 }
 
 class _InviteMintSheet extends ConsumerStatefulWidget {

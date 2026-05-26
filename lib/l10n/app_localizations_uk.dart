@@ -43968,6 +43968,188 @@ class AppLocalizationsUk extends AppLocalizations {
       'Не вдалося створити запрошення. Спробуйте знову.';
 
   @override
+  String get licenseOrgOverviewRecentActivityTitle => 'Нещодавня активність';
+
+  @override
+  String get licenseOrgAuditActionSeatCodeMinted => 'Ліцензійний код створено';
+
+  @override
+  String get licenseOrgAuditActionSeatCodeRedeemed =>
+      'Ліцензійний код активовано';
+
+  @override
+  String get licenseOrgAuditActionSeatCodeReplayed =>
+      'Ліцензійний код уже активовано';
+
+  @override
+  String get licenseOrgAuditActionSeatRevokedManual => 'Місце відкликано';
+
+  @override
+  String get licenseOrgAuditActionSeatReplacementMinted =>
+      'Запасний код створено';
+
+  @override
+  String get licenseOrgAuditActionMemberInvited => 'Учасника запрошено';
+
+  @override
+  String get licenseOrgAuditActionMemberJoined => 'Учасник приєднався';
+
+  @override
+  String get licenseOrgAuditActionOrgPurchased =>
+      'Ліцензійну організацію придбано';
+
+  @override
+  String get licenseOrgAuditActionOrgOwnerCollision =>
+      'Конфлікт власника відхилено';
+
+  @override
+  String get licenseOrgAuditActionOrgSeatRevokedRefund =>
+      'Місце відкликано (повернення)';
+
+  @override
+  String get licenseOrgAuditActionOrgSuspendedDrained =>
+      'Організацію призупинено';
+
+  @override
+  String get licenseOrgAuditActionUnknown => 'Інша подія';
+
+  @override
+  String get licenseOrgAuditOutcomeSuccess => 'Успішно';
+
+  @override
+  String get licenseOrgAuditOutcomeRejected => 'Відхилено';
+
+  @override
+  String get licenseOrgAuditRelativeJustNow => 'щойно';
+
+  @override
+  String licenseOrgAuditRelativeMinutes(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString хв тому';
+  }
+
+  @override
+  String licenseOrgAuditRelativeHours(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString год тому';
+  }
+
+  @override
+  String licenseOrgAuditRelativeDays(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString дн тому';
+  }
+
+  @override
+  String licenseOrgAuditRelativeMonths(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString міс тому';
+  }
+
+  @override
+  String licenseOrgAuditRelativeYears(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString р тому';
+  }
+
+  @override
+  String get licenseOrgAuditLogScreenTitle => 'Журнал аудиту';
+
+  @override
+  String licenseOrgAuditLogSubtitle(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString подій завантажено',
+      many: '$countString подій завантажено',
+      few: '$countString події завантажено',
+      one: '1 подію завантажено',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licenseOrgAuditFilterAll => 'Усі';
+
+  @override
+  String get licenseOrgAuditLogLoadMore => 'Завантажити ще';
+
+  @override
+  String get licenseOrgAuditLogEndOfFeed => 'Кінець стрічки.';
+
+  @override
+  String get licenseOrgAuditLogEmptyTitle => 'Активності ще немає';
+
+  @override
+  String get licenseOrgAuditLogEmptyDescription =>
+      'Події аудиту з’являться тут, коли учасників запрошуватимуть, місця відкликатимуть і виконуватимуться інші дії адміністратора.';
+
+  @override
+  String get licenseOrgAuditLogFilteredEmptyTitle =>
+      'Жодна подія не збігається';
+
+  @override
+  String get licenseOrgAuditLogFilteredEmptyDescription =>
+      'Спробуй інший фільтр або завантаж більше подій.';
+
+  @override
+  String get licenseOrgAuditLogErrorTitle => 'Не вдалося завантажити журнал';
+
+  @override
+  String get licenseOrgAuditLogErrorDescription =>
+      'Спробуй за хвилину. Неактивні учасники не можуть бачити журнал аудиту.';
+
+  @override
+  String get licenseOrgOverviewRecentActivityViewAll =>
+      'Показати всю активність';
+
+  @override
+  String licenseOrgAuditFilterAllWithCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Усі ($countString)';
+  }
+
+  @override
+  String licenseOrgAuditFilterSuccessWithCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Успішні ($countString)';
+  }
+
+  @override
+  String licenseOrgAuditFilterRejectedWithCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Відхилені ($countString)';
+  }
+
+  @override
   String licenseOrgOverviewManageTileSubtitleMany(String count) {
     return '$count орг.';
   }
