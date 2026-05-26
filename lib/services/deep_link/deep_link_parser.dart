@@ -187,6 +187,21 @@ class DeepLinkParser {
           originalUri: original,
           purchaseSessionId: sessionId,
         );
+      case 'invite':
+        // socialmesh://invite/{token}. Token alone does not redeem;
+        // the consent screen mounted by the router prompts the user
+        // before calling acceptLicenseOrgInvite.
+        AppLogging.qr('🔗 Parser: Processing license org invite link');
+        if (data == null || data.isEmpty) {
+          return ParsedDeepLink.invalid(original, [
+            'Missing token in invite link',
+          ]);
+        }
+        return ParsedDeepLink(
+          type: DeepLinkType.licenseOrgInvite,
+          originalUri: original,
+          licenseOrgInviteToken: data,
+        );
       default:
         AppLogging.qr('🔗 Parser: ERROR - Unknown link type: $type');
         return ParsedDeepLink.invalid(original, ['Unknown link type: $type']);
@@ -219,6 +234,24 @@ class DeepLinkParser {
     if (segments.isNotEmpty && segments[0] == 'aether') {
       AppLogging.qr('🔗 Parser: Aether flight universal link');
       return _parseAetherFlightLink(segments.sublist(1), original);
+    }
+
+    // License org invite (slice N+5): /invite/{token}. Token alone
+    // does not redeem; the consent screen prompts the user before
+    // calling acceptLicenseOrgInvite.
+    if (segments.length == 2 && segments[0] == 'invite') {
+      final token = segments[1];
+      AppLogging.qr('🔗 Parser: License org invite universal link');
+      if (token.isEmpty) {
+        return ParsedDeepLink.invalid(original, [
+          'Missing token in invite link',
+        ]);
+      }
+      return ParsedDeepLink(
+        type: DeepLinkType.licenseOrgInvite,
+        originalUri: original,
+        licenseOrgInviteToken: token,
+      );
     }
 
     // Expect: /share/{type}/{id} or /share/{type}?params

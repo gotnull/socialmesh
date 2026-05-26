@@ -44001,6 +44001,86 @@ class AppLocalizationsDe extends AppLocalizations {
   String get licenseOrgOverviewViewMembersAction => 'Mitglieder anzeigen';
 
   @override
+  String get licenseOrgInviteAcceptTitle => 'Gruppenlizenz beitreten';
+
+  @override
+  String licenseOrgInviteAcceptHeadline(String orgName) {
+    return 'Sie wurden eingeladen, $orgName beizutreten';
+  }
+
+  @override
+  String get licenseOrgInviteAcceptDescription =>
+      'Wenn Sie auf Beitreten tippen, werden Sie der Gruppe hinzugefügt und ein Sitz wird zugewiesen. Der Gruppen-Admin sieht Ihren Kontonamen und die letzte Aktivitätszeit. Sie können die Gruppe jederzeit verlassen.';
+
+  @override
+  String get licenseOrgInviteAcceptButton => 'Beitreten';
+
+  @override
+  String get licenseOrgInviteDeclineButton => 'Ablehnen';
+
+  @override
+  String licenseOrgInviteAcceptSuccess(String orgName) {
+    return '$orgName beigetreten';
+  }
+
+  @override
+  String get licenseOrgInviteAcceptErrorExpired =>
+      'Diese Einladung ist abgelaufen';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRedeemed =>
+      'Diese Einladung wurde bereits verwendet';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRevoked =>
+      'Diese Einladung wurde abgebrochen';
+
+  @override
+  String get licenseOrgInviteAcceptErrorMalformed =>
+      'Dieser Einladungslink ist ungültig';
+
+  @override
+  String get licenseOrgInviteAcceptErrorOrgSuspended =>
+      'Diese Gruppe ist pausiert';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRateLimited =>
+      'Zu viele Versuche. Bitte später erneut versuchen.';
+
+  @override
+  String get licenseOrgInviteAcceptErrorGeneric =>
+      'Einladung konnte nicht angenommen werden. Bitte erneut versuchen.';
+
+  @override
+  String get licenseOrgInviteAcceptInviterNoteLabel => 'Vom Einladenden';
+
+  @override
+  String get licenseOrgInviteMintAction => 'Mitglied einladen';
+
+  @override
+  String get licenseOrgInviteMintSheetTitle => 'Teammitglied einladen';
+
+  @override
+  String get licenseOrgInviteMintSheetBody =>
+      'Erstellen Sie einen einmaligen Einladungslink. Senden Sie ihn an ein Teammitglied; sobald sie auf Beitreten tippen, wird der Link verbraucht. Standardablauf ist 7 Tage.';
+
+  @override
+  String get licenseOrgInviteMintProductLabel => 'Sitz-Produkt';
+
+  @override
+  String get licenseOrgInviteMintSubmit => 'Einladungslink erstellen';
+
+  @override
+  String get licenseOrgInviteMintCopySuccess => 'Einladungslink kopiert';
+
+  @override
+  String get licenseOrgInviteMintShareLabel => 'Einladungslink teilen';
+
+  @override
+  String get licenseOrgInviteMintGenericError =>
+      'Einladung konnte nicht erstellt werden. Bitte erneut versuchen.';
+
+  @override
   String licenseOrgOverviewManageTileSubtitleMany(String count) {
     return '$count Orgs';
   }

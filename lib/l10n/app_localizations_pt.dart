@@ -43852,6 +43852,84 @@ class AppLocalizationsPt extends AppLocalizations {
   String get licenseOrgOverviewViewMembersAction => 'Ver membros';
 
   @override
+  String get licenseOrgInviteAcceptTitle => 'Aderir à licença de grupo';
+
+  @override
+  String licenseOrgInviteAcceptHeadline(String orgName) {
+    return 'Foi convidado para aderir a $orgName';
+  }
+
+  @override
+  String get licenseOrgInviteAcceptDescription =>
+      'Ao tocar em Aderir é adicionado ao grupo e recebe um assento. O administrador do grupo verá o nome da sua conta e a última hora ativa. Pode sair do grupo a qualquer momento.';
+
+  @override
+  String get licenseOrgInviteAcceptButton => 'Aderir';
+
+  @override
+  String get licenseOrgInviteDeclineButton => 'Recusar';
+
+  @override
+  String licenseOrgInviteAcceptSuccess(String orgName) {
+    return 'Aderiu a $orgName';
+  }
+
+  @override
+  String get licenseOrgInviteAcceptErrorExpired => 'Este convite expirou';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRedeemed =>
+      'Este convite já foi utilizado';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRevoked => 'Este convite foi cancelado';
+
+  @override
+  String get licenseOrgInviteAcceptErrorMalformed =>
+      'Esse link de convite não é válido';
+
+  @override
+  String get licenseOrgInviteAcceptErrorOrgSuspended =>
+      'Este grupo está em pausa';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRateLimited =>
+      'Demasiadas tentativas. Tente mais tarde.';
+
+  @override
+  String get licenseOrgInviteAcceptErrorGeneric =>
+      'Não foi possível aceitar o convite. Tente novamente.';
+
+  @override
+  String get licenseOrgInviteAcceptInviterNoteLabel => 'Do convidador';
+
+  @override
+  String get licenseOrgInviteMintAction => 'Convidar membro';
+
+  @override
+  String get licenseOrgInviteMintSheetTitle => 'Convidar um colega';
+
+  @override
+  String get licenseOrgInviteMintSheetBody =>
+      'Crie um link de convite de uso único. Envie-o a um colega de equipa; assim que tocar em Aderir, o link é consumido. A expiração padrão é de 7 dias.';
+
+  @override
+  String get licenseOrgInviteMintProductLabel => 'Produto do assento';
+
+  @override
+  String get licenseOrgInviteMintSubmit => 'Gerar link de convite';
+
+  @override
+  String get licenseOrgInviteMintCopySuccess => 'Link de convite copiado';
+
+  @override
+  String get licenseOrgInviteMintShareLabel => 'Partilhar link de convite';
+
+  @override
+  String get licenseOrgInviteMintGenericError =>
+      'Não foi possível criar o convite. Tente novamente.';
+
+  @override
   String licenseOrgOverviewManageTileSubtitleMany(String count) {
     return '$count orgs';
   }

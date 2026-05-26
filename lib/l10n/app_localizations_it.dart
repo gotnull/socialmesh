@@ -43883,6 +43883,85 @@ class AppLocalizationsIt extends AppLocalizations {
   String get licenseOrgOverviewViewMembersAction => 'Visualizza membri';
 
   @override
+  String get licenseOrgInviteAcceptTitle => 'Unisciti alla licenza di gruppo';
+
+  @override
+  String licenseOrgInviteAcceptHeadline(String orgName) {
+    return 'Sei stato invitato a unirti a $orgName';
+  }
+
+  @override
+  String get licenseOrgInviteAcceptDescription =>
+      'Toccando Unisciti vieni aggiunto al gruppo e ti viene assegnato un posto. L\'amministratore del gruppo vedrà il nome del tuo account e l\'ultimo orario attivo. Puoi lasciare il gruppo in qualsiasi momento.';
+
+  @override
+  String get licenseOrgInviteAcceptButton => 'Unisciti';
+
+  @override
+  String get licenseOrgInviteDeclineButton => 'Rifiuta';
+
+  @override
+  String licenseOrgInviteAcceptSuccess(String orgName) {
+    return 'Ti sei unito a $orgName';
+  }
+
+  @override
+  String get licenseOrgInviteAcceptErrorExpired => 'Questo invito è scaduto';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRedeemed =>
+      'Questo invito è già stato usato';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRevoked =>
+      'Questo invito è stato annullato';
+
+  @override
+  String get licenseOrgInviteAcceptErrorMalformed =>
+      'Quel link di invito non è valido';
+
+  @override
+  String get licenseOrgInviteAcceptErrorOrgSuspended =>
+      'Questo gruppo è in pausa';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRateLimited =>
+      'Troppi tentativi. Riprova più tardi.';
+
+  @override
+  String get licenseOrgInviteAcceptErrorGeneric =>
+      'Impossibile accettare l\'invito. Riprova.';
+
+  @override
+  String get licenseOrgInviteAcceptInviterNoteLabel => 'Dall\'invitante';
+
+  @override
+  String get licenseOrgInviteMintAction => 'Invita un membro';
+
+  @override
+  String get licenseOrgInviteMintSheetTitle => 'Invita un compagno';
+
+  @override
+  String get licenseOrgInviteMintSheetBody =>
+      'Crea un link di invito monouso. Inviarlo a un compagno di squadra; appena tocca Unisciti, il link viene consumato. La scadenza predefinita è di 7 giorni.';
+
+  @override
+  String get licenseOrgInviteMintProductLabel => 'Prodotto del posto';
+
+  @override
+  String get licenseOrgInviteMintSubmit => 'Genera link di invito';
+
+  @override
+  String get licenseOrgInviteMintCopySuccess => 'Link di invito copiato';
+
+  @override
+  String get licenseOrgInviteMintShareLabel => 'Condividi link di invito';
+
+  @override
+  String get licenseOrgInviteMintGenericError =>
+      'Impossibile creare l\'invito. Riprova.';
+
+  @override
   String licenseOrgOverviewManageTileSubtitleMany(String count) {
     return '$count org';
   }

@@ -75887,6 +75887,138 @@ abstract class AppLocalizations {
   /// **'View members'**
   String get licenseOrgOverviewViewMembersAction;
 
+  /// App-bar title on the InviteAcceptScreen, shown when the user opens an invite deep link.
+  ///
+  /// In en, this message translates to:
+  /// **'Join group license'**
+  String get licenseOrgInviteAcceptTitle;
+
+  /// Hero headline on the InviteAcceptScreen. Placeholder is the inviting org's display name; if the org name is empty the deep-link router falls back to the slug.
+  ///
+  /// In en, this message translates to:
+  /// **'You have been invited to join {orgName}'**
+  String licenseOrgInviteAcceptHeadline(String orgName);
+
+  /// Privacy disclosure shown above the Join / Decline buttons on the InviteAcceptScreen. Tells the user what the org admin will and will not see, in plain language.
+  ///
+  /// In en, this message translates to:
+  /// **'Tapping Join adds you to the group and allocates a seat. The group admin will see your account name and last active time. You can leave the group at any time.'**
+  String get licenseOrgInviteAcceptDescription;
+
+  /// Primary action button on the InviteAcceptScreen. Calls acceptLicenseOrgInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get licenseOrgInviteAcceptButton;
+
+  /// Secondary action button on the InviteAcceptScreen. Pops the screen without calling the callable.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get licenseOrgInviteDeclineButton;
+
+  /// Success snackbar shown after the user accepts an invite. Placeholder is the org display name.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined {orgName}'**
+  String licenseOrgInviteAcceptSuccess(String orgName);
+
+  /// Error state on the InviteAcceptScreen when the server returns reason=expired.
+  ///
+  /// In en, this message translates to:
+  /// **'This invite has expired'**
+  String get licenseOrgInviteAcceptErrorExpired;
+
+  /// Error state when reason=already_used. Single-use invites return this once consumed.
+  ///
+  /// In en, this message translates to:
+  /// **'This invite has already been used'**
+  String get licenseOrgInviteAcceptErrorRedeemed;
+
+  /// Error state when the admin revoked the invite before redemption.
+  ///
+  /// In en, this message translates to:
+  /// **'This invite was cancelled'**
+  String get licenseOrgInviteAcceptErrorRevoked;
+
+  /// Error state when the token does not match the LINV format.
+  ///
+  /// In en, this message translates to:
+  /// **'That invite link is not valid'**
+  String get licenseOrgInviteAcceptErrorMalformed;
+
+  /// Error state when the parent license org is suspended at accept time.
+  ///
+  /// In en, this message translates to:
+  /// **'This group is paused'**
+  String get licenseOrgInviteAcceptErrorOrgSuspended;
+
+  /// Error state when the per-uid accept rate limit (10/hr) is hit.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Please try again later.'**
+  String get licenseOrgInviteAcceptErrorRateLimited;
+
+  /// Fallback error state for unmapped Firebase Functions error codes.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not accept the invite. Please try again.'**
+  String get licenseOrgInviteAcceptErrorGeneric;
+
+  /// Label above the inviter's free-form note on the InviteAcceptScreen. Only rendered when the invite carries a non-empty note.
+  ///
+  /// In en, this message translates to:
+  /// **'From the inviter'**
+  String get licenseOrgInviteAcceptInviterNoteLabel;
+
+  /// Action button label on the License Org Overview per-org card that mints a new invite link. Visible to owner / admin role only.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite member'**
+  String get licenseOrgInviteMintAction;
+
+  /// Title at the top of the mint-invite bottom sheet that the admin opens via the Invite member action.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite a teammate'**
+  String get licenseOrgInviteMintSheetTitle;
+
+  /// Body copy on the mint-invite bottom sheet explaining the invite lifecycle in one line.
+  ///
+  /// In en, this message translates to:
+  /// **'Mint a single-use invite link. Send it to one teammate; once they tap Join, the link is consumed. Default expiry is 7 days.'**
+  String get licenseOrgInviteMintSheetBody;
+
+  /// Label for the product picker in the mint-invite sheet. Owner picks which seat the invitee gets allocated.
+  ///
+  /// In en, this message translates to:
+  /// **'Seat product'**
+  String get licenseOrgInviteMintProductLabel;
+
+  /// Submit button label on the mint-invite sheet. Calls inviteLicenseOrgMember and renders the resulting URL.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate invite link'**
+  String get licenseOrgInviteMintSubmit;
+
+  /// Snackbar confirmation when the admin taps Copy on the rendered invite URL.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite link copied'**
+  String get licenseOrgInviteMintCopySuccess;
+
+  /// Action label on the mint-result card that opens the system share sheet with the invite URL.
+  ///
+  /// In en, this message translates to:
+  /// **'Share invite link'**
+  String get licenseOrgInviteMintShareLabel;
+
+  /// Generic fallback error on the mint-invite sheet when the callable fails for an unmapped reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not mint the invite. Please try again.'**
+  String get licenseOrgInviteMintGenericError;
+
   /// Subtitle on the 'Manage group licenses' tile when the current user belongs to two or more license orgs. The {count} placeholder is the org count.
   ///
   /// In en, this message translates to:

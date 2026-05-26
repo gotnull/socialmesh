@@ -47,6 +47,13 @@ enum DeepLinkType {
   /// Buy Me a Coffee webhook lands.
   purchaseReturn,
 
+  /// License org invite (slice N+5): socialmesh://invite/{token}
+  /// or https://socialmesh.app/invite/{token}. Token is a single-use
+  /// LINV-prefixed string the server validates inside
+  /// acceptLicenseOrgInvite. The screen MUST gate redemption behind
+  /// an explicit user accept tap (no silent auto-redeem).
+  licenseOrgInvite,
+
   /// Invalid/unrecognized deep link - routes to fallback
   invalid,
 }
@@ -84,6 +91,7 @@ class ParsedDeepLink {
     this.legalDocument,
     this.legalSectionAnchor,
     this.purchaseSessionId,
+    this.licenseOrgInviteToken,
     this.validationErrors = const [],
   });
 
@@ -155,6 +163,14 @@ class ParsedDeepLink {
   /// Session id from socialmesh://purchase-return?sessionId=… — handed
   /// to ExternalPurchaseService to start polling for webhook confirmation.
   final String? purchaseSessionId;
+
+  // License org invite fields (slice N+5)
+  /// Plaintext LINV-XXXXXX-XXXXXX-XXXXXX-XXXXXX token from
+  /// `/invite/{token}` deep links. Routed to [InviteAcceptScreen]
+  /// where the user explicitly accepts before the token is sent to
+  /// `acceptLicenseOrgInvite`. The token is opaque to the client;
+  /// the server validates the LINV shape + redemption state.
+  final String? licenseOrgInviteToken;
 
   /// Validation errors encountered during parsing.
   /// Empty list means the deep link is valid.

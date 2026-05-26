@@ -44186,6 +44186,86 @@ class AppLocalizationsFr extends AppLocalizations {
   String get licenseOrgOverviewViewMembersAction => 'Voir les membres';
 
   @override
+  String get licenseOrgInviteAcceptTitle => 'Rejoindre la licence de groupe';
+
+  @override
+  String licenseOrgInviteAcceptHeadline(String orgName) {
+    return 'Vous avez été invité à rejoindre $orgName';
+  }
+
+  @override
+  String get licenseOrgInviteAcceptDescription =>
+      'Appuyer sur Rejoindre vous ajoute au groupe et attribue un siège. L\'administrateur du groupe verra le nom de votre compte et l\'heure d\'activité la plus récente. Vous pouvez quitter le groupe à tout moment.';
+
+  @override
+  String get licenseOrgInviteAcceptButton => 'Rejoindre';
+
+  @override
+  String get licenseOrgInviteDeclineButton => 'Refuser';
+
+  @override
+  String licenseOrgInviteAcceptSuccess(String orgName) {
+    return 'Vous avez rejoint $orgName';
+  }
+
+  @override
+  String get licenseOrgInviteAcceptErrorExpired => 'Cette invitation a expiré';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRedeemed =>
+      'Cette invitation a déjà été utilisée';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRevoked =>
+      'Cette invitation a été annulée';
+
+  @override
+  String get licenseOrgInviteAcceptErrorMalformed =>
+      'Ce lien d\'invitation n\'est pas valide';
+
+  @override
+  String get licenseOrgInviteAcceptErrorOrgSuspended =>
+      'Ce groupe est en pause';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRateLimited =>
+      'Trop de tentatives. Réessayez plus tard.';
+
+  @override
+  String get licenseOrgInviteAcceptErrorGeneric =>
+      'Impossible d\'accepter l\'invitation. Réessayez.';
+
+  @override
+  String get licenseOrgInviteAcceptInviterNoteLabel =>
+      'De la part de l\'invitant';
+
+  @override
+  String get licenseOrgInviteMintAction => 'Inviter un membre';
+
+  @override
+  String get licenseOrgInviteMintSheetTitle => 'Inviter un coéquipier';
+
+  @override
+  String get licenseOrgInviteMintSheetBody =>
+      'Créez un lien d\'invitation à usage unique. Envoyez-le à un coéquipier ; dès qu\'il appuie sur Rejoindre, le lien est consommé. L\'expiration par défaut est de 7 jours.';
+
+  @override
+  String get licenseOrgInviteMintProductLabel => 'Produit du siège';
+
+  @override
+  String get licenseOrgInviteMintSubmit => 'Générer le lien d\'invitation';
+
+  @override
+  String get licenseOrgInviteMintCopySuccess => 'Lien d\'invitation copié';
+
+  @override
+  String get licenseOrgInviteMintShareLabel => 'Partager le lien d\'invitation';
+
+  @override
+  String get licenseOrgInviteMintGenericError =>
+      'Impossible de créer l\'invitation. Réessayez.';
+
+  @override
   String licenseOrgOverviewManageTileSubtitleMany(String count) {
     return '$count orgs';
   }

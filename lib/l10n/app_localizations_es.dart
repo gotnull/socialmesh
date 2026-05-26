@@ -44073,6 +44073,86 @@ class AppLocalizationsEs extends AppLocalizations {
   String get licenseOrgOverviewViewMembersAction => 'Ver miembros';
 
   @override
+  String get licenseOrgInviteAcceptTitle => 'Unirse a la licencia de grupo';
+
+  @override
+  String licenseOrgInviteAcceptHeadline(String orgName) {
+    return 'Te han invitado a unirte a $orgName';
+  }
+
+  @override
+  String get licenseOrgInviteAcceptDescription =>
+      'Al tocar Unirme te añades al grupo y se asigna un asiento. El administrador del grupo verá tu nombre de cuenta y la última hora activa. Puedes salir del grupo en cualquier momento.';
+
+  @override
+  String get licenseOrgInviteAcceptButton => 'Unirme';
+
+  @override
+  String get licenseOrgInviteDeclineButton => 'Rechazar';
+
+  @override
+  String licenseOrgInviteAcceptSuccess(String orgName) {
+    return 'Te uniste a $orgName';
+  }
+
+  @override
+  String get licenseOrgInviteAcceptErrorExpired =>
+      'Esta invitación ha caducado';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRedeemed =>
+      'Esta invitación ya se utilizó';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRevoked =>
+      'Esta invitación fue cancelada';
+
+  @override
+  String get licenseOrgInviteAcceptErrorMalformed =>
+      'Ese enlace de invitación no es válido';
+
+  @override
+  String get licenseOrgInviteAcceptErrorOrgSuspended =>
+      'Este grupo está pausado';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRateLimited =>
+      'Demasiados intentos. Inténtalo más tarde.';
+
+  @override
+  String get licenseOrgInviteAcceptErrorGeneric =>
+      'No se pudo aceptar la invitación. Inténtalo de nuevo.';
+
+  @override
+  String get licenseOrgInviteAcceptInviterNoteLabel => 'Del que invita';
+
+  @override
+  String get licenseOrgInviteMintAction => 'Invitar miembro';
+
+  @override
+  String get licenseOrgInviteMintSheetTitle => 'Invitar a un compañero';
+
+  @override
+  String get licenseOrgInviteMintSheetBody =>
+      'Crea un enlace de invitación de un solo uso. Envíalo a un miembro del equipo; cuando toque Unirme, el enlace se consume. La caducidad predeterminada es 7 días.';
+
+  @override
+  String get licenseOrgInviteMintProductLabel => 'Producto del asiento';
+
+  @override
+  String get licenseOrgInviteMintSubmit => 'Generar enlace de invitación';
+
+  @override
+  String get licenseOrgInviteMintCopySuccess => 'Enlace de invitación copiado';
+
+  @override
+  String get licenseOrgInviteMintShareLabel => 'Compartir enlace de invitación';
+
+  @override
+  String get licenseOrgInviteMintGenericError =>
+      'No se pudo crear la invitación. Inténtalo de nuevo.';
+
+  @override
   String licenseOrgOverviewManageTileSubtitleMany(String count) {
     return '$count orgs';
   }

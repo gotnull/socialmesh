@@ -43874,6 +43874,87 @@ class AppLocalizationsRu extends AppLocalizations {
   String get licenseOrgOverviewViewMembersAction => 'Просмотр участников';
 
   @override
+  String get licenseOrgInviteAcceptTitle =>
+      'Присоединиться к групповой лицензии';
+
+  @override
+  String licenseOrgInviteAcceptHeadline(String orgName) {
+    return 'Вас пригласили присоединиться к $orgName';
+  }
+
+  @override
+  String get licenseOrgInviteAcceptDescription =>
+      'Нажав Присоединиться, вы будете добавлены в группу и получите место. Администратор группы увидит имя вашей учётной записи и время последней активности. Вы можете покинуть группу в любое время.';
+
+  @override
+  String get licenseOrgInviteAcceptButton => 'Присоединиться';
+
+  @override
+  String get licenseOrgInviteDeclineButton => 'Отклонить';
+
+  @override
+  String licenseOrgInviteAcceptSuccess(String orgName) {
+    return 'Вы присоединились к $orgName';
+  }
+
+  @override
+  String get licenseOrgInviteAcceptErrorExpired => 'Срок приглашения истёк';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRedeemed =>
+      'Это приглашение уже использовано';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRevoked => 'Это приглашение отменено';
+
+  @override
+  String get licenseOrgInviteAcceptErrorMalformed =>
+      'Эта ссылка-приглашение недействительна';
+
+  @override
+  String get licenseOrgInviteAcceptErrorOrgSuspended =>
+      'Эта группа приостановлена';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRateLimited =>
+      'Слишком много попыток. Повторите позже.';
+
+  @override
+  String get licenseOrgInviteAcceptErrorGeneric =>
+      'Не удалось принять приглашение. Повторите попытку.';
+
+  @override
+  String get licenseOrgInviteAcceptInviterNoteLabel => 'От приглашающего';
+
+  @override
+  String get licenseOrgInviteMintAction => 'Пригласить участника';
+
+  @override
+  String get licenseOrgInviteMintSheetTitle => 'Пригласить участника команды';
+
+  @override
+  String get licenseOrgInviteMintSheetBody =>
+      'Создайте одноразовую ссылку-приглашение. Отправьте её одному участнику команды; как только он нажмёт Присоединиться, ссылка будет использована. Срок действия по умолчанию — 7 дней.';
+
+  @override
+  String get licenseOrgInviteMintProductLabel => 'Продукт места';
+
+  @override
+  String get licenseOrgInviteMintSubmit => 'Создать ссылку-приглашение';
+
+  @override
+  String get licenseOrgInviteMintCopySuccess =>
+      'Ссылка-приглашение скопирована';
+
+  @override
+  String get licenseOrgInviteMintShareLabel =>
+      'Поделиться ссылкой-приглашением';
+
+  @override
+  String get licenseOrgInviteMintGenericError =>
+      'Не удалось создать приглашение. Повторите попытку.';
+
+  @override
   String licenseOrgOverviewManageTileSubtitleMany(String count) {
     return '$count орг.';
   }

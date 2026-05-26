@@ -15,10 +15,15 @@
 // Spec parent: docs/engineering/LICENSE_ORG_OVERVIEW_SCREEN.md.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 
+import '../../config/revenuecat_config.dart';
 import '../../core/l10n/l10n_extension.dart';
+import '../../core/safety/safety.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/section_header.dart';
 import '../../l10n/app_localizations.dart';
@@ -26,6 +31,8 @@ import '../../models/license_org.dart';
 import '../../models/license_org_membership.dart';
 import '../../providers/license_org_members_providers.dart';
 import '../../providers/license_org_overview_providers.dart';
+import '../../services/license_org/license_org_invite_service.dart';
+import '../../utils/snackbar.dart';
 import 'license_org_members_sheet.dart';
 
 /// Reads the per-org providers for [orgId] and renders the canonical
@@ -110,11 +117,20 @@ class LicenseOrgOverviewCard extends ConsumerWidget {
         // imply admin recourse that doesn't exist. The "Open in web
         // admin" button is still gated on the future
         // licenseOrgAdminWebEnabled flag and stays deferred.
-        if (status == LicenseOrgStatus.active)
-          Padding(
-            padding: const EdgeInsets.only(top: AppTheme.spacing12),
-            child: _ViewMembersButton(orgId: orgId),
-          ),
+        if (status == LicenseOrgStatus.active) ...[
+          const SizedBox(height: AppTheme.spacing12),
+          _ViewMembersButton(orgId: orgId),
+          // Owner / admin can mint an invite link directly from the
+          // Overview card. Member role doesn't see the button (mint
+          // is admin-only at the Function layer; surfacing the
+          // button to members would be a confusing dead-end). The
+          // future web admin pane has the same mint affordance.
+          if (role == LicenseOrgMemberRole.owner ||
+              role == LicenseOrgMemberRole.admin) ...[
+            const SizedBox(height: AppTheme.spacing8),
+            _InviteMemberButton(orgId: orgId),
+          ],
+        ],
       ],
     );
   }
@@ -328,6 +344,262 @@ class _ViewMembersButton extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Owner / admin affordance to mint a single-use invite link via
+/// `inviteLicenseOrgMember`. Opens an `AppBottomSheet.show` with a
+/// short explainer; on confirm, calls the callable and renders the
+/// returned URL with copy + share actions. Member role does not see
+/// this button.
+class _InviteMemberButton extends ConsumerWidget {
+  final String orgId;
+
+  const _InviteMemberButton({required this.orgId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return Material(
+      color: context.card,
+      borderRadius: BorderRadius.circular(AppTheme.radius12),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => _showMintSheet(context, orgId),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacing16,
+            vertical: AppTheme.spacing12,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: context.accentColor.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(AppTheme.radius8),
+                ),
+                child: Icon(
+                  Icons.person_add_alt_1_outlined,
+                  color: context.accentColor,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: Text(
+                  l10n.licenseOrgInviteMintAction,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: context.textPrimary,
+                  ),
+                ),
+              ),
+              Icon(Icons.chevron_right, color: context.textTertiary, size: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+Future<void> _showMintSheet(BuildContext context, String orgId) {
+  return AppBottomSheet.show<void>(
+    context: context,
+    child: _InviteMintSheet(orgId: orgId),
+  );
+}
+
+class _InviteMintSheet extends ConsumerStatefulWidget {
+  final String orgId;
+
+  const _InviteMintSheet({required this.orgId});
+
+  @override
+  ConsumerState<_InviteMintSheet> createState() => _InviteMintSheetState();
+}
+
+class _InviteMintSheetState extends ConsumerState<_InviteMintSheet>
+    with LifecycleSafeMixin {
+  bool _busy = false;
+  String? _acceptUrl;
+  String? _errorMessage;
+
+  Future<void> _mint() async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _errorMessage = null;
+    });
+    final service = LicenseOrgInviteService();
+    final result = await service.mintInvite(
+      licenseOrgId: widget.orgId,
+      productId: RevenueCatConfig.themePackProductId,
+    );
+    if (!mounted) return;
+    switch (result) {
+      case MintInviteSuccess(:final acceptUrl):
+        setState(() {
+          _busy = false;
+          _acceptUrl = acceptUrl;
+        });
+      case MintInviteFailure():
+        setState(() {
+          _busy = false;
+          _errorMessage = context.l10n.licenseOrgInviteMintGenericError;
+        });
+    }
+  }
+
+  Future<void> _copy() async {
+    final url = _acceptUrl;
+    if (url == null) return;
+    await Clipboard.setData(ClipboardData(text: url));
+    if (!mounted) return;
+    showSuccessSnackBar(context, context.l10n.licenseOrgInviteMintCopySuccess);
+  }
+
+  Future<void> _share() async {
+    final url = _acceptUrl;
+    if (url == null) return;
+    await SharePlus.instance.share(ShareParams(text: url));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing24,
+        AppTheme.spacing8,
+        AppTheme.spacing24,
+        AppTheme.spacing24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l10n.licenseOrgInviteMintSheetTitle,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: context.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          Text(
+            l10n.licenseOrgInviteMintSheetBody,
+            style: TextStyle(
+              fontSize: 14,
+              color: context.textSecondary,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing20),
+          if (_acceptUrl == null) ...[
+            if (_errorMessage != null) ...[
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spacing12),
+                decoration: BoxDecoration(
+                  color: AppTheme.errorRed.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
+                  border: Border.all(
+                    color: AppTheme.errorRed.withValues(alpha: 0.5),
+                  ),
+                ),
+                child: Text(
+                  _errorMessage!,
+                  style: TextStyle(color: AppTheme.errorRed, fontSize: 13),
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing12),
+            ],
+            FilledButton.icon(
+              onPressed: _busy ? null : _mint,
+              icon: _busy
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.link),
+              label: Text(l10n.licenseOrgInviteMintSubmit),
+              style: FilledButton.styleFrom(
+                backgroundColor: context.accentColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
+                ),
+              ),
+            ),
+          ] else ...[
+            Container(
+              padding: const EdgeInsets.all(AppTheme.spacing12),
+              decoration: BoxDecoration(
+                color: context.card,
+                borderRadius: BorderRadius.circular(AppTheme.radius12),
+                border: Border.all(color: context.border),
+              ),
+              child: SelectableText(
+                _acceptUrl!,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: context.textPrimary,
+                  fontFamily: AppTheme.fontFamily,
+                ),
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _copy,
+                    icon: const Icon(Icons.copy),
+                    label: Text(l10n.licenseOrgInviteMintCopySuccess),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: context.accentColor,
+                      side: BorderSide(
+                        color: context.accentColor.withValues(alpha: 0.5),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppTheme.spacing12),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: _share,
+                    icon: const Icon(Icons.share_outlined),
+                    label: Text(l10n.licenseOrgInviteMintShareLabel),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: context.accentColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
       ),
     );
   }

@@ -283,6 +283,11 @@ class DeepLinkManager {
         return sessionId != null
             ? 'purchase-return:$sessionId'
             : null; // lint-allow: hardcoded-string
+      case DeepLinkType.licenseOrgInvite:
+        final token = link.licenseOrgInviteToken;
+        return token != null
+            ? 'license-org-invite:$token'
+            : null; // lint-allow: hardcoded-string
       case DeepLinkType.invalid:
         return null;
     }

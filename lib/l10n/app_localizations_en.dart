@@ -43389,6 +43389,83 @@ class AppLocalizationsEn extends AppLocalizations {
   String get licenseOrgOverviewViewMembersAction => 'View members';
 
   @override
+  String get licenseOrgInviteAcceptTitle => 'Join group license';
+
+  @override
+  String licenseOrgInviteAcceptHeadline(String orgName) {
+    return 'You have been invited to join $orgName';
+  }
+
+  @override
+  String get licenseOrgInviteAcceptDescription =>
+      'Tapping Join adds you to the group and allocates a seat. The group admin will see your account name and last active time. You can leave the group at any time.';
+
+  @override
+  String get licenseOrgInviteAcceptButton => 'Join';
+
+  @override
+  String get licenseOrgInviteDeclineButton => 'Decline';
+
+  @override
+  String licenseOrgInviteAcceptSuccess(String orgName) {
+    return 'Joined $orgName';
+  }
+
+  @override
+  String get licenseOrgInviteAcceptErrorExpired => 'This invite has expired';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRedeemed =>
+      'This invite has already been used';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRevoked => 'This invite was cancelled';
+
+  @override
+  String get licenseOrgInviteAcceptErrorMalformed =>
+      'That invite link is not valid';
+
+  @override
+  String get licenseOrgInviteAcceptErrorOrgSuspended => 'This group is paused';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRateLimited =>
+      'Too many attempts. Please try again later.';
+
+  @override
+  String get licenseOrgInviteAcceptErrorGeneric =>
+      'Could not accept the invite. Please try again.';
+
+  @override
+  String get licenseOrgInviteAcceptInviterNoteLabel => 'From the inviter';
+
+  @override
+  String get licenseOrgInviteMintAction => 'Invite member';
+
+  @override
+  String get licenseOrgInviteMintSheetTitle => 'Invite a teammate';
+
+  @override
+  String get licenseOrgInviteMintSheetBody =>
+      'Mint a single-use invite link. Send it to one teammate; once they tap Join, the link is consumed. Default expiry is 7 days.';
+
+  @override
+  String get licenseOrgInviteMintProductLabel => 'Seat product';
+
+  @override
+  String get licenseOrgInviteMintSubmit => 'Generate invite link';
+
+  @override
+  String get licenseOrgInviteMintCopySuccess => 'Invite link copied';
+
+  @override
+  String get licenseOrgInviteMintShareLabel => 'Share invite link';
+
+  @override
+  String get licenseOrgInviteMintGenericError =>
+      'Could not mint the invite. Please try again.';
+
+  @override
   String licenseOrgOverviewManageTileSubtitleMany(String count) {
     return '$count orgs';
   }

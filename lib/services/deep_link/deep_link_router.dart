@@ -56,6 +56,7 @@ class DeepLinkRouter {
       DeepLinkType.aetherFlight => _routeAetherFlight(link),
       DeepLinkType.legal => _routeLegal(link),
       DeepLinkType.purchaseReturn => _routePurchaseReturn(link),
+      DeepLinkType.licenseOrgInvite => _routeLicenseOrgInvite(link),
       DeepLinkType.invalid => DeepLinkRouteResult.fallback,
     };
 
@@ -280,6 +281,26 @@ class DeepLinkRouter {
     return DeepLinkRouteResult(
       routeName: '/main',
       arguments: {'purchaseSessionId': link.purchaseSessionId},
+    );
+  }
+
+  /// Route a license org invite deep link to the consent screen.
+  /// The screen mounts `InviteAcceptScreen` and prompts the user to
+  /// accept or decline before any callable is invoked. The token is
+  /// passed as an argument; the app shell's route table converts
+  /// `/invite` + `arguments.token` into a push of
+  /// `InviteAcceptScreen.route(token)`.
+  DeepLinkRouteResult _routeLicenseOrgInvite(ParsedDeepLink link) {
+    final token = link.licenseOrgInviteToken;
+    if (token == null || token.isEmpty) {
+      return DeepLinkRouteResult(
+        routeName: '/main',
+        fallbackMessage: 'Missing invite token',
+      );
+    }
+    return DeepLinkRouteResult(
+      routeName: '/invite',
+      arguments: {'token': token},
     );
   }
 

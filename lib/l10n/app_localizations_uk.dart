@@ -43886,6 +43886,85 @@ class AppLocalizationsUk extends AppLocalizations {
   String get licenseOrgOverviewViewMembersAction => 'Переглянути учасників';
 
   @override
+  String get licenseOrgInviteAcceptTitle => 'Приєднатися до групової ліцензії';
+
+  @override
+  String licenseOrgInviteAcceptHeadline(String orgName) {
+    return 'Вас запросили приєднатися до $orgName';
+  }
+
+  @override
+  String get licenseOrgInviteAcceptDescription =>
+      'Натискаючи Приєднатися, ви додаєтеся до групи та отримуєте місце. Адміністратор групи бачитиме ім\'я вашого облікового запису та час останньої активності. Ви можете залишити групу в будь-який час.';
+
+  @override
+  String get licenseOrgInviteAcceptButton => 'Приєднатися';
+
+  @override
+  String get licenseOrgInviteDeclineButton => 'Відхилити';
+
+  @override
+  String licenseOrgInviteAcceptSuccess(String orgName) {
+    return 'Ви приєдналися до $orgName';
+  }
+
+  @override
+  String get licenseOrgInviteAcceptErrorExpired => 'Це запрошення прострочене';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRedeemed =>
+      'Це запрошення вже використано';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRevoked => 'Це запрошення скасовано';
+
+  @override
+  String get licenseOrgInviteAcceptErrorMalformed =>
+      'Це посилання-запрошення недійсне';
+
+  @override
+  String get licenseOrgInviteAcceptErrorOrgSuspended => 'Цю групу призупинено';
+
+  @override
+  String get licenseOrgInviteAcceptErrorRateLimited =>
+      'Забагато спроб. Спробуйте пізніше.';
+
+  @override
+  String get licenseOrgInviteAcceptErrorGeneric =>
+      'Не вдалося прийняти запрошення. Спробуйте знову.';
+
+  @override
+  String get licenseOrgInviteAcceptInviterNoteLabel => 'Від запрошувача';
+
+  @override
+  String get licenseOrgInviteMintAction => 'Запросити учасника';
+
+  @override
+  String get licenseOrgInviteMintSheetTitle => 'Запросити учасника команди';
+
+  @override
+  String get licenseOrgInviteMintSheetBody =>
+      'Створіть одноразове посилання-запрошення. Надішліть його одному учаснику команди; коли вони натиснуть Приєднатися, посилання буде використано. Стандартний термін дії — 7 днів.';
+
+  @override
+  String get licenseOrgInviteMintProductLabel => 'Продукт місця';
+
+  @override
+  String get licenseOrgInviteMintSubmit => 'Створити посилання-запрошення';
+
+  @override
+  String get licenseOrgInviteMintCopySuccess =>
+      'Посилання-запрошення скопійовано';
+
+  @override
+  String get licenseOrgInviteMintShareLabel =>
+      'Поділитися посиланням-запрошенням';
+
+  @override
+  String get licenseOrgInviteMintGenericError =>
+      'Не вдалося створити запрошення. Спробуйте знову.';
+
+  @override
   String licenseOrgOverviewManageTileSubtitleMany(String count) {
     return '$count орг.';
   }

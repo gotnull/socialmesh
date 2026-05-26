@@ -74,6 +74,7 @@ import 'providers/accessibility_providers.dart';
 import 'features/automations/automation_providers.dart';
 import 'features/automations/automation_import_screen.dart';
 import 'features/external_purchase/confirming_unlock_overlay.dart';
+import 'features/license_org/invite_accept_screen.dart';
 import 'features/widget_builder/widget_import_screen.dart';
 import 'models/mesh_models.dart';
 import 'models/social.dart';
@@ -2005,6 +2006,22 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
           '/reachability': (context) => const MeshReachabilityScreen(),
         },
         onGenerateRoute: (settings) {
+          // License org invite (slice N+5). Deep-link router lands
+          // here with the plaintext LINV token in arguments; we push
+          // the InviteAcceptScreen which prompts the user for
+          // explicit consent before calling acceptLicenseOrgInvite.
+          if (settings.name == '/invite') {
+            final args = settings.arguments as Map<String, dynamic>?;
+            final token = args?['token'] as String?;
+            if (token == null || token.isEmpty) {
+              return MaterialPageRoute(
+                builder: (_) => const Scaffold(
+                  body: Center(child: Text('Invalid invite link')),
+                ),
+              );
+            }
+            return InviteAcceptScreen.route(token);
+          }
           if (settings.name == '/my-bug-reports') {
             final args = settings.arguments as Map<String, dynamic>?;
             final reportId = args?['reportId'] as String?;
