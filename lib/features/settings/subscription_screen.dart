@@ -169,16 +169,14 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
               // One-time purchases (shows OWNED or price depending on state)
               _buildOneTimePurchases(),
 
-              // Restore Purchases button (bottom)
-              const RestorePurchasesButton(),
-
-              // Group licensing entry section. Promoted from the
-              // measly bottom-of-screen TextButton treatment (initial
-              // ship) to a proper first-class card section with a
-              // SectionTitle header + canonical SettingsTile rows.
-              // Group / community licensing is a revenue path and a
-              // team-management surface; it is NOT a fallback like
-              // unlock-code redemption. See auto-memory
+              // Group licensing entry section. First-class card
+              // section with a SectionTitle header + canonical
+              // SettingsTile rows. Group / community licensing is a
+              // revenue path and a team-management surface; it is
+              // NOT a fallback like unlock-code redemption. Sits
+              // ABOVE Restore Purchases and unlock-code support
+              // links so the team-management surface stays visually
+              // primary. See auto-memory
               // feedback_enterprise_ux_for_premium_surfaces.md.
               if (AppFeatureFlags.isGroupLicensingEnabled) ...[
                 const SizedBox(height: AppTheme.spacing24),
@@ -193,6 +191,11 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
                 const SizedBox(height: AppTheme.spacing8),
                 _GroupLicensingEntries(),
               ],
+
+              // Restore Purchases - sits BELOW the group licensing
+              // section so the team surface stays visually primary.
+              const SizedBox(height: AppTheme.spacing16),
+              const RestorePurchasesButton(),
 
               // Support fallback: redeem unlock code. Low-emphasis text
               // link - primary CTAs above remain the canonical path.

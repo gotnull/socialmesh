@@ -47,7 +47,7 @@ final seatAllocationRepositoryProvider = Provider<SeatAllocationRepository>((
 final currentUserSeatAllocationsProvider =
     StreamProvider<Set<SeatAllocationRef>>((ref) async* {
       if (!AppFeatureFlags.isGroupLicensingEnabled) {
-        AppLogging.purchase(
+        AppLogging.groupLicensing(
           '[SeatAllocation] feature flag disabled - yielding empty',
         );
         yield const <SeatAllocationRef>{};
@@ -60,7 +60,7 @@ final currentUserSeatAllocationsProvider =
         return;
       }
       if (user.isAnonymous) {
-        AppLogging.purchase(
+        AppLogging.groupLicensing(
           '[SeatAllocation] anonymous user - yielding empty '
           '(guest mode is seat-blind)',
         );
@@ -80,7 +80,7 @@ final currentUserSeatAllocationsProvider =
           yield seats;
         }
       } catch (e) {
-        AppLogging.purchase(
+        AppLogging.groupLicensing(
           '[SeatAllocation] repository stream threw - failing closed '
           '(error class: ${e.runtimeType})',
         );
@@ -105,6 +105,6 @@ final hasSeatForProvider = Provider.family<bool, SeatAllocationRef>((
 /// provider; the next subscriber re-evaluates flag + auth state and
 /// re-subscribes to the repository.
 void debugRefreshSeatAllocations(WidgetRef ref) {
-  AppLogging.purchase('[SeatAllocation] debugRefresh requested');
+  AppLogging.groupLicensing('[SeatAllocation] debugRefresh requested');
   ref.invalidate(currentUserSeatAllocationsProvider);
 }

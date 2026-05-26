@@ -98,7 +98,7 @@ Future<OrgCheckoutOutcome> showOrgCheckoutSheet(
   OrgCheckoutLauncher? launcher,
 }) async {
   if (!AppFeatureFlags.isGroupLicensingEnabled) {
-    AppLogging.purchase(
+    AppLogging.groupLicensing(
       '[OrgCheckoutSheet] group licensing disabled - sheet suppressed',
     );
     return OrgCheckoutOutcome.canceled;
@@ -246,7 +246,7 @@ class _OrgCheckoutBodyState extends ConsumerState<_OrgCheckoutBody>
         licenseOrgId: slug,
       );
       if (!mounted) return;
-      AppLogging.purchase(
+      AppLogging.groupLicensing(
         '[OrgCheckoutSheet] descriptor received sessionId=${descriptor.sessionId} '
         'paymentIntentId=${descriptor.paymentIntentId} '
         'hasClientSecret=${descriptor.clientSecret.isNotEmpty}',
@@ -263,7 +263,7 @@ class _OrgCheckoutBodyState extends ConsumerState<_OrgCheckoutBody>
       // owning the lists itself.
       final details = e.details;
       final reason = details is Map ? details['reason'] : null;
-      AppLogging.purchase(
+      AppLogging.groupLicensing(
         '[OrgCheckoutSheet] checkout rejected code=${e.code} reason=$reason',
       );
       if (!mounted) return;
@@ -273,7 +273,7 @@ class _OrgCheckoutBodyState extends ConsumerState<_OrgCheckoutBody>
         _errorMessage = _serverErrorMessage(context, reason);
       });
     } catch (e) {
-      AppLogging.purchase('[OrgCheckoutSheet] checkout failed: $e');
+      AppLogging.groupLicensing('[OrgCheckoutSheet] checkout failed: $e');
       if (!mounted) return;
       ref.haptics.error();
       safeSetState(() {

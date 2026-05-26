@@ -85,7 +85,7 @@ class _LicenseOrgOverviewScreenState
       // contract in docs/engineering/LICENSE_ORG_OVERVIEW_SCREEN.md
       // section 8 (Tests) and the broader GROUP_LICENSING_FOUNDATION
       // PII rules.
-      AppLogging.purchase(
+      AppLogging.groupLicensing(
         '[LicenseOrgOverview] screen opened '
         '(flag=${AppFeatureFlags.isGroupLicensingEnabled})',
       );
@@ -106,7 +106,7 @@ class _LicenseOrgOverviewScreenState
             child: _LoadingSkeleton(),
           ),
           error: (err, st) {
-            AppLogging.purchase(
+            AppLogging.groupLicensing(
               '[LicenseOrgOverview] error state rendered '
               '(error class: ${err.runtimeType})',
             );
@@ -122,7 +122,9 @@ class _LicenseOrgOverviewScreenState
           },
           data: (orgIds) {
             if (orgIds.isEmpty) {
-              AppLogging.purchase('[LicenseOrgOverview] empty state rendered');
+              AppLogging.groupLicensing(
+                '[LicenseOrgOverview] empty state rendered',
+              );
               return SliverFillRemaining(
                 hasScrollBody: false,
                 child: _EmptyState(
@@ -134,7 +136,7 @@ class _LicenseOrgOverviewScreenState
               );
             }
             // Counts only - no orgIds, no uid leak.
-            AppLogging.purchase(
+            AppLogging.groupLicensing(
               '[LicenseOrgOverview] loaded orgCount=${orgIds.length}',
             );
             final sorted = orgIds.toList()..sort();

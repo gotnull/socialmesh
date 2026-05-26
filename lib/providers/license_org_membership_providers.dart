@@ -57,7 +57,7 @@ final currentUserLicenseOrgIdsProvider = StreamProvider<Set<String>>((
   ref,
 ) async* {
   if (!AppFeatureFlags.isGroupLicensingEnabled) {
-    AppLogging.purchase(
+    AppLogging.groupLicensing(
       '[LicenseOrgMembership] feature flag disabled - yielding empty',
     );
     yield const <String>{};
@@ -70,7 +70,7 @@ final currentUserLicenseOrgIdsProvider = StreamProvider<Set<String>>((
     return;
   }
   if (user.isAnonymous) {
-    AppLogging.purchase(
+    AppLogging.groupLicensing(
       '[LicenseOrgMembership] anonymous user - yielding empty '
       '(guest mode is license-org-blind)',
     );
@@ -94,7 +94,7 @@ final currentUserLicenseOrgIdsProvider = StreamProvider<Set<String>>((
       yield ids;
     }
   } catch (e) {
-    AppLogging.purchase(
+    AppLogging.groupLicensing(
       '[LicenseOrgMembership] repository stream threw - failing closed '
       '(error class: ${e.runtimeType})',
     );
@@ -122,6 +122,6 @@ final isCurrentUserInLicenseOrgProvider = Provider.family<bool, String>((
 /// provider; the next subscriber re-evaluates flag + auth state and
 /// re-subscribes to the repository.
 void debugRefreshLicenseOrgMembership(WidgetRef ref) {
-  AppLogging.purchase('[LicenseOrgMembership] debugRefresh requested');
+  AppLogging.groupLicensing('[LicenseOrgMembership] debugRefresh requested');
   ref.invalidate(currentUserLicenseOrgIdsProvider);
 }

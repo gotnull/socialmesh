@@ -109,7 +109,7 @@ class FirestoreLicenseOrgMembershipRepository
           if (org == null || !org.isAccessActive) continue;
           next.add(membership.orgId);
         } catch (e) {
-          AppLogging.purchase(
+          AppLogging.groupLicensing(
             '[LicenseOrgMembershipRepo] parent license_org fetch failed - '
             'skipping id (error class: ${e.runtimeType})',
           );
@@ -136,7 +136,7 @@ class FirestoreLicenseOrgMembershipRepository
               emit();
             },
             onError: (Object e) {
-              AppLogging.purchase(
+              AppLogging.groupLicensing(
                 '[LicenseOrgMembershipRepo] owned-orgs stream error - '
                 'failing closed (error class: ${e.runtimeType})',
               );
@@ -158,7 +158,7 @@ class FirestoreLicenseOrgMembershipRepository
               unawaited(handleMemberSnapshot(snap));
             },
             onError: (Object e) {
-              AppLogging.purchase(
+              AppLogging.groupLicensing(
                 '[LicenseOrgMembershipRepo] member-orgs stream error - '
                 'failing closed (error class: ${e.runtimeType})',
               );
@@ -204,7 +204,7 @@ class FirestoreLicenseOrgMembershipRepository
               controller.add(LicenseOrg.fromFirestore(snap));
             },
             onError: (Object e) {
-              AppLogging.purchase(
+              AppLogging.groupLicensing(
                 '[LicenseOrgMembershipRepo] watchLicenseOrg stream error - '
                 'failing closed (error class: ${e.runtimeType})',
               );
@@ -246,7 +246,7 @@ class FirestoreLicenseOrgMembershipRepository
               controller.add(LicenseOrgMembership.fromFirestore(snap));
             },
             onError: (Object e) {
-              AppLogging.purchase(
+              AppLogging.groupLicensing(
                 '[LicenseOrgMembershipRepo] watchMembership stream error - '
                 'failing closed (error class: ${e.runtimeType})',
               );

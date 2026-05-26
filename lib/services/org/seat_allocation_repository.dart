@@ -63,7 +63,7 @@ class FirestoreSeatAllocationRepository implements SeatAllocationRepository {
               controller.add(result);
             },
             onError: (Object e) {
-              AppLogging.purchase(
+              AppLogging.groupLicensing(
                 '[SeatAllocationRepo] stream error - failing closed '
                 '(error class: ${e.runtimeType})',
               );

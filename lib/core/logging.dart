@@ -54,6 +54,7 @@ class AppLogging {
   static bool? _appLoggingEnabled;
   static bool? _subscriptionsLoggingEnabled;
   static bool? _purchaseLoggingEnabled;
+  static bool? _groupLicensingLoggingEnabled;
   static bool? _notificationsLoggingEnabled;
   static bool? _audioLoggingEnabled;
   static bool? _mapsLoggingEnabled;
@@ -205,6 +206,13 @@ class AppLogging {
     _purchaseLoggingEnabled ??=
         _safeGetEnv('PURCHASE_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _purchaseLoggingEnabled!;
+  }
+
+  static bool get groupLicensingLoggingEnabled {
+    _groupLicensingLoggingEnabled ??=
+        _safeGetEnv('GROUP_LICENSING_LOGGING_ENABLED')?.toLowerCase() !=
+        'false';
+    return _groupLicensingLoggingEnabled!;
   }
 
   static bool get notificationsLoggingEnabled {
@@ -491,6 +499,18 @@ class AppLogging {
 
   static void purchase(String message) {
     if (purchaseLoggingEnabled) debugPrint('Purchase: $message');
+  }
+
+  /// Group / community licensing channel. Use this for any
+  /// `license_orgs/`, `org_seat_allocations/`, `license_seat_codes/`,
+  /// or `license_org_audit_events/` related diagnostic output on the
+  /// client side. PII-safe by convention - no uid, no orgId, no
+  /// productId in payloads; counts + status only (matches the
+  /// `channel: 'licensing'` Cloud Function logs).
+  static void groupLicensing(String message) {
+    if (groupLicensingLoggingEnabled) {
+      debugPrint('GroupLicensing: $message');
+    }
   }
 
   static void notifications(String message) {
@@ -1162,6 +1182,7 @@ class AppLogging {
     _appLoggingEnabled = null;
     _subscriptionsLoggingEnabled = null;
     _purchaseLoggingEnabled = null;
+    _groupLicensingLoggingEnabled = null;
     _notificationsLoggingEnabled = null;
     _audioLoggingEnabled = null;
     _mapsLoggingEnabled = null;
@@ -1239,6 +1260,7 @@ class AppLogging {
     _appLoggingEnabled = null;
     _subscriptionsLoggingEnabled = null;
     _purchaseLoggingEnabled = null;
+    _groupLicensingLoggingEnabled = null;
     _notificationsLoggingEnabled = null;
     _audioLoggingEnabled = null;
     _mapsLoggingEnabled = null;
