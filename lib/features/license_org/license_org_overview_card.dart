@@ -2,14 +2,17 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
 // Per-org card used by [LicenseOrgOverviewScreen]. Renders one
-// SectionTitle (with role badge as trailing) over a canonical
-// InfoTable with the org id, role, seat count, status, and joined
-// date. Read-only by design - actions hang off the parent screen so
-// the card stays composition-free.
+// [SectionTitle] with the org name over a canonical [InfoTable].
 //
-// Spec: docs/engineering/LICENSE_ORG_OVERVIEW_SCREEN.md section 2
-// "Per-org card structure". All UI primitives are canonical (no
-// hand-rolled Row / Container / Stack arrangements).
+// Status and Role are rendered as **pill-shaped valueWidgets inside
+// the InfoTable cells** rather than as a SectionTitle trailing badge.
+// This keeps both pills on the same vertical grid as the table values
+// (right-aligned to the InfoTable's internal cell padding), which was
+// the alignment ambiguity the first ship had — a Spacer-pushed
+// trailing chip in the SectionTitle never aligned correctly with the
+// InfoTable border below.
+//
+// Spec parent: docs/engineering/LICENSE_ORG_OVERVIEW_SCREEN.md.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,16 +27,12 @@ import '../../models/license_org_membership.dart';
 import '../../providers/license_org_overview_providers.dart';
 
 /// Reads the per-org providers for [orgId] and renders the canonical
-/// SectionTitle + InfoTable card.
+/// [SectionTitle] + [InfoTable] card.
 ///
-/// All four data sources fail closed:
-///   - org doc -> shows the slug as a placeholder name and an unknown
-///     status badge if the doc is missing
-///   - membership doc -> falls back to LicenseOrgMemberRole.unknown
-///     (rendered as "Member" for accessibility)
-///   - seat count -> 0 when no seats or while loading
-///
-/// The card itself never throws into the build phase.
+/// Fail-closed everywhere:
+///   - org doc -> slug as placeholder name, unknown status pill
+///   - membership doc -> falls back to [LicenseOrgMemberRole.unknown]
+///   - seat count -> 0 while loading or on error
 class LicenseOrgOverviewCard extends ConsumerWidget {
   final String orgId;
 
@@ -61,39 +60,46 @@ class LicenseOrgOverviewCard extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SectionTitle(
-          title: displayName,
-          trailing: _RoleBadge(role: role),
-        ),
+        SectionTitle(title: displayName),
+        const SizedBox(height: AppTheme.spacing12),
         InfoTable(
           rows: [
+            // Status first - the field a user opens this screen TO
+            // check. Rendered as a colored pill in the value cell so
+            // active / suspended is scannable at a glance.
             InfoTableRow(
-              label: l10n.licenseOrgOverviewOrgIdLabel,
-              value: orgId,
-              icon: Icons.fingerprint,
+              label: l10n.licenseOrgOverviewStatusLabel,
+              value: _statusString(l10n, status),
+              icon: Icons.shield_outlined,
+              valueWidget: _StatusPill(status: status, l10n: l10n),
             ),
+            // Role second - "what can I do here?". Owner / Admin /
+            // Member are accent-colored pills in the value cell.
             InfoTableRow(
               label: l10n.licenseOrgOverviewRoleLabel,
               value: _roleString(l10n, role),
-              icon: Icons.shield_outlined,
+              icon: Icons.workspace_premium_outlined,
+              valueWidget: _RolePill(role: role, l10n: l10n),
             ),
+            // Primary metric - how many seats the current user holds.
             InfoTableRow(
               label: l10n.licenseOrgOverviewSeatsLabel,
               value: seatCount.toString(),
               icon: Icons.event_seat_outlined,
             ),
-            InfoTableRow(
-              label: l10n.licenseOrgOverviewStatusLabel,
-              value: _statusString(l10n, status),
-              icon: Icons.circle,
-              iconColor: _statusColor(context, status),
-            ),
+            // Audit / temporal.
             if (membership?.joinedAt != null)
               InfoTableRow(
                 label: l10n.licenseOrgOverviewJoinedLabel,
                 value: _formatJoinedAt(membership!.joinedAt!),
                 icon: Icons.event_available_outlined,
               ),
+            // Technical identifier - bottom row, copy/debug only.
+            InfoTableRow(
+              label: l10n.licenseOrgOverviewOrgIdLabel,
+              value: orgId,
+              icon: Icons.fingerprint,
+            ),
           ],
         ),
       ],
@@ -122,19 +128,9 @@ class LicenseOrgOverviewCard extends ConsumerWidget {
     }
   }
 
-  Color _statusColor(BuildContext context, LicenseOrgStatus status) {
-    switch (status) {
-      case LicenseOrgStatus.active:
-        return AppTheme.successGreen;
-      case LicenseOrgStatus.suspended:
-      case LicenseOrgStatus.unknown:
-        return AppTheme.errorRed;
-    }
-  }
-
   // Day-precision absolute date: YYYY-MM-DD. The Overview screen does
-  // not show timestamps, so the membership join date renders without a
-  // time component to match the read-only audit-style InfoTable.
+  // not show timestamps, so the membership join date renders without
+  // a time component to match the read-only audit-style InfoTable.
   String _formatJoinedAt(DateTime joinedAt) {
     final local = joinedAt.toLocal();
     final y = local.year.toString().padLeft(4, '0');
@@ -144,56 +140,99 @@ class LicenseOrgOverviewCard extends ConsumerWidget {
   }
 }
 
-class _RoleBadge extends StatelessWidget {
-  final LicenseOrgMemberRole role;
+/// Colored pill rendered in the Status row's value cell.
+///
+/// Aligns right via the InfoTable's right-cell `alignment:
+/// Alignment.topRight`. No Spacer hacks, no SectionTitle trailing -
+/// the chip sits exactly where every other value sits, on the table's
+/// right-edge grid.
+class _StatusPill extends StatelessWidget {
+  final LicenseOrgStatus status;
+  final AppLocalizations l10n;
 
-  const _RoleBadge({required this.role});
+  const _StatusPill({required this.status, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final accent = _accent(context);
-    final label = _label(l10n);
+    final (color, label) = switch (status) {
+      LicenseOrgStatus.active => (
+        AppTheme.successGreen,
+        l10n.licenseOrgOverviewStatusActive,
+      ),
+      LicenseOrgStatus.suspended || LicenseOrgStatus.unknown => (
+        AppTheme.errorRed,
+        l10n.licenseOrgOverviewStatusSuspended,
+      ),
+    };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.18),
+        color: color.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(AppTheme.radius8),
-        border: Border.all(color: accent.withValues(alpha: 0.6)),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Accent-colored pill rendered in the Role row's value cell.
+class _RolePill extends StatelessWidget {
+  final LicenseOrgMemberRole role;
+  final AppLocalizations l10n;
+
+  const _RolePill({required this.role, required this.l10n});
+
+  @override
+  Widget build(BuildContext context) {
+    final (color, label) = switch (role) {
+      LicenseOrgMemberRole.owner => (
+        AppTheme.warningYellow,
+        l10n.licenseOrgOverviewRoleOwner,
+      ),
+      LicenseOrgMemberRole.admin => (
+        context.accentColor,
+        l10n.licenseOrgOverviewRoleAdmin,
+      ),
+      LicenseOrgMemberRole.member || LicenseOrgMemberRole.unknown => (
+        context.textSecondary,
+        l10n.licenseOrgOverviewRoleMember,
+      ),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(AppTheme.radius8),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Text(
         label.toUpperCase(),
         style: TextStyle(
-          fontSize: 10,
+          fontSize: 11,
           fontWeight: FontWeight.w700,
-          color: accent,
-          letterSpacing: 1,
+          color: color,
+          letterSpacing: 0.8,
         ),
       ),
     );
-  }
-
-  String _label(AppLocalizations l10n) {
-    switch (role) {
-      case LicenseOrgMemberRole.owner:
-        return l10n.licenseOrgOverviewRoleOwner;
-      case LicenseOrgMemberRole.admin:
-        return l10n.licenseOrgOverviewRoleAdmin;
-      case LicenseOrgMemberRole.member:
-      case LicenseOrgMemberRole.unknown:
-        return l10n.licenseOrgOverviewRoleMember;
-    }
-  }
-
-  Color _accent(BuildContext context) {
-    switch (role) {
-      case LicenseOrgMemberRole.owner:
-        return AppTheme.warningYellow;
-      case LicenseOrgMemberRole.admin:
-        return context.accentColor;
-      case LicenseOrgMemberRole.member:
-      case LicenseOrgMemberRole.unknown:
-        return context.textTertiary;
-    }
   }
 }

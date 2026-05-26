@@ -75707,6 +75707,30 @@ abstract class AppLocalizations {
   /// **'Manage group licenses'**
   String get licenseOrgOverviewEntryAction;
 
+  /// Section title above the Manage / Buy group license tiles on the Subscription screen. Promotes group licensing from a bottom-of-screen text link into a first-class section.
+  ///
+  /// In en, this message translates to:
+  /// **'Group licensing'**
+  String get licenseOrgOverviewGroupSectionTitle;
+
+  /// Subtitle on the 'Buy a group license' tile in the Subscription screen's Group licensing section. Explains the value proposition in one short sentence.
+  ///
+  /// In en, this message translates to:
+  /// **'Share premium features with your team'**
+  String get licenseOrgOverviewBuyTileSubtitle;
+
+  /// Subtitle on the 'Manage group licenses' tile when the current user belongs to exactly one license org. Short scannable metric, not a sentence.
+  ///
+  /// In en, this message translates to:
+  /// **'1 org'**
+  String get licenseOrgOverviewManageTileSubtitleOne;
+
+  /// Subtitle on the 'Manage group licenses' tile when the current user belongs to two or more license orgs. The {count} placeholder is the org count.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} orgs'**
+  String licenseOrgOverviewManageTileSubtitleMany(String count);
+
   /// Empty-state title prefix on the License Org Overview screen, shown when the user has zero license orgs. Combined with keyword and suffix to form 'No group licenses yet'.
   ///
   /// In en, this message translates to:

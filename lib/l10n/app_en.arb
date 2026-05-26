@@ -57751,6 +57751,28 @@
     "@licenseOrgOverviewEntryAction": {
         "description": "Subscription-screen tile label that opens the License Org Overview screen. Visible only when the current user belongs to one or more license orgs."
     },
+    "licenseOrgOverviewGroupSectionTitle": "Group licensing",
+    "@licenseOrgOverviewGroupSectionTitle": {
+        "description": "Section title above the Manage / Buy group license tiles on the Subscription screen. Promotes group licensing from a bottom-of-screen text link into a first-class section."
+    },
+    "licenseOrgOverviewBuyTileSubtitle": "Share premium features with your team",
+    "@licenseOrgOverviewBuyTileSubtitle": {
+        "description": "Subtitle on the 'Buy a group license' tile in the Subscription screen's Group licensing section. Explains the value proposition in one short sentence."
+    },
+    "licenseOrgOverviewManageTileSubtitleOne": "1 org",
+    "@licenseOrgOverviewManageTileSubtitleOne": {
+        "description": "Subtitle on the 'Manage group licenses' tile when the current user belongs to exactly one license org. Short scannable metric, not a sentence."
+    },
+    "licenseOrgOverviewManageTileSubtitleMany": "{count} orgs",
+    "@licenseOrgOverviewManageTileSubtitleMany": {
+        "description": "Subtitle on the 'Manage group licenses' tile when the current user belongs to two or more license orgs. The {count} placeholder is the org count.",
+        "placeholders": {
+            "count": {
+                "type": "String",
+                "example": "3"
+            }
+        }
+    },
     "licenseOrgOverviewEmptyTitlePrefix": "No",
     "@licenseOrgOverviewEmptyTitlePrefix": {
         "description": "Empty-state title prefix on the License Org Overview screen, shown when the user has zero license orgs. Combined with keyword and suffix to form 'No group licenses yet'."

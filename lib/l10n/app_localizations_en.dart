@@ -43278,6 +43278,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get licenseOrgOverviewEntryAction => 'Manage group licenses';
 
   @override
+  String get licenseOrgOverviewGroupSectionTitle => 'Group licensing';
+
+  @override
+  String get licenseOrgOverviewBuyTileSubtitle =>
+      'Share premium features with your team';
+
+  @override
+  String get licenseOrgOverviewManageTileSubtitleOne => '1 org';
+
+  @override
+  String licenseOrgOverviewManageTileSubtitleMany(String count) {
+    return '$count orgs';
+  }
+
+  @override
   String get licenseOrgOverviewEmptyTitlePrefix => 'No';
 
   @override

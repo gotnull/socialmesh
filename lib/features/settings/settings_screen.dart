@@ -1821,6 +1821,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               child: Padding(
                 padding: const EdgeInsets.all(AppTheme.spacing16),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Stack(
                       clipBehavior: Clip.none,
@@ -1909,9 +1910,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         ],
                       ),
                     ),
-                    Icon(
-                      Icons.chevron_right,
-                      color: ownsAll ? accentColor : Colors.white,
+                    Padding(
+                      padding: const EdgeInsets.only(top: AppTheme.spacing8),
+                      child: Icon(
+                        Icons.chevron_right,
+                        color: ownsAll ? accentColor : Colors.white,
+                      ),
                     ),
                   ],
                 ),

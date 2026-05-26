@@ -12,6 +12,7 @@ import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
+import '../../core/widgets/section_header.dart';
 import '../../core/widgets/animated_gold_button.dart';
 import '../../core/widgets/legal_document_sheet.dart';
 import '../../core/widgets/verified_badge.dart';
@@ -171,34 +172,27 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
               // Restore Purchases button (bottom)
               const RestorePurchasesButton(),
 
-              // Slice 10: self-serve org-pack checkout entry. Low-
-              // emphasis text link mirrors the redeem-code tile shape
-              // - primary store CTAs above remain the canonical path.
-              // Gated by GROUP_LICENSING_ENABLED + the sheet itself
-              // re-checks the flag (slice 9), so a stray render on a
-              // disabled build is a quiet no-op.
-              if (AppFeatureFlags.isGroupLicensingEnabled)
-                Center(
-                  child: TextButton(
-                    onPressed: () => showOrgCheckoutSheet(
-                      context,
-                      productId: RevenueCatConfig.themePackProductId,
-                    ),
-                    child: Text(
-                      context.l10n.orgCheckoutEntryAction,
-                      style: TextStyle(
-                        color: context.textTertiary,
-                        fontSize: 12,
-                      ),
-                    ),
+              // Group licensing entry section. Promoted from the
+              // measly bottom-of-screen TextButton treatment (initial
+              // ship) to a proper first-class card section with a
+              // SectionTitle header + canonical SettingsTile rows.
+              // Group / community licensing is a revenue path and a
+              // team-management surface; it is NOT a fallback like
+              // unlock-code redemption. See auto-memory
+              // feedback_enterprise_ux_for_premium_surfaces.md.
+              if (AppFeatureFlags.isGroupLicensingEnabled) ...[
+                const SizedBox(height: AppTheme.spacing24),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing4,
+                  ),
+                  child: SectionTitle(
+                    title: context.l10n.licenseOrgOverviewGroupSectionTitle,
                   ),
                 ),
-
-              // License Org Overview entry. Same flag gate as the buy
-              // tile, plus a non-empty membership check so users who
-              // have not joined any org keep seeing only the buy path.
-              if (AppFeatureFlags.isGroupLicensingEnabled)
-                _ManageGroupLicensesTile(),
+                const SizedBox(height: AppTheme.spacing8),
+                _GroupLicensingEntries(),
+              ],
 
               // Support fallback: redeem unlock code. Low-emphasis text
               // link - primary CTAs above remain the canonical path.
@@ -276,6 +270,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
         border: Border.all(color: context.accentColor.withValues(alpha: 0.5)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 48,
@@ -1374,32 +1369,142 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
   }
 }
 
-/// Low-emphasis text-link tile that opens the License Org Overview
-/// screen. Visible only when the signed-in user belongs to one or more
-/// license orgs - a user with zero orgs still sees the sibling
-/// "Buy as a group license" tile.
+/// First-class "GROUP LICENSING" section rendered on the Subscription
+/// screen. Stacks two canonical [SettingsTile] cards under a
+/// [SectionTitle] header:
 ///
-/// Internally a [ConsumerWidget] so the watch on
-/// [currentUserLicenseOrgIdsProvider] only happens when this row is
-/// actually visible. Folds to [SizedBox.shrink] in loading / error /
-/// empty states so the divider above the legal links keeps its
-/// rhythm.
-class _ManageGroupLicensesTile extends ConsumerWidget {
+///   1. **Manage group licenses** - visible only when the user belongs
+///      to one or more `license_orgs` (owner / admin / member). Opens
+///      the [LicenseOrgOverviewScreen].
+///   2. **Buy a group license** - always visible while the flag is on.
+///      Opens the existing org checkout sheet.
+///
+/// The promotion from low-emphasis bottom-of-screen TextButton to a
+/// proper card section was driven by an auto-memory rule the developer
+/// laid down on this slice (see
+/// `memory/feedback_enterprise_ux_for_premium_surfaces.md`): revenue +
+/// team-management surfaces deserve first-class placement; only true
+/// fallbacks (unlock-code redemption) get the measly text-link style.
+class _GroupLicensingEntries extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final orgsAsync = ref.watch(currentUserLicenseOrgIdsProvider);
-    final hasOrgs = orgsAsync.maybeWhen(
-      data: (ids) => ids.isNotEmpty,
-      orElse: () => false,
+    final orgs = orgsAsync.maybeWhen(
+      data: (ids) => ids,
+      orElse: () => const <String>{},
     );
-    if (!hasOrgs) return const SizedBox.shrink();
-    return Center(
-      child: TextButton(
-        onPressed: () =>
-            Navigator.of(context).push(LicenseOrgOverviewScreen.route()),
-        child: Text(
-          context.l10n.licenseOrgOverviewEntryAction,
-          style: TextStyle(color: context.textTertiary, fontSize: 12),
+    final orgCount = orgs.length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (orgCount > 0) ...[
+          _GroupLicensingTile(
+            icon: Icons.groups_outlined,
+            title: l10n.licenseOrgOverviewEntryAction,
+            subtitle: orgCount == 1
+                ? l10n.licenseOrgOverviewManageTileSubtitleOne
+                : l10n.licenseOrgOverviewManageTileSubtitleMany(
+                    orgCount.toString(),
+                  ),
+            onTap: () =>
+                Navigator.of(context).push(LicenseOrgOverviewScreen.route()),
+          ),
+          const SizedBox(height: AppTheme.spacing8),
+        ],
+        _GroupLicensingTile(
+          icon: Icons.add_business_outlined,
+          title: l10n.orgCheckoutEntryAction,
+          subtitle: l10n.licenseOrgOverviewBuyTileSubtitle,
+          onTap: () => showOrgCheckoutSheet(
+            context,
+            productId: RevenueCatConfig.themePackProductId,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Inline copy of the canonical [SettingsTile] body, with zero
+/// horizontal margin so the tile fills the parent [SliverPadding]'s
+/// content rect edge-to-edge. [SettingsTile] adds its own
+/// `horizontal: 16` margin (correct in screens with an unpadded outer
+/// ListView, like `mqtt_config_screen.dart`), but the subscription
+/// screen's outer slivers wrap content in `EdgeInsets.all(spacing16)`,
+/// so using [SettingsTile] directly here double-pads the cards down
+/// to 376px wide while every other section sits at the full 408px.
+/// This widget keeps the same visual rhythm (card surface, radius,
+/// icon + title + subtitle + chevron) without the extra margin.
+class _GroupLicensingTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _GroupLicensingTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: context.card,
+      borderRadius: BorderRadius.circular(AppTheme.radius12),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacing16,
+            vertical: AppTheme.spacing12,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: context.accentColor.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(AppTheme.radius10),
+                ),
+                child: Icon(icon, color: context.accentColor, size: 22),
+              ),
+              const SizedBox(width: AppTheme.spacing16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing2),
+                    Text(
+                      subtitle,
+                      style: context.bodySmallStyle?.copyWith(
+                        color: context.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: AppTheme.spacing8),
+                child: Icon(Icons.chevron_right, color: context.textTertiary),
+              ),
+            ],
+          ),
         ),
       ),
     );

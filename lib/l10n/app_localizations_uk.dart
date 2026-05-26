@@ -43775,6 +43775,21 @@ class AppLocalizationsUk extends AppLocalizations {
   String get licenseOrgOverviewEntryAction => 'Керувати груповими ліцензіями';
 
   @override
+  String get licenseOrgOverviewGroupSectionTitle => 'Групове ліцензування';
+
+  @override
+  String get licenseOrgOverviewBuyTileSubtitle =>
+      'Діліться преміум-функціями з командою';
+
+  @override
+  String get licenseOrgOverviewManageTileSubtitleOne => '1 орг.';
+
+  @override
+  String licenseOrgOverviewManageTileSubtitleMany(String count) {
+    return '$count орг.';
+  }
+
+  @override
   String get licenseOrgOverviewEmptyTitlePrefix => 'Поки немає';
 
   @override

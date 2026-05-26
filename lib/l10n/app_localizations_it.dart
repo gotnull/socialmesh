@@ -43772,6 +43772,21 @@ class AppLocalizationsIt extends AppLocalizations {
   String get licenseOrgOverviewEntryAction => 'Gestisci le licenze di gruppo';
 
   @override
+  String get licenseOrgOverviewGroupSectionTitle => 'Licenze di gruppo';
+
+  @override
+  String get licenseOrgOverviewBuyTileSubtitle =>
+      'Condividi le funzioni premium con il tuo team';
+
+  @override
+  String get licenseOrgOverviewManageTileSubtitleOne => '1 org';
+
+  @override
+  String licenseOrgOverviewManageTileSubtitleMany(String count) {
+    return '$count org';
+  }
+
+  @override
   String get licenseOrgOverviewEmptyTitlePrefix => 'Nessuna';
 
   @override

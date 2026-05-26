@@ -43763,6 +43763,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get licenseOrgOverviewEntryAction => 'Управлять групповыми лицензиями';
 
   @override
+  String get licenseOrgOverviewGroupSectionTitle => 'Групповое лицензирование';
+
+  @override
+  String get licenseOrgOverviewBuyTileSubtitle =>
+      'Делитесь премиум-функциями с командой';
+
+  @override
+  String get licenseOrgOverviewManageTileSubtitleOne => '1 орг.';
+
+  @override
+  String licenseOrgOverviewManageTileSubtitleMany(String count) {
+    return '$count орг.';
+  }
+
+  @override
   String get licenseOrgOverviewEmptyTitlePrefix => 'Пока нет';
 
   @override
