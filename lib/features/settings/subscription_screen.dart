@@ -642,6 +642,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
               AppTheme.spacing16,
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Stack(
                   clipBehavior: Clip.none,
@@ -1088,6 +1089,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
                             ),
                           ),
                           child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container(
                                 width: 44,
