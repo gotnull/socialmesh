@@ -63,6 +63,22 @@ class MeshCoreContactCard extends ConsumerWidget {
     }
   }
 
+  // Mirrors the StatusFilterChip palette on MeshCoreNodesScreen so a
+  // contact card's border colour matches the chip the user would tap to
+  // filter for it. Favourite wins over type, same way isFavorite wins
+  // over presence on the Meshtastic node card.
+  Color _borderColor() {
+    if (contact.isFavorite) return AppTheme.warningYellow;
+    switch (contact.type) {
+      case 1:
+        return AccentColors.blue;
+      case 2:
+        return AccentColors.green;
+      default:
+        return SemanticColors.disabled;
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final avatarColor = _fallbackAvatarColor();
@@ -79,142 +95,195 @@ class MeshCoreContactCard extends ConsumerWidget {
         ? contact.unreadCount
         : (conversation?.unreadCount ?? 0);
 
+    final borderColor = _borderColor();
+
     return BouncyTap(
       onTap: onTap,
       onLongPress: onLongPress,
       scaleFactor: 0.98,
       child: Container(
         margin: const EdgeInsets.only(bottom: AppTheme.spacing8),
-        decoration: BoxDecoration(
-          color: context.card,
+        child: ClipRRect(
           borderRadius: BorderRadius.circular(AppTheme.radius12),
-          border: Border.all(color: context.border, width: 1),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spacing12),
-          child: Row(
+          child: Stack(
             children: [
-              if (contact.publicKey.length >= 4)
-                MeshCoreSigilAvatar(pubKey: contact.publicKey, size: 48)
-              else
-                Container(
-                  width: 48,
-                  height: 48,
+              // Layer 1: Flat card surface, matches the canonical
+              // settings tile so the bulk of the card reads as neutral.
+              Positioned.fill(
+                child: Container(
                   decoration: BoxDecoration(
-                    color: avatarColor.withValues(alpha: 0.2),
+                    color: context.card,
                     borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
-                  child: Center(
-                    child: Text(
-                      contact.name.isNotEmpty
-                          ? contact.name[0].toUpperCase()
-                          : '?',
-                      style: TextStyle(
-                        color: avatarColor,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+                ),
+              ),
+              // Layer 2: Soft-light category tint. Composites borderColor
+              // into the surface via BlendMode.softLight so saturated
+              // states (favorite / chat / repeater) pick up a subtle
+              // hue while the disabled gray for "other" collapses to no
+              // visible change against the slate card.
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: borderColor.withValues(alpha: 0.5),
+                      backgroundBlendMode: BlendMode.softLight,
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                 ),
-              const SizedBox(width: AppTheme.spacing12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+              // Layer 3: Category-coloured border driven by _borderColor.
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                      border: Border.all(color: borderColor),
+                    ),
+                  ),
+                ),
+              ),
+              // Layer 4: Content
+              Padding(
+                padding: const EdgeInsets.all(AppTheme.spacing12),
+                child: Row(
                   children: [
-                    Text(
-                      contact.displayName.isNotEmpty
-                          ? contact.displayName
-                          : context.l10n.meshcoreContactUnknownName,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
-                    ),
-                    if (lastMessageText != null &&
-                        lastMessageText.isNotEmpty) ...[
-                      const SizedBox(height: AppTheme.spacing2),
-                      Text(
-                        lastMessageText,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: unreadCount > 0
-                              ? context.textPrimary
-                              : context.textSecondary,
-                          fontSize: 13,
-                          fontWeight: unreadCount > 0
-                              ? FontWeight.w500
-                              : FontWeight.w400,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: AppTheme.spacing4),
-                    Row(
-                      children: [
-                        Icon(
-                          _typeIcon(),
-                          size: 14,
-                          color: context.textTertiary,
-                        ),
-                        const SizedBox(width: AppTheme.spacing4),
-                        Text(
-                          contact.localizedTypeLabel(context.l10n),
-                          style: TextStyle(
-                            color: context.textTertiary,
-                            fontSize: 12,
+                    if (contact.publicKey.length >= 4)
+                      MeshCoreSigilAvatar(pubKey: contact.publicKey, size: 48)
+                    else
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: avatarColor.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
                           ),
                         ),
-                        const SizedBox(width: AppTheme.spacing12),
-                        Icon(
-                          Icons.route_rounded,
-                          size: 14,
-                          color: context.textTertiary,
-                        ),
-                        const SizedBox(width: AppTheme.spacing4),
-                        Text(
-                          contact.localizedPathLabel(context.l10n),
-                          style: TextStyle(
-                            color: context.textTertiary,
-                            fontSize: 12,
+                        child: Center(
+                          child: Text(
+                            contact.name.isNotEmpty
+                                ? contact.name[0].toUpperCase()
+                                : '?',
+                            style: TextStyle(
+                              color: avatarColor,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                        if (contact.snrDb != null) ...[
-                          const SizedBox(width: AppTheme.spacing12),
-                          _SnrBadge(snrDb: contact.snrDb!),
+                      ),
+                    const SizedBox(width: AppTheme.spacing12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            contact.displayName.isNotEmpty
+                                ? contact.displayName
+                                : context.l10n.meshcoreContactUnknownName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                          if (lastMessageText != null &&
+                              lastMessageText.isNotEmpty) ...[
+                            const SizedBox(height: AppTheme.spacing2),
+                            Text(
+                              lastMessageText,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: unreadCount > 0
+                                    ? context.textPrimary
+                                    : context.textSecondary,
+                                fontSize: 13,
+                                fontWeight: unreadCount > 0
+                                    ? FontWeight.w500
+                                    : FontWeight.w400,
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: AppTheme.spacing4),
+                          Row(
+                            children: [
+                              Icon(
+                                _typeIcon(),
+                                size: 14,
+                                color: context.textTertiary,
+                              ),
+                              const SizedBox(width: AppTheme.spacing4),
+                              Text(
+                                contact.localizedTypeLabel(context.l10n),
+                                style: TextStyle(
+                                  color: context.textTertiary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(width: AppTheme.spacing12),
+                              Icon(
+                                Icons.route_rounded,
+                                size: 14,
+                                color: context.textTertiary,
+                              ),
+                              const SizedBox(width: AppTheme.spacing4),
+                              Text(
+                                contact.localizedPathLabel(context.l10n),
+                                style: TextStyle(
+                                  color: context.textTertiary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              if (contact.snrDb != null) ...[
+                                const SizedBox(width: AppTheme.spacing12),
+                                _SnrBadge(snrDb: contact.snrDb!),
+                              ],
+                            ],
+                          ),
                         ],
-                      ],
+                      ),
                     ),
+                    if (contact.isFavorite)
+                      const Padding(
+                        padding: EdgeInsets.only(right: AppTheme.spacing8),
+                        child: Icon(
+                          Icons.star,
+                          color: AccentColors.yellow,
+                          size: 20,
+                        ),
+                      ),
+                    if (unreadCount > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacing8,
+                          vertical: AppTheme.spacing4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AccentColors.cyan,
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radius12,
+                          ),
+                        ),
+                        child: Text(
+                          unreadCount > 99 ? '99+' : '$unreadCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      )
+                    else
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: context.textTertiary,
+                      ),
                   ],
                 ),
               ),
-              if (contact.isFavorite)
-                const Padding(
-                  padding: EdgeInsets.only(right: AppTheme.spacing8),
-                  child: Icon(Icons.star, color: AccentColors.yellow, size: 20),
-                ),
-              if (unreadCount > 0)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.spacing8,
-                    vertical: AppTheme.spacing4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AccentColors.cyan,
-                    borderRadius: BorderRadius.circular(AppTheme.radius12),
-                  ),
-                  child: Text(
-                    unreadCount > 99 ? '99+' : '$unreadCount',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                )
-              else
-                Icon(Icons.chevron_right_rounded, color: context.textTertiary),
             ],
           ),
         ),

@@ -735,11 +735,9 @@ class _ContactTile extends StatelessWidget {
       case PresenceConfidence.active:
         return AccentColors.green;
       case PresenceConfidence.fading:
-        return AccentColors.orange;
       case PresenceConfidence.stale:
-        return AccentColors.slate;
       case PresenceConfidence.unknown:
-        return AccentColors.purple;
+        return context.textTertiary;
     }
   }
 
@@ -869,31 +867,44 @@ class _ContactTile extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppTheme.radius12),
             child: Stack(
               children: [
-                // Layer 1: Background blend matching presence/favorite color
+                // Layer 1: Flat card surface, matches the canonical
+                // settings tile so the bulk of the card reads as neutral.
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: blendColor.withValues(alpha: 0.08),
+                      color: context.card,
                       borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                 ),
-                // Layer 2: Border (favorites only) — uniform accent on all
-                // four edges, matching StatusFilterChip.
-                if (contact.isFavorite)
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(
-                            AppTheme.radius12,
-                          ),
-                          border: Border.all(color: AccentColors.yellow),
-                        ),
+                // Layer 2: Soft-light category tint. Composites blendColor
+                // into the surface via BlendMode.softLight so saturated
+                // states (favorite / active) pick up a subtle hue while
+                // the inactive gray collapses to no visible change.
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: blendColor.withValues(alpha: 0.5),
+                        backgroundBlendMode: BlendMode.softLight,
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                     ),
                   ),
-                // Layer 3: Content
+                ),
+                // Layer 3: Category-coloured border. blendColor encodes
+                // favorite / active / inactive.
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
+                        border: Border.all(color: blendColor),
+                      ),
+                    ),
+                  ),
+                ),
+                // Layer 4: Content
                 cardContent,
               ],
             ),

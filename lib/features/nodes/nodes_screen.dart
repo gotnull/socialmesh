@@ -1297,8 +1297,8 @@ class _NodeCard extends ConsumerWidget {
             borderRadius: BorderRadius.circular(AppTheme.radius12),
             child: Stack(
               children: [
-                // Layer 1: Flat surface matching the canonical settings tile;
-                // category is signalled by the border, not a colour wash.
+                // Layer 1: Flat card surface, matches the canonical
+                // settings tile so the bulk of the card reads as neutral.
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
@@ -1307,7 +1307,23 @@ class _NodeCard extends ConsumerWidget {
                     ),
                   ),
                 ),
-                // Layer 2: Category-coloured border. blendColor encodes
+                // Layer 2: Soft-light category tint. Composites blendColor
+                // into the surface via BlendMode.softLight rather than a
+                // flat alpha wash, so saturated states (active / favorite
+                // / owner) pick up a subtle hue while the inactive gray
+                // collapses to no visible change against the slate card.
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: blendColor.withValues(alpha: 0.3),
+                        backgroundBlendMode: BlendMode.softLight,
+                        borderRadius: BorderRadius.circular(AppTheme.radius12),
+                      ),
+                    ),
+                  ),
+                ),
+                // Layer 3: Category-coloured border. blendColor encodes
                 // owner / favorite / active / fading / quiet / unknown.
                 Positioned.fill(
                   child: IgnorePointer(
@@ -1319,7 +1335,7 @@ class _NodeCard extends ConsumerWidget {
                     ),
                   ),
                 ),
-                // Layer 3: Content
+                // Layer 4: Content
                 Padding(
                   padding: const EdgeInsets.all(AppTheme.spacing16),
                   child: _buildCardContent(
