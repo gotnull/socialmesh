@@ -43884,8 +43884,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get licenseOrgOverviewViewMembersAction => 'Просмотр участников';
 
   @override
-  String get licenseOrgInviteAcceptTitle =>
-      'Присоединиться к групповой лицензии';
+  String get licenseOrgInviteAcceptTitle => 'Присоединиться к группе';
 
   @override
   String licenseOrgInviteAcceptHeadline(String orgName) {
@@ -43894,7 +43893,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get licenseOrgInviteAcceptDescription =>
-      'Нажав Присоединиться, вы будете добавлены в группу и получите место. Администратор группы увидит имя вашей учётной записи и время последней активности. Вы можете покинуть группу в любое время.';
+      'Нажав Присоединиться, вы будете добавлены в группу как участник. Администратор группы увидит имя вашей учётной записи и время последней активности. Вы можете покинуть группу в любое время.';
 
   @override
   String get licenseOrgInviteAcceptButton => 'Присоединиться';

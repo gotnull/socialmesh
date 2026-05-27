@@ -43862,7 +43862,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get licenseOrgOverviewViewMembersAction => 'Ver membros';
 
   @override
-  String get licenseOrgInviteAcceptTitle => 'Aderir à licença de grupo';
+  String get licenseOrgInviteAcceptTitle => 'Aderir ao grupo';
 
   @override
   String licenseOrgInviteAcceptHeadline(String orgName) {
@@ -43871,7 +43871,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get licenseOrgInviteAcceptDescription =>
-      'Ao tocar em Aderir é adicionado ao grupo e recebe um assento. O administrador do grupo verá o nome da sua conta e a última hora ativa. Pode sair do grupo a qualquer momento.';
+      'Ao tocar em Aderir é adicionado ao grupo como membro. O administrador do grupo verá o nome da sua conta e a última hora ativa. Pode sair do grupo a qualquer momento.';
 
   @override
   String get licenseOrgInviteAcceptButton => 'Aderir';

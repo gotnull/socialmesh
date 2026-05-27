@@ -44196,7 +44196,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get licenseOrgOverviewViewMembersAction => 'Voir les membres';
 
   @override
-  String get licenseOrgInviteAcceptTitle => 'Rejoindre la licence de groupe';
+  String get licenseOrgInviteAcceptTitle => 'Rejoindre le groupe';
 
   @override
   String licenseOrgInviteAcceptHeadline(String orgName) {
@@ -44205,7 +44205,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get licenseOrgInviteAcceptDescription =>
-      'Appuyer sur Rejoindre vous ajoute au groupe et attribue un siège. L\'administrateur du groupe verra le nom de votre compte et l\'heure d\'activité la plus récente. Vous pouvez quitter le groupe à tout moment.';
+      'Appuyer sur Rejoindre vous ajoute au groupe en tant que membre. L\'administrateur du groupe verra le nom de votre compte et l\'heure d\'activité la plus récente. Vous pouvez quitter le groupe à tout moment.';
 
   @override
   String get licenseOrgInviteAcceptButton => 'Rejoindre';

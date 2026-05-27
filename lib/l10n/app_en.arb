@@ -57910,7 +57910,7 @@
         "description": "Retry action label on the License Org Members sheet error state."
     },
     "licenseOrgOverviewViewMembersAction": "View members",
-    "licenseOrgInviteAcceptTitle": "Join group license",
+    "licenseOrgInviteAcceptTitle": "Join group",
     "@licenseOrgInviteAcceptTitle": {
         "description": "App-bar title on the InviteAcceptScreen, shown when the user opens an invite deep link."
     },
@@ -57921,7 +57921,7 @@
             "orgName": { "type": "String", "example": "Acme Eng" }
         }
     },
-    "licenseOrgInviteAcceptDescription": "Tapping Join adds you to the group and allocates a seat. The group admin will see your account name and last active time. You can leave the group at any time.",
+    "licenseOrgInviteAcceptDescription": "Tapping Join adds you to the group as a member. The group admin will see your account name and last active time. You can leave the group at any time.",
     "@licenseOrgInviteAcceptDescription": {
         "description": "Privacy disclosure shown above the Join / Decline buttons on the InviteAcceptScreen. Tells the user what the org admin will and will not see, in plain language."
     },

@@ -43399,7 +43399,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get licenseOrgOverviewViewMembersAction => 'View members';
 
   @override
-  String get licenseOrgInviteAcceptTitle => 'Join group license';
+  String get licenseOrgInviteAcceptTitle => 'Join group';
 
   @override
   String licenseOrgInviteAcceptHeadline(String orgName) {
@@ -43408,7 +43408,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get licenseOrgInviteAcceptDescription =>
-      'Tapping Join adds you to the group and allocates a seat. The group admin will see your account name and last active time. You can leave the group at any time.';
+      'Tapping Join adds you to the group as a member. The group admin will see your account name and last active time. You can leave the group at any time.';
 
   @override
   String get licenseOrgInviteAcceptButton => 'Join';

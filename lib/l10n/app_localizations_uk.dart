@@ -43896,7 +43896,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get licenseOrgOverviewViewMembersAction => 'Переглянути учасників';
 
   @override
-  String get licenseOrgInviteAcceptTitle => 'Приєднатися до групової ліцензії';
+  String get licenseOrgInviteAcceptTitle => 'Приєднатися до групи';
 
   @override
   String licenseOrgInviteAcceptHeadline(String orgName) {
@@ -43905,7 +43905,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get licenseOrgInviteAcceptDescription =>
-      'Натискаючи Приєднатися, ви додаєтеся до групи та отримуєте місце. Адміністратор групи бачитиме ім\'я вашого облікового запису та час останньої активності. Ви можете залишити групу в будь-який час.';
+      'Натискаючи Приєднатися, ви додаєтеся до групи як учасник. Адміністратор групи бачитиме ім\'я вашого облікового запису та час останньої активності. Ви можете залишити групу в будь-який час.';
 
   @override
   String get licenseOrgInviteAcceptButton => 'Приєднатися';

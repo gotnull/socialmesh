@@ -75908,7 +75908,7 @@ abstract class AppLocalizations {
   /// App-bar title on the InviteAcceptScreen, shown when the user opens an invite deep link.
   ///
   /// In en, this message translates to:
-  /// **'Join group license'**
+  /// **'Join group'**
   String get licenseOrgInviteAcceptTitle;
 
   /// Hero headline on the InviteAcceptScreen. Placeholder is the inviting org's display name; if the org name is empty the deep-link router falls back to the slug.
@@ -75920,7 +75920,7 @@ abstract class AppLocalizations {
   /// Privacy disclosure shown above the Join / Decline buttons on the InviteAcceptScreen. Tells the user what the org admin will and will not see, in plain language.
   ///
   /// In en, this message translates to:
-  /// **'Tapping Join adds you to the group and allocates a seat. The group admin will see your account name and last active time. You can leave the group at any time.'**
+  /// **'Tapping Join adds you to the group as a member. The group admin will see your account name and last active time. You can leave the group at any time.'**
   String get licenseOrgInviteAcceptDescription;
 
   /// Primary action button on the InviteAcceptScreen. Calls acceptLicenseOrgInvite.
