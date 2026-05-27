@@ -26559,7 +26559,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get orgCheckoutError =>
-      'Не удалось запустить оформление групповой лицензии. Повторите попытку или обратитесь в поддержку.';
+      'Не удалось запустить оформление Community Pack. Повторите попытку или обратитесь в поддержку.';
 
   @override
   String get orgCheckoutSignInRequired =>
@@ -43785,7 +43785,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get watchCannedMessageReceived => 'Сообщение получено';
 
   @override
-  String get licenseOrgOverviewTitle => 'Ваши групповые лицензии';
+  String get licenseOrgOverviewTitle => 'Ваши группы';
 
   @override
   String get licenseOrgOverviewEntryAction => 'Управление группами';
@@ -43867,7 +43867,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get licenseOrgMembersEmptyTagline =>
-      'Пригласите людей через веб-админ, чтобы расширить группу.';
+      'Нажмите Пригласить участника, чтобы поделиться группой с другими.';
 
   @override
   String get licenseOrgMembersSuspendedTitlePrefix => 'Группа';
@@ -43957,11 +43957,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get licenseOrgInviteMintAction => 'Пригласить участника';
 
   @override
-  String get licenseOrgInviteMintSheetTitle => 'Пригласить участника команды';
+  String get licenseOrgInviteMintSheetTitle => 'Пригласить участника';
 
   @override
   String get licenseOrgInviteMintSheetBody =>
-      'Создайте одноразовую ссылку-приглашение. Отправьте её одному участнику команды; как только он нажмёт Присоединиться, ссылка будет использована. Срок действия по умолчанию — 7 дней.';
+      'Создайте одноразовую ссылку-приглашение. Отправьте её одному участнику; как только он нажмёт Присоединиться, ссылка будет использована. Срок действия по умолчанию - 7 дней.';
 
   @override
   String get licenseOrgInviteMintProductLabel => 'Продукт места';
@@ -44012,8 +44012,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get licenseOrgAuditActionMemberJoined => 'Участник присоединился';
 
   @override
-  String get licenseOrgAuditActionOrgPurchased =>
-      'Лицензионная организация куплена';
+  String get licenseOrgAuditActionOrgPurchased => 'Community Pack куплен';
 
   @override
   String get licenseOrgAuditActionOrgOwnerCollision =>

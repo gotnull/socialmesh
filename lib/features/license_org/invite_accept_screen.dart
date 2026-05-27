@@ -74,6 +74,14 @@ class _InviteAcceptScreenState extends ConsumerState<InviteAcceptScreen>
           context.l10n.licenseOrgInviteAcceptSuccess(licenseOrgId),
           type: SnackBarType.success,
         );
+        // The success snackbar lives on this screen's local
+        // GlassScaffold ScaffoldMessenger. Popping in the same frame
+        // unmounts that messenger before the snackbar renders, so
+        // the user never sees confirmation. Hold the route for 1.8s
+        // (matches the snackbar's natural display window) before
+        // returning the user to wherever they came from.
+        await Future.delayed(const Duration(milliseconds: 1800));
+        if (!mounted) return;
         safeNavigatorPop();
       case AcceptInviteFailure(:final reason):
         AppLogging.groupLicensing(

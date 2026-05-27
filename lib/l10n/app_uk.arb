@@ -4330,11 +4330,11 @@
     "licenseOrgInviteMintGenericError": "Не вдалося створити запрошення. Спробуйте знову.",
     "licenseOrgInviteMintProductLabel": "Продукт місця",
     "licenseOrgInviteMintShareLabel": "Поділитися посиланням-запрошенням",
-    "licenseOrgInviteMintSheetBody": "Створіть одноразове посилання-запрошення. Надішліть його одному учаснику команди; коли вони натиснуть Приєднатися, посилання буде використано. Стандартний термін дії — 7 днів.",
-    "licenseOrgInviteMintSheetTitle": "Запросити учасника команди",
+    "licenseOrgInviteMintSheetBody": "Створіть одноразове посилання-запрошення. Надішліть його одному учаснику; коли вони натиснуть Приєднатися, посилання буде використано. Стандартний термін дії - 7 днів.",
+    "licenseOrgInviteMintSheetTitle": "Запросити учасника",
     "licenseOrgInviteMintSubmit": "Створити посилання-запрошення",
     "licenseOrgMembersCount": "{count, plural, =0{Немає учасників} =1{1 учасник} other{{count} учасників}}",
-    "licenseOrgMembersEmptyTagline": "Запросіть людей через веб-адмін, щоб розширити групу.",
+    "licenseOrgMembersEmptyTagline": "Натисніть Запросити учасника, щоб поділитися своєю групою з іншими.",
     "licenseOrgMembersEmptyTitleKeyword": "учасників",
     "licenseOrgMembersEmptyTitlePrefix": "Поки немає інших",
     "licenseOrgMembersEmptyTitleSuffix": "",
@@ -4379,7 +4379,7 @@
     "licenseOrgOverviewStatusActive": "Активна",
     "licenseOrgOverviewStatusLabel": "Статус",
     "licenseOrgOverviewStatusSuspended": "Призупинена",
-    "licenseOrgOverviewTitle": "Ваші групові ліцензії",
+    "licenseOrgOverviewTitle": "Ваші групи",
     "licenseOrgOverviewViewMembersAction": "Переглянути учасників",
     "lifecycleActionCancelled": "Дію скасовано",
     "lifecycleActionCancelledBackground": "Дію скасовано - додаток у фоновому режимі",
@@ -7852,7 +7852,7 @@
     "operationsScreenTitle": "Операції",
     "operationsSectionActive": "АКТИВНІ",
     "operationsSectionCompleted": "ЗАВЕРШЕНІ",
-    "orgCheckoutError": "Не вдалося розпочати оформлення групової ліцензії. Повторіть спробу або зверніться до підтримки.",
+    "orgCheckoutError": "Не вдалося розпочати оформлення Community Pack. Повторіть спробу або зверніться до підтримки.",
     "orgCheckoutEntryAction": "Придбати як групову ліцензію",
     "orgCheckoutOrgIdHelp": "Малі літери, цифри та дефіси. Від 3 до 64 символів. Використовується для ідентифікації вашої групи в SocialMesh.",
     "orgCheckoutOrgIdHint": "acme-eng-team",
@@ -12707,7 +12707,7 @@
     "@licenseOrgAuditActionMemberJoined": {
         "description": "Human-readable label for the member_joined audit action."
     },
-    "licenseOrgAuditActionOrgPurchased": "Ліцензійну організацію придбано",
+    "licenseOrgAuditActionOrgPurchased": "Community Pack придбано",
     "@licenseOrgAuditActionOrgPurchased": {
         "description": "Human-readable label for the org_purchased audit action."
     },

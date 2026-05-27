@@ -26749,7 +26749,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get orgCheckoutError =>
-      'Impossible de démarrer le paiement de la licence de groupe. Réessayez ou contactez le support.';
+      'Impossible de démarrer le paiement du Community Pack. Réessayez ou contactez le support.';
 
   @override
   String get orgCheckoutSignInRequired =>
@@ -44096,7 +44096,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get watchCannedMessageReceived => 'Message reçu';
 
   @override
-  String get licenseOrgOverviewTitle => 'Vos licences de groupe';
+  String get licenseOrgOverviewTitle => 'Vos groupes';
 
   @override
   String get licenseOrgOverviewEntryAction => 'Gérer les groupes';
@@ -44178,7 +44178,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get licenseOrgMembersEmptyTagline =>
-      'Invitez des personnes depuis l\'admin web pour agrandir votre groupe.';
+      'Appuyez sur Inviter un membre pour partager votre groupe avec d\'autres personnes.';
 
   @override
   String get licenseOrgMembersSuspendedTitlePrefix => 'Groupe';
@@ -44270,11 +44270,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get licenseOrgInviteMintAction => 'Inviter un membre';
 
   @override
-  String get licenseOrgInviteMintSheetTitle => 'Inviter un coéquipier';
+  String get licenseOrgInviteMintSheetTitle => 'Inviter un membre';
 
   @override
   String get licenseOrgInviteMintSheetBody =>
-      'Créez un lien d\'invitation à usage unique. Envoyez-le à un coéquipier ; dès qu\'il appuie sur Rejoindre, le lien est consommé. L\'expiration par défaut est de 7 jours.';
+      'Créez un lien d\'invitation à usage unique. Envoyez-le à un membre ; dès qu\'il appuie sur Rejoindre, le lien est consommé. L\'expiration par défaut est de 7 jours.';
 
   @override
   String get licenseOrgInviteMintProductLabel => 'Produit du siège';
@@ -44322,8 +44322,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get licenseOrgAuditActionMemberJoined => 'Membre ajouté';
 
   @override
-  String get licenseOrgAuditActionOrgPurchased =>
-      'Organisation de licence achetée';
+  String get licenseOrgAuditActionOrgPurchased => 'Community Pack acheté';
 
   @override
   String get licenseOrgAuditActionOrgOwnerCollision =>

@@ -26265,7 +26265,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get orgCheckoutError =>
-      'Could not start the group license checkout. Try again or contact support.';
+      'Could not start the Community Pack checkout. Try again or contact support.';
 
   @override
   String get orgCheckoutSignInRequired =>
@@ -43300,7 +43300,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get watchCannedMessageReceived => 'Message received';
 
   @override
-  String get licenseOrgOverviewTitle => 'Your group licenses';
+  String get licenseOrgOverviewTitle => 'Your groups';
 
   @override
   String get licenseOrgOverviewEntryAction => 'Manage groups';
@@ -43382,7 +43382,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get licenseOrgMembersEmptyTagline =>
-      'Invite people from the web admin to grow your group.';
+      'Tap Invite member to share your group with others.';
 
   @override
   String get licenseOrgMembersSuspendedTitlePrefix => 'Group';
@@ -43471,11 +43471,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get licenseOrgInviteMintAction => 'Invite member';
 
   @override
-  String get licenseOrgInviteMintSheetTitle => 'Invite a teammate';
+  String get licenseOrgInviteMintSheetTitle => 'Invite a member';
 
   @override
   String get licenseOrgInviteMintSheetBody =>
-      'Mint a single-use invite link. Send it to one teammate; once they tap Join, the link is consumed. Default expiry is 7 days.';
+      'Create a single-use invite link. Send it to one member; once they tap Join, the link is consumed. Default expiry is 7 days.';
 
   @override
   String get licenseOrgInviteMintProductLabel => 'Seat product';
@@ -43523,7 +43523,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get licenseOrgAuditActionMemberJoined => 'Member joined';
 
   @override
-  String get licenseOrgAuditActionOrgPurchased => 'License org purchased';
+  String get licenseOrgAuditActionOrgPurchased => 'Community Pack purchased';
 
   @override
   String get licenseOrgAuditActionOrgOwnerCollision =>

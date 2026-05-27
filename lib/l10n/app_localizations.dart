@@ -45991,7 +45991,7 @@ abstract class AppLocalizations {
   /// Error shown when the createCheckout callable rejects the org-pack request.
   ///
   /// In en, this message translates to:
-  /// **'Could not start the group license checkout. Try again or contact support.'**
+  /// **'Could not start the Community Pack checkout. Try again or contact support.'**
   String get orgCheckoutError;
 
   /// Error shown when the createCheckout callable rejects an org-pack request because the caller is unauthenticated or signed in anonymously. Maps to the 'org-pack-requires-signin' and 'org-pack-requires-permanent-account' server rejection reasons.
@@ -75746,7 +75746,7 @@ abstract class AppLocalizations {
   /// App bar title for the License Org Overview screen. Surfaces the list of group / community licenses the signed-in user belongs to (owner, admin, or member). Gated by GROUP_LICENSING_ENABLED.
   ///
   /// In en, this message translates to:
-  /// **'Your group licenses'**
+  /// **'Your groups'**
   String get licenseOrgOverviewTitle;
 
   /// Subscription-screen tile label that opens the License Org Overview screen. Visible only when the current user belongs to one or more license orgs.
@@ -75872,7 +75872,7 @@ abstract class AppLocalizations {
   /// Empty-state tagline on the License Org Members sheet. Points at the invite path (web admin for now; mobile invite UI lands in a later slice).
   ///
   /// In en, this message translates to:
-  /// **'Invite people from the web admin to grow your group.'**
+  /// **'Tap Invite member to share your group with others.'**
   String get licenseOrgMembersEmptyTagline;
 
   /// Suspended-org title prefix on the License Org Members sheet. Combined with keyword + suffix to form 'Group paused'.
@@ -76028,13 +76028,13 @@ abstract class AppLocalizations {
   /// Title at the top of the mint-invite bottom sheet that the admin opens via the Invite member action.
   ///
   /// In en, this message translates to:
-  /// **'Invite a teammate'**
+  /// **'Invite a member'**
   String get licenseOrgInviteMintSheetTitle;
 
   /// Body copy on the mint-invite bottom sheet explaining the invite lifecycle in one line.
   ///
   /// In en, this message translates to:
-  /// **'Mint a single-use invite link. Send it to one teammate; once they tap Join, the link is consumed. Default expiry is 7 days.'**
+  /// **'Create a single-use invite link. Send it to one member; once they tap Join, the link is consumed. Default expiry is 7 days.'**
   String get licenseOrgInviteMintSheetBody;
 
   /// Label for the product picker in the mint-invite sheet. Owner picks which seat the invitee gets allocated.
@@ -76124,7 +76124,7 @@ abstract class AppLocalizations {
   /// Human-readable label for the org_purchased audit action.
   ///
   /// In en, this message translates to:
-  /// **'License org purchased'**
+  /// **'Community Pack purchased'**
   String get licenseOrgAuditActionOrgPurchased;
 
   /// Human-readable label for the org_owner_collision audit action.

@@ -26550,7 +26550,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get orgCheckoutError =>
-      'Não foi possível iniciar o pagamento da licença de grupo. Tente novamente ou entre em contato com o suporte.';
+      'Não foi possível iniciar o pagamento do Community Pack. Tente novamente ou contacte o suporte.';
 
   @override
   String get orgCheckoutSignInRequired =>
@@ -43763,7 +43763,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get watchCannedMessageReceived => 'Mensagem recebida';
 
   @override
-  String get licenseOrgOverviewTitle => 'As suas licenças de grupo';
+  String get licenseOrgOverviewTitle => 'Os seus grupos';
 
   @override
   String get licenseOrgOverviewEntryAction => 'Gerir grupos';
@@ -43845,7 +43845,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get licenseOrgMembersEmptyTagline =>
-      'Convide pessoas a partir do admin web para fazer crescer o seu grupo.';
+      'Toque em Convidar membro para partilhar o seu grupo com outras pessoas.';
 
   @override
   String get licenseOrgMembersSuspendedTitlePrefix => 'Grupo';
@@ -43935,11 +43935,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get licenseOrgInviteMintAction => 'Convidar membro';
 
   @override
-  String get licenseOrgInviteMintSheetTitle => 'Convidar um colega';
+  String get licenseOrgInviteMintSheetTitle => 'Convidar um membro';
 
   @override
   String get licenseOrgInviteMintSheetBody =>
-      'Crie um link de convite de uso único. Envie-o a um colega de equipa; assim que tocar em Aderir, o link é consumido. A expiração padrão é de 7 dias.';
+      'Crie um link de convite de uso único. Envie-o a um membro; assim que tocar em Aderir, o link é consumido. A expiração padrão é de 7 dias.';
 
   @override
   String get licenseOrgInviteMintProductLabel => 'Produto do assento';
@@ -43988,8 +43988,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get licenseOrgAuditActionMemberJoined => 'Membro adicionado';
 
   @override
-  String get licenseOrgAuditActionOrgPurchased =>
-      'Organização de licença comprada';
+  String get licenseOrgAuditActionOrgPurchased => 'Community Pack comprado';
 
   @override
   String get licenseOrgAuditActionOrgOwnerCollision =>

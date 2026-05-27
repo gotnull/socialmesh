@@ -99,10 +99,25 @@ final currentUserLicenseOrgMembershipProvider =
 /// Pure derivation: the role the current user holds in [orgId].
 /// Returns [LicenseOrgMemberRole.unknown] when the membership is
 /// loading, errored, missing, or the user is signed out.
+///
+/// Owner detection runs first: the org doc carries an `ownerUid`
+/// field set by the Stripe webhook at purchase time, and the owner
+/// is intentionally NOT written into the members subcollection (they
+/// do not consume a seat). Without this short-circuit the owner would
+/// fall through to `unknown` and lose access to owner-only surfaces
+/// (Invite member button, mint seat code, member revoke, etc.).
 final licenseOrgRoleProvider = Provider.family<LicenseOrgMemberRole, String>((
   ref,
   orgId,
 ) {
+  final user = ref.watch(currentUserProvider);
+  if (user != null && !user.isAnonymous && user.uid.isNotEmpty) {
+    final orgAsync = ref.watch(licenseOrgProvider(orgId));
+    final org = orgAsync.maybeWhen(data: (o) => o, orElse: () => null);
+    if (org != null && org.ownerUid == user.uid) {
+      return LicenseOrgMemberRole.owner;
+    }
+  }
   final async = ref.watch(currentUserLicenseOrgMembershipProvider(orgId));
   return async.maybeWhen(
     data: (membership) => membership?.role ?? LicenseOrgMemberRole.unknown,

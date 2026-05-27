@@ -4366,11 +4366,11 @@
     "licenseOrgInviteMintGenericError": "Не удалось создать приглашение. Повторите попытку.",
     "licenseOrgInviteMintProductLabel": "Продукт места",
     "licenseOrgInviteMintShareLabel": "Поделиться ссылкой-приглашением",
-    "licenseOrgInviteMintSheetBody": "Создайте одноразовую ссылку-приглашение. Отправьте её одному участнику команды; как только он нажмёт Присоединиться, ссылка будет использована. Срок действия по умолчанию — 7 дней.",
-    "licenseOrgInviteMintSheetTitle": "Пригласить участника команды",
+    "licenseOrgInviteMintSheetBody": "Создайте одноразовую ссылку-приглашение. Отправьте её одному участнику; как только он нажмёт Присоединиться, ссылка будет использована. Срок действия по умолчанию - 7 дней.",
+    "licenseOrgInviteMintSheetTitle": "Пригласить участника",
     "licenseOrgInviteMintSubmit": "Создать ссылку-приглашение",
     "licenseOrgMembersCount": "{count, plural, =0{Нет участников} =1{1 участник} other{{count} участников}}",
-    "licenseOrgMembersEmptyTagline": "Пригласите людей через веб-админ, чтобы расширить группу.",
+    "licenseOrgMembersEmptyTagline": "Нажмите Пригласить участника, чтобы поделиться группой с другими.",
     "licenseOrgMembersEmptyTitleKeyword": "участников",
     "licenseOrgMembersEmptyTitlePrefix": "Пока нет других",
     "licenseOrgMembersEmptyTitleSuffix": "",
@@ -4415,7 +4415,7 @@
     "licenseOrgOverviewStatusActive": "Активна",
     "licenseOrgOverviewStatusLabel": "Статус",
     "licenseOrgOverviewStatusSuspended": "Приостановлена",
-    "licenseOrgOverviewTitle": "Ваши групповые лицензии",
+    "licenseOrgOverviewTitle": "Ваши группы",
     "licenseOrgOverviewViewMembersAction": "Просмотр участников",
     "lifecycleActionCancelled": "Действие отменено",
     "lifecycleActionCancelledBackground": "Действие отменено - приложение в фоне",
@@ -8221,7 +8221,7 @@
     "operationsScreenTitle": "Операции",
     "operationsSectionActive": "АКТИВНЫЕ",
     "operationsSectionCompleted": "ЗАВЕРШЁННЫЕ",
-    "orgCheckoutError": "Не удалось запустить оформление групповой лицензии. Повторите попытку или обратитесь в поддержку.",
+    "orgCheckoutError": "Не удалось запустить оформление Community Pack. Повторите попытку или обратитесь в поддержку.",
     "orgCheckoutEntryAction": "Купить как групповую лицензию",
     "orgCheckoutOrgIdHelp": "Строчные буквы, цифры и дефисы. От 3 до 64 символов. Используется для идентификации вашей группы в SocialMesh.",
     "orgCheckoutOrgIdHint": "acme-eng-team",
@@ -12707,7 +12707,7 @@
     "@licenseOrgAuditActionMemberJoined": {
         "description": "Human-readable label for the member_joined audit action."
     },
-    "licenseOrgAuditActionOrgPurchased": "Лицензионная организация куплена",
+    "licenseOrgAuditActionOrgPurchased": "Community Pack куплен",
     "@licenseOrgAuditActionOrgPurchased": {
         "description": "Human-readable label for the org_purchased audit action."
     },

@@ -26629,7 +26629,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get orgCheckoutError =>
-      'Der Gruppenlizenz-Checkout konnte nicht gestartet werden. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support.';
+      'Der Community Pack-Checkout konnte nicht gestartet werden. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support.';
 
   @override
   String get orgCheckoutSignInRequired =>
@@ -43912,7 +43912,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get watchCannedMessageReceived => 'Nachricht erhalten';
 
   @override
-  String get licenseOrgOverviewTitle => 'Ihre Gruppenlizenzen';
+  String get licenseOrgOverviewTitle => 'Ihre Gruppen';
 
   @override
   String get licenseOrgOverviewEntryAction => 'Gruppen verwalten';
@@ -43994,7 +43994,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get licenseOrgMembersEmptyTagline =>
-      'Laden Sie über das Web-Admin Personen ein, um Ihre Gruppe zu erweitern.';
+      'Tippen Sie auf Mitglied einladen, um Ihre Gruppe mit anderen zu teilen.';
 
   @override
   String get licenseOrgMembersSuspendedTitlePrefix => 'Gruppe';
@@ -44086,11 +44086,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get licenseOrgInviteMintAction => 'Mitglied einladen';
 
   @override
-  String get licenseOrgInviteMintSheetTitle => 'Teammitglied einladen';
+  String get licenseOrgInviteMintSheetTitle => 'Mitglied einladen';
 
   @override
   String get licenseOrgInviteMintSheetBody =>
-      'Erstellen Sie einen einmaligen Einladungslink. Senden Sie ihn an ein Teammitglied; sobald sie auf Beitreten tippen, wird der Link verbraucht. Standardablauf ist 7 Tage.';
+      'Erstellen Sie einen einmaligen Einladungslink. Senden Sie ihn an ein Mitglied; sobald es auf Beitreten tippt, wird der Link verbraucht. Standardablauf ist 7 Tage.';
 
   @override
   String get licenseOrgInviteMintProductLabel => 'Sitz-Produkt';
@@ -44138,7 +44138,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get licenseOrgAuditActionMemberJoined => 'Mitglied beigetreten';
 
   @override
-  String get licenseOrgAuditActionOrgPurchased => 'Lizenz-Organisation gekauft';
+  String get licenseOrgAuditActionOrgPurchased => 'Community Pack gekauft';
 
   @override
   String get licenseOrgAuditActionOrgOwnerCollision =>

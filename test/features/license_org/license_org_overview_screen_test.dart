@@ -185,6 +185,14 @@ void main() {
 
     testWidgets('renders the admin badge for an admin role', (tester) async {
       const orgId = 'acme';
+      // Owner is a different uid (`u2`) so that the current user's
+      // role is determined by their members-subcollection role
+      // (admin) rather than the owner-uid short-circuit on the org
+      // doc. See `licenseOrgRoleProvider`: ownerUid match wins
+      // because the owner is intentionally not written into the
+      // members subcollection on org-pack purchase; tests that
+      // exercise the admin / member branches must avoid colliding
+      // with the owner-uid path.
       await tester.pumpWidget(
         _buildTestWidget(
           repo: _FakeRepo(
@@ -193,7 +201,7 @@ void main() {
               orgId: LicenseOrg(
                 id: orgId,
                 name: 'Acme',
-                ownerUid: 'u1',
+                ownerUid: 'u2',
                 createdAt: null,
                 status: LicenseOrgStatus.active,
               ),

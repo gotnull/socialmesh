@@ -37507,11 +37507,11 @@
     "licenseOrgInviteMintGenericError": "Não foi possível criar o convite. Tente novamente.",
     "licenseOrgInviteMintProductLabel": "Produto do assento",
     "licenseOrgInviteMintShareLabel": "Partilhar link de convite",
-    "licenseOrgInviteMintSheetBody": "Crie um link de convite de uso único. Envie-o a um colega de equipa; assim que tocar em Aderir, o link é consumido. A expiração padrão é de 7 dias.",
-    "licenseOrgInviteMintSheetTitle": "Convidar um colega",
+    "licenseOrgInviteMintSheetBody": "Crie um link de convite de uso único. Envie-o a um membro; assim que tocar em Aderir, o link é consumido. A expiração padrão é de 7 dias.",
+    "licenseOrgInviteMintSheetTitle": "Convidar um membro",
     "licenseOrgInviteMintSubmit": "Gerar link de convite",
     "licenseOrgMembersCount": "{count, plural, =0{Sem membros} =1{1 membro} other{{count} membros}}",
-    "licenseOrgMembersEmptyTagline": "Convide pessoas a partir do admin web para fazer crescer o seu grupo.",
+    "licenseOrgMembersEmptyTagline": "Toque em Convidar membro para partilhar o seu grupo com outras pessoas.",
     "licenseOrgMembersEmptyTitleKeyword": "membros",
     "licenseOrgMembersEmptyTitlePrefix": "Ainda sem outros",
     "licenseOrgMembersEmptyTitleSuffix": "",
@@ -37556,7 +37556,7 @@
     "licenseOrgOverviewStatusActive": "Ativa",
     "licenseOrgOverviewStatusLabel": "Estado",
     "licenseOrgOverviewStatusSuspended": "Suspensa",
-    "licenseOrgOverviewTitle": "As suas licenças de grupo",
+    "licenseOrgOverviewTitle": "Os seus grupos",
     "licenseOrgOverviewViewMembersAction": "Ver membros",
     "lifecycleActionCancelled": "Ação cancelada",
     "lifecycleActionCancelledBackground": "Ação cancelada - o app está em segundo plano",
@@ -41362,7 +41362,7 @@
     "operationsScreenTitle": "Operações",
     "operationsSectionActive": "ATIVAS",
     "operationsSectionCompleted": "CONCLUÍDAS",
-    "orgCheckoutError": "Não foi possível iniciar o pagamento da licença de grupo. Tente novamente ou entre em contato com o suporte.",
+    "orgCheckoutError": "Não foi possível iniciar o pagamento do Community Pack. Tente novamente ou contacte o suporte.",
     "orgCheckoutEntryAction": "Comprar como licença de grupo",
     "orgCheckoutOrgIdHelp": "Letras minúsculas, dígitos e hifens. De 3 a 64 caracteres. Usado para identificar o seu grupo no SocialMesh.",
     "orgCheckoutOrgIdHint": "acme-eng-team",
@@ -45848,7 +45848,7 @@
     "@licenseOrgAuditActionMemberJoined": {
         "description": "Human-readable label for the member_joined audit action."
     },
-    "licenseOrgAuditActionOrgPurchased": "Organização de licença comprada",
+    "licenseOrgAuditActionOrgPurchased": "Community Pack comprado",
     "@licenseOrgAuditActionOrgPurchased": {
         "description": "Human-readable label for the org_purchased audit action."
     },

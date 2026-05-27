@@ -35807,7 +35807,7 @@
     "@orgCheckoutOrgIdReserved": {
         "description": "Validation error when the entered license org id is in the reserved namespace (admin, enterprise, root, socialmesh, staff, support, system, or any of those with a hyphen suffix)."
     },
-    "orgCheckoutError": "Could not start the group license checkout. Try again or contact support.",
+    "orgCheckoutError": "Could not start the Community Pack checkout. Try again or contact support.",
     "@orgCheckoutError": {
         "description": "Error shown when the createCheckout callable rejects the org-pack request."
     },
@@ -57775,7 +57775,7 @@
     "@watchCannedMessageReceived": {
         "description": "Apple Watch canned-message label used as an acknowledgement reply. Equivalent to a brief 'roger that'."
     },
-    "licenseOrgOverviewTitle": "Your group licenses",
+    "licenseOrgOverviewTitle": "Your groups",
     "@licenseOrgOverviewTitle": {
         "description": "App bar title for the License Org Overview screen. Surfaces the list of group / community licenses the signed-in user belongs to (owner, admin, or member). Gated by GROUP_LICENSING_ENABLED."
     },
@@ -57889,7 +57889,7 @@
     "@licenseOrgMembersEmptyTitleSuffix": {
         "description": "Empty-state title suffix on the License Org Members sheet."
     },
-    "licenseOrgMembersEmptyTagline": "Invite people from the web admin to grow your group.",
+    "licenseOrgMembersEmptyTagline": "Tap Invite member to share your group with others.",
     "@licenseOrgMembersEmptyTagline": {
         "description": "Empty-state tagline on the License Org Members sheet. Points at the invite path (web admin for now; mobile invite UI lands in a later slice)."
     },
@@ -57996,11 +57996,11 @@
     "@licenseOrgInviteMintAction": {
         "description": "Action button label on the License Org Overview per-org card that mints a new invite link. Visible to owner / admin role only."
     },
-    "licenseOrgInviteMintSheetTitle": "Invite a teammate",
+    "licenseOrgInviteMintSheetTitle": "Invite a member",
     "@licenseOrgInviteMintSheetTitle": {
         "description": "Title at the top of the mint-invite bottom sheet that the admin opens via the Invite member action."
     },
-    "licenseOrgInviteMintSheetBody": "Mint a single-use invite link. Send it to one teammate; once they tap Join, the link is consumed. Default expiry is 7 days.",
+    "licenseOrgInviteMintSheetBody": "Create a single-use invite link. Send it to one member; once they tap Join, the link is consumed. Default expiry is 7 days.",
     "@licenseOrgInviteMintSheetBody": {
         "description": "Body copy on the mint-invite bottom sheet explaining the invite lifecycle in one line."
     },
@@ -58060,7 +58060,7 @@
     "@licenseOrgAuditActionMemberJoined": {
         "description": "Human-readable label for the member_joined audit action."
     },
-    "licenseOrgAuditActionOrgPurchased": "License org purchased",
+    "licenseOrgAuditActionOrgPurchased": "Community Pack purchased",
     "@licenseOrgAuditActionOrgPurchased": {
         "description": "Human-readable label for the org_purchased audit action."
     },

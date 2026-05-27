@@ -717,7 +717,7 @@ class _InviteMintSheetState extends ConsumerState<_InviteMintSheet>
     final service = LicenseOrgInviteService();
     final result = await service.mintInvite(
       licenseOrgId: widget.orgId,
-      productId: RevenueCatConfig.themePackProductId,
+      productId: RevenueCatConfig.completePackProductId,
     );
     if (!mounted) return;
     switch (result) {

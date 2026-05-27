@@ -26574,7 +26574,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get orgCheckoutError =>
-      'Не вдалося розпочати оформлення групової ліцензії. Повторіть спробу або зверніться до підтримки.';
+      'Не вдалося розпочати оформлення Community Pack. Повторіть спробу або зверніться до підтримки.';
 
   @override
   String get orgCheckoutSignInRequired =>
@@ -43796,7 +43796,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get watchCannedMessageReceived => 'Повідомлення отримано';
 
   @override
-  String get licenseOrgOverviewTitle => 'Ваші групові ліцензії';
+  String get licenseOrgOverviewTitle => 'Ваші групи';
 
   @override
   String get licenseOrgOverviewEntryAction => 'Керувати групами';
@@ -43878,7 +43878,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get licenseOrgMembersEmptyTagline =>
-      'Запросіть людей через веб-адмін, щоб розширити групу.';
+      'Натисніть Запросити учасника, щоб поділитися своєю групою з іншими.';
 
   @override
   String get licenseOrgMembersSuspendedTitlePrefix => 'Група';
@@ -43967,11 +43967,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get licenseOrgInviteMintAction => 'Запросити учасника';
 
   @override
-  String get licenseOrgInviteMintSheetTitle => 'Запросити учасника команди';
+  String get licenseOrgInviteMintSheetTitle => 'Запросити учасника';
 
   @override
   String get licenseOrgInviteMintSheetBody =>
-      'Створіть одноразове посилання-запрошення. Надішліть його одному учаснику команди; коли вони натиснуть Приєднатися, посилання буде використано. Стандартний термін дії — 7 днів.';
+      'Створіть одноразове посилання-запрошення. Надішліть його одному учаснику; коли вони натиснуть Приєднатися, посилання буде використано. Стандартний термін дії - 7 днів.';
 
   @override
   String get licenseOrgInviteMintProductLabel => 'Продукт місця';
@@ -44022,8 +44022,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get licenseOrgAuditActionMemberJoined => 'Учасник приєднався';
 
   @override
-  String get licenseOrgAuditActionOrgPurchased =>
-      'Ліцензійну організацію придбано';
+  String get licenseOrgAuditActionOrgPurchased => 'Community Pack придбано';
 
   @override
   String get licenseOrgAuditActionOrgOwnerCollision =>

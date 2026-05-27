@@ -157,7 +157,7 @@ void main() {
 
       expect(outcome, OrgCheckoutOutcome.canceled);
       // Sheet body never rendered.
-      expect(find.text('Buy a group license'), findsNothing);
+      expect(find.text('Buy a Community Pack'), findsNothing);
       // No backend call.
       expect(invoker.calls, isEmpty);
     },
@@ -180,14 +180,14 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
-    // Title + body copy present.
-    expect(find.text('Buy a group license'), findsOneWidget);
-    expect(
-      find.textContaining('Seats are NOT assigned automatically'),
-      findsOneWidget,
-    );
+    // Title + body copy present. Strings match the Community Pack
+    // language contract (see GROUP_LICENSING_FOUNDATION.md): no
+    // "license", "seat allocation", "license org" wording in
+    // end-user UI.
+    expect(find.text('Buy a Community Pack'), findsOneWidget);
+    expect(find.textContaining("won't use a seat yourself"), findsOneWidget);
     // Field + submit button present.
-    expect(find.text('License org id'), findsOneWidget);
+    expect(find.text('Group ID'), findsOneWidget);
     expect(find.text('Continue to payment'), findsOneWidget);
   });
 
@@ -490,7 +490,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.textContaining('Could not start the group license checkout'),
+      find.textContaining('Could not start the Community Pack checkout'),
       findsWidgets,
     );
   });
@@ -668,11 +668,11 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.textContaining('Could not start the group license checkout'),
+        find.textContaining('Could not start the Community Pack checkout'),
         findsWidgets,
       );
       // Sheet still on screen (title still visible).
-      expect(find.text('Buy a group license'), findsOneWidget);
+      expect(find.text('Buy a Community Pack'), findsOneWidget);
     },
   );
 

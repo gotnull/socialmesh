@@ -26675,7 +26675,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get orgCheckoutError =>
-      'No se pudo iniciar el proceso de compra de la licencia de grupo. Inténtalo de nuevo o contacta con soporte.';
+      'No se pudo iniciar el proceso de compra del Community Pack. Inténtalo de nuevo o contacta con soporte.';
 
   @override
   String get orgCheckoutSignInRequired =>
@@ -43984,7 +43984,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get watchCannedMessageReceived => 'Mensaje recibido';
 
   @override
-  String get licenseOrgOverviewTitle => 'Tus licencias de grupo';
+  String get licenseOrgOverviewTitle => 'Tus grupos';
 
   @override
   String get licenseOrgOverviewEntryAction => 'Gestionar grupos';
@@ -44066,7 +44066,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get licenseOrgMembersEmptyTagline =>
-      'Invita personas desde el panel web para hacer crecer tu grupo.';
+      'Toca Invitar miembro para compartir tu grupo con otras personas.';
 
   @override
   String get licenseOrgMembersSuspendedTitlePrefix => 'Grupo';
@@ -44158,11 +44158,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get licenseOrgInviteMintAction => 'Invitar miembro';
 
   @override
-  String get licenseOrgInviteMintSheetTitle => 'Invitar a un compañero';
+  String get licenseOrgInviteMintSheetTitle => 'Invitar a un miembro';
 
   @override
   String get licenseOrgInviteMintSheetBody =>
-      'Crea un enlace de invitación de un solo uso. Envíalo a un miembro del equipo; cuando toque Unirme, el enlace se consume. La caducidad predeterminada es 7 días.';
+      'Crea un enlace de invitación de un solo uso. Envíalo a un miembro; cuando toque Unirme, el enlace se consume. La caducidad predeterminada es 7 días.';
 
   @override
   String get licenseOrgInviteMintProductLabel => 'Producto del asiento';
@@ -44211,8 +44211,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get licenseOrgAuditActionMemberJoined => 'Miembro unido';
 
   @override
-  String get licenseOrgAuditActionOrgPurchased =>
-      'Organización de licencia comprada';
+  String get licenseOrgAuditActionOrgPurchased => 'Community Pack comprado';
 
   @override
   String get licenseOrgAuditActionOrgOwnerCollision =>
