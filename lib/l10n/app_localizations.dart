@@ -26866,6 +26866,18 @@ abstract class AppLocalizations {
   /// **'Regions'**
   String get nodedexRegionsLabel;
 
+  /// Discovery row label and card title: count of distinct regions where the remote node has broadcast its own position from.
+  ///
+  /// In en, this message translates to:
+  /// **'Broadcast regions'**
+  String get nodedexBroadcastRegionsLabel;
+
+  /// Discovery row label and card title: count of distinct regions where the local radio was when the remote node was encountered.
+  ///
+  /// In en, this message translates to:
+  /// **'Seen from'**
+  String get nodedexObservedFromRegionsLabel;
+
   /// Text displayed in node management
   ///
   /// In en, this message translates to:

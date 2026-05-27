@@ -7740,6 +7740,8 @@
     "nodedexRegionEncounterCount": "{count} встреч",
     "nodedexRegionsCompactLabel": "Регионы",
     "nodedexRegionsLabel": "Регионы",
+    "nodedexBroadcastRegionsLabel": "Регионы трансляции",
+    "nodedexObservedFromRegionsLabel": "Замечено из",
     "nodedexRelationshipTimeline": "Хронология отношений",
     "nodedexRelativeDaysAgo": "{days}д назад",
     "nodedexRelativeHoursAgo": "{hours}ч назад",

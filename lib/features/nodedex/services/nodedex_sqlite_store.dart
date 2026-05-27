@@ -192,6 +192,7 @@ class NodeDexSqliteStore {
         await txn.delete(NodeDexTables.syncOutbox);
         await txn.delete(NodeDexTables.coSeenEdges);
         await txn.delete(NodeDexTables.seenRegions);
+        await txn.delete(NodeDexTables.observedFromRegions);
         await txn.delete(NodeDexTables.encounters);
         await txn.delete(NodeDexTables.identityChanges);
         await txn.delete(NodeDexTables.entries);
@@ -567,6 +568,25 @@ class NodeDexSqliteStore {
       });
     }
 
+    // Replace observed-from regions: delete old, insert current list.
+    await txn.delete(
+      NodeDexTables.observedFromRegions,
+      where: '${NodeDexTables.colNodeNum} = ?',
+      whereArgs: [entry.nodeNum],
+    );
+    for (final region in entry.observedFromRegions) {
+      await txn.insert(NodeDexTables.observedFromRegions, {
+        NodeDexTables.colNodeNum: entry.nodeNum,
+        NodeDexTables.colRegionKey: region.regionId,
+        NodeDexTables.colRegionLabel: region.label,
+        NodeDexTables.colRegionFirstSeenMs:
+            region.firstSeen.millisecondsSinceEpoch,
+        NodeDexTables.colRegionLastSeenMs:
+            region.lastSeen.millisecondsSinceEpoch,
+        NodeDexTables.colRegionCount: region.encounterCount,
+      });
+    }
+
     // Upsert co-seen edges (canonical ordering: a < b).
     for (final coSeenEntry in entry.coSeenNodes.entries) {
       final other = coSeenEntry.key;
@@ -668,6 +688,14 @@ class NodeDexSqliteStore {
     );
     final regions = regionRows.map(_rowToRegion).toList();
 
+    // Load observed-from regions (v14).
+    final observedFromRows = await _db.query(
+      NodeDexTables.observedFromRegions,
+      where: '${NodeDexTables.colNodeNum} = ?',
+      whereArgs: [nodeNum],
+    );
+    final observedFromRegions = observedFromRows.map(_rowToRegion).toList();
+
     // Load co-seen edges for this node.
     final edgeRows = await _db.query(
       NodeDexTables.coSeenEdges,
@@ -743,6 +771,7 @@ class NodeDexSqliteStore {
       userNoteUpdatedAtMs: row[NodeDexTables.colUserNoteUpdatedAtMs] as int?,
       encounters: encounters,
       seenRegions: regions,
+      observedFromRegions: observedFromRegions,
       coSeenNodes: coSeen,
       sigil: sigil,
       lastKnownName: row[NodeDexTables.colLastKnownName] as String?,

@@ -7369,6 +7369,8 @@
     "nodedexRegionEncounterCount": "{count} зустрічей",
     "nodedexRegionsCompactLabel": "Регіони",
     "nodedexRegionsLabel": "Регіони",
+    "nodedexBroadcastRegionsLabel": "Регіони мовлення",
+    "nodedexObservedFromRegionsLabel": "Помічено з",
     "nodedexRelationshipTimeline": "Хронологія відносин",
     "nodedexRelativeDaysAgo": "{days} дн. тому",
     "nodedexRelativeHoursAgo": "{hours} год тому",

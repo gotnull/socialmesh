@@ -15526,6 +15526,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nodedexRegionsLabel => 'Regions';
 
   @override
+  String get nodedexBroadcastRegionsLabel => 'Broadcast regions';
+
+  @override
+  String get nodedexObservedFromRegionsLabel => 'Seen from';
+
+  @override
   String get nodedexRelationshipTimeline => 'Relationship Timeline';
 
   @override

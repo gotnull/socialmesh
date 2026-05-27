@@ -7369,6 +7369,8 @@
     "nodedexRegionEncounterCount": "{count} Begegnungen",
     "nodedexRegionsCompactLabel": "Regionen",
     "nodedexRegionsLabel": "Regionen",
+    "nodedexBroadcastRegionsLabel": "Sende-Regionen",
+    "nodedexObservedFromRegionsLabel": "Gesehen von",
     "nodedexRelationshipTimeline": "Beziehungsverlauf",
     "nodedexRelativeDaysAgo": "vor {days} T",
     "nodedexRelativeHoursAgo": "vor {hours} Std.",

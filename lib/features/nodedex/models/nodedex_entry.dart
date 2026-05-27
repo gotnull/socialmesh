@@ -303,11 +303,11 @@ class SigilData {
   }
 }
 
-/// A region where a node has been observed.
-///
-/// Regions are derived from position data when available, or from
-/// the device's configured LoRa region as a fallback. Each region
-/// tracks when it was first and last seen.
+/// A coarse-grid region (~1°x1°) attached to a node, either as the
+/// remote node's broadcast position (entry.seenRegions) or as the
+/// local radio's position at the time the remote node was observed
+/// (entry.observedFromRegions). Same shape for both — the meaning
+/// is determined by which list the value lives in.
 class SeenRegion {
   /// Region identifier — either a geohash prefix or LoRa region code.
   final String regionId;
@@ -647,8 +647,15 @@ class NodeDexEntry {
   /// Rolling window of recent encounters (most recent 50).
   final List<EncounterRecord> encounters;
 
-  /// Regions where this node has been observed.
+  /// Regions where this node has been observed broadcasting its own
+  /// position (derived from the remote MeshNode's lat/lon when present).
   final List<SeenRegion> seenRegions;
+
+  /// Regions where the local radio was when this node was encountered
+  /// (derived from the user's own MeshNode position at encounter time).
+  /// Empty when the local radio never had GPS during encounters with
+  /// this node.
+  final List<SeenRegion> observedFromRegions;
 
   /// Co-seen node relationships: nodeNum -> CoSeenRelationship.
   ///
@@ -827,6 +834,7 @@ class NodeDexEntry {
     this.userNoteUpdatedAtMs,
     this.encounters = const [],
     this.seenRegions = const [],
+    this.observedFromRegions = const [],
     this.coSeenNodes = const {},
     this.sigil,
     this.lastKnownName,
@@ -916,8 +924,12 @@ class NodeDexEntry {
   /// Time since last seen.
   Duration get timeSinceLastSeen => DateTime.now().difference(lastSeen);
 
-  /// Number of distinct regions where this node has been observed.
+  /// Number of distinct broadcast regions (remote node's positions).
   int get regionCount => seenRegions.length;
+
+  /// Number of distinct regions where the local radio was when this
+  /// node was encountered.
+  int get observedFromRegionCount => observedFromRegions.length;
 
   /// Number of nodes historically co-seen with this one.
   int get historicalCoSeenCount => coSeenNodes.length;
@@ -974,6 +986,7 @@ class NodeDexEntry {
     int? localNicknameUpdatedAtMs,
     List<EncounterRecord>? encounters,
     List<SeenRegion>? seenRegions,
+    List<SeenRegion>? observedFromRegions,
     Map<int, CoSeenRelationship>? coSeenNodes,
     SigilData? sigil,
     String? lastKnownName,
@@ -1042,6 +1055,7 @@ class NodeDexEntry {
       userNoteUpdatedAtMs: effectiveUnMs,
       encounters: encounters ?? this.encounters,
       seenRegions: seenRegions ?? this.seenRegions,
+      observedFromRegions: observedFromRegions ?? this.observedFromRegions,
       coSeenNodes: coSeenNodes ?? this.coSeenNodes,
       sigil: sigil ?? this.sigil,
       lastKnownName: lastKnownName ?? this.lastKnownName,
@@ -1202,7 +1216,8 @@ class NodeDexEntry {
     return copyWith(coSeenNodes: updated);
   }
 
-  /// Add or update a region observation.
+  /// Add or update a broadcast-region observation (where the remote
+  /// node has broadcast its position from).
   NodeDexEntry addRegion(String regionId, String label, {DateTime? timestamp}) {
     final now = timestamp ?? DateTime.now();
     final updated = List<SeenRegion>.from(seenRegions);
@@ -1226,6 +1241,37 @@ class NodeDexEntry {
     }
 
     return copyWith(seenRegions: updated);
+  }
+
+  /// Add or update an observed-from region (where the local radio was
+  /// when this node was encountered).
+  NodeDexEntry addObservedFromRegion(
+    String regionId,
+    String label, {
+    DateTime? timestamp,
+  }) {
+    final now = timestamp ?? DateTime.now();
+    final updated = List<SeenRegion>.from(observedFromRegions);
+    final existingIndex = updated.indexWhere((r) => r.regionId == regionId);
+
+    if (existingIndex >= 0) {
+      updated[existingIndex] = updated[existingIndex].copyWith(
+        lastSeen: now,
+        encounterCount: updated[existingIndex].encounterCount + 1,
+      );
+    } else {
+      updated.add(
+        SeenRegion(
+          regionId: regionId,
+          label: label,
+          firstSeen: now,
+          lastSeen: now,
+          encounterCount: 1,
+        ),
+      );
+    }
+
+    return copyWith(observedFromRegions: updated);
   }
 
   /// Increment message count.
@@ -1380,6 +1426,20 @@ class NodeDexEntry {
       }
     }
 
+    // --- Observed-from regions: merge by regionId ---
+    final observedFromMap = <String, SeenRegion>{};
+    for (final region in observedFromRegions) {
+      observedFromMap[region.regionId] = region;
+    }
+    for (final region in other.observedFromRegions) {
+      final existing = observedFromMap[region.regionId];
+      if (existing != null) {
+        observedFromMap[region.regionId] = existing.merge(region);
+      } else {
+        observedFromMap[region.regionId] = region;
+      }
+    }
+
     // --- Co-seen relationships: merge per edge ---
     final mergedCoSeen = Map<int, CoSeenRelationship>.from(coSeenNodes);
     for (final entry in other.coSeenNodes.entries) {
@@ -1508,6 +1568,7 @@ class NodeDexEntry {
       userNoteUpdatedAtMs: mergedNoteResult.timestamp,
       encounters: mergedEncounters,
       seenRegions: regionMap.values.toList(),
+      observedFromRegions: observedFromMap.values.toList(),
       coSeenNodes: mergedCoSeen,
       sigil: mergedSigil,
       lastKnownName: mergedName,
@@ -1621,6 +1682,7 @@ class NodeDexEntry {
       if (userNoteUpdatedAtMs != null) 'un_ms': userNoteUpdatedAtMs,
       'enc': encounters.map((e) => e.toJson()).toList(),
       'sr': seenRegions.map((r) => r.toJson()).toList(),
+      'ofr': observedFromRegions.map((r) => r.toJson()).toList(),
       // Schema v2: store CoSeenRelationship objects.
       'csn': coSeenNodes.map((k, v) => MapEntry(k.toString(), v.toJson())),
       if (sigil != null) 'sig': sigil!.toJson(),
@@ -1698,6 +1760,11 @@ class NodeDexEntry {
           const [],
       seenRegions:
           (json['sr'] as List<dynamic>?)
+              ?.map((r) => SeenRegion.fromJson(r as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      observedFromRegions:
+          (json['ofr'] as List<dynamic>?)
               ?.map((r) => SeenRegion.fromJson(r as Map<String, dynamic>))
               .toList() ??
           const [],

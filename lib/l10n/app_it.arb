@@ -20504,6 +20504,12 @@
     "@nodedexRegionsLabel": {
         "description": "Label in node management"
     },
+    "@nodedexBroadcastRegionsLabel": {
+        "description": "Discovery row label and card title: count of distinct regions where the remote node has broadcast its own position from."
+    },
+    "@nodedexObservedFromRegionsLabel": {
+        "description": "Discovery row label and card title: count of distinct regions where the local radio was when the remote node was encountered."
+    },
     "@nodedexRelationshipTimeline": {
         "description": "Text displayed in node management"
     },
@@ -40875,6 +40881,8 @@
     "nodedexRegionEncounterCount": "{count} incontri",
     "nodedexRegionsCompactLabel": "Regioni",
     "nodedexRegionsLabel": "Regioni",
+    "nodedexBroadcastRegionsLabel": "Regioni di trasmissione",
+    "nodedexObservedFromRegionsLabel": "Vista da",
     "nodedexRelationshipTimeline": "Cronologia relazione",
     "nodedexRelativeDaysAgo": "{days}g fa",
     "nodedexRelativeHoursAgo": "{hours}h fa",

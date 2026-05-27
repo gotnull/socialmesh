@@ -15706,6 +15706,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String get nodedexRegionsLabel => 'Регіони';
 
   @override
+  String get nodedexBroadcastRegionsLabel => 'Регіони мовлення';
+
+  @override
+  String get nodedexObservedFromRegionsLabel => 'Помічено з';
+
+  @override
   String get nodedexRelationshipTimeline => 'Хронологія відносин';
 
   @override

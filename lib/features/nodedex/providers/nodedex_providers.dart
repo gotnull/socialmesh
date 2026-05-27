@@ -469,6 +469,11 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     if (_store == null) return;
 
     final myNodeNum = ref.read(myNodeNumProvider);
+    // Local radio's MeshNode (when known). Used to stamp observed-from
+    // regions on remote-node entries: the coarse cell of *our* GPS at
+    // encounter time, distinct from the remote node's own broadcast
+    // region (seenRegions).
+    final localNode = myNodeNum != null ? current[myNodeNum] : null;
     final updated = Map<int, NodeDexEntry>.from(state);
     var changed = false;
 
@@ -600,16 +605,26 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
         final withRegion = isLive
             ? _addRegionFromNode(newEntry, node, timestamp: discoveryTimestamp)
             : newEntry;
+        // Also capture the local radio's region (where *we* were when the
+        // remote was first heard). Gated on isLive for the same reason as
+        // above: a sync-replay discovery should not stamp our current cell.
+        final withObservedFrom = isLive
+            ? _addObservedFromRegionFromLocal(
+                withRegion,
+                localNode,
+                timestamp: discoveryTimestamp,
+              )
+            : withRegion;
         // Stamp the active identity pubkey so subsequent observations can
         // detect rotation. Safe to backfill at creation time — no prior
         // identity to archive yet.
         final observedPubkey = _extractIdentityPubkey(node);
         final withIdentity = observedPubkey != null
-            ? withRegion.copyWith(
+            ? withObservedFrom.copyWith(
                 identityPubkey: observedPubkey,
                 identityObservedAt: now,
               )
-            : withRegion;
+            : withObservedFrom;
         updated[nodeNum] = withIdentity;
 
         // Only track encounters and co-seen for nodes that are
@@ -731,6 +746,15 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
           updatedEntry = _addRegionFromNode(
             updatedEntry,
             node,
+            timestamp: encounterTimestamp,
+          );
+
+          // Stamp the local radio's region too (where we were when the
+          // remote was heard). Distinct from the seenRegions list above,
+          // which records where the remote was broadcasting from.
+          updatedEntry = _addObservedFromRegionFromLocal(
+            updatedEntry,
+            localNode,
             timestamp: encounterTimestamp,
           );
 
@@ -911,6 +935,28 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
       return entry.addRegion(regionId, label, timestamp: timestamp);
     }
     return entry;
+  }
+
+  /// Stamp the local radio's coarse region onto a remote-node entry.
+  ///
+  /// Records where *our* radio was when the remote node was encountered,
+  /// derived from the local MeshNode's lat/lon. No-op when the local
+  /// node is unknown or has no position. Use the same coarse-geohash
+  /// grid as [_addRegionFromNode] so the two lists are comparable.
+  NodeDexEntry _addObservedFromRegionFromLocal(
+    NodeDexEntry entry,
+    MeshNode? localNode, {
+    DateTime? timestamp,
+  }) {
+    if (localNode == null) return entry;
+    if (!localNode.hasPosition ||
+        localNode.latitude == null ||
+        localNode.longitude == null) {
+      return entry;
+    }
+    final regionId = _coarseGeohash(localNode.latitude!, localNode.longitude!);
+    final label = _regionLabel(localNode.latitude!, localNode.longitude!);
+    return entry.addObservedFromRegion(regionId, label, timestamp: timestamp);
   }
 
   /// Generate a coarse geohash-like region identifier.

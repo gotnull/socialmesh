@@ -15690,6 +15690,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get nodedexRegionsLabel => 'Регионы';
 
   @override
+  String get nodedexBroadcastRegionsLabel => 'Регионы трансляции';
+
+  @override
+  String get nodedexObservedFromRegionsLabel => 'Замечено из';
+
+  @override
   String get nodedexRelationshipTimeline => 'Хронология отношений';
 
   @override

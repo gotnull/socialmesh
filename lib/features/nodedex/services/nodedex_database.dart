@@ -7,7 +7,7 @@
 // All tables, indices, and migration logic live here.
 //
 // Database: nodedex.db
-// Schema version: 13
+// Schema version: 14
 
 import 'dart:async';
 import 'dart:io';
@@ -22,7 +22,7 @@ import '../../../core/logging.dart';
 ///
 /// Bump this when adding tables, columns, or indices.
 /// Migration logic runs in [_onUpgrade].
-const int nodedexSchemaVersion = 13;
+const int nodedexSchemaVersion = 14;
 
 /// Table and column name constants for NodeDex SQLite schema.
 abstract final class NodeDexTables {
@@ -120,12 +120,20 @@ abstract final class NodeDexTables {
   static const colEncCreatedAtMs = 'created_at_ms';
 
   // -- nodedex_seen_regions --
+  // Broadcast regions: derived from the remote node's own broadcast
+  // position (MeshNode.latitude/longitude).
   static const seenRegions = 'nodedex_seen_regions';
   static const colRegionKey = 'region_key';
   static const colRegionLabel = 'label';
   static const colRegionFirstSeenMs = 'first_seen_ms';
   static const colRegionLastSeenMs = 'last_seen_ms';
   static const colRegionCount = 'count';
+
+  // -- nodedex_observed_from_regions (v14) --
+  // Observed-from regions: where the local radio was when the remote
+  // node was encountered (derived from the user's own MeshNode lat/lon).
+  // Mirrors the seenRegions schema so the same column constants are reused.
+  static const observedFromRegions = 'nodedex_observed_from_regions';
 
   // -- nodedex_coseen_edges --
   static const coSeenEdges = 'nodedex_coseen_edges';
@@ -338,6 +346,21 @@ class NodeDexDatabase {
     // -- nodedex_seen_regions --
     batch.execute('''
       CREATE TABLE ${NodeDexTables.seenRegions} (
+        ${NodeDexTables.colNodeNum} INTEGER NOT NULL
+          REFERENCES ${NodeDexTables.entries}(${NodeDexTables.colNodeNum})
+          ON DELETE CASCADE,
+        ${NodeDexTables.colRegionKey} TEXT NOT NULL,
+        ${NodeDexTables.colRegionLabel} TEXT,
+        ${NodeDexTables.colRegionFirstSeenMs} INTEGER NOT NULL,
+        ${NodeDexTables.colRegionLastSeenMs} INTEGER NOT NULL,
+        ${NodeDexTables.colRegionCount} INTEGER NOT NULL DEFAULT 1,
+        PRIMARY KEY (${NodeDexTables.colNodeNum}, ${NodeDexTables.colRegionKey})
+      )
+    ''');
+
+    // -- nodedex_observed_from_regions (v14) --
+    batch.execute('''
+      CREATE TABLE ${NodeDexTables.observedFromRegions} (
         ${NodeDexTables.colNodeNum} INTEGER NOT NULL
           REFERENCES ${NodeDexTables.entries}(${NodeDexTables.colNodeNum})
           ON DELETE CASCADE,
@@ -673,6 +696,29 @@ class NodeDexDatabase {
         'NodeDexDatabase: v13 migration — added identity tracking columns + identity changes log',
       );
     }
+    if (oldVersion < 14) {
+      // v14: Observed-from regions. Records the local radio's coarse
+      // region (~1°x1° geohash cell) at the time the remote node was
+      // encountered. Distinct from seen_regions, which records the
+      // remote node's own broadcast position. Both are nullable —
+      // observed_from only gets a row when the local radio has GPS.
+      await db.execute('''
+        CREATE TABLE ${NodeDexTables.observedFromRegions} (
+          ${NodeDexTables.colNodeNum} INTEGER NOT NULL
+            REFERENCES ${NodeDexTables.entries}(${NodeDexTables.colNodeNum})
+            ON DELETE CASCADE,
+          ${NodeDexTables.colRegionKey} TEXT NOT NULL,
+          ${NodeDexTables.colRegionLabel} TEXT,
+          ${NodeDexTables.colRegionFirstSeenMs} INTEGER NOT NULL,
+          ${NodeDexTables.colRegionLastSeenMs} INTEGER NOT NULL,
+          ${NodeDexTables.colRegionCount} INTEGER NOT NULL DEFAULT 1,
+          PRIMARY KEY (${NodeDexTables.colNodeNum}, ${NodeDexTables.colRegionKey})
+        )
+      ''');
+      AppLogging.storage(
+        'NodeDexDatabase: v14 migration — added observed_from_regions table',
+      );
+    }
   }
 
   /// Handle downgrades by recreating.
@@ -729,6 +775,7 @@ class NodeDexDatabase {
     NodeDexTables.entries,
     NodeDexTables.encounters,
     NodeDexTables.seenRegions,
+    NodeDexTables.observedFromRegions,
     NodeDexTables.coSeenEdges,
     NodeDexTables.presenceTransitions,
     NodeDexTables.syncState,

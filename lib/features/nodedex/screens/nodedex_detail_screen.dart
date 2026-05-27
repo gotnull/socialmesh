@@ -536,13 +536,37 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
             ),
           ),
 
-          // Region history
+          // Broadcast region history (where the remote node has broadcast
+          // its own position from).
           if (entry.seenRegions.isNotEmpty)
             SliverToBoxAdapter(
               child: _DetailEntrance(
                 index: 13,
                 reduceMotion: reduceMotion,
-                child: _RegionHistoryCard(entry: entry),
+                child: _RegionListCard(
+                  regions: entry.seenRegions,
+                  title: context.l10n.nodedexBroadcastRegionsLabel,
+                  icon: Icons.public_outlined,
+                  rowIcon: Icons.pin_drop_outlined,
+                  helpKey: 'regions',
+                ),
+              ),
+            ),
+
+          // Observed-from regions (where the local radio was when the
+          // remote was encountered).
+          if (entry.observedFromRegions.isNotEmpty)
+            SliverToBoxAdapter(
+              child: _DetailEntrance(
+                index: 14,
+                reduceMotion: reduceMotion,
+                child: _RegionListCard(
+                  regions: entry.observedFromRegions,
+                  title: context.l10n.nodedexObservedFromRegionsLabel,
+                  icon: Icons.my_location_outlined,
+                  rowIcon: Icons.my_location,
+                  helpKey: 'regions',
+                ),
               ),
             ),
 
@@ -1420,15 +1444,15 @@ class _SelfDeviceCard extends StatelessWidget {
 // Discovery Stats Card
 // =============================================================================
 
-class _DiscoveryStatsCard extends StatelessWidget {
+class _DiscoveryStatsCard extends ConsumerWidget {
   final NodeDexEntry entry;
   final MeshNode? node;
   // When true, the card shows a self-aware variant:
   //  - First Discovered and Known For rows are hidden (mesh-observation
   //    framings that don't map cleanly to the user's own radio).
   //  - Encounters and Messages rows are hidden (self never accumulates
-  //    remote-peer encounters and messageCount only tracks inbound from
-  //    message.from).
+  //    remote-peer encounters and a self-row message count would be
+  //    every message ever authored or received, not a per-peer metric).
   //  - The "Last encounter" row is relabelled "Last sync" since the value
   //    reflects the local connection's last update, not a remote-peer
   //    encounter.
@@ -1445,7 +1469,7 @@ class _DiscoveryStatsCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final dateFormat = DateFormat('MMM d, yyyy');
     final timeFormat = AppTimeFormat.timeOnly(context);
     final firstSeen = dateFormat.format(entry.firstSeen);
@@ -1558,19 +1582,22 @@ class _DiscoveryStatsCard extends StatelessWidget {
               value: _formatDistance(context, entry.maxDistanceSeen!),
               icon: Icons.straighten,
             ),
-          // Messages row hidden for self: messageCount is incremented only
-          // from inbound message.from, so self's count is structurally
-          // meaningless (outbound is never attributed back to self).
-          if (!isSelf)
-            _InfoRow(
-              label: context.l10n.nodedexMessagesLabel,
-              value: entry.messageCount.toString(),
-              icon: Icons.chat_bubble_outline,
-            ),
+          // Derived all-time message count for this node, matching the
+          // activity timeline's filter: any message where from == nodeNum
+          // OR to == nodeNum, excluding tapback emoji reactions. The
+          // persisted entry.messageCount only counts inbound (and dedups
+          // within a 5min window in app_providers), so it under-reports
+          // outbound DMs and channel rebroadcasts that the timeline shows.
+          if (!isSelf) _MessagesInfoRow(nodeNum: entry.nodeNum),
           _InfoRow(
-            label: context.l10n.nodedexRegionsLabel,
+            label: context.l10n.nodedexBroadcastRegionsLabel,
             value: entry.regionCount.toString(),
             icon: Icons.public_outlined,
+          ),
+          _InfoRow(
+            label: context.l10n.nodedexObservedFromRegionsLabel,
+            value: entry.observedFromRegionCount.toString(),
+            icon: Icons.my_location_outlined,
           ),
           _InfoRow(
             label: context.l10n.nodedexPositionsLabel,
@@ -1887,72 +1914,73 @@ class _CharCounter extends StatelessWidget {
 // Region History Card
 // =============================================================================
 
-class _RegionHistoryCard extends StatelessWidget {
-  final NodeDexEntry entry;
+class _RegionListCard extends StatelessWidget {
+  final List<SeenRegion> regions;
+  final String title;
+  final IconData icon;
+  final IconData rowIcon;
+  final String helpKey;
 
-  const _RegionHistoryCard({required this.entry});
+  const _RegionListCard({
+    required this.regions,
+    required this.title,
+    required this.icon,
+    required this.rowIcon,
+    required this.helpKey,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final regions = List<SeenRegion>.from(entry.seenRegions)
+    final sorted = List<SeenRegion>.from(regions)
       ..sort((a, b) => b.lastSeen.compareTo(a.lastSeen));
+    final dateFormat = DateFormat('MMM d');
 
     return NodeDexCard(
-      title: context.l10n.nodedexRegionsLabel,
-      icon: Icons.public_outlined,
-      helpKey: 'regions',
+      title: title,
+      icon: icon,
+      helpKey: helpKey,
       child: Column(
         children: [
-          for (var i = 0; i < regions.length; i++) ...[
+          for (var i = 0; i < sorted.length; i++) ...[
             if (i > 0) const SizedBox(height: AppTheme.spacing8),
-            Builder(
-              builder: (context) {
-                final region = regions[i];
-                final dateFormat = DateFormat('MMM d');
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: context.accentColor.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: context.accentColor.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(rowIcon, size: 14, color: context.accentColor),
+                ),
+                const SizedBox(width: AppTheme.spacing12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        sorted[i].label,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: context.textPrimary,
+                        ),
                       ),
-                      child: Icon(
-                        Icons.pin_drop_outlined,
-                        size: 14,
-                        color: context.accentColor,
+                      const SizedBox(height: AppTheme.spacing2),
+                      Text(
+                        '${context.l10n.nodedexRegionEncounterCount(sorted[i].encounterCount)} '
+                        '\u00B7 ${dateFormat.format(sorted[i].firstSeen)} \u2013 ${dateFormat.format(sorted[i].lastSeen)}', // lint-allow: hardcoded-string
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: context.textTertiary,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: AppTheme.spacing12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            region.label,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: context.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: AppTheme.spacing2),
-                          Text(
-                            '${context.l10n.nodedexRegionEncounterCount(region.encounterCount)} '
-                            '\u00B7 ${dateFormat.format(region.firstSeen)} \u2013 ${dateFormat.format(region.lastSeen)}', // lint-allow: hardcoded-string
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: context.textTertiary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              },
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
         ],
@@ -3794,6 +3822,27 @@ class _InfoRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _MessagesInfoRow extends ConsumerWidget {
+  final int nodeNum;
+
+  const _MessagesInfoRow({required this.nodeNum});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final messages = ref.watch(messagesProvider);
+    var count = 0;
+    for (final m in messages) {
+      if (m.isEmoji) continue;
+      if (m.from == nodeNum || m.to == nodeNum) count++;
+    }
+    return _InfoRow(
+      label: context.l10n.nodedexMessagesLabel,
+      value: count.toString(),
+      icon: Icons.chat_bubble_outline,
     );
   }
 }
