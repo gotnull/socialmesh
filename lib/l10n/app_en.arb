@@ -36823,6 +36823,26 @@
     "@subscriptionOneTimePurchases": {
         "description": "Subtitle in premium header reinforcing lifetime and no-subscription value prop"
     },
+    "subscriptionForGroupsAndCommunitiesTitle": "For Groups & Communities",
+    "@subscriptionForGroupsAndCommunitiesTitle": {
+        "description": "Section header above the Community Pack tiles on the Premium screen. Rendered uppercase by SectionTitle. User-facing entry point for buying a Community Pack."
+    },
+    "subscriptionCommunityPack10Title": "Community Pack 10",
+    "@subscriptionCommunityPack10Title": {
+        "description": "Title of the 10-member Community Pack tile on the Premium screen. Brand name; keep verbatim across locales."
+    },
+    "subscriptionCommunityPack10Subtitle": "Shared access for up to 10 members",
+    "@subscriptionCommunityPack10Subtitle": {
+        "description": "One-line subtitle under the 10-member Community Pack tile, describing the shared premium access in plain language."
+    },
+    "subscriptionCommunityPack20Title": "Community Pack 20",
+    "@subscriptionCommunityPack20Title": {
+        "description": "Title of the 20-member Community Pack tile on the Premium screen. Brand name; keep verbatim across locales."
+    },
+    "subscriptionCommunityPack20Subtitle": "Shared access for up to 20 members",
+    "@subscriptionCommunityPack20Subtitle": {
+        "description": "One-line subtitle under the 20-member Community Pack tile, describing the shared premium access in plain language."
+    },
     "subscriptionTerms": "Terms",
     "@subscriptionTerms": {
         "description": "UI text: subscription terms"

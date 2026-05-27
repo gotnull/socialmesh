@@ -27459,6 +27459,24 @@ class AppLocalizationsDe extends AppLocalizations {
       'Einmal kaufen. Für immer Ihres. Kein Abonnement.';
 
   @override
+  String get subscriptionForGroupsAndCommunitiesTitle =>
+      'Für Gruppen und Communitys';
+
+  @override
+  String get subscriptionCommunityPack10Title => 'Community Pack 10';
+
+  @override
+  String get subscriptionCommunityPack10Subtitle =>
+      'Geteilter Zugriff für bis zu 10 Mitglieder';
+
+  @override
+  String get subscriptionCommunityPack20Title => 'Community Pack 20';
+
+  @override
+  String get subscriptionCommunityPack20Subtitle =>
+      'Geteilter Zugriff für bis zu 20 Mitglieder';
+
+  @override
   String get subscriptionTerms => 'Bedingungen';
 
   @override

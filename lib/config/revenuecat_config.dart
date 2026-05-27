@@ -68,6 +68,18 @@ class RevenueCatConfig {
   static String get completePackProductId =>
       dotenv.env['COMPLETE_PACK_PRODUCT_ID'] ?? 'complete_pack';
 
+  /// Community Pack 10 - shared premium access for up to 10 members.
+  /// Maps to the org-checkout backend; gated by
+  /// `AppFeatureFlags.isCommunityPackEnabled` until the matching Stripe
+  /// SKU is live.
+  static String get communityPack10ProductId =>
+      dotenv.env['COMMUNITY_PACK_10_PRODUCT_ID'] ?? 'community_pack_10';
+
+  /// Community Pack 20 - shared premium access for up to 20 members.
+  /// Same gating + backend wiring as `communityPack10ProductId`.
+  static String get communityPack20ProductId =>
+      dotenv.env['COMMUNITY_PACK_20_PRODUCT_ID'] ?? 'community_pack_20';
+
   /// Get all product IDs as a list
   static List<String> get allProductIds => [
     themePackProductId,

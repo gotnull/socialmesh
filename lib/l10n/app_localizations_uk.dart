@@ -27396,6 +27396,23 @@ class AppLocalizationsUk extends AppLocalizations {
       'Одна покупка. Назавжди. Без підписки.';
 
   @override
+  String get subscriptionForGroupsAndCommunitiesTitle => 'Для груп і спільнот';
+
+  @override
+  String get subscriptionCommunityPack10Title => 'Community Pack 10';
+
+  @override
+  String get subscriptionCommunityPack10Subtitle =>
+      'Спільний доступ до 10 учасників';
+
+  @override
+  String get subscriptionCommunityPack20Title => 'Community Pack 20';
+
+  @override
+  String get subscriptionCommunityPack20Subtitle =>
+      'Спільний доступ до 20 учасників';
+
+  @override
   String get subscriptionTerms => 'Умови';
 
   @override

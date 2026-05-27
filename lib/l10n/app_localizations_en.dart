@@ -27070,6 +27070,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'One purchase. Yours forever. No subscription.';
 
   @override
+  String get subscriptionForGroupsAndCommunitiesTitle =>
+      'For Groups & Communities';
+
+  @override
+  String get subscriptionCommunityPack10Title => 'Community Pack 10';
+
+  @override
+  String get subscriptionCommunityPack10Subtitle =>
+      'Shared access for up to 10 members';
+
+  @override
+  String get subscriptionCommunityPack20Title => 'Community Pack 20';
+
+  @override
+  String get subscriptionCommunityPack20Subtitle =>
+      'Shared access for up to 20 members';
+
+  @override
   String get subscriptionTerms => 'Terms';
 
   @override

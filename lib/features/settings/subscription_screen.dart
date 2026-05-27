@@ -170,6 +170,30 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
               // One-time purchases (shows OWNED or price depending on state)
               _buildOneTimePurchases(),
 
+              // Community Pack entry section. First-class user-facing
+              // surface for buying a Community Pack for a group. The
+              // section title and pack labels use the Community Pack
+              // language contract (see GROUP_LICENSING_FOUNDATION.md
+              // section "User-facing terminology boundary"). Sits
+              // above the legacy Group Licensing section so the
+              // user-facing copy is the primary entry. Gated by
+              // isCommunityPackEnabled (default off) until the
+              // corresponding Stripe SKUs land on the backend.
+              if (AppFeatureFlags.isCommunityPackEnabled) ...[
+                const SizedBox(height: AppTheme.spacing24),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing4,
+                  ),
+                  child: SectionTitle(
+                    title:
+                        context.l10n.subscriptionForGroupsAndCommunitiesTitle,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacing8),
+                const _CommunityPackEntries(),
+              ],
+
               // Group licensing entry section. First-class card
               // section with a SectionTitle header + canonical
               // SettingsTile rows. Group / community licensing is a
@@ -1426,9 +1450,13 @@ class _GroupLicensingEntries extends ConsumerWidget {
             onTap: () =>
                 Navigator.of(context).push(LicenseOrgOverviewScreen.route()),
           ),
-          if (canBuyOrgPack) const SizedBox(height: AppTheme.spacing8),
+          if (canBuyOrgPack && !AppFeatureFlags.isCommunityPackEnabled)
+            const SizedBox(height: AppTheme.spacing8),
         ],
-        if (canBuyOrgPack)
+        // Legacy Buy tile hides when the Community Pack section above
+        // is on - that section is the canonical purchase entry once
+        // its flag is enabled.
+        if (canBuyOrgPack && !AppFeatureFlags.isCommunityPackEnabled)
           _GroupLicensingTile(
             icon: Icons.add_business_outlined,
             title: l10n.orgCheckoutEntryAction,
@@ -1438,6 +1466,50 @@ class _GroupLicensingEntries extends ConsumerWidget {
               productId: RevenueCatConfig.themePackProductId,
             ),
           ),
+      ],
+    );
+  }
+}
+
+/// Community Pack entries - two tiles (Pack 10 / Pack 20) gated by
+/// `AppFeatureFlags.isCommunityPackEnabled` at the call site. Both
+/// tiles only render for signed-in non-anonymous users, mirroring
+/// the `canBuyOrgPack` guard on `_GroupLicensingEntries` (anonymous
+/// users would hit an HttpsError at checkout).
+class _CommunityPackEntries extends ConsumerWidget {
+  const _CommunityPackEntries();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final user = ref.watch(currentUserProvider);
+    final canBuyOrgPack =
+        user != null && !user.isAnonymous && user.uid.isNotEmpty;
+
+    if (!canBuyOrgPack) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _GroupLicensingTile(
+          icon: Icons.diversity_3_outlined,
+          title: l10n.subscriptionCommunityPack10Title,
+          subtitle: l10n.subscriptionCommunityPack10Subtitle,
+          onTap: () => showOrgCheckoutSheet(
+            context,
+            productId: RevenueCatConfig.communityPack10ProductId,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing8),
+        _GroupLicensingTile(
+          icon: Icons.groups_2_outlined,
+          title: l10n.subscriptionCommunityPack20Title,
+          subtitle: l10n.subscriptionCommunityPack20Subtitle,
+          onTap: () => showOrgCheckoutSheet(
+            context,
+            productId: RevenueCatConfig.communityPack20ProductId,
+          ),
+        ),
       ],
     );
   }

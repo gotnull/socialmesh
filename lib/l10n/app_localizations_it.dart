@@ -27385,6 +27385,24 @@ class AppLocalizationsIt extends AppLocalizations {
       'Acquisti una tantum, tuoi per sempre';
 
   @override
+  String get subscriptionForGroupsAndCommunitiesTitle =>
+      'Per gruppi e community';
+
+  @override
+  String get subscriptionCommunityPack10Title => 'Community Pack 10';
+
+  @override
+  String get subscriptionCommunityPack10Subtitle =>
+      'Accesso condiviso fino a 10 membri';
+
+  @override
+  String get subscriptionCommunityPack20Title => 'Community Pack 20';
+
+  @override
+  String get subscriptionCommunityPack20Subtitle =>
+      'Accesso condiviso fino a 20 membri';
+
+  @override
   String get subscriptionTerms => 'Termini';
 
   @override

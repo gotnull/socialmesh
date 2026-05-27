@@ -448,6 +448,24 @@ class AppFeatureFlags {
     }
   }
 
+  /// Whether the Community Pack entry-point card on the Premium screen
+  /// is visible. Set `COMMUNITY_PACK_ENABLED=true` in `.env` to enable.
+  /// Default: false. The card surfaces two pack tiles (Community Pack
+  /// 10 / 20) that launch the existing org checkout sheet. Default off
+  /// until the corresponding Stripe SKUs (`community_pack_10`,
+  /// `community_pack_20`) are live on the backend, so the tap cannot
+  /// land on a broken checkout. When this flag is on, the legacy
+  /// "Buy a group license" tile in the Group Licensing section is
+  /// hidden to avoid a redundant purchase path.
+  static bool get isCommunityPackEnabled {
+    try {
+      final raw = dotenv.env['COMMUNITY_PACK_ENABLED']?.toLowerCase().trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Shorthand that turns on every flag required for the SIP handshake
   /// + secure-DM stack: SIP, MRRP, and the three overlay flags (link,
   /// resource, secure). Set `HANDSHAKE_ENABLED=true` in `.env` to enable

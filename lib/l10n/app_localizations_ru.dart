@@ -27382,6 +27382,24 @@ class AppLocalizationsRu extends AppLocalizations {
       'Одна покупка. Навсегда ваше. Без подписки.';
 
   @override
+  String get subscriptionForGroupsAndCommunitiesTitle =>
+      'Для групп и сообществ';
+
+  @override
+  String get subscriptionCommunityPack10Title => 'Community Pack 10';
+
+  @override
+  String get subscriptionCommunityPack10Subtitle =>
+      'Общий доступ до 10 участников';
+
+  @override
+  String get subscriptionCommunityPack20Title => 'Community Pack 20';
+
+  @override
+  String get subscriptionCommunityPack20Subtitle =>
+      'Общий доступ до 20 участников';
+
+  @override
   String get subscriptionTerms => 'Условия';
 
   @override

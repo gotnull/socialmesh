@@ -47392,6 +47392,36 @@ abstract class AppLocalizations {
   /// **'One purchase. Yours forever. No subscription.'**
   String get subscriptionOneTimePurchases;
 
+  /// Section header above the Community Pack tiles on the Premium screen. Rendered uppercase by SectionTitle. User-facing entry point for buying a Community Pack.
+  ///
+  /// In en, this message translates to:
+  /// **'For Groups & Communities'**
+  String get subscriptionForGroupsAndCommunitiesTitle;
+
+  /// Title of the 10-member Community Pack tile on the Premium screen. Brand name; keep verbatim across locales.
+  ///
+  /// In en, this message translates to:
+  /// **'Community Pack 10'**
+  String get subscriptionCommunityPack10Title;
+
+  /// One-line subtitle under the 10-member Community Pack tile, describing the shared premium access in plain language.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared access for up to 10 members'**
+  String get subscriptionCommunityPack10Subtitle;
+
+  /// Title of the 20-member Community Pack tile on the Premium screen. Brand name; keep verbatim across locales.
+  ///
+  /// In en, this message translates to:
+  /// **'Community Pack 20'**
+  String get subscriptionCommunityPack20Title;
+
+  /// One-line subtitle under the 20-member Community Pack tile, describing the shared premium access in plain language.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared access for up to 20 members'**
+  String get subscriptionCommunityPack20Subtitle;
+
   /// UI text: subscription terms
   ///
   /// In en, this message translates to:

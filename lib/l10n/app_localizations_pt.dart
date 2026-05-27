@@ -27367,6 +27367,24 @@ class AppLocalizationsPt extends AppLocalizations {
   String get subscriptionOneTimePurchases => 'Compras únicas, seus para sempre';
 
   @override
+  String get subscriptionForGroupsAndCommunitiesTitle =>
+      'Para grupos e comunidades';
+
+  @override
+  String get subscriptionCommunityPack10Title => 'Community Pack 10';
+
+  @override
+  String get subscriptionCommunityPack10Subtitle =>
+      'Acesso partilhado para até 10 membros';
+
+  @override
+  String get subscriptionCommunityPack20Title => 'Community Pack 20';
+
+  @override
+  String get subscriptionCommunityPack20Subtitle =>
+      'Acesso partilhado para até 20 membros';
+
+  @override
   String get subscriptionTerms => 'Termos';
 
   @override
