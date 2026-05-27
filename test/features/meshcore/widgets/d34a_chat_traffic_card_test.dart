@@ -63,8 +63,13 @@ Widget _wrap({MeshCoreSession? session}) {
 final List<RegExp> _bannedRenderTextPatterns = [
   RegExp(r'\[mrrp\]'),
   RegExp(r'\[/mrrp\]'),
-  RegExp(r'02:[0-9a-f]{12}:'),
-  RegExp(r'01:[0-9a-f]{2}:'),
+  // MMF stable-string envelopes pin the full shape from
+  // `MeshCoreMmf.toStableString` — channel is `01:<2-hex>:<8-hex>`,
+  // contact is `02:<12-hex>:<8-hex>`. The 8-hex timestamp tail keeps
+  // the pattern from false-positive matching HH:MM:SS row values like
+  // `01:23:45` (which only carry 2 hex chars after the second colon).
+  RegExp(r'02:[0-9a-f]{12}:[0-9a-f]{8}'),
+  RegExp(r'01:[0-9a-f]{2}:[0-9a-f]{8}'),
   // 32-byte hex pubkey (any case).
   RegExp(r'[0-9a-fA-F]{64}'),
   // Long base64-ish runs (envelope content).
