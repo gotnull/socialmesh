@@ -51,6 +51,34 @@
       ],
       "stripeEnabled": true
     },
+    "community_pack_10": {
+      "kind": "oneTime",
+      "name": "Community Pack 10",
+      "priceUsd": 49.99,
+      "grants": [
+        "complete_pack",
+        "theme_pack",
+        "ringtone_pack",
+        "widget_pack",
+        "automations_pack",
+        "ifttt_pack"
+      ],
+      "stripeEnabled": true
+    },
+    "community_pack_20": {
+      "kind": "oneTime",
+      "name": "Community Pack 20",
+      "priceUsd": 79.99,
+      "grants": [
+        "complete_pack",
+        "theme_pack",
+        "ringtone_pack",
+        "widget_pack",
+        "automations_pack",
+        "ifttt_pack"
+      ],
+      "stripeEnabled": true
+    },
     "translation_pack": {
       "kind": "oneTime",
       "name": "Translation Pack",

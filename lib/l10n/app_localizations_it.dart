@@ -26537,21 +26537,21 @@ class AppLocalizationsIt extends AppLocalizations {
   String get dismiss => 'Chiudi';
 
   @override
-  String get orgCheckoutSheetTitle => 'Acquista una licenza di gruppo';
+  String get orgCheckoutSheetTitle => 'Acquista un Community Pack';
 
   @override
   String get orgCheckoutSheetBody =>
-      'L\'acquisto di un pacchetto di licenze configura un\'organizzazione di licenze per il tuo team. I posti NON vengono assegnati automaticamente e non verrai aggiunto come membro. Distribuisci i codici posto per invitare i membri.';
+      'Il tuo Community Pack crea un gruppo di cui sei proprietario. Non occuperai un posto; invita i membri per condividere l\'accesso premium. Puoi gestire il tuo gruppo in qualsiasi momento dalle impostazioni del gruppo.';
 
   @override
-  String get orgCheckoutOrgIdLabel => 'ID organizzazione di licenza';
+  String get orgCheckoutOrgIdLabel => 'ID gruppo';
 
   @override
   String get orgCheckoutOrgIdHint => 'acme-eng-team';
 
   @override
   String get orgCheckoutOrgIdHelp =>
-      'Lettere minuscole, cifre e trattini. Da 3 a 64 caratteri. Usato per identificare il tuo team nel sistema di licenze.';
+      'Lettere minuscole, cifre e trattini. Da 3 a 64 caratteri. Usato per identificare il tuo gruppo su SocialMesh.';
 
   @override
   String get orgCheckoutSubmit => 'Continua al pagamento';
@@ -43797,10 +43797,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get licenseOrgOverviewTitle => 'Le tue licenze di gruppo';
 
   @override
-  String get licenseOrgOverviewEntryAction => 'Gestisci le licenze di gruppo';
+  String get licenseOrgOverviewEntryAction => 'Gestisci i gruppi';
 
   @override
-  String get licenseOrgOverviewGroupSectionTitle => 'Licenze di gruppo';
+  String get licenseOrgOverviewGroupSectionTitle => 'I tuoi gruppi';
 
   @override
   String get licenseOrgOverviewBuyTileSubtitle =>

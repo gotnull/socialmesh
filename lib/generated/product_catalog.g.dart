@@ -95,6 +95,38 @@ class ProductCatalog {
     stripeEnabled: true,
   );
 
+  static const ProductSpec communityPack10 = ProductSpec(
+    id: 'community_pack_10',
+    name: 'Community Pack 10',
+    priceUsd: 49.99,
+    kind: ProductKind.oneTime,
+    grants: <String>[
+      'complete_pack',
+      'theme_pack',
+      'ringtone_pack',
+      'widget_pack',
+      'automations_pack',
+      'ifttt_pack',
+    ],
+    stripeEnabled: true,
+  );
+
+  static const ProductSpec communityPack20 = ProductSpec(
+    id: 'community_pack_20',
+    name: 'Community Pack 20',
+    priceUsd: 79.99,
+    kind: ProductKind.oneTime,
+    grants: <String>[
+      'complete_pack',
+      'theme_pack',
+      'ringtone_pack',
+      'widget_pack',
+      'automations_pack',
+      'ifttt_pack',
+    ],
+    stripeEnabled: true,
+  );
+
   static const ProductSpec translationPack = ProductSpec(
     id: 'translation_pack',
     name: 'Translation Pack',
@@ -129,6 +161,8 @@ class ProductCatalog {
     'automations_pack': automationsPack,
     'ifttt_pack': iftttPack,
     'complete_pack': completePack,
+    'community_pack_10': communityPack10,
+    'community_pack_20': communityPack20,
     'translation_pack': translationPack,
     'cloud_monthly': cloudMonthly,
     'cloud_yearly': cloudYearly,
@@ -141,6 +175,8 @@ class ProductCatalog {
     'automations_pack': 4.99,
     'ifttt_pack': 3.99,
     'complete_pack': 12.99,
+    'community_pack_10': 49.99,
+    'community_pack_20': 79.99,
     'translation_pack': 2.99,
     'cloud_monthly': 2.99,
     'cloud_yearly': 24.99,

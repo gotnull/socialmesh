@@ -45943,19 +45943,19 @@ abstract class AppLocalizations {
   /// Title of the org-pack checkout sheet (group / community licensing self-serve purchase).
   ///
   /// In en, this message translates to:
-  /// **'Buy a group license'**
+  /// **'Buy a Community Pack'**
   String get orgCheckoutSheetTitle;
 
   /// Body copy in the org checkout sheet. Sets expectations that seats are distributed separately via seat codes, not auto-allocated.
   ///
   /// In en, this message translates to:
-  /// **'Purchasing a license pack sets up a license org for your team. Seats are NOT assigned automatically and you will not be added as a member. Distribute seat codes to invite members.'**
+  /// **'Your Community Pack creates a group you own. You won\'t use a seat yourself; invite members to share premium access. You can manage your group anytime from group settings.'**
   String get orgCheckoutSheetBody;
 
   /// Text field label inside the org checkout sheet.
   ///
   /// In en, this message translates to:
-  /// **'License org id'**
+  /// **'Group ID'**
   String get orgCheckoutOrgIdLabel;
 
   /// Placeholder shown in the license org id text field.
@@ -45967,7 +45967,7 @@ abstract class AppLocalizations {
   /// Helper text below the license org id field describing the slug format.
   ///
   /// In en, this message translates to:
-  /// **'Lowercase letters, digits, and hyphens. 3 to 64 characters. Used to identify your team across the licensing system.'**
+  /// **'Lowercase letters, digits, and hyphens. 3 to 64 characters. Used to identify your group on SocialMesh.'**
   String get orgCheckoutOrgIdHelp;
 
   /// Submit button label inside the org checkout sheet.
@@ -75752,13 +75752,13 @@ abstract class AppLocalizations {
   /// Subscription-screen tile label that opens the License Org Overview screen. Visible only when the current user belongs to one or more license orgs.
   ///
   /// In en, this message translates to:
-  /// **'Manage group licenses'**
+  /// **'Manage groups'**
   String get licenseOrgOverviewEntryAction;
 
   /// Section title above the Manage / Buy group license tiles on the Subscription screen. Promotes group licensing from a bottom-of-screen text link into a first-class section.
   ///
   /// In en, this message translates to:
-  /// **'Group licensing'**
+  /// **'Your groups'**
   String get licenseOrgOverviewGroupSectionTitle;
 
   /// Subtitle on the 'Buy a group license' tile in the Subscription screen's Group licensing section. Explains the value proposition in one short sentence.
