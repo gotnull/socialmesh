@@ -4313,6 +4313,7 @@
     "licenseOrgInviteAcceptErrorGeneric": "Impossible d'accepter l'invitation. Réessayez.",
     "licenseOrgInviteAcceptErrorMalformed": "Ce lien d'invitation n'est pas valide",
     "licenseOrgInviteAcceptErrorOrgSuspended": "Ce groupe est en pause",
+    "licenseOrgInviteAcceptErrorOwnerSelf": "Vous êtes déjà propriétaire de ce groupe, vous n'avez donc pas besoin d'accepter une invitation.",
     "licenseOrgInviteAcceptErrorRateLimited": "Trop de tentatives. Réessayez plus tard.",
     "licenseOrgInviteAcceptErrorRedeemed": "Cette invitation a déjà été utilisée",
     "licenseOrgInviteAcceptErrorRevoked": "Cette invitation a été annulée",

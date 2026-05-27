@@ -117,6 +117,8 @@ class _InviteAcceptScreenState extends ConsumerState<InviteAcceptScreen>
         return l10n.licenseOrgInviteAcceptErrorOrgSuspended;
       case AcceptInviteReason.rateLimited:
         return l10n.licenseOrgInviteAcceptErrorRateLimited;
+      case AcceptInviteReason.ownerCannotRedeem:
+        return l10n.licenseOrgInviteAcceptErrorOwnerSelf;
       case AcceptInviteReason.permissionDenied:
       case AcceptInviteReason.unauthenticated:
       case AcceptInviteReason.generic:

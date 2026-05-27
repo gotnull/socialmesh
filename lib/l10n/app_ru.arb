@@ -4349,6 +4349,7 @@
     "licenseOrgInviteAcceptErrorGeneric": "Не удалось принять приглашение. Повторите попытку.",
     "licenseOrgInviteAcceptErrorMalformed": "Эта ссылка-приглашение недействительна",
     "licenseOrgInviteAcceptErrorOrgSuspended": "Эта группа приостановлена",
+    "licenseOrgInviteAcceptErrorOwnerSelf": "Вы уже являетесь владельцем этой группы, поэтому вам не нужно принимать приглашение.",
     "licenseOrgInviteAcceptErrorRateLimited": "Слишком много попыток. Повторите позже.",
     "licenseOrgInviteAcceptErrorRedeemed": "Это приглашение уже использовано",
     "licenseOrgInviteAcceptErrorRevoked": "Это приглашение отменено",

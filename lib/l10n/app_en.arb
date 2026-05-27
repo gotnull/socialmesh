@@ -57980,6 +57980,10 @@
     "@licenseOrgInviteAcceptErrorOrgSuspended": {
         "description": "Error state when the parent license org is suspended at accept time."
     },
+    "licenseOrgInviteAcceptErrorOwnerSelf": "You're already the owner of this group, so you don't need to redeem an invite.",
+    "@licenseOrgInviteAcceptErrorOwnerSelf": {
+        "description": "Error state when the caller is the owner of the target org and tried to redeem their own invite. Backend reason: owner_cannot_redeem."
+    },
     "licenseOrgInviteAcceptErrorRateLimited": "Too many attempts. Please try again later.",
     "@licenseOrgInviteAcceptErrorRateLimited": {
         "description": "Error state when the per-uid accept rate limit (10/hr) is hit."

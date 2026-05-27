@@ -4313,6 +4313,7 @@
     "licenseOrgInviteAcceptErrorGeneric": "Не вдалося прийняти запрошення. Спробуйте знову.",
     "licenseOrgInviteAcceptErrorMalformed": "Це посилання-запрошення недійсне",
     "licenseOrgInviteAcceptErrorOrgSuspended": "Цю групу призупинено",
+    "licenseOrgInviteAcceptErrorOwnerSelf": "Ви вже є власником цієї групи, тому вам не потрібно приймати запрошення.",
     "licenseOrgInviteAcceptErrorRateLimited": "Забагато спроб. Спробуйте пізніше.",
     "licenseOrgInviteAcceptErrorRedeemed": "Це запрошення вже використано",
     "licenseOrgInviteAcceptErrorRevoked": "Це запрошення скасовано",

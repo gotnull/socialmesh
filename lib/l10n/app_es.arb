@@ -4313,6 +4313,7 @@
     "licenseOrgInviteAcceptErrorGeneric": "No se pudo aceptar la invitación. Inténtalo de nuevo.",
     "licenseOrgInviteAcceptErrorMalformed": "Ese enlace de invitación no es válido",
     "licenseOrgInviteAcceptErrorOrgSuspended": "Este grupo está pausado",
+    "licenseOrgInviteAcceptErrorOwnerSelf": "Ya eres propietario de este grupo, por lo que no necesitas aceptar una invitación.",
     "licenseOrgInviteAcceptErrorRateLimited": "Demasiados intentos. Inténtalo más tarde.",
     "licenseOrgInviteAcceptErrorRedeemed": "Esta invitación ya se utilizó",
     "licenseOrgInviteAcceptErrorRevoked": "Esta invitación fue cancelada",

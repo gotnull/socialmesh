@@ -76001,6 +76001,12 @@ abstract class AppLocalizations {
   /// **'This group is paused'**
   String get licenseOrgInviteAcceptErrorOrgSuspended;
 
+  /// Error state when the caller is the owner of the target org and tried to redeem their own invite. Backend reason: owner_cannot_redeem.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re already the owner of this group, so you don\'t need to redeem an invite.'**
+  String get licenseOrgInviteAcceptErrorOwnerSelf;
+
   /// Error state when the per-uid accept rate limit (10/hr) is hit.
   ///
   /// In en, this message translates to:

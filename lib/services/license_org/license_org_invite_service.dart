@@ -109,6 +109,11 @@ enum AcceptInviteReason {
   permissionDenied,
   unauthenticated,
   rateLimited,
+
+  /// The caller is the owner of the target org and tried to redeem
+  /// their own invite. Backend rejects to prevent the owner from
+  /// consuming a seat and ending up as both OWNER and MEMBER.
+  ownerCannotRedeem,
   generic,
 }
 
@@ -248,6 +253,9 @@ class LicenseOrgInviteService {
       case 'resource-exhausted':
         return AcceptInviteReason.rateLimited;
       case 'failed-precondition':
+        if (msg.contains('owner cannot redeem')) {
+          return AcceptInviteReason.ownerCannotRedeem;
+        }
         if (msg.contains('expired')) return AcceptInviteReason.expired;
         if (msg.contains('already used') || msg.contains('exhausted')) {
           return AcceptInviteReason.alreadyUsed;

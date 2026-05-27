@@ -37490,6 +37490,7 @@
     "licenseOrgInviteAcceptErrorGeneric": "Não foi possível aceitar o convite. Tente novamente.",
     "licenseOrgInviteAcceptErrorMalformed": "Esse link de convite não é válido",
     "licenseOrgInviteAcceptErrorOrgSuspended": "Este grupo está em pausa",
+    "licenseOrgInviteAcceptErrorOwnerSelf": "Já é o proprietário deste grupo, por isso não precisa de aceitar um convite.",
     "licenseOrgInviteAcceptErrorRateLimited": "Demasiadas tentativas. Tente mais tarde.",
     "licenseOrgInviteAcceptErrorRedeemed": "Este convite já foi utilizado",
     "licenseOrgInviteAcceptErrorRevoked": "Este convite foi cancelado",

@@ -44072,6 +44072,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Diese Gruppe ist pausiert';
 
   @override
+  String get licenseOrgInviteAcceptErrorOwnerSelf =>
+      'Sie sind bereits Eigentümer dieser Gruppe und müssen daher keine Einladung annehmen.';
+
+  @override
   String get licenseOrgInviteAcceptErrorRateLimited =>
       'Zu viele Versuche. Bitte später erneut versuchen.';
 

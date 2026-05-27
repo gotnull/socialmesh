@@ -43943,6 +43943,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Эта группа приостановлена';
 
   @override
+  String get licenseOrgInviteAcceptErrorOwnerSelf =>
+      'Вы уже являетесь владельцем этой группы, поэтому вам не нужно принимать приглашение.';
+
+  @override
   String get licenseOrgInviteAcceptErrorRateLimited =>
       'Слишком много попыток. Повторите позже.';
 

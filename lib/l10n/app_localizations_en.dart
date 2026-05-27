@@ -43457,6 +43457,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get licenseOrgInviteAcceptErrorOrgSuspended => 'This group is paused';
 
   @override
+  String get licenseOrgInviteAcceptErrorOwnerSelf =>
+      'You\'re already the owner of this group, so you don\'t need to redeem an invite.';
+
+  @override
   String get licenseOrgInviteAcceptErrorRateLimited =>
       'Too many attempts. Please try again later.';
 

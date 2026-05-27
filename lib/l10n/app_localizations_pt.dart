@@ -43921,6 +43921,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Este grupo está em pausa';
 
   @override
+  String get licenseOrgInviteAcceptErrorOwnerSelf =>
+      'Já é o proprietário deste grupo, por isso não precisa de aceitar um convite.';
+
+  @override
   String get licenseOrgInviteAcceptErrorRateLimited =>
       'Demasiadas tentativas. Tente mais tarde.';
 

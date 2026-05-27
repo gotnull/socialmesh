@@ -43953,6 +43953,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get licenseOrgInviteAcceptErrorOrgSuspended => 'Цю групу призупинено';
 
   @override
+  String get licenseOrgInviteAcceptErrorOwnerSelf =>
+      'Ви вже є власником цієї групи, тому вам не потрібно приймати запрошення.';
+
+  @override
   String get licenseOrgInviteAcceptErrorRateLimited =>
       'Забагато спроб. Спробуйте пізніше.';
 
