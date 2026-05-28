@@ -56,8 +56,39 @@ final externalPurchaseServiceProvider = FutureProvider<ExternalPurchaseService>(
   // worrying about duplicates. Quiet no-op for anonymous users -
   // anon uids change between installs and would just churn the audit
   // trail.
+  //
+  // Also clears the local entitlement cache on uid CHANGE so a fresh
+  // sign-in cannot briefly see the previous account's pack list
+  // before the refresh callable lands. The SharedPrefs key is a
+  // global blob (one cache key per install, not per uid), so without
+  // this clear: user A buys complete_pack → cache writes → user A
+  // signs out → user B signs in → user B sees complete_pack tiles
+  // OWNED until ~1-2 seconds later when `getExternalEntitlements`
+  // returns user B's actual pack list. The window is small but
+  // user-visible. Source: hygiene sweep on 2026-05-28.
+  String? lastSeenUid;
   String? lastClaimedUid;
   ref.listen<User?>(currentUserProvider, (previous, next) {
+    final nextUid = next?.uid;
+    // Auth flip detection: a previous uid was tracked AND the new
+    // uid differs (covers sign-out → null, sign-out → different
+    // user, anon → permanent, and permanent → anon). Skip on the
+    // very first emission so a cold start with an already-signed-in
+    // user does not wipe valid offline-cached entitlements.
+    if (lastSeenUid != null && lastSeenUid != nextUid) {
+      AppLogging.purchase(
+        '[ProviderGraph] uid changed (prev=${lastSeenUid!.length >= 8 ? lastSeenUid!.substring(0, 8) : lastSeenUid} → '
+        'next=${nextUid == null
+            ? 'null'
+            : nextUid.length >= 8
+            ? nextUid.substring(0, 8)
+            : nextUid}) '
+        '- clearing entitlement cache',
+      );
+      unawaited(service.cache.clear());
+    }
+    lastSeenUid = nextUid;
+
     if (next == null || next.isAnonymous) return;
     if (next.uid == lastClaimedUid) return;
     lastClaimedUid = next.uid;
