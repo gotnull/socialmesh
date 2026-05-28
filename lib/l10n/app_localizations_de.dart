@@ -43931,6 +43931,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get licenseOrgMembersTitle => 'Mitglieder';
 
   @override
+  String get licenseOrgMembersSectionAll => 'Mitglieder';
+
+  @override
   String get licenseOrgMembersSectionActive => 'Aktive Mitglieder';
 
   @override

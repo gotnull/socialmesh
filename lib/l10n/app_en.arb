@@ -57799,6 +57799,10 @@
     "@licenseOrgMembersTitle": {
         "description": "Header title on the License Org Members sheet (slice N+4 roster). Pinned at the top of the AppBottomSheet.showScrollable sheet."
     },
+    "licenseOrgMembersSectionAll": "Members",
+    "@licenseOrgMembersSectionAll": {
+        "description": "Single section title at the top of the License Org Members sheet. Replaces the older 'Active members' + 'Revoked' dual-section design: tiles now render in one unified list and their visual styling (bright accent for active, dim person-off for revoked) carries the categorical signal."
+    },
     "licenseOrgMembersSectionActive": "Active members",
     "@licenseOrgMembersSectionActive": {
         "description": "Section title above the active-member list in the License Org Members sheet."

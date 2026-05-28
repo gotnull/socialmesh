@@ -260,9 +260,11 @@ void main() {
     await _pump(tester);
 
     expect(find.text(_l10n.licenseOrgMembersTitle), findsOneWidget);
+    // Unified rollup uses a single "Members" section title at the
+    // top (replaced the older Active / Revoked dual-section).
     // SectionTitle uppercases the label internally.
     expect(
-      find.text(_l10n.licenseOrgMembersSectionActive.toUpperCase()),
+      find.text(_l10n.licenseOrgMembersSectionAll.toUpperCase()),
       findsOneWidget,
     );
   });
@@ -441,12 +443,23 @@ void main() {
       );
     });
 
-    test('hides the entire section when no revocations exist', () {
-      // The hasRevoked computation drives both the title row AND
-      // the itemCount delta. Without it, the section heading would
-      // render over an empty list.
-      expect(src, contains('final hasRevoked = revoked.isNotEmpty'));
-      expect(src, contains('if (hasRevoked && index == revokedTitleIdx)'));
+    test('unified rollup: one Members section header, flat list of tiles', () {
+      // Unified rollup replaces the old Active / Revoked dual
+      // sections with a single header + flat list. Revoked tiles
+      // still render distinctly (dim card + person-off icon) so
+      // the categorical signal lives in tile styling, not in
+      // section subheaders.
+      expect(src, contains('licenseOrgMembersSectionAll'));
+      expect(
+        src,
+        contains('final itemCount = 1 + members.length + revoked.length'),
+      );
+      // Old dual-section gates must NOT come back — keep them
+      // absent so a refactor can't accidentally re-introduce the
+      // orphan-heading edge cases.
+      expect(src, isNot(contains('hasActive')));
+      expect(src, isNot(contains('hasRevoked')));
+      expect(src, isNot(contains('revokedTitleIdx')));
     });
 
     test('only shows empty state when BOTH active and revoked are empty', () {
@@ -522,10 +535,12 @@ void main() {
       expect(src, contains('licenseOrgMembersReinstateErrorOverCapacity'));
     });
 
-    test('reinstate gated by owner/admin role', () {
-      // canReinstate only fires for owner / admin. A passive
-      // member viewer (legacy seeded data) sees no trigger.
-      expect(src, contains('canReinstate ='));
+    test('reinstate + revoke gated by single owner/admin flag', () {
+      // Unified rollup computes role / canRevoke / reinstate gate
+      // ONCE per build via `isCallerAdminOrOwner`, reused by both
+      // tile variants. A passive member viewer (legacy seeded
+      // data) sees no trigger.
+      expect(src, contains('isCallerAdminOrOwner'));
       expect(src, contains('LicenseOrgMemberRole.owner ||'));
       expect(src, contains('LicenseOrgMemberRole.admin'));
     });

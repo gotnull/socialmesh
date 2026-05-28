@@ -44003,6 +44003,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get licenseOrgMembersTitle => 'Miembros';
 
   @override
+  String get licenseOrgMembersSectionAll => 'Miembros';
+
+  @override
   String get licenseOrgMembersSectionActive => 'Miembros activos';
 
   @override

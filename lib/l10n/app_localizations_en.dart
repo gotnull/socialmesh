@@ -43319,6 +43319,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get licenseOrgMembersTitle => 'Members';
 
   @override
+  String get licenseOrgMembersSectionAll => 'Members';
+
+  @override
   String get licenseOrgMembersSectionActive => 'Active members';
 
   @override

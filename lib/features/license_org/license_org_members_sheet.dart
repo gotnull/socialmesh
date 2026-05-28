@@ -346,21 +346,25 @@ class _LicenseOrgMembersSheetState extends ConsumerState<LicenseOrgMembersSheet>
                 return _EmptyState(scrollController: widget.scrollController);
               }
 
-              // Index map for the combined active + revoked list.
-              // Both section headings are HIDDEN when their section
-              // has zero rows, so the user never sees a heading
-              // floating over an empty list. The active section can
-              // become empty when the only members have had their
-              // seats revoked but the membership doc stayed `active`
-              // per the manual-revoke spec.
-              final hasActive = members.isNotEmpty;
-              final hasRevoked = revoked.isNotEmpty;
-              final activePart =
-                  (hasActive ? 1 : 0) + members.length; // title + tiles
-              final revokedPart =
-                  (hasRevoked ? 1 : 0) + revoked.length; // title + tiles
-              final revokedTitleIdx = activePart;
-              final itemCount = activePart + revokedPart;
+              // Unified Members list. Tiles render in one flat
+              // ListView with active members first (alphabetical-ish
+              // by membership insertion order) followed by revoked
+              // entries (most recent revoke first). The categorical
+              // signal lives in tile styling — bright accent avatar
+              // for active, dim person-off icon for revoked — not in
+              // section headings. Earlier slices ran a dual-section
+              // layout (Active / Revoked); that was clear but added
+              // visual noise on a small roster, and the headings
+              // re-rendered orphaned on edge transitions (last
+              // active revoked, last revoked reinstated). The flat
+              // list dodges both.
+              final role = ref.watch(
+                licenseOrgRoleProvider(widget.licenseOrgId),
+              );
+              final isCallerAdminOrOwner =
+                  role == LicenseOrgMemberRole.owner ||
+                  role == LicenseOrgMemberRole.admin;
+              final itemCount = 1 + members.length + revoked.length;
               return ListView.builder(
                 controller: widget.scrollController,
                 padding: const EdgeInsets.symmetric(
@@ -369,76 +373,49 @@ class _LicenseOrgMembersSheetState extends ConsumerState<LicenseOrgMembersSheet>
                 ),
                 itemCount: itemCount,
                 itemBuilder: (context, index) {
-                  if (hasActive && index == 0) {
+                  if (index == 0) {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
                       child: SectionTitle(
-                        title: l10n.licenseOrgMembersSectionActive,
+                        title: l10n.licenseOrgMembersSectionAll,
                       ),
                     );
                   }
-                  if (hasRevoked && index == revokedTitleIdx) {
-                    return Padding(
-                      padding: EdgeInsets.only(
-                        top: hasActive ? AppTheme.spacing16 : 0,
-                        bottom: AppTheme.spacing8,
-                      ),
-                      child: SectionTitle(
-                        title: l10n.licenseOrgMembersSectionRevoked,
-                      ),
-                    );
-                  }
-                  if (index >= revokedTitleIdx + (hasRevoked ? 1 : 0)) {
-                    final revokedIdx =
-                        index - revokedTitleIdx - (hasRevoked ? 1 : 0);
-                    final event = revoked[revokedIdx];
-                    // Owner/admin only — same gate as the revoke
-                    // action on _MemberTile. The role provider
-                    // already drove the Active section's revoke
-                    // affordance; reuse it here.
-                    final role = ref.watch(
-                      licenseOrgRoleProvider(widget.licenseOrgId),
-                    );
-                    final canReinstate =
-                        role == LicenseOrgMemberRole.owner ||
-                        role == LicenseOrgMemberRole.admin;
-                    return _RevokedTile(
-                      event: event,
-                      onReinstate: canReinstate
-                          ? () => _onReinstateTapped(event.targetId ?? '')
+                  final flatIdx = index - 1;
+                  if (flatIdx < members.length) {
+                    final member = members[flatIdx];
+                    final isCurrentUser =
+                        currentUid != null && member.uid == currentUid;
+                    // Reveal the revoke action only when:
+                    //   - caller holds owner or admin role in THIS
+                    //     org, AND
+                    //   - the tile is NOT the current user (owners
+                    //     and admins cannot revoke their own seat
+                    //     from this surface; the leave / disband
+                    //     flow handles that), AND
+                    //   - the tile is NOT another owner (owners
+                    //     aren't in the members subcollection by
+                    //     design, but legacy seeded data can carry
+                    //     OWNER role on a member doc — defensive
+                    //     guard here).
+                    final canRevoke =
+                        !isCurrentUser &&
+                        isCallerAdminOrOwner &&
+                        member.role != LicenseOrgMemberRole.owner;
+                    return _MemberTile(
+                      member: member,
+                      isCurrentUser: isCurrentUser,
+                      onRevoke: canRevoke
+                          ? () => _onRevokeTapped(member)
                           : null,
                     );
                   }
-                  // Active tile branch. Subtract the active-title row
-                  // (index 0) when present.
-                  final memberIdx = hasActive ? index - 1 : index;
-                  final member = members[memberIdx];
-                  final isCurrentUser =
-                      currentUid != null && member.uid == currentUid;
-                  // Reveal the revoke action only when:
-                  //   - the current user holds owner or admin role in
-                  //     THIS org (read via licenseOrgRoleProvider so
-                  //     the rule respects member-doc role flips), AND
-                  //   - the tile is NOT the current user (owners and
-                  //     admins cannot revoke their own seat from this
-                  //     surface; that path goes through the org
-                  //     suspend / leave flow), AND
-                  //   - the tile is NOT another owner (owners aren't
-                  //     in the member roster anyway, but the role
-                  //     pill can show OWNER for legacy seeded data;
-                  //     bake the safety check here).
-                  final role = ref.watch(
-                    licenseOrgRoleProvider(widget.licenseOrgId),
-                  );
-                  final canRevoke =
-                      !isCurrentUser &&
-                      (role == LicenseOrgMemberRole.owner ||
-                          role == LicenseOrgMemberRole.admin) &&
-                      member.role != LicenseOrgMemberRole.owner;
-                  return _MemberTile(
-                    member: member,
-                    isCurrentUser: isCurrentUser,
-                    onRevoke: canRevoke ? () => _onRevokeTapped(member) : null,
+                  final event = revoked[flatIdx - members.length];
+                  return _RevokedTile(
+                    event: event,
+                    onReinstate: isCallerAdminOrOwner
+                        ? () => _onReinstateTapped(event.targetId ?? '')
+                        : null,
                   );
                 },
               );

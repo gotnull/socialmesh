@@ -75779,6 +75779,12 @@ abstract class AppLocalizations {
   /// **'Members'**
   String get licenseOrgMembersTitle;
 
+  /// Single section title at the top of the License Org Members sheet. Replaces the older 'Active members' + 'Revoked' dual-section design: tiles now render in one unified list and their visual styling (bright accent for active, dim person-off for revoked) carries the categorical signal.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get licenseOrgMembersSectionAll;
+
   /// Section title above the active-member list in the License Org Members sheet.
   ///
   /// In en, this message translates to:

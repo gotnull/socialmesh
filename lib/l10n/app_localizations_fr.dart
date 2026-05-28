@@ -44115,6 +44115,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get licenseOrgMembersTitle => 'Membres';
 
   @override
+  String get licenseOrgMembersSectionAll => 'Membres';
+
+  @override
   String get licenseOrgMembersSectionActive => 'Membres actifs';
 
   @override

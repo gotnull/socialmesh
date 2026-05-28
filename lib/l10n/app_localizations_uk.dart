@@ -43815,6 +43815,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get licenseOrgMembersTitle => 'Учасники';
 
   @override
+  String get licenseOrgMembersSectionAll => 'Учасники';
+
+  @override
   String get licenseOrgMembersSectionActive => 'Активні учасники';
 
   @override

@@ -43804,6 +43804,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get licenseOrgMembersTitle => 'Участники';
 
   @override
+  String get licenseOrgMembersSectionAll => 'Участники';
+
+  @override
   String get licenseOrgMembersSectionActive => 'Активные участники';
 
   @override

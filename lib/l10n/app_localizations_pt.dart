@@ -43782,6 +43782,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get licenseOrgMembersTitle => 'Membros';
 
   @override
+  String get licenseOrgMembersSectionAll => 'Membros';
+
+  @override
   String get licenseOrgMembersSectionActive => 'Membros ativos';
 
   @override
