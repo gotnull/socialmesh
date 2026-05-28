@@ -552,6 +552,55 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
     return AppTheme.errorRed;
   }
 
+  String _rssiQualityLabel(BuildContext context, int? rssi) {
+    if (rssi == null) return context.l10n.nodeDetailSignalUnknown;
+    if (rssi >= -50) return context.l10n.nodeDetailSignalExcellent;
+    if (rssi >= -65) return context.l10n.nodeDetailSignalGood;
+    if (rssi >= -80) return context.l10n.nodeDetailSignalFair;
+    if (rssi >= -90) return context.l10n.nodeDetailSignalWeak;
+    return context.l10n.nodeDetailSignalVeryWeak;
+  }
+
+  Color _rssiQualityColor(int? rssi) {
+    if (rssi == null) return SemanticColors.disabled;
+    if (rssi >= -65) return AccentColors.green;
+    if (rssi >= -80) return AppTheme.warningYellow;
+    return AppTheme.errorRed;
+  }
+
+  Widget _signalValueWithLabel(
+    BuildContext context, {
+    required String rawValue,
+    required String qualityLabel,
+    required Color qualityColor,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          rawValue,
+          style: TextStyle(
+            fontSize: 14,
+            color: context.textPrimary,
+            fontWeight: FontWeight.w500,
+          ),
+          textAlign: TextAlign.right,
+        ),
+        const SizedBox(height: AppTheme.spacing4),
+        Text(
+          qualityLabel,
+          style: TextStyle(
+            fontSize: 12,
+            color: qualityColor,
+            fontWeight: FontWeight.w600,
+          ),
+          textAlign: TextAlign.right,
+        ),
+      ],
+    );
+  }
+
   /// Build the hero header with avatar, name, status and stat chips.
   Widget _buildHeroSection(BuildContext context, MeshNode node) {
     final isOnline = _isNodeOnline(node);
@@ -1031,12 +1080,24 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
             icon: Icons.signal_cellular_alt,
             label: context.l10n.nodeDetailLabelRssi,
             value: context.l10n.nodeDetailValueRssi(node.rssi!),
+            valueWidget: _signalValueWithLabel(
+              context,
+              rawValue: context.l10n.nodeDetailValueRssi(node.rssi!),
+              qualityLabel: _rssiQualityLabel(context, node.rssi),
+              qualityColor: _rssiQualityColor(node.rssi),
+            ),
           ),
         if (node.snr != null)
           InfoTableRow(
             icon: Icons.wifi,
             label: context.l10n.nodeDetailLabelSnr,
             value: context.l10n.nodeDetailValueSnr(node.snr.toString()),
+            valueWidget: _signalValueWithLabel(
+              context,
+              rawValue: context.l10n.nodeDetailValueSnr(node.snr.toString()),
+              qualityLabel: _signalLabel(context, node.snr),
+              qualityColor: _signalColor(node.snr),
+            ),
           ),
         if (node.noiseFloor != null)
           InfoTableRow(

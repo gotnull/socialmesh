@@ -290,7 +290,7 @@ class _LicenseOrgMembersSheetState extends ConsumerState<LicenseOrgMembersSheet>
               final revokedAsync = ref.watch(
                 licenseOrgRevokedSeatsProvider(widget.licenseOrgId),
               );
-              final revoked = revokedAsync.maybeWhen(
+              final revokedRaw = revokedAsync.maybeWhen(
                 data: (rows) => rows,
                 orElse: () => const <LicenseOrgAuditEvent>[],
               );
@@ -311,6 +311,24 @@ class _LicenseOrgMembersSheetState extends ConsumerState<LicenseOrgMembersSheet>
                 data: (s) => s,
                 orElse: () => const <String>{},
               );
+
+              // Symmetric dedupe on the Revoked side: drop revoke
+              // audit rows whose target uid currently holds an
+              // active seat (i.e. the seat was later reinstated).
+              // Without this filter, a revoked-then-reinstated
+              // member surfaces in BOTH Active AND Revoked, which
+              // is the residual UX issue from the 2026-05-28 sim
+              // verify. The audit log itself is append-only — the
+              // historical revoke event is preserved in the full
+              // Audit Log screen; the roster surface just shows
+              // CURRENT state per uid.
+              final revoked = revokedRaw
+                  .where(
+                    (e) => !activeUids.contains(
+                      _uidFromAllocationId(e.targetId ?? ''),
+                    ),
+                  )
+                  .toList(growable: false);
               // Owners are intentionally NOT in the members
               // subcollection (they consume no seat), so a "no seat"
               // filter would hide them from a roster they might
