@@ -17,6 +17,8 @@
 //
 // See docs/engineering/LICENSE_ORG_INVITES.md.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -26,6 +28,7 @@ import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../l10n/app_localizations.dart';
+import '../../providers/external_purchase_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../services/license_org/license_org_invite_service.dart';
 import '../../utils/snackbar.dart';
@@ -68,6 +71,18 @@ class _InviteAcceptScreenState extends ConsumerState<InviteAcceptScreen>
         AppLogging.groupLicensing(
           '[InviteAcceptScreen] accept ok replay=$alreadyAllocated',
         );
+        // Refresh the external-entitlements cache so the org-scoped
+        // packs unlocked by the freshly-allocated seat appear in
+        // `effectiveEntitlementsProvider` without an app restart. The
+        // membership + seat Firestore snapshots already invalidate
+        // `currentUserLicenseOrgIdsProvider` and
+        // `currentUserSeatAllocationsProvider`, but the entitlement
+        // docs themselves only land in the local cache via a callable
+        // refresh — without this kick the user sees price labels
+        // until the next launch. Failure is swallowed by the helper
+        // (it never throws), so error-pathing the snackbar isn't
+        // needed.
+        unawaited(refreshExternalEntitlements(ref));
         await ref.read(hapticServiceProvider).trigger(HapticType.success);
         if (!mounted) return;
         safeShowSnackBar(
