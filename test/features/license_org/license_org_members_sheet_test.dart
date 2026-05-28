@@ -26,13 +26,16 @@ import 'package:socialmesh/features/license_org/license_org_members_sheet.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:socialmesh/l10n/app_localizations_en.dart';
 import 'package:socialmesh/models/license_org.dart';
+import 'package:socialmesh/models/license_org_audit_event.dart';
 import 'package:socialmesh/models/license_org_membership.dart';
 import 'package:socialmesh/models/seat_allocation.dart';
 import 'package:socialmesh/providers/auth_providers.dart';
+import 'package:socialmesh/providers/license_org_audit_providers.dart';
 import 'package:socialmesh/providers/license_org_members_providers.dart';
 import 'package:socialmesh/providers/license_org_membership_providers.dart';
 import 'package:socialmesh/providers/license_org_overview_providers.dart';
 import 'package:socialmesh/providers/seat_allocation_providers.dart';
+import 'package:socialmesh/services/org/license_org_audit_repository.dart';
 import 'package:socialmesh/services/org/license_org_membership_repository.dart';
 import 'package:socialmesh/services/org/seat_allocation_repository.dart';
 
@@ -106,6 +109,53 @@ class _FakeSeatRepo implements SeatAllocationRepository {
       Stream.value(activeUids);
 }
 
+/// Test audit repo that yields a configurable list of `recentEventsForOrg`
+/// rows. The sheet filters these to `seat_revoked_manual` + success.
+class _FakeAuditRepo implements LicenseOrgAuditRepository {
+  final List<LicenseOrgAuditEvent> events;
+
+  _FakeAuditRepo({this.events = const <LicenseOrgAuditEvent>[]});
+
+  @override
+  Stream<List<LicenseOrgAuditEvent>> recentEventsForOrg(
+    String orgId, {
+    int limit = 5,
+  }) => Stream.value(events);
+
+  @override
+  Future<LicenseOrgAuditLogPage> fetchPage(
+    String orgId, {
+    Object? startAfter,
+    int limit = 50,
+  }) async => const LicenseOrgAuditLogPage(
+    events: <LicenseOrgAuditEvent>[],
+    cursor: null,
+    hasMore: false,
+  );
+}
+
+/// Builds a synthetic seat_revoked_manual audit event for the tests.
+/// Mirrors the shape the backend writes.
+LicenseOrgAuditEvent _revokedEvent({
+  required String allocationId,
+  required String actorUid,
+  DateTime? tsServer,
+}) {
+  return LicenseOrgAuditEvent(
+    id: 'evt-${allocationId.hashCode}',
+    licenseOrgId: 'acme',
+    actorUid: actorUid,
+    actorRole: LicenseOrgAuditActorRole.owner,
+    action: LicenseOrgAuditAction.seatRevokedManual,
+    targetKind: LicenseOrgAuditTargetKind.orgSeatAllocation,
+    targetId: allocationId,
+    outcome: LicenseOrgAuditOutcome.success,
+    reasonCode: null,
+    tsServer: tsServer ?? DateTime.utc(2026, 5, 28),
+    metadata: const <String, Object>{},
+  );
+}
+
 LicenseOrg _activeOrg(String id) => LicenseOrg(
   id: id,
   name: id,
@@ -136,6 +186,7 @@ Widget _buildSheet({
   required LicenseOrgMembershipRepository repo,
   String currentUid = 'u-self',
   Set<String>? activeSeatHolderUids,
+  List<LicenseOrgAuditEvent> revokedEvents = const <LicenseOrgAuditEvent>[],
 }) {
   // Default the active-seat set to ALL known member uids so existing
   // tests keep rendering their members. The new
@@ -152,11 +203,13 @@ Widget _buildSheet({
   final seatRepo = _FakeSeatRepo(
     activeUids: activeSeatHolderUids ?? defaultActiveUids,
   );
+  final auditRepo = _FakeAuditRepo(events: revokedEvents);
   return ProviderScope(
     overrides: [
       currentUserProvider.overrideWith((ref) => _FakeUser(uid: currentUid)),
       licenseOrgMembershipRepositoryProvider.overrideWith((ref) => repo),
       seatAllocationRepositoryProvider.overrideWith((ref) => seatRepo),
+      licenseOrgAuditRepositoryProvider.overrideWith((ref) => auditRepo),
     ],
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -475,6 +528,61 @@ void main() {
       expect(src, contains('canReinstate ='));
       expect(src, contains('LicenseOrgMemberRole.owner ||'));
       expect(src, contains('LicenseOrgMemberRole.admin'));
+    });
+
+    test(
+      'Revoked section drops events whose target uid holds an active seat',
+      () {
+        // The dedupe complement: Active list drops revoked-seat
+        // members, AND Revoked list drops reinstated-seat members.
+        // Without this filter, a revoked-then-reinstated uid
+        // surfaces in BOTH sections at once. Source pins the
+        // negation guard and the helper that parses the uid out
+        // of the audit row's targetId.
+        final assignment = src.indexOf('final revoked = revokedRaw');
+        expect(assignment, greaterThan(-1));
+        final closingSemicolon = src.indexOf(';', assignment);
+        final body = src.substring(assignment, closingSemicolon);
+        expect(body, contains('!activeUids.contains'));
+        expect(body, contains('_uidFromAllocationId'));
+      },
+    );
+
+    testWidgets('revoked-then-reinstated uid appears only in Active section', (
+      WidgetTester tester,
+    ) async {
+      // The member's seat was revoked at some point (audit row
+      // still in the revoked stream) but then later reinstated
+      // (uid back in activeUids). Roster must render the uid in
+      // ACTIVE only, not in both sections.
+      await tester.pumpWidget(
+        _buildSheet(
+          repo: _FakeRepo(
+            orgs: {'acme': _activeOrg('acme')},
+            members: {
+              'acme': [_member('uid-roundtrip')],
+            },
+          ),
+          // Membership stayed active; seat was reinstated.
+          activeSeatHolderUids: const {'uid-roundtrip'},
+          // Audit log carries the historical revoke event.
+          revokedEvents: [
+            _revokedEvent(
+              allocationId: 'acme__uid-roundtrip__complete_pack',
+              actorUid: 'owner-uid',
+            ),
+          ],
+        ),
+      );
+      await _pump(tester);
+
+      // Single Active tile with the uid label.
+      expect(find.text('#UID-RO'), findsOneWidget);
+      // No REVOKED section heading (the event was filtered out).
+      expect(
+        find.text(_l10n.licenseOrgMembersSectionRevoked.toUpperCase()),
+        findsNothing,
+      );
     });
 
     test('extracts uid from allocationId for the revoked member label', () {
