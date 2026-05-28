@@ -76529,6 +76529,12 @@ abstract class AppLocalizations {
   /// **'Not yet'**
   String get licenseOrgNameSheetCancelButton;
 
+  /// Primary CTA on the post-purchase confirmation overlay shown to a buyer who just bought a Community Pack and now has an unnamed org. Tapping pops the overlay and navigates to the License Org Overview screen, where the card auto-prompt opens the 'Name your community' sheet immediately.
+  ///
+  /// In en, this message translates to:
+  /// **'View your group'**
+  String get unlockSuccessOrgPackCta;
+
   /// Trailing icon button tooltip on the License Org Overview card header that opens the name sheet so the owner can rename the org.
   ///
   /// In en, this message translates to:

@@ -25,8 +25,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/theme.dart';
 import '../../models/subscription_models.dart';
+import '../../providers/auth_providers.dart';
 import '../../providers/external_purchase_providers.dart';
+import '../../providers/license_org_membership_providers.dart';
+import '../../providers/license_org_overview_providers.dart';
 import '../../services/external_purchase/external_purchase_service.dart';
+import '../license_org/license_org_overview_screen.dart';
 import 'redeem_unlock_code_sheet.dart' show showKeepPackSignInNudge;
 
 /// Wraps [child] with a fullscreen overlay that surfaces external-purchase
@@ -159,7 +163,7 @@ class _Confirming extends StatelessWidget {
   }
 }
 
-class _Success extends StatelessWidget {
+class _Success extends ConsumerWidget {
   final ConfirmationState state;
   final VoidCallback onDismiss;
 
@@ -177,8 +181,38 @@ class _Success extends StatelessWidget {
     return context.l10n.unlockSuccessGeneric;
   }
 
+  /// First license_org the current user owns whose `name` is empty.
+  /// Returns null when the buyer has no orgs (personal purchase) or
+  /// every owned org already has a name (the user is renaming
+  /// post-purchase manually, or the rename was already done in a
+  /// previous session). Only this scenario triggers the CTA — we
+  /// never push the user to a screen where there's nothing to do.
+  String? _unnamedOwnedOrgId(WidgetRef ref) {
+    final user = ref.watch(currentUserProvider);
+    if (user == null || user.isAnonymous || user.uid.isEmpty) return null;
+    final orgIds = ref
+        .watch(currentUserLicenseOrgIdsProvider)
+        .maybeWhen(data: (s) => s, orElse: () => const <String>{});
+    for (final orgId in orgIds) {
+      final org = ref
+          .watch(licenseOrgProvider(orgId))
+          .maybeWhen(data: (o) => o, orElse: () => null);
+      if (org == null) continue;
+      if (org.ownerUid != user.uid) continue;
+      if (org.name.isNotEmpty) continue;
+      return orgId;
+    }
+    return null;
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Surfaces the rename CTA only when there is an unnamed owner org
+    // to actually navigate to. The card-level auto-prompt picks the
+    // sheet up from there; we don't duplicate the rename UI inside
+    // the overlay.
+    final unnamedOrgId = _unnamedOwnedOrgId(ref);
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -194,21 +228,55 @@ class _Success extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppTheme.spacing20),
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton(
-            onPressed: onDismiss,
-            style: FilledButton.styleFrom(
-              backgroundColor: context.accentColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radius12),
+        if (unnamedOrgId != null) ...[
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () {
+                onDismiss();
+                // Pop any sheets / dialogs above the route stack
+                // (this overlay sits inside MaterialApp.builder, so
+                // the root navigator is the right one).
+                Navigator.of(
+                  context,
+                  rootNavigator: true,
+                ).push(LicenseOrgOverviewScreen.route());
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: context.accentColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
+                ),
               ),
+              child: Text(context.l10n.unlockSuccessOrgPackCta),
             ),
-            child: Text(context.l10n.dismiss),
           ),
-        ),
+          const SizedBox(height: AppTheme.spacing8),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: onDismiss,
+              child: Text(context.l10n.dismiss),
+            ),
+          ),
+        ] else
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: onDismiss,
+              style: FilledButton.styleFrom(
+                backgroundColor: context.accentColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
+                ),
+              ),
+              child: Text(context.l10n.dismiss),
+            ),
+          ),
       ],
     );
   }

@@ -44318,6 +44318,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get licenseOrgNameSheetCancelButton => 'Не зараз';
 
   @override
+  String get unlockSuccessOrgPackCta => 'Відкрити вашу групу';
+
+  @override
   String get licenseOrgNameSheetEditButton => 'Редагувати назву';
 
   @override

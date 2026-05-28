@@ -44280,6 +44280,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get licenseOrgNameSheetCancelButton => 'Agora não';
 
   @override
+  String get unlockSuccessOrgPackCta => 'Ver o teu grupo';
+
+  @override
   String get licenseOrgNameSheetEditButton => 'Editar nome';
 
   @override

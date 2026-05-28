@@ -44313,6 +44313,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get licenseOrgNameSheetCancelButton => 'Non ora';
 
   @override
+  String get unlockSuccessOrgPackCta => 'Apri il tuo gruppo';
+
+  @override
   String get licenseOrgNameSheetEditButton => 'Modifica nome';
 
   @override

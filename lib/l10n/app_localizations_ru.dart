@@ -44308,6 +44308,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get licenseOrgNameSheetCancelButton => 'Не сейчас';
 
   @override
+  String get unlockSuccessOrgPackCta => 'Открыть вашу группу';
+
+  @override
   String get licenseOrgNameSheetEditButton => 'Изменить название';
 
   @override

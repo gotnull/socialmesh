@@ -13004,5 +13004,9 @@
     "licenseOrgAuditActionLicenseOrgRenamed": "Community umbenannt",
     "@licenseOrgAuditActionLicenseOrgRenamed": {
         "description": "Human-readable label for the license_org_renamed audit action. Written when the owner saves a new name via the License Org Overview card's edit affordance."
+    },
+    "unlockSuccessOrgPackCta": "Gruppe öffnen",
+    "@unlockSuccessOrgPackCta": {
+        "description": "Primary CTA on the post-purchase confirmation overlay shown to a buyer who just bought a Community Pack and now has an unnamed org. Tapping pops the overlay and navigates to the License Org Overview screen, where the card auto-prompt opens the 'Name your community' sheet immediately."
     }
 }
