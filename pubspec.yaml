@@ -33,7 +33,7 @@ dependencies:
   typed_data: ^1.4.0
 
   # Storage
-  flutter_secure_storage: ^10.2.0
+  flutter_secure_storage: ^10.3.1
   shared_preferences: ^2.5.5
   sqflite: ^2.3.3
   sqflite_common_ffi: ^2.4.0+2
