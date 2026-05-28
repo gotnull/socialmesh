@@ -34,6 +34,9 @@ import '../../models/license_org_membership.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/license_org_members_providers.dart';
 import '../../providers/license_org_overview_providers.dart';
+import '../../services/haptic_service.dart';
+import '../../services/license_org/license_org_seat_service.dart';
+import '../../utils/snackbar.dart';
 
 class LicenseOrgMembersSheet extends ConsumerStatefulWidget {
   final String licenseOrgId;
@@ -69,6 +72,74 @@ class LicenseOrgMembersSheet extends ConsumerStatefulWidget {
 
 class _LicenseOrgMembersSheetState extends ConsumerState<LicenseOrgMembersSheet>
     with LifecycleSafeMixin<LicenseOrgMembersSheet> {
+  bool _revoking = false;
+
+  Future<void> _onRevokeTapped(LicenseOrgMembership member) async {
+    if (_revoking) return;
+    final l10n = context.l10n;
+    final memberLabel = _labelForUid(member.uid);
+
+    // Confirm-then-act. Cancel returns null/false; confirm returns
+    // true. Sheet child pops itself with the chosen value so the
+    // parent state's `mounted` guard does not race the sheet's
+    // teardown.
+    final confirmed = await AppBottomSheet.show<bool>(
+      context: context,
+      child: _RevokeConfirmSheet(memberLabel: memberLabel),
+    );
+    if (confirmed != true || !mounted) return;
+
+    safeSetState(() => _revoking = true);
+    try {
+      final allocationId = seatAllocationDocId(
+        licenseOrgId: widget.licenseOrgId,
+        uid: member.uid,
+        productId: communityPackSeatProductId,
+      );
+      final service = LicenseOrgSeatService();
+      final result = await service.revokeSeat(
+        licenseOrgId: widget.licenseOrgId,
+        allocationId: allocationId,
+      );
+      if (!mounted) return;
+      switch (result) {
+        case RevokeSeatSuccess(:final alreadyRevoked):
+          await ref
+              .read(hapticServiceProvider)
+              .trigger(alreadyRevoked ? HapticType.light : HapticType.success);
+          if (!mounted) return;
+          safeShowSnackBar(
+            alreadyRevoked
+                ? l10n.licenseOrgMembersRevokeAlreadyRevoked
+                : l10n.licenseOrgMembersRevokeSuccess,
+            type: alreadyRevoked ? SnackBarType.info : SnackBarType.success,
+          );
+        case RevokeSeatFailure(:final reason):
+          await ref.read(hapticServiceProvider).trigger(HapticType.error);
+          if (!mounted) return;
+          safeShowSnackBar(
+            _revokeErrorMessage(l10n, reason),
+            type: SnackBarType.error,
+          );
+      }
+    } finally {
+      if (mounted) safeSetState(() => _revoking = false);
+    }
+  }
+
+  String _revokeErrorMessage(AppLocalizations l10n, RevokeSeatReason reason) {
+    switch (reason) {
+      case RevokeSeatReason.permissionDenied:
+        return l10n.licenseOrgMembersRevokeErrorPermission;
+      case RevokeSeatReason.rateLimited:
+        return l10n.licenseOrgMembersRevokeErrorRateLimit;
+      case RevokeSeatReason.notFound:
+      case RevokeSeatReason.unauthenticated:
+      case RevokeSeatReason.generic:
+        return l10n.licenseOrgMembersRevokeErrorGeneric;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -151,10 +222,32 @@ class _LicenseOrgMembersSheetState extends ConsumerState<LicenseOrgMembersSheet>
                     );
                   }
                   final member = members[index - 1];
+                  final isCurrentUser =
+                      currentUid != null && member.uid == currentUid;
+                  // Reveal the revoke action only when:
+                  //   - the current user holds owner or admin role in
+                  //     THIS org (read via licenseOrgRoleProvider so
+                  //     the rule respects member-doc role flips), AND
+                  //   - the tile is NOT the current user (owners and
+                  //     admins cannot revoke their own seat from this
+                  //     surface; that path goes through the org
+                  //     suspend / leave flow), AND
+                  //   - the tile is NOT another owner (owners aren't
+                  //     in the member roster anyway, but the role
+                  //     pill can show OWNER for legacy seeded data;
+                  //     bake the safety check here).
+                  final role = ref.watch(
+                    licenseOrgRoleProvider(widget.licenseOrgId),
+                  );
+                  final canRevoke =
+                      !isCurrentUser &&
+                      (role == LicenseOrgMemberRole.owner ||
+                          role == LicenseOrgMemberRole.admin) &&
+                      member.role != LicenseOrgMemberRole.owner;
                   return _MemberTile(
                     member: member,
-                    isCurrentUser:
-                        currentUid != null && member.uid == currentUid,
+                    isCurrentUser: isCurrentUser,
+                    onRevoke: canRevoke ? () => _onRevokeTapped(member) : null,
                   );
                 },
               );
@@ -206,7 +299,16 @@ class _MemberTile extends StatelessWidget {
   final LicenseOrgMembership member;
   final bool isCurrentUser;
 
-  const _MemberTile({required this.member, required this.isCurrentUser});
+  /// Owner/admin-only callback. When null the tile renders read-only;
+  /// when non-null an overflow icon appears on the trailing edge and
+  /// taps invoke the parent's revoke flow.
+  final VoidCallback? onRevoke;
+
+  const _MemberTile({
+    required this.member,
+    required this.isCurrentUser,
+    this.onRevoke,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -263,6 +365,141 @@ class _MemberTile extends StatelessWidget {
           ),
           const SizedBox(width: AppTheme.spacing8),
           _RolePill(role: member.role, label: role),
+          if (onRevoke != null) ...[
+            const SizedBox(width: AppTheme.spacing4),
+            IconButton(
+              tooltip: l10n.licenseOrgMembersRevokeAction,
+              icon: Icon(
+                Icons.more_vert,
+                color: context.textTertiary,
+                size: 20,
+              ),
+              onPressed: () => _showRevokeMenu(context, l10n),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              visualDensity: VisualDensity.compact,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showRevokeMenu(BuildContext context, AppLocalizations l10n) {
+    return AppBottomSheet.show<void>(
+      context: context,
+      child: _RevokeActionMenu(
+        label: l10n.licenseOrgMembersRevokeAction,
+        onTap: () {
+          Navigator.of(context).pop();
+          onRevoke?.call();
+        },
+      ),
+    );
+  }
+}
+
+/// One-action menu sheet shown when the owner taps the overflow on a
+/// member tile. Kept as a separate widget so it pops cleanly via the
+/// sheet's own BuildContext.
+class _RevokeActionMenu extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _RevokeActionMenu({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing8,
+        AppTheme.spacing8,
+        AppTheme.spacing8,
+        AppTheme.spacing16,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: Icon(
+              Icons.person_remove_outlined,
+              color: AppTheme.errorRed,
+            ),
+            title: Text(
+              label,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.errorRed,
+              ),
+            ),
+            onTap: onTap,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radius12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Confirmation sheet shown after the owner picks "Revoke seat" from
+/// the per-member action menu. Pops `true` on confirm, `false` on
+/// cancel.
+class _RevokeConfirmSheet extends StatelessWidget {
+  final String memberLabel;
+
+  const _RevokeConfirmSheet({required this.memberLabel});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.all(AppTheme.spacing16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.licenseOrgMembersRevokeConfirmTitle(memberLabel),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: context.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          Text(
+            l10n.licenseOrgMembersRevokeConfirmBody,
+            style: TextStyle(
+              fontSize: 13,
+              color: context.textSecondary,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text(l10n.licenseOrgMembersRevokeCancelButton),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppTheme.errorRed,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text(l10n.licenseOrgMembersRevokeConfirmButton),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

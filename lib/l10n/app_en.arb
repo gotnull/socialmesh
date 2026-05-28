@@ -57817,6 +57817,49 @@
     "@licenseOrgMembersYouBadge": {
         "description": "Inline badge rendered next to the current user's row in the License Org Members sheet so the viewer can pick themselves out at a glance."
     },
+    "licenseOrgMembersRevokeAction": "Revoke seat",
+    "@licenseOrgMembersRevokeAction": {
+        "description": "Owner/admin-only menu action on a member tile in the License Org Members sheet. Tapping opens the confirm sheet that calls revokeLicenseSeat."
+    },
+    "licenseOrgMembersRevokeConfirmTitle": "Revoke {member}'s seat?",
+    "@licenseOrgMembersRevokeConfirmTitle": {
+        "description": "Title of the confirm sheet shown after the owner taps Revoke seat on a member tile. Placeholder is the opaque #ABCDEF label (never the real name/email).",
+        "placeholders": {
+            "member": { "type": "String", "example": "#A1B2C3" }
+        }
+    },
+    "licenseOrgMembersRevokeConfirmBody": "They lose access to the group's premium features immediately. Their seat returns to your pool and you can invite someone else.",
+    "@licenseOrgMembersRevokeConfirmBody": {
+        "description": "Body copy of the revoke confirm sheet. Frames the consequence (instant lock-out) and the upside (seat returns to the pool) without leaking backend terms."
+    },
+    "licenseOrgMembersRevokeConfirmButton": "Revoke",
+    "@licenseOrgMembersRevokeConfirmButton": {
+        "description": "Primary destructive button on the revoke confirm sheet."
+    },
+    "licenseOrgMembersRevokeCancelButton": "Keep member",
+    "@licenseOrgMembersRevokeCancelButton": {
+        "description": "Secondary cancel button on the revoke confirm sheet. Frames the inverse (keeping the member) for clarity."
+    },
+    "licenseOrgMembersRevokeSuccess": "Seat revoked",
+    "@licenseOrgMembersRevokeSuccess": {
+        "description": "Success snackbar after a successful revokeLicenseSeat call."
+    },
+    "licenseOrgMembersRevokeAlreadyRevoked": "That seat was already revoked",
+    "@licenseOrgMembersRevokeAlreadyRevoked": {
+        "description": "Info snackbar shown when the backend reports the seat was already revoked (double-tap, or two admins racing the same revoke)."
+    },
+    "licenseOrgMembersRevokeErrorPermission": "Only the group owner or an admin can revoke seats",
+    "@licenseOrgMembersRevokeErrorPermission": {
+        "description": "Error snackbar shown when revokeLicenseSeat returns permission-denied (caller is not owner/admin)."
+    },
+    "licenseOrgMembersRevokeErrorRateLimit": "Too many revokes — try again in a minute",
+    "@licenseOrgMembersRevokeErrorRateLimit": {
+        "description": "Error snackbar shown when revokeLicenseSeat returns resource-exhausted (admin per-minute or per-hour cap)."
+    },
+    "licenseOrgMembersRevokeErrorGeneric": "Could not revoke the seat — try again",
+    "@licenseOrgMembersRevokeErrorGeneric": {
+        "description": "Fallback error snackbar for any other revoke failure (network, internal, not-found)."
+    },
     "licenseOrgMembersRoleOwner": "Owner",
     "@licenseOrgMembersRoleOwner": {
         "description": "Role label on a member tile in the License Org Members sheet when the member is the org owner."
@@ -57956,6 +57999,13 @@
     "licenseOrgInviteAcceptSuccess": "Joined {orgName}",
     "@licenseOrgInviteAcceptSuccess": {
         "description": "Success snackbar shown after the user accepts an invite. Placeholder is the org display name.",
+        "placeholders": {
+            "orgName": { "type": "String", "example": "Acme Eng" }
+        }
+    },
+    "licenseOrgInviteAcceptAlreadyMember": "You're already a member of {orgName}",
+    "@licenseOrgInviteAcceptAlreadyMember": {
+        "description": "Info snackbar shown after a redeem that was an idempotent replay (the user already had an active seat in the org). Distinguishes the 'nothing changed' case from a fresh join so the user doesn't get the same green success on a re-tap or a stranger's invite link.",
         "placeholders": {
             "orgName": { "type": "String", "example": "Acme Eng" }
         }

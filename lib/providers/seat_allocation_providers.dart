@@ -125,6 +125,19 @@ final licenseOrgActiveSeatCountProvider = StreamProvider.family<int, String>((
     yield 0;
     return;
   }
+  // Force teardown + re-subscribe whenever the signed-in uid changes.
+  // The query is scoped by orgId, not the caller's uid, so this watch
+  // is not strictly part of the filter — but the underlying Firestore
+  // snapshot listener binds to the auth context at subscribe time. If
+  // a sign-out / sign-in flip happens while the provider has a live
+  // subscription, the existing stream keeps the old auth context and
+  // either keeps emitting stale data or fails permission-denied (the
+  // repo fails-closed to 0). Without this watch the Capacity row
+  // wedged at "0 of 10" across the 2026-05-28 e2e until an app
+  // restart. See the regression test in
+  // `test/providers/seat_allocation_providers_test.dart`.
+  ref.watch(currentUserProvider.select((u) => u?.uid));
+
   final repo = ref.watch(seatAllocationRepositoryProvider);
   yield 0;
   try {

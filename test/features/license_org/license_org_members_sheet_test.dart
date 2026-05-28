@@ -15,6 +15,8 @@
 // The sheet uses AnimatedEmptyState (radar animation) and AnimatedTagline
 // which never settle, so tests use `pump()` not `pumpAndSettle()`.
 
+import 'dart:io' as io;
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -275,5 +277,53 @@ void main() {
       find.text(_l10n.licenseOrgMembersYouBadge.toUpperCase()),
       findsOneWidget,
     );
+  });
+
+  // ===========================================================================
+  // Source-text regressions for the revoke flow.
+  //
+  // The revoke action is owner/admin-only, hidden on the current user's
+  // own tile and on owner tiles. Building a live ProviderScope that
+  // exercises all those branches would need fakes for the role
+  // provider + the Cloud Functions invoker, which adds a lot of test
+  // scaffolding for a flag-driven render path. Source-text checks pin
+  // the guards without that overhead; the service-level behaviour is
+  // covered separately in
+  // `test/services/license_org/license_org_seat_service_test.dart`.
+  // ===========================================================================
+  group('revoke action — source-text guards', () {
+    late String src;
+    setUpAll(() {
+      src = io.File(
+        'lib/features/license_org/license_org_members_sheet.dart',
+      ).readAsStringSync();
+    });
+
+    test('hides revoke action for the current user (no self-revoke)', () {
+      expect(src, contains('canRevoke ='));
+      // Must include the !isCurrentUser predicate so an owner / admin
+      // viewing their own roster row never sees the trigger.
+      expect(src, contains('!isCurrentUser'));
+    });
+
+    test('reveals revoke only for owner or admin caller role', () {
+      expect(src, contains('LicenseOrgMemberRole.owner'));
+      expect(src, contains('LicenseOrgMemberRole.admin'));
+      expect(src, contains('licenseOrgRoleProvider'));
+    });
+
+    test('never offers revoke against another owner tile', () {
+      // A historical seeded org could surface an owner row in the
+      // members subcollection. Even if the caller is also an owner,
+      // the action stays hidden on owner-vs-owner pairs.
+      expect(src, contains('member.role != LicenseOrgMemberRole.owner'));
+    });
+
+    test('wires the confirm sheet + service call', () {
+      expect(src, contains('_RevokeConfirmSheet'));
+      expect(src, contains('LicenseOrgSeatService()'));
+      expect(src, contains('seatAllocationDocId('));
+      expect(src, contains('communityPackSeatProductId'));
+    });
   });
 }

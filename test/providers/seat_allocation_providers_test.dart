@@ -14,6 +14,8 @@
 // `external_entitlement_cache_test.dart` and
 // `effective_entitlements_test.dart`.
 
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -250,6 +252,53 @@ void main() {
       expect(async.value, isEmpty);
       expect(c.read(hasSeatForProvider(_widgetSeat)), isFalse);
       c.dispose();
+    });
+  });
+
+  group('licenseOrgActiveSeatCountProvider — auth-change re-subscribe', () {
+    // Regression for the wedge bug observed on 2026-05-28:
+    // - foolvo signs in, opens the org overview, Capacity reads 1/10.
+    // - foolvo signs out, socialmeshapp signs in, then back to foolvo.
+    // - Capacity reads 0/10 even though Firestore has 1 active seat.
+    // - Recovers only after `flutter run` relaunches the app.
+    //
+    // The root cause was that the provider's body did not watch
+    // [currentUserProvider], so the underlying Firestore snapshot
+    // subscription survived the auth flip with a stale auth context.
+    // The fix is `ref.watch(currentUserProvider.select((u) => u?.uid))`
+    // which forces a teardown + re-subscribe when uid changes. We
+    // pin that invariant via source-text inspection because the
+    // observable behaviour requires a live Firestore subscription
+    // and a real auth flip — neither is easy to fake in pure-dart
+    // tests, and a stub stream would re-emit naturally without
+    // surfacing the bug. The source-text check guards against
+    // someone removing the watch line.
+    test('provider body watches currentUserProvider uid', () {
+      final src = File(
+        'lib/providers/seat_allocation_providers.dart',
+      ).readAsStringSync();
+      // Bound the search to the org-count provider body so a watch
+      // line that drifts into the per-user seats provider does not
+      // accidentally satisfy this test.
+      final orgCountIdx = src.indexOf(
+        'final licenseOrgActiveSeatCountProvider',
+      );
+      expect(orgCountIdx, greaterThan(-1));
+      // Find the closing `});` of the provider body. The literal
+      // appears multiple times in the file; we want the FIRST one
+      // after the provider declaration.
+      final closeIdx = src.indexOf('});', orgCountIdx);
+      expect(closeIdx, greaterThan(orgCountIdx));
+      final body = src.substring(orgCountIdx, closeIdx);
+      expect(
+        body,
+        contains('ref.watch(currentUserProvider.select((u) => u?.uid))'),
+        reason:
+            'licenseOrgActiveSeatCountProvider must watch the current uid '
+            'so the Firestore subscription tears down + re-subscribes on '
+            'sign-out/sign-in. Removing this watch reintroduces the '
+            '2026-05-28 wedge.',
+      );
     });
   });
 }

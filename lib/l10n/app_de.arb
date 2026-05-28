@@ -10793,7 +10793,7 @@
     "subscriptionCommunityPack10Title": "Community Pack 10",
     "subscriptionCommunityPack20Subtitle": "Geteilter Zugriff für bis zu 20 Mitglieder",
     "subscriptionCommunityPack20Title": "Community Pack 20",
-    "subscriptionCompletePack":"Komplettpaket",
+    "subscriptionCompletePack": "Komplettpaket",
     "subscriptionCompletePackSubtitle": "Alle Premium-Funktionen in einem einmaligen Kauf",
     "subscriptionCompletePackSubtitleWithTranslation": "Alle Funktionen, ein Preis - einschließlich Übersetzung",
     "subscriptionFallbackAutomations": "Automatisierungen",
@@ -10805,7 +10805,7 @@
     "subscriptionFeaturedTranslationSubtitle": "Übersetzung auf Abruf mit intelligentem Caching, Datenschutzkontrollen und BYO-Anbieterunterstützung",
     "subscriptionFeaturedTranslationSubtitleRefactored": "Übersetzung auf Abruf mit intelligentem Caching, Datenschutzkontrollen und BYO-Anbieterunterstützung",
     "subscriptionForGroupsAndCommunitiesTitle": "Für Gruppen und Communitys",
-    "subscriptionGetAll":"Alles freischalten",
+    "subscriptionGetAll": "Alles freischalten",
     "subscriptionGetTranslation": "Erwerben",
     "subscriptionGroupAutomation": "Automatisierung",
     "subscriptionGroupCommunication": "Kommunikation",
@@ -12892,5 +12892,61 @@
     "orgCheckoutSignInRequired": "Melde dich mit einem permanenten Konto an, bevor du eine Gruppenlizenz kaufst. Anonyme Sitzungen können keine Org besitzen.",
     "@orgCheckoutSignInRequired": {
         "description": "Error shown when the createCheckout callable rejects an org-pack request because the caller is unauthenticated or signed in anonymously. Maps to the 'org-pack-requires-signin' and 'org-pack-requires-permanent-account' server rejection reasons."
+    },
+    "licenseOrgInviteAcceptAlreadyMember": "Du bist bereits Mitglied von {orgName}",
+    "@licenseOrgInviteAcceptAlreadyMember": {
+        "description": "Info snackbar shown after a redeem that was an idempotent replay (the user already had an active seat in the org). Distinguishes the 'nothing changed' case from a fresh join so the user doesn't get the same green success on a re-tap or a stranger's invite link.",
+        "placeholders": {
+            "orgName": {
+                "type": "String",
+                "example": "Acme Eng"
+            }
+        }
+    },
+    "licenseOrgMembersRevokeAction": "Platz entziehen",
+    "@licenseOrgMembersRevokeAction": {
+        "description": "Owner/admin-only menu action on a member tile in the License Org Members sheet. Tapping opens the confirm sheet that calls revokeLicenseSeat."
+    },
+    "licenseOrgMembersRevokeConfirmTitle": "Platz von {member} entziehen?",
+    "@licenseOrgMembersRevokeConfirmTitle": {
+        "description": "Title of the confirm sheet shown after the owner taps Revoke seat on a member tile. Placeholder is the opaque #ABCDEF label (never the real name/email).",
+        "placeholders": {
+            "member": {
+                "type": "String",
+                "example": "#A1B2C3"
+            }
+        }
+    },
+    "licenseOrgMembersRevokeConfirmBody": "Die Person verliert sofort den Zugriff auf die Premium-Funktionen der Gruppe. Der Platz fließt in deinen Pool zurück und du kannst jemand anderen einladen.",
+    "@licenseOrgMembersRevokeConfirmBody": {
+        "description": "Body copy of the revoke confirm sheet. Frames the consequence (instant lock-out) and the upside (seat returns to the pool) without leaking backend terms."
+    },
+    "licenseOrgMembersRevokeConfirmButton": "Entziehen",
+    "@licenseOrgMembersRevokeConfirmButton": {
+        "description": "Primary destructive button on the revoke confirm sheet."
+    },
+    "licenseOrgMembersRevokeCancelButton": "Mitglied behalten",
+    "@licenseOrgMembersRevokeCancelButton": {
+        "description": "Secondary cancel button on the revoke confirm sheet. Frames the inverse (keeping the member) for clarity."
+    },
+    "licenseOrgMembersRevokeSuccess": "Platz entzogen",
+    "@licenseOrgMembersRevokeSuccess": {
+        "description": "Success snackbar after a successful revokeLicenseSeat call."
+    },
+    "licenseOrgMembersRevokeAlreadyRevoked": "Dieser Platz war bereits entzogen",
+    "@licenseOrgMembersRevokeAlreadyRevoked": {
+        "description": "Info snackbar shown when the backend reports the seat was already revoked (double-tap, or two admins racing the same revoke)."
+    },
+    "licenseOrgMembersRevokeErrorPermission": "Nur Gruppeninhaber oder Admins können Plätze entziehen",
+    "@licenseOrgMembersRevokeErrorPermission": {
+        "description": "Error snackbar shown when revokeLicenseSeat returns permission-denied (caller is not owner/admin)."
+    },
+    "licenseOrgMembersRevokeErrorRateLimit": "Zu viele Entzüge — versuche es in einer Minute erneut",
+    "@licenseOrgMembersRevokeErrorRateLimit": {
+        "description": "Error snackbar shown when revokeLicenseSeat returns resource-exhausted (admin per-minute or per-hour cap)."
+    },
+    "licenseOrgMembersRevokeErrorGeneric": "Platz konnte nicht entzogen werden — bitte erneut versuchen",
+    "@licenseOrgMembersRevokeErrorGeneric": {
+        "description": "Fallback error snackbar for any other revoke failure (network, internal, not-found)."
     }
 }

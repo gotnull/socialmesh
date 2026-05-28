@@ -43822,6 +43822,43 @@ class AppLocalizationsRu extends AppLocalizations {
   String get licenseOrgMembersYouBadge => 'вы';
 
   @override
+  String get licenseOrgMembersRevokeAction => 'Отозвать место';
+
+  @override
+  String licenseOrgMembersRevokeConfirmTitle(String member) {
+    return 'Отозвать место $member?';
+  }
+
+  @override
+  String get licenseOrgMembersRevokeConfirmBody =>
+      'Они немедленно потеряют доступ к премиум-функциям группы. Место вернётся в ваш пул, и вы сможете пригласить кого-то ещё.';
+
+  @override
+  String get licenseOrgMembersRevokeConfirmButton => 'Отозвать';
+
+  @override
+  String get licenseOrgMembersRevokeCancelButton => 'Оставить участника';
+
+  @override
+  String get licenseOrgMembersRevokeSuccess => 'Место отозвано';
+
+  @override
+  String get licenseOrgMembersRevokeAlreadyRevoked =>
+      'Это место уже было отозвано';
+
+  @override
+  String get licenseOrgMembersRevokeErrorPermission =>
+      'Отзывать места может только владелец группы или администратор';
+
+  @override
+  String get licenseOrgMembersRevokeErrorRateLimit =>
+      'Слишком много отзывов — попробуйте через минуту';
+
+  @override
+  String get licenseOrgMembersRevokeErrorGeneric =>
+      'Не удалось отозвать место — попробуйте снова';
+
+  @override
   String get licenseOrgMembersRoleOwner => 'Владелец';
 
   @override
@@ -43922,6 +43959,11 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String licenseOrgInviteAcceptSuccess(String orgName) {
     return 'Вы присоединились к $orgName';
+  }
+
+  @override
+  String licenseOrgInviteAcceptAlreadyMember(String orgName) {
+    return 'Вы уже участник $orgName';
   }
 
   @override

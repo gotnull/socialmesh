@@ -43949,6 +43949,43 @@ class AppLocalizationsDe extends AppLocalizations {
   String get licenseOrgMembersYouBadge => 'Sie';
 
   @override
+  String get licenseOrgMembersRevokeAction => 'Platz entziehen';
+
+  @override
+  String licenseOrgMembersRevokeConfirmTitle(String member) {
+    return 'Platz von $member entziehen?';
+  }
+
+  @override
+  String get licenseOrgMembersRevokeConfirmBody =>
+      'Die Person verliert sofort den Zugriff auf die Premium-Funktionen der Gruppe. Der Platz fließt in deinen Pool zurück und du kannst jemand anderen einladen.';
+
+  @override
+  String get licenseOrgMembersRevokeConfirmButton => 'Entziehen';
+
+  @override
+  String get licenseOrgMembersRevokeCancelButton => 'Mitglied behalten';
+
+  @override
+  String get licenseOrgMembersRevokeSuccess => 'Platz entzogen';
+
+  @override
+  String get licenseOrgMembersRevokeAlreadyRevoked =>
+      'Dieser Platz war bereits entzogen';
+
+  @override
+  String get licenseOrgMembersRevokeErrorPermission =>
+      'Nur Gruppeninhaber oder Admins können Plätze entziehen';
+
+  @override
+  String get licenseOrgMembersRevokeErrorRateLimit =>
+      'Zu viele Entzüge — versuche es in einer Minute erneut';
+
+  @override
+  String get licenseOrgMembersRevokeErrorGeneric =>
+      'Platz konnte nicht entzogen werden — bitte erneut versuchen';
+
+  @override
   String get licenseOrgMembersRoleOwner => 'Besitzer';
 
   @override
@@ -44049,6 +44086,11 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String licenseOrgInviteAcceptSuccess(String orgName) {
     return '$orgName beigetreten';
+  }
+
+  @override
+  String licenseOrgInviteAcceptAlreadyMember(String orgName) {
+    return 'Du bist bereits Mitglied von $orgName';
   }
 
   @override

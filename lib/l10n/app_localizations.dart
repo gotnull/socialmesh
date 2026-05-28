@@ -75797,6 +75797,66 @@ abstract class AppLocalizations {
   /// **'you'**
   String get licenseOrgMembersYouBadge;
 
+  /// Owner/admin-only menu action on a member tile in the License Org Members sheet. Tapping opens the confirm sheet that calls revokeLicenseSeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke seat'**
+  String get licenseOrgMembersRevokeAction;
+
+  /// Title of the confirm sheet shown after the owner taps Revoke seat on a member tile. Placeholder is the opaque #ABCDEF label (never the real name/email).
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke {member}\'s seat?'**
+  String licenseOrgMembersRevokeConfirmTitle(String member);
+
+  /// Body copy of the revoke confirm sheet. Frames the consequence (instant lock-out) and the upside (seat returns to the pool) without leaking backend terms.
+  ///
+  /// In en, this message translates to:
+  /// **'They lose access to the group\'s premium features immediately. Their seat returns to your pool and you can invite someone else.'**
+  String get licenseOrgMembersRevokeConfirmBody;
+
+  /// Primary destructive button on the revoke confirm sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke'**
+  String get licenseOrgMembersRevokeConfirmButton;
+
+  /// Secondary cancel button on the revoke confirm sheet. Frames the inverse (keeping the member) for clarity.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep member'**
+  String get licenseOrgMembersRevokeCancelButton;
+
+  /// Success snackbar after a successful revokeLicenseSeat call.
+  ///
+  /// In en, this message translates to:
+  /// **'Seat revoked'**
+  String get licenseOrgMembersRevokeSuccess;
+
+  /// Info snackbar shown when the backend reports the seat was already revoked (double-tap, or two admins racing the same revoke).
+  ///
+  /// In en, this message translates to:
+  /// **'That seat was already revoked'**
+  String get licenseOrgMembersRevokeAlreadyRevoked;
+
+  /// Error snackbar shown when revokeLicenseSeat returns permission-denied (caller is not owner/admin).
+  ///
+  /// In en, this message translates to:
+  /// **'Only the group owner or an admin can revoke seats'**
+  String get licenseOrgMembersRevokeErrorPermission;
+
+  /// Error snackbar shown when revokeLicenseSeat returns resource-exhausted (admin per-minute or per-hour cap).
+  ///
+  /// In en, this message translates to:
+  /// **'Too many revokes — try again in a minute'**
+  String get licenseOrgMembersRevokeErrorRateLimit;
+
+  /// Fallback error snackbar for any other revoke failure (network, internal, not-found).
+  ///
+  /// In en, this message translates to:
+  /// **'Could not revoke the seat — try again'**
+  String get licenseOrgMembersRevokeErrorGeneric;
+
   /// Role label on a member tile in the License Org Members sheet when the member is the org owner.
   ///
   /// In en, this message translates to:
@@ -75970,6 +76030,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Joined {orgName}'**
   String licenseOrgInviteAcceptSuccess(String orgName);
+
+  /// Info snackbar shown after a redeem that was an idempotent replay (the user already had an active seat in the org). Distinguishes the 'nothing changed' case from a fresh join so the user doesn't get the same green success on a re-tap or a stranger's invite link.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re already a member of {orgName}'**
+  String licenseOrgInviteAcceptAlreadyMember(String orgName);
 
   /// Error state on the InviteAcceptScreen when the server returns reason=expired.
   ///

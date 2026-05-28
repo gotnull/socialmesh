@@ -81,13 +81,26 @@ class _InviteAcceptScreenState extends ConsumerState<InviteAcceptScreen>
         // refresh — without this kick the user sees price labels
         // until the next launch. Failure is swallowed by the helper
         // (it never throws), so error-pathing the snackbar isn't
-        // needed.
+        // needed. Idempotent replays (already-a-member retries) hit
+        // the same refresh — cheap and keeps the cache hot in case
+        // the user signed in on a fresh device.
         unawaited(refreshExternalEntitlements(ref));
-        await ref.read(hapticServiceProvider).trigger(HapticType.success);
+        // Idempotent replay: tap on a stranger's link by an existing
+        // member, or a double-tap on the same invite. The backend
+        // does NOT burn the invite in this branch (the rejected
+        // `already_used` path is reserved for invites whose count is
+        // exhausted), so the user is correctly still a member but
+        // nothing changed. Light haptic + neutral copy distinguishes
+        // this from a true fresh join.
+        await ref
+            .read(hapticServiceProvider)
+            .trigger(alreadyAllocated ? HapticType.light : HapticType.success);
         if (!mounted) return;
         safeShowSnackBar(
-          context.l10n.licenseOrgInviteAcceptSuccess(licenseOrgId),
-          type: SnackBarType.success,
+          alreadyAllocated
+              ? context.l10n.licenseOrgInviteAcceptAlreadyMember(licenseOrgId)
+              : context.l10n.licenseOrgInviteAcceptSuccess(licenseOrgId),
+          type: alreadyAllocated ? SnackBarType.info : SnackBarType.success,
         );
         // The success snackbar lives on this screen's local
         // GlassScaffold ScaffoldMessenger. Popping in the same frame

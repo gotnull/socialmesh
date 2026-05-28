@@ -43831,6 +43831,43 @@ class AppLocalizationsIt extends AppLocalizations {
   String get licenseOrgMembersYouBadge => 'tu';
 
   @override
+  String get licenseOrgMembersRevokeAction => 'Revoca posto';
+
+  @override
+  String licenseOrgMembersRevokeConfirmTitle(String member) {
+    return 'Revocare il posto di $member?';
+  }
+
+  @override
+  String get licenseOrgMembersRevokeConfirmBody =>
+      'Perderà immediatamente l\'accesso alle funzioni premium del gruppo. Il posto torna nel tuo pool e potrai invitare qualcun altro.';
+
+  @override
+  String get licenseOrgMembersRevokeConfirmButton => 'Revoca';
+
+  @override
+  String get licenseOrgMembersRevokeCancelButton => 'Mantieni il membro';
+
+  @override
+  String get licenseOrgMembersRevokeSuccess => 'Posto revocato';
+
+  @override
+  String get licenseOrgMembersRevokeAlreadyRevoked =>
+      'Quel posto era già stato revocato';
+
+  @override
+  String get licenseOrgMembersRevokeErrorPermission =>
+      'Solo il proprietario o un admin del gruppo può revocare i posti';
+
+  @override
+  String get licenseOrgMembersRevokeErrorRateLimit =>
+      'Troppe revoche — riprova tra un minuto';
+
+  @override
+  String get licenseOrgMembersRevokeErrorGeneric =>
+      'Impossibile revocare il posto — riprova';
+
+  @override
   String get licenseOrgMembersRoleOwner => 'Proprietario';
 
   @override
@@ -43931,6 +43968,11 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String licenseOrgInviteAcceptSuccess(String orgName) {
     return 'Ti sei unito a $orgName';
+  }
+
+  @override
+  String licenseOrgInviteAcceptAlreadyMember(String orgName) {
+    return 'Sei già membro di $orgName';
   }
 
   @override

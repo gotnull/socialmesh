@@ -60,4 +60,39 @@ void main() {
       expect(src, contains("import 'dart:async';"));
     });
   });
+
+  group('InviteAcceptScreen — alreadyAllocated UX branch', () {
+    test('uses the alreadyMember copy when the backend reports replay', () {
+      // The backend returns `alreadyAllocated: true` when the caller
+      // already has an active seat (idempotent replay — a double-tap
+      // or a stranger's invite-link to an existing member). A fresh
+      // green "Joined" snackbar in that case is misleading; the user
+      // could think they joined a new group. Branch on the flag.
+      expect(
+        src,
+        contains('licenseOrgInviteAcceptAlreadyMember(licenseOrgId)'),
+      );
+      expect(src, contains('licenseOrgInviteAcceptSuccess(licenseOrgId)'));
+    });
+
+    test('downgrades haptic + snackbar tone for the replay branch', () {
+      // A "nothing happened" replay should not feel like a state
+      // change. Light haptic + info-coloured snackbar makes the
+      // distinction tangible without inventing a new error state.
+      expect(src, contains('HapticType.light'));
+      expect(src, contains('HapticType.success'));
+      expect(src, contains('SnackBarType.info'));
+      expect(src, contains('SnackBarType.success'));
+      // Ensure the branch keys on alreadyAllocated and not some
+      // other flag (e.g. a stale "isReplay").
+      expect(
+        src,
+        contains('alreadyAllocated ? HapticType.light : HapticType.success'),
+      );
+      expect(
+        src,
+        contains('alreadyAllocated ? SnackBarType.info : SnackBarType.success'),
+      );
+    });
+  });
 }

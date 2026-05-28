@@ -11164,7 +11164,7 @@
     "subscriptionCommunityPack10Title": "Community Pack 10",
     "subscriptionCommunityPack20Subtitle": "Общий доступ до 20 участников",
     "subscriptionCommunityPack20Title": "Community Pack 20",
-    "subscriptionCompletePack":"Полный пакет",
+    "subscriptionCompletePack": "Полный пакет",
     "subscriptionCompletePackSubtitle": "Все премиум-функции в одной бессрочной покупке",
     "subscriptionCompletePackSubtitleWithTranslation": "Все функции по одной цене, включая перевод",
     "subscriptionFallbackAutomations": "Автоматизации",
@@ -11176,7 +11176,7 @@
     "subscriptionFeaturedTranslationSubtitle": "Перевод по запросу с умным кэшированием, контролем конфиденциальности и поддержкой собственного провайдера",
     "subscriptionFeaturedTranslationSubtitleRefactored": "Перевод по запросу с умным кэшированием, контролем конфиденциальности и поддержкой собственного провайдера",
     "subscriptionForGroupsAndCommunitiesTitle": "Для групп и сообществ",
-    "subscriptionGetAll":"Разблокировать всё",
+    "subscriptionGetAll": "Разблокировать всё",
     "subscriptionGetTranslation": "Получить",
     "subscriptionGroupAutomation": "Автоматизация",
     "subscriptionGroupCommunication": "Коммуникация",
@@ -12892,5 +12892,61 @@
     "orgCheckoutSignInRequired": "Войдите с постоянного аккаунта перед покупкой групповой лицензии. Анонимные сеансы не могут владеть организацией.",
     "@orgCheckoutSignInRequired": {
         "description": "Error shown when the createCheckout callable rejects an org-pack request because the caller is unauthenticated or signed in anonymously. Maps to the 'org-pack-requires-signin' and 'org-pack-requires-permanent-account' server rejection reasons."
+    },
+    "licenseOrgInviteAcceptAlreadyMember": "Вы уже участник {orgName}",
+    "@licenseOrgInviteAcceptAlreadyMember": {
+        "description": "Info snackbar shown after a redeem that was an idempotent replay (the user already had an active seat in the org). Distinguishes the 'nothing changed' case from a fresh join so the user doesn't get the same green success on a re-tap or a stranger's invite link.",
+        "placeholders": {
+            "orgName": {
+                "type": "String",
+                "example": "Acme Eng"
+            }
+        }
+    },
+    "licenseOrgMembersRevokeAction": "Отозвать место",
+    "@licenseOrgMembersRevokeAction": {
+        "description": "Owner/admin-only menu action on a member tile in the License Org Members sheet. Tapping opens the confirm sheet that calls revokeLicenseSeat."
+    },
+    "licenseOrgMembersRevokeConfirmTitle": "Отозвать место {member}?",
+    "@licenseOrgMembersRevokeConfirmTitle": {
+        "description": "Title of the confirm sheet shown after the owner taps Revoke seat on a member tile. Placeholder is the opaque #ABCDEF label (never the real name/email).",
+        "placeholders": {
+            "member": {
+                "type": "String",
+                "example": "#A1B2C3"
+            }
+        }
+    },
+    "licenseOrgMembersRevokeConfirmBody": "Они немедленно потеряют доступ к премиум-функциям группы. Место вернётся в ваш пул, и вы сможете пригласить кого-то ещё.",
+    "@licenseOrgMembersRevokeConfirmBody": {
+        "description": "Body copy of the revoke confirm sheet. Frames the consequence (instant lock-out) and the upside (seat returns to the pool) without leaking backend terms."
+    },
+    "licenseOrgMembersRevokeConfirmButton": "Отозвать",
+    "@licenseOrgMembersRevokeConfirmButton": {
+        "description": "Primary destructive button on the revoke confirm sheet."
+    },
+    "licenseOrgMembersRevokeCancelButton": "Оставить участника",
+    "@licenseOrgMembersRevokeCancelButton": {
+        "description": "Secondary cancel button on the revoke confirm sheet. Frames the inverse (keeping the member) for clarity."
+    },
+    "licenseOrgMembersRevokeSuccess": "Место отозвано",
+    "@licenseOrgMembersRevokeSuccess": {
+        "description": "Success snackbar after a successful revokeLicenseSeat call."
+    },
+    "licenseOrgMembersRevokeAlreadyRevoked": "Это место уже было отозвано",
+    "@licenseOrgMembersRevokeAlreadyRevoked": {
+        "description": "Info snackbar shown when the backend reports the seat was already revoked (double-tap, or two admins racing the same revoke)."
+    },
+    "licenseOrgMembersRevokeErrorPermission": "Отзывать места может только владелец группы или администратор",
+    "@licenseOrgMembersRevokeErrorPermission": {
+        "description": "Error snackbar shown when revokeLicenseSeat returns permission-denied (caller is not owner/admin)."
+    },
+    "licenseOrgMembersRevokeErrorRateLimit": "Слишком много отзывов — попробуйте через минуту",
+    "@licenseOrgMembersRevokeErrorRateLimit": {
+        "description": "Error snackbar shown when revokeLicenseSeat returns resource-exhausted (admin per-minute or per-hour cap)."
+    },
+    "licenseOrgMembersRevokeErrorGeneric": "Не удалось отозвать место — попробуйте снова",
+    "@licenseOrgMembersRevokeErrorGeneric": {
+        "description": "Fallback error snackbar for any other revoke failure (network, internal, not-found)."
     }
 }
