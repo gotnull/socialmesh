@@ -43877,6 +43877,32 @@ class AppLocalizationsIt extends AppLocalizations {
       'Troppe revoche — riprova tra un minuto';
 
   @override
+  String get licenseOrgMembersReinstateAction => 'Ripristina posto';
+
+  @override
+  String get licenseOrgMembersReinstateSuccess => 'Posto ripristinato';
+
+  @override
+  String get licenseOrgMembersReinstateAlreadyActive =>
+      'Quel posto è già attivo';
+
+  @override
+  String get licenseOrgMembersReinstateErrorOverCapacity =>
+      'Il gruppo è al limite di posti — revoca qualcun altro prima';
+
+  @override
+  String get licenseOrgMembersReinstateErrorPermission =>
+      'Solo il proprietario o un admin del gruppo può ripristinare i posti';
+
+  @override
+  String get licenseOrgMembersReinstateErrorRateLimit =>
+      'Troppi ripristini — riprova tra un minuto';
+
+  @override
+  String get licenseOrgMembersReinstateErrorGeneric =>
+      'Impossibile ripristinare il posto — riprova';
+
+  @override
   String get licenseOrgMembersRevokeErrorGeneric =>
       'Impossibile revocare il posto — riprova';
 
@@ -44092,6 +44118,9 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get licenseOrgAuditActionOrgSuspendedDrained =>
       'Organizzazione sospesa';
+
+  @override
+  String get licenseOrgAuditActionSeatReinstated => 'Posto ripristinato';
 
   @override
   String get licenseOrgAuditActionLicenseOrgRenamed => 'Community rinominata';

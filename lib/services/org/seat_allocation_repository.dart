@@ -31,6 +31,14 @@ abstract class SeatAllocationRepository {
   /// capacity. Fail-closed: yields 0 on empty orgId, stream errors,
   /// or malformed rows.
   Stream<int> watchOrgActiveSeatCount(String orgId);
+
+  /// Emits the set of uids that currently hold an active seat in
+  /// [orgId]. The owner-side roster uses this to filter the Active
+  /// Members list so a member whose seat was revoked (but whose
+  /// membership doc stays `active` by spec) doesn't appear in both
+  /// Active and Revoked sections at once. Fail-closed: yields an
+  /// empty set on empty orgId, stream errors, or malformed rows.
+  Stream<Set<String>> watchOrgActiveSeatHolderUids(String orgId);
 }
 
 /// Firestore-backed implementation.
@@ -124,6 +132,54 @@ class FirestoreSeatAllocationRepository implements SeatAllocationRepository {
 
       if (!controller.isClosed) {
         controller.add(0);
+      }
+    };
+
+    controller.onCancel = () async {
+      await sub?.cancel();
+      sub = null;
+    };
+
+    return controller.stream;
+  }
+
+  @override
+  Stream<Set<String>> watchOrgActiveSeatHolderUids(String orgId) {
+    if (orgId.isEmpty) return Stream.value(const <String>{});
+
+    final controller = StreamController<Set<String>>();
+    StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? sub;
+
+    controller.onListen = () {
+      sub = _firestore
+          .collection('org_seat_allocations')
+          .where('orgId', isEqualTo: orgId)
+          .where('status', isEqualTo: 'active')
+          .snapshots()
+          .listen(
+            (snap) {
+              final uids = <String>{};
+              for (final doc in snap.docs) {
+                final raw = doc.data()['uid'];
+                if (raw is String && raw.isNotEmpty) {
+                  uids.add(raw);
+                }
+              }
+              if (controller.isClosed) return;
+              controller.add(uids);
+            },
+            onError: (Object e) {
+              AppLogging.groupLicensing(
+                '[SeatAllocationRepo] org-uids stream error - failing '
+                'closed (error class: ${e.runtimeType})',
+              );
+              if (controller.isClosed) return;
+              controller.add(const <String>{});
+            },
+          );
+
+      if (!controller.isClosed) {
+        controller.add(const <String>{});
       }
     };
 

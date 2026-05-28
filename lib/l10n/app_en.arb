@@ -57874,6 +57874,34 @@
     "@licenseOrgMembersRevokeErrorRateLimit": {
         "description": "Error snackbar shown when revokeLicenseSeat returns resource-exhausted (admin per-minute or per-hour cap)."
     },
+    "licenseOrgMembersReinstateAction": "Reinstate seat",
+    "@licenseOrgMembersReinstateAction": {
+        "description": "Owner/admin-only action on a Revoked-section tile. Tapping calls reinstateLicenseSeat and flips the seat back to active; the same member regains premium-feature access without redeeming a fresh invite."
+    },
+    "licenseOrgMembersReinstateSuccess": "Seat reinstated",
+    "@licenseOrgMembersReinstateSuccess": {
+        "description": "Success snackbar shown after a successful reinstateLicenseSeat call."
+    },
+    "licenseOrgMembersReinstateAlreadyActive": "That seat is already active",
+    "@licenseOrgMembersReinstateAlreadyActive": {
+        "description": "Info snackbar shown when the backend reports the seat was already active (a double-tap, or two admins racing the same reinstate)."
+    },
+    "licenseOrgMembersReinstateErrorOverCapacity": "Group is at the seat cap — revoke someone else first",
+    "@licenseOrgMembersReinstateErrorOverCapacity": {
+        "description": "Error snackbar when reinstating would push the org past its seat capacity. Backend rejects with failed-precondition + 'seat capacity' in the message."
+    },
+    "licenseOrgMembersReinstateErrorPermission": "Only the group owner or an admin can reinstate seats",
+    "@licenseOrgMembersReinstateErrorPermission": {
+        "description": "Error snackbar shown when reinstateLicenseSeat returns permission-denied (caller is not owner/admin)."
+    },
+    "licenseOrgMembersReinstateErrorRateLimit": "Too many reinstates — try again in a minute",
+    "@licenseOrgMembersReinstateErrorRateLimit": {
+        "description": "Error snackbar shown when reinstateLicenseSeat returns resource-exhausted (admin per-minute or per-hour cap)."
+    },
+    "licenseOrgMembersReinstateErrorGeneric": "Could not reinstate the seat — try again",
+    "@licenseOrgMembersReinstateErrorGeneric": {
+        "description": "Fallback error snackbar for any other reinstate failure (network, internal, not-found, org-suspended)."
+    },
     "licenseOrgMembersRevokeErrorGeneric": "Could not revoke the seat — try again",
     "@licenseOrgMembersRevokeErrorGeneric": {
         "description": "Fallback error snackbar for any other revoke failure (network, internal, not-found)."
@@ -58147,6 +58175,10 @@
     "licenseOrgAuditActionOrgSuspendedDrained": "Org suspended",
     "@licenseOrgAuditActionOrgSuspendedDrained": {
         "description": "Human-readable label for the org_suspended_drained audit action."
+    },
+    "licenseOrgAuditActionSeatReinstated": "Seat reinstated",
+    "@licenseOrgAuditActionSeatReinstated": {
+        "description": "Human-readable label for the seat_reinstated audit action. Written when an owner / admin flips a revoked seat back to active so the affected member regains access without redeeming a fresh invite."
     },
     "licenseOrgAuditActionLicenseOrgRenamed": "Community renamed",
     "@licenseOrgAuditActionLicenseOrgRenamed": {

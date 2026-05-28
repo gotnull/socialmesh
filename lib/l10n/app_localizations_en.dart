@@ -43383,6 +43383,32 @@ class AppLocalizationsEn extends AppLocalizations {
       'Too many revokes — try again in a minute';
 
   @override
+  String get licenseOrgMembersReinstateAction => 'Reinstate seat';
+
+  @override
+  String get licenseOrgMembersReinstateSuccess => 'Seat reinstated';
+
+  @override
+  String get licenseOrgMembersReinstateAlreadyActive =>
+      'That seat is already active';
+
+  @override
+  String get licenseOrgMembersReinstateErrorOverCapacity =>
+      'Group is at the seat cap — revoke someone else first';
+
+  @override
+  String get licenseOrgMembersReinstateErrorPermission =>
+      'Only the group owner or an admin can reinstate seats';
+
+  @override
+  String get licenseOrgMembersReinstateErrorRateLimit =>
+      'Too many reinstates — try again in a minute';
+
+  @override
+  String get licenseOrgMembersReinstateErrorGeneric =>
+      'Could not reinstate the seat — try again';
+
+  @override
   String get licenseOrgMembersRevokeErrorGeneric =>
       'Could not revoke the seat — try again';
 
@@ -43594,6 +43620,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get licenseOrgAuditActionOrgSuspendedDrained => 'Org suspended';
+
+  @override
+  String get licenseOrgAuditActionSeatReinstated => 'Seat reinstated';
 
   @override
   String get licenseOrgAuditActionLicenseOrgRenamed => 'Community renamed';

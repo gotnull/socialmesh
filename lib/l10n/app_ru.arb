@@ -13032,5 +13032,37 @@
                 "example": "#A1B2C3"
             }
         }
+    },
+    "licenseOrgAuditActionSeatReinstated": "Место восстановлено",
+    "@licenseOrgAuditActionSeatReinstated": {
+        "description": "Human-readable label for the seat_reinstated audit action. Written when an owner / admin flips a revoked seat back to active so the affected member regains access without redeeming a fresh invite."
+    },
+    "licenseOrgMembersReinstateAction": "Восстановить место",
+    "@licenseOrgMembersReinstateAction": {
+        "description": "Owner/admin-only action on a Revoked-section tile. Tapping calls reinstateLicenseSeat and flips the seat back to active; the same member regains premium-feature access without redeeming a fresh invite."
+    },
+    "licenseOrgMembersReinstateSuccess": "Место восстановлено",
+    "@licenseOrgMembersReinstateSuccess": {
+        "description": "Success snackbar shown after a successful reinstateLicenseSeat call."
+    },
+    "licenseOrgMembersReinstateAlreadyActive": "Это место уже активно",
+    "@licenseOrgMembersReinstateAlreadyActive": {
+        "description": "Info snackbar shown when the backend reports the seat was already active (a double-tap, or two admins racing the same reinstate)."
+    },
+    "licenseOrgMembersReinstateErrorOverCapacity": "Группа достигла лимита мест — сначала отзовите чьё-то другое",
+    "@licenseOrgMembersReinstateErrorOverCapacity": {
+        "description": "Error snackbar when reinstating would push the org past its seat capacity. Backend rejects with failed-precondition + 'seat capacity' in the message."
+    },
+    "licenseOrgMembersReinstateErrorPermission": "Восстанавливать места может только владелец группы или администратор",
+    "@licenseOrgMembersReinstateErrorPermission": {
+        "description": "Error snackbar shown when reinstateLicenseSeat returns permission-denied (caller is not owner/admin)."
+    },
+    "licenseOrgMembersReinstateErrorRateLimit": "Слишком много восстановлений — попробуйте через минуту",
+    "@licenseOrgMembersReinstateErrorRateLimit": {
+        "description": "Error snackbar shown when reinstateLicenseSeat returns resource-exhausted (admin per-minute or per-hour cap)."
+    },
+    "licenseOrgMembersReinstateErrorGeneric": "Не удалось восстановить место — попробуйте снова",
+    "@licenseOrgMembersReinstateErrorGeneric": {
+        "description": "Fallback error snackbar for any other reinstate failure (network, internal, not-found, org-suspended)."
     }
 }

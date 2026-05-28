@@ -43846,6 +43846,32 @@ class AppLocalizationsPt extends AppLocalizations {
       'Demasiadas revogações — tenta novamente em um minuto';
 
   @override
+  String get licenseOrgMembersReinstateAction => 'Restabelecer acesso';
+
+  @override
+  String get licenseOrgMembersReinstateSuccess => 'Acesso restabelecido';
+
+  @override
+  String get licenseOrgMembersReinstateAlreadyActive =>
+      'Esse acesso já está ativo';
+
+  @override
+  String get licenseOrgMembersReinstateErrorOverCapacity =>
+      'O grupo está no limite de vagas — revoga outro primeiro';
+
+  @override
+  String get licenseOrgMembersReinstateErrorPermission =>
+      'Apenas o dono ou um admin do grupo pode restabelecer acessos';
+
+  @override
+  String get licenseOrgMembersReinstateErrorRateLimit =>
+      'Demasiados restabelecimentos — tenta novamente em um minuto';
+
+  @override
+  String get licenseOrgMembersReinstateErrorGeneric =>
+      'Não foi possível restabelecer o acesso — tenta novamente';
+
+  @override
   String get licenseOrgMembersRevokeErrorGeneric =>
       'Não foi possível revogar o acesso — tenta novamente';
 
@@ -44059,6 +44085,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get licenseOrgAuditActionOrgSuspendedDrained => 'Organização suspensa';
+
+  @override
+  String get licenseOrgAuditActionSeatReinstated => 'Acesso restabelecido';
 
   @override
   String get licenseOrgAuditActionLicenseOrgRenamed => 'Comunidade renomeada';

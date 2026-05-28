@@ -125,6 +125,118 @@ class LicenseOrgSeatService {
       );
     }
   }
+
+  /// Inverse of [revokeSeat]: flips a revoked allocation row back to
+  /// active so the affected member regains access without redeeming
+  /// a fresh invite. Backend rejects when:
+  ///   - caller is not owner/admin (`permission-denied`)
+  ///   - allocation doesn't exist or doesn't belong to the org
+  ///     (`notFound`)
+  ///   - org is suspended (`failedPrecondition` mapped to
+  ///     [ReinstateSeatReason.orgSuspended])
+  ///   - reinstating would push past the org's seat capacity
+  ///     (`failedPrecondition` mapped to
+  ///     [ReinstateSeatReason.overCapacity])
+  ///   - admin rate-limit exhausted (`rateLimited`)
+  Future<ReinstateSeatResult> reinstateSeat({
+    required String licenseOrgId,
+    required String allocationId,
+  }) async {
+    AppLogging.groupLicensing(
+      '[LicenseOrgSeatService] reinstateSeat requested',
+    );
+    try {
+      final result = await _invoker.call('reinstateLicenseSeat', {
+        'licenseOrgId': licenseOrgId,
+        'allocationId': allocationId,
+      });
+      return ReinstateSeatSuccess(
+        allocationId: result['allocationId'] as String,
+        alreadyActive: (result['alreadyActive'] as bool?) ?? false,
+      );
+    } on FirebaseFunctionsException catch (e) {
+      AppLogging.groupLicensing(
+        '[LicenseOrgSeatService] reinstateSeat failed code=${e.code} '
+        'msg=${e.message?.length ?? 0}c',
+      );
+      return ReinstateSeatFailure(
+        reason: _mapReinstateReason(e),
+        message: e.message ?? '',
+      );
+    } catch (e) {
+      AppLogging.groupLicensing(
+        '[LicenseOrgSeatService] reinstateSeat unexpected '
+        '(error class: ${e.runtimeType})',
+      );
+      return ReinstateSeatFailure(
+        reason: ReinstateSeatReason.generic,
+        message: e.toString(),
+      );
+    }
+  }
+}
+
+sealed class ReinstateSeatResult {
+  const ReinstateSeatResult();
+}
+
+class ReinstateSeatSuccess extends ReinstateSeatResult {
+  final String allocationId;
+
+  /// True when the backend reports the seat was ALREADY active before
+  /// this call (a double-tap, or two admins racing the same reinstate).
+  final bool alreadyActive;
+
+  const ReinstateSeatSuccess({
+    required this.allocationId,
+    required this.alreadyActive,
+  });
+}
+
+enum ReinstateSeatReason {
+  permissionDenied,
+  notFound,
+  unauthenticated,
+  rateLimited,
+  orgSuspended,
+
+  /// Reinstating would push the org past its `seatCapacity`. Owner
+  /// sees a distinct message: "Group is at the seat cap — revoke
+  /// someone else first."
+  overCapacity,
+  generic,
+}
+
+class ReinstateSeatFailure extends ReinstateSeatResult {
+  final ReinstateSeatReason reason;
+  final String message;
+
+  const ReinstateSeatFailure({required this.reason, required this.message});
+}
+
+ReinstateSeatReason _mapReinstateReason(FirebaseFunctionsException e) {
+  switch (e.code) {
+    case 'permission-denied':
+      return ReinstateSeatReason.permissionDenied;
+    case 'not-found':
+      return ReinstateSeatReason.notFound;
+    case 'unauthenticated':
+      return ReinstateSeatReason.unauthenticated;
+    case 'resource-exhausted':
+      return ReinstateSeatReason.rateLimited;
+    case 'failed-precondition':
+      // Backend uses the same code for both "org suspended" and
+      // "over capacity". Discriminate by the message substring the
+      // backend emits — preferred over a side-channel because the
+      // wire shape is small and we already pin the message in the
+      // backend source-text tests.
+      final msg = (e.message ?? '').toLowerCase();
+      if (msg.contains('seat capacity'))
+        return ReinstateSeatReason.overCapacity;
+      return ReinstateSeatReason.orgSuspended;
+    default:
+      return ReinstateSeatReason.generic;
+  }
 }
 
 RevokeSeatReason _mapRevokeReason(FirebaseFunctionsException e) {

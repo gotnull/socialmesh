@@ -31,6 +31,7 @@ enum LicenseOrgAuditAction {
   seatCodeReplayed('seat_code_replayed'),
   seatRevokedManual('seat_revoked_manual'),
   seatReplacementMinted('seat_replacement_minted'),
+  seatReinstated('seat_reinstated'),
   memberInvited('member_invited'),
   memberJoined('member_joined'),
   orgPurchased('org_purchased'),

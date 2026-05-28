@@ -43995,6 +43995,32 @@ class AppLocalizationsDe extends AppLocalizations {
       'Zu viele Entzüge — versuche es in einer Minute erneut';
 
   @override
+  String get licenseOrgMembersReinstateAction => 'Platz wiederherstellen';
+
+  @override
+  String get licenseOrgMembersReinstateSuccess => 'Platz wiederhergestellt';
+
+  @override
+  String get licenseOrgMembersReinstateAlreadyActive =>
+      'Dieser Platz ist bereits aktiv';
+
+  @override
+  String get licenseOrgMembersReinstateErrorOverCapacity =>
+      'Die Gruppe ist am Platzlimit — entzieh zuerst jemand anderem';
+
+  @override
+  String get licenseOrgMembersReinstateErrorPermission =>
+      'Nur Gruppeninhaber oder Admins können Plätze wiederherstellen';
+
+  @override
+  String get licenseOrgMembersReinstateErrorRateLimit =>
+      'Zu viele Wiederherstellungen — versuche es in einer Minute erneut';
+
+  @override
+  String get licenseOrgMembersReinstateErrorGeneric =>
+      'Platz konnte nicht wiederhergestellt werden — bitte erneut versuchen';
+
+  @override
   String get licenseOrgMembersRevokeErrorGeneric =>
       'Platz konnte nicht entzogen werden — bitte erneut versuchen';
 
@@ -44210,6 +44236,9 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get licenseOrgAuditActionOrgSuspendedDrained =>
       'Organisation gesperrt';
+
+  @override
+  String get licenseOrgAuditActionSeatReinstated => 'Platz wiederhergestellt';
 
   @override
   String get licenseOrgAuditActionLicenseOrgRenamed => 'Community umbenannt';

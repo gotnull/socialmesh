@@ -27,11 +27,14 @@ import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:socialmesh/l10n/app_localizations_en.dart';
 import 'package:socialmesh/models/license_org.dart';
 import 'package:socialmesh/models/license_org_membership.dart';
+import 'package:socialmesh/models/seat_allocation.dart';
 import 'package:socialmesh/providers/auth_providers.dart';
 import 'package:socialmesh/providers/license_org_members_providers.dart';
 import 'package:socialmesh/providers/license_org_membership_providers.dart';
 import 'package:socialmesh/providers/license_org_overview_providers.dart';
+import 'package:socialmesh/providers/seat_allocation_providers.dart';
 import 'package:socialmesh/services/org/license_org_membership_repository.dart';
+import 'package:socialmesh/services/org/seat_allocation_repository.dart';
 
 final _l10n = AppLocalizationsEn();
 
@@ -82,6 +85,27 @@ class _ErrorRepo extends _FakeRepo {
       Stream<List<LicenseOrgMembership>>.error(StateError('boom'));
 }
 
+/// Test seat repo that yields a configurable set of active-seat-holder
+/// uids per org. The members sheet joins this with the membership
+/// list to drop revoked-seat members from the Active section.
+class _FakeSeatRepo implements SeatAllocationRepository {
+  final Set<String> activeUids;
+
+  _FakeSeatRepo({this.activeUids = const <String>{}});
+
+  @override
+  Stream<Set<SeatAllocationRef>> watchCurrentUserSeats(String uid) =>
+      Stream.value(const <SeatAllocationRef>{});
+
+  @override
+  Stream<int> watchOrgActiveSeatCount(String orgId) =>
+      Stream.value(activeUids.length);
+
+  @override
+  Stream<Set<String>> watchOrgActiveSeatHolderUids(String orgId) =>
+      Stream.value(activeUids);
+}
+
 LicenseOrg _activeOrg(String id) => LicenseOrg(
   id: id,
   name: id,
@@ -111,11 +135,28 @@ LicenseOrgMembership _member(String uid, {DateTime? joinedAt}) =>
 Widget _buildSheet({
   required LicenseOrgMembershipRepository repo,
   String currentUid = 'u-self',
+  Set<String>? activeSeatHolderUids,
 }) {
+  // Default the active-seat set to ALL known member uids so existing
+  // tests keep rendering their members. The new
+  // `licenseOrgActiveSeatHolderUidsProvider` filter drops members
+  // whose seat is revoked; without a permissive default every
+  // pre-existing test would suddenly hide its rows.
+  // Tests that exercise the filter pass `activeSeatHolderUids`
+  // explicitly with the trimmed-down set.
+  final Set<String> defaultActiveUids = repo is _FakeRepo
+      ? (repo.members['acme'] ?? const <LicenseOrgMembership>[])
+            .map((m) => m.uid)
+            .toSet()
+      : const <String>{};
+  final seatRepo = _FakeSeatRepo(
+    activeUids: activeSeatHolderUids ?? defaultActiveUids,
+  );
   return ProviderScope(
     overrides: [
       currentUserProvider.overrideWith((ref) => _FakeUser(uid: currentUid)),
       licenseOrgMembershipRepositoryProvider.overrideWith((ref) => repo),
+      seatAllocationRepositoryProvider.overrideWith((ref) => seatRepo),
     ],
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -371,6 +412,69 @@ void main() {
       // a Stripe refund triggers the seat drain without an
       // owner action).
       expect(src, contains('LicenseOrgAuditActorRole.system'));
+    });
+
+    testWidgets('Active list filters out members whose seat is revoked', (
+      WidgetTester tester,
+    ) async {
+      // Two members in the membership doc, but only one holds an
+      // active seat. The other's seat was revoked (membership doc
+      // stays `active` per the manual-revoke spec). The Active
+      // section must drop the revoked one so the same uid does
+      // not appear in BOTH Active and Revoked at once.
+      await tester.pumpWidget(
+        _buildSheet(
+          repo: _FakeRepo(
+            orgs: {'acme': _activeOrg('acme')},
+            members: {
+              'acme': [_member('uid-kept'), _member('uid-revoked')],
+            },
+          ),
+          activeSeatHolderUids: const {'uid-kept'},
+        ),
+      );
+      await _pump(tester);
+
+      // The kept uid surfaces.
+      expect(find.text('#UID-KE'), findsOneWidget);
+      // The revoked uid does NOT.
+      expect(find.text('#UID-RE'), findsNothing);
+    });
+
+    test('reinstate action: _RevokedTile wires onReinstate callback', () {
+      // _RevokedTile gained an optional onReinstate trailing icon.
+      // Owner/admin caller passes a non-null callback; non-eligible
+      // viewers pass null and the tile stays read-only.
+      expect(src, contains('final VoidCallback? onReinstate'));
+      expect(src, contains('this.onReinstate'));
+      expect(src, contains('Icons.restore_outlined'));
+      expect(src, contains('licenseOrgMembersReinstateAction'));
+    });
+
+    test('reinstate handler routes through LicenseOrgSeatService', () {
+      expect(src, contains('Future<void> _onReinstateTapped'));
+      expect(src, contains('service.reinstateSeat('));
+      expect(src, contains('alreadyActive'));
+      expect(src, contains('licenseOrgMembersReinstateSuccess'));
+      expect(src, contains('licenseOrgMembersReinstateAlreadyActive'));
+    });
+
+    test('reinstate over-capacity gets a distinct error message', () {
+      // The backend's failed-precondition splits into orgSuspended
+      // vs overCapacity by message substring (see the seat-service
+      // tests). Surface a distinct snackbar for the cap case so
+      // the owner knows the fix is "revoke someone else" not
+      // "restore the org".
+      expect(src, contains('ReinstateSeatReason.overCapacity'));
+      expect(src, contains('licenseOrgMembersReinstateErrorOverCapacity'));
+    });
+
+    test('reinstate gated by owner/admin role', () {
+      // canReinstate only fires for owner / admin. A passive
+      // member viewer (legacy seeded data) sees no trigger.
+      expect(src, contains('canReinstate ='));
+      expect(src, contains('LicenseOrgMemberRole.owner ||'));
+      expect(src, contains('LicenseOrgMemberRole.admin'));
     });
 
     test('extracts uid from allocationId for the revoked member label', () {

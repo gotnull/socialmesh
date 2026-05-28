@@ -75869,6 +75869,48 @@ abstract class AppLocalizations {
   /// **'Too many revokes — try again in a minute'**
   String get licenseOrgMembersRevokeErrorRateLimit;
 
+  /// Owner/admin-only action on a Revoked-section tile. Tapping calls reinstateLicenseSeat and flips the seat back to active; the same member regains premium-feature access without redeeming a fresh invite.
+  ///
+  /// In en, this message translates to:
+  /// **'Reinstate seat'**
+  String get licenseOrgMembersReinstateAction;
+
+  /// Success snackbar shown after a successful reinstateLicenseSeat call.
+  ///
+  /// In en, this message translates to:
+  /// **'Seat reinstated'**
+  String get licenseOrgMembersReinstateSuccess;
+
+  /// Info snackbar shown when the backend reports the seat was already active (a double-tap, or two admins racing the same reinstate).
+  ///
+  /// In en, this message translates to:
+  /// **'That seat is already active'**
+  String get licenseOrgMembersReinstateAlreadyActive;
+
+  /// Error snackbar when reinstating would push the org past its seat capacity. Backend rejects with failed-precondition + 'seat capacity' in the message.
+  ///
+  /// In en, this message translates to:
+  /// **'Group is at the seat cap — revoke someone else first'**
+  String get licenseOrgMembersReinstateErrorOverCapacity;
+
+  /// Error snackbar shown when reinstateLicenseSeat returns permission-denied (caller is not owner/admin).
+  ///
+  /// In en, this message translates to:
+  /// **'Only the group owner or an admin can reinstate seats'**
+  String get licenseOrgMembersReinstateErrorPermission;
+
+  /// Error snackbar shown when reinstateLicenseSeat returns resource-exhausted (admin per-minute or per-hour cap).
+  ///
+  /// In en, this message translates to:
+  /// **'Too many reinstates — try again in a minute'**
+  String get licenseOrgMembersReinstateErrorRateLimit;
+
+  /// Fallback error snackbar for any other reinstate failure (network, internal, not-found, org-suspended).
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reinstate the seat — try again'**
+  String get licenseOrgMembersReinstateErrorGeneric;
+
   /// Fallback error snackbar for any other revoke failure (network, internal, not-found).
   ///
   /// In en, this message translates to:
@@ -76234,6 +76276,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Org suspended'**
   String get licenseOrgAuditActionOrgSuspendedDrained;
+
+  /// Human-readable label for the seat_reinstated audit action. Written when an owner / admin flips a revoked seat back to active so the affected member regains access without redeeming a fresh invite.
+  ///
+  /// In en, this message translates to:
+  /// **'Seat reinstated'**
+  String get licenseOrgAuditActionSeatReinstated;
 
   /// Human-readable label for the license_org_renamed audit action. Written when the owner saves a new name via the License Org Overview card's edit affordance.
   ///

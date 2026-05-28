@@ -43879,6 +43879,31 @@ class AppLocalizationsUk extends AppLocalizations {
       'Забагато відкликань — спробуйте за хвилину';
 
   @override
+  String get licenseOrgMembersReinstateAction => 'Відновити місце';
+
+  @override
+  String get licenseOrgMembersReinstateSuccess => 'Місце відновлено';
+
+  @override
+  String get licenseOrgMembersReinstateAlreadyActive => 'Це місце вже активне';
+
+  @override
+  String get licenseOrgMembersReinstateErrorOverCapacity =>
+      'Група досягла ліміту місць — спочатку відкличте чиєсь інше';
+
+  @override
+  String get licenseOrgMembersReinstateErrorPermission =>
+      'Лише власник або адмін групи можуть відновити місця';
+
+  @override
+  String get licenseOrgMembersReinstateErrorRateLimit =>
+      'Забагато відновлень — спробуйте за хвилину';
+
+  @override
+  String get licenseOrgMembersReinstateErrorGeneric =>
+      'Не вдалося відновити місце — спробуйте знову';
+
+  @override
   String get licenseOrgMembersRevokeErrorGeneric =>
       'Не вдалося відкликати місце — спробуйте знову';
 
@@ -44094,6 +44119,9 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get licenseOrgAuditActionOrgSuspendedDrained =>
       'Організацію призупинено';
+
+  @override
+  String get licenseOrgAuditActionSeatReinstated => 'Місце відновлено';
 
   @override
   String get licenseOrgAuditActionLicenseOrgRenamed =>

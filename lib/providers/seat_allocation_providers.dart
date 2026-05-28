@@ -152,3 +152,41 @@ final licenseOrgActiveSeatCountProvider = StreamProvider.family<int, String>((
     yield 0;
   }
 });
+
+/// Set of uids that currently hold an active seat in [orgId]. The
+/// owner-side roster joins this with the membership stream to filter
+/// the Active Members list, so a member whose seat was revoked (but
+/// whose membership doc stays `active` per the manual-revoke spec)
+/// does NOT appear in both Active and Revoked sections at once.
+///
+/// Same fail-closed envelope as [licenseOrgActiveSeatCountProvider]:
+/// flag off / empty orgId / stream error all yield an empty set. The
+/// `ref.watch(currentUserProvider.select((u) => u?.uid))` mirrors the
+/// same auth-flip re-subscribe pattern documented at the count
+/// provider.
+final licenseOrgActiveSeatHolderUidsProvider =
+    StreamProvider.family<Set<String>, String>((ref, orgId) async* {
+      if (!AppFeatureFlags.isGroupLicensingEnabled) {
+        yield const <String>{};
+        return;
+      }
+      if (orgId.isEmpty) {
+        yield const <String>{};
+        return;
+      }
+      ref.watch(currentUserProvider.select((u) => u?.uid));
+
+      final repo = ref.watch(seatAllocationRepositoryProvider);
+      yield const <String>{};
+      try {
+        await for (final uids in repo.watchOrgActiveSeatHolderUids(orgId)) {
+          yield uids;
+        }
+      } catch (e) {
+        AppLogging.groupLicensing(
+          '[SeatAllocation] org-uids stream threw - failing closed '
+          '(error class: ${e.runtimeType})',
+        );
+        yield const <String>{};
+      }
+    });

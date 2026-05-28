@@ -62,6 +62,8 @@ String _actionLabel(AppLocalizations l10n, LicenseOrgAuditAction a) {
       return l10n.licenseOrgAuditActionSeatRevokedManual;
     case LicenseOrgAuditAction.seatReplacementMinted:
       return l10n.licenseOrgAuditActionSeatReplacementMinted;
+    case LicenseOrgAuditAction.seatReinstated:
+      return l10n.licenseOrgAuditActionSeatReinstated;
     case LicenseOrgAuditAction.memberInvited:
       return l10n.licenseOrgAuditActionMemberInvited;
     case LicenseOrgAuditAction.memberJoined:
@@ -648,6 +650,8 @@ class _AuditLogRow extends StatelessWidget {
       case LicenseOrgAuditAction.seatRevokedManual:
       case LicenseOrgAuditAction.orgSeatRevokedRefund:
         return Icons.remove_circle_outline;
+      case LicenseOrgAuditAction.seatReinstated:
+        return Icons.restore_outlined;
       case LicenseOrgAuditAction.orgPurchased:
         return Icons.shopping_bag_outlined;
       case LicenseOrgAuditAction.orgOwnerCollision:

@@ -48,6 +48,10 @@ class _StubRepo implements SeatAllocationRepository {
 
   @override
   Stream<int> watchOrgActiveSeatCount(String orgId) => Stream.value(0);
+
+  @override
+  Stream<Set<String>> watchOrgActiveSeatHolderUids(String orgId) =>
+      Stream.value(const <String>{});
 }
 
 class _ThrowingRepo implements SeatAllocationRepository {
@@ -58,6 +62,10 @@ class _ThrowingRepo implements SeatAllocationRepository {
   @override
   Stream<int> watchOrgActiveSeatCount(String orgId) =>
       Stream<int>.error(StateError('Firestore unavailable'));
+
+  @override
+  Stream<Set<String>> watchOrgActiveSeatHolderUids(String orgId) =>
+      Stream<Set<String>>.error(StateError('Firestore unavailable'));
 }
 
 void _setFlag({required bool enabled}) {

@@ -36,6 +36,7 @@ import '../../providers/auth_providers.dart';
 import '../../providers/license_org_audit_providers.dart';
 import '../../providers/license_org_members_providers.dart';
 import '../../providers/license_org_overview_providers.dart';
+import '../../providers/seat_allocation_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../services/license_org/license_org_seat_service.dart';
 import '../../utils/snackbar.dart';
@@ -75,6 +76,63 @@ class LicenseOrgMembersSheet extends ConsumerStatefulWidget {
 class _LicenseOrgMembersSheetState extends ConsumerState<LicenseOrgMembersSheet>
     with LifecycleSafeMixin<LicenseOrgMembersSheet> {
   bool _revoking = false;
+  bool _reinstating = false;
+
+  Future<void> _onReinstateTapped(String allocationId) async {
+    if (_reinstating) return;
+    final l10n = context.l10n;
+
+    safeSetState(() => _reinstating = true);
+    try {
+      final service = LicenseOrgSeatService();
+      final result = await service.reinstateSeat(
+        licenseOrgId: widget.licenseOrgId,
+        allocationId: allocationId,
+      );
+      if (!mounted) return;
+      switch (result) {
+        case ReinstateSeatSuccess(:final alreadyActive):
+          await ref
+              .read(hapticServiceProvider)
+              .trigger(alreadyActive ? HapticType.light : HapticType.success);
+          if (!mounted) return;
+          safeShowSnackBar(
+            alreadyActive
+                ? l10n.licenseOrgMembersReinstateAlreadyActive
+                : l10n.licenseOrgMembersReinstateSuccess,
+            type: alreadyActive ? SnackBarType.info : SnackBarType.success,
+          );
+        case ReinstateSeatFailure(:final reason):
+          await ref.read(hapticServiceProvider).trigger(HapticType.error);
+          if (!mounted) return;
+          safeShowSnackBar(
+            _reinstateErrorMessage(l10n, reason),
+            type: SnackBarType.error,
+          );
+      }
+    } finally {
+      if (mounted) safeSetState(() => _reinstating = false);
+    }
+  }
+
+  String _reinstateErrorMessage(
+    AppLocalizations l10n,
+    ReinstateSeatReason reason,
+  ) {
+    switch (reason) {
+      case ReinstateSeatReason.permissionDenied:
+        return l10n.licenseOrgMembersReinstateErrorPermission;
+      case ReinstateSeatReason.rateLimited:
+        return l10n.licenseOrgMembersReinstateErrorRateLimit;
+      case ReinstateSeatReason.overCapacity:
+        return l10n.licenseOrgMembersReinstateErrorOverCapacity;
+      case ReinstateSeatReason.notFound:
+      case ReinstateSeatReason.unauthenticated:
+      case ReinstateSeatReason.orgSuspended:
+      case ReinstateSeatReason.generic:
+        return l10n.licenseOrgMembersReinstateErrorGeneric;
+    }
+  }
 
   Future<void> _onRevokeTapped(LicenseOrgMembership member) async {
     if (_revoking) return;
@@ -178,8 +236,28 @@ class _LicenseOrgMembersSheetState extends ConsumerState<LicenseOrgMembersSheet>
                   ),
                 ),
               ),
+              // Count chip mirrors the active-members filter (see
+              // the ListView body below): we drop members whose seat
+              // is revoked but whose membership doc is still `active`
+              // per the manual-revoke spec, so the badge stays
+              // consistent with the visible rows.
               membersAsync.maybeWhen(
-                data: (members) => _CountChip(count: members.length),
+                data: (members) {
+                  final activeUids = ref
+                      .watch(
+                        licenseOrgActiveSeatHolderUidsProvider(
+                          widget.licenseOrgId,
+                        ),
+                      )
+                      .maybeWhen(
+                        data: (s) => s,
+                        orElse: () => const <String>{},
+                      );
+                  final active = members
+                      .where((m) => activeUids.contains(m.uid))
+                      .length;
+                  return _CountChip(count: active);
+                },
                 orElse: () => const SizedBox.shrink(),
               ),
             ],
@@ -198,7 +276,7 @@ class _LicenseOrgMembersSheetState extends ConsumerState<LicenseOrgMembersSheet>
                 ),
               );
             },
-            data: (members) {
+            data: (rawMembers) {
               if (isSuspended) {
                 return _SuspendedState(
                   scrollController: widget.scrollController,
@@ -216,22 +294,55 @@ class _LicenseOrgMembersSheetState extends ConsumerState<LicenseOrgMembersSheet>
                 data: (rows) => rows,
                 orElse: () => const <LicenseOrgAuditEvent>[],
               );
+
+              // Filter the Active Members list to uids that ALSO hold
+              // an active seat row. Manual revoke flips the seat row
+              // to 'revoked' but leaves the membership doc `active`
+              // per the backend spec — without this filter the same
+              // uid surfaces in BOTH Active and Revoked sections,
+              // which is the confusing UX we saw on the 2026-05-28
+              // sim verify. The seat-uid provider yields an empty
+              // set while loading or on error so the filter starts
+              // restrictive and relaxes once data lands.
+              final activeUidsAsync = ref.watch(
+                licenseOrgActiveSeatHolderUidsProvider(widget.licenseOrgId),
+              );
+              final activeUids = activeUidsAsync.maybeWhen(
+                data: (s) => s,
+                orElse: () => const <String>{},
+              );
+              // Owners are intentionally NOT in the members
+              // subcollection (they consume no seat), so a "no seat"
+              // filter would hide them from a roster they might
+              // appear in for legacy seeded orgs. Keep owner-role
+              // rows visible regardless of the seat join.
+              final members = rawMembers
+                  .where(
+                    (m) =>
+                        activeUids.contains(m.uid) ||
+                        m.role == LicenseOrgMemberRole.owner,
+                  )
+                  .toList(growable: false);
+
               if (members.isEmpty && revoked.isEmpty) {
                 return _EmptyState(scrollController: widget.scrollController);
               }
 
-              // Index map for the combined active + revoked list:
-              //   0                                 -> active title
-              //   1..members.length                 -> active tile
-              //   members.length+1                  -> revoked title (if any)
-              //   members.length+2..end             -> revoked tile
-              // The revoked section is omitted entirely when revoked
-              // is empty so the user doesn't see a heading over an
-              // empty list.
+              // Index map for the combined active + revoked list.
+              // Both section headings are HIDDEN when their section
+              // has zero rows, so the user never sees a heading
+              // floating over an empty list. The active section can
+              // become empty when the only members have had their
+              // seats revoked but the membership doc stayed `active`
+              // per the manual-revoke spec.
+              final hasActive = members.isNotEmpty;
               final hasRevoked = revoked.isNotEmpty;
-              final revokedTitleIdx = members.length + 1;
-              final itemCount =
-                  1 + members.length + (hasRevoked ? 1 + revoked.length : 0);
+              final activePart =
+                  (hasActive ? 1 : 0) + members.length; // title + tiles
+              final revokedPart =
+                  (hasRevoked ? 1 : 0) + revoked.length; // title + tiles
+              final revokedTitleIdx = activePart;
+              final itemCount = activePart + revokedPart;
               return ListView.builder(
                 controller: widget.scrollController,
                 padding: const EdgeInsets.symmetric(
@@ -240,7 +351,7 @@ class _LicenseOrgMembersSheetState extends ConsumerState<LicenseOrgMembersSheet>
                 ),
                 itemCount: itemCount,
                 itemBuilder: (context, index) {
-                  if (index == 0) {
+                  if (hasActive && index == 0) {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
                       child: SectionTitle(
@@ -250,8 +361,8 @@ class _LicenseOrgMembersSheetState extends ConsumerState<LicenseOrgMembersSheet>
                   }
                   if (hasRevoked && index == revokedTitleIdx) {
                     return Padding(
-                      padding: const EdgeInsets.only(
-                        top: AppTheme.spacing16,
+                      padding: EdgeInsets.only(
+                        top: hasActive ? AppTheme.spacing16 : 0,
                         bottom: AppTheme.spacing8,
                       ),
                       child: SectionTitle(
@@ -259,11 +370,31 @@ class _LicenseOrgMembersSheetState extends ConsumerState<LicenseOrgMembersSheet>
                       ),
                     );
                   }
-                  if (hasRevoked && index > revokedTitleIdx) {
-                    final revokedIdx = index - revokedTitleIdx - 1;
-                    return _RevokedTile(event: revoked[revokedIdx]);
+                  if (index >= revokedTitleIdx + (hasRevoked ? 1 : 0)) {
+                    final revokedIdx =
+                        index - revokedTitleIdx - (hasRevoked ? 1 : 0);
+                    final event = revoked[revokedIdx];
+                    // Owner/admin only — same gate as the revoke
+                    // action on _MemberTile. The role provider
+                    // already drove the Active section's revoke
+                    // affordance; reuse it here.
+                    final role = ref.watch(
+                      licenseOrgRoleProvider(widget.licenseOrgId),
+                    );
+                    final canReinstate =
+                        role == LicenseOrgMemberRole.owner ||
+                        role == LicenseOrgMemberRole.admin;
+                    return _RevokedTile(
+                      event: event,
+                      onReinstate: canReinstate
+                          ? () => _onReinstateTapped(event.targetId ?? '')
+                          : null,
+                    );
                   }
-                  final member = members[index - 1];
+                  // Active tile branch. Subtract the active-title row
+                  // (index 0) when present.
+                  final memberIdx = hasActive ? index - 1 : index;
+                  final member = members[memberIdx];
                   final isCurrentUser =
                       currentUid != null && member.uid == currentUid;
                   // Reveal the revoke action only when:
@@ -904,12 +1035,17 @@ class _ErrorState extends StatelessWidget {
 /// Single row in the Revoked section. Renders the same opaque
 /// `#ABCDEF` label as a [_MemberTile] (so a viewer can match a
 /// revocation back to a former member they had in mind) plus the
-/// relative timestamp and the actor who performed the revoke. No
-/// trailing actions — revocations are immutable.
+/// relative timestamp and the actor who performed the revoke.
+///
+/// Optional [onReinstate] surfaces a trailing icon button that
+/// calls the parent state's reinstate flow. The caller (owner /
+/// admin gate) decides whether to pass it; non-eligible viewers
+/// pass null and the tile stays read-only.
 class _RevokedTile extends StatelessWidget {
   final LicenseOrgAuditEvent event;
+  final VoidCallback? onReinstate;
 
-  const _RevokedTile({required this.event});
+  const _RevokedTile({required this.event, this.onReinstate});
 
   @override
   Widget build(BuildContext context) {
@@ -984,6 +1120,21 @@ class _RevokedTile extends StatelessWidget {
               ],
             ),
           ),
+          if (onReinstate != null) ...[
+            const SizedBox(width: AppTheme.spacing4),
+            IconButton(
+              tooltip: l10n.licenseOrgMembersReinstateAction,
+              icon: Icon(
+                Icons.restore_outlined,
+                color: context.accentColor,
+                size: 20,
+              ),
+              onPressed: onReinstate,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              visualDensity: VisualDensity.compact,
+            ),
+          ],
         ],
       ),
     );

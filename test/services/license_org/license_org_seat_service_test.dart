@@ -200,4 +200,144 @@ void main() {
       );
     });
   });
+
+  group('LicenseOrgSeatService.reinstateSeat', () {
+    test(
+      'returns success with alreadyActive: false on a fresh reinstate',
+      () async {
+        final invoker = _FakeInvoker(
+          (_, _) async => {
+            'allocationId': 'acme__u1__complete_pack',
+            'status': 'active',
+            'alreadyActive': false,
+          },
+        );
+        final svc = LicenseOrgSeatService(invoker: invoker);
+        final result = await svc.reinstateSeat(
+          licenseOrgId: 'acme',
+          allocationId: 'acme__u1__complete_pack',
+        );
+        expect(result, isA<ReinstateSeatSuccess>());
+        final success = result as ReinstateSeatSuccess;
+        expect(success.allocationId, equals('acme__u1__complete_pack'));
+        expect(success.alreadyActive, isFalse);
+        expect(invoker.lastName, equals('reinstateLicenseSeat'));
+        expect(invoker.lastData!['licenseOrgId'], equals('acme'));
+      },
+    );
+
+    test(
+      'returns success with alreadyActive: true on idempotent replay',
+      () async {
+        final invoker = _FakeInvoker(
+          (_, _) async => {
+            'allocationId': 'acme__u1__complete_pack',
+            'status': 'active',
+            'alreadyActive': true,
+          },
+        );
+        final svc = LicenseOrgSeatService(invoker: invoker);
+        final result = await svc.reinstateSeat(
+          licenseOrgId: 'acme',
+          allocationId: 'acme__u1__complete_pack',
+        );
+        expect((result as ReinstateSeatSuccess).alreadyActive, isTrue);
+      },
+    );
+
+    test('permission-denied -> permissionDenied', () async {
+      final invoker = _FakeInvoker(
+        (_, _) async => throw FirebaseFunctionsException(
+          code: 'permission-denied',
+          message: 'caller is not owner or admin',
+        ),
+      );
+      final svc = LicenseOrgSeatService(invoker: invoker);
+      final result = await svc.reinstateSeat(
+        licenseOrgId: 'acme',
+        allocationId: 'acme__u1__complete_pack',
+      );
+      expect(
+        (result as ReinstateSeatFailure).reason,
+        equals(ReinstateSeatReason.permissionDenied),
+      );
+    });
+
+    test('failed-precondition with "seat capacity" -> overCapacity', () async {
+      // Backend uses failed-precondition for both org-suspended and
+      // over-capacity. Discriminate by the message substring.
+      final invoker = _FakeInvoker(
+        (_, _) async => throw FirebaseFunctionsException(
+          code: 'failed-precondition',
+          message: 'cannot reinstate: org is at seat capacity (10)',
+        ),
+      );
+      final svc = LicenseOrgSeatService(invoker: invoker);
+      final result = await svc.reinstateSeat(
+        licenseOrgId: 'acme',
+        allocationId: 'acme__u1__complete_pack',
+      );
+      expect(
+        (result as ReinstateSeatFailure).reason,
+        equals(ReinstateSeatReason.overCapacity),
+      );
+    });
+
+    test(
+      'failed-precondition without seat-capacity hint -> orgSuspended',
+      () async {
+        final invoker = _FakeInvoker(
+          (_, _) async => throw FirebaseFunctionsException(
+            code: 'failed-precondition',
+            message: 'License org is not active',
+          ),
+        );
+        final svc = LicenseOrgSeatService(invoker: invoker);
+        final result = await svc.reinstateSeat(
+          licenseOrgId: 'acme',
+          allocationId: 'acme__u1__complete_pack',
+        );
+        expect(
+          (result as ReinstateSeatFailure).reason,
+          equals(ReinstateSeatReason.orgSuspended),
+        );
+      },
+    );
+
+    test('resource-exhausted -> rateLimited', () async {
+      final invoker = _FakeInvoker(
+        (_, _) async => throw FirebaseFunctionsException(
+          code: 'resource-exhausted',
+          message: 'too_many_reinstates',
+        ),
+      );
+      final svc = LicenseOrgSeatService(invoker: invoker);
+      final result = await svc.reinstateSeat(
+        licenseOrgId: 'acme',
+        allocationId: 'acme__u1__complete_pack',
+      );
+      expect(
+        (result as ReinstateSeatFailure).reason,
+        equals(ReinstateSeatReason.rateLimited),
+      );
+    });
+
+    test('unknown code -> generic', () async {
+      final invoker = _FakeInvoker(
+        (_, _) async => throw FirebaseFunctionsException(
+          code: 'unavailable',
+          message: 'transient',
+        ),
+      );
+      final svc = LicenseOrgSeatService(invoker: invoker);
+      final result = await svc.reinstateSeat(
+        licenseOrgId: 'acme',
+        allocationId: 'acme__u1__complete_pack',
+      );
+      expect(
+        (result as ReinstateSeatFailure).reason,
+        equals(ReinstateSeatReason.generic),
+      );
+    });
+  });
 }
