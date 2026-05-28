@@ -37,6 +37,7 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/section_header.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/license_org_audit_event.dart';
+import '../../providers/auth_providers.dart';
 import '../../providers/license_org_audit_providers.dart';
 
 enum _OutcomeFilter { all, success, rejected }
@@ -523,16 +524,28 @@ class _LicenseOrgAuditLogScreenState
   }
 }
 
-class _AuditLogRow extends StatelessWidget {
+class _AuditLogRow extends ConsumerWidget {
   final LicenseOrgAuditEvent event;
 
   const _AuditLogRow({required this.event});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final isRejected = event.outcome == LicenseOrgAuditOutcome.rejected;
     final outcomeColor = isRejected ? AppTheme.errorRed : AppTheme.successGreen;
+    // "you" substitution for own-uid actors. See the same pattern
+    // on `_AuditRow` in license_org_overview_card.dart for the
+    // rationale (own-action rows on a freshly-created org should
+    // not surface as opaque #ABCDEF labels).
+    final currentUid = ref.watch(currentUserProvider)?.uid;
+    final isSelf =
+        currentUid != null &&
+        currentUid.isNotEmpty &&
+        event.actorUid == currentUid;
+    final actorLabel = isSelf
+        ? l10n.licenseOrgAuditActorYou
+        : event.actorDisplayLabel;
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing12),
@@ -564,7 +577,7 @@ class _AuditLogRow extends StatelessWidget {
                   runSpacing: AppTheme.spacing4,
                   children: [
                     Text(
-                      event.actorDisplayLabel,
+                      actorLabel,
                       style: TextStyle(
                         fontSize: 12,
                         color: context.textTertiary,

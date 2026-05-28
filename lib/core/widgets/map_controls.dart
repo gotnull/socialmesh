@@ -287,7 +287,7 @@ class MapCompass extends StatelessWidget {
           ],
         ),
         child: Transform.rotate(
-          angle: -rotation * (3.14159 / 180),
+          angle: rotation * (3.14159 / 180),
           child: Stack(
             alignment: Alignment.center,
             children: [

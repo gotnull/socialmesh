@@ -44146,6 +44146,9 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get licenseOrgAuditActorYou => 'toi';
+
+  @override
   String get licenseOrgMembersYouBadge => 'vous';
 
   @override
@@ -44362,13 +44365,45 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get licenseOrgInviteMintSheetBody =>
-      'Créez un lien d\'invitation à usage unique. Envoyez-le à un membre ; dès qu\'il appuie sur Rejoindre, le lien est consommé. L\'expiration par défaut est de 7 jours.';
+      'Partage ce lien pour permettre aux gens de rejoindre ton groupe. Il fonctionne jusqu\'à ce que tu atteignes ta limite ou expire dans 7 jours.';
+
+  @override
+  String licenseOrgInviteMintUsage(int used, int total) {
+    return '$used sur $total entrées utilisées';
+  }
+
+  @override
+  String get licenseOrgInviteMintExhausted =>
+      'Toutes les places prises — régénère après une révocation';
+
+  @override
+  String get licenseOrgInviteRegenerateAction => 'Régénérer le lien';
+
+  @override
+  String get licenseOrgInviteRegenerateConfirmTitle =>
+      'Générer un nouveau lien ?';
+
+  @override
+  String get licenseOrgInviteRegenerateConfirmBody =>
+      'Les personnes qui n\'ont pas encore rejoint auront besoin du nouveau lien. Celles qui ont déjà rejoint conservent leur accès.';
+
+  @override
+  String get licenseOrgInviteRegenerateConfirmButton =>
+      'Générer un nouveau lien';
+
+  @override
+  String get licenseOrgInviteRegenerateCancelButton =>
+      'Conserver le lien actuel';
+
+  @override
+  String get licenseOrgInviteRegenerateSuccess =>
+      'Nouveau lien généré · l\'ancien n\'est plus valide';
 
   @override
   String get licenseOrgInviteMintProductLabel => 'Produit du siège';
 
   @override
-  String get licenseOrgInviteMintSubmit => 'Générer le lien d\'invitation';
+  String get licenseOrgInviteMintSubmit => 'Générer un lien partageable';
 
   @override
   String get licenseOrgInviteMintCopyAction => 'Copier le lien';

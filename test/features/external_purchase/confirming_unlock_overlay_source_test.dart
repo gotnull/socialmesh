@@ -50,30 +50,38 @@ void main() {
       expect(src, contains('org.name.isNotEmpty'));
     });
 
-    test('navigates via rootNavigator so the overlay can dismiss cleanly', () {
-      // The overlay sits inside MaterialApp.builder; pushing onto
-      // the nested Navigator would mount the License Org Overview
-      // BELOW the overlay scrim. Use rootNavigator to push at the
-      // top-most level.
-      // Formatter sometimes breaks the call across lines; assert
-      // the kw without baking in the surrounding whitespace.
-      expect(src, contains('rootNavigator: true'));
-      expect(src, contains('LicenseOrgOverviewScreen.route()'));
-    });
+    test(
+      'navigates via the global navigatorKey, not Navigator.of(context)',
+      () {
+        // The overlay sits inside MaterialApp.builder as a Stack
+        // sibling of the Navigator subtree — `Navigator.of(context)`
+        // and `Navigator.of(context, rootNavigator: true)` both fail
+        // because there is no Navigator ancestor above the overlay.
+        // The CTA must use the global `navigatorKey.currentState`
+        // bound on the MaterialApp in main.dart.
+        expect(src, contains("import '../../core/navigation.dart'"));
+        expect(src, contains('navigatorKey.currentState'));
+        expect(src, contains('LicenseOrgOverviewScreen.route()'));
+      },
+    );
 
-    test('CTA fires onDismiss BEFORE navigating', () {
-      // Without onDismiss, the service would still think there is a
-      // pending confirmation to surface — a second deep link in the
-      // same session would not re-trigger the overlay. Call dismiss
-      // first, then push.
+    test('CTA captures navigatorKey BEFORE onDismiss + pushes AFTER', () {
+      // Regression for Crashlytics 0fac5378d7a21235e2599d2fed6cc415,
+      // FATAL on iOS 26.5.0 (1.43.0 #182), 2026-05-28: dismissing
+      // first unmounts the overlay and tears down the build context;
+      // a navigator captured AFTER dismiss is then disposed and the
+      // push silently no-ops. Capture nav FIRST, then dismiss, then
+      // push on the captured reference.
       final ctaIdx = src.indexOf('unlockSuccessOrgPackCta');
       final onPressedIdx = src.lastIndexOf('onPressed: () {', ctaIdx);
       expect(onPressedIdx, greaterThan(-1));
-      final body = src.substring(onPressedIdx, ctaIdx + 200);
+      final body = src.substring(onPressedIdx, ctaIdx + 400);
+      final captureIdx = body.indexOf('navigatorKey.currentState');
       final dismissIdx = body.indexOf('onDismiss();');
-      final navIdx = body.indexOf('Navigator.of(');
-      expect(dismissIdx, greaterThan(-1));
-      expect(navIdx, greaterThan(dismissIdx));
+      final pushIdx = body.indexOf('nav?.push');
+      expect(captureIdx, greaterThan(-1));
+      expect(dismissIdx, greaterThan(captureIdx));
+      expect(pushIdx, greaterThan(dismissIdx));
     });
 
     test('falls back to plain Dismiss when no unnamed org exists', () {

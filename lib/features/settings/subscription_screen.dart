@@ -203,18 +203,19 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
               // links so the team-management surface stays visually
               // primary. See auto-memory
               // feedback_enterprise_ux_for_premium_surfaces.md.
+              //
+              // The whole section (header + entries) is rendered
+              // inside `_GroupLicensingSection` so the orphan-header
+              // edge case is handled in one place: when the user
+              // has zero orgs AND no Buy tile is visible (anonymous
+              // user, or Community Pack flag has taken over the buy
+              // entry), the body collapses to empty, and the section
+              // header must collapse too. Previously the SectionTitle
+              // was emitted unconditionally and rendered "YOUR
+              // GROUPS" over nothing.
               if (AppFeatureFlags.isGroupLicensingEnabled) ...[
                 const SizedBox(height: AppTheme.spacing24),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.spacing4,
-                  ),
-                  child: SectionTitle(
-                    title: context.l10n.licenseOrgOverviewGroupSectionTitle,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacing8),
-                _GroupLicensingEntries(),
+                const _GroupLicensingSection(),
               ],
 
               // Restore Purchases - sits BELOW the group licensing
@@ -1413,7 +1414,13 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
 /// `memory/feedback_enterprise_ux_for_premium_surfaces.md`): revenue +
 /// team-management surfaces deserve first-class placement; only true
 /// fallbacks (unlock-code redemption) get the measly text-link style.
-class _GroupLicensingEntries extends ConsumerWidget {
+/// Wraps the group-licensing section header + entries. Renders nothing
+/// (header AND body) when the user has zero orgs AND no Buy tile is
+/// visible — without this guard the "YOUR GROUPS" header surfaces
+/// above an empty body, which the user flagged on 2026-05-28.
+class _GroupLicensingSection extends ConsumerWidget {
+  const _GroupLicensingSection();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
@@ -1434,11 +1441,27 @@ class _GroupLicensingEntries extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
     final canBuyOrgPack =
         user != null && !user.isAnonymous && user.uid.isNotEmpty;
+    final showBuyTile =
+        canBuyOrgPack && !AppFeatureFlags.isCommunityPackEnabled;
+
+    // Section visibility: at least one of the two tile rows must be
+    // visible OR the header is hidden. The Manage tile depends on
+    // orgCount > 0; the Buy tile depends on showBuyTile. Both
+    // hidden → no header.
+    final hasManageTile = orgCount > 0;
+    if (!hasManageTile && !showBuyTile) {
+      return const SizedBox.shrink();
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (orgCount > 0) ...[
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing4),
+          child: SectionTitle(title: l10n.licenseOrgOverviewGroupSectionTitle),
+        ),
+        const SizedBox(height: AppTheme.spacing8),
+        if (hasManageTile) ...[
           _GroupLicensingTile(
             icon: Icons.groups_outlined,
             title: l10n.licenseOrgOverviewEntryAction,
@@ -1450,13 +1473,12 @@ class _GroupLicensingEntries extends ConsumerWidget {
             onTap: () =>
                 Navigator.of(context).push(LicenseOrgOverviewScreen.route()),
           ),
-          if (canBuyOrgPack && !AppFeatureFlags.isCommunityPackEnabled)
-            const SizedBox(height: AppTheme.spacing8),
+          if (showBuyTile) const SizedBox(height: AppTheme.spacing8),
         ],
         // Legacy Buy tile hides when the Community Pack section above
         // is on - that section is the canonical purchase entry once
         // its flag is enabled.
-        if (canBuyOrgPack && !AppFeatureFlags.isCommunityPackEnabled)
+        if (showBuyTile)
           _GroupLicensingTile(
             icon: Icons.add_business_outlined,
             title: l10n.orgCheckoutEntryAction,

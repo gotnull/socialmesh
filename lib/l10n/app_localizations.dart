@@ -75815,6 +75815,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, =0{No members} =1{1 member} other{{count} members}}'**
   String licenseOrgMembersCount(int count);
 
+  /// Actor label on a Recent Activity / Audit Log row when the actor uid matches the currently signed-in user. Replaces the opaque #ABCDEF prefix so users do not mistake their own actions (org_purchased, license_org_renamed, seat_revoked_manual, etc.) for someone else's history on a freshly-created org. Lowercase to match the singular-word pattern used in licenseOrgMembersYouBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'you'**
+  String get licenseOrgAuditActorYou;
+
   /// Inline badge rendered next to the current user's row in the License Org Members sheet so the viewer can pick themselves out at a glance.
   ///
   /// In en, this message translates to:
@@ -76169,11 +76175,59 @@ abstract class AppLocalizations {
   /// **'Invite a member'**
   String get licenseOrgInviteMintSheetTitle;
 
-  /// Body copy on the mint-invite bottom sheet explaining the invite lifecycle in one line.
+  /// Body copy on the mint-invite bottom sheet explaining the multi-use shareable-link contract. One persistent link per group; redeems decrement remaining capacity until the seat cap fills.
   ///
   /// In en, this message translates to:
-  /// **'Create a single-use invite link. Send it to one member; once they tap Join, the link is consumed. Default expiry is 7 days.'**
+  /// **'Share this link to let people join your group. It works until you\'re at capacity or it expires in 7 days.'**
   String get licenseOrgInviteMintSheetBody;
+
+  /// Subtitle on the rendered invite link tile showing how many people have redeemed vs the cap. Used here means: people who have already redeemed and consumed a seat.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {total} joins used'**
+  String licenseOrgInviteMintUsage(int used, int total);
+
+  /// Subtitle shown on the rendered invite link tile when usedCount has reached maxUses. The link no longer admits new joins; owner needs to revoke someone or buy more seats.
+  ///
+  /// In en, this message translates to:
+  /// **'All seats taken — regenerate after revoking'**
+  String get licenseOrgInviteMintExhausted;
+
+  /// Secondary action on the rendered invite link tile that mints a fresh URL. Replaces the current link — anyone holding the previous URL will see 'this invite was cancelled'.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerate link'**
+  String get licenseOrgInviteRegenerateAction;
+
+  /// Title of the confirm sheet that opens when the owner taps Regenerate. Warns that the current link will be invalidated.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate a new link?'**
+  String get licenseOrgInviteRegenerateConfirmTitle;
+
+  /// Body copy of the regenerate-confirm sheet. Reassures that already-joined members keep access; only pending-joiners are affected.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone who hasn\'t joined yet will need the new link. People who already joined keep their access.'**
+  String get licenseOrgInviteRegenerateConfirmBody;
+
+  /// Primary destructive button on the regenerate-confirm sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate new link'**
+  String get licenseOrgInviteRegenerateConfirmButton;
+
+  /// Secondary cancel button on the regenerate-confirm sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep current link'**
+  String get licenseOrgInviteRegenerateCancelButton;
+
+  /// Snackbar shown after a successful regenerate. Tells the owner both that the new link is ready AND that the previous URL is dead.
+  ///
+  /// In en, this message translates to:
+  /// **'New link generated · old link is no longer valid'**
+  String get licenseOrgInviteRegenerateSuccess;
 
   /// Label for the product picker in the mint-invite sheet. Owner picks which seat the invitee gets allocated.
   ///
@@ -76184,7 +76238,7 @@ abstract class AppLocalizations {
   /// Submit button label on the mint-invite sheet. Calls inviteLicenseOrgMember and renders the resulting URL.
   ///
   /// In en, this message translates to:
-  /// **'Generate invite link'**
+  /// **'Generate shareable link'**
   String get licenseOrgInviteMintSubmit;
 
   /// Secondary action label on the mint-result card that copies the rendered invite URL to the clipboard.

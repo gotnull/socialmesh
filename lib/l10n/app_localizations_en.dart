@@ -43350,6 +43350,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get licenseOrgAuditActorYou => 'you';
+
+  @override
   String get licenseOrgMembersYouBadge => 'you';
 
   @override
@@ -43563,13 +43566,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get licenseOrgInviteMintSheetBody =>
-      'Create a single-use invite link. Send it to one member; once they tap Join, the link is consumed. Default expiry is 7 days.';
+      'Share this link to let people join your group. It works until you\'re at capacity or it expires in 7 days.';
+
+  @override
+  String licenseOrgInviteMintUsage(int used, int total) {
+    return '$used of $total joins used';
+  }
+
+  @override
+  String get licenseOrgInviteMintExhausted =>
+      'All seats taken — regenerate after revoking';
+
+  @override
+  String get licenseOrgInviteRegenerateAction => 'Regenerate link';
+
+  @override
+  String get licenseOrgInviteRegenerateConfirmTitle => 'Generate a new link?';
+
+  @override
+  String get licenseOrgInviteRegenerateConfirmBody =>
+      'Anyone who hasn\'t joined yet will need the new link. People who already joined keep their access.';
+
+  @override
+  String get licenseOrgInviteRegenerateConfirmButton => 'Generate new link';
+
+  @override
+  String get licenseOrgInviteRegenerateCancelButton => 'Keep current link';
+
+  @override
+  String get licenseOrgInviteRegenerateSuccess =>
+      'New link generated · old link is no longer valid';
 
   @override
   String get licenseOrgInviteMintProductLabel => 'Seat product';
 
   @override
-  String get licenseOrgInviteMintSubmit => 'Generate invite link';
+  String get licenseOrgInviteMintSubmit => 'Generate shareable link';
 
   @override
   String get licenseOrgInviteMintCopyAction => 'Copy link';

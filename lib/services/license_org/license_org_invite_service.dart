@@ -54,10 +54,22 @@ class MintInviteSuccess extends MintInviteResult {
   final String acceptUrl;
   final DateTime expiresAt;
 
+  /// Multi-use invite cap. Equals the org's remaining seat capacity
+  /// at mint time. Null on legacy single-use mints (treated as 1).
+  final int? maxUses;
+
+  /// True when this mint REVOKED a previously-active invite (i.e.
+  /// the owner regenerated the share link, invalidating any URL
+  /// they shared earlier). UI uses this to surface a snackbar like
+  /// "Old link is now invalid".
+  final bool replacedPrevious;
+
   const MintInviteSuccess({
     required this.inviteId,
     required this.acceptUrl,
     required this.expiresAt,
+    this.maxUses,
+    this.replacedPrevious = false,
   });
 }
 
@@ -66,6 +78,49 @@ class MintInviteFailure extends MintInviteResult {
   final String message;
 
   const MintInviteFailure({required this.reasonCode, required this.message});
+}
+
+// =============================================================================
+// Get active invite (multi-use shareable-link contract)
+// =============================================================================
+
+sealed class GetActiveInviteResult {
+  const GetActiveInviteResult();
+}
+
+class GetActiveInviteNone extends GetActiveInviteResult {
+  const GetActiveInviteNone();
+}
+
+class GetActiveInviteFound extends GetActiveInviteResult {
+  final String inviteId;
+  final String? acceptUrl;
+  final int maxUses;
+  final int usedCount;
+  final DateTime expiresAt;
+
+  const GetActiveInviteFound({
+    required this.inviteId,
+    required this.acceptUrl,
+    required this.maxUses,
+    required this.usedCount,
+    required this.expiresAt,
+  });
+
+  /// Joins remaining on this link. Owner-facing UI shows this so the
+  /// owner knows how many people can still redeem before the link
+  /// exhausts and they need to regenerate.
+  int get remaining => (maxUses - usedCount).clamp(0, maxUses);
+}
+
+class GetActiveInviteFailure extends GetActiveInviteResult {
+  final String reasonCode;
+  final String message;
+
+  const GetActiveInviteFailure({
+    required this.reasonCode,
+    required this.message,
+  });
 }
 
 // =============================================================================
@@ -170,6 +225,8 @@ class LicenseOrgInviteService {
         inviteId: result['inviteId'] as String,
         acceptUrl: result['acceptUrl'] as String,
         expiresAt: DateTime.parse(result['expiresAt'] as String),
+        maxUses: (result['maxUses'] as num?)?.toInt(),
+        replacedPrevious: (result['replacedPrevious'] as bool?) ?? false,
       );
     } on FirebaseFunctionsException catch (e) {
       AppLogging.groupLicensing(
@@ -182,6 +239,58 @@ class LicenseOrgInviteService {
         '(error class: ${e.runtimeType})',
       );
       return MintInviteFailure(reasonCode: 'internal', message: e.toString());
+    }
+  }
+
+  /// Read the currently-active multi-use invite for (orgId, productId).
+  /// The mint sheet calls this on open so it can show the existing
+  /// share link instead of always minting a fresh one (which under
+  /// the v2 contract would revoke the old link and surprise an owner
+  /// who already shared it). Returns [GetActiveInviteNone] when no
+  /// active invite exists; the owner must then mint a fresh one to
+  /// get a shareable URL.
+  Future<GetActiveInviteResult> getActiveInvite({
+    required String licenseOrgId,
+    required String productId,
+  }) async {
+    AppLogging.groupLicensing('[LicenseOrgInviteService] getActiveInvite');
+    try {
+      final result = await _invoker.call('getActiveLicenseOrgInvite', {
+        'licenseOrgId': licenseOrgId,
+        'productId': productId,
+      });
+      if ((result['hasActive'] as bool?) != true) {
+        return const GetActiveInviteNone();
+      }
+      // acceptUrl is only present when STORE_INVITE_TOKEN_PLAINTEXT
+      // is on (default off in production). Surface null so the UI
+      // can prompt the owner to regenerate when the plaintext is
+      // not retrievable.
+      final urlRaw = result['acceptUrl'];
+      return GetActiveInviteFound(
+        inviteId: result['inviteId'] as String,
+        acceptUrl: urlRaw is String && urlRaw.isNotEmpty ? urlRaw : null,
+        maxUses: (result['maxUses'] as num?)?.toInt() ?? 0,
+        usedCount: (result['usedCount'] as num?)?.toInt() ?? 0,
+        expiresAt: DateTime.parse(result['expiresAt'] as String),
+      );
+    } on FirebaseFunctionsException catch (e) {
+      AppLogging.groupLicensing(
+        '[LicenseOrgInviteService] getActiveInvite failed code=${e.code}',
+      );
+      return GetActiveInviteFailure(
+        reasonCode: e.code,
+        message: e.message ?? '',
+      );
+    } catch (e) {
+      AppLogging.groupLicensing(
+        '[LicenseOrgInviteService] getActiveInvite unexpected '
+        '(error class: ${e.runtimeType})',
+      );
+      return GetActiveInviteFailure(
+        reasonCode: 'internal',
+        message: e.toString(),
+      );
     }
   }
 

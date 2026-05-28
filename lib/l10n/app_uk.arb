@@ -4331,9 +4331,9 @@
     "licenseOrgInviteMintGenericError": "Не вдалося створити запрошення. Спробуйте знову.",
     "licenseOrgInviteMintProductLabel": "Продукт місця",
     "licenseOrgInviteMintShareLabel": "Поділитися посиланням-запрошенням",
-    "licenseOrgInviteMintSheetBody": "Створіть одноразове посилання-запрошення. Надішліть його одному учаснику; коли вони натиснуть Приєднатися, посилання буде використано. Стандартний термін дії - 7 днів.",
+    "licenseOrgInviteMintSheetBody": "Поділіться цим посиланням, щоб люди могли приєднатися до вашої групи. Воно діє, доки ви не досягнете максимальної місткості, або закінчується через 7 днів.",
     "licenseOrgInviteMintSheetTitle": "Запросити учасника",
-    "licenseOrgInviteMintSubmit": "Створити посилання-запрошення",
+    "licenseOrgInviteMintSubmit": "Створити посилання",
     "licenseOrgMembersCount": "{count, plural, =0{Немає учасників} =1{1 учасник} other{{count} учасників}}",
     "licenseOrgMembersEmptyTagline": "Натисніть Запросити учасника, щоб поділитися своєю групою з іншими.",
     "licenseOrgMembersEmptyTitleKeyword": "учасників",
@@ -13068,5 +13068,57 @@
     "licenseOrgMembersSectionAll": "Учасники",
     "@licenseOrgMembersSectionAll": {
         "description": "Single section title at the top of the License Org Members sheet. Replaces the older 'Active members' + 'Revoked' dual-section design: tiles now render in one unified list and their visual styling (bright accent for active, dim person-off for revoked) carries the categorical signal."
+    },
+    "licenseOrgAuditActorYou": "ви",
+    "@licenseOrgAuditActorYou": {
+        "description": "Actor label on a Recent Activity / Audit Log row when the actor uid matches the currently signed-in user. Replaces the opaque #ABCDEF prefix so users do not mistake their own actions (org_purchased, license_org_renamed, seat_revoked_manual, etc.) for someone else's history on a freshly-created org. Lowercase to match the singular-word pattern used in licenseOrgMembersYouBadge."
+    },
+    "@licenseOrgInviteMintSheetBody": {
+        "description": "Body copy on the mint-invite bottom sheet explaining the multi-use shareable-link contract. One persistent link per group; redeems decrement remaining capacity until the seat cap fills."
+    },
+    "licenseOrgInviteMintUsage": "Використано {used} з {total}",
+    "@licenseOrgInviteMintUsage": {
+        "description": "Subtitle on the rendered invite link tile showing how many people have redeemed vs the cap.",
+        "placeholders": {
+            "used": {
+                "type": "int",
+                "example": "2"
+            },
+            "total": {
+                "type": "int",
+                "example": "10"
+            }
+        }
+    },
+    "licenseOrgInviteMintExhausted": "Усі місця зайняті — спочатку відкличте когось, потім згенеруйте знову",
+    "@licenseOrgInviteMintExhausted": {
+        "description": "Subtitle when usedCount has reached maxUses; owner needs to revoke someone or buy more seats."
+    },
+    "licenseOrgInviteRegenerateAction": "Згенерувати знову",
+    "@licenseOrgInviteRegenerateAction": {
+        "description": "Secondary action that mints a fresh URL and invalidates the current link."
+    },
+    "licenseOrgInviteRegenerateConfirmTitle": "Створити нове посилання?",
+    "@licenseOrgInviteRegenerateConfirmTitle": {
+        "description": "Title of the regenerate-confirm sheet."
+    },
+    "licenseOrgInviteRegenerateConfirmBody": "Тим, хто ще не приєднався, знадобиться нове посилання. Хто вже приєднався — збереже доступ.",
+    "@licenseOrgInviteRegenerateConfirmBody": {
+        "description": "Body copy reassuring already-joined members keep access."
+    },
+    "licenseOrgInviteRegenerateConfirmButton": "Створити нове",
+    "@licenseOrgInviteRegenerateConfirmButton": {
+        "description": "Primary destructive button on the regenerate-confirm sheet."
+    },
+    "licenseOrgInviteRegenerateCancelButton": "Залишити поточне",
+    "@licenseOrgInviteRegenerateCancelButton": {
+        "description": "Secondary cancel button on the regenerate-confirm sheet."
+    },
+    "licenseOrgInviteRegenerateSuccess": "Створено нове посилання · попереднє більше не дійсне",
+    "@licenseOrgInviteRegenerateSuccess": {
+        "description": "Snackbar shown after a successful regenerate."
+    },
+    "@licenseOrgInviteMintSubmit": {
+        "description": "Submit button label on the mint-invite sheet. Calls inviteLicenseOrgMember and renders the resulting URL."
     }
 }

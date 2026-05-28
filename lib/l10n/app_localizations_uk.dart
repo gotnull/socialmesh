@@ -43846,6 +43846,9 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get licenseOrgAuditActorYou => 'ви';
+
+  @override
   String get licenseOrgMembersYouBadge => 'ви';
 
   @override
@@ -44058,13 +44061,43 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get licenseOrgInviteMintSheetBody =>
-      'Створіть одноразове посилання-запрошення. Надішліть його одному учаснику; коли вони натиснуть Приєднатися, посилання буде використано. Стандартний термін дії - 7 днів.';
+      'Поділіться цим посиланням, щоб люди могли приєднатися до вашої групи. Воно діє, доки ви не досягнете максимальної місткості, або закінчується через 7 днів.';
+
+  @override
+  String licenseOrgInviteMintUsage(int used, int total) {
+    return 'Використано $used з $total';
+  }
+
+  @override
+  String get licenseOrgInviteMintExhausted =>
+      'Усі місця зайняті — спочатку відкличте когось, потім згенеруйте знову';
+
+  @override
+  String get licenseOrgInviteRegenerateAction => 'Згенерувати знову';
+
+  @override
+  String get licenseOrgInviteRegenerateConfirmTitle =>
+      'Створити нове посилання?';
+
+  @override
+  String get licenseOrgInviteRegenerateConfirmBody =>
+      'Тим, хто ще не приєднався, знадобиться нове посилання. Хто вже приєднався — збереже доступ.';
+
+  @override
+  String get licenseOrgInviteRegenerateConfirmButton => 'Створити нове';
+
+  @override
+  String get licenseOrgInviteRegenerateCancelButton => 'Залишити поточне';
+
+  @override
+  String get licenseOrgInviteRegenerateSuccess =>
+      'Створено нове посилання · попереднє більше не дійсне';
 
   @override
   String get licenseOrgInviteMintProductLabel => 'Продукт місця';
 
   @override
-  String get licenseOrgInviteMintSubmit => 'Створити посилання-запрошення';
+  String get licenseOrgInviteMintSubmit => 'Створити посилання';
 
   @override
   String get licenseOrgInviteMintCopyAction => 'Скопіювати посилання';

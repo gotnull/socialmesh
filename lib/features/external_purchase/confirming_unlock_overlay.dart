@@ -23,6 +23,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/l10n_extension.dart';
+import '../../core/navigation.dart';
 import '../../core/theme.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/auth_providers.dart';
@@ -233,14 +234,19 @@ class _Success extends ConsumerWidget {
             width: double.infinity,
             child: FilledButton(
               onPressed: () {
+                // Overlay is mounted in MaterialApp.builder as a
+                // sibling of the Navigator (Stack child), so the
+                // local `context` has no Navigator ancestor and
+                // Navigator.of(context) throws "Null check operator
+                // used on a null value". Use the global navigatorKey
+                // bound to the root Navigator in main.dart. Capture
+                // before onDismiss() — the overlay unmounts on idle
+                // and the captured reference outlives this widget.
+                // Crashlytics 0fac5378d7a21235e2599d2fed6cc415, fresh
+                // 2026-05-28 on iOS 26.5.0 (1.43.0 #182).
+                final nav = navigatorKey.currentState;
                 onDismiss();
-                // Pop any sheets / dialogs above the route stack
-                // (this overlay sits inside MaterialApp.builder, so
-                // the root navigator is the right one).
-                Navigator.of(
-                  context,
-                  rootNavigator: true,
-                ).push(LicenseOrgOverviewScreen.route());
+                nav?.push(LicenseOrgOverviewScreen.route());
               },
               style: FilledButton.styleFrom(
                 backgroundColor: context.accentColor,

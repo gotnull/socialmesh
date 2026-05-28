@@ -43844,6 +43844,9 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get licenseOrgAuditActorYou => 'tu';
+
+  @override
   String get licenseOrgMembersYouBadge => 'tu';
 
   @override
@@ -44059,13 +44062,44 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get licenseOrgInviteMintSheetBody =>
-      'Crea un link di invito monouso. Inviarlo a un membro; appena tocca Unisciti, il link viene consumato. La scadenza predefinita è di 7 giorni.';
+      'Condividi questo link per far entrare le persone nel tuo gruppo. Funziona finché non raggiungi la capacità massima o scade dopo 7 giorni.';
+
+  @override
+  String licenseOrgInviteMintUsage(int used, int total) {
+    return '$used di $total ingressi usati';
+  }
+
+  @override
+  String get licenseOrgInviteMintExhausted =>
+      'Posti esauriti — rigenera dopo aver revocato';
+
+  @override
+  String get licenseOrgInviteRegenerateAction => 'Rigenera link';
+
+  @override
+  String get licenseOrgInviteRegenerateConfirmTitle =>
+      'Generare un nuovo link?';
+
+  @override
+  String get licenseOrgInviteRegenerateConfirmBody =>
+      'Chi non è ancora entrato avrà bisogno del nuovo link. Chi è già entrato mantiene il proprio accesso.';
+
+  @override
+  String get licenseOrgInviteRegenerateConfirmButton => 'Genera nuovo link';
+
+  @override
+  String get licenseOrgInviteRegenerateCancelButton =>
+      'Mantieni il link attuale';
+
+  @override
+  String get licenseOrgInviteRegenerateSuccess =>
+      'Nuovo link generato · il vecchio non è più valido';
 
   @override
   String get licenseOrgInviteMintProductLabel => 'Prodotto del posto';
 
   @override
-  String get licenseOrgInviteMintSubmit => 'Genera link di invito';
+  String get licenseOrgInviteMintSubmit => 'Genera link condivisibile';
 
   @override
   String get licenseOrgInviteMintCopyAction => 'Copia link';

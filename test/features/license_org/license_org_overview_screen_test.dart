@@ -103,6 +103,10 @@ class _FakeSeatRepo implements SeatAllocationRepository {
   @override
   Stream<int> watchOrgActiveSeatCount(String orgId) =>
       Stream.value(_orgActiveCounts[orgId] ?? 0);
+
+  @override
+  Stream<Set<String>> watchOrgActiveSeatHolderUids(String orgId) =>
+      Stream.value(const <String>{});
 }
 
 Widget _buildTestWidget({

@@ -37508,9 +37508,9 @@
     "licenseOrgInviteMintGenericError": "Não foi possível criar o convite. Tente novamente.",
     "licenseOrgInviteMintProductLabel": "Produto do assento",
     "licenseOrgInviteMintShareLabel": "Partilhar link de convite",
-    "licenseOrgInviteMintSheetBody": "Crie um link de convite de uso único. Envie-o a um membro; assim que tocar em Aderir, o link é consumido. A expiração padrão é de 7 dias.",
+    "licenseOrgInviteMintSheetBody": "Partilha este link para que outras pessoas entrem no teu grupo. Funciona até atingires a capacidade máxima ou expira em 7 dias.",
     "licenseOrgInviteMintSheetTitle": "Convidar um membro",
-    "licenseOrgInviteMintSubmit": "Gerar link de convite",
+    "licenseOrgInviteMintSubmit": "Gerar link partilhável",
     "licenseOrgMembersCount": "{count, plural, =0{Sem membros} =1{1 membro} other{{count} membros}}",
     "licenseOrgMembersEmptyTagline": "Toque em Convidar membro para partilhar o seu grupo com outras pessoas.",
     "licenseOrgMembersEmptyTitleKeyword": "membros",
@@ -46209,5 +46209,57 @@
     "licenseOrgMembersSectionAll": "Membros",
     "@licenseOrgMembersSectionAll": {
         "description": "Single section title at the top of the License Org Members sheet. Replaces the older 'Active members' + 'Revoked' dual-section design: tiles now render in one unified list and their visual styling (bright accent for active, dim person-off for revoked) carries the categorical signal."
+    },
+    "licenseOrgAuditActorYou": "tu",
+    "@licenseOrgAuditActorYou": {
+        "description": "Actor label on a Recent Activity / Audit Log row when the actor uid matches the currently signed-in user. Replaces the opaque #ABCDEF prefix so users do not mistake their own actions (org_purchased, license_org_renamed, seat_revoked_manual, etc.) for someone else's history on a freshly-created org. Lowercase to match the singular-word pattern used in licenseOrgMembersYouBadge."
+    },
+    "@licenseOrgInviteMintSheetBody": {
+        "description": "Body copy on the mint-invite bottom sheet explaining the multi-use shareable-link contract. One persistent link per group; redeems decrement remaining capacity until the seat cap fills."
+    },
+    "licenseOrgInviteMintUsage": "{used} de {total} entradas usadas",
+    "@licenseOrgInviteMintUsage": {
+        "description": "Subtitle on the rendered invite link tile showing how many people have redeemed vs the cap.",
+        "placeholders": {
+            "used": {
+                "type": "int",
+                "example": "2"
+            },
+            "total": {
+                "type": "int",
+                "example": "10"
+            }
+        }
+    },
+    "licenseOrgInviteMintExhausted": "Vagas esgotadas — regenera depois de revogar",
+    "@licenseOrgInviteMintExhausted": {
+        "description": "Subtitle when usedCount has reached maxUses; owner needs to revoke someone or buy more seats."
+    },
+    "licenseOrgInviteRegenerateAction": "Regenerar link",
+    "@licenseOrgInviteRegenerateAction": {
+        "description": "Secondary action that mints a fresh URL and invalidates the current link."
+    },
+    "licenseOrgInviteRegenerateConfirmTitle": "Gerar um novo link?",
+    "@licenseOrgInviteRegenerateConfirmTitle": {
+        "description": "Title of the regenerate-confirm sheet."
+    },
+    "licenseOrgInviteRegenerateConfirmBody": "Quem ainda não entrou vai precisar do novo link. Quem já entrou mantém o acesso.",
+    "@licenseOrgInviteRegenerateConfirmBody": {
+        "description": "Body copy reassuring already-joined members keep access."
+    },
+    "licenseOrgInviteRegenerateConfirmButton": "Gerar novo link",
+    "@licenseOrgInviteRegenerateConfirmButton": {
+        "description": "Primary destructive button on the regenerate-confirm sheet."
+    },
+    "licenseOrgInviteRegenerateCancelButton": "Manter link atual",
+    "@licenseOrgInviteRegenerateCancelButton": {
+        "description": "Secondary cancel button on the regenerate-confirm sheet."
+    },
+    "licenseOrgInviteRegenerateSuccess": "Novo link gerado · o antigo já não é válido",
+    "@licenseOrgInviteRegenerateSuccess": {
+        "description": "Snackbar shown after a successful regenerate."
+    },
+    "@licenseOrgInviteMintSubmit": {
+        "description": "Submit button label on the mint-invite sheet. Calls inviteLicenseOrgMember and renders the resulting URL."
     }
 }

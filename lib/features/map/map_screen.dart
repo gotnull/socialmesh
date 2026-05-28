@@ -341,15 +341,19 @@ class _MapScreenState extends ConsumerState<MapScreen>
     _compassSubscription = FlutterCompass.events?.listen((event) {
       final heading = event.heading;
       if (heading == null || !mounted) return;
+      // FlutterCompass heading is degrees CW from north (device facing).
+      // flutter_map rotates content by +rotation (CW), so to put the
+      // facing-direction at the top of the map we apply the inverse.
+      final newRotation = -heading;
       // Skip tiny changes to reduce redraws (accounts for 360°/0° wrap)
-      final diff = ((heading - _mapRotation + 540) % 360) - 180;
+      final diff = ((newRotation - _mapRotation + 540) % 360) - 180;
       if (diff.abs() < 1.0) return;
       _mapController.safeMoveAndRotate(
         _mapController.camera.center,
         _currentZoom,
-        heading,
+        newRotation,
       );
-      _mapRotation = heading;
+      _mapRotation = newRotation;
     });
     if (_compassSubscription != null) {
       setState(() => _headingUpMode = true);

@@ -43962,6 +43962,9 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get licenseOrgAuditActorYou => 'du';
+
+  @override
   String get licenseOrgMembersYouBadge => 'Sie';
 
   @override
@@ -44178,13 +44181,43 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get licenseOrgInviteMintSheetBody =>
-      'Erstellen Sie einen einmaligen Einladungslink. Senden Sie ihn an ein Mitglied; sobald es auf Beitreten tippt, wird der Link verbraucht. Standardablauf ist 7 Tage.';
+      'Teile diesen Link, damit andere deiner Gruppe beitreten können. Er funktioniert, bis du dein Limit erreichst, oder läuft nach 7 Tagen ab.';
+
+  @override
+  String licenseOrgInviteMintUsage(int used, int total) {
+    return '$used von $total Beitritten verwendet';
+  }
+
+  @override
+  String get licenseOrgInviteMintExhausted =>
+      'Alle Plätze belegt — nach einer Entziehung neu erstellen';
+
+  @override
+  String get licenseOrgInviteRegenerateAction => 'Link neu erstellen';
+
+  @override
+  String get licenseOrgInviteRegenerateConfirmTitle => 'Neuen Link erzeugen?';
+
+  @override
+  String get licenseOrgInviteRegenerateConfirmBody =>
+      'Wer noch nicht beigetreten ist, braucht den neuen Link. Bereits beigetretene Mitglieder behalten ihren Zugriff.';
+
+  @override
+  String get licenseOrgInviteRegenerateConfirmButton => 'Neuen Link erzeugen';
+
+  @override
+  String get licenseOrgInviteRegenerateCancelButton =>
+      'Aktuellen Link behalten';
+
+  @override
+  String get licenseOrgInviteRegenerateSuccess =>
+      'Neuer Link erzeugt · der alte ist nicht mehr gültig';
 
   @override
   String get licenseOrgInviteMintProductLabel => 'Sitz-Produkt';
 
   @override
-  String get licenseOrgInviteMintSubmit => 'Einladungslink erstellen';
+  String get licenseOrgInviteMintSubmit => 'Teilbaren Link erzeugen';
 
   @override
   String get licenseOrgInviteMintCopyAction => 'Link kopieren';

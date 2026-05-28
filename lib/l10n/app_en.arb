@@ -57835,6 +57835,10 @@
             }
         }
     },
+    "licenseOrgAuditActorYou": "you",
+    "@licenseOrgAuditActorYou": {
+        "description": "Actor label on a Recent Activity / Audit Log row when the actor uid matches the currently signed-in user. Replaces the opaque #ABCDEF prefix so users do not mistake their own actions (org_purchased, license_org_renamed, seat_revoked_manual, etc.) for someone else's history on a freshly-created org. Lowercase to match the singular-word pattern used in licenseOrgMembersYouBadge."
+    },
     "licenseOrgMembersYouBadge": "you",
     "@licenseOrgMembersYouBadge": {
         "description": "Inline badge rendered next to the current user's row in the License Org Members sheet so the viewer can pick themselves out at a glance."
@@ -58104,15 +58108,51 @@
     "@licenseOrgInviteMintSheetTitle": {
         "description": "Title at the top of the mint-invite bottom sheet that the admin opens via the Invite member action."
     },
-    "licenseOrgInviteMintSheetBody": "Create a single-use invite link. Send it to one member; once they tap Join, the link is consumed. Default expiry is 7 days.",
+    "licenseOrgInviteMintSheetBody": "Share this link to let people join your group. It works until you're at capacity or it expires in 7 days.",
     "@licenseOrgInviteMintSheetBody": {
-        "description": "Body copy on the mint-invite bottom sheet explaining the invite lifecycle in one line."
+        "description": "Body copy on the mint-invite bottom sheet explaining the multi-use shareable-link contract. One persistent link per group; redeems decrement remaining capacity until the seat cap fills."
+    },
+    "licenseOrgInviteMintUsage": "{used} of {total} joins used",
+    "@licenseOrgInviteMintUsage": {
+        "description": "Subtitle on the rendered invite link tile showing how many people have redeemed vs the cap. Used here means: people who have already redeemed and consumed a seat.",
+        "placeholders": {
+            "used": { "type": "int", "example": "2" },
+            "total": { "type": "int", "example": "10" }
+        }
+    },
+    "licenseOrgInviteMintExhausted": "All seats taken — regenerate after revoking",
+    "@licenseOrgInviteMintExhausted": {
+        "description": "Subtitle shown on the rendered invite link tile when usedCount has reached maxUses. The link no longer admits new joins; owner needs to revoke someone or buy more seats."
+    },
+    "licenseOrgInviteRegenerateAction": "Regenerate link",
+    "@licenseOrgInviteRegenerateAction": {
+        "description": "Secondary action on the rendered invite link tile that mints a fresh URL. Replaces the current link — anyone holding the previous URL will see 'this invite was cancelled'."
+    },
+    "licenseOrgInviteRegenerateConfirmTitle": "Generate a new link?",
+    "@licenseOrgInviteRegenerateConfirmTitle": {
+        "description": "Title of the confirm sheet that opens when the owner taps Regenerate. Warns that the current link will be invalidated."
+    },
+    "licenseOrgInviteRegenerateConfirmBody": "Anyone who hasn't joined yet will need the new link. People who already joined keep their access.",
+    "@licenseOrgInviteRegenerateConfirmBody": {
+        "description": "Body copy of the regenerate-confirm sheet. Reassures that already-joined members keep access; only pending-joiners are affected."
+    },
+    "licenseOrgInviteRegenerateConfirmButton": "Generate new link",
+    "@licenseOrgInviteRegenerateConfirmButton": {
+        "description": "Primary destructive button on the regenerate-confirm sheet."
+    },
+    "licenseOrgInviteRegenerateCancelButton": "Keep current link",
+    "@licenseOrgInviteRegenerateCancelButton": {
+        "description": "Secondary cancel button on the regenerate-confirm sheet."
+    },
+    "licenseOrgInviteRegenerateSuccess": "New link generated · old link is no longer valid",
+    "@licenseOrgInviteRegenerateSuccess": {
+        "description": "Snackbar shown after a successful regenerate. Tells the owner both that the new link is ready AND that the previous URL is dead."
     },
     "licenseOrgInviteMintProductLabel": "Seat product",
     "@licenseOrgInviteMintProductLabel": {
         "description": "Label for the product picker in the mint-invite sheet. Owner picks which seat the invitee gets allocated."
     },
-    "licenseOrgInviteMintSubmit": "Generate invite link",
+    "licenseOrgInviteMintSubmit": "Generate shareable link",
     "@licenseOrgInviteMintSubmit": {
         "description": "Submit button label on the mint-invite sheet. Calls inviteLicenseOrgMember and renders the resulting URL."
     },

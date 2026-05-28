@@ -33,6 +33,7 @@ import '../../providers/license_org_audit_providers.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/license_org.dart';
 import '../../models/license_org_membership.dart';
+import '../../providers/auth_providers.dart';
 import '../../providers/license_org_members_providers.dart';
 import '../../providers/license_org_overview_providers.dart';
 import '../../providers/seat_allocation_providers.dart';
@@ -621,16 +622,31 @@ class _RecentActivitySection extends ConsumerWidget {
   }
 }
 
-class _AuditRow extends StatelessWidget {
+class _AuditRow extends ConsumerWidget {
   final LicenseOrgAuditEvent event;
 
   const _AuditRow({required this.event});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final isRejected = event.outcome == LicenseOrgAuditOutcome.rejected;
     final outcomeColor = isRejected ? AppTheme.errorRed : AppTheme.successGreen;
+    // Resolve "you" for the actor label so a freshly-created org's
+    // own-purchase + own-rename rows don't surface as opaque uid
+    // labels that the user mistakes for someone else's history.
+    // Mirrors the `_YouBadge` pattern already used on the members
+    // tile. Owner / system actors fall through to the default
+    // `event.actorDisplayLabel` (#ABCDEF for member uids, "system"
+    // verbatim for backend-cascade rows).
+    final currentUid = ref.watch(currentUserProvider)?.uid;
+    final isSelf =
+        currentUid != null &&
+        currentUid.isNotEmpty &&
+        event.actorUid == currentUid;
+    final actorLabel = isSelf
+        ? l10n.licenseOrgAuditActorYou
+        : event.actorDisplayLabel;
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -661,7 +677,7 @@ class _AuditRow extends StatelessWidget {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text(
-                      event.actorDisplayLabel,
+                      actorLabel,
                       style: TextStyle(
                         fontSize: 12,
                         color: context.textTertiary,
@@ -825,8 +841,53 @@ class _InviteMintSheet extends ConsumerStatefulWidget {
 class _InviteMintSheetState extends ConsumerState<_InviteMintSheet>
     with LifecycleSafeMixin {
   bool _busy = false;
+  // Initial load state: ConsumerState reaches build() before
+  // initState's async work completes, so we keep the "loading" pill
+  // separate from `_busy` (which means a network mint is in flight).
+  bool _loading = true;
   String? _acceptUrl;
+  int? _maxUses;
+  int _usedCount = 0;
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    // Multi-use shareable-link contract: on open we ask the backend
+    // for the EXISTING active invite (if any) and show it. Owners
+    // who already minted a link see it again, with usage stats,
+    // instead of accidentally minting a fresh one and invalidating
+    // the URL they already shared.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadExisting());
+  }
+
+  Future<void> _loadExisting() async {
+    final service = LicenseOrgInviteService();
+    final result = await service.getActiveInvite(
+      licenseOrgId: widget.orgId,
+      productId: RevenueCatConfig.completePackProductId,
+    );
+    if (!mounted) return;
+    switch (result) {
+      case GetActiveInviteFound(
+        :final acceptUrl,
+        :final maxUses,
+        :final usedCount,
+      ):
+        setState(() {
+          _loading = false;
+          _acceptUrl = acceptUrl;
+          _maxUses = maxUses;
+          _usedCount = usedCount;
+        });
+      case GetActiveInviteNone():
+      case GetActiveInviteFailure():
+        // No existing invite (or read failed) — owner needs to
+        // mint a fresh one. The error case degrades silently to
+        // the empty state since the mint call can still succeed.
+        setState(() => _loading = false);
+    }
+  }
 
   Future<void> _mint() async {
     if (_busy) return;
@@ -841,17 +902,46 @@ class _InviteMintSheetState extends ConsumerState<_InviteMintSheet>
     );
     if (!mounted) return;
     switch (result) {
-      case MintInviteSuccess(:final acceptUrl):
+      case MintInviteSuccess(
+        :final acceptUrl,
+        :final maxUses,
+        :final replacedPrevious,
+      ):
         setState(() {
           _busy = false;
           _acceptUrl = acceptUrl;
+          _maxUses = maxUses;
+          _usedCount = 0;
         });
+        // Owner-facing snackbar: the regenerate-success line tells
+        // them BOTH that the new link is ready AND that the old
+        // one is dead. Skipped on the first mint (no previous to
+        // replace).
+        if (replacedPrevious) {
+          showSuccessSnackBar(
+            context,
+            context.l10n.licenseOrgInviteRegenerateSuccess,
+          );
+        }
       case MintInviteFailure():
         setState(() {
           _busy = false;
           _errorMessage = context.l10n.licenseOrgInviteMintGenericError;
         });
     }
+  }
+
+  /// Two-step regenerate: confirm-then-mint. The confirm sheet
+  /// warns the owner that the current URL will stop working, so a
+  /// tap that was meant as "copy link" doesn't silently invalidate
+  /// the link they already shared.
+  Future<void> _confirmRegenerate() async {
+    final confirmed = await AppBottomSheet.show<bool>(
+      context: context,
+      child: _RegenerateConfirmSheet(),
+    );
+    if (confirmed != true || !mounted) return;
+    await _mint();
   }
 
   Future<void> _copy() async {
@@ -866,6 +956,14 @@ class _InviteMintSheetState extends ConsumerState<_InviteMintSheet>
     final url = _acceptUrl;
     if (url == null) return;
     await SharePlus.instance.share(ShareParams(text: url));
+  }
+
+  String? _usageText(AppLocalizations l10n) {
+    final maxUses = _maxUses;
+    if (maxUses == null) return null;
+    if (maxUses == 0) return l10n.licenseOrgInviteMintExhausted;
+    if (_usedCount >= maxUses) return l10n.licenseOrgInviteMintExhausted;
+    return l10n.licenseOrgInviteMintUsage(_usedCount, maxUses);
   }
 
   @override
@@ -899,7 +997,14 @@ class _InviteMintSheetState extends ConsumerState<_InviteMintSheet>
             ),
           ),
           const SizedBox(height: AppTheme.spacing20),
-          if (_acceptUrl == null) ...[
+          if (_loading) ...[
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: AppTheme.spacing20),
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          ] else if (_acceptUrl == null) ...[
             if (_errorMessage != null) ...[
               StatusBanner.error(
                 title: _errorMessage!,
@@ -930,15 +1035,24 @@ class _InviteMintSheetState extends ConsumerState<_InviteMintSheet>
                 ),
               ),
             ),
+            if (_usageText(l10n) != null) ...[
+              const SizedBox(height: AppTheme.spacing8),
+              Text(
+                _usageText(l10n)!,
+                style: textTheme.bodySmall?.copyWith(
+                  color: context.textTertiary,
+                ),
+              ),
+            ],
             const SizedBox(height: AppTheme.spacing16),
             PrimaryGradientButton(
               label: l10n.licenseOrgInviteMintShareLabel,
               icon: Icons.ios_share,
-              onPressed: _share,
+              onPressed: _busy ? null : _share,
             ),
             const SizedBox(height: AppTheme.spacing8),
             TextButton.icon(
-              onPressed: _copy,
+              onPressed: _busy ? null : _copy,
               icon: const Icon(Icons.copy, size: AppTheme.spacing16),
               label: Text(l10n.licenseOrgInviteMintCopyAction),
               style: TextButton.styleFrom(
@@ -948,7 +1062,76 @@ class _InviteMintSheetState extends ConsumerState<_InviteMintSheet>
                 ),
               ),
             ),
+            TextButton.icon(
+              onPressed: _busy ? null : _confirmRegenerate,
+              icon: const Icon(Icons.refresh, size: AppTheme.spacing16),
+              label: Text(l10n.licenseOrgInviteRegenerateAction),
+              style: TextButton.styleFrom(
+                foregroundColor: context.textSecondary,
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppTheme.spacing12,
+                ),
+              ),
+            ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Confirm sheet shown when the owner taps Regenerate. Warns that
+/// the current link will be invalidated. Pops `true` on confirm,
+/// `false`/`null` on cancel.
+class _RegenerateConfirmSheet extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.all(AppTheme.spacing16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.licenseOrgInviteRegenerateConfirmTitle,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: context.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          Text(
+            l10n.licenseOrgInviteRegenerateConfirmBody,
+            style: TextStyle(
+              fontSize: 13,
+              color: context.textSecondary,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text(l10n.licenseOrgInviteRegenerateCancelButton),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppTheme.warningYellow,
+                    foregroundColor: Colors.black,
+                  ),
+                  child: Text(l10n.licenseOrgInviteRegenerateConfirmButton),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -1077,14 +1260,17 @@ class _NameOrgSheetState extends State<_NameOrgSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    // `AppBottomSheet.show` already adds its own
+    // `MediaQuery.viewInsets.bottom` padding on the outer shell to
+    // lift the sheet above the keyboard, AND its own `padding`
+    // (default `EdgeInsets.fromLTRB(24, 0, 24, 24)`) around the
+    // child. Adding viewInsets.bottom HERE too produced a double
+    // keyboard-height bottom padding which the user surfaced on
+    // 2026-05-28 as "full screen ... massive amount of white
+    // space" beneath the buttons when the keyboard was up. Keep
+    // padding-bottom minimal here; the shell handles the rest.
     return Padding(
-      padding: EdgeInsets.only(
-        left: AppTheme.spacing16,
-        right: AppTheme.spacing16,
-        top: AppTheme.spacing16,
-        // Lift above the keyboard so the input row stays visible.
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppTheme.spacing16,
-      ),
+      padding: const EdgeInsets.only(top: AppTheme.spacing4),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
