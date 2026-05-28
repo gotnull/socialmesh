@@ -98,7 +98,7 @@ dependencies:
   firebase_core: ^4.8.0
   firebase_analytics: ^12.4.1
   firebase_auth: ^6.5.1
-  firebase_storage: ^13.1.0
+  firebase_storage: ^13.4.1
   firebase_messaging: ^16.2.2
   characters: ^1.4.0
   cloud_firestore: ^6.4.1
