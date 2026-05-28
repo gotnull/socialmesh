@@ -37,9 +37,29 @@ import '../../providers/license_org_members_providers.dart';
 import '../../providers/license_org_overview_providers.dart';
 import '../../providers/seat_allocation_providers.dart';
 import '../../services/license_org/license_org_invite_service.dart';
+import '../../services/license_org/license_org_settings_service.dart';
 import '../../utils/snackbar.dart';
 import 'license_org_audit_log_screen.dart';
 import 'license_org_members_sheet.dart';
+
+/// Session-scoped set of orgIds the auto-prompt has already fired for
+/// in this app launch. An owner who dismisses the prompt with "Not
+/// yet" is not nagged again until next launch — the edit-name icon
+/// remains available for a manual rename. Stored as a module-level
+/// Set rather than a Riverpod provider because: (a) this state is
+/// purely UI-ephemeral, (b) it must survive widget tear-downs (the
+/// card unmounts when the user navigates away then back), and (c)
+/// reaching for a provider would tempt persistence and turn a UX
+/// nudge into a permanent piece of user state.
+final Set<String> _autoPromptedOrgIds = <String>{};
+
+/// Test seam: clear the auto-prompt set between widget tests so each
+/// scenario starts from a clean session. Not exposed publicly outside
+/// the test library.
+@visibleForTesting
+void debugResetLicenseOrgAutoPromptSet() {
+  _autoPromptedOrgIds.clear();
+}
 
 /// Reads the per-org providers for [orgId] and renders the canonical
 /// [SectionTitle] + [InfoTable] card.
@@ -76,13 +96,81 @@ class LicenseOrgOverviewCard extends ConsumerWidget {
       orElse: () => null,
     );
 
-    final displayName = (org?.name.isNotEmpty ?? false) ? org!.name : orgId;
+    // Display name: real stored name takes priority; falls back to a
+    // neutral placeholder ("Unnamed community" in en, localised
+    // per-locale) instead of the raw orgId slug. The slug is an
+    // internal artifact - exposing it (e.g. "cleanrun-pack-ten") is
+    // the load-bearing UX gap this slice closes. Owners see an edit
+    // affordance in the title trailing slot; non-owners just see the
+    // current name.
+    final hasStoredName = org?.name.isNotEmpty ?? false;
+    final displayName = hasStoredName
+        ? org!.name
+        : l10n.licenseOrgNameEmptyPlaceholder;
     final status = org?.status ?? LicenseOrgStatus.unknown;
+    final isOwner = role == LicenseOrgMemberRole.owner;
+
+    // Auto-prompt the name sheet the first time an owner lands on a
+    // card for an org that has no name yet. Conditions to fire (all
+    // must hold):
+    //   - org doc has actually loaded (we know name is empty, not
+    //     just "not yet loaded")
+    //   - caller is the owner (admins / members don't see the
+    //     affordance at all)
+    //   - org isn't suspended (a paused org has bigger problems than
+    //     a missing name; don't pile a sheet on top)
+    //   - this orgId hasn't already triggered a prompt this session
+    //     so a "Not yet" dismissal stays sticky until the next launch
+    // Scheduled via postFrameCallback so the sheet animates on top
+    // of the fully-laid-out screen rather than competing with the
+    // overview's initial paint.
+    final shouldAutoPromptName =
+        org != null &&
+        !hasStoredName &&
+        isOwner &&
+        status == LicenseOrgStatus.active &&
+        !_autoPromptedOrgIds.contains(orgId);
+    if (shouldAutoPromptName) {
+      _autoPromptedOrgIds.add(orgId);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted) return;
+        _openNameSheet(context, ref, orgId: orgId, currentName: '');
+      });
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SectionTitle(title: displayName),
+        SectionTitle(
+          // Community names are user-generated and can be up to 50
+          // chars — well past the title's natural width on small
+          // devices. Marquee instead of fading so the owner doesn't
+          // lose the tail of their own name.
+          title: displayName,
+          marquee: true,
+          trailing: isOwner
+              ? IconButton(
+                  tooltip: l10n.licenseOrgNameSheetEditButton,
+                  icon: Icon(
+                    Icons.edit_outlined,
+                    color: context.textSecondary,
+                    size: 18,
+                  ),
+                  onPressed: () => _openNameSheet(
+                    context,
+                    ref,
+                    orgId: orgId,
+                    currentName: hasStoredName ? org!.name : '',
+                  ),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                  visualDensity: VisualDensity.compact,
+                )
+              : null,
+        ),
         const SizedBox(height: AppTheme.spacing12),
         InfoTable(
           rows: [
@@ -664,6 +752,8 @@ class _AuditRow extends StatelessWidget {
         return Icons.warning_amber_outlined;
       case LicenseOrgAuditAction.orgSuspendedDrained:
         return Icons.block_outlined;
+      case LicenseOrgAuditAction.licenseOrgRenamed:
+        return Icons.edit_outlined;
       case LicenseOrgAuditAction.unknown:
         return Icons.history_outlined;
     }
@@ -693,6 +783,8 @@ class _AuditRow extends StatelessWidget {
         return l10n.licenseOrgAuditActionOrgSeatRevokedRefund;
       case LicenseOrgAuditAction.orgSuspendedDrained:
         return l10n.licenseOrgAuditActionOrgSuspendedDrained;
+      case LicenseOrgAuditAction.licenseOrgRenamed:
+        return l10n.licenseOrgAuditActionLicenseOrgRenamed;
       case LicenseOrgAuditAction.unknown:
         return l10n.licenseOrgAuditActionUnknown;
     }
@@ -853,6 +945,218 @@ class _InviteMintSheetState extends ConsumerState<_InviteMintSheet>
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// Name your community
+// =============================================================================
+
+/// Owner-only sheet trigger. Opens an `AppBottomSheet` with the
+/// inline `_NameOrgSheet` body. Submits via [LicenseOrgSettingsService]
+/// and surfaces a success / no-change / error snackbar.
+///
+/// [orgId] is passed explicitly because [BuildContext.findAncestorWidgetOfExactType]
+/// walks UP from the calling element and EXCLUDES the starting element
+/// — so calling it with the card's own context would skip the card
+/// and either grab a wrong ancestor (multiple cards in a list) or
+/// return null. The earlier attempt to use the ancestor lookup
+/// resolved to `''` and the backend rejected with `invalid-argument`,
+/// which was a silent UX bug because the error snackbar shape
+/// matched a valid-but-empty rename request.
+Future<void> _openNameSheet(
+  BuildContext context,
+  WidgetRef ref, {
+  required String orgId,
+  required String currentName,
+}) {
+  return AppBottomSheet.show<void>(
+    context: context,
+    child: _NameOrgSheet(
+      currentName: currentName,
+      onSubmit: (name) async {
+        final l10n = context.l10n;
+        final service = LicenseOrgSettingsService();
+        final result = await service.updateName(
+          licenseOrgId: orgId,
+          name: name,
+        );
+        if (!context.mounted) return;
+        switch (result) {
+          case UpdateLicenseOrgNameSuccess(:final noChange):
+            Navigator.of(context).pop();
+            if (noChange) {
+              showInfoSnackBar(context, l10n.licenseOrgNameSaveNoChange);
+            } else {
+              showSuccessSnackBar(context, l10n.licenseOrgNameSaveSuccess);
+            }
+          case UpdateLicenseOrgNameFailure(:final reason):
+            showErrorSnackBar(context, _nameErrorMessage(l10n, reason));
+        }
+      },
+    ),
+  );
+}
+
+String _nameErrorMessage(
+  AppLocalizations l10n,
+  UpdateLicenseOrgNameReason reason,
+) {
+  switch (reason) {
+    case UpdateLicenseOrgNameReason.permissionDenied:
+      return l10n.licenseOrgNameErrorPermission;
+    case UpdateLicenseOrgNameReason.invalidArgument:
+      // Surfaced via the field's own errorText too; the snackbar is
+      // a belt-and-braces for the rare case where the field passes
+      // a value the server still rejects (e.g. trim differences).
+      return l10n.licenseOrgNameValidationEmpty;
+    case UpdateLicenseOrgNameReason.notFound:
+    case UpdateLicenseOrgNameReason.unauthenticated:
+    case UpdateLicenseOrgNameReason.generic:
+      return l10n.licenseOrgNameErrorGeneric;
+  }
+}
+
+class _NameOrgSheet extends StatefulWidget {
+  final String currentName;
+  final Future<void> Function(String name) onSubmit;
+
+  const _NameOrgSheet({required this.currentName, required this.onSubmit});
+
+  @override
+  State<_NameOrgSheet> createState() => _NameOrgSheetState();
+}
+
+class _NameOrgSheetState extends State<_NameOrgSheet> {
+  late final TextEditingController _controller;
+  String? _errorText;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.currentName);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _onSave() async {
+    if (_saving) return;
+    final l10n = context.l10n;
+    final raw = _controller.text.trim();
+    if (raw.isEmpty) {
+      setState(() => _errorText = l10n.licenseOrgNameValidationEmpty);
+      return;
+    }
+    if (raw.length > licenseOrgNameMaxLength) {
+      setState(() => _errorText = l10n.licenseOrgNameValidationTooLong);
+      return;
+    }
+    setState(() {
+      _saving = true;
+      _errorText = null;
+    });
+    try {
+      await widget.onSubmit(raw);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Padding(
+      padding: EdgeInsets.only(
+        left: AppTheme.spacing16,
+        right: AppTheme.spacing16,
+        top: AppTheme.spacing16,
+        // Lift above the keyboard so the input row stays visible.
+        bottom: MediaQuery.of(context).viewInsets.bottom + AppTheme.spacing16,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.licenseOrgNameSheetTitle,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: context.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing8),
+          Text(
+            l10n.licenseOrgNameSheetBody,
+            style: TextStyle(
+              fontSize: 13,
+              color: context.textSecondary,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            maxLength: licenseOrgNameMaxLength,
+            enabled: !_saving,
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _onSave(),
+            decoration: InputDecoration(
+              hintText: l10n.licenseOrgNameSheetHint,
+              errorText: _errorText,
+              errorMaxLines: 3,
+              filled: true,
+              fillColor: context.background,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+                borderSide: BorderSide(color: context.accentColor),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: _saving ? null : () => Navigator.of(context).pop(),
+                  child: Text(l10n.licenseOrgNameSheetCancelButton),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: _saving ? null : _onSave,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: context.accentColor,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: _saving
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(l10n.licenseOrgNameSheetSaveButton),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

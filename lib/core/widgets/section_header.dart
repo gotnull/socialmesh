@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 
 import '../theme.dart';
 import 'app_bottom_sheet.dart';
+import 'auto_scroll_text.dart';
 import 'edge_fade.dart';
 
 /// Canonical sub-section title used above cards, tables, and form groups
@@ -38,16 +39,31 @@ class SectionTitle extends StatelessWidget {
   final WidgetBuilder? helpSheetBuilder;
   final Widget? trailing;
 
+  /// When true, the title scrolls horizontally (marquee) if it
+  /// overflows the available width. Use this for user-generated
+  /// content (community names, channel names, node names) where
+  /// truncating loses information. Defaults to false so existing
+  /// fixed-copy call sites (`"CONNECTION DETAILS"`, etc.) keep
+  /// their gentle fade-out behaviour.
+  final bool marquee;
+
   const SectionTitle({
     super.key,
     required this.title,
     this.leadingIcon,
     this.helpSheetBuilder,
     this.trailing,
+    this.marquee = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final titleStyle = TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w600,
+      color: context.textTertiary,
+      letterSpacing: 1,
+    );
     return Padding(
       padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
       child: Row(
@@ -57,18 +73,24 @@ class SectionTitle extends StatelessWidget {
             const SizedBox(width: AppTheme.spacing8),
           ],
           Flexible(
-            child: Text(
-              title.toUpperCase(),
-              maxLines: 1,
-              softWrap: false,
-              overflow: TextOverflow.fade,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: context.textTertiary,
-                letterSpacing: 1,
-              ),
-            ),
+            child: marquee
+                ? AutoScrollText(
+                    title.toUpperCase(),
+                    style: titleStyle,
+                    // SectionTitle is a static header (not animated),
+                    // so the natural-feeling scroll pacing here is
+                    // slightly slower than the in-app-bar use to avoid
+                    // grabbing attention away from the InfoTable below.
+                    velocity: 28,
+                    pauseBetween: const Duration(seconds: 3),
+                  )
+                : Text(
+                    title.toUpperCase(),
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.fade,
+                    style: titleStyle,
+                  ),
           ),
           if (helpSheetBuilder != null) ...[
             const SizedBox(width: AppTheme.spacing4),

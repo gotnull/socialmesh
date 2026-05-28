@@ -87,6 +87,31 @@ void main() {
       expect(event!.action, LicenseOrgAuditAction.unknown);
     });
 
+    test('license_org_renamed wire string parses to licenseOrgRenamed', () {
+      // Pin the wire-name -> enum mapping so a refactor that drops
+      // the case (or renames the wire string) trips this test before
+      // the audit log silently demotes rename events to "Other event".
+      final event = LicenseOrgAuditEvent.fromMap('evt-rename', {
+        'licenseOrgId': 'acme',
+        'action': 'license_org_renamed',
+        'targetKind': 'license_org',
+        'targetId': 'acme',
+        'actorUid': 'owner-uid',
+        'actorRole': 'owner',
+        'outcome': 'success',
+        'metadata': const {
+          'previousName': '',
+          'newName': 'Sample Volunteer Brigade',
+        },
+      });
+      expect(event, isNotNull);
+      expect(event!.action, LicenseOrgAuditAction.licenseOrgRenamed);
+      expect(
+        LicenseOrgAuditAction.fromWire('license_org_renamed'),
+        LicenseOrgAuditAction.licenseOrgRenamed,
+      );
+    });
+
     test('unknown actorRole / targetKind / outcome collapse to unknown', () {
       final event = LicenseOrgAuditEvent.fromMap('evt-1', {
         'licenseOrgId': 'acme',

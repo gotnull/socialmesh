@@ -76217,6 +76217,12 @@ abstract class AppLocalizations {
   /// **'Org suspended'**
   String get licenseOrgAuditActionOrgSuspendedDrained;
 
+  /// Human-readable label for the license_org_renamed audit action. Written when the owner saves a new name via the License Org Overview card's edit affordance.
+  ///
+  /// In en, this message translates to:
+  /// **'Community renamed'**
+  String get licenseOrgAuditActionLicenseOrgRenamed;
+
   /// Fallback label used when an audit row carries an action enum the mobile client has not been updated to render yet.
   ///
   /// In en, this message translates to:
@@ -76492,6 +76498,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Status'**
   String get licenseOrgOverviewStatusLabel;
+
+  /// Title on the bottom sheet that lets the owner set or rename their community / group. Owners see this when the org has no name yet and via an edit affordance on the overview card.
+  ///
+  /// In en, this message translates to:
+  /// **'Name your community'**
+  String get licenseOrgNameSheetTitle;
+
+  /// Subtitle copy under the name sheet's title explaining where the name is visible and that it is editable later.
+  ///
+  /// In en, this message translates to:
+  /// **'This is what your members see in invites and the roster. You can change it anytime.'**
+  String get licenseOrgNameSheetBody;
+
+  /// Placeholder text inside the name input field on the name bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Volunteer Fire Brigade'**
+  String get licenseOrgNameSheetHint;
+
+  /// Primary button on the name sheet that submits the chosen name to the updateLicenseOrgName callable.
+  ///
+  /// In en, this message translates to:
+  /// **'Save name'**
+  String get licenseOrgNameSheetSaveButton;
+
+  /// Secondary button on the name sheet that dismisses without saving. Phrased as a soft 'come back later' rather than a hard cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Not yet'**
+  String get licenseOrgNameSheetCancelButton;
+
+  /// Trailing icon button tooltip on the License Org Overview card header that opens the name sheet so the owner can rename the org.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit name'**
+  String get licenseOrgNameSheetEditButton;
+
+  /// Error text shown under the name input when the owner tries to submit a blank or whitespace-only name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name cannot be blank'**
+  String get licenseOrgNameValidationEmpty;
+
+  /// Error text shown under the name input when the owner submits a name over 50 characters.
+  ///
+  /// In en, this message translates to:
+  /// **'Name must be 50 characters or fewer'**
+  String get licenseOrgNameValidationTooLong;
+
+  /// Success snackbar shown after the owner saves a new community name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name saved'**
+  String get licenseOrgNameSaveSuccess;
+
+  /// Info snackbar shown when the owner submits the same name that is already stored. The backend writes nothing and skips the audit row in this case.
+  ///
+  /// In en, this message translates to:
+  /// **'Name is already set to that'**
+  String get licenseOrgNameSaveNoChange;
+
+  /// Error snackbar shown when updateLicenseOrgName returns permission-denied. Admins can manage seats but cannot rename.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the group owner can rename the community'**
+  String get licenseOrgNameErrorPermission;
+
+  /// Fallback error snackbar for any other rename failure (network, internal, not-found).
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the name — try again'**
+  String get licenseOrgNameErrorGeneric;
+
+  /// Display label substituted for the raw orgId slug on the overview card and members sheet when the owner hasn't named the org yet. Replaces the legacy slug fallback like 'cleanrun-pack-ten'.
+  ///
+  /// In en, this message translates to:
+  /// **'Unnamed community'**
+  String get licenseOrgNameEmptyPlaceholder;
 
   /// Row label on the License Org Overview per-org card showing the date the current user joined that org.
   ///

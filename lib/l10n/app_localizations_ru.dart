@@ -44073,6 +44073,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Организация приостановлена';
 
   @override
+  String get licenseOrgAuditActionLicenseOrgRenamed =>
+      'Сообщество переименовано';
+
+  @override
   String get licenseOrgAuditActionUnknown => 'Другое событие';
 
   @override
@@ -44285,6 +44289,50 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get licenseOrgOverviewStatusLabel => 'Статус';
+
+  @override
+  String get licenseOrgNameSheetTitle => 'Назовите свою группу';
+
+  @override
+  String get licenseOrgNameSheetBody =>
+      'Это название ваши участники увидят в приглашениях и списке. Вы можете изменить его в любой момент.';
+
+  @override
+  String get licenseOrgNameSheetHint =>
+      'например, Добровольная пожарная дружина';
+
+  @override
+  String get licenseOrgNameSheetSaveButton => 'Сохранить название';
+
+  @override
+  String get licenseOrgNameSheetCancelButton => 'Не сейчас';
+
+  @override
+  String get licenseOrgNameSheetEditButton => 'Изменить название';
+
+  @override
+  String get licenseOrgNameValidationEmpty => 'Название не может быть пустым';
+
+  @override
+  String get licenseOrgNameValidationTooLong =>
+      'Название должно быть не длиннее 50 символов';
+
+  @override
+  String get licenseOrgNameSaveSuccess => 'Название сохранено';
+
+  @override
+  String get licenseOrgNameSaveNoChange => 'Это название уже установлено';
+
+  @override
+  String get licenseOrgNameErrorPermission =>
+      'Переименовать группу может только владелец';
+
+  @override
+  String get licenseOrgNameErrorGeneric =>
+      'Не удалось сохранить название — попробуйте снова';
+
+  @override
+  String get licenseOrgNameEmptyPlaceholder => 'Группа без названия';
 
   @override
   String get licenseOrgOverviewJoinedLabel => 'Дата вступления';

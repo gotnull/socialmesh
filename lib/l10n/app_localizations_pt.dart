@@ -44048,6 +44048,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get licenseOrgAuditActionOrgSuspendedDrained => 'Organização suspensa';
 
   @override
+  String get licenseOrgAuditActionLicenseOrgRenamed => 'Comunidade renomeada';
+
+  @override
   String get licenseOrgAuditActionUnknown => 'Outro evento';
 
   @override
@@ -44259,6 +44262,49 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get licenseOrgOverviewStatusLabel => 'Estado';
+
+  @override
+  String get licenseOrgNameSheetTitle => 'Dá um nome à tua comunidade';
+
+  @override
+  String get licenseOrgNameSheetBody =>
+      'É o que os teus membros veem nos convites e na lista. Podes mudar a qualquer altura.';
+
+  @override
+  String get licenseOrgNameSheetHint => 'ex. Bombeiros Voluntários';
+
+  @override
+  String get licenseOrgNameSheetSaveButton => 'Guardar nome';
+
+  @override
+  String get licenseOrgNameSheetCancelButton => 'Agora não';
+
+  @override
+  String get licenseOrgNameSheetEditButton => 'Editar nome';
+
+  @override
+  String get licenseOrgNameValidationEmpty => 'O nome não pode estar em branco';
+
+  @override
+  String get licenseOrgNameValidationTooLong =>
+      'O nome deve ter no máximo 50 caracteres';
+
+  @override
+  String get licenseOrgNameSaveSuccess => 'Nome guardado';
+
+  @override
+  String get licenseOrgNameSaveNoChange => 'O nome já está definido assim';
+
+  @override
+  String get licenseOrgNameErrorPermission =>
+      'Apenas o dono do grupo pode renomear a comunidade';
+
+  @override
+  String get licenseOrgNameErrorGeneric =>
+      'Não foi possível guardar o nome — tenta novamente';
+
+  @override
+  String get licenseOrgNameEmptyPlaceholder => 'Comunidade sem nome';
 
   @override
   String get licenseOrgOverviewJoinedLabel => 'Aderiu em';

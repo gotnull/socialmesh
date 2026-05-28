@@ -12948,5 +12948,61 @@
     "licenseOrgMembersRevokeErrorGeneric": "No se pudo revocar el puesto — inténtalo de nuevo",
     "@licenseOrgMembersRevokeErrorGeneric": {
         "description": "Fallback error snackbar for any other revoke failure (network, internal, not-found)."
+    },
+    "licenseOrgNameSheetTitle": "Dale un nombre a tu comunidad",
+    "@licenseOrgNameSheetTitle": {
+        "description": "Title on the bottom sheet that lets the owner set or rename their community / group. Owners see this when the org has no name yet and via an edit affordance on the overview card."
+    },
+    "licenseOrgNameSheetBody": "Es lo que tus miembros verán en las invitaciones y la lista. Puedes cambiarlo cuando quieras.",
+    "@licenseOrgNameSheetBody": {
+        "description": "Subtitle copy under the name sheet's title explaining where the name is visible and that it is editable later."
+    },
+    "licenseOrgNameSheetHint": "ej. Bomberos Voluntarios",
+    "@licenseOrgNameSheetHint": {
+        "description": "Placeholder text inside the name input field on the name bottom sheet."
+    },
+    "licenseOrgNameSheetSaveButton": "Guardar nombre",
+    "@licenseOrgNameSheetSaveButton": {
+        "description": "Primary button on the name sheet that submits the chosen name to the updateLicenseOrgName callable."
+    },
+    "licenseOrgNameSheetCancelButton": "Ahora no",
+    "@licenseOrgNameSheetCancelButton": {
+        "description": "Secondary button on the name sheet that dismisses without saving. Phrased as a soft 'come back later' rather than a hard cancel."
+    },
+    "licenseOrgNameSheetEditButton": "Editar nombre",
+    "@licenseOrgNameSheetEditButton": {
+        "description": "Trailing icon button tooltip on the License Org Overview card header that opens the name sheet so the owner can rename the org."
+    },
+    "licenseOrgNameValidationEmpty": "El nombre no puede estar vacío",
+    "@licenseOrgNameValidationEmpty": {
+        "description": "Error text shown under the name input when the owner tries to submit a blank or whitespace-only name."
+    },
+    "licenseOrgNameValidationTooLong": "El nombre debe tener 50 caracteres o menos",
+    "@licenseOrgNameValidationTooLong": {
+        "description": "Error text shown under the name input when the owner submits a name over 50 characters."
+    },
+    "licenseOrgNameSaveSuccess": "Nombre guardado",
+    "@licenseOrgNameSaveSuccess": {
+        "description": "Success snackbar shown after the owner saves a new community name."
+    },
+    "licenseOrgNameSaveNoChange": "El nombre ya está configurado así",
+    "@licenseOrgNameSaveNoChange": {
+        "description": "Info snackbar shown when the owner submits the same name that is already stored. The backend writes nothing and skips the audit row in this case."
+    },
+    "licenseOrgNameErrorPermission": "Solo el propietario del grupo puede renombrar la comunidad",
+    "@licenseOrgNameErrorPermission": {
+        "description": "Error snackbar shown when updateLicenseOrgName returns permission-denied. Admins can manage seats but cannot rename."
+    },
+    "licenseOrgNameErrorGeneric": "No se pudo guardar el nombre — inténtalo de nuevo",
+    "@licenseOrgNameErrorGeneric": {
+        "description": "Fallback error snackbar for any other rename failure (network, internal, not-found)."
+    },
+    "licenseOrgNameEmptyPlaceholder": "Comunidad sin nombre",
+    "@licenseOrgNameEmptyPlaceholder": {
+        "description": "Display label substituted for the raw orgId slug on the overview card and members sheet when the owner hasn't named the org yet. Replaces the legacy slug fallback like 'cleanrun-pack-ten'."
+    },
+    "licenseOrgAuditActionLicenseOrgRenamed": "Comunidad renombrada",
+    "@licenseOrgAuditActionLicenseOrgRenamed": {
+        "description": "Human-readable label for the license_org_renamed audit action. Written when the owner saves a new name via the License Org Overview card's edit affordance."
     }
 }

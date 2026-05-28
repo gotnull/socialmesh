@@ -37,6 +37,7 @@ enum LicenseOrgAuditAction {
   orgOwnerCollision('org_owner_collision'),
   orgSeatRevokedRefund('org_seat_revoked_refund'),
   orgSuspendedDrained('org_suspended_drained'),
+  licenseOrgRenamed('license_org_renamed'),
   unknown('');
 
   final String wire;

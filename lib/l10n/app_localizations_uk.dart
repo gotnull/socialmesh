@@ -44083,6 +44083,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Організацію призупинено';
 
   @override
+  String get licenseOrgAuditActionLicenseOrgRenamed =>
+      'Спільноту перейменовано';
+
+  @override
   String get licenseOrgAuditActionUnknown => 'Інша подія';
 
   @override
@@ -44296,6 +44300,49 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get licenseOrgOverviewStatusLabel => 'Статус';
+
+  @override
+  String get licenseOrgNameSheetTitle => 'Назвіть свою спільноту';
+
+  @override
+  String get licenseOrgNameSheetBody =>
+      'Це назва, яку ваші учасники бачать у запрошеннях і списку. Ви можете змінити її будь-коли.';
+
+  @override
+  String get licenseOrgNameSheetHint => 'напр. Добровільна пожежна охорона';
+
+  @override
+  String get licenseOrgNameSheetSaveButton => 'Зберегти назву';
+
+  @override
+  String get licenseOrgNameSheetCancelButton => 'Не зараз';
+
+  @override
+  String get licenseOrgNameSheetEditButton => 'Редагувати назву';
+
+  @override
+  String get licenseOrgNameValidationEmpty => 'Назва не може бути порожньою';
+
+  @override
+  String get licenseOrgNameValidationTooLong =>
+      'Назва має бути не довшою за 50 символів';
+
+  @override
+  String get licenseOrgNameSaveSuccess => 'Назву збережено';
+
+  @override
+  String get licenseOrgNameSaveNoChange => 'Назва вже встановлена саме така';
+
+  @override
+  String get licenseOrgNameErrorPermission =>
+      'Перейменувати спільноту може лише власник групи';
+
+  @override
+  String get licenseOrgNameErrorGeneric =>
+      'Не вдалося зберегти назву — спробуйте ще раз';
+
+  @override
+  String get licenseOrgNameEmptyPlaceholder => 'Спільнота без назви';
 
   @override
   String get licenseOrgOverviewJoinedLabel => 'Дата приєднання';

@@ -43583,6 +43583,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get licenseOrgAuditActionOrgSuspendedDrained => 'Org suspended';
 
   @override
+  String get licenseOrgAuditActionLicenseOrgRenamed => 'Community renamed';
+
+  @override
   String get licenseOrgAuditActionUnknown => 'Other event';
 
   @override
@@ -43792,6 +43795,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get licenseOrgOverviewStatusLabel => 'Status';
+
+  @override
+  String get licenseOrgNameSheetTitle => 'Name your community';
+
+  @override
+  String get licenseOrgNameSheetBody =>
+      'This is what your members see in invites and the roster. You can change it anytime.';
+
+  @override
+  String get licenseOrgNameSheetHint => 'e.g. Volunteer Fire Brigade';
+
+  @override
+  String get licenseOrgNameSheetSaveButton => 'Save name';
+
+  @override
+  String get licenseOrgNameSheetCancelButton => 'Not yet';
+
+  @override
+  String get licenseOrgNameSheetEditButton => 'Edit name';
+
+  @override
+  String get licenseOrgNameValidationEmpty => 'Name cannot be blank';
+
+  @override
+  String get licenseOrgNameValidationTooLong =>
+      'Name must be 50 characters or fewer';
+
+  @override
+  String get licenseOrgNameSaveSuccess => 'Name saved';
+
+  @override
+  String get licenseOrgNameSaveNoChange => 'Name is already set to that';
+
+  @override
+  String get licenseOrgNameErrorPermission =>
+      'Only the group owner can rename the community';
+
+  @override
+  String get licenseOrgNameErrorGeneric =>
+      'Could not save the name — try again';
+
+  @override
+  String get licenseOrgNameEmptyPlaceholder => 'Unnamed community';
 
   @override
   String get licenseOrgOverviewJoinedLabel => 'Joined';
