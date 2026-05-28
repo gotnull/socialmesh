@@ -216,6 +216,7 @@ class ExternalPurchaseService {
     String? provider,
     String? subjectKind,
     String? licenseOrgId,
+    String? licenseOrgName,
   }) async {
     final isOrgPack = subjectKind == 'org';
     AppLogging.purchase(
@@ -232,6 +233,7 @@ class ExternalPurchaseService {
       // calls stay wire-identical to pre-slice-8 behaviour.
       if (isOrgPack) 'subjectKind': 'org',
       if (isOrgPack && licenseOrgId != null) 'licenseOrgId': licenseOrgId,
+      if (isOrgPack && licenseOrgName != null) 'licenseOrgName': licenseOrgName,
       ...identity,
     });
     final descriptor = CheckoutSessionDescriptor.fromJson(response);

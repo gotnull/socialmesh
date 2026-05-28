@@ -67,6 +67,21 @@ final RegExp _licenseOrgIdPattern = RegExp(r'^[a-z0-9]([a-z0-9-]*[a-z0-9])?$');
 const int _licenseOrgIdMinLength = 3;
 const int _licenseOrgIdMaxLength = 64;
 
+// Display name bounds. Mirror the backend (slice 11) so the sheet
+// rejects empty / over-long names before round-tripping to Stripe.
+const int _licenseOrgNameMinLength = 1;
+const int _licenseOrgNameMaxLength = 50;
+
+/// Kebab-case slugifier for the auto-derive (Name → Group ID).
+/// Lowercases, replaces any run of non-alphanumeric chars with a single
+/// hyphen, trims leading/trailing hyphens. Output may still be too
+/// short or otherwise invalid; the caller validates downstream.
+String _autoSlugFromName(String name) {
+  final lower = name.toLowerCase();
+  final hyphenated = lower.replaceAll(RegExp(r'[^a-z0-9]+'), '-');
+  return hyphenated.replaceAll(RegExp(r'^-+|-+$'), '');
+}
+
 /// Input formatter that lowercases input as the user types so the
 /// visible field state matches what gets sent. Without this, users
 /// typing "Acme" see "Acme" but the server gets "acme" - confusing
@@ -123,33 +138,69 @@ class _OrgCheckoutBody extends ConsumerStatefulWidget {
 
 class _OrgCheckoutBodyState extends ConsumerState<_OrgCheckoutBody>
     with LifecycleSafeMixin<_OrgCheckoutBody> {
+  final _nameController = TextEditingController();
+  final _nameFocusNode = FocusNode();
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
   bool _submitting = false;
   String? _errorMessage;
+  // Tracks whether the user manually edited the Group ID. Once true,
+  // we stop auto-deriving the slug from the Name so we don't clobber
+  // the customisation. Reset never — only set, never cleared.
+  bool _slugTouchedByUser = false;
 
   @override
   void initState() {
     super.initState();
-    // Drive button enabled / disabled state from the text field.
-    // Keeps the Continue-to-payment CTA off until the input passes
-    // slug + reserved-namespace validation, mirroring the slice 7
-    // backend rules so users never tap into a guaranteed-reject
-    // round-trip.
-    _controller.addListener(_onTextChanged);
+    // Drive button enabled / disabled state from the text fields.
+    // Keeps the Continue-to-payment CTA off until BOTH name and slug
+    // pass validation, mirroring the backend mandatory-name rule so
+    // users never tap into a guaranteed-reject round-trip.
+    _nameController.addListener(_onNameChanged);
+    _controller.addListener(_onSlugChanged);
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_onTextChanged);
+    _nameController.removeListener(_onNameChanged);
+    _nameController.dispose();
+    _nameFocusNode.dispose();
+    _controller.removeListener(_onSlugChanged);
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
   }
 
-  void _onTextChanged() {
+  void _onNameChanged() {
+    // Auto-derive the slug from the name UNTIL the user has manually
+    // edited the slug field. After that, name edits leave the slug
+    // alone so the user's chosen id sticks. Listener is suppressed
+    // during the derive write so we don't recursively flip
+    // _slugTouchedByUser via the slug listener.
+    if (!_slugTouchedByUser) {
+      final derived = _autoSlugFromName(_nameController.text);
+      if (_controller.text != derived) {
+        _controller.removeListener(_onSlugChanged);
+        _controller.text = derived;
+        _controller.selection = TextSelection.collapsed(offset: derived.length);
+        _controller.addListener(_onSlugChanged);
+      }
+    }
+    _clearErrorAndRepaint();
+  }
+
+  void _onSlugChanged() {
+    // First user-initiated slug edit pins the field; auto-derive is
+    // suppressed from here on. Cheap predicate — once set, stays set.
+    if (!_slugTouchedByUser) {
+      _slugTouchedByUser = true;
+    }
+    _clearErrorAndRepaint();
+  }
+
+  void _clearErrorAndRepaint() {
     // Repaint so the disabled-state recomputes against the new text.
-    // Also clear any stale error from a previous failed submit -
+    // Also clear any stale error from a previous failed submit —
     // the user is now editing, the old error no longer matches the
     // current text.
     if (_errorMessage != null) {
@@ -173,9 +224,32 @@ class _OrgCheckoutBodyState extends ConsumerState<_OrgCheckoutBody>
     return trimmed;
   }
 
-  // Returns true when the current input is shape-valid for
-  // submission. Cheap to call from build() every paint.
-  bool get _isInputValid => _validateLicenseOrgId(_controller.text) != null;
+  // Display-name validation. Mirrors the backend rule: trimmed length
+  // in [1, 50]. Returns the trimmed name to send, or null when unusable.
+  String? _validateLicenseOrgName(String raw) {
+    final trimmed = raw.trim();
+    if (trimmed.length < _licenseOrgNameMinLength) return null;
+    if (trimmed.length > _licenseOrgNameMaxLength) return null;
+    return trimmed;
+  }
+
+  // Returns true when both name AND slug pass shape validation. Cheap
+  // to call from build() every paint.
+  bool get _isInputValid =>
+      _validateLicenseOrgId(_controller.text) != null &&
+      _validateLicenseOrgName(_nameController.text) != null;
+
+  // Inline error for the Name field. Empty trimmed input shows
+  // nothing (the user hasn't finished typing); over-long input shows
+  // the explicit "too long" string.
+  String? _nameInputErrorMessage(BuildContext context) {
+    final trimmed = _nameController.text.trim();
+    if (trimmed.isEmpty) return null;
+    if (trimmed.length > _licenseOrgNameMaxLength) {
+      return context.l10n.orgCheckoutNameTooLong;
+    }
+    return null;
+  }
 
   // Inline error for shape-only failures. Length-only failures stay
   // silent so the field doesn't flash an error after the first
@@ -214,6 +288,12 @@ class _OrgCheckoutBodyState extends ConsumerState<_OrgCheckoutBody>
         return context.l10n.orgCheckoutOrgIdBannedWord;
       case 'license-org-id-malformed':
         return context.l10n.orgCheckoutOrgIdInvalid;
+      case 'license-org-name-required':
+      case 'license-org-name-empty':
+      case 'license-org-name-malformed':
+        return context.l10n.orgCheckoutNameRequired;
+      case 'license-org-name-too-long':
+        return context.l10n.orgCheckoutNameTooLong;
       case 'org-pack-requires-signin':
       case 'org-pack-requires-permanent-account':
         return context.l10n.orgCheckoutSignInRequired;
@@ -223,6 +303,16 @@ class _OrgCheckoutBodyState extends ConsumerState<_OrgCheckoutBody>
   }
 
   Future<void> _submit() async {
+    final name = _validateLicenseOrgName(_nameController.text);
+    if (name == null) {
+      safeSetState(() {
+        _errorMessage =
+            _nameInputErrorMessage(context) ??
+            context.l10n.orgCheckoutNameRequired;
+      });
+      ref.haptics.error();
+      return;
+    }
     final slug = _validateLicenseOrgId(_controller.text);
     if (slug == null) {
       safeSetState(() {
@@ -247,6 +337,7 @@ class _OrgCheckoutBodyState extends ConsumerState<_OrgCheckoutBody>
         provider: 'stripe',
         subjectKind: 'org',
         licenseOrgId: slug,
+        licenseOrgName: name,
       );
       if (!mounted) return;
       AppLogging.groupLicensing(
@@ -332,9 +423,44 @@ class _OrgCheckoutBodyState extends ConsumerState<_OrgCheckoutBody>
         ),
         const SizedBox(height: AppTheme.spacing24),
         TextField(
+          controller: _nameController,
+          focusNode: _nameFocusNode,
+          autofocus: true,
+          enabled: !_submitting,
+          maxLength: _licenseOrgNameMaxLength,
+          textCapitalization: TextCapitalization.words,
+          decoration: InputDecoration(
+            labelText: context.l10n.orgCheckoutNameLabel,
+            hintText: context.l10n.orgCheckoutNameHint,
+            helperText: context.l10n.orgCheckoutNameHelp,
+            helperMaxLines: 3,
+            filled: true,
+            fillColor: context.background,
+            prefixIcon: Icon(Icons.label_outline, color: context.textSecondary),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radius8),
+              borderSide: BorderSide(color: context.accentColor),
+            ),
+            errorText: _nameInputErrorMessage(context),
+            errorMaxLines: 3,
+            counterText: '',
+          ),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: context.textPrimary,
+            fontFamily: AppTheme.fontFamily,
+          ),
+          textInputAction: TextInputAction.next,
+          onSubmitted: (_) => _focusNode.requestFocus(),
+        ),
+        const SizedBox(height: AppTheme.spacing16),
+        TextField(
           controller: _controller,
           focusNode: _focusNode,
-          autofocus: true,
           enabled: !_submitting,
           maxLength: _licenseOrgIdMaxLength,
           textCapitalization: TextCapitalization.none,

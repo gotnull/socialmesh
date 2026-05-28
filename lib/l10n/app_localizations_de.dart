@@ -1546,7 +1546,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get authMfaErrorInvalidPhoneNumber =>
-      'Bitte geben Sie eine gültige Telefonnummer mit Ländervorwahl ein (z. B. +49 123 456 789).';
+      'Wir konnten diese Telefonnummer nicht verifizieren. Geh zurück, prüfe Ländervorwahl und Ziffern, und versuch es erneut.';
 
   @override
   String get authMfaErrorInvalidTotpCode =>
@@ -26605,6 +26605,24 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get orgCheckoutSheetBody =>
       'Ihr Community Pack erstellt eine Gruppe, deren Eigentümer Sie sind. Sie belegen selbst keinen Platz; laden Sie Mitglieder ein, um den Premium-Zugriff zu teilen. Sie können Ihre Gruppe jederzeit in den Gruppeneinstellungen verwalten.';
+
+  @override
+  String get orgCheckoutNameLabel => 'Gruppenname';
+
+  @override
+  String get orgCheckoutNameHint => 'Acme Engineering';
+
+  @override
+  String get orgCheckoutNameHelp =>
+      'Wird Mitgliedern im Roster und auf Einladungslinks angezeigt. Du kannst ihn später ändern.';
+
+  @override
+  String get orgCheckoutNameRequired =>
+      'Bitte gib einen Namen für deine Gruppe ein.';
+
+  @override
+  String get orgCheckoutNameTooLong =>
+      'Der Gruppenname darf höchstens 50 Zeichen lang sein.';
 
   @override
   String get orgCheckoutOrgIdLabel => 'Gruppen-ID';

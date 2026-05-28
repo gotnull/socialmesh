@@ -72,7 +72,14 @@ class SectionTitle extends StatelessWidget {
             Icon(leadingIcon, size: 14, color: context.textTertiary),
             const SizedBox(width: AppTheme.spacing8),
           ],
-          Flexible(
+          // Expanded (not Flexible+Spacer): the previous layout left
+          // the title in a Flexible(loose) sharing flex with a Spacer,
+          // which made `trailing` sit at `title_width + 50%_of_remaining`
+          // instead of the row's right edge whenever the title was
+          // shorter than half the available width. Expanded forces the
+          // title to occupy the full remaining width, so trailing is
+          // pinned to the right regardless of title length.
+          Expanded(
             child: marquee
                 ? AutoScrollText(
                     title.toUpperCase(),
@@ -113,7 +120,7 @@ class SectionTitle extends StatelessWidget {
               ),
             ),
           ],
-          if (trailing != null) ...[const Spacer(), trailing!],
+          if (trailing != null) trailing!,
         ],
       ),
     );

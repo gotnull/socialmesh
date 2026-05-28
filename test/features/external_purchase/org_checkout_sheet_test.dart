@@ -239,7 +239,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Underscores aren't in the slug alphabet.
-      await tester.enterText(find.byType(TextField), 'acme_eng_team');
+      await tester.enterText(find.byType(TextField).first, 'Acme Eng Team');
+      await tester.enterText(find.byType(TextField).at(1), 'acme_eng_team');
       await tester.pumpAndSettle();
 
       // Inline error message appears (errorText shown under the field).
@@ -287,7 +288,8 @@ void main() {
 
       // The substring "socialmesh" matches the server's reserved rule;
       // the sheet itself no longer pre-checks this case.
-      await tester.enterText(find.byType(TextField), 'iamsocialmesh');
+      await tester.enterText(find.byType(TextField).first, 'Acme Eng Team');
+      await tester.enterText(find.byType(TextField).at(1), 'iamsocialmesh');
       await tester.pumpAndSettle();
 
       // Button is now enabled (server is authoritative).
@@ -330,7 +332,8 @@ void main() {
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), 'enterprise-pilot');
+      await tester.enterText(find.byType(TextField).first, 'Acme Eng Team');
+      await tester.enterText(find.byType(TextField).at(1), 'enterprise-pilot');
       await tester.pumpAndSettle();
 
       // Button enabled; server gets the call.
@@ -373,7 +376,8 @@ void main() {
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), 'acme-eng-team');
+      await tester.enterText(find.byType(TextField).first, 'Acme Eng Team');
+      await tester.enterText(find.byType(TextField).at(1), 'acme-eng-team');
       await tester.pumpAndSettle();
       await tester.tap(find.text('Continue to payment'));
       await tester.pumpAndSettle();
@@ -410,7 +414,8 @@ void main() {
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), 'acme-eng-team');
+      await tester.enterText(find.byType(TextField).first, 'Acme Eng Team');
+      await tester.enterText(find.byType(TextField).at(1), 'acme-eng-team');
       await tester.pumpAndSettle();
       await tester.tap(find.text('Continue to payment'));
       await tester.pumpAndSettle();
@@ -447,7 +452,8 @@ void main() {
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), 'plausible-slug');
+      await tester.enterText(find.byType(TextField).first, 'Plausible Slug');
+      await tester.enterText(find.byType(TextField).at(1), 'plausible-slug');
       await tester.pumpAndSettle();
       await tester.tap(find.text('Continue to payment'));
       await tester.pumpAndSettle();
@@ -484,7 +490,8 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextField), 'acme-eng-team');
+    await tester.enterText(find.byType(TextField).first, 'Acme Eng Team');
+    await tester.enterText(find.byType(TextField).at(1), 'acme-eng-team');
     await tester.pumpAndSettle();
     await tester.tap(find.text('Continue to payment'));
     await tester.pumpAndSettle();
@@ -518,11 +525,13 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tap-enter uppercase; formatter should immediately lowercase.
-      await tester.enterText(find.byType(TextField), 'ACME-Eng-Team');
+      await tester.enterText(find.byType(TextField).first, 'Acme Eng Team');
+      await tester.enterText(find.byType(TextField).at(1), 'ACME-Eng-Team');
       await tester.pumpAndSettle();
 
-      // The field's controller text should be lowercase.
-      final field = tester.widget<TextField>(find.byType(TextField));
+      // The slug field's controller text should be lowercase. .at(1)
+      // is the slug field; .first is the Name field.
+      final field = tester.widget<TextField>(find.byType(TextField).at(1));
       expect(field.controller!.text, 'acme-eng-team');
     },
   );
@@ -544,7 +553,8 @@ void main() {
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), 'acme-eng-team');
+      await tester.enterText(find.byType(TextField).first, 'Acme Eng Team');
+      await tester.enterText(find.byType(TextField).at(1), 'acme-eng-team');
       await tester.pumpAndSettle();
 
       final btn = tester.widget<FilledButton>(find.byType(FilledButton));
@@ -585,7 +595,8 @@ void main() {
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), 'acme-eng-team');
+      await tester.enterText(find.byType(TextField).first, 'Acme Eng Team');
+      await tester.enterText(find.byType(TextField).at(1), 'acme-eng-team');
       // Pump for the controller listener + setState so the FilledButton
       // re-enables (slice 10a: button is disabled until input passes
       // client-side validation).
@@ -600,6 +611,7 @@ void main() {
       expect(call.data['provider'], 'stripe');
       expect(call.data['subjectKind'], 'org');
       expect(call.data['licenseOrgId'], 'acme-eng-team');
+      expect(call.data['licenseOrgName'], 'Acme Eng Team');
 
       expect(captured, isNotNull);
       expect(captured!.sessionId, 'sess-1');
@@ -628,7 +640,8 @@ void main() {
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), '  ACME-Eng-Team  ');
+      await tester.enterText(find.byType(TextField).first, 'Acme Eng Team');
+      await tester.enterText(find.byType(TextField).at(1), '  ACME-Eng-Team  ');
       await tester.pumpAndSettle();
       await tester.tap(find.text('Continue to payment'));
       await tester.pumpAndSettle();
@@ -659,7 +672,8 @@ void main() {
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), 'acme-eng-team');
+      await tester.enterText(find.byType(TextField).first, 'Acme Eng Team');
+      await tester.enterText(find.byType(TextField).at(1), 'acme-eng-team');
       // Pump for the controller listener + setState so the FilledButton
       // re-enables (slice 10a: button is disabled until input passes
       // client-side validation).
@@ -699,7 +713,8 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextField), 'acme-eng-team');
+    await tester.enterText(find.byType(TextField).first, 'Acme Eng Team');
+    await tester.enterText(find.byType(TextField).at(1), 'acme-eng-team');
     await tester.pumpAndSettle();
     await tester.tap(find.text('Continue to payment'));
     await tester.pumpAndSettle();
@@ -730,6 +745,7 @@ void main() {
       final data = invoker.calls.single.data;
       expect(data.containsKey('subjectKind'), isFalse);
       expect(data.containsKey('licenseOrgId'), isFalse);
+      expect(data.containsKey('licenseOrgName'), isFalse);
     },
   );
 }

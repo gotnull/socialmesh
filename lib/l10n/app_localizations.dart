@@ -2811,7 +2811,7 @@ abstract class AppLocalizations {
   /// Error when phone number format is invalid
   ///
   /// In en, this message translates to:
-  /// **'Please enter a valid phone number with country code (e.g. +1 234 567 890).'**
+  /// **'We couldn\'t verify that phone number. Go back and check the country code and digits, then try again.'**
   String get authMfaErrorInvalidPhoneNumber;
 
   /// Error when TOTP authenticator code is wrong
@@ -45951,6 +45951,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your Community Pack creates a group you own. You won\'t use a seat yourself; invite members to share premium access. You can manage your group anytime from group settings.'**
   String get orgCheckoutSheetBody;
+
+  /// Display-name text field label inside the org checkout sheet. The slug (Group ID) is auto-derived from this field.
+  ///
+  /// In en, this message translates to:
+  /// **'Group name'**
+  String get orgCheckoutNameLabel;
+
+  /// Placeholder shown in the group name text field.
+  ///
+  /// In en, this message translates to:
+  /// **'Acme Engineering'**
+  String get orgCheckoutNameHint;
+
+  /// Helper text below the group name field explaining where the display name surfaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown to members in the roster and on invite links. You can change it later.'**
+  String get orgCheckoutNameHelp;
+
+  /// Validation error when the group name field is empty at submit.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a name for your group.'**
+  String get orgCheckoutNameRequired;
+
+  /// Validation error when the group name exceeds the 50-character backend limit.
+  ///
+  /// In en, this message translates to:
+  /// **'Group name must be 50 characters or fewer.'**
+  String get orgCheckoutNameTooLong;
 
   /// Text field label inside the org checkout sheet.
   ///

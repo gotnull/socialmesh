@@ -1545,7 +1545,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get authMfaErrorInvalidPhoneNumber =>
-      'Inserisci un numero di telefono valido con prefisso internazionale (es. +1 234 567 890).';
+      'Non siamo riusciti a verificare quel numero di telefono. Torna indietro, controlla prefisso e cifre, poi riprova.';
 
   @override
   String get authMfaErrorInvalidTotpCode =>
@@ -26542,6 +26542,23 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get orgCheckoutSheetBody =>
       'Il tuo Community Pack crea un gruppo di cui sei proprietario. Non occuperai un posto; invita i membri per condividere l\'accesso premium. Puoi gestire il tuo gruppo in qualsiasi momento dalle impostazioni del gruppo.';
+
+  @override
+  String get orgCheckoutNameLabel => 'Nome del gruppo';
+
+  @override
+  String get orgCheckoutNameHint => 'Acme Engineering';
+
+  @override
+  String get orgCheckoutNameHelp =>
+      'Mostrato ai membri nel roster e sui link di invito. Puoi cambiarlo in seguito.';
+
+  @override
+  String get orgCheckoutNameRequired => 'Inserisci un nome per il tuo gruppo.';
+
+  @override
+  String get orgCheckoutNameTooLong =>
+      'Il nome del gruppo non può superare i 50 caratteri.';
 
   @override
   String get orgCheckoutOrgIdLabel => 'ID gruppo';

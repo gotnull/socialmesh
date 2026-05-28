@@ -2059,7 +2059,7 @@
     "@authMfaErrorInvalidData": {
         "description": "Error when verification data is malformed (ArgumentError)"
     },
-    "authMfaErrorInvalidPhoneNumber": "Please enter a valid phone number with country code (e.g. +1 234 567 890).",
+    "authMfaErrorInvalidPhoneNumber": "We couldn't verify that phone number. Go back and check the country code and digits, then try again.",
     "@authMfaErrorInvalidPhoneNumber": {
         "description": "Error when phone number format is invalid"
     },
@@ -35782,6 +35782,26 @@
     "orgCheckoutSheetBody": "Your Community Pack creates a group you own. You won't use a seat yourself; invite members to share premium access. You can manage your group anytime from group settings.",
     "@orgCheckoutSheetBody": {
         "description": "Body copy in the org checkout sheet. Sets expectations that seats are distributed separately via seat codes, not auto-allocated."
+    },
+    "orgCheckoutNameLabel": "Group name",
+    "@orgCheckoutNameLabel": {
+        "description": "Display-name text field label inside the org checkout sheet. The slug (Group ID) is auto-derived from this field."
+    },
+    "orgCheckoutNameHint": "Acme Engineering",
+    "@orgCheckoutNameHint": {
+        "description": "Placeholder shown in the group name text field."
+    },
+    "orgCheckoutNameHelp": "Shown to members in the roster and on invite links. You can change it later.",
+    "@orgCheckoutNameHelp": {
+        "description": "Helper text below the group name field explaining where the display name surfaces."
+    },
+    "orgCheckoutNameRequired": "Please enter a name for your group.",
+    "@orgCheckoutNameRequired": {
+        "description": "Validation error when the group name field is empty at submit."
+    },
+    "orgCheckoutNameTooLong": "Group name must be 50 characters or fewer.",
+    "@orgCheckoutNameTooLong": {
+        "description": "Validation error when the group name exceeds the 50-character backend limit."
     },
     "orgCheckoutOrgIdLabel": "Group ID",
     "@orgCheckoutOrgIdLabel": {

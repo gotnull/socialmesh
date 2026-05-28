@@ -1538,7 +1538,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get authMfaErrorInvalidPhoneNumber =>
-      'Введите корректный номер телефона с кодом страны (например, +7 900 123 45 67).';
+      'Не удалось подтвердить этот номер телефона. Вернитесь назад, проверьте код страны и цифры, затем попробуйте снова.';
 
   @override
   String get authMfaErrorInvalidTotpCode =>
@@ -26535,6 +26535,23 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get orgCheckoutSheetBody =>
       'Ваш Community Pack создаёт группу, владельцем которой являетесь вы. Вы не занимаете место; пригласите участников, чтобы поделиться премиум-доступом. Вы можете управлять группой в любое время в настройках группы.';
+
+  @override
+  String get orgCheckoutNameLabel => 'Название группы';
+
+  @override
+  String get orgCheckoutNameHint => 'Acme Engineering';
+
+  @override
+  String get orgCheckoutNameHelp =>
+      'Показывается участникам в списке и на ссылках приглашения. Вы можете изменить его позже.';
+
+  @override
+  String get orgCheckoutNameRequired => 'Введите название для вашей группы.';
+
+  @override
+  String get orgCheckoutNameTooLong =>
+      'Название группы должно содержать не более 50 символов.';
 
   @override
   String get orgCheckoutOrgIdLabel => 'ID группы';

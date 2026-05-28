@@ -1522,7 +1522,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authMfaErrorInvalidPhoneNumber =>
-      'Please enter a valid phone number with country code (e.g. +1 234 567 890).';
+      'We couldn\'t verify that phone number. Go back and check the country code and digits, then try again.';
 
   @override
   String get authMfaErrorInvalidTotpCode =>
@@ -26241,6 +26241,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get orgCheckoutSheetBody =>
       'Your Community Pack creates a group you own. You won\'t use a seat yourself; invite members to share premium access. You can manage your group anytime from group settings.';
+
+  @override
+  String get orgCheckoutNameLabel => 'Group name';
+
+  @override
+  String get orgCheckoutNameHint => 'Acme Engineering';
+
+  @override
+  String get orgCheckoutNameHelp =>
+      'Shown to members in the roster and on invite links. You can change it later.';
+
+  @override
+  String get orgCheckoutNameRequired => 'Please enter a name for your group.';
+
+  @override
+  String get orgCheckoutNameTooLong =>
+      'Group name must be 50 characters or fewer.';
 
   @override
   String get orgCheckoutOrgIdLabel => 'Group ID';
