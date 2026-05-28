@@ -58311,6 +58311,25 @@
     "@licenseOrgOverviewSeatsLabel": {
         "description": "Row label on the License Org Overview per-org card showing how many active seats the current user holds inside that org. Scoped to the current user; the org-wide count is admin-only and lives in a separate sheet."
     },
+    "licenseOrgOverviewCapacityLabel": "Capacity",
+    "@licenseOrgOverviewCapacityLabel": {
+        "description": "Row label shown on owner-viewed License Org Overview cards in place of 'Your seats' so the row reads as the org's total seat budget (e.g. 'Capacity: 10 seats') rather than the owner's personal count."
+    },
+    "licenseOrgOverviewCapacityValue": "{count} seats",
+    "@licenseOrgOverviewCapacityValue": {
+        "description": "Value cell paired with licenseOrgOverviewCapacityLabel. Renders the total seat budget for a Community Pack (always > 1, so no plural form needed).",
+        "placeholders": {
+            "count": { "type": "int", "example": "10" }
+        }
+    },
+    "licenseOrgOverviewCapacityValueUsed": "{used} of {capacity} seats used",
+    "@licenseOrgOverviewCapacityValueUsed": {
+        "description": "Value cell paired with licenseOrgOverviewCapacityLabel for owners. Renders the live used / total seat budget for a Community Pack (e.g. '3 of 10 seats used').",
+        "placeholders": {
+            "used": { "type": "int", "example": "3" },
+            "capacity": { "type": "int", "example": "10" }
+        }
+    },
     "licenseOrgOverviewStatusLabel": "Status",
     "@licenseOrgOverviewStatusLabel": {
         "description": "Row label on the License Org Overview per-org card showing whether the org is currently active or suspended."

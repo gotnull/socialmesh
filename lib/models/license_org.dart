@@ -72,12 +72,20 @@ class LicenseOrg {
   /// admit org-owned entitlements for any user.
   final LicenseOrgStatus status;
 
+  /// Total seat capacity for this org, derived from the purchased
+  /// Community Pack at upsert time (`community_pack_10` -> 10,
+  /// `community_pack_20` -> 20). Null for legacy orgs (purchased
+  /// before this field shipped) and for any future org-eligible
+  /// product that doesn't declare a capacity.
+  final int? seatCapacity;
+
   const LicenseOrg({
     required this.id,
     required this.name,
     required this.ownerUid,
     required this.createdAt,
     required this.status,
+    this.seatCapacity,
   });
 
   /// Parse a Firestore document. Returns null when required fields
@@ -102,12 +110,19 @@ class LicenseOrg {
     } else if (created is String) {
       createdAt = DateTime.tryParse(created)?.toUtc();
     }
+    final seatCapacityRaw = data['seatCapacity'];
+    final int? seatCapacity = switch (seatCapacityRaw) {
+      final int v when v > 0 => v,
+      final num v when v > 0 => v.toInt(),
+      _ => null,
+    };
     return LicenseOrg(
       id: id,
       name: (data['name'] as String?) ?? '',
       ownerUid: ownerUid,
       createdAt: createdAt,
       status: LicenseOrgStatus.fromWire(data['status'] as String?),
+      seatCapacity: seatCapacity,
     );
   }
 
@@ -122,6 +137,7 @@ class LicenseOrg {
     String? ownerUid,
     DateTime? createdAt,
     LicenseOrgStatus? status,
+    int? seatCapacity,
   }) {
     return LicenseOrg(
       id: id ?? this.id,
@@ -129,6 +145,7 @@ class LicenseOrg {
       ownerUid: ownerUid ?? this.ownerUid,
       createdAt: createdAt ?? this.createdAt,
       status: status ?? this.status,
+      seatCapacity: seatCapacity ?? this.seatCapacity,
     );
   }
 
@@ -140,12 +157,15 @@ class LicenseOrg {
           name == other.name &&
           ownerUid == other.ownerUid &&
           createdAt == other.createdAt &&
-          status == other.status;
+          status == other.status &&
+          seatCapacity == other.seatCapacity;
 
   @override
-  int get hashCode => Object.hash(id, name, ownerUid, createdAt, status);
+  int get hashCode =>
+      Object.hash(id, name, ownerUid, createdAt, status, seatCapacity);
 
   @override
   String toString() =>
-      'LicenseOrg(id: $id, ownerUid: $ownerUid, status: $status)';
+      'LicenseOrg(id: $id, ownerUid: $ownerUid, status: $status, '
+      'seatCapacity: $seatCapacity)';
 }

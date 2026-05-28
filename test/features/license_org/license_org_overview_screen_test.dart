@@ -88,13 +88,21 @@ class _FakeRepo implements LicenseOrgMembershipRepository {
 
 class _FakeSeatRepo implements SeatAllocationRepository {
   final Set<SeatAllocationRef> _seats;
+  final Map<String, int> _orgActiveCounts;
 
-  _FakeSeatRepo([Set<SeatAllocationRef>? seats])
-    : _seats = seats ?? <SeatAllocationRef>{};
+  _FakeSeatRepo([
+    Set<SeatAllocationRef>? seats,
+    Map<String, int>? orgActiveCounts,
+  ]) : _seats = seats ?? <SeatAllocationRef>{},
+       _orgActiveCounts = orgActiveCounts ?? <String, int>{};
 
   @override
   Stream<Set<SeatAllocationRef>> watchCurrentUserSeats(String uid) =>
       Stream.value(_seats);
+
+  @override
+  Stream<int> watchOrgActiveSeatCount(String orgId) =>
+      Stream.value(_orgActiveCounts[orgId] ?? 0);
 }
 
 Widget _buildTestWidget({

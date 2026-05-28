@@ -55,6 +55,7 @@
       "kind": "oneTime",
       "name": "Community Pack 10",
       "priceUsd": 49.99,
+      "seatCapacity": 10,
       "grants": [
         "complete_pack",
         "theme_pack",
@@ -69,6 +70,7 @@
       "kind": "oneTime",
       "name": "Community Pack 20",
       "priceUsd": 79.99,
+      "seatCapacity": 20,
       "grants": [
         "complete_pack",
         "theme_pack",

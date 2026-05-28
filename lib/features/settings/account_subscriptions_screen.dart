@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/constants.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
@@ -770,11 +771,20 @@ class _AccountSubscriptionsScreenState
       error: (e, s) => <String, StoreProductInfo>{},
     );
 
-    // Count owned features
-    final ownedCount = OneTimePurchases.allPurchases
+    // Visible packs: drop Translation Pack when its feature flag is
+    // off (default). Without this filter the card surfaces a product
+    // the rest of the app never exposes, breaking the "X of Y" count.
+    final visiblePacks = OneTimePurchases.allPurchases
+        .where(
+          (p) =>
+              p.unlocksFeature != PremiumFeature.translation ||
+              AppFeatureFlags.isTranslationEnabled,
+        )
+        .toList(growable: false);
+    final ownedCount = visiblePacks
         .where((p) => purchaseState.hasPurchased(p.productId))
         .length;
-    final totalCount = OneTimePurchases.allPurchases.length;
+    final totalCount = visiblePacks.length;
     final allUnlocked = ownedCount == totalCount;
 
     return Container(
@@ -851,7 +861,7 @@ class _AccountSubscriptionsScreenState
             Padding(
               padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 12, 16, 4),
               child: Column(
-                children: OneTimePurchases.allPurchases.map((purchase) {
+                children: visiblePacks.map((purchase) {
                   return _FeatureRow(
                     icon: _getIconForFeature(purchase.unlocksFeature),
                     text:

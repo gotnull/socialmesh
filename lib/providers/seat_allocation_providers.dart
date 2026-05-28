@@ -108,3 +108,34 @@ void debugRefreshSeatAllocations(WidgetRef ref) {
   AppLogging.groupLicensing('[SeatAllocation] debugRefresh requested');
   ref.invalidate(currentUserSeatAllocationsProvider);
 }
+
+/// Count of active seat allocations for [orgId] across all users.
+/// Owner-facing surfaces pair this with [LicenseOrg.seatCapacity] to
+/// render "X of Y seats used". Yields 0 when the flag is off, the
+/// orgId is empty, or the underlying stream errors.
+final licenseOrgActiveSeatCountProvider = StreamProvider.family<int, String>((
+  ref,
+  orgId,
+) async* {
+  if (!AppFeatureFlags.isGroupLicensingEnabled) {
+    yield 0;
+    return;
+  }
+  if (orgId.isEmpty) {
+    yield 0;
+    return;
+  }
+  final repo = ref.watch(seatAllocationRepositoryProvider);
+  yield 0;
+  try {
+    await for (final count in repo.watchOrgActiveSeatCount(orgId)) {
+      yield count;
+    }
+  } catch (e) {
+    AppLogging.groupLicensing(
+      '[SeatAllocation] org-count stream threw - failing closed '
+      '(error class: ${e.runtimeType})',
+    );
+    yield 0;
+  }
+});

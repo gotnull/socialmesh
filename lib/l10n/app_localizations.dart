@@ -76403,6 +76403,24 @@ abstract class AppLocalizations {
   /// **'Your seats'**
   String get licenseOrgOverviewSeatsLabel;
 
+  /// Row label shown on owner-viewed License Org Overview cards in place of 'Your seats' so the row reads as the org's total seat budget (e.g. 'Capacity: 10 seats') rather than the owner's personal count.
+  ///
+  /// In en, this message translates to:
+  /// **'Capacity'**
+  String get licenseOrgOverviewCapacityLabel;
+
+  /// Value cell paired with licenseOrgOverviewCapacityLabel. Renders the total seat budget for a Community Pack (always > 1, so no plural form needed).
+  ///
+  /// In en, this message translates to:
+  /// **'{count} seats'**
+  String licenseOrgOverviewCapacityValue(int count);
+
+  /// Value cell paired with licenseOrgOverviewCapacityLabel for owners. Renders the live used / total seat budget for a Community Pack (e.g. '3 of 10 seats used').
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {capacity} seats used'**
+  String licenseOrgOverviewCapacityValueUsed(int used, int capacity);
+
   /// Row label on the License Org Overview per-org card showing whether the org is currently active or suspended.
   ///
   /// In en, this message translates to:

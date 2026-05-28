@@ -44355,6 +44355,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get licenseOrgOverviewSeatsLabel => 'Ihre Sitze';
 
   @override
+  String get licenseOrgOverviewCapacityLabel => 'Kapazität';
+
+  @override
+  String licenseOrgOverviewCapacityValue(int count) {
+    return '$count Plätze';
+  }
+
+  @override
+  String licenseOrgOverviewCapacityValueUsed(int used, int capacity) {
+    return '$used von $capacity Plätzen belegt';
+  }
+
+  @override
   String get licenseOrgOverviewStatusLabel => 'Status';
 
   @override

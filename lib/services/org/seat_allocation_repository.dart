@@ -24,6 +24,13 @@ abstract class SeatAllocationRepository {
   /// Emits the current seat set on subscribe, then re-emits on every
   /// underlying change. Empty set on empty uid.
   Stream<Set<SeatAllocationRef>> watchCurrentUserSeats(String uid);
+
+  /// Emits the count of active seat allocations for [orgId] on
+  /// subscribe and on every underlying change. Used by the org
+  /// overview card to render "X of Y seats used" alongside the org's
+  /// capacity. Fail-closed: yields 0 on empty orgId, stream errors,
+  /// or malformed rows.
+  Stream<int> watchOrgActiveSeatCount(String orgId);
 }
 
 /// Firestore-backed implementation.
@@ -76,6 +83,47 @@ class FirestoreSeatAllocationRepository implements SeatAllocationRepository {
       // for the first Firestore snapshot.
       if (!controller.isClosed) {
         controller.add(const <SeatAllocationRef>{});
+      }
+    };
+
+    controller.onCancel = () async {
+      await sub?.cancel();
+      sub = null;
+    };
+
+    return controller.stream;
+  }
+
+  @override
+  Stream<int> watchOrgActiveSeatCount(String orgId) {
+    if (orgId.isEmpty) return Stream.value(0);
+
+    final controller = StreamController<int>();
+    StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? sub;
+
+    controller.onListen = () {
+      sub = _firestore
+          .collection('org_seat_allocations')
+          .where('orgId', isEqualTo: orgId)
+          .where('status', isEqualTo: 'active')
+          .snapshots()
+          .listen(
+            (snap) {
+              if (controller.isClosed) return;
+              controller.add(snap.size);
+            },
+            onError: (Object e) {
+              AppLogging.groupLicensing(
+                '[SeatAllocationRepo] org-count stream error - failing '
+                'closed (error class: ${e.runtimeType})',
+              );
+              if (controller.isClosed) return;
+              controller.add(0);
+            },
+          );
+
+      if (!controller.isClosed) {
+        controller.add(0);
       }
     };
 

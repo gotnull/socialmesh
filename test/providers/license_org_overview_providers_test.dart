@@ -79,6 +79,9 @@ class _StubSeatRepo implements SeatAllocationRepository {
   @override
   Stream<Set<SeatAllocationRef>> watchCurrentUserSeats(String uid) =>
       Stream.value(_seats);
+
+  @override
+  Stream<int> watchOrgActiveSeatCount(String orgId) => Stream.value(0);
 }
 
 void _setFlag({required bool enabled}) {

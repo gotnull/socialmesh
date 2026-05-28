@@ -44240,6 +44240,19 @@ class AppLocalizationsUk extends AppLocalizations {
   String get licenseOrgOverviewSeatsLabel => 'Ваші місця';
 
   @override
+  String get licenseOrgOverviewCapacityLabel => 'Місткість';
+
+  @override
+  String licenseOrgOverviewCapacityValue(int count) {
+    return '$count місць';
+  }
+
+  @override
+  String licenseOrgOverviewCapacityValueUsed(int used, int capacity) {
+    return '$used з $capacity місць використано';
+  }
+
+  @override
   String get licenseOrgOverviewStatusLabel => 'Статус';
 
   @override

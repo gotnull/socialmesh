@@ -35,6 +35,7 @@ import '../../models/license_org.dart';
 import '../../models/license_org_membership.dart';
 import '../../providers/license_org_members_providers.dart';
 import '../../providers/license_org_overview_providers.dart';
+import '../../providers/seat_allocation_providers.dart';
 import '../../services/license_org/license_org_invite_service.dart';
 import '../../utils/snackbar.dart';
 import 'license_org_audit_log_screen.dart';
@@ -57,6 +58,13 @@ class LicenseOrgOverviewCard extends ConsumerWidget {
     final orgAsync = ref.watch(licenseOrgProvider(orgId));
     final role = ref.watch(licenseOrgRoleProvider(orgId));
     final seatCount = ref.watch(licenseOrgRedeemedSeatCountProvider(orgId));
+    final activeSeatCountAsync = ref.watch(
+      licenseOrgActiveSeatCountProvider(orgId),
+    );
+    final activeSeatCount = activeSeatCountAsync.maybeWhen(
+      data: (n) => n,
+      orElse: () => 0,
+    );
     final membershipAsync = ref.watch(
       currentUserLicenseOrgMembershipProvider(orgId),
     );
@@ -95,12 +103,28 @@ class LicenseOrgOverviewCard extends ConsumerWidget {
               icon: Icons.workspace_premium_outlined,
               valueWidget: _RolePill(role: role, l10n: l10n),
             ),
-            // Primary metric - how many seats the current user holds.
-            InfoTableRow(
-              label: l10n.licenseOrgOverviewSeatsLabel,
-              value: seatCount.toString(),
-              icon: Icons.event_seat_outlined,
-            ),
+            // Primary metric. For owners with a known capacity (the
+            // typical case after a Community Pack purchase) show the
+            // org's total seat budget WITH the live used-count
+            // denominator: "Capacity: 2 of 10 seats used". Members
+            // and orgs without a capacity field fall back to the
+            // per-user "Your seats: <count>" row that was the
+            // original semantic.
+            if (role == LicenseOrgMemberRole.owner && org?.seatCapacity != null)
+              InfoTableRow(
+                label: l10n.licenseOrgOverviewCapacityLabel,
+                value: l10n.licenseOrgOverviewCapacityValueUsed(
+                  activeSeatCount,
+                  org!.seatCapacity!,
+                ),
+                icon: Icons.event_seat_outlined,
+              )
+            else
+              InfoTableRow(
+                label: l10n.licenseOrgOverviewSeatsLabel,
+                value: seatCount.toString(),
+                icon: Icons.event_seat_outlined,
+              ),
             // Audit / temporal.
             if (membership?.joinedAt != null)
               InfoTableRow(

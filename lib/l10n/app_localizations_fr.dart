@@ -44538,6 +44538,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get licenseOrgOverviewSeatsLabel => 'Vos sièges';
 
   @override
+  String get licenseOrgOverviewCapacityLabel => 'Capacité';
+
+  @override
+  String licenseOrgOverviewCapacityValue(int count) {
+    return '$count places';
+  }
+
+  @override
+  String licenseOrgOverviewCapacityValueUsed(int used, int capacity) {
+    return '$used sur $capacity places utilisées';
+  }
+
+  @override
   String get licenseOrgOverviewStatusLabel => 'Statut';
 
   @override
