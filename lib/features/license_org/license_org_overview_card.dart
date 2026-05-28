@@ -172,7 +172,14 @@ class LicenseOrgOverviewCard extends ConsumerWidget {
                 )
               : null,
         ),
-        const SizedBox(height: AppTheme.spacing12),
+        // No explicit spacer: SectionTitle bakes in `bottom: spacing8`
+        // and the IconButton's 32x32 hit area inflates the title row's
+        // vertical padding to ~10px below the text baseline. Together
+        // that's already ~18px to the InfoTable — matching the gap the
+        // text-only `RECENT ACTIVITY` header gets via its built-in 8 +
+        // explicit 8. Any additional SizedBox here just stacks on top
+        // of the row inflation and makes this header look more spaced
+        // than its sibling sections.
         InfoTable(
           rows: [
             // Status first - the field a user opens this screen TO
@@ -236,9 +243,9 @@ class LicenseOrgOverviewCard extends ConsumerWidget {
         // admin" button is still gated on the future
         // licenseOrgAdminWebEnabled flag and stays deferred.
         if (status == LicenseOrgStatus.active) ...[
-          const SizedBox(height: AppTheme.spacing16),
+          const SizedBox(height: AppTheme.spacing24),
           _RecentActivitySection(orgId: orgId),
-          const SizedBox(height: AppTheme.spacing12),
+          const SizedBox(height: AppTheme.spacing20),
           _ViewMembersButton(orgId: orgId),
           // Owner / admin can mint an invite link directly from the
           // Overview card. Member role doesn't see the button (mint
