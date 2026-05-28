@@ -89,6 +89,71 @@ final licenseOrgRecentAuditProvider =
       }
     });
 
+/// Streams the audit rows for [orgId] filtered to manual seat
+/// revocations (`seat_revoked_manual`). Used by the License Org
+/// Members sheet to surface a "Revoked seats" history section so
+/// owners can see who they removed and when, without leaving the
+/// roster.
+///
+/// Fail-closed mirrors [licenseOrgRecentAuditProvider]: flag off /
+/// signed out / anonymous user / suspended org / repo error all
+/// degrade to an empty list. Capped at 100 rows to bound payload —
+/// owners revoking past that have a much bigger problem than
+/// scrollable history, and the full audit log screen surfaces
+/// everything via the paginated provider.
+final licenseOrgRevokedSeatsProvider =
+    StreamProvider.family<List<LicenseOrgAuditEvent>, String>((
+      ref,
+      orgId,
+    ) async* {
+      if (!AppFeatureFlags.isGroupLicensingEnabled) {
+        yield const <LicenseOrgAuditEvent>[];
+        return;
+      }
+      if (orgId.isEmpty) {
+        yield const <LicenseOrgAuditEvent>[];
+        return;
+      }
+
+      final user = ref.watch(currentUserProvider);
+      if (user == null || user.isAnonymous || user.uid.isEmpty) {
+        yield const <LicenseOrgAuditEvent>[];
+        return;
+      }
+
+      // Mirror the suspended-org guard from the recent-audit
+      // provider. The roster sheet hides Members entirely on a
+      // suspended org and the same gate applies here so a re-
+      // enabled org doesn't briefly leak revoke history.
+      final orgAsync = ref.watch(licenseOrgProvider(orgId));
+      final org = orgAsync.maybeWhen(data: (o) => o, orElse: () => null);
+      if (org != null && org.status != LicenseOrgStatus.active) {
+        yield const <LicenseOrgAuditEvent>[];
+        return;
+      }
+
+      final repo = ref.watch(licenseOrgAuditRepositoryProvider);
+      yield const <LicenseOrgAuditEvent>[];
+
+      try {
+        await for (final events in repo.recentEventsForOrg(orgId, limit: 100)) {
+          yield events
+              .where(
+                (e) =>
+                    e.action == LicenseOrgAuditAction.seatRevokedManual &&
+                    e.outcome == LicenseOrgAuditOutcome.success,
+              )
+              .toList(growable: false);
+        }
+      } catch (e) {
+        AppLogging.groupLicensing(
+          '[LicenseOrgAudit] revoked-seats stream threw - failing closed '
+          '(error class: ${e.runtimeType})',
+        );
+        yield const <LicenseOrgAuditEvent>[];
+      }
+    });
+
 /// Immutable state held by [LicenseOrgAuditLogNotifier]. The notifier
 /// accumulates pages so the screen renders a single growing list.
 class LicenseOrgAuditLogState {

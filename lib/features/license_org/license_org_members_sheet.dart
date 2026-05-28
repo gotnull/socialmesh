@@ -30,8 +30,10 @@ import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/section_header.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/license_org.dart';
+import '../../models/license_org_audit_event.dart';
 import '../../models/license_org_membership.dart';
 import '../../providers/auth_providers.dart';
+import '../../providers/license_org_audit_providers.dart';
 import '../../providers/license_org_members_providers.dart';
 import '../../providers/license_org_overview_providers.dart';
 import '../../services/haptic_service.dart';
@@ -202,16 +204,41 @@ class _LicenseOrgMembersSheetState extends ConsumerState<LicenseOrgMembersSheet>
                   scrollController: widget.scrollController,
                 );
               }
-              if (members.isEmpty) {
+              // Revoked seats history. Watched at the same level as
+              // the active members stream so the section can mount /
+              // dismount live without re-keying the ListView. An
+              // empty list (no revocations yet, OR the rules / flag
+              // block the read) collapses the section entirely.
+              final revokedAsync = ref.watch(
+                licenseOrgRevokedSeatsProvider(widget.licenseOrgId),
+              );
+              final revoked = revokedAsync.maybeWhen(
+                data: (rows) => rows,
+                orElse: () => const <LicenseOrgAuditEvent>[],
+              );
+              if (members.isEmpty && revoked.isEmpty) {
                 return _EmptyState(scrollController: widget.scrollController);
               }
+
+              // Index map for the combined active + revoked list:
+              //   0                                 -> active title
+              //   1..members.length                 -> active tile
+              //   members.length+1                  -> revoked title (if any)
+              //   members.length+2..end             -> revoked tile
+              // The revoked section is omitted entirely when revoked
+              // is empty so the user doesn't see a heading over an
+              // empty list.
+              final hasRevoked = revoked.isNotEmpty;
+              final revokedTitleIdx = members.length + 1;
+              final itemCount =
+                  1 + members.length + (hasRevoked ? 1 + revoked.length : 0);
               return ListView.builder(
                 controller: widget.scrollController,
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppTheme.spacing16,
                   vertical: AppTheme.spacing16,
                 ),
-                itemCount: members.length + 1,
+                itemCount: itemCount,
                 itemBuilder: (context, index) {
                   if (index == 0) {
                     return Padding(
@@ -220,6 +247,21 @@ class _LicenseOrgMembersSheetState extends ConsumerState<LicenseOrgMembersSheet>
                         title: l10n.licenseOrgMembersSectionActive,
                       ),
                     );
+                  }
+                  if (hasRevoked && index == revokedTitleIdx) {
+                    return Padding(
+                      padding: const EdgeInsets.only(
+                        top: AppTheme.spacing16,
+                        bottom: AppTheme.spacing8,
+                      ),
+                      child: SectionTitle(
+                        title: l10n.licenseOrgMembersSectionRevoked,
+                      ),
+                    );
+                  }
+                  if (hasRevoked && index > revokedTitleIdx) {
+                    final revokedIdx = index - revokedTitleIdx - 1;
+                    return _RevokedTile(event: revoked[revokedIdx]);
                   }
                   final member = members[index - 1];
                   final isCurrentUser =
@@ -513,6 +555,19 @@ String _labelForUid(String uid) {
   if (uid.isEmpty) return '#------';
   final prefix = uid.length >= 6 ? uid.substring(0, 6) : uid.padRight(6, '_');
   return '#${prefix.toUpperCase()}';
+}
+
+/// Extracts the uid from a seat allocation doc id. Backend format
+/// (from `seatAllocationDocId` in license_org_invites.ts):
+/// `<orgId>__<uid>__<productId>`. Splits on `__` and returns the
+/// middle segment; falls back to the raw input when the format
+/// doesn't match (so an unknown shape degrades to a less-specific
+/// label rather than blanking).
+String _uidFromAllocationId(String allocationId) {
+  if (allocationId.isEmpty) return '';
+  final parts = allocationId.split('__');
+  if (parts.length != 3) return allocationId;
+  return parts[1];
 }
 
 String _roleString(AppLocalizations l10n, LicenseOrgMemberRole role) {
@@ -844,4 +899,112 @@ class _ErrorState extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Single row in the Revoked section. Renders the same opaque
+/// `#ABCDEF` label as a [_MemberTile] (so a viewer can match a
+/// revocation back to a former member they had in mind) plus the
+/// relative timestamp and the actor who performed the revoke. No
+/// trailing actions — revocations are immutable.
+class _RevokedTile extends StatelessWidget {
+  final LicenseOrgAuditEvent event;
+
+  const _RevokedTile({required this.event});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    // `targetId` on a seat_revoked_manual audit row is the full
+    // allocation doc id: `<orgId>__<uid>__<productId>` (mirrors the
+    // backend's `seatAllocationDocId`). The opaque member label
+    // wants the uid (middle segment) — using the whole targetId
+    // here surfaced `#CLEANR` (the first 6 chars of the orgId
+    // prefix) on first sim verification, 2026-05-28.
+    final revokedUid = _uidFromAllocationId(event.targetId ?? '');
+    final memberLabel = _labelForUid(revokedUid);
+    final actorLabel = event.actorRole == LicenseOrgAuditActorRole.system
+        ? 'system'
+        : _labelForUid(event.actorUid);
+    final relative = _formatRevokedRelative(
+      l10n,
+      event.tsServer,
+      DateTime.now(),
+    );
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing16,
+        vertical: AppTheme.spacing12,
+      ),
+      decoration: BoxDecoration(
+        color: context.card.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(color: context.border.withValues(alpha: 0.6)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: context.textTertiary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppTheme.radius10),
+              border: Border.all(
+                color: context.textTertiary.withValues(alpha: 0.3),
+              ),
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              Icons.person_off_outlined,
+              size: 20,
+              color: context.textTertiary,
+            ),
+          ),
+          const SizedBox(width: AppTheme.spacing16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.licenseOrgMembersRevokedTileTitle(memberLabel),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: context.textSecondary,
+                    fontFamily: AppTheme.fontFamily,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacing2),
+                Text(
+                  '${l10n.licenseOrgMembersRevokedTileBy(actorLabel)} · $relative',
+                  style: TextStyle(fontSize: 12, color: context.textTertiary),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _formatRevokedRelative(
+  AppLocalizations l10n,
+  DateTime? tsServer,
+  DateTime now,
+) {
+  if (tsServer == null) return l10n.licenseOrgMembersJoinedToday;
+  final diff = now.toUtc().difference(tsServer);
+  if (diff.inDays >= 365) {
+    return l10n.licenseOrgMembersJoinedYearsAgo(diff.inDays ~/ 365);
+  }
+  if (diff.inDays >= 30) {
+    return l10n.licenseOrgMembersJoinedMonthsAgo(diff.inDays ~/ 30);
+  }
+  if (diff.inDays >= 1) {
+    return l10n.licenseOrgMembersJoinedDaysAgo(diff.inDays);
+  }
+  return l10n.licenseOrgMembersJoinedToday;
 }

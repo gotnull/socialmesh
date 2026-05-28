@@ -75785,6 +75785,24 @@ abstract class AppLocalizations {
   /// **'Active members'**
   String get licenseOrgMembersSectionActive;
 
+  /// Section title above the revoked-seat history rows in the License Org Members sheet. Hidden when no revocations exist.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoked'**
+  String get licenseOrgMembersSectionRevoked;
+
+  /// Title row on a revoked-seat history tile in the License Org Members sheet. Placeholder is the opaque #ABCDEF label derived from the revoked member's uid.
+  ///
+  /// In en, this message translates to:
+  /// **'{member} — seat revoked'**
+  String licenseOrgMembersRevokedTileTitle(String member);
+
+  /// Subtitle on a revoked-seat history tile naming who performed the revoke. Placeholder is the actor's opaque #ABCDEF label or 'system' for refund-cascade revokes.
+  ///
+  /// In en, this message translates to:
+  /// **'By {actor}'**
+  String licenseOrgMembersRevokedTileBy(String actor);
+
   /// Pluralised count of active members for the License Org Members sheet header chip. Used as a scannable subtitle so the admin can spot fast whether the org has grown.
   ///
   /// In en, this message translates to:

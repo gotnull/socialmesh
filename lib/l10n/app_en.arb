@@ -57803,6 +57803,24 @@
     "@licenseOrgMembersSectionActive": {
         "description": "Section title above the active-member list in the License Org Members sheet."
     },
+    "licenseOrgMembersSectionRevoked": "Revoked",
+    "@licenseOrgMembersSectionRevoked": {
+        "description": "Section title above the revoked-seat history rows in the License Org Members sheet. Hidden when no revocations exist."
+    },
+    "licenseOrgMembersRevokedTileTitle": "{member} — seat revoked",
+    "@licenseOrgMembersRevokedTileTitle": {
+        "description": "Title row on a revoked-seat history tile in the License Org Members sheet. Placeholder is the opaque #ABCDEF label derived from the revoked member's uid.",
+        "placeholders": {
+            "member": { "type": "String", "example": "#A1B2C3" }
+        }
+    },
+    "licenseOrgMembersRevokedTileBy": "By {actor}",
+    "@licenseOrgMembersRevokedTileBy": {
+        "description": "Subtitle on a revoked-seat history tile naming who performed the revoke. Placeholder is the actor's opaque #ABCDEF label or 'system' for refund-cascade revokes.",
+        "placeholders": {
+            "actor": { "type": "String", "example": "#A1B2C3" }
+        }
+    },
     "licenseOrgMembersCount": "{count, plural, =0{No members} =1{1 member} other{{count} members}}",
     "@licenseOrgMembersCount": {
         "description": "Pluralised count of active members for the License Org Members sheet header chip. Used as a scannable subtitle so the admin can spot fast whether the org has grown.",

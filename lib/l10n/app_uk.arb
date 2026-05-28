@@ -13008,5 +13008,29 @@
     "unlockSuccessOrgPackCta": "Відкрити вашу групу",
     "@unlockSuccessOrgPackCta": {
         "description": "Primary CTA on the post-purchase confirmation overlay shown to a buyer who just bought a Community Pack and now has an unnamed org. Tapping pops the overlay and navigates to the License Org Overview screen, where the card auto-prompt opens the 'Name your community' sheet immediately."
+    },
+    "licenseOrgMembersSectionRevoked": "Відкликані",
+    "@licenseOrgMembersSectionRevoked": {
+        "description": "Section title above the revoked-seat history rows in the License Org Members sheet. Hidden when no revocations exist."
+    },
+    "licenseOrgMembersRevokedTileTitle": "{member} — місце відкликано",
+    "@licenseOrgMembersRevokedTileTitle": {
+        "description": "Title row on a revoked-seat history tile in the License Org Members sheet. Placeholder is the opaque #ABCDEF label derived from the revoked member's uid.",
+        "placeholders": {
+            "member": {
+                "type": "String",
+                "example": "#A1B2C3"
+            }
+        }
+    },
+    "licenseOrgMembersRevokedTileBy": "Ким: {actor}",
+    "@licenseOrgMembersRevokedTileBy": {
+        "description": "Subtitle on a revoked-seat history tile naming who performed the revoke. Placeholder is the actor's opaque #ABCDEF label or 'system' for refund-cascade revokes.",
+        "placeholders": {
+            "actor": {
+                "type": "String",
+                "example": "#A1B2C3"
+            }
+        }
     }
 }

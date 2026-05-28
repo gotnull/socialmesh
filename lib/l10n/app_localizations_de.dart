@@ -43934,6 +43934,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get licenseOrgMembersSectionActive => 'Aktive Mitglieder';
 
   @override
+  String get licenseOrgMembersSectionRevoked => 'Entzogen';
+
+  @override
+  String licenseOrgMembersRevokedTileTitle(String member) {
+    return '$member — Platz entzogen';
+  }
+
+  @override
+  String licenseOrgMembersRevokedTileBy(String actor) {
+    return 'Von $actor';
+  }
+
+  @override
   String licenseOrgMembersCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

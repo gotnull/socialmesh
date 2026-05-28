@@ -326,4 +326,63 @@ void main() {
       expect(src, contains('communityPackSeatProductId'));
     });
   });
+
+  // ===========================================================================
+  // Revoked-seats history section. Pulls from licenseOrgRevokedSeatsProvider
+  // and renders under the Active members list. Hidden entirely when zero
+  // revocations exist so the user doesn't see a heading over an empty list.
+  // ===========================================================================
+  group('revoked history — source-text guards', () {
+    late String src;
+    setUpAll(() {
+      src = io.File(
+        'lib/features/license_org/license_org_members_sheet.dart',
+      ).readAsStringSync();
+    });
+
+    test('watches licenseOrgRevokedSeatsProvider for the current orgId', () {
+      expect(
+        src,
+        contains('licenseOrgRevokedSeatsProvider(widget.licenseOrgId)'),
+      );
+    });
+
+    test('hides the entire section when no revocations exist', () {
+      // The hasRevoked computation drives both the title row AND
+      // the itemCount delta. Without it, the section heading would
+      // render over an empty list.
+      expect(src, contains('final hasRevoked = revoked.isNotEmpty'));
+      expect(src, contains('if (hasRevoked && index == revokedTitleIdx)'));
+    });
+
+    test('only shows empty state when BOTH active and revoked are empty', () {
+      // A roster with zero current members but historical
+      // revocations is still useful (audit trail of a churned
+      // group). Don't push the user to the empty-state animation
+      // when there's any history to surface.
+      expect(src, contains('if (members.isEmpty && revoked.isEmpty)'));
+    });
+
+    test('_RevokedTile shows revoked-member + actor labels', () {
+      expect(src, contains('class _RevokedTile'));
+      expect(src, contains('licenseOrgMembersRevokedTileTitle'));
+      expect(src, contains('licenseOrgMembersRevokedTileBy'));
+      // System-actor labelling for refund-cascade revokes (when
+      // a Stripe refund triggers the seat drain without an
+      // owner action).
+      expect(src, contains('LicenseOrgAuditActorRole.system'));
+    });
+
+    test('extracts uid from allocationId for the revoked member label', () {
+      // Regression for the 2026-05-28 first-revoke bug: targetId on
+      // a seat_revoked_manual audit row is the full allocation doc
+      // id `<orgId>__<uid>__<productId>`, not the uid alone. The
+      // first ship rendered #CLEANR (orgId prefix) where the revoked
+      // member's uid should be. Parse the middle segment.
+      expect(src, contains('_uidFromAllocationId'));
+      expect(src, contains("final parts = allocationId.split('__')"));
+      expect(src, contains('if (parts.length != 3) return allocationId'));
+      expect(src, contains('return parts[1]'));
+    });
+  });
 }
