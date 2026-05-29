@@ -12685,6 +12685,14 @@
     "privacyChoiceTagBalanced": "ÉQUILIBRÉ",
     "privacyChoiceTagMostHelpful": "PLUS UTILE",
     "licenseOrgOverviewRecentActivityTitle": "Activité récente",
+    "licenseOrgSeatUsageSectionTitle": "Utilisation des sièges",
+    "licenseOrgSeatUsageSubtitle": "{active} sur {capacity} actifs",
+    "licenseOrgSeatUsageActiveToday": "Actif aujourd'hui",
+    "licenseOrgSeatUsageIdleDays": "{days, plural, =1{Inactif depuis 1 jour} other{Inactif depuis {days} jours}}",
+    "licenseOrgSeatUsageNeverSignedIn": "N'a pas signé depuis l'attribution du siège",
+    "licenseOrgSeatUsageRevokeAction": "Révoquer le siège",
+    "licenseOrgSeatUsageEmptyState": "Aucun siège attribué : partage une invitation pour faire entrer des membres.",
+    "licenseOrgSeatUsageLoadError": "Impossible de charger l'utilisation des sièges. Tire vers le bas pour réessayer.",
     "@licenseOrgOverviewRecentActivityTitle": {
         "description": "Section title for the recent-audit-events preview rendered on the License Org Overview screen."
     },

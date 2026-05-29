@@ -44124,6 +44124,44 @@ class AppLocalizationsRu extends AppLocalizations {
   String get licenseOrgOverviewRecentActivityTitle => 'Недавняя активность';
 
   @override
+  String get licenseOrgSeatUsageSectionTitle => 'Использование мест';
+
+  @override
+  String licenseOrgSeatUsageSubtitle(int active, int capacity) {
+    return '$active из $capacity активных';
+  }
+
+  @override
+  String get licenseOrgSeatUsageActiveToday => 'Активен сегодня';
+
+  @override
+  String licenseOrgSeatUsageIdleDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Неактивен $days дней',
+      few: 'Неактивен $days дня',
+      one: 'Неактивен 1 день',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licenseOrgSeatUsageNeverSignedIn =>
+      'Не входил в систему с момента получения места';
+
+  @override
+  String get licenseOrgSeatUsageRevokeAction => 'Отозвать место';
+
+  @override
+  String get licenseOrgSeatUsageEmptyState =>
+      'Места ещё не назначены: поделитесь приглашением, чтобы пригласить участников.';
+
+  @override
+  String get licenseOrgSeatUsageLoadError =>
+      'Не удалось загрузить использование мест. Потяните вниз, чтобы повторить.';
+
+  @override
   String get licenseOrgAuditActionSeatCodeMinted => 'Лицензионный код создан';
 
   @override

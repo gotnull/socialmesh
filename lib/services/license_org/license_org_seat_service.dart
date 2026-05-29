@@ -231,8 +231,9 @@ ReinstateSeatReason _mapReinstateReason(FirebaseFunctionsException e) {
       // wire shape is small and we already pin the message in the
       // backend source-text tests.
       final msg = (e.message ?? '').toLowerCase();
-      if (msg.contains('seat capacity'))
+      if (msg.contains('seat capacity')) {
         return ReinstateSeatReason.overCapacity;
+      }
       return ReinstateSeatReason.orgSuspended;
     default:
       return ReinstateSeatReason.generic;
@@ -251,5 +252,117 @@ RevokeSeatReason _mapRevokeReason(FirebaseFunctionsException e) {
       return RevokeSeatReason.rateLimited;
     default:
       return RevokeSeatReason.generic;
+  }
+}
+
+// =============================================================================
+// getSeatUtilization (Phase 2 of seat utilization analytics)
+// =============================================================================
+
+/// Per-member row in [GetSeatUtilizationSuccess.byMember]. Mirrors the
+/// `SeatUtilizationMember` wire shape from
+/// `backend/functions/src/license_org_seats.ts`. Callers compute the
+/// opaque display label via
+/// `licenseOrgMemberLabel(uid)` from
+/// `lib/features/license_org/utils/member_label.dart` so the Seat
+/// Usage section uses the same scheme as the Members sheet.
+class SeatUtilizationMember {
+  final String allocationId;
+  final String uid;
+  final String role;
+  final String productId;
+  final DateTime seatAllocatedAt;
+  final DateTime? lastActiveAt;
+  final int? daysIdle;
+
+  const SeatUtilizationMember({
+    required this.allocationId,
+    required this.uid,
+    required this.role,
+    required this.productId,
+    required this.seatAllocatedAt,
+    required this.lastActiveAt,
+    required this.daysIdle,
+  });
+
+  static SeatUtilizationMember fromMap(Map<String, dynamic> m) {
+    final lastActiveRaw = m['lastActiveAt'] as String?;
+    return SeatUtilizationMember(
+      allocationId: m['allocationId'] as String,
+      uid: m['uid'] as String,
+      role: m['role'] as String? ?? 'unknown',
+      productId: m['productId'] as String,
+      seatAllocatedAt: DateTime.parse(m['seatAllocatedAt'] as String),
+      lastActiveAt: lastActiveRaw == null
+          ? null
+          : DateTime.parse(lastActiveRaw),
+      daysIdle: (m['daysIdle'] as num?)?.toInt(),
+    );
+  }
+}
+
+sealed class GetSeatUtilizationResult {
+  const GetSeatUtilizationResult();
+}
+
+class GetSeatUtilizationSuccess extends GetSeatUtilizationResult {
+  final int capacity;
+  final int active;
+  final List<SeatUtilizationMember> byMember;
+
+  const GetSeatUtilizationSuccess({
+    required this.capacity,
+    required this.active,
+    required this.byMember,
+  });
+}
+
+class GetSeatUtilizationFailure extends GetSeatUtilizationResult {
+  final String message;
+
+  const GetSeatUtilizationFailure({required this.message});
+}
+
+extension LicenseOrgSeatServiceUtilization on LicenseOrgSeatService {
+  /// Owner / admin read. Returns the per-seat utilization snapshot for
+  /// the org. Backend gates on `isLicenseOrgAdminOrOwner` and rejects
+  /// anonymous callers; the failure case maps both rejection codes to
+  /// a generic [GetSeatUtilizationFailure] (the surface is read-only —
+  /// the UI just shows an error state without forking on the reason).
+  Future<GetSeatUtilizationResult> getSeatUtilization({
+    required String licenseOrgId,
+  }) async {
+    AppLogging.groupLicensing(
+      '[LicenseOrgSeatService] getSeatUtilization requested',
+    );
+    try {
+      final result = await _invoker.call('getLicenseOrgSeatUtilization', {
+        'licenseOrgId': licenseOrgId,
+      });
+      final byMemberRaw = (result['byMember'] as List?) ?? const [];
+      final byMember = byMemberRaw
+          .map(
+            (e) => SeatUtilizationMember.fromMap(
+              Map<String, dynamic>.from(e as Map),
+            ),
+          )
+          .toList();
+      return GetSeatUtilizationSuccess(
+        capacity: (result['capacity'] as num?)?.toInt() ?? 0,
+        active: (result['active'] as num?)?.toInt() ?? 0,
+        byMember: byMember,
+      );
+    } on FirebaseFunctionsException catch (e) {
+      AppLogging.groupLicensing(
+        '[LicenseOrgSeatService] getSeatUtilization failed code=${e.code}',
+      );
+      return GetSeatUtilizationFailure(message: e.message ?? e.code);
+    } catch (e) {
+      AppLogging.groupLicensing(
+        '[LicenseOrgSeatService] getSeatUtilization unexpected '
+        '(error class: ${e.runtimeType})',
+      );
+      return GetSeatUtilizationFailure(message: e.toString());
+    }
   }
 }

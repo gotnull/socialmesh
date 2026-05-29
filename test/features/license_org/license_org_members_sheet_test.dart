@@ -416,7 +416,12 @@ void main() {
     });
 
     test('wires the confirm sheet + service call', () {
-      expect(src, contains('_RevokeConfirmSheet'));
+      // The confirm sheet was promoted to
+      // `lib/features/license_org/widgets/revoke_seat_confirm_sheet.dart`
+      // so the per-org card's Seat Usage section can share the same
+      // surface. Pin the shared widget name + the import path.
+      expect(src, contains('RevokeSeatConfirmSheet'));
+      expect(src, contains("import 'widgets/revoke_seat_confirm_sheet.dart'"));
       expect(src, contains('LicenseOrgSeatService()'));
       expect(src, contains('seatAllocationDocId('));
       expect(src, contains('communityPackSeatProductId'));
@@ -559,7 +564,7 @@ void main() {
         final closingSemicolon = src.indexOf(';', assignment);
         final body = src.substring(assignment, closingSemicolon);
         expect(body, contains('!activeUids.contains'));
-        expect(body, contains('_uidFromAllocationId'));
+        expect(body, contains('licenseOrgUidFromAllocationId'));
       },
     );
 
@@ -606,10 +611,15 @@ void main() {
       // id `<orgId>__<uid>__<productId>`, not the uid alone. The
       // first ship rendered #CLEANR (orgId prefix) where the revoked
       // member's uid should be. Parse the middle segment.
-      expect(src, contains('_uidFromAllocationId'));
-      expect(src, contains("final parts = allocationId.split('__')"));
-      expect(src, contains('if (parts.length != 3) return allocationId'));
-      expect(src, contains('return parts[1]'));
+      // Helper extracted to
+      // `lib/features/license_org/utils/member_label.dart` as
+      // `licenseOrgUidFromAllocationId`. Implementation details
+      // (split / length check / middle-segment return) are pinned
+      // in the helper's own behavior test
+      // (`test/features/license_org/utils/member_label_test.dart`);
+      // here we just guarantee the members sheet still routes
+      // through that helper.
+      expect(src, contains('licenseOrgUidFromAllocationId'));
     });
   });
 }

@@ -76301,6 +76301,54 @@ abstract class AppLocalizations {
   /// **'Recent activity'**
   String get licenseOrgOverviewRecentActivityTitle;
 
+  /// Section title for the per-member seat-utilization view on the License Org Overview card.
+  ///
+  /// In en, this message translates to:
+  /// **'Seat usage'**
+  String get licenseOrgSeatUsageSectionTitle;
+
+  /// Trailing subtitle on the Seat Usage section header, e.g. '7 of 10 active'.
+  ///
+  /// In en, this message translates to:
+  /// **'{active} of {capacity} active'**
+  String licenseOrgSeatUsageSubtitle(int active, int capacity);
+
+  /// Last-active line under a Seat Usage member row when the member has signed in today (daysIdle == 0).
+  ///
+  /// In en, this message translates to:
+  /// **'Active today'**
+  String get licenseOrgSeatUsageActiveToday;
+
+  /// Last-active line under a Seat Usage member row when daysIdle is between 1 and 29. ICU plural.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Idle 1 day} other{Idle {days} days}}'**
+  String licenseOrgSeatUsageIdleDays(int days);
+
+  /// Last-active line under a Seat Usage member row when the seat has never had a presence ping (daysIdle == null).
+  ///
+  /// In en, this message translates to:
+  /// **'Hasn\'t signed in since seat was granted'**
+  String get licenseOrgSeatUsageNeverSignedIn;
+
+  /// Overflow-menu action on a Seat Usage member row that opens the existing RevokeSeatConfirmSheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke seat'**
+  String get licenseOrgSeatUsageRevokeAction;
+
+  /// Empty state shown inside the Seat Usage section when no active seats exist for the org.
+  ///
+  /// In en, this message translates to:
+  /// **'No seats allocated yet — share an invite to get members in.'**
+  String get licenseOrgSeatUsageEmptyState;
+
+  /// Error state shown inside the Seat Usage section when getLicenseOrgSeatUtilization fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load seat usage. Pull down to retry.'**
+  String get licenseOrgSeatUsageLoadError;
+
   /// Human-readable label for the seat_code_minted audit action on the License Org Overview screen's Recent activity row.
   ///
   /// In en, this message translates to:

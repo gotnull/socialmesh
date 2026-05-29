@@ -44135,6 +44135,43 @@ class AppLocalizationsIt extends AppLocalizations {
   String get licenseOrgOverviewRecentActivityTitle => 'Attività recente';
 
   @override
+  String get licenseOrgSeatUsageSectionTitle => 'Utilizzo posti';
+
+  @override
+  String licenseOrgSeatUsageSubtitle(int active, int capacity) {
+    return '$active di $capacity attivi';
+  }
+
+  @override
+  String get licenseOrgSeatUsageActiveToday => 'Attivo oggi';
+
+  @override
+  String licenseOrgSeatUsageIdleDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Inattivo da $days giorni',
+      one: 'Inattivo da 1 giorno',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licenseOrgSeatUsageNeverSignedIn =>
+      'Non ha effettuato l\'accesso da quando è stato assegnato il posto';
+
+  @override
+  String get licenseOrgSeatUsageRevokeAction => 'Revoca posto';
+
+  @override
+  String get licenseOrgSeatUsageEmptyState =>
+      'Nessun posto assegnato: condividi un invito per far entrare i membri.';
+
+  @override
+  String get licenseOrgSeatUsageLoadError =>
+      'Impossibile caricare l\'utilizzo dei posti. Trascina verso il basso per riprovare.';
+
+  @override
   String get licenseOrgAuditActionSeatCodeMinted => 'Codice licenza creato';
 
   @override

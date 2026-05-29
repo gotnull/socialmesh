@@ -12685,6 +12685,14 @@
     "privacyChoiceTagBalanced": "СБАЛАНСИРОВАННО",
     "privacyChoiceTagMostHelpful": "МАКСИМАЛЬНАЯ ПОМОЩЬ",
     "licenseOrgOverviewRecentActivityTitle": "Недавняя активность",
+    "licenseOrgSeatUsageSectionTitle": "Использование мест",
+    "licenseOrgSeatUsageSubtitle": "{active} из {capacity} активных",
+    "licenseOrgSeatUsageActiveToday": "Активен сегодня",
+    "licenseOrgSeatUsageIdleDays": "{days, plural, one{Неактивен 1 день} few{Неактивен {days} дня} other{Неактивен {days} дней}}",
+    "licenseOrgSeatUsageNeverSignedIn": "Не входил в систему с момента получения места",
+    "licenseOrgSeatUsageRevokeAction": "Отозвать место",
+    "licenseOrgSeatUsageEmptyState": "Места ещё не назначены: поделитесь приглашением, чтобы пригласить участников.",
+    "licenseOrgSeatUsageLoadError": "Не удалось загрузить использование мест. Потяните вниз, чтобы повторить.",
     "@licenseOrgOverviewRecentActivityTitle": {
         "description": "Section title for the recent-audit-events preview rendered on the License Org Overview screen."
     },

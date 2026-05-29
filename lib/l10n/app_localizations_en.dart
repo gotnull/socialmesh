@@ -43637,6 +43637,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get licenseOrgOverviewRecentActivityTitle => 'Recent activity';
 
   @override
+  String get licenseOrgSeatUsageSectionTitle => 'Seat usage';
+
+  @override
+  String licenseOrgSeatUsageSubtitle(int active, int capacity) {
+    return '$active of $capacity active';
+  }
+
+  @override
+  String get licenseOrgSeatUsageActiveToday => 'Active today';
+
+  @override
+  String licenseOrgSeatUsageIdleDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Idle $days days',
+      one: 'Idle 1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licenseOrgSeatUsageNeverSignedIn =>
+      'Hasn\'t signed in since seat was granted';
+
+  @override
+  String get licenseOrgSeatUsageRevokeAction => 'Revoke seat';
+
+  @override
+  String get licenseOrgSeatUsageEmptyState =>
+      'No seats allocated yet — share an invite to get members in.';
+
+  @override
+  String get licenseOrgSeatUsageLoadError =>
+      'Couldn\'t load seat usage. Pull down to retry.';
+
+  @override
   String get licenseOrgAuditActionSeatCodeMinted => 'Seat code minted';
 
   @override

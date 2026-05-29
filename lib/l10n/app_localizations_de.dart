@@ -44254,6 +44254,43 @@ class AppLocalizationsDe extends AppLocalizations {
   String get licenseOrgOverviewRecentActivityTitle => 'Letzte Aktivität';
 
   @override
+  String get licenseOrgSeatUsageSectionTitle => 'Sitzplatznutzung';
+
+  @override
+  String licenseOrgSeatUsageSubtitle(int active, int capacity) {
+    return '$active von $capacity aktiv';
+  }
+
+  @override
+  String get licenseOrgSeatUsageActiveToday => 'Heute aktiv';
+
+  @override
+  String licenseOrgSeatUsageIdleDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Seit $days Tagen inaktiv',
+      one: 'Seit 1 Tag inaktiv',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licenseOrgSeatUsageNeverSignedIn =>
+      'Hat sich seit der Sitzplatzvergabe nicht angemeldet';
+
+  @override
+  String get licenseOrgSeatUsageRevokeAction => 'Sitzplatz entziehen';
+
+  @override
+  String get licenseOrgSeatUsageEmptyState =>
+      'Noch keine Sitzplätze vergeben: teile eine Einladung, damit Mitglieder beitreten können.';
+
+  @override
+  String get licenseOrgSeatUsageLoadError =>
+      'Sitzplatznutzung konnte nicht geladen werden. Zum Wiederholen nach unten ziehen.';
+
+  @override
   String get licenseOrgAuditActionSeatCodeMinted => 'Lizenz-Code erstellt';
 
   @override

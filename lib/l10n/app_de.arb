@@ -12685,6 +12685,14 @@
     "privacyChoiceTagBalanced": "AUSGEWOGEN",
     "privacyChoiceTagMostHelpful": "AM HILFREICHSTEN",
     "licenseOrgOverviewRecentActivityTitle": "Letzte Aktivität",
+    "licenseOrgSeatUsageSectionTitle": "Sitzplatznutzung",
+    "licenseOrgSeatUsageSubtitle": "{active} von {capacity} aktiv",
+    "licenseOrgSeatUsageActiveToday": "Heute aktiv",
+    "licenseOrgSeatUsageIdleDays": "{days, plural, =1{Seit 1 Tag inaktiv} other{Seit {days} Tagen inaktiv}}",
+    "licenseOrgSeatUsageNeverSignedIn": "Hat sich seit der Sitzplatzvergabe nicht angemeldet",
+    "licenseOrgSeatUsageRevokeAction": "Sitzplatz entziehen",
+    "licenseOrgSeatUsageEmptyState": "Noch keine Sitzplätze vergeben: teile eine Einladung, damit Mitglieder beitreten können.",
+    "licenseOrgSeatUsageLoadError": "Sitzplatznutzung konnte nicht geladen werden. Zum Wiederholen nach unten ziehen.",
     "@licenseOrgOverviewRecentActivityTitle": {
         "description": "Section title for the recent-audit-events preview rendered on the License Org Overview screen."
     },

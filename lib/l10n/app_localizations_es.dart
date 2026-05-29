@@ -44325,6 +44325,43 @@ class AppLocalizationsEs extends AppLocalizations {
   String get licenseOrgOverviewRecentActivityTitle => 'Actividad reciente';
 
   @override
+  String get licenseOrgSeatUsageSectionTitle => 'Uso de asientos';
+
+  @override
+  String licenseOrgSeatUsageSubtitle(int active, int capacity) {
+    return '$active de $capacity activos';
+  }
+
+  @override
+  String get licenseOrgSeatUsageActiveToday => 'Activo hoy';
+
+  @override
+  String licenseOrgSeatUsageIdleDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Inactivo $days días',
+      one: 'Inactivo 1 día',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licenseOrgSeatUsageNeverSignedIn =>
+      'No ha iniciado sesión desde que se le asignó el asiento';
+
+  @override
+  String get licenseOrgSeatUsageRevokeAction => 'Revocar asiento';
+
+  @override
+  String get licenseOrgSeatUsageEmptyState =>
+      'Aún no hay asientos asignados: comparte una invitación para que entren miembros.';
+
+  @override
+  String get licenseOrgSeatUsageLoadError =>
+      'No se pudo cargar el uso de asientos. Desliza hacia abajo para reintentar.';
+
+  @override
   String get licenseOrgAuditActionSeatCodeMinted => 'Código de licencia creado';
 
   @override

@@ -40,6 +40,8 @@ import '../../providers/seat_allocation_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../services/license_org/license_org_seat_service.dart';
 import '../../utils/snackbar.dart';
+import 'utils/member_label.dart';
+import 'widgets/revoke_seat_confirm_sheet.dart';
 
 class LicenseOrgMembersSheet extends ConsumerStatefulWidget {
   final String licenseOrgId;
@@ -137,7 +139,7 @@ class _LicenseOrgMembersSheetState extends ConsumerState<LicenseOrgMembersSheet>
   Future<void> _onRevokeTapped(LicenseOrgMembership member) async {
     if (_revoking) return;
     final l10n = context.l10n;
-    final memberLabel = _labelForUid(member.uid);
+    final memberLabel = licenseOrgMemberLabel(member.uid);
 
     // Confirm-then-act. Cancel returns null/false; confirm returns
     // true. Sheet child pops itself with the chosen value so the
@@ -145,7 +147,7 @@ class _LicenseOrgMembersSheetState extends ConsumerState<LicenseOrgMembersSheet>
     // teardown.
     final confirmed = await AppBottomSheet.show<bool>(
       context: context,
-      child: _RevokeConfirmSheet(memberLabel: memberLabel),
+      child: RevokeSeatConfirmSheet(memberLabel: memberLabel),
     );
     if (confirmed != true || !mounted) return;
 
@@ -325,7 +327,7 @@ class _LicenseOrgMembersSheetState extends ConsumerState<LicenseOrgMembersSheet>
               final revoked = revokedRaw
                   .where(
                     (e) => !activeUids.contains(
-                      _uidFromAllocationId(e.targetId ?? ''),
+                      licenseOrgUidFromAllocationId(e.targetId ?? ''),
                     ),
                   )
                   .toList(growable: false);
@@ -481,7 +483,7 @@ class _MemberTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final label = _labelForUid(member.uid);
+    final label = licenseOrgMemberLabel(member.uid);
     final role = _roleString(l10n, member.role);
     final joined = _formatJoinedRelative(l10n, member.joinedAt, DateTime.now());
 
@@ -610,90 +612,6 @@ class _RevokeActionMenu extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Confirmation sheet shown after the owner picks "Revoke seat" from
-/// the per-member action menu. Pops `true` on confirm, `false` on
-/// cancel.
-class _RevokeConfirmSheet extends StatelessWidget {
-  final String memberLabel;
-
-  const _RevokeConfirmSheet({required this.memberLabel});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return Padding(
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.licenseOrgMembersRevokeConfirmTitle(memberLabel),
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: context.textPrimary,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing12),
-          Text(
-            l10n.licenseOrgMembersRevokeConfirmBody,
-            style: TextStyle(
-              fontSize: 13,
-              color: context.textSecondary,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: Text(l10n.licenseOrgMembersRevokeCancelButton),
-                ),
-              ),
-              const SizedBox(width: AppTheme.spacing12),
-              Expanded(
-                child: FilledButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.errorRed,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: Text(l10n.licenseOrgMembersRevokeConfirmButton),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Deterministic short label derived from the first 6 chars of the
-/// uid. Stable across sessions, opaque to other members, and good
-/// enough to distinguish people in a small org. See spec §4.
-String _labelForUid(String uid) {
-  if (uid.isEmpty) return '#------';
-  final prefix = uid.length >= 6 ? uid.substring(0, 6) : uid.padRight(6, '_');
-  return '#${prefix.toUpperCase()}';
-}
-
-/// Extracts the uid from a seat allocation doc id. Backend format
-/// (from `seatAllocationDocId` in license_org_invites.ts):
-/// `<orgId>__<uid>__<productId>`. Splits on `__` and returns the
-/// middle segment; falls back to the raw input when the format
-/// doesn't match (so an unknown shape degrades to a less-specific
-/// label rather than blanking).
-String _uidFromAllocationId(String allocationId) {
-  if (allocationId.isEmpty) return '';
-  final parts = allocationId.split('__');
-  if (parts.length != 3) return allocationId;
-  return parts[1];
 }
 
 String _roleString(AppLocalizations l10n, LicenseOrgMemberRole role) {
@@ -1051,11 +969,11 @@ class _RevokedTile extends StatelessWidget {
     // wants the uid (middle segment) — using the whole targetId
     // here surfaced `#CLEANR` (the first 6 chars of the orgId
     // prefix) on first sim verification, 2026-05-28.
-    final revokedUid = _uidFromAllocationId(event.targetId ?? '');
-    final memberLabel = _labelForUid(revokedUid);
+    final revokedUid = licenseOrgUidFromAllocationId(event.targetId ?? '');
+    final memberLabel = licenseOrgMemberLabel(revokedUid);
     final actorLabel = event.actorRole == LicenseOrgAuditActorRole.system
         ? 'system'
-        : _labelForUid(event.actorUid);
+        : licenseOrgMemberLabel(event.actorUid);
     final relative = _formatRevokedRelative(
       l10n,
       event.tsServer,

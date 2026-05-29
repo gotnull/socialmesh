@@ -36,12 +36,16 @@ import '../../models/license_org_membership.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/license_org_members_providers.dart';
 import '../../providers/license_org_overview_providers.dart';
+import '../../providers/license_org_seat_utilization_providers.dart';
 import '../../providers/seat_allocation_providers.dart';
 import '../../services/license_org/license_org_invite_service.dart';
+import '../../services/license_org/license_org_seat_service.dart';
 import '../../services/license_org/license_org_settings_service.dart';
 import '../../utils/snackbar.dart';
 import 'license_org_audit_log_screen.dart';
 import 'license_org_members_sheet.dart';
+import 'utils/member_label.dart';
+import 'widgets/revoke_seat_confirm_sheet.dart';
 
 /// Session-scoped set of orgIds the auto-prompt has already fired for
 /// in this app launch. An owner who dismisses the prompt with "Not
@@ -241,6 +245,18 @@ class LicenseOrgOverviewCard extends ConsumerWidget {
         // admin" button is still gated on the future
         // licenseOrgAdminWebEnabled flag and stays deferred.
         if (status == LicenseOrgStatus.active) ...[
+          // Owner / admin sees the Seat Usage section between the
+          // InfoTable and Recent Activity. Member role sees neither
+          // the seat-utilization data nor the inline revoke action,
+          // so the section is suppressed entirely below the role
+          // gate — the backend rejects the callable for non-admins
+          // anyway, but suppressing client-side avoids a useless
+          // loading spinner.
+          if (role == LicenseOrgMemberRole.owner ||
+              role == LicenseOrgMemberRole.admin) ...[
+            const SizedBox(height: AppTheme.spacing24),
+            _SeatUsageSection(orgId: orgId),
+          ],
           const SizedBox(height: AppTheme.spacing24),
           _RecentActivitySection(orgId: orgId),
           const SizedBox(height: AppTheme.spacing20),
@@ -623,6 +639,303 @@ class _RecentActivitySection extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// =============================================================================
+// Seat Usage section (Phase 2 of seat utilization analytics)
+// =============================================================================
+
+/// Per-org "Seat usage" section rendered between the InfoTable and
+/// Recent Activity for owner / admin viewers. Shows each active
+/// seat's holder by opaque `#XXXXXX` label + their last-activity
+/// signal so admins can spot idle members at a glance and reclaim
+/// the seat without opening the Members sheet.
+///
+/// Backend contract: `getLicenseOrgSeatUtilization` (Phase 1) wired
+/// through [licenseOrgSeatUtilizationProvider]. The provider returns
+/// `LicenseOrgSeatUtilizationState.failed=true` on Cloud Functions
+/// errors and the section renders an inline error state; loading
+/// renders a single thin progress indicator below the section
+/// header so the surrounding card layout doesn't jump.
+class _SeatUsageSection extends ConsumerWidget {
+  final String orgId;
+
+  const _SeatUsageSection({required this.orgId});
+
+  /// Above this threshold (days), the row's last-active label is
+  /// rendered in the error / amber color so admins scan idle
+  /// candidates first. Below it the row uses the standard
+  /// `textTertiary` color — present without screaming.
+  static const int _idleHighlightDays = 30;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final asyncState = ref.watch(licenseOrgSeatUtilizationProvider(orgId));
+
+    return asyncState.when(
+      data: (state) => _buildLoaded(context, ref, l10n, state),
+      loading: () => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SectionTitle(title: l10n.licenseOrgSeatUsageSectionTitle),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppTheme.spacing16),
+            child: Center(
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          ),
+        ],
+      ),
+      error: (_, _) => _buildError(context, l10n),
+    );
+  }
+
+  Widget _buildLoaded(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+    LicenseOrgSeatUtilizationState state,
+  ) {
+    if (state.failed) return _buildError(context, l10n);
+    final hasMembers = state.byMember.isNotEmpty;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionTitle(
+          title: l10n.licenseOrgSeatUsageSectionTitle,
+          trailing: Text(
+            l10n.licenseOrgSeatUsageSubtitle(state.active, state.capacity),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: context.textTertiary,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: context.card,
+            borderRadius: BorderRadius.circular(AppTheme.radius12),
+            border: Border.all(color: context.border),
+          ),
+          child: hasMembers
+              ? Column(
+                  children: [
+                    for (var i = 0; i < state.byMember.length; i++) ...[
+                      if (i > 0) Divider(color: context.border, height: 1),
+                      _SeatUsageRow(
+                        orgId: orgId,
+                        member: state.byMember[i],
+                        idleHighlightDays: _idleHighlightDays,
+                      ),
+                    ],
+                  ],
+                )
+              : Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing16,
+                    vertical: AppTheme.spacing20,
+                  ),
+                  child: Text(
+                    l10n.licenseOrgSeatUsageEmptyState,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: context.textSecondary,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildError(BuildContext context, AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionTitle(title: l10n.licenseOrgSeatUsageSectionTitle),
+        StatusBanner.error(
+          title: l10n.licenseOrgSeatUsageLoadError,
+          margin: EdgeInsets.zero,
+        ),
+      ],
+    );
+  }
+}
+
+/// One row inside the Seat Usage card. Opaque label + role text on
+/// the left, last-activity line on the right, overflow-menu trailing
+/// with the Revoke action.
+class _SeatUsageRow extends ConsumerStatefulWidget {
+  final String orgId;
+  final SeatUtilizationMember member;
+  final int idleHighlightDays;
+
+  const _SeatUsageRow({
+    required this.orgId,
+    required this.member,
+    required this.idleHighlightDays,
+  });
+
+  @override
+  ConsumerState<_SeatUsageRow> createState() => _SeatUsageRowState();
+}
+
+class _SeatUsageRowState extends ConsumerState<_SeatUsageRow> {
+  bool _revoking = false;
+
+  String _lastActiveText(AppLocalizations l10n) {
+    final daysIdle = widget.member.daysIdle;
+    if (daysIdle == null) return l10n.licenseOrgSeatUsageNeverSignedIn;
+    if (daysIdle == 0) return l10n.licenseOrgSeatUsageActiveToday;
+    return l10n.licenseOrgSeatUsageIdleDays(daysIdle);
+  }
+
+  bool get _isIdleHighlighted {
+    final daysIdle = widget.member.daysIdle;
+    return daysIdle != null && daysIdle >= widget.idleHighlightDays;
+  }
+
+  Color _lastActiveColor(BuildContext context) {
+    if (_isIdleHighlighted) return AppTheme.errorRed;
+    if (widget.member.daysIdle == null) return context.textTertiary;
+    return context.textSecondary;
+  }
+
+  String _roleText(AppLocalizations l10n) {
+    switch (widget.member.role) {
+      case 'owner':
+        return l10n.licenseOrgOverviewRoleOwner;
+      case 'admin':
+        return l10n.licenseOrgOverviewRoleAdmin;
+      default:
+        return l10n.licenseOrgOverviewRoleMember;
+    }
+  }
+
+  Future<void> _confirmAndRevoke(BuildContext context) async {
+    final l10n = context.l10n;
+    final memberLabel = licenseOrgMemberLabel(widget.member.uid);
+    final confirmed = await AppBottomSheet.show<bool>(
+      context: context,
+      child: RevokeSeatConfirmSheet(memberLabel: memberLabel),
+    );
+    if (confirmed != true) return;
+    if (!mounted) return;
+    setState(() => _revoking = true);
+    final service = LicenseOrgSeatService();
+    final result = await service.revokeSeat(
+      licenseOrgId: widget.orgId,
+      allocationId: widget.member.allocationId,
+    );
+    if (!mounted) return;
+    setState(() => _revoking = false);
+    switch (result) {
+      case RevokeSeatSuccess s:
+        // Invalidate the seat-usage provider so the section refreshes
+        // immediately. The members-sheet provider rebuilds the next
+        // time the user opens the roster.
+        ref.invalidate(licenseOrgSeatUtilizationProvider(widget.orgId));
+        if (context.mounted) {
+          showSuccessSnackBar(
+            context,
+            s.alreadyRevoked
+                ? l10n.licenseOrgMembersRevokeAlreadyRevoked
+                : l10n.licenseOrgMembersRevokeSuccess,
+          );
+        }
+      case RevokeSeatFailure f:
+        if (context.mounted) {
+          showErrorSnackBar(context, _failureMessage(l10n, f));
+        }
+    }
+  }
+
+  String _failureMessage(AppLocalizations l10n, RevokeSeatFailure f) {
+    switch (f.reason) {
+      case RevokeSeatReason.permissionDenied:
+        return l10n.licenseOrgMembersRevokeErrorPermission;
+      case RevokeSeatReason.rateLimited:
+        return l10n.licenseOrgMembersRevokeErrorRateLimit;
+      default:
+        return l10n.licenseOrgMembersRevokeErrorGeneric;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final memberLabel = licenseOrgMemberLabel(widget.member.uid);
+    final roleText = _roleText(l10n);
+    final lastActive = _lastActiveText(l10n);
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing16,
+        vertical: AppTheme.spacing12,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  memberLabel,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: context.textPrimary,
+                    fontFamily: AppTheme.fontFamily,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacing2),
+                Text(
+                  '$roleText · $lastActive',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: _lastActiveColor(context),
+                    fontWeight: _isIdleHighlighted
+                        ? FontWeight.w600
+                        : FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (_revoking)
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          else
+            PopupMenuButton<String>(
+              icon: Icon(Icons.more_vert, color: context.textSecondary),
+              padding: EdgeInsets.zero,
+              tooltip: l10n.licenseOrgSeatUsageRevokeAction,
+              onSelected: (value) {
+                if (value == 'revoke') _confirmAndRevoke(context);
+              },
+              itemBuilder: (_) => [
+                PopupMenuItem<String>(
+                  value: 'revoke',
+                  child: Text(l10n.licenseOrgSeatUsageRevokeAction),
+                ),
+              ],
+            ),
+        ],
+      ),
     );
   }
 }

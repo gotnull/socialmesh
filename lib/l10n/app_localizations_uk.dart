@@ -44135,6 +44135,44 @@ class AppLocalizationsUk extends AppLocalizations {
   String get licenseOrgOverviewRecentActivityTitle => 'Нещодавня активність';
 
   @override
+  String get licenseOrgSeatUsageSectionTitle => 'Використання місць';
+
+  @override
+  String licenseOrgSeatUsageSubtitle(int active, int capacity) {
+    return '$active з $capacity активних';
+  }
+
+  @override
+  String get licenseOrgSeatUsageActiveToday => 'Активний сьогодні';
+
+  @override
+  String licenseOrgSeatUsageIdleDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Неактивний $days днів',
+      few: 'Неактивний $days дні',
+      one: 'Неактивний 1 день',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get licenseOrgSeatUsageNeverSignedIn =>
+      'Не входив із моменту надання місця';
+
+  @override
+  String get licenseOrgSeatUsageRevokeAction => 'Відкликати місце';
+
+  @override
+  String get licenseOrgSeatUsageEmptyState =>
+      'Місць ще не призначено: поділіться запрошенням, щоб додати учасників.';
+
+  @override
+  String get licenseOrgSeatUsageLoadError =>
+      'Не вдалося завантажити використання місць. Потягніть вниз, щоб повторити.';
+
+  @override
   String get licenseOrgAuditActionSeatCodeMinted => 'Ліцензійний код створено';
 
   @override

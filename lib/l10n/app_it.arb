@@ -45826,6 +45826,14 @@
     "privacyChoiceTagBalanced": "EQUILIBRATO",
     "privacyChoiceTagMostHelpful": "PIÙ UTILE",
     "licenseOrgOverviewRecentActivityTitle": "Attività recente",
+    "licenseOrgSeatUsageSectionTitle": "Utilizzo posti",
+    "licenseOrgSeatUsageSubtitle": "{active} di {capacity} attivi",
+    "licenseOrgSeatUsageActiveToday": "Attivo oggi",
+    "licenseOrgSeatUsageIdleDays": "{days, plural, =1{Inattivo da 1 giorno} other{Inattivo da {days} giorni}}",
+    "licenseOrgSeatUsageNeverSignedIn": "Non ha effettuato l'accesso da quando è stato assegnato il posto",
+    "licenseOrgSeatUsageRevokeAction": "Revoca posto",
+    "licenseOrgSeatUsageEmptyState": "Nessun posto assegnato: condividi un invito per far entrare i membri.",
+    "licenseOrgSeatUsageLoadError": "Impossibile caricare l'utilizzo dei posti. Trascina verso il basso per riprovare.",
     "@licenseOrgOverviewRecentActivityTitle": {
         "description": "Section title for the recent-audit-events preview rendered on the License Org Overview screen."
     },

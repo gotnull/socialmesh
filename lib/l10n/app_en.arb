@@ -58196,6 +58196,45 @@
     "@licenseOrgOverviewRecentActivityTitle": {
         "description": "Section title for the recent-audit-events preview rendered on the License Org Overview screen."
     },
+    "licenseOrgSeatUsageSectionTitle": "Seat usage",
+    "@licenseOrgSeatUsageSectionTitle": {
+        "description": "Section title for the per-member seat-utilization view on the License Org Overview card."
+    },
+    "licenseOrgSeatUsageSubtitle": "{active} of {capacity} active",
+    "@licenseOrgSeatUsageSubtitle": {
+        "description": "Trailing subtitle on the Seat Usage section header, e.g. '7 of 10 active'.",
+        "placeholders": {
+            "active": { "type": "int" },
+            "capacity": { "type": "int" }
+        }
+    },
+    "licenseOrgSeatUsageActiveToday": "Active today",
+    "@licenseOrgSeatUsageActiveToday": {
+        "description": "Last-active line under a Seat Usage member row when the member has signed in today (daysIdle == 0)."
+    },
+    "licenseOrgSeatUsageIdleDays": "{days, plural, =1{Idle 1 day} other{Idle {days} days}}",
+    "@licenseOrgSeatUsageIdleDays": {
+        "description": "Last-active line under a Seat Usage member row when daysIdle is between 1 and 29. ICU plural.",
+        "placeholders": {
+            "days": { "type": "int" }
+        }
+    },
+    "licenseOrgSeatUsageNeverSignedIn": "Hasn't signed in since seat was granted",
+    "@licenseOrgSeatUsageNeverSignedIn": {
+        "description": "Last-active line under a Seat Usage member row when the seat has never had a presence ping (daysIdle == null)."
+    },
+    "licenseOrgSeatUsageRevokeAction": "Revoke seat",
+    "@licenseOrgSeatUsageRevokeAction": {
+        "description": "Overflow-menu action on a Seat Usage member row that opens the existing RevokeSeatConfirmSheet."
+    },
+    "licenseOrgSeatUsageEmptyState": "No seats allocated yet — share an invite to get members in.",
+    "@licenseOrgSeatUsageEmptyState": {
+        "description": "Empty state shown inside the Seat Usage section when no active seats exist for the org."
+    },
+    "licenseOrgSeatUsageLoadError": "Couldn't load seat usage. Pull down to retry.",
+    "@licenseOrgSeatUsageLoadError": {
+        "description": "Error state shown inside the Seat Usage section when getLicenseOrgSeatUtilization fails."
+    },
     "licenseOrgAuditActionSeatCodeMinted": "Seat code minted",
     "@licenseOrgAuditActionSeatCodeMinted": {
         "description": "Human-readable label for the seat_code_minted audit action on the License Org Overview screen's Recent activity row."

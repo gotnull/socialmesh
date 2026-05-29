@@ -45826,6 +45826,14 @@
     "privacyChoiceTagBalanced": "EQUILIBRADO",
     "privacyChoiceTagMostHelpful": "MAIS ÚTIL",
     "licenseOrgOverviewRecentActivityTitle": "Atividade recente",
+    "licenseOrgSeatUsageSectionTitle": "Uso de assentos",
+    "licenseOrgSeatUsageSubtitle": "{active} de {capacity} ativos",
+    "licenseOrgSeatUsageActiveToday": "Ativo hoje",
+    "licenseOrgSeatUsageIdleDays": "{days, plural, =1{Inativo há 1 dia} other{Inativo há {days} dias}}",
+    "licenseOrgSeatUsageNeverSignedIn": "Não entrou desde que o assento foi concedido",
+    "licenseOrgSeatUsageRevokeAction": "Revogar assento",
+    "licenseOrgSeatUsageEmptyState": "Nenhum assento atribuído: partilha um convite para que os membros entrem.",
+    "licenseOrgSeatUsageLoadError": "Não foi possível carregar o uso de assentos. Puxa para baixo para tentar novamente.",
     "@licenseOrgOverviewRecentActivityTitle": {
         "description": "Section title for the recent-audit-events preview rendered on the License Org Overview screen."
     },

@@ -12685,6 +12685,14 @@
     "privacyChoiceTagBalanced": "ЗБАЛАНСОВАНО",
     "privacyChoiceTagMostHelpful": "НАЙКОРИСНІШЕ",
     "licenseOrgOverviewRecentActivityTitle": "Нещодавня активність",
+    "licenseOrgSeatUsageSectionTitle": "Використання місць",
+    "licenseOrgSeatUsageSubtitle": "{active} з {capacity} активних",
+    "licenseOrgSeatUsageActiveToday": "Активний сьогодні",
+    "licenseOrgSeatUsageIdleDays": "{days, plural, one{Неактивний 1 день} few{Неактивний {days} дні} other{Неактивний {days} днів}}",
+    "licenseOrgSeatUsageNeverSignedIn": "Не входив із моменту надання місця",
+    "licenseOrgSeatUsageRevokeAction": "Відкликати місце",
+    "licenseOrgSeatUsageEmptyState": "Місць ще не призначено: поділіться запрошенням, щоб додати учасників.",
+    "licenseOrgSeatUsageLoadError": "Не вдалося завантажити використання місць. Потягніть вниз, щоб повторити.",
     "@licenseOrgOverviewRecentActivityTitle": {
         "description": "Section title for the recent-audit-events preview rendered on the License Org Overview screen."
     },
