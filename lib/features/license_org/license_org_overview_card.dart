@@ -790,7 +790,8 @@ class _SeatUsageRow extends ConsumerStatefulWidget {
   ConsumerState<_SeatUsageRow> createState() => _SeatUsageRowState();
 }
 
-class _SeatUsageRowState extends ConsumerState<_SeatUsageRow> {
+class _SeatUsageRowState extends ConsumerState<_SeatUsageRow>
+    with LifecycleSafeMixin<_SeatUsageRow> {
   bool _revoking = false;
 
   String _lastActiveText(AppLocalizations l10n) {
