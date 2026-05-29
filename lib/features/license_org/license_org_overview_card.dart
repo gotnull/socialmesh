@@ -172,14 +172,12 @@ class LicenseOrgOverviewCard extends ConsumerWidget {
                 )
               : null,
         ),
-        // No explicit spacer: SectionTitle bakes in `bottom: spacing8`
-        // and the IconButton's 32x32 hit area inflates the title row's
-        // vertical padding to ~10px below the text baseline. Together
-        // that's already ~18px to the InfoTable — matching the gap the
-        // text-only `RECENT ACTIVITY` header gets via its built-in 8 +
-        // explicit 8. Any additional SizedBox here just stacks on top
-        // of the row inflation and makes this header look more spaced
-        // than its sibling sections.
+        // No explicit spacer: SectionTitle internally compensates for
+        // tall trailing widgets (see SizedOverflowBox in
+        // `lib/core/widgets/section_header.dart`), so the IconButton
+        // edit pencil no longer inflates the title row's reported
+        // height. The built-in `bottom: spacing8` is consistent
+        // whether trailing is null or an IconButton.
         InfoTable(
           rows: [
             // Status first - the field a user opens this screen TO
