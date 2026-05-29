@@ -2249,7 +2249,12 @@ Future<void> clearDeviceDataBeforeConnect(
   // (files deleted, WAL/SHM journals stale). A failure here must never
   // prevent the user from reconnecting to a device.
 
-  // Clear persistent node storage only when switching devices
+  // Clear persistent device-scoped storage only when switching devices.
+  // Node identities, telemetry history, and recorded routes are all
+  // preserved across a same-device reconnect (including app relaunch +
+  // auto-reconnect) so collected statistics survive an app restart. They
+  // are wiped only on a genuine device switch or an explicit forget, where
+  // the old device's data must not union with the new device's fresh dump.
   if (clearNodeData) {
     try {
       final nodeStorage = await ref.read(nodeStorageProvider.future);
@@ -2257,24 +2262,24 @@ Future<void> clearDeviceDataBeforeConnect(
     } catch (e) {
       AppLogging.app('⚠️ clearDeviceData: nodeStorage.clearNodes failed: $e');
     }
-  }
 
-  // Clear telemetry data (device metrics, environment metrics, positions, etc.)
-  try {
-    final telemetryStorage = await ref.read(telemetryStorageProvider.future);
-    await telemetryStorage.clearAllData();
-  } catch (e) {
-    AppLogging.app('⚠️ clearDeviceData: telemetry.clearAllData failed: $e');
-  }
+    // Clear telemetry data (device metrics, environment metrics, positions, etc.)
+    try {
+      final telemetryStorage = await ref.read(telemetryStorageProvider.future);
+      await telemetryStorage.clearAllData();
+    } catch (e) {
+      AppLogging.app('⚠️ clearDeviceData: telemetry.clearAllData failed: $e');
+    }
 
-  // Clear routes
-  try {
-    final routeStorage = await ref.read(routeStorageProvider.future);
-    await routeStorage.clearAllRoutes();
-  } catch (e) {
-    AppLogging.app(
-      '⚠️ clearDeviceData: routeStorage.clearAllRoutes failed: $e',
-    );
+    // Clear routes
+    try {
+      final routeStorage = await ref.read(routeStorageProvider.future);
+      await routeStorage.clearAllRoutes();
+    } catch (e) {
+      AppLogging.app(
+        '⚠️ clearDeviceData: routeStorage.clearAllRoutes failed: $e',
+      );
+    }
   }
 
   AppLogging.app(
@@ -2340,7 +2345,12 @@ Future<void> clearDeviceDataBeforeConnectRef(
   // (files deleted, WAL/SHM journals stale). A failure here must never
   // prevent the user from reconnecting to a device.
 
-  // Clear persistent node storage only when switching devices
+  // Clear persistent device-scoped storage only when switching devices.
+  // Node identities, telemetry history, and recorded routes are all
+  // preserved across a same-device reconnect (including app relaunch +
+  // auto-reconnect) so collected statistics survive an app restart. They
+  // are wiped only on a genuine device switch or an explicit forget, where
+  // the old device's data must not union with the new device's fresh dump.
   if (clearNodeData) {
     try {
       final nodeStorage = await ref.read(nodeStorageProvider.future);
@@ -2348,24 +2358,24 @@ Future<void> clearDeviceDataBeforeConnectRef(
     } catch (e) {
       AppLogging.app('⚠️ clearDeviceData: nodeStorage.clearNodes failed: $e');
     }
-  }
 
-  // Clear telemetry data (device metrics, environment metrics, positions, etc.)
-  try {
-    final telemetryStorage = await ref.read(telemetryStorageProvider.future);
-    await telemetryStorage.clearAllData();
-  } catch (e) {
-    AppLogging.app('⚠️ clearDeviceData: telemetry.clearAllData failed: $e');
-  }
+    // Clear telemetry data (device metrics, environment metrics, positions, etc.)
+    try {
+      final telemetryStorage = await ref.read(telemetryStorageProvider.future);
+      await telemetryStorage.clearAllData();
+    } catch (e) {
+      AppLogging.app('⚠️ clearDeviceData: telemetry.clearAllData failed: $e');
+    }
 
-  // Clear routes
-  try {
-    final routeStorage = await ref.read(routeStorageProvider.future);
-    await routeStorage.clearAllRoutes();
-  } catch (e) {
-    AppLogging.app(
-      '⚠️ clearDeviceData: routeStorage.clearAllRoutes failed: $e',
-    );
+    // Clear routes
+    try {
+      final routeStorage = await ref.read(routeStorageProvider.future);
+      await routeStorage.clearAllRoutes();
+    } catch (e) {
+      AppLogging.app(
+        '⚠️ clearDeviceData: routeStorage.clearAllRoutes failed: $e',
+      );
+    }
   }
 
   AppLogging.app(
