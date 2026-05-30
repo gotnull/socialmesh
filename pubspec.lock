@@ -141,50 +141,50 @@ packages:
     dependency: "direct main"
     description:
       name: bonsoir
-      sha256: "1b112a966302a739d253c8dbc7ea4c1cb3eca6d8110dc59e36d76f7cf0b6edf2"
+      sha256: c0e84f696767d67f14fc05f2d67656487aa86934dfaa9462e1eed34c016deb52
       url: "https://pub.dev"
     source: hosted
-    version: "6.1.0"
+    version: "7.1.1"
   bonsoir_android:
     dependency: transitive
     description:
       name: bonsoir_android
-      sha256: bfa3ab7e2f65473cb369bce639dbdbdc75064848c01ac11b3c2bc3e16031ff3a
+      sha256: "152966e6b4db2bfd5a8a9cc3234a30d694e596f61c9cc868daa1644707df7873"
       url: "https://pub.dev"
     source: hosted
-    version: "6.0.2"
+    version: "7.1.1"
   bonsoir_darwin:
     dependency: transitive
     description:
       name: bonsoir_darwin
-      sha256: d62fd62ed433aa09ec99f71f95dae53ffa0adf788c9051ff3d6b903463045d3c
+      sha256: "04425a8657e3131683c7966689d4e65e114cb5181de94aac89d2fba84cfaaca4"
       url: "https://pub.dev"
     source: hosted
-    version: "6.1.0"
+    version: "7.1.0"
   bonsoir_linux:
     dependency: transitive
     description:
       name: bonsoir_linux
-      sha256: a49d5f328a197b27a3901b833f92c93366f2cd7085dcb495fa11ee6d9f2509a9
+      sha256: "9afae7bb9509c5bd20a0ea2ca02a0f2b1ef09cca1ceb2ea288ed58a0f03d1e11"
       url: "https://pub.dev"
     source: hosted
-    version: "6.0.3"
+    version: "7.1.0"
   bonsoir_platform_interface:
     dependency: transitive
     description:
       name: bonsoir_platform_interface
-      sha256: ba1cc30daaa172dfc76f88e4fee8d090674179439201997ba2b3bd9e1cca84c0
+      sha256: "6c55c786b01ad279f675ae72cea3a885aa746e416d2e8c1f0c46e9d2c06420b0"
       url: "https://pub.dev"
     source: hosted
-    version: "6.1.0"
+    version: "7.0.0"
   bonsoir_windows:
     dependency: transitive
     description:
       name: bonsoir_windows
-      sha256: "01aba2516b776eb1deb68845124dc0a41095da108276d4b307bf19c4c3e2d9b1"
+      sha256: "656aea056e48adc93b535339efe2f5f4e5eeec38a7d5c7aa6eb7566b919cdec1"
       url: "https://pub.dev"
     source: hosted
-    version: "6.0.3"
+    version: "7.1.0"
   boolean_selector:
     dependency: transitive
     description:
@@ -1657,10 +1657,10 @@ packages:
     dependency: transitive
     description:
       name: meta
-      sha256: "23f08335362185a5ea2ad3a4e597f1375e78bce8a040df5c600c8d3552ef2394"
+      sha256: "1741988757a65eb6b36abe716829688cf01910bbf91c34354ff7ec1c3de2b349"
       url: "https://pub.dev"
     source: hosted
-    version: "1.17.0"
+    version: "1.18.0"
   mgrs_dart:
     dependency: transitive
     description:
@@ -2494,26 +2494,26 @@ packages:
     dependency: transitive
     description:
       name: test
-      sha256: "280d6d890011ca966ad08df7e8a4ddfab0fb3aa49f96ed6de56e3521347a9ae7"
+      sha256: "8d9ceddbab833f180fbefed08afa76d7c03513dfdba87ffcec2718b02bbcbf20"
       url: "https://pub.dev"
     source: hosted
-    version: "1.30.0"
+    version: "1.31.0"
   test_api:
     dependency: transitive
     description:
       name: test_api
-      sha256: "8161c84903fd860b26bfdefb7963b3f0b68fee7adea0f59ef805ecca346f0c7a"
+      sha256: "949a932224383300f01be9221c39180316445ecb8e7547f70a41a35bf421fb9e"
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.10"
+    version: "0.7.11"
   test_core:
     dependency: transitive
     description:
       name: test_core
-      sha256: "0381bd1585d1a924763c308100f2138205252fb90c9d4eeaf28489ee65ccde51"
+      sha256: "1991d4cfe85d5043241acac92962c3977c8d2f2add1ee73130c7b286417d1d34"
       url: "https://pub.dev"
     source: hosted
-    version: "0.6.16"
+    version: "0.6.17"
   timeago:
     dependency: "direct main"
     description:
