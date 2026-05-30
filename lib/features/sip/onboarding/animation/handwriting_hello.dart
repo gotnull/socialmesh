@@ -2,20 +2,21 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 // Self-writing "hello mesh" shown in the sketch onboarding pad while it is
-// empty. Renders the Caveat cursive typeface and reveals it left-to-right with
-// a soft feathered edge, like a hand writing the word, then holds and gently
-// loops.
+// empty. Renders the bundled Caveat cursive typeface and reveals it
+// left-to-right with a soft feathered edge, like a hand writing the word,
+// then holds and gently loops.
 //
-// The Caveat font is fetched on first use via google_fonts. To avoid the
-// fallback-font flash + reflow ("janky thing before it appears"), nothing is
-// painted until the real font has loaded; it then fades in smoothly.
+// Caveat ships as a bundled asset (see pubspec `fonts:`), so it is available
+// instantly and the whole flow works fully offline - no network font fetch.
 //
 // Honours reduced-motion by showing the finished word.
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme.dart';
+
+/// Family name as declared in pubspec.yaml `fonts:`.
+const String _kCaveatFamily = 'Caveat';
 
 /// Animated cursive "hello mesh" reveal.
 class HandwritingHello extends StatefulWidget {
@@ -35,33 +36,14 @@ class _HandwritingHelloState extends State<HandwritingHello>
 
   late final AnimationController _controller;
   bool _reduceMotion = false;
-  bool _fontReady = false;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(vsync: this, duration: _period);
-    _loadFont();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _syncMotion();
     });
-  }
-
-  // Resolve the Caveat font before painting so we never flash a fallback.
-  Future<void> _loadFont() async {
-    // Touch the style so google_fonts schedules the fetch, then await any
-    // pending font loads. On cached runs this completes effectively instantly.
-    GoogleFonts.caveat();
-    try {
-      await GoogleFonts.pendingFonts([GoogleFonts.caveat()]);
-    } catch (_) {
-      // Network unavailable (offline-first app): fall back to whatever
-      // google_fonts resolves to rather than hiding the word forever.
-    }
-    if (!mounted) return;
-    setState(() => _fontReady = true);
-    _controller.forward(from: 0);
-    _syncMotion();
   }
 
   @override
@@ -78,7 +60,7 @@ class _HandwritingHelloState extends State<HandwritingHello>
   }
 
   void _syncMotion() {
-    if (widget.active && !_reduceMotion && _fontReady) {
+    if (widget.active && !_reduceMotion) {
       if (!_controller.isAnimating) _controller.repeat();
     } else if (!widget.active) {
       _controller.stop();
@@ -94,7 +76,8 @@ class _HandwritingHelloState extends State<HandwritingHello>
   @override
   Widget build(BuildContext context) {
     final gradient = AccentColors.gradientFor(widget.accent);
-    final textStyle = GoogleFonts.caveat(
+    const textStyle = TextStyle(
+      fontFamily: _kCaveatFamily,
       fontSize: 66,
       fontWeight: FontWeight.w600,
       height: 1.0,
@@ -102,41 +85,34 @@ class _HandwritingHelloState extends State<HandwritingHello>
       letterSpacing: 0.5,
     );
 
-    // Until the font is resolved, paint nothing - this removes the
-    // fallback-font flash the user saw before the handwriting appeared.
     return RepaintBoundary(
-      child: AnimatedOpacity(
-        opacity: _fontReady ? 1.0 : 0.0,
-        duration: const Duration(milliseconds: 360),
-        curve: Curves.easeOut,
-        child: Center(
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, _) {
-              final t = _reduceMotion ? 1.0 : _controller.value;
-              // Eased left-to-right write across the first 55% of the loop.
-              final raw = (t / 0.55).clamp(0.0, 1.0);
-              final reveal = _reduceMotion
-                  ? 1.0
-                  : Curves.easeInOutCubic.transform(raw);
-              return ShaderMask(
-                shaderCallback: (bounds) => LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  colors: gradient,
-                ).createShader(bounds),
-                blendMode: BlendMode.srcIn,
-                child: _WriteOnReveal(
-                  reveal: reveal,
-                  child: Text(
-                    'hello mesh',
-                    style: textStyle,
-                    textAlign: TextAlign.center,
-                  ),
+      child: Center(
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, _) {
+            final t = _reduceMotion ? 1.0 : _controller.value;
+            // Eased left-to-right write across the first 55% of the loop.
+            final raw = (t / 0.55).clamp(0.0, 1.0);
+            final reveal = _reduceMotion
+                ? 1.0
+                : Curves.easeInOutCubic.transform(raw);
+            return ShaderMask(
+              shaderCallback: (bounds) => LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: gradient,
+              ).createShader(bounds),
+              blendMode: BlendMode.srcIn,
+              child: _WriteOnReveal(
+                reveal: reveal,
+                child: const Text(
+                  'hello mesh',
+                  style: textStyle,
+                  textAlign: TextAlign.center,
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
       ),
     );

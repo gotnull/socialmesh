@@ -143,7 +143,6 @@ dependencies:
   ffi: ^2.2.0
   flutter_image_compress: ^2.4.0
   bonsoir: ^6.1.0
-  google_fonts: ^8.1.0
 
 dev_dependencies:
   flutter_test:
