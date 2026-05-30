@@ -209,6 +209,15 @@ class SettingsService {
   bool get sipAutoScanEnabled =>
       _preferences.getBool('sip_auto_scan_enabled') ?? false;
 
+  // Handshake (SIP hub) first-visit onboarding. Shown once the first time the
+  // user opens the hub; independent of the Meshtastic device onboarding flag.
+  Future<void> setHandshakeOnboardingSeen(bool seen) async {
+    await _preferences.setBool('handshake_onboarding_seen', seen);
+  }
+
+  bool get handshakeOnboardingSeen =>
+      _preferences.getBool('handshake_onboarding_seen') ?? false;
+
   // Mesh privacy: discoverable (allow peers to discover via SIP)
   Future<void> setMeshDiscoverable(bool enabled) async {
     await _preferences.setBool('mesh_discoverable', enabled);

@@ -48,9 +48,12 @@ import '../../services/protocol/sip/sip_dm.dart';
 import '../../services/protocol/sip/sip_handshake.dart';
 import '../../services/protocol/sip/signal/sip_signal_constants.dart';
 import '../../utils/snackbar.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/animated_empty_state.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../mrrp_harness/mrrp_harness_home_screen.dart';
+import 'onboarding/animation/radar_sweep.dart';
+import 'onboarding/handshake_onboarding_screen.dart';
 import 'sip_dm_screen.dart';
 import 'sip_peer_detail_sheet.dart';
 import 'widgets/peer_service_preview_row.dart';
@@ -71,7 +74,7 @@ class SipHubScreen extends ConsumerStatefulWidget {
 const Duration _kAutoScanInterval = Duration(seconds: 60);
 
 class _SipHubScreenState extends ConsumerState<SipHubScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, LifecycleSafeMixin<SipHubScreen> {
   bool _scanning = false;
   Timer? _autoScanTimer;
   Timer? _scanTimeoutTimer;
@@ -90,6 +93,11 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
       duration: const Duration(seconds: 3),
     );
 
+    // First visit to the hub shows the cinematic Handshake onboarding once.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeShowHandshakeOnboarding();
+    });
+
     // Restore persisted auto-scan state after the first frame so that
     // providers are available.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -106,6 +114,24 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
         _performScan(force: false);
       }
     });
+  }
+
+  // Shows the first-visit Handshake onboarding over the hub, once. The
+  // onboarding screen persists the "seen" flag itself before it pops, so the
+  // hub is revealed underneath when the flow completes.
+  Future<void> _maybeShowHandshakeOnboarding() async {
+    if (!mounted) return;
+    final settings = await ref.read(settingsServiceProvider.future);
+    if (!mounted) return;
+    if (settings.handshakeOnboardingSeen) return;
+    await Navigator.of(context).push<void>(
+      PageRouteBuilder<void>(
+        transitionDuration: const Duration(milliseconds: 450),
+        pageBuilder: (_, _, _) => const HandshakeOnboardingScreen(),
+        transitionsBuilder: (_, animation, _, child) =>
+            FadeTransition(opacity: animation, child: child),
+      ),
+    );
   }
 
   @override
@@ -535,28 +561,37 @@ class _SipHubScreenState extends ConsumerState<SipHubScreen>
     return [
       SliverFillRemaining(
         hasScrollBody: false,
-        child: AnimatedEmptyState(
-          config: AnimatedEmptyStateConfig(
-            icons: const [
-              Icons.sensors,
-              Icons.wifi_find,
-              Icons.radar,
-              Icons.people_outline,
-              Icons.explore_outlined,
-              Icons.person_search,
-              Icons.network_check,
-              Icons.cell_tower,
-            ],
-            taglines: taglines,
-            titlePrefix: l10n.sipHubScanningTitlePrefix,
-            titleKeyword: l10n.sipHubScanningTitleKeyword,
-            titleSuffix: l10n.sipHubScanningTitleSuffix,
-            actionLabel: l10n.sipDiscoveryScanButton,
-            actionIcon: Icons.sensors,
-            onAction: _scanning ? null : _onScan,
-            actionEnabled: !_scanning,
-            actionDisabledReason: _scanning ? l10n.sipScanningIndicator : null,
-          ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Ambient radar so an empty mesh still feels alive (no fake peers).
+            RadarSweep(accent: context.accentColor, intensity: 0.6),
+            AnimatedEmptyState(
+              config: AnimatedEmptyStateConfig(
+                icons: const [
+                  Icons.sensors,
+                  Icons.wifi_find,
+                  Icons.radar,
+                  Icons.people_outline,
+                  Icons.explore_outlined,
+                  Icons.person_search,
+                  Icons.network_check,
+                  Icons.cell_tower,
+                ],
+                taglines: taglines,
+                titlePrefix: l10n.sipHubScanningTitlePrefix,
+                titleKeyword: l10n.sipHubScanningTitleKeyword,
+                titleSuffix: l10n.sipHubScanningTitleSuffix,
+                actionLabel: l10n.sipDiscoveryScanButton,
+                actionIcon: Icons.sensors,
+                onAction: _scanning ? null : _onScan,
+                actionEnabled: !_scanning,
+                actionDisabledReason: _scanning
+                    ? l10n.sipScanningIndicator
+                    : null,
+              ),
+            ),
+          ],
         ),
       ),
     ];

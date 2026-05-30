@@ -44499,4 +44499,155 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get licenseOrgOverviewStatusSuspended => 'Призупинена';
+
+  @override
+  String get handshakeOnboardingSkip => 'Пропустити';
+
+  @override
+  String get handshakeOnboardingCtaContinue => 'Продовжити';
+
+  @override
+  String get handshakeOnboardingCtaNext => 'Далі';
+
+  @override
+  String get handshakeOnboardingCtaGotIt => 'Зрозуміло';
+
+  @override
+  String get handshakeOnboardingCtaEnter => 'Увійти в SocialMesh';
+
+  @override
+  String get handshakeOnboardingWelcomeHeadline => 'Мережа без інтернету';
+
+  @override
+  String get handshakeOnboardingWelcomeBody =>
+      'Знаходьте людей, надсилайте повідомлення й обмінюйтеся ідеями — повністю офлайн. Без вишок, без хмари. Лише меш навколо вас.';
+
+  @override
+  String get handshakeOnboardingWelcomeTagline =>
+      'Залишайтеся на зв\'язку, навіть коли мережі не працюють.';
+
+  @override
+  String get handshakeOnboardingHandshakeHeadline =>
+      'Зв\'язок починається з рукостискання';
+
+  @override
+  String get handshakeOnboardingHandshakeBody =>
+      'Коли хтось поруч хоче зв\'язатися, він надсилає рукостискання. Ви завжди самі вирішуєте, чи прийняти його.';
+
+  @override
+  String get handshakeOnboardingHandshakeHighlightTitle =>
+      'Контроль передусім за вами';
+
+  @override
+  String get handshakeOnboardingHandshakeHighlightBody =>
+      'Ніхто не зможе зв\'язатися з вами без вашого дозволу.';
+
+  @override
+  String get handshakeOnboardingHandshakeHint =>
+      'Натисніть «Прийняти», щоб з\'єднатися';
+
+  @override
+  String get handshakeOnboardingHandshakeAccept => 'Прийняти';
+
+  @override
+  String get handshakeOnboardingHandshakeConnected => 'З\'єднано';
+
+  @override
+  String get handshakeOnboardingDiscoveryHeadline => 'Дивіться, хто поруч';
+
+  @override
+  String get handshakeOnboardingDiscoveryBody =>
+      'Сусідні учасники з\'являються, коли приходять і йдуть. Надішліть рукостискання, відкрийте чат або долучіться до того, чим вони діляться.';
+
+  @override
+  String get handshakeOnboardingMessagingHeadline => 'Приватні розмови';
+
+  @override
+  String get handshakeOnboardingMessagingBody =>
+      'Після рукостискання ваші повідомлення захищені наскрізним шифруванням. Прочитати їх можете лише ви та ваш співрозмовник.';
+
+  @override
+  String get handshakeOnboardingMessagingFeatureEncrypted => 'Шифрування';
+
+  @override
+  String get handshakeOnboardingMessagingFeatureReactions => 'Реакції';
+
+  @override
+  String get handshakeOnboardingMessagingFeatureOffline => 'Офлайн-доставка';
+
+  @override
+  String get handshakeOnboardingMessagingFeatureMesh => 'Рідний для меш';
+
+  @override
+  String get handshakeOnboardingSketchHeadline => 'Більше, ніж слова';
+
+  @override
+  String get handshakeOnboardingSketchBody =>
+      'Надсилайте ескізи, реакції та швидкі символи. Іноді малюнок скаже більше.';
+
+  @override
+  String get handshakeOnboardingSketchHint => 'Намалюйте щось';
+
+  @override
+  String get handshakeOnboardingGamesHeadline => 'Грайте разом офлайн';
+
+  @override
+  String get handshakeOnboardingGamesBody =>
+      'Кидайте виклик сусіднім учасникам у швидких іграх і спільних моментах.';
+
+  @override
+  String get handshakeOnboardingMorseHeadline =>
+      'Різні способи вийти на зв\'язок';
+
+  @override
+  String get handshakeOnboardingMorseBody =>
+      'Від шифрованого чату до легких сигналів — меш підлаштовується під момент.';
+
+  @override
+  String get handshakeOnboardingMorseTagline => 'Створено для досліджень.';
+
+  @override
+  String get handshakeOnboardingMorseHint => 'Натисніть, щоб надіслати імпульс';
+
+  @override
+  String get handshakeOnboardingServicesHeadline => 'Більше, ніж повідомлення';
+
+  @override
+  String get handshakeOnboardingServicesBody =>
+      'Деякі учасники діляться зустрічами, дошками та інструментами. Усе починається з рукостискання.';
+
+  @override
+  String get handshakeOnboardingPermissionsHeadline =>
+      'Готові приєднатися до меш?';
+
+  @override
+  String get handshakeOnboardingPermissionsBluetoothTitle => 'Bluetooth';
+
+  @override
+  String get handshakeOnboardingPermissionsBluetoothBody =>
+      'Підключайтеся до сусідніх меш-пристроїв.';
+
+  @override
+  String get handshakeOnboardingPermissionsNotificationsTitle => 'Сповіщення';
+
+  @override
+  String get handshakeOnboardingPermissionsNotificationsBody =>
+      'Дізнавайтеся про рукостискання, повідомлення й активність.';
+
+  @override
+  String get handshakeOnboardingPermissionsLocationTitle => 'Місцезнаходження';
+
+  @override
+  String get handshakeOnboardingPermissionsLocationBody =>
+      'Телефон потребує його, щоб знаходити сусідні пристрої.';
+
+  @override
+  String get handshakeOnboardingPermissionsFooter =>
+      'SocialMesh використовує лише те, що потрібно для пошуку та зв\'язку із сусідніми учасниками.';
+
+  @override
+  String get handshakeOnboardingPermissionsAllow => 'Дозволити';
+
+  @override
+  String get handshakeOnboardingPermissionsAllowed => 'Дозволено';
 }

@@ -76828,6 +76828,270 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Suspended'**
   String get licenseOrgOverviewStatusSuspended;
+
+  /// Handshake onboarding: de-emphasized skip action.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get handshakeOnboardingSkip;
+
+  /// Handshake onboarding: continue button.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get handshakeOnboardingCtaContinue;
+
+  /// Handshake onboarding: next button.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get handshakeOnboardingCtaNext;
+
+  /// Handshake onboarding: acknowledge button.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get handshakeOnboardingCtaGotIt;
+
+  /// Handshake onboarding: final button entering the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter SocialMesh'**
+  String get handshakeOnboardingCtaEnter;
+
+  /// Handshake onboarding welcome headline.
+  ///
+  /// In en, this message translates to:
+  /// **'A network without the internet'**
+  String get handshakeOnboardingWelcomeHeadline;
+
+  /// Handshake onboarding welcome body.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover people, share messages, and trade ideas, entirely offline. No towers, no cloud. Just the mesh around you.'**
+  String get handshakeOnboardingWelcomeBody;
+
+  /// Handshake onboarding welcome tagline (offline resilience).
+  ///
+  /// In en, this message translates to:
+  /// **'Stay connected even when networks aren\'t.'**
+  String get handshakeOnboardingWelcomeTagline;
+
+  /// Handshake onboarding handshake headline.
+  ///
+  /// In en, this message translates to:
+  /// **'Connections begin with a handshake'**
+  String get handshakeOnboardingHandshakeHeadline;
+
+  /// Handshake onboarding handshake body.
+  ///
+  /// In en, this message translates to:
+  /// **'When someone nearby wants to connect, they send a handshake. You always choose whether to accept.'**
+  String get handshakeOnboardingHandshakeBody;
+
+  /// Handshake onboarding consent highlight card title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your control comes first'**
+  String get handshakeOnboardingHandshakeHighlightTitle;
+
+  /// Handshake onboarding consent highlight card body.
+  ///
+  /// In en, this message translates to:
+  /// **'No one can reach you without your approval.'**
+  String get handshakeOnboardingHandshakeHighlightBody;
+
+  /// Handshake onboarding handshake interaction hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap Accept to connect'**
+  String get handshakeOnboardingHandshakeHint;
+
+  /// Handshake onboarding accept affordance label.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get handshakeOnboardingHandshakeAccept;
+
+  /// Handshake onboarding connected state label.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get handshakeOnboardingHandshakeConnected;
+
+  /// Handshake onboarding discovery headline.
+  ///
+  /// In en, this message translates to:
+  /// **'See who\'s around you'**
+  String get handshakeOnboardingDiscoveryHeadline;
+
+  /// Handshake onboarding discovery body.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby peers appear as they come and go. Send a handshake, open a chat, or join what they\'re sharing.'**
+  String get handshakeOnboardingDiscoveryBody;
+
+  /// Handshake onboarding messaging headline.
+  ///
+  /// In en, this message translates to:
+  /// **'Private conversations'**
+  String get handshakeOnboardingMessagingHeadline;
+
+  /// Handshake onboarding messaging body.
+  ///
+  /// In en, this message translates to:
+  /// **'After a handshake, your messages are end-to-end encrypted. Only you and the person you\'re talking to can read them.'**
+  String get handshakeOnboardingMessagingBody;
+
+  /// Handshake onboarding messaging feature chip: encrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted'**
+  String get handshakeOnboardingMessagingFeatureEncrypted;
+
+  /// Handshake onboarding messaging feature chip: reactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Reactions'**
+  String get handshakeOnboardingMessagingFeatureReactions;
+
+  /// Handshake onboarding messaging feature chip: offline delivery.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline delivery'**
+  String get handshakeOnboardingMessagingFeatureOffline;
+
+  /// Handshake onboarding messaging feature chip: mesh-native.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh-native'**
+  String get handshakeOnboardingMessagingFeatureMesh;
+
+  /// Handshake onboarding sketch headline.
+  ///
+  /// In en, this message translates to:
+  /// **'More than words'**
+  String get handshakeOnboardingSketchHeadline;
+
+  /// Handshake onboarding sketch body.
+  ///
+  /// In en, this message translates to:
+  /// **'Send sketches, reactions, and quick symbols. Sometimes a drawing says it better.'**
+  String get handshakeOnboardingSketchBody;
+
+  /// Handshake onboarding sketch interaction hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Draw something'**
+  String get handshakeOnboardingSketchHint;
+
+  /// Handshake onboarding games headline.
+  ///
+  /// In en, this message translates to:
+  /// **'Play together offline'**
+  String get handshakeOnboardingGamesHeadline;
+
+  /// Handshake onboarding games body.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge nearby peers to quick games and shared moments.'**
+  String get handshakeOnboardingGamesBody;
+
+  /// Handshake onboarding morse headline.
+  ///
+  /// In en, this message translates to:
+  /// **'Different ways to reach out'**
+  String get handshakeOnboardingMorseHeadline;
+
+  /// Handshake onboarding morse body.
+  ///
+  /// In en, this message translates to:
+  /// **'From encrypted chat to lightweight signals, the mesh adapts to the moment.'**
+  String get handshakeOnboardingMorseBody;
+
+  /// Handshake onboarding morse tagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Built for exploration.'**
+  String get handshakeOnboardingMorseTagline;
+
+  /// Handshake onboarding morse interaction hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to send a pulse'**
+  String get handshakeOnboardingMorseHint;
+
+  /// Handshake onboarding services headline.
+  ///
+  /// In en, this message translates to:
+  /// **'More than messages'**
+  String get handshakeOnboardingServicesHeadline;
+
+  /// Handshake onboarding services body.
+  ///
+  /// In en, this message translates to:
+  /// **'Some peers share meetups, boards, and tools. It all begins with the handshake.'**
+  String get handshakeOnboardingServicesBody;
+
+  /// Handshake onboarding permissions headline.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to join the mesh?'**
+  String get handshakeOnboardingPermissionsHeadline;
+
+  /// Handshake onboarding Bluetooth permission title.
+  ///
+  /// In en, this message translates to:
+  /// **'Bluetooth'**
+  String get handshakeOnboardingPermissionsBluetoothTitle;
+
+  /// Handshake onboarding Bluetooth permission body.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to nearby mesh devices.'**
+  String get handshakeOnboardingPermissionsBluetoothBody;
+
+  /// Handshake onboarding notifications permission title.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get handshakeOnboardingPermissionsNotificationsTitle;
+
+  /// Handshake onboarding notifications permission body.
+  ///
+  /// In en, this message translates to:
+  /// **'Hear about handshakes, messages, and activity.'**
+  String get handshakeOnboardingPermissionsNotificationsBody;
+
+  /// Handshake onboarding location permission title.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get handshakeOnboardingPermissionsLocationTitle;
+
+  /// Handshake onboarding location permission body.
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone requires it to discover nearby devices.'**
+  String get handshakeOnboardingPermissionsLocationBody;
+
+  /// Handshake onboarding permissions footer reassurance.
+  ///
+  /// In en, this message translates to:
+  /// **'SocialMesh only uses what it needs to find and reach nearby peers.'**
+  String get handshakeOnboardingPermissionsFooter;
+
+  /// Handshake onboarding permission allow button.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get handshakeOnboardingPermissionsAllow;
+
+  /// Handshake onboarding permission granted label.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed'**
+  String get handshakeOnboardingPermissionsAllowed;
 }
 
 class _AppLocalizationsDelegate

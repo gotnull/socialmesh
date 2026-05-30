@@ -44615,4 +44615,156 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get licenseOrgOverviewStatusSuspended => 'Gesperrt';
+
+  @override
+  String get handshakeOnboardingSkip => 'Überspringen';
+
+  @override
+  String get handshakeOnboardingCtaContinue => 'Weiter';
+
+  @override
+  String get handshakeOnboardingCtaNext => 'Weiter';
+
+  @override
+  String get handshakeOnboardingCtaGotIt => 'Verstanden';
+
+  @override
+  String get handshakeOnboardingCtaEnter => 'SocialMesh betreten';
+
+  @override
+  String get handshakeOnboardingWelcomeHeadline => 'Ein Netzwerk ohne Internet';
+
+  @override
+  String get handshakeOnboardingWelcomeBody =>
+      'Entdecke Menschen, teile Nachrichten und tausche Ideen aus, ganz ohne Internet. Keine Funkmasten, keine Cloud. Nur das Mesh um dich herum.';
+
+  @override
+  String get handshakeOnboardingWelcomeTagline =>
+      'Bleib verbunden, auch wenn Netze ausfallen.';
+
+  @override
+  String get handshakeOnboardingHandshakeHeadline =>
+      'Verbindungen beginnen mit einem Handshake';
+
+  @override
+  String get handshakeOnboardingHandshakeBody =>
+      'Wenn jemand in der Nähe sich verbinden möchte, sendet er einen Handshake. Du entscheidest immer selbst, ob du annimmst.';
+
+  @override
+  String get handshakeOnboardingHandshakeHighlightTitle =>
+      'Die Kontrolle liegt zuerst bei dir';
+
+  @override
+  String get handshakeOnboardingHandshakeHighlightBody =>
+      'Niemand kann dich ohne deine Zustimmung erreichen.';
+
+  @override
+  String get handshakeOnboardingHandshakeHint =>
+      'Tippe auf Annehmen, um zu verbinden';
+
+  @override
+  String get handshakeOnboardingHandshakeAccept => 'Annehmen';
+
+  @override
+  String get handshakeOnboardingHandshakeConnected => 'Verbunden';
+
+  @override
+  String get handshakeOnboardingDiscoveryHeadline =>
+      'Sieh, wer um dich herum ist';
+
+  @override
+  String get handshakeOnboardingDiscoveryBody =>
+      'Nahe Peers erscheinen, während sie kommen und gehen. Sende einen Handshake, öffne einen Chat oder mach mit, was sie teilen.';
+
+  @override
+  String get handshakeOnboardingMessagingHeadline => 'Private Gespräche';
+
+  @override
+  String get handshakeOnboardingMessagingBody =>
+      'Nach einem Handshake sind deine Nachrichten Ende-zu-Ende verschlüsselt. Nur du und dein Gegenüber können sie lesen.';
+
+  @override
+  String get handshakeOnboardingMessagingFeatureEncrypted => 'Verschlüsselt';
+
+  @override
+  String get handshakeOnboardingMessagingFeatureReactions => 'Reaktionen';
+
+  @override
+  String get handshakeOnboardingMessagingFeatureOffline => 'Offline-Zustellung';
+
+  @override
+  String get handshakeOnboardingMessagingFeatureMesh => 'Mesh-nativ';
+
+  @override
+  String get handshakeOnboardingSketchHeadline => 'Mehr als Worte';
+
+  @override
+  String get handshakeOnboardingSketchBody =>
+      'Sende Skizzen, Reaktionen und schnelle Symbole. Manchmal sagt eine Zeichnung mehr.';
+
+  @override
+  String get handshakeOnboardingSketchHint => 'Zeichne etwas';
+
+  @override
+  String get handshakeOnboardingGamesHeadline => 'Spielt zusammen offline';
+
+  @override
+  String get handshakeOnboardingGamesBody =>
+      'Fordere nahe Peers zu schnellen Spielen und gemeinsamen Momenten heraus.';
+
+  @override
+  String get handshakeOnboardingMorseHeadline =>
+      'Verschiedene Wege, dich zu melden';
+
+  @override
+  String get handshakeOnboardingMorseBody =>
+      'Vom verschlüsselten Chat bis zu leichten Signalen passt sich das Mesh dem Moment an.';
+
+  @override
+  String get handshakeOnboardingMorseTagline => 'Gemacht zum Entdecken.';
+
+  @override
+  String get handshakeOnboardingMorseHint => 'Tippe, um einen Impuls zu senden';
+
+  @override
+  String get handshakeOnboardingServicesHeadline => 'Mehr als Nachrichten';
+
+  @override
+  String get handshakeOnboardingServicesBody =>
+      'Manche Peers teilen Treffen, Pinnwände und Werkzeuge. Alles beginnt mit dem Handshake.';
+
+  @override
+  String get handshakeOnboardingPermissionsHeadline =>
+      'Bereit, dem Mesh beizutreten?';
+
+  @override
+  String get handshakeOnboardingPermissionsBluetoothTitle => 'Bluetooth';
+
+  @override
+  String get handshakeOnboardingPermissionsBluetoothBody =>
+      'Verbinde dich mit nahen Mesh-Geräten.';
+
+  @override
+  String get handshakeOnboardingPermissionsNotificationsTitle => 'Mitteilungen';
+
+  @override
+  String get handshakeOnboardingPermissionsNotificationsBody =>
+      'Erfahre von Handshakes, Nachrichten und Aktivität.';
+
+  @override
+  String get handshakeOnboardingPermissionsLocationTitle => 'Standort';
+
+  @override
+  String get handshakeOnboardingPermissionsLocationBody =>
+      'Dein Telefon benötigt ihn, um nahe Geräte zu finden.';
+
+  @override
+  String get handshakeOnboardingPermissionsFooter =>
+      'SocialMesh nutzt nur, was nötig ist, um nahe Peers zu finden und zu erreichen.';
+
+  @override
+  String get handshakeOnboardingPermissionsAllow => 'Erlauben';
+
+  @override
+  String get handshakeOnboardingPermissionsAllowed => 'Erlaubt';
 }

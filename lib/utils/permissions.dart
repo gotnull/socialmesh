@@ -55,6 +55,50 @@ class PermissionHelper {
     }
   }
 
+  /// Request notification permission
+  Future<bool> requestNotificationPermission() async {
+    try {
+      final status = await Permission.notification.request();
+      return status.isGranted;
+    } catch (e) {
+      AppLogging.permissions('⚠️ Error requesting notification permission: $e');
+      return false;
+    }
+  }
+
+  /// Check if notification permission is granted
+  Future<bool> hasNotificationPermission() async {
+    try {
+      final status = await Permission.notification.status;
+      return status.isGranted;
+    } catch (e) {
+      AppLogging.permissions('⚠️ Error checking notification permission: $e');
+      return false;
+    }
+  }
+
+  /// Request foreground location permission
+  Future<bool> requestLocationPermission() async {
+    try {
+      final status = await Permission.locationWhenInUse.request();
+      return status.isGranted || status.isLimited;
+    } catch (e) {
+      AppLogging.permissions('⚠️ Error requesting location permission: $e');
+      return false;
+    }
+  }
+
+  /// Check if foreground location permission is granted
+  Future<bool> hasLocationPermission() async {
+    try {
+      final status = await Permission.locationWhenInUse.status;
+      return status.isGranted || status.isLimited;
+    } catch (e) {
+      AppLogging.permissions('⚠️ Error checking location permission: $e');
+      return false;
+    }
+  }
+
   /// Request camera permissions (for QR scanning)
   Future<bool> requestCameraPermission() async {
     try {
