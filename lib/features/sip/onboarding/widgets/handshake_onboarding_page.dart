@@ -40,67 +40,81 @@ class HandshakeOnboardingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spacing24,
-        vertical: AppTheme.spacing16,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildVisual(context),
-          const SizedBox(height: AppTheme.spacing24),
-          Text(
-            data.headline,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: context.textPrimary,
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.5,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacing24,
+            vertical: AppTheme.spacing16,
+          ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: constraints.maxHeight - AppTheme.spacing32,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildVisual(context),
+                const SizedBox(height: AppTheme.spacing24),
+                Text(
+                  data.headline,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: context.textPrimary,
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacing12),
+                Text(
+                  data.body,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: context.textSecondary,
+                    fontSize: 15,
+                    height: 1.45,
+                  ),
+                ),
+                if (data.visual == HandshakeVisual.handshake &&
+                    data.interactiveHint != null) ...[
+                  const SizedBox(height: AppTheme.spacing12),
+                  _hint(context, data.interactiveHint!),
+                ],
+                if (data.highlightTitle != null &&
+                    data.highlightBody != null) ...[
+                  const SizedBox(height: AppTheme.spacing20),
+                  HandshakeHighlightCard(
+                    accent: data.accent,
+                    title: data.highlightTitle!,
+                    body: data.highlightBody!,
+                  ),
+                ],
+                if (data.features.isNotEmpty) ...[
+                  const SizedBox(height: AppTheme.spacing20),
+                  HandshakeFeatureRow(
+                    accent: data.accent,
+                    features: data.features,
+                  ),
+                ],
+                if (data.tagline != null) ...[
+                  const SizedBox(height: AppTheme.spacing16),
+                  Text(
+                    data.tagline!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: data.accent,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
-          const SizedBox(height: AppTheme.spacing12),
-          Text(
-            data.body,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: context.textSecondary,
-              fontSize: 15,
-              height: 1.45,
-            ),
-          ),
-          if (data.visual == HandshakeVisual.handshake &&
-              data.interactiveHint != null) ...[
-            const SizedBox(height: AppTheme.spacing12),
-            _hint(context, data.interactiveHint!),
-          ],
-          if (data.highlightTitle != null && data.highlightBody != null) ...[
-            const SizedBox(height: AppTheme.spacing20),
-            HandshakeHighlightCard(
-              accent: data.accent,
-              title: data.highlightTitle!,
-              body: data.highlightBody!,
-            ),
-          ],
-          if (data.features.isNotEmpty) ...[
-            const SizedBox(height: AppTheme.spacing20),
-            HandshakeFeatureRow(accent: data.accent, features: data.features),
-          ],
-          if (data.tagline != null) ...[
-            const SizedBox(height: AppTheme.spacing16),
-            Text(
-              data.tagline!,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: data.accent,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ],
-      ),
+        );
+      },
     );
   }
 

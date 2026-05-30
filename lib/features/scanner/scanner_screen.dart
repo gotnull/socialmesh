@@ -432,7 +432,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     }
     // Always unregister via the captured notifier — no `ref.read` here,
     // so this can't silently fail and inflate the counter into a phantom.
-    _mountCounter.unregister();
+    // Same microtask-defer treatment as the setActive(false) call above:
+    // mutating a NotifierProvider's state during BuildOwner.finalizeTree
+    // trips Riverpod's "Tried to modify a provider while the widget
+    // tree was building" assertion (Crashlytics 88594eb858cbccdc06d041dc0fcbbafe).
+    // The single-microtask delay is invisible to the next-frame
+    // mount check — by the time _AppRouter or a pushNamed callsite
+    // reads the count, the decrement has landed.
+    final mountCounter = _mountCounter;
+    Future.microtask(mountCounter.unregister);
     AppLogging.connection(
       '📡 SCANNER: dispose - hashCode=$hashCode '
       'scanWorkStarted=$_scanWorkStarted',

@@ -245,6 +245,20 @@ void main() {
     testWidgets('renders one card per org in alphabetical order', (
       tester,
     ) async {
+      // Bump the viewport so the SliverList.separated builds both
+      // cards in one frame. With the Phase 2 Seat Usage section
+      // (which renders a StatusBanner.error in tests without
+      // Firebase init) the first owner card is ~600px tall and the
+      // default 800x600 test viewport leaves the second card
+      // unbuilt — `find.byType(LicenseOrgOverviewCard)` then sees
+      // only 1 widget and the ordering assertion can never reach
+      // it. A taller viewport mounts both cards directly without
+      // forcing scroll. Restored after the test in tearDown.
+      addTearDown(() => tester.view.resetPhysicalSize());
+      tester.view.physicalSize = const Size(1200, 4800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetDevicePixelRatio());
+
       const acmeId = 'acme';
       const betaId = 'beta-team';
       await tester.pumpWidget(
