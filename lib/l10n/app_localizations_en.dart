@@ -43605,10 +43605,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Anyone who hasn\'t joined yet will need the new link. People who already joined keep their access.';
 
   @override
-  String get licenseOrgInviteRegenerateConfirmButton => 'Generate new link';
+  String get licenseOrgInviteRegenerateConfirmButton => 'Regenerate';
 
   @override
-  String get licenseOrgInviteRegenerateCancelButton => 'Keep current link';
+  String get licenseOrgInviteRegenerateCancelButton => 'Keep link';
 
   @override
   String get licenseOrgInviteRegenerateSuccess =>

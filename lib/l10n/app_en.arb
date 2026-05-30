@@ -57835,14 +57835,20 @@
     "@licenseOrgMembersRevokedTileTitle": {
         "description": "Title row on a revoked-seat history tile in the License Org Members sheet. Placeholder is the opaque #ABCDEF label derived from the revoked member's uid.",
         "placeholders": {
-            "member": { "type": "String", "example": "#A1B2C3" }
+            "member": {
+                "type": "String",
+                "example": "#A1B2C3"
+            }
         }
     },
     "licenseOrgMembersRevokedTileBy": "By {actor}",
     "@licenseOrgMembersRevokedTileBy": {
         "description": "Subtitle on a revoked-seat history tile naming who performed the revoke. Placeholder is the actor's opaque #ABCDEF label or 'system' for refund-cascade revokes.",
         "placeholders": {
-            "actor": { "type": "String", "example": "#A1B2C3" }
+            "actor": {
+                "type": "String",
+                "example": "#A1B2C3"
+            }
         }
     },
     "licenseOrgMembersCount": "{count, plural, =0{No members} =1{1 member} other{{count} members}}",
@@ -57871,7 +57877,10 @@
     "@licenseOrgMembersRevokeConfirmTitle": {
         "description": "Title of the confirm sheet shown after the owner taps Revoke seat on a member tile. Placeholder is the opaque #ABCDEF label (never the real name/email).",
         "placeholders": {
-            "member": { "type": "String", "example": "#A1B2C3" }
+            "member": {
+                "type": "String",
+                "example": "#A1B2C3"
+            }
         }
     },
     "licenseOrgMembersRevokeConfirmBody": "They lose access to the group's premium features immediately. Their seat returns to your pool and you can invite someone else.",
@@ -58055,7 +58064,10 @@
     "@licenseOrgInviteAcceptHeadline": {
         "description": "Hero headline on the InviteAcceptScreen. Placeholder is the inviting org's display name; if the org name is empty the deep-link router falls back to the slug.",
         "placeholders": {
-            "orgName": { "type": "String", "example": "Acme Eng" }
+            "orgName": {
+                "type": "String",
+                "example": "Acme Eng"
+            }
         }
     },
     "licenseOrgInviteAcceptDescription": "Tapping Join adds you to the group as a member. The group admin will see your account name and last active time. You can leave the group at any time.",
@@ -58074,14 +58086,20 @@
     "@licenseOrgInviteAcceptSuccess": {
         "description": "Success snackbar shown after the user accepts an invite. Placeholder is the org display name.",
         "placeholders": {
-            "orgName": { "type": "String", "example": "Acme Eng" }
+            "orgName": {
+                "type": "String",
+                "example": "Acme Eng"
+            }
         }
     },
     "licenseOrgInviteAcceptAlreadyMember": "You're already a member of {orgName}",
     "@licenseOrgInviteAcceptAlreadyMember": {
         "description": "Info snackbar shown after a redeem that was an idempotent replay (the user already had an active seat in the org). Distinguishes the 'nothing changed' case from a fresh join so the user doesn't get the same green success on a re-tap or a stranger's invite link.",
         "placeholders": {
-            "orgName": { "type": "String", "example": "Acme Eng" }
+            "orgName": {
+                "type": "String",
+                "example": "Acme Eng"
+            }
         }
     },
     "licenseOrgInviteAcceptErrorExpired": "This invite has expired",
@@ -58136,8 +58154,14 @@
     "@licenseOrgInviteMintUsage": {
         "description": "Subtitle on the rendered invite link tile showing how many people have redeemed vs the cap. Used here means: people who have already redeemed and consumed a seat.",
         "placeholders": {
-            "used": { "type": "int", "example": "2" },
-            "total": { "type": "int", "example": "10" }
+            "used": {
+                "type": "int",
+                "example": "2"
+            },
+            "total": {
+                "type": "int",
+                "example": "10"
+            }
         }
     },
     "licenseOrgInviteMintExhausted": "All seats taken — regenerate after revoking",
@@ -58156,11 +58180,11 @@
     "@licenseOrgInviteRegenerateConfirmBody": {
         "description": "Body copy of the regenerate-confirm sheet. Reassures that already-joined members keep access; only pending-joiners are affected."
     },
-    "licenseOrgInviteRegenerateConfirmButton": "Generate new link",
+    "licenseOrgInviteRegenerateConfirmButton": "Regenerate",
     "@licenseOrgInviteRegenerateConfirmButton": {
         "description": "Primary destructive button on the regenerate-confirm sheet."
     },
-    "licenseOrgInviteRegenerateCancelButton": "Keep current link",
+    "licenseOrgInviteRegenerateCancelButton": "Keep link",
     "@licenseOrgInviteRegenerateCancelButton": {
         "description": "Secondary cancel button on the regenerate-confirm sheet."
     },
@@ -58204,8 +58228,12 @@
     "@licenseOrgSeatUsageSubtitle": {
         "description": "Trailing subtitle on the Seat Usage section header, e.g. '7 of 10 active'.",
         "placeholders": {
-            "active": { "type": "int" },
-            "capacity": { "type": "int" }
+            "active": {
+                "type": "int"
+            },
+            "capacity": {
+                "type": "int"
+            }
         }
     },
     "licenseOrgSeatUsageActiveToday": "Active today",
@@ -58216,7 +58244,9 @@
     "@licenseOrgSeatUsageIdleDays": {
         "description": "Last-active line under a Seat Usage member row when daysIdle is between 1 and 29. ICU plural.",
         "placeholders": {
-            "days": { "type": "int" }
+            "days": {
+                "type": "int"
+            }
         }
     },
     "licenseOrgSeatUsageNeverSignedIn": "Hasn't signed in since seat was granted",
@@ -58526,15 +58556,24 @@
     "@licenseOrgOverviewCapacityValue": {
         "description": "Value cell paired with licenseOrgOverviewCapacityLabel. Renders the total seat budget for a Community Pack (always > 1, so no plural form needed).",
         "placeholders": {
-            "count": { "type": "int", "example": "10" }
+            "count": {
+                "type": "int",
+                "example": "10"
+            }
         }
     },
     "licenseOrgOverviewCapacityValueUsed": "{used} of {capacity} seats used",
     "@licenseOrgOverviewCapacityValueUsed": {
         "description": "Value cell paired with licenseOrgOverviewCapacityLabel for owners. Renders the live used / total seat budget for a Community Pack (e.g. '3 of 10 seats used').",
         "placeholders": {
-            "used": { "type": "int", "example": "3" },
-            "capacity": { "type": "int", "example": "10" }
+            "used": {
+                "type": "int",
+                "example": "3"
+            },
+            "capacity": {
+                "type": "int",
+                "example": "10"
+            }
         }
     },
     "licenseOrgOverviewStatusLabel": "Status",
@@ -58625,92 +58664,180 @@
     "@licenseOrgOverviewStatusSuspended": {
         "description": "Status badge label rendered on the License Org Overview per-org card when the org status is suspended (e.g. after a refund cascade)."
     },
-  "handshakeOnboardingSkip": "Skip",
-  "@handshakeOnboardingSkip": {"description": "Handshake onboarding: de-emphasized skip action."},
-  "handshakeOnboardingCtaContinue": "Continue",
-  "@handshakeOnboardingCtaContinue": {"description": "Handshake onboarding: continue button."},
-  "handshakeOnboardingCtaNext": "Next",
-  "@handshakeOnboardingCtaNext": {"description": "Handshake onboarding: next button."},
-  "handshakeOnboardingCtaGotIt": "Got it",
-  "@handshakeOnboardingCtaGotIt": {"description": "Handshake onboarding: acknowledge button."},
-  "handshakeOnboardingCtaEnter": "Enter SocialMesh",
-  "@handshakeOnboardingCtaEnter": {"description": "Handshake onboarding: final button entering the app."},
-  "handshakeOnboardingWelcomeHeadline": "A network without the internet",
-  "@handshakeOnboardingWelcomeHeadline": {"description": "Handshake onboarding welcome headline."},
-  "handshakeOnboardingWelcomeBody": "Discover people, share messages, and trade ideas, entirely offline. No towers, no cloud. Just the mesh around you.",
-  "@handshakeOnboardingWelcomeBody": {"description": "Handshake onboarding welcome body."},
-  "handshakeOnboardingWelcomeTagline": "Stay connected even when networks aren't.",
-  "@handshakeOnboardingWelcomeTagline": {"description": "Handshake onboarding welcome tagline (offline resilience)."},
-  "handshakeOnboardingHandshakeHeadline": "Connections begin with a handshake",
-  "@handshakeOnboardingHandshakeHeadline": {"description": "Handshake onboarding handshake headline."},
-  "handshakeOnboardingHandshakeBody": "When someone nearby wants to connect, they send a handshake. You always choose whether to accept.",
-  "@handshakeOnboardingHandshakeBody": {"description": "Handshake onboarding handshake body."},
-  "handshakeOnboardingHandshakeHighlightTitle": "Your control comes first",
-  "@handshakeOnboardingHandshakeHighlightTitle": {"description": "Handshake onboarding consent highlight card title."},
-  "handshakeOnboardingHandshakeHighlightBody": "No one can reach you without your approval.",
-  "@handshakeOnboardingHandshakeHighlightBody": {"description": "Handshake onboarding consent highlight card body."},
-  "handshakeOnboardingHandshakeHint": "Tap Accept to connect",
-  "@handshakeOnboardingHandshakeHint": {"description": "Handshake onboarding handshake interaction hint."},
-  "handshakeOnboardingHandshakeAccept": "Accept",
-  "@handshakeOnboardingHandshakeAccept": {"description": "Handshake onboarding accept affordance label."},
-  "handshakeOnboardingHandshakeConnected": "Connected",
-  "@handshakeOnboardingHandshakeConnected": {"description": "Handshake onboarding connected state label."},
-  "handshakeOnboardingDiscoveryHeadline": "See who's around you",
-  "@handshakeOnboardingDiscoveryHeadline": {"description": "Handshake onboarding discovery headline."},
-  "handshakeOnboardingDiscoveryBody": "Nearby peers appear as they come and go. Send a handshake, open a chat, or join what they're sharing.",
-  "@handshakeOnboardingDiscoveryBody": {"description": "Handshake onboarding discovery body."},
-  "handshakeOnboardingMessagingHeadline": "Private conversations",
-  "@handshakeOnboardingMessagingHeadline": {"description": "Handshake onboarding messaging headline."},
-  "handshakeOnboardingMessagingBody": "After a handshake, your messages are end-to-end encrypted. Only you and the person you're talking to can read them.",
-  "@handshakeOnboardingMessagingBody": {"description": "Handshake onboarding messaging body."},
-  "handshakeOnboardingMessagingFeatureEncrypted": "Encrypted",
-  "@handshakeOnboardingMessagingFeatureEncrypted": {"description": "Handshake onboarding messaging feature chip: encrypted."},
-  "handshakeOnboardingMessagingFeatureReactions": "Reactions",
-  "@handshakeOnboardingMessagingFeatureReactions": {"description": "Handshake onboarding messaging feature chip: reactions."},
-  "handshakeOnboardingMessagingFeatureOffline": "Offline delivery",
-  "@handshakeOnboardingMessagingFeatureOffline": {"description": "Handshake onboarding messaging feature chip: offline delivery."},
-  "handshakeOnboardingMessagingFeatureMesh": "Mesh-native",
-  "@handshakeOnboardingMessagingFeatureMesh": {"description": "Handshake onboarding messaging feature chip: mesh-native."},
-  "handshakeOnboardingSketchHeadline": "More than words",
-  "@handshakeOnboardingSketchHeadline": {"description": "Handshake onboarding sketch headline."},
-  "handshakeOnboardingSketchBody": "Send sketches, reactions, and quick symbols. Sometimes a drawing says it better.",
-  "@handshakeOnboardingSketchBody": {"description": "Handshake onboarding sketch body."},
-  "handshakeOnboardingSketchHint": "Draw something",
-  "@handshakeOnboardingSketchHint": {"description": "Handshake onboarding sketch interaction hint."},
-  "handshakeOnboardingGamesHeadline": "Play together offline",
-  "@handshakeOnboardingGamesHeadline": {"description": "Handshake onboarding games headline."},
-  "handshakeOnboardingGamesBody": "Challenge nearby peers to quick games and shared moments.",
-  "@handshakeOnboardingGamesBody": {"description": "Handshake onboarding games body."},
-  "handshakeOnboardingMorseHeadline": "Different ways to reach out",
-  "@handshakeOnboardingMorseHeadline": {"description": "Handshake onboarding morse headline."},
-  "handshakeOnboardingMorseBody": "From encrypted chat to lightweight signals, the mesh adapts to the moment.",
-  "@handshakeOnboardingMorseBody": {"description": "Handshake onboarding morse body."},
-  "handshakeOnboardingMorseTagline": "Built for exploration.",
-  "@handshakeOnboardingMorseTagline": {"description": "Handshake onboarding morse tagline."},
-  "handshakeOnboardingMorseHint": "Tap to send a pulse",
-  "@handshakeOnboardingMorseHint": {"description": "Handshake onboarding morse interaction hint."},
-  "handshakeOnboardingServicesHeadline": "More than messages",
-  "@handshakeOnboardingServicesHeadline": {"description": "Handshake onboarding services headline."},
-  "handshakeOnboardingServicesBody": "Some peers share meetups, boards, and tools. It all begins with the handshake.",
-  "@handshakeOnboardingServicesBody": {"description": "Handshake onboarding services body."},
-  "handshakeOnboardingPermissionsHeadline": "Ready to join the mesh?",
-  "@handshakeOnboardingPermissionsHeadline": {"description": "Handshake onboarding permissions headline."},
-  "handshakeOnboardingPermissionsBluetoothTitle": "Bluetooth",
-  "@handshakeOnboardingPermissionsBluetoothTitle": {"description": "Handshake onboarding Bluetooth permission title."},
-  "handshakeOnboardingPermissionsBluetoothBody": "Connect to nearby mesh devices.",
-  "@handshakeOnboardingPermissionsBluetoothBody": {"description": "Handshake onboarding Bluetooth permission body."},
-  "handshakeOnboardingPermissionsNotificationsTitle": "Notifications",
-  "@handshakeOnboardingPermissionsNotificationsTitle": {"description": "Handshake onboarding notifications permission title."},
-  "handshakeOnboardingPermissionsNotificationsBody": "Hear about handshakes, messages, and activity.",
-  "@handshakeOnboardingPermissionsNotificationsBody": {"description": "Handshake onboarding notifications permission body."},
-  "handshakeOnboardingPermissionsLocationTitle": "Location",
-  "@handshakeOnboardingPermissionsLocationTitle": {"description": "Handshake onboarding location permission title."},
-  "handshakeOnboardingPermissionsLocationBody": "Your phone requires it to discover nearby devices.",
-  "@handshakeOnboardingPermissionsLocationBody": {"description": "Handshake onboarding location permission body."},
-  "handshakeOnboardingPermissionsFooter": "SocialMesh only uses what it needs to find and reach nearby peers.",
-  "@handshakeOnboardingPermissionsFooter": {"description": "Handshake onboarding permissions footer reassurance."},
-  "handshakeOnboardingPermissionsAllow": "Allow",
-  "@handshakeOnboardingPermissionsAllow": {"description": "Handshake onboarding permission allow button."},
-  "handshakeOnboardingPermissionsAllowed": "Allowed",
-  "@handshakeOnboardingPermissionsAllowed": {"description": "Handshake onboarding permission granted label."}
+    "handshakeOnboardingSkip": "Skip",
+    "@handshakeOnboardingSkip": {
+        "description": "Handshake onboarding: de-emphasized skip action."
+    },
+    "handshakeOnboardingCtaContinue": "Continue",
+    "@handshakeOnboardingCtaContinue": {
+        "description": "Handshake onboarding: continue button."
+    },
+    "handshakeOnboardingCtaNext": "Next",
+    "@handshakeOnboardingCtaNext": {
+        "description": "Handshake onboarding: next button."
+    },
+    "handshakeOnboardingCtaGotIt": "Got it",
+    "@handshakeOnboardingCtaGotIt": {
+        "description": "Handshake onboarding: acknowledge button."
+    },
+    "handshakeOnboardingCtaEnter": "Enter SocialMesh",
+    "@handshakeOnboardingCtaEnter": {
+        "description": "Handshake onboarding: final button entering the app."
+    },
+    "handshakeOnboardingWelcomeHeadline": "A network without the internet",
+    "@handshakeOnboardingWelcomeHeadline": {
+        "description": "Handshake onboarding welcome headline."
+    },
+    "handshakeOnboardingWelcomeBody": "Discover people, share messages, and trade ideas, entirely offline. No towers, no cloud. Just the mesh around you.",
+    "@handshakeOnboardingWelcomeBody": {
+        "description": "Handshake onboarding welcome body."
+    },
+    "handshakeOnboardingWelcomeTagline": "Stay connected even when networks aren't.",
+    "@handshakeOnboardingWelcomeTagline": {
+        "description": "Handshake onboarding welcome tagline (offline resilience)."
+    },
+    "handshakeOnboardingHandshakeHeadline": "Connections begin with a handshake",
+    "@handshakeOnboardingHandshakeHeadline": {
+        "description": "Handshake onboarding handshake headline."
+    },
+    "handshakeOnboardingHandshakeBody": "When someone nearby wants to connect, they send a handshake. You always choose whether to accept.",
+    "@handshakeOnboardingHandshakeBody": {
+        "description": "Handshake onboarding handshake body."
+    },
+    "handshakeOnboardingHandshakeHighlightTitle": "Your control comes first",
+    "@handshakeOnboardingHandshakeHighlightTitle": {
+        "description": "Handshake onboarding consent highlight card title."
+    },
+    "handshakeOnboardingHandshakeHighlightBody": "No one can reach you without your approval.",
+    "@handshakeOnboardingHandshakeHighlightBody": {
+        "description": "Handshake onboarding consent highlight card body."
+    },
+    "handshakeOnboardingHandshakeHint": "Tap Accept to connect",
+    "@handshakeOnboardingHandshakeHint": {
+        "description": "Handshake onboarding handshake interaction hint."
+    },
+    "handshakeOnboardingHandshakeAccept": "Accept",
+    "@handshakeOnboardingHandshakeAccept": {
+        "description": "Handshake onboarding accept affordance label."
+    },
+    "handshakeOnboardingHandshakeConnected": "Connected",
+    "@handshakeOnboardingHandshakeConnected": {
+        "description": "Handshake onboarding connected state label."
+    },
+    "handshakeOnboardingDiscoveryHeadline": "See who's around you",
+    "@handshakeOnboardingDiscoveryHeadline": {
+        "description": "Handshake onboarding discovery headline."
+    },
+    "handshakeOnboardingDiscoveryBody": "Nearby peers appear as they come and go. Send a handshake, open a chat, or join what they're sharing.",
+    "@handshakeOnboardingDiscoveryBody": {
+        "description": "Handshake onboarding discovery body."
+    },
+    "handshakeOnboardingMessagingHeadline": "Private conversations",
+    "@handshakeOnboardingMessagingHeadline": {
+        "description": "Handshake onboarding messaging headline."
+    },
+    "handshakeOnboardingMessagingBody": "After a handshake, your messages are end-to-end encrypted. Only you and the person you're talking to can read them.",
+    "@handshakeOnboardingMessagingBody": {
+        "description": "Handshake onboarding messaging body."
+    },
+    "handshakeOnboardingMessagingFeatureEncrypted": "Encrypted",
+    "@handshakeOnboardingMessagingFeatureEncrypted": {
+        "description": "Handshake onboarding messaging feature chip: encrypted."
+    },
+    "handshakeOnboardingMessagingFeatureReactions": "Reactions",
+    "@handshakeOnboardingMessagingFeatureReactions": {
+        "description": "Handshake onboarding messaging feature chip: reactions."
+    },
+    "handshakeOnboardingMessagingFeatureOffline": "Offline delivery",
+    "@handshakeOnboardingMessagingFeatureOffline": {
+        "description": "Handshake onboarding messaging feature chip: offline delivery."
+    },
+    "handshakeOnboardingMessagingFeatureMesh": "Mesh-native",
+    "@handshakeOnboardingMessagingFeatureMesh": {
+        "description": "Handshake onboarding messaging feature chip: mesh-native."
+    },
+    "handshakeOnboardingSketchHeadline": "More than words",
+    "@handshakeOnboardingSketchHeadline": {
+        "description": "Handshake onboarding sketch headline."
+    },
+    "handshakeOnboardingSketchBody": "Send sketches, reactions, and quick symbols. Sometimes a drawing says it better.",
+    "@handshakeOnboardingSketchBody": {
+        "description": "Handshake onboarding sketch body."
+    },
+    "handshakeOnboardingSketchHint": "Draw something",
+    "@handshakeOnboardingSketchHint": {
+        "description": "Handshake onboarding sketch interaction hint."
+    },
+    "handshakeOnboardingGamesHeadline": "Play together offline",
+    "@handshakeOnboardingGamesHeadline": {
+        "description": "Handshake onboarding games headline."
+    },
+    "handshakeOnboardingGamesBody": "Challenge nearby peers to quick games and shared moments.",
+    "@handshakeOnboardingGamesBody": {
+        "description": "Handshake onboarding games body."
+    },
+    "handshakeOnboardingMorseHeadline": "Different ways to reach out",
+    "@handshakeOnboardingMorseHeadline": {
+        "description": "Handshake onboarding morse headline."
+    },
+    "handshakeOnboardingMorseBody": "From encrypted chat to lightweight signals, the mesh adapts to the moment.",
+    "@handshakeOnboardingMorseBody": {
+        "description": "Handshake onboarding morse body."
+    },
+    "handshakeOnboardingMorseTagline": "Built for exploration.",
+    "@handshakeOnboardingMorseTagline": {
+        "description": "Handshake onboarding morse tagline."
+    },
+    "handshakeOnboardingMorseHint": "Tap to send a pulse",
+    "@handshakeOnboardingMorseHint": {
+        "description": "Handshake onboarding morse interaction hint."
+    },
+    "handshakeOnboardingServicesHeadline": "More than messages",
+    "@handshakeOnboardingServicesHeadline": {
+        "description": "Handshake onboarding services headline."
+    },
+    "handshakeOnboardingServicesBody": "Some peers share meetups, boards, and tools. It all begins with the handshake.",
+    "@handshakeOnboardingServicesBody": {
+        "description": "Handshake onboarding services body."
+    },
+    "handshakeOnboardingPermissionsHeadline": "Ready to join the mesh?",
+    "@handshakeOnboardingPermissionsHeadline": {
+        "description": "Handshake onboarding permissions headline."
+    },
+    "handshakeOnboardingPermissionsBluetoothTitle": "Bluetooth",
+    "@handshakeOnboardingPermissionsBluetoothTitle": {
+        "description": "Handshake onboarding Bluetooth permission title."
+    },
+    "handshakeOnboardingPermissionsBluetoothBody": "Connect to nearby mesh devices.",
+    "@handshakeOnboardingPermissionsBluetoothBody": {
+        "description": "Handshake onboarding Bluetooth permission body."
+    },
+    "handshakeOnboardingPermissionsNotificationsTitle": "Notifications",
+    "@handshakeOnboardingPermissionsNotificationsTitle": {
+        "description": "Handshake onboarding notifications permission title."
+    },
+    "handshakeOnboardingPermissionsNotificationsBody": "Hear about handshakes, messages, and activity.",
+    "@handshakeOnboardingPermissionsNotificationsBody": {
+        "description": "Handshake onboarding notifications permission body."
+    },
+    "handshakeOnboardingPermissionsLocationTitle": "Location",
+    "@handshakeOnboardingPermissionsLocationTitle": {
+        "description": "Handshake onboarding location permission title."
+    },
+    "handshakeOnboardingPermissionsLocationBody": "Your phone requires it to discover nearby devices.",
+    "@handshakeOnboardingPermissionsLocationBody": {
+        "description": "Handshake onboarding location permission body."
+    },
+    "handshakeOnboardingPermissionsFooter": "SocialMesh only uses what it needs to find and reach nearby peers.",
+    "@handshakeOnboardingPermissionsFooter": {
+        "description": "Handshake onboarding permissions footer reassurance."
+    },
+    "handshakeOnboardingPermissionsAllow": "Allow",
+    "@handshakeOnboardingPermissionsAllow": {
+        "description": "Handshake onboarding permission allow button."
+    },
+    "handshakeOnboardingPermissionsAllowed": "Allowed",
+    "@handshakeOnboardingPermissionsAllowed": {
+        "description": "Handshake onboarding permission granted label."
+    }
 }

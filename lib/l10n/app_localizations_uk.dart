@@ -44101,10 +44101,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Тим, хто ще не приєднався, знадобиться нове посилання. Хто вже приєднався — збереже доступ.';
 
   @override
-  String get licenseOrgInviteRegenerateConfirmButton => 'Створити нове';
+  String get licenseOrgInviteRegenerateConfirmButton => 'Створити';
 
   @override
-  String get licenseOrgInviteRegenerateCancelButton => 'Залишити поточне';
+  String get licenseOrgInviteRegenerateCancelButton => 'Залишити';
 
   @override
   String get licenseOrgInviteRegenerateSuccess =>

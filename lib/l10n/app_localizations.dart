@@ -76244,13 +76244,13 @@ abstract class AppLocalizations {
   /// Primary destructive button on the regenerate-confirm sheet.
   ///
   /// In en, this message translates to:
-  /// **'Generate new link'**
+  /// **'Regenerate'**
   String get licenseOrgInviteRegenerateConfirmButton;
 
   /// Secondary cancel button on the regenerate-confirm sheet.
   ///
   /// In en, this message translates to:
-  /// **'Keep current link'**
+  /// **'Keep link'**
   String get licenseOrgInviteRegenerateCancelButton;
 
   /// Snackbar shown after a successful regenerate. Tells the owner both that the new link is ready AND that the previous URL is dead.

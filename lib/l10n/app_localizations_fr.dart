@@ -44405,12 +44405,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les personnes qui n\'ont pas encore rejoint auront besoin du nouveau lien. Celles qui ont déjà rejoint conservent leur accès.';
 
   @override
-  String get licenseOrgInviteRegenerateConfirmButton =>
-      'Générer un nouveau lien';
+  String get licenseOrgInviteRegenerateConfirmButton => 'Régénérer';
 
   @override
-  String get licenseOrgInviteRegenerateCancelButton =>
-      'Conserver le lien actuel';
+  String get licenseOrgInviteRegenerateCancelButton => 'Conserver';
 
   @override
   String get licenseOrgInviteRegenerateSuccess =>

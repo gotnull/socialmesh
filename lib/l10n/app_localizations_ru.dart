@@ -44090,10 +44090,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Те, кто ещё не присоединился, должны будут использовать новую ссылку. Уже присоединившиеся сохранят доступ.';
 
   @override
-  String get licenseOrgInviteRegenerateConfirmButton => 'Создать новую';
+  String get licenseOrgInviteRegenerateConfirmButton => 'Создать';
 
   @override
-  String get licenseOrgInviteRegenerateCancelButton => 'Оставить текущую';
+  String get licenseOrgInviteRegenerateCancelButton => 'Оставить';
 
   @override
   String get licenseOrgInviteRegenerateSuccess =>

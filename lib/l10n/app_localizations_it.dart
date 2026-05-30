@@ -44102,11 +44102,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Chi non è ancora entrato avrà bisogno del nuovo link. Chi è già entrato mantiene il proprio accesso.';
 
   @override
-  String get licenseOrgInviteRegenerateConfirmButton => 'Genera nuovo link';
+  String get licenseOrgInviteRegenerateConfirmButton => 'Rigenera';
 
   @override
-  String get licenseOrgInviteRegenerateCancelButton =>
-      'Mantieni il link attuale';
+  String get licenseOrgInviteRegenerateCancelButton => 'Mantieni';
 
   @override
   String get licenseOrgInviteRegenerateSuccess =>

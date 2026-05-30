@@ -44221,11 +44221,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Wer noch nicht beigetreten ist, braucht den neuen Link. Bereits beigetretene Mitglieder behalten ihren Zugriff.';
 
   @override
-  String get licenseOrgInviteRegenerateConfirmButton => 'Neuen Link erzeugen';
+  String get licenseOrgInviteRegenerateConfirmButton => 'Erzeugen';
 
   @override
-  String get licenseOrgInviteRegenerateCancelButton =>
-      'Aktuellen Link behalten';
+  String get licenseOrgInviteRegenerateCancelButton => 'Behalten';
 
   @override
   String get licenseOrgInviteRegenerateSuccess =>

@@ -44293,10 +44293,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Quien aún no se haya unido necesitará el nuevo enlace. Quien ya se unió conserva su acceso.';
 
   @override
-  String get licenseOrgInviteRegenerateConfirmButton => 'Generar nuevo enlace';
+  String get licenseOrgInviteRegenerateConfirmButton => 'Regenerar';
 
   @override
-  String get licenseOrgInviteRegenerateCancelButton => 'Mantener enlace actual';
+  String get licenseOrgInviteRegenerateCancelButton => 'Mantener';
 
   @override
   String get licenseOrgInviteRegenerateSuccess =>

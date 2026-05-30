@@ -44069,10 +44069,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Quem ainda não entrou vai precisar do novo link. Quem já entrou mantém o acesso.';
 
   @override
-  String get licenseOrgInviteRegenerateConfirmButton => 'Gerar novo link';
+  String get licenseOrgInviteRegenerateConfirmButton => 'Regenerar';
 
   @override
-  String get licenseOrgInviteRegenerateCancelButton => 'Manter link atual';
+  String get licenseOrgInviteRegenerateCancelButton => 'Manter';
 
   @override
   String get licenseOrgInviteRegenerateSuccess =>
