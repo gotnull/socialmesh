@@ -7696,6 +7696,7 @@
     "waypointExpireLabel": "Läuft ab",
     "waypointExpireSubtitle": "Diesen Wegpunkt später automatisch entfernen",
     "waypointExpireDateLabel": "Ablaufdatum",
+    "waypointExpireTimeLabel": "Ablaufzeit",
     "waypointNoExpiry": "Läuft nie ab",
     "waypointLockedLabel": "Gesperrt",
     "waypointLockedSubtitle": "Nur du kannst diesen Wegpunkt bearbeiten",

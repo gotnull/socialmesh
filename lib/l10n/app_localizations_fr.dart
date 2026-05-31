@@ -36200,6 +36200,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get waypointExpireDateLabel => 'Date d\'expiration';
 
   @override
+  String get waypointExpireTimeLabel => 'Heure d\'expiration';
+
+  @override
   String get waypointNoExpiry => 'N\'expire jamais';
 
   @override

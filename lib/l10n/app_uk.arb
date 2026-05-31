@@ -7696,6 +7696,7 @@
     "waypointExpireLabel": "Термін дії",
     "waypointExpireSubtitle": "Автоматично видалити цю точку пізніше",
     "waypointExpireDateLabel": "Дата завершення",
+    "waypointExpireTimeLabel": "Час завершення",
     "waypointNoExpiry": "Ніколи не завершується",
     "waypointLockedLabel": "Заблоковано",
     "waypointLockedSubtitle": "Лише ви можете редагувати цю точку маршруту",

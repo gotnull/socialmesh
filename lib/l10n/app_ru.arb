@@ -8065,6 +8065,7 @@
     "waypointExpireLabel": "Истекает",
     "waypointExpireSubtitle": "Автоматически удалить эту точку позже",
     "waypointExpireDateLabel": "Дата истечения",
+    "waypointExpireTimeLabel": "Время истечения",
     "waypointNoExpiry": "Никогда не истекает",
     "waypointLockedLabel": "Заблокировано",
     "waypointLockedSubtitle": "Только вы можете редактировать эту точку маршрута",

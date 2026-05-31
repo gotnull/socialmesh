@@ -35525,6 +35525,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get waypointExpireDateLabel => 'Expiry date';
 
   @override
+  String get waypointExpireTimeLabel => 'Expiry time';
+
+  @override
   String get waypointNoExpiry => 'Never expires';
 
   @override

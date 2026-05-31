@@ -36100,6 +36100,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get waypointExpireDateLabel => 'Fecha de caducidad';
 
   @override
+  String get waypointExpireTimeLabel => 'Hora de caducidad';
+
+  @override
   String get waypointNoExpiry => 'Nunca caduca';
 
   @override

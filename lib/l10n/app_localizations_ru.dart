@@ -35935,6 +35935,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get waypointExpireDateLabel => 'Дата истечения';
 
   @override
+  String get waypointExpireTimeLabel => 'Время истечения';
+
+  @override
   String get waypointNoExpiry => 'Никогда не истекает';
 
   @override

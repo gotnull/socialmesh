@@ -41206,6 +41206,7 @@
     "waypointExpireLabel": "Expira",
     "waypointExpireSubtitle": "Remover este ponto de passagem automaticamente mais tarde",
     "waypointExpireDateLabel": "Data de expiração",
+    "waypointExpireTimeLabel": "Hora de expiração",
     "waypointNoExpiry": "Nunca expira",
     "waypointLockedLabel": "Bloqueado",
     "waypointLockedSubtitle": "Apenas você pode editar este ponto de passagem",

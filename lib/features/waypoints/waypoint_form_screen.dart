@@ -116,12 +116,16 @@ class _WaypointFormScreenState extends ConsumerState<WaypointFormScreen>
       title: context.l10n.waypointExpireDateLabel,
     );
     if (date == null || !mounted) return;
+    // Default the time wheel to the existing expiry time when editing a
+    // waypoint that already has one; otherwise to the current time (HIG: a
+    // time picker opens at "now", not an arbitrary derived value).
+    final initialTime = (_isEditing && widget.existing!.hasExpiry)
+        ? TimeOfDay.fromDateTime(_expiryDate!)
+        : TimeOfDay.now();
     final time = await TimePickerSheet.show(
       context,
-      initialTime: TimeOfDay.fromDateTime(
-        _expiryDate ?? now.add(const Duration(hours: 8)),
-      ),
-      title: context.l10n.waypointExpireDateLabel,
+      initialTime: initialTime,
+      title: context.l10n.waypointExpireTimeLabel,
     );
     if (!mounted) return;
     final t = time ?? TimeOfDay.fromDateTime(date);

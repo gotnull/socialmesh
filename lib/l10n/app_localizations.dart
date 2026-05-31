@@ -62149,6 +62149,12 @@ abstract class AppLocalizations {
   /// **'Expiry date'**
   String get waypointExpireDateLabel;
 
+  /// Title for the waypoint expiry time picker sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Expiry time'**
+  String get waypointExpireTimeLabel;
+
   /// Shown when a waypoint has no expiry set
   ///
   /// In en, this message translates to:

@@ -35948,6 +35948,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get waypointExpireDateLabel => 'Дата завершення';
 
   @override
+  String get waypointExpireTimeLabel => 'Час завершення';
+
+  @override
   String get waypointNoExpiry => 'Ніколи не завершується';
 
   @override

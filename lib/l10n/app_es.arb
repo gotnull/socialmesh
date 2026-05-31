@@ -7696,6 +7696,7 @@
     "waypointExpireLabel": "Caduca",
     "waypointExpireSubtitle": "Eliminar este punto de ruta automáticamente más tarde",
     "waypointExpireDateLabel": "Fecha de caducidad",
+    "waypointExpireTimeLabel": "Hora de caducidad",
     "waypointNoExpiry": "Nunca caduca",
     "waypointLockedLabel": "Bloqueado",
     "waypointLockedSubtitle": "Solo tú puedes editar este punto de ruta",

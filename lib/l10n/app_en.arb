@@ -47551,6 +47551,10 @@
     "@waypointExpireDateLabel": {
         "description": "Label for the waypoint expiry date picker tile"
     },
+    "waypointExpireTimeLabel": "Expiry time",
+    "@waypointExpireTimeLabel": {
+        "description": "Title for the waypoint expiry time picker sheet"
+    },
     "waypointNoExpiry": "Never expires",
     "@waypointNoExpiry": {
         "description": "Shown when a waypoint has no expiry set"

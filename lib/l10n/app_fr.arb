@@ -7696,6 +7696,7 @@
     "waypointExpireLabel": "Expire",
     "waypointExpireSubtitle": "Supprimer automatiquement ce point de cheminement plus tard",
     "waypointExpireDateLabel": "Date d'expiration",
+    "waypointExpireTimeLabel": "Heure d'expiration",
     "waypointNoExpiry": "N'expire jamais",
     "waypointLockedLabel": "Verrouillé",
     "waypointLockedSubtitle": "Vous seul pouvez modifier ce point de cheminement",

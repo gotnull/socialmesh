@@ -36032,6 +36032,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get waypointExpireDateLabel => 'Ablaufdatum';
 
   @override
+  String get waypointExpireTimeLabel => 'Ablaufzeit';
+
+  @override
   String get waypointNoExpiry => 'Läuft nie ab';
 
   @override
