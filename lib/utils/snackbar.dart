@@ -274,7 +274,7 @@ void _showStyledSnackBar(
                 builder: (context, constraints) {
                   final textStyle = Theme.of(context).textTheme.bodyMedium
                       ?.copyWith(
-                        color: Colors.white,
+                        color: context.textPrimary,
                         fontWeight: FontWeight.w500,
                         height: 1.3,
                       );
@@ -312,7 +312,7 @@ void _showStyledSnackBar(
                           padding: const EdgeInsets.all(AppTheme.spacing4),
                           child: Icon(
                             Icons.close_rounded,
-                            color: Colors.white.withValues(alpha: 0.7),
+                            color: context.textPrimary.withValues(alpha: 0.7),
                             size: 18,
                           ),
                         ),
@@ -384,7 +384,7 @@ void showActionSnackBar(
                 builder: (context, constraints) {
                   final textStyle = Theme.of(context).textTheme.bodyMedium
                       ?.copyWith(
-                        color: Colors.white,
+                        color: context.textPrimary,
                         fontWeight: FontWeight.w500,
                         height: 1.3,
                       );
@@ -421,9 +421,8 @@ void showActionSnackBar(
                         },
                         child: Text(
                           actionLabel,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.labelLarge?.copyWith(color: Colors.white),
+                          style: Theme.of(context).textTheme.labelLarge
+                              ?.copyWith(color: context.textPrimary),
                         ),
                       ),
                     ],
@@ -488,7 +487,7 @@ void _showLoadingSnackBar(
                 builder: (context, constraints) {
                   final textStyle = Theme.of(context).textTheme.bodyMedium
                       ?.copyWith(
-                        color: Colors.white,
+                        color: context.textPrimary,
                         fontWeight: FontWeight.w500,
                         height: 1.3,
                       );

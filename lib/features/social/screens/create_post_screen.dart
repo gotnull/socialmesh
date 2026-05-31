@@ -158,7 +158,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.white,
+                        color: _canPost ? Colors.white : context.accentColor,
                       ),
                     )
                   : Text(

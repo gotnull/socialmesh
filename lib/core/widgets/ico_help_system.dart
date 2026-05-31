@@ -343,7 +343,11 @@ class _IcoHelpAppBarButtonState extends ConsumerState<IcoHelpAppBarButton>
 /// Uses theme accent colors for highlights
 /// Handles incomplete markdown during typing animation gracefully
 class _RichTextParser {
-  static List<TextSpan> parse(String text, {Color? highlightColor}) {
+  static List<TextSpan> parse(
+    String text, {
+    Color? highlightColor,
+    Color textColor = Colors.white,
+  }) {
     final spans = <TextSpan>[];
     // Match complete **text** patterns OR incomplete **text at end of string
     final regex = RegExp(r'\*\*(.+?)\*\*|\*\*(.+)$');
@@ -355,8 +359,8 @@ class _RichTextParser {
         spans.add(
           TextSpan(
             text: text.substring(lastEnd, match.start),
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: textColor,
               fontSize: 15,
               height: 1.5,
               fontFamily: AppTheme.fontFamily,
@@ -1217,9 +1221,7 @@ class _IcoSpeechBubbleWithArrowState
                                     Text(
                                       '${widget.currentStep}/${widget.totalSteps}',
                                       style: TextStyle(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.4,
-                                        ),
+                                        color: context.textTertiary,
                                         fontSize: 11,
                                         fontFamily: AppTheme.fontFamily,
                                         decoration: TextDecoration.none,
@@ -1241,9 +1243,7 @@ class _IcoSpeechBubbleWithArrowState
                                           ? Icons.vibration
                                           : Icons.mobile_off,
                                       size: 16,
-                                      color: Colors.white.withValues(
-                                        alpha: 0.4,
-                                      ),
+                                      color: context.textTertiary,
                                     ),
                                   ),
                                 ],
@@ -1257,6 +1257,7 @@ class _IcoSpeechBubbleWithArrowState
                                   children: _RichTextParser.parse(
                                     _displayedText,
                                     highlightColor: context.accentColor,
+                                    textColor: context.textPrimary,
                                   ),
                                 ),
                               ),
@@ -1341,9 +1342,7 @@ class _IcoSpeechBubbleWithArrowState
                                         child: Text(
                                           'Skip',
                                           style: TextStyle(
-                                            color: Colors.white.withValues(
-                                              alpha: 0.4,
-                                            ),
+                                            color: context.textTertiary,
                                             fontSize: 13,
                                             fontFamily: AppTheme.fontFamily,
                                             decoration: TextDecoration.none,

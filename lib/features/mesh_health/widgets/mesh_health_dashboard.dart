@@ -254,7 +254,7 @@ class MeshHealthDashboard extends ConsumerWidget {
                       status.totalPackets,
                     ),
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: context.textSecondary,
                       fontSize: 13,
                     ),
                   ),
@@ -265,13 +265,15 @@ class MeshHealthDashboard extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
+                color: context.isDarkMode
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.black.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(AppTheme.radius16),
               ),
               child: Text(
                 context.l10n.meshHealthIssueCount(status.issueCount),
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: context.textPrimary,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
@@ -325,9 +327,15 @@ class MeshHealthDashboard extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: context.isDarkMode
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.black.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(AppTheme.radius12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(
+          color: context.isDarkMode
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.black.withValues(alpha: 0.1),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -338,7 +346,7 @@ class MeshHealthDashboard extends ConsumerWidget {
               Text(
                 context.l10n.meshHealthChannelUtilization,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -363,9 +371,7 @@ class MeshHealthDashboard extends ConsumerWidget {
                 ? Center(
                     child: Text(
                       context.l10n.meshHealthNoDataYet,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
-                      ),
+                      style: TextStyle(color: context.textTertiary),
                     ),
                   )
                 : _UtilizationGraph(data: history),
@@ -381,9 +387,15 @@ class MeshHealthDashboard extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: context.isDarkMode
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.black.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(AppTheme.radius12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(
+          color: context.isDarkMode
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.black.withValues(alpha: 0.1),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -391,7 +403,7 @@ class MeshHealthDashboard extends ConsumerWidget {
           Text(
             context.l10n.meshHealthDetectedIssues,
             style: TextStyle(
-              color: Colors.white,
+              color: context.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.w600,
             ),
@@ -405,15 +417,13 @@ class MeshHealthDashboard extends ConsumerWidget {
                   children: [
                     Icon(
                       Icons.check_circle_outline,
-                      color: Colors.white.withValues(alpha: 0.3),
+                      color: context.textTertiary,
                       size: 32,
                     ),
                     const SizedBox(height: AppTheme.spacing8),
                     Text(
                       context.l10n.meshHealthNoIssuesDetected,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
-                      ),
+                      style: TextStyle(color: context.textTertiary),
                     ),
                   ],
                 ),
@@ -434,9 +444,15 @@ class MeshHealthDashboard extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: context.isDarkMode
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.black.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(AppTheme.radius12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(
+          color: context.isDarkMode
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.black.withValues(alpha: 0.1),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -444,7 +460,7 @@ class MeshHealthDashboard extends ConsumerWidget {
           Text(
             context.l10n.meshHealthTopContributors,
             style: TextStyle(
-              color: Colors.white,
+              color: context.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.w600,
             ),
@@ -456,7 +472,7 @@ class MeshHealthDashboard extends ConsumerWidget {
               child: Center(
                 child: Text(
                   context.l10n.meshHealthNoNodesDetected,
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+                  style: TextStyle(color: context.textTertiary),
                 ),
               ),
             )
@@ -523,10 +539,7 @@ class _MetricCard extends StatelessWidget {
               const SizedBox(width: AppTheme.spacing6),
               Text(
                 title,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.7),
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: context.textSecondary, fontSize: 12),
               ),
             ],
           ),
@@ -613,7 +626,7 @@ class _IssueCard extends StatelessWidget {
                 const SizedBox(height: AppTheme.spacing4),
                 Text(
                   issue.message,
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  style: TextStyle(color: context.textPrimary, fontSize: 13),
                 ),
                 if (issue.nodeId != null)
                   Padding(
@@ -621,7 +634,7 @@ class _IssueCard extends StatelessWidget {
                     child: Text(
                       context.l10n.meshHealthNodePrefix(issue.nodeId!),
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: context.textTertiary,
                         fontSize: 11,
                         fontFamily: AppTheme.fontFamily,
                       ),
@@ -683,7 +696,7 @@ class _NodeContributorRow extends StatelessWidget {
             decoration: BoxDecoration(
               color: node.isKnownNode
                   ? const Color(0xFF00E5FF).withValues(alpha: 0.2)
-                  : Colors.white.withValues(alpha: 0.1),
+                  : context.textPrimary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(AppTheme.radius8),
               border: Border.all(
                 color: hasIssue
@@ -696,7 +709,7 @@ class _NodeContributorRow extends StatelessWidget {
                 node.isKnownNode ? Icons.check : Icons.help_outline,
                 color: node.isKnownNode
                     ? const Color(0xFF00E5FF)
-                    : Colors.white.withValues(alpha: 0.5),
+                    : context.textTertiary,
                 size: 18,
               ),
             ),
@@ -710,8 +723,8 @@ class _NodeContributorRow extends StatelessWidget {
                   children: [
                     Text(
                       node.nodeId,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: context.textPrimary,
                         fontSize: 13,
                         fontFamily: AppTheme.fontFamily,
                       ),
@@ -766,10 +779,7 @@ class _NodeContributorRow extends StatelessWidget {
                     node.packetCount,
                     node.totalAirtimeMs,
                   ),
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
-                    fontSize: 11,
-                  ),
+                  style: TextStyle(color: context.textTertiary, fontSize: 11),
                 ),
               ],
             ),
@@ -787,10 +797,7 @@ class _NodeContributorRow extends StatelessWidget {
               ),
               Text(
                 context.l10n.meshHealthOfAirtime,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.4),
-                  fontSize: 10,
-                ),
+                style: TextStyle(color: context.textTertiary, fontSize: 10),
               ),
             ],
           ),
@@ -810,15 +817,19 @@ class _UtilizationGraph extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomPaint(
       size: const Size(double.infinity, 120),
-      painter: _UtilizationGraphPainter(data: data),
+      painter: _UtilizationGraphPainter(
+        data: data,
+        gridColor: context.textPrimary.withValues(alpha: 0.1),
+      ),
     );
   }
 }
 
 class _UtilizationGraphPainter extends CustomPainter {
   final List<UtilizationDataPoint> data;
+  final Color gridColor;
 
-  _UtilizationGraphPainter({required this.data});
+  _UtilizationGraphPainter({required this.data, required this.gridColor});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -832,7 +843,7 @@ class _UtilizationGraphPainter extends CustomPainter {
 
     // Grid lines
     final gridPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.1)
+      ..color = gridColor
       ..strokeWidth = 1;
 
     for (var i = 0; i <= 4; i++) {
@@ -901,6 +912,6 @@ class _UtilizationGraphPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_UtilizationGraphPainter oldDelegate) {
-    return oldDelegate.data != data;
+    return oldDelegate.data != data || oldDelegate.gridColor != gridColor;
   }
 }

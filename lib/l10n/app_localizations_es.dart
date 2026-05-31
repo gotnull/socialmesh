@@ -27989,6 +27989,28 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appearanceTitle => 'Apariencia y accesibilidad';
 
   @override
+  String get appearanceThemeMode => 'Tema';
+
+  @override
+  String get appearanceThemeModeSystem => 'Sistema';
+
+  @override
+  String get appearanceThemeModeSystemDesc =>
+      'Seguir la configuración de apariencia del dispositivo';
+
+  @override
+  String get appearanceThemeModeLight => 'Claro';
+
+  @override
+  String get appearanceThemeModeLightDesc => 'Usar siempre el tema claro';
+
+  @override
+  String get appearanceThemeModeDark => 'Oscuro';
+
+  @override
+  String get appearanceThemeModeDarkDesc => 'Usar siempre el tema oscuro';
+
+  @override
   String get appearanceResetTooltip => 'Restablecer valores predeterminados';
 
   @override

@@ -71,7 +71,9 @@ class StatusFilterChip extends StatelessWidget {
           border: Border.all(
             color: isSelected
                 ? chipColor
-                : Colors.white.withValues(alpha: 0.08),
+                : context.isDarkMode
+                ? Colors.white.withValues(alpha: 0.08)
+                : context.border,
           ),
         ),
         child: Row(
@@ -98,7 +100,7 @@ class StatusFilterChip extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected ? Colors.white : context.textSecondary,
+                color: isSelected ? chipColor : context.textSecondary,
               ),
             ),
             if (count != null) ...[

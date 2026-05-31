@@ -113,10 +113,10 @@ class _ModerationStatusScreenState extends ConsumerState<ModerationStatusScreen>
             const SizedBox(height: AppTheme.spacing24),
             Text(
               context.l10n.socialAccountGoodStanding,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: context.textPrimary,
               ),
             ),
             const SizedBox(height: AppTheme.spacing12),
@@ -124,7 +124,7 @@ class _ModerationStatusScreenState extends ConsumerState<ModerationStatusScreen>
               context.l10n.socialAccountGoodStandingDesc,
               style: TextStyle(
                 fontSize: 15,
-                color: Colors.white.withValues(alpha: 0.7),
+                color: context.textSecondary,
                 height: 1.5,
               ),
               textAlign: TextAlign.center,
@@ -167,10 +167,10 @@ class _ModerationStatusScreenState extends ConsumerState<ModerationStatusScreen>
           if (status.history.isNotEmpty) ...[
             Text(
               context.l10n.socialAccountRecentActivity,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: context.textPrimary,
               ),
             ),
             const SizedBox(height: AppTheme.spacing12),
@@ -189,10 +189,14 @@ class _ModerationStatusScreenState extends ConsumerState<ModerationStatusScreen>
                   vertical: 14,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
+                  color: context.isDarkMode
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.black.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(AppTheme.radius12),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: context.isDarkMode
+                        ? Colors.white.withValues(alpha: 0.2)
+                        : Colors.black.withValues(alpha: 0.12),
                   ),
                 ),
                 child: Row(
@@ -200,14 +204,14 @@ class _ModerationStatusScreenState extends ConsumerState<ModerationStatusScreen>
                   children: [
                     Icon(
                       Icons.email_outlined,
-                      color: Colors.white.withValues(alpha: 0.8),
+                      color: context.textSecondary,
                       size: 20,
                     ),
                     const SizedBox(width: AppTheme.spacing12),
                     Text(
                       context.l10n.socialContactSupport,
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: context.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -368,10 +372,7 @@ class _StatItem extends StatelessWidget {
         const SizedBox(height: AppTheme.spacing4),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.white.withValues(alpha: 0.5),
-          ),
+          style: TextStyle(fontSize: 12, color: context.textTertiary),
         ),
       ],
     );
@@ -389,7 +390,9 @@ class _StrikeMeterCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing20),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: context.isDarkMode
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.black.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(AppTheme.radius16),
       ),
       child: Column(
@@ -405,10 +408,10 @@ class _StrikeMeterCard extends StatelessWidget {
               const SizedBox(width: AppTheme.spacing8),
               Text(
                 context.l10n.socialAccountStrikeMeter,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: context.textPrimary,
                 ),
               ),
               const Spacer(),
@@ -439,7 +442,9 @@ class _StrikeMeterCard extends StatelessWidget {
                         ? (index == maxStrikes - 1
                               ? AppTheme.errorRed
                               : AccentColors.orange)
-                        : Colors.white.withValues(alpha: 0.1),
+                        : context.isDarkMode
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.black.withValues(alpha: 0.08),
                   ),
                 ),
               );
@@ -454,7 +459,7 @@ class _StrikeMeterCard extends StatelessWidget {
               fontSize: 13,
               color: strikeCount >= maxStrikes
                   ? AppTheme.errorRed.withValues(alpha: 0.9)
-                  : Colors.white.withValues(alpha: 0.6),
+                  : context.textTertiary,
             ),
           ),
         ],
@@ -485,10 +490,10 @@ class _GuidelinesCard extends StatelessWidget {
               const SizedBox(width: AppTheme.spacing8),
               Text(
                 context.l10n.socialCommunityGuidelines,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: context.textPrimary,
                 ),
               ),
             ],
@@ -496,10 +501,7 @@ class _GuidelinesCard extends StatelessWidget {
           const SizedBox(height: AppTheme.spacing12),
           Text(
             'Please ensure your content follows our guidelines:',
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.white.withValues(alpha: 0.7),
-            ),
+            style: TextStyle(fontSize: 13, color: context.textSecondary),
           ),
           const SizedBox(height: AppTheme.spacing12),
           _GuidelineItem(text: context.l10n.socialGuidelineNoExplicit),
@@ -533,10 +535,7 @@ class _GuidelineItem extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.white.withValues(alpha: 0.7),
-              ),
+              style: TextStyle(fontSize: 13, color: context.textSecondary),
             ),
           ),
         ],
@@ -574,7 +573,9 @@ class _HistoryItemCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: context.isDarkMode
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.black.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(AppTheme.radius12),
         border: Border.all(color: typeColor.withValues(alpha: 0.2)),
       ),
@@ -609,7 +610,7 @@ class _HistoryItemCard extends StatelessWidget {
                       DateFormat.yMMMd().format(item.timestamp),
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.white.withValues(alpha: 0.4),
+                        color: context.textTertiary,
                       ),
                     ),
                   ],
@@ -618,10 +619,7 @@ class _HistoryItemCard extends StatelessWidget {
                   const SizedBox(height: AppTheme.spacing4),
                   Text(
                     item.reason!,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.white.withValues(alpha: 0.6),
-                    ),
+                    style: TextStyle(fontSize: 13, color: context.textTertiary),
                   ),
                 ],
                 if (item.contentType != null) ...[
@@ -632,14 +630,16 @@ class _HistoryItemCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
+                      color: context.isDarkMode
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : Colors.black.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(AppTheme.radius6),
                     ),
                     child: Text(
                       item.contentType!,
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: context.textTertiary,
                       ),
                     ),
                   ),

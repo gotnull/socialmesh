@@ -48250,6 +48250,48 @@ abstract class AppLocalizations {
   /// **'Appearance & Accessibility'**
   String get appearanceTitle;
 
+  /// Section header for the light/dark theme mode picker
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get appearanceThemeMode;
+
+  /// Theme mode option that follows the device setting
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get appearanceThemeModeSystem;
+
+  /// Description for the System theme mode option
+  ///
+  /// In en, this message translates to:
+  /// **'Follow your device\'s appearance setting'**
+  String get appearanceThemeModeSystemDesc;
+
+  /// Light theme mode option
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get appearanceThemeModeLight;
+
+  /// Description for the Light theme mode option
+  ///
+  /// In en, this message translates to:
+  /// **'Always use the light theme'**
+  String get appearanceThemeModeLightDesc;
+
+  /// Dark theme mode option
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get appearanceThemeModeDark;
+
+  /// Description for the Dark theme mode option
+  ///
+  /// In en, this message translates to:
+  /// **'Always use the dark theme'**
+  String get appearanceThemeModeDarkDesc;
+
   /// Tooltip in appearance settings
   ///
   /// In en, this message translates to:

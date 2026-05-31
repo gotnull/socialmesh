@@ -37450,6 +37450,34 @@
     "@appearanceTitle": {
         "description": "Title for the appearance settings screen"
     },
+    "appearanceThemeMode": "Theme",
+    "@appearanceThemeMode": {
+        "description": "Section header for the light/dark theme mode picker"
+    },
+    "appearanceThemeModeSystem": "System",
+    "@appearanceThemeModeSystem": {
+        "description": "Theme mode option that follows the device setting"
+    },
+    "appearanceThemeModeSystemDesc": "Follow your device's appearance setting",
+    "@appearanceThemeModeSystemDesc": {
+        "description": "Description for the System theme mode option"
+    },
+    "appearanceThemeModeLight": "Light",
+    "@appearanceThemeModeLight": {
+        "description": "Light theme mode option"
+    },
+    "appearanceThemeModeLightDesc": "Always use the light theme",
+    "@appearanceThemeModeLightDesc": {
+        "description": "Description for the Light theme mode option"
+    },
+    "appearanceThemeModeDark": "Dark",
+    "@appearanceThemeModeDark": {
+        "description": "Dark theme mode option"
+    },
+    "appearanceThemeModeDarkDesc": "Always use the dark theme",
+    "@appearanceThemeModeDarkDesc": {
+        "description": "Description for the Dark theme mode option"
+    },
     "appearanceResetTooltip": "Reset to defaults",
     "@appearanceResetTooltip": {
         "description": "Tooltip in appearance settings"

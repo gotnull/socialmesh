@@ -27948,6 +27948,28 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appearanceTitle => 'Erscheinungsbild & Barrierefreiheit';
 
   @override
+  String get appearanceThemeMode => 'Design';
+
+  @override
+  String get appearanceThemeModeSystem => 'System';
+
+  @override
+  String get appearanceThemeModeSystemDesc =>
+      'Der Darstellung des Geräts folgen';
+
+  @override
+  String get appearanceThemeModeLight => 'Hell';
+
+  @override
+  String get appearanceThemeModeLightDesc => 'Immer das helle Design verwenden';
+
+  @override
+  String get appearanceThemeModeDark => 'Dunkel';
+
+  @override
+  String get appearanceThemeModeDarkDesc => 'Immer das dunkle Design verwenden';
+
+  @override
   String get appearanceResetTooltip => 'Auf Standardwerte zurücksetzen';
 
   @override

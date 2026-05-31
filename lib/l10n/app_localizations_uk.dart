@@ -27885,6 +27885,29 @@ class AppLocalizationsUk extends AppLocalizations {
   String get appearanceTitle => 'Зовнішній вигляд та доступність';
 
   @override
+  String get appearanceThemeMode => 'Тема';
+
+  @override
+  String get appearanceThemeModeSystem => 'Системна';
+
+  @override
+  String get appearanceThemeModeSystemDesc =>
+      'Дотримуватися налаштувань вигляду пристрою';
+
+  @override
+  String get appearanceThemeModeLight => 'Світла';
+
+  @override
+  String get appearanceThemeModeLightDesc =>
+      'Завжди використовувати світлу тему';
+
+  @override
+  String get appearanceThemeModeDark => 'Темна';
+
+  @override
+  String get appearanceThemeModeDarkDesc => 'Завжди використовувати темну тему';
+
+  @override
   String get appearanceResetTooltip => 'Скинути до початкових';
 
   @override

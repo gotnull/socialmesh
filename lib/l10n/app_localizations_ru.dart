@@ -27872,6 +27872,28 @@ class AppLocalizationsRu extends AppLocalizations {
   String get appearanceTitle => 'Внешний вид и доступность';
 
   @override
+  String get appearanceThemeMode => 'Тема';
+
+  @override
+  String get appearanceThemeModeSystem => 'Системная';
+
+  @override
+  String get appearanceThemeModeSystemDesc =>
+      'Следовать настройкам оформления устройства';
+
+  @override
+  String get appearanceThemeModeLight => 'Светлая';
+
+  @override
+  String get appearanceThemeModeLightDesc => 'Всегда использовать светлую тему';
+
+  @override
+  String get appearanceThemeModeDark => 'Тёмная';
+
+  @override
+  String get appearanceThemeModeDarkDesc => 'Всегда использовать тёмную тему';
+
+  @override
   String get appearanceResetTooltip => 'Сбросить до значений по умолчанию';
 
   @override

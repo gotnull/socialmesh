@@ -14,12 +14,37 @@ import '../../core/widgets/app_bottom_sheet.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/accessibility_preferences.dart';
 import '../../providers/accessibility_providers.dart';
+import '../../providers/app_providers.dart';
 import '../../providers/locale_provider.dart';
 import '../../services/haptic_service.dart';
 
 // ---------------------------------------------------------------------------
 // Localized display names / descriptions for accessibility preference enums
 // ---------------------------------------------------------------------------
+
+extension ThemeModeL10n on ThemeMode {
+  String localizedName(BuildContext context) {
+    switch (this) {
+      case ThemeMode.system:
+        return context.l10n.appearanceThemeModeSystem;
+      case ThemeMode.light:
+        return context.l10n.appearanceThemeModeLight;
+      case ThemeMode.dark:
+        return context.l10n.appearanceThemeModeDark;
+    }
+  }
+
+  String localizedDescription(BuildContext context) {
+    switch (this) {
+      case ThemeMode.system:
+        return context.l10n.appearanceThemeModeSystemDesc;
+      case ThemeMode.light:
+        return context.l10n.appearanceThemeModeLightDesc;
+      case ThemeMode.dark:
+        return context.l10n.appearanceThemeModeDarkDesc;
+    }
+  }
+}
 
 extension FontModeL10n on FontMode {
   String localizedName(BuildContext context) {
@@ -204,6 +229,19 @@ class _AppearanceAccessibilityScreenState
 
               const SizedBox(height: AppTheme.spacing24),
 
+              // Theme Mode Section
+              _SectionHeader(
+                title: context.l10n.appearanceThemeMode,
+                icon: Icons.brightness_6_rounded,
+              ),
+              const SizedBox(height: AppTheme.spacing8),
+              _ThemeModeSelector(
+                currentMode: ref.watch(themeModeProvider),
+                onChanged: (mode) => _updateThemeMode(mode),
+              ),
+
+              const SizedBox(height: AppTheme.spacing24),
+
               _SectionHeader(
                 title: context.l10n.appearanceLanguage,
                 icon: Icons.language_rounded,
@@ -312,6 +350,15 @@ class _AppearanceAccessibilityScreenState
     HapticFeedback.selectionClick();
     final notifier = ref.read(localeProvider.notifier);
     await notifier.setLocale(locale);
+  }
+
+  Future<void> _updateThemeMode(ThemeMode mode) async {
+    HapticFeedback.selectionClick();
+    final notifier = ref.read(themeModeProvider.notifier);
+    final settingsService = await ref.read(settingsServiceProvider.future);
+    if (!mounted) return;
+    await settingsService.setThemeMode(mode.index);
+    notifier.setThemeMode(mode);
   }
 
   Future<void> _updateFontMode(FontMode mode) async {
@@ -530,6 +577,89 @@ class _PreviewChip extends StatelessWidget {
           color: context.accentColor,
           fontWeight: FontWeight.w600,
         ),
+      ),
+    );
+  }
+}
+
+/// Theme mode selector with radio-style options (System / Light / Dark)
+class _ThemeModeSelector extends StatelessWidget {
+  const _ThemeModeSelector({
+    required this.currentMode,
+    required this.onChanged,
+  });
+
+  final ThemeMode currentMode;
+  final ValueChanged<ThemeMode> onChanged;
+
+  static const _modes = [ThemeMode.system, ThemeMode.light, ThemeMode.dark];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(color: context.border),
+      ),
+      child: Column(
+        children: _modes.map((mode) {
+          final isSelected = mode == currentMode;
+          final isLast = mode == _modes.last;
+
+          return Column(
+            children: [
+              InkWell(
+                onTap: () => onChanged(mode),
+                borderRadius: BorderRadius.vertical(
+                  top: mode == _modes.first
+                      ? const Radius.circular(12)
+                      : Radius.zero,
+                  bottom: isLast ? const Radius.circular(12) : Radius.zero,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              mode.localizedName(context),
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(
+                                    fontWeight: isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.w500,
+                                  ),
+                            ),
+                            const SizedBox(height: AppTheme.spacing2),
+                            Text(
+                              mode.localizedDescription(context),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Radio<ThemeMode>(
+                        value: mode,
+                        groupValue: currentMode,
+                        onChanged: (value) {
+                          if (value != null) onChanged(value);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (!isLast) Divider(height: 1, color: context.border),
+            ],
+          );
+        }).toList(),
       ),
     );
   }
