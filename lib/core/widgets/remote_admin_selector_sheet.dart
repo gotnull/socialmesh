@@ -57,6 +57,13 @@ class _RemoteAdminSelectorSheetState
   String _searchQuery = '';
   final _searchController = TextEditingController();
 
+  // Frozen display order (node numbers), captured once on first build so rows
+  // stay put while the sheet is open. The list watches live mesh + presence
+  // state and the sort key includes active status, so without a stable order it
+  // re-sorts on every inbound packet — a row could shift out from under the
+  // user's finger between render and tap, selecting the wrong node.
+  List<int>? _frozenOrder;
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -68,29 +75,51 @@ class _RemoteAdminSelectorSheetState
     final myNodeNum = ref.watch(myNodeNumProvider);
     final presenceMap = ref.watch(presenceMapProvider);
 
-    // Filter to PKI-enabled nodes only, excluding our own node
-    var nodeList =
-        nodes.values.where((n) {
-          if (n.nodeNum == myNodeNum) return false;
-          return n.hasPublicKey;
-        }).toList()..sort((a, b) {
-          // Active nodes first, then by name
-          final aActive = presenceConfidenceFor(presenceMap, a).isActive;
-          final bActive = presenceConfidenceFor(presenceMap, b).isActive;
-          if (aActive != bActive) return aActive ? -1 : 1;
-          return a.displayName.compareTo(b.displayName);
-        });
+    // Index PKI-enabled nodes (excluding our own) by node number.
+    final pkiByNum = <int, MeshNode>{};
+    for (final n in nodes.values) {
+      if (n.nodeNum == myNodeNum) continue;
+      if (!n.hasPublicKey) continue;
+      pkiByNum[n.nodeNum] = n;
+    }
 
-    if (_searchQuery.isNotEmpty) {
-      final query = _searchQuery.toLowerCase();
-      nodeList = nodeList.where((n) {
+    // Freeze the display order on first build. nodeNum is the final tiebreaker
+    // so equal active/name nodes order deterministically.
+    _frozenOrder ??=
+        (pkiByNum.values.toList()..sort((a, b) {
+              final aActive = presenceConfidenceFor(presenceMap, a).isActive;
+              final bActive = presenceConfidenceFor(presenceMap, b).isActive;
+              if (aActive != bActive) return aActive ? -1 : 1;
+              final byName = a.displayName.compareTo(b.displayName);
+              if (byName != 0) return byName;
+              return a.nodeNum.compareTo(b.nodeNum);
+            }))
+            .map((n) => n.nodeNum)
+            .toList();
+
+    // Append any newly-discovered PKI nodes not already in the frozen order.
+    final order = _frozenOrder!;
+    for (final num in pkiByNum.keys) {
+      if (!order.contains(num)) order.add(num);
+    }
+
+    // Resolve to live nodes in frozen order, then apply the search filter.
+    final query = _searchQuery.toLowerCase();
+    final nodeList = <MeshNode>[];
+    for (final num in order) {
+      final n = pkiByNum[num];
+      if (n == null) continue; // node vanished since the sheet opened
+      if (query.isNotEmpty) {
         final name = n.displayName.toLowerCase();
         final shortName = (n.shortName ?? '').toLowerCase();
         final nodeId = n.nodeNum.toRadixString(16).toLowerCase();
-        return name.contains(query) ||
-            shortName.contains(query) ||
-            nodeId.contains(query);
-      }).toList();
+        if (!name.contains(query) &&
+            !shortName.contains(query) &&
+            !nodeId.contains(query)) {
+          continue;
+        }
+      }
+      nodeList.add(n);
     }
 
     return nodeList;
@@ -241,6 +270,7 @@ class _RemoteAdminSelectorSheetState
                       final node = nodes[index];
                       final isSelected = widget.currentTarget == node.nodeNum;
                       return Perspective3DSlide(
+                        key: ValueKey<int>(node.nodeNum),
                         index: index,
                         direction: SlideDirection.left,
                         enabled: animationsEnabled,
