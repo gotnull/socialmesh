@@ -1761,10 +1761,10 @@ packages:
     dependency: "direct main"
     description:
       name: open_mail_launcher
-      sha256: "457ebca906589270dc8ac593d5a3caf035a60f38c9822d95f45af19caf7fdab8"
+      sha256: "3994869a8bb496c27e092f9a90ea63db583226ba93de13b05a256ae0776bfc4b"
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.2"
+    version: "0.2.0"
   package_config:
     dependency: transitive
     description:
