@@ -311,7 +311,7 @@ class LanSyncService {
   void _onPeerFound(BonsoirService service) {
     AppLogging.meshFeed(
       'LAN-SYNC: service FOUND: ${service.name} '
-      '(host=${service.host} port=${service.port})',
+      '(host=${service.hostAddress} port=${service.port})',
     );
 
     // Trigger resolution to obtain host/port/attributes.
@@ -325,7 +325,7 @@ class LanSyncService {
   }
 
   void _onPeerResolved(BonsoirService service) {
-    final host = service.host;
+    final host = service.hostAddress;
     final port = service.port;
 
     AppLogging.meshFeed(

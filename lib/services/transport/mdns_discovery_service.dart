@@ -200,7 +200,7 @@ class MeshtasticMdnsDiscovery {
   }
 
   void _onServiceResolved(BonsoirService service) {
-    final host = service.host;
+    final host = service.hostAddress;
     final port = service.port;
 
     if (host == null || host.isEmpty) {
