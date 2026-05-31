@@ -741,26 +741,26 @@ packages:
     dependency: "direct main"
     description:
       name: firebase_storage
-      sha256: cc0299c8f294054065b3cf75013eb4730b86ba4929be2e49d6a7c18c6bf54920
+      sha256: ceb51aeb981826b6b6c3ec293c84d54c2667c7005b110b356a1e3d6374f81bab
       url: "https://pub.dev"
     source: hosted
-    version: "13.4.0"
+    version: "13.4.1"
   firebase_storage_platform_interface:
     dependency: transitive
     description:
       name: firebase_storage_platform_interface
-      sha256: "735e4dba64724e489a00de8971c0583d0c5d380110a6947904b8e9823844ac7a"
+      sha256: "14ae6a777e1e66e085c26d94f1252d5933dab74004d4400463ac4e23e2e71c4d"
       url: "https://pub.dev"
     source: hosted
-    version: "6.0.0"
+    version: "6.0.1"
   firebase_storage_web:
     dependency: transitive
     description:
       name: firebase_storage_web
-      sha256: "98664ab1bce765731db20df333136e59bc98e9d4cd45976c2ef0a33402fa34b9"
+      sha256: "98cc7365f1c931cd2943f2396753b155b0781074f8c2fbf2916d2c4182790449"
       url: "https://pub.dev"
     source: hosted
-    version: "3.11.6"
+    version: "3.11.7"
   fixnum:
     dependency: "direct main"
     description:
