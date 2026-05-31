@@ -29151,6 +29151,20 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get radioConfigDisableTxTitle => 'Désactiver l\'émission ?';
+
+  @override
+  String get radioConfigDisableTxRemoteWarning =>
+      'Ce nœud distant cessera d\'émettre et ne pourra plus accuser réception des commandes sur le réseau mesh. Il peut toujours recevoir une réactivation, vous pourrez donc réactiver l\'émission ici plus tard.';
+
+  @override
+  String get radioConfigDisableTxConfirm => 'Désactiver l\'émission';
+
+  @override
+  String get radioConfigRemoteUnknownState =>
+      'Impossible de lire les paramètres radio actuels de ce nœud. Enregistrer maintenant pourrait le configurer de façon incorrecte. Attendez que le nœud réponde, puis réessayez.';
+
+  @override
   String get radioConfigTitle => 'Radio';
 
   @override

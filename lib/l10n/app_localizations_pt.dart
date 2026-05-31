@@ -28918,6 +28918,20 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get radioConfigDisableTxTitle => 'Desativar a transmissão?';
+
+  @override
+  String get radioConfigDisableTxRemoteWarning =>
+      'Este nó remoto deixará de transmitir e não poderá mais confirmar comandos pela mesh. Ele ainda pode receber uma reativação, então você poderá reativar a transmissão aqui mais tarde.';
+
+  @override
+  String get radioConfigDisableTxConfirm => 'Desativar transmissão';
+
+  @override
+  String get radioConfigRemoteUnknownState =>
+      'Não foi possível ler as configurações de rádio atuais deste nó. Salvar agora pode configurá-lo incorretamente. Aguarde o nó responder e tente novamente.';
+
+  @override
   String get radioConfigTitle => 'Rádio';
 
   @override

@@ -26,6 +26,7 @@ import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/status_banner.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 
 /// Screen for configuring LoRa radio settings
 class RadioConfigScreen extends ConsumerStatefulWidget {
@@ -153,14 +154,37 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
     safeSetState(() => _isLoading = true);
     try {
       final protocol = ref.read(protocolServiceProvider);
-      final target = AdminTarget.fromNullable(
-        ref.read(remoteAdminTargetProvider),
-      );
+      final remoteNodeNum = ref.read(remoteAdminTargetProvider);
+      final target = AdminTarget.fromNullable(remoteNodeNum);
 
-      // Apply cached config immediately if available (local only)
       if (target.isLocal) {
+        // Apply cached config immediately if available
         final cached = protocol.currentLoraConfig;
         if (cached != null) {
+          _applyConfig(cached);
+        }
+      } else if (remoteNodeNum != null) {
+        // Remote admin: seed the form from the last-known config for this node
+        // so it stays correct even when the node can no longer transmit its
+        // config back (e.g. after TX was disabled to swap an antenna).
+        var cached = protocol.remoteLoraConfig(remoteNodeNum);
+        if (cached == null) {
+          // Hydrate the in-memory protocol cache from persistence so a later
+          // read-modify-write save preserves region / preset / unknown fields.
+          final settings = await ref.read(settingsServiceProvider.future);
+          final bytes = settings.getRemoteLoraConfig(remoteNodeNum);
+          if (bytes != null) {
+            try {
+              cached = config_pb.Config_LoRaConfig.fromBuffer(bytes);
+              protocol.cacheRemoteLoraConfig(remoteNodeNum, cached);
+            } catch (e) {
+              AppLogging.protocol(
+                'Failed to decode persisted remote LoRa config: $e',
+              );
+            }
+          }
+        }
+        if (cached != null && mounted) {
           _applyConfig(cached);
         }
       }
@@ -169,7 +193,13 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
       if (protocol.isConnected) {
         // Listen for config response
         _configSubscription = protocol.loraConfigStream.listen((config) {
-          if (mounted) _applyConfig(config);
+          if (!mounted) return;
+          _applyConfig(config);
+          // Persist fresh remote configs so they survive an app restart and a
+          // node going TX-silent.
+          if (remoteNodeNum != null) {
+            unawaited(_persistRemoteLoraConfig(remoteNodeNum, config));
+          }
         });
 
         // Request fresh config from device (or remote node)
@@ -188,6 +218,45 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
     }
   }
 
+  /// Persist a remote node's LoRa config so it survives an app restart and the
+  /// node going TX-silent. Fire-and-forget; failures are non-fatal.
+  Future<void> _persistRemoteLoraConfig(
+    int nodeNum,
+    config_pb.Config_LoRaConfig config,
+  ) async {
+    try {
+      final settings = await ref.read(settingsServiceProvider.future);
+      await settings.setRemoteLoraConfig(nodeNum, config.writeToBuffer());
+    } catch (e) {
+      AppLogging.protocol('Failed to persist remote LoRa config: $e');
+    }
+  }
+
+  /// Handle the TX-enabled toggle, confirming before disabling TX on a remote
+  /// node — that makes it stop transmitting and stop acknowledging admin
+  /// commands over the mesh (it can still receive a re-enable).
+  Future<void> _onTxEnabledChanged(bool value) async {
+    HapticFeedback.selectionClick();
+    if (!value) {
+      final target = AdminTarget.fromNullable(
+        ref.read(remoteAdminTargetProvider),
+      );
+      if (target.isRemote) {
+        final l10n = context.l10n;
+        final confirmed = await AppBottomSheet.showConfirm(
+          context: context,
+          title: l10n.radioConfigDisableTxTitle,
+          message: l10n.radioConfigDisableTxRemoteWarning,
+          confirmLabel: l10n.radioConfigDisableTxConfirm,
+          isDestructive: true,
+        );
+        if (confirmed != true) return;
+        if (!mounted) return;
+      }
+    }
+    safeSetState(() => _txEnabled = value);
+  }
+
   Future<void> _saveConfig() async {
     // Commit any in-progress frequency override text before saving,
     // in case the user taps Save while the field still has focus.
@@ -204,12 +273,27 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
 
     // Capture providers and UI dependencies before any await
     final protocol = ref.read(protocolServiceProvider);
-    final target = AdminTarget.fromNullable(
-      ref.read(remoteAdminTargetProvider),
-    );
+    final remoteNodeNum = ref.read(remoteAdminTargetProvider);
+    final target = AdminTarget.fromNullable(remoteNodeNum);
     final settingsFuture = ref.read(settingsServiceProvider.future);
     final navigator = Navigator.of(context);
     final l10n = context.l10n;
+
+    // Guard: never write a destructive default config to a remote node whose
+    // current settings we couldn't read. region == UNSET with no cached base
+    // would clobber the node's real radio config and can brick remote access.
+    if (target.isRemote) {
+      final effectiveRegion =
+          _selectedRegion ?? config_pbenum.Config_LoRaConfig_RegionCode.UNSET;
+      final hasBase =
+          remoteNodeNum != null &&
+          protocol.remoteLoraConfig(remoteNodeNum) != null;
+      if (effectiveRegion == config_pbenum.Config_LoRaConfig_RegionCode.UNSET &&
+          !hasBase) {
+        showErrorSnackBar(context, l10n.radioConfigRemoteUnknownState);
+        return;
+      }
+    }
 
     safeSetState(() => _isSaving = true);
     try {
@@ -247,6 +331,14 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
         ref
             .read(countdownProvider.notifier)
             .startDeviceRebootCountdown(reason: 'radio config saved');
+      } else if (remoteNodeNum != null) {
+        // Persist the just-sent config (protocol updated its remote cache in
+        // setConfig) so the next edit repopulates and read-modify-writes even
+        // if the node is now TX-silent.
+        final saved = protocol.remoteLoraConfig(remoteNodeNum);
+        if (saved != null) {
+          await _persistRemoteLoraConfig(remoteNodeNum, saved);
+        }
       }
       navigator.pop();
     } catch (e) {
@@ -319,10 +411,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen>
                       subtitle: context.l10n.radioConfigTxEnabledSubtitle,
                       trailing: ThemedSwitch(
                         value: _txEnabled,
-                        onChanged: (value) {
-                          HapticFeedback.selectionClick();
-                          setState(() => _txEnabled = value);
-                        },
+                        onChanged: _onTxEnabledChanged,
                       ),
                     ),
                     Container(

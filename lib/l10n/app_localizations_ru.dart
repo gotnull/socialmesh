@@ -28941,6 +28941,20 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get radioConfigDisableTxTitle => 'Отключить передачу?';
+
+  @override
+  String get radioConfigDisableTxRemoteWarning =>
+      'Этот удалённый узел перестанет передавать и больше не сможет подтверждать команды по сети mesh. Он всё ещё может принять команду повторного включения, поэтому позже вы сможете снова включить передачу отсюда.';
+
+  @override
+  String get radioConfigDisableTxConfirm => 'Отключить передачу';
+
+  @override
+  String get radioConfigRemoteUnknownState =>
+      'Не удалось прочитать текущие настройки радио этого узла. Сохранение сейчас может привести к неверной конфигурации. Дождитесь ответа узла и повторите попытку.';
+
+  @override
   String get radioConfigTitle => 'Радио';
 
   @override

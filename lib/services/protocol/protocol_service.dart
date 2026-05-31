@@ -533,6 +533,14 @@ class ProtocolService {
   config_pb.Config_BluetoothConfig? _currentBluetoothConfig;
   config_pb.Config_SecurityConfig? _currentSecurityConfig;
   config_pb.Config_LoRaConfig? _currentLoraConfig;
+  // Last-known LoRa config of remote-admin nodes, keyed by node number.
+  // Populated from remote GetConfigResponse frames and from successful remote
+  // SETs. Lets the radio config screen repopulate and read-modify-write a
+  // remote node's LoRa config even when the node can no longer transmit its
+  // config back (e.g. after TX was disabled to swap an antenna). Persistence
+  // across app restarts is owned by the radio config screen, which seeds this
+  // map via [cacheRemoteLoraConfig] on load.
+  final Map<int, config_pb.Config_LoRaConfig> _remoteLoraConfigByNode = {};
   module_pb.ModuleConfig_MQTTConfig? _currentMqttConfig;
   module_pb.ModuleConfig_TelemetryConfig? _currentTelemetryConfig;
   module_pb.ModuleConfig_PaxcounterConfig? _currentPaxCounterConfig;
@@ -1237,6 +1245,19 @@ class ProtocolService {
 
   /// Current LoRa config
   config_pb.Config_LoRaConfig? get currentLoraConfig => _currentLoraConfig;
+
+  /// Last-known LoRa config of a remote-admin [nodeNum], or null if never seen.
+  config_pb.Config_LoRaConfig? remoteLoraConfig(int nodeNum) =>
+      _remoteLoraConfigByNode[nodeNum];
+
+  /// Seed the remote LoRa config cache for [nodeNum] from persisted state.
+  ///
+  /// Called by the radio config screen on load so a remote node's read-modify-
+  /// write base survives an app restart even when the node can no longer
+  /// transmit its current config (e.g. after TX was disabled).
+  void cacheRemoteLoraConfig(int nodeNum, config_pb.Config_LoRaConfig config) {
+    _remoteLoraConfigByNode[nodeNum] = config;
+  }
 
   /// Stream of MQTT config updates
   Stream<module_pb.ModuleConfig_MQTTConfig> get mqttConfigStream =>
@@ -3409,6 +3430,11 @@ class ProtocolService {
           if (isLocalResponse) {
             _currentRegion = loraConfig.region;
             _currentLoraConfig = loraConfig;
+          } else {
+            // Remote-admin response: cache per node so the radio config screen
+            // can repopulate and read-modify-write even if the node later goes
+            // TX-silent and can no longer answer a fresh getConfig.
+            _remoteLoraConfigByNode[packet.from] = loraConfig;
           }
           _regionController.add(loraConfig.region);
           _loraConfigController.add(loraConfig);
@@ -9441,6 +9467,11 @@ class ProtocolService {
         'setConfig: Emitting localConfigWrite — device reboot expected',
       );
       _localConfigWriteController.add(null);
+    } else if (config.hasLora()) {
+      // Keep the per-node remote LoRa cache fresh with what we just sent, so a
+      // follow-up edit (e.g. re-enabling TX) read-modify-writes against the
+      // latest known state even if the node can no longer answer a getConfig.
+      _remoteLoraConfigByNode[dest] = config.lora;
     }
   }
 
@@ -9512,7 +9543,28 @@ class ProtocolService {
   }) async {
     AppLogging.protocol('Setting LoRa config');
 
-    final loraConfig = config_pb.Config_LoRaConfig()
+    // Read-modify-write: clone the cached config so we preserve every field the
+    // device sent us — including advanced fields the UI doesn't expose and
+    // unknown firmware fields — then apply the form values on top. Firmware
+    // replaces the whole LoRa config block on SET, so building from scratch
+    // would zero out everything not listed below. This is critical for remote
+    // admin: a TX-disabled node can't answer a fresh getConfig, so without a
+    // preserved base a save would clobber region/preset and brick the node.
+    final isLocalTarget = target == null || target.isLocal;
+    final config_pb.Config_LoRaConfig? base = isLocalTarget
+        ? _currentLoraConfig
+        : _remoteLoraConfigByNode[target.resolve(_myNodeNum ?? 0)];
+
+    final loraConfig = base != null
+        ? config_pb.Config_LoRaConfig.fromBuffer(base.writeToBuffer())
+        : config_pb.Config_LoRaConfig();
+    AppLogging.protocol(
+      'setLoRaConfig: ${base != null ? 'cloned cached config '
+                '(${base.writeToBuffer().length} bytes)' : 'building from scratch'} '
+      'for ${isLocalTarget ? 'local' : 'remote'} target',
+    );
+
+    loraConfig
       ..usePreset = usePreset
       ..region = region
       ..modemPreset = modemPreset

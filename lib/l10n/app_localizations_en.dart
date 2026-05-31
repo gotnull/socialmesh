@@ -28605,6 +28605,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get radioConfigDisableTxTitle => 'Disable transmit?';
+
+  @override
+  String get radioConfigDisableTxRemoteWarning =>
+      'This remote node will stop transmitting and can no longer acknowledge commands over the mesh. It can still receive a re-enable, so you can turn transmit back on from here later.';
+
+  @override
+  String get radioConfigDisableTxConfirm => 'Disable transmit';
+
+  @override
+  String get radioConfigRemoteUnknownState =>
+      'Can\'t read this node\'s current radio settings. Saving now could misconfigure it. Wait until the node responds, then try again.';
+
+  @override
   String get radioConfigTitle => 'Radio';
 
   @override

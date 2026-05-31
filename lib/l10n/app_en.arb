@@ -38833,6 +38833,22 @@
         "description": "UI text: radio config saved"
     },
     "radioConfigSaveFailed": "Failed to save: {error}",
+    "radioConfigDisableTxTitle": "Disable transmit?",
+    "@radioConfigDisableTxTitle": {
+        "description": "Title of the confirmation sheet shown before disabling the LoRa transmitter on a remote node"
+    },
+    "radioConfigDisableTxRemoteWarning": "This remote node will stop transmitting and can no longer acknowledge commands over the mesh. It can still receive a re-enable, so you can turn transmit back on from here later.",
+    "@radioConfigDisableTxRemoteWarning": {
+        "description": "Warning shown before disabling transmit on a remote node, explaining it goes silent but can still be re-enabled"
+    },
+    "radioConfigDisableTxConfirm": "Disable transmit",
+    "@radioConfigDisableTxConfirm": {
+        "description": "Confirm button label for disabling the LoRa transmitter on a remote node"
+    },
+    "radioConfigRemoteUnknownState": "Can't read this node's current radio settings. Saving now could misconfigure it. Wait until the node responds, then try again.",
+    "@radioConfigRemoteUnknownState": {
+        "description": "Error shown when a remote radio config save is blocked because the node's current settings are unknown"
+    },
     "@radioConfigSaveFailed": {
         "placeholders": {
             "error": {

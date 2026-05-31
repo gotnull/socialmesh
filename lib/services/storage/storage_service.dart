@@ -683,6 +683,29 @@ class SettingsService {
 
   int get nodeViewModeIndex => _preferences.getInt('node_view_mode_index') ?? 0;
 
+  // Last-known LoRa config of remote-admin nodes, keyed by node number.
+  // Stored as the base64-encoded serialized Config_LoRaConfig protobuf so
+  // unknown firmware fields round-trip intact. Lets the radio config screen
+  // repopulate (and read-modify-write) even when a TX-disabled remote node
+  // can no longer transmit its config back over the mesh.
+  Future<void> setRemoteLoraConfig(int nodeNum, List<int> bytes) async {
+    await _preferences.setString(
+      'remote_lora_config_$nodeNum',
+      base64Encode(bytes),
+    );
+  }
+
+  List<int>? getRemoteLoraConfig(int nodeNum) {
+    final encoded = _preferences.getString('remote_lora_config_$nodeNum');
+    if (encoded == null) return null;
+    try {
+      return base64Decode(encoded);
+    } catch (e) {
+      AppLogging.storage('⚠️ Failed to decode cached remote LoRa config: $e');
+      return null;
+    }
+  }
+
   // Message tech info bar (inline radio metadata below messages)
   Future<void> setMessageTechInfoEnabled(bool enabled) async {
     await _preferences.setBool('message_tech_info_enabled', enabled);

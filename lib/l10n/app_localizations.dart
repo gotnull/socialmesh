@@ -50169,6 +50169,30 @@ abstract class AppLocalizations {
   /// **'Failed to save: {error}'**
   String radioConfigSaveFailed(String error);
 
+  /// Title of the confirmation sheet shown before disabling the LoRa transmitter on a remote node
+  ///
+  /// In en, this message translates to:
+  /// **'Disable transmit?'**
+  String get radioConfigDisableTxTitle;
+
+  /// Warning shown before disabling transmit on a remote node, explaining it goes silent but can still be re-enabled
+  ///
+  /// In en, this message translates to:
+  /// **'This remote node will stop transmitting and can no longer acknowledge commands over the mesh. It can still receive a re-enable, so you can turn transmit back on from here later.'**
+  String get radioConfigDisableTxRemoteWarning;
+
+  /// Confirm button label for disabling the LoRa transmitter on a remote node
+  ///
+  /// In en, this message translates to:
+  /// **'Disable transmit'**
+  String get radioConfigDisableTxConfirm;
+
+  /// Error shown when a remote radio config save is blocked because the node's current settings are unknown
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t read this node\'s current radio settings. Saving now could misconfigure it. Wait until the node responds, then try again.'**
+  String get radioConfigRemoteUnknownState;
+
   /// Title for the LoRa radio configuration screen (frequency, bandwidth, spreading factor).
   ///
   /// In en, this message translates to:

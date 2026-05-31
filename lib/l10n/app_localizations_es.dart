@@ -29066,6 +29066,20 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get radioConfigDisableTxTitle => '¿Desactivar la transmisión?';
+
+  @override
+  String get radioConfigDisableTxRemoteWarning =>
+      'Este nodo remoto dejará de transmitir y ya no podrá confirmar comandos a través de la malla. Aún puede recibir una reactivación, así que podrás volver a activar la transmisión desde aquí más tarde.';
+
+  @override
+  String get radioConfigDisableTxConfirm => 'Desactivar transmisión';
+
+  @override
+  String get radioConfigRemoteUnknownState =>
+      'No se pueden leer los ajustes de radio actuales de este nodo. Guardar ahora podría configurarlo incorrectamente. Espera a que el nodo responda e inténtalo de nuevo.';
+
+  @override
   String get radioConfigTitle => 'Radio';
 
   @override

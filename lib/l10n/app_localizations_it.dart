@@ -28939,6 +28939,20 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get radioConfigDisableTxTitle => 'Disabilitare la trasmissione?';
+
+  @override
+  String get radioConfigDisableTxRemoteWarning =>
+      'Questo nodo remoto smetterà di trasmettere e non potrà più confermare i comandi sulla mesh. Può comunque ricevere una riattivazione, quindi potrai riattivare la trasmissione da qui in seguito.';
+
+  @override
+  String get radioConfigDisableTxConfirm => 'Disabilita trasmissione';
+
+  @override
+  String get radioConfigRemoteUnknownState =>
+      'Impossibile leggere le impostazioni radio attuali di questo nodo. Salvare ora potrebbe configurarlo in modo errato. Attendi che il nodo risponda, poi riprova.';
+
+  @override
   String get radioConfigTitle => 'Radio';
 
   @override

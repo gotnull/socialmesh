@@ -29020,6 +29020,20 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get radioConfigDisableTxTitle => 'Senden deaktivieren?';
+
+  @override
+  String get radioConfigDisableTxRemoteWarning =>
+      'Dieser entfernte Knoten sendet dann nicht mehr und kann Befehle über das Mesh nicht mehr bestätigen. Er kann eine erneute Aktivierung weiterhin empfangen, sodass du das Senden später hier wieder einschalten kannst.';
+
+  @override
+  String get radioConfigDisableTxConfirm => 'Senden deaktivieren';
+
+  @override
+  String get radioConfigRemoteUnknownState =>
+      'Die aktuellen Funkeinstellungen dieses Knotens konnten nicht gelesen werden. Ein Speichern könnte ihn falsch konfigurieren. Warte, bis der Knoten antwortet, und versuche es erneut.';
+
+  @override
   String get radioConfigTitle => 'Funk';
 
   @override

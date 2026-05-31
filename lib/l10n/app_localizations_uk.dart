@@ -28954,6 +28954,20 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get radioConfigDisableTxTitle => 'Вимкнути передавання?';
+
+  @override
+  String get radioConfigDisableTxRemoteWarning =>
+      'Цей віддалений вузол припинить передавання й більше не зможе підтверджувати команди через мережу mesh. Він усе ще може отримати команду повторного ввімкнення, тож згодом ви зможете знову ввімкнути передавання звідси.';
+
+  @override
+  String get radioConfigDisableTxConfirm => 'Вимкнути передавання';
+
+  @override
+  String get radioConfigRemoteUnknownState =>
+      'Не вдалося прочитати поточні налаштування радіо цього вузла. Збереження зараз може призвести до неправильного налаштування. Зачекайте на відповідь вузла та повторіть спробу.';
+
+  @override
   String get radioConfigTitle => 'Радіо';
 
   @override
