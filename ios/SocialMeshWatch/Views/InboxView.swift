@@ -9,6 +9,7 @@ import SwiftUI
 
 struct InboxView: View {
   @EnvironmentObject private var store: WatchSnapshotStore
+  @EnvironmentObject private var connectivity: WatchConnectivityManager
 
   var body: some View {
     NavigationStack {
@@ -24,7 +25,15 @@ struct InboxView: View {
                 .listRowBackground(Color.clear)
             }
             ForEach(snap.inbox.previews) { message in
-              _InboxRow(message: message)
+              // Tap a row to reply with a canned message. Replies thread
+              // under the original when it carries a packet id (Meshtastic);
+              // otherwise the composer notes it sends as a new message.
+              Button {
+                store.selectReplyTarget(message)
+              } label: {
+                _InboxRow(message: message)
+              }
+              .buttonStyle(.plain)
             }
           }
           .listStyle(.carousel)
@@ -39,6 +48,11 @@ struct InboxView: View {
       }
       .navigationTitle("Inbox")
       .navigationBarTitleDisplayMode(.inline)
+      .sheet(item: $store.selectedReplyTarget) { target in
+        QuickMessageView(replyTarget: target)
+          .environmentObject(store)
+          .environmentObject(connectivity)
+      }
     }
   }
 }

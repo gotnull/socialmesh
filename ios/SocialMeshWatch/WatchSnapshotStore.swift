@@ -29,6 +29,20 @@ final class WatchSnapshotStore: ObservableObject {
   /// view that consumed it tells us to.
   @Published var lastIntentResult: WatchIntentResult?
 
+  /// The inbox message the user tapped to reply to, bridging the Inbox tab
+  /// and the reply composer sheet. Nil when not replying.
+  @Published var selectedReplyTarget: WatchInboxMessage?
+
+  /// Select an inbox message as the reply target (opens the reply composer).
+  func selectReplyTarget(_ message: WatchInboxMessage) {
+    self.selectedReplyTarget = message
+  }
+
+  /// Clear the reply target (composer dismissed or send completed).
+  func clearReplyTarget() {
+    self.selectedReplyTarget = nil
+  }
+
   private let log = Logger(
     subsystem: "com.gotnull.socialmesh", category: "watch")
 
@@ -38,6 +52,13 @@ final class WatchSnapshotStore: ObservableObject {
   func update(_ snapshot: WatchSnapshot) {
     self.latestSnapshot = snapshot
     self.lastReceivedAt = Date()
+    // Drop a stale reply target if it aged out of the latest inbox so the
+    // composer never points at a message the phone can no longer resolve.
+    if let target = selectedReplyTarget,
+      !snapshot.inbox.previews.contains(where: { $0.id == target.id })
+    {
+      self.selectedReplyTarget = nil
+    }
     log.log(level: .info, """
       snapshot received: gen=\(snapshot.generatedAt, privacy: .public) \
       status=\(snapshot.connection.status.rawValue, privacy: .public) \

@@ -18,6 +18,13 @@ import SwiftUI
 struct QuickMessageView: View {
   @EnvironmentObject private var store: WatchSnapshotStore
   @EnvironmentObject private var connectivity: WatchConnectivityManager
+  @Environment(\.dismiss) private var dismiss
+
+  /// When non-nil, this view is a reply composer for a specific received
+  /// inbox message: it shows a quote header, defaults the channel to the
+  /// message's channel, and sends a `quickReply` intent carrying the
+  /// message id. Nil = the standalone Send tab.
+  var replyTarget: WatchInboxMessage?
 
   /// Picked channel for the next send. Nil = "use the snapshot's
   /// default". Updated whenever the user opens ChannelPickerView and
@@ -40,8 +47,15 @@ struct QuickMessageView: View {
           )
         }
       }
-      .navigationTitle("Send")
+      .navigationTitle(replyTarget == nil ? "Send" : "Reply")
       .navigationBarTitleDisplayMode(.inline)
+      // In reply mode, default the channel to the replied-to message's
+      // channel so the reply lands in the same conversation.
+      .onAppear {
+        if let ch = replyTarget?.channelIndex, pickedChannel == nil {
+          pickedChannel = ch
+        }
+      }
       // Clear any per-session channel pick when the phone-side
       // default changes (user updated Settings -> Watch -> Default
       // channel). Without this, _effectiveChannel keeps preferring
@@ -67,6 +81,22 @@ struct QuickMessageView: View {
       && effectiveChannel != nil
 
     List {
+      if let target = replyTarget {
+        Section("Replying to \(target.sender)") {
+          Text(target.snippet)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .lineLimit(2)
+          if target.packetId == nil {
+            // No Meshtastic packet id (MeshCore row, or aged out) — the send
+            // still goes out, just not threaded under the original.
+            Label("Sends as a new message", systemImage: "info.circle")
+              .font(.caption2)
+              .foregroundStyle(.orange)
+          }
+        }
+      }
+
       if store.isStale, let ago = store.lastReceivedDescription {
         Section {
           Label("Snapshot stale (\(ago))", systemImage: "clock")
@@ -182,10 +212,24 @@ struct QuickMessageView: View {
   private func _send(cannedKey: String, channelIndex: Int) async {
     sending = true
     defer { sending = false }
-    let intent = WatchIntent.quickMessage(
-      cannedKey: cannedKey, channelIndex: channelIndex)
+    let intent: WatchIntent
+    if let target = replyTarget {
+      intent = WatchIntent.quickReply(
+        cannedKey: cannedKey,
+        channelIndex: channelIndex,
+        replyToMessageId: target.id)
+    } else {
+      intent = WatchIntent.quickMessage(
+        cannedKey: cannedKey, channelIndex: channelIndex)
+    }
     let result = await connectivity.send(intent)
     lastResult = result
+    // In the reply sheet, a successful send closes the sheet and clears the
+    // selected target. Rejections stay so the banner is visible.
+    if result.accepted, replyTarget != nil {
+      store.clearReplyTarget()
+      dismiss()
+    }
   }
 
   @ViewBuilder

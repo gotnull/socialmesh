@@ -17,7 +17,11 @@ class WatchCompanionIntentResult {
     this.diagnosticReason,
   });
 
-  static const int wireVersion = 1;
+  /// Tracks the shared wire version. The result shape itself is unchanged in
+  /// v2; the bump keeps all three wire constants aligned, and the range gate
+  /// below lets a v1 result still decode.
+  static const int wireVersion = 2;
+  static const int minWireVersion = 1;
 
   final String requestId;
   final bool accepted;
@@ -36,10 +40,10 @@ class WatchCompanionIntentResult {
 
   factory WatchCompanionIntentResult.fromJson(Map<String, dynamic> json) {
     final v = json['version'];
-    if (v != wireVersion) {
+    if (v is! int || v < minWireVersion || v > wireVersion) {
       throw FormatException(
-        'WatchCompanionIntentResult wire-version mismatch: expected '
-        '$wireVersion, got $v',
+        'WatchCompanionIntentResult wire-version unsupported: accept '
+        '$minWireVersion..$wireVersion, got $v',
       );
     }
     return WatchCompanionIntentResult(

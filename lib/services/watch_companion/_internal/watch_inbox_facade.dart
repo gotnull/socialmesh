@@ -102,5 +102,9 @@ WatchCompanionInboxMessage _meshtasticMessageToPreview(Message m) {
     timestampMs: m.timestamp.millisecondsSinceEpoch,
     unread: m.received && !m.read,
     channelIndex: m.channel,
+    // Only received messages are reply targets; the Watch shows the reply
+    // affordance only when packetId is non-null. Outgoing messages and all
+    // MeshCore rows leave this null.
+    packetId: m.received ? m.packetId : null,
   );
 }

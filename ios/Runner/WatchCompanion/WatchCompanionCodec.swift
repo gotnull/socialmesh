@@ -14,10 +14,15 @@
 import Foundation
 
 enum WatchCompanionWire {
-  /// The frozen wire version. Mirrors the Dart constants on
+  /// Current wire version. Mirrors the Dart constants on
   /// `WatchCompanionSnapshot`, `WatchCompanionIntent`, and
-  /// `WatchCompanionIntentResult` (all currently 1).
-  static let version: Int = 1
+  /// `WatchCompanionIntentResult`. v2 added reply fields
+  /// (`replyToMessageId` on intents, `packetId` on inbox rows).
+  static let version: Int = 2
+
+  /// Oldest wire version the bridge still accepts. New fields are optional,
+  /// so a v1 payload validates and decodes cleanly under v2.
+  static let minVersion: Int = 1
 
   /// MethodChannel name shared with Dart. Must match
   /// `lib/services/watch_companion/watch_companion_channel_bridge.dart`
@@ -43,7 +48,7 @@ enum WatchCompanionCodec {
     guard let v = dict["version"] as? Int else {
       return WatchCompanionWire.DiagnosticReason.invalidIntentPayload
     }
-    if v != WatchCompanionWire.version {
+    if v < WatchCompanionWire.minVersion || v > WatchCompanionWire.version {
       return WatchCompanionWire.DiagnosticReason.unsupportedWireVersion
     }
     return nil

@@ -33,9 +33,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/logging.dart';
 import 'package:socialmesh/core/meshcore_constants.dart';
 import 'package:socialmesh/l10n/l10n_utils.dart';
-import 'package:socialmesh/models/mesh_models.dart' show MessageSource;
+import 'package:socialmesh/models/mesh_models.dart' show Message, MessageSource;
 import 'package:socialmesh/providers/app_providers.dart'
-    show ActiveProtocol, activeProtocolProvider, protocolServiceProvider;
+    show
+        ActiveProtocol,
+        activeProtocolProvider,
+        messagesProvider,
+        protocolServiceProvider;
 import 'package:socialmesh/providers/meshcore_providers.dart'
     show meshCoreSessionProvider;
 import 'package:socialmesh/services/meshcore/meshcore_send_rate_limiter.dart'
@@ -59,7 +63,11 @@ import 'watch_readiness_facade.dart';
 /// send. Allows tests to override the send call without standing up a
 /// real ProtocolService instance.
 typedef MeshtasticChannelSend =
-    Future<int> Function({required String text, required int channelIndex});
+    Future<int> Function({
+      required String text,
+      required int channelIndex,
+      int? replyId,
+    });
 
 /// Function signature for issuing a MeshCore channel-broadcast text
 /// send. Returns the full `MeshCoreTextSendResult` so the facade can
@@ -80,13 +88,14 @@ typedef MeshCoreChannelSend =
 /// `MessageSource.watch` once the messages-DB attribution story is
 /// settled (out of scope for this slice).
 final meshtasticChannelSendProvider = Provider<MeshtasticChannelSend>((ref) {
-  return ({required String text, required int channelIndex}) {
+  return ({required String text, required int channelIndex, int? replyId}) {
     final protocol = ref.read(protocolServiceProvider);
     return protocol.sendMessage(
       text: text,
       to: 0xFFFFFFFF,
       channel: channelIndex,
       wantAck: true,
+      replyId: replyId,
       source: MessageSource.manual,
     );
   };
@@ -234,13 +243,27 @@ class WatchSendFacade {
         return _reject(intent, 'protocol_not_active');
 
       case ActiveProtocol.meshtastic:
+        // Resolve an optional reply target. Unresolvable ids degrade to a
+        // plain broadcast (replyId null) rather than failing the send — the
+        // user's canned message still goes out, only the threading is lost.
+        final replyId = _resolveReplyId(intent.payload.replyToMessageId);
+        if (intent.payload.replyToMessageId != null && replyId == null) {
+          AppLogging.watchCompanion(
+            'reply_unresolved_fallback: id=${intent.payload.replyToMessageId} '
+            'req=${intent.requestId}',
+          );
+        }
         AppLogging.watchCompanion(
           'send path: meshtastic channel=$channelIndex '
-          'len=${text.length} req=${intent.requestId}',
+          'len=${text.length} replyId=$replyId req=${intent.requestId}',
         );
         try {
           final send = _ref.read(meshtasticChannelSendProvider);
-          final packetId = await send(text: text, channelIndex: channelIndex);
+          final packetId = await send(
+            text: text,
+            channelIndex: channelIndex,
+            replyId: replyId,
+          );
           AppLogging.watchCompanion(
             'send success: meshtastic packetId=$packetId req=${intent.requestId}',
           );
@@ -253,6 +276,14 @@ class WatchSendFacade {
         }
 
       case ActiveProtocol.meshcore:
+        // MeshCore has no wire-level reply concept. A reply intent degrades
+        // to a normal channel broadcast — never fake threading via text.
+        if (intent.payload.replyToMessageId != null) {
+          AppLogging.watchCompanion(
+            'reply_dropped_meshcore: id=${intent.payload.replyToMessageId} '
+            'req=${intent.requestId}',
+          );
+        }
         AppLogging.watchCompanion(
           'send path: meshcore channel=$channelIndex '
           'len=${text.length} req=${intent.requestId}',
@@ -284,6 +315,30 @@ class WatchSendFacade {
           return _reject(intent, 'send_failed:${e.runtimeType}');
         }
     }
+  }
+
+  /// Resolve a Watch-supplied reply-target id (the inbox row's wire-stable
+  /// `id`) to a Meshtastic packet id. Tries the live message store first, then
+  /// falls back to parsing the `pkt-<fromHex>-<pktHex>` deterministic-id form
+  /// (see [Message.deterministicId]). Returns null when unresolvable.
+  int? _resolveReplyId(String? replyToMessageId) {
+    if (replyToMessageId == null || replyToMessageId.isEmpty) return null;
+
+    final messages = _ref.read(messagesProvider);
+    for (final m in messages) {
+      if (m.id == replyToMessageId && m.packetId != null) {
+        return m.packetId;
+      }
+    }
+
+    // Fallback: parse `pkt-<fromHex>-<pktHex>`; the trailing segment is the
+    // packet id in hex. Tolerates messages aged out of the in-memory store.
+    final parts = replyToMessageId.split('-');
+    if (parts.length == 3 && parts[0] == 'pkt') {
+      final pkt = int.tryParse(parts[2], radix: 16);
+      if (pkt != null && pkt != 0) return pkt;
+    }
+    return null;
   }
 
   WatchCompanionIntentResult _accept(WatchCompanionIntent intent) {

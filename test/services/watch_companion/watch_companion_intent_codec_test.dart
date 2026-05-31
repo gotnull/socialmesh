@@ -59,7 +59,7 @@ void main() {
       expect((json['payload'] as Map)['cannedKey'], isNull);
     });
 
-    test('serialized version field is 1', () {
+    test('serialized version field is the current wire version', () {
       final intent = WatchCompanionIntent(
         requestId: 'r',
         type: WatchCompanionIntentType.refreshSnapshot,
@@ -67,10 +67,13 @@ void main() {
         payload: const WatchCompanionIntentPayload(),
         createdAtMs: 1,
       );
-      expect(intent.toJson()['version'], equals(1));
+      expect(
+        intent.toJson()['version'],
+        equals(WatchCompanionIntent.wireVersion),
+      );
     });
 
-    test('rejects mismatched wire-version with FormatException', () {
+    test('rejects out-of-range wire-version with FormatException', () {
       final intent = WatchCompanionIntent(
         requestId: 'r',
         type: WatchCompanionIntentType.refreshSnapshot,
@@ -78,7 +81,7 @@ void main() {
         payload: const WatchCompanionIntentPayload(),
         createdAtMs: 1,
       );
-      final json = intent.toJson()..['version'] = 2;
+      final json = intent.toJson()..['version'] = 99;
       expect(
         () => WatchCompanionIntent.fromJson(json),
         throwsA(isA<FormatException>()),
@@ -122,16 +125,19 @@ void main() {
       expect(decoded, equals(result));
     });
 
-    test('serialized version field is 1', () {
+    test('serialized version field is the current wire version', () {
       const result = WatchCompanionIntentResult(
         requestId: 'r',
         accepted: true,
         timestampMs: 1,
       );
-      expect(result.toJson()['version'], equals(1));
+      expect(
+        result.toJson()['version'],
+        equals(WatchCompanionIntentResult.wireVersion),
+      );
     });
 
-    test('rejects mismatched wire-version', () {
+    test('rejects out-of-range wire-version', () {
       const result = WatchCompanionIntentResult(
         requestId: 'r',
         accepted: true,

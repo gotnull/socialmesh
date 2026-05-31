@@ -5,8 +5,13 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:socialmesh/models/mesh_models.dart' show Message, MessageSource;
 import 'package:socialmesh/providers/app_providers.dart'
-    show ActiveProtocol, activeProtocolProvider;
+    show
+        ActiveProtocol,
+        activeProtocolProvider,
+        messagesProvider,
+        MessagesNotifier;
 import 'package:socialmesh/services/meshcore/protocol/meshcore_frame.dart';
 import 'package:socialmesh/services/meshcore/protocol/meshcore_session.dart';
 import 'package:socialmesh/services/watch_companion/_internal/watch_channels_facade.dart';
@@ -20,14 +25,31 @@ import 'package:socialmesh/services/watch_companion/watch_companion_feature_flag
 import 'package:socialmesh/services/watch_companion/watch_companion_providers.dart';
 
 class _MtSendRecorder {
-  final List<({String text, int channelIndex})> calls = [];
-  Future<int> Function({required String text, required int channelIndex})
-  reply = ({required text, required channelIndex}) async => 42;
+  final List<({String text, int channelIndex, int? replyId})> calls = [];
+  Future<int> Function({
+    required String text,
+    required int channelIndex,
+    int? replyId,
+  })
+  reply = ({required text, required channelIndex, replyId}) async => 42;
 
-  Future<int> call({required String text, required int channelIndex}) async {
-    calls.add((text: text, channelIndex: channelIndex));
-    return reply(text: text, channelIndex: channelIndex);
+  Future<int> call({
+    required String text,
+    required int channelIndex,
+    int? replyId,
+  }) async {
+    calls.add((text: text, channelIndex: channelIndex, replyId: replyId));
+    return reply(text: text, channelIndex: channelIndex, replyId: replyId);
   }
+}
+
+/// Minimal MessagesNotifier override that returns a fixed list without
+/// touching storage, so the send facade's reply-id resolution can be tested.
+class _FakeMessagesNotifier extends MessagesNotifier {
+  _FakeMessagesNotifier(this._messages);
+  final List<Message> _messages;
+  @override
+  List<Message> build() => _messages;
 }
 
 class _McSendRecorder {
@@ -55,12 +77,16 @@ WatchCompanionIntent _intent({
   String? cannedKey = WatchCompanionCannedMessageKeys.onMyWay,
   int? channelIndex = 0,
   String requestId = 'req-1',
+  String? replyToMessageId,
 }) {
   return WatchCompanionIntent(
     requestId: requestId,
     type: type,
     target: WatchCompanionIntentTarget(channelIndex: channelIndex),
-    payload: WatchCompanionIntentPayload(cannedKey: cannedKey),
+    payload: WatchCompanionIntentPayload(
+      cannedKey: cannedKey,
+      replyToMessageId: replyToMessageId,
+    ),
     createdAtMs: 1747700000000,
   );
 }
@@ -74,9 +100,11 @@ ProviderContainer _container({
   int defaultChannel = 0,
   _MtSendRecorder? mt,
   _McSendRecorder? mc,
+  List<Message> messages = const <Message>[],
 }) {
   return ProviderContainer(
     overrides: [
+      messagesProvider.overrideWith(() => _FakeMessagesNotifier(messages)),
       watchCompanionFeatureFlagsProvider.overrideWith(
         (ref) => WatchCompanionFeatureFlags(enabled: enabled),
       ),
@@ -314,7 +342,7 @@ void main() {
 
     test('Meshtastic send throw is captured as send_failed:<type>', () async {
       final mt = _MtSendRecorder()
-        ..reply = ({required text, required channelIndex}) {
+        ..reply = ({required text, required channelIndex, replyId}) {
           throw StateError('readiness collapsed mid-flight');
         };
       final container = _container(mt: mt);
@@ -444,6 +472,85 @@ void main() {
       expect(mt.calls, isEmpty);
       expect(mc.calls, isEmpty);
     });
+
+    test('Meshtastic reply resolves replyId from the message store', () async {
+      final mt = _MtSendRecorder();
+      final msg = Message(
+        id: 'inbox-row-1',
+        from: 0xAA,
+        to: 0xFFFFFFFF,
+        text: 'ping',
+        received: true,
+        packetId: 0xDEAD,
+        source: MessageSource.manual,
+      );
+      final container = _container(mt: mt, messages: [msg]);
+      addTearDown(container.dispose);
+
+      final result = await container
+          .read(watchSendFacadeProvider)
+          .dispatch(_intent(replyToMessageId: 'inbox-row-1'));
+
+      expect(result.accepted, isTrue);
+      expect(mt.calls.single.replyId, 0xDEAD);
+    });
+
+    test('Meshtastic reply resolves replyId via pkt-<from>-<id> fallback '
+        'when not in the store', () async {
+      final mt = _MtSendRecorder();
+      final container = _container(mt: mt);
+      addTearDown(container.dispose);
+
+      // 'pkt-aa-beef' -> packet id 0xbeef parsed from the trailing hex.
+      final result = await container
+          .read(watchSendFacadeProvider)
+          .dispatch(_intent(replyToMessageId: 'pkt-aa-beef'));
+
+      expect(result.accepted, isTrue);
+      expect(mt.calls.single.replyId, 0xBEEF);
+    });
+
+    test('Meshtastic unresolvable reply degrades to a broadcast '
+        '(replyId null, still accepted)', () async {
+      final mt = _MtSendRecorder();
+      final container = _container(mt: mt);
+      addTearDown(container.dispose);
+
+      final result = await container
+          .read(watchSendFacadeProvider)
+          .dispatch(_intent(replyToMessageId: 'not-a-resolvable-id'));
+
+      expect(result.accepted, isTrue);
+      expect(mt.calls, hasLength(1));
+      expect(mt.calls.single.replyId, isNull);
+    });
+
+    test(
+      'MeshCore ignores replyToMessageId and sends a normal broadcast',
+      () async {
+        final mc = _McSendRecorder();
+        final container = _container(
+          protocol: ActiveProtocol.meshcore,
+          channels: const <WatchCompanionChannelPreview>[
+            WatchCompanionChannelPreview(
+              index: 0,
+              name: 'Public',
+              isDefault: true,
+            ),
+          ],
+          mc: mc,
+        );
+        addTearDown(container.dispose);
+
+        final result = await container
+            .read(watchSendFacadeProvider)
+            .dispatch(_intent(replyToMessageId: 'pkt-aa-bb'));
+
+        // MeshCore has no reply wire concept: the send still goes out.
+        expect(result.accepted, isTrue);
+        expect(mc.calls, hasLength(1));
+      },
+    );
 
     test('intent type does not include any location-intent case', () {
       // Compile-time + runtime proof that v1 has no location-intent

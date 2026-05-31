@@ -24,7 +24,12 @@ class WatchCompanionSnapshot {
     required this.capabilities,
   });
 
-  static const int wireVersion = 1;
+  /// v2 added [WatchCompanionInboxMessage.packetId] for reply resolution.
+  static const int wireVersion = 2;
+
+  /// Oldest wire version this build still decodes. New fields are optional, so
+  /// a v1 snapshot (no packetId) decodes cleanly under v2.
+  static const int minWireVersion = 1;
 
   /// Milliseconds since epoch. The Watch flags the snapshot as stale once
   /// `now - lastReceivedAt > 30 s` (the receive timestamp is captured
@@ -51,10 +56,10 @@ class WatchCompanionSnapshot {
 
   factory WatchCompanionSnapshot.fromJson(Map<String, dynamic> json) {
     final v = json['version'];
-    if (v != wireVersion) {
+    if (v is! int || v < minWireVersion || v > wireVersion) {
       throw FormatException(
-        'WatchCompanionSnapshot wire-version mismatch: expected '
-        '$wireVersion, got $v',
+        'WatchCompanionSnapshot wire-version unsupported: accept '
+        '$minWireVersion..$wireVersion, got $v',
       );
     }
     return WatchCompanionSnapshot(

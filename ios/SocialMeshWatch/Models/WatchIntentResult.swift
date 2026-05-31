@@ -9,7 +9,8 @@
 import Foundation
 
 struct WatchIntentResult: Decodable, Equatable {
-  static let wireVersion: Int = 1
+  static let wireVersion: Int = 2
+  static let minWireVersion: Int = 1
 
   let version: Int
   let requestId: String
@@ -30,7 +31,7 @@ struct WatchIntentResult: Decodable, Equatable {
   init(from decoder: Decoder) throws {
     let c = try decoder.container(keyedBy: CodingKeys.self)
     let v = try c.decode(Int.self, forKey: .version)
-    if v != WatchIntentResult.wireVersion {
+    if v < WatchIntentResult.minWireVersion || v > WatchIntentResult.wireVersion {
       throw WatchWireError.unsupportedVersion(
         got: v, expected: WatchIntentResult.wireVersion)
     }

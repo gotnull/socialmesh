@@ -49,27 +49,42 @@ class WatchCompanionIntentTarget {
 /// Watch-originated intent payload. Carries only a canned-message key, never
 /// a raw string; the phone resolves the key to localized text before
 /// dispatching down the normal send path.
+///
+/// [replyToMessageId] (v2+) is the wire-stable id of the inbox message the
+/// canned send is replying to. It stays opaque on the Watch — the phone
+/// resolves it to a Meshtastic packet id. Null for a standalone send.
 class WatchCompanionIntentPayload {
-  const WatchCompanionIntentPayload({this.cannedKey});
+  const WatchCompanionIntentPayload({this.cannedKey, this.replyToMessageId});
 
   final String? cannedKey;
+  final String? replyToMessageId;
 
-  Map<String, dynamic> toJson() => <String, dynamic>{'cannedKey': cannedKey};
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'cannedKey': cannedKey,
+    'replyToMessageId': replyToMessageId,
+  };
 
   factory WatchCompanionIntentPayload.fromJson(Map<String, dynamic> json) {
-    return WatchCompanionIntentPayload(cannedKey: json['cannedKey'] as String?);
+    return WatchCompanionIntentPayload(
+      cannedKey: json['cannedKey'] as String?,
+      replyToMessageId: json['replyToMessageId'] as String?,
+    );
   }
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is WatchCompanionIntentPayload && other.cannedKey == cannedKey;
+      other is WatchCompanionIntentPayload &&
+          other.cannedKey == cannedKey &&
+          other.replyToMessageId == replyToMessageId;
 
   @override
-  int get hashCode => cannedKey.hashCode;
+  int get hashCode => Object.hash(cannedKey, replyToMessageId);
 
   @override
-  String toString() => 'WatchCompanionIntentPayload(canned: $cannedKey)';
+  String toString() =>
+      'WatchCompanionIntentPayload(canned: $cannedKey, '
+      'replyTo: $replyToMessageId)';
 }
 
 /// Top-level intent envelope sent from the Watch.
@@ -85,8 +100,13 @@ class WatchCompanionIntent {
     required this.createdAtMs,
   });
 
-  /// Bumps whenever a field is added, removed, or changes meaning.
-  static const int wireVersion = 1;
+  /// Bumps whenever a field is added, removed, or changes meaning. v2 added
+  /// [WatchCompanionIntentPayload.replyToMessageId].
+  static const int wireVersion = 2;
+
+  /// Oldest wire version this build still decodes. New fields are optional, so
+  /// a v1 intent (no replyToMessageId) decodes cleanly under v2.
+  static const int minWireVersion = 1;
 
   final String requestId;
   final WatchCompanionIntentType type;
@@ -105,10 +125,10 @@ class WatchCompanionIntent {
 
   factory WatchCompanionIntent.fromJson(Map<String, dynamic> json) {
     final v = json['version'];
-    if (v != wireVersion) {
+    if (v is! int || v < minWireVersion || v > wireVersion) {
       throw FormatException(
-        'WatchCompanionIntent wire-version mismatch: expected '
-        '$wireVersion, got $v',
+        'WatchCompanionIntent wire-version unsupported: accept '
+        '$minWireVersion..$wireVersion, got $v',
       );
     }
     return WatchCompanionIntent(

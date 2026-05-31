@@ -3894,16 +3894,21 @@ class _MeshWaypointMarker extends StatelessWidget {
         ],
       ),
       child: glyph.isNotEmpty
-          ? Text(
-              glyph,
-              textAlign: TextAlign.center,
-              // Collapse the line box to the glyph and distribute leading
-              // evenly so the emoji sits centred — default line height +
-              // baseline make it ride high in a tight circle.
-              style: const TextStyle(
-                fontSize: 16,
-                height: 1.0,
-                leadingDistribution: TextLeadingDistribution.even,
+          ? FittedBox(
+              fit: BoxFit.scaleDown,
+              // Strip the emoji's ascent/descent leading so the glyph box is
+              // tight to the glyph; FittedBox then centres that tight box in
+              // the circle. height:1.0 + even leading alone leaves the
+              // below-baseline descent, which rode the glyph low and left.
+              child: Text(
+                glyph,
+                textAlign: TextAlign.center,
+                textHeightBehavior: const TextHeightBehavior(
+                  applyHeightToFirstAscent: false,
+                  applyHeightToLastDescent: false,
+                  leadingDistribution: TextLeadingDistribution.even,
+                ),
+                style: const TextStyle(fontSize: 18, height: 1.0),
               ),
             )
           : Icon(Icons.place, size: 18, color: SemanticColors.onMarker),

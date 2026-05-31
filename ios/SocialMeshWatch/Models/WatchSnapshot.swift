@@ -42,6 +42,11 @@ struct WatchInboxMessage: Decodable, Equatable, Identifiable {
   let timestampMs: Int
   let unread: Bool
   let channelIndex: Int?
+  // v2: Meshtastic packet id, non-nil only for received Meshtastic messages.
+  // The Watch keys its reply affordance off this being non-nil (MeshCore rows
+  // and outgoing messages leave it nil). Synthesized Decodable treats the
+  // absent key as nil, so v1 snapshots still decode.
+  let packetId: Int?
 }
 
 struct WatchInbox: Decodable, Equatable {
@@ -85,10 +90,12 @@ struct WatchCapabilities: Decodable, Equatable {
 
 struct WatchSnapshot: Decodable, Equatable {
   /// Wire-version constant. Mirrors Dart's
-  /// `WatchCompanionSnapshot.wireVersion`. Bump in lock-step with the
-  /// Dart side when changing any field shape; init(from:) below rejects
-  /// every other value.
-  static let wireVersion: Int = 1
+  /// `WatchCompanionSnapshot.wireVersion`. v2 added
+  /// `WatchInboxMessage.packetId`. init(from:) accepts the
+  /// [minWireVersion, wireVersion] range; new fields are optional so older
+  /// snapshots still decode.
+  static let wireVersion: Int = 2
+  static let minWireVersion: Int = 1
 
   let version: Int
   let generatedAt: Int
@@ -113,7 +120,7 @@ struct WatchSnapshot: Decodable, Equatable {
   init(from decoder: Decoder) throws {
     let c = try decoder.container(keyedBy: CodingKeys.self)
     let v = try c.decode(Int.self, forKey: .version)
-    if v != WatchSnapshot.wireVersion {
+    if v < WatchSnapshot.minWireVersion || v > WatchSnapshot.wireVersion {
       throw WatchWireError.unsupportedVersion(
         got: v, expected: WatchSnapshot.wireVersion)
     }

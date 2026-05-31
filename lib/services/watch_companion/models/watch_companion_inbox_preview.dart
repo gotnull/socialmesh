@@ -14,6 +14,7 @@ class WatchCompanionInboxMessage {
     required this.timestampMs,
     required this.unread,
     this.channelIndex,
+    this.packetId,
   });
 
   final String id;
@@ -23,6 +24,11 @@ class WatchCompanionInboxMessage {
   final bool unread;
   final int? channelIndex;
 
+  /// Meshtastic packet id of this message (v2+), used phone-side to resolve a
+  /// reply target. Null for MeshCore rows (no reply wire concept) — the Watch
+  /// keys its reply affordance off this being null.
+  final int? packetId;
+
   Map<String, dynamic> toJson() => <String, dynamic>{
     'id': id,
     'sender': sender,
@@ -30,6 +36,7 @@ class WatchCompanionInboxMessage {
     'timestampMs': timestampMs,
     'unread': unread,
     'channelIndex': channelIndex,
+    'packetId': packetId,
   };
 
   factory WatchCompanionInboxMessage.fromJson(Map<String, dynamic> json) {
@@ -40,6 +47,7 @@ class WatchCompanionInboxMessage {
       timestampMs: json['timestampMs'] as int,
       unread: json['unread'] as bool,
       channelIndex: json['channelIndex'] as int?,
+      packetId: json['packetId'] as int?,
     );
   }
 
@@ -52,16 +60,24 @@ class WatchCompanionInboxMessage {
           other.snippet == snippet &&
           other.timestampMs == timestampMs &&
           other.unread == unread &&
-          other.channelIndex == channelIndex;
+          other.channelIndex == channelIndex &&
+          other.packetId == packetId;
 
   @override
-  int get hashCode =>
-      Object.hash(id, sender, snippet, timestampMs, unread, channelIndex);
+  int get hashCode => Object.hash(
+    id,
+    sender,
+    snippet,
+    timestampMs,
+    unread,
+    channelIndex,
+    packetId,
+  );
 
   @override
   String toString() =>
       'WatchCompanionInboxMessage(id: $id, sender: $sender, '
-      'unread: $unread, ch: $channelIndex)';
+      'unread: $unread, ch: $channelIndex, pkt: $packetId)';
 }
 
 /// Inbox slice of a watch snapshot.

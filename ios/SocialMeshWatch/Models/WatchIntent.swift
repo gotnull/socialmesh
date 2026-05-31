@@ -36,23 +36,31 @@ struct WatchIntentTarget: Encodable, Equatable {
 
 struct WatchIntentPayload: Encodable, Equatable {
   let cannedKey: String?
+  // v2: wire-stable id of the inbox message this canned send replies to.
+  // Stays opaque on the Watch; the phone resolves it to a packet id. Nil for
+  // a standalone send.
+  let replyToMessageId: String?
 
-  init(cannedKey: String?) {
+  init(cannedKey: String?, replyToMessageId: String? = nil) {
     self.cannedKey = cannedKey
+    self.replyToMessageId = replyToMessageId
   }
 
   func encode(to encoder: Encoder) throws {
     var c = encoder.container(keyedBy: CodingKeys.self)
+    // Encode both keys always (even when nil) so the phone observes them.
     try c.encode(cannedKey, forKey: .cannedKey)
+    try c.encode(replyToMessageId, forKey: .replyToMessageId)
   }
 
   enum CodingKeys: String, CodingKey {
     case cannedKey
+    case replyToMessageId
   }
 }
 
 struct WatchIntent: Encodable, Equatable {
-  static let wireVersion: Int = 1
+  static let wireVersion: Int = 2
 
   let requestId: String
   let type: WatchIntentType
@@ -86,6 +94,27 @@ struct WatchIntent: Encodable, Equatable {
       type: .quickMessage,
       target: WatchIntentTarget(channelIndex: channelIndex),
       payload: WatchIntentPayload(cannedKey: cannedKey),
+      createdAtMs: Int(Date().timeIntervalSince1970 * 1000)
+    )
+  }
+
+  /// Convenience: build a `quickMessage` intent that replies to a specific
+  /// received inbox message. Same send shape as `quickMessage`, plus the
+  /// opaque `replyToMessageId` the phone resolves to a packet id. The channel
+  /// should default to the replied-to message's channel.
+  static func quickReply(
+    cannedKey: String,
+    channelIndex: Int,
+    replyToMessageId: String
+  ) -> WatchIntent {
+    return WatchIntent(
+      requestId: UUID().uuidString,
+      type: .quickMessage,
+      target: WatchIntentTarget(channelIndex: channelIndex),
+      payload: WatchIntentPayload(
+        cannedKey: cannedKey,
+        replyToMessageId: replyToMessageId
+      ),
       createdAtMs: Int(Date().timeIntervalSince1970 * 1000)
     )
   }

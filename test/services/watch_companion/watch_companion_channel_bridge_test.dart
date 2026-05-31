@@ -229,7 +229,10 @@ void main() {
           (c) => c.method == 'pushSnapshot',
         );
         expect(pushCall.arguments, isA<Map>());
-        expect((pushCall.arguments as Map)['version'], 1);
+        expect(
+          (pushCall.arguments as Map)['version'],
+          WatchCompanionSnapshot.wireVersion,
+        );
       },
     );
 
@@ -396,7 +399,7 @@ void main() {
       final resultMap = Map<String, dynamic>.from(result! as Map);
       expect(resultMap['accepted'], isTrue);
       expect(resultMap['requestId'], 'req-1');
-      expect(resultMap['version'], 1);
+      expect(resultMap['version'], WatchCompanionIntentResult.wireVersion);
     });
 
     test(
@@ -435,7 +438,7 @@ void main() {
         expect(map['accepted'], isFalse);
         expect(map['diagnosticReason'], 'invalid_intent_payload');
         expect(map['requestId'], 'req-bad');
-        expect(map['version'], 1);
+        expect(map['version'], WatchCompanionIntentResult.wireVersion);
       },
     );
 

@@ -105,9 +105,9 @@ void main() {
       }
     });
 
-    test('serialized version field is 1', () {
+    test('serialized version field is the current wire version', () {
       final json = _buildSnapshot().toJson();
-      expect(json['version'], equals(1));
+      expect(json['version'], equals(WatchCompanionSnapshot.wireVersion));
     });
 
     test('rejects mismatched wire-version with FormatException', () {
