@@ -8,6 +8,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/logging.dart';
+import '../../core/safe_lat_lng.dart';
 import '../../core/transport.dart';
 import '../../models/mesh_models.dart';
 import '../../models/device_error.dart';
@@ -159,6 +160,41 @@ class SmFileTransferEvent {
     required this.packet,
     required this.senderNodeNum,
     this.version = 0,
+  });
+}
+
+/// Event emitted by the waypoint StreamController inside ProtocolService for
+/// every inbound (or locally echoed) Meshtastic `Waypoint` (WAYPOINT_APP).
+///
+/// Carries plain decoded fields so the feature layer never depends on the
+/// generated protobuf. Coordinates are already converted to decimal degrees.
+/// [isDelete] is true when the wire `expire == 1` — the firmware
+/// "delete for everyone" sentinel.
+class MeshWaypointEvent {
+  final int id;
+  final double latitude;
+  final double longitude;
+  final int expire;
+  final int lockedTo;
+  final String name;
+  final String description;
+  final int icon;
+  final int fromNodeNum;
+  final bool isDelete;
+  final DateTime receivedAt;
+
+  const MeshWaypointEvent({
+    required this.id,
+    required this.latitude,
+    required this.longitude,
+    required this.expire,
+    required this.lockedTo,
+    required this.name,
+    required this.description,
+    required this.icon,
+    required this.fromNodeNum,
+    required this.isDelete,
+    required this.receivedAt,
   });
 }
 
@@ -375,6 +411,7 @@ class ProtocolService {
   final StreamController<pb.ClientNotification> _clientNotificationController;
   final StreamController<pb.User> _userConfigController;
   final StreamController<DetectionSensorEvent> _detectionSensorEventController;
+  final StreamController<MeshWaypointEvent> _waypointController;
   final StreamController<TraceRouteLog> _traceRouteLogController;
   final StreamController<MeshTelemetry> _meshTelemetryController;
   final StreamController<pb.MqttClientProxyMessage>
@@ -1069,6 +1106,7 @@ class ProtocolService {
        _userConfigController = StreamController<pb.User>.broadcast(),
        _detectionSensorEventController =
            StreamController<DetectionSensorEvent>.broadcast(),
+       _waypointController = StreamController<MeshWaypointEvent>.broadcast(),
        _traceRouteLogController = StreamController<TraceRouteLog>.broadcast(),
        _meshTelemetryController = StreamController<MeshTelemetry>.broadcast(),
        _mqttClientProxyMessageController =
@@ -1171,6 +1209,12 @@ class ProtocolService {
   /// Stream of detection sensor events (DETECTION_SENSOR_APP portnum)
   Stream<DetectionSensorEvent> get detectionSensorEventStream =>
       _detectionSensorEventController.stream;
+
+  /// Stream of Meshtastic waypoint events (WAYPOINT_APP portnum). Emits on
+  /// every inbound waypoint and on local sends (self-echo) so the sender sees
+  /// its own waypoint immediately. [MeshWaypointEvent.isDelete] flags the
+  /// firmware "delete for everyone" sentinel.
+  Stream<MeshWaypointEvent> get waypointStream => _waypointController.stream;
 
   /// Stream of client notifications (firmware errors, warnings, config validation)
   Stream<pb.ClientNotification> get clientNotificationStream =>
@@ -2713,6 +2757,9 @@ class ProtocolService {
           case pn.PortNum.DETECTION_SENSOR_APP:
             _handleDetectionSensorMessage(packet, data);
             break;
+          case pn.PortNum.WAYPOINT_APP:
+            _handleWaypointMessage(packet, data);
+            break;
           case pn.PortNum.NODE_STATUS_APP:
             _handleNodeStatusMessage(packet, data);
             break;
@@ -3353,6 +3400,51 @@ class ProtocolService {
       _detectionSensorEventController.add(event);
     } catch (e) {
       AppLogging.protocol('Failed to parse detection sensor message: $e');
+    }
+  }
+
+  /// Handle Meshtastic waypoint messages (WAYPOINT_APP portnum).
+  ///
+  /// Decodes the `Waypoint` proto, converts the 1e7-scaled coordinates to
+  /// decimal degrees, and republishes a plain [MeshWaypointEvent]. Create vs
+  /// update reconciliation and the locked-edit rule live in the waypoint
+  /// notifier (they need the persisted DB state); this handler never
+  /// rebroadcasts. `expire == 1` is the "delete for everyone" sentinel and is
+  /// surfaced via [MeshWaypointEvent.isDelete] (coordinate validation is
+  /// skipped for deletes, which may carry zeroed coordinates).
+  void _handleWaypointMessage(pb.MeshPacket packet, pb.Data data) {
+    try {
+      final w = pb.Waypoint.fromBuffer(data.payload);
+      final isDelete = w.expire == 1;
+      final ll = safeLatLng(w.latitudeI / 1e7, w.longitudeI / 1e7);
+      if (ll == null && !isDelete) {
+        AppLogging.protocol(
+          'WAYPOINT_APP from=${packet.from.toRadixString(16)} dropped: '
+          'invalid coordinates',
+        );
+        return;
+      }
+      AppLogging.protocol(
+        'RX_WAYPOINT from=${packet.from.toRadixString(16)} id=${w.id} '
+        '${isDelete ? "(delete)" : "name=\"${w.name}\""}',
+      );
+      _waypointController.add(
+        MeshWaypointEvent(
+          id: w.id,
+          latitude: ll?.latitude ?? 0.0,
+          longitude: ll?.longitude ?? 0.0,
+          expire: w.expire,
+          lockedTo: w.lockedTo,
+          name: sanitizeExternalText(w.name),
+          description: sanitizeExternalText(w.description),
+          icon: w.icon,
+          fromNodeNum: packet.from,
+          isDelete: isDelete,
+          receivedAt: _resolvePacketLastHeard(packet),
+        ),
+      );
+    } catch (e) {
+      AppLogging.protocol('Failed to parse waypoint message: $e');
     }
   }
 
@@ -7741,6 +7833,82 @@ class ProtocolService {
     }
   }
 
+  /// Broadcast a Meshtastic waypoint (WAYPOINT_APP).
+  ///
+  /// Mirrors the official Meshtastic clients: a new waypoint uses a fresh
+  /// random 32-bit [id]; an edit reuses the existing [id]. Always broadcast
+  /// (`to == 0xFFFFFFFF`) with `wantAck`. Set [expire] to `1` to broadcast a
+  /// "delete for everyone" (forces immediate expiry on all nodes). [lockedTo]
+  /// of a node number restricts future edits to that node; `0` leaves it open.
+  ///
+  /// User-initiated only — there is no auto-resend and the receive path never
+  /// rebroadcasts, so this stays within the normal Meshtastic airtime budget
+  /// (it does not ride the SIP rate limiter). Emits a self-echo on
+  /// [waypointStream] so the sender sees the waypoint immediately.
+  Future<void> sendWaypoint({
+    required int id,
+    required double latitude,
+    required double longitude,
+    String name = '',
+    String description = '',
+    int icon = 0,
+    int expire = 0,
+    int lockedTo = 0,
+  }) async {
+    try {
+      AppLogging.protocol(
+        'Sending waypoint id=$id name="$name" '
+        '${expire == 1 ? "(delete)" : ""}',
+      );
+
+      final waypoint = pb.Waypoint()
+        ..id = id
+        ..latitudeI = (latitude * 1e7).round()
+        ..longitudeI = (longitude * 1e7).round();
+      if (name.isNotEmpty) waypoint.name = name;
+      if (description.isNotEmpty) waypoint.description = description;
+      if (icon != 0) waypoint.icon = icon;
+      if (expire != 0) waypoint.expire = expire;
+      if (lockedTo != 0) waypoint.lockedTo = lockedTo;
+
+      final data = pb.Data()
+        ..portnum = pn.PortNum.WAYPOINT_APP
+        ..payload = waypoint.writeToBuffer();
+
+      final packet = MeshPacketBuilder.userPayload(
+        myNodeNum: _myNodeNum ?? 0,
+        to: 0xFFFFFFFF,
+        data: data,
+        packetId: _generatePacketId(),
+        wantAck: true,
+      );
+
+      final toRadio = pb.ToRadio()..packet = packet;
+      await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+
+      // Self-echo so our own map updates immediately without waiting for the
+      // firmware to flood our broadcast back to us.
+      _waypointController.add(
+        MeshWaypointEvent(
+          id: id,
+          latitude: latitude,
+          longitude: longitude,
+          expire: expire,
+          lockedTo: lockedTo,
+          name: name,
+          description: description,
+          icon: icon,
+          fromNodeNum: _myNodeNum ?? 0,
+          isDelete: expire == 1,
+          receivedAt: DateTime.now(),
+        ),
+      );
+    } catch (e) {
+      AppLogging.protocol('Error sending waypoint: $e');
+      rethrow;
+    }
+  }
+
   /// Send position to a specific node (direct message, not broadcast).
   ///
   /// Rate-limited to one directed send every [_positionDirectMinInterval]
@@ -10960,6 +11128,7 @@ class ProtocolService {
     await _userConfigController.close();
     await _traceRouteLogController.close();
     await _meshTelemetryController.close();
+    await _waypointController.close();
     await _mqttClientProxyMessageController.close();
     await _localConfigWriteController.close();
     await _readinessController.close();

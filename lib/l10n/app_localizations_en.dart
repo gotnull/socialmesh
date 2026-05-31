@@ -35491,6 +35491,103 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get waypointCreateTitle => 'New Waypoint';
+
+  @override
+  String get waypointEditTitle => 'Edit Waypoint';
+
+  @override
+  String get waypointNameLabel => 'Name';
+
+  @override
+  String get waypointNameHint => 'Waypoint name';
+
+  @override
+  String get waypointDescriptionLabel => 'Description';
+
+  @override
+  String get waypointDescriptionHint => 'Optional details';
+
+  @override
+  String get waypointEmojiLabel => 'Icon';
+
+  @override
+  String get waypointPickEmoji => 'Pick an emoji';
+
+  @override
+  String get waypointExpireLabel => 'Expires';
+
+  @override
+  String get waypointExpireSubtitle =>
+      'Automatically remove this waypoint later';
+
+  @override
+  String get waypointExpireDateLabel => 'Expiry date';
+
+  @override
+  String get waypointNoExpiry => 'Never expires';
+
+  @override
+  String get waypointLockedLabel => 'Locked';
+
+  @override
+  String get waypointLockedSubtitle => 'Only you can edit this waypoint';
+
+  @override
+  String get waypointLockedReadOnly => 'Locked by its owner';
+
+  @override
+  String get waypointSave => 'Save Waypoint';
+
+  @override
+  String get waypointCreated => 'Waypoint shared';
+
+  @override
+  String get waypointUpdated => 'Waypoint updated';
+
+  @override
+  String get waypointDeleted => 'Waypoint deleted';
+
+  @override
+  String get waypointDeleteForMe => 'Delete for me';
+
+  @override
+  String get waypointDeleteForEveryone => 'Delete for everyone';
+
+  @override
+  String get waypointEdit => 'Edit';
+
+  @override
+  String get mapCreateMeshWaypoint => 'Create mesh waypoint';
+
+  @override
+  String waypointSheetFrom(String senderName) {
+    return 'From $senderName';
+  }
+
+  @override
+  String waypointSheetExpires(String time) {
+    return 'Expires $time';
+  }
+
+  @override
+  String get waypointSendError => 'Could not share waypoint';
+
+  @override
+  String notificationWaypointTitle(String name) {
+    return 'New waypoint: $name';
+  }
+
+  @override
+  String notificationWaypointBody(String senderName) {
+    return 'Shared by $senderName';
+  }
+
+  @override
+  String get notificationChannelWaypoint =>
+      'Notifications for shared mesh waypoints';
+
+  @override
   String notificationEntityStaleTitle(String callsign) {
     return 'Entity Stale: $callsign';
   }

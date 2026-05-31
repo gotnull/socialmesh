@@ -35998,6 +35998,104 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get waypointCreateTitle => 'Neuer Wegpunkt';
+
+  @override
+  String get waypointEditTitle => 'Wegpunkt bearbeiten';
+
+  @override
+  String get waypointNameLabel => 'Name';
+
+  @override
+  String get waypointNameHint => 'Name des Wegpunkts';
+
+  @override
+  String get waypointDescriptionLabel => 'Beschreibung';
+
+  @override
+  String get waypointDescriptionHint => 'Optionale Details';
+
+  @override
+  String get waypointEmojiLabel => 'Symbol';
+
+  @override
+  String get waypointPickEmoji => 'Emoji auswählen';
+
+  @override
+  String get waypointExpireLabel => 'Läuft ab';
+
+  @override
+  String get waypointExpireSubtitle =>
+      'Diesen Wegpunkt später automatisch entfernen';
+
+  @override
+  String get waypointExpireDateLabel => 'Ablaufdatum';
+
+  @override
+  String get waypointNoExpiry => 'Läuft nie ab';
+
+  @override
+  String get waypointLockedLabel => 'Gesperrt';
+
+  @override
+  String get waypointLockedSubtitle =>
+      'Nur du kannst diesen Wegpunkt bearbeiten';
+
+  @override
+  String get waypointLockedReadOnly => 'Vom Eigentümer gesperrt';
+
+  @override
+  String get waypointSave => 'Wegpunkt speichern';
+
+  @override
+  String get waypointCreated => 'Wegpunkt geteilt';
+
+  @override
+  String get waypointUpdated => 'Wegpunkt aktualisiert';
+
+  @override
+  String get waypointDeleted => 'Wegpunkt gelöscht';
+
+  @override
+  String get waypointDeleteForMe => 'Für mich löschen';
+
+  @override
+  String get waypointDeleteForEveryone => 'Für alle löschen';
+
+  @override
+  String get waypointEdit => 'Bearbeiten';
+
+  @override
+  String get mapCreateMeshWaypoint => 'Mesh-Wegpunkt erstellen';
+
+  @override
+  String waypointSheetFrom(String senderName) {
+    return 'Von $senderName';
+  }
+
+  @override
+  String waypointSheetExpires(String time) {
+    return 'Läuft ab $time';
+  }
+
+  @override
+  String get waypointSendError => 'Wegpunkt konnte nicht geteilt werden';
+
+  @override
+  String notificationWaypointTitle(String name) {
+    return 'Neuer Wegpunkt: $name';
+  }
+
+  @override
+  String notificationWaypointBody(String senderName) {
+    return 'Geteilt von $senderName';
+  }
+
+  @override
+  String get notificationChannelWaypoint =>
+      'Benachrichtigungen für geteilte Mesh-Wegpunkte';
+
+  @override
   String notificationEntityStaleTitle(String callsign) {
     return 'Entität veraltet: $callsign';
   }

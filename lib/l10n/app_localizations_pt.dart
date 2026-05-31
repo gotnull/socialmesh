@@ -35872,6 +35872,105 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get waypointCreateTitle => 'Novo ponto de passagem';
+
+  @override
+  String get waypointEditTitle => 'Editar ponto de passagem';
+
+  @override
+  String get waypointNameLabel => 'Nome';
+
+  @override
+  String get waypointNameHint => 'Nome do ponto de passagem';
+
+  @override
+  String get waypointDescriptionLabel => 'Descrição';
+
+  @override
+  String get waypointDescriptionHint => 'Detalhes opcionais';
+
+  @override
+  String get waypointEmojiLabel => 'Ícone';
+
+  @override
+  String get waypointPickEmoji => 'Escolher um emoji';
+
+  @override
+  String get waypointExpireLabel => 'Expira';
+
+  @override
+  String get waypointExpireSubtitle =>
+      'Remover este ponto de passagem automaticamente mais tarde';
+
+  @override
+  String get waypointExpireDateLabel => 'Data de expiração';
+
+  @override
+  String get waypointNoExpiry => 'Nunca expira';
+
+  @override
+  String get waypointLockedLabel => 'Bloqueado';
+
+  @override
+  String get waypointLockedSubtitle =>
+      'Apenas você pode editar este ponto de passagem';
+
+  @override
+  String get waypointLockedReadOnly => 'Bloqueado pelo proprietário';
+
+  @override
+  String get waypointSave => 'Salvar ponto de passagem';
+
+  @override
+  String get waypointCreated => 'Ponto de passagem compartilhado';
+
+  @override
+  String get waypointUpdated => 'Ponto de passagem atualizado';
+
+  @override
+  String get waypointDeleted => 'Ponto de passagem excluído';
+
+  @override
+  String get waypointDeleteForMe => 'Excluir para mim';
+
+  @override
+  String get waypointDeleteForEveryone => 'Excluir para todos';
+
+  @override
+  String get waypointEdit => 'Editar';
+
+  @override
+  String get mapCreateMeshWaypoint => 'Criar ponto de passagem na malha';
+
+  @override
+  String waypointSheetFrom(String senderName) {
+    return 'De $senderName';
+  }
+
+  @override
+  String waypointSheetExpires(String time) {
+    return 'Expira $time';
+  }
+
+  @override
+  String get waypointSendError =>
+      'Não foi possível compartilhar o ponto de passagem';
+
+  @override
+  String notificationWaypointTitle(String name) {
+    return 'Novo ponto de passagem: $name';
+  }
+
+  @override
+  String notificationWaypointBody(String senderName) {
+    return 'Compartilhado por $senderName';
+  }
+
+  @override
+  String get notificationChannelWaypoint =>
+      'Notificações de pontos de passagem compartilhados na malha';
+
+  @override
   String notificationEntityStaleTitle(String callsign) {
     return 'Entidade obsoleta: $callsign';
   }

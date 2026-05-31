@@ -62083,6 +62083,180 @@ abstract class AppLocalizations {
   /// **'From {displayName}'**
   String notificationDetectionSensorBody(String displayName);
 
+  /// Title for the create-waypoint screen
+  ///
+  /// In en, this message translates to:
+  /// **'New Waypoint'**
+  String get waypointCreateTitle;
+
+  /// Title for the edit-waypoint screen
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Waypoint'**
+  String get waypointEditTitle;
+
+  /// Label for the waypoint name field
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get waypointNameLabel;
+
+  /// Hint text for the waypoint name field
+  ///
+  /// In en, this message translates to:
+  /// **'Waypoint name'**
+  String get waypointNameHint;
+
+  /// Label for the waypoint description field
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get waypointDescriptionLabel;
+
+  /// Hint text for the waypoint description field
+  ///
+  /// In en, this message translates to:
+  /// **'Optional details'**
+  String get waypointDescriptionHint;
+
+  /// Label for the waypoint emoji/icon picker tile
+  ///
+  /// In en, this message translates to:
+  /// **'Icon'**
+  String get waypointEmojiLabel;
+
+  /// Subtitle prompting the user to choose a waypoint emoji
+  ///
+  /// In en, this message translates to:
+  /// **'Pick an emoji'**
+  String get waypointPickEmoji;
+
+  /// Label for the waypoint expiry toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Expires'**
+  String get waypointExpireLabel;
+
+  /// Subtitle explaining the waypoint expiry toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically remove this waypoint later'**
+  String get waypointExpireSubtitle;
+
+  /// Label for the waypoint expiry date picker tile
+  ///
+  /// In en, this message translates to:
+  /// **'Expiry date'**
+  String get waypointExpireDateLabel;
+
+  /// Shown when a waypoint has no expiry set
+  ///
+  /// In en, this message translates to:
+  /// **'Never expires'**
+  String get waypointNoExpiry;
+
+  /// Label for the waypoint lock toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get waypointLockedLabel;
+
+  /// Subtitle explaining the waypoint lock toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Only you can edit this waypoint'**
+  String get waypointLockedSubtitle;
+
+  /// Shown when a received waypoint is locked and cannot be edited
+  ///
+  /// In en, this message translates to:
+  /// **'Locked by its owner'**
+  String get waypointLockedReadOnly;
+
+  /// Label for the save/submit button on the waypoint form
+  ///
+  /// In en, this message translates to:
+  /// **'Save Waypoint'**
+  String get waypointSave;
+
+  /// Confirmation shown after creating a waypoint
+  ///
+  /// In en, this message translates to:
+  /// **'Waypoint shared'**
+  String get waypointCreated;
+
+  /// Confirmation shown after editing a waypoint
+  ///
+  /// In en, this message translates to:
+  /// **'Waypoint updated'**
+  String get waypointUpdated;
+
+  /// Confirmation shown after deleting a waypoint
+  ///
+  /// In en, this message translates to:
+  /// **'Waypoint deleted'**
+  String get waypointDeleted;
+
+  /// Action that removes a waypoint locally only
+  ///
+  /// In en, this message translates to:
+  /// **'Delete for me'**
+  String get waypointDeleteForMe;
+
+  /// Action that broadcasts a waypoint deletion to the mesh
+  ///
+  /// In en, this message translates to:
+  /// **'Delete for everyone'**
+  String get waypointDeleteForEveryone;
+
+  /// Action that opens a waypoint for editing
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get waypointEdit;
+
+  /// Long-press map action that creates a shareable mesh waypoint
+  ///
+  /// In en, this message translates to:
+  /// **'Create mesh waypoint'**
+  String get mapCreateMeshWaypoint;
+
+  /// Shows which node shared a waypoint
+  ///
+  /// In en, this message translates to:
+  /// **'From {senderName}'**
+  String waypointSheetFrom(String senderName);
+
+  /// Shows when a waypoint expires
+  ///
+  /// In en, this message translates to:
+  /// **'Expires {time}'**
+  String waypointSheetExpires(String time);
+
+  /// Error shown when broadcasting a waypoint fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not share waypoint'**
+  String get waypointSendError;
+
+  /// Notification title when a waypoint is received
+  ///
+  /// In en, this message translates to:
+  /// **'New waypoint: {name}'**
+  String notificationWaypointTitle(String name);
+
+  /// Notification body when a waypoint is received
+  ///
+  /// In en, this message translates to:
+  /// **'Shared by {senderName}'**
+  String notificationWaypointBody(String senderName);
+
+  /// Android notification channel description for waypoints
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications for shared mesh waypoints'**
+  String get notificationChannelWaypoint;
+
   /// Notification title for stale TAK entity
   ///
   /// In en, this message translates to:

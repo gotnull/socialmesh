@@ -816,6 +816,60 @@ class NotificationService {
     );
   }
 
+  /// Show notification when a shared waypoint is received from the mesh.
+  Future<void> showWaypointNotification({
+    required int waypointId,
+    required String name,
+    required String senderName,
+    bool playSound = true,
+    bool vibrate = true,
+  }) async {
+    if (!_initialized) {
+      AppLogging.notifications(
+        '🔔 NotificationService not initialized, skipping waypoint notification',
+      );
+      return;
+    }
+
+    final androidDetails = AndroidNotificationDetails(
+      'waypoints',
+      'Waypoints', // lint-allow: hardcoded-string
+      channelDescription: _l10n.notificationChannelWaypoint,
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      groupKey: 'waypoints',
+      playSound: playSound,
+      enableVibration: vibrate,
+      color: AccentColors.orange,
+    );
+
+    final iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: playSound,
+      threadIdentifier: 'waypoints',
+    );
+
+    final notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+      macOS: iosDetails,
+    );
+
+    await _notifications.show(
+      id: waypointId % 100000000,
+      title: _l10n.notificationWaypointTitle(name),
+      body: _l10n.notificationWaypointBody(senderName),
+      notificationDetails: notificationDetails,
+      payload: 'waypoint:$waypointId',
+    );
+
+    AppLogging.notifications(
+      '🔔 Showed waypoint notification: "$name" from $senderName',
+    );
+  }
+
   /// Show notification when a tracked TAK entity goes stale.
   Future<void> showTakStaleNotification({
     required String uid,

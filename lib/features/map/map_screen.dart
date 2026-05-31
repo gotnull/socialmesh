@@ -51,6 +51,9 @@ import '../nodes/node_display_name_resolver.dart';
 import '../telemetry/traceroute_log_screen.dart';
 import '../telemetry/position_log_screen.dart';
 import '../settings/settings_screen.dart';
+import '../waypoints/models/mesh_waypoint.dart';
+import '../waypoints/providers/waypoint_providers.dart';
+import '../waypoints/waypoint_form_screen.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../core/constants.dart';
 import '../../core/logging.dart';
@@ -758,6 +761,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         : ref.watch(nodesProvider);
     final presenceMap = ref.watch(presenceMapProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
+    final meshWaypoints = ref.watch(meshWaypointsProvider);
 
     // Load position history — per-node when tracking, all when global toggle
     final List<PositionLog> positionLogs;
@@ -1767,6 +1771,26 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               ),
                             );
                           }),
+                        ),
+                      ),
+                      // Shared mesh waypoints (WAYPOINT_APP) — orange emoji
+                      // markers, distinct from the local "dropped pin" above.
+                      MarkerLayer(
+                        rotate: true,
+                        markers: finiteMarkers(
+                          meshWaypoints.map((w) {
+                            final point = safeLatLng(w.latitude, w.longitude);
+                            if (point == null) return null;
+                            return Marker(
+                              point: point,
+                              width: 40,
+                              height: 40,
+                              child: GestureDetector(
+                                onTap: () => _showMeshWaypointSheet(w),
+                                child: _MeshWaypointMarker(waypoint: w),
+                              ),
+                            );
+                          }).whereType<Marker>(),
                         ),
                       ),
                       // Node markers - hide in location only mode.
@@ -2798,6 +2822,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
           onTap: () => _addWaypoint(point),
         ),
         BottomSheetAction(
+          icon: Icons.place,
+          iconColor: AccentColors.orange,
+          label: context.l10n.mapCreateMeshWaypoint,
+          onTap: () => _openWaypointForm(location: point),
+        ),
+        BottomSheetAction(
           icon: Icons.share,
           iconColor: context.accentColor,
           label: context.l10n.mapShareLocation,
@@ -2859,6 +2889,106 @@ class _MapScreenState extends ConsumerState<MapScreen>
               color: context.textSecondary,
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  void _openWaypointForm({required LatLng location, MeshWaypoint? existing}) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            WaypointFormScreen(location: location, existing: existing),
+      ),
+    );
+  }
+
+  void _showMeshWaypointSheet(MeshWaypoint waypoint) {
+    final myNodeNum = ref.read(myNodeNumProvider);
+    final canEdit = !waypoint.isLocked || waypoint.lockedTo == myNodeNum;
+    final point = LatLng(waypoint.latitude, waypoint.longitude);
+    final senderName =
+        ref.read(nodesProvider)[waypoint.sourceNodeNum]?.displayName ??
+        '!${waypoint.sourceNodeNum.toRadixString(16)}';
+
+    AppBottomSheet.showActions(
+      context: context,
+      actions: [
+        if (canEdit)
+          BottomSheetAction(
+            icon: Icons.edit,
+            iconColor: context.accentColor,
+            label: context.l10n.waypointEdit,
+            onTap: () => _openWaypointForm(location: point, existing: waypoint),
+          ),
+        BottomSheetAction(
+          icon: Icons.share,
+          iconColor: context.accentColor,
+          label: context.l10n.mapShare,
+          onTap: () => _shareLocation(point, label: waypoint.name),
+        ),
+        BottomSheetAction(
+          icon: Icons.copy,
+          iconColor: context.textSecondary,
+          label: context.l10n.mapCopyCoordinates,
+          onTap: () => _copyCoordinates(point),
+        ),
+        BottomSheetAction(
+          icon: Icons.delete_outline,
+          label: context.l10n.waypointDeleteForMe,
+          isDestructive: true,
+          onTap: () => ref
+              .read(waypointsNotifierProvider.notifier)
+              .deleteForMe(waypoint.id),
+        ),
+        if (canEdit)
+          BottomSheetAction(
+            icon: Icons.delete_forever,
+            label: context.l10n.waypointDeleteForEveryone,
+            isDestructive: true,
+            onTap: () => ref
+                .read(waypointsNotifierProvider.notifier)
+                .deleteForEveryone(waypoint),
+          ),
+      ],
+      header: Column(
+        children: [
+          Text(
+            waypoint.name.isNotEmpty
+                ? '${waypoint.iconEmoji} ${waypoint.name}'.trim()
+                : context.l10n.waypointCreateTitle,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
+            ),
+          ),
+          if (waypoint.description.isNotEmpty) ...[
+            const SizedBox(height: AppTheme.spacing4),
+            Text(
+              waypoint.description,
+              textAlign: TextAlign.center,
+              style: context.bodySecondaryStyle?.copyWith(
+                color: context.textSecondary,
+              ),
+            ),
+          ],
+          const SizedBox(height: AppTheme.spacing8),
+          Text(
+            context.l10n.waypointSheetFrom(senderName),
+            style: context.bodySecondaryStyle?.copyWith(
+              color: context.textTertiary,
+            ),
+          ),
+          if (waypoint.isLocked && !canEdit) ...[
+            const SizedBox(height: AppTheme.spacing4),
+            Text(
+              context.l10n.waypointLockedReadOnly,
+              style: context.bodySecondaryStyle?.copyWith(
+                color: context.textTertiary,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -3739,6 +3869,35 @@ class _Waypoint {
   final String label;
 
   _Waypoint({required this.id, required this.position, required this.label});
+}
+
+/// Map marker for a shared mesh waypoint: an orange circle with the waypoint's
+/// emoji glyph (or a pin icon when no emoji is set).
+class _MeshWaypointMarker extends StatelessWidget {
+  final MeshWaypoint waypoint;
+
+  const _MeshWaypointMarker({required this.waypoint});
+
+  @override
+  Widget build(BuildContext context) {
+    final glyph = waypoint.iconEmoji;
+    return Container(
+      width: 34,
+      height: 34,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AccentColors.orange,
+        shape: BoxShape.circle,
+        border: Border.all(color: SemanticColors.onMarker, width: 2),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 4),
+        ],
+      ),
+      child: glyph.isNotEmpty
+          ? Text(glyph, style: const TextStyle(fontSize: 16))
+          : Icon(Icons.place, size: 18, color: SemanticColors.onMarker),
+    );
+  }
 }
 
 /// Cached position for nodes that lose GPS

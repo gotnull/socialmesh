@@ -47507,6 +47507,142 @@
             }
         }
     },
+    "waypointCreateTitle": "New Waypoint",
+    "@waypointCreateTitle": {
+        "description": "Title for the create-waypoint screen"
+    },
+    "waypointEditTitle": "Edit Waypoint",
+    "@waypointEditTitle": {
+        "description": "Title for the edit-waypoint screen"
+    },
+    "waypointNameLabel": "Name",
+    "@waypointNameLabel": {
+        "description": "Label for the waypoint name field"
+    },
+    "waypointNameHint": "Waypoint name",
+    "@waypointNameHint": {
+        "description": "Hint text for the waypoint name field"
+    },
+    "waypointDescriptionLabel": "Description",
+    "@waypointDescriptionLabel": {
+        "description": "Label for the waypoint description field"
+    },
+    "waypointDescriptionHint": "Optional details",
+    "@waypointDescriptionHint": {
+        "description": "Hint text for the waypoint description field"
+    },
+    "waypointEmojiLabel": "Icon",
+    "@waypointEmojiLabel": {
+        "description": "Label for the waypoint emoji/icon picker tile"
+    },
+    "waypointPickEmoji": "Pick an emoji",
+    "@waypointPickEmoji": {
+        "description": "Subtitle prompting the user to choose a waypoint emoji"
+    },
+    "waypointExpireLabel": "Expires",
+    "@waypointExpireLabel": {
+        "description": "Label for the waypoint expiry toggle"
+    },
+    "waypointExpireSubtitle": "Automatically remove this waypoint later",
+    "@waypointExpireSubtitle": {
+        "description": "Subtitle explaining the waypoint expiry toggle"
+    },
+    "waypointExpireDateLabel": "Expiry date",
+    "@waypointExpireDateLabel": {
+        "description": "Label for the waypoint expiry date picker tile"
+    },
+    "waypointNoExpiry": "Never expires",
+    "@waypointNoExpiry": {
+        "description": "Shown when a waypoint has no expiry set"
+    },
+    "waypointLockedLabel": "Locked",
+    "@waypointLockedLabel": {
+        "description": "Label for the waypoint lock toggle"
+    },
+    "waypointLockedSubtitle": "Only you can edit this waypoint",
+    "@waypointLockedSubtitle": {
+        "description": "Subtitle explaining the waypoint lock toggle"
+    },
+    "waypointLockedReadOnly": "Locked by its owner",
+    "@waypointLockedReadOnly": {
+        "description": "Shown when a received waypoint is locked and cannot be edited"
+    },
+    "waypointSave": "Save Waypoint",
+    "@waypointSave": {
+        "description": "Label for the save/submit button on the waypoint form"
+    },
+    "waypointCreated": "Waypoint shared",
+    "@waypointCreated": {
+        "description": "Confirmation shown after creating a waypoint"
+    },
+    "waypointUpdated": "Waypoint updated",
+    "@waypointUpdated": {
+        "description": "Confirmation shown after editing a waypoint"
+    },
+    "waypointDeleted": "Waypoint deleted",
+    "@waypointDeleted": {
+        "description": "Confirmation shown after deleting a waypoint"
+    },
+    "waypointDeleteForMe": "Delete for me",
+    "@waypointDeleteForMe": {
+        "description": "Action that removes a waypoint locally only"
+    },
+    "waypointDeleteForEveryone": "Delete for everyone",
+    "@waypointDeleteForEveryone": {
+        "description": "Action that broadcasts a waypoint deletion to the mesh"
+    },
+    "waypointEdit": "Edit",
+    "@waypointEdit": {
+        "description": "Action that opens a waypoint for editing"
+    },
+    "mapCreateMeshWaypoint": "Create mesh waypoint",
+    "@mapCreateMeshWaypoint": {
+        "description": "Long-press map action that creates a shareable mesh waypoint"
+    },
+    "waypointSheetFrom": "From {senderName}",
+    "@waypointSheetFrom": {
+        "description": "Shows which node shared a waypoint",
+        "placeholders": {
+            "senderName": {
+                "type": "String"
+            }
+        }
+    },
+    "waypointSheetExpires": "Expires {time}",
+    "@waypointSheetExpires": {
+        "description": "Shows when a waypoint expires",
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        }
+    },
+    "waypointSendError": "Could not share waypoint",
+    "@waypointSendError": {
+        "description": "Error shown when broadcasting a waypoint fails"
+    },
+    "notificationWaypointTitle": "New waypoint: {name}",
+    "@notificationWaypointTitle": {
+        "description": "Notification title when a waypoint is received",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "notificationWaypointBody": "Shared by {senderName}",
+    "@notificationWaypointBody": {
+        "description": "Notification body when a waypoint is received",
+        "placeholders": {
+            "senderName": {
+                "type": "String"
+            }
+        }
+    },
+    "notificationChannelWaypoint": "Notifications for shared mesh waypoints",
+    "@notificationChannelWaypoint": {
+        "description": "Android notification channel description for waypoints"
+    },
     "notificationEntityStaleTitle": "Entity Stale: {callsign}",
     "@notificationEntityStaleTitle": {
         "description": "Notification title for stale TAK entity",

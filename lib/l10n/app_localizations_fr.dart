@@ -36166,6 +36166,105 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get waypointCreateTitle => 'Nouveau point de cheminement';
+
+  @override
+  String get waypointEditTitle => 'Modifier le point de cheminement';
+
+  @override
+  String get waypointNameLabel => 'Nom';
+
+  @override
+  String get waypointNameHint => 'Nom du point de cheminement';
+
+  @override
+  String get waypointDescriptionLabel => 'Description';
+
+  @override
+  String get waypointDescriptionHint => 'Détails facultatifs';
+
+  @override
+  String get waypointEmojiLabel => 'Icône';
+
+  @override
+  String get waypointPickEmoji => 'Choisir un emoji';
+
+  @override
+  String get waypointExpireLabel => 'Expire';
+
+  @override
+  String get waypointExpireSubtitle =>
+      'Supprimer automatiquement ce point de cheminement plus tard';
+
+  @override
+  String get waypointExpireDateLabel => 'Date d\'expiration';
+
+  @override
+  String get waypointNoExpiry => 'N\'expire jamais';
+
+  @override
+  String get waypointLockedLabel => 'Verrouillé';
+
+  @override
+  String get waypointLockedSubtitle =>
+      'Vous seul pouvez modifier ce point de cheminement';
+
+  @override
+  String get waypointLockedReadOnly => 'Verrouillé par son propriétaire';
+
+  @override
+  String get waypointSave => 'Enregistrer le point de cheminement';
+
+  @override
+  String get waypointCreated => 'Point de cheminement partagé';
+
+  @override
+  String get waypointUpdated => 'Point de cheminement mis à jour';
+
+  @override
+  String get waypointDeleted => 'Point de cheminement supprimé';
+
+  @override
+  String get waypointDeleteForMe => 'Supprimer pour moi';
+
+  @override
+  String get waypointDeleteForEveryone => 'Supprimer pour tous';
+
+  @override
+  String get waypointEdit => 'Modifier';
+
+  @override
+  String get mapCreateMeshWaypoint => 'Créer un point de cheminement maillé';
+
+  @override
+  String waypointSheetFrom(String senderName) {
+    return 'De $senderName';
+  }
+
+  @override
+  String waypointSheetExpires(String time) {
+    return 'Expire $time';
+  }
+
+  @override
+  String get waypointSendError =>
+      'Impossible de partager le point de cheminement';
+
+  @override
+  String notificationWaypointTitle(String name) {
+    return 'Nouveau point de cheminement : $name';
+  }
+
+  @override
+  String notificationWaypointBody(String senderName) {
+    return 'Partagé par $senderName';
+  }
+
+  @override
+  String get notificationChannelWaypoint =>
+      'Notifications pour les points de cheminement maillés partagés';
+
+  @override
   String notificationEntityStaleTitle(String callsign) {
     return 'Entité obsolète : $callsign';
   }

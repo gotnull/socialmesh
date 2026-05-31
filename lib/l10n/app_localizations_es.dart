@@ -36066,6 +36066,104 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get waypointCreateTitle => 'Nuevo punto de ruta';
+
+  @override
+  String get waypointEditTitle => 'Editar punto de ruta';
+
+  @override
+  String get waypointNameLabel => 'Nombre';
+
+  @override
+  String get waypointNameHint => 'Nombre del punto de ruta';
+
+  @override
+  String get waypointDescriptionLabel => 'Descripción';
+
+  @override
+  String get waypointDescriptionHint => 'Detalles opcionales';
+
+  @override
+  String get waypointEmojiLabel => 'Icono';
+
+  @override
+  String get waypointPickEmoji => 'Elegir un emoji';
+
+  @override
+  String get waypointExpireLabel => 'Caduca';
+
+  @override
+  String get waypointExpireSubtitle =>
+      'Eliminar este punto de ruta automáticamente más tarde';
+
+  @override
+  String get waypointExpireDateLabel => 'Fecha de caducidad';
+
+  @override
+  String get waypointNoExpiry => 'Nunca caduca';
+
+  @override
+  String get waypointLockedLabel => 'Bloqueado';
+
+  @override
+  String get waypointLockedSubtitle =>
+      'Solo tú puedes editar este punto de ruta';
+
+  @override
+  String get waypointLockedReadOnly => 'Bloqueado por su propietario';
+
+  @override
+  String get waypointSave => 'Guardar punto de ruta';
+
+  @override
+  String get waypointCreated => 'Punto de ruta compartido';
+
+  @override
+  String get waypointUpdated => 'Punto de ruta actualizado';
+
+  @override
+  String get waypointDeleted => 'Punto de ruta eliminado';
+
+  @override
+  String get waypointDeleteForMe => 'Eliminar para mí';
+
+  @override
+  String get waypointDeleteForEveryone => 'Eliminar para todos';
+
+  @override
+  String get waypointEdit => 'Editar';
+
+  @override
+  String get mapCreateMeshWaypoint => 'Crear punto de ruta en la malla';
+
+  @override
+  String waypointSheetFrom(String senderName) {
+    return 'De $senderName';
+  }
+
+  @override
+  String waypointSheetExpires(String time) {
+    return 'Caduca $time';
+  }
+
+  @override
+  String get waypointSendError => 'No se pudo compartir el punto de ruta';
+
+  @override
+  String notificationWaypointTitle(String name) {
+    return 'Nuevo punto de ruta: $name';
+  }
+
+  @override
+  String notificationWaypointBody(String senderName) {
+    return 'Compartido por $senderName';
+  }
+
+  @override
+  String get notificationChannelWaypoint =>
+      'Notificaciones de puntos de ruta compartidos en la malla';
+
+  @override
   String notificationEntityStaleTitle(String callsign) {
     return 'Entidad obsoleta: $callsign';
   }

@@ -35915,6 +35915,103 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get waypointCreateTitle => 'Нова точка маршруту';
+
+  @override
+  String get waypointEditTitle => 'Редагувати точку маршруту';
+
+  @override
+  String get waypointNameLabel => 'Назва';
+
+  @override
+  String get waypointNameHint => 'Назва точки маршруту';
+
+  @override
+  String get waypointDescriptionLabel => 'Опис';
+
+  @override
+  String get waypointDescriptionHint => 'Додаткові відомості';
+
+  @override
+  String get waypointEmojiLabel => 'Значок';
+
+  @override
+  String get waypointPickEmoji => 'Вибрати емодзі';
+
+  @override
+  String get waypointExpireLabel => 'Термін дії';
+
+  @override
+  String get waypointExpireSubtitle => 'Автоматично видалити цю точку пізніше';
+
+  @override
+  String get waypointExpireDateLabel => 'Дата завершення';
+
+  @override
+  String get waypointNoExpiry => 'Ніколи не завершується';
+
+  @override
+  String get waypointLockedLabel => 'Заблоковано';
+
+  @override
+  String get waypointLockedSubtitle =>
+      'Лише ви можете редагувати цю точку маршруту';
+
+  @override
+  String get waypointLockedReadOnly => 'Заблоковано власником';
+
+  @override
+  String get waypointSave => 'Зберегти точку маршруту';
+
+  @override
+  String get waypointCreated => 'Точку маршруту надіслано';
+
+  @override
+  String get waypointUpdated => 'Точку маршруту оновлено';
+
+  @override
+  String get waypointDeleted => 'Точку маршруту видалено';
+
+  @override
+  String get waypointDeleteForMe => 'Видалити в мене';
+
+  @override
+  String get waypointDeleteForEveryone => 'Видалити в усіх';
+
+  @override
+  String get waypointEdit => 'Редагувати';
+
+  @override
+  String get mapCreateMeshWaypoint => 'Створити точку маршруту в мережі';
+
+  @override
+  String waypointSheetFrom(String senderName) {
+    return 'Від $senderName';
+  }
+
+  @override
+  String waypointSheetExpires(String time) {
+    return 'Термін дії $time';
+  }
+
+  @override
+  String get waypointSendError => 'Не вдалося надіслати точку маршруту';
+
+  @override
+  String notificationWaypointTitle(String name) {
+    return 'Нова точка маршруту: $name';
+  }
+
+  @override
+  String notificationWaypointBody(String senderName) {
+    return 'Надіслав $senderName';
+  }
+
+  @override
+  String get notificationChannelWaypoint =>
+      'Сповіщення про спільні точки маршруту в мережі';
+
+  @override
   String notificationEntityStaleTitle(String callsign) {
     return 'Об\'єкт застарів: $callsign';
   }
