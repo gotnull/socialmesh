@@ -688,7 +688,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen>
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: isSelected
-                              ? Colors.white
+                              ? context.accentColor
                               : context.textSecondary,
                         ),
                       ),

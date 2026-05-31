@@ -9,6 +9,7 @@ import '../../l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/countdown_banner.dart';
@@ -1269,6 +1270,46 @@ class _SettingsButton extends StatelessWidget {
   }
 }
 
+/// Right-aligned quick light/dark toggle for the drawer footer.
+/// Shows the icon of the mode it will switch TO (sun while dark,
+/// moon while light). Mirrors [_SettingsButton]'s circular style.
+class _ThemeToggleButton extends StatelessWidget {
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _ThemeToggleButton({required this.isDark, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Tooltip(
+      message: isDark
+          ? context.l10n.appearanceThemeModeLight
+          : context.l10n.appearanceThemeModeDark,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: theme.dividerColor.withValues(alpha: 0.3),
+              width: 1,
+            ),
+          ),
+          child: Icon(
+            isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+            size: 22,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Owns its own state so chevron expand/collapse and per-tile provider
 /// watches don't bubble up and rebuild [MainShell] (and the rest of the
 /// scaffold/bottom-nav) on every drawer interaction.
@@ -1279,10 +1320,27 @@ class _MainDrawer extends ConsumerStatefulWidget {
   ConsumerState<_MainDrawer> createState() => _MainDrawerState();
 }
 
-class _MainDrawerState extends ConsumerState<_MainDrawer> {
+class _MainDrawerState extends ConsumerState<_MainDrawer>
+    with LifecycleSafeMixin<_MainDrawer> {
   /// Drawer-item labels currently expanded to reveal nested children.
   /// Keyed by label since labels are unique within the drawer.
   final Set<String> _expandedDrawerItems = <String>{};
+
+  /// Quick light/dark flip from the drawer footer. The full
+  /// System/Light/Dark picker lives in Appearance & Accessibility;
+  /// this toggles between the two explicit modes based on the
+  /// currently rendered brightness and persists the choice.
+  Future<void> _toggleThemeMode() async {
+    HapticFeedback.selectionClick();
+    final mode = Theme.of(context).brightness == Brightness.dark
+        ? ThemeMode.light
+        : ThemeMode.dark;
+    final notifier = ref.read(themeModeProvider.notifier);
+    final settingsService = await ref.read(settingsServiceProvider.future);
+    if (!mounted) return;
+    await settingsService.setThemeMode(mode.index);
+    notifier.setThemeMode(mode);
+  }
 
   List<DrawerMenuItem> _buildDrawerMenuItems(AppLocalizations l10n) => [
     DrawerMenuItem(
@@ -2201,6 +2259,13 @@ class _MainDrawerState extends ConsumerState<_MainDrawer> {
                   // directly. In edit mode this widget renders as a
                   // "Done" pill that exits.
                   const DrawerCustomizeButton(),
+                  const Spacer(),
+                  // Quick light/dark theme flip. Three-way System option
+                  // lives in Settings → Appearance & Accessibility.
+                  _ThemeToggleButton(
+                    isDark: context.isDarkMode,
+                    onTap: _toggleThemeMode,
+                  ),
                 ],
               ),
             ),

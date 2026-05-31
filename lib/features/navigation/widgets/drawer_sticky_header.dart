@@ -45,6 +45,11 @@ class DrawerStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(covariant DrawerStickyHeaderDelegate oldDelegate) {
-    return title != oldDelegate.title;
+    // Compare the background too: on a light/dark theme switch the title is
+    // unchanged, so without this the pinned header keeps painting the stale
+    // (e.g. light) background and shows a wrong-colour band over the drawer.
+    return title != oldDelegate.title ||
+        theme.scaffoldBackgroundColor !=
+            oldDelegate.theme.scaffoldBackgroundColor;
   }
 }

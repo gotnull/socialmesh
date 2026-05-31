@@ -125,7 +125,7 @@ class MapEntityListItem extends StatelessWidget {
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                               color: isSelected
-                                  ? Colors.white
+                                  ? context.accentColor
                                   : (isActive
                                         ? context.textPrimary
                                         : context.textSecondary),
