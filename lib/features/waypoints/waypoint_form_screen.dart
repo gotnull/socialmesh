@@ -13,6 +13,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/bottom_action_bar.dart';
 import '../../core/widgets/datetime_picker_sheet.dart';
+import '../../core/widgets/emoji_glyph.dart';
 import '../../core/widgets/emoji_picker_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/primary_gradient_button.dart';
@@ -303,10 +304,7 @@ class _WaypointFormScreenState extends ConsumerState<WaypointFormScreen>
             shape: BoxShape.circle,
           ),
           child: hasIcon
-              ? Text(
-                  String.fromCharCodes([_icon]),
-                  style: const TextStyle(fontSize: 20),
-                )
+              ? EmojiGlyph(codePoint: _icon, size: 20)
               : Icon(Icons.place, color: AccentColors.orange, size: 20),
         ),
         title: Text(

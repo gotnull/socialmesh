@@ -21,6 +21,7 @@ import '../../core/safe_lat_lng.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
+import '../../core/widgets/emoji_glyph.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../core/widgets/map_controls.dart';
@@ -3880,7 +3881,6 @@ class _MeshWaypointMarker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final glyph = waypoint.iconEmoji;
     return Container(
       width: 34,
       height: 34,
@@ -3893,24 +3893,8 @@ class _MeshWaypointMarker extends StatelessWidget {
           BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 4),
         ],
       ),
-      child: glyph.isNotEmpty
-          ? FittedBox(
-              fit: BoxFit.scaleDown,
-              // Strip the emoji's ascent/descent leading so the glyph box is
-              // tight to the glyph; FittedBox then centres that tight box in
-              // the circle. height:1.0 + even leading alone leaves the
-              // below-baseline descent, which rode the glyph low and left.
-              child: Text(
-                glyph,
-                textAlign: TextAlign.center,
-                textHeightBehavior: const TextHeightBehavior(
-                  applyHeightToFirstAscent: false,
-                  applyHeightToLastDescent: false,
-                  leadingDistribution: TextLeadingDistribution.even,
-                ),
-                style: const TextStyle(fontSize: 18, height: 1.0),
-              ),
-            )
+      child: waypoint.icon != 0
+          ? EmojiGlyph(codePoint: waypoint.icon, size: 18)
           : Icon(Icons.place, size: 18, color: SemanticColors.onMarker),
     );
   }
