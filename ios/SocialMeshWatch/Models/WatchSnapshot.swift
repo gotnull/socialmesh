@@ -47,6 +47,9 @@ struct WatchInboxMessage: Decodable, Equatable, Identifiable {
   // and outgoing messages leave it nil). Synthesized Decodable treats the
   // absent key as nil, so v1 snapshots still decode.
   let packetId: Int?
+  // v2: sender short-name + ARGB avatar colour for the inbox avatar disc.
+  let senderShortName: String?
+  let avatarColor: Int?
 }
 
 struct WatchInbox: Decodable, Equatable {

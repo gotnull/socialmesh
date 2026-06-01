@@ -15,6 +15,8 @@ class WatchCompanionInboxMessage {
     required this.unread,
     this.channelIndex,
     this.packetId,
+    this.senderShortName,
+    this.avatarColor,
   });
 
   final String id;
@@ -29,6 +31,14 @@ class WatchCompanionInboxMessage {
   /// keys its reply affordance off this being null.
   final int? packetId;
 
+  /// Sender's short-name (≤4 chars) for the inbox avatar. Null falls back to
+  /// initials derived from [sender].
+  final String? senderShortName;
+
+  /// Sender's avatar colour as a 32-bit ARGB int, for the inbox avatar disc.
+  /// Null falls back to a colour derived from the sender on the watch.
+  final int? avatarColor;
+
   Map<String, dynamic> toJson() => <String, dynamic>{
     'id': id,
     'sender': sender,
@@ -37,6 +47,8 @@ class WatchCompanionInboxMessage {
     'unread': unread,
     'channelIndex': channelIndex,
     'packetId': packetId,
+    'senderShortName': senderShortName,
+    'avatarColor': avatarColor,
   };
 
   factory WatchCompanionInboxMessage.fromJson(Map<String, dynamic> json) {
@@ -48,6 +60,8 @@ class WatchCompanionInboxMessage {
       unread: json['unread'] as bool,
       channelIndex: json['channelIndex'] as int?,
       packetId: json['packetId'] as int?,
+      senderShortName: json['senderShortName'] as String?,
+      avatarColor: json['avatarColor'] as int?,
     );
   }
 
@@ -61,7 +75,9 @@ class WatchCompanionInboxMessage {
           other.timestampMs == timestampMs &&
           other.unread == unread &&
           other.channelIndex == channelIndex &&
-          other.packetId == packetId;
+          other.packetId == packetId &&
+          other.senderShortName == senderShortName &&
+          other.avatarColor == avatarColor;
 
   @override
   int get hashCode => Object.hash(
@@ -72,6 +88,8 @@ class WatchCompanionInboxMessage {
     unread,
     channelIndex,
     packetId,
+    senderShortName,
+    avatarColor,
   );
 
   @override

@@ -80,6 +80,10 @@ final watchInboxFacadeProvider = Provider<WatchCompanionInboxPreview>((ref) {
               timestampMs: c.lastMessageTime?.millisecondsSinceEpoch ?? 0,
               unread: c.unreadCount > 0,
               channelIndex: c.isChannel ? c.channelIndex : null,
+              // MeshCore has no short-name/colour metadata; the watch derives
+              // initials + a colour from the conversation name.
+              senderShortName: null,
+              avatarColor: null,
             ),
           )
           .toList(growable: false);
@@ -92,12 +96,15 @@ final watchInboxFacadeProvider = Provider<WatchCompanionInboxPreview>((ref) {
 });
 
 WatchCompanionInboxMessage _meshtasticMessageToPreview(Message m) {
+  // Last-4-hex node short-code, matching the map markers / node lists.
+  final shortCode = m.from
+      .toRadixString(16)
+      .padLeft(8, '0')
+      .substring(4)
+      .toUpperCase();
   return WatchCompanionInboxMessage(
     id: m.id,
-    sender:
-        m.senderLongName ??
-        m.senderShortName ??
-        '0x${m.from.toRadixString(16).toUpperCase().padLeft(8, '0')}',
+    sender: m.senderLongName ?? m.senderShortName ?? shortCode,
     snippet: m.text,
     timestampMs: m.timestamp.millisecondsSinceEpoch,
     unread: m.received && !m.read,
@@ -106,5 +113,9 @@ WatchCompanionInboxMessage _meshtasticMessageToPreview(Message m) {
     // affordance only when packetId is non-null. Outgoing messages and all
     // MeshCore rows leave this null.
     packetId: m.received ? m.packetId : null,
+    // Prefer the self-reported short-name; fall back to the node short-code
+    // so the avatar never shows a meaningless "0X".
+    senderShortName: m.senderShortName ?? shortCode,
+    avatarColor: m.senderAvatarColor,
   );
 }
