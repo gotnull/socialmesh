@@ -65,6 +65,38 @@ final class WatchConnectivityManager: NSObject, ObservableObject {
     self.isReachable = session.isReachable
     log.log(level: .info,
             "activate() called; state=\(self.activationState.rawValue, privacy: .public) reachable=\(self.isReachable, privacy: .public)")
+    // If the session is already activated (e.g. re-activate on foreground),
+    // pull whatever the phone last set so the UI never sits on
+    // "Waiting for phone" while a cached snapshot exists.
+    if session.activationState == .activated {
+      applyReceivedContext(session)
+      requestSnapshotRefresh()
+    }
+  }
+
+  /// Decode and apply the phone's last-known applicationContext. The
+  /// `didReceiveApplicationContext` delegate only fires for *new* contexts, so
+  /// on cold start the most recent snapshot must be read explicitly from
+  /// `receivedApplicationContext`.
+  private func applyReceivedContext(_ session: WCSession) {
+    let ctx = session.receivedApplicationContext
+    guard !ctx.isEmpty else { return }
+    do {
+      let snap = try WatchSnapshot.decode(from: ctx)
+      self.store?.update(snap)
+      log.log(level: .info, "applied cached receivedApplicationContext")
+    } catch {
+      log.log(level: .error,
+              "cached context decode failed: \(error.localizedDescription, privacy: .public)")
+    }
+  }
+
+  /// Ask the phone to push a fresh snapshot now. Fire-and-forget; the phone
+  /// re-pushes via updateApplicationContext and the delegate applies it. No-op
+  /// when the session is not reachable (the cached-context read covers that).
+  func requestSnapshotRefresh() {
+    guard WCSession.isSupported(), WCSession.default.isReachable else { return }
+    Task { _ = await self.send(WatchIntent.refreshSnapshot()) }
   }
 
   /// Send an intent to the phone and await the reply. Returns a
@@ -168,6 +200,11 @@ extension WatchConnectivityManager: WCSessionDelegate {
       }
       self.activationState = activationState
       self.isReachable = session.isReachable
+      if activationState == .activated {
+        // Cold-start: grab the phone's last snapshot, then pull a fresh one.
+        self.applyReceivedContext(session)
+        self.requestSnapshotRefresh()
+      }
     }
   }
 
@@ -176,6 +213,12 @@ extension WatchConnectivityManager: WCSessionDelegate {
       self.log.log(level: .info,
                    "WCSession reachability: \(session.isReachable, privacy: .public)")
       self.isReachable = session.isReachable
+      // Reachability flipping true is the moment the phone can hear a pull —
+      // grab the cached context and ask for a fresh push.
+      if session.isReachable {
+        self.applyReceivedContext(session)
+        self.requestSnapshotRefresh()
+      }
     }
   }
 

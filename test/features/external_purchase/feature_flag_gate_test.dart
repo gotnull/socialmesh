@@ -6,10 +6,11 @@
 //   - BMC_PURCHASE_ENABLED      (secondary external path)
 //   - AppFeatureFlags.isExternalPurchaseEnabled (computed union of the two)
 //
-// Off-by-default semantics: every entry point - UI link, redeem code
-// link, deep link, entitlement merge - must be invisible/inert when
-// both flags are unset or `false`. Re-enabling later is a single env
-// flip per provider.
+// Stripe is the primary external path and ships ON by default (opt-out):
+// only the literal `false` disables it, so a missing or unparseable
+// value stays enabled. BMC stays opt-in (off until `true`/`1`). Killing
+// Stripe in the field is a single env flip (or remote-flag override) to
+// `false`.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -68,9 +69,9 @@ void main() {
   // -------------------------------------------------------------------------
 
   group('AppFeatureFlags.isStripePurchasesEnabled', () {
-    test('default (env unset) is OFF - opt-in only', () {
+    test('default (env unset) is ON - opt-out, no .env entry needed', () {
       _clearFlags();
-      expect(AppFeatureFlags.isStripePurchasesEnabled, isFalse);
+      expect(AppFeatureFlags.isStripePurchasesEnabled, isTrue);
     });
 
     test('reads "true" as ON', () {
@@ -93,13 +94,20 @@ void main() {
       expect(AppFeatureFlags.isStripePurchasesEnabled, isFalse);
     });
 
-    test('reads anything else as OFF (fail-safe default)', () {
+    test('reads "FALSE" / "  false  " as OFF (case-insensitive, trimmed)', () {
+      _setStripe('FALSE');
+      expect(AppFeatureFlags.isStripePurchasesEnabled, isFalse);
+      _setStripe('  false  ');
+      expect(AppFeatureFlags.isStripePurchasesEnabled, isFalse);
+    });
+
+    test('reads anything else as ON (opt-out: only "false" disables)', () {
       _setStripe('yes');
-      expect(AppFeatureFlags.isStripePurchasesEnabled, isFalse);
+      expect(AppFeatureFlags.isStripePurchasesEnabled, isTrue);
       _setStripe('on');
-      expect(AppFeatureFlags.isStripePurchasesEnabled, isFalse);
-      _setStripe('enabled');
-      expect(AppFeatureFlags.isStripePurchasesEnabled, isFalse);
+      expect(AppFeatureFlags.isStripePurchasesEnabled, isTrue);
+      _setStripe('garbage');
+      expect(AppFeatureFlags.isStripePurchasesEnabled, isTrue);
     });
   });
 
@@ -143,12 +151,15 @@ void main() {
   // -------------------------------------------------------------------------
 
   group('AppFeatureFlags.isExternalPurchaseEnabled (computed)', () {
-    test('OFF when both providers are off (or unset)', () {
-      _clearFlags();
-      expect(AppFeatureFlags.isExternalPurchaseEnabled, isFalse);
+    test('OFF only when both providers are explicitly off', () {
       _setStripe('false');
       _setBmc('false');
       expect(AppFeatureFlags.isExternalPurchaseEnabled, isFalse);
+    });
+
+    test('ON when unset (Stripe defaults on, opt-out)', () {
+      _clearFlags();
+      expect(AppFeatureFlags.isExternalPurchaseEnabled, isTrue);
     });
 
     test('ON when only Stripe is on', () {
@@ -179,7 +190,7 @@ void main() {
   // -------------------------------------------------------------------------
 
   group('AlternativePaymentLink (BMC-only UI gate)', () {
-    testWidgets('renders nothing when BMC flag is OFF (and Stripe OFF)', (
+    testWidgets('renders nothing when BMC flag is OFF (link is BMC-gated)', (
       tester,
     ) async {
       _clearFlags();

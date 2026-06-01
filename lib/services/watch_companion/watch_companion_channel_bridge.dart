@@ -273,6 +273,18 @@ class WatchCompanionChannelBridge {
       );
     }
 
+    // A refreshSnapshot intent is the Watch *pulling* fresh state on
+    // activation/foreground. Re-push the latest cached snapshot immediately so
+    // the Watch exits "Waiting for phone"/stale even when no upstream provider
+    // has changed since the last push. The dispatch below still acks it.
+    if (intent.type == WatchCompanionIntentType.refreshSnapshot) {
+      final cached = _readService().latestSnapshot;
+      if (cached != null) {
+        AppLogging.watchCompanion('bridge: refreshSnapshot pull -> re-push');
+        unawaited(_pushSnapshot(cached));
+      }
+    }
+
     try {
       final service = _readService();
       final result = await service.handleIntent(intent);

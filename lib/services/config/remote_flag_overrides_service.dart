@@ -153,6 +153,15 @@ class RemoteFlagOverridesService {
     'PLATFORM_LOGGING_ENABLED',
   };
 
+  /// Subset of [allowedKeys] whose code-level default is `true` when no
+  /// remote override and no `.env` value is present (opt-out flags).
+  /// The matching getter in AppFeatureFlags must agree — keep in sync.
+  /// Without this set the admin sheet would render an unset opt-out flag
+  /// as OFF and its kill-switch would read backwards.
+  static const Set<String> defaultTrueKeys = <String>{
+    'STRIPE_PURCHASES_ENABLED',
+  };
+
   static const String _firestoreCollection = 'app_config';
   static const String _firestoreDocument = 'remote_flags';
   static const String _prefsCacheKey = 'remote_flag_overrides_cache_v1';
@@ -187,6 +196,18 @@ class RemoteFlagOverridesService {
     } catch (_) {
       return '';
     }
+  }
+
+  /// The resolved boolean the app actually sees for [key]: the remote
+  /// override if set, else the `.env` value, else the code-level default
+  /// (`true` for [defaultTrueKeys], `false` otherwise). Mirrors the
+  /// AppFeatureFlags / AppLogging getter semantics so the admin sheet's
+  /// switch reflects reality for both opt-in and opt-out flags.
+  bool effectiveBoolFor(String key) {
+    final raw = effectiveValueFor(key).trim().toLowerCase();
+    if (raw.isEmpty) return defaultTrueKeys.contains(key);
+    if (defaultTrueKeys.contains(key)) return raw != 'false';
+    return raw == 'true' || raw == '1';
   }
 
   /// One-time initialisation. Idempotent. Must not throw or block.

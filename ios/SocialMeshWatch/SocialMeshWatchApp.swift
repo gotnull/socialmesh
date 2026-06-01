@@ -21,6 +21,7 @@ import SwiftUI
 struct SocialMeshWatchApp: App {
   @StateObject private var store = WatchSnapshotStore()
   @StateObject private var connectivity = WatchConnectivityManager()
+  @Environment(\.scenePhase) private var scenePhase
 
   var body: some Scene {
     WindowGroup {
@@ -30,6 +31,14 @@ struct SocialMeshWatchApp: App {
         .onAppear {
           connectivity.attachStore(store)
           connectivity.activate()
+        }
+        .onChange(of: scenePhase) { _, phase in
+          // Returning to the foreground re-activates and pulls a fresh
+          // snapshot so the watch never shows stale/"Waiting for phone"
+          // state after being backgrounded.
+          if phase == .active {
+            connectivity.activate()
+          }
         }
     }
   }

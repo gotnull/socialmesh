@@ -243,9 +243,7 @@ class _FlagRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final originalValue = service.originalEnvValueFor(envKey);
     final override = service.getRemoteOverride(envKey);
-    final effective = service.effectiveValueFor(envKey);
-    final effectiveBool =
-        effective.toLowerCase() == 'true' || effective.toLowerCase() == '1';
+    final effectiveBool = service.effectiveBoolFor(envKey);
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -276,7 +274,7 @@ class _FlagRow extends StatelessWidget {
                     ),
                     const SizedBox(height: AppTheme.spacing4),
                     Text(
-                      _subtitle(originalValue, override, effective),
+                      _subtitle(originalValue, override, effectiveBool),
                       style: TextStyle(
                         fontSize: 11,
                         color: context.textTertiary,
@@ -319,7 +317,7 @@ class _FlagRow extends StatelessWidget {
     );
   }
 
-  String _subtitle(String? original, bool? override, String effective) {
+  String _subtitle(String? original, bool? override, bool effective) {
     final originalLabel = original == null || original.isEmpty
         ? 'unset' // lint-allow: hardcoded-string
         : original;

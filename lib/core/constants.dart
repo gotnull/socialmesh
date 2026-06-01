@@ -633,17 +633,20 @@ class AppFeatureFlags {
 
   // Whether the Stripe Checkout external purchase path is enabled.
   //
-  // Set `STRIPE_PURCHASES_ENABLED=true` in `.env` to enable. Default:
-  // false. Stripe is the primary external (off-store) purchase path
-  // for unlocking packs when App Store / Play Store IAP is unavailable
-  // or unreliable. Gates the Stripe handoff sheet + the createCheckout
-  // call when `provider=stripe`.
+  // Stripe is the primary external (off-store) purchase path for
+  // unlocking packs when App Store / Play Store IAP is unavailable or
+  // unreliable, so it is ON by default and needs no `.env` entry. Set
+  // `STRIPE_PURCHASES_ENABLED=false` in `.env` (or via the remote-flag
+  // overlay) to kill the Stripe handoff sheet + the createCheckout call
+  // when `provider=stripe`. Only the literal value `false`
+  // (case-insensitive, trimmed) disables; a missing or unparseable
+  // value stays enabled (opt-out, not opt-in).
   static bool get isStripePurchasesEnabled {
     try {
-      final raw = dotenv.env['STRIPE_PURCHASES_ENABLED']?.toLowerCase().trim();
-      return raw == 'true' || raw == '1';
+      final raw = dotenv.env['STRIPE_PURCHASES_ENABLED']?.trim().toLowerCase();
+      return raw != 'false';
     } catch (_) {
-      return false;
+      return true;
     }
   }
 
