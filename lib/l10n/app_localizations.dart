@@ -23770,6 +23770,18 @@ abstract class AppLocalizations {
   /// **'Configure this node remotely'**
   String get nodeDetailMenuAdminSubtitle;
 
+  /// Overflow menu item to configure your own connected device.
+  ///
+  /// In en, this message translates to:
+  /// **'Device Settings'**
+  String get nodeDetailMenuDeviceSettings;
+
+  /// Subtitle for the device settings menu item on your own node.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure this device'**
+  String get nodeDetailMenuDeviceSettingsSubtitle;
+
   /// Overflow menu item for exchanging positions.
   ///
   /// In en, this message translates to:

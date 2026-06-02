@@ -6714,6 +6714,8 @@
     "nodeDetailLastHeardTimestamp": "Zuletzt gehört: {timestamp}",
     "nodeDetailMenuAdminSettings": "Admin-Einstellungen",
     "nodeDetailMenuAdminSubtitle": "Diesen Knoten aus der Ferne konfigurieren",
+    "nodeDetailMenuDeviceSettings": "Geräteeinstellungen",
+    "nodeDetailMenuDeviceSettingsSubtitle": "Dieses Gerät konfigurieren",
     "nodeDetailMenuExchangePositions": "Positionen austauschen",
     "nodeDetailMenuQrCode": "QR-Code",
     "nodeDetailMenuRemoveNode": "Knoten entfernen",

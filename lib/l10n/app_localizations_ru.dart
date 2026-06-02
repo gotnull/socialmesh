@@ -13777,6 +13777,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get nodeDetailMenuAdminSubtitle => 'Удалённая настройка этого узла';
 
   @override
+  String get nodeDetailMenuDeviceSettings => 'Настройки устройства';
+
+  @override
+  String get nodeDetailMenuDeviceSettingsSubtitle => 'Настроить это устройство';
+
+  @override
   String get nodeDetailMenuExchangePositions => 'Обменяться позициями';
 
   @override

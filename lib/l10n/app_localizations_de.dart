@@ -13810,6 +13810,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Diesen Knoten aus der Ferne konfigurieren';
 
   @override
+  String get nodeDetailMenuDeviceSettings => 'Geräteeinstellungen';
+
+  @override
+  String get nodeDetailMenuDeviceSettingsSubtitle =>
+      'Dieses Gerät konfigurieren';
+
+  @override
   String get nodeDetailMenuExchangePositions => 'Positionen austauschen';
 
   @override

@@ -6714,6 +6714,8 @@
     "nodeDetailLastHeardTimestamp": "Escuchado por última vez {timestamp}",
     "nodeDetailMenuAdminSettings": "Ajustes de administrador",
     "nodeDetailMenuAdminSubtitle": "Configurar este nodo de forma remota",
+    "nodeDetailMenuDeviceSettings": "Ajustes del dispositivo",
+    "nodeDetailMenuDeviceSettingsSubtitle": "Configurar este dispositivo",
     "nodeDetailMenuExchangePositions": "Intercambiar posiciones",
     "nodeDetailMenuQrCode": "Código QR",
     "nodeDetailMenuRemoveNode": "Eliminar nodo",

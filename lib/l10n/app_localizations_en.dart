@@ -13620,6 +13620,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nodeDetailMenuAdminSubtitle => 'Configure this node remotely';
 
   @override
+  String get nodeDetailMenuDeviceSettings => 'Device Settings';
+
+  @override
+  String get nodeDetailMenuDeviceSettingsSubtitle => 'Configure this device';
+
+  @override
   String get nodeDetailMenuExchangePositions => 'Exchange Positions';
 
   @override

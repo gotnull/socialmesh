@@ -6714,6 +6714,8 @@
     "nodeDetailLastHeardTimestamp": "Востаннє чули {timestamp}",
     "nodeDetailMenuAdminSettings": "Налаштування адміністратора",
     "nodeDetailMenuAdminSubtitle": "Налаштуйте цей вузол дистанційно",
+    "nodeDetailMenuDeviceSettings": "Налаштування пристрою",
+    "nodeDetailMenuDeviceSettingsSubtitle": "Налаштувати цей пристрій",
     "nodeDetailMenuExchangePositions": "Обмінятися позиціями",
     "nodeDetailMenuQrCode": "QR-код",
     "nodeDetailMenuRemoveNode": "Видалити вузол",

@@ -6714,6 +6714,8 @@
     "nodeDetailLastHeardTimestamp": "Dernière réception {timestamp}",
     "nodeDetailMenuAdminSettings": "Paramètres administrateur",
     "nodeDetailMenuAdminSubtitle": "Configurer ce noeud à distance",
+    "nodeDetailMenuDeviceSettings": "Paramètres de l'appareil",
+    "nodeDetailMenuDeviceSettingsSubtitle": "Configurer cet appareil",
     "nodeDetailMenuExchangePositions": "Échanger les positions",
     "nodeDetailMenuQrCode": "Code QR",
     "nodeDetailMenuRemoveNode": "Supprimer le noeud",

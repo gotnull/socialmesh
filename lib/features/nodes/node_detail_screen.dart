@@ -481,6 +481,15 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
     );
   }
 
+  void _configureLocally(BuildContext context) {
+    ref.read(remoteAdminProvider.notifier).clearTarget();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const DeviceConfigScreen()),
+    );
+  }
+
   Future<void> _exchangePositions(BuildContext context, MeshNode node) async {
     final protocol = ref.read(protocolServiceProvider);
 
@@ -1708,6 +1717,20 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                 contentPadding: EdgeInsets.zero,
               ),
             ),
+            if (isMyNode)
+              PopupMenuItem(
+                value: 'device_settings',
+                child: ListTile(
+                  leading: Icon(Icons.tune, color: context.accentColor),
+                  title: Text(context.l10n.nodeDetailMenuDeviceSettings),
+                  subtitle: Text(
+                    context.l10n.nodeDetailMenuDeviceSettingsSubtitle,
+                    style: TextStyle(fontSize: 11, color: context.textTertiary),
+                  ),
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
             if (!isMyNode) ...[
               PopupMenuItem(
                 value: 'traceroute_history',
@@ -1806,6 +1829,8 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                     builder: (_) => NodeDexDetailScreen(nodeNum: node.nodeNum),
                   ),
                 );
+              case 'device_settings':
+                _configureLocally(context);
               case 'traceroute_history':
                 _showTracerouteHistory(context, node);
               case 'request_info':

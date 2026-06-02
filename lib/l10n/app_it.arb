@@ -40232,6 +40232,8 @@
     "nodeDetailLastHeardTimestamp": "Ultimo contatto {timestamp}",
     "nodeDetailMenuAdminSettings": "Impostazioni Admin",
     "nodeDetailMenuAdminSubtitle": "Configura questo nodo da remoto",
+    "nodeDetailMenuDeviceSettings": "Impostazioni dispositivo",
+    "nodeDetailMenuDeviceSettingsSubtitle": "Configura questo dispositivo",
     "nodeDetailMenuExchangePositions": "Scambia Posizioni",
     "nodeDetailMenuQrCode": "Codice QR",
     "nodeDetailMenuRemoveNode": "Rimuovi Nodo",

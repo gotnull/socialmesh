@@ -18390,6 +18390,14 @@
     "@nodeDetailMenuAdminSubtitle": {
         "description": "Subtitle for the admin settings menu item."
     },
+    "nodeDetailMenuDeviceSettings": "Device Settings",
+    "@nodeDetailMenuDeviceSettings": {
+        "description": "Overflow menu item to configure your own connected device."
+    },
+    "nodeDetailMenuDeviceSettingsSubtitle": "Configure this device",
+    "@nodeDetailMenuDeviceSettingsSubtitle": {
+        "description": "Subtitle for the device settings menu item on your own node."
+    },
     "nodeDetailMenuExchangePositions": "Exchange Positions",
     "@nodeDetailMenuExchangePositions": {
         "description": "Overflow menu item for exchanging positions."

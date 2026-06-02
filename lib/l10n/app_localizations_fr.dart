@@ -13876,6 +13876,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get nodeDetailMenuAdminSubtitle => 'Configurer ce noeud à distance';
 
   @override
+  String get nodeDetailMenuDeviceSettings => 'Paramètres de l\'appareil';
+
+  @override
+  String get nodeDetailMenuDeviceSettingsSubtitle => 'Configurer cet appareil';
+
+  @override
   String get nodeDetailMenuExchangePositions => 'Échanger les positions';
 
   @override

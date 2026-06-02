@@ -13793,6 +13793,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String get nodeDetailMenuAdminSubtitle => 'Налаштуйте цей вузол дистанційно';
 
   @override
+  String get nodeDetailMenuDeviceSettings => 'Налаштування пристрою';
+
+  @override
+  String get nodeDetailMenuDeviceSettingsSubtitle => 'Налаштувати цей пристрій';
+
+  @override
   String get nodeDetailMenuExchangePositions => 'Обмінятися позиціями';
 
   @override

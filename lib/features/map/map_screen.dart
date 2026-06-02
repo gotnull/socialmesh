@@ -222,6 +222,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
   // Track if initial node centering has been done
   bool _initialCenteringDone = false;
 
+  // One-shot: on a plain Map-tab open (no deep-link / traceroute /
+  // location target) the camera is placed imperatively after first
+  // render. MapOptions.initialCenter only applies on the first build,
+  // and node positions arrive async — so the computed `center` would
+  // otherwise be stranded at the LatLng(0,0) fallback (blank ocean).
+  bool _didInitialAutoFit = false;
+
   // One-shot flag: consume TAK provider values that were set before
   // this widget built (ref.listen only fires on *changes*, not
   // the current value at subscription time).
@@ -934,6 +941,49 @@ class _MapScreenState extends ConsumerState<MapScreen>
           zoom = 12.0;
         }
       }
+    }
+
+    // One-shot default camera placement for a plain Map-tab open. The
+    // initialCenter above only applies on the first FlutterMap build and
+    // node positions resolve async, so without this the camera stays at
+    // the LatLng(0,0) fallback (blank ocean) even after nodes arrive. We
+    // place it imperatively after first render: centre on my node when it
+    // has a GPS fix, otherwise frame every node (the fit-all overview).
+    // Deep-link / traceroute / location targets own the camera via
+    // _initialCenteringDone above and are excluded here.
+    if (!_didInitialAutoFit &&
+        !_initialCenteringDone &&
+        widget.tracerouteLog == null &&
+        !widget.locationOnlyMode &&
+        widget.initialNodeNum == null &&
+        widget.initialLatitude == null &&
+        allNodesWithPosition.isNotEmpty) {
+      _didInitialAutoFit = true;
+      final fitNodes = nodesWithPosition;
+      final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
+      final myNodeWithPos = nodesWithPosition
+          .where((n) => n.node.nodeNum == myNodeNum)
+          .firstOrNull;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (myNodeWithPos != null) {
+          final target = safeLatLng(
+            myNodeWithPos.latitude,
+            myNodeWithPos.longitude,
+          );
+          if (target != null) {
+            _animatedMove(target, 14.0);
+            return;
+          }
+        } else if (myNode?.hasPosition == true) {
+          final target = safeLatLng(myNode!.latitude!, myNode.longitude!);
+          if (target != null) {
+            _animatedMove(target, 14.0);
+            return;
+          }
+        }
+        _fitNodesCamera(fitNodes);
+      });
     }
 
     // Check if this screen was pushed (can pop) or is a root drawer screen.
@@ -3046,6 +3096,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   void _fitAllNodes(List<_NodeWithPosition> nodes) {
+    _fitNodesCamera(nodes);
+    HapticFeedback.lightImpact();
+  }
+
+  // Frames every node in [nodes] without firing haptics — shared by the
+  // fit-all button (via [_fitAllNodes]) and the one-shot auto-fit on a
+  // plain Map-tab open, where a haptic on load would be wrong.
+  void _fitNodesCamera(List<_NodeWithPosition> nodes) {
     // Single-pass min/max with strict WGS-84 range filter. The mesh-observer
     // / NodeDex feed contains a small fraction of nodes with garbage
     // coordinates (e.g. lat=-211, lon=194) that pass `.isFinite` but fail
@@ -3083,7 +3141,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
     final camera = cameraFit.fit(_mapController.camera);
     _animatedMove(camera.center, camera.zoom.clamp(4.0, 16.0));
-    HapticFeedback.lightImpact();
   }
 
   /// Wraps the mesh-map node markers in a [MarkerClusterLayerWidget]

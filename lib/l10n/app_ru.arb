@@ -7091,6 +7091,8 @@
     "nodeDetailLastHeardTimestamp": "Последний сигнал: {timestamp}",
     "nodeDetailMenuAdminSettings": "Настройки администратора",
     "nodeDetailMenuAdminSubtitle": "Удалённая настройка этого узла",
+    "nodeDetailMenuDeviceSettings": "Настройки устройства",
+    "nodeDetailMenuDeviceSettingsSubtitle": "Настроить это устройство",
     "nodeDetailMenuExchangePositions": "Обменяться позициями",
     "nodeDetailMenuQrCode": "QR-код",
     "nodeDetailMenuRemoveNode": "Удалить узел",
