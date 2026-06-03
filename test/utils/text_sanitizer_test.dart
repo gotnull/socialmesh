@@ -8,6 +8,27 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/utils/text_sanitizer.dart';
 
 void main() {
+  group('isValidUnicodeScalar', () {
+    test('accepts ordinary scalars including astral emoji', () {
+      expect(isValidUnicodeScalar(0x41), isTrue); // 'A'
+      expect(isValidUnicodeScalar(0x1F4CD), isTrue); // 📍 (astral)
+      expect(isValidUnicodeScalar(0x10FFFF), isTrue); // top of range
+      expect(isValidUnicodeScalar(0), isTrue);
+    });
+
+    test('rejects surrogate halves', () {
+      expect(isValidUnicodeScalar(0xD800), isFalse);
+      expect(isValidUnicodeScalar(0xDBFF), isFalse);
+      expect(isValidUnicodeScalar(0xDC00), isFalse);
+      expect(isValidUnicodeScalar(0xDFFF), isFalse);
+    });
+
+    test('rejects out-of-range values', () {
+      expect(isValidUnicodeScalar(-1), isFalse);
+      expect(isValidUnicodeScalar(0x110000), isFalse);
+    });
+  });
+
   group('sanitizeExternalText (legacy sanitizeUtf16 tests)', () {
     test('returns input for empty string', () {
       expect(sanitizeExternalText(''), '');

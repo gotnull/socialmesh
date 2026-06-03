@@ -72,6 +72,7 @@ String truncateUtf8(String s, int maxBytes) {
   final buf = StringBuffer();
   var bytes = 0;
   for (final rune in s.runes) {
+    // lint-allow: no-raw-from-char-codes — String.runes yields valid scalars (pairs already decoded)
     final ch = String.fromCharCodes([rune]);
     final w = utf8ByteLength(ch);
     if (bytes + w > maxBytes) break;

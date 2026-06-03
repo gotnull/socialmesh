@@ -2,6 +2,8 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/widgets.dart';
 
+import '../../utils/text_sanitizer.dart';
+
 // A single emoji codepoint centred inside a circular badge (waypoint marker,
 // icon tile). The line box is collapsed tight to the glyph and a small
 // correction offsets the emoji baseline + side bearing so the ink sits
@@ -21,6 +23,13 @@ class EmojiGlyph extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Defensive last line of defence: an untrusted code point (e.g. a mesh
+    // waypoint icon) that is a surrogate half or out of the Unicode range
+    // would form malformed UTF-16 and crash the native paragraph builder
+    // fatally during layout. Render nothing rather than crash; callers gate
+    // on a valid scalar to show their own fallback (a pin, etc.).
+    if (!isValidUnicodeScalar(codePoint)) return const SizedBox.shrink();
+
     return Transform.translate(
       offset: Offset(
         -size * _horizontalCorrection,

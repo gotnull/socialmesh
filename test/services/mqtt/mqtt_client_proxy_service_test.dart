@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/services/mqtt/mqtt_client_proxy_service.dart';
 
@@ -530,6 +532,41 @@ void main() {
         expect(service.failureReason, isNot(MqttProxyFailureReason.none));
         expect(service.diagnostics.lastError, isNotNull);
         expect(service.diagnostics.lastFailureAt, isNotNull);
+      },
+    );
+
+    test(
+      'malformed CONNACK from a non-MQTT endpoint fails cleanly, no crash',
+      () async {
+        // A non-MQTT endpoint (wrong port / an HTTP service) replies with bytes
+        // that mqtt_client parses as a CONNACK with an out-of-range return code,
+        // throwing a RangeError on the raw socket read callback — off the
+        // connect() future. Without the guarded zone this escapes as an
+        // unhandled async error (the production Crashlytics non-fatal); the test
+        // would surface it as an unhandled exception. We assert the connect maps
+        // to a structured failure instead.
+        final server = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
+        server.listen((socket) {
+          socket.listen((_) {
+            // After the client's CONNECT arrives, reply with a CONNACK whose
+            // return code (0x30 = 48) is outside the valid 0..6 range.
+            socket.add([0x20, 0x02, 0x00, 0x30]);
+          });
+        });
+        addTearDown(() => server.close());
+
+        await service.connect(
+          address: '127.0.0.1:${server.port}',
+          tlsEnabled: false,
+          username: '',
+          password: '',
+          topicPrefix: 'msh/2/e',
+          shouldSubscribe: false,
+        );
+
+        expect(service.phase, MqttProxyConnectionPhase.failed);
+        expect(service.failureReason, MqttProxyFailureReason.protocolRejected);
+        expect(service.diagnostics.lastError, isNotNull);
       },
     );
 

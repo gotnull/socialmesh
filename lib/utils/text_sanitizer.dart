@@ -22,6 +22,20 @@ bool _isUnsafeControl(int codeUnit) {
   return false;
 }
 
+/// Whether [codePoint] is a Unicode scalar value safe to render as text.
+///
+/// Returns false for UTF-16 surrogate halves (0xD800-0xDFFF) and for values
+/// outside the Unicode range (negative or above U+10FFFF). Passing such a
+/// value to [String.fromCharCodes] yields a malformed UTF-16 string, and
+/// Flutter's native paragraph builder then throws a fatal "string is not
+/// well-formed UTF-16" during layout. Untrusted single-scalar fields (e.g. a
+/// mesh waypoint's `icon`) must be checked with this before being rendered.
+bool isValidUnicodeScalar(int codePoint) {
+  if (codePoint < 0 || codePoint > 0x10FFFF) return false;
+  if (_isHighSurrogate(codePoint) || _isLowSurrogate(codePoint)) return false;
+  return true;
+}
+
 /// Full sanitization for external/untrusted text before UI rendering.
 ///
 /// Repairs unpaired UTF-16 surrogates and removes null bytes and

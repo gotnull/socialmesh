@@ -89,6 +89,20 @@ void main() {
       expect(_wp(icon: 0).iconEmoji, '');
       expect(_wp(icon: 0x1F4CD).iconEmoji, '📍');
     });
+
+    test('hasRenderableIcon gates non-zero valid scalars', () {
+      expect(_wp(icon: 0).hasRenderableIcon, isFalse);
+      expect(_wp(icon: 0x1F4CD).hasRenderableIcon, isTrue);
+    });
+
+    test('malformed icon scalars fall back instead of crashing render', () {
+      // A peer fully controls the wire `icon`; a surrogate half or out-of-range
+      // scalar would form malformed UTF-16 and crash the paragraph builder.
+      for (final bad in [0xD800, 0xDBFF, 0xDC00, 0xDFFF, 0x110000, -1]) {
+        expect(_wp(icon: bad).hasRenderableIcon, isFalse, reason: '$bad');
+        expect(_wp(icon: bad).iconEmoji, '', reason: '$bad');
+      }
+    });
   });
 }
 

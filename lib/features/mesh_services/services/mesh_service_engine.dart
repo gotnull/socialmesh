@@ -288,6 +288,7 @@ class MeshServicesHandler implements MrrpServiceHandler {
       if (payload[i] == 0) break;
       chars.add(payload[i]);
     }
+    // lint-allow: no-raw-from-char-codes — payload bytes (0-255), id key for matching not rendered text
     return String.fromCharCodes(chars);
   }
 

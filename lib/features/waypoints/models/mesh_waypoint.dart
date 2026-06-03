@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import '../../../services/protocol/protocol_service.dart'
     show MeshWaypointEvent;
+import '../../../utils/text_sanitizer.dart' show isValidUnicodeScalar;
 
 // A shared Meshtastic waypoint (POI) — the in-app representation of the
 // firmware `Waypoint` proto (PortNum WAYPOINT_APP). Coordinates are stored as
@@ -74,9 +75,16 @@ class MeshWaypoint {
   bool get isExpired =>
       expire > 1 && expire * 1000 <= DateTime.now().millisecondsSinceEpoch;
 
-  // The emoji glyph for [icon], or '' when no icon is set. Uses the
-  // full-codepoint form so scalars above U+FFFF render correctly.
-  String get iconEmoji => icon == 0 ? '' : String.fromCharCodes([icon]);
+  // True when [icon] is set and is a renderable Unicode scalar. A peer fully
+  // controls the wire `icon` field, so a malformed value (surrogate half or
+  // out-of-range scalar) must fall back to the default pin rather than reach
+  // a Text/EmojiGlyph and crash the paragraph builder.
+  bool get hasRenderableIcon => icon != 0 && isValidUnicodeScalar(icon);
+
+  // The emoji glyph for [icon], or '' when no icon is set or the value is not
+  // a renderable scalar. Uses the full-codepoint form so scalars above U+FFFF
+  // render correctly.
+  String get iconEmoji => hasRenderableIcon ? String.fromCharCodes([icon]) : '';
 
   // Build from a decoded protocol event. [myNodeNum] resolves [isMine].
   factory MeshWaypoint.fromEvent(MeshWaypointEvent event, {int? myNodeNum}) {

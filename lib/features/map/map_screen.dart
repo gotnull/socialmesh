@@ -3950,7 +3950,7 @@ class _MeshWaypointMarker extends StatelessWidget {
           BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 4),
         ],
       ),
-      child: waypoint.icon != 0
+      child: waypoint.hasRenderableIcon
           ? EmojiGlyph(codePoint: waypoint.icon, size: 18)
           : Icon(Icons.place, size: 18, color: SemanticColors.onMarker),
     );

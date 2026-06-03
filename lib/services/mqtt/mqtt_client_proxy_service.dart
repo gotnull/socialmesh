@@ -627,81 +627,128 @@ class MqttClientProxyService {
     _client = client;
 
     try {
-      final status = await client.connect();
-      if (status?.state == MqttConnectionState.connected) {
-        AppLogging.mqttProxy('Connected to broker $host:$port');
-        _phase = MqttProxyConnectionPhase.connected;
-        _failureReason = MqttProxyFailureReason.none;
-        _lastConnectArgs = newArgs;
-        _lastConnectedAt = DateTime.now();
-        _reconnectAttempts = 0;
-        _lastError = null;
+      // mqtt_client parses the CONNACK on the raw socket read callback, not on
+      // the connect() future. A non-MQTT endpoint (wrong port, an HTTP service)
+      // makes its CONNACK parser throw a RangeError there, which bypasses the
+      // typed catches below and escapes connect() as an uncaught async error
+      // (surfaced as a Crashlytics non-fatal). Run the connect inside a guarded
+      // zone so read-path parse failures become a structured connect failure
+      // and mid-session parse errors are logged instead of crashing.
+      var bodyDone = false;
+      Object? readPathError;
+      final connectDone = Completer<void>();
 
-        // Subscribe to the topic only if downlink is enabled on at least
-        // one channel.  This matches the official Meshtastic iOS app: when no
-        // channel has downlinkEnabled, the proxy connects (allowing the device
-        // to publish / uplink) but does NOT subscribe (no inbound MQTT
-        // messages are relayed to the device).
-        if (shouldSubscribe) {
-          final subscriptionTopic = '$topicPrefix/#';
-          _subscribedTopic = subscriptionTopic;
-          AppLogging.mqttProxy('Subscribing to $subscriptionTopic');
-          client.subscribe(subscriptionTopic, MqttQos.atLeastOnce);
-        } else {
-          _subscribedTopic = null;
-          AppLogging.mqttProxy(
-            'Connected but NOT subscribing '
-            '(no channel has downlink enabled)',
+      void signalDone() {
+        if (!connectDone.isCompleted) connectDone.complete();
+      }
+
+      runZonedGuarded(
+        () async {
+          try {
+            final status = await client.connect();
+            if (status?.state == MqttConnectionState.connected) {
+              AppLogging.mqttProxy('Connected to broker $host:$port');
+              _phase = MqttProxyConnectionPhase.connected;
+              _failureReason = MqttProxyFailureReason.none;
+              _lastConnectArgs = newArgs;
+              _lastConnectedAt = DateTime.now();
+              _reconnectAttempts = 0;
+              _lastError = null;
+
+              // Subscribe to the topic only if downlink is enabled on at least
+              // one channel.  This matches the official Meshtastic iOS app: when
+              // no channel has downlinkEnabled, the proxy connects (allowing the
+              // device to publish / uplink) but does NOT subscribe (no inbound
+              // MQTT messages are relayed to the device).
+              if (shouldSubscribe) {
+                final subscriptionTopic = '$topicPrefix/#';
+                _subscribedTopic = subscriptionTopic;
+                AppLogging.mqttProxy('Subscribing to $subscriptionTopic');
+                client.subscribe(subscriptionTopic, MqttQos.atLeastOnce);
+              } else {
+                _subscribedTopic = null;
+                AppLogging.mqttProxy(
+                  'Connected but NOT subscribing '
+                  '(no channel has downlink enabled)',
+                );
+              }
+
+              // Listen for inbound messages
+              _subscription = client.updates?.listen(_handleInboundMessage);
+
+              _emitDiagnostics();
+            } else {
+              final stateName = status?.state.name ?? 'unknown';
+              final reason = _mapNoConnectionStatus(status);
+              await _failConnect(
+                reason: reason,
+                summary: 'Connection failed: $stateName',
+                rawDetail: stateName,
+              );
+            }
+          } on NoConnectionException catch (e) {
+            final reason = debugMapNoConnectionExceptionMessage(e.toString());
+            await _failConnect(
+              reason: reason,
+              summary: 'Connection refused', // lint-allow: hardcoded-string
+              rawDetail: e.toString(),
+            );
+          } on SocketException catch (e) {
+            final reason = _mapSocketException(e);
+            await _failConnect(
+              reason: reason,
+              summary: 'Socket error', // lint-allow: hardcoded-string
+              rawDetail: e.message,
+            );
+          } on HandshakeException catch (e) {
+            final reason = _mapHandshakeException(e);
+            await _failConnect(
+              reason: reason,
+              summary: 'TLS handshake failed', // lint-allow: hardcoded-string
+              rawDetail: e.message,
+            );
+          } on TlsException catch (e) {
+            // SecureSocket / cert-store failures (rare; handshake covers most).
+            await _failConnect(
+              reason: MqttProxyFailureReason.tlsHandshakeFailed,
+              summary: 'TLS error', // lint-allow: hardcoded-string
+              rawDetail: e.message,
+            );
+          } catch (e) {
+            await _failConnect(
+              reason: MqttProxyFailureReason.unknown,
+              summary: 'Unexpected error', // lint-allow: hardcoded-string
+              rawDetail: e.toString(),
+            );
+          } finally {
+            bodyDone = true;
+            signalDone();
+          }
+        },
+        (error, _) {
+          // Uncaught async error from the raw socket read path. Always log it;
+          // when it lands during connect (the CONNACK parse), drive a
+          // structured failure. Mid-session it is logged and swallowed so a
+          // single malformed packet cannot crash the app.
+          AppLogging.mqttProxyError(
+            'Read-path error: ${_sanitizeError(error.toString())}',
           );
-        }
+          if (!connectDone.isCompleted) {
+            readPathError = error;
+            signalDone();
+          }
+        },
+      );
 
-        // Listen for inbound messages
-        _subscription = client.updates?.listen(_handleInboundMessage);
+      await connectDone.future;
 
-        _emitDiagnostics();
-      } else {
-        final stateName = status?.state.name ?? 'unknown';
-        final reason = _mapNoConnectionStatus(status);
+      if (!bodyDone && readPathError != null) {
         await _failConnect(
-          reason: reason,
-          summary: 'Connection failed: $stateName',
-          rawDetail: stateName,
+          reason: MqttProxyFailureReason.protocolRejected,
+          summary: 'Malformed broker response', // lint-allow: hardcoded-string
+          rawDetail: readPathError.toString(),
         );
       }
-    } on NoConnectionException catch (e) {
-      final reason = debugMapNoConnectionExceptionMessage(e.toString());
-      await _failConnect(
-        reason: reason,
-        summary: 'Connection refused', // lint-allow: hardcoded-string
-        rawDetail: e.toString(),
-      );
-    } on SocketException catch (e) {
-      final reason = _mapSocketException(e);
-      await _failConnect(
-        reason: reason,
-        summary: 'Socket error', // lint-allow: hardcoded-string
-        rawDetail: e.message,
-      );
-    } on HandshakeException catch (e) {
-      final reason = _mapHandshakeException(e);
-      await _failConnect(
-        reason: reason,
-        summary: 'TLS handshake failed', // lint-allow: hardcoded-string
-        rawDetail: e.message,
-      );
-    } on TlsException catch (e) {
-      // SecureSocket / cert-store level failures (rare; handshake covers most).
-      await _failConnect(
-        reason: MqttProxyFailureReason.tlsHandshakeFailed,
-        summary: 'TLS error', // lint-allow: hardcoded-string
-        rawDetail: e.message,
-      );
-    } catch (e) {
-      await _failConnect(
-        reason: MqttProxyFailureReason.unknown,
-        summary: 'Unexpected error', // lint-allow: hardcoded-string
-        rawDetail: e.toString(),
-      );
     } finally {
       _isConnecting = false;
       _pendingConnectArgs = null;

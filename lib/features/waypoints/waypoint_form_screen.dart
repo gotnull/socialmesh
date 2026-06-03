@@ -19,6 +19,7 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/primary_gradient_button.dart';
 import '../../providers/app_providers.dart';
 import '../../utils/snackbar.dart';
+import '../../utils/text_sanitizer.dart' show isValidUnicodeScalar;
 import 'models/mesh_waypoint.dart';
 import 'providers/waypoint_providers.dart';
 
@@ -291,7 +292,7 @@ class _WaypointFormScreenState extends ConsumerState<WaypointFormScreen>
   }
 
   Widget _iconCard() {
-    final hasIcon = _icon != 0;
+    final hasIcon = _icon != 0 && isValidUnicodeScalar(_icon);
     return Container(
       decoration: _cardDecoration,
       child: ListTile(

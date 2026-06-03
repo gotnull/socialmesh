@@ -11,6 +11,7 @@
 #   no-private-log             Private _log() methods (use AppLogging.<feature> directly)
 #   no-hardcoded-ui-strings    Hardcoded user-facing strings (Text('...'), title: '...')
 #   no-raw-latlng              Raw LatLng(<expr>, <expr>) outside safeLatLng()
+#   no-raw-from-char-codes     Raw String.fromCharCode(s)(<untrusted int>) unguarded
 #   no-unimplemented           throw UnimplementedError
 #   no-bare-scaffold           Bare Scaffold (use GlassScaffold)
 #   no-bare-switch             Bare Switch/SwitchListTile (use ThemedSwitch)
@@ -44,6 +45,7 @@
 #   scripts/hooks/socialmesh-lint.sh --em-dash file ... # Also flag em-dash chars (opt-in: see below)
 #   scripts/hooks/socialmesh-lint.sh --unsafe-pop file ... # Flag unsafe Navigator.pop in callbacks (opt-in)
 #   scripts/hooks/socialmesh-lint.sh --no-raw-latlng file ... # Flag raw LatLng() outside safeLatLng (opt-in)
+#   scripts/hooks/socialmesh-lint.sh --no-raw-from-char-codes file ... # Flag unguarded String.fromCharCode(s) (opt-in)
 #   scripts/hooks/socialmesh-lint.sh --diff-only --format  # Combined
 #
 # --em-dash is opt-in by design. The em-dash character (U+2014) is banned
@@ -74,6 +76,21 @@
 # routine edits unrelated to the LatLng family. Pass --no-raw-latlng when
 # reviewing files you are about to ship; new code should route through
 # safeLatLng() from lib/core/safe_lat_lng.dart.
+#
+# --no-raw-from-char-codes is opt-in by design. Passing an integer code point
+# to String.fromCharCode(s) without validating it is a Unicode scalar lets a
+# surrogate half (0xD800-0xDFFF) or out-of-range value form malformed UTF-16;
+# Flutter's native paragraph builder then throws a fatal "string is not
+# well-formed UTF-16" during layout (Crashlytics 1d31a53e, a peer-controlled
+# waypoint icon rendered every frame). The rule flags String.fromCharCode(s)
+# whose first argument is an identifier/list (not a numeric literal) and is
+# not already wrapped in sanitizeExternalText() or guarded by
+# isValidUnicodeScalar() on the same line. Untrusted single-scalar fields
+# should render through EmojiGlyph (self-guarding) or be checked with
+# isValidUnicodeScalar(); untrusted byte/string payloads should be wrapped in
+# sanitizeExternalText() from lib/utils/text_sanitizer.dart. Literal ranges
+# (e.g. ASCII/Katakana animations) are safe and only fire as opt-in noise, so
+# the rule is off by default - run when auditing files before shipping.
 #
 # Exit codes:
 #   0  All checks passed
@@ -129,6 +146,12 @@ CHECK_RAW_LATLNG=false  # Opt-in: flags raw LatLng(<expr>, <expr>) outside
                         # should route through safeLatLng. 50+ legacy sites
                         # would fire today, so off by default - run when
                         # auditing files before shipping.
+CHECK_RAW_FROM_CHAR_CODES=false  # Opt-in: flags String.fromCharCode(s) on an
+                        # identifier/list arg not wrapped in sanitizeExternalText()
+                        # or guarded by isValidUnicodeScalar(). A surrogate or
+                        # out-of-range int forms malformed UTF-16 and crashes
+                        # the paragraph builder. Literal-range callsites fire as
+                        # noise, so off by default - run when auditing files.
 EXPLICIT_FILES=()
 
 while [ $# -gt 0 ]; do
@@ -139,6 +162,7 @@ while [ $# -gt 0 ]; do
     --em-dash)      CHECK_EM_DASH=true; shift ;;
     --unsafe-pop)   CHECK_UNSAFE_POP=true; shift ;;
     --no-raw-latlng) CHECK_RAW_LATLNG=true; shift ;;
+    --no-raw-from-char-codes) CHECK_RAW_FROM_CHAR_CODES=true; shift ;;
     -*)             echo "Unknown flag: $1" >&2; exit 2 ;;
     *)              MODE="explicit"; EXPLICIT_FILES+=("$1"); shift ;;
   esac
@@ -940,6 +964,50 @@ check_file() {
             "Raw LatLng(<expr>) - wrap with safeLatLng() so NaN/Infinity/out-of-range coords drop out before reaching flutter_map projectAtZoom (lib/core/safe_lat_lng.dart)." \
             "error"
         done < <(grep -nE '[^a-zA-Z_]LatLng\([a-zA-Z_]' "$file" 2>/dev/null || true)
+        ;;
+    esac
+  fi
+
+  # ------------------------------------------------------------------
+  # ERROR: Raw String.fromCharCode(s)(<untrusted int>) without a guard
+  # A surrogate half (0xD800-0xDFFF) or out-of-range code point forms
+  # malformed UTF-16, and Flutter's native paragraph builder then throws
+  # a fatal "string is not well-formed UTF-16" during layout (Crashlytics
+  # 1d31a53e: a peer-controlled waypoint icon rendered every frame).
+  #
+  # The regex flags String.fromCharCode(s)( whose first argument is an
+  # identifier or list (i.e. not a numeric literal). Lines already wrapped
+  # in sanitizeExternalText() or guarded by isValidUnicodeScalar() on the
+  # same line are skipped, as is the sanitizer definition file.
+  #
+  # OPT-IN: literal-range callsites (ASCII/Katakana) fire as noise.
+  # ------------------------------------------------------------------
+  if [ "$CHECK_RAW_FROM_CHAR_CODES" = true ] && [ "$is_dart" = true ]; then
+    case "$file" in
+      # The sanitizer itself and the self-guarding EmojiGlyph primitive.
+      lib/utils/text_sanitizer.dart) ;;
+      lib/core/widgets/emoji_glyph.dart) ;;
+      *)
+        while IFS=: read -r lineno matched_line; do
+          line_in_scope "$file" "$lineno" || continue
+          # Already routed through the canonical guard / sanitizer.
+          [[ "$matched_line" == *sanitizeExternalText* ]] && continue
+          [[ "$matched_line" == *isValidUnicodeScalar* ]] && continue
+          [[ "$matched_line" == *hasRenderableIcon* ]] && continue
+          # Honor `// lint-allow: no-raw-from-char-codes` on the matched line
+          # or on the line immediately above it (the natural spot for a
+          # leading comment on a multi-line / return expression).
+          [[ "$matched_line" =~ lint-allow:.*no-raw-from-char-codes ]] && continue
+          local prevline
+          prevline=$(sed -n "$((lineno - 1))p" "$file" 2>/dev/null || true)
+          [[ "$prevline" =~ lint-allow:.*no-raw-from-char-codes ]] && continue
+          # Skip comment-only lines.
+          local trimmed="${matched_line#"${matched_line%%[![:space:]]*}"}"
+          [[ "$trimmed" == //* ]] && continue
+          record_hit "$file" "$lineno" "no-raw-from-char-codes" \
+            "Raw String.fromCharCode(s)(<int>) - a surrogate or out-of-range value forms malformed UTF-16 and crashes the paragraph builder. Render untrusted scalars via EmojiGlyph or guard with isValidUnicodeScalar(); wrap untrusted byte/string payloads in sanitizeExternalText() (lib/utils/text_sanitizer.dart)." \
+            "error"
+        done < <(grep -nE 'String\.fromCharCodes?\(\[?[a-zA-Z_]' "$file" 2>/dev/null || true)
         ;;
     esac
   fi

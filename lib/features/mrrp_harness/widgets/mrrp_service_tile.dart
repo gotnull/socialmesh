@@ -7,6 +7,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../services/protocol/sip/mrrp_messages_advert.dart';
 import '../../../services/protocol/sip/mrrp_types.dart';
+import '../../../utils/text_sanitizer.dart' show sanitizeExternalText;
 
 /// Tile showing a single MRRP service descriptor with version, flags,
 /// and optional raw hex expansion.
@@ -101,7 +102,9 @@ class _MrrpServiceTileState extends State<MrrpServiceTile> {
             Padding(
               padding: const EdgeInsets.only(left: 36, top: AppTheme.spacing4),
               child: Text(
-                String.fromCharCodes(d.metadata),
+                // metadata is untrusted wire bytes; strip control characters
+                // that would crash the iOS paragraph builder before display.
+                sanitizeExternalText(String.fromCharCodes(d.metadata)),
                 style: TextStyle(
                   color: context.textTertiary,
                   fontStyle: FontStyle.italic,
