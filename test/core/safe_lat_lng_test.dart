@@ -63,6 +63,35 @@ void main() {
     });
   });
 
+  group('isFiniteCameraPose', () {
+    test('true for finite center and zoom', () {
+      expect(isFiniteCameraPose(const LatLng(10, 20), 12.0), isTrue);
+    });
+
+    test('false for null center', () {
+      expect(isFiniteCameraPose(null, 12.0), isFalse);
+    });
+
+    test('false for NaN center (flutter_map pinch overflow)', () {
+      expect(isFiniteCameraPose(LatLng(double.nan, double.nan), 12.0), isFalse);
+    });
+
+    test('false for NaN zoom (math.log(scale<=0) overflow)', () {
+      expect(isFiniteCameraPose(const LatLng(10, 20), double.nan), isFalse);
+    });
+
+    test('false for infinite zoom', () {
+      expect(
+        isFiniteCameraPose(const LatLng(10, 20), double.infinity),
+        isFalse,
+      );
+    });
+
+    test('false for out-of-range center', () {
+      expect(isFiniteCameraPose(const LatLng(95, 0), 12.0), isFalse);
+    });
+  });
+
   group('finiteMarkers', () {
     test('filters out non-finite marker points', () {
       final good = Marker(point: const LatLng(10, 20), child: const SizedBox());

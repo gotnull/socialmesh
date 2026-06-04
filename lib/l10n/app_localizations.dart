@@ -21310,6 +21310,30 @@ abstract class AppLocalizations {
   /// **'The unique identifier for this radio packet, assigned by the sending node. Useful for debugging delivery issues.'**
   String get messagingTechInfoExplainPacketIdBody;
 
+  /// Relative day label for a message sent or received today, shown before the time in the inline technical info (e.g. 'Today, 22:27').
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get messagingTechInfoTimestampToday;
+
+  /// Relative day label for a message sent or received yesterday, shown before the time in the inline technical info (e.g. 'Yesterday, 22:27').
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get messagingTechInfoTimestampYesterday;
+
+  /// Title for the bottom sheet explaining the message date and time.
+  ///
+  /// In en, this message translates to:
+  /// **'Message Time'**
+  String get messagingTechInfoExplainTimestampTitle;
+
+  /// Explanation of the full message date and time shown in a bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'The local date and time this message was sent or received, based on your device\'s clock. The message bubble shows just the time; the full date appears here.'**
+  String get messagingTechInfoExplainTimestampBody;
+
   /// Empty state text in a new DM conversation.
   ///
   /// In en, this message translates to:

@@ -12175,6 +12175,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'The unique identifier for this radio packet, assigned by the sending node. Useful for debugging delivery issues.';
 
   @override
+  String get messagingTechInfoTimestampToday => 'Today';
+
+  @override
+  String get messagingTechInfoTimestampYesterday => 'Yesterday';
+
+  @override
+  String get messagingTechInfoExplainTimestampTitle => 'Message Time';
+
+  @override
+  String get messagingTechInfoExplainTimestampBody =>
+      'The local date and time this message was sent or received, based on your device\'s clock. The message bubble shows just the time; the full date appears here.';
+
+  @override
   String get messagingStartConversation => 'Start the conversation';
 
   @override

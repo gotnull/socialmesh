@@ -52,6 +52,17 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     with TickerProviderStateMixin, LifecycleSafeMixin<WorldMeshScreen> {
   final MapController _mapController = MapController();
   double _currentZoom = 3.0;
+
+  // Camera-boundary NaN recovery. flutter_map's pinch pipeline can commit a
+  // non-finite pose through its internal moveRaw() (a math.log(scale<=0)
+  // overflow), bypassing every safeMove guard and leaving the camera centre
+  // NaN — which then throws fatally in Crs.checkLatLng on the next tile build
+  // and every later pinch. onPositionChanged is the one hook that fires on the
+  // internal move, so we snap back to the last finite pose before that frame
+  // builds. See lib/core/safe_lat_lng.dart isFiniteCameraPose.
+  LatLng? _lastFiniteCenter;
+  double _lastFiniteZoom = 3.0;
+  bool _cameraRecoveryScheduled = false;
   // Map rotation and selection use ValueNotifiers so that pan/rotate gestures
   // and node selection do not trigger a full screen rebuild — only the
   // compass, the highlight overlay, and the info card listen. This is what
@@ -743,6 +754,21 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                 pinchZoomThreshold: 0.5,
               ),
               onPositionChanged: (position, hasGesture) {
+                // Camera-boundary NaN guard (see _lastFiniteCenter).
+                if (isFiniteCameraPose(position.center, position.zoom)) {
+                  _lastFiniteCenter = position.center;
+                  _lastFiniteZoom = position.zoom;
+                } else if (!_cameraRecoveryScheduled) {
+                  _cameraRecoveryScheduled = true;
+                  final recoverCenter = _lastFiniteCenter;
+                  final recoverZoom = _lastFiniteZoom;
+                  scheduleMicrotask(() {
+                    _cameraRecoveryScheduled = false;
+                    if (!mounted || recoverCenter == null) return;
+                    _mapController.safeMove(recoverCenter, recoverZoom);
+                  });
+                  return;
+                }
                 _currentZoom = position.zoom;
                 if (hasGesture &&
                     position.rotation != _mapRotationNotifier.value) {

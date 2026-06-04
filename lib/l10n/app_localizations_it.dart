@@ -12327,6 +12327,19 @@ class AppLocalizationsIt extends AppLocalizations {
       'L\'identificatore univoco di questo pacchetto radio, assegnato dal nodo mittente. Utile per il debug dei problemi di consegna.';
 
   @override
+  String get messagingTechInfoTimestampToday => 'Oggi';
+
+  @override
+  String get messagingTechInfoTimestampYesterday => 'Ieri';
+
+  @override
+  String get messagingTechInfoExplainTimestampTitle => 'Ora del messaggio';
+
+  @override
+  String get messagingTechInfoExplainTimestampBody =>
+      'La data e l\'ora locali in cui questo messaggio è stato inviato o ricevuto, in base all\'orologio del dispositivo. La nuvoletta del messaggio mostra solo l\'ora; la data completa appare qui.';
+
+  @override
   String get messagingStartConversation => 'Inizia la conversazione';
 
   @override

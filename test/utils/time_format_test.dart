@@ -684,5 +684,147 @@ void main() {
         expect(formatted, '14:30');
       });
     });
+
+    // =========================================================================
+    // relativeDateTime — calendar-relative date + time for detail surfaces
+    // =========================================================================
+
+    group('relativeDateTime', () {
+      // Fixed "now" so day-delta arithmetic is deterministic.
+      final now = DateTime(2026, 6, 3, 9, 0);
+
+      testWidgets('today renders "Today, HH:mm" (24h)', (tester) async {
+        await setTimeFormatMode(TimeFormatMode.twentyFourHour);
+        late String formatted;
+        await tester.pumpWidget(
+          buildTestHarness(
+            alwaysUse24HourFormat: true,
+            onBuild: (ctx) {
+              formatted = AppTimeFormat.relativeDateTime(
+                ctx,
+                DateTime(2026, 6, 3, 22, 27),
+                todayLabel: 'Today',
+                yesterdayLabel: 'Yesterday',
+                now: now,
+              );
+            },
+          ),
+        );
+        expect(formatted, 'Today, 22:27');
+      });
+
+      testWidgets('today renders "Today, h:mm a" (12h)', (tester) async {
+        await setTimeFormatMode(TimeFormatMode.twelveHour);
+        late String formatted;
+        await tester.pumpWidget(
+          buildTestHarness(
+            alwaysUse24HourFormat: false,
+            onBuild: (ctx) {
+              formatted = AppTimeFormat.relativeDateTime(
+                ctx,
+                DateTime(2026, 6, 3, 22, 27),
+                todayLabel: 'Today',
+                yesterdayLabel: 'Yesterday',
+                now: now,
+              );
+            },
+          ),
+        );
+        expect(formatted, 'Today, 10:27 PM');
+      });
+
+      testWidgets('yesterday renders "Yesterday, HH:mm"', (tester) async {
+        await setTimeFormatMode(TimeFormatMode.twentyFourHour);
+        late String formatted;
+        await tester.pumpWidget(
+          buildTestHarness(
+            alwaysUse24HourFormat: true,
+            onBuild: (ctx) {
+              formatted = AppTimeFormat.relativeDateTime(
+                ctx,
+                DateTime(2026, 6, 2, 22, 27),
+                todayLabel: 'Today',
+                yesterdayLabel: 'Yesterday',
+                now: now,
+              );
+            },
+          ),
+        );
+        expect(formatted, 'Yesterday, 22:27');
+      });
+
+      testWidgets('older date renders "d MMM yyyy, HH:mm"', (tester) async {
+        await setTimeFormatMode(TimeFormatMode.twentyFourHour);
+        late String formatted;
+        await tester.pumpWidget(
+          buildTestHarness(
+            alwaysUse24HourFormat: true,
+            onBuild: (ctx) {
+              formatted = AppTimeFormat.relativeDateTime(
+                ctx,
+                DateTime(2026, 5, 30, 22, 27),
+                todayLabel: 'Today',
+                yesterdayLabel: 'Yesterday',
+                now: now,
+              );
+            },
+          ),
+        );
+        expect(formatted, '30 May 2026, 22:27');
+      });
+
+      testWidgets('older date crossing a year boundary uses full date', (
+        tester,
+      ) async {
+        await setTimeFormatMode(TimeFormatMode.twentyFourHour);
+        late String formatted;
+        await tester.pumpWidget(
+          buildTestHarness(
+            alwaysUse24HourFormat: true,
+            onBuild: (ctx) {
+              formatted = AppTimeFormat.relativeDateTime(
+                ctx,
+                DateTime(2025, 12, 31, 23, 59),
+                todayLabel: 'Today',
+                yesterdayLabel: 'Yesterday',
+                now: DateTime(2026, 1, 2, 0, 30),
+              );
+            },
+          ),
+        );
+        expect(formatted, '31 Dec 2025, 23:59');
+      });
+
+      testWidgets('uses localized labels supplied by the caller', (
+        tester,
+      ) async {
+        await setTimeFormatMode(TimeFormatMode.twentyFourHour);
+        late String today;
+        late String yesterday;
+        await tester.pumpWidget(
+          buildTestHarness(
+            alwaysUse24HourFormat: true,
+            onBuild: (ctx) {
+              today = AppTimeFormat.relativeDateTime(
+                ctx,
+                DateTime(2026, 6, 3, 8, 5),
+                todayLabel: 'Oggi',
+                yesterdayLabel: 'Ieri',
+                now: now,
+              );
+              yesterday = AppTimeFormat.relativeDateTime(
+                ctx,
+                DateTime(2026, 6, 2, 8, 5),
+                todayLabel: 'Oggi',
+                yesterdayLabel: 'Ieri',
+                now: now,
+              );
+            },
+          ),
+        );
+        expect(today, 'Oggi, 08:05');
+        expect(yesterday, 'Ieri, 08:05');
+      });
+    });
   });
 }

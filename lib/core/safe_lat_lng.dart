@@ -30,6 +30,15 @@ List<Marker> finiteMarkers(Iterable<Marker> markers) {
   return markers.where((m) => isFiniteLatLng(m.point)).toList(growable: false);
 }
 
+// True when a camera pose (center + zoom) is safe to project. flutter_map's
+// pinch pipeline can commit a non-finite pose through its internal moveRaw —
+// a math.log(scale) overflow when the gesture's scale term reaches <= 0 —
+// which bypasses safeMove entirely. Map surfaces watching onPositionChanged
+// use this to detect that pose and snap the camera back to the last finite
+// one before the crashing tile/marker projection runs.
+bool isFiniteCameraPose(LatLng? center, double zoom) =>
+    isFiniteLatLng(center) && zoom.isFinite;
+
 // Build LatLngBounds.fromPoints only from finite points. Returns null when
 // nothing finite is left — callers should skip the fit in that case rather
 // than feed a degenerate bounds into the camera.

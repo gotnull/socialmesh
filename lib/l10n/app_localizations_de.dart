@@ -12354,6 +12354,19 @@ class AppLocalizationsDe extends AppLocalizations {
       'Die eindeutige Kennung für dieses Funkpaket, vergeben vom sendenden Knoten. Nützlich zur Diagnose von Zustellproblemen.';
 
   @override
+  String get messagingTechInfoTimestampToday => 'Heute';
+
+  @override
+  String get messagingTechInfoTimestampYesterday => 'Gestern';
+
+  @override
+  String get messagingTechInfoExplainTimestampTitle => 'Nachrichtenzeit';
+
+  @override
+  String get messagingTechInfoExplainTimestampBody =>
+      'Das lokale Datum und die Uhrzeit, zu der diese Nachricht gesendet oder empfangen wurde, basierend auf der Uhr deines Geräts. Die Sprechblase zeigt nur die Uhrzeit; das vollständige Datum erscheint hier.';
+
+  @override
   String get messagingStartConversation => 'Unterhaltung beginnen';
 
   @override

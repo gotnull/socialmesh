@@ -12387,6 +12387,19 @@ class AppLocalizationsEs extends AppLocalizations {
       'El identificador único de este paquete de radio, asignado por el nodo emisor. Útil para depurar problemas de entrega.';
 
   @override
+  String get messagingTechInfoTimestampToday => 'Hoy';
+
+  @override
+  String get messagingTechInfoTimestampYesterday => 'Ayer';
+
+  @override
+  String get messagingTechInfoExplainTimestampTitle => 'Hora del mensaje';
+
+  @override
+  String get messagingTechInfoExplainTimestampBody =>
+      'La fecha y hora locales en que se envió o recibió este mensaje, según el reloj de tu dispositivo. La burbuja del mensaje muestra solo la hora; la fecha completa aparece aquí.';
+
+  @override
   String get messagingStartConversation => 'Inicie la conversación';
 
   @override

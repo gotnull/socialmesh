@@ -12314,6 +12314,19 @@ class AppLocalizationsRu extends AppLocalizations {
       'Уникальный идентификатор этого радиопакета, присвоенный отправляющим узлом. Полезен для отладки проблем с доставкой.';
 
   @override
+  String get messagingTechInfoTimestampToday => 'Сегодня';
+
+  @override
+  String get messagingTechInfoTimestampYesterday => 'Вчера';
+
+  @override
+  String get messagingTechInfoExplainTimestampTitle => 'Время сообщения';
+
+  @override
+  String get messagingTechInfoExplainTimestampBody =>
+      'Местные дата и время отправки или получения этого сообщения по часам вашего устройства. В пузыре сообщения показано только время; полная дата отображается здесь.';
+
+  @override
   String get messagingStartConversation => 'Начните разговор';
 
   @override

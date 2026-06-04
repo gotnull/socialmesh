@@ -3756,12 +3756,39 @@ class _MessageBubble extends ConsumerWidget {
 
     final nodeHex = message.from.toRadixString(16).padLeft(4, '0');
 
+    // The bubble always carries a real wall-clock timestamp; flag only the
+    // rare case where it looks unset (epoch/pre-2000) so a bad upstream
+    // source can be traced. No message content is logged. This stays silent
+    // for normal data, keeping the build path noise-free.
+    if (message.timestamp.toLocal().year < 2000) {
+      AppLogging.messages(
+        'Tech info: packet ${message.packetId ?? 'n/a'} has implausible '
+        'timestamp ${message.timestamp.toIso8601String()}; rendering as-is',
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.only(top: AppTheme.spacing2),
       child: Wrap(
         spacing: AppTheme.spacing8,
         runSpacing: AppTheme.spacing2,
         children: [
+          // Always show: full local date + time (compact bubble keeps the
+          // short time-only label; details surface the calendar date too).
+          _TechInfoChip(
+            icon: Icons.schedule,
+            label: AppTimeFormat.relativeDateTime(
+              context,
+              message.timestamp,
+              todayLabel: l10n.messagingTechInfoTimestampToday,
+              yesterdayLabel: l10n.messagingTechInfoTimestampYesterday,
+            ),
+            iconSize: iconSize,
+            color: color,
+            textStyle: textStyle,
+            explainTitle: l10n.messagingTechInfoExplainTimestampTitle,
+            explainBody: l10n.messagingTechInfoExplainTimestampBody,
+          ),
           // Always show: from node ID
           _TechInfoChip(
             icon: Icons.person_outline,

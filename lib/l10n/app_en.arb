@@ -16406,6 +16406,22 @@
     "@messagingTechInfoExplainPacketIdBody": {
         "description": "Explanation of packet ID shown in a bottom sheet."
     },
+    "messagingTechInfoTimestampToday": "Today",
+    "@messagingTechInfoTimestampToday": {
+        "description": "Relative day label for a message sent or received today, shown before the time in the inline technical info (e.g. 'Today, 22:27')."
+    },
+    "messagingTechInfoTimestampYesterday": "Yesterday",
+    "@messagingTechInfoTimestampYesterday": {
+        "description": "Relative day label for a message sent or received yesterday, shown before the time in the inline technical info (e.g. 'Yesterday, 22:27')."
+    },
+    "messagingTechInfoExplainTimestampTitle": "Message Time",
+    "@messagingTechInfoExplainTimestampTitle": {
+        "description": "Title for the bottom sheet explaining the message date and time."
+    },
+    "messagingTechInfoExplainTimestampBody": "The local date and time this message was sent or received, based on your device's clock. The message bubble shows just the time; the full date appears here.",
+    "@messagingTechInfoExplainTimestampBody": {
+        "description": "Explanation of the full message date and time shown in a bottom sheet."
+    },
     "messagingStartConversation": "Start the conversation",
     "@messagingStartConversation": {
         "description": "Empty state text in a new DM conversation."

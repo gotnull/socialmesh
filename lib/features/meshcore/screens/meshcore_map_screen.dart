@@ -95,6 +95,17 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
   double _currentZoom = 13.0;
   double _mapRotation = 0.0;
 
+  // Camera-boundary NaN recovery. flutter_map's pinch pipeline can commit a
+  // non-finite pose through its internal moveRaw() (a math.log(scale<=0)
+  // overflow), bypassing every safeMove guard and leaving the camera centre
+  // NaN — which then throws fatally in Crs.checkLatLng on the next tile build
+  // and every later pinch. onPositionChanged is the one hook that fires on the
+  // internal move, so we snap back to the last finite pose before that frame
+  // builds. See lib/core/safe_lat_lng.dart isFiniteCameraPose.
+  LatLng? _lastFiniteCenter;
+  double _lastFiniteZoom = 13.0;
+  bool _cameraRecoveryScheduled = false;
+
   // Tile style. Hydrates from settings on first frame so the user's
   // selection survives app restarts; mirrors the Meshtastic map.
   MapTileStyle _mapStyle = MapTileStyle.dark;
@@ -476,6 +487,21 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
                       scrollWheelVelocity: 0.005,
                     ),
                     onPositionChanged: (position, hasGesture) {
+                      // Camera-boundary NaN guard (see _lastFiniteCenter).
+                      if (isFiniteCameraPose(position.center, position.zoom)) {
+                        _lastFiniteCenter = position.center;
+                        _lastFiniteZoom = position.zoom;
+                      } else if (!_cameraRecoveryScheduled) {
+                        _cameraRecoveryScheduled = true;
+                        final recoverCenter = _lastFiniteCenter;
+                        final recoverZoom = _lastFiniteZoom;
+                        scheduleMicrotask(() {
+                          _cameraRecoveryScheduled = false;
+                          if (!mounted || recoverCenter == null) return;
+                          _mapController.safeMove(recoverCenter, recoverZoom);
+                        });
+                        return;
+                      }
                       final newZoom = position.zoom;
                       final newRotation = position.rotation;
                       if (newZoom != _currentZoom ||

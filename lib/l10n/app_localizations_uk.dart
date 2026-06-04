@@ -12328,6 +12328,19 @@ class AppLocalizationsUk extends AppLocalizations {
       'Унікальний ідентифікатор цього радіопакета, присвоєний вузлом-відправником. Корисний для діагностики проблем із доставкою.';
 
   @override
+  String get messagingTechInfoTimestampToday => 'Сьогодні';
+
+  @override
+  String get messagingTechInfoTimestampYesterday => 'Вчора';
+
+  @override
+  String get messagingTechInfoExplainTimestampTitle => 'Час повідомлення';
+
+  @override
+  String get messagingTechInfoExplainTimestampBody =>
+      'Місцеві дата й час, коли це повідомлення було надіслано або отримано, за годинником вашого пристрою. У бульбашці повідомлення показано лише час; повна дата відображається тут.';
+
+  @override
   String get messagingStartConversation => 'Розпочати розмову';
 
   @override

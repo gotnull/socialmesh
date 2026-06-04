@@ -12417,6 +12417,19 @@ class AppLocalizationsFr extends AppLocalizations {
       'L\'identifiant unique de ce paquet radio, attribué par le nœud émetteur. Utile pour diagnostiquer les problèmes de livraison.';
 
   @override
+  String get messagingTechInfoTimestampToday => 'Aujourd\'hui';
+
+  @override
+  String get messagingTechInfoTimestampYesterday => 'Hier';
+
+  @override
+  String get messagingTechInfoExplainTimestampTitle => 'Heure du message';
+
+  @override
+  String get messagingTechInfoExplainTimestampBody =>
+      'La date et l\'heure locales auxquelles ce message a été envoyé ou reçu, selon l\'horloge de votre appareil. La bulle du message n\'affiche que l\'heure ; la date complète apparaît ici.';
+
+  @override
   String get messagingStartConversation => 'Démarrer la conversation';
 
   @override

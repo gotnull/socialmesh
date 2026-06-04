@@ -234,6 +234,20 @@ class _MapScreenState extends ConsumerState<MapScreen>
   // the current value at subscription time).
   bool _takInitialCheckDone = false;
 
+  // Camera-boundary NaN recovery. flutter_map's pinch pipeline computes a
+  // new zoom via math.log(scale) and commits it through the internal
+  // moveRaw() — which bypasses every safeMove/safeLatLng guard. When the
+  // gesture's scale term reaches <= 0 the log yields -Infinity/NaN, clampZoom
+  // passes it through, and the camera lands on a non-finite center/zoom. The
+  // next tile-layer build (and every later pinch) then projects that center
+  // and throws fatally in Crs.checkLatLng. We cannot intercept moveRaw, but
+  // onPositionChanged fires on every camera mutation including the internal
+  // one, so we snap the camera back to the last finite pose before the frame
+  // that would crash gets built.
+  LatLng? _lastFiniteCenter;
+  double _lastFiniteZoom = 2.0;
+  bool _cameraRecoveryScheduled = false;
+
   // Layout constants for consistent spacing
   static const double _mapPadding = 16.0;
   static const double _controlSpacing = 8.0;
@@ -1595,6 +1609,29 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         scrollWheelVelocity: 0.005,
                       ),
                       onPositionChanged: (position, hasGesture) {
+                        // Camera-boundary NaN guard (see _lastFiniteCenter).
+                        // Record every finite pose; if a non-finite one lands
+                        // (flutter_map pinch math overflow committed via the
+                        // internal moveRaw), snap back to the last good pose
+                        // on a microtask — which drains before the next frame
+                        // builds, so the crashing tile projection never runs.
+                        if (isFiniteCameraPose(
+                          position.center,
+                          position.zoom,
+                        )) {
+                          _lastFiniteCenter = position.center;
+                          _lastFiniteZoom = position.zoom;
+                        } else if (!_cameraRecoveryScheduled) {
+                          _cameraRecoveryScheduled = true;
+                          final recoverCenter = _lastFiniteCenter;
+                          final recoverZoom = _lastFiniteZoom;
+                          scheduleMicrotask(() {
+                            _cameraRecoveryScheduled = false;
+                            if (!mounted || recoverCenter == null) return;
+                            _mapController.safeMove(recoverCenter, recoverZoom);
+                          });
+                          return;
+                        }
                         if (hasGesture) {
                           // Disable heading-up if user manually rotates the map
                           if (_headingUpMode) {

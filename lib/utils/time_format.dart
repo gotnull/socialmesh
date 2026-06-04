@@ -159,4 +159,44 @@ abstract final class AppTimeFormat {
   static DateFormat withDatePrefix(BuildContext context, String datePrefix) {
     return DateFormat('$datePrefix ${timePattern(context)}');
   }
+
+  // ---------------------------------------------------------------------------
+  // Calendar-relative date + time (for detail/metadata surfaces)
+  // ---------------------------------------------------------------------------
+
+  /// Full local date + time for detail surfaces, using calendar-relative
+  /// labels for recent days. Produces, with the device's local timezone:
+  ///
+  /// - "Today, 22:27" when [timestamp] falls on the current local day
+  /// - "Yesterday, 22:27" when it falls on the previous local day
+  /// - "3 Jun 2026, 22:27" for any older day
+  ///
+  /// The time portion honours the user's 12/24-hour preference. The relative
+  /// day labels are supplied by the caller so this utility stays free of any
+  /// localization dependency. [now] is injectable for deterministic tests;
+  /// it defaults to the current wall clock.
+  static String relativeDateTime(
+    BuildContext context,
+    DateTime timestamp, {
+    required String todayLabel,
+    required String yesterdayLabel,
+    DateTime? now,
+  }) {
+    final local = timestamp.toLocal();
+    final reference = (now ?? DateTime.now()).toLocal();
+    final today = DateTime(reference.year, reference.month, reference.day);
+    final messageDay = DateTime(local.year, local.month, local.day);
+    final dayDelta = today.difference(messageDay).inDays;
+
+    final timeText = DateFormat(timePattern(context)).format(local);
+
+    if (dayDelta == 0) {
+      return '$todayLabel, $timeText';
+    }
+    if (dayDelta == 1) {
+      return '$yesterdayLabel, $timeText';
+    }
+    final dateText = DateFormat('d MMM yyyy').format(local);
+    return '$dateText, $timeText';
+  }
 }
