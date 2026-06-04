@@ -12,6 +12,7 @@
 #   no-hardcoded-ui-strings    Hardcoded user-facing strings (Text('...'), title: '...')
 #   no-raw-latlng              Raw LatLng(<expr>, <expr>) outside safeLatLng()
 #   no-raw-from-char-codes     Raw String.fromCharCode(s)(<untrusted int>) unguarded
+#   require-camera-pose-guard  FlutterMap without the camera-pose NaN guard (isFiniteCameraPose)
 #   no-unimplemented           throw UnimplementedError
 #   no-bare-scaffold           Bare Scaffold (use GlassScaffold)
 #   no-bare-switch             Bare Switch/SwitchListTile (use ThemedSwitch)
@@ -1010,6 +1011,43 @@ check_file() {
         done < <(grep -nE 'String\.fromCharCodes?\(\[?[a-zA-Z_]' "$file" 2>/dev/null || true)
         ;;
     esac
+  fi
+
+  # ------------------------------------------------------------------
+  # ERROR: FlutterMap without the camera-pose NaN guard (default-on)
+  #
+  # flutter_map's pinch pipeline can commit a non-finite camera pose through
+  # its internal moveRaw() (a math.log(scale<=0) overflow in _getZoomForScale)
+  # that bypasses every safeMove/safeLatLng guard, leaving the camera centre
+  # NaN. The next tile-layer build and every later pinch then throw fatally in
+  # Crs.checkLatLng (Crashlytics 563ef91f, which regressed repeatedly because
+  # data-path guards never covered the camera path). Every interactive
+  # FlutterMap must guard onPositionChanged with isFiniteCameraPose
+  # (lib/core/safe_lat_lng.dart): record the last finite pose, and on a
+  # non-finite one snap back via scheduleMicrotask before the crashing frame
+  # builds.
+  #
+  # Pass conditions (any one):
+  #   - the file references isFiniteCameraPose (guards its own FlutterMap, or
+  #     is the shared MeshMapWidget wrapper that guards every consumer), or
+  #   - a `// lint-allow: camera-pose-guard - <reason>` comment is present
+  #     (non-interactive maps with InteractiveFlag.none cannot pinch).
+  #
+  # Default-on: there are zero violations today and shared maps route through
+  # MeshMapWidget, so new map surfaces are the only thing this catches.
+  # ------------------------------------------------------------------
+  if [ "$is_dart" = true ] && [ "$in_lib" = true ] && [ "$in_lib_generated" = false ]; then
+    if ! grep -q 'isFiniteCameraPose' "$file" 2>/dev/null \
+       && ! grep -q 'lint-allow:.*camera-pose-guard' "$file" 2>/dev/null; then
+      while IFS=: read -r lineno matched_line; do
+        line_in_scope "$file" "$lineno" || continue
+        local trimmed="${matched_line#"${matched_line%%[![:space:]]*}"}"
+        [[ "$trimmed" == //* ]] && continue
+        record_hit "$file" "$lineno" "require-camera-pose-guard" \
+          "FlutterMap without camera-pose NaN guard - wrap onPositionChanged with isFiniteCameraPose so a non-finite pinch pose snaps back before Crs.checkLatLng crashes (lib/core/safe_lat_lng.dart). Shared maps should route through MeshMapWidget (guards centrally); non-interactive maps add // lint-allow: camera-pose-guard." \
+          "error"
+      done < <(grep -nE '\bFlutterMap\(' "$file" 2>/dev/null || true)
+    fi
   fi
 
   # ------------------------------------------------------------------

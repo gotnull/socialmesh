@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -16,7 +18,7 @@ import '../../models/presence_confidence.dart';
 ///
 /// This widget provides a consistent map experience across all screens.
 /// Use the various parameters to enable/disable features as needed.
-class MeshMapWidget extends StatelessWidget {
+class MeshMapWidget extends StatefulWidget {
   /// The map controller for programmatic control
   final MapController? mapController;
 
@@ -133,53 +135,100 @@ class MeshMapWidget extends StatelessWidget {
   });
 
   @override
+  State<MeshMapWidget> createState() => _MeshMapWidgetState();
+}
+
+class _MeshMapWidgetState extends State<MeshMapWidget> {
+  // Effective controller: the caller's when supplied, otherwise our own — so
+  // the camera-NaN recovery below always has a handle to snap back with.
+  late final bool _ownsController = widget.mapController == null;
+  late final MapController _effectiveController =
+      widget.mapController ?? MapController();
+
+  // Camera-boundary NaN recovery, centralised here so every MeshMapWidget
+  // consumer is protected at once. flutter_map's pinch pipeline can commit a
+  // non-finite pose through its internal moveRaw() (a math.log(scale<=0)
+  // overflow) that bypasses every safeMove guard, leaving the camera centre
+  // NaN — which then throws fatally in Crs.checkLatLng on the next tile build
+  // and every later pinch. onPositionChanged fires on that internal move, so
+  // we snap back to the last finite pose before the crashing frame builds.
+  // See lib/core/safe_lat_lng.dart isFiniteCameraPose.
+  LatLng? _lastFiniteCenter;
+  late double _lastFiniteZoom = widget.initialZoom;
+  bool _cameraRecoveryScheduled = false;
+
+  @override
+  void dispose() {
+    if (_ownsController) _effectiveController.dispose();
+    super.dispose();
+  }
+
+  void _handlePositionChanged(MapCamera camera, bool hasGesture) {
+    if (isFiniteCameraPose(camera.center, camera.zoom)) {
+      _lastFiniteCenter = camera.center;
+      _lastFiniteZoom = camera.zoom;
+    } else if (!_cameraRecoveryScheduled) {
+      _cameraRecoveryScheduled = true;
+      final recoverCenter = _lastFiniteCenter;
+      final recoverZoom = _lastFiniteZoom;
+      scheduleMicrotask(() {
+        _cameraRecoveryScheduled = false;
+        if (!mounted || recoverCenter == null) return;
+        _effectiveController.safeMove(recoverCenter, recoverZoom);
+      });
+      return;
+    }
+    widget.onPositionChanged?.call(camera, hasGesture);
+  }
+
+  @override
   Widget build(BuildContext context) {
     // Build interaction flags
-    int interactionFlags = interactive
+    int interactionFlags = widget.interactive
         ? InteractiveFlag.all
         : InteractiveFlag.none;
-    if (disableRotation && interactive) {
+    if (widget.disableRotation && widget.interactive) {
       interactionFlags = InteractiveFlag.all & ~InteractiveFlag.rotate;
     }
 
     // Wrap in RepaintBoundary for better performance with large datasets
     return RepaintBoundary(
       child: FlutterMap(
-        mapController: mapController,
+        mapController: _effectiveController,
         options: MapOptions(
-          initialCenter: initialCenter,
-          initialZoom: initialZoom,
-          minZoom: minZoom,
-          maxZoom: maxZoom,
-          backgroundColor: backgroundColor ?? context.background,
+          initialCenter: widget.initialCenter,
+          initialZoom: widget.initialZoom,
+          minZoom: widget.minZoom,
+          maxZoom: widget.maxZoom,
+          backgroundColor: widget.backgroundColor ?? context.background,
           interactionOptions: InteractionOptions(
             flags: interactionFlags,
             pinchZoomThreshold: 0.5,
             scrollWheelVelocity: 0.005,
           ),
-          onPositionChanged: onPositionChanged,
-          onTap: onTap,
-          onLongPress: onLongPress,
+          onPositionChanged: _handlePositionChanged,
+          onTap: widget.onTap,
+          onLongPress: widget.onLongPress,
         ),
         children: [
           // Map tiles. Routes to Mapbox when its flag + token are set.
           TileLayer(
             urlTemplate:
                 MapConfig.mapboxUrlForStyle(
-                  mapStyle,
-                  satelliteLabelsOn: showSatelliteLabels,
+                  widget.mapStyle,
+                  satelliteLabelsOn: widget.showSatelliteLabels,
                 ) ??
-                mapStyle.url,
+                widget.mapStyle.url,
             subdomains: MapConfig.isMapboxActive
                 ? const <String>[]
-                : mapStyle.subdomains,
+                : widget.mapStyle.subdomains,
             userAgentPackageName: MapConfig.userAgentPackageName,
             retinaMode: MapConfig.isMapboxActive
                 ? true
-                : mapStyle != MapTileStyle.satellite,
+                : widget.mapStyle != MapTileStyle.satellite,
             evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
             // Disable tile animation for better performance
-            tileBuilder: animateTiles
+            tileBuilder: widget.animateTiles
                 ? (context, tileWidget, tile) {
                     return tileWidget; // Just return widget without animation for perf
                   }
@@ -189,56 +238,59 @@ class MeshMapWidget extends StatelessWidget {
           // Transparent place-name + boundary overlay above satellite
           // imagery. Sits below additional layers and node markers. Skipped
           // on the Mapbox path (labels baked into satellite-streets-v12).
-          if (mapStyle == MapTileStyle.satellite &&
-              showSatelliteLabels &&
+          if (widget.mapStyle == MapTileStyle.satellite &&
+              widget.showSatelliteLabels &&
               !MapConfig.isMapboxActive)
             MapConfig.satelliteReferenceLabelsTileLayer(),
 
           // Additional layers (polylines, circles, etc.)
-          ...additionalLayers,
+          ...widget.additionalLayers,
 
           // Clustered markers (when enabled)
-          if (enableClustering &&
-              clusteredMarkers != null &&
-              clusteredMarkers!.isNotEmpty)
+          if (widget.enableClustering &&
+              widget.clusteredMarkers != null &&
+              widget.clusteredMarkers!.isNotEmpty)
             MarkerClusterLayerWidget(
               options: MarkerClusterLayerOptions(
-                maxClusterRadius: clusterRadius.toInt(),
+                maxClusterRadius: widget.clusterRadius.toInt(),
                 size: const Size(48, 48),
                 padding: const EdgeInsets.all(AppTheme.spacing50),
-                markers: finiteMarkers(clusteredMarkers!),
-                popupOptions: popupController != null && popupBuilder != null
+                markers: finiteMarkers(widget.clusteredMarkers!),
+                popupOptions:
+                    widget.popupController != null &&
+                        widget.popupBuilder != null
                     ? PopupOptions(
                         popupSnap: PopupSnap.markerTop,
-                        popupController: popupController!,
-                        popupBuilder: popupBuilder!,
+                        popupController: widget.popupController!,
+                        popupBuilder: widget.popupBuilder!,
                       )
                     : PopupOptions(
                         popupBuilder: (_, _) => const SizedBox.shrink(),
                       ),
-                builder: clusterBuilder ?? _defaultClusterBuilder,
+                builder: widget.clusterBuilder ?? _defaultClusterBuilder,
               ),
             ),
 
           // Non-clustered node markers (standard mode)
-          if (!enableClustering &&
-              nodeMarkers != null &&
-              nodeMarkers!.isNotEmpty)
+          if (!widget.enableClustering &&
+              widget.nodeMarkers != null &&
+              widget.nodeMarkers!.isNotEmpty)
             MarkerLayer(
               rotate: true,
               markers: finiteMarkers(
-                nodeMarkers!.map((data) {
-                  final isMyNode = data.node.nodeNum == myNodeNum;
-                  final isSelected = data.node.nodeNum == selectedNodeNum;
+                widget.nodeMarkers!.map((data) {
+                  final isMyNode = data.node.nodeNum == widget.myNodeNum;
+                  final isSelected =
+                      data.node.nodeNum == widget.selectedNodeNum;
                   return Marker(
                     point: LatLng(data.latitude, data.longitude),
                     width: isSelected ? 56 : 44,
                     height: isSelected ? 56 : 44,
                     child: GestureDetector(
-                      onTap: onNodeTap != null
+                      onTap: widget.onNodeTap != null
                           ? () {
                               HapticFeedback.selectionClick();
-                              onNodeTap!(data.node);
+                              widget.onNodeTap!(data.node);
                             }
                           : null,
                       child: MeshNodeMarker(
@@ -258,7 +310,7 @@ class MeshMapWidget extends StatelessWidget {
           // the pill doesn't get clipped by rounded screen corners / device
           // chrome at the bottom-left, and lifted above the home indicator
           // via the system safe-area inset.
-          if (showAttribution)
+          if (widget.showAttribution)
             Positioned(
               left: 0,
               right: 0,
@@ -269,9 +321,9 @@ class MeshMapWidget extends StatelessWidget {
                     Uri.parse(
                       MapConfig.isMapboxActive
                           ? MapConfig.mapboxAttributionUrl
-                          : mapStyle == MapTileStyle.satellite
+                          : widget.mapStyle == MapTileStyle.satellite
                           ? 'https://www.esri.com'
-                          : mapStyle == MapTileStyle.terrain
+                          : widget.mapStyle == MapTileStyle.terrain
                           ? 'https://opentopomap.org'
                           : 'https://carto.com/attributions',
                     ),
@@ -288,9 +340,9 @@ class MeshMapWidget extends StatelessWidget {
                     child: Text(
                       MapConfig.isMapboxActive
                           ? MapConfig.mapboxAttributionLabel
-                          : mapStyle == MapTileStyle.satellite
+                          : widget.mapStyle == MapTileStyle.satellite
                           ? '© Esri'
-                          : mapStyle == MapTileStyle.terrain
+                          : widget.mapStyle == MapTileStyle.terrain
                           ? '© OpenTopoMap © OSM'
                           : '© OSM © CARTO',
                       style: const TextStyle(

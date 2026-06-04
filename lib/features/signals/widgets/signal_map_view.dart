@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -47,6 +49,33 @@ class _SignalMapViewState extends ConsumerState<SignalMapView>
   bool _showSignalList = false;
   MapTileStyle _mapStyle = MapTileStyle.dark;
   bool _showSatelliteLabels = true;
+
+  // Camera-boundary NaN recovery. flutter_map's pinch pipeline can commit a
+  // non-finite pose through its internal moveRaw() (a math.log(scale<=0)
+  // overflow), bypassing every safeMove guard and leaving the camera centre
+  // NaN — which then throws fatally in Crs.checkLatLng on the next tile build
+  // and every later pinch. onPositionChanged fires on that internal move, so
+  // we snap back to the last finite pose before the crashing frame builds.
+  // See lib/core/safe_lat_lng.dart isFiniteCameraPose.
+  LatLng? _lastFiniteCenter;
+  double _lastFiniteZoom = 13.0;
+  bool _cameraRecoveryScheduled = false;
+
+  void _handlePositionChanged(MapCamera camera, bool hasGesture) {
+    if (isFiniteCameraPose(camera.center, camera.zoom)) {
+      _lastFiniteCenter = camera.center;
+      _lastFiniteZoom = camera.zoom;
+    } else if (!_cameraRecoveryScheduled) {
+      _cameraRecoveryScheduled = true;
+      final recoverCenter = _lastFiniteCenter;
+      final recoverZoom = _lastFiniteZoom;
+      scheduleMicrotask(() {
+        _cameraRecoveryScheduled = false;
+        if (!mounted || recoverCenter == null) return;
+        _mapController.safeMove(recoverCenter, recoverZoom);
+      });
+    }
+  }
 
   /// Programmatically focus on a specific signal: select the preview card
   /// and center/zoom the map to its location.
@@ -170,6 +199,7 @@ class _SignalMapViewState extends ConsumerState<SignalMapView>
             interactionOptions: const InteractionOptions(
               flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
             ),
+            onPositionChanged: _handlePositionChanged,
             onTap: (_, _) {
               setState(() {
                 _selectedSignal = null;

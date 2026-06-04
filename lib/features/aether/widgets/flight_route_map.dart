@@ -79,6 +79,8 @@ class FlightRouteMap extends StatelessWidget {
       child: Stack(
         children: [
           // The map
+          // lint-allow: camera-pose-guard — non-interactive (InteractiveFlag.none);
+          // no pinch gesture, so the camera centre cannot go NaN.
           FlutterMap(
             options: MapOptions(
               initialCenter: isFiniteLatLng(bounds.center)
