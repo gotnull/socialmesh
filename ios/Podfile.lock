@@ -1216,7 +1216,7 @@ PODS:
   - BoringSSL-GRPC/Interface (0.0.37)
   - camera_avfoundation (0.0.1):
     - Flutter
-  - cloud_firestore (6.4.1):
+  - cloud_firestore (6.5.0):
     - Firebase/Firestore (= 12.14.0)
     - firebase_core
     - Flutter
@@ -1960,7 +1960,7 @@ SPEC CHECKSUMS:
   bonsoir_darwin: 14bd7429acb51db6a8e51f6574ac3b1ea0037a87
   BoringSSL-GRPC: dded2a44897e45f28f08ae87a55ee4bcd19bc508
   camera_avfoundation: 968a9a5323c79a99c166ad9d7866bfd2047b5a9b
-  cloud_firestore: 766684e944226a9d7384d7a2a630effa6615c186
+  cloud_firestore: 0b00f29ae2bb05adf7b0624b4aa883861a59761d
   cloud_functions: 18bff3a9a3a018512bef4b70535f3f5326bc5e24
   connectivity_plus: cb623214f4e1f6ef8fe7403d580fdad517d2f7dd
   device_info_plus: 21fcca2080fbcd348be798aa36c3e5ed849eefbe
