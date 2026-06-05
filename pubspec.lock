@@ -1769,10 +1769,10 @@ packages:
     dependency: "direct main"
     description:
       name: nordic_dfu
-      sha256: fde2f689950fbb34705eeb5e26718c79040721065df0ed48ee7de45b997452a1
+      sha256: "15261392e7a22739546666dff25d79d53ba4b4e2bb4bd00d623e3cdc6942cf33"
       url: "https://pub.dev"
     source: hosted
-    version: "7.1.2"
+    version: "7.1.3"
   objective_c:
     dependency: transitive
     description:
