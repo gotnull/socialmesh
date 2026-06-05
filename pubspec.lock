@@ -802,18 +802,18 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_blue_plus
-      sha256: "26d8a39e1a4a801c4e800a8d6f40fa1ddb1ea5bb354d2cad20877da570c57870"
+      sha256: "93a248888ec065c3656b3058116254a2d650abe0077942bad6ccd3319bb87a63"
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.4"
+    version: "2.3.5"
   flutter_blue_plus_android:
     dependency: transitive
     description:
       name: flutter_blue_plus_android
-      sha256: fd49046d16bdff7609f7f099fcd5d51e4ea70d699bbcb1b2c6c88b732697d2fc
+      sha256: "9ddbdc75cf7b4e11838118fb43659460d2837b3cee478dd8261b1196e10a8cc5"
       url: "https://pub.dev"
     source: hosted
-    version: "9.0.0"
+    version: "9.0.1"
   flutter_blue_plus_darwin:
     dependency: transitive
     description:
