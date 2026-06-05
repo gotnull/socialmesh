@@ -42112,6 +42112,119 @@ class AppLocalizationsEs extends AppLocalizations {
   String get whatsNewCtaOpenWatchSettings => 'Abrir ajustes de Watch';
 
   @override
+  String get whatsNewVersion1450Subtitle => 'Versión 1.45.0';
+
+  @override
+  String get whatsNewCarPlayMessagingTitle => 'Mensajes mesh en CarPlay';
+
+  @override
+  String get whatsNewCarPlayMessagingDescription =>
+      'Mensajería mesh con manos libres para la carretera. Envía, escucha y gestiona mensajes con Siri, y echa un vistazo a tus canales y mensajes directos en la pantalla de CarPlay. Creado en torno al modelo de comunicación CarPlay de Apple.';
+
+  @override
+  String get whatsNewCtaExploreCarPlay => 'Explorar CarPlay';
+
+  @override
+  String get carPlayShowcaseAppBarTitle => 'Novedades';
+
+  @override
+  String get carPlayShowcaseTitle => 'Mensajes mesh en CarPlay';
+
+  @override
+  String get carPlayShowcaseSubtitle =>
+      'Mensajes mesh con manos libres, pensados para la carretera.';
+
+  @override
+  String get carPlayShowcaseBadgeMajor => 'Función principal';
+
+  @override
+  String get carPlayShowcaseBadgeMessaging => 'Mensajes';
+
+  @override
+  String get carPlayShowcaseHeroStatus =>
+      'Creado en torno al modelo de comunicación CarPlay de Apple';
+
+  @override
+  String get carPlayShowcaseFlowTitle => 'El viaje de un mensaje';
+
+  @override
+  String get carPlayShowcaseFlowStep1 => 'Llega el mensaje';
+
+  @override
+  String get carPlayShowcaseFlowStep2 => 'Siri envía o lee';
+
+  @override
+  String get carPlayShowcaseFlowStep3 => 'La radio transmite';
+
+  @override
+  String get carPlayShowcaseFlowStep4 => 'El estado de lectura se sincroniza';
+
+  @override
+  String get carPlayShowcaseLeadTitle => 'La mensajería mesh llega al coche';
+
+  @override
+  String get carPlayShowcaseLeadBody =>
+      'Cuando la cobertura se vuelve poco fiable, tu red mesh sigue hablando. Ahora SocialMesh lleva esa misma mentalidad centrada en la comunicación a la conducción, con una experiencia de mensajería con manos libres creada en torno al modelo de comunicación CarPlay de Apple.';
+
+  @override
+  String get carPlayShowcaseCardSendTitle => 'Envía mensajes mesh breves';
+
+  @override
+  String get carPlayShowcaseCardSendBody =>
+      'Pídele a Siri que envíe una actualización concisa y saldrá por la red mesh. Sin tocar el teléfono, sin abrir la app.';
+
+  @override
+  String get carPlayShowcaseCardHearTitle => 'Escucha lo que acaba de llegar';
+
+  @override
+  String get carPlayShowcaseCardHearBody =>
+      'Siri lee en voz alta los mensajes mesh recientes para que sigas la conversación sin mirar nunca hacia abajo.';
+
+  @override
+  String get carPlayShowcaseCardMarkTitle =>
+      'Mantén sincronizado el estado de lectura';
+
+  @override
+  String get carPlayShowcaseCardMarkBody =>
+      'Marca los mensajes como gestionados con la voz y el estado de lectura se mantiene alineado con la app de tu teléfono.';
+
+  @override
+  String get carPlayShowcaseCardBrowseTitle => 'Echa un vistazo a canales y MD';
+
+  @override
+  String get carPlayShowcaseCardBrowseBody =>
+      'Tus canales y mensajes directos aparecen directamente en la pantalla de CarPlay, con la lista segura para conducir de Apple y los contadores de no leídos de un vistazo.';
+
+  @override
+  String get carPlayShowcaseCardSafeTitle =>
+      'Seguro para conducir desde el diseño';
+
+  @override
+  String get carPlayShowcaseCardSafeBody =>
+      'Mensajes breves, interacción con Siri en primer lugar, toques mínimos. Toda la experiencia está pensada para que no apartes la vista de la carretera.';
+
+  @override
+  String get carPlayShowcaseHowTitle => 'Cómo funciona';
+
+  @override
+  String get carPlayShowcaseHowBody =>
+      'La mensajería de CarPlay se basa en los intents de comunicación de SiriKit de Apple, la misma base que Apple usa para la mensajería nativa en el coche. Enviar, buscar mensajes recientes y actualizar el estado de lectura corresponden cada uno a un intent dedicado.';
+
+  @override
+  String get carPlayShowcaseRealityTitle => 'Centrado, sin distracciones';
+
+  @override
+  String get carPlayShowcaseRealityBody =>
+      'Esto es comunicación mesh breve: no es VoIP, no es un sistema de llamadas y no es un panel de mando complejo. Está limitado a propósito para que conducir siga siendo la prioridad.';
+
+  @override
+  String get carPlayShowcaseFooter =>
+      'Pensado para los momentos en que la cobertura normal se vuelve poco fiable, pero seguir en contacto todavía importa.';
+
+  @override
+  String get carPlayShowcaseCta => 'Entendido';
+
+  @override
   String get meshFeedTitle => 'Mesh Feed';
 
   @override

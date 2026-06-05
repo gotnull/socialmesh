@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/automations/automations_screen.dart';
+import '../../features/carplay/carplay_messaging_showcase_screen.dart';
 import '../../features/device_shop/screens/device_shop_screen.dart';
 import '../../features/settings/watch_companion_settings_screen.dart';
 import '../../features/navigation/main_shell.dart';
@@ -762,6 +763,8 @@ class _WhatsNewItemCard extends ConsumerWidget {
         return const DeviceShopScreen();
       case '/settings/watch':
         return const WatchCompanionSettingsScreen();
+      case '/carplay':
+        return const CarPlayMessagingShowcaseScreen();
       default:
         return null;
     }

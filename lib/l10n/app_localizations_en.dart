@@ -41452,6 +41452,118 @@ class AppLocalizationsEn extends AppLocalizations {
   String get whatsNewCtaOpenWatchSettings => 'Open Watch settings';
 
   @override
+  String get whatsNewVersion1450Subtitle => 'Version 1.45.0';
+
+  @override
+  String get whatsNewCarPlayMessagingTitle => 'CarPlay Mesh Messaging';
+
+  @override
+  String get whatsNewCarPlayMessagingDescription =>
+      'Hands-free mesh messaging for the road. Send, hear, and triage messages with Siri, and glance at your channels and direct messages right on the CarPlay display. Built around Apple\'s CarPlay communication model.';
+
+  @override
+  String get whatsNewCtaExploreCarPlay => 'Explore CarPlay';
+
+  @override
+  String get carPlayShowcaseAppBarTitle => 'What\'s New';
+
+  @override
+  String get carPlayShowcaseTitle => 'CarPlay Mesh Messaging';
+
+  @override
+  String get carPlayShowcaseSubtitle =>
+      'Hands-free mesh messages, designed for the road.';
+
+  @override
+  String get carPlayShowcaseBadgeMajor => 'Major Feature';
+
+  @override
+  String get carPlayShowcaseBadgeMessaging => 'Messaging';
+
+  @override
+  String get carPlayShowcaseHeroStatus =>
+      'Built around Apple\'s CarPlay communication model';
+
+  @override
+  String get carPlayShowcaseFlowTitle => 'How a message travels';
+
+  @override
+  String get carPlayShowcaseFlowStep1 => 'Message arrives';
+
+  @override
+  String get carPlayShowcaseFlowStep2 => 'Siri sends or reads';
+
+  @override
+  String get carPlayShowcaseFlowStep3 => 'Radio transmits';
+
+  @override
+  String get carPlayShowcaseFlowStep4 => 'Read state syncs';
+
+  @override
+  String get carPlayShowcaseLeadTitle =>
+      'Mesh messaging is moving into the car';
+
+  @override
+  String get carPlayShowcaseLeadBody =>
+      'When coverage gets unreliable, your mesh keeps talking. SocialMesh now brings that same communication-first mindset to driving, with a hands-free messaging experience built around Apple\'s CarPlay communication model.';
+
+  @override
+  String get carPlayShowcaseCardSendTitle => 'Send short mesh messages';
+
+  @override
+  String get carPlayShowcaseCardSendBody =>
+      'Ask Siri to fire off a concise update and it goes out over the mesh. No phone handling, no opening the app.';
+
+  @override
+  String get carPlayShowcaseCardHearTitle => 'Hear what just came in';
+
+  @override
+  String get carPlayShowcaseCardHearBody =>
+      'Siri reads recent mesh messages aloud so you stay aware of the conversation without ever glancing down.';
+
+  @override
+  String get carPlayShowcaseCardMarkTitle => 'Keep read state in sync';
+
+  @override
+  String get carPlayShowcaseCardMarkBody =>
+      'Mark messages handled by voice, and the read state stays in step with the app on your phone.';
+
+  @override
+  String get carPlayShowcaseCardBrowseTitle => 'Glance at channels and DMs';
+
+  @override
+  String get carPlayShowcaseCardBrowseBody =>
+      'Your channels and direct messages appear right on the CarPlay screen, using Apple\'s driver-safe list, with unread counts at a glance.';
+
+  @override
+  String get carPlayShowcaseCardSafeTitle => 'Driver-safe by design';
+
+  @override
+  String get carPlayShowcaseCardSafeBody =>
+      'Short messages, Siri-first interaction, minimal taps. The whole experience is intentionally scoped so your eyes stay on the road.';
+
+  @override
+  String get carPlayShowcaseHowTitle => 'How it works';
+
+  @override
+  String get carPlayShowcaseHowBody =>
+      'CarPlay messaging is built on Apple\'s SiriKit communication intents, the same foundation Apple uses for first-party messaging in the car. Sending, finding recent messages, and updating read state each map to a dedicated intent.';
+
+  @override
+  String get carPlayShowcaseRealityTitle => 'Focused, not distracting';
+
+  @override
+  String get carPlayShowcaseRealityBody =>
+      'This is short-form mesh communication: not VoIP, not a calling system, and not a sprawling in-car dashboard. It is intentionally scoped to keep driving the priority.';
+
+  @override
+  String get carPlayShowcaseFooter =>
+      'Built for the moments when ordinary coverage gets unreliable, but staying in touch still matters.';
+
+  @override
+  String get carPlayShowcaseCta => 'Got it';
+
+  @override
   String get meshFeedTitle => 'Mesh Feed';
 
   @override

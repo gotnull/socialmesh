@@ -526,6 +526,9 @@ class AppTheme {
   static const primaryPurple = Color(0xFF8B5CF6); // Purple
   static const primaryBlue = Color(0xFF4F6AF6); // Blue
 
+  // CarPlay surface accent (Apple CarPlay blue).
+  static const carPlayBlue = Color(0xFF3B82F6);
+
   // Accent colors
   static const secondaryPink = Color(0xFFF97BBD);
   static const accentOrange = Color(0xFFFF9D6E);

@@ -42027,6 +42027,117 @@ class AppLocalizationsDe extends AppLocalizations {
   String get whatsNewCtaOpenWatchSettings => 'Watch-Einstellungen öffnen';
 
   @override
+  String get whatsNewVersion1450Subtitle => 'Version 1.45.0';
+
+  @override
+  String get whatsNewCarPlayMessagingTitle => 'Mesh-Nachrichten in CarPlay';
+
+  @override
+  String get whatsNewCarPlayMessagingDescription =>
+      'Freihändige Mesh-Nachrichten für unterwegs. Sende, höre und sortiere Nachrichten mit Siri und sieh deine Kanäle und Direktnachrichten direkt auf dem CarPlay-Display. Aufgebaut auf Apples CarPlay-Kommunikationsmodell.';
+
+  @override
+  String get whatsNewCtaExploreCarPlay => 'CarPlay entdecken';
+
+  @override
+  String get carPlayShowcaseAppBarTitle => 'Neuigkeiten';
+
+  @override
+  String get carPlayShowcaseTitle => 'Mesh-Nachrichten in CarPlay';
+
+  @override
+  String get carPlayShowcaseSubtitle =>
+      'Freihändige Mesh-Nachrichten, gemacht für unterwegs.';
+
+  @override
+  String get carPlayShowcaseBadgeMajor => 'Wichtige Funktion';
+
+  @override
+  String get carPlayShowcaseBadgeMessaging => 'Nachrichten';
+
+  @override
+  String get carPlayShowcaseHeroStatus =>
+      'Aufgebaut auf Apples CarPlay-Kommunikationsmodell';
+
+  @override
+  String get carPlayShowcaseFlowTitle => 'Der Weg einer Nachricht';
+
+  @override
+  String get carPlayShowcaseFlowStep1 => 'Nachricht kommt an';
+
+  @override
+  String get carPlayShowcaseFlowStep2 => 'Siri sendet oder liest';
+
+  @override
+  String get carPlayShowcaseFlowStep3 => 'Funk überträgt';
+
+  @override
+  String get carPlayShowcaseFlowStep4 => 'Lesestatus wird synchronisiert';
+
+  @override
+  String get carPlayShowcaseLeadTitle => 'Mesh-Nachrichten ziehen ins Auto ein';
+
+  @override
+  String get carPlayShowcaseLeadBody =>
+      'Wenn die Netzabdeckung unzuverlässig wird, redet dein Mesh weiter. SocialMesh bringt dieselbe kommunikationsorientierte Haltung jetzt auch ans Steuer, mit einem freihändigen Nachrichtenerlebnis, das auf Apples CarPlay-Kommunikationsmodell aufbaut.';
+
+  @override
+  String get carPlayShowcaseCardSendTitle => 'Kurze Mesh-Nachrichten senden';
+
+  @override
+  String get carPlayShowcaseCardSendBody =>
+      'Bitte Siri um ein kurzes Update, und es geht über das Mesh hinaus. Ohne das Telefon in die Hand zu nehmen, ohne die App zu öffnen.';
+
+  @override
+  String get carPlayShowcaseCardHearTitle => 'Hör, was gerade reinkam';
+
+  @override
+  String get carPlayShowcaseCardHearBody =>
+      'Siri liest aktuelle Mesh-Nachrichten vor, damit du dem Gespräch folgen kannst, ohne je nach unten zu schauen.';
+
+  @override
+  String get carPlayShowcaseCardMarkTitle => 'Lesestatus synchron halten';
+
+  @override
+  String get carPlayShowcaseCardMarkBody =>
+      'Markiere Nachrichten per Sprache als erledigt, und der Lesestatus bleibt mit der App auf deinem Telefon im Einklang.';
+
+  @override
+  String get carPlayShowcaseCardBrowseTitle => 'Kanäle und DMs im Blick';
+
+  @override
+  String get carPlayShowcaseCardBrowseBody =>
+      'Deine Kanäle und Direktnachrichten erscheinen direkt auf dem CarPlay-Display, in Apples fahrsicherer Liste, mit ungelesenen Zählern auf einen Blick.';
+
+  @override
+  String get carPlayShowcaseCardSafeTitle => 'Fahrsicher von Grund auf';
+
+  @override
+  String get carPlayShowcaseCardSafeBody =>
+      'Kurze Nachrichten, Siri zuerst, minimale Tipps. Das gesamte Erlebnis ist bewusst so gestaltet, dass dein Blick auf der Straße bleibt.';
+
+  @override
+  String get carPlayShowcaseHowTitle => 'So funktioniert es';
+
+  @override
+  String get carPlayShowcaseHowBody =>
+      'CarPlay-Nachrichten basieren auf Apples SiriKit-Kommunikations-Intents, derselben Grundlage, die Apple für die native Nachrichtenfunktion im Auto nutzt. Senden, aktuelle Nachrichten finden und den Lesestatus aktualisieren entsprechen jeweils einem eigenen Intent.';
+
+  @override
+  String get carPlayShowcaseRealityTitle => 'Fokussiert, nicht ablenkend';
+
+  @override
+  String get carPlayShowcaseRealityBody =>
+      'Das ist kurze Mesh-Kommunikation: kein VoIP, kein Anrufsystem und kein ausuferndes Cockpit-Dashboard. Sie ist bewusst begrenzt, damit das Fahren Priorität bleibt.';
+
+  @override
+  String get carPlayShowcaseFooter =>
+      'Gemacht für die Momente, in denen die normale Abdeckung unzuverlässig wird, Kontakt zu halten aber weiter zählt.';
+
+  @override
+  String get carPlayShowcaseCta => 'Verstanden';
+
+  @override
   String get meshFeedTitle => 'Mesh-Feed';
 
   @override

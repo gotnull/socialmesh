@@ -391,6 +391,28 @@ class WhatsNewRegistry {
         ),
       ],
     ),
+
+    // v1.45.0 — CarPlay mesh messaging (major feature reveal)
+    WhatsNewPayload(
+      version: '1.45.0',
+      headline: "What's New in SocialMesh",
+      subtitle: 'Version 1.45.0',
+      items: [
+        WhatsNewItem(
+          id: 'carplay_messaging_intro',
+          title: 'CarPlay Mesh Messaging',
+          description:
+              'Hands-free mesh messaging for the road. Send, hear, and triage '
+              'messages with Siri, and glance at your channels and direct '
+              'messages right on the CarPlay display. Built around Apple\'s '
+              'CarPlay communication model.',
+          icon: Icons.directions_car_filled_outlined,
+          iconColor: Color(0xFF3B82F6), // CarPlay blue
+          deepLinkRoute: '/carplay',
+          ctaLabel: 'Explore CarPlay',
+        ),
+      ],
+    ),
   ];
 
   // ===========================================================================
@@ -546,6 +568,8 @@ class WhatsNewRegistry {
         return l10n.whatsNewVersion1360Subtitle;
       case '1.41.0':
         return l10n.whatsNewVersion1410Subtitle;
+      case '1.45.0':
+        return l10n.whatsNewVersion1450Subtitle;
       default:
         return null;
     }
@@ -607,6 +631,10 @@ class WhatsNewRegistry {
         title = l10n.whatsNewAppleWatchCompanionTitle;
         description = l10n.whatsNewAppleWatchCompanionDescription;
         ctaLabel = l10n.whatsNewCtaOpenWatchSettings;
+      case 'carplay_messaging_intro':
+        title = l10n.whatsNewCarPlayMessagingTitle;
+        description = l10n.whatsNewCarPlayMessagingDescription;
+        ctaLabel = l10n.whatsNewCtaExploreCarPlay;
       default:
         return i;
     }

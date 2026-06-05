@@ -72401,6 +72401,204 @@ abstract class AppLocalizations {
   /// **'Open Watch settings'**
   String get whatsNewCtaOpenWatchSettings;
 
+  /// Subtitle for the What's New popup for version 1.45.0.
+  ///
+  /// In en, this message translates to:
+  /// **'Version 1.45.0'**
+  String get whatsNewVersion1450Subtitle;
+
+  /// What's New entry title for CarPlay mesh messaging. 'CarPlay' is an Apple brand name; keep it verbatim in every locale.
+  ///
+  /// In en, this message translates to:
+  /// **'CarPlay Mesh Messaging'**
+  String get whatsNewCarPlayMessagingTitle;
+
+  /// What's New entry description for CarPlay mesh messaging. Brand names 'CarPlay', 'Siri', and 'SocialMesh' stay verbatim.
+  ///
+  /// In en, this message translates to:
+  /// **'Hands-free mesh messaging for the road. Send, hear, and triage messages with Siri, and glance at your channels and direct messages right on the CarPlay display. Built around Apple\'s CarPlay communication model.'**
+  String get whatsNewCarPlayMessagingDescription;
+
+  /// CTA button label that opens the CarPlay mesh messaging showcase from What's New. 'CarPlay' stays verbatim.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore CarPlay'**
+  String get whatsNewCtaExploreCarPlay;
+
+  /// App bar title for the CarPlay mesh messaging showcase screen.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s New'**
+  String get carPlayShowcaseAppBarTitle;
+
+  /// Hero title on the CarPlay showcase screen. 'CarPlay' stays verbatim.
+  ///
+  /// In en, this message translates to:
+  /// **'CarPlay Mesh Messaging'**
+  String get carPlayShowcaseTitle;
+
+  /// Hero subtitle on the CarPlay showcase screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Hands-free mesh messages, designed for the road.'**
+  String get carPlayShowcaseSubtitle;
+
+  /// Badge label marking CarPlay messaging as a major feature.
+  ///
+  /// In en, this message translates to:
+  /// **'Major Feature'**
+  String get carPlayShowcaseBadgeMajor;
+
+  /// Category badge label for the CarPlay messaging feature.
+  ///
+  /// In en, this message translates to:
+  /// **'Messaging'**
+  String get carPlayShowcaseBadgeMessaging;
+
+  /// Small status line under the hero. 'Apple' and 'CarPlay' stay verbatim.
+  ///
+  /// In en, this message translates to:
+  /// **'Built around Apple\'s CarPlay communication model'**
+  String get carPlayShowcaseHeroStatus;
+
+  /// Section title above the animated message-flow rail.
+  ///
+  /// In en, this message translates to:
+  /// **'How a message travels'**
+  String get carPlayShowcaseFlowTitle;
+
+  /// Flow rail step 1: a mesh message arrives.
+  ///
+  /// In en, this message translates to:
+  /// **'Message arrives'**
+  String get carPlayShowcaseFlowStep1;
+
+  /// Flow rail step 2: Siri sends or reads the message. 'Siri' stays verbatim.
+  ///
+  /// In en, this message translates to:
+  /// **'Siri sends or reads'**
+  String get carPlayShowcaseFlowStep2;
+
+  /// Flow rail step 3: the mesh radio transmits.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio transmits'**
+  String get carPlayShowcaseFlowStep3;
+
+  /// Flow rail step 4: read state syncs back to the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Read state syncs'**
+  String get carPlayShowcaseFlowStep4;
+
+  /// Lead paragraph title on the CarPlay showcase.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh messaging is moving into the car'**
+  String get carPlayShowcaseLeadTitle;
+
+  /// Lead paragraph body. Brand names 'SocialMesh', 'Apple', 'CarPlay' stay verbatim.
+  ///
+  /// In en, this message translates to:
+  /// **'When coverage gets unreliable, your mesh keeps talking. SocialMesh now brings that same communication-first mindset to driving, with a hands-free messaging experience built around Apple\'s CarPlay communication model.'**
+  String get carPlayShowcaseLeadBody;
+
+  /// Feature card title: sending messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Send short mesh messages'**
+  String get carPlayShowcaseCardSendTitle;
+
+  /// Feature card body: sending messages. 'Siri' stays verbatim.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask Siri to fire off a concise update and it goes out over the mesh. No phone handling, no opening the app.'**
+  String get carPlayShowcaseCardSendBody;
+
+  /// Feature card title: hearing recent messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Hear what just came in'**
+  String get carPlayShowcaseCardHearTitle;
+
+  /// Feature card body: hearing messages. 'Siri' stays verbatim.
+  ///
+  /// In en, this message translates to:
+  /// **'Siri reads recent mesh messages aloud so you stay aware of the conversation without ever glancing down.'**
+  String get carPlayShowcaseCardHearBody;
+
+  /// Feature card title: marking messages read.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep read state in sync'**
+  String get carPlayShowcaseCardMarkTitle;
+
+  /// Feature card body: marking messages read.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark messages handled by voice, and the read state stays in step with the app on your phone.'**
+  String get carPlayShowcaseCardMarkBody;
+
+  /// Feature card title: browsing channels and direct messages. 'DMs' means direct messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Glance at channels and DMs'**
+  String get carPlayShowcaseCardBrowseTitle;
+
+  /// Feature card body: browsing channels and DMs. 'CarPlay' and 'Apple' stay verbatim.
+  ///
+  /// In en, this message translates to:
+  /// **'Your channels and direct messages appear right on the CarPlay screen, using Apple\'s driver-safe list, with unread counts at a glance.'**
+  String get carPlayShowcaseCardBrowseBody;
+
+  /// Feature card title: driver safety.
+  ///
+  /// In en, this message translates to:
+  /// **'Driver-safe by design'**
+  String get carPlayShowcaseCardSafeTitle;
+
+  /// Feature card body: driver safety. 'Siri' stays verbatim.
+  ///
+  /// In en, this message translates to:
+  /// **'Short messages, Siri-first interaction, minimal taps. The whole experience is intentionally scoped so your eyes stay on the road.'**
+  String get carPlayShowcaseCardSafeBody;
+
+  /// Section title for the technical explanation.
+  ///
+  /// In en, this message translates to:
+  /// **'How it works'**
+  String get carPlayShowcaseHowTitle;
+
+  /// Technical explanation body. 'CarPlay', 'Apple', 'SiriKit' stay verbatim.
+  ///
+  /// In en, this message translates to:
+  /// **'CarPlay messaging is built on Apple\'s SiriKit communication intents, the same foundation Apple uses for first-party messaging in the car. Sending, finding recent messages, and updating read state each map to a dedicated intent.'**
+  String get carPlayShowcaseHowBody;
+
+  /// Title for the 'what this is not' reality-check section.
+  ///
+  /// In en, this message translates to:
+  /// **'Focused, not distracting'**
+  String get carPlayShowcaseRealityTitle;
+
+  /// Reality-check body clarifying the feature is not VoIP/calling/custom dashboard. 'VoIP' stays verbatim.
+  ///
+  /// In en, this message translates to:
+  /// **'This is short-form mesh communication: not VoIP, not a calling system, and not a sprawling in-car dashboard. It is intentionally scoped to keep driving the priority.'**
+  String get carPlayShowcaseRealityBody;
+
+  /// Footer line on the CarPlay showcase screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Built for the moments when ordinary coverage gets unreliable, but staying in touch still matters.'**
+  String get carPlayShowcaseFooter;
+
+  /// Primary call-to-action button that dismisses the CarPlay showcase.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get carPlayShowcaseCta;
+
   /// Title for the mesh feed screen.
   ///
   /// In en, this message translates to:

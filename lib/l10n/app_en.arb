@@ -55370,6 +55370,138 @@
     "@whatsNewCtaOpenWatchSettings": {
         "description": "CTA button label to open the Apple Watch companion settings screen from What's New."
     },
+    "whatsNewVersion1450Subtitle": "Version 1.45.0",
+    "@whatsNewVersion1450Subtitle": {
+        "description": "Subtitle for the What's New popup for version 1.45.0."
+    },
+    "whatsNewCarPlayMessagingTitle": "CarPlay Mesh Messaging",
+    "@whatsNewCarPlayMessagingTitle": {
+        "description": "What's New entry title for CarPlay mesh messaging. 'CarPlay' is an Apple brand name; keep it verbatim in every locale."
+    },
+    "whatsNewCarPlayMessagingDescription": "Hands-free mesh messaging for the road. Send, hear, and triage messages with Siri, and glance at your channels and direct messages right on the CarPlay display. Built around Apple's CarPlay communication model.",
+    "@whatsNewCarPlayMessagingDescription": {
+        "description": "What's New entry description for CarPlay mesh messaging. Brand names 'CarPlay', 'Siri', and 'SocialMesh' stay verbatim."
+    },
+    "whatsNewCtaExploreCarPlay": "Explore CarPlay",
+    "@whatsNewCtaExploreCarPlay": {
+        "description": "CTA button label that opens the CarPlay mesh messaging showcase from What's New. 'CarPlay' stays verbatim."
+    },
+    "carPlayShowcaseAppBarTitle": "What's New",
+    "@carPlayShowcaseAppBarTitle": {
+        "description": "App bar title for the CarPlay mesh messaging showcase screen."
+    },
+    "carPlayShowcaseTitle": "CarPlay Mesh Messaging",
+    "@carPlayShowcaseTitle": {
+        "description": "Hero title on the CarPlay showcase screen. 'CarPlay' stays verbatim."
+    },
+    "carPlayShowcaseSubtitle": "Hands-free mesh messages, designed for the road.",
+    "@carPlayShowcaseSubtitle": {
+        "description": "Hero subtitle on the CarPlay showcase screen."
+    },
+    "carPlayShowcaseBadgeMajor": "Major Feature",
+    "@carPlayShowcaseBadgeMajor": {
+        "description": "Badge label marking CarPlay messaging as a major feature."
+    },
+    "carPlayShowcaseBadgeMessaging": "Messaging",
+    "@carPlayShowcaseBadgeMessaging": {
+        "description": "Category badge label for the CarPlay messaging feature."
+    },
+    "carPlayShowcaseHeroStatus": "Built around Apple's CarPlay communication model",
+    "@carPlayShowcaseHeroStatus": {
+        "description": "Small status line under the hero. 'Apple' and 'CarPlay' stay verbatim."
+    },
+    "carPlayShowcaseFlowTitle": "How a message travels",
+    "@carPlayShowcaseFlowTitle": {
+        "description": "Section title above the animated message-flow rail."
+    },
+    "carPlayShowcaseFlowStep1": "Message arrives",
+    "@carPlayShowcaseFlowStep1": {
+        "description": "Flow rail step 1: a mesh message arrives."
+    },
+    "carPlayShowcaseFlowStep2": "Siri sends or reads",
+    "@carPlayShowcaseFlowStep2": {
+        "description": "Flow rail step 2: Siri sends or reads the message. 'Siri' stays verbatim."
+    },
+    "carPlayShowcaseFlowStep3": "Radio transmits",
+    "@carPlayShowcaseFlowStep3": {
+        "description": "Flow rail step 3: the mesh radio transmits."
+    },
+    "carPlayShowcaseFlowStep4": "Read state syncs",
+    "@carPlayShowcaseFlowStep4": {
+        "description": "Flow rail step 4: read state syncs back to the app."
+    },
+    "carPlayShowcaseLeadTitle": "Mesh messaging is moving into the car",
+    "@carPlayShowcaseLeadTitle": {
+        "description": "Lead paragraph title on the CarPlay showcase."
+    },
+    "carPlayShowcaseLeadBody": "When coverage gets unreliable, your mesh keeps talking. SocialMesh now brings that same communication-first mindset to driving, with a hands-free messaging experience built around Apple's CarPlay communication model.",
+    "@carPlayShowcaseLeadBody": {
+        "description": "Lead paragraph body. Brand names 'SocialMesh', 'Apple', 'CarPlay' stay verbatim."
+    },
+    "carPlayShowcaseCardSendTitle": "Send short mesh messages",
+    "@carPlayShowcaseCardSendTitle": {
+        "description": "Feature card title: sending messages."
+    },
+    "carPlayShowcaseCardSendBody": "Ask Siri to fire off a concise update and it goes out over the mesh. No phone handling, no opening the app.",
+    "@carPlayShowcaseCardSendBody": {
+        "description": "Feature card body: sending messages. 'Siri' stays verbatim."
+    },
+    "carPlayShowcaseCardHearTitle": "Hear what just came in",
+    "@carPlayShowcaseCardHearTitle": {
+        "description": "Feature card title: hearing recent messages."
+    },
+    "carPlayShowcaseCardHearBody": "Siri reads recent mesh messages aloud so you stay aware of the conversation without ever glancing down.",
+    "@carPlayShowcaseCardHearBody": {
+        "description": "Feature card body: hearing messages. 'Siri' stays verbatim."
+    },
+    "carPlayShowcaseCardMarkTitle": "Keep read state in sync",
+    "@carPlayShowcaseCardMarkTitle": {
+        "description": "Feature card title: marking messages read."
+    },
+    "carPlayShowcaseCardMarkBody": "Mark messages handled by voice, and the read state stays in step with the app on your phone.",
+    "@carPlayShowcaseCardMarkBody": {
+        "description": "Feature card body: marking messages read."
+    },
+    "carPlayShowcaseCardBrowseTitle": "Glance at channels and DMs",
+    "@carPlayShowcaseCardBrowseTitle": {
+        "description": "Feature card title: browsing channels and direct messages. 'DMs' means direct messages."
+    },
+    "carPlayShowcaseCardBrowseBody": "Your channels and direct messages appear right on the CarPlay screen, using Apple's driver-safe list, with unread counts at a glance.",
+    "@carPlayShowcaseCardBrowseBody": {
+        "description": "Feature card body: browsing channels and DMs. 'CarPlay' and 'Apple' stay verbatim."
+    },
+    "carPlayShowcaseCardSafeTitle": "Driver-safe by design",
+    "@carPlayShowcaseCardSafeTitle": {
+        "description": "Feature card title: driver safety."
+    },
+    "carPlayShowcaseCardSafeBody": "Short messages, Siri-first interaction, minimal taps. The whole experience is intentionally scoped so your eyes stay on the road.",
+    "@carPlayShowcaseCardSafeBody": {
+        "description": "Feature card body: driver safety. 'Siri' stays verbatim."
+    },
+    "carPlayShowcaseHowTitle": "How it works",
+    "@carPlayShowcaseHowTitle": {
+        "description": "Section title for the technical explanation."
+    },
+    "carPlayShowcaseHowBody": "CarPlay messaging is built on Apple's SiriKit communication intents, the same foundation Apple uses for first-party messaging in the car. Sending, finding recent messages, and updating read state each map to a dedicated intent.",
+    "@carPlayShowcaseHowBody": {
+        "description": "Technical explanation body. 'CarPlay', 'Apple', 'SiriKit' stay verbatim."
+    },
+    "carPlayShowcaseRealityTitle": "Focused, not distracting",
+    "@carPlayShowcaseRealityTitle": {
+        "description": "Title for the 'what this is not' reality-check section."
+    },
+    "carPlayShowcaseRealityBody": "This is short-form mesh communication: not VoIP, not a calling system, and not a sprawling in-car dashboard. It is intentionally scoped to keep driving the priority.",
+    "@carPlayShowcaseRealityBody": {
+        "description": "Reality-check body clarifying the feature is not VoIP/calling/custom dashboard. 'VoIP' stays verbatim."
+    },
+    "carPlayShowcaseFooter": "Built for the moments when ordinary coverage gets unreliable, but staying in touch still matters.",
+    "@carPlayShowcaseFooter": {
+        "description": "Footer line on the CarPlay showcase screen."
+    },
+    "carPlayShowcaseCta": "Got it",
+    "@carPlayShowcaseCta": {
+        "description": "Primary call-to-action button that dismisses the CarPlay showcase."
+    },
     "meshFeedTitle": "Mesh Feed",
     "@meshFeedTitle": {
         "description": "Title for the mesh feed screen."
