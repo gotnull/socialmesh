@@ -203,6 +203,9 @@ class GeoChat extends $pb.GeneratedMessage {
     $core.String? toCallsign,
     $core.String? receiptForUid,
     GeoChat_ReceiptType? receiptType,
+    $core.String? lang,
+    $core.String? roomId,
+    $core.String? voiceProfileId,
   }) {
     final result = create();
     if (message != null) result.message = message;
@@ -210,6 +213,9 @@ class GeoChat extends $pb.GeneratedMessage {
     if (toCallsign != null) result.toCallsign = toCallsign;
     if (receiptForUid != null) result.receiptForUid = receiptForUid;
     if (receiptType != null) result.receiptType = receiptType;
+    if (lang != null) result.lang = lang;
+    if (roomId != null) result.roomId = roomId;
+    if (voiceProfileId != null) result.voiceProfileId = voiceProfileId;
     return result;
   }
 
@@ -232,6 +238,9 @@ class GeoChat extends $pb.GeneratedMessage {
     ..aOS(4, _omitFieldNames ? '' : 'receiptForUid')
     ..aE<GeoChat_ReceiptType>(5, _omitFieldNames ? '' : 'receiptType',
         enumValues: GeoChat_ReceiptType.values)
+    ..aOS(6, _omitFieldNames ? '' : 'lang')
+    ..aOS(7, _omitFieldNames ? '' : 'roomId')
+    ..aOS(8, _omitFieldNames ? '' : 'voiceProfileId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -310,6 +319,45 @@ class GeoChat extends $pb.GeneratedMessage {
   $core.bool hasReceiptType() => $_has(4);
   @$pb.TagNumber(5)
   void clearReceiptType() => $_clearField(5);
+
+  ///
+  ///  BCP-47-ish language tag or human-readable name (e.g. "en", "English")
+  ///  that the originator's TAKTALK plugin recorded for the message.
+  @$pb.TagNumber(6)
+  $core.String get lang => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set lang($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasLang() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearLang() => $_clearField(6);
+
+  ///
+  ///  TAKTALK chatroom UUID (e.g. "30b2755c-c547-44ef-a0cc-cdbd8a15616f") that
+  ///  the receiver's TAKTALK plugin uses to thread the message under the
+  ///  right room. Resolved to a friendly name via TakTalkRoomData broadcasts.
+  @$pb.TagNumber(7)
+  $core.String get roomId => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set roomId($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasRoomId() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearRoomId() => $_clearField(7);
+
+  ///
+  ///  TAKTALK voice profile pointer. Often empty in practice (the empty
+  ///  marker `<voice_profile_id/>` still signals TAKTALK origination), so
+  ///  receivers should treat empty-but-present as the equivalent of the
+  ///  marker rather than a missing field.
+  @$pb.TagNumber(8)
+  $core.String get voiceProfileId => $_getSZ(7);
+  @$pb.TagNumber(8)
+  set voiceProfileId($core.String value) => $_setString(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasVoiceProfileId() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearVoiceProfileId() => $_clearField(8);
 }
 
 ///
@@ -918,12 +966,13 @@ class DrawnShape extends $pb.GeneratedMessage {
     Team? fillColor,
     $core.int? fillArgb,
     $core.bool? labelsOn,
-    $core.Iterable<CotGeoPoint>? vertices,
     $core.bool? truncated,
     $core.int? bullseyeDistanceDm,
     $core.int? bullseyeBearingRef,
     $core.int? bullseyeFlags,
     $core.String? bullseyeUidRef,
+    $core.Iterable<$core.int>? vertexLatDeltas,
+    $core.Iterable<$core.int>? vertexLonDeltas,
   }) {
     final result = create();
     if (kind != null) result.kind = kind;
@@ -937,7 +986,6 @@ class DrawnShape extends $pb.GeneratedMessage {
     if (fillColor != null) result.fillColor = fillColor;
     if (fillArgb != null) result.fillArgb = fillArgb;
     if (labelsOn != null) result.labelsOn = labelsOn;
-    if (vertices != null) result.vertices.addAll(vertices);
     if (truncated != null) result.truncated = truncated;
     if (bullseyeDistanceDm != null)
       result.bullseyeDistanceDm = bullseyeDistanceDm;
@@ -945,6 +993,8 @@ class DrawnShape extends $pb.GeneratedMessage {
       result.bullseyeBearingRef = bullseyeBearingRef;
     if (bullseyeFlags != null) result.bullseyeFlags = bullseyeFlags;
     if (bullseyeUidRef != null) result.bullseyeUidRef = bullseyeUidRef;
+    if (vertexLatDeltas != null) result.vertexLatDeltas.addAll(vertexLatDeltas);
+    if (vertexLonDeltas != null) result.vertexLonDeltas.addAll(vertexLonDeltas);
     return result;
   }
 
@@ -975,8 +1025,6 @@ class DrawnShape extends $pb.GeneratedMessage {
     ..aE<Team>(9, _omitFieldNames ? '' : 'fillColor', enumValues: Team.values)
     ..aI(10, _omitFieldNames ? '' : 'fillArgb', fieldType: $pb.PbFieldType.OF3)
     ..aOB(11, _omitFieldNames ? '' : 'labelsOn')
-    ..pPM<CotGeoPoint>(12, _omitFieldNames ? '' : 'vertices',
-        subBuilder: CotGeoPoint.create)
     ..aOB(13, _omitFieldNames ? '' : 'truncated')
     ..aI(14, _omitFieldNames ? '' : 'bullseyeDistanceDm',
         fieldType: $pb.PbFieldType.OU3)
@@ -985,6 +1033,10 @@ class DrawnShape extends $pb.GeneratedMessage {
     ..aI(16, _omitFieldNames ? '' : 'bullseyeFlags',
         fieldType: $pb.PbFieldType.OU3)
     ..aOS(17, _omitFieldNames ? '' : 'bullseyeUidRef')
+    ..p<$core.int>(
+        18, _omitFieldNames ? '' : 'vertexLatDeltas', $pb.PbFieldType.KS3)
+    ..p<$core.int>(
+        19, _omitFieldNames ? '' : 'vertexLonDeltas', $pb.PbFieldType.KS3)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1136,42 +1188,35 @@ class DrawnShape extends $pb.GeneratedMessage {
   void clearLabelsOn() => $_clearField(11);
 
   ///
-  ///  Vertex list for polyline/polygon/rectangle shapes. Capped at 32 by
-  ///  the nanopb pool; senders MUST truncate longer inputs and set
-  ///  `truncated = true`.
-  @$pb.TagNumber(12)
-  $pb.PbList<CotGeoPoint> get vertices => $_getList(11);
-
-  ///
-  ///  True if the sender truncated `vertices` to fit the pool.
+  ///  True if the sender truncated the vertex columns to fit the pool.
   @$pb.TagNumber(13)
-  $core.bool get truncated => $_getBF(12);
+  $core.bool get truncated => $_getBF(11);
   @$pb.TagNumber(13)
-  set truncated($core.bool value) => $_setBool(12, value);
+  set truncated($core.bool value) => $_setBool(11, value);
   @$pb.TagNumber(13)
-  $core.bool hasTruncated() => $_has(12);
+  $core.bool hasTruncated() => $_has(11);
   @$pb.TagNumber(13)
   void clearTruncated() => $_clearField(13);
 
   ///
   ///  Bullseye distance in meters * 10 (e.g. 3285 = 328.5 m). 0 = unset.
   @$pb.TagNumber(14)
-  $core.int get bullseyeDistanceDm => $_getIZ(13);
+  $core.int get bullseyeDistanceDm => $_getIZ(12);
   @$pb.TagNumber(14)
-  set bullseyeDistanceDm($core.int value) => $_setUnsignedInt32(13, value);
+  set bullseyeDistanceDm($core.int value) => $_setUnsignedInt32(12, value);
   @$pb.TagNumber(14)
-  $core.bool hasBullseyeDistanceDm() => $_has(13);
+  $core.bool hasBullseyeDistanceDm() => $_has(12);
   @$pb.TagNumber(14)
   void clearBullseyeDistanceDm() => $_clearField(14);
 
   ///
   ///  Bullseye bearing reference: 0 unset, 1 Magnetic, 2 True, 3 Grid.
   @$pb.TagNumber(15)
-  $core.int get bullseyeBearingRef => $_getIZ(14);
+  $core.int get bullseyeBearingRef => $_getIZ(13);
   @$pb.TagNumber(15)
-  set bullseyeBearingRef($core.int value) => $_setUnsignedInt32(14, value);
+  set bullseyeBearingRef($core.int value) => $_setUnsignedInt32(13, value);
   @$pb.TagNumber(15)
-  $core.bool hasBullseyeBearingRef() => $_has(14);
+  $core.bool hasBullseyeBearingRef() => $_has(13);
   @$pb.TagNumber(15)
   void clearBullseyeBearingRef() => $_clearField(15);
 
@@ -1182,24 +1227,30 @@ class DrawnShape extends $pb.GeneratedMessage {
   ///    bit 2: edgeToCenter
   ///    bit 3: mils
   @$pb.TagNumber(16)
-  $core.int get bullseyeFlags => $_getIZ(15);
+  $core.int get bullseyeFlags => $_getIZ(14);
   @$pb.TagNumber(16)
-  set bullseyeFlags($core.int value) => $_setUnsignedInt32(15, value);
+  set bullseyeFlags($core.int value) => $_setUnsignedInt32(14, value);
   @$pb.TagNumber(16)
-  $core.bool hasBullseyeFlags() => $_has(15);
+  $core.bool hasBullseyeFlags() => $_has(14);
   @$pb.TagNumber(16)
   void clearBullseyeFlags() => $_clearField(16);
 
   ///
   ///  Bullseye reference UID (anchor marker). Empty = anchor is self.
   @$pb.TagNumber(17)
-  $core.String get bullseyeUidRef => $_getSZ(16);
+  $core.String get bullseyeUidRef => $_getSZ(15);
   @$pb.TagNumber(17)
-  set bullseyeUidRef($core.String value) => $_setString(16, value);
+  set bullseyeUidRef($core.String value) => $_setString(15, value);
   @$pb.TagNumber(17)
-  $core.bool hasBullseyeUidRef() => $_has(16);
+  $core.bool hasBullseyeUidRef() => $_has(15);
   @$pb.TagNumber(17)
   void clearBullseyeUidRef() => $_clearField(17);
+
+  @$pb.TagNumber(18)
+  $pb.PbList<$core.int> get vertexLatDeltas => $_getList(16);
+
+  @$pb.TagNumber(19)
+  $pb.PbList<$core.int> get vertexLonDeltas => $_getList(17);
 }
 
 ///
@@ -2951,8 +3002,307 @@ class SensorFov extends $pb.GeneratedMessage {
   void clearModel() => $_clearField(8);
 }
 
+///
+///  TAKTALK chat message payload (CoT type m-t-t).
+///
+///  TAKTALK is an ATAK plugin for voice + text team messaging. The voice
+///  audio stream goes over UDP/RTP and is NOT carried by the mesh — only
+///  the text envelope (this message) is. `from_voice` marks messages sent
+///  via push-to-talk speech-to-text so receivers can render a mic icon
+///  next to the text.
+///
+///  Wire shape inside <event type="m-t-t">/<detail>:
+///    <callsign>...</callsign>        - mapped to TAKPacketV2.callsign
+///    <lang>English</lang>            - lang
+///    <text>...</text>                - text
+///    <chatroom-id>1</chatroom-id>    - chatroom_id
+///    <voice/>                        - presence sets from_voice = true
+class TakTalkMessage extends $pb.GeneratedMessage {
+  factory TakTalkMessage({
+    $core.String? text,
+    $core.String? chatroomId,
+    $core.String? lang,
+    $core.bool? fromVoice,
+  }) {
+    final result = create();
+    if (text != null) result.text = text;
+    if (chatroomId != null) result.chatroomId = chatroomId;
+    if (lang != null) result.lang = lang;
+    if (fromVoice != null) result.fromVoice = fromVoice;
+    return result;
+  }
+
+  TakTalkMessage._();
+
+  factory TakTalkMessage.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory TakTalkMessage.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'TakTalkMessage',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'text')
+    ..aOS(2, _omitFieldNames ? '' : 'chatroomId')
+    ..aOS(3, _omitFieldNames ? '' : 'lang')
+    ..aOB(4, _omitFieldNames ? '' : 'fromVoice')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TakTalkMessage clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TakTalkMessage copyWith(void Function(TakTalkMessage) updates) =>
+      super.copyWith((message) => updates(message as TakTalkMessage))
+          as TakTalkMessage;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static TakTalkMessage create() => TakTalkMessage._();
+  @$core.override
+  TakTalkMessage createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static TakTalkMessage getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<TakTalkMessage>(create);
+  static TakTalkMessage? _defaultInstance;
+
+  ///
+  ///  The text body of the TAKTALK message (speech-to-text transcript when
+  ///  from_voice = true, typed message otherwise).
+  @$pb.TagNumber(1)
+  $core.String get text => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set text($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasText() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearText() => $_clearField(1);
+
+  ///
+  ///  TAKTALK chatroom identifier. May be a short id like "1" for the
+  ///  default room or a UUID like "30b2755c-c547-44ef-a0cc-cdbd8a15616f"
+  ///  for custom rooms (resolved by TakTalkRoomData broadcasts).
+  ///  Empty = broadcast room.
+  @$pb.TagNumber(2)
+  $core.String get chatroomId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set chatroomId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasChatroomId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearChatroomId() => $_clearField(2);
+
+  ///
+  ///  BCP-47-ish language tag or human-readable name (e.g. "en", "English").
+  ///  Empty = unspecified.
+  @$pb.TagNumber(3)
+  $core.String get lang => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set lang($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasLang() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearLang() => $_clearField(3);
+
+  ///
+  ///  True when the source CoT carried a <voice/> marker, i.e. the message
+  ///  originated as push-to-talk speech-to-text. Lets receivers show a mic
+  ///  icon. Proto3 only encodes when true so empty payload cost is 0 bytes.
+  @$pb.TagNumber(4)
+  $core.bool get fromVoice => $_getBF(3);
+  @$pb.TagNumber(4)
+  set fromVoice($core.bool value) => $_setBool(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasFromVoice() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearFromVoice() => $_clearField(4);
+}
+
+///
+///  TAKTALK room/membership broadcast (CoT type y-).
+///
+///  Announces a TAKTALK chatroom's friendly name and roster so peers can
+///  resolve room UUIDs (used in TakTalkMessage.chatroom_id and
+///  GeoChat.room_id) to a display name and participant list. Not a chat
+///  message itself — these events are emitted by TAKTALK when rooms are
+///  created or memberships change.
+class TakTalkRoomData extends $pb.GeneratedMessage {
+  factory TakTalkRoomData({
+    @$core.Deprecated('This field is deprecated.') $core.String? senderCallsign,
+    $core.String? roomId,
+    $core.String? roomName,
+    $core.Iterable<$core.String>? participants,
+  }) {
+    final result = create();
+    if (senderCallsign != null) result.senderCallsign = senderCallsign;
+    if (roomId != null) result.roomId = roomId;
+    if (roomName != null) result.roomName = roomName;
+    if (participants != null) result.participants.addAll(participants);
+    return result;
+  }
+
+  TakTalkRoomData._();
+
+  factory TakTalkRoomData.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory TakTalkRoomData.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'TakTalkRoomData',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'senderCallsign')
+    ..aOS(2, _omitFieldNames ? '' : 'roomId')
+    ..aOS(3, _omitFieldNames ? '' : 'roomName')
+    ..pPS(4, _omitFieldNames ? '' : 'participants')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TakTalkRoomData clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TakTalkRoomData copyWith(void Function(TakTalkRoomData) updates) =>
+      super.copyWith((message) => updates(message as TakTalkRoomData))
+          as TakTalkRoomData;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static TakTalkRoomData create() => TakTalkRoomData._();
+  @$core.override
+  TakTalkRoomData createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static TakTalkRoomData getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<TakTalkRoomData>(create);
+  static TakTalkRoomData? _defaultInstance;
+
+  ///
+  ///  Callsign of the device broadcasting the room state (typically the
+  ///  room owner / latest writer).
+  ///
+  ///  DEPRECATED in v0.3.2: always equals TAKPacketV2.callsign, so the wire
+  ///  byte was redundant. Builders stop emitting this field in v0.3.2;
+  ///  parsers still read it for one release so v0.3.1-encoded packets decode
+  ///  cleanly. To be removed entirely in v0.4.x.
+  @$core.Deprecated('This field is deprecated.')
+  @$pb.TagNumber(1)
+  $core.String get senderCallsign => $_getSZ(0);
+  @$core.Deprecated('This field is deprecated.')
+  @$pb.TagNumber(1)
+  set senderCallsign($core.String value) => $_setString(0, value);
+  @$core.Deprecated('This field is deprecated.')
+  @$pb.TagNumber(1)
+  $core.bool hasSenderCallsign() => $_has(0);
+  @$core.Deprecated('This field is deprecated.')
+  @$pb.TagNumber(1)
+  void clearSenderCallsign() => $_clearField(1);
+
+  ///
+  ///  Room UUID, matches TakTalkMessage.chatroom_id / GeoChat.room_id on
+  ///  messages routed into this room.
+  @$pb.TagNumber(2)
+  $core.String get roomId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set roomId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasRoomId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRoomId() => $_clearField(2);
+
+  ///
+  ///  Friendly display name for the room (e.g. "test", "Alpha Team").
+  @$pb.TagNumber(3)
+  $core.String get roomName => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set roomName($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasRoomName() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearRoomName() => $_clearField(3);
+
+  ///
+  ///  Member callsigns. Wire-encoded as repeated strings; the underlying
+  ///  CoT carries them as a single <chatroom-participants>A,B,C</> element
+  ///  which parsers split / builders join on ','.
+  @$pb.TagNumber(4)
+  $pb.PbList<$core.String> get participants => $_getList(3);
+}
+
+///
+///  ATAK directed-routing recipient list (CoT <marti><dest callsign='X'/>…</marti>).
+///
+///  Present when an event is addressed to specific TAK users rather than the
+///  broadcast group. TAKTALK gates voice TTS on this element matching the
+///  receiver's callsign; directed b-t-f chats use it for the same purpose. A
+///  missing <marti> means "broadcast to all peers", which is the default for
+///  PLI, alerts, drawings, and most situational-awareness events.
+///
+///  Carried as repeated strings (not indexes into a per-packet table) because
+///  the typical event has 1-2 destinations and table overhead would erase the
+///  savings. Receivers that need the original XML element rebuild it from
+///  dest_callsign on emit.
+class Marti extends $pb.GeneratedMessage {
+  factory Marti({
+    $core.Iterable<$core.String>? destCallsign,
+  }) {
+    final result = create();
+    if (destCallsign != null) result.destCallsign.addAll(destCallsign);
+    return result;
+  }
+
+  Marti._();
+
+  factory Marti.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Marti.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Marti',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..pPS(1, _omitFieldNames ? '' : 'destCallsign')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Marti clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Marti copyWith(void Function(Marti) updates) =>
+      super.copyWith((message) => updates(message as Marti)) as Marti;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Marti create() => Marti._();
+  @$core.override
+  Marti createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Marti getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Marti>(create);
+  static Marti? _defaultInstance;
+
+  ///
+  ///  Recipient callsigns. Order is preserved end-to-end so receivers can show
+  ///  primary-vs-cc distinction the same way ATAK does.
+  ///
+  ///  If dest_callsign is [TAKPacketV2.callsign] (self-addressed, unusual but
+  ///  legal — e.g. ATAK echoing back to its own room), the builder still emits
+  ///  the element so loopback shapes round-trip cleanly.
+  @$pb.TagNumber(1)
+  $pb.PbList<$core.String> get destCallsign => $_getList(0);
+}
+
 enum TAKPacketV2_PayloadVariant {
-  pli,
   chat,
   aircraft,
   rawDetail,
@@ -2963,6 +3313,8 @@ enum TAKPacketV2_PayloadVariant {
   casevac,
   emergency,
   task,
+  taktalk,
+  taktalkRoom,
   notSet
 }
 
@@ -2999,7 +3351,7 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
     $core.String? remarks,
     TAKEnvironment? environment,
     SensorFov? sensorFov,
-    $core.bool? pli,
+    Marti? marti,
     GeoChat? chat,
     AircraftTrack? aircraft,
     $core.List<$core.int>? rawDetail,
@@ -3010,6 +3362,8 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
     CasevacReport? casevac,
     EmergencyAlert? emergency,
     TaskRequest? task,
+    TakTalkMessage? taktalk,
+    TakTalkRoomData? taktalkRoom,
   }) {
     final result = create();
     if (cotTypeId != null) result.cotTypeId = cotTypeId;
@@ -3038,7 +3392,7 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
     if (remarks != null) result.remarks = remarks;
     if (environment != null) result.environment = environment;
     if (sensorFov != null) result.sensorFov = sensorFov;
-    if (pli != null) result.pli = pli;
+    if (marti != null) result.marti = marti;
     if (chat != null) result.chat = chat;
     if (aircraft != null) result.aircraft = aircraft;
     if (rawDetail != null) result.rawDetail = rawDetail;
@@ -3049,6 +3403,8 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
     if (casevac != null) result.casevac = casevac;
     if (emergency != null) result.emergency = emergency;
     if (task != null) result.task = task;
+    if (taktalk != null) result.taktalk = taktalk;
+    if (taktalkRoom != null) result.taktalkRoom = taktalkRoom;
     return result;
   }
 
@@ -3063,7 +3419,6 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
 
   static const $core.Map<$core.int, TAKPacketV2_PayloadVariant>
       _TAKPacketV2_PayloadVariantByTag = {
-    30: TAKPacketV2_PayloadVariant.pli,
     31: TAKPacketV2_PayloadVariant.chat,
     32: TAKPacketV2_PayloadVariant.aircraft,
     33: TAKPacketV2_PayloadVariant.rawDetail,
@@ -3074,13 +3429,15 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
     38: TAKPacketV2_PayloadVariant.casevac,
     39: TAKPacketV2_PayloadVariant.emergency,
     40: TAKPacketV2_PayloadVariant.task,
+    41: TAKPacketV2_PayloadVariant.taktalk,
+    42: TAKPacketV2_PayloadVariant.taktalkRoom,
     0: TAKPacketV2_PayloadVariant.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'TAKPacketV2',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
       createEmptyInstance: create)
-    ..oo(0, [30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40])
+    ..oo(0, [31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42])
     ..aE<CotType>(1, _omitFieldNames ? '' : 'cotTypeId',
         enumValues: CotType.values)
     ..aE<CotHow>(2, _omitFieldNames ? '' : 'how', enumValues: CotHow.values)
@@ -3115,7 +3472,7 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
         subBuilder: TAKEnvironment.create)
     ..aOM<SensorFov>(26, _omitFieldNames ? '' : 'sensorFov',
         subBuilder: SensorFov.create)
-    ..aOB(30, _omitFieldNames ? '' : 'pli')
+    ..aOM<Marti>(29, _omitFieldNames ? '' : 'marti', subBuilder: Marti.create)
     ..aOM<GeoChat>(31, _omitFieldNames ? '' : 'chat',
         subBuilder: GeoChat.create)
     ..aOM<AircraftTrack>(32, _omitFieldNames ? '' : 'aircraft',
@@ -3135,6 +3492,10 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
         subBuilder: EmergencyAlert.create)
     ..aOM<TaskRequest>(40, _omitFieldNames ? '' : 'task',
         subBuilder: TaskRequest.create)
+    ..aOM<TakTalkMessage>(41, _omitFieldNames ? '' : 'taktalk',
+        subBuilder: TakTalkMessage.create)
+    ..aOM<TakTalkRoomData>(42, _omitFieldNames ? '' : 'taktalkRoom',
+        subBuilder: TakTalkRoomData.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3156,7 +3517,6 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<TAKPacketV2>(create);
   static TAKPacketV2? _defaultInstance;
 
-  @$pb.TagNumber(30)
   @$pb.TagNumber(31)
   @$pb.TagNumber(32)
   @$pb.TagNumber(33)
@@ -3167,9 +3527,10 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
   @$pb.TagNumber(38)
   @$pb.TagNumber(39)
   @$pb.TagNumber(40)
+  @$pb.TagNumber(41)
+  @$pb.TagNumber(42)
   TAKPacketV2_PayloadVariant whichPayloadVariant() =>
       _TAKPacketV2_PayloadVariantByTag[$_whichOneof(0)]!;
-  @$pb.TagNumber(30)
   @$pb.TagNumber(31)
   @$pb.TagNumber(32)
   @$pb.TagNumber(33)
@@ -3180,6 +3541,8 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
   @$pb.TagNumber(38)
   @$pb.TagNumber(39)
   @$pb.TagNumber(40)
+  @$pb.TagNumber(41)
+  @$pb.TagNumber(42)
   void clearPayloadVariant() => $_clearField($_whichOneof(0));
 
   ///
@@ -3261,7 +3624,14 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
   void clearLongitudeI() => $_clearField(7);
 
   ///
-  ///  Altitude in meters (HAE)
+  ///  Altitude in meters (HAE). ATAK's "no altitude" sentinel is hae=9999999.0.
+  ///
+  ///  NOTE: an earlier v0.4.0 attempt made this `optional` to omit the 9999999
+  ///  sentinel from the wire, but measurement showed it was net-negative: the
+  ///  zstd dictionary already compresses the literal 9999999 to ~nothing, while
+  ///  proto3 `optional` forces a genuine 0 m HAE (common on routes/drawings that
+  ///  carry hae="0.0" or omit hae → parsed as 0) to encode explicitly (+2 bytes),
+  ///  which REGRESSED the worst-case route fixture. Kept as a plain field.
   @$pb.TagNumber(8)
   $core.int get altitude => $_getIZ(7);
   @$pb.TagNumber(8)
@@ -3480,15 +3850,24 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
   SensorFov ensureSensorFov() => $_ensure(25);
 
   ///
-  ///  Position report (true = PLI, no extra fields beyond the common ones above)
-  @$pb.TagNumber(30)
-  $core.bool get pli => $_getBF(26);
-  @$pb.TagNumber(30)
-  set pli($core.bool value) => $_setBool(26, value);
-  @$pb.TagNumber(30)
-  $core.bool hasPli() => $_has(26);
-  @$pb.TagNumber(30)
-  void clearPli() => $_clearField(30);
+  ///  Directed-routing recipient list (CoT <marti><dest callsign='X'/>…</marti>).
+  ///  Empty / unset = broadcast to all peers (the default for situational-awareness
+  ///  events). Populated for TAKTALK m-t-t, directed b-t-f DMs, and any other CoT
+  ///  shape that ATAK addresses to specific recipients. TAKTALK gates voice TTS
+  ///  playback on this element matching the receiver's callsign, so dropping it
+  ///  silently breaks voice messaging end-to-end.
+  ///
+  ///  See Marti.
+  @$pb.TagNumber(29)
+  Marti get marti => $_getN(26);
+  @$pb.TagNumber(29)
+  set marti(Marti value) => $_setField(29, value);
+  @$pb.TagNumber(29)
+  $core.bool hasMarti() => $_has(26);
+  @$pb.TagNumber(29)
+  void clearMarti() => $_clearField(29);
+  @$pb.TagNumber(29)
+  Marti ensureMarti() => $_ensure(26);
 
   ///
   ///  ATAK GeoChat message
@@ -3621,6 +4000,36 @@ class TAKPacketV2 extends $pb.GeneratedMessage {
   void clearTask() => $_clearField(40);
   @$pb.TagNumber(40)
   TaskRequest ensureTask() => $_ensure(36);
+
+  ///
+  ///  TAKTALK chat message (CoT type m-t-t). See TakTalkMessage.
+  ///  Voice audio itself rides UDP/RTP outside the mesh; this carries the
+  ///  text envelope plus a from_voice marker for receiver UX.
+  @$pb.TagNumber(41)
+  TakTalkMessage get taktalk => $_getN(37);
+  @$pb.TagNumber(41)
+  set taktalk(TakTalkMessage value) => $_setField(41, value);
+  @$pb.TagNumber(41)
+  $core.bool hasTaktalk() => $_has(37);
+  @$pb.TagNumber(41)
+  void clearTaktalk() => $_clearField(41);
+  @$pb.TagNumber(41)
+  TakTalkMessage ensureTaktalk() => $_ensure(37);
+
+  ///
+  ///  TAKTALK room/membership broadcast (CoT type y-). See TakTalkRoomData.
+  ///  Resolves room UUIDs (used in TakTalkMessage.chatroom_id and
+  ///  GeoChat.room_id) to display name + roster on receivers.
+  @$pb.TagNumber(42)
+  TakTalkRoomData get taktalkRoom => $_getN(38);
+  @$pb.TagNumber(42)
+  set taktalkRoom(TakTalkRoomData value) => $_setField(42, value);
+  @$pb.TagNumber(42)
+  $core.bool hasTaktalkRoom() => $_has(38);
+  @$pb.TagNumber(42)
+  void clearTaktalkRoom() => $_clearField(42);
+  @$pb.TagNumber(42)
+  TakTalkRoomData ensureTaktalkRoom() => $_ensure(38);
 }
 
 const $core.bool _omitFieldNames =

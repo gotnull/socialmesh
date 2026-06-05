@@ -334,14 +334,14 @@ final List<RegionMetadata> kRegionMetadata = <RegionMetadata>[
     regionSelectionDescription: (l) => l.regionSelectionRegionItu1_2mDesc,
   ),
   RegionMetadata(
-    code: config_pbenum.Config_LoRaConfig_RegionCode.ITU23_2M,
+    code: config_pbenum.Config_LoRaConfig_RegionCode.ITU2_2M,
     frequency: '144-148MHz',
     dutyCycle: 100,
     isCountry: false,
-    radioConfigLabel: (l) => l.regionSelectionRegionItu23_2m,
-    regionSelectionName: (l) => l.regionSelectionRegionItu23_2m,
-    regionSelectionFrequency: (l) => l.regionSelectionRegionItu23_2mFreq,
-    regionSelectionDescription: (l) => l.regionSelectionRegionItu23_2mDesc,
+    radioConfigLabel: (l) => l.regionSelectionRegionItu2_2m,
+    regionSelectionName: (l) => l.regionSelectionRegionItu2_2m,
+    regionSelectionFrequency: (l) => l.regionSelectionRegionItu2_2mFreq,
+    regionSelectionDescription: (l) => l.regionSelectionRegionItu2_2mDesc,
   ),
   RegionMetadata(
     code: config_pbenum.Config_LoRaConfig_RegionCode.EU_866,
@@ -382,6 +382,16 @@ final List<RegionMetadata> kRegionMetadata = <RegionMetadata>[
     regionSelectionName: (l) => l.regionSelectionRegionEuN868,
     regionSelectionFrequency: (l) => l.regionSelectionRegionEuN868Freq,
     regionSelectionDescription: (l) => l.regionSelectionRegionEuN868Desc,
+  ),
+  RegionMetadata(
+    code: config_pbenum.Config_LoRaConfig_RegionCode.ITU3_2M,
+    frequency: '144-148MHz',
+    dutyCycle: 100,
+    isCountry: false,
+    radioConfigLabel: (l) => l.regionSelectionRegionItu3_2m,
+    regionSelectionName: (l) => l.regionSelectionRegionItu3_2m,
+    regionSelectionFrequency: (l) => l.regionSelectionRegionItu3_2mFreq,
+    regionSelectionDescription: (l) => l.regionSelectionRegionItu3_2mDesc,
   ),
 ];
 

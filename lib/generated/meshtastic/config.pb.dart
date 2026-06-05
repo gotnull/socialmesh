@@ -1298,6 +1298,7 @@ class Config_LoRaConfig extends $pb.GeneratedMessage {
     $core.bool? ignoreMqtt,
     $core.bool? configOkToMqtt,
     Config_LoRaConfig_FEM_LNA_Mode? femLnaMode,
+    $core.bool? serialHalOnly,
   }) {
     final result = create();
     if (usePreset != null) result.usePreset = usePreset;
@@ -1320,6 +1321,7 @@ class Config_LoRaConfig extends $pb.GeneratedMessage {
     if (ignoreMqtt != null) result.ignoreMqtt = ignoreMqtt;
     if (configOkToMqtt != null) result.configOkToMqtt = configOkToMqtt;
     if (femLnaMode != null) result.femLnaMode = femLnaMode;
+    if (serialHalOnly != null) result.serialHalOnly = serialHalOnly;
     return result;
   }
 
@@ -1364,6 +1366,7 @@ class Config_LoRaConfig extends $pb.GeneratedMessage {
     ..aE<Config_LoRaConfig_FEM_LNA_Mode>(
         106, _omitFieldNames ? '' : 'femLnaMode',
         enumValues: Config_LoRaConfig_FEM_LNA_Mode.values)
+    ..aOB(107, _omitFieldNames ? '' : 'serialHalOnly')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1619,6 +1622,17 @@ class Config_LoRaConfig extends $pb.GeneratedMessage {
   $core.bool hasFemLnaMode() => $_has(18);
   @$pb.TagNumber(106)
   void clearFemLnaMode() => $_clearField(106);
+
+  ///
+  ///  Don't use radiolib to initialize the radio, instead listen for a serialHal connection
+  @$pb.TagNumber(107)
+  $core.bool get serialHalOnly => $_getBF(19);
+  @$pb.TagNumber(107)
+  set serialHalOnly($core.bool value) => $_setBool(19, value);
+  @$pb.TagNumber(107)
+  $core.bool hasSerialHalOnly() => $_has(19);
+  @$pb.TagNumber(107)
+  void clearSerialHalOnly() => $_clearField(107);
 }
 
 class Config_BluetoothConfig extends $pb.GeneratedMessage {

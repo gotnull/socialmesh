@@ -12170,6 +12170,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get messagingStatusSentToRadio => 'Inviato alla radio';
 
   @override
+  String get messagingStatusHeardByMesh => 'Ripetuto dalla mesh';
+
+  @override
+  String get messagingStatusDelivered => 'Consegnato';
+
+  @override
+  String get messagingStatusReceivedByRelay => 'Ricevuto da un ripetitore';
+
+  @override
   String get messagingResend => 'Reinvia';
 
   @override
@@ -12338,6 +12347,13 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get messagingTechInfoExplainTimestampBody =>
       'La data e l\'ora locali in cui questo messaggio è stato inviato o ricevuto, in base all\'orologio del dispositivo. La nuvoletta del messaggio mostra solo l\'ora; la data completa appare qui.';
+
+  @override
+  String get messagingTechInfoExplainStatusTitle => 'Stato di consegna';
+
+  @override
+  String get messagingTechInfoExplainStatusBody =>
+      'Quanto lontano è arrivato il tuo messaggio. \'Inviato alla radio\' significa che ha lasciato il tuo dispositivo. \'Ripetuto dalla mesh\' significa che un altro nodo ha ripetuto il tuo messaggio di canale. \'Consegnato\' significa che il nodo del destinatario ha confermato il tuo messaggio diretto.';
 
   @override
   String get messagingStartConversation => 'Inizia la conversazione';
@@ -17975,14 +17991,24 @@ class AppLocalizationsIt extends AppLocalizations {
   String get regionSelectionRegionItu1_2mFreq => '144-146 MHz';
 
   @override
-  String get regionSelectionRegionItu23_2m => 'ITU R2/3 2m';
+  String get regionSelectionRegionItu2_2m => 'ITU R2 2m';
 
   @override
-  String get regionSelectionRegionItu23_2mDesc =>
-      'Banda radioamatoriale 2m ITU Regione 2/3';
+  String get regionSelectionRegionItu2_2mDesc =>
+      'Banda radioamatoriale 2m ITU Regione 2';
 
   @override
-  String get regionSelectionRegionItu23_2mFreq => '144-148 MHz';
+  String get regionSelectionRegionItu2_2mFreq => '144-148 MHz';
+
+  @override
+  String get regionSelectionRegionItu3_2m => 'ITU R3 2m';
+
+  @override
+  String get regionSelectionRegionItu3_2mDesc =>
+      'Banda radioamatoriale 2m ITU Regione 3';
+
+  @override
+  String get regionSelectionRegionItu3_2mFreq => '144-148 MHz';
 
   @override
   String get regionSelectionRegionEu866 => 'EU 866';

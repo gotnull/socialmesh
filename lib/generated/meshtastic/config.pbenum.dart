@@ -513,6 +513,12 @@ class Config_DisplayConfig_OledType extends $pb.ProtobufEnum {
       Config_DisplayConfig_OledType._(
           4, _omitEnumNames ? '' : 'OLED_SH1107_128_128');
 
+  ///
+  ///  Can not be auto detected but set by proto. Used for 64x128 rotated screens
+  static const Config_DisplayConfig_OledType OLED_SH1107_ROTATED =
+      Config_DisplayConfig_OledType._(
+          5, _omitEnumNames ? '' : 'OLED_SH1107_ROTATED');
+
   static const $core.List<Config_DisplayConfig_OledType> values =
       <Config_DisplayConfig_OledType>[
     OLED_AUTO,
@@ -520,10 +526,11 @@ class Config_DisplayConfig_OledType extends $pb.ProtobufEnum {
     OLED_SH1106,
     OLED_SH1107,
     OLED_SH1107_128_128,
+    OLED_SH1107_ROTATED,
   ];
 
   static final $core.List<Config_DisplayConfig_OledType?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 4);
+      $pb.ProtobufEnum.$_initByValueList(values, 5);
   static Config_DisplayConfig_OledType? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
@@ -778,9 +785,9 @@ class Config_LoRaConfig_RegionCode extends $pb.ProtobufEnum {
       Config_LoRaConfig_RegionCode._(27, _omitEnumNames ? '' : 'ITU1_2M');
 
   ///
-  ///  ITU Region 2 / 3 Amateur Radio 2m band (144-148 MHz)
-  static const Config_LoRaConfig_RegionCode ITU23_2M =
-      Config_LoRaConfig_RegionCode._(28, _omitEnumNames ? '' : 'ITU23_2M');
+  ///  ITU Region 2 Amateur Radio 2m band (144-148 MHz)
+  static const Config_LoRaConfig_RegionCode ITU2_2M =
+      Config_LoRaConfig_RegionCode._(28, _omitEnumNames ? '' : 'ITU2_2M');
 
   ///
   ///  EU 866MHz band (Band no. 47b of 2006/771/EC and subsequent amendments) for Non-specific short-range devices (SRD)
@@ -798,6 +805,11 @@ class Config_LoRaConfig_RegionCode extends $pb.ProtobufEnum {
   ///  EU 868MHz band, with narrow presets
   static const Config_LoRaConfig_RegionCode EU_N_868 =
       Config_LoRaConfig_RegionCode._(32, _omitEnumNames ? '' : 'EU_N_868');
+
+  ///
+  ///  ITU Region 3 Amateur Radio 2m band (144-148 MHz)
+  static const Config_LoRaConfig_RegionCode ITU3_2M =
+      Config_LoRaConfig_RegionCode._(33, _omitEnumNames ? '' : 'ITU3_2M');
 
   static const $core.List<Config_LoRaConfig_RegionCode> values =
       <Config_LoRaConfig_RegionCode>[
@@ -829,15 +841,16 @@ class Config_LoRaConfig_RegionCode extends $pb.ProtobufEnum {
     NP_865,
     BR_902,
     ITU1_2M,
-    ITU23_2M,
+    ITU2_2M,
     EU_866,
     EU_874,
     EU_917,
     EU_N_868,
+    ITU3_2M,
   ];
 
   static final $core.List<Config_LoRaConfig_RegionCode?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 32);
+      $pb.ProtobufEnum.$_initByValueList(values, 33);
   static Config_LoRaConfig_RegionCode? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

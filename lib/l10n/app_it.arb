@@ -23869,14 +23869,23 @@
     "@regionSelectionRegionItu1_2mFreq": {
         "description": "UI text: region selection ITU R1 2m freq"
     },
-    "@regionSelectionRegionItu23_2m": {
-        "description": "UI text: region selection ITU Region 2/3 Amateur Radio 2m band"
+    "@regionSelectionRegionItu2_2m": {
+        "description": "UI text: region selection ITU Region 2 Amateur Radio 2m band"
     },
-    "@regionSelectionRegionItu23_2mDesc": {
+    "@regionSelectionRegionItu2_2mDesc": {
         "description": "Description text"
     },
-    "@regionSelectionRegionItu23_2mFreq": {
-        "description": "UI text: region selection ITU R2/3 2m freq"
+    "@regionSelectionRegionItu2_2mFreq": {
+        "description": "UI text: region selection ITU R2 2m freq"
+    },
+    "@regionSelectionRegionItu3_2m": {
+        "description": "UI text: region selection ITU Region 3 Amateur Radio 2m band"
+    },
+    "@regionSelectionRegionItu3_2mDesc": {
+        "description": "Description text"
+    },
+    "@regionSelectionRegionItu3_2mFreq": {
+        "description": "UI text: region selection ITU R3 2m freq"
     },
     "@regionSelectionRegionJp": {
         "description": "UI text: region selection region jp"
@@ -39647,6 +39656,9 @@
     "messagingStatusConfirmed": "Confermato",
     "messagingStatusRetrying": "Nuovo tentativo",
     "messagingStatusSentToRadio": "Inviato alla radio",
+    "messagingStatusHeardByMesh": "Ripetuto dalla mesh",
+    "messagingStatusDelivered": "Consegnato",
+    "messagingStatusReceivedByRelay": "Ricevuto da un ripetitore",
     "messagingStatusUnconfirmed": "Non confermato",
     "messagingTechInfoDirectHop": "Diretto",
     "messagingTechInfoExplainHopsBody": "Il numero di volte in cui questo messaggio è stato ritrasmesso da altri nodi prima di raggiungerti. 'Diretto' significa nessun relay - il mittente era nel raggio radio diretto.",
@@ -39658,6 +39670,8 @@
     "messagingTechInfoTimestampYesterday": "Ieri",
     "messagingTechInfoExplainTimestampTitle": "Ora del messaggio",
     "messagingTechInfoExplainTimestampBody": "La data e l'ora locali in cui questo messaggio è stato inviato o ricevuto, in base all'orologio del dispositivo. La nuvoletta del messaggio mostra solo l'ora; la data completa appare qui.",
+    "messagingTechInfoExplainStatusTitle": "Stato di consegna",
+    "messagingTechInfoExplainStatusBody": "Quanto lontano è arrivato il tuo messaggio. 'Inviato alla radio' significa che ha lasciato il tuo dispositivo. 'Ripetuto dalla mesh' significa che un altro nodo ha ripetuto il tuo messaggio di canale. 'Consegnato' significa che il nodo del destinatario ha confermato il tuo messaggio diretto.",
     "messagingTechInfoExplainPacketIdTitle": "ID pacchetto",
     "messagingTechInfoExplainRssiBody": "Indicatore della potenza del segnale ricevuto - quanto era forte il segnale radio all'arrivo. Più vicino a 0 è più forte. Intervallo tipico: -120 dBm (molto debole) fino a -40 dBm (molto forte).",
     "messagingTechInfoExplainRssiTitle": "Intensità segnale (RSSI)",
@@ -42315,9 +42329,12 @@
     "regionSelectionRegionItu1_2m": "ITU R1 2m",
     "regionSelectionRegionItu1_2mDesc": "Banda radioamatoriale 2m ITU Regione 1",
     "regionSelectionRegionItu1_2mFreq": "144-146 MHz",
-    "regionSelectionRegionItu23_2m": "ITU R2/3 2m",
-    "regionSelectionRegionItu23_2mDesc": "Banda radioamatoriale 2m ITU Regione 2/3",
-    "regionSelectionRegionItu23_2mFreq": "144-148 MHz",
+    "regionSelectionRegionItu2_2m": "ITU R2 2m",
+    "regionSelectionRegionItu2_2mDesc": "Banda radioamatoriale 2m ITU Regione 2",
+    "regionSelectionRegionItu2_2mFreq": "144-148 MHz",
+    "regionSelectionRegionItu3_2m": "ITU R3 2m",
+    "regionSelectionRegionItu3_2mDesc": "Banda radioamatoriale 2m ITU Regione 3",
+    "regionSelectionRegionItu3_2mFreq": "144-148 MHz",
     "regionSelectionRegionJp": "Giappone",
     "regionSelectionRegionJpDesc": "Giappone",
     "regionSelectionRegionJpFreq": "920 MHz",

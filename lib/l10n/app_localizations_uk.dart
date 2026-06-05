@@ -12171,6 +12171,15 @@ class AppLocalizationsUk extends AppLocalizations {
   String get messagingStatusSentToRadio => 'Надіслано на радіо';
 
   @override
+  String get messagingStatusHeardByMesh => 'Ретрансльовано мережею';
+
+  @override
+  String get messagingStatusDelivered => 'Доставлено';
+
+  @override
+  String get messagingStatusReceivedByRelay => 'Прийнято ретранслятором';
+
+  @override
   String get messagingResend => 'Надіслати повторно';
 
   @override
@@ -12339,6 +12348,13 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get messagingTechInfoExplainTimestampBody =>
       'Місцеві дата й час, коли це повідомлення було надіслано або отримано, за годинником вашого пристрою. У бульбашці повідомлення показано лише час; повна дата відображається тут.';
+
+  @override
+  String get messagingTechInfoExplainStatusTitle => 'Статус доставки';
+
+  @override
+  String get messagingTechInfoExplainStatusBody =>
+      'Як далеко пройшло ваше повідомлення. \'Надіслано на радіо\' означає, що воно залишило ваш пристрій. \'Ретрансльовано мережею\' означає, що інший вузол повторив ваше повідомлення в каналі. \'Доставлено\' означає, що вузол отримувача підтвердив ваше пряме повідомлення.';
 
   @override
   String get messagingStartConversation => 'Розпочати розмову';
@@ -17980,14 +17996,24 @@ class AppLocalizationsUk extends AppLocalizations {
   String get regionSelectionRegionItu1_2mFreq => '144-146 МГц';
 
   @override
-  String get regionSelectionRegionItu23_2m => 'ITU R2/3 2m';
+  String get regionSelectionRegionItu2_2m => 'ITU R2 2m';
 
   @override
-  String get regionSelectionRegionItu23_2mDesc =>
-      'Аматорський діапазон 2м регіонів 2/3 ITU';
+  String get regionSelectionRegionItu2_2mDesc =>
+      'Аматорський діапазон 2м регіону 2 ITU';
 
   @override
-  String get regionSelectionRegionItu23_2mFreq => '144-148 МГц';
+  String get regionSelectionRegionItu2_2mFreq => '144-148 МГц';
+
+  @override
+  String get regionSelectionRegionItu3_2m => 'ITU R3 2m';
+
+  @override
+  String get regionSelectionRegionItu3_2mDesc =>
+      'Аматорський діапазон 2м регіону 3 ITU';
+
+  @override
+  String get regionSelectionRegionItu3_2mFreq => '144-148 МГц';
 
   @override
   String get regionSelectionRegionEu866 => 'EU 866';

@@ -16203,6 +16203,18 @@
     "@messagingStatusSentToRadio": {
         "description": "Delivery status label shown immediately after a message has been handed to the radio."
     },
+    "messagingStatusHeardByMesh": "Heard by mesh",
+    "@messagingStatusHeardByMesh": {
+        "description": "Delivery status label shown on a channel (broadcast) message once another node has repeated it on the mesh."
+    },
+    "messagingStatusDelivered": "Delivered",
+    "@messagingStatusDelivered": {
+        "description": "Delivery status label shown on a direct message that the recipient node has acknowledged."
+    },
+    "messagingStatusReceivedByRelay": "Received by relay",
+    "@messagingStatusReceivedByRelay": {
+        "description": "Delivery status label shown on a direct message that a relay node rebroadcast but the recipient has not yet acknowledged."
+    },
     "messagingResend": "Resend",
     "@messagingResend": {
         "description": "Action label for manually resending an unconfirmed direct message."
@@ -16421,6 +16433,14 @@
     "messagingTechInfoExplainTimestampBody": "The local date and time this message was sent or received, based on your device's clock. The message bubble shows just the time; the full date appears here.",
     "@messagingTechInfoExplainTimestampBody": {
         "description": "Explanation of the full message date and time shown in a bottom sheet."
+    },
+    "messagingTechInfoExplainStatusTitle": "Delivery Status",
+    "@messagingTechInfoExplainStatusTitle": {
+        "description": "Title for the bottom sheet explaining the delivery status of an outgoing message."
+    },
+    "messagingTechInfoExplainStatusBody": "How far your message has travelled. \"Sent to radio\" means it left your device. \"Heard by mesh\" means another node repeated your channel message. \"Delivered\" means the recipient's node acknowledged your direct message.",
+    "@messagingTechInfoExplainStatusBody": {
+        "description": "Explanation of the outgoing message delivery status shown in a bottom sheet."
     },
     "messagingStartConversation": "Start the conversation",
     "@messagingStartConversation": {
@@ -24230,17 +24250,29 @@
     "@regionSelectionRegionItu1_2mFreq": {
         "description": "UI text: region selection ITU R1 2m freq"
     },
-    "regionSelectionRegionItu23_2m": "ITU R2/3 2m",
-    "@regionSelectionRegionItu23_2m": {
-        "description": "UI text: region selection ITU Region 2/3 Amateur Radio 2m band"
+    "regionSelectionRegionItu2_2m": "ITU R2 2m",
+    "@regionSelectionRegionItu2_2m": {
+        "description": "UI text: region selection ITU Region 2 Amateur Radio 2m band"
     },
-    "regionSelectionRegionItu23_2mDesc": "ITU Region 2/3 amateur radio 2m band",
-    "@regionSelectionRegionItu23_2mDesc": {
+    "regionSelectionRegionItu2_2mDesc": "ITU Region 2 amateur radio 2m band",
+    "@regionSelectionRegionItu2_2mDesc": {
         "description": "Description text"
     },
-    "regionSelectionRegionItu23_2mFreq": "144-148 MHz",
-    "@regionSelectionRegionItu23_2mFreq": {
-        "description": "UI text: region selection ITU R2/3 2m freq"
+    "regionSelectionRegionItu2_2mFreq": "144-148 MHz",
+    "@regionSelectionRegionItu2_2mFreq": {
+        "description": "UI text: region selection ITU R2 2m freq"
+    },
+    "regionSelectionRegionItu3_2m": "ITU R3 2m",
+    "@regionSelectionRegionItu3_2m": {
+        "description": "UI text: region selection ITU Region 3 Amateur Radio 2m band"
+    },
+    "regionSelectionRegionItu3_2mDesc": "ITU Region 3 amateur radio 2m band",
+    "@regionSelectionRegionItu3_2mDesc": {
+        "description": "Description text"
+    },
+    "regionSelectionRegionItu3_2mFreq": "144-148 MHz",
+    "@regionSelectionRegionItu3_2mFreq": {
+        "description": "UI text: region selection ITU R3 2m freq"
     },
     "regionSelectionRegionEu866": "EU 866",
     "@regionSelectionRegionEu866": {

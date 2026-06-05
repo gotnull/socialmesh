@@ -12157,6 +12157,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get messagingStatusSentToRadio => 'Отправлено на радио';
 
   @override
+  String get messagingStatusHeardByMesh => 'Ретранслировано сетью';
+
+  @override
+  String get messagingStatusDelivered => 'Доставлено';
+
+  @override
+  String get messagingStatusReceivedByRelay => 'Принято ретранслятором';
+
+  @override
   String get messagingResend => 'Отправить повторно';
 
   @override
@@ -12325,6 +12334,13 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get messagingTechInfoExplainTimestampBody =>
       'Местные дата и время отправки или получения этого сообщения по часам вашего устройства. В пузыре сообщения показано только время; полная дата отображается здесь.';
+
+  @override
+  String get messagingTechInfoExplainStatusTitle => 'Статус доставки';
+
+  @override
+  String get messagingTechInfoExplainStatusBody =>
+      'Как далеко прошло ваше сообщение. \'Отправлено на радио\' означает, что оно покинуло ваше устройство. \'Ретранслировано сетью\' означает, что другой узел повторил ваше сообщение в канале. \'Доставлено\' означает, что узел получателя подтвердил ваше личное сообщение.';
 
   @override
   String get messagingStartConversation => 'Начните разговор';
@@ -17961,14 +17977,24 @@ class AppLocalizationsRu extends AppLocalizations {
   String get regionSelectionRegionItu1_2mFreq => '144-146 МГц';
 
   @override
-  String get regionSelectionRegionItu23_2m => 'ITU R2/3 2m';
+  String get regionSelectionRegionItu2_2m => 'ITU R2 2m';
 
   @override
-  String get regionSelectionRegionItu23_2mDesc =>
-      'Диапазон 2 м любительского радио по ITU регион 2/3';
+  String get regionSelectionRegionItu2_2mDesc =>
+      'Диапазон 2 м любительского радио по ITU регион 2';
 
   @override
-  String get regionSelectionRegionItu23_2mFreq => '144-148 МГц';
+  String get regionSelectionRegionItu2_2mFreq => '144-148 МГц';
+
+  @override
+  String get regionSelectionRegionItu3_2m => 'ITU R3 2m';
+
+  @override
+  String get regionSelectionRegionItu3_2mDesc =>
+      'Диапазон 2 м любительского радио по ITU регион 3';
+
+  @override
+  String get regionSelectionRegionItu3_2mFreq => '144-148 МГц';
 
   @override
   String get regionSelectionRegionEu866 => 'ЕС 866';

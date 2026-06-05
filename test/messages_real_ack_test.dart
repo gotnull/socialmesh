@@ -327,6 +327,71 @@ void main() {
   );
 
   test(
+    'broadcast implicit mesh ack marks it delivered (heard) with realAck null',
+    () async {
+      // The firmware emits an implicit ack (a self-addressed Routing packet)
+      // when a node repeats a broadcast sent with wantAck. Channel sends now
+      // track their packet, so this update flips the bubble to "heard by
+      // mesh": status delivered, realAck left null (no recipient concept).
+      final h = await _makeHarness();
+      final notifier = h.container.read(messagesProvider.notifier);
+      notifier.addMessage(_pendingBroadcast(id: 'b2', packetId: 711));
+      notifier.trackPacket(711, 'b2');
+
+      h.protocol.emit(
+        MessageDeliveryUpdate(packetId: 711, delivered: true, realAck: false),
+      );
+      await _pump(h.container);
+
+      final out = h.container
+          .read(messagesProvider)
+          .firstWhere((m) => m.id == 'b2');
+      expect(out.status, MessageStatus.delivered);
+      expect(out.realAck, isNull, reason: 'broadcasts must not carry realAck');
+      h.container.dispose();
+    },
+  );
+
+  test(
+    'routing failure for a tracked broadcast never flips it to failed',
+    () async {
+      // A broadcast cannot receive a routing failure addressed back to us; a
+      // stray error update must leave a sent channel message at "sent to
+      // radio" rather than showing a misleading failure.
+      final h = await _makeHarness();
+      final notifier = h.container.read(messagesProvider.notifier);
+      final sentBroadcast = Message(
+        id: 'b3',
+        from: 0x11111111,
+        to: 0xFFFFFFFF,
+        text: 'hi all',
+        status: MessageStatus.sent,
+        packetId: 712,
+        channel: 0,
+      );
+      notifier.addMessage(sentBroadcast);
+      notifier.trackPacket(712, 'b3');
+
+      h.protocol.emit(
+        MessageDeliveryUpdate(
+          packetId: 712,
+          delivered: false,
+          realAck: false,
+          error: RoutingError.timeout,
+        ),
+      );
+      await _pump(h.container);
+
+      final out = h.container
+          .read(messagesProvider)
+          .firstWhere((m) => m.id == 'b3');
+      expect(out.status, MessageStatus.sent, reason: 'broadcast must not fail');
+      expect(out.realAck, isNull);
+      h.container.dispose();
+    },
+  );
+
+  test(
     'TTL sweep evicts implicit-acked entry when no explicit ack arrives',
     () async {
       final h = await _makeHarness();

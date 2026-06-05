@@ -796,6 +796,20 @@ class CotType extends $pb.ProtobufEnum {
   static const CotType CotType_t_s =
       CotType._(124, _omitEnumNames ? '' : 'CotType_t_s');
 
+  ///
+  ///  m-t-t: TAKTALK voice/text chat message. Payload carried via the
+  ///  TakTalkMessage typed variant (text, chatroom_id, lang, from_voice).
+  static const CotType CotType_m_t_t =
+      CotType._(125, _omitEnumNames ? '' : 'CotType_m_t_t');
+
+  ///
+  ///  y-: TAKTALK room/membership broadcast. Payload carried via the
+  ///  TakTalkRoomData typed variant (sender_callsign, room_id, room_name,
+  ///  participants). The CoT type literally has a trailing dash and no
+  ///  second atom — not a typo.
+  static const CotType CotType_y =
+      CotType._(126, _omitEnumNames ? '' : 'CotType_y');
+
   static const $core.List<CotType> values = <CotType>[
     CotType_Other,
     CotType_a_f_G_U_C,
@@ -922,10 +936,12 @@ class CotType extends $pb.ProtobufEnum {
     CotType_b_t_f_r,
     CotType_b_a_o_c,
     CotType_t_s,
+    CotType_m_t_t,
+    CotType_y,
   ];
 
   static final $core.List<CotType?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 124);
+      $pb.ProtobufEnum.$_initByValueList(values, 126);
   static CotType? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

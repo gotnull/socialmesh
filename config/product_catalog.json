@@ -40,7 +40,7 @@
     "complete_pack": {
       "kind": "oneTime",
       "name": "Complete Pack",
-      "priceUsd": 12.99,
+      "priceUsd": 9.99,
       "grants": [
         "complete_pack",
         "theme_pack",

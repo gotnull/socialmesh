@@ -30,7 +30,7 @@ class ModuleConfig_MQTTConfig extends $pb.GeneratedMessage {
     $core.String? username,
     $core.String? password,
     $core.bool? encryptionEnabled,
-    $core.bool? jsonEnabled,
+    @$core.Deprecated('This field is deprecated.') $core.bool? jsonEnabled,
     $core.bool? tlsEnabled,
     $core.String? root,
     $core.bool? proxyToClientEnabled,
@@ -167,13 +167,17 @@ class ModuleConfig_MQTTConfig extends $pb.GeneratedMessage {
   void clearEncryptionEnabled() => $_clearField(5);
 
   ///
-  ///  Whether to send / consume json packets on MQTT
+  ///  Deprecated: JSON packet support on MQTT was removed, and this field is ignored.
+  @$core.Deprecated('This field is deprecated.')
   @$pb.TagNumber(6)
   $core.bool get jsonEnabled => $_getBF(5);
+  @$core.Deprecated('This field is deprecated.')
   @$pb.TagNumber(6)
   set jsonEnabled($core.bool value) => $_setBool(5, value);
+  @$core.Deprecated('This field is deprecated.')
   @$pb.TagNumber(6)
   $core.bool hasJsonEnabled() => $_has(5);
+  @$core.Deprecated('This field is deprecated.')
   @$pb.TagNumber(6)
   void clearJsonEnabled() => $_clearField(6);
 

@@ -71,6 +71,8 @@ const TelemetrySensorType$json = {
     {'1': 'SCD30', '2': 49},
     {'1': 'SHTXX', '2': 50},
     {'1': 'DS248X', '2': 51},
+    {'1': 'MMC5983MA', '2': 52},
+    {'1': 'ICM42607P', '2': 53},
   ],
 };
 
@@ -88,7 +90,8 @@ final $typed_data.Uint8List telemetrySensorTypeDescriptor = $convert.base64Decod
     'lOECMSCgoGRFBTMzEwECQSDAoIUkFLMTIwMzUQJRIMCghNQVgxNzI2MRAmEgsKB1BDVDIwNzUQ'
     'JxILCgdBRFMxWDE1ECgSDwoLQURTMVgxNV9BTFQQKRIJCgVTRkEzMBAqEgkKBVNFTjVYECsSCw'
     'oHVFNMMjU2MRAsEgoKBkJIMTc1MBAtEgsKB0hEQzEwODAQLhIJCgVTSFQyMRAvEgkKBVNUQzMx'
-    'EDASCQoFU0NEMzAQMRIJCgVTSFRYWBAyEgoKBkRTMjQ4WBAz');
+    'EDASCQoFU0NEMzAQMRIJCgVTSFRYWBAyEgoKBkRTMjQ4WBAzEg0KCU1NQzU5ODNNQRA0Eg0KCU'
+    'lDTTQyNjA3UBA1');
 
 @$core.Deprecated('Use deviceMetricsDescriptor instead')
 const DeviceMetrics$json = {

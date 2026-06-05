@@ -21064,6 +21064,24 @@ abstract class AppLocalizations {
   /// **'Sent to radio'**
   String get messagingStatusSentToRadio;
 
+  /// Delivery status label shown on a channel (broadcast) message once another node has repeated it on the mesh.
+  ///
+  /// In en, this message translates to:
+  /// **'Heard by mesh'**
+  String get messagingStatusHeardByMesh;
+
+  /// Delivery status label shown on a direct message that the recipient node has acknowledged.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get messagingStatusDelivered;
+
+  /// Delivery status label shown on a direct message that a relay node rebroadcast but the recipient has not yet acknowledged.
+  ///
+  /// In en, this message translates to:
+  /// **'Received by relay'**
+  String get messagingStatusReceivedByRelay;
+
   /// Action label for manually resending an unconfirmed direct message.
   ///
   /// In en, this message translates to:
@@ -21333,6 +21351,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The local date and time this message was sent or received, based on your device\'s clock. The message bubble shows just the time; the full date appears here.'**
   String get messagingTechInfoExplainTimestampBody;
+
+  /// Title for the bottom sheet explaining the delivery status of an outgoing message.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery Status'**
+  String get messagingTechInfoExplainStatusTitle;
+
+  /// Explanation of the outgoing message delivery status shown in a bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'How far your message has travelled. \"Sent to radio\" means it left your device. \"Heard by mesh\" means another node repeated your channel message. \"Delivered\" means the recipient\'s node acknowledged your direct message.'**
+  String get messagingTechInfoExplainStatusBody;
 
   /// Empty state text in a new DM conversation.
   ///
@@ -30878,23 +30908,41 @@ abstract class AppLocalizations {
   /// **'144-146 MHz'**
   String get regionSelectionRegionItu1_2mFreq;
 
-  /// UI text: region selection ITU Region 2/3 Amateur Radio 2m band
+  /// UI text: region selection ITU Region 2 Amateur Radio 2m band
   ///
   /// In en, this message translates to:
-  /// **'ITU R2/3 2m'**
-  String get regionSelectionRegionItu23_2m;
+  /// **'ITU R2 2m'**
+  String get regionSelectionRegionItu2_2m;
 
   /// Description text
   ///
   /// In en, this message translates to:
-  /// **'ITU Region 2/3 amateur radio 2m band'**
-  String get regionSelectionRegionItu23_2mDesc;
+  /// **'ITU Region 2 amateur radio 2m band'**
+  String get regionSelectionRegionItu2_2mDesc;
 
-  /// UI text: region selection ITU R2/3 2m freq
+  /// UI text: region selection ITU R2 2m freq
   ///
   /// In en, this message translates to:
   /// **'144-148 MHz'**
-  String get regionSelectionRegionItu23_2mFreq;
+  String get regionSelectionRegionItu2_2mFreq;
+
+  /// UI text: region selection ITU Region 3 Amateur Radio 2m band
+  ///
+  /// In en, this message translates to:
+  /// **'ITU R3 2m'**
+  String get regionSelectionRegionItu3_2m;
+
+  /// Description text
+  ///
+  /// In en, this message translates to:
+  /// **'ITU Region 3 amateur radio 2m band'**
+  String get regionSelectionRegionItu3_2mDesc;
+
+  /// UI text: region selection ITU R3 2m freq
+  ///
+  /// In en, this message translates to:
+  /// **'144-148 MHz'**
+  String get regionSelectionRegionItu3_2mFreq;
 
   /// UI text: region selection EU 866MHz Short-Range Devices band
   ///

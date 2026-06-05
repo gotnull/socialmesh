@@ -648,6 +648,11 @@ message Config {
        * Can not be auto detected but set by proto. Used for 128x128 screens
        */
       OLED_SH1107_128_128 = 4;
+
+      /*
+       * Can not be auto detected but set by proto. Used for 64x128 rotated screens
+       */
+      OLED_SH1107_ROTATED = 5;
     }
 
     /*
@@ -936,9 +941,9 @@ message Config {
       ITU1_2M = 27;
 
       /*
-       * ITU Region 2 / 3 Amateur Radio 2m band (144-148 MHz)
+       * ITU Region 2 Amateur Radio 2m band (144-148 MHz)
        */
-      ITU23_2M = 28;
+      ITU2_2M = 28;
 
       /*
        * EU 866MHz band (Band no. 47b of 2006/771/EC and subsequent amendments) for Non-specific short-range devices (SRD)
@@ -955,6 +960,11 @@ message Config {
        * EU 868MHz band, with narrow presets
        */
       EU_N_868 = 32;
+
+      /*
+       * ITU Region 3 Amateur Radio 2m band (144-148 MHz)
+       */
+      ITU3_2M = 33;
     }
 
     /*
@@ -1184,10 +1194,16 @@ message Config {
      * Sets the ok_to_mqtt bit on outgoing packets
      */
     bool config_ok_to_mqtt = 105;
+
     /*
      * Set where LORA FEM is enabled, disabled, or not present
      */
     FEM_LNA_Mode fem_lna_mode = 106;
+
+    /*
+     * Don't use radiolib to initialize the radio, instead listen for a serialHal connection
+     */
+    bool serial_hal_only = 107;
   }
 
   message BluetoothConfig {

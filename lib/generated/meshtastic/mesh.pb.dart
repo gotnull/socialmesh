@@ -2848,6 +2848,7 @@ enum FromRadio_PayloadVariant {
   fileInfo,
   clientNotification,
   deviceuiConfig,
+  lockdownStatus,
   notSet
 }
 
@@ -2875,6 +2876,7 @@ class FromRadio extends $pb.GeneratedMessage {
     FileInfo? fileInfo,
     ClientNotification? clientNotification,
     $5.DeviceUIConfig? deviceuiConfig,
+    LockdownStatus? lockdownStatus,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -2896,6 +2898,7 @@ class FromRadio extends $pb.GeneratedMessage {
     if (clientNotification != null)
       result.clientNotification = clientNotification;
     if (deviceuiConfig != null) result.deviceuiConfig = deviceuiConfig;
+    if (lockdownStatus != null) result.lockdownStatus = lockdownStatus;
     return result;
   }
 
@@ -2926,13 +2929,14 @@ class FromRadio extends $pb.GeneratedMessage {
     15: FromRadio_PayloadVariant.fileInfo,
     16: FromRadio_PayloadVariant.clientNotification,
     17: FromRadio_PayloadVariant.deviceuiConfig,
+    18: FromRadio_PayloadVariant.lockdownStatus,
     0: FromRadio_PayloadVariant.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'FromRadio',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
       createEmptyInstance: create)
-    ..oo(0, [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17])
+    ..oo(0, [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18])
     ..aI(1, _omitFieldNames ? '' : 'id', fieldType: $pb.PbFieldType.OU3)
     ..aOM<MeshPacket>(2, _omitFieldNames ? '' : 'packet',
         subBuilder: MeshPacket.create)
@@ -2967,6 +2971,8 @@ class FromRadio extends $pb.GeneratedMessage {
         protoName: 'clientNotification', subBuilder: ClientNotification.create)
     ..aOM<$5.DeviceUIConfig>(17, _omitFieldNames ? '' : 'deviceuiConfig',
         protoName: 'deviceuiConfig', subBuilder: $5.DeviceUIConfig.create)
+    ..aOM<LockdownStatus>(18, _omitFieldNames ? '' : 'lockdownStatus',
+        subBuilder: LockdownStatus.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3003,6 +3009,7 @@ class FromRadio extends $pb.GeneratedMessage {
   @$pb.TagNumber(15)
   @$pb.TagNumber(16)
   @$pb.TagNumber(17)
+  @$pb.TagNumber(18)
   FromRadio_PayloadVariant whichPayloadVariant() =>
       _FromRadio_PayloadVariantByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(2)
@@ -3021,6 +3028,7 @@ class FromRadio extends $pb.GeneratedMessage {
   @$pb.TagNumber(15)
   @$pb.TagNumber(16)
   @$pb.TagNumber(17)
+  @$pb.TagNumber(18)
   void clearPayloadVariant() => $_clearField($_whichOneof(0));
 
   ///
@@ -3247,6 +3255,158 @@ class FromRadio extends $pb.GeneratedMessage {
   void clearDeviceuiConfig() => $_clearField(17);
   @$pb.TagNumber(17)
   $5.DeviceUIConfig ensureDeviceuiConfig() => $_ensure(16);
+
+  ///
+  ///  Lockdown state notification for hardened firmware builds.
+  ///  Sent post-config (so unauthorized clients learn they must
+  ///  provision/unlock) and after each LockdownAuth admin command
+  ///  to report success or failure. Replaces the earlier scheme of
+  ///  encoding state as magic-string prefixes inside ClientNotification.
+  @$pb.TagNumber(18)
+  LockdownStatus get lockdownStatus => $_getN(17);
+  @$pb.TagNumber(18)
+  set lockdownStatus(LockdownStatus value) => $_setField(18, value);
+  @$pb.TagNumber(18)
+  $core.bool hasLockdownStatus() => $_has(17);
+  @$pb.TagNumber(18)
+  void clearLockdownStatus() => $_clearField(18);
+  @$pb.TagNumber(18)
+  LockdownStatus ensureLockdownStatus() => $_ensure(17);
+}
+
+///
+///  Lockdown state report from firmware to client (for hardened builds
+///  with MESHTASTIC_LOCKDOWN). Sent immediately after config_complete_id
+///  to inform a freshly-connected unauthorized client what it must do,
+///  and again in response to each LockdownAuth admin command.
+class LockdownStatus extends $pb.GeneratedMessage {
+  factory LockdownStatus({
+    LockdownStatus_State? state,
+    $core.String? lockReason,
+    $core.int? bootsRemaining,
+    $core.int? validUntilEpoch,
+    $core.int? backoffSeconds,
+  }) {
+    final result = create();
+    if (state != null) result.state = state;
+    if (lockReason != null) result.lockReason = lockReason;
+    if (bootsRemaining != null) result.bootsRemaining = bootsRemaining;
+    if (validUntilEpoch != null) result.validUntilEpoch = validUntilEpoch;
+    if (backoffSeconds != null) result.backoffSeconds = backoffSeconds;
+    return result;
+  }
+
+  LockdownStatus._();
+
+  factory LockdownStatus.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory LockdownStatus.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'LockdownStatus',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aE<LockdownStatus_State>(1, _omitFieldNames ? '' : 'state',
+        enumValues: LockdownStatus_State.values)
+    ..aOS(2, _omitFieldNames ? '' : 'lockReason')
+    ..aI(3, _omitFieldNames ? '' : 'bootsRemaining',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(4, _omitFieldNames ? '' : 'validUntilEpoch',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(5, _omitFieldNames ? '' : 'backoffSeconds',
+        fieldType: $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  LockdownStatus clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  LockdownStatus copyWith(void Function(LockdownStatus) updates) =>
+      super.copyWith((message) => updates(message as LockdownStatus))
+          as LockdownStatus;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static LockdownStatus create() => LockdownStatus._();
+  @$core.override
+  LockdownStatus createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static LockdownStatus getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<LockdownStatus>(create);
+  static LockdownStatus? _defaultInstance;
+
+  /// Current lockdown state being reported.
+  @$pb.TagNumber(1)
+  LockdownStatus_State get state => $_getN(0);
+  @$pb.TagNumber(1)
+  set state(LockdownStatus_State value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasState() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearState() => $_clearField(1);
+
+  ///
+  ///  For LOCKED: machine-readable reason. Known values:
+  ///    "needs_auth"        — storage already unlocked, client must auth
+  ///    "token_missing"     — no boot token on flash
+  ///    "token_expired"     — boot token wall-clock TTL elapsed
+  ///    "token_boots_zero"  — boot token boot-count TTL exhausted
+  ///    "token_hmac_fail"   — token tampered or wrong device
+  ///    "token_dek_fail"    — token DEK decrypt failed
+  ///    "token_wrong_size"  — token file corrupted
+  ///    "token_bad_magic"   — token file corrupted
+  ///    "not_provisioned"   — should generally use NEEDS_PROVISION state instead
+  ///  Other values may be added; clients should treat unknown values as
+  ///  "locked, ask for passphrase".
+  @$pb.TagNumber(2)
+  $core.String get lockReason => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set lockReason($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasLockReason() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearLockReason() => $_clearField(2);
+
+  ///
+  ///  For UNLOCKED: remaining boots on the issued session token.
+  ///  Decrements by 1 on each subsequent boot.
+  @$pb.TagNumber(3)
+  $core.int get bootsRemaining => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set bootsRemaining($core.int value) => $_setUnsignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasBootsRemaining() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearBootsRemaining() => $_clearField(3);
+
+  ///
+  ///  For UNLOCKED: wall-clock expiry of the issued session token,
+  ///  absolute Unix-epoch seconds. 0 = no time limit.
+  @$pb.TagNumber(4)
+  $core.int get validUntilEpoch => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set validUntilEpoch($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasValidUntilEpoch() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearValidUntilEpoch() => $_clearField(4);
+
+  ///
+  ///  For UNLOCK_FAILED: seconds the client must wait before another
+  ///  passphrase attempt will be accepted. 0 = wrong passphrase, no
+  ///  backoff (immediate retry allowed but advisable to prompt user).
+  @$pb.TagNumber(5)
+  $core.int get backoffSeconds => $_getIZ(4);
+  @$pb.TagNumber(5)
+  set backoffSeconds($core.int value) => $_setUnsignedInt32(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasBackoffSeconds() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearBackoffSeconds() => $_clearField(5);
 }
 
 enum ClientNotification_PayloadVariant {

@@ -698,6 +698,31 @@ class HardwareModel extends $pb.ProtobufEnum {
       HardwareModel._(131, _omitEnumNames ? '' : 'THINKNODE_M9');
 
   ///
+  ///  The Heltec-V4-R8 uses an ESP32S3R8 chip, plus an SX1262.
+  static const HardwareModel HELTEC_V4_R8 =
+      HardwareModel._(132, _omitEnumNames ? '' : 'HELTEC_V4_R8');
+
+  ///
+  ///  The HELTEC_MESH_NODE_T1 uses an NRF52840 chip, plus an SX1262.
+  static const HardwareModel HELTEC_MESH_NODE_T1 =
+      HardwareModel._(133, _omitEnumNames ? '' : 'HELTEC_MESH_NODE_T1');
+
+  ///
+  ///  B&Q Consulting Station G3: TBD
+  static const HardwareModel STATION_G3 =
+      HardwareModel._(134, _omitEnumNames ? '' : 'STATION_G3');
+
+  ///
+  ///  Lilygo T-Impulse-Plus
+  static const HardwareModel T_IMPULSE_PLUS =
+      HardwareModel._(135, _omitEnumNames ? '' : 'T_IMPULSE_PLUS');
+
+  ///
+  ///  Lilygo T-Echo Card
+  static const HardwareModel T_ECHO_CARD =
+      HardwareModel._(136, _omitEnumNames ? '' : 'T_ECHO_CARD');
+
+  ///
   ///  ------------------------------------------------------------------------------------------------------------------------------------------
   ///  Reserved ID For developing private Ports. These will show up in live traffic sparsely, so we can use a high number. Keep it within 8 bits.
   ///  ------------------------------------------------------------------------------------------------------------------------------------------
@@ -837,6 +862,11 @@ class HardwareModel extends $pb.ProtobufEnum {
     THINKNODE_M7,
     THINKNODE_M8,
     THINKNODE_M9,
+    HELTEC_V4_R8,
+    HELTEC_MESH_NODE_T1,
+    STATION_G3,
+    T_IMPULSE_PLUS,
+    T_ECHO_CARD,
     PRIVATE_HW,
   ];
 
@@ -1721,6 +1751,53 @@ class LogRecord_Level extends $pb.ProtobufEnum {
   static LogRecord_Level? valueOf($core.int value) => _byValue[value];
 
   const LogRecord_Level._(super.value, super.name);
+}
+
+class LockdownStatus_State extends $pb.ProtobufEnum {
+  /// Default; should not be sent.
+  static const LockdownStatus_State STATE_UNSPECIFIED =
+      LockdownStatus_State._(0, _omitEnumNames ? '' : 'STATE_UNSPECIFIED');
+
+  ///
+  ///  No passphrase has ever been provisioned on this device.
+  ///  Client should prompt the operator to set one.
+  static const LockdownStatus_State NEEDS_PROVISION =
+      LockdownStatus_State._(1, _omitEnumNames ? '' : 'NEEDS_PROVISION');
+
+  ///
+  ///  Storage is locked or this client has not authenticated yet.
+  ///  lock_reason carries a machine-readable detail string.
+  ///  Client should present (or auto-replay) a passphrase via
+  ///  AdminMessage.lockdown_auth.
+  static const LockdownStatus_State LOCKED =
+      LockdownStatus_State._(2, _omitEnumNames ? '' : 'LOCKED');
+
+  ///
+  ///  Passphrase accepted; client is now authorized for this connection.
+  ///  boots_remaining and valid_until_epoch describe the active session
+  ///  token's TTL.
+  static const LockdownStatus_State UNLOCKED =
+      LockdownStatus_State._(3, _omitEnumNames ? '' : 'UNLOCKED');
+
+  ///
+  ///  Passphrase rejected. backoff_seconds is non-zero when rate-limited.
+  static const LockdownStatus_State UNLOCK_FAILED =
+      LockdownStatus_State._(4, _omitEnumNames ? '' : 'UNLOCK_FAILED');
+
+  static const $core.List<LockdownStatus_State> values = <LockdownStatus_State>[
+    STATE_UNSPECIFIED,
+    NEEDS_PROVISION,
+    LOCKED,
+    UNLOCKED,
+    UNLOCK_FAILED,
+  ];
+
+  static final $core.List<LockdownStatus_State?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 4);
+  static LockdownStatus_State? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const LockdownStatus_State._(super.value, super.name);
 }
 
 const $core.bool _omitEnumNames =

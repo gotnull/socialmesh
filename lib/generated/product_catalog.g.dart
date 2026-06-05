@@ -82,7 +82,7 @@ class ProductCatalog {
   static const ProductSpec completePack = ProductSpec(
     id: 'complete_pack',
     name: 'Complete Pack',
-    priceUsd: 12.99,
+    priceUsd: 9.99,
     kind: ProductKind.oneTime,
     grants: <String>[
       'complete_pack',
@@ -174,7 +174,7 @@ class ProductCatalog {
     'widget_pack': 3.99,
     'automations_pack': 4.99,
     'ifttt_pack': 3.99,
-    'complete_pack': 12.99,
+    'complete_pack': 9.99,
     'community_pack_10': 49.99,
     'community_pack_20': 79.99,
     'translation_pack': 2.99,

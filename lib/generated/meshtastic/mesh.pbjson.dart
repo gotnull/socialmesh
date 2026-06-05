@@ -151,6 +151,11 @@ const HardwareModel$json = {
     {'1': 'THINKNODE_M7', '2': 129},
     {'1': 'THINKNODE_M8', '2': 130},
     {'1': 'THINKNODE_M9', '2': 131},
+    {'1': 'HELTEC_V4_R8', '2': 132},
+    {'1': 'HELTEC_MESH_NODE_T1', '2': 133},
+    {'1': 'STATION_G3', '2': 134},
+    {'1': 'T_IMPULSE_PLUS', '2': 135},
+    {'1': 'T_ECHO_CARD', '2': 136},
     {'1': 'PRIVATE_HW', '2': 255},
   ],
 };
@@ -202,7 +207,9 @@ final $typed_data.Uint8List hardwareModelDescriptor = $convert.base64Decode(
     'ehIUChBUNV9TM19FUEFQRVJfUFJPEHsSDQoJVEJFQU1fQlBGEHwSEgoOTUlOSV9FUEFQRVJfUz'
     'MQfRITCg9URElTUExBWV9TM19QUk8QfhIZChVIRUxURUNfTUVTSF9OT0RFX1QwOTYQfxIYChNU'
     'UkFDS0VSX1QxMDAwX0VfUFJPEIABEhEKDFRISU5LTk9ERV9NNxCBARIRCgxUSElOS05PREVfTT'
-    'gQggESEQoMVEhJTktOT0RFX005EIMBEg8KClBSSVZBVEVfSFcQ/wE=');
+    'gQggESEQoMVEhJTktOT0RFX005EIMBEhEKDEhFTFRFQ19WNF9SOBCEARIYChNIRUxURUNfTUVT'
+    'SF9OT0RFX1QxEIUBEg8KClNUQVRJT05fRzMQhgESEwoOVF9JTVBVTFNFX1BMVVMQhwESEAoLVF'
+    '9FQ0hPX0NBUkQQiAESDwoKUFJJVkFURV9IVxD/AQ==');
 
 @$core.Deprecated('Use constantsDescriptor instead')
 const Constants$json = {
@@ -1297,6 +1304,15 @@ const FromRadio$json = {
       '9': 0,
       '10': 'deviceuiConfig'
     },
+    {
+      '1': 'lockdown_status',
+      '3': 18,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.LockdownStatus',
+      '9': 0,
+      '10': 'lockdownStatus'
+    },
   ],
   '8': [
     {'1': 'payload_variant'},
@@ -1322,7 +1338,55 @@ final $typed_data.Uint8List fromRadioDescriptor = $convert.base64Decode(
     'RmlsZUluZm9IAFIIZmlsZUluZm8SUAoSY2xpZW50Tm90aWZpY2F0aW9uGBAgASgLMh4ubWVzaH'
     'Rhc3RpYy5DbGllbnROb3RpZmljYXRpb25IAFISY2xpZW50Tm90aWZpY2F0aW9uEkQKDmRldmlj'
     'ZXVpQ29uZmlnGBEgASgLMhoubWVzaHRhc3RpYy5EZXZpY2VVSUNvbmZpZ0gAUg5kZXZpY2V1aU'
-    'NvbmZpZ0IRCg9wYXlsb2FkX3ZhcmlhbnQ=');
+    'NvbmZpZxJFCg9sb2NrZG93bl9zdGF0dXMYEiABKAsyGi5tZXNodGFzdGljLkxvY2tkb3duU3Rh'
+    'dHVzSABSDmxvY2tkb3duU3RhdHVzQhEKD3BheWxvYWRfdmFyaWFudA==');
+
+@$core.Deprecated('Use lockdownStatusDescriptor instead')
+const LockdownStatus$json = {
+  '1': 'LockdownStatus',
+  '2': [
+    {
+      '1': 'state',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.meshtastic.LockdownStatus.State',
+      '10': 'state'
+    },
+    {'1': 'lock_reason', '3': 2, '4': 1, '5': 9, '10': 'lockReason'},
+    {'1': 'boots_remaining', '3': 3, '4': 1, '5': 13, '10': 'bootsRemaining'},
+    {
+      '1': 'valid_until_epoch',
+      '3': 4,
+      '4': 1,
+      '5': 13,
+      '10': 'validUntilEpoch'
+    },
+    {'1': 'backoff_seconds', '3': 5, '4': 1, '5': 13, '10': 'backoffSeconds'},
+  ],
+  '4': [LockdownStatus_State$json],
+};
+
+@$core.Deprecated('Use lockdownStatusDescriptor instead')
+const LockdownStatus_State$json = {
+  '1': 'State',
+  '2': [
+    {'1': 'STATE_UNSPECIFIED', '2': 0},
+    {'1': 'NEEDS_PROVISION', '2': 1},
+    {'1': 'LOCKED', '2': 2},
+    {'1': 'UNLOCKED', '2': 3},
+    {'1': 'UNLOCK_FAILED', '2': 4},
+  ],
+};
+
+/// Descriptor for `LockdownStatus`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List lockdownStatusDescriptor = $convert.base64Decode(
+    'Cg5Mb2NrZG93blN0YXR1cxI2CgVzdGF0ZRgBIAEoDjIgLm1lc2h0YXN0aWMuTG9ja2Rvd25TdG'
+    'F0dXMuU3RhdGVSBXN0YXRlEh8KC2xvY2tfcmVhc29uGAIgASgJUgpsb2NrUmVhc29uEicKD2Jv'
+    'b3RzX3JlbWFpbmluZxgDIAEoDVIOYm9vdHNSZW1haW5pbmcSKgoRdmFsaWRfdW50aWxfZXBvY2'
+    'gYBCABKA1SD3ZhbGlkVW50aWxFcG9jaBInCg9iYWNrb2ZmX3NlY29uZHMYBSABKA1SDmJhY2tv'
+    'ZmZTZWNvbmRzImAKBVN0YXRlEhUKEVNUQVRFX1VOU1BFQ0lGSUVEEAASEwoPTkVFRFNfUFJPVk'
+    'lTSU9OEAESCgoGTE9DS0VEEAISDAoIVU5MT0NLRUQQAxIRCg1VTkxPQ0tfRkFJTEVEEAQ=');
 
 @$core.Deprecated('Use clientNotificationDescriptor instead')
 const ClientNotification$json = {

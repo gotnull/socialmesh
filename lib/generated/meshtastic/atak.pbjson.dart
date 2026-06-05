@@ -216,6 +216,8 @@ const CotType$json = {
     {'1': 'CotType_b_t_f_r', '2': 122},
     {'1': 'CotType_b_a_o_c', '2': 123},
     {'1': 'CotType_t_s', '2': 124},
+    {'1': 'CotType_m_t_t', '2': 125},
+    {'1': 'CotType_y', '2': 126},
   ],
 };
 
@@ -273,7 +275,8 @@ final $typed_data.Uint8List cotTypeDescriptor = $convert.base64Decode(
     'NfY3AQcxIYChRDb3RUeXBlX2JfbV9wX3NfcF9vcBB0EhEKDUNvdFR5cGVfdV9kX3YQdRITCg9D'
     'b3RUeXBlX3VfZF92X20QdhITCg9Db3RUeXBlX3VfZF9jX2UQdxITCg9Db3RUeXBlX2JfaV94X2'
     'kQeBITCg9Db3RUeXBlX2JfdF9mX2QQeRITCg9Db3RUeXBlX2JfdF9mX3IQehITCg9Db3RUeXBl'
-    'X2JfYV9vX2MQexIPCgtDb3RUeXBlX3RfcxB8');
+    'X2JfYV9vX2MQexIPCgtDb3RUeXBlX3RfcxB8EhEKDUNvdFR5cGVfbV90X3QQfRINCglDb3RUeX'
+    'BlX3kQfg==');
 
 @$core.Deprecated('Use geoPointSourceDescriptor instead')
 const GeoPointSource$json = {
@@ -379,11 +382,33 @@ const GeoChat$json = {
       '6': '.meshtastic.GeoChat.ReceiptType',
       '10': 'receiptType'
     },
+    {'1': 'lang', '3': 6, '4': 1, '5': 9, '9': 2, '10': 'lang', '17': true},
+    {
+      '1': 'room_id',
+      '3': 7,
+      '4': 1,
+      '5': 9,
+      '9': 3,
+      '10': 'roomId',
+      '17': true
+    },
+    {
+      '1': 'voice_profile_id',
+      '3': 8,
+      '4': 1,
+      '5': 9,
+      '9': 4,
+      '10': 'voiceProfileId',
+      '17': true
+    },
   ],
   '4': [GeoChat_ReceiptType$json],
   '8': [
     {'1': '_to'},
     {'1': '_to_callsign'},
+    {'1': '_lang'},
+    {'1': '_room_id'},
+    {'1': '_voice_profile_id'},
   ],
 };
 
@@ -402,9 +427,12 @@ final $typed_data.Uint8List geoChatDescriptor = $convert.base64Decode(
     'CgdHZW9DaGF0EhgKB21lc3NhZ2UYASABKAlSB21lc3NhZ2USEwoCdG8YAiABKAlIAFICdG+IAQ'
     'ESJAoLdG9fY2FsbHNpZ24YAyABKAlIAVIKdG9DYWxsc2lnbogBARImCg9yZWNlaXB0X2Zvcl91'
     'aWQYBCABKAlSDXJlY2VpcHRGb3JVaWQSQgoMcmVjZWlwdF90eXBlGAUgASgOMh8ubWVzaHRhc3'
-    'RpYy5HZW9DaGF0LlJlY2VpcHRUeXBlUgtyZWNlaXB0VHlwZSJUCgtSZWNlaXB0VHlwZRIUChBS'
-    'ZWNlaXB0VHlwZV9Ob25lEAASGQoVUmVjZWlwdFR5cGVfRGVsaXZlcmVkEAESFAoQUmVjZWlwdF'
-    'R5cGVfUmVhZBACQgUKA190b0IOCgxfdG9fY2FsbHNpZ24=');
+    'RpYy5HZW9DaGF0LlJlY2VpcHRUeXBlUgtyZWNlaXB0VHlwZRIXCgRsYW5nGAYgASgJSAJSBGxh'
+    'bmeIAQESHAoHcm9vbV9pZBgHIAEoCUgDUgZyb29tSWSIAQESLQoQdm9pY2VfcHJvZmlsZV9pZB'
+    'gIIAEoCUgEUg52b2ljZVByb2ZpbGVJZIgBASJUCgtSZWNlaXB0VHlwZRIUChBSZWNlaXB0VHlw'
+    'ZV9Ob25lEAASGQoVUmVjZWlwdFR5cGVfRGVsaXZlcmVkEAESFAoQUmVjZWlwdFR5cGVfUmVhZB'
+    'ACQgUKA190b0IOCgxfdG9fY2FsbHNpZ25CBwoFX2xhbmdCCgoIX3Jvb21faWRCEwoRX3ZvaWNl'
+    'X3Byb2ZpbGVfaWQ=');
 
 @$core.Deprecated('Use groupDescriptor instead')
 const Group$json = {
@@ -566,12 +594,18 @@ const DrawnShape$json = {
     {'1': 'fill_argb', '3': 10, '4': 1, '5': 7, '10': 'fillArgb'},
     {'1': 'labels_on', '3': 11, '4': 1, '5': 8, '10': 'labelsOn'},
     {
-      '1': 'vertices',
-      '3': 12,
+      '1': 'vertex_lat_deltas',
+      '3': 18,
       '4': 3,
-      '5': 11,
-      '6': '.meshtastic.CotGeoPoint',
-      '10': 'vertices'
+      '5': 17,
+      '10': 'vertexLatDeltas'
+    },
+    {
+      '1': 'vertex_lon_deltas',
+      '3': 19,
+      '4': 3,
+      '5': 17,
+      '10': 'vertexLonDeltas'
     },
     {'1': 'truncated', '3': 13, '4': 1, '5': 8, '10': 'truncated'},
     {
@@ -592,6 +626,9 @@ const DrawnShape$json = {
     {'1': 'bullseye_uid_ref', '3': 17, '4': 1, '5': 9, '10': 'bullseyeUidRef'},
   ],
   '4': [DrawnShape_Kind$json, DrawnShape_StyleMode$json],
+  '9': [
+    {'1': 12, '2': 13},
+  ],
 };
 
 @$core.Deprecated('Use drawnShapeDescriptor instead')
@@ -632,18 +669,19 @@ final $typed_data.Uint8List drawnShapeDescriptor = $convert.base64Decode(
     'MhAubWVzaHRhc3RpYy5UZWFtUgtzdHJva2VDb2xvchIfCgtzdHJva2VfYXJnYhgHIAEoB1IKc3'
     'Ryb2tlQXJnYhIqChFzdHJva2Vfd2VpZ2h0X3gxMBgIIAEoDVIPc3Ryb2tlV2VpZ2h0WDEwEi8K'
     'CmZpbGxfY29sb3IYCSABKA4yEC5tZXNodGFzdGljLlRlYW1SCWZpbGxDb2xvchIbCglmaWxsX2'
-    'FyZ2IYCiABKAdSCGZpbGxBcmdiEhsKCWxhYmVsc19vbhgLIAEoCFIIbGFiZWxzT24SMwoIdmVy'
-    'dGljZXMYDCADKAsyFy5tZXNodGFzdGljLkNvdEdlb1BvaW50Ugh2ZXJ0aWNlcxIcCgl0cnVuY2'
-    'F0ZWQYDSABKAhSCXRydW5jYXRlZBIwChRidWxsc2V5ZV9kaXN0YW5jZV9kbRgOIAEoDVISYnVs'
-    'bHNleWVEaXN0YW5jZURtEjAKFGJ1bGxzZXllX2JlYXJpbmdfcmVmGA8gASgNUhJidWxsc2V5ZU'
-    'JlYXJpbmdSZWYSJQoOYnVsbHNleWVfZmxhZ3MYECABKA1SDWJ1bGxzZXllRmxhZ3MSKAoQYnVs'
-    'bHNleWVfdWlkX3JlZhgRIAEoCVIOYnVsbHNleWVVaWRSZWYi4gEKBEtpbmQSFAoQS2luZF9Vbn'
-    'NwZWNpZmllZBAAEg8KC0tpbmRfQ2lyY2xlEAESEgoOS2luZF9SZWN0YW5nbGUQAhIRCg1LaW5k'
-    'X0ZyZWVmb3JtEAMSFQoRS2luZF9UZWxlc3RyYXRpb24QBBIQCgxLaW5kX1BvbHlnb24QBRIWCh'
-    'JLaW5kX1JhbmdpbmdDaXJjbGUQBhIRCg1LaW5kX0J1bGxzZXllEAcSEAoMS2luZF9FbGxpcHNl'
-    'EAgSEgoOS2luZF9WZWhpY2xlMkQQCRISCg5LaW5kX1ZlaGljbGUzRBAKInUKCVN0eWxlTW9kZR'
-    'IZChVTdHlsZU1vZGVfVW5zcGVjaWZpZWQQABIYChRTdHlsZU1vZGVfU3Ryb2tlT25seRABEhYK'
-    'ElN0eWxlTW9kZV9GaWxsT25seRACEhsKF1N0eWxlTW9kZV9TdHJva2VBbmRGaWxsEAM=');
+    'FyZ2IYCiABKAdSCGZpbGxBcmdiEhsKCWxhYmVsc19vbhgLIAEoCFIIbGFiZWxzT24SKgoRdmVy'
+    'dGV4X2xhdF9kZWx0YXMYEiADKBFSD3ZlcnRleExhdERlbHRhcxIqChF2ZXJ0ZXhfbG9uX2RlbH'
+    'RhcxgTIAMoEVIPdmVydGV4TG9uRGVsdGFzEhwKCXRydW5jYXRlZBgNIAEoCFIJdHJ1bmNhdGVk'
+    'EjAKFGJ1bGxzZXllX2Rpc3RhbmNlX2RtGA4gASgNUhJidWxsc2V5ZURpc3RhbmNlRG0SMAoUYn'
+    'VsbHNleWVfYmVhcmluZ19yZWYYDyABKA1SEmJ1bGxzZXllQmVhcmluZ1JlZhIlCg5idWxsc2V5'
+    'ZV9mbGFncxgQIAEoDVINYnVsbHNleWVGbGFncxIoChBidWxsc2V5ZV91aWRfcmVmGBEgASgJUg'
+    '5idWxsc2V5ZVVpZFJlZiLiAQoES2luZBIUChBLaW5kX1Vuc3BlY2lmaWVkEAASDwoLS2luZF9D'
+    'aXJjbGUQARISCg5LaW5kX1JlY3RhbmdsZRACEhEKDUtpbmRfRnJlZWZvcm0QAxIVChFLaW5kX1'
+    'RlbGVzdHJhdGlvbhAEEhAKDEtpbmRfUG9seWdvbhAFEhYKEktpbmRfUmFuZ2luZ0NpcmNsZRAG'
+    'EhEKDUtpbmRfQnVsbHNleWUQBxIQCgxLaW5kX0VsbGlwc2UQCBISCg5LaW5kX1ZlaGljbGUyRB'
+    'AJEhIKDktpbmRfVmVoaWNsZTNEEAoidQoJU3R5bGVNb2RlEhkKFVN0eWxlTW9kZV9VbnNwZWNp'
+    'ZmllZBAAEhgKFFN0eWxlTW9kZV9TdHJva2VPbmx5EAESFgoSU3R5bGVNb2RlX0ZpbGxPbmx5EA'
+    'ISGwoXU3R5bGVNb2RlX1N0cm9rZUFuZEZpbGwQA0oECAwQDQ==');
 
 @$core.Deprecated('Use markerDescriptor instead')
 const Marker$json = {
@@ -1258,6 +1296,59 @@ final $typed_data.Uint8List sensorFovDescriptor = $convert.base64Decode(
     'FsEAISFAoQU2Vuc29yVHlwZV9MYXNlchADEhIKDlNlbnNvclR5cGVfTnZnEAQSEQoNU2Vuc29y'
     'VHlwZV9SZhAFEhQKEFNlbnNvclR5cGVfT3RoZXIQBkIKCghfcmFuZ2VfbQ==');
 
+@$core.Deprecated('Use takTalkMessageDescriptor instead')
+const TakTalkMessage$json = {
+  '1': 'TakTalkMessage',
+  '2': [
+    {'1': 'text', '3': 1, '4': 1, '5': 9, '10': 'text'},
+    {'1': 'chatroom_id', '3': 2, '4': 1, '5': 9, '10': 'chatroomId'},
+    {'1': 'lang', '3': 3, '4': 1, '5': 9, '10': 'lang'},
+    {'1': 'from_voice', '3': 4, '4': 1, '5': 8, '10': 'fromVoice'},
+  ],
+};
+
+/// Descriptor for `TakTalkMessage`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List takTalkMessageDescriptor = $convert.base64Decode(
+    'Cg5UYWtUYWxrTWVzc2FnZRISCgR0ZXh0GAEgASgJUgR0ZXh0Eh8KC2NoYXRyb29tX2lkGAIgAS'
+    'gJUgpjaGF0cm9vbUlkEhIKBGxhbmcYAyABKAlSBGxhbmcSHQoKZnJvbV92b2ljZRgEIAEoCFIJ'
+    'ZnJvbVZvaWNl');
+
+@$core.Deprecated('Use takTalkRoomDataDescriptor instead')
+const TakTalkRoomData$json = {
+  '1': 'TakTalkRoomData',
+  '2': [
+    {
+      '1': 'sender_callsign',
+      '3': 1,
+      '4': 1,
+      '5': 9,
+      '8': {'3': true},
+      '10': 'senderCallsign',
+    },
+    {'1': 'room_id', '3': 2, '4': 1, '5': 9, '10': 'roomId'},
+    {'1': 'room_name', '3': 3, '4': 1, '5': 9, '10': 'roomName'},
+    {'1': 'participants', '3': 4, '4': 3, '5': 9, '10': 'participants'},
+  ],
+};
+
+/// Descriptor for `TakTalkRoomData`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List takTalkRoomDataDescriptor = $convert.base64Decode(
+    'Cg9UYWtUYWxrUm9vbURhdGESKwoPc2VuZGVyX2NhbGxzaWduGAEgASgJQgIYAVIOc2VuZGVyQ2'
+    'FsbHNpZ24SFwoHcm9vbV9pZBgCIAEoCVIGcm9vbUlkEhsKCXJvb21fbmFtZRgDIAEoCVIIcm9v'
+    'bU5hbWUSIgoMcGFydGljaXBhbnRzGAQgAygJUgxwYXJ0aWNpcGFudHM=');
+
+@$core.Deprecated('Use martiDescriptor instead')
+const Marti$json = {
+  '1': 'Marti',
+  '2': [
+    {'1': 'dest_callsign', '3': 1, '4': 3, '5': 9, '10': 'destCallsign'},
+  ],
+};
+
+/// Descriptor for `Marti`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List martiDescriptor = $convert.base64Decode(
+    'CgVNYXJ0aRIjCg1kZXN0X2NhbGxzaWduGAEgAygJUgxkZXN0Q2FsbHNpZ24=');
+
 @$core.Deprecated('Use tAKPacketV2Descriptor instead')
 const TAKPacketV2$json = {
   '1': 'TAKPacketV2',
@@ -1348,7 +1439,16 @@ const TAKPacketV2$json = {
       '10': 'sensorFov',
       '17': true
     },
-    {'1': 'pli', '3': 30, '4': 1, '5': 8, '9': 0, '10': 'pli'},
+    {
+      '1': 'marti',
+      '3': 29,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.Marti',
+      '9': 3,
+      '10': 'marti',
+      '17': true
+    },
     {
       '1': 'chat',
       '3': 31,
@@ -1431,16 +1531,35 @@ const TAKPacketV2$json = {
       '9': 0,
       '10': 'task'
     },
+    {
+      '1': 'taktalk',
+      '3': 41,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.TakTalkMessage',
+      '9': 0,
+      '10': 'taktalk'
+    },
+    {
+      '1': 'taktalk_room',
+      '3': 42,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.TakTalkRoomData',
+      '9': 0,
+      '10': 'taktalkRoom'
+    },
   ],
   '8': [
     {'1': 'payload_variant'},
     {'1': '_environment'},
     {'1': '_sensor_fov'},
+    {'1': '_marti'},
   ],
   '9': [
     {'1': 27, '2': 28},
     {'1': 28, '2': 29},
-    {'1': 29, '2': 30},
+    {'1': 30, '2': 31},
   ],
 };
 
@@ -1462,15 +1581,17 @@ final $typed_data.Uint8List tAKPacketV2Descriptor = $convert.base64Decode(
     'hlbmRwb2ludBIUCgVwaG9uZRgWIAEoCVIFcGhvbmUSIAoMY290X3R5cGVfc3RyGBcgASgJUgpj'
     'b3RUeXBlU3RyEhgKB3JlbWFya3MYGCABKAlSB3JlbWFya3MSQQoLZW52aXJvbm1lbnQYGSABKA'
     'syGi5tZXNodGFzdGljLlRBS0Vudmlyb25tZW50SAFSC2Vudmlyb25tZW50iAEBEjkKCnNlbnNv'
-    'cl9mb3YYGiABKAsyFS5tZXNodGFzdGljLlNlbnNvckZvdkgCUglzZW5zb3JGb3aIAQESEgoDcG'
-    'xpGB4gASgISABSA3BsaRIpCgRjaGF0GB8gASgLMhMubWVzaHRhc3RpYy5HZW9DaGF0SABSBGNo'
-    'YXQSNwoIYWlyY3JhZnQYICABKAsyGS5tZXNodGFzdGljLkFpcmNyYWZ0VHJhY2tIAFIIYWlyY3'
-    'JhZnQSHwoKcmF3X2RldGFpbBghIAEoDEgAUglyYXdEZXRhaWwSLgoFc2hhcGUYIiABKAsyFi5t'
-    'ZXNodGFzdGljLkRyYXduU2hhcGVIAFIFc2hhcGUSLAoGbWFya2VyGCMgASgLMhIubWVzaHRhc3'
-    'RpYy5NYXJrZXJIAFIGbWFya2VyEi8KA3JhYhgkIAEoCzIbLm1lc2h0YXN0aWMuUmFuZ2VBbmRC'
-    'ZWFyaW5nSABSA3JhYhIpCgVyb3V0ZRglIAEoCzIRLm1lc2h0YXN0aWMuUm91dGVIAFIFcm91dG'
-    'USNQoHY2FzZXZhYxgmIAEoCzIZLm1lc2h0YXN0aWMuQ2FzZXZhY1JlcG9ydEgAUgdjYXNldmFj'
-    'EjoKCWVtZXJnZW5jeRgnIAEoCzIaLm1lc2h0YXN0aWMuRW1lcmdlbmN5QWxlcnRIAFIJZW1lcm'
-    'dlbmN5Ei0KBHRhc2sYKCABKAsyFy5tZXNodGFzdGljLlRhc2tSZXF1ZXN0SABSBHRhc2tCEQoP'
-    'cGF5bG9hZF92YXJpYW50Qg4KDF9lbnZpcm9ubWVudEINCgtfc2Vuc29yX2ZvdkoECBsQHEoECB'
-    'wQHUoECB0QHg==');
+    'cl9mb3YYGiABKAsyFS5tZXNodGFzdGljLlNlbnNvckZvdkgCUglzZW5zb3JGb3aIAQESLAoFbW'
+    'FydGkYHSABKAsyES5tZXNodGFzdGljLk1hcnRpSANSBW1hcnRpiAEBEikKBGNoYXQYHyABKAsy'
+    'Ey5tZXNodGFzdGljLkdlb0NoYXRIAFIEY2hhdBI3CghhaXJjcmFmdBggIAEoCzIZLm1lc2h0YX'
+    'N0aWMuQWlyY3JhZnRUcmFja0gAUghhaXJjcmFmdBIfCgpyYXdfZGV0YWlsGCEgASgMSABSCXJh'
+    'd0RldGFpbBIuCgVzaGFwZRgiIAEoCzIWLm1lc2h0YXN0aWMuRHJhd25TaGFwZUgAUgVzaGFwZR'
+    'IsCgZtYXJrZXIYIyABKAsyEi5tZXNodGFzdGljLk1hcmtlckgAUgZtYXJrZXISLwoDcmFiGCQg'
+    'ASgLMhsubWVzaHRhc3RpYy5SYW5nZUFuZEJlYXJpbmdIAFIDcmFiEikKBXJvdXRlGCUgASgLMh'
+    'EubWVzaHRhc3RpYy5Sb3V0ZUgAUgVyb3V0ZRI1CgdjYXNldmFjGCYgASgLMhkubWVzaHRhc3Rp'
+    'Yy5DYXNldmFjUmVwb3J0SABSB2Nhc2V2YWMSOgoJZW1lcmdlbmN5GCcgASgLMhoubWVzaHRhc3'
+    'RpYy5FbWVyZ2VuY3lBbGVydEgAUgllbWVyZ2VuY3kSLQoEdGFzaxgoIAEoCzIXLm1lc2h0YXN0'
+    'aWMuVGFza1JlcXVlc3RIAFIEdGFzaxI2Cgd0YWt0YWxrGCkgASgLMhoubWVzaHRhc3RpYy5UYW'
+    'tUYWxrTWVzc2FnZUgAUgd0YWt0YWxrEkAKDHRha3RhbGtfcm9vbRgqIAEoCzIbLm1lc2h0YXN0'
+    'aWMuVGFrVGFsa1Jvb21EYXRhSABSC3Rha3RhbGtSb29tQhEKD3BheWxvYWRfdmFyaWFudEIOCg'
+    'xfZW52aXJvbm1lbnRCDQoLX3NlbnNvcl9mb3ZCCAoGX21hcnRpSgQIGxAcSgQIHBAdSgQIHhAf');

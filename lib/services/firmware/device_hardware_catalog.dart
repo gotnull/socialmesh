@@ -69,6 +69,9 @@ class DeviceHardwareCatalog {
     121: DeviceArchitecture.nrf52840, // MESHSTICK_1262
     127: DeviceArchitecture.nrf52840, // HELTEC_MESH_NODE_T096
     128: DeviceArchitecture.nrf52840, // TRACKER_T1000_E_PRO (proto comment)
+    133: DeviceArchitecture.nrf52840, // HELTEC_MESH_NODE_T1 (proto comment)
+    135: DeviceArchitecture.nrf52840, // T_IMPULSE_PLUS
+    136: DeviceArchitecture.nrf52840, // T_ECHO_CARD
     // esp32
     19: DeviceArchitecture.esp32, // LORA_TYPE
     20: DeviceArchitecture.esp32, // WIPHONE
@@ -98,6 +101,8 @@ class DeviceHardwareCatalog {
     104: DeviceArchitecture.esp32s3, // M5STACK_RESERVED
     114: DeviceArchitecture.esp32s3, // T_WATCH_ULTRA
     126: DeviceArchitecture.esp32s3, // TDISPLAY_S3_PRO
+    132: DeviceArchitecture.esp32s3, // HELTEC_V4_R8 (proto comment)
+    134: DeviceArchitecture.esp32s3, // STATION_G3 (firmware variant)
     // esp32c6
     83: DeviceArchitecture.esp32c6, // TLORA_C6
     87: DeviceArchitecture.esp32c6, // MESHLINK

@@ -277,6 +277,16 @@ class TelemetrySensorType extends $pb.ProtobufEnum {
   static const TelemetrySensorType DS248X =
       TelemetrySensorType._(51, _omitEnumNames ? '' : 'DS248X');
 
+  ///
+  ///  MMC5983MA 3-Axis Digital Magnetic Sensor
+  static const TelemetrySensorType MMC5983MA =
+      TelemetrySensorType._(52, _omitEnumNames ? '' : 'MMC5983MA');
+
+  ///
+  ///  ICM-42607-P 6‑Axis IMU
+  static const TelemetrySensorType ICM42607P =
+      TelemetrySensorType._(53, _omitEnumNames ? '' : 'ICM42607P');
+
   static const $core.List<TelemetrySensorType> values = <TelemetrySensorType>[
     SENSOR_UNSET,
     BME280,
@@ -330,10 +340,12 @@ class TelemetrySensorType extends $pb.ProtobufEnum {
     SCD30,
     SHTXX,
     DS248X,
+    MMC5983MA,
+    ICM42607P,
   ];
 
   static final $core.List<TelemetrySensorType?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 51);
+      $pb.ProtobufEnum.$_initByValueList(values, 53);
   static TelemetrySensorType? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

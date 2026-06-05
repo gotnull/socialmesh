@@ -5167,6 +5167,17 @@ class MessagesNotifier extends Notifier<List<Message>> {
       );
     }
 
+    // A broadcast cannot carry a routing failure addressed back to us — its
+    // only meaningful signal is the implicit mesh ack (heard/repeated). Should
+    // a stray routing error ever arrive for a tracked broadcast packet, leave
+    // the message at "sent to radio" rather than flipping it to "failed".
+    if (message.isBroadcast && !update.isSuccess) {
+      AppLogging.debug(
+        '📨 ⏭️ Ignoring non-success update for broadcast message: $messageId',
+      );
+      return;
+    }
+
     Message updatedMessage;
     if (update.isSuccess) {
       // Confirmed — clear all retry state; the message is delivered.

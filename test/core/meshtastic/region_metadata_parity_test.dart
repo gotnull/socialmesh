@@ -66,7 +66,8 @@ void main() {
 
     test('dutyCycleForRegion returns 100 for ITU amateur-radio bands', () {
       expect(dutyCycleForRegion(Config_LoRaConfig_RegionCode.ITU1_2M), 100);
-      expect(dutyCycleForRegion(Config_LoRaConfig_RegionCode.ITU23_2M), 100);
+      expect(dutyCycleForRegion(Config_LoRaConfig_RegionCode.ITU2_2M), 100);
+      expect(dutyCycleForRegion(Config_LoRaConfig_RegionCode.ITU3_2M), 100);
     });
 
     test('dutyCycleForRegion returns 0 for UNSET', () {

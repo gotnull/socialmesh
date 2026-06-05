@@ -263,6 +263,7 @@ enum AdminMessage_PayloadVariant {
   nodedbReset,
   otaRequest,
   sensorConfig,
+  lockdownAuth,
   notSet
 }
 
@@ -330,6 +331,7 @@ class AdminMessage extends $pb.GeneratedMessage {
     $core.List<$core.int>? sessionPasskey,
     AdminMessage_OTAEvent? otaRequest,
     SensorConfig? sensorConfig,
+    LockdownAuth? lockdownAuth,
   }) {
     final result = create();
     if (getChannelRequest != null) result.getChannelRequest = getChannelRequest;
@@ -421,6 +423,7 @@ class AdminMessage extends $pb.GeneratedMessage {
     if (sessionPasskey != null) result.sessionPasskey = sessionPasskey;
     if (otaRequest != null) result.otaRequest = otaRequest;
     if (sensorConfig != null) result.sensorConfig = sensorConfig;
+    if (lockdownAuth != null) result.lockdownAuth = lockdownAuth;
     return result;
   }
 
@@ -492,6 +495,7 @@ class AdminMessage extends $pb.GeneratedMessage {
     100: AdminMessage_PayloadVariant.nodedbReset,
     102: AdminMessage_PayloadVariant.otaRequest,
     103: AdminMessage_PayloadVariant.sensorConfig,
+    104: AdminMessage_PayloadVariant.lockdownAuth,
     0: AdminMessage_PayloadVariant.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -555,7 +559,8 @@ class AdminMessage extends $pb.GeneratedMessage {
       99,
       100,
       102,
-      103
+      103,
+      104
     ])
     ..aI(1, _omitFieldNames ? '' : 'getChannelRequest',
         fieldType: $pb.PbFieldType.OU3)
@@ -656,6 +661,8 @@ class AdminMessage extends $pb.GeneratedMessage {
         subBuilder: AdminMessage_OTAEvent.create)
     ..aOM<SensorConfig>(103, _omitFieldNames ? '' : 'sensorConfig',
         subBuilder: SensorConfig.create)
+    ..aOM<LockdownAuth>(104, _omitFieldNames ? '' : 'lockdownAuth',
+        subBuilder: LockdownAuth.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -734,6 +741,7 @@ class AdminMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(100)
   @$pb.TagNumber(102)
   @$pb.TagNumber(103)
+  @$pb.TagNumber(104)
   AdminMessage_PayloadVariant whichPayloadVariant() =>
       _AdminMessage_PayloadVariantByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -793,6 +801,7 @@ class AdminMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(100)
   @$pb.TagNumber(102)
   @$pb.TagNumber(103)
+  @$pb.TagNumber(104)
   void clearPayloadVariant() => $_clearField($_whichOneof(0));
 
   ///
@@ -1506,6 +1515,151 @@ class AdminMessage extends $pb.GeneratedMessage {
   void clearSensorConfig() => $_clearField(103);
   @$pb.TagNumber(103)
   SensorConfig ensureSensorConfig() => $_ensure(57);
+
+  ///
+  ///  Lockdown passphrase delivery / unlock / lock-now command for hardened
+  ///  firmware builds (see MESHTASTIC_LOCKDOWN). Used to provision the
+  ///  passphrase on first boot, unlock encrypted storage on subsequent
+  ///  reboots, re-verify on already-unlocked devices to authorize a new
+  ///  client connection, or immediately re-lock the device.
+  ///
+  ///  Replaces the earlier scheme that repurposed SecurityConfig.private_key
+  ///  to carry passphrase bytes; that hack is retired.
+  @$pb.TagNumber(104)
+  LockdownAuth get lockdownAuth => $_getN(58);
+  @$pb.TagNumber(104)
+  set lockdownAuth(LockdownAuth value) => $_setField(104, value);
+  @$pb.TagNumber(104)
+  $core.bool hasLockdownAuth() => $_has(58);
+  @$pb.TagNumber(104)
+  void clearLockdownAuth() => $_clearField(104);
+  @$pb.TagNumber(104)
+  LockdownAuth ensureLockdownAuth() => $_ensure(58);
+}
+
+///
+///  Lockdown passphrase delivery payload.
+///
+///  One message handles three operations distinguished by content:
+///    - Provision (first-time): passphrase set, lock_now=false. Firmware
+///      generates DEK, wraps with passphrase-derived KEK, persists.
+///    - Unlock: passphrase set, lock_now=false. Firmware verifies
+///      passphrase against stored DEK, unlocks storage, authorizes the
+///      connection that delivered this packet.
+///    - Lock now: lock_now=true, passphrase ignored. Firmware revokes
+///      all client auth and reboots into the locked state.
+///
+///  Firmware decides between provision and unlock based on its own state
+///  (whether a DEK file already exists). Clients do not need to track
+///  which case applies.
+class LockdownAuth extends $pb.GeneratedMessage {
+  factory LockdownAuth({
+    $core.List<$core.int>? passphrase,
+    $core.int? bootsRemaining,
+    $core.int? validUntilEpoch,
+    $core.bool? lockNow,
+  }) {
+    final result = create();
+    if (passphrase != null) result.passphrase = passphrase;
+    if (bootsRemaining != null) result.bootsRemaining = bootsRemaining;
+    if (validUntilEpoch != null) result.validUntilEpoch = validUntilEpoch;
+    if (lockNow != null) result.lockNow = lockNow;
+    return result;
+  }
+
+  LockdownAuth._();
+
+  factory LockdownAuth.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory LockdownAuth.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'LockdownAuth',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'passphrase', $pb.PbFieldType.OY)
+    ..aI(2, _omitFieldNames ? '' : 'bootsRemaining',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(3, _omitFieldNames ? '' : 'validUntilEpoch',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOB(4, _omitFieldNames ? '' : 'lockNow')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  LockdownAuth clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  LockdownAuth copyWith(void Function(LockdownAuth) updates) =>
+      super.copyWith((message) => updates(message as LockdownAuth))
+          as LockdownAuth;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static LockdownAuth create() => LockdownAuth._();
+  @$core.override
+  LockdownAuth createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static LockdownAuth getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<LockdownAuth>(create);
+  static LockdownAuth? _defaultInstance;
+
+  ///
+  ///  Passphrase bytes (1-32). Empty when lock_now is true.
+  ///  Capped to 32 to match the proto cap on related security fields.
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get passphrase => $_getN(0);
+  @$pb.TagNumber(1)
+  set passphrase($core.List<$core.int> value) => $_setBytes(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPassphrase() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPassphrase() => $_clearField(1);
+
+  ///
+  ///  Optional override of the boot-count token TTL granted on success.
+  ///  0 = use firmware default (TOKEN_DEFAULT_BOOTS).
+  ///  On reboot the firmware decrements this; when it reaches 0 the
+  ///  device boots fully locked and requires a fresh passphrase.
+  @$pb.TagNumber(2)
+  $core.int get bootsRemaining => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set bootsRemaining($core.int value) => $_setUnsignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasBootsRemaining() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearBootsRemaining() => $_clearField(2);
+
+  ///
+  ///  Optional wall-clock expiry for the unlock token, as absolute
+  ///  Unix-epoch seconds. 0 = no time limit (only the boot-count TTL
+  ///  applies). On boot, if the device RTC is set and now > this value,
+  ///  the token is treated as expired.
+  @$pb.TagNumber(3)
+  $core.int get validUntilEpoch => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set validUntilEpoch($core.int value) => $_setUnsignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasValidUntilEpoch() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearValidUntilEpoch() => $_clearField(3);
+
+  ///
+  ///  If true, ignore passphrase fields, immediately revoke all
+  ///  connection-level admin authorization, and reboot the device into
+  ///  the locked state. Always honoured regardless of current lock state.
+  @$pb.TagNumber(4)
+  $core.bool get lockNow => $_getBF(3);
+  @$pb.TagNumber(4)
+  set lockNow($core.bool value) => $_setBool(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasLockNow() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearLockNow() => $_clearField(4);
 }
 
 ///

@@ -1811,16 +1811,25 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       int packetId;
 
       if (widget.type == ConversationType.channel) {
-        packetId = await protocol.sendMessage(
+        // Track the broadcast packet so the firmware's implicit mesh ack (a
+        // self-addressed Routing packet emitted when the radio hears its own
+        // broadcast rebroadcast by another node) flips the bubble from "sent
+        // to radio" to "heard by mesh". Pre-track before the send so the ack
+        // cannot race ahead of tracking setup. sentAt stays null below, which
+        // keeps the broadcast out of the DM unconfirmed/auto-retry coordinator.
+        packetId = await protocol.sendMessageWithPreTracking(
           text: text,
           to: 0xFFFFFFFF, // Broadcast to channel
           channel: widget.channelIndex ?? 0,
           wantAck: true,
           messageId: messageId,
+          onPacketIdGenerated: (id) {
+            // Use captured notifier - safe even if widget disposed
+            messagesNotifier.trackPacket(id, messageId);
+          },
           source: MessageSource.manual,
           replyId: replyPacketId,
         );
-        // Channel messages don't get ACKs, so no tracking needed
       } else {
         // Pre-generate packet ID and track BEFORE sending to avoid race condition
         // where ACK arrives before tracking is set up.
@@ -3292,12 +3301,6 @@ class _MessageBubble extends ConsumerWidget {
     final isUnconfirmed = message.isUnconfirmed;
     final isRetrying = message.isRetrying;
     final isPending = message.isPending;
-    final isDelivered = message.status == MessageStatus.delivered;
-    // Explicit recipient ack — renders with the double-check indicator.
-    // Legacy rows (realAck == null) are treated as explicit to preserve the
-    // pre-migration presentation; only a known-implicit ack (false) downgrades
-    // the visual to a single check.
-    final isExplicitlyAcked = isDelivered && message.realAck != false;
     final sourceBadge = _buildSourceBadge(context);
 
     // Translation state for this message
@@ -3444,13 +3447,7 @@ class _MessageBubble extends ConsumerWidget {
                               ),
                               if (!isPending && !isFailed && !isQueued) ...[
                                 const SizedBox(width: AppTheme.spacing4),
-                                Icon(
-                                  isExplicitlyAcked
-                                      ? Icons.done_all
-                                      : Icons.done,
-                                  size: 14,
-                                  color: Colors.white.withValues(alpha: 0.7),
-                                ),
+                                _buildDeliveryGlyph(context),
                               ],
                             ],
                           ),
@@ -3740,6 +3737,60 @@ class _MessageBubble extends ConsumerWidget {
 
   /// Builds a compact row of technical details (hops, SNR, RSSI, transport)
   /// shown inline below the message timestamp when the setting is enabled.
+  // Delivery presentation for a settled outbound message (sent or delivered).
+  // Centralises the sent → heard/delivered glyph so the bubble status row and
+  // the tech-info panel always agree. Only meaningful once a message is past
+  // pending/queued/failed; callers gate on that.
+  ({IconData icon, Color color, double size, String label}) _deliveryStatus(
+    BuildContext context,
+  ) {
+    final l10n = context.l10n;
+    if (message.status != MessageStatus.delivered) {
+      // Handed to the radio; no mesh acknowledgement yet.
+      return (
+        icon: Icons.done,
+        color: Colors.white.withValues(alpha: 0.7),
+        size: 14,
+        label: l10n.messagingStatusSentToRadio,
+      );
+    }
+    if (message.isBroadcast) {
+      // Implicit mesh ack: a node repeated the broadcast.
+      return (
+        icon: Icons.done_all,
+        color: Colors.white,
+        size: 16,
+        label: l10n.messagingStatusHeardByMesh,
+      );
+    }
+    // Direct message delivered. realAck == false is a relay-only (implicit)
+    // ack; anything else (explicit recipient ack, or legacy null rows) counts
+    // as a recipient ack and gets the prominent success colour.
+    if (message.realAck == false) {
+      return (
+        icon: Icons.done_all,
+        color: Colors.white,
+        size: 16,
+        label: l10n.messagingStatusReceivedByRelay,
+      );
+    }
+    return (
+      icon: Icons.done_all,
+      color: SemanticColors.success,
+      size: 16,
+      label: l10n.messagingStatusDelivered,
+    );
+  }
+
+  // Tooltip-wrapped delivery glyph rendered inline in the outbound status row.
+  Widget _buildDeliveryGlyph(BuildContext context) {
+    final status = _deliveryStatus(context);
+    return Tooltip(
+      message: status.label,
+      child: Icon(status.icon, size: status.size, color: status.color),
+    );
+  }
+
   Widget _buildInlineTechInfo(BuildContext context, {required bool sentByMe}) {
     final l10n = context.l10n;
     final hasRadioInfo =
@@ -3789,6 +3840,25 @@ class _MessageBubble extends ConsumerWidget {
             explainTitle: l10n.messagingTechInfoExplainTimestampTitle,
             explainBody: l10n.messagingTechInfoExplainTimestampBody,
           ),
+          // Outbound delivery status: human-readable text counterpart of the
+          // bubble's check glyph (sent to radio / heard by mesh / delivered).
+          if (sentByMe &&
+              (message.status == MessageStatus.sent ||
+                  message.status == MessageStatus.delivered))
+            Builder(
+              builder: (context) {
+                final status = _deliveryStatus(context);
+                return _TechInfoChip(
+                  icon: status.icon,
+                  label: status.label,
+                  iconSize: iconSize,
+                  color: color,
+                  textStyle: textStyle,
+                  explainTitle: l10n.messagingTechInfoExplainStatusTitle,
+                  explainBody: l10n.messagingTechInfoExplainStatusBody,
+                );
+              },
+            ),
           // Always show: from node ID
           _TechInfoChip(
             icon: Icons.person_outline,

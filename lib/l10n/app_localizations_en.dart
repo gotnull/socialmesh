@@ -12019,6 +12019,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messagingStatusSentToRadio => 'Sent to radio';
 
   @override
+  String get messagingStatusHeardByMesh => 'Heard by mesh';
+
+  @override
+  String get messagingStatusDelivered => 'Delivered';
+
+  @override
+  String get messagingStatusReceivedByRelay => 'Received by relay';
+
+  @override
   String get messagingResend => 'Resend';
 
   @override
@@ -12186,6 +12195,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get messagingTechInfoExplainTimestampBody =>
       'The local date and time this message was sent or received, based on your device\'s clock. The message bubble shows just the time; the full date appears here.';
+
+  @override
+  String get messagingTechInfoExplainStatusTitle => 'Delivery Status';
+
+  @override
+  String get messagingTechInfoExplainStatusBody =>
+      'How far your message has travelled. \"Sent to radio\" means it left your device. \"Heard by mesh\" means another node repeated your channel message. \"Delivered\" means the recipient\'s node acknowledged your direct message.';
 
   @override
   String get messagingStartConversation => 'Start the conversation';
@@ -17784,14 +17800,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get regionSelectionRegionItu1_2mFreq => '144-146 MHz';
 
   @override
-  String get regionSelectionRegionItu23_2m => 'ITU R2/3 2m';
+  String get regionSelectionRegionItu2_2m => 'ITU R2 2m';
 
   @override
-  String get regionSelectionRegionItu23_2mDesc =>
-      'ITU Region 2/3 amateur radio 2m band';
+  String get regionSelectionRegionItu2_2mDesc =>
+      'ITU Region 2 amateur radio 2m band';
 
   @override
-  String get regionSelectionRegionItu23_2mFreq => '144-148 MHz';
+  String get regionSelectionRegionItu2_2mFreq => '144-148 MHz';
+
+  @override
+  String get regionSelectionRegionItu3_2m => 'ITU R3 2m';
+
+  @override
+  String get regionSelectionRegionItu3_2mDesc =>
+      'ITU Region 3 amateur radio 2m band';
+
+  @override
+  String get regionSelectionRegionItu3_2mFreq => '144-148 MHz';
 
   @override
   String get regionSelectionRegionEu866 => 'EU 866';
