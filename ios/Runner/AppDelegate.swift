@@ -1,6 +1,7 @@
 import Flutter
 import Intents
 import UIKit
+import UserNotifications
 import os
 
 @main
@@ -45,6 +46,30 @@ import os
     handlerFor intent: INIntent
   ) -> Any? {
     return IntentHandler().handler(for: intent)
+  }
+
+  // Read-tracking for CarPlay communication notifications. A tap on a
+  // carplay_repost notification (posted by CarPlayDonation) marks that
+  // conversation read in Dart. super is called so flutter_local_notifications'
+  // own tap handling is preserved.
+  override func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    didReceive response: UNNotificationResponse,
+    withCompletionHandler completionHandler: @escaping () -> Void
+  ) {
+    let userInfo = response.notification.request.content.userInfo
+    if userInfo["carplay_repost"] as? Bool == true {
+      let conversationId = (userInfo["conversationId"] as? String)
+        ?? response.notification.request.content.threadIdentifier
+      if !conversationId.isEmpty {
+        CarPlayManager.shared.request(
+          "carplayMarkReadConversation",
+          ["conversationId": conversationId]
+        ) { _ in }
+      }
+    }
+    super.userNotificationCenter(
+      center, didReceive: response, withCompletionHandler: completionHandler)
   }
   
   /// Check for and clear potentially corrupted Firestore cache

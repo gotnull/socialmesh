@@ -51,6 +51,11 @@ final class CarPlayManager {
         case "engineReady":
             markEngineReady()
             result(nil)
+        case "donateMessage":
+            if let args = call.arguments as? [String: Any] {
+                CarPlayDonation.donate(args)
+            }
+            result(nil)
         default:
             result(FlutterMethodNotImplemented)
         }

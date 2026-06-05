@@ -37,6 +37,7 @@
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		9A0B63D87A2FB6A26E2B9142 /* CarPlaySceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC437CE38CE6CC2C0C414486 /* CarPlaySceneDelegate.swift */; };
+		A0D70249131F4A98FDA28DD0 /* CarPlayDonation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D024780D50401D84D36C3C25 /* CarPlayDonation.swift */; };
 		A2F94733B66DF1EDD204E054 /* WatchIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69ECD66A678088B1F1781BC6 /* WatchIntent.swift */; };
 		A4F5E6D7C8B9A0F1E2D3C4B5 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B5C4D3E2F1A0B9C8D7E6F5A4 /* PrivacyInfo.xcprivacy */; };
 		AD2CE878F4B50A32C47347AB /* SendMessageIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FEA22C8EEE962240FCD458 /* SendMessageIntentHandler.swift */; };
@@ -198,6 +199,7 @@
 		C6E64F927859BB383A71156B /* WatchCompanionCodec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchCompanionCodec.swift; sourceTree = "<group>"; };
 		C86AF8AA5F427B965BCDBF3E /* IntentMessageConverters.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IntentMessageConverters.swift; sourceTree = "<group>"; };
 		CB40CE046BA0CD6C3D58600C /* Intents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Intents.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Intents.framework; sourceTree = DEVELOPER_DIR; };
+		D024780D50401D84D36C3C25 /* CarPlayDonation.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CarPlayDonation.swift; sourceTree = "<group>"; };
 		D244EC97454F3E5B52E85F55 /* NodesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NodesView.swift; sourceTree = "<group>"; };
 		D3465C317F5D107C6D2AA20D /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		D8CB7BB13DF7ED035C9A0469 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
@@ -331,6 +333,7 @@
 			children = (
 				AC437CE38CE6CC2C0C414486 /* CarPlaySceneDelegate.swift */,
 				1CE2447A8B24C97DC8D420EB /* CarPlayManager.swift */,
+				D024780D50401D84D36C3C25 /* CarPlayDonation.swift */,
 			);
 			name = CarPlay;
 			path = CarPlay;
@@ -917,6 +920,7 @@
 				718FAB4A4DD5E6A07A32AFB6 /* SearchForMessagesIntentHandler.swift in Sources */,
 				EB7B3BC7507CCCFAF6E366BE /* SetMessageAttributeIntentHandler.swift in Sources */,
 				48FFD32559140606B1A9B198 /* CarPlayManager.swift in Sources */,
+				A0D70249131F4A98FDA28DD0 /* CarPlayDonation.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
