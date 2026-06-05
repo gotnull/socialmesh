@@ -37,6 +37,15 @@ import os
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
   }
+
+  // In-process SiriKit intent routing for CarPlay communication. Returns the
+  // per-intent handler; each relays to Dart via CarPlayManager.
+  override func application(
+    _ application: UIApplication,
+    handlerFor intent: INIntent
+  ) -> Any? {
+    return IntentHandler().handler(for: intent)
+  }
   
   /// Check for and clear potentially corrupted Firestore cache
   /// The cache corruption manifests as an assertion failure during Firestore initialization.

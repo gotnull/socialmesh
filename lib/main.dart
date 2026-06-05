@@ -79,6 +79,7 @@ import 'features/widget_builder/widget_import_screen.dart';
 import 'models/mesh_models.dart';
 import 'models/social.dart';
 import 'services/app_intents/app_intents_service.dart';
+import 'services/carplay/carplay_intent_service.dart';
 import 'services/deep_link_manager.dart';
 import 'utils/snackbar.dart';
 import 'utils/text_sanitizer.dart';
@@ -652,8 +653,10 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       // restart.
       if (Platform.isIOS) {
         unawaited(ref.read(watchCompanionChannelBridgeProvider).start());
-        // CarPlay communication is wired in Phase 1 (carPlayIntentService),
-        // which relays in-process SiriKit intents + donation through Dart.
+        // CarPlay communication: in-process SiriKit intents (send/search/
+        // mark-read) relayed to ProtocolService + the message store via the
+        // com.socialmesh/carplay channel.
+        ref.read(carPlayIntentServiceProvider).setup();
       }
     });
   }

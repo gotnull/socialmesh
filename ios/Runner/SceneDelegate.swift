@@ -65,8 +65,9 @@ class SceneDelegate: FlutterSceneDelegate {
         // Apple Watch companion bridge (com.socialmesh/watch_companion).
         WatchCompanionBridge.shared.setup(with: controller)
 
-        // CarPlay in-process bridge (com.socialmesh/carplay) is registered in
-        // Phase 1 (CarPlayManager) — it relays SiriKit intent handlers to Dart.
+        // CarPlay in-process bridge (com.socialmesh/carplay): relays the SiriKit
+        // intent handlers + CarPlay scene to Dart (ProtocolService, message store).
+        CarPlayManager.shared.setup(with: controller)
 
         // Dart -> os_log bridge. Forwards debugPrint lines to os_log under
         // subsystem com.gotnull.socialmesh, category dart, so they surface in
