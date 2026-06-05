@@ -44,6 +44,7 @@ class AppLogging {
   static bool? _protocolLoggingEnabled;
   static bool? _widgetsLoggingEnabled;
   static bool? _liveActivityLoggingEnabled;
+  static bool? _carplayLoggingEnabled;
   static bool? _automationsLoggingEnabled;
   static bool? _messagesLoggingEnabled;
   static bool? _iftttLoggingEnabled;
@@ -146,6 +147,12 @@ class AppLogging {
     _liveActivityLoggingEnabled ??=
         _safeGetEnv('LIVE_ACTIVITY_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _liveActivityLoggingEnabled!;
+  }
+
+  static bool get carplayLoggingEnabled {
+    _carplayLoggingEnabled ??=
+        _safeGetEnv('CARPLAY_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    return _carplayLoggingEnabled!;
   }
 
   static bool get automationsLoggingEnabled {
@@ -452,6 +459,10 @@ class AppLogging {
 
   static void liveActivity(String message) {
     if (liveActivityLoggingEnabled) debugPrint('LiveActivity: $message');
+  }
+
+  static void carplay(String message) {
+    if (carplayLoggingEnabled) debugPrint('CarPlay: $message');
   }
 
   static void widgets(String message) {

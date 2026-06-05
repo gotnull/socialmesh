@@ -66,6 +66,16 @@ import os
       WatchCompanionBridge.shared.setup(with: controller)
     }
 
+    // CarPlay communication writer bridge. Registers the
+    // com.socialmesh/carplay MethodChannel so the Dart-side
+    // CarPlayBridgeService can mirror recent messages and peers into the App
+    // Group container for the SiriKit Intents extension. Safe to register
+    // unconditionally: when CARPLAY_COMMUNICATION_ENABLED is off, Dart never
+    // invokes the channel.
+    if let controller = window?.rootViewController as? FlutterViewController {
+      CarPlayChannel.shared.setup(with: controller)
+    }
+
     // Dart → os_log bridge.
     // Flutter's `print`/`debugPrint` goes to Dart VM stderr, which is
     // invisible to `xcrun simctl log stream` and the xcodebuild MCP log

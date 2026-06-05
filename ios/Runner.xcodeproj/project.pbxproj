@@ -16,6 +16,7 @@
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		376EF8DDA00E098703C86195 /* InboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6383323257C943D0B3664D6 /* InboxView.swift */; };
 		383C04B43512B23878A24034 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 086144CADDD33946257DB070 /* Pods_Runner.framework */; };
+		38480AA0C06D16D085D18FD8 /* SharedContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90F3A34F9227F64489FE04B4 /* SharedContainer.swift */; };
 		386029B53AD8B262C9E35529 /* WatchCompanionLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C77513A7C0D2613F64C0311 /* WatchCompanionLogger.swift */; };
 		3A7207EA1B04F4B229F27BDC /* QuickMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4CAC49F2E17EC77F96F453D /* QuickMessageView.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
@@ -61,6 +62,7 @@
 		DEAA1B73E64596EF83F0313D /* sip_handshake_declined.caf in Resources */ = {isa = PBXBuildFile; fileRef = E2EF6E9623189449B1E7103A /* sip_handshake_declined.caf */; };
 		E310A2F8DE73F6FB5E9AB2DC /* WatchSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27552A30DC4BB14B5896B0E1 /* WatchSnapshotStore.swift */; };
 		E3DA58E007D6A6388FB809E7 /* StatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5B16966013C8FEB1A1882A8 /* StatusView.swift */; };
+		F3C540B561DF28D0773F30B7 /* CarPlayChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90E6AF4D93119C7B2CD9883 /* CarPlayChannel.swift */; };
 		NSE001012026011200000001 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = NSE001012026011200000010 /* NotificationService.swift */; };
 		NSE001012026011200000002 /* NotificationServiceExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = NSE001012026011200000020 /* NotificationServiceExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
@@ -144,6 +146,7 @@
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
 		82126BB40327C4B92161BACD /* sip_handshake_request.caf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = sip_handshake_request.caf; sourceTree = "<group>"; };
+		90F3A34F9227F64489FE04B4 /* SharedContainer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SharedContainer.swift; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Flutter/Debug.xcconfig; sourceTree = "<group>"; };
 		9740EEB31CF90195004384FC /* Generated.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Generated.xcconfig; path = Flutter/Generated.xcconfig; sourceTree = "<group>"; };
 		97C146EE1CF9000F007C117D /* Runner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Runner.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -186,6 +189,7 @@
 		D244EC97454F3E5B52E85F55 /* NodesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NodesView.swift; sourceTree = "<group>"; };
 		D3465C317F5D107C6D2AA20D /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		D8CB7BB13DF7ED035C9A0469 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
+		D90E6AF4D93119C7B2CD9883 /* CarPlayChannel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CarPlayChannel.swift; sourceTree = "<group>"; };
 		E2EF6E9623189449B1E7103A /* sip_handshake_declined.caf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = sip_handshake_declined.caf; sourceTree = "<group>"; };
 		E5B16966013C8FEB1A1882A8 /* StatusView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StatusView.swift; sourceTree = "<group>"; };
 		EC8278F02D47C99F8BEC115B /* sip_handshake_accepted.caf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = sip_handshake_accepted.caf; sourceTree = "<group>"; };
@@ -307,6 +311,16 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
+		3E69EED06C1869D015BD23C3 /* CarPlay */ = {
+			isa = PBXGroup;
+			children = (
+				90F3A34F9227F64489FE04B4 /* SharedContainer.swift */,
+				D90E6AF4D93119C7B2CD9883 /* CarPlayChannel.swift */,
+			);
+			name = CarPlay;
+			path = CarPlay;
+			sourceTree = "<group>";
+		};
 		89800D3B87EE50C5A5322C98 /* WatchCompanion */ = {
 			isa = PBXGroup;
 			children = (
@@ -376,6 +390,7 @@
 				EC8278F02D47C99F8BEC115B /* sip_handshake_accepted.caf */,
 				E2EF6E9623189449B1E7103A /* sip_handshake_declined.caf */,
 				89800D3B87EE50C5A5322C98 /* WatchCompanion */,
+				3E69EED06C1869D015BD23C3 /* CarPlay */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -853,6 +868,8 @@
 				89C763C1050CBBD9EC5105DB /* WatchCompanionBridge.swift in Sources */,
 				825D564F5F2F1723A24700C4 /* WatchCompanionCodec.swift in Sources */,
 				386029B53AD8B262C9E35529 /* WatchCompanionLogger.swift in Sources */,
+				38480AA0C06D16D085D18FD8 /* SharedContainer.swift in Sources */,
+				F3C540B561DF28D0773F30B7 /* CarPlayChannel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
