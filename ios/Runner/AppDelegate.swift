@@ -1,4 +1,5 @@
 import Flutter
+import Intents
 import UIKit
 import os
 
@@ -18,6 +19,10 @@ import os
     if #available(iOS 10.0, *) {
       UNUserNotificationCenter.current().delegate = self
     }
+
+    // Request Siri authorization so the CarPlay communication SiriKit intents
+    // (send/search/mark-read) can be invoked. No-op if already decided.
+    INPreferences.requestSiriAuthorization { _ in }
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
