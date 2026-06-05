@@ -3,106 +3,34 @@ import UIKit
 import os
 
 @main
-@objc class AppDelegate: FlutterAppDelegate {
+@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    
+
     // Clear Firestore cache if potentially corrupted BEFORE any Firebase init
     // This prevents NSInternalInconsistencyException crashes from corrupted cache
     // See: https://github.com/firebase/flutterfire/issues/9661
     clearFirestoreCacheIfCorrupted()
-    
-    GeneratedPluginRegistrant.register(with: self)
-    
+
     // Required for flutter_local_notifications to show notifications in foreground
     if #available(iOS 10.0, *) {
       UNUserNotificationCenter.current().delegate = self
     }
-    
-    // Native badge-reset channel.
-    // flutter_local_notifications' cancelAll() removes delivered notifications
-    // from the notification centre but does NOT reset
-    // UIApplication.applicationIconBadgeNumber. Dart calls clearBadge via this
-    // channel whenever the app comes to the foreground so the icon badge is
-    // cleared even when the badge was set by an APNs push payload.
-    if let controller = window?.rootViewController as? FlutterViewController {
-      let badgeChannel = FlutterMethodChannel(
-        name: "socialmesh/badge",
-        binaryMessenger: controller.binaryMessenger
-      )
-      badgeChannel.setMethodCallHandler { call, result in
-        if call.method == "clearBadge" {
-          if #available(iOS 16.0, *) {
-            UNUserNotificationCenter.current().setBadgeCount(0) { _ in
-              result(nil)
-            }
-          } else {
-            UIApplication.shared.applicationIconBadgeNumber = 0
-            result(nil)
-          }
-        } else {
-          result(FlutterMethodNotImplemented)
-        }
-      }
-    }
-    
-    // Setup App Intents manager for Shortcuts integration
-    if #available(iOS 16.0, *) {
-      if let controller = window?.rootViewController as? FlutterViewController {
-        AppIntentsManager.shared.setup(with: controller)
-      }
-    }
 
-    // Apple Watch companion bridge. Sets up the
-    // com.socialmesh/watch_companion MethodChannel; Dart drives the
-    // WCSession lifecycle from there (activate, push, deactivate),
-    // so registering the channel handler here is safe even on devices
-    // without a paired Watch and even when the WATCH_COMPANION_ENABLED
-    // flag is off. The Dart-side bridge starter checks that flag and
-    // simply never calls activateSession when disabled.
-    if let controller = window?.rootViewController as? FlutterViewController {
-      WatchCompanionBridge.shared.setup(with: controller)
-    }
-
-    // CarPlay communication writer bridge. Registers the
-    // com.socialmesh/carplay MethodChannel so the Dart-side
-    // CarPlayBridgeService can mirror recent messages and peers into the App
-    // Group container for the SiriKit Intents extension. Safe to register
-    // unconditionally: when CARPLAY_COMMUNICATION_ENABLED is off, Dart never
-    // invokes the channel.
-    if let controller = window?.rootViewController as? FlutterViewController {
-      CarPlayChannel.shared.setup(with: controller)
-    }
-
-    // Dart → os_log bridge.
-    // Flutter's `print`/`debugPrint` goes to Dart VM stderr, which is
-    // invisible to `xcrun simctl log stream` and the xcodebuild MCP log
-    // capture tool. The Dart-side `OsLogBridge` installs a `debugPrint`
-    // tee that forwards every line through this channel so logs appear
-    // under subsystem `com.gotnull.socialmesh`, category `dart`.
-    // Gated in Dart by `kDebugMode` — release builds never invoke the
-    // channel, so this handler is harmless when present.
-    if let controller = window?.rootViewController as? FlutterViewController {
-      let dartLogger = Logger(subsystem: "com.gotnull.socialmesh", category: "dart")
-      let osLogChannel = FlutterMethodChannel(
-        name: "socialmesh/os_log",
-        binaryMessenger: controller.binaryMessenger
-      )
-      osLogChannel.setMethodCallHandler { call, result in
-        if call.method == "log",
-           let args = call.arguments as? [String: Any],
-           let msg = args["msg"] as? String {
-          dartLogger.log(level: .default, "\(msg, privacy: .public)")
-          result(nil)
-        } else {
-          result(FlutterMethodNotImplemented)
-        }
-      }
-    }
-    
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  // Plugin registration under the UIScene lifecycle. The FlutterViewController
+  // is created by SceneDelegate (FlutterSceneDelegate) from the Main storyboard,
+  // which spins up the implicit FlutterEngine and calls this back. Registering
+  // here replaces the old `GeneratedPluginRegistrant.register(with: self)` in
+  // didFinishLaunching, which no longer has a window/controller to attach to.
+  // The native method channels themselves are registered in SceneDelegate, once
+  // the controller exists.
+  func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
+    GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
   }
   
   /// Check for and clear potentially corrupted Firestore cache
