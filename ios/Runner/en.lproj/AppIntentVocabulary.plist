@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IntentPhrases</key>
+	<array>
+		<dict>
+			<key>IntentName</key>
+			<string>INSendMessageIntent</string>
+			<key>IntentExamples</key>
+			<array>
+				<string>Send a message with SocialMesh</string>
+				<string>Tell my mesh I'm on my way with SocialMesh</string>
+				<string>Message a channel with SocialMesh</string>
+			</array>
+		</dict>
+		<dict>
+			<key>IntentName</key>
+			<string>INSearchForMessagesIntent</string>
+			<key>IntentExamples</key>
+			<array>
+				<string>Read my SocialMesh messages</string>
+				<string>Show my recent messages in SocialMesh</string>
+				<string>Do I have any new SocialMesh messages</string>
+			</array>
+		</dict>
+		<dict>
+			<key>IntentName</key>
+			<string>INSetMessageAttributeIntent</string>
+			<key>IntentExamples</key>
+			<array>
+				<string>Mark my SocialMesh messages as read</string>
+				<string>Mark messages as read in SocialMesh</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

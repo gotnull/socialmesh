@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		08C77A7A80FFB8F2E274B0E1 /* AppIntentVocabulary.plist in Resources */ = {isa = PBXBuildFile; fileRef = A8F9138206BB767B70BA9D19 /* AppIntentVocabulary.plist */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		183F16DE212BB5E0C27FCD76 /* SocialMeshWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 15B1B5C311A2D2A7EB10695E /* SocialMeshWatch.app */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		185BE9088397E5C649031A01 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1DE574B90CEAC3698FDDCCB9 /* Assets.xcassets */; };
@@ -157,6 +158,7 @@
 		7C0B77ECEB9AB4AF0E5346C0 /* CarPlayIntents.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CarPlayIntents.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		82126BB40327C4B92161BACD /* sip_handshake_request.caf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = sip_handshake_request.caf; sourceTree = "<group>"; };
 		8C09DCFDF0E6CC62A77E7A65 /* SetMessageAttributeIntentHandler.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SetMessageAttributeIntentHandler.swift; sourceTree = "<group>"; };
+		90D48DB143840432E76EBB7F /* en */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; name = en; path = en.lproj/AppIntentVocabulary.plist; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Flutter/Debug.xcconfig; sourceTree = "<group>"; };
 		9740EEB31CF90195004384FC /* Generated.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Generated.xcconfig; path = Flutter/Generated.xcconfig; sourceTree = "<group>"; };
 		97C146EE1CF9000F007C117D /* Runner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Runner.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -412,6 +414,7 @@
 				3E69EED06C1869D015BD23C3 /* CarPlay */,
 				EA79882D1734EA800756471E /* SceneDelegate.swift */,
 				F581A715E29066894E4FC865 /* Intents */,
+				A8F9138206BB767B70BA9D19 /* AppIntentVocabulary.plist */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -693,6 +696,7 @@
 				66D48815D2741E6097F3D434 /* sip_handshake_request.caf in Resources */,
 				5EDAF0889B4512A1AC8D6BE1 /* sip_handshake_accepted.caf in Resources */,
 				DEAA1B73E64596EF83F0313D /* sip_handshake_declined.caf in Resources */,
+				08C77A7A80FFB8F2E274B0E1 /* AppIntentVocabulary.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -990,6 +994,14 @@
 				97C147001CF9000F007C117D /* Base */,
 			);
 			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		A8F9138206BB767B70BA9D19 /* AppIntentVocabulary.plist */ = {
+			isa = PBXVariantGroup;
+			children = (
+				90D48DB143840432E76EBB7F /* en */,
+			);
+			name = AppIntentVocabulary.plist;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
