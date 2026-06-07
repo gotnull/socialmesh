@@ -995,7 +995,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _messageFocusNode.requestFocus();
+        // Do not auto-focus the composer on open. Opening a conversation is
+        // a read action far more often than a reply, and popping the keyboard
+        // shrinks the message area and forces a "Jump to latest" jump. Focus
+        // is requested only on an explicit tap or when starting a reply.
         _captureInitialUnreadCount();
         _markAsRead();
       }
