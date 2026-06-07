@@ -943,6 +943,9 @@ class AppTheme {
 
       // Icon theme
       iconTheme: const IconThemeData(color: textPrimary, size: 24),
+
+      // Accessibility-aware text colors (overridden under high contrast)
+      extensions: const [AppTextColors.dark],
     );
   }
 
@@ -1294,6 +1297,9 @@ class AppTheme {
 
       // Icon theme
       iconTheme: const IconThemeData(color: textPrimaryLight, size: 24),
+
+      // Accessibility-aware text colors (overridden under high contrast)
+      extensions: const [AppTextColors.light],
     );
   }
 
@@ -1332,9 +1338,11 @@ extension ThemeAwareColors on BuildContext {
   Color get textPrimary =>
       isDarkMode ? AppTheme.textPrimary : AppTheme.textPrimaryLight;
   Color get textSecondary =>
-      isDarkMode ? AppTheme.textSecondary : AppTheme.textSecondaryLight;
+      Theme.of(this).extension<AppTextColors>()?.secondary ??
+      (isDarkMode ? AppTheme.textSecondary : AppTheme.textSecondaryLight);
   Color get textTertiary =>
-      isDarkMode ? AppTheme.textTertiary : AppTheme.textTertiaryLight;
+      Theme.of(this).extension<AppTextColors>()?.tertiary ??
+      (isDarkMode ? AppTheme.textTertiary : AppTheme.textTertiaryLight);
 }
 
 /// Semantic color constants for intentional white usage on colored backgrounds.
@@ -1401,6 +1409,55 @@ class SemanticColors {
   /// Informational / neutral-positive.
   /// Use for info banners, tooltips, help text.
   static const Color info = Color(0xFF60A5FA);
+}
+
+/// Theme extension carrying the app's secondary / tertiary text colors so they
+/// can respond to accessibility settings.
+///
+/// `context.textSecondary` and `context.textTertiary` resolve through this
+/// extension. The base themes register the normal values; the high contrast
+/// accessibility adapter overrides them with darker / lighter values so every
+/// grey text rendered through those getters becomes more readable. Without this
+/// indirection the getters read [AppTheme] constants directly and high contrast
+/// never reaches them.
+@immutable
+class AppTextColors extends ThemeExtension<AppTextColors> {
+  const AppTextColors({required this.secondary, required this.tertiary});
+
+  /// Secondary body / description text.
+  final Color secondary;
+
+  /// Tertiary / faintest grey text (timestamps, captions, hints).
+  final Color tertiary;
+
+  /// Default text colors for the dark theme.
+  static const dark = AppTextColors(
+    secondary: AppTheme.textSecondary,
+    tertiary: AppTheme.textTertiary,
+  );
+
+  /// Default text colors for the light theme.
+  static const light = AppTextColors(
+    secondary: AppTheme.textSecondaryLight,
+    tertiary: AppTheme.textTertiaryLight,
+  );
+
+  @override
+  AppTextColors copyWith({Color? secondary, Color? tertiary}) {
+    return AppTextColors(
+      secondary: secondary ?? this.secondary,
+      tertiary: tertiary ?? this.tertiary,
+    );
+  }
+
+  @override
+  AppTextColors lerp(ThemeExtension<AppTextColors>? other, double t) {
+    if (other is! AppTextColors) return this;
+    return AppTextColors(
+      secondary: Color.lerp(secondary, other.secondary, t)!,
+      tertiary: Color.lerp(tertiary, other.tertiary, t)!,
+    );
+  }
 }
 
 /// Semantic text style extension for consistent text styling throughout the app.

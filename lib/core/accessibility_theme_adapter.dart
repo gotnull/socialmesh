@@ -329,6 +329,21 @@ class AccessibilityThemeAdapter {
         ? const Color(0xFF1A1A1A)
         : const Color(0xFFFFFFFF);
 
+    // Boost the secondary / tertiary text colors that the app reads through
+    // `context.textSecondary` / `context.textTertiary` (AppTextColors). Without
+    // this, grey body / caption text rendered via those getters would not react
+    // to high contrast even though the colorScheme and textTheme do.
+    final baseTextColors =
+        theme.extension<AppTextColors>() ??
+        (isDark ? AppTextColors.dark : AppTextColors.light);
+    final highContrastTextColors = baseTextColors.copyWith(
+      secondary: highContrastTextSecondary,
+      tertiary: highContrastTextSecondary,
+    );
+    final mergedExtensions =
+        theme.extensions.values.where((e) => e is! AppTextColors).toList()
+          ..add(highContrastTextColors);
+
     return theme.copyWith(
       colorScheme: colorScheme.copyWith(
         onSurface: highContrastTextPrimary,
@@ -341,6 +356,7 @@ class AccessibilityThemeAdapter {
         highContrastTextPrimary,
         highContrastTextSecondary,
       ),
+      extensions: mergedExtensions,
       dividerTheme: theme.dividerTheme.copyWith(color: highContrastBorder),
       cardTheme: theme.cardTheme.copyWith(
         shape: RoundedRectangleBorder(

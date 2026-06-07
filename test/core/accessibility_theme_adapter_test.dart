@@ -127,6 +127,83 @@ void main() {
         expect(result.colorScheme.onSurface, const Color(0xFF000000));
       });
 
+      test('base dark theme registers default AppTextColors', () {
+        final baseTheme = AppTheme.darkTheme(AccentColors.magenta);
+        final textColors = baseTheme.extension<AppTextColors>();
+
+        expect(textColors, isNotNull);
+        expect(textColors!.secondary, AppTheme.textSecondary);
+        expect(textColors.tertiary, AppTheme.textTertiary);
+      });
+
+      test('base light theme registers default AppTextColors', () {
+        final baseTheme = AppTheme.lightTheme(AccentColors.magenta);
+        final textColors = baseTheme.extension<AppTextColors>();
+
+        expect(textColors, isNotNull);
+        expect(textColors!.secondary, AppTheme.textSecondaryLight);
+        expect(textColors.tertiary, AppTheme.textTertiaryLight);
+      });
+
+      test('high contrast boosts AppTextColors on dark theme', () {
+        final baseTheme = AppTheme.darkTheme(AccentColors.magenta);
+        final baseTextColors = baseTheme.extension<AppTextColors>()!;
+        final result = AccessibilityThemeAdapter.applyPreferences(
+          baseTheme: baseTheme,
+          preferences: const AccessibilityPreferences(
+            contrastMode: ContrastMode.high,
+          ),
+        );
+
+        final textColors = result.extension<AppTextColors>();
+        expect(textColors, isNotNull);
+        // On dark, higher contrast secondary/tertiary text is lighter (brighter).
+        expect(
+          textColors!.secondary.computeLuminance(),
+          greaterThan(baseTextColors.secondary.computeLuminance()),
+        );
+        expect(
+          textColors.tertiary.computeLuminance(),
+          greaterThan(baseTextColors.tertiary.computeLuminance()),
+        );
+      });
+
+      test('high contrast boosts AppTextColors on light theme', () {
+        final baseTheme = AppTheme.lightTheme(AccentColors.magenta);
+        final baseTextColors = baseTheme.extension<AppTextColors>()!;
+        final result = AccessibilityThemeAdapter.applyPreferences(
+          baseTheme: baseTheme,
+          preferences: const AccessibilityPreferences(
+            contrastMode: ContrastMode.high,
+          ),
+        );
+
+        final textColors = result.extension<AppTextColors>();
+        expect(textColors, isNotNull);
+        // On light, higher contrast secondary/tertiary text is darker.
+        expect(
+          textColors!.secondary.computeLuminance(),
+          lessThan(baseTextColors.secondary.computeLuminance()),
+        );
+        expect(
+          textColors.tertiary.computeLuminance(),
+          lessThan(baseTextColors.tertiary.computeLuminance()),
+        );
+      });
+
+      test('default preferences keep AppTextColors at base values', () {
+        final baseTheme = AppTheme.darkTheme(AccentColors.magenta);
+        final result = AccessibilityThemeAdapter.applyPreferences(
+          baseTheme: baseTheme,
+          preferences: AccessibilityPreferences.defaults,
+        );
+
+        final textColors = result.extension<AppTextColors>();
+        expect(textColors, isNotNull);
+        expect(textColors!.secondary, AppTheme.textSecondary);
+        expect(textColors.tertiary, AppTheme.textTertiary);
+      });
+
       test('applies shrinkWrap tap target for compact mode', () {
         final baseTheme = AppTheme.darkTheme(AccentColors.magenta);
         final result = AccessibilityThemeAdapter.applyPreferences(
