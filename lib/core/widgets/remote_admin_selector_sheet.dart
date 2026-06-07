@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/l10n_extension.dart';
+import '../node_color.dart';
 import '../theme.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
@@ -433,20 +434,8 @@ class _NodeAdminTile extends StatelessWidget {
     required this.onTap,
   });
 
-  Color _getAvatarColor() {
-    if (node.avatarColor != null) {
-      return Color(node.avatarColor!);
-    }
-    final colors = [
-      const Color(0xFF5B4FCE),
-      const Color(0xFFD946A6),
-      AppTheme.graphBlue,
-      const Color(0xFFF59E0B),
-      AppTheme.errorRed,
-      AccentColors.emerald,
-    ];
-    return colors[node.nodeNum % colors.length];
-  }
+  Color _getAvatarColor() =>
+      resolveNodeColor(nodeNum: node.nodeNum, avatarColor: node.avatarColor);
 
   @override
   Widget build(BuildContext context) {

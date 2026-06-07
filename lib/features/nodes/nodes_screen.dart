@@ -9,6 +9,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
+import '../../core/node_color.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
@@ -1211,21 +1212,8 @@ class _NodeCard extends ConsumerWidget {
     this.animationsEnabled = true,
   });
 
-  Color _getAvatarColor() {
-    if (node.avatarColor != null) {
-      return Color(node.avatarColor!);
-    }
-    // Generate color from node ID
-    final colors = [
-      const Color(0xFF5B4FCE), // Purple like 29a9
-      const Color(0xFFD946A6), // Pink like 2d94
-      AppTheme.graphBlue, // Blue
-      const Color(0xFFF59E0B), // Orange
-      AppTheme.errorRed, // Red
-      AccentColors.emerald, // Green
-    ];
-    return colors[node.nodeNum % colors.length];
-  }
+  Color _getAvatarColor() =>
+      resolveNodeColor(nodeNum: node.nodeNum, avatarColor: node.avatarColor);
 
   int _calculateSignalBars(int? rssi) {
     if (rssi == null) return 0;

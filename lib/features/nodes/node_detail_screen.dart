@@ -13,6 +13,7 @@ import '../../core/logging.dart';
 import '../../utils/time_format.dart';
 import '../../utils/timestamp_validation.dart';
 import '../../core/safety/lifecycle_mixin.dart';
+import '../../core/node_color.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
@@ -125,20 +126,8 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
 
   // ─────────────────────── helpers ───────────────────────
 
-  Color _getAvatarColor(MeshNode node) {
-    if (node.avatarColor != null) {
-      return Color(node.avatarColor!);
-    }
-    final colors = [
-      const Color(0xFF5B4FCE),
-      const Color(0xFFD946A6),
-      AppTheme.graphBlue,
-      const Color(0xFFF59E0B),
-      AppTheme.errorRed,
-      AccentColors.emerald,
-    ];
-    return colors[node.nodeNum % colors.length];
-  }
+  Color _getAvatarColor(MeshNode node) =>
+      resolveNodeColor(nodeNum: node.nodeNum, avatarColor: node.avatarColor);
 
   IconData _getBatteryIcon(int level) {
     if (level > 100) return Icons.battery_charging_full;

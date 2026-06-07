@@ -15,6 +15,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../core/node_color.dart';
 import '../../../core/theme.dart';
 import '../../nodedex/screens/nodedex_detail_screen.dart';
 import '../../nodedex/widgets/sigil_painter.dart';
@@ -170,19 +171,11 @@ int? _parseNodeHex(String? hexId) {
 }
 
 Color _avatarColorFor(BuildContext context, int? nodeNum, String fallbackSeed) {
-  // Same palette as `_MessageBubble._getAvatarColor` in
-  // messaging_screen.dart — keeps the same sender looking identical
-  // across Messages and NodeBoard replies.
-  final palette = <Color>[
-    const Color(0xFF5B4FCE),
-    const Color(0xFFD946A6),
-    AppTheme.graphBlue,
-    const Color(0xFFF59E0B),
-    AppTheme.errorRed,
-    AccentColors.emerald,
-  ];
-  final seed = nodeNum ?? fallbackSeed.hashCode.abs();
-  return palette[seed % palette.length];
+  // Derived the same way as `_MessageBubble._getAvatarColor` in
+  // messaging_screen.dart so the same sender looks identical across Messages
+  // and NodeBoard replies. Authors without a node number fall back to a stable
+  // hash of the author string.
+  return nodeColorFromId(nodeNum ?? fallbackSeed.hashCode.abs());
 }
 
 String _formatTimeAgo(DateTime dt, dynamic l10n) {

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/l10n_extension.dart';
+import '../../core/node_color.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -405,20 +406,10 @@ class _ReachabilityNodeCard extends StatelessWidget {
     required this.onTap,
   });
 
-  Color _getAvatarColor() {
-    if (nodeData.node.avatarColor != null) {
-      return Color(nodeData.node.avatarColor!);
-    }
-    final colors = [
-      const Color(0xFF5B4FCE),
-      const Color(0xFFD946A6),
-      AppTheme.graphBlue,
-      const Color(0xFFF59E0B),
-      AppTheme.errorRed,
-      AccentColors.emerald,
-    ];
-    return colors[nodeData.node.nodeNum % colors.length];
-  }
+  Color _getAvatarColor() => resolveNodeColor(
+    nodeNum: nodeData.node.nodeNum,
+    avatarColor: nodeData.node.avatarColor,
+  );
 
   @override
   Widget build(BuildContext context) {

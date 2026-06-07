@@ -13,6 +13,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
+import '../../../core/node_color.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/app_providers.dart';
@@ -498,14 +499,7 @@ int? _parseNodeHex(String? hexId) {
 }
 
 Color _avatarColorFor(BuildContext context, int? nodeNum, String fallbackSeed) {
-  final palette = <Color>[
-    const Color(0xFF5B4FCE),
-    const Color(0xFFD946A6),
-    AppTheme.graphBlue,
-    const Color(0xFFF59E0B),
-    AppTheme.errorRed,
-    AccentColors.emerald,
-  ];
-  final seed = nodeNum ?? fallbackSeed.hashCode.abs();
-  return palette[seed % palette.length];
+  // Posts without a node number (e.g. server-side authors) fall back to a
+  // stable hash of the author string so the same author keeps one colour.
+  return nodeColorFromId(nodeNum ?? fallbackSeed.hashCode.abs());
 }

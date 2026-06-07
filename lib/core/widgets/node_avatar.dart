@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
+import '../node_color.dart';
 import '../theme.dart';
 
 /// A smart avatar widget that displays node initials with adaptive text sizing.
@@ -111,19 +112,28 @@ class NodeAvatar extends StatelessWidget {
     final batteryRingWidth = showBatteryRing ? 3.0 : 0.0;
     final innerPadding = 3.0; // Always have padding around inner circle
 
+    // Node colours are derived from arbitrary node IDs, so they can land
+    // anywhere from near-black to near-white. Pick a contrasting foreground and
+    // a subtle contrasting outline so every avatar stays legible on dark glass.
+    // An explicit [border] (e.g. the my-node ring) always wins.
+    final contrast = nodeContrastColor(color);
+    final effectiveBorder =
+        border ??
+        Border.all(color: contrast.withValues(alpha: 0.35), width: 1.5);
+
     Widget avatar = Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
         color: color,
         shape: BoxShape.circle,
-        border: border,
+        border: effectiveBorder,
       ),
       child: Center(
         child: Text(
           displayText,
           style: TextStyle(
-            color: SemanticColors.onMarker,
+            color: contrast,
             fontSize: fontSize,
             fontWeight: FontWeight.w700,
             letterSpacing: displayText.length > 4 ? -0.5 : 0,

@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
+import '../../core/node_color.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/auto_scroll_text.dart';
@@ -599,17 +600,7 @@ class _LinkedDeviceCard extends StatelessWidget {
   final VoidCallback onSetPrimary;
   final VoidCallback onUnlink;
 
-  Color _getNodeColor(int nodeNum) {
-    final colors = [
-      const Color(0xFF5B4FCE),
-      const Color(0xFFD946A6),
-      AppTheme.graphBlue,
-      const Color(0xFFF59E0B),
-      AppTheme.errorRed,
-      AccentColors.emerald,
-    ];
-    return colors[nodeNum % colors.length];
-  }
+  Color _getNodeColor(int nodeNum) => nodeColorFromId(nodeNum);
 
   @override
   Widget build(BuildContext context) {

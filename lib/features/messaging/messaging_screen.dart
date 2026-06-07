@@ -25,6 +25,7 @@ import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
 import '../../models/tapback.dart';
 import '../../models/canned_response.dart';
+import '../../core/node_color.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../utils/snackbar.dart';
@@ -3110,18 +3111,8 @@ class _MessageBubble extends ConsumerWidget {
     this.onToggleTechInfo,
   });
 
-  Color _getAvatarColor() {
-    if (avatarColor != null) return Color(avatarColor!);
-    final colors = [
-      const Color(0xFF5B4FCE),
-      const Color(0xFFD946A6),
-      AppTheme.graphBlue,
-      const Color(0xFFF59E0B),
-      AppTheme.errorRed,
-      AccentColors.emerald,
-    ];
-    return colors[message.from % colors.length];
-  }
+  Color _getAvatarColor() =>
+      resolveNodeColor(nodeNum: message.from, avatarColor: avatarColor);
 
   /// Get a display-safe short name (replaces unrenderable chars with node ID hex)
   String _getSafeShortName() {

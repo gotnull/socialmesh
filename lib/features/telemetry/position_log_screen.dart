@@ -16,6 +16,7 @@ import '../../core/l10n/l10n_extension.dart';
 import '../../core/map_config.dart';
 import '../../core/safe_lat_lng.dart';
 import '../../core/safety/lifecycle_mixin.dart';
+import '../../core/node_color.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -1034,17 +1035,7 @@ class _PositionMapViewState extends State<_PositionMapView> {
     );
   }
 
-  Color _getNodeColor(int nodeNum) {
-    const colors = [
-      AppTheme.primaryMagenta,
-      AppTheme.primaryPurple,
-      AppTheme.primaryBlue,
-      AccentColors.cyan,
-      AccentColors.green,
-      AccentColors.orange,
-    ];
-    return colors[nodeNum % colors.length];
-  }
+  Color _getNodeColor(int nodeNum) => nodeColorFromId(nodeNum);
 
   @override
   Widget build(BuildContext context) {
@@ -1160,6 +1151,10 @@ class _PositionMapViewState extends State<_PositionMapView> {
                 cappedLogs.map((log) {
                   final color = _getNodeColor(log.nodeNum);
                   final isSelected = _selectedLog == log;
+                  // Node colors are derived from arbitrary node IDs, so a
+                  // near-white marker would vanish against a plain white ring.
+                  // Outline with the contrasting color instead.
+                  final ring = nodeContrastColor(color);
                   return Marker(
                     point: LatLng(log.latitude, log.longitude),
                     width: isSelected ? 24 : 16,
@@ -1177,8 +1172,8 @@ class _PositionMapViewState extends State<_PositionMapView> {
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: isSelected
-                                ? Colors.white
-                                : Colors.white.withValues(alpha: 0.8),
+                                ? ring
+                                : ring.withValues(alpha: 0.8),
                             width: isSelected ? 3 : 2,
                           ),
                           boxShadow: [
@@ -1273,13 +1268,24 @@ class _PositionMapViewState extends State<_PositionMapView> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (_selectedNodeNum != null) ...[
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: _getNodeColor(_selectedNodeNum!),
-                          shape: BoxShape.circle,
-                        ),
+                      Builder(
+                        builder: (_) {
+                          final dotColor = _getNodeColor(_selectedNodeNum!);
+                          return Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: dotColor,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: nodeContrastColor(
+                                  dotColor,
+                                ).withValues(alpha: 0.4),
+                                width: 0.5,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                       const SizedBox(width: AppTheme.spacing6),
                     ],
