@@ -1808,6 +1808,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             _buildTracerouteMarkers(
                               widget.tracerouteLog!,
                               nodes,
+                              myNodeNum,
                             ),
                           ),
                         ),
@@ -3525,6 +3526,54 @@ class _MapScreenState extends ConsumerState<MapScreen>
   /// Forward hops are rendered in teal, return hops in purple. Only hops
   /// with valid positions are included. The local device position is used
   /// as the origin for the forward path and destination for the return path.
+  // Coordinates persisted by the traceroute pipeline have surfaced as
+  // NaN / out-of-range in field reports; route every direct LatLng()
+  // construction through safeLatLng so a malformed hop drops out of the
+  // route instead of crashing the polyline / tile / marker layer at
+  // build time. Shared by both the polyline and marker builders so the
+  // map renders the route from one position-resolution source of truth.
+  static LatLng? _safeRoutePoint(double? lat, double? lng) {
+    if (lat == null || lng == null) return null;
+    if (lat == 0.0 && lng == 0.0) return null; // unset sentinel
+    return safeLatLng(lat, lng);
+  }
+
+  // Build the label pill marker shared by every traceroute node — the
+  // intermediate hops and both route endpoints. Border colour encodes
+  // direction: teal for the forward terminus / hops, purple for the
+  // return terminus / hops.
+  static Marker _tracerouteLabelMarker(
+    LatLng point,
+    String name,
+    Color borderColor,
+  ) {
+    return Marker(
+      point: point,
+      width: 80,
+      height: 32,
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: Colors.black87,
+            borderRadius: BorderRadius.circular(AppTheme.radius8),
+            border: Border.all(color: borderColor, width: 1.5),
+          ),
+          child: Text(
+            name,
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ),
+    );
+  }
+
   List<Polyline> _buildTraceroutePolylines(
     TraceRouteLog log,
     Map<int, MeshNode> nodes,
@@ -3533,20 +3582,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final polylines = <Polyline>[];
     var droppedHops = 0;
 
-    // Coordinates persisted by the traceroute pipeline have surfaced as
-    // NaN / out-of-range in field reports; route every direct LatLng()
-    // construction through safeLatLng so a malformed hop drops out of
-    // the route instead of crashing the polyline / tile layer at build
-    // time.
-    LatLng? safePointFromCoords(double? lat, double? lng) {
-      if (lat == null || lng == null) return null;
-      if (lat == 0.0 && lng == 0.0) return null; // unset sentinel
-      return safeLatLng(lat, lng);
-    }
-
     // Resolve local device position as the start of the forward route.
     // Prefer the stored position captured at traceroute time.
-    var localPosition = safePointFromCoords(
+    var localPosition = _safeRoutePoint(
       log.originLatitude,
       log.originLongitude,
     );
@@ -3558,7 +3596,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     }
 
     // Resolve target node position as the end of the forward route.
-    var targetPosition = safePointFromCoords(
+    var targetPosition = _safeRoutePoint(
       log.targetLatitude,
       log.targetLongitude,
     );
@@ -3570,7 +3608,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     }
 
     LatLng? positionOf(TraceRouteHop hop) {
-      final point = safePointFromCoords(hop.latitude, hop.longitude);
+      final point = _safeRoutePoint(hop.latitude, hop.longitude);
       if (point == null &&
           hop.latitude != null &&
           hop.longitude != null &&
@@ -3652,13 +3690,58 @@ class _MapScreenState extends ConsumerState<MapScreen>
     return polylines;
   }
 
-  /// Build markers for each hop in a traceroute route overlay.
+  /// Build markers for every node in a traceroute route overlay — the
+  /// intermediate hops plus the two route endpoints (local origin and
+  /// target node). The detail view lists both endpoints as terminus
+  /// rows, so the map must label them too or the two surfaces disagree.
   List<Marker> _buildTracerouteMarkers(
     TraceRouteLog log,
     Map<int, MeshNode> nodes,
+    int? myNodeNum,
   ) {
     final markers = <Marker>[];
     final seen = <int>{};
+
+    // Endpoint markers first. Resolve their positions with the same
+    // precedence as the polyline builder (stored trace-time position,
+    // then the live node table) so the labels land on the polyline's
+    // endpoint anchors.
+    final targetNode = nodes[log.targetNode];
+    var targetPosition = _safeRoutePoint(
+      log.targetLatitude,
+      log.targetLongitude,
+    );
+    if (targetPosition == null &&
+        targetNode != null &&
+        targetNode.hasPosition) {
+      targetPosition = safeLatLng(targetNode.latitude, targetNode.longitude);
+    }
+    if (targetPosition != null) {
+      seen.add(log.targetNode);
+      final name =
+          targetNode?.displayName ??
+          NodeDisplayNameResolver.defaultName(log.targetNode);
+      markers.add(
+        _tracerouteLabelMarker(targetPosition, name, AccentColors.teal),
+      );
+    }
+
+    final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
+    var originPosition = _safeRoutePoint(
+      log.originLatitude,
+      log.originLongitude,
+    );
+    if (originPosition == null && myNode != null && myNode.hasPosition) {
+      originPosition = safeLatLng(myNode.latitude, myNode.longitude);
+    }
+    if (originPosition != null) {
+      if (myNodeNum != null) seen.add(myNodeNum);
+      final name =
+          myNode?.displayName ?? context.l10n.telemetryTracerouteYouLabel;
+      markers.add(
+        _tracerouteLabelMarker(originPosition, name, AccentColors.purple),
+      );
+    }
 
     for (final hop in log.hops) {
       if (seen.contains(hop.nodeNum)) continue;
@@ -3684,33 +3767,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
           node?.displayName ?? NodeDisplayNameResolver.defaultName(hop.nodeNum);
 
       markers.add(
-        Marker(
-          point: point,
-          width: 80,
-          height: 32,
-          child: Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.black87,
-                borderRadius: BorderRadius.circular(AppTheme.radius8),
-                border: Border.all(
-                  color: hop.back ? AccentColors.purple : AccentColors.teal,
-                  width: 1.5,
-                ),
-              ),
-              child: Text(
-                name,
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ),
+        _tracerouteLabelMarker(
+          point,
+          name,
+          hop.back ? AccentColors.purple : AccentColors.teal,
         ),
       );
     }
