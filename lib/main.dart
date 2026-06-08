@@ -1896,6 +1896,13 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     // Watch accessibility preferences for theme adjustments
     final accessibilityPrefs = ref.watch(accessibilityPreferencesProvider);
 
+    // Effective app-wide text scale derived from the user's accessibility
+    // text-size preference. Applied via MediaQuery.textScaler in the builder
+    // below so every Text scales uniformly, including widgets with a
+    // hardcoded fontSize that the theme's text styles never reach.
+    final effectiveTextScale = ref.watch(effectiveTextScaleProvider);
+    final usesSystemTextScale = ref.watch(useSystemTextScaleProvider);
+
     // Apply accessibility preferences to themes
     final lightTheme = AccessibilityThemeAdapter.applyPreferences(
       baseTheme: AppTheme.lightTheme(accentColor),
@@ -1919,12 +1926,17 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
         debugShowCheckedModeBanner: false,
         navigatorKey: navigatorKey,
         builder: (context, child) {
-          // Clamp Dynamic Type / text scale to prevent layout overflow
-          // on devices with large accessibility text settings.
           final mediaQuery = MediaQuery.of(context);
-          final clampedTextScaler = mediaQuery.textScaler.clamp(
-            maxScaleFactor: 1.3,
-          );
+          // Apply the user's text-size preference app-wide through
+          // MediaQuery.textScaler so every Text scales uniformly, including
+          // widgets with a hardcoded fontSize. systemDefault follows the
+          // device's (possibly non-linear) scaler, clamped to avoid layout
+          // overflow; the explicit modes replace it with a fixed scale.
+          final TextScaler appTextScaler = usesSystemTextScale
+              ? mediaQuery.textScaler.clamp(maxScaleFactor: 1.3)
+              : TextScaler.linear(
+                  effectiveTextScale.clamp(0.8, 1.3).toDouble(),
+                );
           final disableAnimations =
               mediaQuery.disableAnimations ||
               accessibilityPrefs.reduceMotionMode.shouldReduceMotion;
@@ -1934,7 +1946,7 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
           // link arrives. Idle stage renders nothing.
           return MediaQuery(
             data: mediaQuery.copyWith(
-              textScaler: clampedTextScaler,
+              textScaler: appTextScaler,
               disableAnimations: disableAnimations,
             ),
             child: ConfirmingUnlockOverlay(child: child!),

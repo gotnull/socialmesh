@@ -1593,7 +1593,6 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
                             // surfaced during the live smoke; fixed
                             // here as part of the MeshCore polish pass.
                             style: chatBubbleBodyStyle(
-                              ref,
                               baseFontSize: 14,
                               color: Colors.white,
                             ),
@@ -1701,7 +1700,6 @@ class _MeshCoreChatScreenState extends ConsumerState<MeshCoreChatScreen>
                           // inconsistency surfaced during live smoke;
                           // unified on 14 across all chat surfaces.
                           style: chatBubbleBodyStyle(
-                            ref,
                             baseFontSize: 14,
                             color: context.textPrimary,
                           ),

@@ -1,27 +1,25 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../providers/accessibility_providers.dart';
-
-// Canonical body-text size for chat bubbles. Each surface picks its own
-// baseline (SIP DM uses 14, Meshtastic + MeshCore use 15 for incoming /
-// 14 for outgoing via the theme bodyMedium); this helper applies the
-// user's chosen accessibility text-scale on top so the same setting
-// reaches both incoming and outgoing bubbles symmetrically.
+// Canonical body-text style for chat bubbles. Each surface picks its own
+// baseline (SIP DM + Meshtastic outgoing use 14, incoming uses 15); using
+// one helper keeps incoming and outgoing bubbles symmetrical.
 //
-// This is purely a render-time helper — it does NOT affect message
+// The user's accessibility text-size preference is applied app-wide via
+// MediaQuery.textScaler (see main.dart), so the size passed here is the
+// unscaled baseline; the render layer scales it for every Text uniformly.
+// Multiplying here again would double-scale.
+//
+// This is purely a render-time helper: it does NOT affect message
 // payloads, wire format, persistence, or anything visible to the peer.
-TextStyle chatBubbleBodyStyle(
-  WidgetRef ref, {
+TextStyle chatBubbleBodyStyle({
   required double baseFontSize,
   Color? color,
   FontWeight? fontWeight,
 }) {
-  final scale = ref.watch(effectiveTextScaleProvider);
   return TextStyle(
-    fontSize: baseFontSize * scale,
+    fontSize: baseFontSize,
     color: color,
     fontWeight: fontWeight,
   );

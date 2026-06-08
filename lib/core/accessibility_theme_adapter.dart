@@ -24,20 +24,16 @@ class AccessibilityThemeAdapter {
   ///
   /// [baseTheme] - The original theme from AppTheme.darkTheme or lightTheme
   /// [preferences] - User's accessibility preferences
-  /// [systemTextScale] - The system's text scale factor from MediaQuery
   static ThemeData applyPreferences({
     required ThemeData baseTheme,
     required AccessibilityPreferences preferences,
-    double systemTextScale = 1.0,
   }) {
     ThemeData theme = baseTheme;
 
-    // Apply text scaling FIRST (before font family, so font changes apply to scaled sizes)
-    theme = _applyTextScaling(
-      theme,
-      preferences.textScaleMode,
-      systemTextScale,
-    );
+    // Text size scaling is applied app-wide via MediaQuery.textScaler at the
+    // app root (see main.dart), not by rewriting the theme's font sizes.
+    // Scaling the theme alone would miss every widget with a hardcoded
+    // fontSize, while MediaQuery.textScaler reaches all of them uniformly.
 
     // Apply font family changes to all text styles
     theme = _applyFontFamily(theme, preferences.fontMode);
@@ -156,99 +152,6 @@ class AccessibilityThemeAdapter {
       textButtonTheme: updatedTextButtonTheme,
       snackBarTheme: updatedSnackBarTheme,
     );
-  }
-
-  /// Apply text scaling to the theme's text styles
-  static ThemeData _applyTextScaling(
-    ThemeData theme,
-    TextScaleMode mode,
-    double systemTextScale,
-  ) {
-    // For systemDefault, don't modify theme - let Flutter's MediaQuery handle it
-    if (mode == TextScaleMode.systemDefault) {
-      return theme;
-    }
-
-    // For socialmeshDefault (1.0), no scaling needed
-    if (mode == TextScaleMode.socialmeshDefault) {
-      return theme;
-    }
-
-    // Get the explicit scale factor for large/extraLarge modes
-    final scaleFactor = mode.scaleFactor;
-    if (scaleFactor == null || scaleFactor == 1.0) {
-      return theme;
-    }
-
-    // Scale all text styles in the theme
-    final scaledTextTheme = _scaleTextTheme(theme.textTheme, scaleFactor);
-
-    // Also scale appBarTheme title
-    final currentAppBarTheme = theme.appBarTheme;
-    final scaledAppBarTheme = currentAppBarTheme.copyWith(
-      titleTextStyle: _scaleTextStyle(
-        currentAppBarTheme.titleTextStyle,
-        scaleFactor,
-      ),
-    );
-
-    // Scale dialog text styles
-    final currentDialogTheme = theme.dialogTheme;
-    final scaledDialogTheme = currentDialogTheme.copyWith(
-      titleTextStyle: _scaleTextStyle(
-        currentDialogTheme.titleTextStyle,
-        scaleFactor,
-      ),
-      contentTextStyle: _scaleTextStyle(
-        currentDialogTheme.contentTextStyle,
-        scaleFactor,
-      ),
-    );
-
-    // Scale snackbar text style
-    final currentSnackBarTheme = theme.snackBarTheme;
-    final scaledSnackBarTheme = currentSnackBarTheme.copyWith(
-      contentTextStyle: _scaleTextStyle(
-        currentSnackBarTheme.contentTextStyle,
-        scaleFactor,
-      ),
-    );
-
-    return theme.copyWith(
-      textTheme: scaledTextTheme,
-      appBarTheme: scaledAppBarTheme,
-      dialogTheme: scaledDialogTheme,
-      snackBarTheme: scaledSnackBarTheme,
-    );
-  }
-
-  /// Scale all font sizes in a TextTheme by a factor
-  static TextTheme _scaleTextTheme(TextTheme textTheme, double factor) {
-    return TextTheme(
-      displayLarge: _scaleTextStyle(textTheme.displayLarge, factor),
-      displayMedium: _scaleTextStyle(textTheme.displayMedium, factor),
-      displaySmall: _scaleTextStyle(textTheme.displaySmall, factor),
-      headlineLarge: _scaleTextStyle(textTheme.headlineLarge, factor),
-      headlineMedium: _scaleTextStyle(textTheme.headlineMedium, factor),
-      headlineSmall: _scaleTextStyle(textTheme.headlineSmall, factor),
-      titleLarge: _scaleTextStyle(textTheme.titleLarge, factor),
-      titleMedium: _scaleTextStyle(textTheme.titleMedium, factor),
-      titleSmall: _scaleTextStyle(textTheme.titleSmall, factor),
-      bodyLarge: _scaleTextStyle(textTheme.bodyLarge, factor),
-      bodyMedium: _scaleTextStyle(textTheme.bodyMedium, factor),
-      bodySmall: _scaleTextStyle(textTheme.bodySmall, factor),
-      labelLarge: _scaleTextStyle(textTheme.labelLarge, factor),
-      labelMedium: _scaleTextStyle(textTheme.labelMedium, factor),
-      labelSmall: _scaleTextStyle(textTheme.labelSmall, factor),
-    );
-  }
-
-  /// Scale a single TextStyle's fontSize
-  static TextStyle? _scaleTextStyle(TextStyle? style, double factor) {
-    if (style == null) return null;
-    final fontSize = style.fontSize;
-    if (fontSize == null) return style;
-    return style.copyWith(fontSize: fontSize * factor);
   }
 
   /// Get the platform's default system font family name
