@@ -683,6 +683,14 @@ class SettingsService {
 
   int get nodeViewModeIndex => _preferences.getInt('node_view_mode_index') ?? 0;
 
+  // Node list section headers visibility (grouped classification headings).
+  Future<void> setNodeSectionHeadersEnabled(bool enabled) async {
+    await _preferences.setBool('node_section_headers_enabled', enabled);
+  }
+
+  bool get nodeSectionHeadersEnabled =>
+      _preferences.getBool('node_section_headers_enabled') ?? true;
+
   // Last-known LoRa config of remote-admin nodes, keyed by node number.
   // Stored as the base64-encoded serialized Config_LoRaConfig protobuf so
   // unknown firmware fields round-trip intact. Lets the radio config screen

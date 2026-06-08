@@ -64,13 +64,16 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
   @override
   void initState() {
     super.initState();
-    _loadViewMode();
+    _loadPersistedPreferences();
   }
 
-  Future<void> _loadViewMode() async {
+  Future<void> _loadPersistedPreferences() async {
     final settings = await ref.read(settingsServiceProvider.future);
     if (!mounted) return;
-    safeSetState(() => _compactView = settings.nodeViewModeIndex == 1);
+    safeSetState(() {
+      _compactView = settings.nodeViewModeIndex == 1;
+      _showSectionHeaders = settings.nodeSectionHeadersEnabled;
+    });
   }
 
   Future<void> _toggleViewMode() async {
@@ -79,6 +82,14 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
     final settings = await ref.read(settingsServiceProvider.future);
     if (!mounted) return;
     await settings.setNodeViewModeIndex(newValue ? 1 : 0);
+  }
+
+  Future<void> _toggleSectionHeaders() async {
+    final newValue = !_showSectionHeaders;
+    safeSetState(() => _showSectionHeaders = newValue);
+    final settings = await ref.read(settingsServiceProvider.future);
+    if (!mounted) return;
+    await settings.setNodeSectionHeadersEnabled(newValue);
   }
 
   @override
@@ -428,9 +439,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                 trailingControls: [
                   SectionHeadersToggle(
                     enabled: _showSectionHeaders,
-                    onToggle: () => setState(
-                      () => _showSectionHeaders = !_showSectionHeaders,
-                    ),
+                    onToggle: _toggleSectionHeaders,
                   ),
                 ],
               ),
