@@ -649,6 +649,8 @@ class _DeviceMetricsChart extends StatelessWidget {
                 lineTouchData: LineTouchData(
                   touchTooltipData: LineTouchTooltipData(
                     maxContentWidth: 180,
+                    fitInsideHorizontally: true,
+                    fitInsideVertically: true,
                     getTooltipColor: (_) => context.card,
                     getTooltipItems: (spots) => spots.map((spot) {
                       final idx = spot.x.toInt().clamp(0, sorted.length - 1);
