@@ -8,12 +8,18 @@ import '../../../core/widgets/app_bottom_sheet.dart';
 
 /// Bottom sheet explaining what all the compact node tile icons mean.
 class NodesLegendSheet extends StatelessWidget {
-  const NodesLegendSheet({super.key});
+  const NodesLegendSheet({required this.scrollController, super.key});
+
+  final ScrollController scrollController;
 
   static Future<void> show(BuildContext context) {
-    return AppBottomSheet.show(
+    return AppBottomSheet.showScrollable<void>(
       context: context,
-      child: const NodesLegendSheet(),
+      title: context.l10n.nodesScreenLegendTitle,
+      initialChildSize: 0.7,
+      minChildSize: 0.4,
+      maxChildSize: 0.95,
+      builder: (controller) => NodesLegendSheet(scrollController: controller),
     );
   }
 
@@ -21,19 +27,15 @@ class NodesLegendSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return ListView(
+      controller: scrollController,
+      padding: const EdgeInsets.fromLTRB(
+        AppTheme.spacing24,
+        0,
+        AppTheme.spacing24,
+        AppTheme.spacing24,
+      ),
       children: [
-        Text(
-          l10n.nodesScreenLegendTitle,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
-          ),
-        ),
-        const SizedBox(height: AppTheme.spacing16),
         _LegendSection(
           title: l10n.nodesScreenLegendSectionStatus,
           items: [
