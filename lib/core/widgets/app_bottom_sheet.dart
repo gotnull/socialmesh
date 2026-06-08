@@ -387,14 +387,14 @@ class AppBottomSheet extends StatelessWidget {
                   action.icon,
                   color: action.isDestructive
                       ? AppTheme.errorRed
-                      : (action.iconColor ?? SemanticColors.onAccent),
+                      : (action.iconColor ?? sheetContext.textPrimary),
                 ),
                 title: Text(
                   action.label,
                   style: TextStyle(
                     color: action.isDestructive
                         ? AppTheme.errorRed
-                        : SemanticColors.onAccent,
+                        : sheetContext.textPrimary,
                   ),
                 ),
                 subtitle: action.subtitle != null
