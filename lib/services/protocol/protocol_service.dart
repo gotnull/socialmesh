@@ -2613,9 +2613,11 @@ class ProtocolService {
 
     // Update lastHeard (and RF metadata) for the sender node.
     // rxRssi/rxSnr are per-packet RF metrics that tell us how strong
-    // the sender's signal was when our radio received it. Propagating
-    // them to MeshNode keeps the per-node signal data fresh for the UI
-    // (node cards, node detail, nearby nodes, AR, 3D mesh, NodeDex).
+    // the signal was when our radio received it — but only describe the
+    // link to the immediate transmitter. They are attributed to the sender
+    // node only on a direct (0-hop, non-MQTT) reception (isDirectRf); on a
+    // relayed/MQTT packet they belong to the next hop and are cleared, so
+    // the UI never shows a meaningless signal for a node heard via a hop.
     // hopCount and viaMqtt are also refreshed so the "hops away" and
     // MQTT badge stay current as mesh topology changes.
     _updateNodeLastHeard(
@@ -2628,6 +2630,7 @@ class ProtocolService {
       rxSnr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
       hopCount: _computeHopCount(packet),
       viaMqtt: packet.hasViaMqtt() ? packet.viaMqtt : null,
+      isDirectRf: _isDirectRfReception(packet),
     );
 
     // Mirror meshtastic-ios `UpdateCoreData.swift:413-415`: every inbound
@@ -4123,6 +4126,25 @@ class ProtocolService {
     return null;
   }
 
+  // rxRssi/rxSnr describe the link to whatever transmitted this packet.
+  // They may only be attributed to packet.from when that node *is* the
+  // transmitter — i.e. a direct (0-hop, non-MQTT) reception. A relayed or
+  // MQTT-tunnelled packet carries the next hop's signal, not the source
+  // node's, so attributing it would show a meaningless value. When hop info
+  // is absent we treat the packet as not-direct rather than guess.
+  bool _isDirectRfReception(pb.MeshPacket packet) {
+    final viaMqtt = packet.hasViaMqtt() && packet.viaMqtt;
+    return _computeHopCount(packet) == 0 && !viaMqtt;
+  }
+
+  int? _directRxRssi(pb.MeshPacket packet) =>
+      _isDirectRfReception(packet) && packet.hasRxRssi() ? packet.rxRssi : null;
+
+  int? _directRxSnr(pb.MeshPacket packet) =>
+      _isDirectRfReception(packet) && packet.hasRxSnr()
+      ? packet.rxSnr.toInt()
+      : null;
+
   /// Handle text message
   void _handleTextMessage(pb.MeshPacket packet, pb.Data data) {
     try {
@@ -4172,8 +4194,8 @@ class ProtocolService {
           nodeNum: packet.from,
           lastHeard: placeholderLastHeard,
           firstHeard: placeholderLastHeard,
-          rssi: packet.hasRxRssi() ? packet.rxRssi : null,
-          snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
+          rssi: _directRxRssi(packet),
+          snr: _directRxSnr(packet),
           hopCount: _computeHopCount(packet),
           viaMqtt: packet.hasViaMqtt() ? packet.viaMqtt : false,
         );
@@ -4724,8 +4746,8 @@ class ProtocolService {
           uptimeSeconds: uptimeSeconds,
           lastHeard: telemetryLastHeard,
           firstHeard: telemetryLastHeard,
-          rssi: packet.hasRxRssi() ? packet.rxRssi : null,
-          snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
+          rssi: _directRxRssi(packet),
+          snr: _directRxSnr(packet),
           hopCount: _computeHopCount(packet),
           viaMqtt: packet.hasViaMqtt() ? packet.viaMqtt : false,
           avatarColor: avatarColor,
@@ -4880,8 +4902,8 @@ class ProtocolService {
           latitude: position.latitudeI / 1e7,
           longitude: position.longitudeI / 1e7,
           altitude: position.hasAltitude() ? position.altitude : null,
-          rssi: packet.hasRxRssi() ? packet.rxRssi : null,
-          snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
+          rssi: _directRxRssi(packet),
+          snr: _directRxSnr(packet),
           lastHeard: _resolvePacketLastHeard(packet),
           firstHeard: _resolvePacketLastHeard(packet),
           hopCount: _computeHopCount(packet),
@@ -4991,7 +5013,10 @@ class ProtocolService {
                 ? user.hwModel.value
                 : existingNode.hwModelId,
             role: role,
-            snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : existingNode.snr,
+            snr: _isDirectRfReception(packet)
+                ? (packet.hasRxSnr() ? packet.rxSnr.toInt() : existingNode.snr)
+                : null,
+            clearSnr: !_isDirectRfReception(packet),
             lastHeard: updatedLastHeard,
           ) ??
           MeshNode(
@@ -5005,8 +5030,8 @@ class ProtocolService {
                 ? user.hwModel.value
                 : null,
             role: role,
-            rssi: packet.hasRxRssi() ? packet.rxRssi : null,
-            snr: packet.hasRxSnr() ? packet.rxSnr.toInt() : null,
+            rssi: _directRxRssi(packet),
+            snr: _directRxSnr(packet),
             lastHeard: updatedLastHeard,
             firstHeard: updatedLastHeard,
             hopCount: _computeHopCount(packet),
@@ -5032,12 +5057,17 @@ class ProtocolService {
   ///
   /// Called for every incoming mesh packet. [rxRssi] and [rxSnr] are
   /// the per-packet RF metrics from the radio — they tell us how strong
-  /// the sender's LoRa signal was when our radio received it. Storing
+  /// the signal was when our radio received it. They describe the link to
+  /// whatever transmitted the packet, so they only belong to [nodeNum] when
+  /// it is the transmitter: a direct (0-hop, non-MQTT) reception, signalled
+  /// by [isDirectRf]. When the packet was relayed or arrived via MQTT
+  /// ([isDirectRf] false) the metrics belong to the next hop, not this node,
+  /// so rssi/snr are cleared to avoid showing a meaningless value. Storing
   /// them on [MeshNode] makes per-node signal strength available to
   /// node cards, node detail, nearby nodes, AR, 3D mesh, and NodeDex.
   ///
-  /// Packets from our own node (local BLE deliveries) lack RF metrics
-  /// and will pass null for both, leaving existing values unchanged.
+  /// On a direct reception that lacks a particular metric (null [rxRssi] /
+  /// [rxSnr]) the prior direct value is preserved.
   ///
   /// [hopCount] is derived from hopStart - hopLimit on the packet.
   /// [viaMqtt] indicates whether the packet traversed MQTT transport.
@@ -5057,6 +5087,7 @@ class ProtocolService {
     int? rxSnr,
     int? hopCount,
     bool? viaMqtt,
+    bool isDirectRf = false,
   }) {
     final node = _nodes[nodeNum];
     if (node != null) {
@@ -5068,8 +5099,10 @@ class ProtocolService {
       );
       final updatedNode = node.copyWith(
         lastHeard: resolvedLastHeard,
-        rssi: rxRssi ?? node.rssi,
-        snr: rxSnr ?? node.snr,
+        rssi: isDirectRf ? rxRssi : null,
+        clearRssi: !isDirectRf,
+        snr: isDirectRf ? rxSnr : null,
+        clearSnr: !isDirectRf,
         hopCount: hopCount ?? node.hopCount,
         viaMqtt: viaMqtt ?? node.viaMqtt,
       );
@@ -5208,6 +5241,20 @@ class ProtocolService {
         }
       }),
     );
+  }
+
+  // The firmware stores NodeInfo.snr from received packets regardless of
+  // hops, so a relayed/MQTT NodeInfo carries the next hop's snr — not the
+  // source node's. Only attribute snr from a direct (0-hop, non-MQTT) NodeInfo.
+  //
+  // hops_away is omitted on the wire when 0 (proto3 default), so its absence
+  // means "direct", not "unknown" — only a present, positive hops_away marks
+  // a relayed node. Treating absence as not-direct would wrongly suppress snr
+  // for the common case of a directly-heard node.
+  bool _isDirectNodeInfo(pb.NodeInfo nodeInfo) {
+    if (nodeInfo.hasViaMqtt() && nodeInfo.viaMqtt) return false;
+    if (nodeInfo.hasHopsAway() && nodeInfo.hopsAway > 0) return false;
+    return true;
   }
 
   /// Handle node info
@@ -5424,7 +5471,10 @@ class ProtocolService {
         altitude: hasValidPosition && nodeInfo.position.hasAltitude()
             ? nodeInfo.position.altitude
             : existingNode.altitude,
-        snr: nodeInfo.hasSnr() ? nodeInfo.snr.toInt() : existingNode.snr,
+        snr: nodeInfo.hasSnr() && _isDirectNodeInfo(nodeInfo)
+            ? nodeInfo.snr.toInt()
+            : existingNode.snr,
+        clearSnr: nodeInfo.hasSnr() && !_isDirectNodeInfo(nodeInfo),
         batteryLevel: nodeInfo.hasDeviceMetrics()
             ? nodeInfo.deviceMetrics.batteryLevel
             : existingNode.batteryLevel,
@@ -5480,7 +5530,9 @@ class ProtocolService {
         altitude: hasValidPosition && nodeInfo.position.hasAltitude()
             ? nodeInfo.position.altitude
             : null,
-        snr: nodeInfo.hasSnr() ? nodeInfo.snr.toInt() : null,
+        snr: nodeInfo.hasSnr() && _isDirectNodeInfo(nodeInfo)
+            ? nodeInfo.snr.toInt()
+            : null,
         batteryLevel: nodeInfo.hasDeviceMetrics()
             ? nodeInfo.deviceMetrics.batteryLevel
             : null,
