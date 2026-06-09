@@ -970,6 +970,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   ConversationReadPosition? _lastPersistedReadPosition;
   List<ConversationTimelineRow> _currentDisplayRows = const [];
 
+  /// Id of the newest message rendered on the previous frame. Used to detect
+  /// a freshly-arrived message in build() so we can auto-scroll when the user
+  /// is parked at the bottom. Null until the first populated frame.
+  String? _lastSeenLatestMessageId;
+
   /// Tracks which message IDs have inline technical info expanded.
   final Set<String> _expandedTechInfoIds = {};
 
@@ -1158,6 +1163,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     _olderLoadInFlight = false;
     _lastPersistedReadPosition = null;
     _currentDisplayRows = const [];
+    _lastSeenLatestMessageId = null;
   }
 
   void _onTimelineViewportChanged() {
@@ -2415,6 +2421,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           .toList();
     }
 
+    // Capture whether the user was parked at the bottom on the PREVIOUS frame
+    // before swapping in the new rows. _isNearLatest reads the live item
+    // positions, which still reflect the prior layout — testing it after the
+    // swap would check the newly-appended index (not yet laid out) and always
+    // return false.
+    final wasParkedAtLatest =
+        _hasAppliedInitialRestore && _isNearLatest(_currentDisplayRows);
+
     _currentDisplayRows = filteredRows;
 
     if (timelineState != null &&
@@ -2428,6 +2442,31 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         .map((row) => row.message)
         .whereType<Message>()
         .toList();
+
+    // Auto-scroll to the newest message when one arrives while the user is
+    // already parked at the bottom. Honour the user's scroll position — if
+    // they've scrolled up to read history, the Jump-to-Latest pill handles it.
+    final latestMessage = visibleMessages.isNotEmpty
+        ? visibleMessages.last
+        : null;
+    final latestMessageId = latestMessage?.id;
+    final isNewInbound =
+        latestMessage != null &&
+        latestMessageId != _lastSeenLatestMessageId &&
+        _lastSeenLatestMessageId != null &&
+        latestMessage.received &&
+        latestMessage.from != myNodeNum;
+    if (isNewInbound &&
+        wasParkedAtLatest &&
+        !(_isSearching && _searchQuery.isNotEmpty)) {
+      final query = _activeTimelineQuery;
+      if (query != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) unawaited(_scrollToLatest(query, animate: true));
+        });
+      }
+    }
+    _lastSeenLatestMessageId = latestMessageId;
 
     return GestureDetector(
       onTap: _dismissKeyboard,

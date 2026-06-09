@@ -4312,7 +4312,7 @@ class _NodeMarkerState extends State<_NodeMarker>
     final marker = AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: widget.isStale ? 0.3 : 0.7),
+        color: color.withValues(alpha: widget.isStale ? 0.55 : 0.7),
         shape: BoxShape.circle,
         border: Border.all(
           color: borderColor,
@@ -4320,10 +4320,18 @@ class _NodeMarkerState extends State<_NodeMarker>
           strokeAlign: BorderSide.strokeAlignOutside,
         ),
         boxShadow: [
+          // Coloured glow for presence emphasis.
           BoxShadow(
             color: color.withValues(alpha: widget.isStale ? 0.2 : 0.4),
             blurRadius: widget.isSelected ? 12 : 6,
             spreadRadius: widget.isSelected ? 2 : 0,
+          ),
+          // Dark drop shadow defines the circle edge against same-toned
+          // map terrain so the marker never blends into the background.
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -4346,8 +4354,18 @@ class _NodeMarkerState extends State<_NodeMarker>
                   fontSize: widget.isSelected ? 16 : 14,
                   fontWeight: FontWeight.bold,
                   color: Colors.white.withValues(
-                    alpha: widget.isStale ? 0.7 : 1.0,
+                    alpha: widget.isStale ? 0.85 : 1.0,
                   ),
+                  // Dark halo keeps the white label legible over busy
+                  // topo tiles regardless of the circle fill behind it.
+                  shadows: const [
+                    Shadow(color: Colors.black, blurRadius: 3),
+                    Shadow(
+                      color: Colors.black,
+                      blurRadius: 1,
+                      offset: Offset(0, 1),
+                    ),
+                  ],
                 ),
               ),
             ),

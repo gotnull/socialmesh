@@ -26,8 +26,20 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"
         android:maxSdkVersion="30" />
 
+    <!-- Soft-declare every hardware feature implied by the permissions below.
+         A radio companion connects over Bluetooth OR USB and runs fully offline,
+         so none of these are hard requirements. Without the explicit
+         required="false", the legacy BLUETOOTH/ACCESS_FINE_LOCATION/RECORD_AUDIO
+         permissions get promoted to required hardware features, and store device
+         filtering excludes installs whose reported feature profile does not
+         advertise them. -->
+    <uses-feature android:name="android.hardware.bluetooth" android:required="false" />
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
+
     <!-- Location permission for Bluetooth scanning on older devices and for map features -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-feature android:name="android.hardware.location" android:required="false" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
     <!-- For Android 13+ notification permission -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -36,9 +48,14 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+    <!-- The CameraX plugin injects camera.any as required by default; override it
+         so devices without a camera (or that under-report it) can still install. -->
+    <uses-feature android:name="android.hardware.camera.any" android:required="false"
+        tools:replace="android:required" />
 
     <!-- Microphone permission for Codec2 voice message recording -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
 
     <!-- Network permissions for WiFi-based nodes -->
     <uses-permission android:name="android.permission.INTERNET" />
