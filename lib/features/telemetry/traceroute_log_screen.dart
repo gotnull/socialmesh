@@ -80,6 +80,16 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
   bool _isSendingTraceroute = false;
   final TextEditingController _searchController = TextEditingController();
 
+  // Optional per-node filter: seeded from widget.nodeNum, clearable so the user
+  // can broaden from a single node to all nodes via the chip's close icon.
+  int? _filterNodeNum;
+
+  @override
+  void initState() {
+    super.initState();
+    _filterNodeNum = widget.nodeNum;
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -87,7 +97,7 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
   }
 
   Future<void> _sendTraceroute() async {
-    final nodeNum = widget.nodeNum;
+    final nodeNum = _filterNodeNum;
     if (nodeNum == null) return;
 
     final cooldownRemaining = ref
@@ -254,10 +264,10 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
 
   @override
   Widget build(BuildContext context) {
-    final logsAsync = widget.nodeNum != null
-        ? ref.watch(nodeTraceRouteLogsProvider(widget.nodeNum!))
+    final logsAsync = _filterNodeNum != null
+        ? ref.watch(nodeTraceRouteLogsProvider(_filterNodeNum!))
         : ref.watch(traceRouteLogsProvider);
-    final cooldownTask = widget.nodeNum != null
+    final cooldownTask = _filterNodeNum != null
         ? ref.watch(activeTracerouteProvider)
         : null;
     final cooldownRemaining = cooldownTask?.remainingSeconds ?? 0;
@@ -265,7 +275,7 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
         cooldownTask?.totalSeconds ??
         CountdownNotifier.tracerouteCooldownSeconds;
     final nodes = ref.watch(nodesProvider);
-    final node = widget.nodeNum != null ? nodes[widget.nodeNum] : null;
+    final node = _filterNodeNum != null ? nodes[_filterNodeNum] : null;
     final nodeName = node?.displayName;
 
     return GestureDetector(
@@ -275,7 +285,7 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
         stepKeys: const {},
         child: GlassScaffold(
           resizeToAvoidBottomInset: false,
-          titleWidget: widget.nodeNum != null && nodeName != null
+          titleWidget: _filterNodeNum != null && nodeName != null
               ? Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -300,11 +310,11 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
                   ],
                 )
               : null,
-          title: widget.nodeNum == null || nodeName == null
+          title: _filterNodeNum == null || nodeName == null
               ? context.l10n.telemetryTracerouteTitle
               : null,
           actions: [
-            if (widget.nodeNum != null)
+            if (_filterNodeNum != null)
               _buildTracerouteAppBarAction(
                 context,
                 cooldownRemaining,
@@ -432,6 +442,67 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
                 ],
               ),
             ),
+
+            // Node filter indicator (when scoped to a single node). Tap the
+            // close icon to clear the scope and browse all nodes' traceroutes.
+            if (_filterNodeNum != null)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AccentColors.purple.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppTheme.radius8),
+                      border: Border.all(
+                        color: AccentColors.purple.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.person_pin_circle,
+                          size: 16,
+                          color: AccentColors.purple,
+                        ),
+                        const SizedBox(width: AppTheme.spacing8),
+                        Expanded(
+                          child: Text(
+                            nodes[_filterNodeNum]?.displayName ??
+                                NodeDisplayNameResolver.defaultName(
+                                  _filterNodeNum!,
+                                ),
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: AccentColors.purple,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            safeSetState(() => _filterNodeNum = null);
+                          },
+                          child: Icon(
+                            Icons.close,
+                            size: 16,
+                            color: AccentColors.purple,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
             logsAsync.when(
               data: (logs) {
                 final filtered = _applyFilters(logs);
@@ -562,9 +633,9 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
 
     try {
       final List<TraceRouteLog> logs;
-      if (widget.nodeNum != null) {
+      if (_filterNodeNum != null) {
         logs = await ref.read(
-          nodeTraceRouteLogsProvider(widget.nodeNum!).future,
+          nodeTraceRouteLogsProvider(_filterNodeNum!).future,
         );
       } else {
         logs = await ref.read(traceRouteLogsProvider.future);
@@ -633,7 +704,7 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
 
       if (!mounted) return;
 
-      final scope = widget.nodeNum != null ? 'Node' : 'All';
+      final scope = _filterNodeNum != null ? 'Node' : 'All';
       final timestamp = DateTime.now()
           .toIso8601String()
           .replaceAll(':', '-')
@@ -669,7 +740,7 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
 
   Future<void> _confirmClearData() async {
     final l10n = context.l10n;
-    final scope = widget.nodeNum != null
+    final scope = _filterNodeNum != null
         ? 'this node'
         : 'all nodes'; // lint-allow: hardcoded-string
 
@@ -685,9 +756,9 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
 
     try {
       final repo = await ref.read(tracerouteRepositoryProvider.future);
-      if (widget.nodeNum != null) {
-        await repo.deleteRunsForNode(widget.nodeNum!);
-        ref.invalidate(nodeTraceRouteLogsProvider(widget.nodeNum!));
+      if (_filterNodeNum != null) {
+        await repo.deleteRunsForNode(_filterNodeNum!);
+        ref.invalidate(nodeTraceRouteLogsProvider(_filterNodeNum!));
       } else {
         await repo.deleteAllRuns();
         ref.invalidate(traceRouteLogsProvider);

@@ -71,6 +71,16 @@ class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
   DateTime? _startDate;
   DateTime? _endDate;
 
+  // Optional per-node filter: seeded from widget.nodeNum, clearable so the user
+  // can broaden from a single node to all nodes via the chip's close icon.
+  int? _filterNodeNum;
+
+  @override
+  void initState() {
+    super.initState();
+    _filterNodeNum = widget.nodeNum;
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -201,7 +211,7 @@ class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
 
   @override
   Widget build(BuildContext context) {
-    final scopedNodeNum = widget.nodeNum;
+    final scopedNodeNum = _filterNodeNum;
     final logsAsync = scopedNodeNum != null
         ? ref.watch(nodeDeviceMetricsLogsProvider(scopedNodeNum))
         : ref.watch(deviceMetricsLogsProvider);
@@ -266,22 +276,58 @@ class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
                 child: SizedBox(height: AppTheme.spacing8),
               ),
 
-              // Scoped node name subtitle — only when filtering by a single node
+              // Node filter indicator (when scoped to a single node). Tap the
+              // close icon to clear the scope and browse all nodes' metrics.
               if (scopedNodeName != null)
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppTheme.spacing16,
-                    0,
-                    AppTheme.spacing16,
-                    AppTheme.spacing8,
-                  ),
-                  sliver: SliverToBoxAdapter(
-                    child: Text(
-                      scopedNodeName,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: context.textSecondary,
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AccentColors.purple.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(AppTheme.radius8),
+                        border: Border.all(
+                          color: AccentColors.purple.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.person_pin_circle,
+                            size: 16,
+                            color: AccentColors.purple,
+                          ),
+                          const SizedBox(width: AppTheme.spacing8),
+                          Expanded(
+                            child: Text(
+                              scopedNodeName,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: AccentColors.purple,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              safeSetState(() => _filterNodeNum = null);
+                            },
+                            child: Icon(
+                              Icons.close,
+                              size: 16,
+                              color: AccentColors.purple,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
