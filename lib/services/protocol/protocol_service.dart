@@ -8156,6 +8156,57 @@ class ProtocolService {
     }
   }
 
+  /// Request telemetry of [type] from a specific node.
+  ///
+  /// Sends an empty telemetry packet with the matching variant set and
+  /// `wantResponse = true` so the node's corresponding telemetry module
+  /// replies with its current values. The reply is ingested by the normal
+  /// inbound `TELEMETRY_APP` path ([_handleTelemetry]) — no request tracking
+  /// is needed. Since firmware 2.7.13 nodes no longer broadcast telemetry by
+  /// default, so this is the on-demand pull path.
+  Future<void> requestTelemetry(
+    int nodeNum, {
+    required TelemetryRequestType type,
+  }) async {
+    try {
+      AppLogging.protocol(
+        'Requesting ${type.name} telemetry for node $nodeNum',
+      );
+
+      // Set the requested variant as an empty sub-message. The firmware keys
+      // its reply off which variant is present in the request.
+      final telem = telemetry.Telemetry();
+      switch (type) {
+        case TelemetryRequestType.device:
+          telem.deviceMetrics = telemetry.DeviceMetrics();
+        case TelemetryRequestType.environment:
+          telem.environmentMetrics = telemetry.EnvironmentMetrics();
+        case TelemetryRequestType.airQuality:
+          telem.airQualityMetrics = telemetry.AirQualityMetrics();
+      }
+
+      final data = pb.Data()
+        ..portnum = pn.PortNum.TELEMETRY_APP
+        ..payload = telem.writeToBuffer()
+        ..wantResponse = true;
+
+      final packet = MeshPacketBuilder.userPayload(
+        myNodeNum: _myNodeNum ?? 0,
+        to: nodeNum,
+        data: data,
+        packetId: _generatePacketId(),
+        wantAck: true,
+      );
+
+      final toRadio = pb.ToRadio()..packet = packet;
+      final bytes = toRadio.writeToBuffer();
+
+      await _transport.send(_prepareForSend(bytes));
+    } catch (e) {
+      AppLogging.protocol('Error requesting telemetry: $e');
+    }
+  }
+
   /// Send a traceroute request to a specific node
   /// Returns immediately - results come via mesh packet responses.
   /// Emits a placeholder [TraceRouteLog] with `response: false` so the UI

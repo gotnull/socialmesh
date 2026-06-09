@@ -19,10 +19,10 @@
 
 repo: https://github.com/meshcore-dev/MeshCore
 branch: main
-sha: 1a7b3614a8439894714a58af55ab7f501e6bb928
-pinned_at: 2026-05-06
-firmware_version: v1.15.0
-firmware_ver_code: 11
+sha: 07a3ca9e05b0ab23b878200b2c44b04e08131972
+pinned_at: 2026-06-08
+firmware_version: v1.16.0
+firmware_ver_code: 13
 
 # Files SocialMesh parses byte-for-byte. Keep the list as small as
 # defensibly possible. Each entry must justify its presence: which

@@ -11403,6 +11403,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meshcoreShellDefaultDeviceNameFull => 'Appareil MeshCore';
 
   @override
+  String get meshcoreSyncingData => 'Synchronisation des données';
+
+  @override
   String get meshcoreShellDefaultInitials => 'MC';
 
   @override
@@ -14127,6 +14130,31 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get nodeDetailTracerouteComplete => 'Traceroute terminé';
+
+  @override
+  String nodeDetailTelemetryRequestTooltip(String type) {
+    return 'Demander $type';
+  }
+
+  @override
+  String nodeDetailTelemetryRequestCooldownTooltip(int seconds) {
+    return 'Délai de télémétrie : ${seconds}s';
+  }
+
+  @override
+  String nodeDetailTelemetryRequested(String type, String name) {
+    return '$type demandé à $name';
+  }
+
+  @override
+  String nodeDetailTelemetryRequestCooldown(int seconds) {
+    return 'Délai de télémétrie ${seconds}s';
+  }
+
+  @override
+  String nodeDetailTelemetryRequestFailed(String error) {
+    return 'Échec de la demande de télémétrie : $error';
+  }
 
   @override
   String nodeDetailTracerouteSummaryRfDirect(String snr) {
@@ -36984,6 +37012,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get countdownRequestingPositions =>
       'Demande des positions du maillage';
+
+  @override
+  String countdownRequestingTelemetry(String displayName) {
+    return 'Demande de télémétrie à $displayName';
+  }
 
   @override
   String get countdownBroadcastingPosition =>

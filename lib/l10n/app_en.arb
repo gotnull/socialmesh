@@ -15040,6 +15040,10 @@
     "@meshcoreShellDefaultDeviceNameFull": {
         "description": "Fallback full device name for MeshCore."
     },
+    "meshcoreSyncingData": "Syncing data",
+    "@meshcoreSyncingData": {
+        "description": "Accessibility label for the MeshCore shell progress bar shown while the initial contacts/channels roster is syncing after connect."
+    },
     "meshcoreShellDefaultInitials": "MC",
     "@meshcoreShellDefaultInitials": {
         "description": "Fallback avatar initials for MeshCore node."
@@ -18747,6 +18751,54 @@
     "nodeDetailTracerouteComplete": "Traceroute complete",
     "@nodeDetailTracerouteComplete": {
         "description": "Snackbar title when a traceroute result arrives."
+    },
+    "nodeDetailTelemetryRequestTooltip": "Request {type}",
+    "@nodeDetailTelemetryRequestTooltip": {
+        "description": "Tooltip for the reload button that requests a telemetry type on demand.",
+        "placeholders": {
+            "type": {
+                "type": "String"
+            }
+        }
+    },
+    "nodeDetailTelemetryRequestCooldownTooltip": "Telemetry cooldown: {seconds}s",
+    "@nodeDetailTelemetryRequestCooldownTooltip": {
+        "description": "Tooltip showing remaining cooldown on a telemetry request reload button.",
+        "placeholders": {
+            "seconds": {
+                "type": "int"
+            }
+        }
+    },
+    "nodeDetailTelemetryRequested": "Requested {type} from {name}",
+    "@nodeDetailTelemetryRequested": {
+        "description": "Success snackbar after requesting telemetry of a given type from a node.",
+        "placeholders": {
+            "type": {
+                "type": "String"
+            },
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "nodeDetailTelemetryRequestCooldown": "Telemetry cooldown {seconds}s",
+    "@nodeDetailTelemetryRequestCooldown": {
+        "description": "Warning snackbar when a telemetry request is tapped during its cooldown.",
+        "placeholders": {
+            "seconds": {
+                "type": "int"
+            }
+        }
+    },
+    "nodeDetailTelemetryRequestFailed": "Failed to request telemetry: {error}",
+    "@nodeDetailTelemetryRequestFailed": {
+        "description": "Error snackbar when a telemetry request fails to send.",
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
     },
     "nodeDetailTracerouteSummaryRfDirect": "RF • direct • SNR {snr} dB",
     "@nodeDetailTracerouteSummaryRfDirect": {
@@ -48590,6 +48642,15 @@
     "countdownRequestingPositions": "Requesting mesh positions",
     "@countdownRequestingPositions": {
         "description": "UI text: countdown requesting positions"
+    },
+    "countdownRequestingTelemetry": "Requesting telemetry from {displayName}",
+    "@countdownRequestingTelemetry": {
+        "placeholders": {
+            "displayName": {
+                "type": "String"
+            }
+        },
+        "description": "Countdown banner label while waiting for an on-demand telemetry reply. Parameters: {displayName} = node display name."
     },
     "countdownBroadcastingPosition": "Broadcasting position to mesh",
     "@countdownBroadcastingPosition": {

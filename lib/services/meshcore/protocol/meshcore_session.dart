@@ -1504,15 +1504,17 @@ class MeshCoreSession {
   ///
   /// Wire request:
   ///   `[CMD_SEND_BINARY_REQ 0x32][recipientPubKey:32 B]`
-  ///   `[REQ_TYPE_GET_TELEMETRY_DATA 0x03][permission_mask 0x00]`
+  ///   `[REQ_TYPE_GET_TELEMETRY_DATA 0x03][permission_mask:4 B LE]`
   ///
   /// Wire response:
   ///   `[PUSH_CODE_TELEMETRY_RESPONSE 0x8B][reserved 0]`
   ///   `[pubkey_prefix:6 B][cayenne_lpp_tlv:...]`
   ///
-  /// `permission_mask = 0x00` asks the responder for everything its
-  /// `telemetry_mode_*` flags allow. The responder may omit channels
-  /// at its own discretion; we surface whatever arrives.
+  /// `permission_mask` is a 32-bit little-endian inverse mask: an
+  /// all-zero mask asks the responder for every telemetry field its
+  /// `telemetry_mode_*` flags allow. Room-servers and repeaters read
+  /// the full 4-byte mask; the responder may omit channels at its own
+  /// discretion and we surface whatever arrives.
   ///
   /// Returns `null` on:
   ///   - empty / missing `recipientPubKey` (asserts in debug),
@@ -1531,7 +1533,7 @@ class MeshCoreSession {
   }) async {
     final response = await sendBinaryRequest(
       recipientPubKey: recipientPubKey,
-      requestBytes: Uint8List.fromList(const [0x03, 0x00]),
+      requestBytes: Uint8List.fromList(const [0x03, 0x00, 0x00, 0x00, 0x00]),
       expectedResponseCode: MeshCorePushCodes.telemetryResponse,
       timeout: timeout,
     );
@@ -1568,21 +1570,45 @@ class MeshCoreSession {
   /// END_OF_CONTACTS is received.
   ///
   /// Returns list of parsed contacts, or empty list on timeout/error.
+  ///
+  /// [onProgress] is invoked as the roster drains: once on `CONTACTS_START`
+  /// with `(0, total)` and again per contact with `(received, total)`.
+  /// `total` is the firmware v3+ count prefixed on `CONTACTS_START` (a u32
+  /// LE), or `null` when an older firmware omits it (indeterminate).
   Future<List<MeshCoreContactInfo>> getContacts({
     Duration timeout = const Duration(seconds: 10),
+    void Function(int received, int? total)? onProgress,
   }) async {
     AppLogging.protocol('MeshCore: getContacts() starting...');
     AppLogging.meshcore('event=contacts.fetch.started');
 
     final contacts = <MeshCoreContactInfo>[];
+    var received = 0;
+    int? total;
 
     // Register waiter for END_OF_CONTACTS
     final endCompleter = _registerWaiter(MeshCoreResponses.endOfContacts);
 
-    // Listen for CONTACT frames
+    // Listen for CONTACTS_START (sync total) and CONTACT frames.
     final contactSubscription = frameStream
-        .where((f) => f.command == MeshCoreResponses.contact)
+        .where(
+          (f) =>
+              f.command == MeshCoreResponses.contact ||
+              f.command == MeshCoreResponses.contactsStart,
+        )
         .listen((frame) {
+          if (frame.command == MeshCoreResponses.contactsStart) {
+            total = frame.payload.length >= 4
+                ? ByteData.sublistView(
+                    frame.payload,
+                  ).getUint32(0, Endian.little)
+                : null;
+            received = 0;
+            onProgress?.call(received, total);
+            return;
+          }
+          received++;
+          onProgress?.call(received, total);
           final result = parseContact(frame.payload);
           if (result.isSuccess && result.value != null) {
             contacts.add(result.value!);
@@ -2191,6 +2217,7 @@ class MeshCoreSession {
   Future<List<MeshCoreChannelInfo>> getChannels({
     int maxChannels = 8,
     Duration timeout = const Duration(seconds: 5),
+    void Function(int received, int total)? onProgress,
   }) async {
     AppLogging.protocol('MeshCore: getChannels() starting...');
     AppLogging.meshcore('event=channels.fetch.started max=$maxChannels');
@@ -2222,6 +2249,7 @@ class MeshCoreSession {
         AppLogging.protocol('MeshCore: getChannels() error for index $i: $e');
         // Continue to next channel
       }
+      onProgress?.call(i + 1, maxChannels);
     }
 
     AppLogging.protocol(

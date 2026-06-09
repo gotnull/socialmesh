@@ -104,6 +104,22 @@ enum MessageSource {
   unknown,
 }
 
+/// A telemetry metric type that can be requested on demand from a node.
+///
+/// Each variant maps to a Meshtastic telemetry sub-message. A request sets
+/// the matching empty sub-message with `wantResponse = true`; the node's
+/// corresponding telemetry module replies with its current values.
+enum TelemetryRequestType {
+  /// Battery, voltage, channel utilization, air-util TX, uptime.
+  device,
+
+  /// Temperature, humidity, pressure, IAQ, lux, wind, rainfall, soil.
+  environment,
+
+  /// PM particulates and CO2.
+  airQuality,
+}
+
 /// Message model
 class Message {
   final String id;

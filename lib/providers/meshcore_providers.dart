@@ -394,35 +394,54 @@ class MeshCoreContactsState {
   final String? error;
   final DateTime? lastRefresh;
 
+  /// Contacts received so far during an in-flight roster sync.
+  final int syncReceived;
+
+  /// Total contacts the firmware will send this sync (from the
+  /// `CONTACTS_START` count), or `null` when the firmware omits it
+  /// (older firmware) — drives indeterminate vs determinate progress.
+  final int? syncTotal;
+
   const MeshCoreContactsState({
     this.contacts = const [],
     this.isLoading = false,
     this.error,
     this.lastRefresh,
+    this.syncReceived = 0,
+    this.syncTotal,
   });
 
   const MeshCoreContactsState.initial()
     : contacts = const [],
       isLoading = false,
       error = null,
-      lastRefresh = null;
+      lastRefresh = null,
+      syncReceived = 0,
+      syncTotal = null;
   const MeshCoreContactsState.loading()
     : contacts = const [],
       isLoading = true,
       error = null,
-      lastRefresh = null;
+      lastRefresh = null,
+      syncReceived = 0,
+      syncTotal = null;
 
   MeshCoreContactsState copyWith({
     List<MeshCoreContact>? contacts,
     bool? isLoading,
     String? error,
     DateTime? lastRefresh,
+    int? syncReceived,
+    int? syncTotal,
+    bool clearSyncTotal = false,
   }) {
     return MeshCoreContactsState(
       contacts: contacts ?? this.contacts,
       isLoading: isLoading ?? this.isLoading,
       error: error,
       lastRefresh: lastRefresh ?? this.lastRefresh,
+      syncReceived: syncReceived ?? this.syncReceived,
+      syncTotal: clearSyncTotal ? null : (syncTotal ?? this.syncTotal),
     );
   }
 }
@@ -446,7 +465,12 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
   Future<void> _loadContacts() async {
     if (state.isLoading) return;
 
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      syncReceived: 0,
+      clearSyncTotal: true,
+    );
 
     try {
       final session = ref.read(meshCoreSessionProvider);
@@ -455,7 +479,15 @@ class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
         return;
       }
 
-      final contactInfos = await session.getContacts();
+      final contactInfos = await session.getContacts(
+        onProgress: (received, total) {
+          state = state.copyWith(
+            syncReceived: received,
+            syncTotal: total,
+            clearSyncTotal: total == null,
+          );
+        },
+      );
 
       // Load unread counts from storage
       final unreadCounts = <String, int>{};
@@ -1232,35 +1264,53 @@ class MeshCoreChannelsState {
   final String? error;
   final DateTime? lastRefresh;
 
+  /// Channel slots probed so far during an in-flight sync.
+  final int syncReceived;
+
+  /// Total channel slots being probed this sync (the fixed slot count),
+  /// or `null` before a sync starts.
+  final int? syncTotal;
+
   const MeshCoreChannelsState({
     this.channels = const [],
     this.isLoading = false,
     this.error,
     this.lastRefresh,
+    this.syncReceived = 0,
+    this.syncTotal,
   });
 
   const MeshCoreChannelsState.initial()
     : channels = const [],
       isLoading = false,
       error = null,
-      lastRefresh = null;
+      lastRefresh = null,
+      syncReceived = 0,
+      syncTotal = null;
   const MeshCoreChannelsState.loading()
     : channels = const [],
       isLoading = true,
       error = null,
-      lastRefresh = null;
+      lastRefresh = null,
+      syncReceived = 0,
+      syncTotal = null;
 
   MeshCoreChannelsState copyWith({
     List<MeshCoreChannel>? channels,
     bool? isLoading,
     String? error,
     DateTime? lastRefresh,
+    int? syncReceived,
+    int? syncTotal,
+    bool clearSyncTotal = false,
   }) {
     return MeshCoreChannelsState(
       channels: channels ?? this.channels,
       isLoading: isLoading ?? this.isLoading,
       error: error,
       lastRefresh: lastRefresh ?? this.lastRefresh,
+      syncReceived: syncReceived ?? this.syncReceived,
+      syncTotal: clearSyncTotal ? null : (syncTotal ?? this.syncTotal),
     );
   }
 }
@@ -1280,7 +1330,12 @@ class MeshCoreChannelsNotifier extends Notifier<MeshCoreChannelsState> {
   Future<void> _loadChannels() async {
     if (state.isLoading) return;
 
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      syncReceived: 0,
+      clearSyncTotal: true,
+    );
 
     try {
       final session = ref.read(meshCoreSessionProvider);
@@ -1289,7 +1344,11 @@ class MeshCoreChannelsNotifier extends Notifier<MeshCoreChannelsState> {
         return;
       }
 
-      final channelInfos = await session.getChannels();
+      final channelInfos = await session.getChannels(
+        onProgress: (received, total) {
+          state = state.copyWith(syncReceived: received, syncTotal: total);
+        },
+      );
 
       // Convert MeshCoreChannelInfo to MeshCoreChannel
       final channels = channelInfos.map((info) {
@@ -1424,6 +1483,53 @@ final meshCoreChannelsProvider =
     NotifierProvider<MeshCoreChannelsNotifier, MeshCoreChannelsState>(
       MeshCoreChannelsNotifier.new,
     );
+
+// ---------------------------------------------------------------------------
+// MeshCore initial-sync progress (parity gap MO-4)
+// ---------------------------------------------------------------------------
+
+/// View model for the cross-tab sync-progress bar.
+///
+/// [active] is true while any roster sync is in flight. [value] is the
+/// determinate fraction `0.0..1.0`, or `null` for an indeterminate bar
+/// (sync active but no known total yet).
+class MeshCoreSyncProgress {
+  final bool active;
+  final double? value;
+
+  const MeshCoreSyncProgress({required this.active, this.value});
+
+  static double? _fraction(int received, int? total) {
+    if (total == null || total <= 0) return null;
+    return (received / total).clamp(0.0, 1.0).toDouble();
+  }
+}
+
+/// Derives the sync-progress bar state from the contacts and channels
+/// notifiers. Contacts and channels load in parallel; the bar prefers the
+/// contact fraction (the count-backed headline signal) while contacts are
+/// syncing and falls back to channels otherwise. Centralising the
+/// received/total math here keeps it out of the widget.
+final meshCoreSyncProgressProvider = Provider<MeshCoreSyncProgress>((ref) {
+  final contacts = ref.watch(meshCoreContactsProvider);
+  final channels = ref.watch(meshCoreChannelsProvider);
+
+  final active = contacts.isLoading || channels.isLoading;
+  if (!active) {
+    return const MeshCoreSyncProgress(active: false);
+  }
+
+  final value = contacts.isLoading
+      ? MeshCoreSyncProgress._fraction(
+          contacts.syncReceived,
+          contacts.syncTotal,
+        )
+      : MeshCoreSyncProgress._fraction(
+          channels.syncReceived,
+          channels.syncTotal,
+        );
+  return MeshCoreSyncProgress(active: true, value: value);
+});
 
 // ---------------------------------------------------------------------------
 // D37-A: MeshCore channel preferences (mute)

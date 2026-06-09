@@ -19594,6 +19594,12 @@ abstract class AppLocalizations {
   /// **'MeshCore Device'**
   String get meshcoreShellDefaultDeviceNameFull;
 
+  /// Accessibility label for the MeshCore shell progress bar shown while the initial contacts/channels roster is syncing after connect.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing data'**
+  String get meshcoreSyncingData;
+
   /// Fallback avatar initials for MeshCore node.
   ///
   /// In en, this message translates to:
@@ -24201,6 +24207,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Traceroute complete'**
   String get nodeDetailTracerouteComplete;
+
+  /// Tooltip for the reload button that requests a telemetry type on demand.
+  ///
+  /// In en, this message translates to:
+  /// **'Request {type}'**
+  String nodeDetailTelemetryRequestTooltip(String type);
+
+  /// Tooltip showing remaining cooldown on a telemetry request reload button.
+  ///
+  /// In en, this message translates to:
+  /// **'Telemetry cooldown: {seconds}s'**
+  String nodeDetailTelemetryRequestCooldownTooltip(int seconds);
+
+  /// Success snackbar after requesting telemetry of a given type from a node.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested {type} from {name}'**
+  String nodeDetailTelemetryRequested(String type, String name);
+
+  /// Warning snackbar when a telemetry request is tapped during its cooldown.
+  ///
+  /// In en, this message translates to:
+  /// **'Telemetry cooldown {seconds}s'**
+  String nodeDetailTelemetryRequestCooldown(int seconds);
+
+  /// Error snackbar when a telemetry request fails to send.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to request telemetry: {error}'**
+  String nodeDetailTelemetryRequestFailed(String error);
 
   /// Traceroute summary for RF direct connection.
   ///
@@ -63466,6 +63502,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Requesting mesh positions'**
   String get countdownRequestingPositions;
+
+  /// Countdown banner label while waiting for an on-demand telemetry reply. Parameters: {displayName} = node display name.
+  ///
+  /// In en, this message translates to:
+  /// **'Requesting telemetry from {displayName}'**
+  String countdownRequestingTelemetry(String displayName);
 
   /// UI text: countdown broadcasting position
   ///

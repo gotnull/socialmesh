@@ -11324,6 +11324,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreShellDefaultDeviceNameFull => 'Пристрій MeshCore';
 
   @override
+  String get meshcoreSyncingData => 'Синхронізація даних';
+
+  @override
   String get meshcoreShellDefaultInitials => 'MC';
 
   @override
@@ -14045,6 +14048,31 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get nodeDetailTracerouteComplete => 'Трасування маршруту завершено';
+
+  @override
+  String nodeDetailTelemetryRequestTooltip(String type) {
+    return 'Запитати $type';
+  }
+
+  @override
+  String nodeDetailTelemetryRequestCooldownTooltip(int seconds) {
+    return 'Затримка телеметрії: $secondsс';
+  }
+
+  @override
+  String nodeDetailTelemetryRequested(String type, String name) {
+    return 'Запитано $type від $name';
+  }
+
+  @override
+  String nodeDetailTelemetryRequestCooldown(int seconds) {
+    return 'Затримка телеметрії $secondsс';
+  }
+
+  @override
+  String nodeDetailTelemetryRequestFailed(String error) {
+    return 'Не вдалося запитати телеметрію: $error';
+  }
 
   @override
   String nodeDetailTracerouteSummaryRfDirect(String snr) {
@@ -36726,6 +36754,11 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get countdownRequestingPositions => 'Запит позицій меша';
+
+  @override
+  String countdownRequestingTelemetry(String displayName) {
+    return 'Запит телеметрії у $displayName';
+  }
 
   @override
   String get countdownBroadcastingPosition => 'Широкомовлення позиції до меша';

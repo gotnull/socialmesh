@@ -30,6 +30,7 @@ import '../meshcore/screens/meshcore_map_screen.dart';
 import '../meshcore/screens/meshcore_settings_screen.dart';
 import '../meshcore/screens/meshcore_qr_scanner_screen.dart';
 import '../meshcore/widgets/meshcore_device_sheet.dart';
+import '../meshcore/widgets/meshcore_sync_progress_bar.dart';
 import 'widgets/drawer_menu_tile.dart';
 import 'widgets/drawer_sticky_header.dart';
 import '../settings/ifttt_config_screen.dart';
@@ -323,6 +324,10 @@ class _MeshCoreShellState extends ConsumerState<MeshCoreShell>
           // Top status banner for disconnection/reconnection
           if (showReconnectionBanner)
             _buildReconnectingBanner(context, deviceName),
+          // Initial-sync progress (MO-4): thin bar that fills while the
+          // contacts/channels roster drains, then collapses. Self-hides
+          // when no sync is active.
+          const MeshCoreSyncProgressBar(),
           // Main content. D23: when the disconnected banner is shown
           // it consumes the system top safe-area itself (via its
           // SafeArea wrapper). The inner per-tab `GlassScaffold`

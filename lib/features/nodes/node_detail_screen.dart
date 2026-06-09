@@ -241,6 +241,16 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
     TraceRouteLogScreen.open(context, nodeNum: node.nodeNum);
   }
 
+  /// Requests on-demand telemetry of [type] from [node]. The reload control's
+  /// cooldown ring is the busy indicator, so no local busy flag is needed.
+  Future<void> _requestTelemetry(
+    BuildContext context,
+    MeshNode node,
+    TelemetryRequestType type,
+  ) async {
+    await requestNodeTelemetry(context, ref, node, type);
+  }
+
   /// Formats a one-line traceroute summary: transport + hops + SNR.
   String _formatTracerouteSummary(BuildContext context, TraceRouteLog log) {
     final l10n = context.l10n;
@@ -1228,41 +1238,82 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
         ref.watch(nodeDetectionSensorLogsProvider(nodeNum)).value?.isNotEmpty ??
         false;
 
-    final tiles = <Widget>[
-      if (hasDevice)
-        _TelemetryNavTile(
-          icon: Icons.battery_charging_full,
-          label: l10n.settingsTileDeviceMetricsTitle,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute<void>(
-              builder: (_) => DeviceMetricsLogScreen(nodeNum: nodeNum),
-            ),
-          ),
+    final tiles = <Widget>[];
+
+    // Device / Environment / Air Quality are requestable on demand. For a
+    // remote node the row is always shown with a reload control so the user
+    // can pull telemetry the node no longer broadcasts by default (firmware
+    // 2.7.13+). For My Node the row only appears when data exists and has no
+    // reload — you cannot request your own telemetry over the mesh.
+    void addRequestable({
+      required bool hasData,
+      required IconData icon,
+      required String label,
+      required TelemetryRequestType type,
+      required VoidCallback onOpen,
+    }) {
+      if (isMyNode) {
+        if (hasData) {
+          tiles.add(_TelemetryNavTile(icon: icon, label: label, onTap: onOpen));
+        }
+        return;
+      }
+      tiles.add(
+        _RequestableTelemetryTile(
+          icon: icon,
+          label: label,
+          nodeNum: nodeNum,
+          type: type,
+          hasData: hasData,
+          onOpen: hasData ? onOpen : null,
+          onRequest: () => _requestTelemetry(context, node, type),
         ),
-      if (hasEnv)
-        _TelemetryNavTile(
-          icon: Icons.thermostat,
-          label: l10n.settingsTileEnvironmentMetricsTitle,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute<void>(
-              builder: (_) => EnvironmentMetricsLogScreen(nodeNum: nodeNum),
-            ),
-          ),
+      );
+    }
+
+    addRequestable(
+      hasData: hasDevice,
+      icon: Icons.battery_charging_full,
+      label: l10n.settingsTileDeviceMetricsTitle,
+      type: TelemetryRequestType.device,
+      onOpen: () => Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => DeviceMetricsLogScreen(nodeNum: nodeNum),
         ),
-      if (hasAir)
-        _TelemetryNavTile(
-          icon: Icons.air,
-          label: l10n.settingsTileAirQualityTitle,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute<void>(
-              builder: (_) => AirQualityLogScreen(nodeNum: nodeNum),
-            ),
-          ),
+      ),
+    );
+    addRequestable(
+      hasData: hasEnv,
+      icon: Icons.thermostat,
+      label: l10n.settingsTileEnvironmentMetricsTitle,
+      type: TelemetryRequestType.environment,
+      onOpen: () => Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => EnvironmentMetricsLogScreen(nodeNum: nodeNum),
         ),
-      if (hasPosition)
+      ),
+    );
+    addRequestable(
+      hasData: hasAir,
+      icon: Icons.air,
+      label: l10n.settingsTileAirQualityTitle,
+      type: TelemetryRequestType.airQuality,
+      onOpen: () => Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => AirQualityLogScreen(nodeNum: nodeNum),
+        ),
+      ),
+    );
+
+    // Position / Traceroute / PAX / Detection are not telemetry-module
+    // requests — they keep their existing "shown only when data exists"
+    // behavior (Position has Exchange Positions; Traceroute has its own
+    // button).
+    if (hasPosition) {
+      tiles.add(
         _TelemetryNavTile(
           icon: Icons.location_on_outlined,
           label: l10n.settingsTilePositionHistoryTitle,
@@ -1273,13 +1324,19 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
             ),
           ),
         ),
-      if (hasTraceroute)
+      );
+    }
+    if (hasTraceroute) {
+      tiles.add(
         _TelemetryNavTile(
           icon: Icons.timeline,
           label: l10n.settingsTileTracerouteHistoryTitle,
           onTap: () => TraceRouteLogScreen.open(context, nodeNum: nodeNum),
         ),
-      if (hasPax)
+      );
+    }
+    if (hasPax) {
+      tiles.add(
         _TelemetryNavTile(
           icon: Icons.people_alt_outlined,
           label: l10n.settingsTilePaxCounterLogsTitle,
@@ -1290,7 +1347,10 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
             ),
           ),
         ),
-      if (hasDetection)
+      );
+    }
+    if (hasDetection) {
+      tiles.add(
         _TelemetryNavTile(
           icon: Icons.sensors,
           label: l10n.settingsTileDetectionSensorLogsTitle,
@@ -1301,7 +1361,8 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
             ),
           ),
         ),
-    ];
+      );
+    }
 
     if (tiles.isEmpty) return const SizedBox.shrink();
 
@@ -1936,6 +1997,154 @@ class _TelemetryNavTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// A telemetry tile that can be requested on demand. Mirrors
+/// [_TelemetryNavTile] but adds a trailing reload control that pulls fresh
+/// telemetry of [type] from the node. Tapping the row body opens the log
+/// screen only when [onOpen] is non-null (i.e. data already exists);
+/// otherwise the row is request-only.
+class _RequestableTelemetryTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final int nodeNum;
+  final TelemetryRequestType type;
+  final bool hasData;
+  final VoidCallback? onOpen;
+  final VoidCallback onRequest;
+
+  const _RequestableTelemetryTile({
+    required this.icon,
+    required this.label,
+    required this.nodeNum,
+    required this.type,
+    required this.hasData,
+    required this.onOpen,
+    required this.onRequest,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onOpen,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacing16,
+            vertical: AppTheme.spacing4,
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 20, color: context.textSecondary),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: context.textPrimary,
+                  ),
+                ),
+              ),
+              _TelemetryReloadButton(
+                nodeNum: nodeNum,
+                type: type,
+                tooltip: context.l10n.nodeDetailTelemetryRequestTooltip(label),
+                onPressed: onRequest,
+              ),
+              if (hasData) ...[
+                const SizedBox(width: AppTheme.spacing4),
+                Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: context.textTertiary,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Trailing reload control for [_RequestableTelemetryTile]. Watches the
+/// per-(node, type) telemetry request cooldown and renders either an idle
+/// refresh icon or a countdown ring with the remaining seconds, mirroring
+/// [_TracerouteButton]'s cooldown affordance.
+class _TelemetryReloadButton extends ConsumerWidget {
+  final int nodeNum;
+  final TelemetryRequestType type;
+  final String tooltip;
+  final VoidCallback onPressed;
+
+  const _TelemetryReloadButton({
+    required this.nodeNum,
+    required this.type,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cooldownId = CountdownNotifier.telemetryRequestId(nodeNum, type);
+    final task = ref.watch(countdownProvider)[cooldownId];
+    final cooldownRemaining = task?.remainingSeconds ?? 0;
+    final cooldownTotal =
+        task?.totalSeconds ?? CountdownNotifier.telemetryRequestSeconds;
+
+    if (cooldownRemaining > 0) {
+      return Tooltip(
+        message: context.l10n.nodeDetailTelemetryRequestCooldownTooltip(
+          cooldownRemaining,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppTheme.spacing8),
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    value: cooldownTotal > 0
+                        ? cooldownRemaining / cooldownTotal
+                        : 0,
+                    strokeWidth: 2,
+                    color: context.accentColor.withValues(alpha: 0.4),
+                    backgroundColor: context.textTertiary.withValues(
+                      alpha: 0.15,
+                    ),
+                  ),
+                ),
+                Text(
+                  '$cooldownRemaining',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w600,
+                    color: context.textTertiary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return IconButton(
+      onPressed: onPressed,
+      icon: Icon(Icons.refresh, color: context.textSecondary, size: 20),
+      tooltip: tooltip,
+      padding: const EdgeInsets.all(AppTheme.spacing8),
+      constraints: const BoxConstraints(),
     );
   }
 }

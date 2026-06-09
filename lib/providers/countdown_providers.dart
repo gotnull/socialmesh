@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/logging.dart';
 import '../core/navigation.dart';
 import '../core/transport.dart';
+import '../models/mesh_models.dart';
 import '../features/telemetry/traceroute_log_screen.dart';
 import '../providers/app_providers.dart';
 import '../providers/telemetry_providers.dart';
@@ -33,6 +34,9 @@ enum CountdownType {
 
   /// A file transfer in progress (sending or receiving chunks).
   fileTransfer,
+
+  /// An on-demand telemetry request waiting for the node's reply.
+  telemetryRequest,
 }
 
 /// Immutable snapshot of a single active countdown.
@@ -112,6 +116,11 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
 
   /// File transfer: negotiation timeout (awaiting accept/decline).
   static const fileTransferNegotiationSeconds = 60;
+
+  /// On-demand telemetry request cooldown. Throttles repeat taps on the
+  /// per-type reload control so we don't flood mesh airtime; replies
+  /// usually arrive within a few seconds but hop count can stretch this.
+  static const telemetryRequestSeconds = 30;
 
   /// Canonical countdown id for the device reboot operation.
   static const deviceRebootId = 'device_reboot';
@@ -268,6 +277,28 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
     cancelCountdown(fileTransferId(fileIdHex));
   }
 
+  /// Convenience: start a telemetry request cooldown for [nodeNum] / [type].
+  ///
+  /// Keyed per (node, type) so the three requestable metric types each have
+  /// their own reload cooldown ring. No completion action — the reply is
+  /// ingested asynchronously and updates the telemetry tiles on its own.
+  void startTelemetryRequestCountdown(int nodeNum, TelemetryRequestType type) {
+    final nodes = ref.read(nodesProvider);
+    final node = nodes[nodeNum];
+    final displayName =
+        node?.displayName ?? NodeDisplayNameResolver.defaultName(nodeNum);
+
+    final l10n = safeL10n();
+
+    startCountdown(
+      id: telemetryRequestId(nodeNum, type),
+      label: l10n.countdownRequestingTelemetry(displayName),
+      totalSeconds: telemetryRequestSeconds,
+      type: CountdownType.telemetryRequest,
+      targetNodeNum: nodeNum,
+    );
+  }
+
   /// Cancel and remove a countdown by [id].
   void cancelCountdown(String id) {
     if (!state.containsKey(id)) return;
@@ -314,6 +345,10 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
 
   /// Build the canonical id for a file transfer countdown.
   static String fileTransferId(String fileIdHex) => 'file_transfer_$fileIdHex';
+
+  /// Build the canonical id for a telemetry request countdown.
+  static String telemetryRequestId(int nodeNum, TelemetryRequestType type) =>
+      'telemetry_${type.name}_$nodeNum';
 
   // -----------------------------------------------------------------------
   // Internal tick logic
@@ -366,6 +401,10 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
         _onPositionBroadcastComplete(task);
       case CountdownType.fileTransfer:
         // No completion action needed — transfer state drives the UI.
+        break;
+      case CountdownType.telemetryRequest:
+        // No completion action — the reply (if any) arrives asynchronously
+        // and updates the telemetry tiles via the inbound logger.
         break;
     }
   }

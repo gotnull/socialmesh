@@ -135,6 +135,8 @@ class _CountdownRow extends StatelessWidget {
         return Icons.location_on;
       case CountdownType.fileTransfer:
         return Icons.swap_vert;
+      case CountdownType.telemetryRequest:
+        return Icons.insights;
     }
   }
 

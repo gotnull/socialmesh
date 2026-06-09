@@ -11311,6 +11311,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreShellDefaultDeviceNameFull => 'Dispositivo MeshCore';
 
   @override
+  String get meshcoreSyncingData => 'Sincronizando dados';
+
+  @override
   String get meshcoreShellDefaultInitials => 'MC';
 
   @override
@@ -14024,6 +14027,31 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get nodeDetailTracerouteComplete => 'Traceroute concluído';
+
+  @override
+  String nodeDetailTelemetryRequestTooltip(String type) {
+    return 'Solicitar $type';
+  }
+
+  @override
+  String nodeDetailTelemetryRequestCooldownTooltip(int seconds) {
+    return 'Cooldown da telemetria: ${seconds}s';
+  }
+
+  @override
+  String nodeDetailTelemetryRequested(String type, String name) {
+    return 'Solicitado $type de $name';
+  }
+
+  @override
+  String nodeDetailTelemetryRequestCooldown(int seconds) {
+    return 'Cooldown da telemetria ${seconds}s';
+  }
+
+  @override
+  String nodeDetailTelemetryRequestFailed(String error) {
+    return 'Falha ao solicitar telemetria: $error';
+  }
 
   @override
   String nodeDetailTracerouteSummaryRfDirect(String snr) {
@@ -36689,6 +36717,11 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get countdownRequestingPositions =>
       'Solicitando posições da rede mesh';
+
+  @override
+  String countdownRequestingTelemetry(String displayName) {
+    return 'Solicitando telemetria de $displayName';
+  }
 
   @override
   String get countdownBroadcastingPosition =>

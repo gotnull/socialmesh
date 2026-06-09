@@ -227,7 +227,7 @@ class MeshCoreCommands {
   /// subtype — only `MeshCoreStatsType.radio` (1) is consumed in
   /// this slice; CORE/PACKETS subtypes are intentionally deferred.
   /// Available on companion firmware v8 and newer; SocialMesh's
-  /// pinned firmware (v1.15.0 / ver_code 11) is well past that gate.
+  /// pinned firmware (v1.16.0 / ver_code 13) is well past that gate.
   static const int getStats = 0x38;
 
   /// D47-A: write per-device auto-add config. Wire payload:
@@ -240,6 +240,13 @@ class MeshCoreCommands {
   /// Response: `RESP_CODE_AUTO_ADD_CONFIG (0x19)` with a single
   /// flags byte.
   static const int getAutoAddConfig = 0x3B;
+
+  /// Inject a pre-built raw LoRa packet. Wire payload:
+  /// `[0x41][priority:1B][packet bytes…]`. New in companion firmware
+  /// v1.16.0 / ver_code 13. Reserved opcode: SocialMesh does not yet
+  /// build a send path for it (no UI surface needs raw injection).
+  /// Tracked as a parity gap in MESHCORE_OPEN_PARITY_AUDIT.md.
+  static const int sendRawPacket = 0x41;
 }
 
 /// MeshCore response codes (device -> app, 0x00-0x7F).

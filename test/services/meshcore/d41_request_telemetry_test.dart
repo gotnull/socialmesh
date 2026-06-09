@@ -112,7 +112,7 @@ Uint8List _voltage405LppBody() => Uint8List.fromList([1, 116, 0x01, 0x95]);
 
 void main() {
   group('D41-A: requestTelemetry() integration', () {
-    test('outbound wire is [0x32][32 B pubkey][0x03][0x00]', () async {
+    test('outbound wire is [0x32][32 B pubkey][0x03][0x00 x4]', () async {
       final tx = _RecordingTransport();
       addTearDown(tx.dispose);
       final session = MeshCoreSession(tx);
@@ -125,13 +125,16 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       // Outbound frame is the CMD_SEND_BINARY_REQ wrapping
-      // [pubkey][0x03][0x00].
+      // [pubkey][0x03][4-byte LE permission mask, all-zero = request all].
       expect(tx.sent, hasLength(1));
       final sentFrame = MeshCoreFrame.fromBytes(tx.sent.single);
       expect(sentFrame.command, MeshCoreCommands.sendBinaryReq);
-      expect(sentFrame.payload.length, 32 + 2);
+      expect(sentFrame.payload.length, 32 + 5);
       expect(sentFrame.payload.sublist(0, 32), equals(pubKey));
-      expect(sentFrame.payload.sublist(32), equals([0x03, 0x00]));
+      expect(
+        sentFrame.payload.sublist(32),
+        equals([0x03, 0x00, 0x00, 0x00, 0x00]),
+      );
 
       // Let the helper complete cleanly so the teardown doesn't hang on
       // its in-flight latch.

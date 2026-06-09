@@ -201,3 +201,107 @@ Future<bool> sendNodeTraceroute(
     return false;
   }
 }
+
+/// Localized display name for a requestable telemetry [type], reused for
+/// snackbar copy and reload tooltips so the wording matches the tile labels.
+String telemetryRequestTypeLabel(
+  BuildContext context,
+  TelemetryRequestType type,
+) {
+  final l10n = context.l10n;
+  switch (type) {
+    case TelemetryRequestType.device:
+      return l10n.settingsTileDeviceMetricsTitle;
+    case TelemetryRequestType.environment:
+      return l10n.settingsTileEnvironmentMetricsTitle;
+    case TelemetryRequestType.airQuality:
+      return l10n.settingsTileAirQualityTitle;
+  }
+}
+
+/// Requests telemetry of [type] from [node]. Returns true on success, false
+/// when the per-type cooldown blocks the send or the device is disconnected.
+/// The reload control's cooldown ring is the canonical "in progress"
+/// indicator, so callers do not need their own busy flag.
+Future<bool> requestNodeTelemetry(
+  BuildContext context,
+  WidgetRef ref,
+  MeshNode node,
+  TelemetryRequestType type,
+) async {
+  final cooldownNotifier = ref.read(countdownProvider.notifier);
+  final cooldownId = CountdownNotifier.telemetryRequestId(node.nodeNum, type);
+  final active = ref.read(countdownProvider)[cooldownId];
+  if (active != null && active.remainingSeconds > 0) {
+    AppLogging.telemetry(
+      '[NodeActions] telemetry request denied - cooldown active '
+      'nodeNum=${node.nodeNum} type=${type.name} '
+      'remaining=${active.remainingSeconds}s',
+    );
+    if (context.mounted) {
+      showWarningSnackBar(
+        context,
+        context.l10n.nodeDetailTelemetryRequestCooldown(
+          active.remainingSeconds,
+        ),
+      );
+    }
+    return false;
+  }
+
+  final connectionState = ref.read(connectionStateProvider);
+  final isConnected = connectionState.maybeWhen(
+    data: (state) => state == DeviceConnectionState.connected,
+    orElse: () => false,
+  );
+  if (!isConnected) {
+    AppLogging.telemetry(
+      '[NodeActions] telemetry request denied - not connected '
+      'nodeNum=${node.nodeNum} type=${type.name}',
+    );
+    if (context.mounted) {
+      showErrorSnackBar(context, context.l10n.nodeDetailTracerouteNotConnected);
+    }
+    return false;
+  }
+
+  final typeLabel = context.mounted
+      ? telemetryRequestTypeLabel(context, type)
+      : type.name;
+
+  AppLogging.telemetry(
+    '[NodeActions] telemetry requested nodeNum=${node.nodeNum} '
+    'type=${type.name}',
+  );
+
+  final protocol = ref.read(protocolServiceProvider);
+  try {
+    await protocol.requestTelemetry(node.nodeNum, type: type);
+    cooldownNotifier.startTelemetryRequestCountdown(node.nodeNum, type);
+    AppLogging.telemetry(
+      '[NodeActions] telemetry request sent nodeNum=${node.nodeNum} '
+      'type=${type.name}',
+    );
+    if (context.mounted) {
+      showSuccessSnackBar(
+        context,
+        context.l10n.nodeDetailTelemetryRequested(typeLabel, node.displayName),
+      );
+    }
+    return true;
+  } catch (e, st) {
+    AppLogging.telemetry(
+      '[NodeActions] telemetry request failed nodeNum=${node.nodeNum} '
+      'type=${type.name} error=$e\n$st',
+    );
+    if (context.mounted) {
+      if (!maybeShowTxBlockedSnackBar(context, e)) {
+        showErrorSnackBar(
+          context,
+          context.l10n.nodeDetailTelemetryRequestFailed(e.toString()),
+        );
+      }
+    }
+    return false;
+  }
+}
