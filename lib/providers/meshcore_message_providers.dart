@@ -821,7 +821,16 @@ class MeshCoreConversationsNotifier
     // only, no persistence). Done before conversation matching so
     // the contacts list updates even when no conversation has been
     // created yet for this sender.
-    if (parsed.snrQuarter != null) {
+    //
+    // Only attribute SNR when the message was received directly. The
+    // firmware path_len byte is 0 for a direct (0-relay) reception,
+    // 1..N when the message was repeated N times, and 0xFF when the
+    // path is unknown / not yet established. For a repeated or
+    // unknown-path message the measured SNR belongs to the last
+    // repeater, not the sending contact, so attributing it would show
+    // a meaningless signal on the contact. Mirrors the Meshtastic
+    // direct-RF gate on rxRssi/rxSnr.
+    if (parsed.snrQuarter != null && parsed.pathLen == 0) {
       ref
           .read(meshCoreContactsProvider.notifier)
           .recordSnrFromPrefix(parsed.senderPrefixHex, parsed.snrQuarter!);

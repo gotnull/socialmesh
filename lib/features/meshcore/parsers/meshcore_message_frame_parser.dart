@@ -51,8 +51,10 @@ class MeshCoreChannelMessageFrame {
   /// Channel slot 0..7.
   final int channelIndex;
 
-  /// LoRa path length, or `0xFF` if firmware reports the message took
-  /// the direct (non-flood) path.
+  /// Firmware LoRa path-length byte: `0` = received directly (0 relays),
+  /// `1..N` = repeated through N relays, `0xFF` = path unknown / not yet
+  /// established. The measured SNR is the sender's own signal only when
+  /// this is `0`; otherwise it belongs to the last repeater.
   final int pathLen;
 
   /// `TXT_TYPE_*` byte. Currently only `TXT_TYPE_PLAIN` is rendered.
@@ -87,6 +89,10 @@ class MeshCoreContactMessageFrame {
   /// prefix. Always exactly 12 chars.
   final String senderPrefixHex;
 
+  /// Firmware LoRa path-length byte: `0` = received directly (0 relays),
+  /// `1..N` = repeated through N relays, `0xFF` = path unknown / not yet
+  /// established. SNR may only be attributed to the sending contact when
+  /// this is `0`.
   final int pathLen;
   final int txtType;
   final DateTime timestamp;

@@ -46,8 +46,14 @@ void main() {
       ];
 
       for (final target in expectedTargets) {
+        // TraceRouteLogScreen navigation is centralized through its
+        // .open(context) factory (a global, no-nodeNum launch from the
+        // hub); the others are pushed via their const constructor.
+        final snippet = target == 'TraceRouteLogScreen'
+            ? 'TraceRouteLogScreen.open('
+            : 'const $target(';
         expect(
-          source.contains('const $target('),
+          source.contains(snippet),
           true,
           reason:
               'Hub must expose a tile that navigates to $target so that '

@@ -105,7 +105,7 @@ void main() {
       final payload = _v3ChannelPayload(
         snrQuarter: 36, // SNR = 9 dB
         channelIndex: 0,
-        pathLen: 0xFF, // direct
+        pathLen: 0xFF, // path unknown / not yet established
         txtType: 0, // TXT_TYPE_PLAIN
         timestamp: 1_700_000_000,
         text: 'sim bridge test',

@@ -62,12 +62,16 @@ void main() {
     test('scopes every per-node log screen to the current node', () {
       // Each per-node screen must be pushed with the current nodeNum so
       // users see only that node's history, not the global log.
+      // TraceRouteLogScreen navigation is centralized through
+      // TraceRouteLogScreen.open(context, nodeNum:) (see the .open
+      // factory). The node-scoping invariant is identical — the current
+      // nodeNum is still threaded through.
       const expectedLaunches = <String>[
         'DeviceMetricsLogScreen(nodeNum: nodeNum)',
         'EnvironmentMetricsLogScreen(nodeNum: nodeNum)',
         'AirQualityLogScreen(nodeNum: nodeNum)',
         'PositionLogScreen(initialNodeNum: nodeNum)',
-        'TraceRouteLogScreen(nodeNum: nodeNum)',
+        'TraceRouteLogScreen.open(context, nodeNum: nodeNum)',
         'PaxCounterLogScreen(nodeNum: nodeNum)',
         'DetectionSensorLogScreen(nodeNum: nodeNum)',
       ];
