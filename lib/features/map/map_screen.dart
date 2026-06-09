@@ -3938,7 +3938,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   Future<void> _sendTracerouteFromMap(MeshNode node) async {
     final cooldownRemaining = ref
         .read(countdownProvider.notifier)
-        .tracerouteRemaining(node.nodeNum);
+        .globalTracerouteRemaining;
     if (cooldownRemaining > 0) {
       showInfoSnackBar(
         context,

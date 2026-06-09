@@ -2010,9 +2010,7 @@ class _TracerouteButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final countdowns = ref.watch(countdownProvider);
-    final traceId = CountdownNotifier.tracerouteId(node.nodeNum);
-    final cooldownTask = countdowns[traceId];
+    final cooldownTask = ref.watch(activeTracerouteProvider);
     final cooldownRemaining = cooldownTask?.remainingSeconds ?? 0;
     final cooldownTotal =
         cooldownTask?.totalSeconds ??

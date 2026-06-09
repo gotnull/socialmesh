@@ -136,7 +136,7 @@ Future<bool> sendNodeTraceroute(
   MeshNode node,
 ) async {
   final cooldownNotifier = ref.read(countdownProvider.notifier);
-  final cooldownRemaining = cooldownNotifier.tracerouteRemaining(node.nodeNum);
+  final cooldownRemaining = cooldownNotifier.globalTracerouteRemaining;
   if (cooldownRemaining > 0) {
     AppLogging.telemetry(
       '[NodeActions] traceroute denied - cooldown active '

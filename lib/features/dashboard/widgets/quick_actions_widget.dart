@@ -34,19 +34,11 @@ class _QuickActionsContentState extends ConsumerState<QuickActionsContent>
       orElse: () => false,
     );
 
-    // Watch global countdown state for traceroute cooldown.
-    // Any active traceroute countdown (regardless of which node) disables the button.
-    final countdowns = ref.watch(countdownProvider);
-    final activeTraceroute = countdowns.values
-        .where((t) => t.type == CountdownType.traceroute)
-        .toList();
-    final hasTracerouteCooldown = activeTraceroute.isNotEmpty;
+    // The device rate-limits traceroute globally (one per 30s regardless of
+    // target), so any active traceroute countdown disables the button.
+    final tracerouteTask = ref.watch(activeTracerouteProvider);
+    final hasTracerouteCooldown = tracerouteTask != null;
     final tracerouteEnabled = isConnected && !hasTracerouteCooldown;
-
-    // Pick the first active traceroute for the cooldown button display
-    final tracerouteTask = hasTracerouteCooldown
-        ? activeTraceroute.first
-        : null;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -74,7 +66,7 @@ class _QuickActionsContentState extends ConsumerState<QuickActionsContent>
               ),
               const SizedBox(width: AppTheme.spacing8),
               Expanded(
-                child: hasTracerouteCooldown && tracerouteTask != null
+                child: tracerouteTask != null
                     ? _TracerouteCooldownButton(
                         remaining: tracerouteTask.remainingSeconds,
                         total: tracerouteTask.totalSeconds,

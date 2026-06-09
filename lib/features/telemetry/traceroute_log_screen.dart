@@ -65,7 +65,7 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
 
     final cooldownRemaining = ref
         .read(countdownProvider.notifier)
-        .tracerouteRemaining(nodeNum);
+        .globalTracerouteRemaining;
     if (_isSendingTraceroute || cooldownRemaining > 0) return;
 
     final connectionState = ref.read(connectionStateProvider);
@@ -230,13 +230,9 @@ class _TraceRouteLogScreenState extends ConsumerState<TraceRouteLogScreen>
     final logsAsync = widget.nodeNum != null
         ? ref.watch(nodeTraceRouteLogsProvider(widget.nodeNum!))
         : ref.watch(traceRouteLogsProvider);
-    final countdowns = widget.nodeNum != null
-        ? ref.watch(countdownProvider)
-        : const <String, CountdownTask>{};
-    final traceId = widget.nodeNum != null
-        ? CountdownNotifier.tracerouteId(widget.nodeNum!)
+    final cooldownTask = widget.nodeNum != null
+        ? ref.watch(activeTracerouteProvider)
         : null;
-    final cooldownTask = traceId != null ? countdowns[traceId] : null;
     final cooldownRemaining = cooldownTask?.remainingSeconds ?? 0;
     final cooldownTotal =
         cooldownTask?.totalSeconds ??

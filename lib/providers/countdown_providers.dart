@@ -283,13 +283,19 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
     _disposeTimer();
   }
 
-  /// Whether a traceroute countdown is active for [nodeNum].
-  bool isTracerouteActive(int nodeNum) =>
-      state.containsKey(tracerouteId(nodeNum));
+  /// The single active traceroute countdown, if any. Traceroute is globally
+  /// rate-limited by the device (one request per 30s regardless of target),
+  /// so at most one is ever active.
+  CountdownTask? get activeTracerouteTask {
+    for (final task in state.values) {
+      if (task.type == CountdownType.traceroute) return task;
+    }
+    return null;
+  }
 
-  /// Remaining seconds for a traceroute to [nodeNum], or 0 if none active.
-  int tracerouteRemaining(int nodeNum) =>
-      state[tracerouteId(nodeNum)]?.remainingSeconds ?? 0;
+  /// Remaining seconds on the global traceroute cooldown, or 0 if none active.
+  int get globalTracerouteRemaining =>
+      activeTracerouteTask?.remainingSeconds ?? 0;
 
   /// Whether a position request countdown is currently active.
   bool get isPositionRequestActive => state.containsKey(positionRequestId);
@@ -472,4 +478,16 @@ final activeCountdownListProvider = Provider<List<CountdownTask>>((ref) {
   final list = countdowns.values.toList()
     ..sort((a, b) => a.remainingSeconds.compareTo(b.remainingSeconds));
   return list;
+});
+
+/// The single active traceroute countdown across the whole app, or null.
+///
+/// Watch from any traceroute button so its cooldown ring reflects the global
+/// device rate limit, not just this node's own send.
+final activeTracerouteProvider = Provider<CountdownTask?>((ref) {
+  final countdowns = ref.watch(countdownProvider);
+  for (final task in countdowns.values) {
+    if (task.type == CountdownType.traceroute) return task;
+  }
+  return null;
 });

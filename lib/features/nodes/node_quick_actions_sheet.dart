@@ -61,7 +61,7 @@ Future<void> showNodeQuickActionsSheet(
 
   final cooldownRemaining = ref
       .read(countdownProvider.notifier)
-      .tracerouteRemaining(node.nodeNum);
+      .globalTracerouteRemaining;
 
   AppLogging.nodes(
     '[QuickActions] sheet opened nodeNum=${node.nodeNum} '
