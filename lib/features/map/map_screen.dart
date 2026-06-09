@@ -2433,12 +2433,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         },
                         onViewHistory: () {
                           final node = _selectedNode!;
-                          Navigator.push(
+                          TraceRouteLogScreen.open(
                             context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  TraceRouteLogScreen(nodeNum: node.nodeNum),
-                            ),
+                            nodeNum: node.nodeNum,
                           );
                         },
                         onShowTrack: _selectedNode!.hasPosition

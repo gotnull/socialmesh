@@ -40,6 +40,33 @@ class TraceRouteLogScreen extends ConsumerStatefulWidget {
 
   const TraceRouteLogScreen({super.key, this.nodeNum});
 
+  /// Canonical route name so we can detect "already showing history" and avoid
+  /// pushing a nested duplicate.
+  static const String routeName = 'traceroute-history';
+
+  /// Opens the history view, unless one is already on top of the navigation
+  /// stack — in which case it's a no-op. Prevents nested duplicate history
+  /// views when "View" is tapped repeatedly from traceroute notifications.
+  ///
+  /// All callers must route through here (rather than pushing the screen
+  /// directly) so the route name is set consistently; the guard only works
+  /// when the screen the user is currently on was itself opened this way.
+  static void open(BuildContext context, {int? nodeNum}) {
+    final navigator = Navigator.of(context);
+    var alreadyOnHistory = false;
+    navigator.popUntil((route) {
+      alreadyOnHistory = route.settings.name == routeName;
+      return true; // predicate true on the top route ⇒ never actually pops
+    });
+    if (alreadyOnHistory) return;
+    navigator.push(
+      MaterialPageRoute<void>(
+        settings: const RouteSettings(name: routeName),
+        builder: (_) => TraceRouteLogScreen(nodeNum: nodeNum),
+      ),
+    );
+  }
+
   @override
   ConsumerState<TraceRouteLogScreen> createState() =>
       _TraceRouteLogScreenState();

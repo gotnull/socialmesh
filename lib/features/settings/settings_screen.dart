@@ -1439,10 +1439,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           subtitle: context.l10n.settingsTileTracerouteHistorySubtitle,
           keywords: ['traceroute', 'path', 'network', 'hop', 'route'],
           section: context.l10n.settingsSectionTelemetryLogs,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const TraceRouteLogScreen()),
-          ),
+          onTap: () => TraceRouteLogScreen.open(context),
         ),
         _SearchableSettingItem(
           icon: Icons.people_alt_outlined,
@@ -3564,12 +3561,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             subtitle: context
                                 .l10n
                                 .settingsTileTracerouteHistorySubtitle,
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const TraceRouteLogScreen(),
-                              ),
-                            ),
+                            onTap: () => TraceRouteLogScreen.open(context),
                           ),
                           _SettingsTile(
                             icon: Icons.people_alt_outlined,

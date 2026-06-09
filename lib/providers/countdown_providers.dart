@@ -10,9 +10,9 @@ import '../core/navigation.dart';
 import '../core/transport.dart';
 import '../features/telemetry/traceroute_log_screen.dart';
 import '../providers/app_providers.dart';
+import '../providers/telemetry_providers.dart';
 import '../features/nodes/node_display_name_resolver.dart';
 import '../utils/snackbar.dart';
-import 'package:flutter/material.dart';
 import 'package:socialmesh/l10n/l10n_utils.dart';
 
 /// The type of countdown operation. Used for grouping, deduplication, and
@@ -373,6 +373,40 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
   void _onTracerouteComplete(CountdownTask task) {
     final targetNodeNum = task.targetNodeNum;
     if (targetNodeNum == null) return;
+    _maybeShowTracerouteReadyNotification(targetNodeNum, task.id);
+  }
+
+  /// Whether the latest traceroute run for [nodeNum] is still awaiting a
+  /// response. The global cooldown guarantees no second send within the
+  /// window, so the node's latest run is the current send: a `response == true`
+  /// run means a reply already arrived (and "Traceroute complete" was shown).
+  /// Returns true (announce) when there is no run or the query fails, so the
+  /// user is never silently left without a prompt.
+  Future<bool> tracerouteAwaitingResponse(int nodeNum) async {
+    try {
+      final repo = await ref.read(tracerouteRepositoryProvider.future);
+      final runs = await repo.listRuns(targetNodeId: nodeNum, limit: 1);
+      return runs.isEmpty || !runs.first.response;
+    } catch (e) {
+      AppLogging.app('Traceroute response check failed for $nodeNum: $e');
+      return true;
+    }
+  }
+
+  /// Shows the "results may be ready" notification only when no response has
+  /// arrived for [targetNodeNum]. If a reply already came back, the user has
+  /// seen "Traceroute complete" and a second prompt would be noise.
+  Future<void> _maybeShowTracerouteReadyNotification(
+    int targetNodeNum,
+    String taskId,
+  ) async {
+    if (!await tracerouteAwaitingResponse(targetNodeNum)) {
+      AppLogging.app(
+        'COUNTDOWN_COMPLETE id=$taskId: response already received, '
+        'skipping ready notification',
+      );
+      return;
+    }
 
     final l10n = safeL10n();
     showGlobalActionSnackBar(
@@ -381,12 +415,7 @@ class CountdownNotifier extends Notifier<Map<String, CountdownTask>> {
       onAction: () {
         final ctx = navigatorKey.currentContext;
         if (ctx == null) return;
-        Navigator.push(
-          ctx,
-          MaterialPageRoute(
-            builder: (_) => TraceRouteLogScreen(nodeNum: targetNodeNum),
-          ),
-        );
+        TraceRouteLogScreen.open(ctx, nodeNum: targetNodeNum);
       },
       type: SnackBarType.success,
       duration: const Duration(seconds: 6),

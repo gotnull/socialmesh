@@ -94,12 +94,7 @@ class TelemetryHubScreen extends StatelessWidget {
               icon: Icons.timeline,
               title: l10n.settingsTileTracerouteHistoryTitle,
               subtitle: l10n.settingsTileTracerouteHistorySubtitle,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (_) => const TraceRouteLogScreen(),
-                ),
-              ),
+              onTap: () => TraceRouteLogScreen.open(context),
             ),
             _TelemetryHubTile(
               icon: Icons.people_alt_outlined,

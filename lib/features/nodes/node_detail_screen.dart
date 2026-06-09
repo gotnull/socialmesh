@@ -238,12 +238,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
 
   void _showTracerouteHistory(BuildContext context, MeshNode node) {
     if (!mounted) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => TraceRouteLogScreen(nodeNum: node.nodeNum),
-      ),
-    );
+    TraceRouteLogScreen.open(context, nodeNum: node.nodeNum);
   }
 
   /// Formats a one-line traceroute summary: transport + hops + SNR.
@@ -1282,12 +1277,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
         _TelemetryNavTile(
           icon: Icons.timeline,
           label: l10n.settingsTileTracerouteHistoryTitle,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute<void>(
-              builder: (_) => TraceRouteLogScreen(nodeNum: nodeNum),
-            ),
-          ),
+          onTap: () => TraceRouteLogScreen.open(context, nodeNum: nodeNum),
         ),
       if (hasPax)
         _TelemetryNavTile(
