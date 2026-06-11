@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (test hardening wave)
+
+- ProtocolService-layer regression tests for the SIP v0.2 target_node_id privacy boundary: overheard HS_HELLO/CHALLENGE/RESPONSE/ACCEPT/DECLINE frames driven through the full wire pipeline must mutate no handshake state and queue no consent request (with a correctly-targeted control frame proving the pipeline is live)
+- Airtime-budget single-accounting tests at the ProtocolService boundary: the gated send path deducts the wire size exactly once, the pre-accounted path deducts nothing, and an exhausted budget puts zero bytes on the air
+- Message identity dedup pins: local messages (NULL packet_id) replace by stable id and never duplicate on re-save; distinct instances with the same packet identity collapse via the unique index; distinct local sends are never falsely deduped
+
+### Changed (cleanup wave)
+
+- The duplicated find-then-upload share core (fingerprint dedup + Firestore upload-or-reuse) for automations and widgets collapsed into one `SharedContentUploader` in `lib/services/share/`, with the fingerprint contract pinned by unit tests; channel sharing keeps its separate crypto-service flow by design
+- `MeshNodeBrain` moved from the onboarding feature to `lib/core/widgets/`, fixing four core-imports-feature inversions (help system, what's-new sheet, help content, splash provider) and the help-center cross-feature import in one move
+- Signal detail's sign-in action now navigates via the `/account` named route instead of importing the settings feature's screen directly
+- Removed three never-referenced core widgets (`SecretGestureDetector`, `TransformableText`, `DraggableTextWidget`) and the stale `petDrawerLabel` localization key across all 8 locales (references re-verified before each removal)
+
+### Changed (UX and accessibility wave)
+
+- All close, clear-search, back, and apply-key icon buttons in the core widget library now carry localized tooltips (VoiceOver/TalkBack labels + long-press hints), cascading to every screen that uses them; new `commonClose` / `commonClear` / `commonClearSearch` / `commonBack` / `channelKeyApply` strings translated across all 8 locales
+- Device metrics chart renders a node's first sample as a dot instead of silently hiding the chart until a second sample arrives; the chart x-domain is pinned so a single sample cannot collapse the horizontal span
+- NodeDex signal-quality reds now use the theme's semantic `errorRed` alongside `successGreen`/`warningYellow` instead of a one-off hex value
+- NodeDex encounter-row node names wrap instead of truncating with an ellipsis
+- NodeBoard creation wizard title and Back/Next/Create Board buttons are localized (previously hardcoded English)
+- Remote flags admin sheet dismisses the keyboard on outside tap
+- Telemetry retention policy (1000 entries per node per metric type) documented with its cadence-dependent time window
+
+### Changed (performance hardening wave)
+
+- Map layers (node markers, range circles, heatmap, trails, connection lines, distance labels) are now cached per build input and rebuilt only when their inputs change, instead of being reconstructed wholesale on every received packet; in cluster mode the stable marker-list identity also lets the cluster layer skip a full re-cluster when nothing changed
+- Connection-lines pair loop screens candidates with a conservative haversine prefilter before the iterative Vincenty calculation (the emitted line set is provably identical, pinned by a randomized property test that also accounts for the decision function's whole-kilometer rounding)
+- Per-packet node presence updates now recompute only the changed nodes (identity diff) instead of every node; untouched nodes keep presence-object identity so per-node watchers stop rebuilding, and the 30s full refresh tick is unchanged
+- Messaging contact summaries (last message, unread count) moved to a memoized provider, so the full message scan reruns only when the message list changes, not on every node or presence tick
+- Per-packet node updates coalesce into one state emission per 250ms window behind the remote-flippable `NODE_EMISSION_COALESCING_ENABLED` flag (default on); new-node discovery, own-node updates, and position changes still commit synchronously, and per-event side effects (saves, counters, automations) are unchanged
+- Map, messaging, and nodes screens emit build-profile diagnostics behind their existing logging flags for before/after rebuild-efficiency measurement
+
+### Fixed (stability hardening wave)
+
+- NodeDex schema downgrade no longer wipes the local collection: the downgrade handler now retains the on-disk schema (encounters, regions, co-seen edges, presence timeline, and identity history survive opening the database with an older binary), and all v2-v14 migrations are idempotent so the eventual re-upgrade re-runs cleanly instead of routing into corruption recovery
+- Messages database now pins an explicit no-op downgrade handler and guards all ALTER-based migrations, so a version down-stamp followed by re-upgrade can never fail the open over existing message history
+- MeshCore frame reader `readInt8` consumed two bytes for negative values, corrupting any subsequent reads (latent: no current callsites)
+- Protocol service per-connection state (`remote admin sessions`, remote LoRa config cache, replay-log timestamps, telemetry request cooldowns) is now cleared on every `start()`, so caches from a previous radio can never leak into a new session, and expired admin sessions are evicted instead of accumulating for the app lifetime
+- Telemetry ingestion now treats non-finite (NaN/Infinity) float samples from peer firmware as absent, keeping the node's prior finite value; device metrics charts also exclude non-finite samples so one bad voltage sample cannot poison the axis range
+- On-demand telemetry requests are deduplicated at the protocol layer (30s per node per type), so non-UI callers and double-taps that race the UI countdown cannot put duplicate requests on the air
+- Telemetry and traceroute local-history write failures now reach Crashlytics via a site-keyed throttled reporter (one report per 5 minutes per site) instead of being visible only in debug logs
+- Saved TCP endpoints normalize their host at storage time (trim + lowercase, RFC 4343) so two casings of one hostname collapse to a single endpoint; legacy raw entries are cleaned on load and out-of-range stored ports fall back to the protocol default
+- A device-connection init failure during app startup is now retryable on the next initialize() trigger instead of silently killing auto-reconnect for the entire session; the retry never re-runs one-time service initialization
+- MeshCore background reconnect's unfiltered scan is now preceded by the same BLE cleanup (stop scan, drop stale system-device handles, settle delay) the Meshtastic path performs, fixing scans blinded by a stale GATT handle after a failed direct connect
+- Overlay secure sessions handle AEAD nonce-counter exhaustion gracefully: the spent session is discarded (in-memory only) and the next outbound renegotiates fresh keys, instead of every subsequent encrypted send throwing forever
+- BLE transport disconnect now null-sets each stream subscription before awaiting its cancel, so a concurrent connect can no longer have its fresh subscriptions orphaned by a late bulk null-set
+- Orphan protocol data-subscription detection now leaves a Crashlytics breadcrumb so lifecycle violations are visible in crash reports, not only debug logs
+
 ### Added
 
 - RF vs MQTT transport indicator on message context menu (cloud icon for MQTT, cell tower icon for RF)
@@ -34,7 +82,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Google Play "device isn't compatible" on devices whose reported feature profile does not advertise all hardware features (e.g. GrapheneOS with sandboxed Google Play). Bluetooth, BLE, location, GPS, microphone, and the CameraX-injected `camera.any` features are now soft-declared (`required="false"`) in the Android manifest so the Play Store no longer filters out those installs. None of these are mandatory: the app connects over BLE or USB and runs fully offline.
+- Fatal iOS background crash (`NSInternalInconsistencyException - Sending a message before the FlutterEngine has been run`): the shake-to-report service now cancels its accelerometer subscription whenever the app leaves the foreground and resubscribes on resume, and no longer starts the 50 Hz sensor stream at all when shake-to-report is disabled
+- Peer-sent waypoint icons are validated as Unicode scalars at protocol ingestion (a surrogate half or out-of-range code point ingests as "no icon"), closing the last peer-controlled text field that previously relied on render-time guards alone against the fatal `string is not well-formed UTF-16` paragraph-builder crash
+- Remote-config watcher no longer disposes itself mid-sync: it read (not watched) the settings service it invalidates to notify watchers, and now also guards its `ref` after awaits, fixing the `Cannot use the Ref of StreamProvider<MeshConfigData?> after it has been disposed` error and the related circular-dependency provider read
+- Map tile updates now drop events that carry a non-finite camera snapshot (new `finiteCameraTileUpdateTransformer` applied to every `TileLayer`, enforced by a new `require-tile-update-transformer` lint rule), closing the residual `LatLng is not finite` path where a queued tile-update event computed with a NaN camera before the existing snap-back recovery ran
+- Google Play "device isn't compatible" on devices whose reported feature profile does not advertise all hardware features (e.g. GrapheneOS with sandboxed Google Play). Bluetooth, BLE, location, GPS, microphone, WiFi (implied required by the WiFi state permissions), touchscreen (implied required for every app by default), and the CameraX-injected `camera.any` features are now soft-declared (`required="false"`) in the Android manifest so the Play Store no longer filters out those installs. None of these are mandatory: the app connects over BLE or USB and runs fully offline.
 - Chat-bubble body font size unified to **14pt** across all three chat surfaces (MeshCore chat, SIP DM, Meshtastic messaging) for both inbound and outbound bubbles. Pre-D30, MeshCore and Meshtastic used 14pt outbound vs 15pt inbound, and SIP DM used 14pt for both — surfacing as inconsistent text rhythm in mixed-protocol conversations. **Canonical chat-body size is 14pt.** Note: commit `f3ece320`'s message text incorrectly says "15pt"; the diff in that commit is 14pt — the message is stale auto-generated text and the code outcome is what's documented here.
 - Compass widget now updates in real-time during programmatic "tap-to-north" animation (was frozen until manual gesture)
 - Measurement mode indicator text no longer clips on smaller screens

@@ -50,8 +50,14 @@ class BugReportService with WidgetsBindingObserver {
     _enabled = settings.shakeToReportEnabled;
     WidgetsBinding.instance.addObserver(this);
     AppLogging.bugReport('Initialized (enabled=$_enabled)');
-    _startListening();
+    if (_enabled) {
+      _startListening();
+    }
   }
+
+  /// Whether the accelerometer subscription is currently live.
+  @visibleForTesting
+  bool get isListening => _accelerometerSub != null;
 
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -65,7 +71,9 @@ class BugReportService with WidgetsBindingObserver {
     await settings.setShakeToReportEnabled(enabled);
     AppLogging.bugReport('Shake toggle set to $enabled');
     if (enabled) {
-      _startListening();
+      if (_appActive) {
+        _startListening();
+      }
     } else {
       await _accelerometerSub?.cancel();
       _accelerometerSub = null;
@@ -183,11 +191,20 @@ class BugReportService with WidgetsBindingObserver {
     if (_appActive == isActive) return;
     _appActive = isActive;
     if (!isActive) {
+      // Stop sensor delivery whenever the app leaves the foreground.
+      // sensors_plus queues CoreMotion callbacks onto the main dispatch
+      // queue; a block that executes after the Flutter engine stops throws
+      // a fatal NSInternalInconsistencyException.
+      _accelerometerSub?.cancel();
+      _accelerometerSub = null;
       _shakeCount = 0;
       _lastShake = DateTime.fromMillisecondsSinceEpoch(0);
       _resetTimer?.cancel();
       AppLogging.bugReport('Shake listener paused (app inactive)');
     } else {
+      if (_enabled && _accelerometerSub == null) {
+        _startListening();
+      }
       AppLogging.bugReport('Shake listener resumed');
     }
   }

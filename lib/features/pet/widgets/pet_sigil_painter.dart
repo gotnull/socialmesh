@@ -20,7 +20,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../../onboarding/widgets/mesh_node_brain.dart';
+import '../../../core/widgets/mesh_node_brain.dart';
 import '../models/pet_enums.dart';
 import 'pet_render_model.dart';
 

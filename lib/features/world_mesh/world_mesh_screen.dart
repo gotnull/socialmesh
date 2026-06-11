@@ -807,6 +807,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                     ? true
                     : _mapStyle != MapTileStyle.satellite,
                 evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
+                tileUpdateTransformer: finiteCameraTileUpdateTransformer,
               ),
               // Transparent place-name + boundary overlay above satellite
               // imagery. Sits below all mesh / node overlays. Skipped on the

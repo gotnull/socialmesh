@@ -3691,6 +3691,18 @@ class AppLocalizationsUk extends AppLocalizations {
   String get commonCancel => 'Скасувати';
 
   @override
+  String get commonBack => 'Назад';
+
+  @override
+  String get commonClose => 'Закрити';
+
+  @override
+  String get commonClearSearch => 'Очистити пошук';
+
+  @override
+  String get channelKeyApply => 'Застосувати ключ';
+
+  @override
   String get commonDelete => 'Видалити';
 
   @override
@@ -42216,9 +42228,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get meshFeedEmptyFilterDescription =>
       'Спробуйте змінити фільтр, щоб побачити більше публікацій.';
-
-  @override
-  String get petDrawerLabel => 'NodePet';
 
   @override
   String get petScreenTitle => 'NodePet';

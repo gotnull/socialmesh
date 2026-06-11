@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
-import 'package:socialmesh/features/onboarding/widgets/mesh_node_brain.dart';
+import 'package:socialmesh/core/widgets/mesh_node_brain.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
 
 /// Direction for coach mark arrows

@@ -4,7 +4,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../core/widgets/animated_mesh_node.dart';
+import 'animated_mesh_node.dart';
 
 /// Emotional states for Ico, the mesh brain advisor (icosahedron mascot)
 enum MeshBrainMood {

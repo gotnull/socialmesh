@@ -263,7 +263,7 @@ class PresenceNotifier extends Notifier<Map<int, NodePresence>> {
 
     ref.listen<Map<int, MeshNode>>(
       nodesProvider,
-      (previous, next) => _recompute(),
+      (previous, next) => _applyNodeChanges(previous, next),
     );
 
     final initial = _compute(
@@ -293,6 +293,49 @@ class PresenceNotifier extends Notifier<Map<int, NodePresence>> {
     );
   }
 
+  /// Incremental path for per-packet node updates.
+  ///
+  /// NodesNotifier replaces MeshNode instances on any field change, so
+  /// reference equality is a complete change signal. A node's presence
+  /// can change only by packet (covered here) or by time (covered by
+  /// the periodic tick), so reusing untouched NodePresence instances
+  /// between ticks is lossless up to the tick interval — the same
+  /// staleness bound the tick already imposes. Keeping instance
+  /// identity for untouched nodes is what lets per-node family
+  /// providers skip notifying their dependents.
+  void _applyNodeChanges(
+    Map<int, MeshNode>? previous,
+    Map<int, MeshNode> next,
+  ) {
+    if (previous == null) {
+      _recompute();
+      return;
+    }
+
+    final changed = <MeshNode>[];
+    for (final entry in next.entries) {
+      if (!identical(previous[entry.key], entry.value)) {
+        changed.add(entry.value);
+      }
+    }
+    final removed = <int>[];
+    for (final nodeNum in state.keys) {
+      if (!next.containsKey(nodeNum)) removed.add(nodeNum);
+    }
+    if (changed.isEmpty && removed.isEmpty) return;
+
+    final now = ref.read(presenceClockProvider)();
+    final updated = Map<int, NodePresence>.of(state);
+    for (final nodeNum in removed) {
+      updated.remove(nodeNum);
+      _lastConfidence.remove(nodeNum);
+    }
+    for (final node in changed) {
+      updated[node.nodeNum] = _computeOne(node, now, logTransitions: true);
+    }
+    state = updated;
+  }
+
   Map<int, NodePresence> _compute(
     Map<int, MeshNode> nodes,
     DateTime now, {
@@ -300,70 +343,82 @@ class PresenceNotifier extends Notifier<Map<int, NodePresence>> {
   }) {
     final next = <int, NodePresence>{};
     final seenNodes = <int>{};
-    final extendedService = ref.read(extendedPresenceServiceProvider);
-    final encounterService = ref.read(nodeEncounterServiceProvider);
 
     for (final node in nodes.values) {
-      final confidence = PresenceCalculator.fromLastHeard(
-        node.lastHeard,
-        now: now,
+      next[node.nodeNum] = _computeOne(
+        node,
+        now,
+        logTransitions: logTransitions,
       );
-      final age = node.lastHeard != null
-          ? now.difference(node.lastHeard!)
-          : null;
-      final signalQuality = _calculateSignalQuality(node);
-      final extendedInfo = extendedService.getRemotePresence(node.nodeNum);
-
-      // Get previous encounter state before recording
-      final previousEncounter = encounterService.getEncounter(node.nodeNum);
-
-      // Check if this is a "back nearby" node (>48h absence, now active)
-      final isBackNearby =
-          confidence == PresenceConfidence.active &&
-          previousEncounter != null &&
-          !_backNearbyShown.contains(node.nodeNum) &&
-          now.difference(previousEncounter.lastSeen).inHours > 48;
-
-      if (isBackNearby) {
-        _backNearbyShown.add(node.nodeNum);
-      }
-
-      // Record encounter for active nodes
-      if (confidence == PresenceConfidence.active) {
-        unawaited(encounterService.recordObservation(node.nodeNum, now: now));
-      }
-      final encounter = encounterService.getEncounter(node.nodeNum);
-
-      next[node.nodeNum] = NodePresence(
-        node: node,
-        confidence: confidence,
-        timeSinceLastHeard: age,
-        signalQuality: signalQuality,
-        extendedInfo: extendedInfo,
-        encounter: encounter,
-        isBackNearby: isBackNearby,
-      );
-
-      if (logTransitions) {
-        final previous = _lastConfidence[node.nodeNum];
-        if (previous != confidence) {
-          final lastHeardMillis = node.lastHeard?.millisecondsSinceEpoch;
-          AppLogging.nodes(
-            'PRESENCE_UPDATE node=${node.nodeNum} lastHeard=${lastHeardMillis ?? 'null'} state=${confidence.name}',
-          );
-          if (previous != null) {
-            unawaited(_handleTransition(node, previous, confidence));
-          }
-        }
-      }
-
-      _lastConfidence[node.nodeNum] = confidence;
       seenNodes.add(node.nodeNum);
     }
 
     _lastConfidence.removeWhere((nodeNum, _) => !seenNodes.contains(nodeNum));
 
     return next;
+  }
+
+  NodePresence _computeOne(
+    MeshNode node,
+    DateTime now, {
+    required bool logTransitions,
+  }) {
+    final extendedService = ref.read(extendedPresenceServiceProvider);
+    final encounterService = ref.read(nodeEncounterServiceProvider);
+
+    final confidence = PresenceCalculator.fromLastHeard(
+      node.lastHeard,
+      now: now,
+    );
+    final age = node.lastHeard != null ? now.difference(node.lastHeard!) : null;
+    final signalQuality = _calculateSignalQuality(node);
+    final extendedInfo = extendedService.getRemotePresence(node.nodeNum);
+
+    // Get previous encounter state before recording
+    final previousEncounter = encounterService.getEncounter(node.nodeNum);
+
+    // Check if this is a "back nearby" node (>48h absence, now active)
+    final isBackNearby =
+        confidence == PresenceConfidence.active &&
+        previousEncounter != null &&
+        !_backNearbyShown.contains(node.nodeNum) &&
+        now.difference(previousEncounter.lastSeen).inHours > 48;
+
+    if (isBackNearby) {
+      _backNearbyShown.add(node.nodeNum);
+    }
+
+    // Record encounter for active nodes
+    if (confidence == PresenceConfidence.active) {
+      unawaited(encounterService.recordObservation(node.nodeNum, now: now));
+    }
+    final encounter = encounterService.getEncounter(node.nodeNum);
+
+    final presence = NodePresence(
+      node: node,
+      confidence: confidence,
+      timeSinceLastHeard: age,
+      signalQuality: signalQuality,
+      extendedInfo: extendedInfo,
+      encounter: encounter,
+      isBackNearby: isBackNearby,
+    );
+
+    if (logTransitions) {
+      final previous = _lastConfidence[node.nodeNum];
+      if (previous != confidence) {
+        final lastHeardMillis = node.lastHeard?.millisecondsSinceEpoch;
+        AppLogging.nodes(
+          'PRESENCE_UPDATE node=${node.nodeNum} lastHeard=${lastHeardMillis ?? 'null'} state=${confidence.name}',
+        );
+        if (previous != null) {
+          unawaited(_handleTransition(node, previous, confidence));
+        }
+      }
+    }
+
+    _lastConfidence[node.nodeNum] = confidence;
+    return presence;
   }
 
   @visibleForTesting

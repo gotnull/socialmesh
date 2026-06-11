@@ -4,6 +4,7 @@ import 'package:flutter_map/flutter_map.dart';
 
 import 'constants.dart';
 import 'logging.dart';
+import 'safe_lat_lng.dart';
 
 /// Centralized map configuration
 class MapConfig {
@@ -52,6 +53,7 @@ class MapConfig {
       userAgentPackageName: userAgentPackageName,
       evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
       errorTileCallback: _onTileError,
+      tileUpdateTransformer: finiteCameraTileUpdateTransformer,
     );
   }
 
@@ -63,6 +65,7 @@ class MapConfig {
       userAgentPackageName: userAgentPackageName,
       evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
       errorTileCallback: _onTileError,
+      tileUpdateTransformer: finiteCameraTileUpdateTransformer,
     );
   }
 
@@ -76,6 +79,7 @@ class MapConfig {
       retinaMode: false,
       evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
       errorTileCallback: _onTileError,
+      tileUpdateTransformer: finiteCameraTileUpdateTransformer,
     );
   }
 

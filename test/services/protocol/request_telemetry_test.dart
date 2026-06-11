@@ -198,4 +198,100 @@ void main() {
       },
     );
   }
+
+  int telemetryPacketCount(_RecordingFakeTransport transport) {
+    var count = 0;
+    for (final bytes in transport.sent) {
+      final toRadio = pb.ToRadio.fromBuffer(bytes);
+      if (toRadio.hasPacket() &&
+          toRadio.packet.decoded.portnum == pn.PortNum.TELEMETRY_APP) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  test('a repeat request for the same node and type inside the cooldown is '
+      'suppressed; other nodes and types still send', () async {
+    await _withTempDirectory((dir) async {
+      final transport = _RecordingFakeTransport();
+      final protocol = await _freshProtocol(dir, transport);
+      try {
+        await protocol.handleIncomingPacket(
+          pb.FromRadio(
+            myInfo: pb.MyNodeInfo(myNodeNum: myNodeNum),
+          ).writeToBuffer(),
+        );
+
+        await protocol.requestTelemetry(
+          targetNodeNum,
+          type: TelemetryRequestType.device,
+        );
+        await protocol.requestTelemetry(
+          targetNodeNum,
+          type: TelemetryRequestType.device,
+        );
+        expect(
+          telemetryPacketCount(transport),
+          1,
+          reason:
+              'A duplicate request inside the cooldown window must not '
+              'reach the air.',
+        );
+
+        await protocol.requestTelemetry(
+          targetNodeNum,
+          type: TelemetryRequestType.environment,
+        );
+        expect(telemetryPacketCount(transport), 2);
+
+        await protocol.requestTelemetry(
+          targetNodeNum + 1,
+          type: TelemetryRequestType.device,
+        );
+        expect(telemetryPacketCount(transport), 3);
+      } finally {
+        protocol.stop();
+        await transport.dispose();
+      }
+    });
+  });
+
+  test('a fresh start() clears the cooldown (per-connection state)', () async {
+    await _withTempDirectory((dir) async {
+      final transport = _RecordingFakeTransport();
+      final protocol = await _freshProtocol(dir, transport);
+      try {
+        await protocol.handleIncomingPacket(
+          pb.FromRadio(
+            myInfo: pb.MyNodeInfo(myNodeNum: myNodeNum),
+          ).writeToBuffer(),
+        );
+
+        await protocol.requestTelemetry(
+          targetNodeNum,
+          type: TelemetryRequestType.device,
+        );
+        expect(telemetryPacketCount(transport), 1);
+
+        unawaited(protocol.start().catchError((_) {}));
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        protocol.stop();
+
+        await protocol.requestTelemetry(
+          targetNodeNum,
+          type: TelemetryRequestType.device,
+        );
+        expect(
+          telemetryPacketCount(transport),
+          2,
+          reason:
+              'Cooldown stamps belong to the previous connection and must '
+              'not suppress requests after a fresh start().',
+        );
+      } finally {
+        await transport.dispose();
+      }
+    });
+  });
 }

@@ -75,11 +75,29 @@ class MessageDatabase {
         AppLogging.storage(
           'Upgrading messages database v$oldVersion -> v$newVersion',
         );
+        // Re-runs are no-ops: after a downgrade the on-disk schema is
+        // newer than user_version, so ALTER blocks must skip columns
+        // that already exist.
+        Set<String>? cachedColumns;
+        Future<void> addColumnIfMissing(String column, String sql) async {
+          final existing = cachedColumns ??= (await db.rawQuery(
+            'PRAGMA table_info($_tableName)', // lint-allow: hardcoded-string
+          )).map((r) => r['name'] as String).toSet();
+          if (existing.contains(column)) {
+            AppLogging.storage('Migration: $column already exists, skipping');
+            return;
+          }
+          await db.execute(sql);
+          existing.add(column);
+        }
+
         if (oldVersion < 2) {
-          await db.execute(
+          await addColumnIfMissing(
+            'reply_id',
             'ALTER TABLE $_tableName ADD COLUMN reply_id INTEGER', // lint-allow: hardcoded-string
           );
-          await db.execute(
+          await addColumnIfMissing(
+            'is_emoji',
             'ALTER TABLE $_tableName ADD COLUMN is_emoji INTEGER NOT NULL DEFAULT 0', // lint-allow: hardcoded-string
           );
           AppLogging.storage('Added reply_id and is_emoji columns (v2)');
@@ -100,11 +118,16 @@ class MessageDatabase {
           );
         }
         if (oldVersion < 4) {
-          await db.execute(
+          await addColumnIfMissing(
+            'hop_count',
             'ALTER TABLE $_tableName ADD COLUMN hop_count INTEGER', // lint-allow: hardcoded-string
           );
-          await db.execute('ALTER TABLE $_tableName ADD COLUMN rx_snr REAL');
-          await db.execute(
+          await addColumnIfMissing(
+            'rx_snr',
+            'ALTER TABLE $_tableName ADD COLUMN rx_snr REAL', // lint-allow: hardcoded-string
+          );
+          await addColumnIfMissing(
+            'rx_rssi',
             'ALTER TABLE $_tableName ADD COLUMN rx_rssi INTEGER', // lint-allow: hardcoded-string
           );
           AppLogging.storage('Added hop_count, rx_snr, rx_rssi columns (v4)');
@@ -114,20 +137,6 @@ class MessageDatabase {
           // TABLE schema was ahead of the version number.  Check PRAGMA
           // table_info before each ALTER to avoid duplicate column errors
           // (which sqflite prints to the native log even when caught in Dart).
-          final existingColumns = (await db.rawQuery(
-            'PRAGMA table_info($_tableName)', // lint-allow: hardcoded-string
-          )).map((r) => r['name'] as String).toSet();
-
-          Future<void> addColumnIfMissing(String column, String sql) async {
-            if (!existingColumns.contains(column)) {
-              await db.execute(sql);
-            } else {
-              AppLogging.storage(
-                'v5 migration: $column already exists, skipping',
-              );
-            }
-          }
-
           await addColumnIfMissing(
             'sent_at',
             'ALTER TABLE $_tableName ADD COLUMN sent_at INTEGER', // lint-allow: hardcoded-string
@@ -231,20 +240,23 @@ class MessageDatabase {
           // Nullable column — legacy rows load as realAck=null (unknown),
           // which the UI renders identically to the previous "delivered"
           // state to avoid rewriting historical certainty.
-          final existingColumns = (await db.rawQuery(
-            'PRAGMA table_info($_tableName)', // lint-allow: hardcoded-string
-          )).map((r) => r['name'] as String).toSet();
-          if (!existingColumns.contains('real_ack')) {
-            await db.execute(
-              'ALTER TABLE $_tableName ADD COLUMN real_ack INTEGER', // lint-allow: hardcoded-string
-            );
-            AppLogging.storage('v10 migration: added real_ack column');
-          } else {
-            AppLogging.storage(
-              'v10 migration: real_ack already exists, skipping',
-            );
-          }
+          await addColumnIfMissing(
+            'real_ack',
+            'ALTER TABLE $_tableName ADD COLUMN real_ack INTEGER', // lint-allow: hardcoded-string
+          );
+          AppLogging.storage('v10 migration: ensured real_ack column');
         }
+      },
+      onDowngrade: (db, oldVersion, newVersion) async {
+        // Retain the on-disk schema: every shipped schema is a strict
+        // superset of older versions, and message history is
+        // unrecoverable user data. sqflite stamps user_version down
+        // after this callback, so the ALTER blocks in onUpgrade are
+        // guarded for the eventual re-upgrade.
+        AppLogging.storage(
+          'Messages database downgrade requested '
+          'v$oldVersion -> v$newVersion (schema retained)',
+        );
       },
     );
 

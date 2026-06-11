@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import '../../core/l10n/l10n_extension.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants.dart';
 import '../../core/logging.dart';
 import '../../core/widgets/qr_share_sheet.dart';
 import '../../providers/auth_providers.dart';
+import '../../services/share/shared_content_uploader.dart';
 import '../../utils/snackbar.dart';
 import 'models/widget_schema.dart';
 
@@ -45,38 +45,25 @@ Future<void> showWidgetShareSheet(
   );
 }
 
+const _uploader = SharedContentUploader(
+  collection: 'shared_widgets',
+  log: AppLogging.widgets,
+  // isPublic is forced false on export and may be flipped server-side;
+  // it must not make an otherwise-identical widget look new.
+  fingerprintIgnoredKeys: {'createdBy', 'createdAt', 'isPublic'},
+);
+
 /// Uploads widget and returns share data for QR sheet.
 Future<QrShareData> _uploadAndGetShareData(
   WidgetSchema schema,
   String userId,
 ) async {
-  // Create export data
   final exportData = _createExportData(schema);
-
-  // Check if an identical widget already exists
-  final existingId = await _findExistingWidget(userId, exportData);
-  String docId;
-
-  if (existingId != null) {
-    // Reuse existing widget
-    docId = existingId;
-    AppLogging.widgets(
-      '[WidgetShare] Reusing existing widget "${schema.name}" with ID $docId',
-    );
-  } else {
-    // Upload new widget to Firestore shared_widgets collection
-    final docRef = await FirebaseFirestore.instance
-        .collection('shared_widgets')
-        .add({
-          ...exportData,
-          'createdBy': userId,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-    docId = docRef.id;
-    AppLogging.widgets(
-      '[WidgetShare] Uploaded widget "${schema.name}" with ID $docId',
-    );
-  }
+  final docId = await _uploader.uploadOrReuse(
+    userId: userId,
+    exportData: exportData,
+    contentName: schema.name,
+  );
 
   // Generate URLs
   final shareUrl = AppUrls.shareWidgetUrl(docId);
@@ -100,55 +87,4 @@ Map<String, dynamic> _createExportData(WidgetSchema schema) {
   exportData['isPublic'] = false;
 
   return exportData;
-}
-
-/// Create a fingerprint from export data to detect duplicates.
-String _createFingerprintFromStoredData(Map<String, dynamic> exportData) {
-  final data = Map<String, dynamic>.from(exportData);
-  data.remove('createdBy');
-  data.remove('createdAt');
-  data.remove('isPublic');
-
-  final sortedKeys = data.keys.toList()..sort();
-  final buffer = StringBuffer();
-  for (final key in sortedKeys) {
-    buffer.write('$key:${data[key]}|');
-  }
-
-  return buffer.toString().hashCode.toRadixString(16);
-}
-
-/// Check if an identical widget already exists in the user's shared_widgets.
-Future<String?> _findExistingWidget(
-  String userId,
-  Map<String, dynamic> exportData,
-) async {
-  final fingerprint = _createFingerprintFromStoredData(exportData);
-  final name = exportData['name'] as String?;
-
-  final query = FirebaseFirestore.instance
-      .collection('shared_widgets')
-      .where('createdBy', isEqualTo: userId)
-      .where('name', isEqualTo: name)
-      .limit(10);
-
-  try {
-    final snapshot = await query.get();
-
-    for (final doc in snapshot.docs) {
-      final storedData = doc.data();
-      final storedFingerprint = _createFingerprintFromStoredData(storedData);
-
-      if (storedFingerprint == fingerprint) {
-        AppLogging.widgets(
-          '[WidgetShare] Found existing widget "$name" with ID ${doc.id}',
-        );
-        return doc.id;
-      }
-    }
-  } catch (e) {
-    AppLogging.widgets('[WidgetShare] Error checking for duplicates: $e');
-  }
-
-  return null;
 }

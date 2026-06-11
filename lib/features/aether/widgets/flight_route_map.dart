@@ -110,6 +110,7 @@ class FlightRouteMap extends StatelessWidget {
                 userAgentPackageName: MapConfig.userAgentPackageName,
                 retinaMode: MapConfig.isMapboxActive,
                 evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
+                tileUpdateTransformer: finiteCameraTileUpdateTransformer,
               ),
 
               // Route arc line

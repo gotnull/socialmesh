@@ -16,7 +16,7 @@ import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/search_filter_header.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/status_filter_chip.dart';
-import '../../../features/onboarding/widgets/mesh_node_brain.dart';
+import '../../../core/widgets/mesh_node_brain.dart';
 import '../../../providers/help_article_providers.dart';
 import '../../../providers/help_providers.dart';
 import '../../../services/haptic_service.dart';

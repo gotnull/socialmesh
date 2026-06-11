@@ -4883,6 +4883,22 @@
     "@commonCancel": {
         "description": "Label for a Cancel button."
     },
+    "commonBack": "Back",
+    "@commonBack": {
+        "description": "Label for a wizard / stepper Back button."
+    },
+    "commonClose": "Close",
+    "@commonClose": {
+        "description": "Tooltip / accessibility label for a Close button."
+    },
+    "commonClearSearch": "Clear search",
+    "@commonClearSearch": {
+        "description": "Tooltip / accessibility label for clearing a search field."
+    },
+    "channelKeyApply": "Apply key",
+    "@channelKeyApply": {
+        "description": "Tooltip for confirming a manually entered channel encryption key."
+    },
     "commonDelete": "Delete",
     "@commonDelete": {
         "description": "Label for a Delete button."
@@ -55756,10 +55772,6 @@
     "meshFeedEmptyFilterDescription": "Try changing the filter to see more posts.",
     "@meshFeedEmptyFilterDescription": {
         "description": "Description shown when no posts match the active filter."
-    },
-    "petDrawerLabel": "NodePet",
-    "@petDrawerLabel": {
-        "description": "Drawer / navigation rail label for the NodePet feature."
     },
     "petScreenTitle": "NodePet",
     "@petScreenTitle": {

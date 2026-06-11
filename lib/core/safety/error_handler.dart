@@ -364,6 +364,35 @@ class AppErrorHandler {
     _reportToCrashlytics(error, stack, reason: context);
   }
 
+  static final Map<String, DateTime> _throttledReportLastAt = {};
+
+  /// Report a non-fatal error at most once per [window] for a given [key].
+  ///
+  /// Keys identify a call site, not a data item, so a persistent failure
+  /// firing on a per-event hot path (for example a SQLite write error on
+  /// every node update) collapses to one Crashlytics report per window
+  /// instead of a flood. Suppressed reports are not queued; the next
+  /// occurrence after the window passes through.
+  ///
+  /// Returns true when the report was admitted, false when suppressed.
+  static bool reportErrorThrottled(
+    Object error,
+    StackTrace? stack, {
+    required String key,
+    String? context,
+    Duration window = const Duration(minutes: 5),
+  }) {
+    final now = DateTime.now();
+    final last = _throttledReportLastAt[key];
+    if (last != null && now.difference(last) < window) return false;
+    _throttledReportLastAt[key] = now;
+    reportError(error, stack, context: context);
+    return true;
+  }
+
+  @visibleForTesting
+  static void resetThrottleStateForTest() => _throttledReportLastAt.clear();
+
   /// Report error to Crashlytics with context.
   static void _reportToCrashlytics(
     Object error,

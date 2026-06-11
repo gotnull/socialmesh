@@ -234,6 +234,46 @@ void main() {
     },
   );
 
+  test('incoming waypoint with a non-scalar icon ingests as no icon', () async {
+    await _withTempDirectory((dir) async {
+      final transport = _CapturingTransport();
+      final protocol = await build(dir, transport);
+
+      final events = <MeshWaypointEvent>[];
+      final sub = protocol.waypointStream.listen(events.add);
+
+      // 0xD800 is an unpaired UTF-16 high surrogate; 0x110000 is beyond
+      // the Unicode range. Either would form malformed UTF-16 if rendered.
+      var packetId = 10;
+      for (final badIcon in [0xD800, 0x110000]) {
+        final waypoint = pb.Waypoint()
+          ..id = packetId
+          ..latitudeI = (51.5 * 1e7).round()
+          ..longitudeI = (-0.12 * 1e7).round()
+          ..name = 'Bad icon'
+          ..icon = badIcon;
+        final data = pb.Data()
+          ..portnum = pn.PortNum.WAYPOINT_APP
+          ..payload = waypoint.writeToBuffer();
+        final packet = pb.MeshPacket()
+          ..from = 0x99
+          ..to = 0xFFFFFFFF
+          ..id = packetId++
+          ..decoded = data;
+        final frame = pb.FromRadio()..packet = packet;
+        await protocol.handleIncomingPacket(frame.writeToBuffer());
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+
+      expect(events, hasLength(2));
+      expect(events[0].icon, 0);
+      expect(events[1].icon, 0);
+
+      await sub.cancel();
+      protocol.stop();
+    });
+  });
+
   test('incoming waypoint with expire == 1 is flagged as a delete', () async {
     await _withTempDirectory((dir) async {
       final transport = _CapturingTransport();

@@ -20,6 +20,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import '../../../core/logging.dart';
 import 'overlay_secure_codec.dart';
@@ -190,6 +191,22 @@ class OverlaySecureSession {
   // the other; the helpers below resolve direction by role.
   int _txSeq = 0;
   final _ReplayWindow _rxWindow = _ReplayWindow();
+
+  /// Highest sequence number the u32 nonce field can carry. Reusing a
+  /// deterministic nonce under the same key is catastrophic for the
+  /// AEAD, so the counter must never wrap; at exhaustion the session
+  /// is discarded and the next outbound renegotiates fresh keys.
+  static const int maxTxSeq = 0xFFFFFFFF;
+
+  /// Whether the outbound counter is spent. [wrap] throws past this
+  /// point; callers should drop the session instead of sending.
+  bool get isSeqExhausted => _txSeq > maxTxSeq;
+
+  /// Test-only: position the outbound counter to exercise exhaustion.
+  @visibleForTesting
+  void debugSetTxSeq(int value) {
+    _txSeq = value;
+  }
 
   OverlaySecureSession({
     required this.linkId,
@@ -392,7 +409,7 @@ class OverlaySecureSession {
       throw StateError('wrap() before session established');
     }
     final seq = _txSeq;
-    if (seq > 0xFFFFFFFF) {
+    if (seq > maxTxSeq) {
       throw StateError('wrap() seq counter exhausted (u32)');
     }
     _txSeq = seq + 1;

@@ -293,6 +293,23 @@ class AppFeatureFlags {
     }
   }
 
+  /// Whether per-packet node updates coalesce into one state emission
+  /// per short window. Structural events (new node, own node, position
+  /// change) always flush synchronously, so discovery and map latency
+  /// are unchanged; only lastHeard/RSSI/telemetry churn coalesces.
+  /// Default: true. Set `NODE_EMISSION_COALESCING_ENABLED=false` in
+  /// `.env` (or flip remotely) to restore per-event emission verbatim.
+  static bool get isNodeEmissionCoalescingEnabled {
+    try {
+      final raw = dotenv.env['NODE_EMISSION_COALESCING_ENABLED']
+          ?.toLowerCase()
+          .trim();
+      return raw != 'false' && raw != '0';
+    } catch (_) {
+      return true;
+    }
+  }
+
   /// Whether the message timeline / week view is enabled.
   /// Set `MESSAGE_TIMELINE_ENABLED=true` in `.env` to enable.
   /// Default: false — the experimental message timeline is hidden.

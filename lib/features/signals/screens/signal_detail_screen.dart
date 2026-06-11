@@ -5,7 +5,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:socialmesh/features/settings/account_subscriptions_screen.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
@@ -413,11 +412,9 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
           l10n.signalSignInRequiredToComment,
           actionLabel: l10n.signalProfile,
           onAction: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const AccountSubscriptionsScreen(),
-              ),
-            );
+            // Named route keeps this feature decoupled from the settings
+            // feature module (no cross-feature screen import).
+            Navigator.of(context).pushNamed('/account');
           },
           type: SnackBarType.warning,
         );

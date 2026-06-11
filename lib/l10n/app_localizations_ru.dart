@@ -3682,6 +3682,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get commonCancel => 'Отмена';
 
   @override
+  String get commonBack => 'Назад';
+
+  @override
+  String get commonClose => 'Закрыть';
+
+  @override
+  String get commonClearSearch => 'Очистить поиск';
+
+  @override
+  String get channelKeyApply => 'Применить ключ';
+
+  @override
   String get commonDelete => 'Удалить';
 
   @override
@@ -42204,9 +42216,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get meshFeedEmptyFilterDescription =>
       'Попробуйте изменить фильтр для просмотра других публикаций.';
-
-  @override
-  String get petDrawerLabel => 'NodePet';
 
   @override
   String get petScreenTitle => 'NodePet';

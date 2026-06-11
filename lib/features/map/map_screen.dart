@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -148,6 +149,120 @@ class _MapScreenState extends ConsumerState<MapScreen>
   // the `event=map.stale_fade.applied` log when nothing has changed
   // between frames - prevents spam on every rebuild.
   int _lastLoggedFadedCount = 0;
+
+  // Build-profile counters, logged behind the map logging flag so
+  // before/after rebuild-efficiency comparisons can be made on-device.
+  // markersReused/markersRebuilt are populated by the marker cache;
+  // connPairs counts pair evaluations in the connection-lines builder.
+  int _buildProfileCount = 0;
+  int _markersRebuiltLastBuild = 0;
+  int _markersReusedLastBuild = 0;
+  bool _markerListReusedLastBuild = false;
+  int _connPairsEvaluatedLastBuild = 0;
+
+  // ---------------------------------------------------------------
+  // Layer caches. Decorative map layers used to be reconstructed
+  // wholesale on every build, which on a busy mesh meant full marker /
+  // circle / polyline re-creation per received packet. Each cache pairs
+  // the built layer with the exact inputs it was derived from; an
+  // element-wise compare (no hashing) decides reuse, so a needed
+  // rebuild can never be skipped by a collision.
+  // ---------------------------------------------------------------
+
+  // Per-node marker cache. MeshNode instances are replaced by
+  // NodesNotifier on any field change, so identity comparison on the
+  // node (and NodeDex pin) is a complete change signal for everything
+  // the marker child renders.
+  final Map<int, _CachedNodeMarker> _markerCache = {};
+  List<Marker>? _markerListCache;
+  List<int>? _markerOrderCache;
+
+  List<_GeomSig>? _rangeCirclesSigNodes;
+  int? _rangeCirclesSigMyNodeNum;
+  Color? _rangeCirclesSigAccent;
+  Brightness? _rangeCirclesSigBrightness;
+  List<CircleMarker>? _rangeCirclesCache;
+
+  List<_GeomSig>? _heatmapSigNodes;
+  Color? _heatmapSigAccent;
+  Brightness? _heatmapSigBrightness;
+  List<CircleMarker>? _heatmapCache;
+
+  List<_GeomSig>? _trailsSigNodes;
+  List<PositionLog>? _trailsSigLogs;
+  int? _trailsSigTrackNode;
+  bool? _trailsSigShowHistory;
+  int? _trailsSigEpoch;
+  int? _trailsSigMyNodeNum;
+  Color? _trailsSigAccent;
+  Brightness? _trailsSigBrightness;
+  List<Polyline>? _trailsCache;
+
+  // Bumped whenever an in-session trail point is appended, so the
+  // trails cache observes `_nodeTrails` mutations without comparing
+  // trail contents.
+  int _trailsEpoch = 0;
+
+  List<_GeomSig>? _connLinesSigNodes;
+  double? _connLinesSigMaxKm;
+  int? _connLinesSigMyNodeNum;
+  Color? _connLinesSigAccent;
+  Brightness? _connLinesSigBrightness;
+  List<Polyline>? _connectionLinesCache;
+
+  List<_GeomSig>? _distLabelsSigNodes;
+  int? _distLabelsSigMyNodeNum;
+  Color? _distLabelsSigAccent;
+  Brightness? _distLabelsSigBrightness;
+  bool? _distLabelsSigZoomedIn;
+  List<Marker>? _distanceLabelsCache;
+
+  static List<_GeomSig> _geometrySignatureOf(List<_NodeWithPosition> nodes) {
+    return [
+      for (final n in nodes)
+        (n.node.nodeNum, n.latitude, n.longitude, n.isStale),
+    ];
+  }
+
+  static bool _geomSigEquals(List<_GeomSig>? a, List<_GeomSig> b) {
+    if (a == null) return false;
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  static bool _intListEquals(List<int> a, List<int> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  // Caches for layers whose toggle is off must not pin their last
+  // contents in memory.
+  void _releaseDisabledLayerCaches() {
+    if (!_showRangeCircles) {
+      _rangeCirclesCache = null;
+      _rangeCirclesSigNodes = null;
+    }
+    if (!_showHeatmap) {
+      _heatmapCache = null;
+      _heatmapSigNodes = null;
+    }
+    if (!_showConnectionLines) {
+      _connectionLinesCache = null;
+      _connLinesSigNodes = null;
+    }
+    if (!_showDistanceLabels) {
+      _distanceLabelsCache = null;
+      _distLabelsSigNodes = null;
+    }
+  }
+
   double _currentZoom = 14.0;
   bool _showNodeList = false;
   bool _showFilters = false;
@@ -508,6 +623,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
       }
 
       _nodeTrails[nodeNum] = trails;
+      // Make the in-place mutation observable to the trails layer cache.
+      _trailsEpoch++;
     }
   }
 
@@ -806,6 +923,19 @@ class _MapScreenState extends ConsumerState<MapScreen>
       presenceMap,
     );
 
+    _buildProfileCount++;
+    if (AppLogging.mapLoggingEnabled) {
+      AppLogging.map(
+        'event=map.build.profile build=$_buildProfileCount '
+        'nodes=${nodes.length} positioned=${nodesWithPosition.length} '
+        'markersReused=$_markersReusedLastBuild '
+        'markersRebuilt=$_markersRebuiltLastBuild '
+        'listReused=$_markerListReusedLastBuild '
+        'connPairs=$_connPairsEvaluatedLastBuild',
+      );
+    }
+    _releaseDisabledLayerCaches();
+
     // In traceroute mode, optionally show only route-related nodes
     if (_tracerouteRouteOnly && widget.tracerouteLog != null) {
       final log = widget.tracerouteLog!;
@@ -818,6 +948,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
           .where((n) => routeNodeNums.contains(n.node.nodeNum))
           .toList();
     }
+
+    // Shared geometry signature for the layer caches: computed once per
+    // build from the final filtered node list, after all filters above.
+    final geomSig = _geometrySignatureOf(nodesWithPosition);
+    final accentColor = context.accentColor;
+    final themeBrightness = Theme.of(context).brightness;
 
     // Handle initial node centering from navigation
     if (!_initialCenteringDone && widget.initialNodeNum != null) {
@@ -1692,6 +1828,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             ? true
                             : _mapStyle != MapTileStyle.satellite,
                         evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
+                        tileUpdateTransformer:
+                            finiteCameraTileUpdateTransformer,
                         // No tileBuilder — AnimatedOpacity at constant 1.0
                         // created unnecessary animation controllers per tile,
                         // causing visible lag on initial map load.
@@ -1707,54 +1845,23 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       // Range circles (theoretical coverage) - hide in location only mode
                       if (_showRangeCircles && !widget.locationOnlyMode)
                         CircleLayer(
-                          circles: nodesWithPosition
-                              .where(
-                                (n) =>
-                                    n.latitude.isFinite && n.longitude.isFinite,
-                              )
-                              .map((n) {
-                                final isMyNode = n.node.nodeNum == myNodeNum;
-                                return CircleMarker(
-                                  point: LatLng(n.latitude, n.longitude),
-                                  radius: 5000, // 5km range circle
-                                  useRadiusInMeter: true,
-                                  color:
-                                      (isMyNode
-                                              ? context.accentColor
-                                              : AppTheme.primaryPurple)
-                                          .withValues(alpha: 0.08),
-                                  borderColor:
-                                      (isMyNode
-                                              ? context.accentColor
-                                              : AppTheme.primaryPurple)
-                                          .withValues(alpha: 0.2),
-                                  borderStrokeWidth: 1,
-                                );
-                              })
-                              .toList(),
+                          circles: _rangeCirclesFor(
+                            nodesWithPosition,
+                            geomSig,
+                            myNodeNum,
+                            accentColor,
+                            themeBrightness,
+                          ),
                         ),
                       // Heatmap layer - hide in location only mode
                       if (_showHeatmap && !widget.locationOnlyMode)
                         CircleLayer(
-                          circles: nodesWithPosition
-                              .where(
-                                (n) =>
-                                    n.latitude.isFinite && n.longitude.isFinite,
-                              )
-                              .map((n) {
-                                return CircleMarker(
-                                  point: LatLng(n.latitude, n.longitude),
-                                  radius: 50,
-                                  color: context.accentColor.withValues(
-                                    alpha: 0.15,
-                                  ),
-                                  borderColor: context.accentColor.withValues(
-                                    alpha: 0.3,
-                                  ),
-                                  borderStrokeWidth: 1,
-                                );
-                              })
-                              .toList(),
+                          circles: _heatmapFor(
+                            nodesWithPosition,
+                            geomSig,
+                            accentColor,
+                            themeBrightness,
+                          ),
                         ),
                       // Node trails (movement history) - hide in location only mode
                       if (!widget.locationOnlyMode &&
@@ -1762,18 +1869,24 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               _trackNodeNum != null ||
                               _nodeTrails.isNotEmpty))
                         PolylineLayer(
-                          polylines: _buildNodeTrails(
+                          polylines: _nodeTrailsFor(
                             nodesWithPosition,
+                            geomSig,
                             myNodeNum,
                             positionLogs,
+                            accentColor,
+                            themeBrightness,
                           ),
                         ),
                       // Connection lines (optional) - hide in location only mode
                       if (_showConnectionLines && !widget.locationOnlyMode)
                         PolylineLayer(
-                          polylines: _buildConnectionLines(
+                          polylines: _connectionLinesFor(
                             nodesWithPosition,
+                            geomSig,
                             myNodeNum,
+                            accentColor,
+                            themeBrightness,
                           ),
                         ),
                       // Measurement line — terrain-colored when available
@@ -1892,14 +2005,21 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       if (!widget.locationOnlyMode)
                         Builder(
                           builder: (context) {
-                            final sortedNodes = [...nodesWithPosition]
-                              ..sort((a, b) {
-                                // Own node renders last = on top
-                                final aIsMe = a.node.nodeNum == myNodeNum;
-                                final bIsMe = b.node.nodeNum == myNodeNum;
-                                if (aIsMe != bIsMe) return aIsMe ? 1 : -1;
-                                return 0;
-                              });
+                            // Deterministic render order: list order for
+                            // peers, own node appended last so it always
+                            // renders on top (the only documented
+                            // ordering invariant). A stable order is
+                            // required for marker-list identity reuse.
+                            final orderedNodes = <_NodeWithPosition>[];
+                            _NodeWithPosition? ownNode;
+                            for (final n in nodesWithPosition) {
+                              if (n.node.nodeNum == myNodeNum) {
+                                ownNode = n;
+                              } else {
+                                orderedNodes.add(n);
+                              }
+                            }
+                            if (ownNode != null) orderedNodes.add(ownNode);
                             // Row 13: age-based fade. Compute "now" once
                             // per build so every marker in this frame
                             // shares the same reference, and a single
@@ -1907,7 +2027,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             // visible nodes are fading.
                             final now = DateTime.now();
                             int fadedCount = 0;
-                            for (final n in sortedNodes) {
+                            for (final n in orderedNodes) {
                               if (markerOpacityForLastHeard(
                                     n.node.lastHeard,
                                     now,
@@ -1921,90 +2041,17 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               _lastLoggedFadedCount = fadedCount;
                               AppLogging.map(
                                 'event=map.stale_fade.applied '
-                                'visible=${sortedNodes.length} '
+                                'visible=${orderedNodes.length} '
                                 'faded=$fadedCount',
                               );
                             }
-                            final markers = finiteMarkers(
-                              sortedNodes.map((n) {
-                                final isMyNode = n.node.nodeNum == myNodeNum;
-                                final isSelected =
-                                    _selectedNode?.nodeNum == n.node.nodeNum;
-                                final ageOpacity = markerOpacityForLastHeard(
-                                  n.node.lastHeard,
-                                  now,
-                                );
-                                return Marker(
-                                  key: ValueKey<int>(n.node.nodeNum),
-                                  point: LatLng(n.latitude, n.longitude),
-                                  width: isMyNode ? 56 : (isSelected ? 56 : 44),
-                                  height: isMyNode
-                                      ? 56
-                                      : (isSelected ? 56 : 44),
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      HapticFeedback.selectionClick();
-                                      if (_measureMode) {
-                                        _handleMeasureNodeTap(n);
-                                      } else {
-                                        setState(() {
-                                          _selectedNode = n.node;
-                                          _selectedTakEntity = null;
-                                        });
-                                      }
-                                    },
-                                    onLongPress: () {
-                                      HapticFeedback.heavyImpact();
-                                      setState(() {
-                                        _measureMode = true;
-                                        _measureStart = LatLng(
-                                          n.latitude,
-                                          n.longitude,
-                                        );
-                                        _measureEnd = null;
-                                        _measureNodeA = n.node;
-                                        _measureNodeB = null;
-                                        _measureTerrainPolylines = null;
-                                        _measureTerrainResult = null;
-                                        _selectedNode = null;
-                                        _selectedTakEntity = null;
-                                      });
-                                    },
-                                    child: Opacity(
-                                      // Row 13: age-from-lastHeard fade
-                                      // applied on top of the existing
-                                      // cached-position isStale logic.
-                                      // Composes multiplicatively if
-                                      // both flags fire on the same
-                                      // marker (rare in practice).
-                                      // Skip the wrapper for own-node
-                                      // so the user's marker never
-                                      // ghosts itself.
-                                      opacity: isMyNode ? 1.0 : ageOpacity,
-                                      child: widget.nodedexMode
-                                          ? NodeDexSigilMarker(
-                                              pin:
-                                                  nodedexPinsByNum[n
-                                                      .node
-                                                      .nodeNum]!,
-                                              isSelected: isSelected,
-                                              isStale: n.isStale,
-                                            )
-                                          : _NodeMarker(
-                                              node: n.node,
-                                              presence: presenceConfidenceFor(
-                                                presenceMap,
-                                                n.node,
-                                              ),
-                                              isMyNode: isMyNode,
-                                              isSelected: isSelected,
-                                              isStale: n.isStale,
-                                            ),
-                                    ),
-                                  ),
-                                );
-                              }),
-                            ).toList(growable: false);
+                            final markers = _markersFor(
+                              orderedNodes,
+                              myNodeNum: myNodeNum,
+                              presenceMap: presenceMap,
+                              nodedexPinsByNum: nodedexPinsByNum,
+                              now: now,
+                            );
 
                             if (!_clusterMarkers) {
                               return MarkerLayer(
@@ -2016,7 +2063,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               context: context,
                               markers: markers,
                               nodesByNum: {
-                                for (final n in sortedNodes) n.node.nodeNum: n,
+                                for (final n in orderedNodes) n.node.nodeNum: n,
                               },
                             );
                           },
@@ -2124,7 +2171,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         MarkerLayer(
                           rotate: true,
                           markers: finiteMarkers(
-                            _buildDistanceLabels(nodesWithPosition, myNodeNum),
+                            _distanceLabelsFor(
+                              nodesWithPosition,
+                              geomSig,
+                              myNodeNum,
+                              accentColor,
+                              themeBrightness,
+                            ),
                           ),
                         ),
                       // Map attribution (matches world mesh style). Mapbox
@@ -3373,6 +3426,341 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   /// Build node movement trails
+  /// Per-node diff over the marker cache. Reuses the cached [Marker]
+  /// instance when every input it renders from is unchanged, so element
+  /// reconciliation short-circuits the whole marker subtree; reuses the
+  /// previous list instance when nothing at all changed, which lets the
+  /// cluster layer's identity check skip a full re-cluster.
+  List<Marker> _markersFor(
+    List<_NodeWithPosition> orderedNodes, {
+    required int? myNodeNum,
+    required Map<int, NodePresence> presenceMap,
+    required Map<int, NodeDexMapPin> nodedexPinsByNum,
+    required DateTime now,
+  }) {
+    var reused = 0;
+    var rebuilt = 0;
+    final markers = <Marker>[];
+    final order = <int>[];
+    final seen = <int>{};
+
+    for (final n in orderedNodes) {
+      // Mirrors the finiteMarkers gate the layer previously applied.
+      if (!n.latitude.isFinite || !n.longitude.isFinite) continue;
+      final nodeNum = n.node.nodeNum;
+      final isMyNode = nodeNum == myNodeNum;
+      final isSelected = _selectedNode?.nodeNum == nodeNum;
+      final ageOpacity = markerOpacityForLastHeard(n.node.lastHeard, now);
+      final presence = presenceConfidenceFor(presenceMap, n.node);
+      final pin = widget.nodedexMode ? nodedexPinsByNum[nodeNum] : null;
+
+      final cached = _markerCache[nodeNum];
+      Marker marker;
+      if (cached != null &&
+          cached.matches(
+            node: n.node,
+            pin: pin,
+            latitude: n.latitude,
+            longitude: n.longitude,
+            isStale: n.isStale,
+            isMyNode: isMyNode,
+            isSelected: isSelected,
+            presence: presence,
+            ageOpacity: ageOpacity,
+          )) {
+        marker = cached.marker;
+        reused++;
+      } else {
+        marker = _buildNodeMarker(
+          n,
+          isMyNode: isMyNode,
+          isSelected: isSelected,
+          ageOpacity: ageOpacity,
+          presence: presence,
+          pin: pin,
+        );
+        _markerCache[nodeNum] = _CachedNodeMarker(
+          marker: marker,
+          node: n.node,
+          pin: pin,
+          latitude: n.latitude,
+          longitude: n.longitude,
+          isStale: n.isStale,
+          isMyNode: isMyNode,
+          isSelected: isSelected,
+          presence: presence,
+          ageOpacity: ageOpacity,
+        );
+        rebuilt++;
+      }
+      markers.add(marker);
+      order.add(nodeNum);
+      seen.add(nodeNum);
+    }
+
+    _markerCache.removeWhere((nodeNum, _) => !seen.contains(nodeNum));
+    _markersReusedLastBuild = reused;
+    _markersRebuiltLastBuild = rebuilt;
+
+    final previousList = _markerListCache;
+    final previousOrder = _markerOrderCache;
+    if (rebuilt == 0 &&
+        previousList != null &&
+        previousOrder != null &&
+        previousList.length == markers.length &&
+        _intListEquals(previousOrder, order)) {
+      _markerListReusedLastBuild = true;
+      return previousList;
+    }
+    final markerList = List<Marker>.of(markers, growable: false);
+    _markerListCache = markerList;
+    _markerOrderCache = order;
+    _markerListReusedLastBuild = false;
+    return markerList;
+  }
+
+  Marker _buildNodeMarker(
+    _NodeWithPosition n, {
+    required bool isMyNode,
+    required bool isSelected,
+    required double ageOpacity,
+    required PresenceConfidence presence,
+    required NodeDexMapPin? pin,
+  }) {
+    return Marker(
+      key: ValueKey<int>(n.node.nodeNum),
+      point: LatLng(n.latitude, n.longitude),
+      width: isMyNode ? 56 : (isSelected ? 56 : 44),
+      height: isMyNode ? 56 : (isSelected ? 56 : 44),
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          if (_measureMode) {
+            _handleMeasureNodeTap(n);
+          } else {
+            // A cached marker can outlive the MeshNode snapshot it was
+            // built from; selection must always use the live node.
+            final live = widget.nodedexMode
+                ? n.node
+                : (ref.read(nodesProvider)[n.node.nodeNum] ?? n.node);
+            setState(() {
+              _selectedNode = live;
+              _selectedTakEntity = null;
+            });
+          }
+        },
+        onLongPress: () {
+          HapticFeedback.heavyImpact();
+          final live = widget.nodedexMode
+              ? n.node
+              : (ref.read(nodesProvider)[n.node.nodeNum] ?? n.node);
+          setState(() {
+            _measureMode = true;
+            _measureStart = LatLng(n.latitude, n.longitude);
+            _measureEnd = null;
+            _measureNodeA = live;
+            _measureNodeB = null;
+            _measureTerrainPolylines = null;
+            _measureTerrainResult = null;
+            _selectedNode = null;
+            _selectedTakEntity = null;
+          });
+        },
+        child: Opacity(
+          // Row 13: age-from-lastHeard fade applied on top of the
+          // existing cached-position isStale logic. Composes
+          // multiplicatively if both flags fire on the same marker
+          // (rare in practice). Skip the wrapper for own-node so the
+          // user's marker never ghosts itself.
+          opacity: isMyNode ? 1.0 : ageOpacity,
+          child: widget.nodedexMode
+              ? NodeDexSigilMarker(
+                  pin: pin!,
+                  isSelected: isSelected,
+                  isStale: n.isStale,
+                )
+              : _NodeMarker(
+                  node: n.node,
+                  presence: presence,
+                  isMyNode: isMyNode,
+                  isSelected: isSelected,
+                  isStale: n.isStale,
+                ),
+        ),
+      ),
+    );
+  }
+
+  List<CircleMarker> _rangeCirclesFor(
+    List<_NodeWithPosition> nodes,
+    List<_GeomSig> geomSig,
+    int? myNodeNum,
+    Color accent,
+    Brightness brightness,
+  ) {
+    final cached = _rangeCirclesCache;
+    if (cached != null &&
+        _rangeCirclesSigMyNodeNum == myNodeNum &&
+        _rangeCirclesSigAccent == accent &&
+        _rangeCirclesSigBrightness == brightness &&
+        _geomSigEquals(_rangeCirclesSigNodes, geomSig)) {
+      return cached;
+    }
+    final circles = nodes
+        .where((n) => n.latitude.isFinite && n.longitude.isFinite)
+        .map((n) {
+          final isMyNode = n.node.nodeNum == myNodeNum;
+          return CircleMarker(
+            point: LatLng(n.latitude, n.longitude),
+            radius: 5000, // 5km range circle
+            useRadiusInMeter: true,
+            color: (isMyNode ? accent : AppTheme.primaryPurple).withValues(
+              alpha: 0.08,
+            ),
+            borderColor: (isMyNode ? accent : AppTheme.primaryPurple)
+                .withValues(alpha: 0.2),
+            borderStrokeWidth: 1,
+          );
+        })
+        .toList(growable: false);
+    _rangeCirclesSigNodes = geomSig;
+    _rangeCirclesSigMyNodeNum = myNodeNum;
+    _rangeCirclesSigAccent = accent;
+    _rangeCirclesSigBrightness = brightness;
+    _rangeCirclesCache = circles;
+    return circles;
+  }
+
+  List<CircleMarker> _heatmapFor(
+    List<_NodeWithPosition> nodes,
+    List<_GeomSig> geomSig,
+    Color accent,
+    Brightness brightness,
+  ) {
+    final cached = _heatmapCache;
+    if (cached != null &&
+        _heatmapSigAccent == accent &&
+        _heatmapSigBrightness == brightness &&
+        _geomSigEquals(_heatmapSigNodes, geomSig)) {
+      return cached;
+    }
+    final circles = nodes
+        .where((n) => n.latitude.isFinite && n.longitude.isFinite)
+        .map((n) {
+          return CircleMarker(
+            point: LatLng(n.latitude, n.longitude),
+            radius: 50,
+            color: accent.withValues(alpha: 0.15),
+            borderColor: accent.withValues(alpha: 0.3),
+            borderStrokeWidth: 1,
+          );
+        })
+        .toList(growable: false);
+    _heatmapSigNodes = geomSig;
+    _heatmapSigAccent = accent;
+    _heatmapSigBrightness = brightness;
+    _heatmapCache = circles;
+    return circles;
+  }
+
+  List<Polyline> _nodeTrailsFor(
+    List<_NodeWithPosition> nodes,
+    List<_GeomSig> geomSig,
+    int? myNodeNum,
+    List<PositionLog> positionLogs,
+    Color accent,
+    Brightness brightness,
+  ) {
+    final cached = _trailsCache;
+    if (cached != null &&
+        identical(_trailsSigLogs, positionLogs) &&
+        _trailsSigTrackNode == _trackNodeNum &&
+        _trailsSigShowHistory == _showPositionHistory &&
+        _trailsSigEpoch == _trailsEpoch &&
+        _trailsSigMyNodeNum == myNodeNum &&
+        _trailsSigAccent == accent &&
+        _trailsSigBrightness == brightness &&
+        _geomSigEquals(_trailsSigNodes, geomSig)) {
+      return cached;
+    }
+    final trails = developer.Timeline.timeSync(
+      'map.nodeTrails',
+      () => _buildNodeTrails(nodes, myNodeNum, positionLogs),
+    );
+    _trailsSigNodes = geomSig;
+    _trailsSigLogs = positionLogs;
+    _trailsSigTrackNode = _trackNodeNum;
+    _trailsSigShowHistory = _showPositionHistory;
+    _trailsSigEpoch = _trailsEpoch;
+    _trailsSigMyNodeNum = myNodeNum;
+    _trailsSigAccent = accent;
+    _trailsSigBrightness = brightness;
+    _trailsCache = trails;
+    return trails;
+  }
+
+  List<Polyline> _connectionLinesFor(
+    List<_NodeWithPosition> nodes,
+    List<_GeomSig> geomSig,
+    int? myNodeNum,
+    Color accent,
+    Brightness brightness,
+  ) {
+    final cached = _connectionLinesCache;
+    if (cached != null &&
+        _connLinesSigMaxKm == _connectionMaxDistance &&
+        _connLinesSigMyNodeNum == myNodeNum &&
+        _connLinesSigAccent == accent &&
+        _connLinesSigBrightness == brightness &&
+        _geomSigEquals(_connLinesSigNodes, geomSig)) {
+      return cached;
+    }
+    final lines = developer.Timeline.timeSync(
+      'map.connectionLines',
+      () => _buildConnectionLines(nodes, myNodeNum),
+    );
+    _connLinesSigNodes = geomSig;
+    _connLinesSigMaxKm = _connectionMaxDistance;
+    _connLinesSigMyNodeNum = myNodeNum;
+    _connLinesSigAccent = accent;
+    _connLinesSigBrightness = brightness;
+    _connectionLinesCache = lines;
+    return lines;
+  }
+
+  List<Marker> _distanceLabelsFor(
+    List<_NodeWithPosition> nodes,
+    List<_GeomSig> geomSig,
+    int? myNodeNum,
+    Color accent,
+    Brightness brightness,
+  ) {
+    // Zoom participates as the same coarse gate the builder applies; zoom
+    // is deliberately only observed on data/selection-driven builds (the
+    // camera handlers avoid setState), matching the pre-cache behavior.
+    final zoomedIn = _currentZoom >= 10;
+    final cached = _distanceLabelsCache;
+    if (cached != null &&
+        _distLabelsSigMyNodeNum == myNodeNum &&
+        _distLabelsSigAccent == accent &&
+        _distLabelsSigBrightness == brightness &&
+        _distLabelsSigZoomedIn == zoomedIn &&
+        _geomSigEquals(_distLabelsSigNodes, geomSig)) {
+      return cached;
+    }
+    final labels = developer.Timeline.timeSync(
+      'map.distanceLabels',
+      () => _buildDistanceLabels(nodes, myNodeNum),
+    );
+    _distLabelsSigNodes = geomSig;
+    _distLabelsSigMyNodeNum = myNodeNum;
+    _distLabelsSigAccent = accent;
+    _distLabelsSigBrightness = brightness;
+    _distLabelsSigZoomedIn = zoomedIn;
+    _distanceLabelsCache = labels;
+    return labels;
+  }
+
   List<Polyline> _buildNodeTrails(
     List<_NodeWithPosition> nodes,
     int? myNodeNum,
@@ -3470,12 +3858,27 @@ class _MapScreenState extends ConsumerState<MapScreen>
   ) {
     final lines = <Polyline>[];
     final maxDistanceKm = _connectionMaxDistance;
+    var vincentyCalls = 0;
 
     for (int i = 0; i < nodes.length; i++) {
       for (int j = i + 1; j < nodes.length; j++) {
         final node1 = nodes[i];
         final node2 = nodes[j];
 
+        // Cheap conservative prefilter; Vincenty stays the sole
+        // decision function for pairs that pass, so the emitted line
+        // set is identical to the unfiltered loop.
+        if (!connectionPrefilterMayBeWithin(
+          node1.latitude,
+          node1.longitude,
+          node2.latitude,
+          node2.longitude,
+          maxDistanceKm,
+        )) {
+          continue;
+        }
+
+        vincentyCalls++;
         final distance = _calculateDistance(
           node1.latitude,
           node1.longitude,
@@ -3515,6 +3918,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
       }
     }
 
+    _connPairsEvaluatedLastBuild = vincentyCalls;
     return lines;
   }
 
@@ -4186,6 +4590,106 @@ class _NodeWithPosition {
     required this.longitude,
     required this.isStale,
   });
+}
+
+/// Conservative spherical (haversine) distance in km.
+///
+/// Top-level so tests can pin the prefilter's correctness contract
+/// without spinning up the full map.
+double haversineKm(double lat1, double lng1, double lat2, double lng2) {
+  const earthRadiusKm = 6371.0;
+  const degToRad = math.pi / 180.0;
+  final dLat = (lat2 - lat1) * degToRad;
+  final dLng = (lng2 - lng1) * degToRad;
+  final sinHalfLat = math.sin(dLat / 2);
+  final sinHalfLng = math.sin(dLng / 2);
+  final a =
+      sinHalfLat * sinHalfLat +
+      math.cos(lat1 * degToRad) *
+          math.cos(lat2 * degToRad) *
+          sinHalfLng *
+          sinHalfLng;
+  return 2 * earthRadiusKm * math.asin(math.min(1.0, math.sqrt(a)));
+}
+
+/// Cheap conservative screen for the connection-lines pair loop.
+///
+/// Returns false ONLY when the production decision function provably
+/// rejects the pair. That decision is `Distance().as(Kilometer, ...)`,
+/// which ROUNDS to whole kilometers, so a pair up to maxDistanceKm + 0.5
+/// of true distance still renders a line. The screen therefore widens
+/// the threshold by the rounding half-step plus a 1% margin for the
+/// haversine-vs-Vincenty (Earth flattening) difference; the latitude
+/// screen uses the same widened bound (one degree of latitude is never
+/// less than ~110.567 km).
+bool connectionPrefilterMayBeWithin(
+  double lat1,
+  double lng1,
+  double lat2,
+  double lng2,
+  double maxDistanceKm,
+) {
+  const minKmPerDegLat = 110.567;
+  final screenKm = (maxDistanceKm + 0.5) * 1.01;
+  if ((lat2 - lat1).abs() * minKmPerDegLat > screenKm) return false;
+  return haversineKm(lat1, lng1, lat2, lng2) <= screenKm;
+}
+
+/// Exact per-node geometry signature for the map layer caches. Record
+/// equality is structural, so an element-wise list compare is an exact
+/// change detector with no collision risk.
+typedef _GeomSig = (int nodeNum, double lat, double lng, bool isStale);
+
+/// One marker cache entry: the built [Marker] plus every input it was
+/// derived from. [node] and [pin] are compared by identity because
+/// NodesNotifier replaces instances on any field change, making
+/// identity a complete change signal for the rendered content.
+class _CachedNodeMarker {
+  final Marker marker;
+  final MeshNode node;
+  final NodeDexMapPin? pin;
+  final double latitude;
+  final double longitude;
+  final bool isStale;
+  final bool isMyNode;
+  final bool isSelected;
+  final PresenceConfidence presence;
+  final double ageOpacity;
+
+  const _CachedNodeMarker({
+    required this.marker,
+    required this.node,
+    required this.pin,
+    required this.latitude,
+    required this.longitude,
+    required this.isStale,
+    required this.isMyNode,
+    required this.isSelected,
+    required this.presence,
+    required this.ageOpacity,
+  });
+
+  bool matches({
+    required MeshNode node,
+    required NodeDexMapPin? pin,
+    required double latitude,
+    required double longitude,
+    required bool isStale,
+    required bool isMyNode,
+    required bool isSelected,
+    required PresenceConfidence presence,
+    required double ageOpacity,
+  }) {
+    return identical(this.node, node) &&
+        identical(this.pin, pin) &&
+        this.latitude == latitude &&
+        this.longitude == longitude &&
+        this.isStale == isStale &&
+        this.isMyNode == isMyNode &&
+        this.isSelected == isSelected &&
+        this.presence == presence &&
+        this.ageOpacity == ageOpacity;
+  }
 }
 
 /// Computes the label shown inside a map node marker.

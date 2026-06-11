@@ -543,6 +543,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
                       userAgentPackageName: MapConfig.userAgentPackageName,
                       retinaMode: MapConfig.isMapboxActive,
                       evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
+                      tileUpdateTransformer: finiteCameraTileUpdateTransformer,
                     ),
                     // Range circles: 5km radius around each contact
                     // (and self). Visualises a rough LoRa coverage

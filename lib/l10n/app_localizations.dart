@@ -6510,6 +6510,30 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get commonCancel;
 
+  /// Label for a wizard / stepper Back button.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get commonBack;
+
+  /// Tooltip / accessibility label for a Close button.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get commonClose;
+
+  /// Tooltip / accessibility label for clearing a search field.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get commonClearSearch;
+
+  /// Tooltip for confirming a manually entered channel encryption key.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply key'**
+  String get channelKeyApply;
+
   /// Label for a Delete button.
   ///
   /// In en, this message translates to:
@@ -72916,12 +72940,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try changing the filter to see more posts.'**
   String get meshFeedEmptyFilterDescription;
-
-  /// Drawer / navigation rail label for the NodePet feature.
-  ///
-  /// In en, this message translates to:
-  /// **'NodePet'**
-  String get petDrawerLabel;
 
   /// App bar title on the Pet home screen.
   ///

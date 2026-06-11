@@ -39,6 +39,29 @@ List<Marker> finiteMarkers(Iterable<Marker> markers) {
 bool isFiniteCameraPose(LatLng? center, double zoom) =>
     isFiniteLatLng(center) && zoom.isFinite;
 
+// Tile-update transformer for every TileLayer in the app. A TileUpdateEvent
+// carries a snapshot of the camera taken at emission time, so an event
+// emitted while the camera held a non-finite pose still reaches
+// TileRangeCalculator (and throws in Crs.checkLatLng) even after the
+// onPositionChanged snap-back has restored the camera. Dropping the event
+// here is safe: the snap-back move emits a fresh event with a finite camera
+// that triggers the tile load instead. Also replicates the default
+// ignoreTapEvents behaviour, which this transformer replaces on TileLayer.
+final TileUpdateTransformer finiteCameraTileUpdateTransformer =
+    TileUpdateTransformer.fromHandlers(
+      handleData: (event, sink) {
+        if (event.wasTriggeredByTap()) return;
+        // Both the raw camera snapshot and the (possibly overridden) load
+        // center/zoom feed tile range projection; either being non-finite
+        // throws.
+        if (!isFiniteCameraPose(event.camera.center, event.camera.zoom)) {
+          return;
+        }
+        if (!isFiniteCameraPose(event.center, event.zoom)) return;
+        sink.add(event);
+      },
+    );
+
 // Build LatLngBounds.fromPoints only from finite points. Returns null when
 // nothing finite is left — callers should skip the fit in that case rather
 // than feed a degenerate bounds into the camera.

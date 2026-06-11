@@ -3643,6 +3643,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonCancel => 'Cancel';
 
   @override
+  String get commonBack => 'Back';
+
+  @override
+  String get commonClose => 'Close';
+
+  @override
+  String get commonClearSearch => 'Clear search';
+
+  @override
+  String get channelKeyApply => 'Apply key';
+
+  @override
   String get commonDelete => 'Delete';
 
   @override
@@ -41746,9 +41758,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get meshFeedEmptyFilterDescription =>
       'Try changing the filter to see more posts.';
-
-  @override
-  String get petDrawerLabel => 'NodePet';
 
   @override
   String get petScreenTitle => 'NodePet';

@@ -374,8 +374,10 @@ class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
               ),
 
               // Pinned chart legend — stays visible like a section header
-              // while the chart + list scroll beneath it.
-              if (filtered.length >= 2)
+              // while the chart + list scroll beneath it. Shown from the
+              // first sample: a single reading renders as a dot, never
+              // silently hidden.
+              if (filtered.isNotEmpty)
                 () {
                   final legendItems = <Widget>[
                     if (filtered.any((l) => l.batteryLevel != null))
@@ -413,7 +415,7 @@ class _DeviceMetricsLogScreenState extends ConsumerState<DeviceMetricsLogScreen>
 
               // Chart — always visible when there is data (matches
               // Android BaseMetricScreen / iOS DeviceMetricsLog).
-              if (filtered.length >= 2)
+              if (filtered.isNotEmpty)
                 SliverToBoxAdapter(child: _DeviceMetricsChart(logs: filtered)),
 
               // Content — empty state or list
@@ -555,16 +557,21 @@ class _DeviceMetricsChart extends StatelessWidget {
       if (log.batteryLevel != null) {
         batterySpots.add(FlSpot(x, log.batteryLevel!.toDouble().clamp(0, 100)));
       }
-      if (log.channelUtilization != null) {
-        chUtilSpots.add(FlSpot(x, log.channelUtilization!.clamp(0, 100)));
+      // Non-finite samples are excluded: NaN survives clamp() and a
+      // single NaN voltage poisons the min/max axis range.
+      final chUtil = log.channelUtilization;
+      if (chUtil != null && chUtil.isFinite) {
+        chUtilSpots.add(FlSpot(x, chUtil.clamp(0, 100)));
       }
-      if (log.airUtilTx != null) {
-        airUtilSpots.add(FlSpot(x, log.airUtilTx!.clamp(0, 100)));
+      final airUtil = log.airUtilTx;
+      if (airUtil != null && airUtil.isFinite) {
+        airUtilSpots.add(FlSpot(x, airUtil.clamp(0, 100)));
       }
-      if (log.voltage != null) {
-        voltageSpots.add(FlSpot(x, log.voltage!));
-        vMin = math.min(vMin, log.voltage!);
-        vMax = math.max(vMax, log.voltage!);
+      final voltage = log.voltage;
+      if (voltage != null && voltage.isFinite) {
+        voltageSpots.add(FlSpot(x, voltage));
+        vMin = math.min(vMin, voltage);
+        vMax = math.max(vMax, voltage);
       }
     }
 
@@ -587,19 +594,25 @@ class _DeviceMetricsChart extends StatelessWidget {
         .map((s) => FlSpot(s.x, ((s.y - vAxisMin) / vRange) * 100))
         .toList();
 
-    // Collect line bar data.
+    // Collect line bar data. Single-point series still render (as a
+    // dot via _line's dot painter): a node's first sample must be
+    // visible, not silently hidden until a second one arrives.
     final lineBars = <LineChartBarData>[
-      if (batterySpots.length >= 2)
+      if (batterySpots.isNotEmpty)
         _line(batterySpots, AccentColors.green, true),
-      if (chUtilSpots.length >= 2)
+      if (chUtilSpots.isNotEmpty)
         _line(chUtilSpots, AppTheme.primaryBlue, false),
-      if (airUtilSpots.length >= 2)
+      if (airUtilSpots.isNotEmpty)
         _line(airUtilSpots, AppTheme.primaryMagenta, false),
-      if (normVoltageSpots.length >= 2)
+      if (normVoltageSpots.isNotEmpty)
         _line(normVoltageSpots, AppTheme.warningYellow, true),
     ];
 
     if (lineBars.isEmpty) return const SizedBox.shrink();
+
+    // Explicit x-domain: with a single sample minX would equal maxX,
+    // which collapses the chart's horizontal span.
+    final chartMaxX = math.max(sorted.length - 1, 1).toDouble();
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppTheme.spacing16, 0, 16, 0),
@@ -611,6 +624,8 @@ class _DeviceMetricsChart extends StatelessWidget {
             height: 200,
             child: LineChart(
               LineChartData(
+                minX: 0,
+                maxX: chartMaxX,
                 minY: 0,
                 maxY: 100,
                 lineBarsData: lineBars,

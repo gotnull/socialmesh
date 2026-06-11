@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:socialmesh/core/theme.dart';
 
+import '../l10n/l10n_extension.dart';
+
 /// A fullscreen gallery view for local image files.
 /// Used for previewing images before they're uploaded (e.g., in create signal screen).
 /// Matches the style of SignalGalleryView but works with local file paths.
@@ -137,6 +139,7 @@ class _LocalImageGalleryState extends State<LocalImageGallery> {
                     IconButton(
                       icon: const Icon(Icons.close, color: Colors.white),
                       onPressed: () => Navigator.of(context).pop(),
+                      tooltip: context.l10n.commonClose,
                     ),
                     const Spacer(),
                     // Page indicator

@@ -11,7 +11,7 @@ import '../../features/device_shop/screens/device_shop_screen.dart';
 import '../../features/settings/watch_companion_settings_screen.dart';
 import '../../features/navigation/main_shell.dart';
 import '../../features/nodedex/screens/nodedex_screen.dart';
-import '../../features/onboarding/widgets/mesh_node_brain.dart';
+import '../widgets/mesh_node_brain.dart';
 import '../../features/presence/presence_screen.dart';
 import '../../features/reachability/mesh_reachability_screen.dart';
 import '../../features/signals/screens/signal_feed_screen.dart';

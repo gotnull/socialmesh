@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../core/l10n/l10n_extension.dart';
+import '../../core/logging.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/node_color.dart';
 import '../../core/theme.dart';
@@ -202,6 +203,13 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
             node.nodeNum.toString().contains(query) ||
             node.nodeNum.toRadixString(16).toLowerCase().contains(query);
       }).toList();
+    }
+
+    if (AppLogging.nodesLoggingEnabled) {
+      AppLogging.nodes(
+        'event=nodes.build.profile nodes=${nodes.length} '
+        'filtered=${nodesList.length}',
+      );
     }
 
     // Count nodes by filter for badges

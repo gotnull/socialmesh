@@ -213,6 +213,7 @@ class _LegalWebViewScreenState extends State<_LegalWebViewScreen> {
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
+          tooltip: context.l10n.commonClose,
         ),
         actions: [
           if (_canGoBack)

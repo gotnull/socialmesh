@@ -17,7 +17,7 @@ import '../../providers/splash_mesh_provider.dart';
 import '../device/region_selection_screen.dart';
 import '../scanner/widgets/connecting_animation.dart';
 import '../scanner/scanner_screen.dart';
-import 'widgets/mesh_node_brain.dart';
+import '../../core/widgets/mesh_node_brain.dart';
 import 'widgets/advisor_speech_bubble.dart';
 
 /// Onboarding screen with mesh brain advisor guide

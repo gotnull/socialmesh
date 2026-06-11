@@ -9,7 +9,7 @@ import '../core/logging.dart';
 import '../core/theme.dart';
 import '../core/widgets/animated_mesh_node.dart';
 import '../core/widgets/node_names_mesh.dart';
-import '../features/onboarding/widgets/mesh_node_brain.dart';
+import '../core/widgets/mesh_node_brain.dart';
 import '../main.dart' show firebaseReady;
 import '../services/config/mesh_firestore_config_service.dart';
 

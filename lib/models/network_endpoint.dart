@@ -86,11 +86,25 @@ class NetworkEndpoint {
     'protocol': protocol.id,
   };
 
+  /// Canonical host form: trimmed and lowercased.
+  ///
+  /// Hostnames are case-insensitive (RFC 4343), so normalizing at storage
+  /// time keeps 'Node.Local' and 'node.local' from producing two distinct
+  /// saved endpoints with distinct ids.
+  static String normalizeHost(String host) => host.trim().toLowerCase();
+
+  /// Whether [port] is a valid TCP port for an endpoint.
+  static bool isValidPort(int port) => port >= 1 && port <= 65535;
+
   factory NetworkEndpoint.fromJson(Map<String, dynamic> json) {
+    // Lenient on disk content: legacy entries saved before storage-time
+    // normalization are cleaned on load, never rejected. The stored id is
+    // kept verbatim so legacy entries retain their identity.
+    final rawPort = json['port'] as int? ?? kMeshtasticDefaultPort;
     return NetworkEndpoint(
       id: json['id'] as String,
-      host: json['host'] as String,
-      port: json['port'] as int? ?? kMeshtasticDefaultPort,
+      host: normalizeHost(json['host'] as String),
+      port: isValidPort(rawPort) ? rawPort : kMeshtasticDefaultPort,
       lastUsed: DateTime.parse(json['lastUsed'] as String),
       name: json['name'] as String?,
       protocol: NetworkEndpointProtocol.fromId(json['protocol'] as String?),
@@ -98,19 +112,26 @@ class NetworkEndpoint {
   }
 
   /// Create a new endpoint with an auto-generated ID.
+  ///
+  /// The host is normalized before the ID is derived, so two casings of
+  /// the same hostname collapse to one endpoint.
   factory NetworkEndpoint.create({
     required String host,
     int port = kMeshtasticDefaultPort,
     String? name,
     NetworkEndpointProtocol protocol = NetworkEndpointProtocol.meshtastic,
   }) {
+    if (!isValidPort(port)) {
+      throw ArgumentError.value(port, 'port', 'must be in 1..65535');
+    }
+    final normalizedHost = normalizeHost(host);
     // Deterministic ID per (protocol, host, port) so the same host:port
     // can coexist for two different protocols without collision.
-    final idSource = '${protocol.id}:$host:$port';
+    final idSource = '${protocol.id}:$normalizedHost:$port';
     final id = idSource.hashCode.toRadixString(16);
     return NetworkEndpoint(
       id: id,
-      host: host,
+      host: normalizedHost,
       port: port,
       lastUsed: DateTime.now(),
       name: name,

@@ -163,4 +163,70 @@ void main() {
       expect(e.toString(), 'NetworkEndpoint(192.168.1.1:4403)');
     });
   });
+
+  group('NetworkEndpoint storage-time normalization', () {
+    test('create() normalizes host (trim + lowercase)', () {
+      final e = NetworkEndpoint.create(host: ' Node.LOCAL ', port: 4403);
+      expect(e.host, 'node.local');
+    });
+
+    test('two casings of the same hostname collapse to one endpoint id', () {
+      final upper = NetworkEndpoint.create(host: 'Node.Local', port: 4403);
+      final lower = NetworkEndpoint.create(host: 'node.local', port: 4403);
+      expect(upper.id, lower.id);
+      expect(upper.host, lower.host);
+    });
+
+    test('create() rejects out-of-range ports', () {
+      expect(
+        () => NetworkEndpoint.create(host: '10.0.0.1', port: 0),
+        throwsArgumentError,
+      );
+      expect(
+        () => NetworkEndpoint.create(host: '10.0.0.1', port: 70000),
+        throwsArgumentError,
+      );
+    });
+
+    test('fromJson normalizes legacy raw hosts and keeps the stored id', () {
+      final json = {
+        'id': 'legacy-raw',
+        'host': ' Node.LOCAL ',
+        'port': 4403,
+        'lastUsed': '2025-01-01T00:00:00.000',
+      };
+      final endpoint = NetworkEndpoint.fromJson(json);
+      expect(endpoint.host, 'node.local');
+      expect(endpoint.id, 'legacy-raw');
+    });
+
+    test('fromJson clamps an out-of-range stored port to the default', () {
+      final json = {
+        'id': 'legacy-bad-port',
+        'host': '10.0.0.1',
+        'port': 99999,
+        'lastUsed': '2025-01-01T00:00:00.000',
+      };
+      final endpoint = NetworkEndpoint.fromJson(json);
+      expect(endpoint.port, kMeshtasticDefaultPort);
+    });
+
+    test('encodeList/decodeList round-trip preserves normalized values', () {
+      final endpoints = [
+        NetworkEndpoint.create(host: ' MESH.local ', port: 4403),
+        NetworkEndpoint.create(
+          host: '10.0.0.2',
+          port: 5000,
+          protocol: NetworkEndpointProtocol.meshcore,
+        ),
+      ];
+      final decoded = NetworkEndpoint.decodeList(
+        NetworkEndpoint.encodeList(endpoints),
+      );
+      expect(decoded[0].host, 'mesh.local');
+      expect(decoded[0].id, endpoints[0].id);
+      expect(decoded[1].host, '10.0.0.2');
+      expect(decoded[1].protocol, NetworkEndpointProtocol.meshcore);
+    });
+  });
 }

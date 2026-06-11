@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../utils/text_sanitizer.dart';
@@ -191,8 +192,7 @@ class _NodeBoardWizardScreenState extends ConsumerState<NodeBoardWizardScreen>
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: GlassScaffold.body(
-        // lint-allow: hardcoded-string
-        title: 'Create Board',
+        title: context.l10n.nodeboardCreateBoard,
         hasScrollBody: false,
         body: Column(
           children: [
@@ -673,8 +673,7 @@ class _NodeBoardWizardScreenState extends ConsumerState<NodeBoardWizardScreen>
                         vertical: AppTheme.spacing14,
                       ),
                     ),
-                    // lint-allow: hardcoded-string
-                    child: const Text('Back'),
+                    child: Text(context.l10n.commonBack),
                   ),
                 )
               else
@@ -702,8 +701,7 @@ class _NodeBoardWizardScreenState extends ConsumerState<NodeBoardWizardScreen>
                             vertical: AppTheme.spacing14,
                           ),
                         ),
-                        // lint-allow: hardcoded-string
-                        child: const Text('Create Board'),
+                        child: Text(context.l10n.nodeboardCreateBoard),
                       )
                     : FilledButton(
                         onPressed: _nextStep,
@@ -717,8 +715,7 @@ class _NodeBoardWizardScreenState extends ConsumerState<NodeBoardWizardScreen>
                             vertical: AppTheme.spacing14,
                           ),
                         ),
-                        // lint-allow: hardcoded-string
-                        child: const Text('Next'),
+                        child: Text(context.l10n.commonNext),
                       ),
               ),
             ],

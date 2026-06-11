@@ -54,52 +54,56 @@ class _RemoteFlagsAdminSheetState extends State<RemoteFlagsAdminSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return GlassScaffold(
-      title: 'Remote flags', // lint-allow: hardcoded-string
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.refresh),
-          tooltip: 'Reload from Firestore', // lint-allow: hardcoded-string
-          onPressed: () {
-            HapticFeedback.selectionClick();
-            // The service is always live-listening; this just nudges
-            // the UI to recheck the listener's last snapshot.
-            setState(() {});
-          },
-        ),
-      ],
-      slivers: [
-        SliverToBoxAdapter(child: _buildSearch(context)),
-        SliverToBoxAdapter(child: _buildSummary(context)),
-        ValueListenableBuilder<int>(
-          valueListenable: _service.revision,
-          builder: (context, _, _) {
-            final rows = _buildGroupedRows();
-            if (rows.isEmpty) {
-              return SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppTheme.spacing24),
-                  child: Center(
-                    child: Text(
-                      'No keys match filter', // lint-allow: hardcoded-string
-                      style: TextStyle(
-                        color: context.textTertiary,
-                        fontFamily: AppTheme.fontFamily,
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: GlassScaffold(
+        title: 'Remote flags', // lint-allow: hardcoded-string
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Reload from Firestore', // lint-allow: hardcoded-string
+            onPressed: () {
+              HapticFeedback.selectionClick();
+              // The service is always live-listening; this just nudges
+              // the UI to recheck the listener's last snapshot.
+              setState(() {});
+            },
+          ),
+        ],
+        slivers: [
+          SliverToBoxAdapter(child: _buildSearch(context)),
+          SliverToBoxAdapter(child: _buildSummary(context)),
+          ValueListenableBuilder<int>(
+            valueListenable: _service.revision,
+            builder: (context, _, _) {
+              final rows = _buildGroupedRows();
+              if (rows.isEmpty) {
+                return SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppTheme.spacing24),
+                    child: Center(
+                      child: Text(
+                        'No keys match filter', // lint-allow: hardcoded-string
+                        style: TextStyle(
+                          color: context.textTertiary,
+                          fontFamily: AppTheme.fontFamily,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              );
-            }
-            return SliverList(delegate: SliverChildListDelegate(rows));
-          },
-        ),
-        SliverToBoxAdapter(
-          child: SizedBox(
-            height: MediaQuery.of(context).padding.bottom + AppTheme.spacing16,
+                );
+              }
+              return SliverList(delegate: SliverChildListDelegate(rows));
+            },
           ),
-        ),
-      ],
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height:
+                  MediaQuery.of(context).padding.bottom + AppTheme.spacing16,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

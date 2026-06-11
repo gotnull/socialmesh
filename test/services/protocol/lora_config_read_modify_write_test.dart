@@ -165,6 +165,30 @@ void main() {
       expect(protocol.currentLoraConfig, isNull);
     });
 
+    test('per-node LoRa cache is cleared by a fresh start() '
+        '(remote configs are per-connection state)', () async {
+      await _injectLoraResponse(
+        protocol,
+        _remoteNodeNum,
+        config_pb.Config_LoRaConfig()
+          ..region = config_pbenum.Config_LoRaConfig_RegionCode.EU_868
+          ..paFanDisabled = true,
+      );
+      expect(protocol.remoteLoraConfig(_remoteNodeNum), isNotNull);
+
+      unawaited(protocol.start().catchError((_) {}));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      protocol.stop();
+
+      expect(
+        protocol.remoteLoraConfig(_remoteNodeNum),
+        isNull,
+        reason:
+            'A different radio may attach next; remote configs cached from '
+            'the previous connection must not survive start().',
+      );
+    });
+
     test('remote save preserves fields the UI does not expose', () async {
       // Node reported its config while TX was still on.
       await _injectLoraResponse(

@@ -148,4 +148,72 @@ void main() {
       );
     });
   });
+
+  group('finiteCameraTileUpdateTransformer', () {
+    MapCamera camera({LatLng? center, double zoom = 10}) => MapCamera(
+      crs: const Epsg3857(),
+      center: center ?? const LatLng(-33.8688, 151.2093),
+      zoom: zoom,
+      rotation: 0,
+      nonRotatedSize: const Size(400, 800),
+    );
+
+    TileUpdateEvent moveEvent(MapCamera cam) => TileUpdateEvent(
+      mapEvent: MapEventMove(
+        source: MapEventSource.onMultiFinger,
+        oldCamera: cam,
+        camera: cam,
+      ),
+    );
+
+    Future<List<TileUpdateEvent>> through(List<TileUpdateEvent> events) =>
+        Stream.fromIterable(
+          events,
+        ).transform(finiteCameraTileUpdateTransformer).toList();
+
+    test('passes events with a finite camera pose', () async {
+      final out = await through([moveEvent(camera())]);
+      expect(out, hasLength(1));
+    });
+
+    test('drops events whose camera centre is non-finite', () async {
+      final out = await through([
+        moveEvent(camera(center: LatLng(double.nan, double.nan))),
+        moveEvent(camera()),
+      ]);
+      expect(out, hasLength(1));
+    });
+
+    // A NaN camera zoom cannot be constructed here: MapCamera asserts
+    // zoom.isFinite in debug builds. The zoom leg of the guard is covered
+    // by the isFiniteCameraPose tests above; in release builds (where the
+    // field crash occurs) the assert is stripped and the transformer is
+    // the only line of defence.
+    test('drops events with a non-finite load override', () async {
+      final out = await through([
+        TileUpdateEvent(
+          mapEvent: MapEventMove(
+            source: MapEventSource.onMultiFinger,
+            oldCamera: camera(),
+            camera: camera(),
+          ),
+          loadCenterOverride: LatLng(double.nan, 0),
+        ),
+      ]);
+      expect(out, isEmpty);
+    });
+
+    test('replicates the default ignoreTapEvents behaviour', () async {
+      final out = await through([
+        TileUpdateEvent(
+          mapEvent: MapEventTap(
+            tapPosition: const LatLng(1, 2),
+            source: MapEventSource.tap,
+            camera: camera(),
+          ),
+        ),
+      ]);
+      expect(out, isEmpty);
+    });
+  });
 }

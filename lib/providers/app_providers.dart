@@ -98,6 +98,16 @@ class AppInitNotifier extends Notifier<AppInitState> {
   /// connection and create a cascade of reconnect cycles.
   bool _backgroundServicesStarted = false;
 
+  /// Device-connection init completion, tracked separately from
+  /// [_backgroundServicesStarted]. One-time services must never re-run,
+  /// but a device-connection init that threw must stay retryable on the
+  /// next initialize() call — otherwise a transient failure here kills
+  /// auto-reconnect for the entire session. Set only after the init block
+  /// completes without throwing (the already-connected skip and the
+  /// autoReconnect-disabled path both count as successful completion).
+  bool _deviceConnectionInitDone = false;
+  bool _deviceConnectionInitInFlight = false;
+
   /// Centralised state setter with logging for every transition.
   void _transition(AppInitState to, [String caller = '']) {
     final from = state;
@@ -214,6 +224,16 @@ class AppInitNotifier extends Notifier<AppInitState> {
       if (!_backgroundServicesStarted) {
         _backgroundServicesStarted = true;
         _initializeBackgroundServices();
+      } else if (!_deviceConnectionInitDone) {
+        // One-time services already ran (or are running), but the
+        // device-connection init failed on a previous pass. Retry just
+        // that block; the in-flight guard inside makes an overlap with a
+        // still-running first pass a no-op.
+        AppLogging.connection(
+          '🎯 AppInitNotifier: retrying device-connection init '
+          '(previous attempt did not complete)',
+        );
+        _startDeviceConnectionInit();
       }
 
       // Determine initial state based on whether user has ever paired
@@ -366,12 +386,34 @@ class AppInitNotifier extends Notifier<AppInitState> {
       AppLogging.debug('Background service init error: $e');
     }
 
-    // -----------------------------------------------------------------------
-    // Device connection: runs OUTSIDE the storage/sync try-catch so that a
-    // failed DB open or hanging platform channel can never silently prevent
-    // auto-reconnect. This is the #1 user-visible consequence of the old
-    // structure — the user stays on "Disconnected" with no reconnect attempt.
-    // -----------------------------------------------------------------------
+    await _startDeviceConnectionInit();
+
+    // MQTT client proxy: eagerly activate so it starts relaying when
+    // the device sends an MQTT config with proxyToClientEnabled=true.
+    try {
+      ref.read(mqttClientProxyForwarderProvider);
+      ref.read(mqttClientProxyAutoConnectProvider);
+      AppLogging.mqttProxy('Client proxy providers activated');
+    } catch (e) {
+      AppLogging.mqttProxy('Client proxy activation failed: $e');
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Device connection: runs OUTSIDE the storage/sync try-catch so that a
+  // failed DB open or hanging platform channel can never silently prevent
+  // auto-reconnect. This is the #1 user-visible consequence of the old
+  // structure — the user stays on "Disconnected" with no reconnect attempt.
+  //
+  // This block only reads the device-connection notifier; it never
+  // re-registers stream listeners or re-creates one-time services, so a
+  // retry from initialize() cannot duplicate side effects. Overlap with
+  // an explicit or resume-triggered restore is deduped downstream by
+  // RestoreSessionCoordinator's single-flight guard.
+  // ---------------------------------------------------------------------
+  Future<void> _startDeviceConnectionInit() async {
+    if (_deviceConnectionInitInFlight) return;
+    _deviceConnectionInitInFlight = true;
     try {
       final settings = await ref.read(settingsServiceProvider.future);
       if (settings.autoReconnect && settings.lastDeviceId != null) {
@@ -399,18 +441,14 @@ class AppInitNotifier extends Notifier<AppInitState> {
               .startBackgroundConnection();
         }
       }
+      _deviceConnectionInitDone = true;
     } catch (e) {
+      // Done flag stays false so the next initialize() call retries.
+      // Retries fire only on external initialize() triggers, never on a
+      // timer, so a persistently failing init cannot loop.
       AppLogging.debug('Background device connection init error: $e');
-    }
-
-    // MQTT client proxy: eagerly activate so it starts relaying when
-    // the device sends an MQTT config with proxyToClientEnabled=true.
-    try {
-      ref.read(mqttClientProxyForwarderProvider);
-      ref.read(mqttClientProxyAutoConnectProvider);
-      AppLogging.mqttProxy('Client proxy providers activated');
-    } catch (e) {
-      AppLogging.mqttProxy('Client proxy activation failed: $e');
+    } finally {
+      _deviceConnectionInitInFlight = false;
     }
   }
 }
@@ -521,8 +559,11 @@ final premiumUpsellEnabledProvider = Provider<bool>((ref) {
 final firestoreConfigWatcherProvider = StreamProvider<MeshConfigData?>((
   ref,
 ) async* {
-  // Wait for settings service to be ready
-  final settingsService = await ref.watch(settingsServiceProvider.future);
+  // Wait for settings service to be ready. Read, not watch: this provider
+  // invalidates settingsServiceProvider below to notify its watchers, and
+  // watching it here would dispose this stream mid-loop on every sync.
+  // The service instance is a cached singleton, so a one-time read is safe.
+  final settingsService = await ref.read(settingsServiceProvider.future);
 
   // Initialize Firestore service if needed
   await MeshFirestoreConfigService.instance.initialize();
@@ -548,6 +589,7 @@ final firestoreConfigWatcherProvider = StreamProvider<MeshConfigData?>((
         );
         // Update AdminConfig static flag
         AdminConfig.setPremiumUpsellEnabled(config.premiumUpsellEnabled);
+        if (!ref.mounted) return;
         // Invalidate settings provider to trigger rebuild
         ref.invalidate(settingsServiceProvider);
       }
@@ -562,6 +604,7 @@ final firestoreConfigWatcherProvider = StreamProvider<MeshConfigData?>((
 
       // Reload SharedPreferences to ensure cached values are updated
       await prefs.reload();
+      if (!ref.mounted) return;
 
       // Trigger refresh for any providers watching premium feature gates
       ref.read(premiumGatedFeaturesRefreshProvider.notifier).refresh();
@@ -5817,6 +5860,8 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
   /// position changes.
   void _recomputeAllDistances(MeshNode myNode) {
     if (!myNode.hasPosition) return;
+    // Reads every node from state: pending writes must land first.
+    _flushPendingNodeWrites();
     final updated = <int, MeshNode>{};
     var changed = false;
     for (final entry in state.entries) {
@@ -5848,6 +5893,35 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
   Timer? _saveTimer;
   static const _saveDebounceDuration = Duration(seconds: 2);
 
+  /// Coalesced emission buffer (flag-gated via
+  /// [AppFeatureFlags.isNodeEmissionCoalescingEnabled]). Non-structural
+  /// per-packet updates pend here and commit in one state write per
+  /// window; structural events (new node, own node, position change)
+  /// flush synchronously so discovery and map latency are unchanged.
+  /// Side effects (saves, counters, IFTTT, automations) stay per-event
+  /// and never depend on the flush. Every other state writer in this
+  /// class must flush pending writes first to preserve write ordering,
+  /// and reads of "the freshest version of node X" must consult the
+  /// pending buffer before committed state.
+  final Map<int, MeshNode> _pendingNodeWrites = {};
+  Timer? _coalesceTimer;
+  static const _coalesceWindow = Duration(milliseconds: 250);
+
+  void _flushPendingNodeWrites() {
+    _coalesceTimer?.cancel();
+    _coalesceTimer = null;
+    if (_pendingNodeWrites.isEmpty) return;
+    if (!ref.mounted) {
+      _pendingNodeWrites.clear();
+      return;
+    }
+    state = {...state, ..._pendingNodeWrites};
+    _pendingNodeWrites.clear();
+  }
+
+  @visibleForTesting
+  void flushPendingNodeWrites() => _flushPendingNodeWrites();
+
   @override
   Map<int, MeshNode> build() {
     final protocol = ref.watch(protocolServiceProvider);
@@ -5868,6 +5942,9 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
       // Flush any pending saves before disposing
       _flushPendingSaves();
       _saveTimer?.cancel();
+      _coalesceTimer?.cancel();
+      _coalesceTimer = null;
+      _pendingNodeWrites.clear();
     });
 
     // Initialize asynchronously
@@ -5913,6 +5990,8 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
   }
 
   void _applyIdentityUpdates(Map<int, NodeIdentity> identities) {
+    // Reads every node from state: pending writes must land first.
+    _flushPendingNodeWrites();
     if (state.isEmpty) return;
     var changed = false;
     final updated = <int, MeshNode>{};
@@ -6159,8 +6238,12 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     // Listen for new nodes
     _nodeSubscription = protocol.nodeStream.listen((node) {
       if (!ref.mounted) return;
-      final isNewNode = !state.containsKey(node.nodeNum);
-      final existing = state[node.nodeNum];
+      final isNewNode =
+          !state.containsKey(node.nodeNum) &&
+          !_pendingNodeWrites.containsKey(node.nodeNum);
+      // Consecutive packets for one node inside a coalesce window must
+      // merge against the freshest pending value, not committed state.
+      final existing = _pendingNodeWrites[node.nodeNum] ?? state[node.nodeNum];
 
       // isIgnored is still managed by DeviceFavoritesService (protocol
       // service does not read it from NodeInfo yet).
@@ -6225,24 +6308,34 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
       // Compute distance from myNode for this node (or recompute all
       // when myNode's own position changes).
       final myNodeNum = ref.read(myNodeNumProvider);
-      if (myNodeNum != null) {
-        if (node.nodeNum == myNodeNum) {
-          // myNode updated — check if position changed
-          final posChanged =
-              existing == null ||
-              existing.latitude != node.latitude ||
-              existing.longitude != node.longitude;
-          state = {...state, node.nodeNum: node};
-          if (posChanged && node.hasPosition) {
-            _recomputeAllDistances(node);
-          }
-        } else {
-          final myNode = state[myNodeNum];
-          node = _withDistance(node, myNode);
-          state = {...state, node.nodeNum: node};
-        }
+      final isOwnNode = myNodeNum != null && node.nodeNum == myNodeNum;
+      if (myNodeNum != null && !isOwnNode) {
+        final myNode = _pendingNodeWrites[myNodeNum] ?? state[myNodeNum];
+        node = _withDistance(node, myNode);
+      }
+      final positionChanged =
+          existing == null ||
+          existing.latitude != node.latitude ||
+          existing.longitude != node.longitude;
+
+      // Structural events commit synchronously so discovery overlays and
+      // map markers keep today's latency; pure lastHeard/RSSI/telemetry
+      // churn coalesces into one emission per window. With the flag off
+      // every event commits synchronously, which is the pre-coalescing
+      // behavior verbatim.
+      final flushNow =
+          !AppFeatureFlags.isNodeEmissionCoalescingEnabled ||
+          isNewNode ||
+          isOwnNode ||
+          (node.hasPosition && positionChanged);
+      _pendingNodeWrites[node.nodeNum] = node;
+      if (flushNow) {
+        _flushPendingNodeWrites();
       } else {
-        state = {...state, node.nodeNum: node};
+        _coalesceTimer ??= Timer(_coalesceWindow, _flushPendingNodeWrites);
+      }
+      if (isOwnNode && positionChanged && node.hasPosition) {
+        _recomputeAllDistances(node);
       }
 
       _logFallbackIfNeeded(node);
@@ -6281,6 +6374,9 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
   }
 
   void addOrUpdateNode(MeshNode node) {
+    // Explicit writes must not be reordered before earlier stream
+    // updates still sitting in the coalesce buffer.
+    _flushPendingNodeWrites();
     final identities = ref.read(nodeIdentityProvider);
     node = _stripBleNamesIfNeeded(node);
     final merged = _mergeIdentity(node, identities[node.nodeNum]);
@@ -6290,6 +6386,10 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
   }
 
   void removeNode(int nodeNum) {
+    // Drop any pending write for this node first: a later flush must
+    // not resurrect a node the user just removed.
+    _pendingNodeWrites.remove(nodeNum);
+    _flushPendingNodeWrites();
     final newState = Map<int, MeshNode>.from(state);
     newState.remove(nodeNum);
     state = newState;
@@ -6302,6 +6402,11 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     // `loadNodes()` will detect the clear on resumption and abandon its
     // stale-state writeback. See `_clearEpoch` docs.
     _clearEpoch++;
+    // Pending stream updates predate the clear and must die with it;
+    // a later flush must not resurrect cleared nodes.
+    _pendingNodeWrites.clear();
+    _coalesceTimer?.cancel();
+    _coalesceTimer = null;
     state = {};
     _storage?.clearNodes();
   }

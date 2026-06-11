@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/l10n_extension.dart';
 import '../theme.dart';
 import 'auto_scroll_text.dart';
 
@@ -113,6 +114,7 @@ class MarqueeAppBar extends StatelessWidget implements PreferredSizeWidget {
             ? IconButton(
                 icon: Icon(Icons.arrow_back, color: context.textPrimary),
                 onPressed: () => Navigator.maybePop(context),
+                tooltip: context.l10n.commonGoBack,
               )
             : null);
 
@@ -251,6 +253,7 @@ class MarqueeAppBarWithAvatar extends StatelessWidget
           ? IconButton(
               icon: Icon(Icons.arrow_back, color: context.textPrimary),
               onPressed: () => Navigator.maybePop(context),
+              tooltip: context.l10n.commonGoBack,
             )
           : null,
       titleSpacing: showBackButton ? 0 : 16,

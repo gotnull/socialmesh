@@ -181,8 +181,12 @@ class MeshCoreBufferReader {
   int readUint8() => readByte();
 
   /// Read signed 8-bit integer.
-  int readInt8() =>
-      readByte() > 127 ? readByte() - 256 : _buffer[_position - 1];
+  ///
+  /// Consumes exactly one byte regardless of sign.
+  int readInt8() {
+    final b = readByte();
+    return b > 127 ? b - 256 : b;
+  }
 
   /// Read unsigned 16-bit little-endian integer.
   int readUint16LE() {

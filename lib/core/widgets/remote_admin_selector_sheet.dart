@@ -166,6 +166,7 @@ class _RemoteAdminSelectorSheetState
                     color: context.textSecondary,
                     size: 22,
                   ),
+                  tooltip: context.l10n.commonClose,
                 ),
               ],
             ),
@@ -197,6 +198,7 @@ class _RemoteAdminSelectorSheetState
                           color: context.textTertiary,
                           size: 18,
                         ),
+                        tooltip: context.l10n.commonClearSearch,
                       )
                     : null,
                 filled: true,

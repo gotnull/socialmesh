@@ -350,6 +350,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                         ),
                         suffixIcon: IconButton(
                           icon: Icon(Icons.check, color: _accentColor),
+                          tooltip: context.l10n.channelKeyApply,
                           onPressed: () {
                             _validateAndDetectKey(_keyController.text);
                             widget.onKeyChanged(_keyController.text);

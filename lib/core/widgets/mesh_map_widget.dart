@@ -227,6 +227,7 @@ class _MeshMapWidgetState extends State<MeshMapWidget> {
                 ? true
                 : widget.mapStyle != MapTileStyle.satellite,
             evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
+            tileUpdateTransformer: finiteCameraTileUpdateTransformer,
             // Disable tile animation for better performance
             tileBuilder: widget.animateTiles
                 ? (context, tileWidget, tile) {

@@ -209,6 +209,52 @@ void main() {
   });
 
   group('admin session passkey lifecycle', () {
+    test('stored passkey is cleared by a fresh start() '
+        '(admin sessions are per-connection state)', () async {
+      await _injectAdminResponseWithPasskey(
+        protocol,
+        fromNodeNum: _remoteNodeNum,
+        sessionPasskey: const <int>[1, 2, 3, 4, 5],
+      );
+
+      transport.clear();
+      await protocol.setConfig(
+        _clientDeviceConfig(),
+        target: const AdminTarget.remote(_remoteNodeNum),
+      );
+      expect(
+        transport.lastAdminMessage.hasSessionPasskey(),
+        isTrue,
+        reason: 'Sanity: the injected passkey must attach before start().',
+      );
+
+      // A fresh start() means a different radio may be attached next;
+      // sessions negotiated with the previous radio must not survive.
+      unawaited(protocol.start().catchError((_) {}));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      protocol.stop();
+      await _primeNodeNum(protocol);
+      await _injectNodeInfo(
+        protocol,
+        _remoteNodeNum,
+        longName: 'Remote',
+        shortName: 'RM',
+      );
+
+      transport.clear();
+      await protocol.setConfig(
+        _clientDeviceConfig(),
+        target: const AdminTarget.remote(_remoteNodeNum),
+      );
+      expect(
+        transport.lastAdminMessage.hasSessionPasskey(),
+        isFalse,
+        reason:
+            'A passkey from the previous connection must not attach after '
+            'a fresh start().',
+      );
+    });
+
     test('empty passkey on a remote admin response is not stored '
         'and does not attach to subsequent remote writes', () async {
       await _injectAdminResponseWithPasskey(

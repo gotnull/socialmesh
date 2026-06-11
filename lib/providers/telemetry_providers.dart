@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/logging.dart';
+import '../core/safety/error_handler.dart';
 import '../models/mesh_models.dart';
 import '../models/telemetry_log.dart';
 import '../models/route.dart';
@@ -697,8 +698,17 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
         } else {
           await repo.saveRun(log);
         }
-      } catch (e) {
+      } catch (e, st) {
         AppLogging.storage('TelemetryLogger: Traceroute DB write failed: $e');
+        // Local history writes fail silently from the user's perspective;
+        // without a Crashlytics signal the data loss is invisible in the
+        // field. Site-keyed throttling collapses per-event floods.
+        AppErrorHandler.reportErrorThrottled(
+          e,
+          st,
+          key: 'telemetry_traceroute_db_write',
+          context: 'TelemetryLogger traceroute DB write',
+        );
       }
       ref.invalidate(traceRouteLogsProvider);
       ref.invalidate(nodeTraceRouteLogsProvider(log.nodeNum));
@@ -936,8 +946,14 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
             ref.invalidate(nodePositionLogsProvider(id));
           }
         }
-      } catch (e) {
+      } catch (e, st) {
         AppLogging.storage('TelemetryLogger: node metrics write failed: $e');
+        AppErrorHandler.reportErrorThrottled(
+          e,
+          st,
+          key: 'telemetry_node_metrics_write',
+          context: 'TelemetryLogger node metrics DB write',
+        );
       }
     });
   }

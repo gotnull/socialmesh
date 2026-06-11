@@ -3,7 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:socialmesh/features/onboarding/widgets/mesh_node_brain.dart';
+import 'package:socialmesh/core/widgets/mesh_node_brain.dart';
 import 'package:socialmesh/features/pet/models/pet_enums.dart';
 import 'package:socialmesh/features/pet/widgets/pet_sigil_painter.dart';
 

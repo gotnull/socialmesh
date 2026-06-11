@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import 'package:flutter/services.dart';
 import 'dm_channel_resolver.dart';
+import 'dm_contacts_provider.dart';
 import 'widgets/chat_composer.dart';
 import 'widgets/message_bubble_body.dart';
 import 'widgets/messaging_unread_divider.dart';
@@ -161,53 +162,12 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen>
   Widget build(BuildContext context) {
     final nodes = ref.watch(nodesProvider);
     final presenceMap = ref.watch(presenceMapProvider);
-    final messages = ref.watch(messagesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
 
-    // Build map of DM info per node (for showing last message, unread count)
-    final dmInfoByNode = <int, _DmInfo>{};
-    for (final message in messages) {
-      // Skip tapback emoji reactions — they are metadata, not messages
-      if (message.isCanonicalTapback) continue;
-      if (message.isDirect) {
-        final otherNode = message.from == myNodeNum ? message.to : message.from;
-        final existing = dmInfoByNode[otherNode];
-        final isUnread =
-            message.received && message.from == otherNode && !message.read;
-
-        if (existing == null) {
-          dmInfoByNode[otherNode] = _DmInfo(
-            lastMessage: message.text,
-            lastMessageTime: message.timestamp,
-            unreadCount: isUnread ? 1 : 0,
-            senderDisplayName: message.senderDisplayName,
-            senderShortName: message.senderShortName,
-            senderAvatarColor: message.senderAvatarColor,
-          );
-        } else {
-          // Update if this message is newer
-          if (message.timestamp.isAfter(existing.lastMessageTime)) {
-            dmInfoByNode[otherNode] = _DmInfo(
-              lastMessage: message.text,
-              lastMessageTime: message.timestamp,
-              unreadCount: existing.unreadCount + (isUnread ? 1 : 0),
-              senderDisplayName: message.senderDisplayName,
-              senderShortName: message.senderShortName,
-              senderAvatarColor: message.senderAvatarColor,
-            );
-          } else if (isUnread) {
-            dmInfoByNode[otherNode] = _DmInfo(
-              lastMessage: existing.lastMessage,
-              lastMessageTime: existing.lastMessageTime,
-              unreadCount: existing.unreadCount + 1,
-              senderDisplayName: existing.senderDisplayName,
-              senderShortName: existing.senderShortName,
-              senderAvatarColor: existing.senderAvatarColor,
-            );
-          }
-        }
-      }
-    }
+    // DM info per node (last message, unread count) is memoized in its
+    // own provider so the O(allMessages) scan reruns only when the
+    // message list changes, not on every node or presence tick.
+    final dmInfoByNode = ref.watch(dmContactInfoProvider);
 
     // Build contacts list from ALL nodes (except self)
     final List<_Contact> contacts = [];
@@ -670,24 +630,6 @@ class _ContactSection {
 }
 
 /// Helper class to track DM info for a node
-class _DmInfo {
-  final String? lastMessage;
-  final DateTime lastMessageTime;
-  final int unreadCount;
-  final String? senderDisplayName;
-  final String? senderShortName;
-  final int? senderAvatarColor;
-
-  _DmInfo({
-    this.lastMessage,
-    required this.lastMessageTime,
-    this.unreadCount = 0,
-    this.senderDisplayName,
-    this.senderShortName,
-    this.senderAvatarColor,
-  });
-}
-
 /// Contact model representing a messageable node
 class _Contact {
   final int nodeNum;

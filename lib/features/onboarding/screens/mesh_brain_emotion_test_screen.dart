@@ -9,7 +9,7 @@ import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/splash_mesh_provider.dart';
-import '../widgets/mesh_node_brain.dart';
+import '../../../core/widgets/mesh_node_brain.dart';
 
 /// A test screen to preview all of Ico's emotional states
 class MeshBrainEmotionTestScreen extends ConsumerStatefulWidget {

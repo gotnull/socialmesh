@@ -261,6 +261,7 @@ class _DrawerSearchField extends StatelessWidget {
                       controller.clear();
                       onChanged('');
                     },
+                    tooltip: context.l10n.commonClearSearch,
                   )
                 : null,
             filled: true,

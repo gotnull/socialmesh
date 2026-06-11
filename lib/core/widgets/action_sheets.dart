@@ -263,6 +263,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent>
               IconButton(
                 onPressed: () => Navigator.pop(context),
                 icon: Icon(Icons.close, color: context.textTertiary),
+                tooltip: context.l10n.commonClose,
               ),
             ],
           ),
@@ -689,6 +690,7 @@ class _SosSheetContentState extends State<SosSheetContent>
               IconButton(
                 onPressed: () => Navigator.pop(context),
                 icon: Icon(Icons.close, color: context.textTertiary),
+                tooltip: context.l10n.commonClose,
               ),
             ],
           ),
@@ -976,6 +978,7 @@ class _TracerouteSheetContentState extends ConsumerState<TracerouteSheetContent>
               IconButton(
                 onPressed: () => Navigator.pop(context),
                 icon: Icon(Icons.close, color: context.textTertiary),
+                tooltip: context.l10n.commonClose,
               ),
             ],
           ),

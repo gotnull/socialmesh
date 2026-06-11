@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/logging.dart';
 import '../../core/safe_lat_lng.dart';
+import '../../core/safety/error_handler.dart';
 import '../../core/transport.dart';
 import '../../models/mesh_models.dart';
 import '../../models/device_error.dart';
@@ -1018,6 +1019,11 @@ class ProtocolService {
   final Map<int, _AdminSession> _adminSessions = {};
   static const Duration _sessionPasskeyTtl = Duration(minutes: 5);
 
+  // Per-(node, type) cooldown stamps for on-demand telemetry pulls.
+  // Cleared on start(); entries are bounded by nodes the user polls.
+  final Map<(int, TelemetryRequestType), DateTime> _lastTelemetryRequestAt = {};
+  static const Duration _telemetryRequestMinInterval = Duration(seconds: 30);
+
   /// Public accessors for SM binary protocol components.
   SmCapabilityStore get smCapabilityStore => _smCapabilityStore;
   SmFeatureFlag get smFeatureFlag => _smFeatureFlag;
@@ -1631,6 +1637,12 @@ class ProtocolService {
           '— orphan _dataSubscription detected on start; cancelling. '
           'This indicates a prior lifecycle violation.',
         );
+        // Breadcrumb so a later crash report carries the lifecycle
+        // violation context that a debug-only log line would lose.
+        AppErrorHandler.addBreadcrumb(
+          'protocol.start: orphan data subscription replaced '
+          '(instance=$hashCode)',
+        );
       }
 
       // Cancel any existing subscriptions to prevent duplicates
@@ -1643,6 +1655,13 @@ class ProtocolService {
       _channels.clear();
       _nodes.clear();
       _syncedContactsThisSession.clear();
+      // Per-connection caches: a different radio may attach next, so
+      // admin sessions, remote LoRa configs, replay-log timestamps, and
+      // telemetry request cooldowns must not leak across sessions.
+      _adminSessions.clear();
+      _remoteLoraConfigByNode.clear();
+      _lastReplayLogAt.clear();
+      _lastTelemetryRequestAt.clear();
       _myNodeNum = null;
       _configurationComplete = false;
       _handshakePhase = _HandshakePhase.idle;
@@ -3440,7 +3459,10 @@ class ProtocolService {
           lockedTo: w.lockedTo,
           name: sanitizeExternalText(w.name),
           description: sanitizeExternalText(w.description),
-          icon: w.icon,
+          // The icon arrives as a raw uint32; a surrogate half or
+          // out-of-range value forms malformed UTF-16 downstream, so
+          // non-scalar values ingest as 0 (no icon).
+          icon: isValidUnicodeScalar(w.icon) ? w.icon : 0,
           fromNodeNum: packet.from,
           isDelete: isDelete,
           receivedAt: _resolvePacketLastHeard(packet),
@@ -4348,6 +4370,12 @@ class ProtocolService {
   }
 
   /// Handle telemetry message (battery, voltage, etc.)
+  // Proto float fields can carry NaN or Infinity from misbehaving peer
+  // firmware. Treating a non-finite sample as absent keeps the node's
+  // prior finite value and keeps non-finite numbers out of nodeStream
+  // consumers (charts, map layers, Live Activities).
+  double? _finiteOrNull(double value) => value.isFinite ? value : null;
+
   void _handleTelemetry(pb.MeshPacket packet, pb.Data data) {
     try {
       // TELEMETRY_APP payload is a Telemetry message wrapper with oneof variant
@@ -4370,13 +4398,13 @@ class ProtocolService {
               ? deviceMetrics.batteryLevel
               : null;
           voltage = deviceMetrics.hasVoltage()
-              ? deviceMetrics.voltage.toDouble()
+              ? _finiteOrNull(deviceMetrics.voltage.toDouble())
               : null;
           channelUtil = deviceMetrics.hasChannelUtilization()
-              ? deviceMetrics.channelUtilization.toDouble()
+              ? _finiteOrNull(deviceMetrics.channelUtilization.toDouble())
               : null;
           airUtilTx = deviceMetrics.hasAirUtilTx()
-              ? deviceMetrics.airUtilTx.toDouble()
+              ? _finiteOrNull(deviceMetrics.airUtilTx.toDouble())
               : null;
           uptimeSeconds = deviceMetrics.hasUptimeSeconds()
               ? deviceMetrics.uptimeSeconds
@@ -4423,62 +4451,68 @@ class ProtocolService {
           if (existingEnvNode != null) {
             final updatedEnvNode = existingEnvNode.copyWith(
               temperature: envMetrics.hasTemperature()
-                  ? envMetrics.temperature.toDouble()
+                  ? _finiteOrNull(envMetrics.temperature.toDouble())
                   : null,
               humidity: envMetrics.hasRelativeHumidity()
-                  ? envMetrics.relativeHumidity.toDouble()
+                  ? _finiteOrNull(envMetrics.relativeHumidity.toDouble())
                   : null,
               barometricPressure: envMetrics.hasBarometricPressure()
-                  ? envMetrics.barometricPressure.toDouble()
+                  ? _finiteOrNull(envMetrics.barometricPressure.toDouble())
                   : null,
               gasResistance: envMetrics.hasGasResistance()
-                  ? envMetrics.gasResistance.toDouble()
+                  ? _finiteOrNull(envMetrics.gasResistance.toDouble())
                   : null,
               iaq: envMetrics.hasIaq() ? envMetrics.iaq : null,
-              lux: envMetrics.hasLux() ? envMetrics.lux.toDouble() : null,
-              whiteLux: envMetrics.hasWhiteLux()
-                  ? envMetrics.whiteLux.toDouble()
+              lux: envMetrics.hasLux()
+                  ? _finiteOrNull(envMetrics.lux.toDouble())
                   : null,
-              irLux: envMetrics.hasIrLux() ? envMetrics.irLux.toDouble() : null,
-              uvLux: envMetrics.hasUvLux() ? envMetrics.uvLux.toDouble() : null,
+              whiteLux: envMetrics.hasWhiteLux()
+                  ? _finiteOrNull(envMetrics.whiteLux.toDouble())
+                  : null,
+              irLux: envMetrics.hasIrLux()
+                  ? _finiteOrNull(envMetrics.irLux.toDouble())
+                  : null,
+              uvLux: envMetrics.hasUvLux()
+                  ? _finiteOrNull(envMetrics.uvLux.toDouble())
+                  : null,
               windDirection: envMetrics.hasWindDirection()
                   ? envMetrics.windDirection
                   : null,
               windSpeed: envMetrics.hasWindSpeed()
-                  ? envMetrics.windSpeed.toDouble()
+                  ? _finiteOrNull(envMetrics.windSpeed.toDouble())
                   : null,
               windGust: envMetrics.hasWindGust()
-                  ? envMetrics.windGust.toDouble()
+                  ? _finiteOrNull(envMetrics.windGust.toDouble())
                   : null,
               windLull: envMetrics.hasWindLull()
-                  ? envMetrics.windLull.toDouble()
+                  ? _finiteOrNull(envMetrics.windLull.toDouble())
                   : null,
               weight: envMetrics.hasWeight()
-                  ? envMetrics.weight.toDouble()
+                  ? _finiteOrNull(envMetrics.weight.toDouble())
                   : null,
               radiation: envMetrics.hasRadiation()
-                  ? envMetrics.radiation.toDouble()
+                  ? _finiteOrNull(envMetrics.radiation.toDouble())
                   : null,
               rainfall1h: envMetrics.hasRainfall1h()
-                  ? envMetrics.rainfall1h.toDouble()
+                  ? _finiteOrNull(envMetrics.rainfall1h.toDouble())
                   : null,
               rainfall24h: envMetrics.hasRainfall24h()
-                  ? envMetrics.rainfall24h.toDouble()
+                  ? _finiteOrNull(envMetrics.rainfall24h.toDouble())
                   : null,
               soilMoisture: envMetrics.hasSoilMoisture()
                   ? envMetrics.soilMoisture
                   : null,
               soilTemperature: envMetrics.hasSoilTemperature()
-                  ? envMetrics.soilTemperature.toDouble()
+                  ? _finiteOrNull(envMetrics.soilTemperature.toDouble())
                   : null,
               envDistance: envMetrics.hasDistance()
-                  ? envMetrics.distance.toDouble()
+                  ? _finiteOrNull(envMetrics.distance.toDouble())
                   : null,
               envCurrent: envMetrics.hasCurrent()
-                  ? envMetrics.current.toDouble()
+                  ? _finiteOrNull(envMetrics.current.toDouble())
                   : null,
               envVoltage: envMetrics.hasVoltage()
-                  ? envMetrics.voltage.toDouble()
+                  ? _finiteOrNull(envMetrics.voltage.toDouble())
                   : null,
               lastHeard: _resolvePacketLastHeard(
                 packet,
@@ -4565,22 +4599,22 @@ class ProtocolService {
           if (existingPwrNode != null) {
             final updatedPwrNode = existingPwrNode.copyWith(
               ch1Voltage: pwrMetrics.hasCh1Voltage()
-                  ? pwrMetrics.ch1Voltage.toDouble()
+                  ? _finiteOrNull(pwrMetrics.ch1Voltage.toDouble())
                   : null,
               ch1Current: pwrMetrics.hasCh1Current()
-                  ? pwrMetrics.ch1Current.toDouble()
+                  ? _finiteOrNull(pwrMetrics.ch1Current.toDouble())
                   : null,
               ch2Voltage: pwrMetrics.hasCh2Voltage()
-                  ? pwrMetrics.ch2Voltage.toDouble()
+                  ? _finiteOrNull(pwrMetrics.ch2Voltage.toDouble())
                   : null,
               ch2Current: pwrMetrics.hasCh2Current()
-                  ? pwrMetrics.ch2Current.toDouble()
+                  ? _finiteOrNull(pwrMetrics.ch2Current.toDouble())
                   : null,
               ch3Voltage: pwrMetrics.hasCh3Voltage()
-                  ? pwrMetrics.ch3Voltage.toDouble()
+                  ? _finiteOrNull(pwrMetrics.ch3Voltage.toDouble())
                   : null,
               ch3Current: pwrMetrics.hasCh3Current()
-                  ? pwrMetrics.ch3Current.toDouble()
+                  ? _finiteOrNull(pwrMetrics.ch3Current.toDouble())
                   : null,
               lastHeard: _resolvePacketLastHeard(
                 packet,
@@ -4602,8 +4636,11 @@ class ProtocolService {
             );
           }
           // Local stats can provide channel utilization
-          if (packet.from == _myNodeNum) {
-            _lastChannelUtil = stats.channelUtilization.toDouble();
+          final localChannelUtil = _finiteOrNull(
+            stats.channelUtilization.toDouble(),
+          );
+          if (packet.from == _myNodeNum && localChannelUtil != null) {
+            _lastChannelUtil = localChannelUtil;
             _channelUtilController.add(_lastChannelUtil);
           }
           // Update node with local stats
@@ -4611,10 +4648,10 @@ class ProtocolService {
           if (existingStatsNode != null) {
             final updatedStatsNode = existingStatsNode.copyWith(
               channelUtilization: stats.hasChannelUtilization()
-                  ? stats.channelUtilization.toDouble()
+                  ? localChannelUtil
                   : null,
               airUtilTx: stats.hasAirUtilTx()
-                  ? stats.airUtilTx.toDouble()
+                  ? _finiteOrNull(stats.airUtilTx.toDouble())
                   : null,
               uptimeSeconds: stats.hasUptimeSeconds()
                   ? stats.uptimeSeconds
@@ -7770,6 +7807,11 @@ class ProtocolService {
 
     final session = _adminSessions[dest];
     if (session == null || session.isExpired) {
+      if (session != null) {
+        // Expired entries are dead weight; evict on detection so the
+        // map stays bounded by the set of live remote admin sessions.
+        _adminSessions.remove(dest);
+      }
       AppLogging.protocol(
         'Remote admin to ${dest.toRadixString(16)}: '
         '${session == null ? "no session passkey" : "session expired"} '
@@ -7791,6 +7833,7 @@ class ProtocolService {
     if (passkey.isEmpty) return;
     if (nodeNum == _myNodeNum) return; // Local node — ignore.
 
+    _adminSessions.removeWhere((_, session) => session.isExpired);
     _adminSessions[nodeNum] = _AdminSession(
       passkey: passkey,
       expiration: DateTime.now().add(_sessionPasskeyTtl),
@@ -8168,6 +8211,20 @@ class ProtocolService {
     int nodeNum, {
     required TelemetryRequestType type,
   }) async {
+    // Protocol-layer cooldown: the UI enforces its own 30s countdown,
+    // but non-UI callers and double-taps that race the countdown start
+    // must not put duplicate requests on the air.
+    final cooldownKey = (nodeNum, type);
+    final lastRequestAt = _lastTelemetryRequestAt[cooldownKey];
+    if (lastRequestAt != null &&
+        DateTime.now().difference(lastRequestAt) <
+            _telemetryRequestMinInterval) {
+      AppLogging.protocol(
+        'Telemetry request for node $nodeNum (${type.name}) suppressed: '
+        'within ${_telemetryRequestMinInterval.inSeconds}s cooldown',
+      );
+      return;
+    }
     try {
       AppLogging.protocol(
         'Requesting ${type.name} telemetry for node $nodeNum',
@@ -8202,6 +8259,9 @@ class ProtocolService {
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
+      // Recorded only after a successful send so a transport throw
+      // leaves the request immediately retryable.
+      _lastTelemetryRequestAt[cooldownKey] = DateTime.now();
     } catch (e) {
       AppLogging.protocol('Error requesting telemetry: $e');
     }

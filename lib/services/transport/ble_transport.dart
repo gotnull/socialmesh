@@ -1159,16 +1159,27 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
     try {
       _pollingTimer?.cancel();
       _pollingTimer = null;
-      await _characteristicSubscription?.cancel();
-      if (_fromNumSubscription != null) {
-        await _fromNumSubscription?.cancel();
+      // Null-set each subscription field BEFORE awaiting its cancel: a
+      // concurrent connect() can assign fresh subscriptions between the
+      // awaits, and a late bulk null-set would orphan them.
+      final characteristicSub = _characteristicSubscription;
+      _characteristicSubscription = null;
+      await characteristicSub?.cancel();
+      final fromNumSub = _fromNumSubscription;
+      _fromNumSubscription = null;
+      if (fromNumSub != null) {
+        await fromNumSub.cancel();
         AppLogging.ble('BLE_NOTIFY_UNSUBSCRIBED fromNum');
       }
-      if (_logRadioSubscription != null) {
-        await _logRadioSubscription?.cancel();
+      final logRadioSub = _logRadioSubscription;
+      _logRadioSubscription = null;
+      if (logRadioSub != null) {
+        await logRadioSub.cancel();
         AppLogging.ble('BLE_NOTIFY_UNSUBSCRIBED logRadio');
       }
-      await _deviceStateSubscription?.cancel();
+      final deviceStateSub = _deviceStateSubscription;
+      _deviceStateSubscription = null;
+      await deviceStateSub?.cancel();
 
       if (_device != null) {
         try {
@@ -1182,10 +1193,6 @@ class BleTransport implements DeviceTransport, ReceiveDiagnosticsSupport {
       _txCharacteristic = null;
       _rxCharacteristic = null;
       _logRadioCharacteristic = null;
-      _characteristicSubscription = null;
-      _deviceStateSubscription = null;
-      _fromNumSubscription = null;
-      _logRadioSubscription = null;
       _consecutiveAuthErrors = 0;
       _lastNotificationAt = null;
 

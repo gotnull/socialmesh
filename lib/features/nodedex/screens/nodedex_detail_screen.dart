@@ -749,8 +749,6 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                                   fontWeight: FontWeight.w500,
                                   color: context.textPrimary,
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: AppTheme.spacing2),
                               Row(
@@ -2517,7 +2515,7 @@ class _EncounterBarChart extends StatelessWidget {
       case 'mid':
         return AppTheme.warningYellow; // amber
       case 'weak':
-        return const Color(0xFFF87171); // red
+        return AppTheme.errorRed;
       default:
         return context.accentColor;
     }
@@ -2615,7 +2613,7 @@ class _SingleDaySummary extends StatelessWidget {
                   if (weak > 0)
                     Expanded(
                       flex: weak,
-                      child: Container(color: const Color(0xFFF87171)),
+                      child: Container(color: AppTheme.errorRed),
                     ),
                   if (noData > 0)
                     Expanded(
@@ -2649,7 +2647,7 @@ class _SingleDaySummary extends StatelessWidget {
               ],
               if (weak > 0) ...[
                 _LegendDot(
-                  color: const Color(0xFFF87171),
+                  color: AppTheme.errorRed,
                   label: '$weak',
                 ), // lint-allow: hardcoded-string
                 const SizedBox(width: AppTheme.spacing10),
@@ -2936,7 +2934,7 @@ class _CompactEncounterRow extends StatelessWidget {
     }
     if (encounter.snr! >= 5) return AppTheme.successGreen;
     if (encounter.snr! >= -5) return AppTheme.warningYellow;
-    return const Color(0xFFF87171);
+    return AppTheme.errorRed;
   }
 
   String _shortDist(BuildContext context, double meters) {
@@ -3112,8 +3110,6 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
                                   fontWeight: FontWeight.w500,
                                   color: context.textPrimary,
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: AppTheme.spacing2),
                               Row(

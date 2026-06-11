@@ -54,6 +54,11 @@ class TelemetryDatabase {
   static const _dbVersion = 1;
 
   /// Maximum entries retained per node per metric type.
+  ///
+  /// Retention is count-based, not time-based, so the covered window
+  /// depends on the node's broadcast cadence: roughly 8 hours at 30s
+  /// intervals, roughly a week at 10-minute intervals. Oldest rows are
+  /// pruned per (node, type) on insert.
   static const int maxLogEntries = 1000;
 
   /// SharedPreferences key prefixes matching the old storage service.

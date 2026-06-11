@@ -6,6 +6,7 @@
 // issue #102 for the failure mode this guards against.
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:socialmesh/models/network_endpoint.dart';
 import 'package:socialmesh/providers/app_providers.dart';
 
 void main() {
@@ -15,6 +16,20 @@ void main() {
       expect(parsed, isNotNull);
       expect(parsed!.host, '10.0.0.5');
       expect(parsed.port, 4403);
+    });
+
+    test('id built from a storage-normalized endpoint round-trips to the '
+        'identical host and port', () {
+      // Storage-time normalization (NetworkEndpoint.create) and the
+      // reconnect parser must agree on the canonical form, so a saved
+      // endpoint's tcp id always parses back to itself.
+      final endpoint = NetworkEndpoint.create(host: ' Node.LOCAL ', port: 4403);
+      final parsed = parseNetworkEndpointIdForTest(
+        'tcp:${endpoint.host}:${endpoint.port}',
+      );
+      expect(parsed, isNotNull);
+      expect(parsed!.host, endpoint.host);
+      expect(parsed.port, endpoint.port);
     });
 
     test('parses hostname-based endpoints', () {

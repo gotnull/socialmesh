@@ -9,7 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../help/help_content.dart';
 import '../l10n/l10n_extension.dart';
 import '../theme.dart';
-import '../../features/onboarding/widgets/mesh_node_brain.dart';
+import 'mesh_node_brain.dart';
 import '../../features/settings/screens/help_center_screen.dart';
 import '../../providers/help_providers.dart';
 

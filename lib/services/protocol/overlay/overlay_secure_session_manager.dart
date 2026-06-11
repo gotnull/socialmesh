@@ -314,6 +314,18 @@ class OverlaySecureSessionManager {
   }) async {
     final session = _sessions[linkId];
     if (session == null || !session.isEstablished) return false;
+    if (session.isSeqExhausted) {
+      // The u32 nonce counter is spent; wrap() would throw on every
+      // send forever. Discard the session (in-memory only, same as
+      // resetSession) so the next outbound renegotiates fresh keys,
+      // and return false so the caller falls back per policy.
+      AppLogging.overlay(
+        'SECURE seq exhausted linkId=0x${linkId.toRadixString(16)} '
+        '— dropping session; next outbound renegotiates fresh keys',
+      );
+      _sessions.remove(linkId);
+      return false;
+    }
     final record = await _store.getByLinkId(linkId);
     if (record == null ||
         record.state == OverlayLinkState.failed ||

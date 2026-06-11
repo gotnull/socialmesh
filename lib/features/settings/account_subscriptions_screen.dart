@@ -439,7 +439,9 @@ class _AccountSubscriptionsScreenState
               const SizedBox(height: AppTheme.spacing10),
             ],
 
-            // GitHub
+            // GitHub. Official brand color per GitHub's identity
+            // guidelines; sign-in buttons must use exact brand colors,
+            // so this intentionally bypasses the app palette.
             _SocialSignInButton(
               onPressed: () => _signInWithGitHub(context),
               icon: _GitHubLogo(),

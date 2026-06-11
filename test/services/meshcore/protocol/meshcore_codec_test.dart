@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/services/meshcore/protocol/meshcore_frame.dart';
 import 'package:socialmesh/services/meshcore/protocol/meshcore_codec.dart';
+import 'package:socialmesh/services/meshcore/protocol/meshcore_messages.dart';
 
 void main() {
   group('MeshCoreFrame', () {
@@ -193,6 +194,53 @@ void main() {
       expect(reader.hasRemaining, isTrue);
       reader.readByte();
       expect(reader.hasRemaining, isFalse);
+    });
+
+    test('readInt8 sign-extends and consumes exactly one byte per call', () {
+      final reader = MeshCoreBufferReader(
+        Uint8List.fromList([0xFF, 0x7F, 0x80, 0x00]),
+      );
+      expect(reader.readInt8(), -1);
+      expect(reader.position, 1);
+      expect(reader.readInt8(), 127);
+      expect(reader.position, 2);
+      expect(reader.readInt8(), -128);
+      expect(reader.position, 3);
+      expect(reader.readInt8(), 0);
+      expect(reader.position, 4);
+      expect(reader.hasRemaining, isFalse);
+    });
+
+    test('readInt8 on a trailing negative byte does not over-read', () {
+      // A negative value as the final byte must not consume a second
+      // (nonexistent) byte.
+      final reader = MeshCoreBufferReader(Uint8List.fromList([0x01, 0xFE]));
+      expect(reader.readByte(), 1);
+      expect(reader.readInt8(), -2);
+      expect(reader.hasRemaining, isFalse);
+    });
+  });
+
+  group('parseChannelInfo bounds', () {
+    test('unterminated 32-byte name never bleeds into the PSK slot', () {
+      // Layout: [0]=idx, [1-32]=name, [33-48]=psk. A name with no null
+      // terminator must read exactly 32 bytes and leave the PSK intact.
+      final payload = Uint8List(49);
+      payload[0] = 3;
+      for (var i = 1; i <= 32; i++) {
+        payload[i] = 0x41;
+      }
+      for (var i = 33; i < 49; i++) {
+        payload[i] = 0xEE;
+      }
+
+      final result = parseChannelInfo(payload);
+      expect(result.isSuccess, isTrue);
+      final info = result.value!;
+      expect(info.index, 3);
+      expect(info.name, 'A' * 32);
+      expect(info.psk.length, 16);
+      expect(info.psk, everyElement(0xEE));
     });
   });
 

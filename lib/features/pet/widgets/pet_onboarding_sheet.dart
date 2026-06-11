@@ -17,7 +17,7 @@ import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../onboarding/widgets/advisor_speech_bubble.dart';
-import '../../onboarding/widgets/mesh_node_brain.dart';
+import '../../../core/widgets/mesh_node_brain.dart';
 import '../providers/pet_providers.dart';
 
 class PetOnboardingSheet extends ConsumerStatefulWidget {

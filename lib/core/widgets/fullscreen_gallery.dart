@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/l10n_extension.dart';
 import '../safety/safe_image.dart';
 import 'package:socialmesh/core/theme.dart';
 
@@ -174,6 +175,7 @@ class _FullscreenGalleryState extends State<FullscreenGallery> {
                           child: IconButton(
                             icon: const Icon(Icons.close, color: Colors.white),
                             onPressed: () => Navigator.of(context).pop(),
+                            tooltip: context.l10n.commonClose,
                           ),
                         ),
                       ],

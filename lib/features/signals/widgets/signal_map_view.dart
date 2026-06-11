@@ -223,6 +223,7 @@ class _SignalMapViewState extends ConsumerState<SignalMapView>
               userAgentPackageName: MapConfig.userAgentPackageName,
               retinaMode: MapConfig.isMapboxActive,
               evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
+              tileUpdateTransformer: finiteCameraTileUpdateTransformer,
             ),
             // Transparent place-name + boundary overlay above satellite
             // imagery. Sits below mesh / signal markers. Skipped on the

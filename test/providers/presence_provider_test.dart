@@ -99,6 +99,109 @@ void main() {
     );
   });
 
+  group('incremental recompute on node changes', () {
+    test('untouched nodes keep NodePresence instance identity; changed '
+        'nodes get a fresh presence', () {
+      final now = DateTime(2026, 1, 24, 12, 0, 0);
+      final container = ProviderContainer(
+        overrides: [
+          nodesProvider.overrideWith(_TestNodesNotifier.new),
+          iftttServiceProvider.overrideWithValue(IftttService()),
+          automationEngineProvider.overrideWithValue(_noopAutomationEngine()),
+          presenceClockProvider.overrideWithValue(() => now),
+        ],
+      );
+      addTearDown(container.dispose);
+      final nodesNotifier =
+          container.read(nodesProvider.notifier) as _TestNodesNotifier;
+
+      final nodeA = MeshNode(nodeNum: 1, lastHeard: now);
+      final nodeB = MeshNode(nodeNum: 2, lastHeard: now);
+      nodesNotifier.setNodes({1: nodeA, 2: nodeB});
+      container.read(presenceMapProvider.notifier).recomputeNow();
+      final before = container.read(presenceMapProvider);
+      expect(before[1], isNotNull);
+      expect(before[2], isNotNull);
+
+      // A packet for node 2 only: NodesNotifier-style update keeps node
+      // 1's MeshNode instance and replaces node 2's.
+      final newNodeB = nodeB.copyWith(lastHeard: now);
+      nodesNotifier.setNodes({1: nodeA, 2: newNodeB});
+      final after = container.read(presenceMapProvider);
+
+      expect(
+        identical(before[1], after[1]),
+        isTrue,
+        reason:
+            'An untouched node must keep its NodePresence instance so '
+            'per-node family providers skip notifying their dependents.',
+      );
+      expect(
+        identical(before[2], after[2]),
+        isFalse,
+        reason: 'The changed node must get a freshly computed presence.',
+      );
+      expect(identical(after[2]!.node, newNodeB), isTrue);
+    });
+
+    test('removed nodes drop out of the presence map incrementally', () {
+      final now = DateTime(2026, 1, 24, 12, 0, 0);
+      final container = ProviderContainer(
+        overrides: [
+          nodesProvider.overrideWith(_TestNodesNotifier.new),
+          iftttServiceProvider.overrideWithValue(IftttService()),
+          automationEngineProvider.overrideWithValue(_noopAutomationEngine()),
+          presenceClockProvider.overrideWithValue(() => now),
+        ],
+      );
+      addTearDown(container.dispose);
+      final nodesNotifier =
+          container.read(nodesProvider.notifier) as _TestNodesNotifier;
+
+      final nodeA = MeshNode(nodeNum: 1, lastHeard: now);
+      final nodeB = MeshNode(nodeNum: 2, lastHeard: now);
+      nodesNotifier.setNodes({1: nodeA, 2: nodeB});
+      container.read(presenceMapProvider.notifier).recomputeNow();
+      expect(container.read(presenceMapProvider).keys, containsAll([1, 2]));
+
+      nodesNotifier.setNodes({1: nodeA});
+      final after = container.read(presenceMapProvider);
+      expect(after.containsKey(2), isFalse);
+      expect(after.containsKey(1), isTrue);
+    });
+
+    test('a no-op emission (all instances unchanged) does not replace the '
+        'presence map', () {
+      final now = DateTime(2026, 1, 24, 12, 0, 0);
+      final container = ProviderContainer(
+        overrides: [
+          nodesProvider.overrideWith(_TestNodesNotifier.new),
+          iftttServiceProvider.overrideWithValue(IftttService()),
+          automationEngineProvider.overrideWithValue(_noopAutomationEngine()),
+          presenceClockProvider.overrideWithValue(() => now),
+        ],
+      );
+      addTearDown(container.dispose);
+      final nodesNotifier =
+          container.read(nodesProvider.notifier) as _TestNodesNotifier;
+
+      final nodeA = MeshNode(nodeNum: 1, lastHeard: now);
+      nodesNotifier.setNodes({1: nodeA});
+      container.read(presenceMapProvider.notifier).recomputeNow();
+      final before = container.read(presenceMapProvider);
+
+      nodesNotifier.setNodes({1: nodeA});
+      final after = container.read(presenceMapProvider);
+      expect(
+        identical(before, after),
+        isTrue,
+        reason:
+            'When no node instance changed, the presence map itself must '
+            'keep identity so downstream watchers do not rebuild.',
+      );
+    });
+  });
+
   test('node does not return to active without a new packet', () {
     var now = DateTime(2026, 1, 24, 12, 0, 0);
     final container = ProviderContainer(

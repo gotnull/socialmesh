@@ -772,6 +772,16 @@ class ReadinessWatchdog {
   }
 }
 
+/// Outcome of the shared pre-scan BLE cleanup.
+enum _BleCleanupOutcome {
+  /// Stack is settled; the caller may proceed to scan.
+  ready,
+
+  /// The target device is absent from the Android bonded list; the
+  /// caller must route to pairing invalidation instead of scanning.
+  bondMissing,
+}
+
 /// Manages device connection lifecycle independently from app initialization.
 /// Starts connection asynchronously in background after app is ready.
 class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
@@ -1364,6 +1374,95 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     }
   }
 
+  /// Shared pre-scan BLE cleanup for background reconnect paths.
+  ///
+  /// The radio may have just been released by another app, or the OS may
+  /// hold a stale GATT handle to the target; scanning in that state finds
+  /// nothing. Stops any active scan, disconnects stale system-device
+  /// handles to [targetDeviceId], optionally verifies the Android bond
+  /// still exists ([enforceBond]), and waits for the stack to settle.
+  ///
+  /// Returns [_BleCleanupOutcome.bondMissing] only when [enforceBond] is
+  /// true and the target is absent from the Android bonded list; the
+  /// caller owns the pairing-invalidation response.
+  Future<_BleCleanupOutcome> _cleanupBleBeforeScan(
+    String targetDeviceId, {
+    required bool enforceBond,
+    required String logContext,
+  }) async {
+    // 1. Stop any existing scan
+    try {
+      await FlutterBluePlus.stopScan();
+    } catch (e) {
+      // Ignore
+    }
+
+    // 2. Check system devices for stale connections to our target
+    try {
+      final systemDevices = await FlutterBluePlus.systemDevices([]);
+      for (final device in systemDevices) {
+        if (device.remoteId.toString() == targetDeviceId) {
+          AppLogging.connection(
+            '🔌 $logContext: Found target in system devices, cleaning up...',
+          );
+          try {
+            if (Platform.isAndroid) {
+              await device.clearGattCache();
+            }
+            await device.disconnect();
+          } catch (e) {
+            // Ignore cleanup errors
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore
+    }
+
+    // 3. Android: Also check bonded devices
+    if (enforceBond && Platform.isAndroid) {
+      try {
+        final bondedDevices = await FlutterBluePlus.bondedDevices;
+        var foundInBonded = false;
+        for (final device in bondedDevices) {
+          if (device.remoteId.toString() == targetDeviceId) {
+            foundInBonded = true;
+            AppLogging.connection(
+              '🔌 $logContext: Found target in bonded devices, cleaning up...',
+            );
+            try {
+              await device.clearGattCache();
+              if (device.isConnected) {
+                await device.disconnect();
+              }
+            } catch (e) {
+              // Ignore
+            }
+          }
+        }
+
+        if (!foundInBonded) {
+          AppLogging.connection(
+            '🔌 $logContext: Device NOT in bonded devices — '
+            'bond was likely removed in Android Bluetooth settings.',
+          );
+          return _BleCleanupOutcome.bondMissing;
+        }
+      } catch (e) {
+        // Ignore — proceed with connection attempt if bond check fails
+        AppLogging.connection('🔌 $logContext: Bond check failed: $e');
+      }
+    }
+
+    // 4. Wait for BLE to reset (longer on Android due to GATT cache)
+    final resetDelay = Platform.isAndroid ? 1500 : 1000;
+    AppLogging.connection(
+      '🔌 $logContext: Waiting ${resetDelay}ms for BLE reset...',
+    );
+    await Future.delayed(Duration(milliseconds: resetDelay));
+    return _BleCleanupOutcome.ready;
+  }
+
   /// Start background connection attempt to known device
   Future<void> startBackgroundConnection() async {
     // Check if user manually disconnected - don't auto-reconnect
@@ -1540,90 +1639,22 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       AppLogging.connection(
         '🔌 startBackgroundConnection: Aggressive BLE cleanup starting...',
       );
-
-      // 1. Stop any existing scan
-      try {
-        await FlutterBluePlus.stopScan();
-      } catch (e) {
-        // Ignore
-      }
-
-      // 2. Check system devices for stale connections to our target
-      try {
-        final systemDevices = await FlutterBluePlus.systemDevices([]);
-        for (final device in systemDevices) {
-          if (device.remoteId.toString() == lastDeviceId) {
-            AppLogging.connection(
-              '🔌 startBackgroundConnection: Found target in system devices, cleaning up...',
-            );
-            try {
-              if (Platform.isAndroid) {
-                await device.clearGattCache();
-              }
-              await device.disconnect();
-            } catch (e) {
-              // Ignore cleanup errors
-            }
-          }
-        }
-      } catch (e) {
-        // Ignore
-      }
-
-      // 3. Android: Also check bonded devices
-      if (Platform.isAndroid) {
-        try {
-          final bondedDevices = await FlutterBluePlus.bondedDevices;
-          var foundInBonded = false;
-          for (final device in bondedDevices) {
-            if (device.remoteId.toString() == lastDeviceId) {
-              foundInBonded = true;
-              AppLogging.connection(
-                '🔌 startBackgroundConnection: Found target in bonded devices, cleaning up...',
-              );
-              try {
-                await device.clearGattCache();
-                if (device.isConnected) {
-                  await device.disconnect();
-                }
-              } catch (e) {
-                // Ignore
-              }
-            }
-          }
-
-          // If the saved device is NOT in the bonded list, the user likely
-          // "forgot" it in Android Bluetooth settings. Attempting to connect
-          // will fail with GATT 133 or auth errors, leaving the user stuck
-          // on the Nodes Screen with a misleading "Device not found" banner.
-          // Trigger pairing invalidation immediately so MainShell shows the
-          // inline Scanner with clear guidance to re-pair.
-          if (!foundInBonded) {
-            AppLogging.connection(
-              '🔌 startBackgroundConnection: Device NOT in bonded devices — '
-              'bond was likely removed in Android Bluetooth settings. '
-              'Triggering pairing invalidation.',
-            );
-            _backgroundScanInProgress = false;
-            await handlePairingInvalidation(
-              PairingInvalidationReason.peerReset,
-            );
-            return;
-          }
-        } catch (e) {
-          // Ignore — proceed with connection attempt if bond check fails
-          AppLogging.connection(
-            '🔌 startBackgroundConnection: Bond check failed: $e',
-          );
-        }
-      }
-
-      // 4. Wait for BLE to reset (longer on Android due to GATT cache)
-      final resetDelay = Platform.isAndroid ? 1500 : 1000;
-      AppLogging.connection(
-        '🔌 startBackgroundConnection: Waiting ${resetDelay}ms for BLE reset...',
+      final cleanup = await _cleanupBleBeforeScan(
+        lastDeviceId,
+        enforceBond: true,
+        logContext: 'startBackgroundConnection',
       );
-      await Future.delayed(Duration(milliseconds: resetDelay));
+      if (cleanup == _BleCleanupOutcome.bondMissing) {
+        // The saved device is NOT in the bonded list: the user likely
+        // "forgot" it in Android Bluetooth settings. Attempting to connect
+        // will fail with GATT 133 or auth errors, leaving the user stuck
+        // on the Nodes Screen with a misleading "Device not found" banner.
+        // Trigger pairing invalidation immediately so MainShell shows the
+        // inline Scanner with clear guidance to re-pair.
+        _backgroundScanInProgress = false;
+        await handlePairingInvalidation(PairingInvalidationReason.peerReset);
+        return;
+      }
 
       // Scan for 5 seconds
       AppLogging.connection(
@@ -2042,6 +2073,16 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       AppLogging.connection(
         '🔌 MeshCore background connect: Direct connect failed (${result.errorMessage}), '
         'trying Strategy 2 - unfiltered scan',
+      );
+
+      // The failed direct connect may have left the OS holding a stale
+      // handle to the target, which makes the unfiltered scan blind to
+      // it. Same cleanup as the Meshtastic path, minus the bond check
+      // (a missing bond is handled by the connect failure itself here).
+      await _cleanupBleBeforeScan(
+        deviceId,
+        enforceBond: false,
+        logContext: 'MeshCore background connect',
       );
 
       ref

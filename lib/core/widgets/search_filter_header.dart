@@ -5,6 +5,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n_extension.dart';
 import '../theme.dart';
 import 'edge_fade.dart';
 
@@ -477,6 +478,7 @@ class _SearchField extends StatelessWidget {
                     controller.clear();
                     onChanged('');
                   },
+                  tooltip: context.l10n.commonClearSearch,
                 )
               : null,
           border: InputBorder.none,

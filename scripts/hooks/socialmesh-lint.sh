@@ -13,6 +13,7 @@
 #   no-raw-latlng              Raw LatLng(<expr>, <expr>) outside safeLatLng()
 #   no-raw-from-char-codes     Raw String.fromCharCode(s)(<untrusted int>) unguarded
 #   require-camera-pose-guard  FlutterMap without the camera-pose NaN guard (isFiniteCameraPose)
+#   require-tile-update-transformer  TileLayer without finiteCameraTileUpdateTransformer
 #   no-unimplemented           throw UnimplementedError
 #   no-bare-scaffold           Bare Scaffold (use GlassScaffold)
 #   no-bare-switch             Bare Switch/SwitchListTile (use ThemedSwitch)
@@ -1048,6 +1049,45 @@ check_file() {
           "error"
       done < <(grep -nE '\bFlutterMap\(' "$file" 2>/dev/null || true)
     fi
+  fi
+
+  # ------------------------------------------------------------------
+  # ERROR: TileLayer without finiteCameraTileUpdateTransformer (default-on)
+  #
+  # A TileUpdateEvent carries a snapshot of the camera taken at emission
+  # time, so an event emitted while the camera held a non-finite pose still
+  # reaches TileRangeCalculator (and throws in Crs.checkLatLng) even after
+  # the onPositionChanged snap-back has restored the camera. Every TileLayer
+  # construction must pass
+  #   tileUpdateTransformer: finiteCameraTileUpdateTransformer
+  # (lib/core/safe_lat_lng.dart) so in-flight non-finite events drop out;
+  # the snap-back move emits a fresh finite-camera event that reloads tiles.
+  #
+  # The check flags a TileLayer( whose following 30 lines do not mention
+  # tileUpdateTransformer. Annotate vetted exceptions with
+  # `// lint-allow: tile-update-transformer - <reason>` on the same line.
+  #
+  # Default-on: there are zero violations today, so new map surfaces are
+  # the only thing this catches.
+  # ------------------------------------------------------------------
+  if [ "$is_dart" = true ] && [ "$in_lib" = true ] && [ "$in_lib_generated" = false ]; then
+    case "$file" in
+      lib/core/safe_lat_lng.dart) ;;
+      *)
+        while IFS=: read -r lineno matched_line; do
+          line_in_scope "$file" "$lineno" || continue
+          local trimmed="${matched_line#"${matched_line%%[![:space:]]*}"}"
+          [[ "$trimmed" == //* ]] && continue
+          [[ "$matched_line" =~ lint-allow:.*tile-update-transformer ]] && continue
+          if ! sed -n "${lineno},$((lineno + 30))p" "$file" 2>/dev/null \
+              | grep -q 'tileUpdateTransformer'; then
+            record_hit "$file" "$lineno" "require-tile-update-transformer" \
+              "TileLayer without tileUpdateTransformer - pass finiteCameraTileUpdateTransformer (lib/core/safe_lat_lng.dart) so tile-update events carrying a non-finite camera snapshot drop out instead of throwing in Crs.checkLatLng." \
+              "error"
+          fi
+        done < <(grep -nE '(^|[^a-zA-Z_.])TileLayer\(' "$file" 2>/dev/null || true)
+        ;;
+    esac
   fi
 
   # ------------------------------------------------------------------

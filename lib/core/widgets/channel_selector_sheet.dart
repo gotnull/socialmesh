@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../l10n/l10n_extension.dart';
 import '../theme.dart';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
@@ -81,6 +82,7 @@ class ChannelSelectorSheet extends ConsumerWidget {
                 IconButton(
                   onPressed: () => Navigator.pop(context),
                   icon: Icon(Icons.close, color: context.textTertiary),
+                  tooltip: context.l10n.commonClose,
                 ),
               ],
             ),

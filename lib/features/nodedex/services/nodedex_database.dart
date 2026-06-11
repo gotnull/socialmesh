@@ -22,6 +22,12 @@ import '../../../core/logging.dart';
 ///
 /// Bump this when adding tables, columns, or indices.
 /// Migration logic runs in [_onUpgrade].
+///
+/// Migrations must remain additive (new nullable columns or new tables
+/// only) and idempotent. Downgrades retain the newest on-disk schema so
+/// older binaries can keep reading it, and sqflite stamps user_version
+/// down after a downgrade, so a later re-upgrade re-runs migration
+/// blocks against the full schema.
 const int nodedexSchemaVersion = 14;
 
 /// Table and column name constants for NodeDex SQLite schema.
@@ -177,11 +183,17 @@ class NodeDexDatabase {
   static const String _dbFileName = 'nodedex.db';
 
   final String? _dbPathOverride;
+  final int _schemaVersion;
   Database? _db;
   Completer<Database?>? _initCompleter;
   bool _initFailed = false;
 
-  NodeDexDatabase({String? dbPathOverride}) : _dbPathOverride = dbPathOverride;
+  /// [schemaVersionOverride] is a test-only affordance for opening the
+  /// database as an older binary would, so downgrade handling can be
+  /// exercised against the production callbacks.
+  NodeDexDatabase({String? dbPathOverride, int? schemaVersionOverride})
+    : _dbPathOverride = dbPathOverride,
+      _schemaVersion = schemaVersionOverride ?? nodedexSchemaVersion;
 
   /// The open database instance. Throws if not initialized.
   Database get database {
@@ -242,7 +254,7 @@ class NodeDexDatabase {
   Future<Database> _attemptOpen(String path) async {
     return openDatabase(
       path,
-      version: nodedexSchemaVersion,
+      version: _schemaVersion,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onDowngrade: _onDowngrade,
@@ -459,21 +471,45 @@ class NodeDexDatabase {
   }
 
   /// Handle schema upgrades.
+  ///
+  /// Every block must be idempotent: after a downgrade the on-disk schema
+  /// is newer than user_version, so re-upgrading re-runs blocks whose
+  /// columns and tables already exist. A throw here fails the open and
+  /// routes into [_attemptRecovery], which deletes the database file.
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     AppLogging.storage(
       'NodeDexDatabase: Upgrading v$oldVersion -> v$newVersion',
     );
 
+    // Re-runs are no-ops: the guard skips columns that already exist.
+    final columnsByTable = <String, Set<String>>{};
+    Future<void> addColumnIfMissing(
+      String table,
+      String column,
+      String definition,
+    ) async {
+      final existing = columnsByTable[table] ??= (await db.rawQuery(
+        'PRAGMA table_info($table)', // lint-allow: hardcoded-string
+      )).map((row) => row['name'] as String).toSet();
+      if (existing.contains(column)) return;
+      await db.execute(
+        'ALTER TABLE $table ADD COLUMN $column $definition', // lint-allow: hardcoded-string
+      );
+      existing.add(column);
+    }
+
     if (oldVersion < 2) {
       // v2: Add per-field timestamps for socialTag and userNote to support
       // last-write-wins conflict resolution during Cloud Sync.
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colSocialTagUpdatedAtMs} INTEGER', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colSocialTagUpdatedAtMs,
+        'INTEGER',
       );
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colUserNoteUpdatedAtMs} INTEGER', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colUserNoteUpdatedAtMs,
+        'INTEGER',
       );
       AppLogging.storage(
         'NodeDexDatabase: v2 migration — added socialTag/userNote timestamps',
@@ -483,9 +519,10 @@ class NodeDexDatabase {
       // v3: Cache node display names so NodeDex can show meaningful names
       // even after reconnecting to a different device (when the original
       // nodes are no longer in the live nodesProvider).
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colLastKnownName} TEXT', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colLastKnownName,
+        'TEXT',
       );
       AppLogging.storage(
         'NodeDexDatabase: v3 migration — added last_known_name column',
@@ -494,17 +531,20 @@ class NodeDexDatabase {
     if (oldVersion < 4) {
       // v4: Cache device info (hardware model, role, firmware version) so
       // SigilCards display this data even when the node is offline.
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colLastKnownHardware} TEXT', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colLastKnownHardware,
+        'TEXT',
       );
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colLastKnownRole} TEXT', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colLastKnownRole,
+        'TEXT',
       );
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colLastKnownFirmware} TEXT', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colLastKnownFirmware,
+        'TEXT',
       );
       AppLogging.storage(
         'NodeDexDatabase: v4 migration — added hardware/role/firmware columns',
@@ -514,7 +554,7 @@ class NodeDexDatabase {
       // v5: Add presence_transitions table to persist presence state
       // changes for the node activity timeline.
       await db.execute('''
-        CREATE TABLE ${NodeDexTables.presenceTransitions} (
+        CREATE TABLE IF NOT EXISTS ${NodeDexTables.presenceTransitions} (
           ${NodeDexTables.colPtId} INTEGER PRIMARY KEY AUTOINCREMENT,
           ${NodeDexTables.colPtNodeNum} INTEGER NOT NULL,
           ${NodeDexTables.colPtFromState} TEXT NOT NULL,
@@ -523,7 +563,7 @@ class NodeDexDatabase {
         )
       ''');
       await db.execute(
-        'CREATE INDEX idx_presence_transitions_node_ts ' // lint-allow: hardcoded-string
+        'CREATE INDEX IF NOT EXISTS idx_presence_transitions_node_ts ' // lint-allow: hardcoded-string
         'ON ${NodeDexTables.presenceTransitions}' // lint-allow: hardcoded-string
         '(${NodeDexTables.colPtNodeNum}, ${NodeDexTables.colPtTsMs})',
       );
@@ -535,13 +575,15 @@ class NodeDexDatabase {
       // v6: Add local_nickname for user-assigned nicknames that override
       // all other name resolution sources. Per-field timestamp supports
       // last-write-wins conflict resolution during Cloud Sync.
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colLocalNickname} TEXT', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colLocalNickname,
+        'TEXT',
       );
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colLocalNicknameUpdatedAtMs} INTEGER', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colLocalNicknameUpdatedAtMs,
+        'INTEGER',
       );
       AppLogging.storage(
         'NodeDexDatabase: v6 migration — added local_nickname columns',
@@ -550,25 +592,30 @@ class NodeDexDatabase {
     if (oldVersion < 7) {
       // v7: Add SIP identity columns for SocialMesh Interop Profile peers.
       // All nullable — existing entries are non-SIP by default.
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colSipCapable} INTEGER', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colSipCapable,
+        'INTEGER',
       );
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colSipPubkey} BLOB', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colSipPubkey,
+        'BLOB',
       );
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colSipPersonaId} BLOB', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colSipPersonaId,
+        'BLOB',
       );
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colSipIdentityState} TEXT', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colSipIdentityState,
+        'TEXT',
       );
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colSipDisplayName} TEXT', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colSipDisplayName,
+        'TEXT',
       );
       AppLogging.storage(
         'NodeDexDatabase: v7 migration — added SIP identity columns',
@@ -577,9 +624,10 @@ class NodeDexDatabase {
     if (oldVersion < 8) {
       // v8: Add MRRP service IDs column so NodeDex can display what
       // MRRP services a peer advertises via SERVICE_ADVERT frames.
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colMrrpServiceIds} TEXT', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colMrrpServiceIds,
+        'TEXT',
       );
       AppLogging.storage(
         'NodeDexDatabase: v8 migration — added mrrp_service_ids column',
@@ -590,13 +638,15 @@ class NodeDexDatabase {
       // observed. Stored as the protobuf Config_LoRaConfig_ModemPreset
       // integer value (0–9). Nullable for legacy entries where the
       // preset was not recorded.
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colLastObservedOnPreset} INTEGER', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colLastObservedOnPreset,
+        'INTEGER',
       );
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.encounters} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colEncObservedOnPreset} INTEGER', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.encounters,
+        NodeDexTables.colEncObservedOnPreset,
+        'INTEGER',
       );
       AppLogging.storage(
         'NodeDexDatabase: v9 migration — added radio preset observation columns',
@@ -606,13 +656,15 @@ class NodeDexDatabase {
       // v10: Track the frequency offset of the local radio when a node
       // was observed. Stored as a float (Hz). Nullable — zero offset
       // is omitted entirely and legacy entries won't have this field.
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colLastObservedFreqOffset} REAL', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colLastObservedFreqOffset,
+        'REAL',
       );
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.encounters} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colEncFreqOffset} REAL', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.encounters,
+        NodeDexTables.colEncFreqOffset,
+        'REAL',
       );
       AppLogging.storage(
         'NodeDexDatabase: v10 migration — added frequency offset columns',
@@ -623,13 +675,15 @@ class NodeDexDatabase {
       // myNodeNumProvider emissions only — never from packet ingest. Both
       // nullable; existing entries leave them NULL forever (remote nodes)
       // or until the next time the user connects to that nodeNum (self).
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colFirstUsedAtMs} INTEGER', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colFirstUsedAtMs,
+        'INTEGER',
       );
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colLastUsedAtMs} INTEGER', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colLastUsedAtMs,
+        'INTEGER',
       );
       AppLogging.storage(
         'NodeDexDatabase: v11 migration — added connection-identity columns',
@@ -642,13 +696,15 @@ class NodeDexDatabase {
       // survive reconnect. Both nullable; legacy entries leave them
       // NULL forever and the radio compatibility helper falls back to
       // the live MeshNode metadata at display time.
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colLastObservationSource} TEXT', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colLastObservationSource,
+        'TEXT',
       );
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colLastHopsAway} INTEGER', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colLastHopsAway,
+        'INTEGER',
       );
       AppLogging.storage(
         'NodeDexDatabase: v12 migration — added observation context columns',
@@ -662,24 +718,28 @@ class NodeDexDatabase {
       // nodedex_identity_changes so the activity timeline surfaces it.
       // Stats are NOT reset: the physical device is continuous across
       // rotation, so encounters / regions / range stay accurate.
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colIdentityPubkey} BLOB', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colIdentityPubkey,
+        'BLOB',
       );
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colIdentityObservedAtMs} INTEGER', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colIdentityObservedAtMs,
+        'INTEGER',
       );
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colIdentityChangeCount} INTEGER NOT NULL DEFAULT 0', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colIdentityChangeCount,
+        'INTEGER NOT NULL DEFAULT 0', // lint-allow: hardcoded-string
       );
-      await db.execute(
-        'ALTER TABLE ${NodeDexTables.entries} ' // lint-allow: hardcoded-string
-        'ADD COLUMN ${NodeDexTables.colLastIdentityChangeAtMs} INTEGER', // lint-allow: hardcoded-string
+      await addColumnIfMissing(
+        NodeDexTables.entries,
+        NodeDexTables.colLastIdentityChangeAtMs,
+        'INTEGER',
       );
       await db.execute('''
-        CREATE TABLE ${NodeDexTables.identityChanges} (
+        CREATE TABLE IF NOT EXISTS ${NodeDexTables.identityChanges} (
           ${NodeDexTables.colIcId} INTEGER PRIMARY KEY AUTOINCREMENT,
           ${NodeDexTables.colNodeNum} INTEGER NOT NULL,
           ${NodeDexTables.colIcPreviousPubkey} BLOB,
@@ -688,7 +748,7 @@ class NodeDexDatabase {
         )
       ''');
       await db.execute(
-        'CREATE INDEX idx_identity_changes_node ' // lint-allow: hardcoded-string
+        'CREATE INDEX IF NOT EXISTS idx_identity_changes_node ' // lint-allow: hardcoded-string
         'ON ${NodeDexTables.identityChanges}' // lint-allow: hardcoded-string
         '(${NodeDexTables.colNodeNum}, ${NodeDexTables.colIcTsMs} DESC)',
       );
@@ -703,7 +763,7 @@ class NodeDexDatabase {
       // remote node's own broadcast position. Both are nullable —
       // observed_from only gets a row when the local radio has GPS.
       await db.execute('''
-        CREATE TABLE ${NodeDexTables.observedFromRegions} (
+        CREATE TABLE IF NOT EXISTS ${NodeDexTables.observedFromRegions} (
           ${NodeDexTables.colNodeNum} INTEGER NOT NULL
             REFERENCES ${NodeDexTables.entries}(${NodeDexTables.colNodeNum})
             ON DELETE CASCADE,
@@ -721,19 +781,26 @@ class NodeDexDatabase {
     }
   }
 
-  /// Handle downgrades by recreating.
+  /// Downgrades retain the on-disk schema unchanged.
+  ///
+  /// Every shipped schema is a strict superset of older versions (columns
+  /// and tables are only ever added), so an older binary reads the newer
+  /// schema safely. These tables hold observation history that cannot be
+  /// rebuilt, so dropping them is never acceptable. sqflite stamps
+  /// user_version down after this callback returns, which is why every
+  /// block in [_onUpgrade] is idempotent.
   Future<void> _onDowngrade(Database db, int oldVersion, int newVersion) async {
     AppLogging.storage(
-      'NodeDexDatabase: Downgrading v$oldVersion -> v$newVersion — '
-      'recreating tables',
+      'NodeDexDatabase: Downgrade requested v$oldVersion -> v$newVersion '
+      '(schema retained)',
     );
-    for (final table in _tableNames()) {
-      await db.execute('DROP TABLE IF EXISTS $table');
-    }
-    await _onCreate(db, newVersion);
   }
 
   /// Attempt corruption recovery by deleting and recreating.
+  ///
+  /// Recovery deletes the database file, so it must never be reachable
+  /// from version-change handling: [_onDowngrade] is a no-op and
+  /// [_onUpgrade] is idempotent for that reason.
   Future<bool> _attemptRecovery(String path) async {
     AppLogging.storage('NodeDexDatabase: Attempting recovery...');
     try {
