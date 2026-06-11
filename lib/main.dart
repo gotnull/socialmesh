@@ -46,6 +46,7 @@ import 'core/logging.dart';
 import 'core/logging/os_log_bridge.dart';
 import 'core/safety/error_handler.dart';
 import 'core/safety/lifecycle_mixin.dart';
+import 'core/third_party_licenses.dart';
 import 'features/debug/app_log_screen.dart' as app_log;
 import 'core/widgets/connecting_content.dart';
 import 'core/widgets/gradient_border_container.dart';
@@ -170,6 +171,10 @@ Future<void> main() async {
 
   // Initialize centralized error handler FIRST - catches errors during startup
   AppErrorHandler.initialize();
+
+  // Register notices for bundled third-party material (fonts, codec2,
+  // vendored packages) so they appear on the Settings > Open Source page.
+  registerThirdPartyLicenses();
 
   // Load environment variables. Skipped on web because the .env asset
   // contains values that crash flutter_dotenv's web parser (Uncaught

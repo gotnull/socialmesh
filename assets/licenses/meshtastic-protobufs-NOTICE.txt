@@ -1,0 +1,24 @@
+Meshtastic protocol buffers
+
+This application communicates with Meshtastic mesh radio devices using
+Dart code generated from the Meshtastic protocol buffer definitions.
+
+  Project:    Meshtastic
+  Repository: https://github.com/meshtastic/protobufs
+  License:    GPL-3.0-only
+  Copyright:  Copyright (C) Meshtastic LLC
+
+Generated code inherits the license of its source .proto files and is
+therefore subject to the GNU General Public License, version 3 only
+(GPL-3.0-only).
+
+The full GPL-3.0 license text is included in this list under the
+"socialmesh" entry (this application is itself licensed under the GNU
+General Public License v3) and is also available at:
+
+  https://www.gnu.org/licenses/gpl-3.0.txt
+
+Complete corresponding source for this application, including the
+generated protobuf bindings, is available at:
+
+  https://github.com/gotnull/socialmesh

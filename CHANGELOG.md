@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (license compliance)
+
+- The in-app license page (Settings > Open Source) now lists notices for third-party material bundled outside the pub dependency graph: the OFL-1.1 fonts (Inter, JetBrains Mono, Caveat), the vendored Codec2 speech codec (LGPL-2.1+), the vendored vs_node_view package (BSD-3-Clause), and the Meshtastic protobuf attribution (GPL-3.0-only), registered lazily via `LicenseRegistry` with texts bundled under `assets/licenses/`
+- `licenses/LGPL-2.1` reference text added beside the existing APACHE-2.0/LGPL-3.0 copies, matching the vendored Codec2 license version; root `NOTICE.md` corrected (flutter_blue_plus license name) and extended with codec2, fonts, sounds, vs_node_view, and GlyphMatrix SDK sections
+
 ### Added (test hardening wave)
 
 - ProtocolService-layer regression tests for the SIP v0.2 target_node_id privacy boundary: overheard HS_HELLO/CHALLENGE/RESPONSE/ACCEPT/DECLINE frames driven through the full wire pipeline must mutate no handshake state and queue no consent request (with a correctly-targeted control frame proving the pipeline is live)

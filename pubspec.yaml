@@ -202,6 +202,10 @@ flutter:
     # SIP Play + Handshake sound effects (Pixabay Content License —
     # see assets/sounds/sip_play/ATTRIBUTION.md for source files).
     - assets/sounds/sip_play/
+    # Third-party license texts surfaced on the in-app LicensePage via
+    # LicenseRegistry (bundled fonts, vendored codec2 + vs_node_view,
+    # Meshtastic protobufs). See lib/core/third_party_licenses.dart.
+    - assets/licenses/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
