@@ -181,12 +181,17 @@ void main() {
 
 /// Poll an event-loop-bound condition by yielding to pending Futures.
 /// Returns once [predicate] is true or [timeout] elapses (the caller
-/// then re-checks state and fails the `expect` cleanly). Cheaper than
-/// a fixed delay and not racy under load.
+/// then re-checks state and fails the `expect` cleanly).
+///
+/// The timeout is a wall-clock bound and must stay generous: under a
+/// full-suite run the worker isolate's event loop can be starved for
+/// hundreds of milliseconds before the notifier's deferred publish
+/// future runs. On the happy path this returns within a step or two,
+/// so the bound costs nothing when the code is healthy.
 Future<void> _pumpUntil(
   bool Function() predicate, {
-  Duration timeout = const Duration(milliseconds: 200),
-  Duration step = const Duration(milliseconds: 1),
+  Duration timeout = const Duration(seconds: 5),
+  Duration step = const Duration(milliseconds: 5),
 }) async {
   final deadline = DateTime.now().add(timeout);
   while (!predicate() && DateTime.now().isBefore(deadline)) {
