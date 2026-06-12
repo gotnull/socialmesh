@@ -32,16 +32,3 @@ String presenceStatusText(PresenceConfidence confidence, Duration? age) {
       return l10n.presenceStatusUnknown;
   }
 }
-
-double presenceOpacity(PresenceConfidence confidence) {
-  switch (confidence) {
-    case PresenceConfidence.active:
-      return 1.0;
-    case PresenceConfidence.fading:
-      return 0.85;
-    case PresenceConfidence.stale:
-      return 0.7;
-    case PresenceConfidence.unknown:
-      return 0.6;
-  }
-}

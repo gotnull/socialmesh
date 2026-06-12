@@ -687,9 +687,6 @@ class _ContactTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final blendColor = _blendColor(context);
-    final cardOpacity = contact.isFavorite
-        ? 1.0
-        : presenceOpacity(contact.presence);
     final cardContent = Padding(
       padding: const EdgeInsets.all(AppTheme.spacing12),
       child: Row(
@@ -802,55 +799,52 @@ class _ContactTile extends StatelessWidget {
       onTap: onTap,
       onLongPress: onLongPress,
       scaleFactor: 0.98,
-      child: Opacity(
-        opacity: cardOpacity,
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppTheme.radius12),
-            child: Stack(
-              children: [
-                // Layer 1: Flat card surface, matches the canonical
-                // settings tile so the bulk of the card reads as neutral.
-                Positioned.fill(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          child: Stack(
+            children: [
+              // Layer 1: Flat card surface, matches the canonical
+              // settings tile so the bulk of the card reads as neutral.
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: context.card,
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
+                  ),
+                ),
+              ),
+              // Layer 2: Soft-light category tint. Composites blendColor
+              // into the surface via BlendMode.softLight so saturated
+              // states (favorite / active) pick up a subtle hue while
+              // the inactive gray collapses to no visible change.
+              Positioned.fill(
+                child: IgnorePointer(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: context.card,
+                      color: blendColor.withValues(alpha: 0.5),
+                      backgroundBlendMode: BlendMode.softLight,
                       borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                 ),
-                // Layer 2: Soft-light category tint. Composites blendColor
-                // into the surface via BlendMode.softLight so saturated
-                // states (favorite / active) pick up a subtle hue while
-                // the inactive gray collapses to no visible change.
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: blendColor.withValues(alpha: 0.5),
-                        backgroundBlendMode: BlendMode.softLight,
-                        borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      ),
+              ),
+              // Layer 3: Category-coloured border. blendColor encodes
+              // favorite / active / inactive.
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                      border: Border.all(color: blendColor),
                     ),
                   ),
                 ),
-                // Layer 3: Category-coloured border. blendColor encodes
-                // favorite / active / inactive.
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(AppTheme.radius12),
-                        border: Border.all(color: blendColor),
-                      ),
-                    ),
-                  ),
-                ),
-                // Layer 4: Content
-                cardContent,
-              ],
-            ),
+              ),
+              // Layer 4: Content
+              cardContent,
+            ],
           ),
         ),
       ),

@@ -21,6 +21,7 @@ import '../../models/telemetry_log.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../providers/app_providers.dart';
+import 'metric_chart_tooltip.dart';
 
 // =============================================================================
 // Filter enum
@@ -708,29 +709,19 @@ class _DeviceMetricsChart extends StatelessWidget {
                   ),
                 ),
                 lineTouchData: LineTouchData(
-                  touchTooltipData: LineTouchTooltipData(
-                    maxContentWidth: 180,
-                    fitInsideHorizontally: true,
-                    fitInsideVertically: true,
-                    getTooltipColor: (_) => context.card,
-                    getTooltipItems: (spots) => spots.map((spot) {
-                      final idx = spot.x.toInt().clamp(0, sorted.length - 1);
-                      final log = sorted[idx];
-                      final color = spot.bar.color ?? context.textPrimary;
+                  touchTooltipData: metricTouchTooltipData(
+                    context,
+                    formatValue: (spot) {
                       // Reverse-map voltage from normalised value.
-                      final isVoltage = color == AppTheme.warningYellow;
-                      final display = isVoltage
+                      final isVoltage =
+                          spot.bar.color == AppTheme.warningYellow;
+                      return isVoltage
                           ? '${((spot.y / 100) * vRange + vAxisMin).toStringAsFixed(2)}V'
                           : '${spot.y.toStringAsFixed(1)}%';
-                      return LineTooltipItem(
-                        '$display\n${AppTimeFormat.withDatePrefix(context, 'MMM d').format(log.timestamp)}',
-                        TextStyle(
-                          color: color,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      );
-                    }).toList(),
+                    },
+                    timestampOf: (spot) =>
+                        sorted[spot.x.toInt().clamp(0, sorted.length - 1)]
+                            .timestamp,
                   ),
                 ),
               ),

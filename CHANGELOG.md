@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (node visual identity)
+
+- Node and contact list tiles no longer fade with presence: the whole-card opacity ramp (active → unknown) is removed from the Meshtastic Nodes tab (both tile styles) and the Messages Contacts list, since presence is already carried by the status dot and the "Seen … ago" text, and the fade made tappable rows read as disabled while hurting legibility
+- Mesh map markers now use the node's identity colour (low three bytes of the node number as RGB, user-set avatar colour wins) with a solid fill and a luminance-contrast label, matching how other Meshtastic clients colour nodes, instead of presence-tier gray/green fills; the age-based marker ghosting (down to 30% opacity after 24h) is removed entirely, and the cached-position "?" badge stays as the staleness signal
+- Map range circles and node movement trails are tinted per-node as well, replacing the flat purple fallback
+
+### Fixed (chart tooltips)
+
+- Metric chart tooltips can no longer escape the chart area: the environment metrics charts and the node history chart now fit their touch tooltips inside the plot (the device metrics chart already did), and the multi-series telemetry tooltips show the sample date once on the bottom entry instead of repeating it per series, so the tooltip stays shorter than the chart even at large accessibility text scales
+
 ### Added (license compliance)
 
 - The in-app license page (Settings > Open Source) now lists notices for third-party material bundled outside the pub dependency graph: the OFL-1.1 fonts (Inter, JetBrains Mono, Caveat), the vendored Codec2 speech codec (LGPL-2.1+), the vendored vs_node_view package (BSD-3-Clause), and the Meshtastic protobuf attribution (GPL-3.0-only), registered lazily via `LicenseRegistry` with texts bundled under `assets/licenses/`

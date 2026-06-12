@@ -21,6 +21,7 @@ import '../../models/telemetry_log.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../providers/app_providers.dart';
+import 'metric_chart_tooltip.dart';
 
 // =============================================================================
 // Filter enum
@@ -811,26 +812,17 @@ class _EnvironmentMetricsChart extends StatelessWidget {
                   ),
                 ),
                 lineTouchData: LineTouchData(
-                  touchTooltipData: LineTouchTooltipData(
-                    maxContentWidth: 180,
-                    getTooltipColor: (_) => context.card,
-                    getTooltipItems: (spots) => spots.map((spot) {
-                      final idx = spot.x.toInt().clamp(0, sorted.length - 1);
-                      final log = sorted[idx];
-                      final color = spot.bar.color ?? context.textPrimary;
-                      final isTemp = color == AppTheme.errorRed;
-                      final display = isTemp
+                  touchTooltipData: metricTouchTooltipData(
+                    context,
+                    formatValue: (spot) {
+                      final isTemp = spot.bar.color == AppTheme.errorRed;
+                      return isTemp
                           ? '${((spot.y / 100) * tRange + tAxisMin).toStringAsFixed(1)}°C'
                           : '${spot.y.toStringAsFixed(1)}%';
-                      return LineTooltipItem(
-                        '$display\n${AppTimeFormat.withDatePrefix(context, 'MMM d').format(log.timestamp)}',
-                        TextStyle(
-                          color: color,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      );
-                    }).toList(),
+                    },
+                    timestampOf: (spot) =>
+                        sorted[spot.x.toInt().clamp(0, sorted.length - 1)]
+                            .timestamp,
                   ),
                 ),
               ),
@@ -941,21 +933,12 @@ class _EnvironmentMetricsChart extends StatelessWidget {
                   ),
                 ),
                 lineTouchData: LineTouchData(
-                  touchTooltipData: LineTouchTooltipData(
-                    maxContentWidth: 180,
-                    getTooltipColor: (_) => context.card,
-                    getTooltipItems: (spotsIn) => spotsIn.map((spot) {
-                      final idx = spot.x.toInt().clamp(0, sorted.length - 1);
-                      final log = sorted[idx];
-                      return LineTooltipItem(
-                        '${_formatTooltipValue(filter, spot.y)}\n${AppTimeFormat.withDatePrefix(context, 'MMM d').format(log.timestamp)}',
-                        TextStyle(
-                          color: color,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      );
-                    }).toList(),
+                  touchTooltipData: metricTouchTooltipData(
+                    context,
+                    formatValue: (spot) => _formatTooltipValue(filter, spot.y),
+                    timestampOf: (spot) =>
+                        sorted[spot.x.toInt().clamp(0, sorted.length - 1)]
+                            .timestamp,
                   ),
                 ),
               ),

@@ -1277,9 +1277,6 @@ class _NodeCard extends ConsumerWidget {
     final statusColor = _presenceColor(context, presenceConfidence);
     final blendColor = _blendColor(context);
     final statusText = presenceStatusText(presenceConfidence, lastHeardAge);
-    final cardOpacity = isMyNode || node.isFavorite
-        ? 1.0
-        : presenceOpacity(presenceConfidence);
     // When this card represents our own device, show the direct link
     // transport (TCP / BLE / USB) instead of the mesh transport (RF /
     // MQTT), because we reach this node via our own phone↔device link,
@@ -1294,65 +1291,62 @@ class _NodeCard extends ConsumerWidget {
       scaleFactor: animationsEnabled ? 0.98 : 1.0,
       enable3DPress: animationsEnabled,
       tiltDegrees: 4.0,
-      child: Opacity(
-        opacity: cardOpacity,
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppTheme.radius12),
-            child: Stack(
-              children: [
-                // Layer 1: Flat card surface, matches the canonical
-                // settings tile so the bulk of the card reads as neutral.
-                Positioned.fill(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppTheme.radius12),
+          child: Stack(
+            children: [
+              // Layer 1: Flat card surface, matches the canonical
+              // settings tile so the bulk of the card reads as neutral.
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: context.card,
+                    borderRadius: BorderRadius.circular(AppTheme.radius12),
+                  ),
+                ),
+              ),
+              // Layer 2: Soft-light category tint. Composites blendColor
+              // into the surface via BlendMode.softLight rather than a
+              // flat alpha wash, so saturated states (active / favorite
+              // / owner) pick up a subtle hue while the inactive gray
+              // collapses to no visible change against the slate card.
+              Positioned.fill(
+                child: IgnorePointer(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: context.card,
+                      color: blendColor.withValues(alpha: 0.3),
+                      backgroundBlendMode: BlendMode.softLight,
                       borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                   ),
                 ),
-                // Layer 2: Soft-light category tint. Composites blendColor
-                // into the surface via BlendMode.softLight rather than a
-                // flat alpha wash, so saturated states (active / favorite
-                // / owner) pick up a subtle hue while the inactive gray
-                // collapses to no visible change against the slate card.
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: blendColor.withValues(alpha: 0.3),
-                        backgroundBlendMode: BlendMode.softLight,
-                        borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      ),
+              ),
+              // Layer 3: Category-coloured border. blendColor encodes
+              // owner / favorite / active / fading / quiet / unknown.
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(AppTheme.radius12),
+                      border: Border.all(color: blendColor),
                     ),
                   ),
                 ),
-                // Layer 3: Category-coloured border. blendColor encodes
-                // owner / favorite / active / fading / quiet / unknown.
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(AppTheme.radius12),
-                        border: Border.all(color: blendColor),
-                      ),
-                    ),
-                  ),
+              ),
+              // Layer 4: Content
+              Padding(
+                padding: const EdgeInsets.all(AppTheme.spacing16),
+                child: _buildCardContent(
+                  context,
+                  signalBars,
+                  statusColor,
+                  statusText,
+                  myDirectTransport,
                 ),
-                // Layer 4: Content
-                Padding(
-                  padding: const EdgeInsets.all(AppTheme.spacing16),
-                  child: _buildCardContent(
-                    context,
-                    signalBars,
-                    statusColor,
-                    statusText,
-                    myDirectTransport,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -1803,137 +1797,131 @@ class _CompactNodeTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = _statusColor(context);
     final statusText = presenceStatusText(presenceConfidence, lastHeardAge);
-    final opacity = isMyNode ? 1.0 : presenceOpacity(presenceConfidence);
     final signalBars = _calculateSignalBars(node.rssi);
     final signalColor = _signalColor(node.rssi);
 
-    return Opacity(
-      opacity: opacity,
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: AppTheme.spacing8,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Row 1: Status dot + full name (no truncation)
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: color,
-                      boxShadow: presenceConfidence.isActive
-                          ? [
-                              BoxShadow(
-                                color: color.withValues(alpha: 0.4),
-                                blurRadius: 4,
-                              ),
-                            ]
-                          : null,
+    return InkWell(
+      onTap: onTap,
+      onLongPress: onLongPress,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: AppTheme.spacing8,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Row 1: Status dot + full name (no truncation)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: color,
+                    boxShadow: presenceConfidence.isActive
+                        ? [
+                            BoxShadow(
+                              color: color.withValues(alpha: 0.4),
+                              blurRadius: 4,
+                            ),
+                          ]
+                        : null,
+                  ),
+                ),
+                const SizedBox(width: AppTheme.spacing12),
+                Expanded(
+                  child: Text(
+                    node.displayName,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: context.textPrimary,
                     ),
                   ),
-                  const SizedBox(width: AppTheme.spacing12),
-                  Expanded(
-                    child: Text(
-                      node.displayName,
+                ),
+                const SizedBox(width: AppTheme.spacing8),
+                Icon(
+                  Icons.chevron_right,
+                  size: 16,
+                  color: context.textTertiary,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.spacing4),
+            // Row 2: Metadata with proper spacing
+            Padding(
+              padding: const EdgeInsets.only(left: 22),
+              child: Wrap(
+                spacing: AppTheme.spacing12,
+                runSpacing: AppTheme.spacing4,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  // Signal bars (mini)
+                  if (node.rssi != null)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: List.generate(4, (i) {
+                        final isActive = i < signalBars;
+                        return Container(
+                          margin: const EdgeInsets.only(right: 1),
+                          width: 3,
+                          height: 6.0 + (i * 2.0),
+                          decoration: BoxDecoration(
+                            color: isActive
+                                ? signalColor
+                                : context.textTertiary.withValues(alpha: 0.25),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radius1,
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                  // Hop count — graphical numbered dots
+                  if (node.hopCount != null)
+                    _CompactHopIndicator(hopCount: node.hopCount!),
+                  // Transport badge (RF / MQTT)
+                  Icon(
+                    node.viaMqtt ? Icons.cloud_outlined : Icons.cell_tower,
+                    size: 14,
+                    color: node.viaMqtt
+                        ? AccentColors.sky
+                        : AccentColors.emerald,
+                  ),
+                  // Battery
+                  if (node.batteryLevel != null && node.batteryLevel! <= 100)
+                    Icon(
+                      _batteryIcon(node.batteryLevel!),
+                      size: 16,
+                      color: _batteryColor(node.batteryLevel!),
+                    ),
+                  // Uptime
+                  if (node.uptimeSeconds != null)
+                    Text(
+                      context.l10n.nodesScreenUptimeLabel(
+                        formatUptime(node.uptimeSeconds!),
+                      ),
                       style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: context.textPrimary,
+                        fontSize: 12,
+                        color: context.textTertiary,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: AppTheme.spacing8),
-                  Icon(
-                    Icons.chevron_right,
-                    size: 16,
-                    color: context.textTertiary,
+                  // Status text
+                  Text(
+                    statusText,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.textSecondary,
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: AppTheme.spacing4),
-              // Row 2: Metadata with proper spacing
-              Padding(
-                padding: const EdgeInsets.only(left: 22),
-                child: Wrap(
-                  spacing: AppTheme.spacing12,
-                  runSpacing: AppTheme.spacing4,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    // Signal bars (mini)
-                    if (node.rssi != null)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: List.generate(4, (i) {
-                          final isActive = i < signalBars;
-                          return Container(
-                            margin: const EdgeInsets.only(right: 1),
-                            width: 3,
-                            height: 6.0 + (i * 2.0),
-                            decoration: BoxDecoration(
-                              color: isActive
-                                  ? signalColor
-                                  : context.textTertiary.withValues(
-                                      alpha: 0.25,
-                                    ),
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.radius1,
-                              ),
-                            ),
-                          );
-                        }),
-                      ),
-                    // Hop count — graphical numbered dots
-                    if (node.hopCount != null)
-                      _CompactHopIndicator(hopCount: node.hopCount!),
-                    // Transport badge (RF / MQTT)
-                    Icon(
-                      node.viaMqtt ? Icons.cloud_outlined : Icons.cell_tower,
-                      size: 14,
-                      color: node.viaMqtt
-                          ? AccentColors.sky
-                          : AccentColors.emerald,
-                    ),
-                    // Battery
-                    if (node.batteryLevel != null && node.batteryLevel! <= 100)
-                      Icon(
-                        _batteryIcon(node.batteryLevel!),
-                        size: 16,
-                        color: _batteryColor(node.batteryLevel!),
-                      ),
-                    // Uptime
-                    if (node.uptimeSeconds != null)
-                      Text(
-                        context.l10n.nodesScreenUptimeLabel(
-                          formatUptime(node.uptimeSeconds!),
-                        ),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: context.textTertiary,
-                        ),
-                      ),
-                    // Status text
-                    Text(
-                      statusText,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: context.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

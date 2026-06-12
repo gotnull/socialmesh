@@ -28,7 +28,7 @@ import '../../core/widgets/status_banner.dart';
 import '../../core/widgets/map_controls.dart';
 import '../../core/widgets/map_node_drawer.dart';
 import '../../core/widgets/node_info_card.dart';
-import '../../core/widgets/stale_location_opacity.dart';
+import '../../core/node_color.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/glass_scaffold.dart';
@@ -145,10 +145,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
   bool _showHeatmap = false;
   bool _clusterMarkers = false;
   bool _isRefreshing = false;
-  // Row 13: most recent faded-marker count we logged. Used to suppress
-  // the `event=map.stale_fade.applied` log when nothing has changed
-  // between frames - prevents spam on every rebuild.
-  int _lastLoggedFadedCount = 0;
 
   // Build-profile counters, logged behind the map logging flag so
   // before/after rebuild-efficiency comparisons can be made on-device.
@@ -2020,37 +2016,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               }
                             }
                             if (ownNode != null) orderedNodes.add(ownNode);
-                            // Row 13: age-based fade. Compute "now" once
-                            // per build so every marker in this frame
-                            // shares the same reference, and a single
-                            // log line summarises how many of the
-                            // visible nodes are fading.
-                            final now = DateTime.now();
-                            int fadedCount = 0;
-                            for (final n in orderedNodes) {
-                              if (markerOpacityForLastHeard(
-                                    n.node.lastHeard,
-                                    now,
-                                  ) <
-                                  1.0) {
-                                fadedCount++;
-                              }
-                            }
-                            if (fadedCount > 0 &&
-                                fadedCount != _lastLoggedFadedCount) {
-                              _lastLoggedFadedCount = fadedCount;
-                              AppLogging.map(
-                                'event=map.stale_fade.applied '
-                                'visible=${orderedNodes.length} '
-                                'faded=$fadedCount',
-                              );
-                            }
                             final markers = _markersFor(
                               orderedNodes,
                               myNodeNum: myNodeNum,
-                              presenceMap: presenceMap,
                               nodedexPinsByNum: nodedexPinsByNum,
-                              now: now,
                             );
 
                             if (!_clusterMarkers) {
@@ -3434,9 +3403,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   List<Marker> _markersFor(
     List<_NodeWithPosition> orderedNodes, {
     required int? myNodeNum,
-    required Map<int, NodePresence> presenceMap,
     required Map<int, NodeDexMapPin> nodedexPinsByNum,
-    required DateTime now,
   }) {
     var reused = 0;
     var rebuilt = 0;
@@ -3450,8 +3417,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
       final nodeNum = n.node.nodeNum;
       final isMyNode = nodeNum == myNodeNum;
       final isSelected = _selectedNode?.nodeNum == nodeNum;
-      final ageOpacity = markerOpacityForLastHeard(n.node.lastHeard, now);
-      final presence = presenceConfidenceFor(presenceMap, n.node);
       final pin = widget.nodedexMode ? nodedexPinsByNum[nodeNum] : null;
 
       final cached = _markerCache[nodeNum];
@@ -3465,8 +3430,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
             isStale: n.isStale,
             isMyNode: isMyNode,
             isSelected: isSelected,
-            presence: presence,
-            ageOpacity: ageOpacity,
           )) {
         marker = cached.marker;
         reused++;
@@ -3475,8 +3438,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
           n,
           isMyNode: isMyNode,
           isSelected: isSelected,
-          ageOpacity: ageOpacity,
-          presence: presence,
           pin: pin,
         );
         _markerCache[nodeNum] = _CachedNodeMarker(
@@ -3488,8 +3449,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
           isStale: n.isStale,
           isMyNode: isMyNode,
           isSelected: isSelected,
-          presence: presence,
-          ageOpacity: ageOpacity,
         );
         rebuilt++;
       }
@@ -3523,8 +3482,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
     _NodeWithPosition n, {
     required bool isMyNode,
     required bool isSelected,
-    required double ageOpacity,
-    required PresenceConfidence presence,
     required NodeDexMapPin? pin,
   }) {
     return Marker(
@@ -3566,27 +3523,18 @@ class _MapScreenState extends ConsumerState<MapScreen>
             _selectedTakEntity = null;
           });
         },
-        child: Opacity(
-          // Row 13: age-from-lastHeard fade applied on top of the
-          // existing cached-position isStale logic. Composes
-          // multiplicatively if both flags fire on the same marker
-          // (rare in practice). Skip the wrapper for own-node so the
-          // user's marker never ghosts itself.
-          opacity: isMyNode ? 1.0 : ageOpacity,
-          child: widget.nodedexMode
-              ? NodeDexSigilMarker(
-                  pin: pin!,
-                  isSelected: isSelected,
-                  isStale: n.isStale,
-                )
-              : _NodeMarker(
-                  node: n.node,
-                  presence: presence,
-                  isMyNode: isMyNode,
-                  isSelected: isSelected,
-                  isStale: n.isStale,
-                ),
-        ),
+        child: widget.nodedexMode
+            ? NodeDexSigilMarker(
+                pin: pin!,
+                isSelected: isSelected,
+                isStale: n.isStale,
+              )
+            : _NodeMarker(
+                node: n.node,
+                isMyNode: isMyNode,
+                isSelected: isSelected,
+                isStale: n.isStale,
+              ),
       ),
     );
   }
@@ -3610,15 +3558,18 @@ class _MapScreenState extends ConsumerState<MapScreen>
         .where((n) => n.latitude.isFinite && n.longitude.isFinite)
         .map((n) {
           final isMyNode = n.node.nodeNum == myNodeNum;
+          // Per-node colour derived from nodeNum only (no avatar
+          // override): the cache signature is geometry-based, so the
+          // colour must be a pure function of inputs it captures.
+          final circleColor = isMyNode
+              ? accent
+              : nodeColorFromId(n.node.nodeNum);
           return CircleMarker(
             point: LatLng(n.latitude, n.longitude),
             radius: 5000, // 5km range circle
             useRadiusInMeter: true,
-            color: (isMyNode ? accent : AppTheme.primaryPurple).withValues(
-              alpha: 0.08,
-            ),
-            borderColor: (isMyNode ? accent : AppTheme.primaryPurple)
-                .withValues(alpha: 0.2),
+            color: circleColor.withValues(alpha: 0.08),
+            borderColor: circleColor.withValues(alpha: 0.2),
             borderStrokeWidth: 1,
           );
         })
@@ -3792,16 +3743,17 @@ class _MapScreenState extends ConsumerState<MapScreen>
         );
         if (points.length < 2) continue;
 
-        // Resolve color from the node's avatar, or fall back to purple
+        // Per-node identity colour (user-set avatar colour wins).
         final matchingNode = nodes
             .where((n) => n.node.nodeNum == nodeNum)
             .firstOrNull;
         final isMyNode = nodeNum == myNodeNum;
         final color = isMyNode
             ? context.accentColor
-            : matchingNode?.node.avatarColor != null
-            ? Color(matchingNode!.node.avatarColor!)
-            : AppTheme.primaryPurple;
+            : resolveNodeColor(
+                nodeNum: nodeNum,
+                avatarColor: matchingNode?.node.avatarColor,
+              );
 
         trails.add(
           Polyline(
@@ -3826,8 +3778,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
         trails.add(
           Polyline(
             points: points,
-            color: (isMyNode ? context.accentColor : AppTheme.primaryPurple)
-                .withValues(alpha: 0.4),
+            color:
+                (isMyNode
+                        ? context.accentColor
+                        : resolveNodeColor(
+                            nodeNum: node.node.nodeNum,
+                            avatarColor: node.node.avatarColor,
+                          ))
+                    .withValues(alpha: 0.4),
             strokeWidth: 2,
             pattern: const StrokePattern.dotted(spacingFactor: 1.5),
           ),
@@ -4653,8 +4611,6 @@ class _CachedNodeMarker {
   final bool isStale;
   final bool isMyNode;
   final bool isSelected;
-  final PresenceConfidence presence;
-  final double ageOpacity;
 
   const _CachedNodeMarker({
     required this.marker,
@@ -4665,8 +4621,6 @@ class _CachedNodeMarker {
     required this.isStale,
     required this.isMyNode,
     required this.isSelected,
-    required this.presence,
-    required this.ageOpacity,
   });
 
   bool matches({
@@ -4677,8 +4631,6 @@ class _CachedNodeMarker {
     required bool isStale,
     required bool isMyNode,
     required bool isSelected,
-    required PresenceConfidence presence,
-    required double ageOpacity,
   }) {
     return identical(this.node, node) &&
         identical(this.pin, pin) &&
@@ -4686,9 +4638,7 @@ class _CachedNodeMarker {
         this.longitude == longitude &&
         this.isStale == isStale &&
         this.isMyNode == isMyNode &&
-        this.isSelected == isSelected &&
-        this.presence == presence &&
-        this.ageOpacity == ageOpacity;
+        this.isSelected == isSelected;
   }
 }
 
@@ -4758,14 +4708,12 @@ String nodeMarkerLabel(MeshNode node) {
 /// Custom marker widget for nodes
 class _NodeMarker extends StatefulWidget {
   final MeshNode node;
-  final PresenceConfidence presence;
   final bool isMyNode;
   final bool isSelected;
   final bool isStale;
 
   const _NodeMarker({
     required this.node,
-    required this.presence,
     required this.isMyNode,
     required this.isSelected,
     this.isStale = false,
@@ -4802,28 +4750,33 @@ class _NodeMarkerState extends State<_NodeMarker>
 
   @override
   Widget build(BuildContext context) {
-    final baseColor = widget.isMyNode
+    // Per-node colour (low three bytes of nodeNum as RGB, user override
+    // wins) so every node keeps its identity colour on the map and never
+    // ghosts with age. Own node stays on the app accent.
+    final color = widget.isMyNode
         ? context.accentColor
-        : _presenceColor(context, widget.presence);
-    final color = widget.isStale ? baseColor.withValues(alpha: 0.5) : baseColor;
-    final borderColor = widget.isSelected
-        ? Colors.white
-        : color.withValues(alpha: widget.isStale ? 0.6 : 0.9);
+        : resolveNodeColor(
+            nodeNum: widget.node.nodeNum,
+            avatarColor: widget.node.avatarColor,
+          );
+    final labelColor = nodeContrastColor(color);
 
     final marker = AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: widget.isStale ? 0.55 : 0.7),
+        color: color,
         shape: BoxShape.circle,
-        border: Border.all(
-          color: borderColor,
-          width: widget.isSelected ? 3 : 2.5,
-          strokeAlign: BorderSide.strokeAlignOutside,
-        ),
+        border: widget.isSelected
+            ? Border.all(
+                color: Colors.white,
+                width: 3,
+                strokeAlign: BorderSide.strokeAlignOutside,
+              )
+            : null,
         boxShadow: [
-          // Coloured glow for presence emphasis.
+          // Coloured glow for selection emphasis.
           BoxShadow(
-            color: color.withValues(alpha: widget.isStale ? 0.2 : 0.4),
+            color: color.withValues(alpha: 0.4),
             blurRadius: widget.isSelected ? 12 : 6,
             spreadRadius: widget.isSelected ? 2 : 0,
           ),
@@ -4854,19 +4807,9 @@ class _NodeMarkerState extends State<_NodeMarker>
                 style: TextStyle(
                   fontSize: widget.isSelected ? 16 : 14,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white.withValues(
-                    alpha: widget.isStale ? 0.85 : 1.0,
-                  ),
-                  // Dark halo keeps the white label legible over busy
-                  // topo tiles regardless of the circle fill behind it.
-                  shadows: const [
-                    Shadow(color: Colors.black, blurRadius: 3),
-                    Shadow(
-                      color: Colors.black,
-                      blurRadius: 1,
-                      offset: Offset(0, 1),
-                    ),
-                  ],
+                  // Black-or-white by the fill's luminance so the label
+                  // stays legible on any per-node colour.
+                  color: labelColor,
                 ),
               ),
             ),

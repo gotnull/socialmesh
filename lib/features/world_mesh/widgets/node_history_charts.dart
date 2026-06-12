@@ -301,6 +301,8 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
         maxY: finalMaxY,
         lineTouchData: LineTouchData(
           touchTooltipData: LineTouchTooltipData(
+            fitInsideHorizontally: true,
+            fitInsideVertically: true,
             getTooltipColor: (_) => context.card,
             tooltipBorder: BorderSide(color: lineColor.withValues(alpha: 0.5)),
             getTooltipItems: (touchedSpots) {
