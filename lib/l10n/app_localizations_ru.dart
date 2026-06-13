@@ -13674,6 +13674,26 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String unitDistanceMeters(String value) {
+    return '$value м';
+  }
+
+  @override
+  String unitDistanceKilometers(String value) {
+    return '$value км';
+  }
+
+  @override
+  String unitDistanceFeet(String value) {
+    return '$value ft';
+  }
+
+  @override
+  String unitDistanceMiles(String value) {
+    return '$value mi';
+  }
+
+  @override
   String nodeDetailDistanceKilometers(String km) {
     return '$km км';
   }
@@ -16451,6 +16471,11 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String nodesScreenDistanceMeters(String meters) {
     return '$meters м';
+  }
+
+  @override
+  String nodesScreenDistanceAway(String distance) {
+    return '$distance';
   }
 
   @override

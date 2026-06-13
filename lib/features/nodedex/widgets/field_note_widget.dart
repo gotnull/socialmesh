@@ -19,6 +19,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
+import '../../../core/units/distance_format.dart';
 import '../models/nodedex_entry.dart';
 import '../services/field_note_generator.dart';
 import 'nodedex_card.dart';
@@ -54,11 +55,15 @@ class FieldNoteWidget extends StatelessWidget {
   /// Controlled by the progressive disclosure system.
   final bool visible;
 
+  /// Display-units preference, so distances in the note honour Imperial.
+  final MeasurementUnits units;
+
   const FieldNoteWidget({
     super.key,
     required this.entry,
     required this.trait,
     required this.accentColor,
+    required this.units,
     this.expanded = false,
     this.visible = true,
   });
@@ -71,6 +76,7 @@ class FieldNoteWidget extends StatelessWidget {
       entry: entry,
       trait: trait,
       l10n: context.l10n,
+      units: units,
     );
 
     if (expanded) {

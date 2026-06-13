@@ -7,10 +7,12 @@ import 'package:latlong2/latlong.dart';
 
 import '../../../../core/l10n/l10n_extension.dart';
 import '../../../../core/theme.dart';
+import '../../../../core/units/distance_format.dart';
 import '../../../../core/widgets/map_entity_list_item.dart';
 import '../../../../core/widgets/map_node_drawer.dart';
 import '../../../../features/meshcore/screens/meshcore_map_marker_staleness.dart';
 import '../../../../models/meshcore_contact.dart';
+import '../../../../providers/app_providers.dart';
 
 /// Side-panel content for the MeshCore Map screen. Mirrors the
 /// Meshtastic map's node-list drawer 1:1 in shape: glass chrome via
@@ -70,6 +72,7 @@ class MeshCoreContactListPanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final now = DateTime.now();
+    final units = ref.watch(measurementUnitsProvider);
     final query = searchQuery.trim().toLowerCase();
 
     var filtered = contacts;
@@ -129,6 +132,7 @@ class MeshCoreContactListPanel extends ConsumerWidget {
                     selfPosition,
                     c,
                     context,
+                    units,
                   );
                   return StaggeredDrawerTile(
                     index: index,
@@ -175,18 +179,12 @@ class MeshCoreContactListPanel extends ConsumerWidget {
     LatLng? self,
     MeshCoreContact c,
     BuildContext context,
+    MeasurementUnits units,
   ) {
     if (self == null) return null;
     final km = _distanceKm(self, c);
     if (km == null) return null;
-    final l10n = context.l10n;
-    if (km < 1) {
-      return l10n.mapDistanceMeters('${(km * 1000).round()}');
-    }
-    if (km < 10) {
-      return l10n.mapDistanceKilometers(km.toStringAsFixed(1));
-    }
-    return l10n.mapDistanceKilometersRound('${km.round()}');
+    return formatDistanceKm(km, units, context.l10n);
   }
 
   static String _statusText(Duration age, BuildContext context) {

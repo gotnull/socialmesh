@@ -23,6 +23,8 @@ import '../../../utils/time_format.dart';
 import '../../../core/constants.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
+import '../../../core/units/distance_format.dart';
+import '../../../providers/app_providers.dart';
 import '../../../models/presence_confidence.dart';
 import '../../../utils/text_sanitizer.dart';
 import '../models/node_activity_event.dart';
@@ -109,6 +111,7 @@ class _NodeActivityTimelineState extends ConsumerState<NodeActivityTimeline> {
             accentColor: widget.accentColor,
             isFirst: i == 0,
             isLast: i == pageItems.length - 1,
+            units: ref.watch(measurementUnitsProvider),
           ),
         // Pagination footer
         if (totalPages > 1) ...[
@@ -204,12 +207,14 @@ class _TimelineEventTile extends StatelessWidget {
   final Color accentColor;
   final bool isFirst;
   final bool isLast;
+  final MeasurementUnits units;
 
   const _TimelineEventTile({
     required this.event,
     required this.accentColor,
     required this.isFirst,
     required this.isLast,
+    required this.units,
   });
 
   @override
@@ -352,10 +357,11 @@ class _TimelineEventTile extends StatelessWidget {
                 timestamp,
                 distanceMeters,
                 snr,
+                units,
               )
             : distanceMeters != null
             ? l10n.nodedexTimelineEncounteredAtDistance(
-                _formatDistance(distanceMeters),
+                _formatDistance(context, distanceMeters, units),
               )
             : snr != null
             ? l10n.nodedexTimelineEncounteredSnr(snr)
@@ -398,6 +404,7 @@ class _TimelineEventTile extends StatelessWidget {
     DateTime end,
     double? distance,
     int? snr,
+    MeasurementUnits units,
   ) {
     final l10n = context.l10n;
     final duration = end.difference(start);
@@ -410,7 +417,9 @@ class _TimelineEventTile extends StatelessWidget {
           );
 
     final detail = distance != null
-        ? l10n.nodedexTimelineEncounterClosest(_formatDistance(distance))
+        ? l10n.nodedexTimelineEncounterClosest(
+            _formatDistance(context, distance, units),
+          )
         : snr != null
         ? l10n.nodedexTimelineEncounterBestSnr(snr)
         : '';
@@ -439,12 +448,11 @@ class _TimelineEventTile extends StatelessWidget {
     };
   }
 
-  static String _formatDistance(double meters) {
-    if (meters >= 1000) {
-      return '${(meters / 1000).toStringAsFixed(1)} km';
-    }
-    return '${meters.round()} m';
-  }
+  static String _formatDistance(
+    BuildContext context,
+    double meters,
+    MeasurementUnits units,
+  ) => formatDistanceMeters(meters, units, context.l10n);
 
   static String _truncate(String text, int maxLength) =>
       safeSubstring(text, maxLength - 1);

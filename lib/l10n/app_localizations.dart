@@ -23596,6 +23596,30 @@ abstract class AppLocalizations {
   /// **'{level}%'**
   String nodeDetailBatteryPercent(int level);
 
+  /// Distance in metres (metric units). {value} is the numeric portion.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} m'**
+  String unitDistanceMeters(String value);
+
+  /// Distance in kilometres (metric units). {value} is the numeric portion.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} km'**
+  String unitDistanceKilometers(String value);
+
+  /// Distance in feet (imperial units). {value} is the numeric portion.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} ft'**
+  String unitDistanceFeet(String value);
+
+  /// Distance in miles (imperial units). {value} is the numeric portion.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} mi'**
+  String unitDistanceMiles(String value);
+
   /// Distance display in kilometers.
   ///
   /// In en, this message translates to:
@@ -28159,6 +28183,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{meters} m away'**
   String nodesScreenDistanceMeters(String meters);
+
+  /// Distance-from-me label on a node card; wraps a formatted distance (e.g. '1.2 km' or '0.8 mi').
+  ///
+  /// In en, this message translates to:
+  /// **'{distance} away'**
+  String nodesScreenDistanceAway(String distance);
 
   /// Empty state message when no nodes exist.
   ///

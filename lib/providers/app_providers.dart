@@ -19,6 +19,7 @@ import '../core/platform/platform_capabilities.dart';
 import '../core/platform/platform_capabilities_provider.dart';
 import '../core/safety/error_handler.dart';
 import '../core/transport.dart';
+import '../core/units/distance_format.dart';
 import '../dev/demo/demo.dart';
 import '../services/transport/ble_transport.dart';
 import '../services/transport/network_transport.dart';
@@ -3817,6 +3818,30 @@ final meshPacketDedupeStoreProvider = Provider<MeshPacketDedupeStore>((ref) {
 });
 
 // Protocol service - singleton instance that persists across rebuilds
+// Display-units preference (metric/imperial) sourced from the device's
+// Meshtastic DisplayConfig. Seeds from the cached config, then tracks live
+// updates from the device. Falls back to metric when no config is known yet.
+final displayUnitsStreamProvider = StreamProvider<MeasurementUnits>((
+  ref,
+) async* {
+  final protocol = ref.watch(protocolServiceProvider);
+  MeasurementUnits toUnits(
+    config_pbenum.Config_DisplayConfig_DisplayUnits? units,
+  ) => units == config_pbenum.Config_DisplayConfig_DisplayUnits.IMPERIAL
+      ? MeasurementUnits.imperial
+      : MeasurementUnits.metric;
+  yield toUnits(protocol.currentDisplayConfig?.units);
+  yield* protocol.displayConfigStream.map((c) => toUnits(c.units));
+});
+
+// Synchronous accessor every distance formatter reads. Distance strings must
+// route through `formatDistanceMeters` with this value so toggling Imperial in
+// Display Settings is honoured app-wide.
+final measurementUnitsProvider = Provider<MeasurementUnits>((ref) {
+  return ref.watch(displayUnitsStreamProvider).asData?.value ??
+      MeasurementUnits.metric;
+});
+
 final protocolServiceProvider = Provider<ProtocolService>((ref) {
   final transport = ref.watch(transportProvider);
   final dedupeStore = ref.watch(meshPacketDedupeStoreProvider);

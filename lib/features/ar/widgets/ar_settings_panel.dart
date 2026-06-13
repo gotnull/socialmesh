@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../core/units/distance_format.dart';
 
 import '../ar_state.dart';
 
@@ -16,6 +17,7 @@ class ARSettingsPanel extends StatelessWidget {
   final ValueChanged<String> onToggleElement;
   final VoidCallback onToggleOfflineNodes;
   final VoidCallback onToggleFavoritesOnly;
+  final MeasurementUnits units;
 
   const ARSettingsPanel({
     super.key,
@@ -25,6 +27,7 @@ class ARSettingsPanel extends StatelessWidget {
     required this.onToggleElement,
     required this.onToggleOfflineNodes,
     required this.onToggleFavoritesOnly,
+    required this.units,
   });
 
   @override
@@ -368,11 +371,6 @@ class ARSettingsPanel extends StatelessWidget {
     );
   }
 
-  String _formatDistance(double meters) {
-    if (meters < 1000) {
-      return '${meters.round()}m';
-    } else {
-      return '${(meters / 1000).toStringAsFixed(1)}km';
-    }
-  }
+  String _formatDistance(double meters) =>
+      formatDistanceMetersAscii(meters, units);
 }

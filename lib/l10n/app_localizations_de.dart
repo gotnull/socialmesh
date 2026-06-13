@@ -13706,6 +13706,26 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String unitDistanceMeters(String value) {
+    return '$value m';
+  }
+
+  @override
+  String unitDistanceKilometers(String value) {
+    return '$value km';
+  }
+
+  @override
+  String unitDistanceFeet(String value) {
+    return '$value ft';
+  }
+
+  @override
+  String unitDistanceMiles(String value) {
+    return '$value mi';
+  }
+
+  @override
   String nodeDetailDistanceKilometers(String km) {
     return '$km km';
   }
@@ -16494,6 +16514,11 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String nodesScreenDistanceMeters(String meters) {
     return '$meters m entfernt';
+  }
+
+  @override
+  String nodesScreenDistanceAway(String distance) {
+    return '$distance entfernt';
   }
 
   @override

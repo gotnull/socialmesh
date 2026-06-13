@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../core/units/distance_format.dart';
 import '../../../utils/timestamp_validation.dart';
 
 import '../ar_engine.dart';
@@ -19,6 +20,7 @@ class ARNodeDetailCard extends StatelessWidget {
   final VoidCallback onFavorite;
   final VoidCallback onShare;
   final bool isFavorite;
+  final MeasurementUnits units;
 
   const ARNodeDetailCard({
     super.key,
@@ -28,6 +30,7 @@ class ARNodeDetailCard extends StatelessWidget {
     required this.onFavorite,
     required this.onShare,
     required this.isFavorite,
+    required this.units,
   });
 
   @override
@@ -466,13 +469,8 @@ class ARNodeDetailCard extends StatelessWidget {
     }
   }
 
-  String _formatDistance(double meters) {
-    if (meters < 1000) {
-      return '${meters.round()}m';
-    } else {
-      return '${(meters / 1000).toStringAsFixed(1)}km';
-    }
-  }
+  String _formatDistance(double meters) =>
+      formatDistanceMetersAscii(meters, units);
 
   String _formatTimeAgo(DateTime dateTime) {
     final duration = DateTime.now().difference(dateTime);

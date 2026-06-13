@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:socialmesh/core/theme.dart';
+import 'package:socialmesh/core/units/distance_format.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -17,6 +18,7 @@ class ARHudPainter extends CustomPainter {
   final ARWorldNode? selectedNode;
   final ARHudConfig config;
   final double animationValue;
+  final MeasurementUnits units;
 
   ARHudPainter({
     required this.orientation,
@@ -26,6 +28,7 @@ class ARHudPainter extends CustomPainter {
     required this.alerts,
     this.selectedNode,
     required this.config,
+    required this.units,
     this.animationValue = 0,
   });
 
@@ -1018,13 +1021,8 @@ class ARHudPainter extends CustomPainter {
     return _criticalColor; // Poor - red
   }
 
-  String _formatDistance(double meters) {
-    if (meters < 1000) {
-      return '${meters.round()}m';
-    } else {
-      return '${(meters / 1000).toStringAsFixed(1)}km';
-    }
-  }
+  String _formatDistance(double meters) =>
+      formatDistanceMetersAscii(meters, units);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // CLUSTERS
@@ -1345,7 +1343,8 @@ class ARHudPainter extends CustomPainter {
         oldDelegate.nodes != nodes ||
         oldDelegate.selectedNode != selectedNode ||
         oldDelegate.animationValue != animationValue ||
-        oldDelegate.alerts != alerts;
+        oldDelegate.alerts != alerts ||
+        oldDelegate.units != units;
   }
 }
 

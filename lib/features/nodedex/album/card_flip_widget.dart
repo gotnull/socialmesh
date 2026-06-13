@@ -35,6 +35,7 @@ import 'package:intl/intl.dart';
 import '../../../core/logging.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
+import '../../../core/units/distance_format.dart';
 import '../../../providers/app_providers.dart';
 import '../../../utils/timestamp_validation.dart';
 import '../models/nodedex_entry.dart';
@@ -549,6 +550,7 @@ class _StatsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dateFormat = DateFormat('dd MMM yyyy');
+    final units = ref.watch(measurementUnitsProvider);
 
     // Prefer the live MeshNode.lastHeard when the device still knows
     // about this node — that's the canonical "any packet receipt"
@@ -596,7 +598,7 @@ class _StatsSection extends ConsumerWidget {
         if (entry.maxDistanceSeen != null && entry.maxDistanceSeen! > 0)
           _StatRow(
             label: context.l10n.nodedexMaxDistanceStatLabel,
-            value: _formatDistance(entry.maxDistanceSeen!),
+            value: _formatDistance(context, entry.maxDistanceSeen!, units),
             scale: scale,
           ),
         if (entry.bestSnr != null)
@@ -609,12 +611,11 @@ class _StatsSection extends ConsumerWidget {
     );
   }
 
-  String _formatDistance(double meters) {
-    if (meters >= 1000) {
-      return '${(meters / 1000).toStringAsFixed(1)} km';
-    }
-    return '${meters.toStringAsFixed(0)} m';
-  }
+  String _formatDistance(
+    BuildContext context,
+    double meters,
+    MeasurementUnits units,
+  ) => formatDistanceMeters(meters, units, context.l10n);
 }
 
 class _TraitSection extends StatelessWidget {

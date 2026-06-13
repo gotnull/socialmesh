@@ -836,9 +836,9 @@ void main() {
           if (note.contains('km')) {
             foundKmNote = true;
             expect(
-              note.contains('15.0km'),
+              note.contains('15.0 km'),
               isTrue,
-              reason: 'Expected "15.0km" in note: "$note"',
+              reason: 'Expected "15.0 km" in note: "$note"',
             );
             break;
           }
@@ -870,7 +870,7 @@ void main() {
             l10n: _l10n,
           );
 
-          if (note.contains('750m')) {
+          if (note.contains('750 m')) {
             foundMeterNote = true;
             break;
           }

@@ -41,6 +41,7 @@ import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/ico_help_system.dart';
 import '../../../core/widgets/status_banner.dart';
 import '../../../models/mesh_models.dart';
+import '../../../core/units/distance_format.dart';
 import '../../../providers/app_providers.dart';
 
 import '../../nodeboard/widgets/nodeboard_node_card.dart';
@@ -387,6 +388,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                   entry: entry,
                   trait: traitResult.primary,
                   accentColor: entry.sigil?.primaryColor ?? context.accentColor,
+                  units: ref.watch(measurementUnitsProvider),
                   expanded: true,
                   visible: disclosure.showFieldNote,
                 ),
@@ -1577,7 +1579,11 @@ class _DiscoveryStatsCard extends ConsumerWidget {
           if (entry.maxDistanceSeen != null)
             _InfoRow(
               label: context.l10n.nodedexMaxRangeLabel,
-              value: _formatDistance(context, entry.maxDistanceSeen!),
+              value: _formatDistance(
+                context,
+                entry.maxDistanceSeen!,
+                ref.watch(measurementUnitsProvider),
+              ),
               icon: Icons.straighten,
             ),
           // Derived all-time message count for this node, matching the
@@ -1610,14 +1616,11 @@ class _DiscoveryStatsCard extends ConsumerWidget {
     );
   }
 
-  String _formatDistance(BuildContext context, double meters) {
-    if (meters >= 1000) {
-      return context.l10n.nodedexDistanceKilometers(
-        (meters / 1000).toStringAsFixed(2),
-      );
-    }
-    return context.l10n.nodedexDistanceMeters(meters.round().toString());
-  }
+  String _formatDistance(
+    BuildContext context,
+    double meters,
+    MeasurementUnits units,
+  ) => formatDistanceMeters(meters, units, context.l10n);
 }
 
 // =============================================================================

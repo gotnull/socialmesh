@@ -25,6 +25,7 @@ import '../../core/widgets/skeleton_config.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
 import '../../providers/app_providers.dart';
+import '../../core/units/distance_format.dart';
 import '../../providers/help_providers.dart';
 import '../../providers/presence_providers.dart';
 import '../../providers/social_providers.dart';
@@ -1241,15 +1242,14 @@ class _NodeCard extends ConsumerWidget {
     return 0;
   }
 
-  String _formatDistance(BuildContext context, double? distance) {
+  String _formatDistance(
+    BuildContext context,
+    double? distance,
+    MeasurementUnits units,
+  ) {
     if (distance == null) return '';
-    if (distance < 1000) {
-      return context.l10n.nodesScreenDistanceMeters(
-        distance.toInt().toString(),
-      );
-    }
-    return context.l10n.nodesScreenDistanceKilometers(
-      (distance / 1000).toStringAsFixed(1),
+    return context.l10n.nodesScreenDistanceAway(
+      formatDistanceMeters(distance, units, context.l10n),
     );
   }
 
@@ -1344,6 +1344,7 @@ class _NodeCard extends ConsumerWidget {
                   statusColor,
                   statusText,
                   myDirectTransport,
+                  ref.watch(measurementUnitsProvider),
                 ),
               ),
             ],
@@ -1359,6 +1360,7 @@ class _NodeCard extends ConsumerWidget {
     Color statusColor,
     String statusText,
     TransportType? myDirectTransport,
+    MeasurementUnits units,
   ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1601,7 +1603,7 @@ class _NodeCard extends ConsumerWidget {
                     Icon(Icons.near_me, size: 14, color: context.textTertiary),
                     SizedBox(width: AppTheme.spacing6),
                     Text(
-                      _formatDistance(context, node.distance),
+                      _formatDistance(context, node.distance, units),
                       style: TextStyle(
                         fontSize: 12,
                         color: context.textTertiary,

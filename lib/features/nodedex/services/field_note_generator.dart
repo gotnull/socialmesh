@@ -18,6 +18,7 @@
 // This ensures visual variety across nodes while maintaining
 // determinism within each node's identity.
 
+import 'package:socialmesh/core/units/distance_format.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
 
 import '../models/nodedex_entry.dart';
@@ -51,13 +52,14 @@ class FieldNoteGenerator {
     required NodeDexEntry entry,
     required NodeTrait trait,
     required AppLocalizations l10n,
+    MeasurementUnits units = MeasurementUnits.metric,
   }) {
     // Use the sigil hash to deterministically pick a template index.
     // This ensures the same node always gets the same template.
     final hash = SigilGenerator.mix(entry.nodeNum);
     final templateIndex = _extractBits(hash, 0, 16) % _templatesPerTrait;
 
-    return _noteForTrait(trait, templateIndex, l10n, entry);
+    return _noteForTrait(trait, templateIndex, l10n, entry, units);
   }
 
   // ---------------------------------------------------------------------------
@@ -69,9 +71,10 @@ class FieldNoteGenerator {
     int index,
     AppLocalizations l10n,
     NodeDexEntry entry,
+    MeasurementUnits units,
   ) {
     return switch (trait) {
-      NodeTrait.wanderer => _wandererNote(index, l10n, entry),
+      NodeTrait.wanderer => _wandererNote(index, l10n, entry, units),
       NodeTrait.beacon => _beaconNote(index, l10n, entry),
       NodeTrait.ghost => _ghostNote(index, l10n, entry),
       NodeTrait.sentinel => _sentinelNote(index, l10n, entry),
@@ -87,13 +90,14 @@ class FieldNoteGenerator {
     int index,
     AppLocalizations l10n,
     NodeDexEntry entry,
+    MeasurementUnits units,
   ) {
     return switch (index) {
       0 => l10n.nodedexFieldNoteWanderer0(entry.regionCount),
       1 => l10n.nodedexFieldNoteWanderer1(entry.distinctPositionCount),
       2 => l10n.nodedexFieldNoteWanderer2(entry.regionCount),
       3 => l10n.nodedexFieldNoteWanderer3(
-        _formatDistance(entry.maxDistanceSeen, l10n),
+        _formatDistance(entry.maxDistanceSeen, l10n, units),
       ),
       4 => l10n.nodedexFieldNoteWanderer4,
       5 => l10n.nodedexFieldNoteWanderer5(entry.regionCount),
@@ -275,12 +279,13 @@ class FieldNoteGenerator {
   // Formatting helpers
   // ---------------------------------------------------------------------------
 
-  static String _formatDistance(double? meters, AppLocalizations l10n) {
+  static String _formatDistance(
+    double? meters,
+    AppLocalizations l10n,
+    MeasurementUnits units,
+  ) {
     if (meters == null) return l10n.nodedexDistanceUnknown;
-    if (meters >= 1000) {
-      return '${(meters / 1000).toStringAsFixed(1)}km';
-    }
-    return '${meters.round()}m';
+    return formatDistanceMeters(meters, units, l10n);
   }
 
   static String _formatRelativeTime(Duration duration, AppLocalizations l10n) {

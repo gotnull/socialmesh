@@ -28,6 +28,7 @@ import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../pet/widgets/pet_mini_preview.dart';
 import '../../../providers/accessibility_providers.dart';
+import '../../../core/units/distance_format.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/help_providers.dart';
 import '../../../core/theme.dart';
@@ -308,7 +309,12 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
           ),
         )
       else
-        SliverToBoxAdapter(child: _NodeDexStatsCard(stats: stats)),
+        SliverToBoxAdapter(
+          child: _NodeDexStatsCard(
+            stats: stats,
+            units: ref.watch(measurementUnitsProvider),
+          ),
+        ),
 
       // Pinned search + filter controls
       SliverPersistentHeader(
@@ -611,8 +617,9 @@ class _ViewModeToggle extends StatelessWidget {
 
 class _NodeDexStatsCard extends StatelessWidget {
   final NodeDexStats stats;
+  final MeasurementUnits units;
 
-  const _NodeDexStatsCard({required this.stats});
+  const _NodeDexStatsCard({required this.stats, required this.units});
 
   @override
   Widget build(BuildContext context) {
@@ -694,7 +701,7 @@ class _NodeDexStatsCard extends StatelessWidget {
                   Expanded(
                     child: _StatChip(
                       icon: Icons.straighten,
-                      value: _formatDistance(stats.longestDistance),
+                      value: _formatDistance(context, stats.longestDistance),
                     ),
                   ),
                 ],
@@ -712,12 +719,9 @@ class _NodeDexStatsCard extends StatelessWidget {
     return n.toString();
   }
 
-  String _formatDistance(double? meters) {
+  String _formatDistance(BuildContext context, double? meters) {
     if (meters == null) return '--';
-    if (meters < 1000) return '${meters.round()}m';
-    final km = meters / 1000;
-    if (km >= 100) return '${km.round()}km';
-    return '${km.toStringAsFixed(1)}km';
+    return formatDistanceMeters(meters, units, context.l10n);
   }
 }
 

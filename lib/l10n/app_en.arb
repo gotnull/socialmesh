@@ -18229,6 +18229,42 @@
             }
         }
     },
+    "unitDistanceMeters": "{value} m",
+    "@unitDistanceMeters": {
+        "description": "Distance in metres (metric units). {value} is the numeric portion.",
+        "placeholders": {
+            "value": {
+                "type": "String"
+            }
+        }
+    },
+    "unitDistanceKilometers": "{value} km",
+    "@unitDistanceKilometers": {
+        "description": "Distance in kilometres (metric units). {value} is the numeric portion.",
+        "placeholders": {
+            "value": {
+                "type": "String"
+            }
+        }
+    },
+    "unitDistanceFeet": "{value} ft",
+    "@unitDistanceFeet": {
+        "description": "Distance in feet (imperial units). {value} is the numeric portion.",
+        "placeholders": {
+            "value": {
+                "type": "String"
+            }
+        }
+    },
+    "unitDistanceMiles": "{value} mi",
+    "@unitDistanceMiles": {
+        "description": "Distance in miles (imperial units). {value} is the numeric portion.",
+        "placeholders": {
+            "value": {
+                "type": "String"
+            }
+        }
+    },
     "nodeDetailDistanceKilometers": "{km} km",
     "@nodeDetailDistanceKilometers": {
         "description": "Distance display in kilometers.",
@@ -22240,6 +22276,15 @@
         "description": "Distance label in meters on node card.",
         "placeholders": {
             "meters": {
+                "type": "String"
+            }
+        }
+    },
+    "nodesScreenDistanceAway": "{distance} away",
+    "@nodesScreenDistanceAway": {
+        "description": "Distance-from-me label on a node card; wraps a formatted distance (e.g. '1.2 km' or '0.8 mi').",
+        "placeholders": {
+            "distance": {
                 "type": "String"
             }
         }

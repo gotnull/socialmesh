@@ -13,6 +13,7 @@ import '../../core/logging.dart';
 import '../../utils/time_format.dart';
 import '../../utils/timestamp_validation.dart';
 import '../../core/safety/lifecycle_mixin.dart';
+import '../../core/units/distance_format.dart';
 import '../../core/node_color.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
@@ -727,6 +728,13 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
   }
 
   /// Row of compact stat chips below the hero.
+  String _formatDistance(BuildContext context, double meters) =>
+      formatDistanceMeters(
+        meters,
+        ref.watch(measurementUnitsProvider),
+        context.l10n,
+      );
+
   Widget _buildStatChipsRow(BuildContext context, MeshNode node) {
     final chips = <Widget>[];
 
@@ -768,13 +776,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
       chips.add(
         _QuickStatChip(
           icon: Icons.near_me,
-          value: node.distance! < 1000
-              ? context.l10n.nodeDetailDistanceMeters(
-                  node.distance!.toInt().toString(),
-                )
-              : context.l10n.nodeDetailDistanceKilometers(
-                  (node.distance! / 1000).toStringAsFixed(1),
-                ),
+          value: _formatDistance(context, node.distance!),
           color: context.accentColor,
           onTap: node.hasPosition
               ? () => Navigator.push(
@@ -1112,13 +1114,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
           InfoTableRow(
             icon: Icons.near_me,
             label: context.l10n.nodeDetailLabelDistance,
-            value: node.distance! < 1000
-                ? context.l10n.nodeDetailDistanceMeters(
-                    node.distance!.toInt().toString(),
-                  )
-                : context.l10n.nodeDetailDistanceKilometers(
-                    (node.distance! / 1000).toStringAsFixed(1),
-                  ),
+            value: _formatDistance(context, node.distance!),
             onTap: node.hasPosition
                 ? () => Navigator.push(
                     context,

@@ -17,6 +17,7 @@ import '../../utils/timestamp_validation.dart';
 import '../../utils/presence_utils.dart';
 import '../l10n/l10n_extension.dart';
 import '../theme.dart';
+import '../units/distance_format.dart';
 
 /// Reusable node information card widget
 /// Displays node details with actions like messaging, position exchange, etc.
@@ -59,16 +60,6 @@ class NodeInfoCard extends ConsumerWidget {
     this.onViewPositionLog,
     this.compact = false,
   });
-
-  String _formatDistance(double km) {
-    if (km < 1) {
-      return '${(km * 1000).round()}m';
-    } else if (km < 10) {
-      return '${km.toStringAsFixed(1)}km';
-    } else {
-      return '${km.round()}km';
-    }
-  }
 
   String _formatBearing(double bearing) {
     const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
@@ -568,7 +559,11 @@ class NodeInfoCard extends ConsumerWidget {
                           ),
                           const SizedBox(width: AppTheme.spacing8),
                           Text(
-                            _formatDistance(distanceFromMe!),
+                            formatDistanceKm(
+                              distanceFromMe!,
+                              ref.watch(measurementUnitsProvider),
+                              context.l10n,
+                            ),
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,

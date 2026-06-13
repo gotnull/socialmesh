@@ -15,6 +15,7 @@ import '../../core/l10n/l10n_extension.dart';
 
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../providers/app_providers.dart';
 import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
 import 'ar_calibration.dart';
@@ -179,6 +180,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
         onToggleFavoritesOnly: () {
           ref.read(arStateProvider.notifier).toggleFavoritesOnly();
         },
+        units: ref.read(measurementUnitsProvider),
       ),
     );
   }
@@ -198,6 +200,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
   Widget build(BuildContext context) {
     final arState = ref.watch(arStateProvider);
     final stats = ref.watch(arStatsProvider);
+    final units = ref.watch(measurementUnitsProvider);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -228,6 +231,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
                         safeAreaTop: padding.top,
                         safeAreaBottom: padding.bottom,
                       ),
+                      units: units,
                       animationValue: _scanController.value,
                     ),
                     size: MediaQuery.of(context).size,
@@ -262,6 +266,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
                 isFavorite: arState.favoriteNodeNums.contains(
                   arState.selectedNode!.node.nodeNum,
                 ),
+                units: units,
               ),
             ),
 

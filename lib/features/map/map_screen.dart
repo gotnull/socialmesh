@@ -38,6 +38,7 @@ import '../nodedex/map/nodedex_map_pins_provider.dart';
 import '../nodedex/map/widgets/nodedex_sigil_marker.dart';
 import '../../models/presence_confidence.dart';
 import '../../providers/age_eligibility_provider.dart';
+import '../../core/units/distance_format.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/presence_providers.dart';
 import '../../providers/help_providers.dart';
@@ -142,6 +143,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
     with TickerProviderStateMixin, LifecycleSafeMixin<MapScreen> {
   final MapController _mapController = MapController();
   MeshNode? _selectedNode;
+  // Cached display-units preference, refreshed each build so distance
+  // strings (including those built inside tap callbacks) honour Imperial.
+  MeasurementUnits _units = MeasurementUnits.metric;
   bool _showHeatmap = false;
   bool _clusterMarkers = false;
   bool _isRefreshing = false;
@@ -695,15 +699,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
     }
   }
 
-  String _formatDistance(double km) {
-    if (km < 1) {
-      return '${(km * 1000).round()}m';
-    } else if (km < 10) {
-      return '${km.toStringAsFixed(1)}km';
-    } else {
-      return '${km.round()}km';
-    }
-  }
+  String _formatDistance(double km) =>
+      formatDistanceKm(km, _units, context.l10n);
 
   /// Calculate bearing from one point to another
   double _calculateBearing(double lat1, double lng1, double lat2, double lng2) {
@@ -821,6 +818,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   @override
   Widget build(BuildContext context) {
+    _units = ref.watch(measurementUnitsProvider);
     // When the drawer's "TAK Map" item is tapped, it switches to this tab
     // and requests TAK mode via the provider. Consume and reset it here.
     ref.listen<bool>(mapTakModeProvider, (prev, next) {
@@ -2307,6 +2305,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             context.l10n.mapCoordinatesCopied,
                           );
                         },
+                        units: _units,
                       ),
                     ),
                   // Mode indicator (centered at top)
@@ -2587,6 +2586,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           _animatedMove(LatLng(event.lat, event.lon), 15.0);
                           HapticFeedback.selectionClick();
                         },
+                        units: _units,
                       ),
                     ),
                   // Node count indicator - hide in location only mode, measure
@@ -4900,6 +4900,7 @@ class _NodeListPanel extends StatelessWidget {
   final void Function(int) onTabChanged;
   final List<TakEvent> takEvents;
   final void Function(TakEvent) onTakEntitySelected;
+  final MeasurementUnits units;
 
   const _NodeListPanel({
     required this.nodesWithPosition,
@@ -4918,6 +4919,7 @@ class _NodeListPanel extends StatelessWidget {
     required this.onTabChanged,
     this.takEvents = const [],
     required this.onTakEntitySelected,
+    required this.units,
   });
 
   @override
@@ -5016,6 +5018,7 @@ class _NodeListPanel extends StatelessWidget {
                               nodeWithPos.node,
                             ),
                             onTap: () => onNodeSelected(nodeWithPos),
+                            units: units,
                           ),
                         );
                       },
@@ -5071,6 +5074,7 @@ class _NodeListItem extends StatelessWidget {
   final PresenceConfidence presence;
   final Duration? lastHeardAge;
   final VoidCallback onTap;
+  final MeasurementUnits units;
 
   const _NodeListItem({
     required this.nodeWithPos,
@@ -5080,17 +5084,11 @@ class _NodeListItem extends StatelessWidget {
     required this.presence,
     required this.lastHeardAge,
     required this.onTap,
+    required this.units,
   });
 
-  String _formatDistance(double km, AppLocalizations l10n) {
-    if (km < 1) {
-      return l10n.mapDistanceMeters('${(km * 1000).round()}');
-    } else if (km < 10) {
-      return l10n.mapDistanceKilometers(km.toStringAsFixed(1));
-    } else {
-      return l10n.mapDistanceKilometersRound('${km.round()}');
-    }
-  }
+  String _formatDistance(double km, AppLocalizations l10n) =>
+      formatDistanceKm(km, units, l10n);
 
   @override
   Widget build(BuildContext context) {
@@ -5414,6 +5412,7 @@ class _MeasurementCard extends StatefulWidget {
   final VoidCallback? onCopyCoordinates;
   final bool hasTerrainSegments;
   final TerrainLosResult? terrainResult;
+  final MeasurementUnits units;
 
   const _MeasurementCard({
     required this.start,
@@ -5427,6 +5426,7 @@ class _MeasurementCard extends StatefulWidget {
     this.hasTerrainSegments = false,
     this.terrainResult,
     this.onCopyCoordinates,
+    required this.units,
   });
 
   @override
@@ -5436,16 +5436,8 @@ class _MeasurementCard extends StatefulWidget {
 class _MeasurementCardState extends State<_MeasurementCard> {
   bool _showLos = false;
 
-  String _formatDistance(double km) {
-    final l10n = context.l10n;
-    if (km < 1) {
-      return l10n.mapDistanceMetersFormal('${(km * 1000).round()}');
-    } else if (km < 10) {
-      return l10n.mapDistanceKilometersPrecise(km.toStringAsFixed(2));
-    } else {
-      return l10n.mapDistanceKilometersFormal(km.toStringAsFixed(1));
-    }
-  }
+  String _formatDistance(double km) =>
+      formatDistanceKm(km, widget.units, context.l10n);
 
   double _calculateDistanceKm() {
     return const Distance().as(LengthUnit.Kilometer, widget.start, widget.end);
