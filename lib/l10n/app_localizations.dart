@@ -40334,6 +40334,18 @@ abstract class AppLocalizations {
   /// **'{value}°C'**
   String telemetryEnvTemperatureValue(String value);
 
+  /// Temperature in Celsius (metric units). {value} is the numeric portion.
+  ///
+  /// In en, this message translates to:
+  /// **'{value}°C'**
+  String unitTemperatureCelsius(String value);
+
+  /// Temperature in Fahrenheit (imperial units). {value} is the numeric portion.
+  ///
+  /// In en, this message translates to:
+  /// **'{value}°F'**
+  String unitTemperatureFahrenheit(String value);
+
   /// Metric chip label showing wind speed in metres per second
   ///
   /// In en, this message translates to:
@@ -69946,6 +69958,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Compass sensor not available on this device'**
   String get mapCompassUnavailable;
+
+  /// Secondary button on the scanner that opens the device-free offline map so users can pre-download tiles before pairing a node
+  ///
+  /// In en, this message translates to:
+  /// **'Explore the map without a device'**
+  String get scannerExploreMapOffline;
+
+  /// App bar title for the device-free offline map screen
+  ///
+  /// In en, this message translates to:
+  /// **'Offline map'**
+  String get offlineMapTitle;
+
+  /// Overflow menu item that starts pre-downloading map tiles for the current viewport
+  ///
+  /// In en, this message translates to:
+  /// **'Download this area'**
+  String get offlineMapDownloadArea;
+
+  /// Bottom button on the offline map that returns to the scanner to pair a device
+  ///
+  /// In en, this message translates to:
+  /// **'Pair a node to unlock mesh features'**
+  String get offlineMapPairCta;
+
+  /// Info message shown when the user tries to download an area while the satellite map style is selected (provider terms forbid bulk caching)
+  ///
+  /// In en, this message translates to:
+  /// **'Satellite maps can\'t be pre-downloaded. Switch to Terrain, Dark, or Light.'**
+  String get offlineMapSatelliteNoDownload;
+
+  /// Title of the offline region download sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Download offline maps'**
+  String get offlineDownloadTitle;
+
+  /// Subtitle describing that the download covers the currently visible map area
+  ///
+  /// In en, this message translates to:
+  /// **'Tiles for the current map area'**
+  String get offlineDownloadAreaSummary;
+
+  /// Label above the zoom/detail-level selector in the offline download sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Detail level'**
+  String get offlineDownloadDetailLabel;
+
+  /// Lowest detail level option (zoomed out) in the offline download sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get offlineDownloadDetailOverview;
+
+  /// Standard detail level option in the offline download sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get offlineDownloadDetailStandard;
+
+  /// Higher detail level option in the offline download sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed'**
+  String get offlineDownloadDetailDetailed;
+
+  /// Highest detail level option (most zoomed in) in the offline download sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Max'**
+  String get offlineDownloadDetailMax;
+
+  /// Tile count and estimated storage size shown before downloading
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tiles · ~{size}'**
+  String offlineDownloadEstimate(int count, String size);
+
+  /// Primary button that starts the region download, showing the estimated size
+  ///
+  /// In en, this message translates to:
+  /// **'Download (~{size})'**
+  String offlineDownloadStart(String size);
+
+  /// Warning banner title shown when the selected area covers a very large number of tiles
+  ///
+  /// In en, this message translates to:
+  /// **'Large download'**
+  String get offlineDownloadLargeTitle;
+
+  /// Warning banner body advising the user to reduce the download size
+  ///
+  /// In en, this message translates to:
+  /// **'This may use significant storage and data. Reduce the detail level or zoom in to a smaller area.'**
+  String get offlineDownloadLargeSubtitle;
+
+  /// Progress text shown during a region download
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} tiles'**
+  String offlineDownloadProgress(int done, int total);
+
+  /// Button that cancels an in-progress region download
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get offlineDownloadCancel;
+
+  /// Success message after a region download finishes
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {count} tiles for offline use'**
+  String offlineDownloadComplete(int count);
+
+  /// Message shown when the user cancels a region download
+  ///
+  /// In en, this message translates to:
+  /// **'Download cancelled'**
+  String get offlineDownloadCancelled;
+
+  /// Error message shown when a region download fails
+  ///
+  /// In en, this message translates to:
+  /// **'Download failed'**
+  String get offlineDownloadFailed;
 
   /// Section header for the TAK mesh bridge controls in settings
   ///

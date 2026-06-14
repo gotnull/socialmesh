@@ -320,9 +320,20 @@ class _MapScreenState extends ConsumerState<MapScreen>
   double get _mapRotation => _mapRotationNotifier.value;
   set _mapRotation(double value) => _mapRotationNotifier.value = value;
 
-  // Heading-up mode (map rotates to match device compass)
-  bool _headingUpMode = false;
+  // Compass interaction mode. North-locked is the default: rotation gestures
+  // are disabled, so a pinch-zoom can never rotate ("wiggle") the map off
+  // north. The compass button cycles north-locked -> free-rotate ->
+  // follow-heading -> north-locked.
+  MapCompassMode _compassMode = MapCompassMode.northLocked;
   StreamSubscription<CompassEvent>? _compassSubscription;
+
+  bool get _headingUpMode => _compassMode == MapCompassMode.followHeading;
+
+  // Interaction flags driven by the compass mode. Disabling InteractiveFlag
+  // .rotate in the resting state is what kills the pinch-zoom wiggle.
+  int get _interactionFlags => _compassMode == MapCompassMode.northLocked
+      ? (InteractiveFlag.all & ~InteractiveFlag.rotate)
+      : InteractiveFlag.all;
 
   // Track last known positions for nodes (to handle GPS loss gracefully)
   final Map<int, _CachedPosition> _positionCache = {};
@@ -496,28 +507,34 @@ class _MapScreenState extends ConsumerState<MapScreen>
       _mapRotation = newRotation;
     });
     if (_compassSubscription != null) {
-      setState(() => _headingUpMode = true);
+      setState(() => _compassMode = MapCompassMode.followHeading);
     }
   }
 
-  void _disableHeadingUp() {
+  // Cancel any heading subscription, snap the camera back to north and return
+  // the compass to its resting (rotation-disabled) state.
+  void _resetToNorthLocked() {
     _compassSubscription?.cancel();
     _compassSubscription = null;
-    setState(() => _headingUpMode = false);
+    setState(() => _compassMode = MapCompassMode.northLocked);
+    _animatedMove(_mapController.camera.center, _currentZoom, rotation: 0);
   }
 
+  // Compass button: cycles north-locked -> free-rotate -> follow-heading ->
+  // north-locked. Devices without a magnetometer skip the follow-heading step.
   void _onCompassTap() {
-    if (_headingUpMode) {
-      _disableHeadingUp();
-      _animatedMove(_mapController.camera.center, _currentZoom, rotation: 0);
-    } else if (_mapRotation.abs() > 1.0) {
-      _animatedMove(_mapController.camera.center, _currentZoom, rotation: 0);
-    } else {
-      if (FlutterCompass.events == null) {
-        showWarningSnackBar(context, context.l10n.mapCompassUnavailable);
-        return;
-      }
-      _enableHeadingUp();
+    switch (_compassMode) {
+      case MapCompassMode.northLocked:
+        setState(() => _compassMode = MapCompassMode.freeRotate);
+      case MapCompassMode.freeRotate:
+        if (FlutterCompass.events == null) {
+          showWarningSnackBar(context, context.l10n.mapCompassUnavailable);
+          _resetToNorthLocked();
+          return;
+        }
+        _enableHeadingUp();
+      case MapCompassMode.followHeading:
+        _resetToNorthLocked();
     }
   }
 
@@ -1733,8 +1750,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       minZoom: 4,
                       maxZoom: 18,
                       backgroundColor: context.background,
-                      interactionOptions: const InteractionOptions(
-                        flags: InteractiveFlag.all,
+                      interactionOptions: InteractionOptions(
+                        flags: _interactionFlags,
                         pinchZoomThreshold: 0.5,
                         scrollWheelVelocity: 0.005,
                       ),
@@ -1763,14 +1780,21 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           return;
                         }
                         if (hasGesture) {
-                          // Disable heading-up if user manually rotates the map
-                          if (_headingUpMode) {
+                          // A manual two-finger rotate while following the
+                          // device heading hands control back to the user:
+                          // drop to free-rotate and stop driving rotation from
+                          // the compass.
+                          if (_compassMode == MapCompassMode.followHeading) {
                             final rotDiff =
                                 ((position.rotation - _mapRotation + 540) %
                                     360) -
                                 180;
                             if (rotDiff.abs() > 1.0) {
-                              _disableHeadingUp();
+                              _compassSubscription?.cancel();
+                              _compassSubscription = null;
+                              setState(
+                                () => _compassMode = MapCompassMode.freeRotate,
+                              );
                             }
                           }
                           // No setState: rotation flows through the notifier
@@ -1817,10 +1841,21 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         subdomains: MapConfig.isMapboxActive
                             ? const <String>[]
                             : _mapStyle.subdomains,
+                        // Overzoom past the source's native cap (e.g. terrain
+                        // tops out at z17) by upscaling the last real tiles
+                        // instead of requesting a non-existent tile. Mapbox
+                        // styles serve deeper, so keep them at the interaction
+                        // cap when active.
+                        maxNativeZoom: MapConfig.isMapboxActive
+                            ? 18
+                            : _mapStyle.maxNativeZoom,
                         userAgentPackageName: MapConfig.userAgentPackageName,
+                        // Retina only for sources that serve real @2x tiles
+                        // (URL has {r}). Simulated retina shifts requested
+                        // tile coords and would desync the offline cache.
                         retinaMode: MapConfig.isMapboxActive
                             ? true
-                            : _mapStyle != MapTileStyle.satellite,
+                            : MapConfig.styleSupportsRetina(_mapStyle),
                         evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
                         tileUpdateTransformer:
                             finiteCameraTileUpdateTransformer,
@@ -2677,6 +2712,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         maxZoom: 18,
                         mapRotation: rotation,
                         isHeadingUp: _headingUpMode,
+                        compassMode: _compassMode,
                         onZoomIn: () {
                           final newZoom = (_currentZoom + 1).clamp(4.0, 18.0);
                           _animatedMove(_mapController.camera.center, newZoom);

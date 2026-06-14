@@ -28,6 +28,7 @@ import '../../core/widgets/map_controls.dart';
 import '../../providers/help_providers.dart';
 import '../../models/world_mesh_node.dart';
 import '../../models/presence_confidence.dart';
+import '../../core/units/temperature_format.dart';
 import '../../providers/node_favorites_provider.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/world_mesh_map_provider.dart';
@@ -2179,7 +2180,11 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                       if (node.temperature != null)
                         _MetricChip(
                           icon: Icons.thermostat,
-                          value: '${node.temperature!.toStringAsFixed(1)}°C',
+                          value: formatTemperatureCelsius(
+                            node.temperature!,
+                            ref.watch(measurementUnitsProvider),
+                            context.l10n,
+                          ),
                           color: AccentColors.orange,
                         ),
                       if (node.relativeHumidity != null)

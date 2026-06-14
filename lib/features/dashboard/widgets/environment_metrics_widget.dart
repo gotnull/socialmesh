@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
+import '../../../core/units/temperature_format.dart';
 import '../../../models/telemetry_log.dart';
+import '../../../providers/app_providers.dart';
 import '../../../providers/telemetry_providers.dart';
 import '../../telemetry/environment_metrics_log_screen.dart';
 import 'dashboard_widget.dart';
@@ -53,7 +55,11 @@ class EnvironmentMetricsContent extends ConsumerWidget {
                 Wrap(
                   spacing: AppTheme.spacing8,
                   runSpacing: AppTheme.spacing8,
-                  children: _readingTiles(context, latest),
+                  children: _readingTiles(
+                    context,
+                    latest,
+                    ref.watch(measurementUnitsProvider),
+                  ),
                 ),
                 SizedBox(height: AppTheme.spacing10),
                 Row(
@@ -95,14 +101,22 @@ class EnvironmentMetricsContent extends ConsumerWidget {
     );
   }
 
-  List<Widget> _readingTiles(BuildContext context, EnvironmentMetricsLog log) {
+  List<Widget> _readingTiles(
+    BuildContext context,
+    EnvironmentMetricsLog log,
+    MeasurementUnits units,
+  ) {
     final tiles = <Widget>[];
     if (log.temperature != null) {
       tiles.add(
         _ReadingChip(
           icon: Icons.thermostat,
           label: context.l10n.telemetryEnvironmentLegendTemperature,
-          value: '${log.temperature!.toStringAsFixed(1)}°C',
+          value: formatTemperatureCelsius(
+            log.temperature!,
+            units,
+            context.l10n,
+          ),
         ),
       );
     }

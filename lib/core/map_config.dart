@@ -45,11 +45,22 @@ class MapConfig {
     AppLogging.map('Tile load failed: ${tile.coordinates} - $error');
   }
 
+  /// Whether a style serves true `@2x` retina tiles (URL carries the `{r}`
+  /// placeholder). Enabling retina for a source WITHOUT `{r}` makes flutter_map
+  /// "simulate" retina via a zoom offset, which (a) costs extra tile requests
+  /// and (b) shifts the requested tile coordinates — breaking parity between
+  /// what the live map fetches and what the offline downloader pre-seeds. So
+  /// retina is gated strictly on real server support.
+  static bool styleSupportsRetina(MapTileStyle style) =>
+      style.url.contains('{r}');
+
   /// Create a TileLayer with the default dark style
   static TileLayer darkTileLayer() {
     return TileLayer(
       urlTemplate: MapTileStyle.dark.url,
       subdomains: MapTileStyle.dark.subdomains,
+      maxNativeZoom: MapTileStyle.dark.maxNativeZoom,
+      retinaMode: styleSupportsRetina(MapTileStyle.dark),
       userAgentPackageName: userAgentPackageName,
       evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
       errorTileCallback: _onTileError,
@@ -57,11 +68,13 @@ class MapConfig {
     );
   }
 
-  /// Create a TileLayer for a given style
+  /// Create a TileLayer for a given style.
   static TileLayer tileLayerForStyle(MapTileStyle style) {
     return TileLayer(
       urlTemplate: style.url,
       subdomains: style.subdomains,
+      maxNativeZoom: style.maxNativeZoom,
+      retinaMode: styleSupportsRetina(style),
       userAgentPackageName: userAgentPackageName,
       evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
       errorTileCallback: _onTileError,
@@ -131,32 +144,52 @@ class MapConfig {
       'https://www.mapbox.com/about/maps/';
 }
 
-/// Map tile style options
+/// Map tile style options.
+///
+/// [maxNativeZoom] is the highest zoom level the tile server actually serves.
+/// Setting it below the interaction [MapConfig.maxZoom] lets flutter_map
+/// "overzoom" — upscaling the last real tiles — instead of requesting
+/// non-existent tiles (which return a server placeholder, e.g. OpenTopoMap's
+/// "max zoom layer 17" error image).
 enum MapTileStyle {
   dark(
     'Dark',
     'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
     ['a', 'b', 'c', 'd'],
+    // CARTO basemaps serve to z20.
+    maxNativeZoom: 20,
   ),
   satellite(
     'Satellite',
     'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     [], // No subdomains
+    // Esri World_Imagery serves to z19 across most regions.
+    maxNativeZoom: 19,
   ),
-  terrain('Terrain', 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', [
-    'a',
-    'b',
-    'c',
-  ]),
+  terrain(
+    'Terrain',
+    'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+    ['a', 'b', 'c'],
+    // OpenTopoMap only serves to z17; beyond that flutter_map upscales.
+    maxNativeZoom: 17,
+  ),
   light(
     'Light',
     'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
     ['a', 'b', 'c', 'd'],
+    // CARTO basemaps serve to z20.
+    maxNativeZoom: 20,
   );
 
   final String label;
   final String url;
   final List<String> subdomains;
+  final int maxNativeZoom;
 
-  const MapTileStyle(this.label, this.url, this.subdomains);
+  const MapTileStyle(
+    this.label,
+    this.url,
+    this.subdomains, {
+    required this.maxNativeZoom,
+  });
 }

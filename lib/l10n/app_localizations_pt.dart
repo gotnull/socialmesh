@@ -23388,6 +23388,16 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String unitTemperatureCelsius(String value) {
+    return '$value°C';
+  }
+
+  @override
+  String unitTemperatureFahrenheit(String value) {
+    return '$value°F';
+  }
+
+  @override
   String telemetryEnvWindSpeedValue(String value) {
     return '$value m/s';
   }
@@ -40489,6 +40499,80 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get mapCompassUnavailable =>
       'Sensor de bússola não disponível neste dispositivo';
+
+  @override
+  String get scannerExploreMapOffline => 'Explore o mapa sem um dispositivo';
+
+  @override
+  String get offlineMapTitle => 'Mapa offline';
+
+  @override
+  String get offlineMapDownloadArea => 'Baixar esta área';
+
+  @override
+  String get offlineMapPairCta =>
+      'Emparelhe um nó para desbloquear os recursos mesh';
+
+  @override
+  String get offlineMapSatelliteNoDownload =>
+      'Os mapas de satélite não podem ser baixados previamente. Mude para Terrain, Dark ou Light.';
+
+  @override
+  String get offlineDownloadTitle => 'Baixar mapas offline';
+
+  @override
+  String get offlineDownloadAreaSummary => 'Blocos da área visível do mapa';
+
+  @override
+  String get offlineDownloadDetailLabel => 'Nível de detalhe';
+
+  @override
+  String get offlineDownloadDetailOverview => 'Visão geral';
+
+  @override
+  String get offlineDownloadDetailStandard => 'Padrão';
+
+  @override
+  String get offlineDownloadDetailDetailed => 'Detalhado';
+
+  @override
+  String get offlineDownloadDetailMax => 'Máximo';
+
+  @override
+  String offlineDownloadEstimate(int count, String size) {
+    return '$count blocos · ~$size';
+  }
+
+  @override
+  String offlineDownloadStart(String size) {
+    return 'Baixar (~$size)';
+  }
+
+  @override
+  String get offlineDownloadLargeTitle => 'Download grande';
+
+  @override
+  String get offlineDownloadLargeSubtitle =>
+      'Isto pode usar bastante armazenamento e dados. Reduza o nível de detalhe ou aproxime uma área menor.';
+
+  @override
+  String offlineDownloadProgress(int done, int total) {
+    return '$done de $total blocos';
+  }
+
+  @override
+  String get offlineDownloadCancel => 'Cancelar';
+
+  @override
+  String offlineDownloadComplete(int count) {
+    return '$count blocos salvos para uso offline';
+  }
+
+  @override
+  String get offlineDownloadCancelled => 'Download cancelado';
+
+  @override
+  String get offlineDownloadFailed => 'Falha no download';
 
   @override
   String get takBridgeSectionTitle => 'Mesh Bridge';

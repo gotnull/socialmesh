@@ -23559,6 +23559,16 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String unitTemperatureCelsius(String value) {
+    return '$value°C';
+  }
+
+  @override
+  String unitTemperatureFahrenheit(String value) {
+    return '$value°F';
+  }
+
+  @override
   String telemetryEnvWindSpeedValue(String value) {
     return '$value m/s';
   }
@@ -40798,6 +40808,81 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get mapCompassUnavailable =>
       'Capteur de boussole non disponible sur cet appareil';
+
+  @override
+  String get scannerExploreMapOffline => 'Explorer la carte sans appareil';
+
+  @override
+  String get offlineMapTitle => 'Carte hors ligne';
+
+  @override
+  String get offlineMapDownloadArea => 'Télécharger cette zone';
+
+  @override
+  String get offlineMapPairCta =>
+      'Associez un nœud pour débloquer les fonctions mesh';
+
+  @override
+  String get offlineMapSatelliteNoDownload =>
+      'Les cartes satellite ne peuvent pas être téléchargées à l\'avance. Passez à Terrain, Dark ou Light.';
+
+  @override
+  String get offlineDownloadTitle => 'Télécharger des cartes hors ligne';
+
+  @override
+  String get offlineDownloadAreaSummary =>
+      'Tuiles de la zone actuellement visible';
+
+  @override
+  String get offlineDownloadDetailLabel => 'Niveau de détail';
+
+  @override
+  String get offlineDownloadDetailOverview => 'Vue d\'ensemble';
+
+  @override
+  String get offlineDownloadDetailStandard => 'Normal';
+
+  @override
+  String get offlineDownloadDetailDetailed => 'Détaillé';
+
+  @override
+  String get offlineDownloadDetailMax => 'Maximum';
+
+  @override
+  String offlineDownloadEstimate(int count, String size) {
+    return '$count tuiles · ~$size';
+  }
+
+  @override
+  String offlineDownloadStart(String size) {
+    return 'Télécharger (~$size)';
+  }
+
+  @override
+  String get offlineDownloadLargeTitle => 'Téléchargement volumineux';
+
+  @override
+  String get offlineDownloadLargeSubtitle =>
+      'Cela peut utiliser beaucoup de stockage et de données. Réduisez le niveau de détail ou zoomez sur une zone plus petite.';
+
+  @override
+  String offlineDownloadProgress(int done, int total) {
+    return '$done sur $total tuiles';
+  }
+
+  @override
+  String get offlineDownloadCancel => 'Annuler';
+
+  @override
+  String offlineDownloadComplete(int count) {
+    return '$count tuiles enregistrées pour une utilisation hors ligne';
+  }
+
+  @override
+  String get offlineDownloadCancelled => 'Téléchargement annulé';
+
+  @override
+  String get offlineDownloadFailed => 'Échec du téléchargement';
 
   @override
   String get takBridgeSectionTitle => 'Pont Mesh';

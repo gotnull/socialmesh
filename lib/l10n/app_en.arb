@@ -31636,6 +31636,24 @@
             }
         }
     },
+    "unitTemperatureCelsius": "{value}°C",
+    "@unitTemperatureCelsius": {
+        "description": "Temperature in Celsius (metric units). {value} is the numeric portion.",
+        "placeholders": {
+            "value": {
+                "type": "String"
+            }
+        }
+    },
+    "unitTemperatureFahrenheit": "{value}°F",
+    "@unitTemperatureFahrenheit": {
+        "description": "Temperature in Fahrenheit (imperial units). {value} is the numeric portion.",
+        "placeholders": {
+            "value": {
+                "type": "String"
+            }
+        }
+    },
     "telemetryEnvWindSpeedValue": "{value} m/s",
     "@telemetryEnvWindSpeedValue": {
         "description": "Metric chip label showing wind speed in metres per second",
@@ -53557,6 +53575,122 @@
     "mapCompassUnavailable": "Compass sensor not available on this device",
     "@mapCompassUnavailable": {
         "description": "Snackbar message when the device does not have a compass/magnetometer sensor"
+    },
+    "scannerExploreMapOffline": "Explore the map without a device",
+    "@scannerExploreMapOffline": {
+        "description": "Secondary button on the scanner that opens the device-free offline map so users can pre-download tiles before pairing a node"
+    },
+    "offlineMapTitle": "Offline map",
+    "@offlineMapTitle": {
+        "description": "App bar title for the device-free offline map screen"
+    },
+    "offlineMapDownloadArea": "Download this area",
+    "@offlineMapDownloadArea": {
+        "description": "Overflow menu item that starts pre-downloading map tiles for the current viewport"
+    },
+    "offlineMapPairCta": "Pair a node to unlock mesh features",
+    "@offlineMapPairCta": {
+        "description": "Bottom button on the offline map that returns to the scanner to pair a device"
+    },
+    "offlineMapSatelliteNoDownload": "Satellite maps can't be pre-downloaded. Switch to Terrain, Dark, or Light.",
+    "@offlineMapSatelliteNoDownload": {
+        "description": "Info message shown when the user tries to download an area while the satellite map style is selected (provider terms forbid bulk caching)"
+    },
+    "offlineDownloadTitle": "Download offline maps",
+    "@offlineDownloadTitle": {
+        "description": "Title of the offline region download sheet"
+    },
+    "offlineDownloadAreaSummary": "Tiles for the current map area",
+    "@offlineDownloadAreaSummary": {
+        "description": "Subtitle describing that the download covers the currently visible map area"
+    },
+    "offlineDownloadDetailLabel": "Detail level",
+    "@offlineDownloadDetailLabel": {
+        "description": "Label above the zoom/detail-level selector in the offline download sheet"
+    },
+    "offlineDownloadDetailOverview": "Overview",
+    "@offlineDownloadDetailOverview": {
+        "description": "Lowest detail level option (zoomed out) in the offline download sheet"
+    },
+    "offlineDownloadDetailStandard": "Standard",
+    "@offlineDownloadDetailStandard": {
+        "description": "Standard detail level option in the offline download sheet"
+    },
+    "offlineDownloadDetailDetailed": "Detailed",
+    "@offlineDownloadDetailDetailed": {
+        "description": "Higher detail level option in the offline download sheet"
+    },
+    "offlineDownloadDetailMax": "Max",
+    "@offlineDownloadDetailMax": {
+        "description": "Highest detail level option (most zoomed in) in the offline download sheet"
+    },
+    "offlineDownloadEstimate": "{count} tiles · ~{size}",
+    "@offlineDownloadEstimate": {
+        "description": "Tile count and estimated storage size shown before downloading",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "description": "Number of tiles that will be downloaded"
+            },
+            "size": {
+                "type": "String",
+                "description": "Human-readable estimated storage size, e.g. 120.4 MB"
+            }
+        }
+    },
+    "offlineDownloadStart": "Download (~{size})",
+    "@offlineDownloadStart": {
+        "description": "Primary button that starts the region download, showing the estimated size",
+        "placeholders": {
+            "size": {
+                "type": "String",
+                "description": "Human-readable estimated storage size, e.g. 120.4 MB"
+            }
+        }
+    },
+    "offlineDownloadLargeTitle": "Large download",
+    "@offlineDownloadLargeTitle": {
+        "description": "Warning banner title shown when the selected area covers a very large number of tiles"
+    },
+    "offlineDownloadLargeSubtitle": "This may use significant storage and data. Reduce the detail level or zoom in to a smaller area.",
+    "@offlineDownloadLargeSubtitle": {
+        "description": "Warning banner body advising the user to reduce the download size"
+    },
+    "offlineDownloadProgress": "{done} of {total} tiles",
+    "@offlineDownloadProgress": {
+        "description": "Progress text shown during a region download",
+        "placeholders": {
+            "done": {
+                "type": "int",
+                "description": "Number of tiles processed so far"
+            },
+            "total": {
+                "type": "int",
+                "description": "Total number of tiles to process"
+            }
+        }
+    },
+    "offlineDownloadCancel": "Cancel",
+    "@offlineDownloadCancel": {
+        "description": "Button that cancels an in-progress region download"
+    },
+    "offlineDownloadComplete": "Saved {count} tiles for offline use",
+    "@offlineDownloadComplete": {
+        "description": "Success message after a region download finishes",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "description": "Number of tiles now available offline"
+            }
+        }
+    },
+    "offlineDownloadCancelled": "Download cancelled",
+    "@offlineDownloadCancelled": {
+        "description": "Message shown when the user cancels a region download"
+    },
+    "offlineDownloadFailed": "Download failed",
+    "@offlineDownloadFailed": {
+        "description": "Error message shown when a region download fails"
     },
     "takBridgeSectionTitle": "Mesh Bridge",
     "@takBridgeSectionTitle": {

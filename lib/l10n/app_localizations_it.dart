@@ -23407,6 +23407,16 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String unitTemperatureCelsius(String value) {
+    return '$value°C';
+  }
+
+  @override
+  String unitTemperatureFahrenheit(String value) {
+    return '$value°F';
+  }
+
+  @override
   String telemetryEnvWindSpeedValue(String value) {
     return '$value m/s';
   }
@@ -40517,6 +40527,82 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get mapCompassUnavailable =>
       'Sensore bussola non disponibile su questo dispositivo';
+
+  @override
+  String get scannerExploreMapOffline =>
+      'Esplora la mappa senza un dispositivo';
+
+  @override
+  String get offlineMapTitle => 'Mappa offline';
+
+  @override
+  String get offlineMapDownloadArea => 'Scarica quest\'area';
+
+  @override
+  String get offlineMapPairCta =>
+      'Abbina un nodo per sbloccare le funzioni mesh';
+
+  @override
+  String get offlineMapSatelliteNoDownload =>
+      'Le mappe satellitari non possono essere pre-scaricate. Passa a Terrain, Dark o Light.';
+
+  @override
+  String get offlineDownloadTitle => 'Scarica mappe offline';
+
+  @override
+  String get offlineDownloadAreaSummary =>
+      'Tessere per l\'area attualmente visibile';
+
+  @override
+  String get offlineDownloadDetailLabel => 'Livello di dettaglio';
+
+  @override
+  String get offlineDownloadDetailOverview => 'Panoramica';
+
+  @override
+  String get offlineDownloadDetailStandard => 'Normale';
+
+  @override
+  String get offlineDownloadDetailDetailed => 'Dettagliato';
+
+  @override
+  String get offlineDownloadDetailMax => 'Massimo';
+
+  @override
+  String offlineDownloadEstimate(int count, String size) {
+    return '$count tessere · ~$size';
+  }
+
+  @override
+  String offlineDownloadStart(String size) {
+    return 'Scarica (~$size)';
+  }
+
+  @override
+  String get offlineDownloadLargeTitle => 'Download di grandi dimensioni';
+
+  @override
+  String get offlineDownloadLargeSubtitle =>
+      'Potrebbe usare molto spazio e molti dati. Riduci il livello di dettaglio o ingrandisci un\'area più piccola.';
+
+  @override
+  String offlineDownloadProgress(int done, int total) {
+    return '$done di $total tessere';
+  }
+
+  @override
+  String get offlineDownloadCancel => 'Annulla';
+
+  @override
+  String offlineDownloadComplete(int count) {
+    return 'Salvate $count tessere per l\'uso offline';
+  }
+
+  @override
+  String get offlineDownloadCancelled => 'Download annullato';
+
+  @override
+  String get offlineDownloadFailed => 'Download non riuscito';
 
   @override
   String get takBridgeSectionTitle => 'Mesh Bridge';

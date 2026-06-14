@@ -75,6 +75,8 @@ import 'providers/accessibility_providers.dart';
 import 'features/automations/automation_providers.dart';
 import 'features/automations/automation_import_screen.dart';
 import 'features/external_purchase/confirming_unlock_overlay.dart';
+import 'features/map/offline_map_screen.dart';
+import 'features/map/offline_tiles/offline_tile_cache.dart';
 import 'features/license_org/invite_accept_screen.dart';
 import 'features/widget_builder/widget_import_screen.dart';
 import 'models/mesh_models.dart';
@@ -224,6 +226,19 @@ Future<void> main() async {
   // Initialize accessibility preferences before UI renders
   // This ensures text scaling and density are applied from first frame
   await AccessibilityPreferencesService().initialize();
+
+  // Reconfigure flutter_map's built-in tile cache to a DURABLE directory with
+  // a long freshness window, BEFORE any map renders (the cache singleton's
+  // config is fixed on first use). Without this, cached/pre-downloaded tiles
+  // live in the OS-evictable cache dir and expire on their HTTP headers —
+  // unusable for off-grid trips. Web noops; never block boot on failure.
+  if (platformCapabilities.platformFamily != PlatformFamily.web) {
+    try {
+      await OfflineTileCache.instance.configure();
+    } catch (e) {
+      AppLogging.platform('boot: offline tile cache config failed: $e');
+    }
+  }
 
   // Stripe SDK init for the external (off-store) Payment Sheet path.
   // The publishable key is mode-aware on the server (the createCheckout
@@ -2059,6 +2074,11 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
             return MaterialPageRoute(
               builder: (context) => const AdminBugReportsScreen(),
             );
+          }
+          // Device-free offline map (reached from the scanner). Pushed by name
+          // so the scanner feature does not import the map feature directly.
+          if (settings.name == '/offline-map') {
+            return MaterialPageRoute(builder: (_) => const OfflineMapScreen());
           }
           // Check route requirements before building
           if (RouteRegistry.isDeviceRequired(settings.name)) {

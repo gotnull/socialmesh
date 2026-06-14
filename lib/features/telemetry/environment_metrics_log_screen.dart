@@ -17,6 +17,7 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/search_filter_header.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/status_filter_chip.dart';
+import '../../core/units/temperature_format.dart';
 import '../../models/telemetry_log.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/telemetry_providers.dart';
@@ -253,6 +254,7 @@ class _EnvironmentMetricsLogScreenState
   @override
   Widget build(BuildContext context) {
     final scopedNodeNum = widget.nodeNum;
+    final units = ref.watch(measurementUnitsProvider);
     final logsAsync = scopedNodeNum != null
         ? ref.watch(nodeEnvironmentMetricsLogsProvider(scopedNodeNum))
         : ref.watch(environmentMetricsLogsProvider);
@@ -400,6 +402,7 @@ class _EnvironmentMetricsLogScreenState
                   child: _EnvironmentMetricsChart(
                     logs: filtered,
                     activeFilter: _activeFilter,
+                    units: units,
                   ),
                 ),
 
@@ -497,6 +500,7 @@ class _EnvironmentMetricsLogScreenState
                       return _EnvironmentMetricsCard(
                         log: log,
                         nodeName: nodeName,
+                        units: units,
                       );
                     },
                   ),
@@ -523,8 +527,13 @@ class _EnvironmentMetricsLogScreenState
 class _EnvironmentMetricsCard extends StatelessWidget {
   final EnvironmentMetricsLog log;
   final String nodeName;
+  final MeasurementUnits units;
 
-  const _EnvironmentMetricsCard({required this.log, required this.nodeName});
+  const _EnvironmentMetricsCard({
+    required this.log,
+    required this.nodeName,
+    required this.units,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -569,8 +578,10 @@ class _EnvironmentMetricsCard extends StatelessWidget {
                 if (log.temperature != null)
                   _MetricChip(
                     icon: Icons.thermostat,
-                    label: context.l10n.telemetryEnvTemperatureValue(
-                      log.temperature!.toStringAsFixed(1),
+                    label: formatTemperatureCelsius(
+                      log.temperature!,
+                      units,
+                      context.l10n,
                     ),
                     color: _getTemperatureColor(log.temperature!),
                   ),
@@ -654,10 +665,12 @@ class _EnvironmentMetricsCard extends StatelessWidget {
 class _EnvironmentMetricsChart extends StatelessWidget {
   final List<EnvironmentMetricsLog> logs;
   final _MetricFilter activeFilter;
+  final MeasurementUnits units;
 
   const _EnvironmentMetricsChart({
     required this.logs,
     required this.activeFilter,
+    required this.units,
   });
 
   @override
@@ -752,7 +765,11 @@ class _EnvironmentMetricsChart extends StatelessWidget {
                             getTitlesWidget: (value, _) {
                               final actual = (value / 100) * tRange + tAxisMin;
                               return Text(
-                                '${actual.toStringAsFixed(0)}°C',
+                                formatTemperatureCelsiusAscii(
+                                  actual,
+                                  units,
+                                  fractionDigits: 0,
+                                ),
                                 style: TextStyle(
                                   fontSize: 10,
                                   color: AppTheme.errorRed.withValues(
@@ -817,7 +834,10 @@ class _EnvironmentMetricsChart extends StatelessWidget {
                     formatValue: (spot) {
                       final isTemp = spot.bar.color == AppTheme.errorRed;
                       return isTemp
-                          ? '${((spot.y / 100) * tRange + tAxisMin).toStringAsFixed(1)}°C'
+                          ? formatTemperatureCelsiusAscii(
+                              (spot.y / 100) * tRange + tAxisMin,
+                              units,
+                            )
                           : '${spot.y.toStringAsFixed(1)}%';
                     },
                     timestampOf: (spot) =>
@@ -898,7 +918,7 @@ class _EnvironmentMetricsChart extends StatelessWidget {
                       reservedSize: 56,
                       interval: interval,
                       getTitlesWidget: (value, _) => Text(
-                        _formatAxisValue(filter, value),
+                        _formatAxisValue(filter, value, units),
                         style: TextStyle(
                           fontSize: 10,
                           color: color.withValues(alpha: 0.7),
@@ -935,7 +955,8 @@ class _EnvironmentMetricsChart extends StatelessWidget {
                 lineTouchData: LineTouchData(
                   touchTooltipData: metricTouchTooltipData(
                     context,
-                    formatValue: (spot) => _formatTooltipValue(filter, spot.y),
+                    formatValue: (spot) =>
+                        _formatTooltipValue(filter, spot.y, units),
                     timestampOf: (spot) =>
                         sorted[spot.x.toInt().clamp(0, sorted.length - 1)]
                             .timestamp,
@@ -976,9 +997,17 @@ class _EnvironmentMetricsChart extends StatelessWidget {
     };
   }
 
-  static String _formatAxisValue(_MetricFilter filter, double value) {
+  static String _formatAxisValue(
+    _MetricFilter filter,
+    double value,
+    MeasurementUnits units,
+  ) {
     return switch (filter) {
-      _MetricFilter.temperature => '${value.toStringAsFixed(0)}°C',
+      _MetricFilter.temperature => formatTemperatureCelsiusAscii(
+        value,
+        units,
+        fractionDigits: 0,
+      ),
       _MetricFilter.humidity => '${value.toStringAsFixed(0)}%',
       _MetricFilter.pressure => '${value.toStringAsFixed(0)} hPa',
       _MetricFilter.gas => _formatLargeNumber(value, unit: 'Ω'),
@@ -989,9 +1018,13 @@ class _EnvironmentMetricsChart extends StatelessWidget {
     };
   }
 
-  static String _formatTooltipValue(_MetricFilter filter, double value) {
+  static String _formatTooltipValue(
+    _MetricFilter filter,
+    double value,
+    MeasurementUnits units,
+  ) {
     return switch (filter) {
-      _MetricFilter.temperature => '${value.toStringAsFixed(1)}°C',
+      _MetricFilter.temperature => formatTemperatureCelsiusAscii(value, units),
       _MetricFilter.humidity => '${value.toStringAsFixed(1)}%',
       _MetricFilter.pressure => '${value.toStringAsFixed(1)} hPa',
       _MetricFilter.gas => _formatLargeNumber(value, unit: 'Ω', decimals: 2),

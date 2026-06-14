@@ -23395,6 +23395,16 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String unitTemperatureCelsius(String value) {
+    return '$value°C';
+  }
+
+  @override
+  String unitTemperatureFahrenheit(String value) {
+    return '$value°F';
+  }
+
+  @override
   String telemetryEnvWindSpeedValue(String value) {
     return '$value м/с';
   }
@@ -40506,6 +40516,80 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get mapCompassUnavailable =>
       'Датчик компаса недоступен на этом устройстве';
+
+  @override
+  String get scannerExploreMapOffline => 'Просмотр карты без устройства';
+
+  @override
+  String get offlineMapTitle => 'Офлайн-карта';
+
+  @override
+  String get offlineMapDownloadArea => 'Скачать эту область';
+
+  @override
+  String get offlineMapPairCta =>
+      'Подключите узел, чтобы разблокировать функции mesh';
+
+  @override
+  String get offlineMapSatelliteNoDownload =>
+      'Спутниковые карты нельзя скачать заранее. Переключитесь на Terrain, Dark или Light.';
+
+  @override
+  String get offlineDownloadTitle => 'Скачать офлайн-карты';
+
+  @override
+  String get offlineDownloadAreaSummary => 'Тайлы видимой области карты';
+
+  @override
+  String get offlineDownloadDetailLabel => 'Уровень детализации';
+
+  @override
+  String get offlineDownloadDetailOverview => 'Обзор';
+
+  @override
+  String get offlineDownloadDetailStandard => 'Стандарт';
+
+  @override
+  String get offlineDownloadDetailDetailed => 'Подробно';
+
+  @override
+  String get offlineDownloadDetailMax => 'Максимум';
+
+  @override
+  String offlineDownloadEstimate(int count, String size) {
+    return '$count тайлов · ~$size';
+  }
+
+  @override
+  String offlineDownloadStart(String size) {
+    return 'Скачать (~$size)';
+  }
+
+  @override
+  String get offlineDownloadLargeTitle => 'Большая загрузка';
+
+  @override
+  String get offlineDownloadLargeSubtitle =>
+      'Это может занять много памяти и трафика. Уменьшите уровень детализации или приблизьте меньшую область.';
+
+  @override
+  String offlineDownloadProgress(int done, int total) {
+    return '$done из $total тайлов';
+  }
+
+  @override
+  String get offlineDownloadCancel => 'Отмена';
+
+  @override
+  String offlineDownloadComplete(int count) {
+    return 'Сохранено тайлов для офлайн-доступа: $count';
+  }
+
+  @override
+  String get offlineDownloadCancelled => 'Загрузка отменена';
+
+  @override
+  String get offlineDownloadFailed => 'Не удалось скачать';
 
   @override
   String get takBridgeSectionTitle => 'Mesh-мост';

@@ -23498,6 +23498,16 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String unitTemperatureCelsius(String value) {
+    return '$value°C';
+  }
+
+  @override
+  String unitTemperatureFahrenheit(String value) {
+    return '$value°F';
+  }
+
+  @override
   String telemetryEnvWindSpeedValue(String value) {
     return '$value m/s';
   }
@@ -40702,6 +40712,80 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get mapCompassUnavailable =>
       'El sensor de brújula no está disponible en este dispositivo';
+
+  @override
+  String get scannerExploreMapOffline => 'Explora el mapa sin un dispositivo';
+
+  @override
+  String get offlineMapTitle => 'Mapa sin conexión';
+
+  @override
+  String get offlineMapDownloadArea => 'Descargar esta área';
+
+  @override
+  String get offlineMapPairCta =>
+      'Empareja un nodo para desbloquear las funciones mesh';
+
+  @override
+  String get offlineMapSatelliteNoDownload =>
+      'Los mapas de satélite no se pueden descargar con antelación. Cambia a Terrain, Dark o Light.';
+
+  @override
+  String get offlineDownloadTitle => 'Descargar mapas sin conexión';
+
+  @override
+  String get offlineDownloadAreaSummary => 'Teselas del área visible del mapa';
+
+  @override
+  String get offlineDownloadDetailLabel => 'Nivel de detalle';
+
+  @override
+  String get offlineDownloadDetailOverview => 'Vista general';
+
+  @override
+  String get offlineDownloadDetailStandard => 'Estándar';
+
+  @override
+  String get offlineDownloadDetailDetailed => 'Detallado';
+
+  @override
+  String get offlineDownloadDetailMax => 'Máximo';
+
+  @override
+  String offlineDownloadEstimate(int count, String size) {
+    return '$count teselas · ~$size';
+  }
+
+  @override
+  String offlineDownloadStart(String size) {
+    return 'Descargar (~$size)';
+  }
+
+  @override
+  String get offlineDownloadLargeTitle => 'Descarga grande';
+
+  @override
+  String get offlineDownloadLargeSubtitle =>
+      'Esto puede usar bastante almacenamiento y datos. Reduce el nivel de detalle o acerca un área más pequeña.';
+
+  @override
+  String offlineDownloadProgress(int done, int total) {
+    return '$done de $total teselas';
+  }
+
+  @override
+  String get offlineDownloadCancel => 'Cancelar';
+
+  @override
+  String offlineDownloadComplete(int count) {
+    return '$count teselas guardadas para uso sin conexión';
+  }
+
+  @override
+  String get offlineDownloadCancelled => 'Descarga cancelada';
+
+  @override
+  String get offlineDownloadFailed => 'Error en la descarga';
 
   @override
   String get takBridgeSectionTitle => 'Puente Mesh';

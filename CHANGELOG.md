@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (offline maps)
+
+- The map is now reachable without pairing a device: a new "Explore the map without a device" action on the scanner opens a lightweight, mesh-free map so a user can browse and pre-download an area before they have a node (for example, prepping for an off-grid trip). It carries no protocol state and offers a clear "Pair a node to unlock mesh features" return path
+- New "Download this area" feature pre-downloads the visible region's tiles for true offline use: pick a detail level, see a live tile-count and storage estimate, and run the download with progress and cancel. Bulk download is allowed for the Terrain, Dark, and Light styles only (Satellite and the optional Mapbox styles are excluded per provider terms); Terrain uses a lower request concurrency and backs off on rate-limit responses
+- Map tile caching is now durable: the built-in tile cache is moved off the OS-evictable cache directory into app storage with a long freshness window, so cached and pre-downloaded tiles survive app restarts and stay usable offline for weeks instead of expiring or being purged
+
+### Fixed (map interaction)
+
+- Pinch-zoom no longer "wiggles" the map off north: rotation gestures are disabled in the default north-locked state, so an uneven two-finger zoom can no longer rotate the map. The map compass is now a three-state control (north-locked → free-rotate → follow-heading) with a distinct look per state
+
+### Changed (map tiles)
+
+- Zooming past a tile source's native maximum now "over-zooms" (upscales the last real tiles) instead of requesting non-existent tiles. On the Terrain (OpenTopoMap) style this removes the server's "max zoom" placeholder tile beyond zoom 17
+- Retina tiles are now requested only for sources that actually serve `@2x` tiles. Terrain no longer uses simulated retina, which lightens its tile-server load and keeps the offline download in sync with what the live map requests
+
 ### Changed (node visual identity)
 
 - Node and contact list tiles no longer fade with presence: the whole-card opacity ramp (active → unknown) is removed from the Meshtastic Nodes tab (both tile styles) and the Messages Contacts list, since presence is already carried by the status dot and the "Seen … ago" text, and the fade made tappable rows read as disabled while hurting legibility

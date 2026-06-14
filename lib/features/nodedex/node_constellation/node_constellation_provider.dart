@@ -22,6 +22,7 @@
 import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/units/temperature_format.dart';
 import '../../../models/mesh_models.dart';
 import '../../../providers/app_providers.dart';
 import '../models/nodedex_entry.dart';
@@ -93,6 +94,7 @@ final nodeDexNodeConstellationProvider =
         channels: channels,
         filter: filter,
         now: now,
+        units: ref.watch(measurementUnitsProvider),
       );
     });
 
@@ -107,6 +109,7 @@ NodeDexConstellation buildNodeDexConstellation({
   required List<ChannelConfig> channels,
   required NodeDexConstellationFilter filter,
   required DateTime now,
+  MeasurementUnits units = MeasurementUnits.metric,
 }) {
   if (entry == null && node == null) {
     return NodeDexConstellation(
@@ -125,6 +128,7 @@ NodeDexConstellation buildNodeDexConstellation({
     channels: channels,
     filter: filter,
     now: now,
+    units: units,
   );
 
   builder.addIdentity();
@@ -153,6 +157,7 @@ class _ConstellationBuilder {
   final List<ChannelConfig> channels;
   final NodeDexConstellationFilter filter;
   final DateTime now;
+  final MeasurementUnits units;
 
   final List<NodeDexGraphNode> _nodes = [];
   final List<NodeDexGraphEdge> _edges = [];
@@ -185,6 +190,7 @@ class _ConstellationBuilder {
     required this.channels,
     required this.filter,
     required this.now,
+    required this.units,
   });
 
   bool _withinTimeWindow(DateTime? ts) {
@@ -438,7 +444,7 @@ class _ConstellationBuilder {
       if (node.temperature != null)
         NodeDexGraphDetailRow(
           label: 'Temp',
-          value: '${node.temperature!.toStringAsFixed(1)}°C',
+          value: formatTemperatureCelsiusAscii(node.temperature!, units),
         ),
       if (node.humidity != null)
         NodeDexGraphDetailRow(

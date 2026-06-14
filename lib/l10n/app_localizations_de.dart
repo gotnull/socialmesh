@@ -23457,6 +23457,16 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String unitTemperatureCelsius(String value) {
+    return '$value°C';
+  }
+
+  @override
+  String unitTemperatureFahrenheit(String value) {
+    return '$value°F';
+  }
+
+  @override
   String telemetryEnvWindSpeedValue(String value) {
     return '$value m/s';
   }
@@ -40613,6 +40623,81 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get mapCompassUnavailable =>
       'Kompasssensor auf diesem Gerät nicht verfügbar';
+
+  @override
+  String get scannerExploreMapOffline => 'Karte ohne Gerät erkunden';
+
+  @override
+  String get offlineMapTitle => 'Offline-Karte';
+
+  @override
+  String get offlineMapDownloadArea => 'Diesen Bereich herunterladen';
+
+  @override
+  String get offlineMapPairCta =>
+      'Kopple einen Node, um Mesh-Funktionen freizuschalten';
+
+  @override
+  String get offlineMapSatelliteNoDownload =>
+      'Satellitenkarten können nicht vorab heruntergeladen werden. Wechsle zu Terrain, Dark oder Light.';
+
+  @override
+  String get offlineDownloadTitle => 'Offline-Karten herunterladen';
+
+  @override
+  String get offlineDownloadAreaSummary =>
+      'Kacheln für den aktuell sichtbaren Bereich';
+
+  @override
+  String get offlineDownloadDetailLabel => 'Detailgrad';
+
+  @override
+  String get offlineDownloadDetailOverview => 'Übersicht';
+
+  @override
+  String get offlineDownloadDetailStandard => 'Normal';
+
+  @override
+  String get offlineDownloadDetailDetailed => 'Detailliert';
+
+  @override
+  String get offlineDownloadDetailMax => 'Maximum';
+
+  @override
+  String offlineDownloadEstimate(int count, String size) {
+    return '$count Kacheln · ~$size';
+  }
+
+  @override
+  String offlineDownloadStart(String size) {
+    return 'Herunterladen (~$size)';
+  }
+
+  @override
+  String get offlineDownloadLargeTitle => 'Großer Download';
+
+  @override
+  String get offlineDownloadLargeSubtitle =>
+      'Dies kann viel Speicher und Daten verbrauchen. Verringere den Detailgrad oder zoome auf einen kleineren Bereich.';
+
+  @override
+  String offlineDownloadProgress(int done, int total) {
+    return '$done von $total Kacheln';
+  }
+
+  @override
+  String get offlineDownloadCancel => 'Abbrechen';
+
+  @override
+  String offlineDownloadComplete(int count) {
+    return '$count Kacheln für die Offline-Nutzung gespeichert';
+  }
+
+  @override
+  String get offlineDownloadCancelled => 'Download abgebrochen';
+
+  @override
+  String get offlineDownloadFailed => 'Download fehlgeschlagen';
 
   @override
   String get takBridgeSectionTitle => 'Mesh-Bridge';

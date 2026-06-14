@@ -170,7 +170,7 @@ void main() {
       expect(find.text('Battery'), findsOneWidget);
       expect(find.text('4.05 V'), findsOneWidget);
       expect(find.text('Temperature'), findsOneWidget);
-      expect(find.text('21.5 °C'), findsOneWidget);
+      expect(find.text('21.5°C'), findsOneWidget);
       expect(find.text('Humidity'), findsOneWidget);
       expect(find.text('47.0 %'), findsOneWidget);
       expect(find.text('Pressure'), findsOneWidget);

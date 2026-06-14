@@ -243,22 +243,65 @@ class MapControlLayout {
   static const double zoomControlsHeight = 136.0; // 3 buttons x 44 + 2 dividers
 }
 
+/// Compass interaction modes, surfaced as distinct visual states on the map
+/// compass (Guru-Maps style).
+///
+/// [northLocked] is the resting state: rotation gestures are disabled so a
+/// pinch-zoom can never rotate ("wiggle") the map off north. [freeRotate]
+/// re-enables two-finger rotation. [followHeading] auto-rotates the map to the
+/// device compass heading.
+enum MapCompassMode { northLocked, freeRotate, followHeading }
+
 /// Compass widget showing map rotation - shared across all map screens.
-/// Supports a heading-up mode where the map tracks the device compass.
+///
+/// Callers that drive the full three-state machine pass [mode]. Legacy callers
+/// pass only [isHeadingUp] and get the two-state (north-up / follow-heading)
+/// behaviour via a derived [_effectiveMode].
 class MapCompass extends StatelessWidget {
   final double rotation;
   final VoidCallback onPressed;
   final bool isHeadingUp;
+  final MapCompassMode? mode;
 
   const MapCompass({
     super.key,
     required this.rotation,
     required this.onPressed,
     this.isHeadingUp = false,
+    this.mode,
   });
+
+  MapCompassMode get _effectiveMode =>
+      mode ??
+      (isHeadingUp ? MapCompassMode.followHeading : MapCompassMode.northLocked);
 
   @override
   Widget build(BuildContext context) {
+    final effectiveMode = _effectiveMode;
+    // Per-mode chrome: followHeading glows cyan, freeRotate gets a stronger
+    // neutral ring to signal "rotation is live", northLocked is the quiet
+    // default.
+    final Color borderColor;
+    final double borderWidth;
+    final Color glowColor;
+    final double glowBlur;
+    switch (effectiveMode) {
+      case MapCompassMode.followHeading:
+        borderColor = AccentColors.cyan.withValues(alpha: 0.8);
+        borderWidth = 2;
+        glowColor = AccentColors.cyan.withValues(alpha: 0.3);
+        glowBlur = 12;
+      case MapCompassMode.freeRotate:
+        borderColor = context.textSecondary.withValues(alpha: 0.7);
+        borderWidth = 1.5;
+        glowColor = Colors.black.withValues(alpha: 0.2);
+        glowBlur = 8;
+      case MapCompassMode.northLocked:
+        borderColor = context.border.withValues(alpha: 0.5);
+        borderWidth = 1;
+        glowColor = Colors.black.withValues(alpha: 0.2);
+        glowBlur = 8;
+    }
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
@@ -270,18 +313,11 @@ class MapCompass extends StatelessWidget {
         decoration: BoxDecoration(
           color: context.card.withValues(alpha: 0.95),
           shape: BoxShape.circle,
-          border: Border.all(
-            color: isHeadingUp
-                ? AccentColors.cyan.withValues(alpha: 0.8)
-                : context.border.withValues(alpha: 0.5),
-            width: isHeadingUp ? 2 : 1,
-          ),
+          border: Border.all(color: borderColor, width: borderWidth),
           boxShadow: [
             BoxShadow(
-              color: isHeadingUp
-                  ? AccentColors.cyan.withValues(alpha: 0.3)
-                  : Colors.black.withValues(alpha: 0.2),
-              blurRadius: isHeadingUp ? 12 : 8,
+              color: glowColor,
+              blurRadius: glowBlur,
               offset: const Offset(0, 2),
             ),
           ],
@@ -348,6 +384,11 @@ class MapControlsOverlay extends StatelessWidget {
   final bool isHeadingUp;
   final VoidCallback? onToggleHeadingUp;
 
+  /// When set, drives the three-state compass visual (north-locked /
+  /// free-rotate / follow-heading). Legacy callers leave this null and get the
+  /// two-state behaviour derived from [isHeadingUp].
+  final MapCompassMode? compassMode;
+
   /// Called when the user taps the "Center on me" button but [hasMyLocation]
   /// is `false`. Forward this to show a snackbar guiding the user to enable
   /// GPS or phone-location sharing.
@@ -372,6 +413,7 @@ class MapControlsOverlay extends StatelessWidget {
     this.hasMyLocation = true,
     this.isHeadingUp = false,
     this.onToggleHeadingUp,
+    this.compassMode,
     this.onLocationUnavailable,
     this.showFitAll = true,
     this.showNavigation = true,
@@ -394,6 +436,7 @@ class MapControlsOverlay extends StatelessWidget {
             MapCompass(
               rotation: mapRotation,
               isHeadingUp: isHeadingUp,
+              mode: compassMode,
               onPressed: isHeadingUp
                   ? onResetNorth
                   : (onToggleHeadingUp ?? onResetNorth),

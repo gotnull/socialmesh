@@ -222,10 +222,18 @@ class _MeshMapWidgetState extends State<MeshMapWidget> {
             subdomains: MapConfig.isMapboxActive
                 ? const <String>[]
                 : widget.mapStyle.subdomains,
+            // Overzoom past the source's native cap (e.g. terrain tops out at
+            // z17) instead of requesting a non-existent tile. Mapbox styles
+            // serve deeper, so keep them at the interaction cap when active.
+            maxNativeZoom: MapConfig.isMapboxActive
+                ? 18
+                : widget.mapStyle.maxNativeZoom,
             userAgentPackageName: MapConfig.userAgentPackageName,
+            // Retina only for sources serving real @2x tiles (URL has {r});
+            // simulated retina would desync the offline tile cache.
             retinaMode: MapConfig.isMapboxActive
                 ? true
-                : widget.mapStyle != MapTileStyle.satellite,
+                : MapConfig.styleSupportsRetina(widget.mapStyle),
             evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
             tileUpdateTransformer: finiteCameraTileUpdateTransformer,
             // Disable tile animation for better performance

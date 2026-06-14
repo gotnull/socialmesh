@@ -23,10 +23,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+import '../../../core/units/temperature_format.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/info_table.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../models/meshcore_contact.dart';
+import '../../../providers/app_providers.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../services/meshcore/protocol/meshcore_cayenne_lpp.dart';
 
@@ -205,8 +207,10 @@ class _TelemetrySheetState extends ConsumerState<_TelemetrySheet>
       case MeshCoreTelemetryTemperature t:
         return InfoTableRow(
           label: l10n.meshcoreTelemetryRowTemperatureLabel,
-          value: l10n.meshcoreTelemetryRowTemperatureValue(
-            t.celsius.toStringAsFixed(1),
+          value: formatTemperatureCelsius(
+            t.celsius,
+            ref.watch(measurementUnitsProvider),
+            l10n,
           ),
         );
       case MeshCoreTelemetryHumidity h:

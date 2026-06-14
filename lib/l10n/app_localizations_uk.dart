@@ -23410,6 +23410,16 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String unitTemperatureCelsius(String value) {
+    return '$value°C';
+  }
+
+  @override
+  String unitTemperatureFahrenheit(String value) {
+    return '$value°F';
+  }
+
+  @override
   String telemetryEnvWindSpeedValue(String value) {
     return '$value м/с';
   }
@@ -40517,6 +40527,80 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get mapCompassUnavailable =>
       'Датчик компаса недоступний на цьому пристрої';
+
+  @override
+  String get scannerExploreMapOffline => 'Перегляд карти без пристрою';
+
+  @override
+  String get offlineMapTitle => 'Офлайн-карта';
+
+  @override
+  String get offlineMapDownloadArea => 'Завантажити цю область';
+
+  @override
+  String get offlineMapPairCta =>
+      'Підключіть вузол, щоб розблокувати функції mesh';
+
+  @override
+  String get offlineMapSatelliteNoDownload =>
+      'Супутникові карти не можна завантажити заздалегідь. Перемкніться на Terrain, Dark або Light.';
+
+  @override
+  String get offlineDownloadTitle => 'Завантажити офлайн-карти';
+
+  @override
+  String get offlineDownloadAreaSummary => 'Тайли видимої області карти';
+
+  @override
+  String get offlineDownloadDetailLabel => 'Рівень деталізації';
+
+  @override
+  String get offlineDownloadDetailOverview => 'Огляд';
+
+  @override
+  String get offlineDownloadDetailStandard => 'Стандарт';
+
+  @override
+  String get offlineDownloadDetailDetailed => 'Детально';
+
+  @override
+  String get offlineDownloadDetailMax => 'Максимум';
+
+  @override
+  String offlineDownloadEstimate(int count, String size) {
+    return '$count тайлів · ~$size';
+  }
+
+  @override
+  String offlineDownloadStart(String size) {
+    return 'Завантажити (~$size)';
+  }
+
+  @override
+  String get offlineDownloadLargeTitle => 'Велике завантаження';
+
+  @override
+  String get offlineDownloadLargeSubtitle =>
+      'Це може зайняти багато пам\'яті та трафіку. Зменшіть рівень деталізації або наблизьте меншу область.';
+
+  @override
+  String offlineDownloadProgress(int done, int total) {
+    return '$done з $total тайлів';
+  }
+
+  @override
+  String get offlineDownloadCancel => 'Скасувати';
+
+  @override
+  String offlineDownloadComplete(int count) {
+    return 'Збережено тайлів для офлайн-використання: $count';
+  }
+
+  @override
+  String get offlineDownloadCancelled => 'Завантаження скасовано';
+
+  @override
+  String get offlineDownloadFailed => 'Не вдалося завантажити';
 
   @override
   String get takBridgeSectionTitle => 'Mesh Bridge';

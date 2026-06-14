@@ -23148,6 +23148,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String unitTemperatureCelsius(String value) {
+    return '$value°C';
+  }
+
+  @override
+  String unitTemperatureFahrenheit(String value) {
+    return '$value°F';
+  }
+
+  @override
   String telemetryEnvWindSpeedValue(String value) {
     return '$value m/s';
   }
@@ -40062,6 +40072,79 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get mapCompassUnavailable =>
       'Compass sensor not available on this device';
+
+  @override
+  String get scannerExploreMapOffline => 'Explore the map without a device';
+
+  @override
+  String get offlineMapTitle => 'Offline map';
+
+  @override
+  String get offlineMapDownloadArea => 'Download this area';
+
+  @override
+  String get offlineMapPairCta => 'Pair a node to unlock mesh features';
+
+  @override
+  String get offlineMapSatelliteNoDownload =>
+      'Satellite maps can\'t be pre-downloaded. Switch to Terrain, Dark, or Light.';
+
+  @override
+  String get offlineDownloadTitle => 'Download offline maps';
+
+  @override
+  String get offlineDownloadAreaSummary => 'Tiles for the current map area';
+
+  @override
+  String get offlineDownloadDetailLabel => 'Detail level';
+
+  @override
+  String get offlineDownloadDetailOverview => 'Overview';
+
+  @override
+  String get offlineDownloadDetailStandard => 'Standard';
+
+  @override
+  String get offlineDownloadDetailDetailed => 'Detailed';
+
+  @override
+  String get offlineDownloadDetailMax => 'Max';
+
+  @override
+  String offlineDownloadEstimate(int count, String size) {
+    return '$count tiles · ~$size';
+  }
+
+  @override
+  String offlineDownloadStart(String size) {
+    return 'Download (~$size)';
+  }
+
+  @override
+  String get offlineDownloadLargeTitle => 'Large download';
+
+  @override
+  String get offlineDownloadLargeSubtitle =>
+      'This may use significant storage and data. Reduce the detail level or zoom in to a smaller area.';
+
+  @override
+  String offlineDownloadProgress(int done, int total) {
+    return '$done of $total tiles';
+  }
+
+  @override
+  String get offlineDownloadCancel => 'Cancel';
+
+  @override
+  String offlineDownloadComplete(int count) {
+    return 'Saved $count tiles for offline use';
+  }
+
+  @override
+  String get offlineDownloadCancelled => 'Download cancelled';
+
+  @override
+  String get offlineDownloadFailed => 'Download failed';
 
   @override
   String get takBridgeSectionTitle => 'Mesh Bridge';
