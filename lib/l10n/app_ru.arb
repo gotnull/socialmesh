@@ -13303,5 +13303,10 @@
   "offlineDownloadCancel": "Отмена",
   "offlineDownloadComplete": "Сохранено тайлов для офлайн-доступа: {count}",
   "offlineDownloadCancelled": "Загрузка отменена",
-  "offlineDownloadFailed": "Не удалось скачать"
+  "offlineDownloadFailed": "Не удалось скачать",
+  "offlineMapSearchHint": "Поиск места",
+  "offlineMapSearchFailed": "Не удалось найти это место. Проверьте написание или подключение.",
+  "offlineMapLocationOff": "Службы геолокации отключены. Включите их, чтобы центрировать карту.",
+  "offlineMapLocationDenied": "Доступ к геолокации запрещён. Включите его в Настройках.",
+  "offlineMapLocationUnavailable": "Не удалось определить ваше местоположение."
 }

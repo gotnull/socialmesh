@@ -479,10 +479,11 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
                     minZoom: 2.0,
                     maxZoom: 18.0,
                     // Enable the full interaction set so the new
-                    // MapControlsOverlay compass + rotation gestures
-                    // are usable. Mirrors the Meshtastic map.
+                    // North-locked, mirroring the Meshtastic map: the rotate
+                    // flag is dropped so a pinch-zoom can't accidentally rotate
+                    // ("wiggle") the map off north.
                     interactionOptions: const InteractionOptions(
-                      flags: InteractiveFlag.all,
+                      flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
                       pinchZoomThreshold: 0.5,
                       scrollWheelVelocity: 0.005,
                     ),

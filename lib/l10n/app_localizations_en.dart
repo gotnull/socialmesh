@@ -40090,6 +40090,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'Satellite maps can\'t be pre-downloaded. Switch to Terrain, Dark, or Light.';
 
   @override
+  String get offlineMapSearchHint => 'Search for a place';
+
+  @override
+  String get offlineMapSearchFailed =>
+      'Couldn\'t find that place. Check the spelling or your connection.';
+
+  @override
+  String get offlineMapLocationOff =>
+      'Location services are off. Turn them on to center the map.';
+
+  @override
+  String get offlineMapLocationDenied =>
+      'Location permission denied. Enable it in Settings.';
+
+  @override
+  String get offlineMapLocationUnavailable => 'Couldn\'t get your location.';
+
+  @override
   String get offlineDownloadTitle => 'Download offline maps';
 
   @override

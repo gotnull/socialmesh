@@ -46453,5 +46453,10 @@
   "offlineDownloadCancel": "Cancelar",
   "offlineDownloadComplete": "{count} blocos salvos para uso offline",
   "offlineDownloadCancelled": "Download cancelado",
-  "offlineDownloadFailed": "Falha no download"
+  "offlineDownloadFailed": "Falha no download",
+  "offlineMapSearchHint": "Procurar um lugar",
+  "offlineMapSearchFailed": "Não foi possível encontrar esse lugar. Verifique a ortografia ou a conexão.",
+  "offlineMapLocationOff": "Os serviços de localização estão desativados. Ative-os para centralizar o mapa.",
+  "offlineMapLocationDenied": "Permissão de localização negada. Ative-a nas Configurações.",
+  "offlineMapLocationUnavailable": "Não foi possível obter a sua localização."
 }

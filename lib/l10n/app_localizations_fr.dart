@@ -40827,6 +40827,25 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les cartes satellite ne peuvent pas être téléchargées à l\'avance. Passez à Terrain, Dark ou Light.';
 
   @override
+  String get offlineMapSearchHint => 'Rechercher un lieu';
+
+  @override
+  String get offlineMapSearchFailed =>
+      'Lieu introuvable. Vérifiez l\'orthographe ou votre connexion.';
+
+  @override
+  String get offlineMapLocationOff =>
+      'Les services de localisation sont désactivés. Activez-les pour centrer la carte.';
+
+  @override
+  String get offlineMapLocationDenied =>
+      'Autorisation de localisation refusée. Activez-la dans les Réglages.';
+
+  @override
+  String get offlineMapLocationUnavailable =>
+      'Impossible d\'obtenir votre position.';
+
+  @override
   String get offlineDownloadTitle => 'Télécharger des cartes hors ligne';
 
   @override

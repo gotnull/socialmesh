@@ -40535,6 +40535,25 @@ class AppLocalizationsRu extends AppLocalizations {
       'Спутниковые карты нельзя скачать заранее. Переключитесь на Terrain, Dark или Light.';
 
   @override
+  String get offlineMapSearchHint => 'Поиск места';
+
+  @override
+  String get offlineMapSearchFailed =>
+      'Не удалось найти это место. Проверьте написание или подключение.';
+
+  @override
+  String get offlineMapLocationOff =>
+      'Службы геолокации отключены. Включите их, чтобы центрировать карту.';
+
+  @override
+  String get offlineMapLocationDenied =>
+      'Доступ к геолокации запрещён. Включите его в Настройках.';
+
+  @override
+  String get offlineMapLocationUnavailable =>
+      'Не удалось определить ваше местоположение.';
+
+  @override
   String get offlineDownloadTitle => 'Скачать офлайн-карты';
 
   @override

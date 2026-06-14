@@ -40546,6 +40546,25 @@ class AppLocalizationsUk extends AppLocalizations {
       'Супутникові карти не можна завантажити заздалегідь. Перемкніться на Terrain, Dark або Light.';
 
   @override
+  String get offlineMapSearchHint => 'Пошук місця';
+
+  @override
+  String get offlineMapSearchFailed =>
+      'Не вдалося знайти це місце. Перевірте правопис або підключення.';
+
+  @override
+  String get offlineMapLocationOff =>
+      'Служби геолокації вимкнено. Увімкніть їх, щоб центрувати карту.';
+
+  @override
+  String get offlineMapLocationDenied =>
+      'Доступ до геолокації заборонено. Увімкніть його в Налаштуваннях.';
+
+  @override
+  String get offlineMapLocationUnavailable =>
+      'Не вдалося визначити ваше місцезнаходження.';
+
+  @override
   String get offlineDownloadTitle => 'Завантажити офлайн-карти';
 
   @override

@@ -40731,6 +40731,25 @@ class AppLocalizationsEs extends AppLocalizations {
       'Los mapas de satélite no se pueden descargar con antelación. Cambia a Terrain, Dark o Light.';
 
   @override
+  String get offlineMapSearchHint => 'Buscar un lugar';
+
+  @override
+  String get offlineMapSearchFailed =>
+      'No se encontró ese lugar. Comprueba la ortografía o tu conexión.';
+
+  @override
+  String get offlineMapLocationOff =>
+      'Los servicios de ubicación están desactivados. Actívalos para centrar el mapa.';
+
+  @override
+  String get offlineMapLocationDenied =>
+      'Permiso de ubicación denegado. Actívalo en Ajustes.';
+
+  @override
+  String get offlineMapLocationUnavailable =>
+      'No se pudo obtener tu ubicación.';
+
+  @override
   String get offlineDownloadTitle => 'Descargar mapas sin conexión';
 
   @override

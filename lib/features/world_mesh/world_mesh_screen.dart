@@ -751,7 +751,9 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
               maxZoom: 18.0,
               backgroundColor: context.background,
               interactionOptions: const InteractionOptions(
-                flags: InteractiveFlag.all,
+                // North-locked: drop the rotate flag so a pinch-zoom can't
+                // accidentally rotate ("wiggle") the map off north.
+                flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
                 pinchZoomThreshold: 0.5,
               ),
               onPositionChanged: (position, hasGesture) {

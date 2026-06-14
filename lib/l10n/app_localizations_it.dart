@@ -40547,6 +40547,25 @@ class AppLocalizationsIt extends AppLocalizations {
       'Le mappe satellitari non possono essere pre-scaricate. Passa a Terrain, Dark o Light.';
 
   @override
+  String get offlineMapSearchHint => 'Cerca un luogo';
+
+  @override
+  String get offlineMapSearchFailed =>
+      'Luogo non trovato. Controlla l\'ortografia o la connessione.';
+
+  @override
+  String get offlineMapLocationOff =>
+      'I servizi di localizzazione sono disattivati. Attivali per centrare la mappa.';
+
+  @override
+  String get offlineMapLocationDenied =>
+      'Autorizzazione alla posizione negata. Abilitala nelle Impostazioni.';
+
+  @override
+  String get offlineMapLocationUnavailable =>
+      'Impossibile ottenere la tua posizione.';
+
+  @override
   String get offlineDownloadTitle => 'Scarica mappe offline';
 
   @override

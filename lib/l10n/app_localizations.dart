@@ -69989,6 +69989,36 @@ abstract class AppLocalizations {
   /// **'Satellite maps can\'t be pre-downloaded. Switch to Terrain, Dark, or Light.'**
   String get offlineMapSatelliteNoDownload;
 
+  /// Hint text in the offline map's place-search field
+  ///
+  /// In en, this message translates to:
+  /// **'Search for a place'**
+  String get offlineMapSearchHint;
+
+  /// Shown when a place search returns no result or fails (e.g. offline)
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t find that place. Check the spelling or your connection.'**
+  String get offlineMapSearchFailed;
+
+  /// Shown when device location services are disabled and the user taps center-on-me on the offline map
+  ///
+  /// In en, this message translates to:
+  /// **'Location services are off. Turn them on to center the map.'**
+  String get offlineMapLocationOff;
+
+  /// Shown when location permission is denied and the user taps center-on-me on the offline map
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission denied. Enable it in Settings.'**
+  String get offlineMapLocationDenied;
+
+  /// Shown when fetching the device GPS position fails on the offline map
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t get your location.'**
+  String get offlineMapLocationUnavailable;
+
   /// Title of the offline region download sheet
   ///
   /// In en, this message translates to:

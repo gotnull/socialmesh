@@ -46453,5 +46453,10 @@
   "offlineDownloadComplete": "Salvate {count} tessere per l'uso offline",
   "offlineDownloadCancelled": "Download annullato",
   "offlineDownloadFailed": "Download non riuscito",
-  "offlineDownloadDetailStandard": "Normale"
+  "offlineDownloadDetailStandard": "Normale",
+  "offlineMapSearchHint": "Cerca un luogo",
+  "offlineMapSearchFailed": "Luogo non trovato. Controlla l'ortografia o la connessione.",
+  "offlineMapLocationOff": "I servizi di localizzazione sono disattivati. Attivali per centrare la mappa.",
+  "offlineMapLocationDenied": "Autorizzazione alla posizione negata. Abilitala nelle Impostazioni.",
+  "offlineMapLocationUnavailable": "Impossibile ottenere la tua posizione."
 }

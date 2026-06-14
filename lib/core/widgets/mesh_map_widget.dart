@@ -40,7 +40,9 @@ class MeshMapWidget extends StatefulWidget {
   /// Whether to enable map interactions (pan, zoom, rotate)
   final bool interactive;
 
-  /// Whether to disable rotation specifically
+  /// Whether to disable manual map rotation. Defaults to `true` so a pinch-zoom
+  /// can never accidentally rotate ("wiggle") the map off north. Screens that
+  /// offer an explicit compass/rotation control opt back in with `false`.
   final bool disableRotation;
 
   /// Callback when map position changes
@@ -111,7 +113,7 @@ class MeshMapWidget extends StatefulWidget {
     this.minZoom = 3.0,
     this.maxZoom = 18.0,
     this.interactive = true,
-    this.disableRotation = false,
+    this.disableRotation = true,
     this.onPositionChanged,
     this.onTap,
     this.onLongPress,

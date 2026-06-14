@@ -13303,5 +13303,10 @@
   "offlineDownloadCancel": "Скасувати",
   "offlineDownloadComplete": "Збережено тайлів для офлайн-використання: {count}",
   "offlineDownloadCancelled": "Завантаження скасовано",
-  "offlineDownloadFailed": "Не вдалося завантажити"
+  "offlineDownloadFailed": "Не вдалося завантажити",
+  "offlineMapSearchHint": "Пошук місця",
+  "offlineMapSearchFailed": "Не вдалося знайти це місце. Перевірте правопис або підключення.",
+  "offlineMapLocationOff": "Служби геолокації вимкнено. Увімкніть їх, щоб центрувати карту.",
+  "offlineMapLocationDenied": "Доступ до геолокації заборонено. Увімкніть його в Налаштуваннях.",
+  "offlineMapLocationUnavailable": "Не вдалося визначити ваше місцезнаходження."
 }

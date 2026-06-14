@@ -13303,5 +13303,10 @@
   "offlineDownloadComplete": "{count} tuiles enregistrées pour une utilisation hors ligne",
   "offlineDownloadCancelled": "Téléchargement annulé",
   "offlineDownloadFailed": "Échec du téléchargement",
-  "offlineDownloadDetailStandard": "Normal"
+  "offlineDownloadDetailStandard": "Normal",
+  "offlineMapSearchHint": "Rechercher un lieu",
+  "offlineMapSearchFailed": "Lieu introuvable. Vérifiez l'orthographe ou votre connexion.",
+  "offlineMapLocationOff": "Les services de localisation sont désactivés. Activez-les pour centrer la carte.",
+  "offlineMapLocationDenied": "Autorisation de localisation refusée. Activez-la dans les Réglages.",
+  "offlineMapLocationUnavailable": "Impossible d'obtenir votre position."
 }

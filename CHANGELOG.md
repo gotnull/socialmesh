@@ -10,12 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added (offline maps)
 
 - The map is now reachable without pairing a device: a new "Explore the map without a device" action on the scanner opens a lightweight, mesh-free map so a user can browse and pre-download an area before they have a node (for example, prepping for an off-grid trip). It carries no protocol state and offers a clear "Pair a node to unlock mesh features" return path
+- The offline map has a place-search bar (type a town/area to jump there) and a center-on-my-location button, so finding the region to pre-download no longer means panning the whole way by hand
 - New "Download this area" feature pre-downloads the visible region's tiles for true offline use: pick a detail level, see a live tile-count and storage estimate, and run the download with progress and cancel. Bulk download is allowed for the Terrain, Dark, and Light styles only (Satellite and the optional Mapbox styles are excluded per provider terms); Terrain uses a lower request concurrency and backs off on rate-limit responses
 - Map tile caching is now durable: the built-in tile cache is moved off the OS-evictable cache directory into app storage with a long freshness window, so cached and pre-downloaded tiles survive app restarts and stay usable offline for weeks instead of expiring or being purged
 
 ### Fixed (map interaction)
 
-- Pinch-zoom no longer "wiggles" the map off north: rotation gestures are disabled in the default north-locked state, so an uneven two-finger zoom can no longer rotate the map. The map compass is now a three-state control (north-locked → free-rotate → follow-heading) with a distinct look per state
+- Pinch-zoom no longer "wiggles" the map off north on any map: rotation gestures are disabled by default across every map surface (Meshtastic map, World Mesh, MeshCore map, the new offline map, and all preview/picker maps), so an uneven two-finger zoom can no longer rotate the map. The main Meshtastic map and the offline map additionally get a three-state compass control (north-locked → free-rotate → follow-heading) with a distinct look per state
 
 ### Changed (map tiles)
 

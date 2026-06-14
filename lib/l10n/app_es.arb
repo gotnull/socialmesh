@@ -13303,5 +13303,10 @@
   "offlineDownloadCancel": "Cancelar",
   "offlineDownloadComplete": "{count} teselas guardadas para uso sin conexión",
   "offlineDownloadCancelled": "Descarga cancelada",
-  "offlineDownloadFailed": "Error en la descarga"
+  "offlineDownloadFailed": "Error en la descarga",
+  "offlineMapSearchHint": "Buscar un lugar",
+  "offlineMapSearchFailed": "No se encontró ese lugar. Comprueba la ortografía o tu conexión.",
+  "offlineMapLocationOff": "Los servicios de ubicación están desactivados. Actívalos para centrar el mapa.",
+  "offlineMapLocationDenied": "Permiso de ubicación denegado. Actívalo en Ajustes.",
+  "offlineMapLocationUnavailable": "No se pudo obtener tu ubicación."
 }

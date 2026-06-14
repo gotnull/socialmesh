@@ -13303,5 +13303,10 @@
   "offlineDownloadComplete": "{count} Kacheln für die Offline-Nutzung gespeichert",
   "offlineDownloadCancelled": "Download abgebrochen",
   "offlineDownloadFailed": "Download fehlgeschlagen",
-  "offlineDownloadDetailStandard": "Normal"
+  "offlineDownloadDetailStandard": "Normal",
+  "offlineMapSearchHint": "Nach einem Ort suchen",
+  "offlineMapSearchFailed": "Ort nicht gefunden. Prüfe die Schreibweise oder deine Verbindung.",
+  "offlineMapLocationOff": "Standortdienste sind aus. Aktiviere sie, um die Karte zu zentrieren.",
+  "offlineMapLocationDenied": "Standortberechtigung verweigert. Aktiviere sie in den Einstellungen.",
+  "offlineMapLocationUnavailable": "Dein Standort konnte nicht ermittelt werden."
 }

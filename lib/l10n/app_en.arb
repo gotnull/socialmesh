@@ -53596,6 +53596,26 @@
     "@offlineMapSatelliteNoDownload": {
         "description": "Info message shown when the user tries to download an area while the satellite map style is selected (provider terms forbid bulk caching)"
     },
+    "offlineMapSearchHint": "Search for a place",
+    "@offlineMapSearchHint": {
+        "description": "Hint text in the offline map's place-search field"
+    },
+    "offlineMapSearchFailed": "Couldn't find that place. Check the spelling or your connection.",
+    "@offlineMapSearchFailed": {
+        "description": "Shown when a place search returns no result or fails (e.g. offline)"
+    },
+    "offlineMapLocationOff": "Location services are off. Turn them on to center the map.",
+    "@offlineMapLocationOff": {
+        "description": "Shown when device location services are disabled and the user taps center-on-me on the offline map"
+    },
+    "offlineMapLocationDenied": "Location permission denied. Enable it in Settings.",
+    "@offlineMapLocationDenied": {
+        "description": "Shown when location permission is denied and the user taps center-on-me on the offline map"
+    },
+    "offlineMapLocationUnavailable": "Couldn't get your location.",
+    "@offlineMapLocationUnavailable": {
+        "description": "Shown when fetching the device GPS position fails on the offline map"
+    },
     "offlineDownloadTitle": "Download offline maps",
     "@offlineDownloadTitle": {
         "description": "Title of the offline region download sheet"
