@@ -53,6 +53,9 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen>
   MapTileStyle _style = MapTileStyle.terrain;
   double _currentZoom = MapConfig.defaultZoom;
 
+  // Last known device position, shown as a marker once "center on me" runs.
+  LatLng? _myLocation;
+
   MapCompassMode _compassMode = MapCompassMode.northLocked;
   StreamSubscription<CompassEvent>? _compassSubscription;
 
@@ -128,6 +131,7 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen>
       final target = safeLatLng(pos.latitude, pos.longitude);
       if (target == null) return;
       final zoom = _currentZoom < 12 ? 12.0 : _currentZoom;
+      safeSetState(() => _myLocation = target);
       _mapController.safeMove(target, zoom);
       _currentZoom = zoom;
     } catch (e) {
@@ -354,6 +358,19 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen>
               disableRotation: _compassMode == MapCompassMode.northLocked,
               onPositionChanged: _onPositionChanged,
               onTap: (_, _) => FocusScope.of(context).unfocus(),
+              additionalLayers: [
+                if (_myLocation != null)
+                  MarkerLayer(
+                    markers: [
+                      Marker(
+                        point: _myLocation!,
+                        width: AppTheme.spacing24,
+                        height: AppTheme.spacing24,
+                        child: const _MyLocationDot(),
+                      ),
+                    ],
+                  ),
+              ],
             ),
             ValueListenableBuilder<double>(
               valueListenable: _rotation,
@@ -392,6 +409,30 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// "You are here" marker: a solid blue dot with a white ring and a soft glow,
+/// shown on the offline map after the user taps "center on me".
+class _MyLocationDot extends StatelessWidget {
+  const _MyLocationDot();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AccentColors.blue,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 3),
+        boxShadow: [
+          BoxShadow(
+            color: AccentColors.blue.withValues(alpha: 0.45),
+            blurRadius: 10,
+            spreadRadius: 2,
+          ),
+        ],
       ),
     );
   }

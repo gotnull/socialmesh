@@ -2124,29 +2124,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Device-free escape hatch: lets a user who has not paired
-                    // a node yet reach the map and pre-download tiles (e.g.
-                    // prepping for an off-grid trip). Only on the standalone
-                    // scanner, never mid-onboarding or when embedded inline.
-                    if (!widget.isOnboarding && !widget.isInline) ...[
-                      TextButton.icon(
-                        onPressed: () =>
-                            Navigator.of(context).pushNamed('/offline-map'),
-                        icon: Icon(
-                          Icons.map_outlined,
-                          size: 18,
-                          color: context.accentColor,
-                        ),
-                        label: Text(
-                          context.l10n.scannerExploreMapOffline,
-                          style: TextStyle(
-                            color: context.accentColor,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: AppTheme.spacing8),
-                    ],
                     Text(
                       versionText,
                       style: TextStyle(
@@ -2245,7 +2222,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                     // a node yet reach the map and pre-download tiles (e.g.
                     // prepping for an off-grid trip). Only on the standalone
                     // scanner, never mid-onboarding or when embedded inline.
-                    if (!widget.isOnboarding && !widget.isInline) ...[
+                    if (!widget.isOnboarding &&
+                        !widget.isInline &&
+                        !_connecting &&
+                        !_autoReconnecting) ...[
                       TextButton.icon(
                         onPressed: () =>
                             Navigator.of(context).pushNamed('/offline-map'),
