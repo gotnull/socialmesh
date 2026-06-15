@@ -27,6 +27,7 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/map_controls.dart';
 import '../../core/widgets/mesh_map_widget.dart';
 import '../../core/widgets/primary_gradient_button.dart';
+import '../../providers/app_providers.dart';
 import '../../utils/snackbar.dart';
 import 'offline_tiles/offline_download_sheet.dart';
 import 'offline_tiles/offline_tile_cache.dart';
@@ -63,12 +64,34 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen>
   static const double _maxZoom = 18;
 
   @override
+  void initState() {
+    super.initState();
+    _loadStyle();
+  }
+
+  @override
   void dispose() {
     _compassSubscription?.cancel();
     _mapController.dispose();
     _rotation.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  // Restore the persisted offline-map base style (falls back to the terrain
+  // default when never set).
+  Future<void> _loadStyle() async {
+    final settings = await ref.read(settingsServiceProvider.future);
+    if (!mounted) return;
+    final index = settings.offlineMapTileStyleIndex;
+    if (index != null && index >= 0 && index < MapTileStyle.values.length) {
+      safeSetState(() => _style = MapTileStyle.values[index]);
+    }
+  }
+
+  Future<void> _saveStyle(MapTileStyle style) async {
+    final settings = await ref.read(settingsServiceProvider.future);
+    await settings.setOfflineMapTileStyleIndex(style.index);
   }
 
   // Jump the camera to a place typed in the search bar, using the platform
@@ -210,7 +233,10 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen>
     }
   }
 
-  void _setStyle(MapTileStyle style) => safeSetState(() => _style = style);
+  void _setStyle(MapTileStyle style) {
+    safeSetState(() => _style = style);
+    _saveStyle(style);
+  }
 
   void _downloadThisArea() {
     if (MapConfig.isMapboxActive || !kDownloadableStyles.contains(_style)) {

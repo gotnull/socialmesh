@@ -627,6 +627,16 @@ class SettingsService {
 
   int get mapTileStyleIndex => _preferences.getInt('map_tile_style_index') ?? 0;
 
+  // Offline map base style — persisted separately from the main map so the
+  // device-free offline map keeps its own (terrain-by-default) preference.
+  // Null when never set, so callers can apply their own default.
+  Future<void> setOfflineMapTileStyleIndex(int index) async {
+    await _preferences.setInt('offline_map_tile_style_index', index);
+  }
+
+  int? get offlineMapTileStyleIndex =>
+      _preferences.getInt('offline_map_tile_style_index');
+
   // Map layer toggles
   Future<void> setMapShowRangeCircles(bool enabled) async {
     await _preferences.setBool('map_show_range_circles', enabled);
