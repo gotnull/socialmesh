@@ -18,6 +18,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Removed the beta Nothing Phone Glyph Matrix integration (the Glyph test screen, the "Glyph pattern" automation action and its flow node, and the bundled Nothing GlyphMatrix SDK). The SDK declared a minSdk of 34, which made Google Play mark the app incompatible with every device below Android 14; removing it restores installability on older Android devices. Existing automations that used the Glyph action fall back to a push notification.
 
+### Fixed (map state persistence)
+
+- The map now remembers where you left it when you switch tabs. Previously the Map tab was rebuilt from scratch on every visit, so the camera reset to a default view, the zoom level was lost, and the map could show a blank blue background until you pinched to refresh. The camera (center and zoom) is now retained for the session and restored on return
+- User-dropped local waypoints (the yellow pins) now survive leaving and returning to the Map tab, matching how shared mesh waypoints already persisted
+- Switching the map style (Dark / Satellite / Terrain / Light) now redraws the tiles immediately instead of leaving a blank background until the map is panned or zoomed
+
+### Fixed (signals and activity)
+
+- A signal whose image never finished uploading no longer animates "Syncing media" forever: after a short grace period the card shows a static "Media unavailable" placeholder. The multi-image upload path also now correctly clears the pending-image flag and writes a valid image state on success
+- Freshly received mesh signals no longer flash into the feed and vanish: a feed refresh that runs while a signal is arriving over the mesh no longer clobbers that signal, and a refresh now preserves non-expired in-memory signals the database snapshot missed
+- The Activity feed no longer flickers empty and then repopulates on auth or app-state changes: it now reacts only to the signed-in user's id rather than to every Firebase user-object re-emission, so it stops resetting and re-subscribing unnecessarily
+
 ### Fixed (map interaction)
 
 - Pinch-zoom no longer "wiggles" the map off north on any map: rotation gestures are disabled by default across every map surface (Meshtastic map, World Mesh, MeshCore map, the new offline map, and all preview/picker maps), so an uneven two-finger zoom can no longer rotate the map. The main Meshtastic map and the offline map additionally get a three-state compass control (north-locked → free-rotate → follow-heading) with a distinct look per state
