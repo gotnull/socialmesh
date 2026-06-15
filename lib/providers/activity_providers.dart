@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/logging.dart';
 import '../models/social_activity.dart';
@@ -71,12 +70,16 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
       return const ActivityFeedState(isLoading: false);
     }
 
-    // ---- Gate 2: Auth state (reactive) ----
-    // Watching currentUserProvider means build() re-runs when the user
-    // signs in or out. No manual authStateChanges subscription needed.
-    final currentUser = ref.watch(currentUserProvider);
+    // ---- Gate 2: Auth state (reactive, uid-only) ----
+    // Depend on the uid (a value-comparable String), NOT the whole User
+    // object. Firebase's User has no `==` override, so every re-emission of
+    // authStateChanges is a fresh instance that would rebuild this notifier —
+    // resetting the feed to an empty loading state and re-subscribing, which
+    // surfaces as activities flashing in and vanishing. Selecting the uid means
+    // build() re-runs only on a real sign-in / sign-out.
+    final uid = ref.watch(currentUserProvider.select((u) => u?.uid));
 
-    if (currentUser == null) {
+    if (uid == null) {
       AppLogging.social(
         '📬 [ActivityFeed] build() — user not signed in, '
         'returning empty state',
@@ -86,20 +89,20 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
 
     // ---- Gate 3: Start watching activities ----
     AppLogging.social(
-      '📬 [ActivityFeed] build() — signed in as uid=${currentUser.uid}, '
+      '📬 [ActivityFeed] build() — signed in as uid=$uid, '
       'starting activity stream',
     );
-    _startWatching(currentUser);
+    _startWatching(uid);
     return const ActivityFeedState(isLoading: true);
   }
 
-  void _startWatching(User currentUser) {
+  void _startWatching(String uid) {
     try {
       final service = ref.read(socialActivityServiceProvider);
 
       AppLogging.social(
         '📬 [ActivityFeed] _startWatching() — creating Firestore stream '
-        'for uid=${currentUser.uid}',
+        'for uid=$uid',
       );
 
       _activitySubscription = service.watchActivities().listen(
