@@ -25,7 +25,6 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../providers/subscription_providers.dart';
 import '../../providers/signal_bookmark_provider.dart';
 import '../../providers/signal_providers.dart';
-import '../../providers/glyph_provider.dart';
 import '../../models/subscription_models.dart';
 import '../../services/storage/storage_service.dart';
 import '../../services/notifications/push_notification_service.dart';
@@ -68,7 +67,6 @@ import '../automations/automation_providers.dart';
 import 'canned_responses_screen.dart';
 import 'canned_message_module_config_screen.dart';
 import 'range_test_screen.dart';
-import 'glyph_test_screen.dart';
 import 'store_forward_config_screen.dart';
 import 'detection_sensor_config_screen.dart';
 import 'external_notification_config_screen.dart';
@@ -1520,20 +1518,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             MaterialPageRoute(builder: (_) => const AppLogScreen()),
           ),
         ),
-        // Glyph Test - only show on Nothing Phone 3
-        if (ref.watch(glyphServiceProvider).deviceModel.contains('Phone (3)'))
-          _SearchableSettingItem(
-            icon: Icons.lightbulb,
-            title: context.l10n.settingsTileGlyphMatrixTitle,
-            subtitle: context.l10n.settingsTileGlyphMatrixSubtitle,
-            keywords: ['glyph', 'nothing', 'led', 'test', 'light', 'matrix'],
-            section: context.l10n.settingsSectionTools,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const GlyphTestScreen()),
-            ),
-          ),
-
         // About
         _SearchableSettingItem(
           icon: Icons.info,
@@ -1556,8 +1540,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         _SearchableSettingItem(
           icon: Icons.phone_android,
           title: context.l10n.settingsTileDeviceInfoTitle,
-          subtitle: ref.watch(glyphServiceProvider).deviceModel,
-          keywords: ['device', 'phone', 'model', 'hardware', 'nothing'],
+          subtitle: context.l10n.settingsTileDeviceInfoSubtitle,
+          keywords: ['device', 'phone', 'model', 'hardware'],
           section: context.l10n.settingsSectionAbout,
           onTap: () => _showDeviceInfo(context, ref),
         ),
@@ -3656,34 +3640,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
-                          // Glyph Matrix Test - only show on Nothing Phone 3
-                          Consumer(
-                            builder: (context, ref, child) {
-                              final glyphService = ref.watch(
-                                glyphServiceProvider,
-                              );
-                              // Only show on Nothing Phone 3
-                              if (!glyphService.deviceModel.contains(
-                                'Phone (3)', // lint-allow: hardcoded-string
-                              )) {
-                                return const SizedBox.shrink();
-                              }
-                              return _SettingsTile(
-                                icon: Icons.lightbulb,
-                                title: context.l10n.settingsGlyphMatrixTest,
-                                subtitle: context
-                                    .l10n
-                                    .settingsGlyphMatrixTestSubtitle,
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const GlyphTestScreen(),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-
                           const SizedBox(height: AppTheme.spacing16),
 
                           // About Section

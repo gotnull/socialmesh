@@ -675,7 +675,6 @@ enum ActionType {
   updateWidget,
   sendToChannel,
   triggerShortcut,
-  glyphPattern,
 }
 
 // Per-protocol compatibility for each ActionType. Most actions are
@@ -701,7 +700,6 @@ extension ActionTypeProtocolSupport on ActionType {
           case ActionType.triggerWebhook:
           case ActionType.logEvent:
           case ActionType.triggerShortcut:
-          case ActionType.glyphPattern:
             return ProtocolSupport.supported;
         }
     }
@@ -729,8 +727,6 @@ extension ActionTypeExtension on ActionType {
         return 'Send to channel'; // lint-allow: hardcoded-string
       case ActionType.triggerShortcut:
         return 'Run iOS Shortcut'; // lint-allow: hardcoded-string
-      case ActionType.glyphPattern:
-        return 'Glyph pattern (Nothing Phone)'; // lint-allow: hardcoded-string
     }
   }
 
@@ -755,8 +751,6 @@ extension ActionTypeExtension on ActionType {
         return l10n.automationActionSendToChannel;
       case ActionType.triggerShortcut:
         return l10n.automationActionTriggerShortcut;
-      case ActionType.glyphPattern:
-        return l10n.automationActionGlyphPattern;
     }
   }
 
@@ -780,8 +774,6 @@ extension ActionTypeExtension on ActionType {
         return Icons.forum;
       case ActionType.triggerShortcut:
         return Icons.play_circle;
-      case ActionType.glyphPattern:
-        return Icons.lightbulb;
     }
   }
 }

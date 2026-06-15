@@ -2391,10 +2391,6 @@
     "@automationActionDone": {
         "description": "Close button in the channel selector"
     },
-    "automationActionGlyphPattern": "Glyph pattern (Nothing Phone)",
-    "@automationActionGlyphPattern": {
-        "description": "Display name for the glyphPattern action type"
-    },
     "automationActionGotIt": "Got it",
     "@automationActionGotIt": {
         "description": "Dismiss button on the shortcut help sheet"
@@ -26453,14 +26449,6 @@
     "@settingsTileForceSyncTitle": {
         "description": "Title of the force sync settings tile."
     },
-    "settingsTileGlyphMatrixSubtitle": "Nothing Phone 3 LED patterns",
-    "@settingsTileGlyphMatrixSubtitle": {
-        "description": "Subtitle of the glyph matrix test tile."
-    },
-    "settingsTileGlyphMatrixTitle": "Glyph Matrix Test",
-    "@settingsTileGlyphMatrixTitle": {
-        "description": "Title of the glyph matrix test tile (Nothing Phone 3 only)."
-    },
     "settingsTileGpsStatusSubtitle": "View detailed GPS information",
     "@settingsTileGpsStatusSubtitle": {
         "description": "Subtitle of the GPS status tools tile."
@@ -36379,34 +36367,6 @@
         },
         "description": "Text in settings Parameters: {price}."
     },
-    "glyphMatrixTitle": "GLYPH MATRIX",
-    "@glyphMatrixTitle": {
-        "description": "Title for a feature that triggers LED patterns on Nothing Phone devices via BLE. Glyph is the Nothing Phone brand name for its LED patterns."
-    },
-    "glyphMatrixTurnOff": "Turn off",
-    "@glyphMatrixTurnOff": {
-        "description": "Text displayed in Glyph matrix / Nothing Phone LED"
-    },
-    "glyphMatrixInitializing": "INITIALIZING GLYPH MATRIX...",
-    "@glyphMatrixInitializing": {
-        "description": "Loading message while the Glyph Matrix BLE connection is being established."
-    },
-    "glyphMatrixInitFailed": "INIT FAILED",
-    "@glyphMatrixInitFailed": {
-        "description": "Error message in Glyph matrix / Nothing Phone LED"
-    },
-    "glyphMatrixNotSupported": "DEVICE NOT SUPPORTED",
-    "@glyphMatrixNotSupported": {
-        "description": "Text displayed in Glyph matrix / Nothing Phone LED"
-    },
-    "glyphMatrixRequiresDevice": "Glyph Matrix requires\nNothing Phone (3)",
-    "@glyphMatrixRequiresDevice": {
-        "description": "Text displayed in Glyph matrix / Nothing Phone LED"
-    },
-    "glyphMatrixSwipeToExecute": "← SWIPE TO EXECUTE →",
-    "@glyphMatrixSwipeToExecute": {
-        "description": "Instruction to swipe a button to trigger the LED pattern. Execute means activate the command."
-    },
     "batteryOptTitle": "Optimize for {oemName}",
     "@batteryOptTitle": {
         "placeholders": {
@@ -37813,10 +37773,6 @@
     "@flowNodeTriggerShortcut": {
         "description": "Visual flow / help l10n"
     },
-    "flowNodeGlyphPattern": "Glyph Pattern",
-    "@flowNodeGlyphPattern": {
-        "description": "Visual flow / help l10n"
-    },
     "flowNodeTimeRange": "Time Range",
     "@flowNodeTimeRange": {
         "description": "Visual flow / help l10n"
@@ -37924,46 +37880,6 @@
                 "type": "String"
             }
         }
-    },
-    "glyphZoneA": "Zone A",
-    "@glyphZoneA": {
-        "description": "Visual flow / help l10n"
-    },
-    "glyphZoneB": "Zone B",
-    "@glyphZoneB": {
-        "description": "Visual flow / help l10n"
-    },
-    "glyphZoneC": "Zone C",
-    "@glyphZoneC": {
-        "description": "Visual flow / help l10n"
-    },
-    "glyphZoneD": "Zone D",
-    "@glyphZoneD": {
-        "description": "Visual flow / help l10n"
-    },
-    "glyphZoneE": "Zone E",
-    "@glyphZoneE": {
-        "description": "Visual flow / help l10n"
-    },
-    "glyphZoneDescCamera": "Camera",
-    "@glyphZoneDescCamera": {
-        "description": "Visual flow / help l10n"
-    },
-    "glyphZoneDescDiagonal": "Diagonal Strip",
-    "@glyphZoneDescDiagonal": {
-        "description": "Visual flow / help l10n"
-    },
-    "glyphZoneDescUsbc": "USB-C Port",
-    "@glyphZoneDescUsbc": {
-        "description": "Visual flow / help l10n"
-    },
-    "glyphZoneDescLower": "Lower Strip",
-    "@glyphZoneDescLower": {
-        "description": "Visual flow / help l10n"
-    },
-    "glyphZoneDescBattery": "Battery",
-    "@glyphZoneDescBattery": {
-        "description": "Visual flow / help l10n"
     },
     "appearanceFontBranded": "Branded",
     "@appearanceFontBranded": {
@@ -38203,10 +38119,6 @@
     },
     "settingsSectionFileTransfer": "FILE TRANSFER",
     "@settingsSectionFileTransfer": {
-        "description": "Text displayed in settings"
-    },
-    "settingsGlyphMatrixTest": "Glyph Matrix Test",
-    "@settingsGlyphMatrixTest": {
         "description": "Text displayed in settings"
     },
     "cloudSyncUnableToLoad": "Unable to load subscription options",
@@ -45915,10 +45827,6 @@
     "@scannerShowAllBleDevices": {
         "description": "Text displayed in BLE scanner"
     },
-    "settingsGlyphMatrixTestSubtitle": "Nothing Phone 3 LED patterns",
-    "@settingsGlyphMatrixTestSubtitle": {
-        "description": "Subtitle in settings"
-    },
     "signalQualityExcellent": "Excellent",
     "@signalQualityExcellent": {
         "description": "Text displayed in signals"
@@ -48385,19 +48293,6 @@
     },
     "automationErrorShortcutRunFailed": "Failed to run shortcut: {error}",
     "@automationErrorShortcutRunFailed": {
-        "placeholders": {
-            "error": {
-                "type": "String"
-            }
-        },
-        "description": "Error message in automations Parameters: {error} = error/status message."
-    },
-    "automationErrorGlyphNotAvailable": "Glyph interface not available",
-    "@automationErrorGlyphNotAvailable": {
-        "description": "Error message in automations"
-    },
-    "automationErrorGlyphPatternFailed": "Failed to show glyph pattern: {error}",
-    "@automationErrorGlyphPatternFailed": {
         "placeholders": {
             "error": {
                 "type": "String"

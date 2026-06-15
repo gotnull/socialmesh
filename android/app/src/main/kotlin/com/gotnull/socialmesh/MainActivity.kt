@@ -19,8 +19,6 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        // Register GlyphMatrix plugin for Nothing Phone 3
-        flutterEngine.plugins.add(GlyphMatrixPlugin())
         // Register age signal plugin (scaffold — returns unknown until SDK wired)
         flutterEngine.plugins.add(AgeSignalPlugin())
         

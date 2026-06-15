@@ -55,10 +55,6 @@ The original license text is retained at `lib/core/visual_flow/vs_node_view/LICE
 
 The SIP Play and handshake sound effects in `assets/sounds/sip_play/` are sourced from Pixabay under the Pixabay Content License (commercial use permitted, attribution not required). Per-file provenance: `assets/sounds/sip_play/ATTRIBUTION.md`.
 
-## Nothing GlyphMatrix SDK
-
-`android/app/libs/glyph-matrix-sdk-1.0.aar` (Nothing Technology Limited) provides Glyph Matrix support on Nothing Phone devices. It is distributed via the Nothing Developer Programme; the aar does not embed a license text. See `docs/legal/third_party_license_audit.md` for status.
-
 ## Flutter and Dart Packages
 
 This application is built with Flutter and uses open-source Dart packages from pub.dev. The complete set of package licenses is embedded in the application by the Flutter build (NOTICES) and is viewable in-app under Settings > Open Source.

@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New "Download this area" feature pre-downloads the visible region's tiles for true offline use: pick a detail level, see a live tile-count and storage estimate, and run the download with progress and cancel. Bulk download is allowed for the Terrain, Dark, and Light styles only (Satellite and the optional Mapbox styles are excluded per provider terms); Terrain uses a lower request concurrency and backs off on rate-limit responses
 - Map tile caching is now durable: the built-in tile cache is moved off the OS-evictable cache directory into app storage with a long freshness window, so cached and pre-downloaded tiles survive app restarts and stay usable offline for weeks instead of expiring or being purged
 
+### Removed (Nothing Phone Glyph)
+
+- Removed the beta Nothing Phone Glyph Matrix integration (the Glyph test screen, the "Glyph pattern" automation action and its flow node, and the bundled Nothing GlyphMatrix SDK). The SDK declared a minSdk of 34, which made Google Play mark the app incompatible with every device below Android 14; removing it restores installability on older Android devices. Existing automations that used the Glyph action fall back to a push notification.
+
 ### Fixed (map interaction)
 
 - Pinch-zoom no longer "wiggles" the map off north on any map: rotation gestures are disabled by default across every map surface (Meshtastic map, World Mesh, MeshCore map, the new offline map, and all preview/picker maps), so an uneven two-finger zoom can no longer rotate the map. The main Meshtastic map and the offline map additionally get a three-state compass control (north-locked → free-rotate → follow-heading) with a distinct look per state

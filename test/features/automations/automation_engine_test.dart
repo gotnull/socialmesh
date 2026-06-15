@@ -2157,45 +2157,6 @@ void main() {
     });
   });
 
-  group('AutomationEngine - Glyph Pattern Action', () {
-    test('glyphPattern validates pattern types', () async {
-      // Test each valid pattern type
-      final validPatterns = [
-        'connected',
-        'disconnected',
-        'message',
-        'dm',
-        'sent',
-        'node_online',
-        'node_offline',
-        'signal_nearby',
-        'low_battery',
-        'error',
-        'success',
-        'syncing',
-        'pulse',
-      ];
-
-      for (final pattern in validPatterns) {
-        final action = AutomationAction(
-          type: ActionType.glyphPattern,
-          config: {'pattern': pattern},
-        );
-        expect(action.config['pattern'], pattern);
-      }
-    });
-
-    test('glyphPattern defaults to pulse for unknown pattern', () async {
-      // The engine defaults unknown patterns to 'pulse'
-      final action = const AutomationAction(
-        type: ActionType.glyphPattern,
-        config: {'pattern': 'unknown_pattern'},
-      );
-      expect(action.config['pattern'], 'unknown_pattern');
-      // The engine will fall through to default case which calls showAutomationTriggered()
-    });
-  });
-
   group('AutomationEngine - Node Offline Condition', () {
     test('nodeOffline condition passes when node is inactive', () async {
       final automation = Automation(

@@ -70,7 +70,6 @@ import 'providers/signal_providers.dart';
 import 'providers/app_lifecycle_provider.dart';
 import 'providers/connectivity_providers.dart';
 import 'providers/presence_providers.dart';
-import 'providers/glyph_provider.dart';
 import 'providers/accessibility_providers.dart';
 import 'features/automations/automation_providers.dart';
 import 'features/automations/automation_import_screen.dart';
@@ -664,8 +663,6 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       _initializeDeepLinks();
       // Initialize push notification navigation
       _initializePushNotificationNavigation();
-      // Initialize glyph service (Nothing Phone)
-      _initializeGlyphService();
       // Start the Apple Watch companion bridge (iOS only). The bridge
       // is internally gated on WCSession.isSupported() and on the
       // WATCH_COMPANION_ENABLED feature flag; on Android / iPad-only
@@ -1330,20 +1327,6 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       AppLogging.app('🔗 Deep link manager initialized');
     } catch (e) {
       AppLogging.app('🔗 Deep link init failed: $e');
-    }
-  }
-
-  /// Initialize glyph service (Nothing Phone)
-  Future<void> _initializeGlyphService() async {
-    try {
-      await ref.read(glyphServiceInitProvider.future);
-      if (!mounted) return;
-      final isSupported = ref.read(glyphSupportedProvider);
-      if (isSupported) {
-        AppLogging.app('🔆 Glyph interface ready');
-      }
-    } catch (e) {
-      AppLogging.app('🔆 Glyph init failed: $e');
     }
   }
 

@@ -222,7 +222,6 @@ Full control over your Meshtastic device:
 
 #### Extras
 
-- **Nothing Phone Glyph** — LED pattern notifications for mesh events (Nothing Phone only)
 - **Sigil Cards** — Collectible trading-card-style renders of node identities with shareable PNG export
 
 #### Premium Features

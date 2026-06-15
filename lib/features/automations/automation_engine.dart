@@ -21,7 +21,6 @@ import '../../models/mesh_models.dart' show MeshNode;
 import '../../services/ifttt/ifttt_service.dart';
 import '../../services/audio/rtttl_player.dart';
 import '../../services/audio/notification_sound_service.dart';
-import '../../services/glyph_service.dart';
 import 'models/automation.dart';
 import 'models/condition_node.dart';
 import 'models/condition_node_result.dart';
@@ -46,7 +45,6 @@ class AutomationEngine {
   final AutomationRepository _repository;
   final IftttService _iftttService;
   final FlutterLocalNotificationsPlugin? _notifications;
-  final GlyphService? _glyphService;
   final AutomationDebugService? _debugService;
   Scheduler? _scheduler;
   StreamSubscription<ScheduledFireEvent>? _schedulerSubscription;
@@ -101,7 +99,6 @@ class AutomationEngine {
     required AutomationRepository repository,
     required IftttService iftttService,
     FlutterLocalNotificationsPlugin? notifications,
-    GlyphService? glyphService,
     AutomationDebugService? debugService,
     Scheduler? scheduler,
     this.onSendMessage,
@@ -111,7 +108,6 @@ class AutomationEngine {
   }) : _repository = repository,
        _iftttService = iftttService,
        _notifications = notifications,
-       _glyphService = glyphService,
        _debugService = debugService,
        _scheduler = scheduler;
 
@@ -1537,60 +1533,6 @@ class AutomationEngine {
               actionName: actionName,
               success: false,
               errorMessage: l10n.automationErrorShortcutRunFailed(e.toString()),
-            );
-          }
-
-        case ActionType.glyphPattern:
-          // Nothing Phone glyph patterns
-          if (_glyphService == null || !_glyphService.isSupported) {
-            return ActionResult(
-              actionName: actionName,
-              success: false,
-              errorMessage: l10n.automationErrorGlyphNotAvailable,
-            );
-          }
-
-          final pattern = action.config['pattern'] as String? ?? 'pulse';
-
-          try {
-            switch (pattern) {
-              case 'connected':
-                await _glyphService.showConnected();
-              case 'disconnected':
-                await _glyphService.showDisconnected();
-              case 'message':
-                await _glyphService.showMessageReceived();
-              case 'dm':
-                await _glyphService.showMessageReceived(isDM: true);
-              case 'sent':
-                await _glyphService.showMessageSent();
-              case 'node_online':
-                await _glyphService.showNodeOnline();
-              case 'node_offline':
-                await _glyphService.showNodeOffline();
-              case 'signal_nearby':
-                await _glyphService.showSignalNearby();
-              case 'low_battery':
-                await _glyphService.showLowBattery();
-              case 'error':
-                await _glyphService.showError();
-              case 'success':
-                await _glyphService.showSuccess();
-              case 'syncing':
-                await _glyphService.showSyncing();
-              case 'pulse':
-              default:
-                await _glyphService.showAutomationTriggered();
-            }
-
-            return ActionResult(actionName: actionName, success: true);
-          } catch (e) {
-            return ActionResult(
-              actionName: actionName,
-              success: false,
-              errorMessage: l10n.automationErrorGlyphPatternFailed(
-                e.toString(),
-              ),
             );
           }
       }

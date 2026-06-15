@@ -1819,9 +1819,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get automationActionDone => 'Concluído';
 
   @override
-  String get automationActionGlyphPattern => 'Padrão de glifo (Nothing Phone)';
-
-  @override
   String get automationActionGotIt => 'Entendi';
 
   @override
@@ -19623,13 +19620,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsTileForceSyncTitle => 'Forçar sincronização';
 
   @override
-  String get settingsTileGlyphMatrixSubtitle =>
-      'Padrões de LED do Nothing Phone 3';
-
-  @override
-  String get settingsTileGlyphMatrixTitle => 'Teste de matriz de glifos';
-
-  @override
   String get settingsTileGpsStatusSubtitle =>
       'Visualize informações detalhadas do GPS';
 
@@ -26996,28 +26986,6 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get glyphMatrixTitle => 'MATRIZ DE GLIFOS';
-
-  @override
-  String get glyphMatrixTurnOff => 'Desligar';
-
-  @override
-  String get glyphMatrixInitializing => 'INICIALIZANDO GLYPH MATRIX...';
-
-  @override
-  String get glyphMatrixInitFailed => 'INICIALIZAÇÃO FALHOU';
-
-  @override
-  String get glyphMatrixNotSupported => 'DISPOSITIVO NÃO SUPORTADO';
-
-  @override
-  String get glyphMatrixRequiresDevice =>
-      'Glyph Matrix requer\nNothing Phone (3)';
-
-  @override
-  String get glyphMatrixSwipeToExecute => '← DESLIZE PARA EXECUTAR →';
-
-  @override
   String batteryOptTitle(String oemName) {
     return 'Otimizar para $oemName';
   }
@@ -28106,9 +28074,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get flowNodeTriggerShortcut => 'Acionar atalho';
 
   @override
-  String get flowNodeGlyphPattern => 'Padrão de glifo';
-
-  @override
   String get flowNodeTimeRange => 'Intervalo de tempo';
 
   @override
@@ -28181,36 +28146,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String flowCompilerThen(String actions) {
     return 'Então: $actions';
   }
-
-  @override
-  String get glyphZoneA => 'Zona A';
-
-  @override
-  String get glyphZoneB => 'Zona B';
-
-  @override
-  String get glyphZoneC => 'Zona C';
-
-  @override
-  String get glyphZoneD => 'Zona D';
-
-  @override
-  String get glyphZoneE => 'Zona E';
-
-  @override
-  String get glyphZoneDescCamera => 'Câmera';
-
-  @override
-  String get glyphZoneDescDiagonal => 'Faixa diagonal';
-
-  @override
-  String get glyphZoneDescUsbc => 'Porta USB-C';
-
-  @override
-  String get glyphZoneDescLower => 'Faixa inferior';
-
-  @override
-  String get glyphZoneDescBattery => 'Bateria';
 
   @override
   String get appearanceFontBranded => 'Personalizada';
@@ -28408,9 +28343,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsSectionFileTransfer => 'TRANSFERÊNCIA DE ARQUIVOS';
-
-  @override
-  String get settingsGlyphMatrixTest => 'Teste de matriz de glifos';
 
   @override
   String get cloudSyncUnableToLoad =>
@@ -34362,9 +34294,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get scannerShowAllBleDevices => 'Mostrar todos os dispositivos BLE';
 
   @override
-  String get settingsGlyphMatrixTestSubtitle => 'Padrões LED Nothing Phone 3';
-
-  @override
   String get signalQualityExcellent => 'Excelente';
 
   @override
@@ -36520,15 +36449,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String automationErrorShortcutRunFailed(String error) {
     return 'Falha ao executar atalho: $error';
-  }
-
-  @override
-  String get automationErrorGlyphNotAvailable =>
-      'Interface de glifo não disponível';
-
-  @override
-  String automationErrorGlyphPatternFailed(String error) {
-    return 'Falha ao exibir padrão de glifo: $error';
   }
 
   @override

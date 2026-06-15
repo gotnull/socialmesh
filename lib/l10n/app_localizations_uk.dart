@@ -1818,9 +1818,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get automationActionDone => 'Готово';
 
   @override
-  String get automationActionGlyphPattern => 'Шаблон гліфа (Nothing Phone)';
-
-  @override
   String get automationActionGotIt => 'Зрозуміло';
 
   @override
@@ -19632,13 +19629,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsTileForceSyncTitle => 'Примусова синхронізація';
 
   @override
-  String get settingsTileGlyphMatrixSubtitle =>
-      'Патерни LED для Nothing Phone 3';
-
-  @override
-  String get settingsTileGlyphMatrixTitle => 'Тест матриці гліфів';
-
-  @override
   String get settingsTileGpsStatusSubtitle =>
       'Переглянути детальну інформацію GPS';
 
@@ -27021,28 +27011,6 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get glyphMatrixTitle => 'МАТРИЦЯ ГЛІФІВ';
-
-  @override
-  String get glyphMatrixTurnOff => 'Вимкнути';
-
-  @override
-  String get glyphMatrixInitializing => 'ІНІЦІАЛІЗАЦІЯ GLYPH MATRIX...';
-
-  @override
-  String get glyphMatrixInitFailed => 'ІНІЦІАЛІЗАЦІЯ НЕ ВДАЛАСЬ';
-
-  @override
-  String get glyphMatrixNotSupported => 'ПРИСТРІЙ НЕ ПІДТРИМУЄТЬСЯ';
-
-  @override
-  String get glyphMatrixRequiresDevice =>
-      'Glyph Matrix потребує\nNothing Phone (3)';
-
-  @override
-  String get glyphMatrixSwipeToExecute => '← ПРОВЕДІТЬ ДЛЯ ВИКОНАННЯ →';
-
-  @override
   String batteryOptTitle(String oemName) {
     return 'Оптимізувати для $oemName';
   }
@@ -28139,9 +28107,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get flowNodeTriggerShortcut => 'Запустити ярлик';
 
   @override
-  String get flowNodeGlyphPattern => 'Шаблон гліфів';
-
-  @override
   String get flowNodeTimeRange => 'Діапазон часу';
 
   @override
@@ -28214,36 +28179,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String flowCompilerThen(String actions) {
     return 'Тоді: $actions';
   }
-
-  @override
-  String get glyphZoneA => 'Зона A';
-
-  @override
-  String get glyphZoneB => 'Зона B';
-
-  @override
-  String get glyphZoneC => 'Зона C';
-
-  @override
-  String get glyphZoneD => 'Зона D';
-
-  @override
-  String get glyphZoneE => 'Зона E';
-
-  @override
-  String get glyphZoneDescCamera => 'Камера';
-
-  @override
-  String get glyphZoneDescDiagonal => 'Діагональна смуга';
-
-  @override
-  String get glyphZoneDescUsbc => 'Порт USB-C';
-
-  @override
-  String get glyphZoneDescLower => 'Нижня смуга';
-
-  @override
-  String get glyphZoneDescBattery => 'Батарея';
 
   @override
   String get appearanceFontBranded => 'Фірмовий';
@@ -28442,9 +28377,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settingsSectionFileTransfer => 'ПЕРЕДАЧА ФАЙЛІВ';
-
-  @override
-  String get settingsGlyphMatrixTest => 'Тест матриці гліфів';
 
   @override
   String get cloudSyncUnableToLoad =>
@@ -34400,10 +34332,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get scannerShowAllBleDevices => 'Показати всі BLE-пристрої';
 
   @override
-  String get settingsGlyphMatrixTestSubtitle =>
-      'Патерни LED для Nothing Phone 3';
-
-  @override
   String get signalQualityExcellent => 'Відмінний';
 
   @override
@@ -36560,14 +36488,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String automationErrorShortcutRunFailed(String error) {
     return 'Не вдалося виконати ярлик: $error';
-  }
-
-  @override
-  String get automationErrorGlyphNotAvailable => 'Інтерфейс гліфа недоступний';
-
-  @override
-  String automationErrorGlyphPatternFailed(String error) {
-    return 'Не вдалося показати шаблон гліфа: $error';
   }
 
   @override

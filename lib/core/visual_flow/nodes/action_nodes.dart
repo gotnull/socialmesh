@@ -50,7 +50,6 @@ class ActionTypes {
   static const updateWidget = 'updateWidget';
   static const sendToChannel = 'sendToChannel';
   static const triggerShortcut = 'triggerShortcut';
-  static const glyphPattern = 'glyphPattern';
 
   /// Display names for each action type.
   static const Map<String, String> displayNames = {
@@ -63,7 +62,6 @@ class ActionTypes {
     updateWidget: 'Update Widget', // lint-allow: hardcoded-string
     sendToChannel: 'Send to Channel', // lint-allow: hardcoded-string
     triggerShortcut: 'Trigger Shortcut', // lint-allow: hardcoded-string
-    glyphPattern: 'Glyph Pattern', // lint-allow: hardcoded-string
   };
 
   /// Icons for each action type.
@@ -77,7 +75,6 @@ class ActionTypes {
     updateWidget: Icons.widgets,
     sendToChannel: Icons.forum,
     triggerShortcut: Icons.shortcut,
-    glyphPattern: Icons.auto_awesome,
   };
 }
 
@@ -193,19 +190,6 @@ class _ShortcutConfig {
   void fromJson(dynamic json) {
     if (json is Map) {
       shortcutName = json['shortcutName'] as String? ?? '';
-    }
-  }
-}
-
-/// Configuration for glyph-pattern actions.
-class _GlyphPatternConfig {
-  String pattern = '';
-
-  dynamic toJson() => {'pattern': pattern};
-
-  void fromJson(dynamic json) {
-    if (json is Map) {
-      pattern = json['pattern'] as String? ?? '';
     }
   }
 }
@@ -455,19 +439,6 @@ Widget _buildTriggerShortcutWidget(_ShortcutConfig config) {
   );
 }
 
-/// Builds a config widget for glyph-pattern actions.
-Widget _buildGlyphPatternWidget(_GlyphPatternConfig config) {
-  return _ActionConfigWidget(
-    icon: ActionTypes.icons[ActionTypes.glyphPattern]!,
-    label: ActionTypes.displayNames[ActionTypes.glyphPattern]!,
-    child: _TextInputField(
-      hint: 'Glyph pattern...', // lint-allow: hardcoded-string
-      value: config.pattern,
-      onChanged: (v) => config.pattern = v,
-    ),
-  );
-}
-
 // ---------------------------------------------------------------------------
 // Public API: action node builder list and subgroup
 // ---------------------------------------------------------------------------
@@ -616,22 +587,6 @@ VSNodeDataBuilder _buildActionNodeBuilder(String actionType) {
         );
       };
 
-    case ActionTypes.glyphPattern:
-      return (Offset offset, VSOutputData? ref) {
-        final config = _GlyphPatternConfig();
-        return ActionNode(
-          type: actionType,
-          actionType: actionType,
-          widgetOffset: offset,
-          nodeWidth: _kActionNodeWidth,
-          title: ActionTypes.displayNames[actionType]!,
-          ref: ref,
-          configWidget: _buildGlyphPatternWidget(config),
-          getConfig: () => config.toJson(),
-          setConfig: (v) => config.fromJson(v),
-        );
-      };
-
     default:
       // Fallback for unknown action types.
       return (Offset offset, VSOutputData? ref) {
@@ -676,7 +631,6 @@ VSSubgroup actionNodeSubgroup() {
       // Feedback
       _buildActionNodeBuilder(ActionTypes.playSound),
       _buildActionNodeBuilder(ActionTypes.vibrate),
-      _buildActionNodeBuilder(ActionTypes.glyphPattern),
 
       // Integration
       _buildActionNodeBuilder(ActionTypes.triggerWebhook),
@@ -702,7 +656,6 @@ List<VSNodeDataBuilder> allActionNodeBuilders() {
     ActionTypes.updateWidget,
     ActionTypes.sendToChannel,
     ActionTypes.triggerShortcut,
-    ActionTypes.glyphPattern,
   ].map(_buildActionNodeBuilder).toList();
 }
 

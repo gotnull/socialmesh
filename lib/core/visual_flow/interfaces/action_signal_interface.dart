@@ -110,7 +110,7 @@ class ActionSignalPayload {
   ///
   /// Examples: 'sendMessage', 'pushNotification', 'triggerWebhook',
   /// 'playSound', 'vibrate', 'logEvent', 'updateWidget', 'sendToChannel',
-  /// 'triggerShortcut', 'glyphPattern'.
+  /// 'triggerShortcut'.
   final String actionType;
 
   /// The raw action configuration map.

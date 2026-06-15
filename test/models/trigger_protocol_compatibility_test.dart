@@ -149,7 +149,6 @@ void main() {
         ActionType.triggerWebhook,
         ActionType.logEvent,
         ActionType.triggerShortcut,
-        ActionType.glyphPattern,
       };
       for (final a in fullySupported) {
         expect(
@@ -171,7 +170,6 @@ void main() {
         ActionType.triggerWebhook,
         ActionType.logEvent,
         ActionType.triggerShortcut,
-        ActionType.glyphPattern,
       };
       final missing = ActionType.values.toSet().difference(accountedFor);
       expect(missing, isEmpty);

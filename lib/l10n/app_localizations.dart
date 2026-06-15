@@ -3276,12 +3276,6 @@ abstract class AppLocalizations {
   /// **'Done'**
   String get automationActionDone;
 
-  /// Display name for the glyphPattern action type
-  ///
-  /// In en, this message translates to:
-  /// **'Glyph pattern (Nothing Phone)'**
-  String get automationActionGlyphPattern;
-
   /// Dismiss button on the shortcut help sheet
   ///
   /// In en, this message translates to:
@@ -33728,18 +33722,6 @@ abstract class AppLocalizations {
   /// **'Force Sync'**
   String get settingsTileForceSyncTitle;
 
-  /// Subtitle of the glyph matrix test tile.
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing Phone 3 LED patterns'**
-  String get settingsTileGlyphMatrixSubtitle;
-
-  /// Title of the glyph matrix test tile (Nothing Phone 3 only).
-  ///
-  /// In en, this message translates to:
-  /// **'Glyph Matrix Test'**
-  String get settingsTileGlyphMatrixTitle;
-
   /// Subtitle of the GPS status tools tile.
   ///
   /// In en, this message translates to:
@@ -46744,48 +46726,6 @@ abstract class AppLocalizations {
   /// **'Unlock \${price}'**
   String settingsPremiumUnlockPrice(String price);
 
-  /// Title for a feature that triggers LED patterns on Nothing Phone devices via BLE. Glyph is the Nothing Phone brand name for its LED patterns.
-  ///
-  /// In en, this message translates to:
-  /// **'GLYPH MATRIX'**
-  String get glyphMatrixTitle;
-
-  /// Text displayed in Glyph matrix / Nothing Phone LED
-  ///
-  /// In en, this message translates to:
-  /// **'Turn off'**
-  String get glyphMatrixTurnOff;
-
-  /// Loading message while the Glyph Matrix BLE connection is being established.
-  ///
-  /// In en, this message translates to:
-  /// **'INITIALIZING GLYPH MATRIX...'**
-  String get glyphMatrixInitializing;
-
-  /// Error message in Glyph matrix / Nothing Phone LED
-  ///
-  /// In en, this message translates to:
-  /// **'INIT FAILED'**
-  String get glyphMatrixInitFailed;
-
-  /// Text displayed in Glyph matrix / Nothing Phone LED
-  ///
-  /// In en, this message translates to:
-  /// **'DEVICE NOT SUPPORTED'**
-  String get glyphMatrixNotSupported;
-
-  /// Text displayed in Glyph matrix / Nothing Phone LED
-  ///
-  /// In en, this message translates to:
-  /// **'Glyph Matrix requires\nNothing Phone (3)'**
-  String get glyphMatrixRequiresDevice;
-
-  /// Instruction to swipe a button to trigger the LED pattern. Execute means activate the command.
-  ///
-  /// In en, this message translates to:
-  /// **'← SWIPE TO EXECUTE →'**
-  String get glyphMatrixSwipeToExecute;
-
   /// Screen or section title Parameters: {oemName} = display name.
   ///
   /// In en, this message translates to:
@@ -48703,12 +48643,6 @@ abstract class AppLocalizations {
   /// Visual flow / help l10n
   ///
   /// In en, this message translates to:
-  /// **'Glyph Pattern'**
-  String get flowNodeGlyphPattern;
-
-  /// Visual flow / help l10n
-  ///
-  /// In en, this message translates to:
   /// **'Time Range'**
   String get flowNodeTimeRange;
 
@@ -48837,66 +48771,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Then: {actions}'**
   String flowCompilerThen(String actions);
-
-  /// Visual flow / help l10n
-  ///
-  /// In en, this message translates to:
-  /// **'Zone A'**
-  String get glyphZoneA;
-
-  /// Visual flow / help l10n
-  ///
-  /// In en, this message translates to:
-  /// **'Zone B'**
-  String get glyphZoneB;
-
-  /// Visual flow / help l10n
-  ///
-  /// In en, this message translates to:
-  /// **'Zone C'**
-  String get glyphZoneC;
-
-  /// Visual flow / help l10n
-  ///
-  /// In en, this message translates to:
-  /// **'Zone D'**
-  String get glyphZoneD;
-
-  /// Visual flow / help l10n
-  ///
-  /// In en, this message translates to:
-  /// **'Zone E'**
-  String get glyphZoneE;
-
-  /// Visual flow / help l10n
-  ///
-  /// In en, this message translates to:
-  /// **'Camera'**
-  String get glyphZoneDescCamera;
-
-  /// Visual flow / help l10n
-  ///
-  /// In en, this message translates to:
-  /// **'Diagonal Strip'**
-  String get glyphZoneDescDiagonal;
-
-  /// Visual flow / help l10n
-  ///
-  /// In en, this message translates to:
-  /// **'USB-C Port'**
-  String get glyphZoneDescUsbc;
-
-  /// Visual flow / help l10n
-  ///
-  /// In en, this message translates to:
-  /// **'Lower Strip'**
-  String get glyphZoneDescLower;
-
-  /// Visual flow / help l10n
-  ///
-  /// In en, this message translates to:
-  /// **'Battery'**
-  String get glyphZoneDescBattery;
 
   /// Text displayed in appearance settings
   ///
@@ -49257,12 +49131,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'FILE TRANSFER'**
   String get settingsSectionFileTransfer;
-
-  /// Text displayed in settings
-  ///
-  /// In en, this message translates to:
-  /// **'Glyph Matrix Test'**
-  String get settingsGlyphMatrixTest;
 
   /// Text displayed in cloud sync
   ///
@@ -59719,12 +59587,6 @@ abstract class AppLocalizations {
   /// **'Show all BLE devices'**
   String get scannerShowAllBleDevices;
 
-  /// Subtitle in settings
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing Phone 3 LED patterns'**
-  String get settingsGlyphMatrixTestSubtitle;
-
   /// Text displayed in signals
   ///
   /// In en, this message translates to:
@@ -63184,18 +63046,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to run shortcut: {error}'**
   String automationErrorShortcutRunFailed(String error);
-
-  /// Error message in automations
-  ///
-  /// In en, this message translates to:
-  /// **'Glyph interface not available'**
-  String get automationErrorGlyphNotAvailable;
-
-  /// Error message in automations Parameters: {error} = error/status message.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to show glyph pattern: {error}'**
-  String automationErrorGlyphPatternFailed(String error);
 
   /// Description text in automations
   ///

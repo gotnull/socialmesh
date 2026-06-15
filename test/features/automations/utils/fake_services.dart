@@ -52,45 +52,6 @@ class FakeUrlLauncher {
 /// Mock launch mode enum for testing
 enum LaunchMode { externalApplication, platformDefault }
 
-/// Fake GlyphService for testing Nothing Phone glyph patterns
-class FakeGlyphService {
-  final List<String> shownPatterns = [];
-  bool isSupported = true;
-  bool shouldFail = false;
-  String? failureMessage;
-
-  Future<void> showPattern(String pattern) async {
-    if (!isSupported) {
-      throw Exception('Glyph interface not available');
-    }
-    if (shouldFail) {
-      throw Exception(failureMessage ?? 'Fake glyph error');
-    }
-    shownPatterns.add(pattern);
-  }
-
-  Future<void> showConnected() => showPattern('connected');
-  Future<void> showDisconnected() => showPattern('disconnected');
-  Future<void> showMessageReceived({bool isDM = false}) =>
-      showPattern(isDM ? 'dm' : 'message');
-  Future<void> showMessageSent() => showPattern('sent');
-  Future<void> showNodeOnline() => showPattern('node_online');
-  Future<void> showNodeOffline() => showPattern('node_offline');
-  Future<void> showSignalNearby() => showPattern('signal_nearby');
-  Future<void> showLowBattery() => showPattern('low_battery');
-  Future<void> showError() => showPattern('error');
-  Future<void> showSuccess() => showPattern('success');
-  Future<void> showSyncing() => showPattern('syncing');
-  Future<void> showAutomationTriggered() => showPattern('pulse');
-
-  void reset() {
-    shownPatterns.clear();
-    isSupported = true;
-    shouldFail = false;
-    failureMessage = null;
-  }
-}
-
 /// Fake notification plugin for testing push notifications
 class FakeNotificationsPlugin {
   final List<FakeNotification> shownNotifications = [];
@@ -178,7 +139,6 @@ class SideEffectCapture {
   final List<(int, String)> sentMessages = [];
   final List<(int, String)> sentChannelMessages = [];
   final FakeRtttlPlayer rtttlPlayer = FakeRtttlPlayer();
-  final FakeGlyphService glyphService = FakeGlyphService();
   final FakeNotificationsPlugin notificationsPlugin = FakeNotificationsPlugin();
   final FakeUrlLauncher urlLauncher = FakeUrlLauncher();
 
@@ -196,7 +156,6 @@ class SideEffectCapture {
     sentMessages.clear();
     sentChannelMessages.clear();
     rtttlPlayer.reset();
-    glyphService.reset();
     notificationsPlugin.reset();
     urlLauncher.reset();
     FakeHapticFeedback.reset();
@@ -214,11 +173,6 @@ class SideEffectCapture {
       rtttlPlayer.playedSounds,
       isEmpty,
       reason: 'Expected no sounds played',
-    );
-    expect(
-      glyphService.shownPatterns,
-      isEmpty,
-      reason: 'Expected no glyph patterns',
     );
     expect(
       notificationsPlugin.shownNotifications,

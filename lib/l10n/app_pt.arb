@@ -3936,9 +3936,6 @@
       }
     }
   },
-  "@automationActionGlyphPattern": {
-    "description": "Display name for the glyphPattern action type"
-  },
   "@automationActionGotIt": {
     "description": "Dismiss button on the shortcut help sheet"
   },
@@ -4326,17 +4323,6 @@
   },
   "@automationEditorWhen": {
     "description": "Section title for the trigger configuration"
-  },
-  "@automationErrorGlyphNotAvailable": {
-    "description": "Error message in automations"
-  },
-  "@automationErrorGlyphPatternFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    },
-    "description": "Error message in automations Parameters: {error} = error/status message."
   },
   "@automationErrorIftttNotConfigured": {
     "description": "Error message in automations"
@@ -9921,9 +9907,6 @@
   "@flowNodeGeofenceExit": {
     "description": "Visual flow / help l10n"
   },
-  "@flowNodeGlyphPattern": {
-    "description": "Visual flow / help l10n"
-  },
   "@flowNodeInput": {
     "description": "Visual flow port title: Input"
   },
@@ -10996,57 +10979,6 @@
   },
   "@globeShowConnections": {
     "description": "UI text: globe show connections"
-  },
-  "@glyphMatrixInitFailed": {
-    "description": "Error message in Glyph matrix / Nothing Phone LED"
-  },
-  "@glyphMatrixInitializing": {
-    "description": "Loading message while the Glyph Matrix BLE connection is being established."
-  },
-  "@glyphMatrixNotSupported": {
-    "description": "Text displayed in Glyph matrix / Nothing Phone LED"
-  },
-  "@glyphMatrixRequiresDevice": {
-    "description": "Text displayed in Glyph matrix / Nothing Phone LED"
-  },
-  "@glyphMatrixSwipeToExecute": {
-    "description": "Instruction to swipe a button to trigger the LED pattern. Execute means activate the command."
-  },
-  "@glyphMatrixTitle": {
-    "description": "Title for a feature that triggers LED patterns on Nothing Phone devices via BLE. Glyph is the Nothing Phone brand name for its LED patterns."
-  },
-  "@glyphMatrixTurnOff": {
-    "description": "Text displayed in Glyph matrix / Nothing Phone LED"
-  },
-  "@glyphZoneA": {
-    "description": "Visual flow / help l10n"
-  },
-  "@glyphZoneB": {
-    "description": "Visual flow / help l10n"
-  },
-  "@glyphZoneC": {
-    "description": "Visual flow / help l10n"
-  },
-  "@glyphZoneD": {
-    "description": "Visual flow / help l10n"
-  },
-  "@glyphZoneDescBattery": {
-    "description": "Visual flow / help l10n"
-  },
-  "@glyphZoneDescCamera": {
-    "description": "Visual flow / help l10n"
-  },
-  "@glyphZoneDescDiagonal": {
-    "description": "Visual flow / help l10n"
-  },
-  "@glyphZoneDescLower": {
-    "description": "Visual flow / help l10n"
-  },
-  "@glyphZoneDescUsbc": {
-    "description": "Visual flow / help l10n"
-  },
-  "@glyphZoneE": {
-    "description": "Visual flow / help l10n"
   },
   "@goBack": {
     "description": "Generic go back button label"
@@ -25453,12 +25385,6 @@
   "@settingsForceSyncingStatus": {
     "description": "Loading text shown inside the sync-in-progress bottom sheet."
   },
-  "@settingsGlyphMatrixTest": {
-    "description": "Text displayed in settings"
-  },
-  "@settingsGlyphMatrixTestSubtitle": {
-    "description": "Subtitle in settings"
-  },
   "@settingsHapticIntensityTitle": {
     "description": "Title of the haptic intensity picker bottom sheet."
   },
@@ -26015,12 +25941,6 @@
   },
   "@settingsTileForceSyncTitle": {
     "description": "Title of the force sync settings tile."
-  },
-  "@settingsTileGlyphMatrixSubtitle": {
-    "description": "Subtitle of the glyph matrix test tile."
-  },
-  "@settingsTileGlyphMatrixTitle": {
-    "description": "Title of the glyph matrix test tile (Nothing Phone 3 only)."
   },
   "@settingsTileGpsStatusSubtitle": {
     "description": "Subtitle of the GPS status tools tile."
@@ -34378,7 +34298,6 @@
   "automationActionDirectMessage": "Mensagem direta",
   "automationActionDone": "Concluído",
   "automationActionError": "Ação {index}: {error}",
-  "automationActionGlyphPattern": "Padrão de glifo (Nothing Phone)",
   "automationActionGotIt": "Entendi",
   "automationActionIftttEventName": "Nome do evento IFTTT",
   "automationActionIftttHelp": "Usa sua chave Webhook IFTTT das Configurações",
@@ -34516,8 +34435,6 @@
   "automationEditorValidateName": "Insira um nome para esta automação",
   "automationEditorValidateThenActions": "Adicione pelo menos uma ação ENTÃO",
   "automationEditorWhen": "QUANDO",
-  "automationErrorGlyphNotAvailable": "Interface de glifo não disponível",
-  "automationErrorGlyphPatternFailed": "Falha ao exibir padrão de glifo: {error}",
   "automationErrorIftttNotConfigured": "IFTTT não configurado - ative o IFTTT e defina a chave webhook nas configurações",
   "automationErrorNoShortcutName": "Nenhum nome de atalho especificado",
   "automationErrorNoSoundConfigured": "Nenhum som configurado",
@@ -36415,7 +36332,6 @@
   "flowNodeGateInverts": "Inverte o sinal",
   "flowNodeGeofenceEnter": "Entrada no geofence",
   "flowNodeGeofenceExit": "Saída do geofence",
-  "flowNodeGlyphPattern": "Padrão de glifo",
   "flowNodeInput": "Entrada",
   "flowNodeInverted": "Invertido",
   "flowNodeLimit": "Limite",
@@ -36713,23 +36629,6 @@
   "globeScreenTitle": "Globo mesh",
   "globeSelectNode": "Selecionar nó",
   "globeShowConnections": "Mostrar conexões",
-  "glyphMatrixInitFailed": "INICIALIZAÇÃO FALHOU",
-  "glyphMatrixInitializing": "INICIALIZANDO GLYPH MATRIX...",
-  "glyphMatrixNotSupported": "DISPOSITIVO NÃO SUPORTADO",
-  "glyphMatrixRequiresDevice": "Glyph Matrix requer\nNothing Phone (3)",
-  "glyphMatrixSwipeToExecute": "← DESLIZE PARA EXECUTAR →",
-  "glyphMatrixTitle": "MATRIZ DE GLIFOS",
-  "glyphMatrixTurnOff": "Desligar",
-  "glyphZoneA": "Zona A",
-  "glyphZoneB": "Zona B",
-  "glyphZoneC": "Zona C",
-  "glyphZoneD": "Zona D",
-  "glyphZoneDescBattery": "Bateria",
-  "glyphZoneDescCamera": "Câmera",
-  "glyphZoneDescDiagonal": "Faixa diagonal",
-  "glyphZoneDescLower": "Faixa inferior",
-  "glyphZoneDescUsbc": "Porta USB-C",
-  "glyphZoneE": "Zona E",
   "goBack": "Voltar",
   "googlePlayUnavailable": "Google Play indisponível neste dispositivo - tente o pagamento alternativo.",
   "gpsStatusAccuracy": "Precisão",
@@ -43065,8 +42964,6 @@
   "settingsForceSyncSuccess": "Sincronização concluída",
   "settingsForceSyncTitle": "Forçar sincronização",
   "settingsForceSyncingStatus": "Sincronizando do dispositivo…",
-  "settingsGlyphMatrixTest": "Teste de matriz de glifos",
-  "settingsGlyphMatrixTestSubtitle": "Padrões LED Nothing Phone 3",
   "settingsHapticIntensityTitle": "Intensidade do feedback tátil",
   "settingsHapticMediumDescription": "Feedback equilibrado para a maioria das interações",
   "settingsHapticStrongDescription": "Feedback forte para confirmação clara",
@@ -43259,8 +43156,6 @@
   "settingsTileForceSyncTitle": "Forçar sincronização",
   "settingsTileGameTurnsSubtitle": "Notifica-me quando for a minha vez num jogo SIP Play.",
   "settingsTileGameTurnsTitle": "Turnos de jogo",
-  "settingsTileGlyphMatrixSubtitle": "Padrões de LED do Nothing Phone 3",
-  "settingsTileGlyphMatrixTitle": "Teste de matriz de glifos",
   "settingsTileGpsStatusSubtitle": "Visualize informações detalhadas do GPS",
   "settingsTileGpsStatusTitle": "Status do GPS",
   "settingsTileHapticFeedbackSubtitle": "Feedback de vibração para interações",

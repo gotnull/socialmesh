@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
-import '../../../providers/glyph_provider.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/meshcore_contact_selector_sheet.dart';
@@ -262,7 +261,6 @@ class _ActionEditorState extends ConsumerState<ActionEditor>
       case ActionType.vibrate:
       case ActionType.logEvent:
       case ActionType.updateWidget:
-      case ActionType.glyphPattern:
         return const SizedBox.shrink();
     }
   }
@@ -1418,99 +1416,90 @@ class _ActionEditorState extends ConsumerState<ActionEditor>
         child: Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: ActionType.values
-              .where((type) {
-                // Hide glyphPattern on non-Nothing phones
-                if (type == ActionType.glyphPattern) {
-                  return ref.watch(glyphServiceProvider).isSupported;
+          children: ActionType.values.map((type) {
+            final isSelected = type == widget.action.type;
+            final isPartialOnMeshCore =
+                widget.protocolFilter == TriggerProtocolFilter.meshcore &&
+                type.supportOn(TriggerProtocol.meshcore) ==
+                    ProtocolSupport.partial;
+            return BouncyTap(
+              onTap: () {
+                Navigator.of(context).pop();
+                if (type != widget.action.type) {
+                  _webhookEventController.text = '';
+                  _webhookUrlController.text = '';
+                  _shortcutNameController.text = '';
+                  // Pre-populate message text for sendMessage/sendToChannel
+                  final config = <String, dynamic>{};
+                  if ((type == ActionType.sendMessage ||
+                          type == ActionType.sendToChannel) &&
+                      widget.triggerType != null) {
+                    config['messageText'] =
+                        widget.triggerType!.defaultMessageText;
+                  }
+                  widget.onChanged(
+                    AutomationAction(type: type, config: config),
+                  );
                 }
-                return true;
-              })
-              .map((type) {
-                final isSelected = type == widget.action.type;
-                final isPartialOnMeshCore =
-                    widget.protocolFilter == TriggerProtocolFilter.meshcore &&
-                    type.supportOn(TriggerProtocol.meshcore) ==
-                        ProtocolSupport.partial;
-                return BouncyTap(
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    if (type != widget.action.type) {
-                      _webhookEventController.text = '';
-                      _webhookUrlController.text = '';
-                      _shortcutNameController.text = '';
-                      // Pre-populate message text for sendMessage/sendToChannel
-                      final config = <String, dynamic>{};
-                      if ((type == ActionType.sendMessage ||
-                              type == ActionType.sendToChannel) &&
-                          widget.triggerType != null) {
-                        config['messageText'] =
-                            widget.triggerType!.defaultMessageText;
-                      }
-                      widget.onChanged(
-                        AutomationAction(type: type, config: config),
-                      );
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? Theme.of(
-                              context,
-                            ).colorScheme.primary.withValues(alpha: 0.2)
-                          : context.card,
-                      borderRadius: BorderRadius.circular(AppTheme.radius12),
-                      border: Border.all(
-                        color: isSelected
-                            ? Theme.of(context).colorScheme.primary
-                            : context.border,
-                      ),
-                    ),
-                    child: Column(
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.2)
+                      : context.card,
+                  borderRadius: BorderRadius.circular(AppTheme.radius12),
+                  border: Border.all(
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : context.border,
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              type.icon,
-                              size: 20,
-                              color: isSelected
-                                  ? Theme.of(context).colorScheme.primary
-                                  : null,
-                            ),
-                            const SizedBox(width: AppTheme.spacing8),
-                            Text(
-                              type.localizedName(context.l10n),
-                              style: TextStyle(
-                                color: isSelected
-                                    ? Theme.of(context).colorScheme.primary
-                                    : null,
-                              ),
-                            ),
-                          ],
+                        Icon(
+                          type.icon,
+                          size: 20,
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.primary
+                              : null,
                         ),
-                        if (isPartialOnMeshCore) ...[
-                          const SizedBox(height: AppTheme.spacing4),
-                          Text(
-                            context.l10n.automationTriggerLimitedOnMeshcore,
-                            style: TextStyle(
-                              color: AppTheme.warningYellow,
-                              fontSize: 11,
-                            ),
+                        const SizedBox(width: AppTheme.spacing8),
+                        Text(
+                          type.localizedName(context.l10n),
+                          style: TextStyle(
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.primary
+                                : null,
                           ),
-                        ],
+                        ),
                       ],
                     ),
-                  ),
-                );
-              })
-              .toList(),
+                    if (isPartialOnMeshCore) ...[
+                      const SizedBox(height: AppTheme.spacing4),
+                      Text(
+                        context.l10n.automationTriggerLimitedOnMeshcore,
+                        style: TextStyle(
+                          color: AppTheme.warningYellow,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
         ),
       ),
     );

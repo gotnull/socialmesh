@@ -15,7 +15,6 @@ import '../../providers/meshcore_providers.dart';
 
 import '../../providers/cloud_sync_entitlement_providers.dart';
 import '../../providers/profile_providers.dart';
-import '../../providers/glyph_provider.dart';
 import '../../services/meshcore/protocol/meshcore_text_frame_builders.dart';
 import '../../services/notifications/notification_service.dart';
 import 'automation_debug_service.dart';
@@ -115,7 +114,6 @@ final automationEngineProvider = Provider<AutomationEngine>((ref) {
   final repository = ref.watch(automationRepositoryProvider);
   final iftttService = ref.watch(iftttServiceProvider);
   final protocol = ref.watch(protocolServiceProvider);
-  final glyphService = ref.watch(glyphServiceProvider);
 
   // Get the notification plugin instance
   final notifications = FlutterLocalNotificationsPlugin();
@@ -124,7 +122,6 @@ final automationEngineProvider = Provider<AutomationEngine>((ref) {
     repository: repository,
     iftttService: iftttService,
     notifications: notifications,
-    glyphService: glyphService,
     debugService: ref.watch(automationDebugServiceProvider),
     onGetMyNodeNum: () => ref.read(myNodeNumProvider),
     onGetPhonePosition: () async {

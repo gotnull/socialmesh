@@ -89,8 +89,6 @@ dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     // Firebase Messaging for custom FCM service
     implementation("com.google.firebase:firebase-messaging:23.4.0")
-    // Nothing Phone 3 GlyphMatrix SDK
-    implementation(files("libs/glyph-matrix-sdk-1.0.aar"))
     // Edge-to-edge support (Android 15 / SDK 35 requirement)
     implementation("androidx.activity:activity-ktx:1.10.1")
 }

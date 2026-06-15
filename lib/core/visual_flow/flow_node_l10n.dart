@@ -39,7 +39,6 @@ String localizedFlowTitle(String title, AppLocalizations l10n) {
     'Update Widget' => l10n.flowNodeUpdateWidget,
     'Send to Channel' => l10n.flowNodeSendToChannel,
     'Trigger Shortcut' => l10n.flowNodeTriggerShortcut,
-    'Glyph Pattern' => l10n.flowNodeGlyphPattern,
     'Execute' => l10n.flowNodeExecute,
     // Condition nodes — displayNames
     'Time Range' => l10n.flowNodeTimeRange,
