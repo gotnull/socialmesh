@@ -43,6 +43,7 @@ import '../../core/widgets/remote_admin_selector_sheet.dart';
 import '../../core/widgets/user_avatar.dart';
 import '../../core/widgets/verified_badge.dart';
 import '../../providers/help_providers.dart';
+import '../../services/telemetry/telemetry_export_service.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../device/region_selection_screen.dart';
@@ -3586,6 +3587,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ),
                           ),
+                          _SettingsTile(
+                            icon: Icons.download_for_offline_outlined,
+                            title:
+                                context.l10n.settingsTileTelemetryExportTitle,
+                            subtitle: context
+                                .l10n
+                                .settingsTileTelemetryExportSubtitle,
+                            onTap: _exportTelemetry,
+                          ),
 
                           const SizedBox(height: AppTheme.spacing16),
 
@@ -4043,6 +4053,42 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           );
         }
       }
+    }
+  }
+
+  /// Builds the app-telemetry-store export bundle and opens the share sheet.
+  /// Shows a clear empty-state when there are no samples (no confusing zip).
+  /// Uses the State's own `context`/`mounted` so the post-await guards relate
+  /// to the surface being used.
+  Future<void> _exportTelemetry() async {
+    HapticFeedback.selectionClick();
+    final l10n = context.l10n;
+    // Share-sheet popover origin (iPad) from this screen's render box.
+    final box = context.findRenderObject();
+    final origin = box is RenderBox
+        ? box.localToGlobal(Offset.zero) & box.size
+        : null;
+    try {
+      final service = await ref.read(telemetryExportServiceProvider.future);
+      final appVersion = await ref.read(appVersionProvider.future);
+      final path = await service.buildBundle(
+        exportedAtUtc: DateTime.now().toUtc(),
+        appVersion: appVersion,
+      );
+      if (!mounted) return;
+      if (path == null) {
+        showInfoSnackBar(context, l10n.settingsTelemetryExportEmpty);
+        return;
+      }
+      await service.shareBundle(path, sharePosition: origin);
+      if (!mounted) return;
+      showSuccessSnackBar(context, l10n.settingsTelemetryExportDone);
+    } catch (e) {
+      if (!mounted) return;
+      showErrorSnackBar(
+        context,
+        l10n.settingsTelemetryExportError(e.toString()),
+      );
     }
   }
 

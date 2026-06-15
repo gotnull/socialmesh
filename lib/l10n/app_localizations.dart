@@ -77836,6 +77836,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unknown'**
   String get nodeHealthUnknown;
+
+  /// Settings tile (Telemetry Logs section): export stored telemetry as a shareable bundle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export telemetry'**
+  String get settingsTileTelemetryExportTitle;
+
+  /// Settings tile subtitle warning the export may contain telemetry and location data.
+  ///
+  /// In en, this message translates to:
+  /// **'Share stored telemetry as CSV/JSON. May include location data.'**
+  String get settingsTileTelemetryExportSubtitle;
+
+  /// Snackbar shown when there is no stored telemetry to export.
+  ///
+  /// In en, this message translates to:
+  /// **'No telemetry samples to export yet.'**
+  String get settingsTelemetryExportEmpty;
+
+  /// Snackbar shown after the telemetry export bundle is built and the share sheet opens.
+  ///
+  /// In en, this message translates to:
+  /// **'Telemetry export ready to share.'**
+  String get settingsTelemetryExportDone;
+
+  /// Snackbar shown when building the telemetry export fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Telemetry export failed: {error}'**
+  String settingsTelemetryExportError(String error);
 }
 
 class _AppLocalizationsDelegate

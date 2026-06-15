@@ -45104,4 +45104,24 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get nodeHealthUnknown => 'Невідомо';
+
+  @override
+  String get settingsTileTelemetryExportTitle => 'Експорт телеметрії';
+
+  @override
+  String get settingsTileTelemetryExportSubtitle =>
+      'Поділіться збереженою телеметрією у форматі CSV/JSON. Може містити дані про місцезнаходження.';
+
+  @override
+  String get settingsTelemetryExportEmpty =>
+      'Поки немає зразків телеметрії для експорту.';
+
+  @override
+  String get settingsTelemetryExportDone =>
+      'Експорт телеметрії готовий до надсилання.';
+
+  @override
+  String settingsTelemetryExportError(String error) {
+    return 'Не вдалося експортувати телеметрію: $error';
+  }
 }

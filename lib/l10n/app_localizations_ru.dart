@@ -45094,4 +45094,24 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get nodeHealthUnknown => 'Неизвестно';
+
+  @override
+  String get settingsTileTelemetryExportTitle => 'Экспорт телеметрии';
+
+  @override
+  String get settingsTileTelemetryExportSubtitle =>
+      'Поделиться сохранённой телеметрией в формате CSV/JSON. Может содержать данные о местоположении.';
+
+  @override
+  String get settingsTelemetryExportEmpty =>
+      'Пока нет образцов телеметрии для экспорта.';
+
+  @override
+  String get settingsTelemetryExportDone =>
+      'Экспорт телеметрии готов к отправке.';
+
+  @override
+  String settingsTelemetryExportError(String error) {
+    return 'Не удалось экспортировать телеметрию: $error';
+  }
 }

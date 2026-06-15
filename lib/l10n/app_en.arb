@@ -59475,5 +59475,30 @@
     "nodeHealthUnknown": "Unknown",
     "@nodeHealthUnknown": {
         "description": "Operational node-health badge: node never heard or has an implausible timestamp."
+    },
+    "settingsTileTelemetryExportTitle": "Export telemetry",
+    "@settingsTileTelemetryExportTitle": {
+        "description": "Settings tile (Telemetry Logs section): export stored telemetry as a shareable bundle."
+    },
+    "settingsTileTelemetryExportSubtitle": "Share stored telemetry as CSV/JSON. May include location data.",
+    "@settingsTileTelemetryExportSubtitle": {
+        "description": "Settings tile subtitle warning the export may contain telemetry and location data."
+    },
+    "settingsTelemetryExportEmpty": "No telemetry samples to export yet.",
+    "@settingsTelemetryExportEmpty": {
+        "description": "Snackbar shown when there is no stored telemetry to export."
+    },
+    "settingsTelemetryExportDone": "Telemetry export ready to share.",
+    "@settingsTelemetryExportDone": {
+        "description": "Snackbar shown after the telemetry export bundle is built and the share sheet opens."
+    },
+    "settingsTelemetryExportError": "Telemetry export failed: {error}",
+    "@settingsTelemetryExportError": {
+        "description": "Snackbar shown when building the telemetry export fails.",
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
     }
 }

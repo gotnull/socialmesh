@@ -13301,5 +13301,10 @@
   "nodeHealthFresh": "Свіжий",
   "nodeHealthStale": "Застарів",
   "nodeHealthOffline": "Не в мережі",
-  "nodeHealthUnknown": "Невідомо"
+  "nodeHealthUnknown": "Невідомо",
+  "settingsTileTelemetryExportTitle": "Експорт телеметрії",
+  "settingsTileTelemetryExportSubtitle": "Поділіться збереженою телеметрією у форматі CSV/JSON. Може містити дані про місцезнаходження.",
+  "settingsTelemetryExportEmpty": "Поки немає зразків телеметрії для експорту.",
+  "settingsTelemetryExportDone": "Експорт телеметрії готовий до надсилання.",
+  "settingsTelemetryExportError": "Не вдалося експортувати телеметрію: {error}"
 }

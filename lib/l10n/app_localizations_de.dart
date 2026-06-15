@@ -45219,4 +45219,24 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get nodeHealthUnknown => 'Unbekannt';
+
+  @override
+  String get settingsTileTelemetryExportTitle => 'Telemetrie exportieren';
+
+  @override
+  String get settingsTileTelemetryExportSubtitle =>
+      'Gespeicherte Telemetrie als CSV/JSON teilen. Kann Standortdaten enthalten.';
+
+  @override
+  String get settingsTelemetryExportEmpty =>
+      'Noch keine Telemetriedaten zum Exportieren.';
+
+  @override
+  String get settingsTelemetryExportDone =>
+      'Telemetrie-Export bereit zum Teilen.';
+
+  @override
+  String settingsTelemetryExportError(String error) {
+    return 'Telemetrie-Export fehlgeschlagen: $error';
+  }
 }

@@ -13301,5 +13301,10 @@
   "nodeHealthFresh": "Reciente",
   "nodeHealthStale": "Desactualizado",
   "nodeHealthOffline": "Sin conexión",
-  "nodeHealthUnknown": "Desconocido"
+  "nodeHealthUnknown": "Desconocido",
+  "settingsTileTelemetryExportTitle": "Exportar telemetría",
+  "settingsTileTelemetryExportSubtitle": "Comparte la telemetría almacenada como CSV/JSON. Puede incluir datos de ubicación.",
+  "settingsTelemetryExportEmpty": "Aún no hay muestras de telemetría para exportar.",
+  "settingsTelemetryExportDone": "Exportación de telemetría lista para compartir.",
+  "settingsTelemetryExportError": "Error al exportar la telemetría: {error}"
 }
