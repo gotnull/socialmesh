@@ -28,6 +28,10 @@ import os
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
+  // Guards plugin registration to exactly once per process. See
+  // didInitializeImplicitFlutterEngine for the rationale.
+  private static var didRegisterPlugins = false
+
   // Plugin registration under the UIScene lifecycle. The FlutterViewController
   // is created by SceneDelegate (FlutterSceneDelegate) from the Main storyboard,
   // which spins up the implicit FlutterEngine and calls this back. Registering
@@ -35,7 +39,27 @@ import os
   // didFinishLaunching, which no longer has a window/controller to attach to.
   // The native method channels themselves are registered in SceneDelegate, once
   // the controller exists.
+  //
+  // Flutter 3.41 may create more than one implicit Flutter engine when
+  // additional UIWindowScene sessions connect. Some plugins register
+  // process-global iOS services during plugin registration. In particular,
+  // flutter_foreground_task 9.2.2 registers BGTaskScheduler identifiers
+  // without its own idempotency guard, and BGTaskScheduler registration is
+  // not repeatable within the same process.
+  //
+  // SocialMesh currently supports one Flutter application scene. Registering
+  // plugins once preserves the supported path and prevents a process-fatal
+  // duplicate BGTaskScheduler registration.
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
+    if AppDelegate.didRegisterPlugins {
+      NSLog(
+        "SocialMesh: skipping GeneratedPluginRegistrant.register for a later "
+          + "implicit Flutter engine; plugins are already registered for this "
+          + "process. This prevents a duplicate BGTaskScheduler registration "
+          + "from flutter_foreground_task (a process-fatal NSException).")
+      return
+    }
+    AppDelegate.didRegisterPlugins = true
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
   }
 
