@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
-import 'dart:io' show SocketException;
+import 'dart:io' show HandshakeException, Platform, SocketException;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -24,6 +24,33 @@ class AppErrorHandler {
   static final List<String> _breadcrumbs = [];
   static const int _maxBreadcrumbs = 50;
 
+  /// True when running on an iOS simulator. The simulator injects
+  /// `SIMULATOR_DEVICE_NAME` into the process environment; reading it is the
+  /// cheapest reliable signal without a plugin. Probed once at class load.
+  static final bool _isSimulator = _detectSimulator();
+
+  static bool _detectSimulator() {
+    if (kIsWeb) return false;
+    try {
+      return Platform.environment.containsKey('SIMULATOR_DEVICE_NAME');
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Whether the current build should forward errors to Crashlytics.
+  ///
+  /// Debug and simulator builds are excluded: their error stream is dominated
+  /// by `assert()`-only framework checks and dev-loop transients that can never
+  /// occur in a shipped release binary, and reporting them pollutes the
+  /// dashboard with non-actionable "regressions". Release/profile builds on a
+  /// physical device report normally.
+  @visibleForTesting
+  static bool isReportableBuild({
+    required bool debug,
+    required bool simulator,
+  }) => !debug && !simulator;
+
   /// Initialize the error handler. Should be called once at app startup.
   static void initialize() {
     if (_initialized) return;
@@ -40,6 +67,14 @@ class AppErrorHandler {
   static void _handleFlutterError(FlutterErrorDetails details) {
     final isFatal = _isErrorFatal(details);
     final log = _loggerForError(details.exception, details.stack);
+
+    // Expected, recoverable transients (network-image drops, etc.) are logged
+    // locally but never reported — they are non-actionable and otherwise
+    // collapse into a single misleading "top issue".
+    if (isRecoverableTransientError(details.exception, details.stack)) {
+      log('FlutterError [SUPPRESSED transient]: ${details.exception}');
+      return;
+    }
 
     // Log locally via the appropriate category channel
     log(
@@ -99,6 +134,14 @@ class AppErrorHandler {
     }
 
     final log = _loggerForError(error, stack);
+
+    // Expected, recoverable transients (BLE connect resets, foreground-task
+    // stops, network-image TLS drops) are logged locally but not reported —
+    // they are non-actionable and would otherwise dominate the dashboard.
+    if (isRecoverableTransientError(error, stack)) {
+      log('PlatformError [SUPPRESSED transient]: $error');
+      return true;
+    }
 
     // Capture the ACTUAL error type before any sanitization —
     // this is critical for diagnosing what's generating platform errors.
@@ -165,6 +208,52 @@ class AppErrorHandler {
         stackStr.contains('mqtt_client_mqtt_server_normal_connection') ||
         stackStr.contains('MqttConnectionKeepAlive.pingRequired') ||
         stackStr.contains('MqttServerNormalConnection.send');
+  }
+
+  /// Detects expected, recoverable transients that should be logged locally
+  /// but not reported to Crashlytics.
+  ///
+  /// These conditions are routine on a mesh-radio app over flaky links: a
+  /// network image whose TLS connection drops mid-load, a BLE scanner connect
+  /// that resets, the foreground task being stopped. They are non-actionable
+  /// and, because they all funnel through this handler, collapse into a single
+  /// misleading "top issue" on the dashboard. Suppressing them keeps the
+  /// reported set genuine. The match list is intentionally narrow — only the
+  /// specific recoverable messages, never broad prefixes — so a real network
+  /// or BLE failure (for example "Connection refused") still reports.
+  static bool isRecoverableTransientError(Object error, StackTrace? stack) {
+    // Network-image load failures: the completer reports the underlying load
+    // error (often a TLS/socket drop) through FlutterError.onError.
+    if (_isImageError(error, null)) return true;
+    final stackStr = stack?.toString() ?? '';
+    if (stackStr.contains('ImageStreamCompleter') ||
+        stackStr.contains('MultiFrameImageStreamCompleter')) {
+      return true;
+    }
+
+    // Transient TLS / socket drops. Distinguish from genuine connectivity
+    // failures (e.g. "Connection refused") by matching only the drop messages.
+    final message = error.toString().toLowerCase();
+    if (error is HandshakeException ||
+        error is SocketException ||
+        message.contains('handshakeexception')) {
+      if (message.contains('connection terminated') ||
+          message.contains('connection reset') ||
+          message.contains('connection closed')) {
+        return true;
+      }
+    }
+
+    // BLE / foreground-task lifecycle strings arrive as bare String platform
+    // errors (no type information) — match them exactly.
+    if (error is String) {
+      final trimmed = error.trim();
+      if (trimmed == 'Connection reset' || trimmed == 'Service stopped') {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /// Categorize a platform error by inspecting its type and stack trace.
@@ -400,6 +489,13 @@ class AppErrorHandler {
     String? reason,
     bool isFatal = false,
   }) {
+    // Debug and simulator builds never forward to Crashlytics — they only
+    // generate assert()-only framework noise and dev-loop transients. The
+    // local log above the call sites still fires for diagnosis.
+    if (!isReportableBuild(debug: kDebugMode, simulator: _isSimulator)) {
+      return;
+    }
+
     try {
       // Sanitize error message to remove sensitive data
       final sanitizedError = _sanitizeError(error);

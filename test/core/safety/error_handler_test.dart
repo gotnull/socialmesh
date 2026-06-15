@@ -580,4 +580,154 @@ void main() {
       expect(isMqttKeepAliveSocketError(err, stack), isTrue);
     });
   });
+
+  group('Build reporting gate', () {
+    test('reports only on non-debug, non-simulator builds', () {
+      expect(
+        AppErrorHandler.isReportableBuild(debug: false, simulator: false),
+        isTrue,
+      );
+    });
+
+    test('suppresses debug builds', () {
+      expect(
+        AppErrorHandler.isReportableBuild(debug: true, simulator: false),
+        isFalse,
+      );
+    });
+
+    test('suppresses simulator builds', () {
+      expect(
+        AppErrorHandler.isReportableBuild(debug: false, simulator: true),
+        isFalse,
+      );
+    });
+
+    test('suppresses debug + simulator builds', () {
+      expect(
+        AppErrorHandler.isReportableBuild(debug: true, simulator: true),
+        isFalse,
+      );
+    });
+  });
+
+  group('Recoverable transient suppression', () {
+    test('suppresses network-image load failures by stack', () {
+      final stack = StackTrace.fromString(
+        '#0 ImageStreamCompleter.reportError '
+        '(package:flutter/src/painting/image_stream.dart:827)\n'
+        '#1 MultiFrameImageStreamCompleter.<fn> '
+        '(package:flutter/src/painting/image_stream.dart:980)',
+      );
+      expect(
+        AppErrorHandler.isRecoverableTransientError(
+          Exception('decode failed'),
+          stack,
+        ),
+        isTrue,
+      );
+    });
+
+    test('suppresses image-classified errors regardless of stack', () {
+      expect(
+        AppErrorHandler.isRecoverableTransientError(
+          Exception('Failed to load network image: decode error'),
+          null,
+        ),
+        isTrue,
+      );
+    });
+
+    test('suppresses HandshakeException connection-terminated drops', () {
+      expect(
+        AppErrorHandler.isRecoverableTransientError(
+          const HandshakeException('Connection terminated during handshake'),
+          StackTrace.current,
+        ),
+        isTrue,
+      );
+    });
+
+    test('suppresses SocketException connection-reset drops', () {
+      expect(
+        AppErrorHandler.isRecoverableTransientError(
+          const SocketException('Connection reset'),
+          StackTrace.current,
+        ),
+        isTrue,
+      );
+    });
+
+    test('suppresses bare String BLE connection-reset', () {
+      expect(
+        AppErrorHandler.isRecoverableTransientError(
+          'Connection reset',
+          StackTrace.current,
+        ),
+        isTrue,
+      );
+    });
+
+    test('suppresses bare String foreground-task Service stopped', () {
+      expect(
+        AppErrorHandler.isRecoverableTransientError(
+          'Service stopped',
+          StackTrace.current,
+        ),
+        isTrue,
+      );
+    });
+
+    test('does NOT suppress genuine SocketException (Connection refused)', () {
+      expect(
+        AppErrorHandler.isRecoverableTransientError(
+          const SocketException('Connection refused'),
+          StackTrace.fromString('#0 _HttpClient._openUrl (dart:_http)'),
+        ),
+        isFalse,
+      );
+    });
+
+    test('does NOT suppress genuine StateError', () {
+      expect(
+        AppErrorHandler.isRecoverableTransientError(
+          StateError('Cannot add event after closing'),
+          StackTrace.current,
+        ),
+        isFalse,
+      );
+    });
+
+    test('does NOT suppress genuine RangeError', () {
+      expect(
+        AppErrorHandler.isRecoverableTransientError(
+          RangeError.index(5, [1, 2, 3]),
+          StackTrace.current,
+        ),
+        isFalse,
+      );
+    });
+
+    test('does NOT suppress protobuf parse errors', () {
+      expect(
+        AppErrorHandler.isRecoverableTransientError(
+          Exception('InvalidProtocolBufferException: invalid tag'),
+          StackTrace.fromString(
+            '#0 ProtocolService._processPacket (protocol_service.dart:1394)',
+          ),
+        ),
+        isFalse,
+      );
+    });
+
+    test('does NOT suppress arbitrary String errors', () {
+      expect(
+        AppErrorHandler.isRecoverableTransientError(
+          'Some unexpected failure',
+          StackTrace.current,
+        ),
+        isFalse,
+      );
+    });
+  });
 }
