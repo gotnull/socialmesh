@@ -214,6 +214,12 @@ class PresenceThresholds {
   /// Heard within this window is treated as actively present.
   static const Duration activeWindow = Duration(minutes: 2);
 
+  /// Operational "fresh" window for the SiteOps node-health projection
+  /// ([NodeHealthState]). A node heard within 15 minutes is reporting
+  /// normally. Separate from the social presence tiers below — it does not
+  /// affect [PresenceCalculator] or any presence UI.
+  static const Duration freshWindow = Duration(minutes: 15);
+
   /// Heard within this window is treated as fading (recent but silent).
   static const Duration fadingWindow = Duration(minutes: 10);
 

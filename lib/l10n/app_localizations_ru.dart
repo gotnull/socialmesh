@@ -45082,4 +45082,16 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get fixedPositionSheetInvalid =>
       'Введите корректную широту (от -90 до 90) и долготу (от -180 до 180).';
+
+  @override
+  String get nodeHealthFresh => 'Свежий';
+
+  @override
+  String get nodeHealthStale => 'Устарел';
+
+  @override
+  String get nodeHealthOffline => 'Не в сети';
+
+  @override
+  String get nodeHealthUnknown => 'Неизвестно';
 }

@@ -45092,4 +45092,16 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get fixedPositionSheetInvalid =>
       'Введіть коректну широту (від -90 до 90) і довготу (від -180 до 180).';
+
+  @override
+  String get nodeHealthFresh => 'Свіжий';
+
+  @override
+  String get nodeHealthStale => 'Застарів';
+
+  @override
+  String get nodeHealthOffline => 'Не в мережі';
+
+  @override
+  String get nodeHealthUnknown => 'Невідомо';
 }

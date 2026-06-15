@@ -44580,4 +44580,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get fixedPositionSheetInvalid =>
       'Enter a valid latitude (-90 to 90) and longitude (-180 to 180).';
+
+  @override
+  String get nodeHealthFresh => 'Fresh';
+
+  @override
+  String get nodeHealthStale => 'Stale';
+
+  @override
+  String get nodeHealthOffline => 'Offline';
+
+  @override
+  String get nodeHealthUnknown => 'Unknown';
 }

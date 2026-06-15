@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:uuid/uuid.dart';
 import 'presence_confidence.dart';
+import '../core/health/node_health.dart';
 import '../features/nodes/node_display_name_resolver.dart';
 import '../utils/text_sanitizer.dart';
 
@@ -909,6 +910,12 @@ class MeshNode {
 
   PresenceConfidence get presenceConfidence {
     return PresenceCalculator.fromLastHeard(lastHeard, now: DateTime.now());
+  }
+
+  /// Operational SiteOps health derived from [lastHeard]. Distinct from
+  /// [presenceConfidence]; see [NodeHealthState].
+  NodeHealthState get healthState {
+    return classifyHealth(lastActivity: lastHeard, now: DateTime.now());
   }
 
   Duration? get lastHeardAge {

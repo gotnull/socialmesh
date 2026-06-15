@@ -45207,4 +45207,16 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get fixedPositionSheetInvalid =>
       'Gib eine gültige Breite (-90 bis 90) und Länge (-180 bis 180) ein.';
+
+  @override
+  String get nodeHealthFresh => 'Aktuell';
+
+  @override
+  String get nodeHealthStale => 'Veraltet';
+
+  @override
+  String get nodeHealthOffline => 'Offline';
+
+  @override
+  String get nodeHealthUnknown => 'Unbekannt';
 }

@@ -45276,4 +45276,16 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get fixedPositionSheetInvalid =>
       'Introduce una latitud válida (-90 a 90) y una longitud válida (-180 a 180).';
+
+  @override
+  String get nodeHealthFresh => 'Reciente';
+
+  @override
+  String get nodeHealthStale => 'Desactualizado';
+
+  @override
+  String get nodeHealthOffline => 'Sin conexión';
+
+  @override
+  String get nodeHealthUnknown => 'Desconocido';
 }

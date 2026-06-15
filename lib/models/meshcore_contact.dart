@@ -3,6 +3,7 @@
 
 import 'dart:typed_data';
 
+import '../core/health/node_health.dart';
 import '../core/meshcore_constants.dart';
 import '../services/meshcore/protocol/meshcore_messages.dart' as msgs;
 
@@ -108,6 +109,16 @@ class MeshCoreContact {
   /// D28: SNR in dB derived from the raw firmware quarter encoding,
   /// or null when no message has carried SNR for this contact yet.
   double? get snrDb => snrQuarter == null ? null : snrQuarter! / 4.0;
+
+  /// Operational SiteOps health derived from the later of [lastSeen] and
+  /// [lastMessageAt]. Distinct from any presence concept; see
+  /// [NodeHealthState].
+  NodeHealthState get healthState {
+    final lastActivity = lastMessageAt.isAfter(lastSeen)
+        ? lastMessageAt
+        : lastSeen;
+    return classifyHealth(lastActivity: lastActivity, now: DateTime.now());
+  }
 
   /// Public key as hex string.
   String get publicKeyHex => _bytesToHex(publicKey);

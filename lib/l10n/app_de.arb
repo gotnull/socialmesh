@@ -13297,5 +13297,9 @@
   "fixedPositionSheetUsePhoneLocation": "Standort meines Telefons verwenden",
   "fixedPositionSheetGettingPhoneLocation": "Telefonstandort wird ermittelt…",
   "fixedPositionSheetSubmit": "Position festlegen",
-  "fixedPositionSheetInvalid": "Gib eine gültige Breite (-90 bis 90) und Länge (-180 bis 180) ein."
+  "fixedPositionSheetInvalid": "Gib eine gültige Breite (-90 bis 90) und Länge (-180 bis 180) ein.",
+  "nodeHealthFresh": "Aktuell",
+  "nodeHealthStale": "Veraltet",
+  "nodeHealthOffline": "Offline",
+  "nodeHealthUnknown": "Unbekannt"
 }

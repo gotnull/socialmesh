@@ -59459,5 +59459,21 @@
     "fixedPositionSheetInvalid": "Enter a valid latitude (-90 to 90) and longitude (-180 to 180).",
     "@fixedPositionSheetInvalid": {
         "description": "Validation error shown when entered coordinates are out of range."
+    },
+    "nodeHealthFresh": "Fresh",
+    "@nodeHealthFresh": {
+        "description": "Operational node-health badge: node reporting normally (heard within 15 minutes)."
+    },
+    "nodeHealthStale": "Stale",
+    "@nodeHealthStale": {
+        "description": "Operational node-health badge: node overdue (heard within 2 hours but past the fresh window)."
+    },
+    "nodeHealthOffline": "Offline",
+    "@nodeHealthOffline": {
+        "description": "Operational node-health badge: node presumed down (not heard within 2 hours)."
+    },
+    "nodeHealthUnknown": "Unknown",
+    "@nodeHealthUnknown": {
+        "description": "Operational node-health badge: node never heard or has an implausible timestamp."
     }
 }

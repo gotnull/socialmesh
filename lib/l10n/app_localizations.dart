@@ -77812,6 +77812,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter a valid latitude (-90 to 90) and longitude (-180 to 180).'**
   String get fixedPositionSheetInvalid;
+
+  /// Operational node-health badge: node reporting normally (heard within 15 minutes).
+  ///
+  /// In en, this message translates to:
+  /// **'Fresh'**
+  String get nodeHealthFresh;
+
+  /// Operational node-health badge: node overdue (heard within 2 hours but past the fresh window).
+  ///
+  /// In en, this message translates to:
+  /// **'Stale'**
+  String get nodeHealthStale;
+
+  /// Operational node-health badge: node presumed down (not heard within 2 hours).
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get nodeHealthOffline;
+
+  /// Operational node-health badge: node never heard or has an implausible timestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get nodeHealthUnknown;
 }
 
 class _AppLocalizationsDelegate

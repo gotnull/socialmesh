@@ -13297,5 +13297,9 @@
   "fixedPositionSheetUsePhoneLocation": "Usar la ubicación de mi teléfono",
   "fixedPositionSheetGettingPhoneLocation": "Obteniendo la ubicación del teléfono…",
   "fixedPositionSheetSubmit": "Establecer posición",
-  "fixedPositionSheetInvalid": "Introduce una latitud válida (-90 a 90) y una longitud válida (-180 a 180)."
+  "fixedPositionSheetInvalid": "Introduce una latitud válida (-90 a 90) y una longitud válida (-180 a 180).",
+  "nodeHealthFresh": "Reciente",
+  "nodeHealthStale": "Desactualizado",
+  "nodeHealthOffline": "Sin conexión",
+  "nodeHealthUnknown": "Desconocido"
 }

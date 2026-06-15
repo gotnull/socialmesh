@@ -40,6 +40,7 @@ import '../navigation/main_shell.dart';
 import 'node_detail_screen.dart';
 import 'node_quick_actions_sheet.dart';
 import 'role_filter.dart';
+import 'widgets/node_health_badge.dart';
 import 'widgets/nodes_legend_sheet.dart';
 
 class NodesScreen extends ConsumerStatefulWidget {
@@ -1515,6 +1516,12 @@ class _NodeCard extends ConsumerWidget {
                     ),
                   ],
                 ),
+              // SiteOps operational health badge (secondary to the presence
+              // label above; does not replace it).
+              if (!isMyNode) ...[
+                SizedBox(height: AppTheme.spacing6),
+                NodeHealthBadge(state: node.healthState),
+              ],
               SizedBox(height: AppTheme.spacing4),
               // Last heard
               if (TimestampValidation.isPlausible(node.lastHeard)) ...[

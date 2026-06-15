@@ -13297,5 +13297,9 @@
   "fixedPositionSheetUsePhoneLocation": "Використати місцезнаходження телефону",
   "fixedPositionSheetGettingPhoneLocation": "Отримання місцезнаходження телефону…",
   "fixedPositionSheetSubmit": "Задати позицію",
-  "fixedPositionSheetInvalid": "Введіть коректну широту (від -90 до 90) і довготу (від -180 до 180)."
+  "fixedPositionSheetInvalid": "Введіть коректну широту (від -90 до 90) і довготу (від -180 до 180).",
+  "nodeHealthFresh": "Свіжий",
+  "nodeHealthStale": "Застарів",
+  "nodeHealthOffline": "Не в мережі",
+  "nodeHealthUnknown": "Невідомо"
 }

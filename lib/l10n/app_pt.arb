@@ -46367,5 +46367,9 @@
   "fixedPositionSheetUsePhoneLocation": "Usar a localização do meu telefone",
   "fixedPositionSheetGettingPhoneLocation": "Obtendo a localização do telefone…",
   "fixedPositionSheetSubmit": "Definir posição",
-  "fixedPositionSheetInvalid": "Insira uma latitude válida (-90 a 90) e uma longitude válida (-180 a 180)."
+  "fixedPositionSheetInvalid": "Insira uma latitude válida (-90 a 90) e uma longitude válida (-180 a 180).",
+  "nodeHealthFresh": "Recente",
+  "nodeHealthStale": "Desatualizado",
+  "nodeHealthOffline": "Offline",
+  "nodeHealthUnknown": "Desconhecido"
 }

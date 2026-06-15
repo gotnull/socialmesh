@@ -54,6 +54,7 @@ import '../telemetry/position_log_screen.dart';
 import '../telemetry/traceroute_log_screen.dart';
 import 'node_actions.dart';
 import 'widgets/fixed_position_sheet.dart';
+import 'widgets/node_health_badge.dart';
 
 /// Navigates to the node detail screen. Can be called from any screen.
 void showNodeDetails(BuildContext context, MeshNode node, bool isMyNode) {
@@ -782,6 +783,13 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                   icon: Icons.star,
                   label: context.l10n.nodeDetailFavoriteBadge,
                   color: AppTheme.warningYellow,
+                ),
+              // SiteOps operational health (secondary; does not replace the
+              // presence/online indicator).
+              if (!isMyNode)
+                _BadgePill(
+                  label: NodeHealthBadge.labelFor(context, node.healthState),
+                  color: NodeHealthBadge.colorFor(node.healthState),
                 ),
             ],
           ),
