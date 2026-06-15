@@ -13284,5 +13284,18 @@
   "offlineMapSearchFailed": "Lieu introuvable. Vérifiez l'orthographe ou votre connexion.",
   "offlineMapLocationOff": "Les services de localisation sont désactivés. Activez-les pour centrer la carte.",
   "offlineMapLocationDenied": "Autorisation de localisation refusée. Activez-la dans les Réglages.",
-  "offlineMapLocationUnavailable": "Impossible d'obtenir votre position."
+  "offlineMapLocationUnavailable": "Impossible d'obtenir votre position.",
+  "nodeDetailMenuRemoveFixedPosition": "Supprimer la position fixe",
+  "nodeDetailRemoveFixedPositionTitle": "Supprimer la position fixe",
+  "nodeDetailRemoveFixedPositionMessage": "Effacer la position fixe sur {name} ? Le nœud n'aura plus aucune position ensuite.",
+  "nodeDetailRemoveFixedPositionConfirm": "Supprimer",
+  "nodeDetailFixedPositionRemoved": "Position fixe effacée sur {name}",
+  "nodeDetailFixedPositionRemoveError": "Échec de la suppression de la position fixe : {error}",
+  "nodeDetailRemoteAdminNoSession": "Aucune session d'administration pour {name} pour l'instant. Ouvrez les Paramètres d'administration pour vous authentifier, puis réessayez.",
+  "fixedPositionSheetTitle": "Définir la position fixe",
+  "fixedPositionSheetDescription": "Attribuez des coordonnées GPS à {name}. Elles sont envoyées au nœud, pas à votre téléphone.",
+  "fixedPositionSheetUsePhoneLocation": "Utiliser la position de mon téléphone",
+  "fixedPositionSheetGettingPhoneLocation": "Récupération de la position du téléphone…",
+  "fixedPositionSheetSubmit": "Définir la position",
+  "fixedPositionSheetInvalid": "Saisissez une latitude valide (-90 à 90) et une longitude valide (-180 à 180)."
 }

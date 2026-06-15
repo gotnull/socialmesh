@@ -19,6 +19,7 @@ import 'package:mqtt_client/mqtt_server_client.dart';
 import 'package:typed_data/typed_data.dart' show Uint8Buffer;
 
 import '../../core/logging.dart';
+import '../../core/mqtt/mqtt_topic_builder.dart';
 
 // ---------------------------------------------------------------------------
 // Diagnostics state — exposed to UI for the diagnostics surface
@@ -791,6 +792,18 @@ class MqttClientProxyService {
         phase: MqttProxyConnectionPhase.disabled,
         reason: MqttProxyFailureReason.clientDisposed,
         kind: 'suppressed',
+      );
+      return;
+    }
+
+    // Publish topics must never contain wildcards. Reject `+`/`#` (and
+    // other invalid topics) before any connection gating so a malformed
+    // topic never reaches the broker, regardless of client state.
+    final topicValidation = TopicBuilder.validateTopic(topic);
+    if (!topicValidation.isValid) {
+      AppLogging.mqttProxy(
+        'Rejecting proxy publish — invalid topic "$topic": '
+        '${topicValidation.error}',
       );
       return;
     }

@@ -13284,5 +13284,18 @@
   "offlineMapSearchFailed": "Не удалось найти это место. Проверьте написание или подключение.",
   "offlineMapLocationOff": "Службы геолокации отключены. Включите их, чтобы центрировать карту.",
   "offlineMapLocationDenied": "Доступ к геолокации запрещён. Включите его в Настройках.",
-  "offlineMapLocationUnavailable": "Не удалось определить ваше местоположение."
+  "offlineMapLocationUnavailable": "Не удалось определить ваше местоположение.",
+  "nodeDetailMenuRemoveFixedPosition": "Удалить фиксированную позицию",
+  "nodeDetailRemoveFixedPositionTitle": "Удалить фиксированную позицию",
+  "nodeDetailRemoveFixedPositionMessage": "Очистить фиксированную позицию на {name}? После этого у узла не будет позиции.",
+  "nodeDetailRemoveFixedPositionConfirm": "Удалить",
+  "nodeDetailFixedPositionRemoved": "Фиксированная позиция очищена на {name}",
+  "nodeDetailFixedPositionRemoveError": "Не удалось удалить фиксированную позицию: {error}",
+  "nodeDetailRemoteAdminNoSession": "Пока нет сессии администратора для {name}. Откройте «Настройки администратора» для аутентификации и повторите попытку.",
+  "fixedPositionSheetTitle": "Задать фиксированную позицию",
+  "fixedPositionSheetDescription": "Назначьте GPS-координаты для {name}. Они отправляются на узел, а не на ваш телефон.",
+  "fixedPositionSheetUsePhoneLocation": "Использовать местоположение телефона",
+  "fixedPositionSheetGettingPhoneLocation": "Получение местоположения телефона…",
+  "fixedPositionSheetSubmit": "Задать позицию",
+  "fixedPositionSheetInvalid": "Введите корректную широту (от -90 до 90) и долготу (от -180 до 180)."
 }

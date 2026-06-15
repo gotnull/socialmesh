@@ -7797,6 +7797,17 @@ class ProtocolService {
     return target.resolve(_myNodeNum!);
   }
 
+  /// Whether a live (non-expired) PKC admin session passkey is held for
+  /// [nodeNum], i.e. a remote SET/ACTION admin command to that node can be
+  /// authenticated right now. The local node is always "ready" (no passkey
+  /// required). Lets callers surface a clear up-front diagnostic instead of
+  /// silently sending a passkey-less remote admin the firmware would drop.
+  bool remoteAdminSessionReady(int nodeNum) {
+    if (nodeNum == _myNodeNum) return true;
+    final session = _adminSessions[nodeNum];
+    return session != null && !session.isExpired;
+  }
+
   /// Apply the stored session passkey to an admin message when targeting a
   /// remote node.
   ///
@@ -9400,13 +9411,17 @@ class ProtocolService {
     }
   }
 
-  /// Local-only: sets a fixed GPS position on the directly-connected device.
-  ///
-  /// This method intentionally uses [MeshPacketBuilder.localAdmin].
+  /// Sets a fixed GPS position. Defaults to the directly-connected device;
+  /// pass [target] (an [AdminTarget.remote]) to set the fixed position on a
+  /// remote node — e.g. an installed tower node that can no longer be
+  /// reached over BLE. Remote sends route via [MeshPacketBuilder.admin] and
+  /// carry the PKC session passkey when one is available; with no [target]
+  /// the packet is self-addressed exactly as before.
   Future<void> setFixedPosition({
     required double latitude,
     required double longitude,
     int altitude = 0,
+    AdminTarget? target,
   }) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot set fixed position: device not ready');
@@ -9415,8 +9430,12 @@ class ProtocolService {
       throw StateError('Cannot set fixed position: not connected');
     }
 
+    final dest = _resolveTarget(target);
+    final isRemote = dest != _myNodeNum;
+
     AppLogging.protocol(
-      'Setting fixed position: $latitude, $longitude, alt=$altitude',
+      'Setting fixed position: $latitude, $longitude, alt=$altitude'
+      '${isRemote ? ' (remote node $dest)' : ''}',
     );
 
     final position = pb.Position()
@@ -9425,13 +9444,15 @@ class ProtocolService {
       ..altitude = altitude;
 
     final adminMsg = admin.AdminMessage()..setFixedPosition = position;
+    _applySessionPasskey(adminMsg, dest);
 
     final data = pb.Data()
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = MeshPacketBuilder.localAdmin(
+    final packet = MeshPacketBuilder.admin(
       myNodeNum: _myNodeNum!,
+      targetNodeNum: dest,
       data: data,
       packetId: _generatePacketId(),
     );
@@ -9440,11 +9461,14 @@ class ProtocolService {
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
-  /// Local-only: removes the fixed GPS override on the directly-connected
-  /// device, reverting to live GPS.
-  ///
-  /// This method intentionally uses [MeshPacketBuilder.localAdmin].
-  Future<void> removeFixedPosition() async {
+  /// Removes (clears) the fixed GPS override. Defaults to the
+  /// directly-connected device; pass [target] (an [AdminTarget.remote]) to
+  /// clear the fixed position on a remote node. Clearing a fixed position
+  /// does not imply the node has a live GPS source — a GPS-less tower will
+  /// simply hold no position afterwards. Remote sends route via
+  /// [MeshPacketBuilder.admin] and carry the PKC session passkey when one is
+  /// available; with no [target] the packet is self-addressed as before.
+  Future<void> removeFixedPosition({AdminTarget? target}) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot remove fixed position: device not ready');
     }
@@ -9452,16 +9476,23 @@ class ProtocolService {
       throw StateError('Cannot remove fixed position: not connected');
     }
 
-    AppLogging.protocol('Removing fixed position');
+    final dest = _resolveTarget(target);
+    final isRemote = dest != _myNodeNum;
+
+    AppLogging.protocol(
+      'Removing fixed position${isRemote ? ' (remote node $dest)' : ''}',
+    );
 
     final adminMsg = admin.AdminMessage()..removeFixedPosition = true;
+    _applySessionPasskey(adminMsg, dest);
 
     final data = pb.Data()
       ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
-    final packet = MeshPacketBuilder.localAdmin(
+    final packet = MeshPacketBuilder.admin(
       myNodeNum: _myNodeNum!,
+      targetNodeNum: dest,
       data: data,
       packetId: _generatePacketId(),
     );

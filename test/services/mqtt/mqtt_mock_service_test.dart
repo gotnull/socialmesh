@@ -316,6 +316,63 @@ void main() {
     });
   });
 
+  // PR-1: client-side publish-topic wildcard guard. Publish topics must
+  // never contain `+`/`#`; subscribe topics may. The guard rejects
+  // invalid publish topics before the broker is touched, with a clear
+  // diagnostic, while subscribe behaviour is unchanged.
+  group('publish topic wildcard guard', () {
+    setUp(() async {
+      await service.connect(config);
+    });
+
+    test('publishing to a/b/# fails client-side', () async {
+      final result = await service.publish('a/b/#', [0x01]);
+      expect(result.accepted, isFalse);
+      expect(result.error, isNotNull);
+    });
+
+    test('publishing to a/+/c fails client-side', () async {
+      final result = await service.publish('a/+/c', [0x01]);
+      expect(result.accepted, isFalse);
+      expect(result.error, isNotNull);
+    });
+
+    test('failed wildcard publish does not reach the broker '
+        '(no publish history entry)', () async {
+      await service.publish('a/b/#', [0x01]);
+      await service.publish('a/+/c', [0x01]);
+      expect(service.publishHistory, isEmpty);
+    });
+
+    test('publishing to a/b/c still succeeds and is recorded', () async {
+      final result = await service.publish('a/b/c', [0x01]);
+      expect(result.accepted, isTrue);
+      expect(service.publishHistory.single.topic, 'a/b/c');
+    });
+
+    test('subscribing to a/b/# remains accepted', () async {
+      final result = await service.subscribe('a/b/#');
+      expect(result.accepted, isTrue);
+    });
+
+    test('subscribing to a/+/c remains accepted', () async {
+      final result = await service.subscribe('a/+/c');
+      expect(result.accepted, isTrue);
+    });
+
+    test('rejection error is clear and not truncated', () async {
+      final result = await service.publish('a/b/#', [0x01]);
+      final error = result.error!;
+      // Names the offending wildcard, explains the rule, and is a full
+      // sentence — never ellipsised or one-word.
+      expect(error, contains('#'));
+      expect(error.toLowerCase(), contains('wildcard'));
+      expect(error, isNot(contains('…')));
+      expect(error, isNot(endsWith('...')));
+      expect(error.length, greaterThan(20));
+    });
+  });
+
   group('messages', () {
     test('injectMessage delivers to message stream', () async {
       await service.connect(config);

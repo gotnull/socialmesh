@@ -29,6 +29,7 @@ import '../../models/telemetry_log.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/countdown_providers.dart';
 import '../../providers/telemetry_providers.dart';
+import '../../services/protocol/admin_target.dart';
 import '../../utils/snackbar.dart';
 import '../../utils/uptime_formatter.dart';
 
@@ -52,6 +53,7 @@ import '../telemetry/pax_counter_log_screen.dart';
 import '../telemetry/position_log_screen.dart';
 import '../telemetry/traceroute_log_screen.dart';
 import 'node_actions.dart';
+import 'widgets/fixed_position_sheet.dart';
 
 /// Navigates to the node detail screen. Can be called from any screen.
 void showNodeDetails(BuildContext context, MeshNode node, bool isMyNode) {
@@ -413,18 +415,37 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
   }
 
   Future<void> _setFixedPosition(BuildContext context, MeshNode node) async {
-    if (!node.hasPosition) {
-      showInfoSnackBar(context, context.l10n.nodeDetailNoPositionData);
+    final protocol = ref.read(protocolServiceProvider);
+
+    // Remote fixed-position is a PKC admin SET: it needs an authenticated
+    // session. If none is ready, prime it and surface a clear diagnostic
+    // rather than silently sending a passkey-less admin the node would drop.
+    if (!protocol.remoteAdminSessionReady(node.nodeNum)) {
+      ref
+          .read(remoteAdminProvider.notifier)
+          .setTarget(node.nodeNum, node.displayName);
+      showWarningSnackBar(
+        context,
+        context.l10n.nodeDetailRemoteAdminNoSession(node.displayName),
+      );
       return;
     }
 
-    final protocol = ref.read(protocolServiceProvider);
+    final input = await FixedPositionSheet.show(
+      context,
+      nodeName: node.displayName,
+      initialLatitude: node.hasPosition ? node.latitude : null,
+      initialLongitude: node.hasPosition ? node.longitude : null,
+      initialAltitude: node.altitude,
+    );
+    if (input == null || !mounted) return;
 
     try {
       await protocol.setFixedPosition(
-        latitude: node.latitude!,
-        longitude: node.longitude!,
-        altitude: node.altitude ?? 0,
+        latitude: input.latitude,
+        longitude: input.longitude,
+        altitude: input.altitude,
+        target: AdminTarget.remote(node.nodeNum),
       );
       if (!mounted) return;
       if (context.mounted) {
@@ -438,6 +459,52 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
         showErrorSnackBar(
           context,
           context.l10n.nodeDetailFixedPositionError(e.toString()),
+        );
+      }
+    }
+  }
+
+  Future<void> _removeFixedPosition(BuildContext context, MeshNode node) async {
+    final protocol = ref.read(protocolServiceProvider);
+
+    if (!protocol.remoteAdminSessionReady(node.nodeNum)) {
+      ref
+          .read(remoteAdminProvider.notifier)
+          .setTarget(node.nodeNum, node.displayName);
+      showWarningSnackBar(
+        context,
+        context.l10n.nodeDetailRemoteAdminNoSession(node.displayName),
+      );
+      return;
+    }
+
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: context.l10n.nodeDetailRemoveFixedPositionTitle,
+      message: context.l10n.nodeDetailRemoveFixedPositionMessage(
+        node.displayName,
+      ),
+      confirmLabel: context.l10n.nodeDetailRemoveFixedPositionConfirm,
+      isDestructive: true,
+    );
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await protocol.removeFixedPosition(
+        target: AdminTarget.remote(node.nodeNum),
+      );
+      if (!mounted) return;
+      if (context.mounted) {
+        showSuccessSnackBar(
+          context,
+          context.l10n.nodeDetailFixedPositionRemoved(node.displayName),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        showErrorSnackBar(
+          context,
+          context.l10n.nodeDetailFixedPositionRemoveError(e.toString()),
         );
       }
     }
@@ -1795,7 +1862,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
-              if (node.hasPosition)
+              if (node.hasPublicKey) ...[
                 PopupMenuItem(
                   value: 'fixed_position',
                   child: ListTile(
@@ -1808,6 +1875,19 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                     contentPadding: EdgeInsets.zero,
                   ),
                 ),
+                PopupMenuItem(
+                  value: 'remove_fixed_position',
+                  child: ListTile(
+                    leading: Icon(
+                      Icons.location_off,
+                      color: context.accentColor,
+                    ),
+                    title: Text(context.l10n.nodeDetailMenuRemoveFixedPosition),
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
               if (node.hasPublicKey)
                 PopupMenuItem(
                   value: 'admin_settings',
@@ -1875,6 +1955,8 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
                 _exchangePositions(context, node);
               case 'fixed_position':
                 _setFixedPosition(context, node);
+              case 'remove_fixed_position':
+                _removeFixedPosition(context, node);
               case 'admin_settings':
                 _configureRemotely(context, node);
               case 'remove':

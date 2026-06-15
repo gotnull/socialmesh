@@ -45341,4 +45341,56 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get handshakeOnboardingPermissionsAllowed => 'Autorisé';
+
+  @override
+  String get nodeDetailMenuRemoveFixedPosition => 'Supprimer la position fixe';
+
+  @override
+  String get nodeDetailRemoveFixedPositionTitle => 'Supprimer la position fixe';
+
+  @override
+  String nodeDetailRemoveFixedPositionMessage(String name) {
+    return 'Effacer la position fixe sur $name ? Le nœud n\'aura plus aucune position ensuite.';
+  }
+
+  @override
+  String get nodeDetailRemoveFixedPositionConfirm => 'Supprimer';
+
+  @override
+  String nodeDetailFixedPositionRemoved(String name) {
+    return 'Position fixe effacée sur $name';
+  }
+
+  @override
+  String nodeDetailFixedPositionRemoveError(String error) {
+    return 'Échec de la suppression de la position fixe : $error';
+  }
+
+  @override
+  String nodeDetailRemoteAdminNoSession(String name) {
+    return 'Aucune session d\'administration pour $name pour l\'instant. Ouvrez les Paramètres d\'administration pour vous authentifier, puis réessayez.';
+  }
+
+  @override
+  String get fixedPositionSheetTitle => 'Définir la position fixe';
+
+  @override
+  String fixedPositionSheetDescription(String name) {
+    return 'Attribuez des coordonnées GPS à $name. Elles sont envoyées au nœud, pas à votre téléphone.';
+  }
+
+  @override
+  String get fixedPositionSheetUsePhoneLocation =>
+      'Utiliser la position de mon téléphone';
+
+  @override
+  String get fixedPositionSheetGettingPhoneLocation =>
+      'Récupération de la position du téléphone…';
+
+  @override
+  String get fixedPositionSheetSubmit => 'Définir la position';
+
+  @override
+  String get fixedPositionSheetInvalid =>
+      'Saisissez une latitude valide (-90 à 90) et une longitude valide (-180 à 180).';
 }

@@ -59382,5 +59382,82 @@
     "handshakeOnboardingPermissionsAllowed": "Allowed",
     "@handshakeOnboardingPermissionsAllowed": {
         "description": "Handshake onboarding permission granted label."
+    },
+    "nodeDetailMenuRemoveFixedPosition": "Remove Fixed Position",
+    "@nodeDetailMenuRemoveFixedPosition": {
+        "description": "Overflow menu item to clear a remote node's fixed position."
+    },
+    "nodeDetailRemoveFixedPositionTitle": "Remove fixed position",
+    "@nodeDetailRemoveFixedPositionTitle": {
+        "description": "Confirm sheet title for clearing a remote node's fixed position."
+    },
+    "nodeDetailRemoveFixedPositionMessage": "Clear the fixed position on {name}? The node will hold no position afterwards.",
+    "@nodeDetailRemoveFixedPositionMessage": {
+        "description": "Confirm sheet body for clearing a remote node's fixed position.",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "nodeDetailRemoveFixedPositionConfirm": "Remove",
+    "@nodeDetailRemoveFixedPositionConfirm": {
+        "description": "Confirm button to clear a remote node's fixed position."
+    },
+    "nodeDetailFixedPositionRemoved": "Cleared fixed position on {name}",
+    "@nodeDetailFixedPositionRemoved": {
+        "description": "Success snackbar after clearing a remote node's fixed position.",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "nodeDetailFixedPositionRemoveError": "Failed to remove fixed position: {error}",
+    "@nodeDetailFixedPositionRemoveError": {
+        "description": "Error snackbar when clearing a remote node's fixed position fails.",
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "nodeDetailRemoteAdminNoSession": "No admin session for {name} yet. Open Admin Settings to authenticate, then try again.",
+    "@nodeDetailRemoteAdminNoSession": {
+        "description": "Warning when a remote fixed-position action is attempted before an admin session is established.",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "fixedPositionSheetTitle": "Set fixed position",
+    "@fixedPositionSheetTitle": {
+        "description": "Title of the remote fixed-position coordinate-entry sheet."
+    },
+    "fixedPositionSheetDescription": "Assign GPS coordinates to {name}. These are sent to the node, not your phone.",
+    "@fixedPositionSheetDescription": {
+        "description": "Description in the remote fixed-position coordinate-entry sheet.",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "fixedPositionSheetUsePhoneLocation": "Use my phone's location",
+    "@fixedPositionSheetUsePhoneLocation": {
+        "description": "Button that fills coordinates from the phone's GPS, not the remote node."
+    },
+    "fixedPositionSheetGettingPhoneLocation": "Getting phone location…",
+    "@fixedPositionSheetGettingPhoneLocation": {
+        "description": "Loading label while reading the phone's GPS."
+    },
+    "fixedPositionSheetSubmit": "Set position",
+    "@fixedPositionSheetSubmit": {
+        "description": "Submit button on the remote fixed-position sheet."
+    },
+    "fixedPositionSheetInvalid": "Enter a valid latitude (-90 to 90) and longitude (-180 to 180).",
+    "@fixedPositionSheetInvalid": {
+        "description": "Validation error shown when entered coordinates are out of range."
     }
 }

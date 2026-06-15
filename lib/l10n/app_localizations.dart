@@ -77734,6 +77734,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Allowed'**
   String get handshakeOnboardingPermissionsAllowed;
+
+  /// Overflow menu item to clear a remote node's fixed position.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Fixed Position'**
+  String get nodeDetailMenuRemoveFixedPosition;
+
+  /// Confirm sheet title for clearing a remote node's fixed position.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove fixed position'**
+  String get nodeDetailRemoveFixedPositionTitle;
+
+  /// Confirm sheet body for clearing a remote node's fixed position.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the fixed position on {name}? The node will hold no position afterwards.'**
+  String nodeDetailRemoveFixedPositionMessage(String name);
+
+  /// Confirm button to clear a remote node's fixed position.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get nodeDetailRemoveFixedPositionConfirm;
+
+  /// Success snackbar after clearing a remote node's fixed position.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleared fixed position on {name}'**
+  String nodeDetailFixedPositionRemoved(String name);
+
+  /// Error snackbar when clearing a remote node's fixed position fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to remove fixed position: {error}'**
+  String nodeDetailFixedPositionRemoveError(String error);
+
+  /// Warning when a remote fixed-position action is attempted before an admin session is established.
+  ///
+  /// In en, this message translates to:
+  /// **'No admin session for {name} yet. Open Admin Settings to authenticate, then try again.'**
+  String nodeDetailRemoteAdminNoSession(String name);
+
+  /// Title of the remote fixed-position coordinate-entry sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Set fixed position'**
+  String get fixedPositionSheetTitle;
+
+  /// Description in the remote fixed-position coordinate-entry sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign GPS coordinates to {name}. These are sent to the node, not your phone.'**
+  String fixedPositionSheetDescription(String name);
+
+  /// Button that fills coordinates from the phone's GPS, not the remote node.
+  ///
+  /// In en, this message translates to:
+  /// **'Use my phone\'s location'**
+  String get fixedPositionSheetUsePhoneLocation;
+
+  /// Loading label while reading the phone's GPS.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting phone location…'**
+  String get fixedPositionSheetGettingPhoneLocation;
+
+  /// Submit button on the remote fixed-position sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Set position'**
+  String get fixedPositionSheetSubmit;
+
+  /// Validation error shown when entered coordinates are out of range.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid latitude (-90 to 90) and longitude (-180 to 180).'**
+  String get fixedPositionSheetInvalid;
 }
 
 class _AppLocalizationsDelegate

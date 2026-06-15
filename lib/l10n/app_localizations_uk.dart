@@ -45040,4 +45040,56 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get handshakeOnboardingPermissionsAllowed => 'Дозволено';
+
+  @override
+  String get nodeDetailMenuRemoveFixedPosition => 'Видалити фіксовану позицію';
+
+  @override
+  String get nodeDetailRemoveFixedPositionTitle => 'Видалити фіксовану позицію';
+
+  @override
+  String nodeDetailRemoveFixedPositionMessage(String name) {
+    return 'Очистити фіксовану позицію на $name? Після цього вузол не матиме позиції.';
+  }
+
+  @override
+  String get nodeDetailRemoveFixedPositionConfirm => 'Видалити';
+
+  @override
+  String nodeDetailFixedPositionRemoved(String name) {
+    return 'Фіксовану позицію очищено на $name';
+  }
+
+  @override
+  String nodeDetailFixedPositionRemoveError(String error) {
+    return 'Не вдалося видалити фіксовану позицію: $error';
+  }
+
+  @override
+  String nodeDetailRemoteAdminNoSession(String name) {
+    return 'Поки немає сесії адміністратора для $name. Відкрийте «Налаштування адміністратора» для автентифікації та повторіть спробу.';
+  }
+
+  @override
+  String get fixedPositionSheetTitle => 'Задати фіксовану позицію';
+
+  @override
+  String fixedPositionSheetDescription(String name) {
+    return 'Призначте GPS-координати для $name. Вони надсилаються на вузол, а не на ваш телефон.';
+  }
+
+  @override
+  String get fixedPositionSheetUsePhoneLocation =>
+      'Використати місцезнаходження телефону';
+
+  @override
+  String get fixedPositionSheetGettingPhoneLocation =>
+      'Отримання місцезнаходження телефону…';
+
+  @override
+  String get fixedPositionSheetSubmit => 'Задати позицію';
+
+  @override
+  String get fixedPositionSheetInvalid =>
+      'Введіть коректну широту (від -90 до 90) і довготу (від -180 до 180).';
 }

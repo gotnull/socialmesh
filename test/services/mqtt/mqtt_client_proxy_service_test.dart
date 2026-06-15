@@ -644,6 +644,22 @@ void main() {
         expect(service.diagnostics.messagesPublished, 0);
       },
     );
+
+    // PR-1: a publish topic with a wildcard is rejected by the guard
+    // before any broker interaction. The connected-path call to
+    // `_client.publishMessage` needs a live broker and cannot be unit
+    // tested here; this asserts the guard is a safe no-op at the API
+    // boundary (no throw, no publish counted). The `TopicBuilder`
+    // validation logic itself is proven in mqtt_mock_service_test.dart.
+    test('handleDevicePublish with a wildcard topic is a safe no-op', () {
+      final service = MqttClientProxyService();
+      addTearDown(service.dispose);
+
+      service.handleDevicePublish(topic: 'a/b/#', data: [1, 2, 3]);
+      service.handleDevicePublish(topic: 'a/+/c', data: [4, 5, 6]);
+
+      expect(service.diagnostics.messagesPublished, 0);
+    });
   });
 
   group('MqttClientProxyService NoConnectionException reason mapping', () {

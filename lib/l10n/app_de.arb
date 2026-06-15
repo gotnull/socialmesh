@@ -13284,5 +13284,18 @@
   "offlineMapSearchFailed": "Ort nicht gefunden. Prüfe die Schreibweise oder deine Verbindung.",
   "offlineMapLocationOff": "Standortdienste sind aus. Aktiviere sie, um die Karte zu zentrieren.",
   "offlineMapLocationDenied": "Standortberechtigung verweigert. Aktiviere sie in den Einstellungen.",
-  "offlineMapLocationUnavailable": "Dein Standort konnte nicht ermittelt werden."
+  "offlineMapLocationUnavailable": "Dein Standort konnte nicht ermittelt werden.",
+  "nodeDetailMenuRemoveFixedPosition": "Feste Position entfernen",
+  "nodeDetailRemoveFixedPositionTitle": "Feste Position entfernen",
+  "nodeDetailRemoveFixedPositionMessage": "Feste Position auf {name} löschen? Der Knoten hat danach keine Position mehr.",
+  "nodeDetailRemoveFixedPositionConfirm": "Entfernen",
+  "nodeDetailFixedPositionRemoved": "Feste Position auf {name} gelöscht",
+  "nodeDetailFixedPositionRemoveError": "Feste Position konnte nicht entfernt werden: {error}",
+  "nodeDetailRemoteAdminNoSession": "Noch keine Admin-Sitzung für {name}. Öffne die Admin-Einstellungen zur Authentifizierung und versuche es erneut.",
+  "fixedPositionSheetTitle": "Feste Position festlegen",
+  "fixedPositionSheetDescription": "Weise {name} GPS-Koordinaten zu. Sie werden an den Knoten gesendet, nicht an dein Telefon.",
+  "fixedPositionSheetUsePhoneLocation": "Standort meines Telefons verwenden",
+  "fixedPositionSheetGettingPhoneLocation": "Telefonstandort wird ermittelt…",
+  "fixedPositionSheetSubmit": "Position festlegen",
+  "fixedPositionSheetInvalid": "Gib eine gültige Breite (-90 bis 90) und Länge (-180 bis 180) ein."
 }

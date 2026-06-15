@@ -45,6 +45,7 @@ import '../../core/mqtt/mqtt_config.dart';
 import '../../core/mqtt/mqtt_connection_state.dart';
 import '../../core/mqtt/mqtt_constants.dart';
 import '../../core/mqtt/mqtt_diagnostics.dart';
+import '../../core/mqtt/mqtt_topic_builder.dart';
 import 'mqtt_service.dart';
 
 // ---------------------------------------------------------------------------
@@ -556,6 +557,18 @@ class MqttMockService implements MqttService {
   }) async {
     _assertNotDisposed();
     _assertConnected('publish');
+
+    // Publish topics must not contain wildcards. Reject `+`/`#` (and
+    // other invalid topics) client-side so the broker is never asked to
+    // publish to a wildcard. Subscribe keeps wildcards (see subscribe()).
+    final topicValidation = TopicBuilder.validateTopic(topic);
+    if (!topicValidation.isValid) {
+      AppLogging.settings(
+        'MqttMockService: publish rejected — '
+        'invalid topic "$topic": ${topicValidation.error}',
+      );
+      return MqttPublishResult.failure(topicValidation.error!);
+    }
 
     _publishHistory.add(
       MockPublishRecord(

@@ -45155,4 +45155,56 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get handshakeOnboardingPermissionsAllowed => 'Erlaubt';
+
+  @override
+  String get nodeDetailMenuRemoveFixedPosition => 'Feste Position entfernen';
+
+  @override
+  String get nodeDetailRemoveFixedPositionTitle => 'Feste Position entfernen';
+
+  @override
+  String nodeDetailRemoveFixedPositionMessage(String name) {
+    return 'Feste Position auf $name löschen? Der Knoten hat danach keine Position mehr.';
+  }
+
+  @override
+  String get nodeDetailRemoveFixedPositionConfirm => 'Entfernen';
+
+  @override
+  String nodeDetailFixedPositionRemoved(String name) {
+    return 'Feste Position auf $name gelöscht';
+  }
+
+  @override
+  String nodeDetailFixedPositionRemoveError(String error) {
+    return 'Feste Position konnte nicht entfernt werden: $error';
+  }
+
+  @override
+  String nodeDetailRemoteAdminNoSession(String name) {
+    return 'Noch keine Admin-Sitzung für $name. Öffne die Admin-Einstellungen zur Authentifizierung und versuche es erneut.';
+  }
+
+  @override
+  String get fixedPositionSheetTitle => 'Feste Position festlegen';
+
+  @override
+  String fixedPositionSheetDescription(String name) {
+    return 'Weise $name GPS-Koordinaten zu. Sie werden an den Knoten gesendet, nicht an dein Telefon.';
+  }
+
+  @override
+  String get fixedPositionSheetUsePhoneLocation =>
+      'Standort meines Telefons verwenden';
+
+  @override
+  String get fixedPositionSheetGettingPhoneLocation =>
+      'Telefonstandort wird ermittelt…';
+
+  @override
+  String get fixedPositionSheetSubmit => 'Position festlegen';
+
+  @override
+  String get fixedPositionSheetInvalid =>
+      'Gib eine gültige Breite (-90 bis 90) und Länge (-180 bis 180) ein.';
 }

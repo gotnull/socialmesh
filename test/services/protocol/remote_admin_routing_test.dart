@@ -666,8 +666,13 @@ void main() {
     });
   });
 
-  group('Local-only guard: setFixedPosition', () {
-    test('always sends to local device', () async {
+  // Fixed-position admin defaults to the local device when no target is
+  // given. With no AdminTarget, MeshPacketBuilder.admin resolves to
+  // localAdmin (to == from == myNodeNum, no wantAck) — byte-for-byte the
+  // pre-PR-2 behaviour. These guard against accidental remote routing of
+  // the default call.
+  group('setFixedPosition defaults to local (no target)', () {
+    test('sends to the local device', () async {
       await protocol.setFixedPosition(latitude: 37.7749, longitude: -122.4194);
 
       final packet = transport.lastPacket;
@@ -677,14 +682,110 @@ void main() {
     });
   });
 
-  group('Local-only guard: removeFixedPosition', () {
-    test('always sends to local device', () async {
+  group('removeFixedPosition defaults to local (no target)', () {
+    test('sends to the local device', () async {
       await protocol.removeFixedPosition();
 
       final packet = transport.lastPacket;
       expect(packet.from, _myNodeNum);
       expect(packet.to, _myNodeNum);
       expect(packet.wantAck, isFalse);
+    });
+  });
+
+  // PR-2: single-node remote fixed GPS for installed tower nodes. With an
+  // AdminTarget.remote, the admin command routes to the selected node
+  // (to == remoteNodeNum, RELIABLE + wantAck) instead of the local device.
+  group('remote fixed-position routing (AdminTarget.remote)', () {
+    test('remote setFixedPosition targets the selected node', () async {
+      await protocol.setFixedPosition(
+        latitude: 37.7749,
+        longitude: -122.4194,
+        altitude: 12,
+        target: const AdminTarget.remote(_remoteNodeNum),
+      );
+
+      final packet = transport.lastPacket;
+      expect(packet.from, _myNodeNum);
+      expect(packet.to, _remoteNodeNum);
+      expect(packet.wantAck, isTrue);
+
+      // Encoding contract still holds on the remote path.
+      final adminMsg = transport.lastAdminMessage;
+      expect(adminMsg.hasSetFixedPosition(), isTrue);
+      final pos = adminMsg.setFixedPosition;
+      expect(pos.latitudeI, (37.7749 * 1e7).toInt());
+      expect(pos.longitudeI, (-122.4194 * 1e7).toInt());
+      expect(pos.altitude, 12);
+    });
+
+    test('remote removeFixedPosition targets the selected node', () async {
+      await protocol.removeFixedPosition(
+        target: const AdminTarget.remote(_remoteNodeNum),
+      );
+
+      final packet = transport.lastPacket;
+      expect(packet.from, _myNodeNum);
+      expect(packet.to, _remoteNodeNum);
+      expect(packet.wantAck, isTrue);
+      expect(transport.lastAdminMessage.removeFixedPosition, isTrue);
+    });
+
+    test('golden invariant: remote target never self-addresses', () async {
+      await protocol.setFixedPosition(
+        latitude: 1,
+        longitude: 2,
+        target: const AdminTarget.remote(_remoteNodeNum),
+      );
+      final packet = transport.lastPacket;
+      expect(packet.from, isNot(packet.to));
+    });
+  });
+
+  // Commercialisation audit — pins the fixed-position encoding contract on
+  // the default (local) path: the AdminMessage uses 1e-7 fixed-point
+  // lat/lon, matching the Meshtastic Position wire contract.
+  group('setFixedPosition encoding contract (1e-7 fixed-point lat/lon)', () {
+    test(
+      'AdminMessage carries setFixedPosition with 1e-7-scaled coords',
+      () async {
+        await protocol.setFixedPosition(
+          latitude: 37.7749,
+          longitude: -122.4194,
+          altitude: 12,
+        );
+
+        final adminMsg = transport.lastAdminMessage;
+        expect(adminMsg.hasSetFixedPosition(), isTrue);
+        final pos = adminMsg.setFixedPosition;
+        expect(pos.latitudeI, (37.7749 * 1e7).toInt());
+        expect(pos.longitudeI, (-122.4194 * 1e7).toInt());
+        expect(pos.altitude, 12);
+      },
+    );
+
+    test(
+      'removeFixedPosition sets the removeFixedPosition admin flag',
+      () async {
+        await protocol.removeFixedPosition();
+
+        final adminMsg = transport.lastAdminMessage;
+        expect(adminMsg.removeFixedPosition, isTrue);
+      },
+    );
+  });
+
+  // PR-2: the UI checks remoteAdminSessionReady before a remote fixed-
+  // position send so it can surface a clear diagnostic (rather than
+  // silently sending a passkey-less admin the firmware would drop) when no
+  // PKC admin session has been primed for the target node.
+  group('remoteAdminSessionReady (clear-failure signal for remote admin)', () {
+    test('local node is always session-ready', () {
+      expect(protocol.remoteAdminSessionReady(_myNodeNum), isTrue);
+    });
+
+    test('remote node with no primed session is not ready', () {
+      expect(protocol.remoteAdminSessionReady(_remoteNodeNum), isFalse);
     });
   });
 

@@ -46354,5 +46354,18 @@
   "offlineMapSearchFailed": "Luogo non trovato. Controlla l'ortografia o la connessione.",
   "offlineMapLocationOff": "I servizi di localizzazione sono disattivati. Attivali per centrare la mappa.",
   "offlineMapLocationDenied": "Autorizzazione alla posizione negata. Abilitala nelle Impostazioni.",
-  "offlineMapLocationUnavailable": "Impossibile ottenere la tua posizione."
+  "offlineMapLocationUnavailable": "Impossibile ottenere la tua posizione.",
+  "nodeDetailMenuRemoveFixedPosition": "Rimuovi Posizione Fissa",
+  "nodeDetailRemoveFixedPositionTitle": "Rimuovi posizione fissa",
+  "nodeDetailRemoveFixedPositionMessage": "Cancellare la posizione fissa su {name}? Il nodo non avrà più alcuna posizione.",
+  "nodeDetailRemoveFixedPositionConfirm": "Rimuovi",
+  "nodeDetailFixedPositionRemoved": "Posizione fissa cancellata su {name}",
+  "nodeDetailFixedPositionRemoveError": "Impossibile rimuovere la posizione fissa: {error}",
+  "nodeDetailRemoteAdminNoSession": "Nessuna sessione admin per {name}. Apri Impostazioni Admin per autenticarti, poi riprova.",
+  "fixedPositionSheetTitle": "Imposta posizione fissa",
+  "fixedPositionSheetDescription": "Assegna coordinate GPS a {name}. Vengono inviate al nodo, non al tuo telefono.",
+  "fixedPositionSheetUsePhoneLocation": "Usa la posizione del telefono",
+  "fixedPositionSheetGettingPhoneLocation": "Recupero posizione del telefono…",
+  "fixedPositionSheetSubmit": "Imposta posizione",
+  "fixedPositionSheetInvalid": "Inserisci una latitudine valida (da -90 a 90) e una longitudine valida (da -180 a 180)."
 }

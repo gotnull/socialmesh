@@ -45003,4 +45003,56 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get handshakeOnboardingPermissionsAllowed => 'Permitido';
+
+  @override
+  String get nodeDetailMenuRemoveFixedPosition => 'Remover Posição Fixa';
+
+  @override
+  String get nodeDetailRemoveFixedPositionTitle => 'Remover posição fixa';
+
+  @override
+  String nodeDetailRemoveFixedPositionMessage(String name) {
+    return 'Limpar a posição fixa em $name? O nó ficará sem posição depois disso.';
+  }
+
+  @override
+  String get nodeDetailRemoveFixedPositionConfirm => 'Remover';
+
+  @override
+  String nodeDetailFixedPositionRemoved(String name) {
+    return 'Posição fixa removida em $name';
+  }
+
+  @override
+  String nodeDetailFixedPositionRemoveError(String error) {
+    return 'Falha ao remover a posição fixa: $error';
+  }
+
+  @override
+  String nodeDetailRemoteAdminNoSession(String name) {
+    return 'Ainda não há sessão de administração para $name. Abra as Configurações de Administração para autenticar e tente novamente.';
+  }
+
+  @override
+  String get fixedPositionSheetTitle => 'Definir posição fixa';
+
+  @override
+  String fixedPositionSheetDescription(String name) {
+    return 'Atribuir coordenadas GPS a $name. Elas são enviadas ao nó, não ao seu telefone.';
+  }
+
+  @override
+  String get fixedPositionSheetUsePhoneLocation =>
+      'Usar a localização do meu telefone';
+
+  @override
+  String get fixedPositionSheetGettingPhoneLocation =>
+      'Obtendo a localização do telefone…';
+
+  @override
+  String get fixedPositionSheetSubmit => 'Definir posição';
+
+  @override
+  String get fixedPositionSheetInvalid =>
+      'Insira uma latitude válida (-90 a 90) e uma longitude válida (-180 a 180).';
 }

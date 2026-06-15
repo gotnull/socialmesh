@@ -13284,5 +13284,18 @@
   "offlineMapSearchFailed": "Не вдалося знайти це місце. Перевірте правопис або підключення.",
   "offlineMapLocationOff": "Служби геолокації вимкнено. Увімкніть їх, щоб центрувати карту.",
   "offlineMapLocationDenied": "Доступ до геолокації заборонено. Увімкніть його в Налаштуваннях.",
-  "offlineMapLocationUnavailable": "Не вдалося визначити ваше місцезнаходження."
+  "offlineMapLocationUnavailable": "Не вдалося визначити ваше місцезнаходження.",
+  "nodeDetailMenuRemoveFixedPosition": "Видалити фіксовану позицію",
+  "nodeDetailRemoveFixedPositionTitle": "Видалити фіксовану позицію",
+  "nodeDetailRemoveFixedPositionMessage": "Очистити фіксовану позицію на {name}? Після цього вузол не матиме позиції.",
+  "nodeDetailRemoveFixedPositionConfirm": "Видалити",
+  "nodeDetailFixedPositionRemoved": "Фіксовану позицію очищено на {name}",
+  "nodeDetailFixedPositionRemoveError": "Не вдалося видалити фіксовану позицію: {error}",
+  "nodeDetailRemoteAdminNoSession": "Поки немає сесії адміністратора для {name}. Відкрийте «Налаштування адміністратора» для автентифікації та повторіть спробу.",
+  "fixedPositionSheetTitle": "Задати фіксовану позицію",
+  "fixedPositionSheetDescription": "Призначте GPS-координати для {name}. Вони надсилаються на вузол, а не на ваш телефон.",
+  "fixedPositionSheetUsePhoneLocation": "Використати місцезнаходження телефону",
+  "fixedPositionSheetGettingPhoneLocation": "Отримання місцезнаходження телефону…",
+  "fixedPositionSheetSubmit": "Задати позицію",
+  "fixedPositionSheetInvalid": "Введіть коректну широту (від -90 до 90) і довготу (від -180 до 180)."
 }
