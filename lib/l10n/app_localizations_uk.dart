@@ -20819,6 +20819,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get signalSyncingMedia => 'Синхронізація медіа';
 
   @override
+  String get signalMediaUnavailable => 'Медіа недоступне';
+
+  @override
   String get signalTakePhoto => 'Зробити фото';
 
   @override

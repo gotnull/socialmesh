@@ -20801,6 +20801,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get signalSyncingMedia => 'Синхронизация медиа';
 
   @override
+  String get signalMediaUnavailable => 'Медиа недоступно';
+
+  @override
   String get signalTakePhoto => 'Сделать фото';
 
   @override

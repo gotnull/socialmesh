@@ -129,6 +129,28 @@ class SignalFeedState {
   }
 }
 
+/// Reconcile a feed refresh against the DB snapshot.
+///
+/// The DB query is authoritative, but a signal that arrives in memory (e.g. an
+/// incoming mesh signal added via [SignalFeedNotifier.addMeshSignal]) DURING
+/// the refresh's async DB read is not yet in [dbSignals]. A plain replace would
+/// clobber it, so it flashes into the feed and vanishes on the refresh tick.
+/// Preserve such in-memory signals while they are still non-expired; expired
+/// ones are dropped here (the countdown timer and DB cleanup own expiry).
+List<Post> mergeRefreshSignals(
+  List<Post> dbSignals,
+  List<Post> inMemory,
+  DateTime now,
+) {
+  final dbIds = dbSignals.map((s) => s.id).toSet();
+  final preserved = inMemory.where(
+    (s) =>
+        !dbIds.contains(s.id) &&
+        (s.expiresAt == null || s.expiresAt!.isAfter(now)),
+  );
+  return [...dbSignals, ...preserved];
+}
+
 /// Sort signals for the presence feed.
 List<Post> sortSignalsForFeed(List<Post> signals, int? myNodeNum) {
   return List<Post>.from(signals)..sort((a, b) {
@@ -592,25 +614,31 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
 
       AppLogging.social('Feed refreshed: ${sorted.length} active signals');
 
-      // Diagnostic: log DB vs in-memory counts and any removals
+      final now = DateTime.now();
+
+      // Diagnostic: log DB vs in-memory counts.
       final inMemoryCount = state.signals.length;
       AppLogging.social(
         'Feed diagnostics: dbCount=${sorted.length} inMemoryCount=$inMemoryCount',
       );
-      // Detect signals present in memory but missing in DB
-      final missingInDb = state.signals
-          .map((s) => s.id)
-          .where((id) => !sorted.any((sig) => sig.id == id))
-          .toList();
-      if (missingInDb.isNotEmpty) {
-        for (final id in missingInDb) {
-          AppLogging.social('REFRESH_REMOVE signalId=$id reason=not_in_db');
-        }
+      // A signal can be in memory but absent from the DB snapshot for two
+      // reasons: it expired (cleaned from the DB), or it arrived in memory
+      // during this refresh's async read. Preserve the latter (still
+      // non-expired) so a freshly received signal is not clobbered; drop the
+      // former.
+      final dbIds = sorted.map((s) => s.id).toSet();
+      for (final s in state.signals) {
+        if (dbIds.contains(s.id)) continue;
+        final expired = s.expiresAt != null && !s.expiresAt!.isAfter(now);
+        AppLogging.social(
+          expired
+              ? 'REFRESH_REMOVE signalId=${s.id} reason=expired'
+              : 'REFRESH_PRESERVE signalId=${s.id} reason=arrived_during_refresh',
+        );
       }
 
-      final activeIds = sorted.map((sig) => sig.id).toSet();
       for (final signal in allSignals) {
-        if (activeIds.contains(signal.id)) continue;
+        if (dbIds.contains(signal.id)) continue;
         final reason = signal.isExpired
             ? 'expired'
             : (signal.postMode != PostMode.signal)
@@ -621,10 +649,13 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
         );
       }
 
-      // Use withSignals to build map - handles deduplication
+      // Merge non-expired in-memory arrivals the DB snapshot missed, then build
+      // the map. Replacing outright clobbered a mesh signal that arrived
+      // mid-refresh (the "flash then vanish" report).
+      final reconciled = mergeRefreshSignals(sorted, state.signals, now);
       state = state
-          .withSignals(sorted)
-          .copyWith(isLoading: false, lastRefresh: DateTime.now());
+          .withSignals(reconciled)
+          .copyWith(isLoading: false, lastRefresh: now);
 
       AppLogging.social(
         'Feed refresh complete: inMemory=${state.signals.length}',

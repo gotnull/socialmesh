@@ -10103,6 +10103,7 @@
   "signalSwipeSave": "Speichern",
   "signalSwipeUnsave": "Nicht mehr speichern",
   "signalSyncingMedia": "Medien werden synchronisiert",
+  "signalMediaUnavailable": "Medien nicht verfügbar",
   "signalTakePhoto": "Foto aufnehmen",
   "signalTapToSet": "Zum Festlegen tippen",
   "signalTapToView": "Zum Anzeigen tippen",

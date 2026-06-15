@@ -20902,6 +20902,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get signalSyncingMedia => 'Sincronizando multimedia';
 
   @override
+  String get signalMediaUnavailable => 'Multimedia no disponible';
+
+  @override
   String get signalTakePhoto => 'Tomar foto';
 
   @override

@@ -28016,6 +28016,10 @@
     "@signalSyncingMedia": {
         "description": "Text displayed in signals"
     },
+    "signalMediaUnavailable": "Media unavailable",
+    "@signalMediaUnavailable": {
+        "description": "Shown on a signal whose image never finished syncing from its sender"
+    },
     "signalTakePhoto": "Take Photo",
     "@signalTakePhoto": {
         "description": "Text displayed in signals"

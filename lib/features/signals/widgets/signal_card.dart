@@ -360,6 +360,19 @@ class _SignalHeader extends ConsumerWidget {
   }
 }
 
+// How long a signal may show the animated "Syncing media" placeholder before
+// it is treated as unavailable. The image arrives via the sender's cloud
+// upload; if that upload failed (and we hold no local copy to fall back to)
+// the URL never comes, so without a bound the placeholder animates forever.
+// Uploads complete in seconds, so a generous few-minute grace period only ever
+// triggers on genuinely stuck media.
+const Duration kSignalPendingMediaTimeout = Duration(minutes: 5);
+
+// Pure decision extracted from [_SignalImage] so the timeout boundary is
+// unit-testable without widget plumbing.
+bool signalMediaIsUnavailable(DateTime createdAt, DateTime now) =>
+    now.difference(createdAt) > kSignalPendingMediaTimeout;
+
 class _SignalImage extends ConsumerWidget {
   const _SignalImage({required this.signal});
 
@@ -460,6 +473,12 @@ class _SignalImage extends ConsumerWidget {
     }
 
     if (hasPendingImage && cloudUrls.isEmpty && localPaths.isEmpty) {
+      // Stop animating "Syncing media" once the image has clearly failed to
+      // arrive, so a stuck signal degrades to a static placeholder instead of
+      // spinning indefinitely.
+      if (signalMediaIsUnavailable(signal.createdAt, DateTime.now())) {
+        return _buildUnavailablePlaceholder(context);
+      }
       return _buildPendingPlaceholder(context);
     }
 
@@ -831,6 +850,38 @@ class _SignalImage extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // Static fallback for a signal whose image never finished syncing. No
+  // animation — it is a terminal state, not an in-progress one.
+  Widget _buildUnavailablePlaceholder(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: 200,
+      color: context.card,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.cloud_off_outlined,
+              size: 32,
+              color: context.textTertiary,
+            ),
+            const SizedBox(height: AppTheme.spacing12),
+            Text(
+              context.l10n.signalMediaUnavailable,
+              style: TextStyle(
+                color: context.textTertiary,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

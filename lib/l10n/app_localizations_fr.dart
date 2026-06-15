@@ -20949,6 +20949,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get signalSyncingMedia => 'Synchronisation des médias';
 
   @override
+  String get signalMediaUnavailable => 'Média indisponible';
+
+  @override
   String get signalTakePhoto => 'Prendre une photo';
 
   @override

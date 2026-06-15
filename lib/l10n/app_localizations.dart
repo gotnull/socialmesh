@@ -35822,6 +35822,12 @@ abstract class AppLocalizations {
   /// **'Syncing media'**
   String get signalSyncingMedia;
 
+  /// Shown on a signal whose image never finished syncing from its sender
+  ///
+  /// In en, this message translates to:
+  /// **'Media unavailable'**
+  String get signalMediaUnavailable;
+
   /// Text displayed in signals
   ///
   /// In en, this message translates to:

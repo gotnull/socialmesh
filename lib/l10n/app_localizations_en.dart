@@ -20585,6 +20585,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signalSyncingMedia => 'Syncing media';
 
   @override
+  String get signalMediaUnavailable => 'Media unavailable';
+
+  @override
   String get signalTakePhoto => 'Take Photo';
 
   @override

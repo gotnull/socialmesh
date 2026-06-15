@@ -1185,23 +1185,29 @@ class SignalService {
 
       // Update the signal with all uploaded URLs
       try {
-        // Update Firestore
+        // Update Firestore. imageState must be a valid ImageState name — the
+        // previous literal 'uploaded' is not an enum value and parses back to
+        // ImageState.none on every reader.
         await _firestore.collection('posts').doc(signalId).update({
           'mediaUrls': uploadedUrls,
-          'imageState': 'uploaded',
+          'imageState': ImageState.cloud.name,
         });
 
-        // Update local database
-        await init();
-        await _db!.update(
-          'signals',
-          {
-            'mediaUrls': jsonEncode(uploadedUrls), // Store as JSON
-            'imageState': 'uploaded',
-          },
-          where: 'id = ?',
-          whereArgs: [signalId],
-        );
+        // Update the local signal through copyWith/updateSignal (not a raw
+        // column write) so every field stays consistent — crucially clearing
+        // hasPendingCloudImage so the card stops showing the "Syncing media"
+        // placeholder. The single-upload path already does this; the batch
+        // path previously left the flag set forever.
+        final signal = await getSignalById(signalId);
+        if (signal != null) {
+          await updateSignal(
+            signal.copyWith(
+              mediaUrls: uploadedUrls,
+              imageState: ImageState.cloud,
+              hasPendingCloudImage: false,
+            ),
+          );
+        }
 
         AppLogging.social(
           'Updated signal $signalId with ${uploadedUrls.length} mediaUrls',
