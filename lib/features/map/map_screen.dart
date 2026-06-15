@@ -19,6 +19,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/map_config.dart';
 import '../../core/safe_lat_lng.dart';
+import 'map_session_providers.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
@@ -306,9 +307,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
   TerrainLosResult? _measureTerrainResult;
   bool _terrainFetchInProgress = false;
   ElevationService? _elevationService;
-
-  // Waypoints dropped by user
-  final List<_Waypoint> _waypoints = [];
 
   // Animation controller for smooth camera movements
   AnimationController? _animationController;
@@ -771,24 +769,20 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   void _addWaypoint(LatLng point, {String? label}) {
-    setState(() {
-      _waypoints.add(
-        _Waypoint(
-          id: DateTime.now().millisecondsSinceEpoch,
-          position: point,
-          label:
-              label ??
-              context.l10n.mapWaypointDefaultLabel(_waypoints.length + 1),
-        ),
-      );
-    });
+    final notifier = ref.read(mapLocalWaypointsProvider.notifier);
+    final count = ref.read(mapLocalWaypointsProvider).length;
+    notifier.add(
+      MapLocalWaypoint(
+        id: DateTime.now().millisecondsSinceEpoch,
+        position: point,
+        label: label ?? context.l10n.mapWaypointDefaultLabel(count + 1),
+      ),
+    );
     HapticFeedback.mediumImpact();
   }
 
   void _removeWaypoint(int id) {
-    setState(() {
-      _waypoints.removeWhere((w) => w.id == id);
-    });
+    ref.read(mapLocalWaypointsProvider.notifier).remove(id);
   }
 
   void _shareLocation(LatLng point, {String? label}) {
@@ -912,6 +906,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final presenceMap = ref.watch(presenceMapProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
     final meshWaypoints = ref.watch(meshWaypointsProvider);
+    final localWaypoints = ref.watch(mapLocalWaypointsProvider);
 
     // Load position history — per-node when tracking, all when global toggle
     final List<PositionLog> positionLogs;
@@ -1101,6 +1096,29 @@ class _MapScreenState extends ConsumerState<MapScreen>
           center = safeLatLng(avgLat, avgLng) ?? center;
           zoom = 12.0;
         }
+      }
+    }
+
+    // Restore the camera the user left on the Map tab last time. MapScreen is
+    // rebuilt from scratch on every tab switch, so without this the camera
+    // resets to the computed fallback above (and the user loses their zoom and
+    // place). Applied only on a plain Map-tab open — deep-link / traceroute /
+    // location targets own the camera. Marking _didInitialAutoFit skips the
+    // auto-fit below so the restored pose wins.
+    if (!_didInitialAutoFit &&
+        !_initialCenteringDone &&
+        widget.tracerouteLog == null &&
+        !widget.locationOnlyMode &&
+        widget.initialNodeNum == null &&
+        widget.initialLatitude == null) {
+      final savedCamera = ref.read(mapCameraStateProvider);
+      if (savedCamera != null &&
+          isFiniteLatLng(savedCamera.center) &&
+          savedCamera.zoom.isFinite) {
+        center = savedCamera.center;
+        zoom = savedCamera.zoom;
+        _currentZoom = savedCamera.zoom;
+        _didInitialAutoFit = true;
       }
     }
 
@@ -1768,6 +1786,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         )) {
                           _lastFiniteCenter = position.center;
                           _lastFiniteZoom = position.zoom;
+                          // Remember the pose for the app session so returning
+                          // to the Map tab restores it instead of snapping back
+                          // to the computed fallback. Cheap: nothing watches
+                          // this provider, so the set notifies no listeners.
+                          ref
+                              .read(mapCameraStateProvider.notifier)
+                              .save(position.center, position.zoom);
                         } else if (!_cameraRecoveryScheduled) {
                           _cameraRecoveryScheduled = true;
                           final recoverCenter = _lastFiniteCenter;
@@ -1832,6 +1857,19 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       // overlay below is skipped — Mapbox bakes labels into
                       // satellite-streets-v12 directly.
                       TileLayer(
+                        tileUpdateTransformer:
+                            finiteCameraTileUpdateTransformer,
+                        // Key off the resolved tile source so switching style
+                        // (Dark / Satellite / Terrain / Light) rebuilds the
+                        // layer and loads the new tiles immediately, instead of
+                        // showing blue until the user pans or pinches.
+                        key: ValueKey(
+                          MapConfig.mapboxUrlForStyle(
+                                _mapStyle,
+                                satelliteLabelsOn: _showSatelliteLabels,
+                              ) ??
+                              _mapStyle.url,
+                        ),
                         urlTemplate:
                             MapConfig.mapboxUrlForStyle(
                               _mapStyle,
@@ -1857,8 +1895,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             ? true
                             : MapConfig.styleSupportsRetina(_mapStyle),
                         evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
-                        tileUpdateTransformer:
-                            finiteCameraTileUpdateTransformer,
                         // No tileBuilder — AnimatedOpacity at constant 1.0
                         // created unnecessary animation controllers per tile,
                         // causing visible lag on initial map load.
@@ -1958,7 +1994,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       MarkerLayer(
                         rotate: true,
                         markers: finiteMarkers(
-                          _waypoints.map((w) {
+                          localWaypoints.map((w) {
                             return Marker(
                               point: w.position,
                               width: 32,
@@ -2993,7 +3029,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     );
   }
 
-  void _showWaypointDetails(_Waypoint waypoint) {
+  void _showWaypointDetails(MapLocalWaypoint waypoint) {
     AppBottomSheet.showActions(
       context: context,
       actions: [
@@ -4410,15 +4446,6 @@ class _TrailPoint {
     required this.longitude,
     required this.timestamp,
   });
-}
-
-/// Waypoint dropped by user
-class _Waypoint {
-  final int id;
-  final LatLng position;
-  final String label;
-
-  _Waypoint({required this.id, required this.position, required this.label});
 }
 
 /// Map marker for a shared mesh waypoint: an orange circle with the waypoint's
