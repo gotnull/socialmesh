@@ -3933,17 +3933,6 @@ class ProtocolService {
           );
         } else {
           // Create new node entry
-          final colors = [
-            0xFF1976D2,
-            0xFFD32F2F,
-            0xFF388E3C,
-            0xFFF57C00,
-            0xFF7B1FA2,
-            0xFF00796B,
-            0xFFC2185B,
-          ];
-          final avatarColor = colors[packet.from % colors.length];
-
           String? hwModel;
           if (user.hasHwModel() && user.hwModel != pb.HardwareModel.UNSET) {
             hwModel = _formatHardwareModel(user.hwModel);
@@ -3965,7 +3954,7 @@ class ProtocolService {
                 ? List<int>.unmodifiable(user.publicKey)
                 : null,
             lastHeard: _resolvePacketLastHeard(packet),
-            avatarColor: avatarColor,
+            avatarColor: null,
             isFavorite: false,
           );
           _nodes[packet.from] = newNode;
@@ -4762,17 +4751,6 @@ class ProtocolService {
         AppLogging.protocol(
           'Creating new node entry for ${packet.from} from telemetry',
         );
-        final colors = [
-          0xFF1976D2,
-          0xFFD32F2F,
-          0xFF388E3C,
-          0xFFF57C00,
-          0xFF7B1FA2,
-          0xFF00796B,
-          0xFFC2185B,
-        ];
-        final avatarColor = colors[packet.from % colors.length];
-
         final telemetryLastHeard = _resolvePacketLastHeard(packet);
         final newNode = MeshNode(
           nodeNum: packet.from,
@@ -4787,7 +4765,7 @@ class ProtocolService {
           snr: _directRxSnr(packet),
           hopCount: _computeHopCount(packet),
           viaMqtt: packet.hasViaMqtt() ? packet.viaMqtt : false,
-          avatarColor: avatarColor,
+          avatarColor: null,
           isFavorite: false,
         );
         _nodes[packet.from] = newNode;
@@ -4917,17 +4895,6 @@ class ProtocolService {
         AppLogging.protocol(
           'Creating placeholder node ${packet.from} from position update',
         );
-        final colors = [
-          0xFF1976D2,
-          0xFFD32F2F,
-          0xFF388E3C,
-          0xFFF57C00,
-          0xFF7B1FA2,
-          0xFF00796B,
-          0xFFC2185B,
-        ];
-        final avatarColor = colors[packet.from % colors.length];
-
         final newNode = MeshNode(
           nodeNum: packet.from,
           // Leave longName/shortName null for placeholder nodes.
@@ -4945,7 +4912,7 @@ class ProtocolService {
           firstHeard: _resolvePacketLastHeard(packet),
           hopCount: _computeHopCount(packet),
           viaMqtt: packet.hasViaMqtt() ? packet.viaMqtt : false,
-          avatarColor: avatarColor,
+          avatarColor: null,
           isFavorite: false,
           positionTimestamp: posTime,
           // GPS extended fields
@@ -4987,17 +4954,6 @@ class ProtocolService {
         '🔑 📥 Public key present: ${user.publicKey.isNotEmpty} (${user.publicKey.length} bytes)',
       );
       AppLogging.protocol('Node info from ${packet.from}: $longName');
-
-      final colors = [
-        0xFF1976D2,
-        0xFFD32F2F,
-        0xFF388E3C,
-        0xFFF57C00,
-        0xFF7B1FA2,
-        0xFF00796B,
-        0xFFC2185B,
-      ];
-      final avatarColor = colors[packet.from % colors.length];
 
       // Extract hardware model from user
       String? hwModel;
@@ -5073,7 +5029,7 @@ class ProtocolService {
             firstHeard: updatedLastHeard,
             hopCount: _computeHopCount(packet),
             viaMqtt: packet.hasViaMqtt() ? packet.viaMqtt : false,
-            avatarColor: avatarColor,
+            avatarColor: null,
             isFavorite: false,
           );
 
@@ -5395,18 +5351,6 @@ class ProtocolService {
       );
     }
 
-    // Generate consistent color from node number
-    final colors = [
-      0xFF1976D2,
-      0xFFD32F2F,
-      0xFF388E3C,
-      0xFFF57C00,
-      0xFF7B1FA2,
-      0xFF00796B,
-      0xFFC2185B,
-    ];
-    final avatarColor = colors[nodeInfo.num % colors.length];
-
     // Extract hardware model and role from user if present
     String? hwModel;
     String role = 'CLIENT';
@@ -5517,7 +5461,7 @@ class ProtocolService {
             : existingNode.batteryLevel,
         lastHeard: deviceLastHeard,
         role: role,
-        avatarColor: existingNode.avatarColor,
+        avatarColor: null,
         hasPublicKey: hasPublicKey,
         publicKey: publicKeyBytes ?? existingNode.publicKey,
         isMuted: nodeInfo.hasIsMuted()
@@ -5576,7 +5520,7 @@ class ProtocolService {
         lastHeard: deviceLastHeard,
         firstHeard: DateTime.now(),
         role: role,
-        avatarColor: avatarColor,
+        avatarColor: null,
         isFavorite: nodeInfo.isFavorite,
         hasPublicKey: hasPublicKey,
         publicKey: publicKeyBytes,

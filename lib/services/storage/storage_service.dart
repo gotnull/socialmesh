@@ -1525,7 +1525,12 @@ class NodeStorageService {
       firstHeard: json['firstHeard'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['firstHeard'] as int)
           : null,
-      avatarColor: json['avatarColor'] as int? ?? 0xFF1976D2,
+      // Drop any persisted colour: it is derived deterministically from the
+      // node number via nodeColorFromId, and legacy builds stored a small
+      // fixed palette here that collided across nodes. Null lets the colour
+      // resolve from the node id. avatarColor is reserved for an explicit
+      // user override, of which there is no persisted source today.
+      avatarColor: null,
       role: json['role'] as String?,
       isFavorite: json['isFavorite'] as bool? ?? false,
       isIgnored: json['isIgnored'] as bool? ?? false,
