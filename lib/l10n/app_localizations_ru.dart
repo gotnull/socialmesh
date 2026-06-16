@@ -7538,6 +7538,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get mapShowRangeCircles => 'Показать круги дальности';
 
   @override
+  String get mapShowMeshWaypoints => 'Показать точки маршрута сети';
+
+  @override
+  String get mapHideMeshWaypoints => 'Скрыть точки маршрута сети';
+
+  @override
+  String get mapShowWaypoints => 'Показать точки маршрута';
+
+  @override
+  String get mapHideWaypoints => 'Скрыть точки маршрута';
+
+  @override
   String get mapShowSatelliteLabels => 'Показать подписи спутников';
 
   @override
@@ -45090,7 +45102,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get nodeHealthStale => 'Устарел';
 
   @override
-  String get nodeHealthOffline => 'Не в сети';
+  String get nodeHealthOffline => 'Нет сигнала';
 
   @override
   String get nodeHealthUnknown => 'Неизвестно';

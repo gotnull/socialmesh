@@ -7583,6 +7583,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get mapShowRangeCircles => 'Mostrar círculos de alcance';
 
   @override
+  String get mapShowMeshWaypoints => 'Mostrar puntos de referencia de malla';
+
+  @override
+  String get mapHideMeshWaypoints => 'Ocultar puntos de referencia de malla';
+
+  @override
+  String get mapShowWaypoints => 'Mostrar puntos de referencia';
+
+  @override
+  String get mapHideWaypoints => 'Ocultar puntos de referencia';
+
+  @override
   String get mapShowSatelliteLabels => 'Mostrar etiquetas satelitales';
 
   @override
@@ -45284,7 +45296,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get nodeHealthStale => 'Desactualizado';
 
   @override
-  String get nodeHealthOffline => 'Sin conexión';
+  String get nodeHealthOffline => 'Sin señal';
 
   @override
   String get nodeHealthUnknown => 'Desconocido';

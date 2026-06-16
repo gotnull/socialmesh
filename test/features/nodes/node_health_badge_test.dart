@@ -33,7 +33,7 @@ void main() {
   const cases = {
     NodeHealthState.fresh: 'Fresh',
     NodeHealthState.stale: 'Stale',
-    NodeHealthState.offline: 'Offline',
+    NodeHealthState.offline: 'No signal',
     NodeHealthState.unknown: 'Unknown',
   };
 

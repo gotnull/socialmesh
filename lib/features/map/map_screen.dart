@@ -273,6 +273,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
   bool _showPositionHistory = false;
   bool _showSatelliteLabels = true;
   bool _showDistanceLabels = true;
+  bool _showMeshWaypoints = true;
+  bool _showWaypoints = true;
 
   /// When true in traceroute mode, only nodes part of the route are shown.
   bool _tracerouteRouteOnly = false;
@@ -410,6 +412,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _showSatelliteLabels = settings.satelliteLabelsEnabled;
         _clusterMarkers = settings.mapClusterMarkers;
         _showDistanceLabels = settings.mapShowDistanceLabels;
+        _showMeshWaypoints = settings.mapShowMeshWaypoints;
+        _showWaypoints = settings.mapShowWaypoints;
       });
     }
   }
@@ -432,6 +436,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
     await settings.setSatelliteLabelsEnabled(_showSatelliteLabels);
     await settings.setMapClusterMarkers(_clusterMarkers);
     await settings.setMapShowDistanceLabels(_showDistanceLabels);
+    await settings.setMapShowMeshWaypoints(_showMeshWaypoints);
+    await settings.setMapShowWaypoints(_showWaypoints);
   }
 
   /// Animate camera to a specific location with smooth easing
@@ -1276,6 +1282,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   setState(() => _showPositionHistory = !_showPositionHistory);
                   unawaited(_saveMapLayerSettings());
                   break;
+                case 'mesh_waypoints':
+                  setState(() => _showMeshWaypoints = !_showMeshWaypoints);
+                  unawaited(_saveMapLayerSettings());
+                  break;
+                case 'waypoints':
+                  setState(() => _showWaypoints = !_showWaypoints);
+                  unawaited(_saveMapLayerSettings());
+                  break;
                 case 'measure':
                   setState(() {
                     _measureMode = !_measureMode;
@@ -1655,6 +1669,48 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 ),
               ], // End of node-related options
               PopupMenuItem(
+                value: 'mesh_waypoints',
+                child: Row(
+                  children: [
+                    Icon(
+                      _showMeshWaypoints
+                          ? Icons.share_location
+                          : Icons.share_location_outlined,
+                      size: 18,
+                      color: _showMeshWaypoints
+                          ? context.accentColor
+                          : context.textSecondary,
+                    ),
+                    SizedBox(width: AppTheme.spacing8),
+                    Text(
+                      _showMeshWaypoints
+                          ? context.l10n.mapHideMeshWaypoints
+                          : context.l10n.mapShowMeshWaypoints,
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'waypoints',
+                child: Row(
+                  children: [
+                    Icon(
+                      _showWaypoints ? Icons.place : Icons.place_outlined,
+                      size: 18,
+                      color: _showWaypoints
+                          ? context.accentColor
+                          : context.textSecondary,
+                    ),
+                    SizedBox(width: AppTheme.spacing8),
+                    Text(
+                      _showWaypoints
+                          ? context.l10n.mapHideWaypoints
+                          : context.l10n.mapShowWaypoints,
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
                 value: 'measure',
                 child: Row(
                   children: [
@@ -1991,75 +2047,77 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           ),
                         ),
                       // Waypoint markers
-                      MarkerLayer(
-                        rotate: true,
-                        markers: finiteMarkers(
-                          localWaypoints.map((w) {
-                            return Marker(
-                              point: w.position,
-                              width: 32,
-                              height: 40,
-                              child: GestureDetector(
-                                onTap: () => _showWaypointDetails(w),
-                                child: Column(
-                                  children: [
-                                    Container(
-                                      width: 24,
-                                      height: 24,
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.warningYellow,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: Colors.white,
-                                          width: 2,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.3,
-                                            ),
-                                            blurRadius: 4,
+                      if (_showWaypoints)
+                        MarkerLayer(
+                          rotate: true,
+                          markers: finiteMarkers(
+                            localWaypoints.map((w) {
+                              return Marker(
+                                point: w.position,
+                                width: 32,
+                                height: 40,
+                                child: GestureDetector(
+                                  onTap: () => _showWaypointDetails(w),
+                                  child: Column(
+                                    children: [
+                                      Container(
+                                        width: 24,
+                                        height: 24,
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.warningYellow,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Colors.white,
+                                            width: 2,
                                           ),
-                                        ],
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(
+                                                alpha: 0.3,
+                                              ),
+                                              blurRadius: 4,
+                                            ),
+                                          ],
+                                        ),
+                                        child: const Icon(
+                                          Icons.place,
+                                          size: 14,
+                                          color: Colors.white,
+                                        ),
                                       ),
-                                      child: const Icon(
-                                        Icons.place,
-                                        size: 14,
-                                        color: Colors.white,
+                                      Container(
+                                        width: 2,
+                                        height: 12,
+                                        color: AppTheme.warningYellow,
                                       ),
-                                    ),
-                                    Container(
-                                      width: 2,
-                                      height: 12,
-                                      color: AppTheme.warningYellow,
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            );
-                          }),
+                              );
+                            }),
+                          ),
                         ),
-                      ),
                       // Shared mesh waypoints (WAYPOINT_APP) — orange emoji
                       // markers, distinct from the local "dropped pin" above.
-                      MarkerLayer(
-                        rotate: true,
-                        markers: finiteMarkers(
-                          meshWaypoints.map((w) {
-                            final point = safeLatLng(w.latitude, w.longitude);
-                            if (point == null) return null;
-                            return Marker(
-                              point: point,
-                              width: 40,
-                              height: 40,
-                              child: GestureDetector(
-                                onTap: () => _showMeshWaypointSheet(w),
-                                child: _MeshWaypointMarker(waypoint: w),
-                              ),
-                            );
-                          }).whereType<Marker>(),
+                      if (_showMeshWaypoints)
+                        MarkerLayer(
+                          rotate: true,
+                          markers: finiteMarkers(
+                            meshWaypoints.map((w) {
+                              final point = safeLatLng(w.latitude, w.longitude);
+                              if (point == null) return null;
+                              return Marker(
+                                point: point,
+                                width: 40,
+                                height: 40,
+                                child: GestureDetector(
+                                  onTap: () => _showMeshWaypointSheet(w),
+                                  child: _MeshWaypointMarker(waypoint: w),
+                                ),
+                              );
+                            }).whereType<Marker>(),
+                          ),
                         ),
-                      ),
                       // Node markers - hide in location only mode.
                       // Markers are built once and consumed by either
                       // the plain MarkerLayer or the

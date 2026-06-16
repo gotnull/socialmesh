@@ -655,6 +655,24 @@ class SettingsService {
   bool get mapShowDistanceLabels =>
       _preferences.getBool('map_show_distance_labels') ?? true;
 
+  // Shared mesh waypoints (WAYPOINT_APP) marker layer. Defaults to true:
+  // the layer was always visible before the toggle existed.
+  Future<void> setMapShowMeshWaypoints(bool enabled) async {
+    await _preferences.setBool('map_show_mesh_waypoints', enabled);
+  }
+
+  bool get mapShowMeshWaypoints =>
+      _preferences.getBool('map_show_mesh_waypoints') ?? true;
+
+  // Local "dropped pin" waypoints marker layer. Defaults to true:
+  // the layer was always visible before the toggle existed.
+  Future<void> setMapShowWaypoints(bool enabled) async {
+    await _preferences.setBool('map_show_waypoints', enabled);
+  }
+
+  bool get mapShowWaypoints =>
+      _preferences.getBool('map_show_waypoints') ?? true;
+
   // Reference labels overlay above satellite imagery (boundaries + place
   // names from Esri). Defaults to true: directly answers user feedback that
   // village / town / city names should be visible in satellite mode.

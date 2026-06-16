@@ -17,7 +17,9 @@ enum NodeHealthState {
   /// Overdue — heard within the 2 h online window but past the fresh window.
   stale,
 
-  /// Presumed down — last heard beyond the 2 h online window.
+  /// No signal — not heard beyond the 2 h online window. This is INFERRED, not
+  /// confirmed: LoRa has no offline signal, so the node may be down, out of
+  /// range, asleep, or simply idle. Surfaced as "No signal", never "Offline".
   offline,
 
   /// Never heard, or an implausible / out-of-order timestamp.

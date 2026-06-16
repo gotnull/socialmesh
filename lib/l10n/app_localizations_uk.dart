@@ -7551,6 +7551,18 @@ class AppLocalizationsUk extends AppLocalizations {
   String get mapShowRangeCircles => 'Показати кола дальності';
 
   @override
+  String get mapShowMeshWaypoints => 'Показати точки маршруту мережі';
+
+  @override
+  String get mapHideMeshWaypoints => 'Сховати точки маршруту мережі';
+
+  @override
+  String get mapShowWaypoints => 'Показати точки маршруту';
+
+  @override
+  String get mapHideWaypoints => 'Сховати точки маршруту';
+
+  @override
   String get mapShowSatelliteLabels => 'Показати мітки супутника';
 
   @override
@@ -45100,7 +45112,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get nodeHealthStale => 'Застарів';
 
   @override
-  String get nodeHealthOffline => 'Не в мережі';
+  String get nodeHealthOffline => 'Немає сигналу';
 
   @override
   String get nodeHealthUnknown => 'Невідомо';

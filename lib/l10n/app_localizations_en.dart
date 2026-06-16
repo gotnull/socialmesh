@@ -7451,6 +7451,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mapShowRangeCircles => 'Show range circles';
 
   @override
+  String get mapShowMeshWaypoints => 'Show mesh waypoints';
+
+  @override
+  String get mapHideMeshWaypoints => 'Hide mesh waypoints';
+
+  @override
+  String get mapShowWaypoints => 'Show waypoints';
+
+  @override
+  String get mapHideWaypoints => 'Hide waypoints';
+
+  @override
   String get mapShowSatelliteLabels => 'Show satellite labels';
 
   @override
@@ -44588,7 +44600,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nodeHealthStale => 'Stale';
 
   @override
-  String get nodeHealthOffline => 'Offline';
+  String get nodeHealthOffline => 'No signal';
 
   @override
   String get nodeHealthUnknown => 'Unknown';

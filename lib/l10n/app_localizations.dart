@@ -13185,6 +13185,30 @@ abstract class AppLocalizations {
   /// **'Show range circles'**
   String get mapShowRangeCircles;
 
+  /// Map menu action that shows the shared mesh waypoint markers (waypoints broadcast across the mesh by other nodes).
+  ///
+  /// In en, this message translates to:
+  /// **'Show mesh waypoints'**
+  String get mapShowMeshWaypoints;
+
+  /// Map menu action that hides the shared mesh waypoint markers.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide mesh waypoints'**
+  String get mapHideMeshWaypoints;
+
+  /// Map menu action that shows the local dropped-pin waypoint markers.
+  ///
+  /// In en, this message translates to:
+  /// **'Show waypoints'**
+  String get mapShowWaypoints;
+
+  /// Map menu action that hides the local dropped-pin waypoint markers.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide waypoints'**
+  String get mapHideWaypoints;
+
   /// Map menu action that overlays village, town and city labels with country and state boundaries above satellite imagery.
   ///
   /// In en, this message translates to:
@@ -77825,10 +77849,10 @@ abstract class AppLocalizations {
   /// **'Stale'**
   String get nodeHealthStale;
 
-  /// Operational node-health badge: node presumed down (not heard within 2 hours).
+  /// Operational node-health badge: no signal from the node, inferred from not being heard within the 2h window (LoRa has no true offline signal).
   ///
   /// In en, this message translates to:
-  /// **'Offline'**
+  /// **'No signal'**
   String get nodeHealthOffline;
 
   /// Operational node-health badge: node never heard or has an implausible timestamp.

@@ -7611,6 +7611,20 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mapShowRangeCircles => 'Afficher les cercles de portée';
 
   @override
+  String get mapShowMeshWaypoints =>
+      'Afficher les points de passage du maillage';
+
+  @override
+  String get mapHideMeshWaypoints =>
+      'Masquer les points de passage du maillage';
+
+  @override
+  String get mapShowWaypoints => 'Afficher les points de passage';
+
+  @override
+  String get mapHideWaypoints => 'Masquer les points de passage';
+
+  @override
   String get mapShowSatelliteLabels => 'Afficher les étiquettes satellite';
 
   @override
@@ -45401,7 +45415,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get nodeHealthStale => 'Obsolète';
 
   @override
-  String get nodeHealthOffline => 'Hors ligne';
+  String get nodeHealthOffline => 'Aucun signal';
 
   @override
   String get nodeHealthUnknown => 'Inconnu';
