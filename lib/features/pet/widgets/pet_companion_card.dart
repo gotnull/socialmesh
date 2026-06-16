@@ -304,7 +304,7 @@ class _OpenNodePetButton extends ConsumerWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTheme.radius12),
           ),
-          textStyle: const TextStyle(
+          textStyle: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.4,

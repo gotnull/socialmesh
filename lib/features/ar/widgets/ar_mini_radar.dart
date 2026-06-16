@@ -520,7 +520,7 @@ class _AnimatedMiniRadarPainter extends CustomPainter {
     );
 
     final textPainter = TextPainter(
-      text: const TextSpan(
+      text: TextSpan(
         text: 'N',
         style: TextStyle(
           color: Color(0xFF00E5FF),

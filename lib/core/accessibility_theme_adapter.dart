@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-import 'dart:io' show Platform;
-
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../models/accessibility_preferences.dart';
@@ -58,7 +55,9 @@ class AccessibilityThemeAdapter {
     final fontFamily = fontMode.fontFamily;
 
     // Determine the effective font family
-    final effectiveFont = fontFamily.isEmpty ? _systemFontFamily : fontFamily;
+    final effectiveFont = fontFamily.isEmpty
+        ? AppTheme.systemFontFamily
+        : fontFamily;
 
     // Apply font to all text theme styles
     final updatedTextTheme = _applyTextThemeFontFamily(
@@ -152,27 +151,6 @@ class AccessibilityThemeAdapter {
       textButtonTheme: updatedTextButtonTheme,
       snackBarTheme: updatedSnackBarTheme,
     );
-  }
-
-  /// Get the platform's default system font family name
-  static String get _systemFontFamily {
-    if (kIsWeb) {
-      return 'Roboto'; // Web default
-    }
-    try {
-      if (Platform.isIOS || Platform.isMacOS) {
-        return '.AppleSystemUIFont'; // System font on Apple platforms
-      } else if (Platform.isAndroid) {
-        return 'Roboto';
-      } else if (Platform.isWindows) {
-        return 'Segoe UI';
-      } else if (Platform.isLinux) {
-        return 'Roboto'; // Common on Linux
-      }
-    } catch (_) {
-      // Platform not available, use safe default
-    }
-    return 'Roboto';
   }
 
   /// Apply a specific font family to all text styles

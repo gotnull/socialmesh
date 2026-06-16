@@ -260,7 +260,7 @@ class DiscoverySourceStatBadge extends ConsumerWidget {
               const SizedBox(width: AppTheme.spacing4),
               Text(
                 '${stats.uniqueNodes} remote',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFF38BDF8),

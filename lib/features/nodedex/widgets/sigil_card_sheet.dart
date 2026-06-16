@@ -248,7 +248,7 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radius12),
                 ),
-                textStyle: const TextStyle(
+                textStyle: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                   fontFamily: AppTheme.fontFamily,
@@ -291,7 +291,7 @@ class _SigilCardSheetContentState extends ConsumerState<_SigilCardSheetContent>
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radius12),
                   ),
-                  textStyle: const TextStyle(
+                  textStyle: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     fontFamily: AppTheme.fontFamily,

@@ -168,7 +168,7 @@ class ARSettingsPanel extends StatelessWidget {
             ),
             Text(
               _formatDistance(state.maxDistance),
-              style: const TextStyle(
+              style: TextStyle(
                 color: Color(0xFF00E5FF),
                 fontSize: 14,
                 fontWeight: FontWeight.bold,

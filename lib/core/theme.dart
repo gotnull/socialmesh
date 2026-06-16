@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/core/logging.dart';
 import 'package:socialmesh/core/theme.dart';
+import 'package:socialmesh/services/accessibility_preferences_service.dart';
 
 /// Available accent colors for the app
 class AccentColors {
@@ -518,8 +522,46 @@ class AppTheme {
   static const double radius30 = 30;
 
   // Font families
-  static const fontFamily = 'JetBrainsMono';
+  //
+  // `fontFamily` resolves the user's font-mode accessibility preference at
+  // access time so every explicit reference tracks the setting instead of
+  // pinning the branded font. The MaterialApp rebuilds the whole widget tree
+  // when the preference changes (main.dart watches
+  // accessibilityPreferencesProvider), which re-evaluates the getter and
+  // applies the new family app-wide. Text that omits an explicit fontFamily
+  // already inherits the same value through the adapted theme; this getter
+  // brings the explicit callsites in line.
+  static const brandedFontFamily = 'JetBrainsMono';
   static const fontFamilyFallback = 'Inter';
+
+  static String get fontFamily {
+    final family =
+        AccessibilityPreferencesService().current.fontMode.fontFamily;
+    return family.isEmpty ? systemFontFamily : family;
+  }
+
+  /// The platform's default system UI font family name. Used when the font
+  /// mode is `FontMode.system`, mirroring the value the theme adapter applies
+  /// to inherited text so explicit and inherited callsites stay consistent.
+  static String get systemFontFamily {
+    if (kIsWeb) {
+      return 'Roboto';
+    }
+    try {
+      if (Platform.isIOS || Platform.isMacOS) {
+        return '.AppleSystemUIFont';
+      } else if (Platform.isAndroid) {
+        return 'Roboto';
+      } else if (Platform.isWindows) {
+        return 'Segoe UI';
+      } else if (Platform.isLinux) {
+        return 'Roboto';
+      }
+    } catch (_) {
+      // Platform not available, use safe default
+    }
+    return 'Roboto';
+  }
 
   // Brand colors - extracted from app icon gradient
   static const primaryMagenta = Color(0xFFE91E8C); // Hot pink/magenta
@@ -646,7 +688,7 @@ class AppTheme {
           color: textPrimary,
           fontSize: 24,
           fontWeight: FontWeight.w600,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         iconTheme: IconThemeData(color: textPrimary, size: 24),
       ),
@@ -660,102 +702,102 @@ class AppTheme {
       ),
 
       // Text theme
-      fontFamily: fontFamily,
+      fontFamily: brandedFontFamily,
       textTheme: const TextTheme(
         displayLarge: TextStyle(
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: textPrimary,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
           letterSpacing: -0.5,
         ),
         displayMedium: TextStyle(
           fontSize: 28,
           fontWeight: FontWeight.bold,
           color: textPrimary,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
           letterSpacing: -0.5,
         ),
         displaySmall: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.w600,
           color: textPrimary,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
           letterSpacing: -0.25,
         ),
         headlineLarge: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: textPrimary,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         headlineMedium: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: textPrimary,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         headlineSmall: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: textPrimary,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         titleLarge: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w500,
           color: textPrimary,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         titleMedium: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w500,
           color: textPrimary,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         titleSmall: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
           color: textPrimary,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         bodyLarge: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.normal,
           color: textPrimary,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         bodyMedium: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.normal,
           color: textSecondary,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         bodySmall: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.normal,
           color: textTertiary,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         labelLarge: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
           color: textPrimary,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
           letterSpacing: 0.5,
         ),
         labelMedium: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w500,
           color: textSecondary,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
           letterSpacing: 0.5,
         ),
         labelSmall: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w500,
           color: textTertiary,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
           letterSpacing: 0.5,
         ),
       ),
@@ -797,7 +839,7 @@ class AppTheme {
           textStyle: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            fontFamily: fontFamily,
+            fontFamily: brandedFontFamily,
           ),
         ),
       ),
@@ -815,7 +857,7 @@ class AppTheme {
           textStyle: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            fontFamily: fontFamily,
+            fontFamily: brandedFontFamily,
           ),
         ),
       ),
@@ -832,7 +874,7 @@ class AppTheme {
           textStyle: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            fontFamily: fontFamily,
+            fontFamily: brandedFontFamily,
           ),
         ),
       ),
@@ -845,7 +887,7 @@ class AppTheme {
           textStyle: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            fontFamily: fontFamily,
+            fontFamily: brandedFontFamily,
           ),
         ),
       ),
@@ -899,12 +941,12 @@ class AppTheme {
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: textPrimary,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         contentTextStyle: const TextStyle(
           fontSize: 14,
           color: textSecondary,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
       ),
 
@@ -924,7 +966,7 @@ class AppTheme {
           color: Colors.white,
           fontSize: 14,
           fontWeight: FontWeight.w500,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         behavior: SnackBarBehavior.fixed,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -995,7 +1037,7 @@ class AppTheme {
           color: textPrimaryLight,
           fontSize: 24,
           fontWeight: FontWeight.w600,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         iconTheme: IconThemeData(color: textPrimaryLight, size: 24),
       ),
@@ -1009,102 +1051,102 @@ class AppTheme {
       ),
 
       // Text theme
-      fontFamily: fontFamily,
+      fontFamily: brandedFontFamily,
       textTheme: const TextTheme(
         displayLarge: TextStyle(
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: textPrimaryLight,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
           letterSpacing: -0.5,
         ),
         displayMedium: TextStyle(
           fontSize: 28,
           fontWeight: FontWeight.bold,
           color: textPrimaryLight,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
           letterSpacing: -0.5,
         ),
         displaySmall: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.w600,
           color: textPrimaryLight,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
           letterSpacing: -0.25,
         ),
         headlineLarge: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: textPrimaryLight,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         headlineMedium: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: textPrimaryLight,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         headlineSmall: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: textPrimaryLight,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         titleLarge: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w500,
           color: textPrimaryLight,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         titleMedium: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w500,
           color: textPrimaryLight,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         titleSmall: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
           color: textPrimaryLight,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         bodyLarge: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.normal,
           color: textPrimaryLight,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         bodyMedium: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.normal,
           color: textSecondaryLight,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         bodySmall: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.normal,
           color: textTertiaryLight,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         labelLarge: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
           color: textPrimaryLight,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
           letterSpacing: 0.5,
         ),
         labelMedium: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w500,
           color: textSecondaryLight,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
           letterSpacing: 0.5,
         ),
         labelSmall: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w500,
           color: textTertiaryLight,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
           letterSpacing: 0.5,
         ),
       ),
@@ -1146,7 +1188,7 @@ class AppTheme {
           textStyle: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            fontFamily: fontFamily,
+            fontFamily: brandedFontFamily,
           ),
         ),
       ),
@@ -1164,7 +1206,7 @@ class AppTheme {
           textStyle: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            fontFamily: fontFamily,
+            fontFamily: brandedFontFamily,
           ),
         ),
       ),
@@ -1181,7 +1223,7 @@ class AppTheme {
           textStyle: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            fontFamily: fontFamily,
+            fontFamily: brandedFontFamily,
           ),
         ),
       ),
@@ -1194,7 +1236,7 @@ class AppTheme {
           textStyle: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            fontFamily: fontFamily,
+            fontFamily: brandedFontFamily,
           ),
         ),
       ),
@@ -1253,12 +1295,12 @@ class AppTheme {
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: textPrimaryLight,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         contentTextStyle: const TextStyle(
           fontSize: 14,
           color: textSecondaryLight,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
       ),
 
@@ -1278,7 +1320,7 @@ class AppTheme {
           color: Colors.white,
           fontSize: 14,
           fontWeight: FontWeight.w500,
-          fontFamily: fontFamily,
+          fontFamily: brandedFontFamily,
         ),
         behavior: SnackBarBehavior.fixed,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

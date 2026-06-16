@@ -128,7 +128,7 @@ class _RemoteFlagsAdminSheetState extends State<RemoteFlagsAdminSheet> {
             borderRadius: BorderRadius.circular(AppTheme.radius8),
           ),
         ),
-        style: const TextStyle(fontFamily: AppTheme.fontFamily),
+        style: TextStyle(fontFamily: AppTheme.fontFamily),
       ),
     );
   }
@@ -270,7 +270,7 @@ class _FlagRow extends StatelessWidget {
                   children: [
                     Text(
                       envKey,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                         fontFamily: AppTheme.fontFamily,

@@ -317,7 +317,7 @@ class ARNodeDetailCard extends StatelessWidget {
         const SizedBox(height: AppTheme.spacing4),
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             color: Color(0xFF00E5FF),
             fontSize: 18,
             fontWeight: FontWeight.bold,

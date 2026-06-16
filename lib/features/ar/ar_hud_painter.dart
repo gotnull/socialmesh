@@ -645,7 +645,7 @@ class ARHudPainter extends CustomPainter {
     final altPainter = TextPainter(
       text: TextSpan(
         text: altText,
-        style: const TextStyle(
+        style: TextStyle(
           color: Colors.black,
           fontSize: 12,
           fontWeight: FontWeight.bold,
@@ -1068,7 +1068,7 @@ class ARHudPainter extends CustomPainter {
     final countPainter = TextPainter(
       text: TextSpan(
         text: countText,
-        style: const TextStyle(
+        style: TextStyle(
           color: _primaryColor,
           fontSize: 14,
           fontWeight: FontWeight.bold,

@@ -516,7 +516,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
             const SizedBox(height: AppTheme.spacing24),
             Text(
               context.l10n.arInitializingEngine,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Color(0xFF00E5FF),
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
@@ -556,7 +556,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
               const SizedBox(height: AppTheme.spacing16),
               Text(
                 context.l10n.arEngineError,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Color(0xFFFF1744),
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -658,7 +658,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
           const SizedBox(width: AppTheme.spacing8),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               color: Color(0xFF00E5FF),
               fontSize: 10,
               fontFamily: AppTheme.fontFamily,

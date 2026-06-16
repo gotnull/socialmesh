@@ -394,7 +394,7 @@ class _RichTextParser {
       spans.add(
         TextSpan(
           text: text.substring(lastEnd),
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
             fontSize: 15,
             height: 1.5,
@@ -1368,7 +1368,7 @@ class _IcoSpeechBubbleWithArrowState
                                         child: Text(
                                           widget.nextLabel ??
                                               context.l10n.commonNext,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             color: Colors.white,
                                             fontSize: 13,
                                             fontWeight: FontWeight.w600,

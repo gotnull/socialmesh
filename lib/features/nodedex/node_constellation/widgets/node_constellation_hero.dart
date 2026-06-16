@@ -160,7 +160,7 @@ class NodeConstellationHero extends StatelessWidget {
                     ),
                   Text(
                     node.label,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
@@ -282,7 +282,7 @@ class _PeerPeek extends StatelessWidget {
                 ),
                 child: Text(
                   '+$remaining',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,

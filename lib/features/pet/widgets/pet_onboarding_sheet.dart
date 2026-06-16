@@ -223,7 +223,7 @@ class _PetOnboardingPageView extends StatelessWidget {
             child: Text(
               page.title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -375,7 +375,7 @@ class _GradientActionButton extends StatelessWidget {
             ),
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
                 fontFamily: AppTheme.fontFamily,

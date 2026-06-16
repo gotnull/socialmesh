@@ -2261,7 +2261,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                           ),
                           child: Text(
                             '${entry.key}${snr != null ? ' (${snr.toStringAsFixed(1)}dB)' : ''}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
                               fontFamily: AppTheme.fontFamily,
                             ),

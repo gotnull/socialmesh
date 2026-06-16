@@ -272,7 +272,7 @@ class _ARCalibrationScreenState extends ConsumerState<ARCalibrationScreen>
         // Progress percentage
         Text(
           '${(_progress * 100).toInt()}%',
-          style: const TextStyle(
+          style: TextStyle(
             color: Color(0xFF00E5FF),
             fontSize: 48,
             fontWeight: FontWeight.bold,
@@ -391,7 +391,7 @@ class _ARCalibrationScreenState extends ConsumerState<ARCalibrationScreen>
               ),
               child: Text(
                 context.l10n.arCalibrationScreenStart,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   fontFamily: AppTheme.fontFamily,
@@ -423,7 +423,7 @@ class _ARCalibrationScreenState extends ConsumerState<ARCalibrationScreen>
               ),
               child: Text(
                 context.l10n.arCalibrationScreenContinue,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   fontFamily: AppTheme.fontFamily,
