@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/logging.dart';
 import '../../../models/world_mesh_node.dart';
+import '../../../utils/text_sanitizer.dart';
 
 /// Service for persisting and retrieving favorite nodes.
 /// Stores minimal metadata for favorites to allow offline access.
@@ -202,8 +203,8 @@ class FavoriteNodeMetadata {
   factory FavoriteNodeMetadata.fromJson(Map<String, dynamic> json) {
     return FavoriteNodeMetadata(
       nodeId: json['nodeId'] as String,
-      longName: json['longName'] as String? ?? '',
-      shortName: json['shortName'] as String? ?? '',
+      longName: sanitizeExternalText(json['longName'] as String? ?? ''),
+      shortName: sanitizeExternalText(json['shortName'] as String? ?? ''),
       role: json['role'] as String? ?? '',
       addedAt: DateTime.parse(json['addedAt'] as String),
       lastSeen: DateTime.parse(json['lastSeen'] as String),

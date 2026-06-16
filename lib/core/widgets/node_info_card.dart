@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/nodes/node_display_name_resolver.dart';
 import '../../models/mesh_models.dart';
+import '../../utils/text_sanitizer.dart';
 import 'app_bottom_sheet.dart';
 import '../transport_path.dart';
 import '../widgets/gradient_border_container.dart';
@@ -458,15 +459,14 @@ class NodeInfoCard extends ConsumerWidget {
                 ),
                 child: Center(
                   child: Text(
-                    ((node.shortName != null && node.shortName!.isNotEmpty)
-                            ? node.shortName!
-                            : NodeDisplayNameResolver.defaultShortName(
-                                node.nodeNum,
-                              ))
-                        .characters
-                        .take(2)
-                        .toString()
-                        .toUpperCase(),
+                    (node.shortName != null && node.shortName!.isNotEmpty)
+                        ? safeInitials(node.shortName, 2)
+                        : safeInitials(
+                            NodeDisplayNameResolver.defaultShortName(
+                              node.nodeNum,
+                            ),
+                            2,
+                          ),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,

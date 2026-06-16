@@ -172,3 +172,22 @@ String safeSubstring(String input, int maxLength) {
   if (chars.length <= maxLength) return input;
   return '${chars.take(maxLength).string}…';
 }
+
+/// Render-boundary safe avatar/marker initials from an untrusted name.
+///
+/// Sanitizes [input] first (repairing unpaired UTF-16 surrogates and stripping
+/// control characters that crash Flutter's paragraph builder), then takes at
+/// most [count] grapheme clusters and uppercases the result. Returns an empty
+/// string when [input] is null, empty, or sanitizes to nothing — callers can
+/// fall back to a placeholder rather than rendering malformed text.
+///
+/// Use this at every place that derives avatar/marker initials from a peer- or
+/// cloud-controlled name (e.g. `node.shortName`). Plain truncation helpers
+/// ([safeTruncate], `.characters.first`) do NOT strip surrogates, so a lone
+/// surrogate in the source still reaches the paragraph builder and throws.
+String safeInitials(String? input, int count) {
+  if (input == null || input.isEmpty || count <= 0) return '';
+  final sanitized = sanitizeExternalText(input);
+  if (sanitized.isEmpty) return '';
+  return sanitized.characters.take(count).string.toUpperCase();
+}

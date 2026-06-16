@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import '../../core/logging.dart';
+import '../../utils/text_sanitizer.dart';
 import '../../core/l10n/l10n_extension.dart';
 import 'dart:async';
 import 'dart:math' as math;
@@ -892,7 +893,7 @@ class _NodePickerContentState extends State<_NodePickerContent> {
                     child: Center(
                       child: Text(
                         (node.shortName?.isNotEmpty == true)
-                            ? node.shortName!.characters.first.toUpperCase()
+                            ? safeInitials(node.shortName, 1)
                             : '?',
                         style: TextStyle(
                           color: presence.isActive

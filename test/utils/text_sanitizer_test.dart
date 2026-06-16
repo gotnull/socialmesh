@@ -4,6 +4,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:characters/characters.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/utils/text_sanitizer.dart';
 
@@ -457,6 +458,49 @@ void main() {
         ),
         isTrue,
       );
+    });
+  });
+
+  group('safeInitials', () {
+    test('returns empty for null / empty / non-positive count', () {
+      expect(safeInitials(null, 2), '');
+      expect(safeInitials('', 2), '');
+      expect(safeInitials('AB', 0), '');
+      expect(safeInitials('AB', -1), '');
+    });
+
+    test('takes up to count graphemes and uppercases', () {
+      expect(safeInitials('node', 2), 'NO');
+      expect(safeInitials('a', 2), 'A');
+      expect(safeInitials('café', 4), 'CAFÉ');
+    });
+
+    test('does not split astral emoji grapheme clusters', () {
+      // 📍 is a single grapheme made of a surrogate pair — taking 1 keeps it whole.
+      final result = safeInitials('📍X', 1);
+      expect(_hasLoneSurrogate(result), isFalse);
+      expect(result.characters.length, 1);
+    });
+
+    test('repairs a lone high surrogate in shortName before rendering', () {
+      // The exact crash class: a peer/cloud shortName carrying an unpaired
+      // surrogate must never reach the paragraph builder malformed.
+      const malformed = '\uD800AB';
+      final result = safeInitials(malformed, 2);
+      expect(_hasLoneSurrogate(result), isFalse);
+      // First grapheme is the repaired U+FFFD, second is 'A'.
+      expect(result, '�A');
+    });
+
+    test('repairs a lone low surrogate in shortName', () {
+      final result = safeInitials('\uDC00Z', 2);
+      expect(_hasLoneSurrogate(result), isFalse);
+      expect(result, '�Z');
+    });
+
+    test('returns empty when the name sanitizes to nothing', () {
+      // An all-control-character name strips to empty rather than throwing.
+      expect(safeInitials('', 2), '');
     });
   });
 }

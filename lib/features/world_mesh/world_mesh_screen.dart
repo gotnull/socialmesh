@@ -1837,7 +1837,7 @@ class _SearchResultTile extends StatelessWidget {
     if (shortName.isNotEmpty &&
         shortName != '????' &&
         !shortName.startsWith('!')) {
-      return safeTruncate(shortName, 2).toUpperCase();
+      return safeInitials(shortName, 2);
     }
     return node.nodeNum
         .toRadixString(16)
@@ -2478,7 +2478,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
         shortName != '????' &&
         !shortName.startsWith('!')) {
       // Use first 2 characters of shortName
-      return safeTruncate(shortName, 2).toUpperCase();
+      return safeInitials(shortName, 2);
     }
     // Fall back to hex node ID (first 2 hex chars)
     return node.nodeNum

@@ -12,6 +12,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/map_config.dart';
+import '../../utils/text_sanitizer.dart';
 import '../../core/safe_lat_lng.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/bottom_action_bar.dart';
@@ -859,7 +860,7 @@ class _NodeMarker extends StatelessWidget {
       child: Center(
         child: Text(
           (node.shortName?.isNotEmpty == true)
-              ? node.shortName!.characters.first.toUpperCase()
+              ? safeInitials(node.shortName, 1)
               : node.nodeNum.toString()[0],
           style: TextStyle(
             fontSize: isSelected ? 16 : 14,
@@ -1002,7 +1003,7 @@ class _NodeListItem extends StatelessWidget {
                 child: Center(
                   child: Text(
                     (node.shortName?.isNotEmpty == true)
-                        ? node.shortName!.characters.first.toUpperCase()
+                        ? safeInitials(node.shortName, 1)
                         : node.nodeNum.toString()[0],
                     style: TextStyle(
                       fontSize: 14,

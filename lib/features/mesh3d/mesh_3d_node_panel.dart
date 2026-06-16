@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/theme.dart';
+import '../../utils/text_sanitizer.dart';
 import '../../core/widgets/map_node_drawer.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
@@ -203,7 +204,7 @@ class _NodeListTile extends StatelessWidget {
                 child: Center(
                   child: Text(
                     node.shortName?.isNotEmpty == true
-                        ? node.shortName!.characters.first.toUpperCase()
+                        ? safeInitials(node.shortName, 1)
                         : node.nodeNum
                               .toRadixString(16)
                               .characters

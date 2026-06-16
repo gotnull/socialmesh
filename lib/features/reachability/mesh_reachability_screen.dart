@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/node_color.dart';
+import '../../utils/text_sanitizer.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -445,8 +446,7 @@ class _ReachabilityNodeCard extends StatelessWidget {
                 child: Center(
                   child: Text(
                     nodeData.node.shortName?.isNotEmpty == true
-                        ? nodeData.node.shortName!.characters.first
-                              .toUpperCase()
+                        ? safeInitials(nodeData.node.shortName, 1)
                         : '?',
                     style: TextStyle(
                       fontSize: 18,

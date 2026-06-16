@@ -13,6 +13,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/l10n/l10n_extension.dart';
+import '../../utils/text_sanitizer.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/countdown_providers.dart';
 import 'package:latlong2/latlong.dart';
@@ -4815,10 +4816,10 @@ List<({List<LatLng> points, bool dashed})> tracerouteSegmentsFor(
 String nodeMarkerLabel(MeshNode node) {
   final shortName = node.shortName;
   if (shortName != null && shortName.isNotEmpty) {
-    // .characters is grapheme-cluster-aware (handles emoji + accents).
-    final clusters = shortName.characters;
-    final capped = clusters.length > 4 ? clusters.take(4).string : shortName;
-    return capped.toUpperCase();
+    // safeInitials sanitizes (repairs lone surrogates / strips controls) then
+    // takes up to 4 grapheme clusters — grapheme-aware for emoji + accents.
+    final initials = safeInitials(shortName, 4);
+    if (initials.isNotEmpty) return initials;
   }
   // Last 4 hex digits — matches the canonical short-form id used
   // elsewhere in the app for nodes without a self-reported name.
@@ -5251,7 +5252,7 @@ class _NodeListItem extends StatelessWidget {
                   children: [
                     Text(
                       (node.shortName?.isNotEmpty == true
-                          ? node.shortName!.characters.first.toUpperCase()
+                          ? safeInitials(node.shortName, 1)
                           : node.nodeNum
                                 .toRadixString(16)
                                 .characters

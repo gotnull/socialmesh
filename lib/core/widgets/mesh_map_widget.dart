@@ -10,6 +10,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../map_config.dart';
 import '../safe_lat_lng.dart';
+import '../../utils/text_sanitizer.dart';
 import '../theme.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
@@ -518,7 +519,7 @@ class MeshNodeMarker extends StatelessWidget {
             ? const Icon(Icons.person, color: SemanticColors.onMarker, size: 20)
             : Text(
                 (node.shortName?.isNotEmpty ?? false)
-                    ? node.shortName!.characters.first.toUpperCase()
+                    ? safeInitials(node.shortName, 1)
                     : '?',
                 style: const TextStyle(
                   color: SemanticColors.onMarker,

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:socialmesh/core/theme.dart';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/units/distance_format.dart';
+import '../../../utils/text_sanitizer.dart';
 import '../../../utils/timestamp_validation.dart';
 
 import '../ar_engine.dart';
@@ -238,11 +238,9 @@ class ARNodeDetailCard extends StatelessWidget {
             ),
             child: Center(
               child: Text(
-                meshNode.shortName?.substring(
-                      0,
-                      math.min(2, meshNode.shortName?.length ?? 0),
-                    ) ??
-                    '??',
+                (meshNode.shortName?.isNotEmpty == true)
+                    ? safeInitials(meshNode.shortName, 2)
+                    : '??',
                 style: TextStyle(
                   color: _getThreatColor(node.threatLevel),
                   fontSize: 16,
