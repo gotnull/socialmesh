@@ -48,7 +48,10 @@ import '../album/card_gallery_screen.dart';
 import '../models/nodedex_entry.dart';
 import '../models/observed_radio_preset.dart';
 import '../models/sigil_evolution.dart';
+import '../providers/node_groups_provider.dart';
 import '../providers/nodedex_providers.dart';
+import '../widgets/group_filter.dart';
+import 'manage_node_groups_screen.dart';
 import '../services/trust_score.dart';
 
 import '../../settings/settings_screen.dart';
@@ -76,6 +79,7 @@ class NodeDexScreen extends ConsumerStatefulWidget {
 
 class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
   final TextEditingController _searchController = TextEditingController();
+  String _activeGroupId = groupFilterAll;
 
   @override
   void initState() {
@@ -109,11 +113,26 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
     final reduceMotion = ref.watch(reduceMotionEnabledProvider);
     final galleryEntryCount = ref.watch(albumCardCountProvider);
 
+    // User-defined group filter (nodedex.db) — applied on top of the
+    // sort/filter/search already baked into nodeDexSortedEntriesProvider.
+    final groupMembership =
+        ref.watch(nodeGroupsProvider).value?.membership ??
+        const <int, Set<String>>{};
+    final visibleEntries = entries
+        .where(
+          (e) =>
+              matchesGroupFilter(groupMembership, e.$1.nodeNum, _activeGroupId),
+        )
+        .toList();
+    // Counts on the group chips reflect the full (pre-group-filter) set so
+    // switching groups stays useful.
+    final groupNodeNums = entries.map((e) => e.$1.nodeNum).toList();
+
     // Separate own device from other entries.
     final myEntry = myNodeNum != null
-        ? entries.where((e) => e.$1.nodeNum == myNodeNum).toList()
+        ? visibleEntries.where((e) => e.$1.nodeNum == myNodeNum).toList()
         : <(NodeDexEntry, MeshNode?)>[];
-    final otherEntries = entries
+    final otherEntries = visibleEntries
         .where((e) => e.$1.nodeNum != myNodeNum)
         .toList();
 
@@ -229,6 +248,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
                   observedPresets: observedPresets,
                   reduceMotion: reduceMotion,
                   searchQuery: searchQuery,
+                  groupNodeNums: groupNodeNums,
                 ),
         ),
       ),
@@ -294,6 +314,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
     required Set<int> observedPresets,
     required bool reduceMotion,
     required String searchQuery,
+    required List<int> groupNodeNums,
   }) {
     return [
       // Top padding below glass app bar
@@ -465,6 +486,21 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
               },
             ),
           ],
+        ),
+      ),
+
+      // User-defined group filter + entry to Manage Groups. Hides when none.
+      SliverToBoxAdapter(
+        child: GroupFilterChipRow(
+          nodeNums: groupNodeNums,
+          selectedGroupId: _activeGroupId,
+          source: 'nodedex',
+          onGroupSelected: (id) => setState(() => _activeGroupId = id),
+          onManage: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const ManageNodeGroupsScreen(),
+            ),
+          ),
         ),
       ),
 

@@ -3744,6 +3744,113 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get nodeGroupsAssignEmptyPrompt =>
+      'Ainda sem grupos. Crie um para começar a organizar os seus nós.';
+
+  @override
+  String get nodeGroupsAssignTitle => 'Adicionar a grupos';
+
+  @override
+  String get nodeGroupsCancel => 'Cancelar';
+
+  @override
+  String get nodeGroupsColorLabel => 'Cor';
+
+  @override
+  String get nodeGroupsCreate => 'Criar';
+
+  @override
+  String get nodeGroupsCreateFirst => 'Criar um grupo';
+
+  @override
+  String get nodeGroupsCreateTitle => 'Novo grupo';
+
+  @override
+  String get nodeGroupsCreateTooltip => 'Novo grupo';
+
+  @override
+  String get nodeGroupsDeleteAction => 'Eliminar';
+
+  @override
+  String nodeGroupsDeleteMessage(String name) {
+    return '$name será removido e os seus nós ficarão sem atribuição. Isto não pode ser anulado.';
+  }
+
+  @override
+  String get nodeGroupsDeleteTitle => 'Eliminar grupo?';
+
+  @override
+  String get nodeGroupsDone => 'Concluído';
+
+  @override
+  String get nodeGroupsEditSubtitle =>
+      'Dê um nome e depois escolha uma cor e um ícone.';
+
+  @override
+  String get nodeGroupsEditTitle => 'Editar grupo';
+
+  @override
+  String get nodeGroupsEditTooltip => 'Editar';
+
+  @override
+  String get nodeGroupsEmptyDescription =>
+      'Organize os nós nas suas próprias categorias - repetidores, a sua equipa, uma cidade, o que quiser.';
+
+  @override
+  String get nodeGroupsEmptyTitleKeyword => 'grupos';
+
+  @override
+  String get nodeGroupsEmptyTitlePrefix => 'Ainda sem ';
+
+  @override
+  String get nodeGroupsEmptyTitleSuffix => '';
+
+  @override
+  String get nodeGroupsFilterAll => 'Todos';
+
+  @override
+  String get nodeGroupsIconLabel => 'Ícone';
+
+  @override
+  String get nodeGroupsLoadError => 'Não foi possível carregar os grupos.';
+
+  @override
+  String get nodeGroupsManageChip => 'Gerir';
+
+  @override
+  String get nodeGroupsManageTitle => 'Grupos de nós';
+
+  @override
+  String get nodeGroupsNameHint => 'ex. Repetidores, A minha equipa';
+
+  @override
+  String get nodeGroupsNameLabel => 'Nome';
+
+  @override
+  String get nodeGroupsNewGroup => 'Novo grupo';
+
+  @override
+  String nodeGroupsNodeCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nós',
+      one: '1 nó',
+      zero: 'Sem nós',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get nodeGroupsNone => 'Sem grupo';
+
+  @override
+  String get nodeGroupsSave => 'Guardar';
+
+  @override
+  String get nodeGroupsSectionTitle => 'Grupos';
+
+  @override
   String nodeInfoLatitude(String value) {
     return 'Lat: $value°';
   }
@@ -16451,6 +16558,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get quickActionViewInNodeDex => 'Ver no NodeDex';
+
+  @override
+  String get quickActionAssignGroups => 'Adicionar a grupos';
 
   @override
   String get quickActionFavorite => 'Adicionar aos favoritos';

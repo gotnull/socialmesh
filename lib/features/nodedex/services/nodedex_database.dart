@@ -7,7 +7,7 @@
 // All tables, indices, and migration logic live here.
 //
 // Database: nodedex.db
-// Schema version: 14
+// Schema version: 15
 
 import 'dart:async';
 import 'dart:io';
@@ -28,7 +28,7 @@ import '../../../core/logging.dart';
 /// older binaries can keep reading it, and sqflite stamps user_version
 /// down after a downgrade, so a later re-upgrade re-runs migration
 /// blocks against the full schema.
-const int nodedexSchemaVersion = 14;
+const int nodedexSchemaVersion = 15;
 
 /// Table and column name constants for NodeDex SQLite schema.
 abstract final class NodeDexTables {
@@ -173,6 +173,29 @@ abstract final class NodeDexTables {
   static const colOutboxUpdatedAtMs = 'updated_at_ms';
   static const colOutboxAttemptCount = 'attempt_count';
   static const colOutboxLastError = 'last_error';
+
+  // -- nodedex_groups (v15) --
+  // User-defined node groups. A purely local organisation concept with no
+  // Meshtastic radio equivalent. deleted_at_ms is reserved for future
+  // Cloud Sync tombstones; v1 hard-deletes and leaves it NULL.
+  static const groups = 'nodedex_groups';
+  static const colGroupId = 'id';
+  static const colGroupName = 'name';
+  static const colGroupColor = 'color';
+  static const colGroupIconKey = 'icon_key';
+  static const colGroupSortOrder = 'sort_order';
+  static const colGroupCreatedAtMs = 'created_at_ms';
+  static const colGroupUpdatedAtMs = 'updated_at_ms';
+  static const colGroupDeletedAtMs = 'deleted_at_ms';
+
+  // -- nodedex_node_groups (v15) --
+  // Many-to-many membership join. node_num is intentionally NOT foreign-keyed
+  // to nodedex_entries: a node can be grouped before it has earned a journal
+  // entry. group_id references nodedex_groups; membership is cleared
+  // explicitly on group delete (foreign keys are not enabled on this DB).
+  static const nodeGroups = 'nodedex_node_groups';
+  static const colNgGroupId = 'group_id';
+  static const colNgAssignedAtMs = 'assigned_at_ms';
 }
 
 /// Manages the NodeDex SQLite database lifecycle.
@@ -460,6 +483,36 @@ class NodeDexDatabase {
       'CREATE INDEX idx_identity_changes_node ' // lint-allow: hardcoded-string
       'ON ${NodeDexTables.identityChanges}' // lint-allow: hardcoded-string
       '(${NodeDexTables.colNodeNum}, ${NodeDexTables.colIcTsMs} DESC)',
+    );
+
+    // -- nodedex_groups (v15) --
+    batch.execute('''
+      CREATE TABLE ${NodeDexTables.groups} (
+        ${NodeDexTables.colGroupId} TEXT PRIMARY KEY,
+        ${NodeDexTables.colGroupName} TEXT NOT NULL,
+        ${NodeDexTables.colGroupColor} INTEGER NOT NULL,
+        ${NodeDexTables.colGroupIconKey} TEXT NOT NULL,
+        ${NodeDexTables.colGroupSortOrder} INTEGER NOT NULL DEFAULT 0,
+        ${NodeDexTables.colGroupCreatedAtMs} INTEGER NOT NULL,
+        ${NodeDexTables.colGroupUpdatedAtMs} INTEGER NOT NULL,
+        ${NodeDexTables.colGroupDeletedAtMs} INTEGER
+      )
+    ''');
+
+    // -- nodedex_node_groups (v15) --
+    batch.execute('''
+      CREATE TABLE ${NodeDexTables.nodeGroups} (
+        ${NodeDexTables.colNodeNum} INTEGER NOT NULL,
+        ${NodeDexTables.colNgGroupId} TEXT NOT NULL
+          REFERENCES ${NodeDexTables.groups}(${NodeDexTables.colGroupId})
+          ON DELETE CASCADE,
+        ${NodeDexTables.colNgAssignedAtMs} INTEGER NOT NULL,
+        PRIMARY KEY (${NodeDexTables.colNodeNum}, ${NodeDexTables.colNgGroupId})
+      )
+    ''');
+    batch.execute(
+      'CREATE INDEX idx_node_groups_group ' // lint-allow: hardcoded-string
+      'ON ${NodeDexTables.nodeGroups}(${NodeDexTables.colNgGroupId})', // lint-allow: hardcoded-string
     );
 
     await batch.commit(noResult: true);
@@ -779,6 +832,41 @@ class NodeDexDatabase {
         'NodeDexDatabase: v14 migration — added observed_from_regions table',
       );
     }
+    if (oldVersion < 15) {
+      // v15: User-defined node groups (name + colour + icon) and a
+      // many-to-many membership join. Local organisation concept with no
+      // radio equivalent. Timestamps + deleted_at_ms make the schema
+      // sync-ready; the outbox wiring is deferred to a later release.
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS ${NodeDexTables.groups} (
+          ${NodeDexTables.colGroupId} TEXT PRIMARY KEY,
+          ${NodeDexTables.colGroupName} TEXT NOT NULL,
+          ${NodeDexTables.colGroupColor} INTEGER NOT NULL,
+          ${NodeDexTables.colGroupIconKey} TEXT NOT NULL,
+          ${NodeDexTables.colGroupSortOrder} INTEGER NOT NULL DEFAULT 0,
+          ${NodeDexTables.colGroupCreatedAtMs} INTEGER NOT NULL,
+          ${NodeDexTables.colGroupUpdatedAtMs} INTEGER NOT NULL,
+          ${NodeDexTables.colGroupDeletedAtMs} INTEGER
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS ${NodeDexTables.nodeGroups} (
+          ${NodeDexTables.colNodeNum} INTEGER NOT NULL,
+          ${NodeDexTables.colNgGroupId} TEXT NOT NULL
+            REFERENCES ${NodeDexTables.groups}(${NodeDexTables.colGroupId})
+            ON DELETE CASCADE,
+          ${NodeDexTables.colNgAssignedAtMs} INTEGER NOT NULL,
+          PRIMARY KEY (${NodeDexTables.colNodeNum}, ${NodeDexTables.colNgGroupId})
+        )
+      ''');
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_node_groups_group ' // lint-allow: hardcoded-string
+        'ON ${NodeDexTables.nodeGroups}(${NodeDexTables.colNgGroupId})', // lint-allow: hardcoded-string
+      );
+      AppLogging.storage(
+        'NodeDexDatabase: v15 migration — added node groups + membership tables',
+      );
+    }
   }
 
   /// Downgrades retain the on-disk schema unchanged.
@@ -848,5 +936,7 @@ class NodeDexDatabase {
     NodeDexTables.syncState,
     NodeDexTables.syncOutbox,
     NodeDexTables.identityChanges,
+    NodeDexTables.groups,
+    NodeDexTables.nodeGroups,
   ];
 }

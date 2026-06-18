@@ -37,6 +37,9 @@ import '../../core/constants.dart';
 import '../aether/providers/aether_flight_matcher_provider.dart';
 import '../aether/widgets/aether_flight_match_card.dart';
 import '../navigation/main_shell.dart';
+import '../nodedex/providers/node_groups_provider.dart';
+import '../nodedex/screens/manage_node_groups_screen.dart';
+import '../nodedex/widgets/group_filter.dart';
 import 'node_detail_screen.dart';
 import 'node_quick_actions_sheet.dart';
 import 'role_filter.dart';
@@ -55,6 +58,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
   String _searchQuery = '';
   NodeFilter _activeFilter = NodeFilter.all;
   String _activeRoleFilter = roleFilterAll;
+  String _activeGroupId = groupFilterAll;
   NodeSortOrder _sortOrder = NodeSortOrder.lastHeard;
   bool _showSectionHeaders = true;
   bool _compactView = false;
@@ -190,6 +194,17 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
     // users typically pair "Active" + "Client" to silence routers and
     // repeaters from the contact-style list.
     nodesList = applyRoleFilter(nodesList, _activeRoleFilter).toList();
+
+    // Apply group filter — user-defined groups (nodedex.db). Orthogonal to
+    // presence + role; membership comes from the groups provider.
+    final groupMembership =
+        ref.watch(nodeGroupsProvider).value?.membership ??
+        const <int, Set<String>>{};
+    nodesList = nodesList
+        .where(
+          (n) => matchesGroupFilter(groupMembership, n.nodeNum, _activeGroupId),
+        )
+        .toList();
 
     // Apply sort
     nodesList = _applySort(nodesList, myNodeNum);
@@ -470,6 +485,21 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
                 source: 'nodes_tab',
                 onRoleSelected: (role) =>
                     setState(() => _activeRoleFilter = role),
+              ),
+            ),
+            // User-defined group filter + entry to the Manage Groups screen.
+            // Hides itself when no groups exist.
+            SliverToBoxAdapter(
+              child: GroupFilterChipRow(
+                nodeNums: nodes.values.map((n) => n.nodeNum),
+                selectedGroupId: _activeGroupId,
+                source: 'nodes_tab',
+                onGroupSelected: (id) => setState(() => _activeGroupId = id),
+                onManage: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const ManageNodeGroupsScreen(),
+                  ),
+                ),
               ),
             ),
             // Node list content

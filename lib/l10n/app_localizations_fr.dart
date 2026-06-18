@@ -3792,6 +3792,113 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get nodeGroupsAssignEmptyPrompt =>
+      'Aucun groupe pour le moment. Créez-en un pour organiser vos noeuds.';
+
+  @override
+  String get nodeGroupsAssignTitle => 'Ajouter à des groupes';
+
+  @override
+  String get nodeGroupsCancel => 'Annuler';
+
+  @override
+  String get nodeGroupsColorLabel => 'Couleur';
+
+  @override
+  String get nodeGroupsCreate => 'Créer';
+
+  @override
+  String get nodeGroupsCreateFirst => 'Créer un groupe';
+
+  @override
+  String get nodeGroupsCreateTitle => 'Nouveau groupe';
+
+  @override
+  String get nodeGroupsCreateTooltip => 'Nouveau groupe';
+
+  @override
+  String get nodeGroupsDeleteAction => 'Supprimer';
+
+  @override
+  String nodeGroupsDeleteMessage(String name) {
+    return '$name sera supprimé et ses noeuds seront désassignés. Cette action est irréversible.';
+  }
+
+  @override
+  String get nodeGroupsDeleteTitle => 'Supprimer le groupe ?';
+
+  @override
+  String get nodeGroupsDone => 'Terminé';
+
+  @override
+  String get nodeGroupsEditSubtitle =>
+      'Donnez-lui un nom, puis choisissez une couleur et une icône.';
+
+  @override
+  String get nodeGroupsEditTitle => 'Modifier le groupe';
+
+  @override
+  String get nodeGroupsEditTooltip => 'Modifier';
+
+  @override
+  String get nodeGroupsEmptyDescription =>
+      'Organisez les noeuds dans vos propres catégories - répéteurs, votre équipe, une ville, tout ce que vous voulez.';
+
+  @override
+  String get nodeGroupsEmptyTitleKeyword => 'groupe';
+
+  @override
+  String get nodeGroupsEmptyTitlePrefix => 'Aucun ';
+
+  @override
+  String get nodeGroupsEmptyTitleSuffix => '';
+
+  @override
+  String get nodeGroupsFilterAll => 'Tous';
+
+  @override
+  String get nodeGroupsIconLabel => 'Icône';
+
+  @override
+  String get nodeGroupsLoadError => 'Impossible de charger les groupes.';
+
+  @override
+  String get nodeGroupsManageChip => 'Gérer';
+
+  @override
+  String get nodeGroupsManageTitle => 'Groupes de noeuds';
+
+  @override
+  String get nodeGroupsNameHint => 'ex. Répéteurs, Mon équipe';
+
+  @override
+  String get nodeGroupsNameLabel => 'Nom';
+
+  @override
+  String get nodeGroupsNewGroup => 'Nouveau groupe';
+
+  @override
+  String nodeGroupsNodeCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count noeuds',
+      one: '1 noeud',
+      zero: 'Aucun noeud',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get nodeGroupsNone => 'Dans aucun groupe';
+
+  @override
+  String get nodeGroupsSave => 'Enregistrer';
+
+  @override
+  String get nodeGroupsSectionTitle => 'Groupes';
+
+  @override
   String nodeInfoLatitude(String value) {
     return 'Lat : $value°';
   }
@@ -16558,6 +16665,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get quickActionViewInNodeDex => 'Voir dans NodeDex';
+
+  @override
+  String get quickActionAssignGroups => 'Ajouter à des groupes';
 
   @override
   String get quickActionFavorite => 'Ajouter aux favoris';

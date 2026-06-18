@@ -41,6 +41,7 @@ import '../nodedex/providers/nodedex_providers.dart';
 import '../nodedex/screens/nodedex_detail_screen.dart';
 import '../nodedex/services/sigil_generator.dart';
 import '../nodedex/services/trait_engine.dart';
+import '../nodedex/widgets/node_groups_card.dart';
 import '../nodedex/widgets/node_note_edit_sheet.dart';
 import '../nodedex/widgets/section_info_button.dart';
 import '../nodedex/widgets/sigil_card_sheet.dart';
@@ -2003,6 +2004,14 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
 
         // ── Radio card ──
         SliverToBoxAdapter(child: _buildRadioCard(context, node)),
+
+        // ── Node groups (user-defined organisation) ──
+        SliverToBoxAdapter(
+          child: NodeGroupsCard(
+            nodeNum: node.nodeNum,
+            nodeName: node.displayName,
+          ),
+        ),
 
         // ── Device metrics card ──
         SliverToBoxAdapter(child: _buildDeviceMetricsCard(context, node)),

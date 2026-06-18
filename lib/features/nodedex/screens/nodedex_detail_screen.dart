@@ -65,6 +65,7 @@ import '../widgets/field_note_widget.dart';
 import '../widgets/identity_overlay_painter.dart';
 import '../widgets/observation_timeline.dart';
 import '../widgets/node_activity_timeline.dart';
+import '../widgets/node_groups_card.dart';
 import '../widgets/node_summary_card.dart';
 import '../widgets/patina_stamp.dart';
 import '../widgets/radio_compatibility_card.dart';
@@ -534,6 +535,18 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                     initialNote: entry.userNote,
                   );
                 },
+              ),
+            ),
+          ),
+
+          // Node groups (user-defined organisation).
+          SliverToBoxAdapter(
+            child: _DetailEntrance(
+              index: 12,
+              reduceMotion: reduceMotion,
+              child: NodeGroupsCard(
+                nodeNum: widget.nodeNum,
+                nodeName: entry.localNickname ?? entry.lastKnownName,
               ),
             ),
           ),

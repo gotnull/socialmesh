@@ -3709,6 +3709,112 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get nodeGroupsAssignEmptyPrompt =>
+      'No groups yet. Create one to start organising your nodes.';
+
+  @override
+  String get nodeGroupsAssignTitle => 'Add to Groups';
+
+  @override
+  String get nodeGroupsCancel => 'Cancel';
+
+  @override
+  String get nodeGroupsColorLabel => 'Colour';
+
+  @override
+  String get nodeGroupsCreate => 'Create';
+
+  @override
+  String get nodeGroupsCreateFirst => 'Create a group';
+
+  @override
+  String get nodeGroupsCreateTitle => 'New Group';
+
+  @override
+  String get nodeGroupsCreateTooltip => 'New group';
+
+  @override
+  String get nodeGroupsDeleteAction => 'Delete';
+
+  @override
+  String nodeGroupsDeleteMessage(String name) {
+    return '$name will be removed and its nodes unassigned. This can\'t be undone.';
+  }
+
+  @override
+  String get nodeGroupsDeleteTitle => 'Delete group?';
+
+  @override
+  String get nodeGroupsDone => 'Done';
+
+  @override
+  String get nodeGroupsEditSubtitle => 'Name it, then pick a colour and icon.';
+
+  @override
+  String get nodeGroupsEditTitle => 'Edit Group';
+
+  @override
+  String get nodeGroupsEditTooltip => 'Edit';
+
+  @override
+  String get nodeGroupsEmptyDescription =>
+      'Organise nodes into your own categories - repeaters, your team, a city, anything.';
+
+  @override
+  String get nodeGroupsEmptyTitleKeyword => 'groups';
+
+  @override
+  String get nodeGroupsEmptyTitlePrefix => 'No ';
+
+  @override
+  String get nodeGroupsEmptyTitleSuffix => ' yet';
+
+  @override
+  String get nodeGroupsFilterAll => 'All';
+
+  @override
+  String get nodeGroupsIconLabel => 'Icon';
+
+  @override
+  String get nodeGroupsLoadError => 'Couldn\'t load groups.';
+
+  @override
+  String get nodeGroupsManageChip => 'Manage';
+
+  @override
+  String get nodeGroupsManageTitle => 'Node Groups';
+
+  @override
+  String get nodeGroupsNameHint => 'e.g. Repeaters, My Team';
+
+  @override
+  String get nodeGroupsNameLabel => 'Name';
+
+  @override
+  String get nodeGroupsNewGroup => 'New group';
+
+  @override
+  String nodeGroupsNodeCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nodes',
+      one: '1 node',
+      zero: 'No nodes',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get nodeGroupsNone => 'Not in any group';
+
+  @override
+  String get nodeGroupsSave => 'Save';
+
+  @override
+  String get nodeGroupsSectionTitle => 'Groups';
+
+  @override
   String nodeInfoLatitude(String value) {
     return 'Lat: $value°';
   }
@@ -16284,6 +16390,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quickActionViewInNodeDex => 'View in NodeDex';
+
+  @override
+  String get quickActionAssignGroups => 'Add to Groups';
 
   @override
   String get quickActionFavorite => 'Add to favorites';

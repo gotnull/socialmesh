@@ -6618,6 +6618,192 @@ abstract class AppLocalizations {
   /// **'{count} hops'**
   String commonHopsPlural(int count);
 
+  /// Prompt in the assign sheet when no groups exist yet.
+  ///
+  /// In en, this message translates to:
+  /// **'No groups yet. Create one to start organising your nodes.'**
+  String get nodeGroupsAssignEmptyPrompt;
+
+  /// Header title of the sheet for assigning a node to groups.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to Groups'**
+  String get nodeGroupsAssignTitle;
+
+  /// Cancel button in the node group edit sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get nodeGroupsCancel;
+
+  /// Label above the colour picker in the node group edit sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Colour'**
+  String get nodeGroupsColorLabel;
+
+  /// Confirm button label when creating a new node group.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get nodeGroupsCreate;
+
+  /// Empty-state action button to create the first node group.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a group'**
+  String get nodeGroupsCreateFirst;
+
+  /// Header title of the node group sheet when creating.
+  ///
+  /// In en, this message translates to:
+  /// **'New Group'**
+  String get nodeGroupsCreateTitle;
+
+  /// Tooltip for the add button on the Node Groups screen.
+  ///
+  /// In en, this message translates to:
+  /// **'New group'**
+  String get nodeGroupsCreateTooltip;
+
+  /// Confirm/label for deleting a node group.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get nodeGroupsDeleteAction;
+
+  /// Confirmation body when deleting a node group.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} will be removed and its nodes unassigned. This can\'t be undone.'**
+  String nodeGroupsDeleteMessage(String name);
+
+  /// Confirmation title when deleting a node group.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete group?'**
+  String get nodeGroupsDeleteTitle;
+
+  /// Confirm button that applies group assignments for a node.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get nodeGroupsDone;
+
+  /// Subtitle of the node group edit sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Name it, then pick a colour and icon.'**
+  String get nodeGroupsEditSubtitle;
+
+  /// Header title of the node group sheet when editing.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Group'**
+  String get nodeGroupsEditTitle;
+
+  /// Tooltip for the edit button on a node group row.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get nodeGroupsEditTooltip;
+
+  /// Empty-state description on the Node Groups screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Organise nodes into your own categories - repeaters, your team, a city, anything.'**
+  String get nodeGroupsEmptyDescription;
+
+  /// Gradient-animated keyword in the Node Groups empty-state title (between prefix and suffix).
+  ///
+  /// In en, this message translates to:
+  /// **'groups'**
+  String get nodeGroupsEmptyTitleKeyword;
+
+  /// Leading text of the Node Groups empty-state title, before the keyword.
+  ///
+  /// In en, this message translates to:
+  /// **'No '**
+  String get nodeGroupsEmptyTitlePrefix;
+
+  /// Trailing text of the Node Groups empty-state title, after the keyword.
+  ///
+  /// In en, this message translates to:
+  /// **' yet'**
+  String get nodeGroupsEmptyTitleSuffix;
+
+  /// Group filter chip that clears the group filter (shows all nodes).
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get nodeGroupsFilterAll;
+
+  /// Label above the icon picker in the node group edit sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon'**
+  String get nodeGroupsIconLabel;
+
+  /// Error message when node groups fail to load.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load groups.'**
+  String get nodeGroupsLoadError;
+
+  /// Trailing chip in the group filter row that opens the manage groups screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage'**
+  String get nodeGroupsManageChip;
+
+  /// Title of the manage node groups screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Node Groups'**
+  String get nodeGroupsManageTitle;
+
+  /// Hint text for the node group name field.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Repeaters, My Team'**
+  String get nodeGroupsNameHint;
+
+  /// Label for the node group name field.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get nodeGroupsNameLabel;
+
+  /// Row in the assign sheet that creates a new group inline.
+  ///
+  /// In en, this message translates to:
+  /// **'New group'**
+  String get nodeGroupsNewGroup;
+
+  /// Count of nodes assigned to a group.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No nodes} =1{1 node} other{{count} nodes}}'**
+  String nodeGroupsNodeCount(int count);
+
+  /// Shown on a node's detail when it belongs to no groups.
+  ///
+  /// In en, this message translates to:
+  /// **'Not in any group'**
+  String get nodeGroupsNone;
+
+  /// Save button label when editing a node group.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get nodeGroupsSave;
+
+  /// Section title for the groups card on a node's detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups'**
+  String get nodeGroupsSectionTitle;
+
   /// Latitude display label.
   ///
   /// In en, this message translates to:
@@ -28159,6 +28345,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View in NodeDex'**
   String get quickActionViewInNodeDex;
+
+  /// Quick-action menu item that opens the assign-to-groups sheet for the node.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to Groups'**
+  String get quickActionAssignGroups;
 
   /// Quick-action menu item to favorite a node.
   ///

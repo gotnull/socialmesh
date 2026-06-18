@@ -3748,6 +3748,115 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get nodeGroupsAssignEmptyPrompt =>
+      'Пока нет групп. Создайте группу, чтобы упорядочить узлы.';
+
+  @override
+  String get nodeGroupsAssignTitle => 'Добавить в группы';
+
+  @override
+  String get nodeGroupsCancel => 'Отмена';
+
+  @override
+  String get nodeGroupsColorLabel => 'Цвет';
+
+  @override
+  String get nodeGroupsCreate => 'Создать';
+
+  @override
+  String get nodeGroupsCreateFirst => 'Создать группу';
+
+  @override
+  String get nodeGroupsCreateTitle => 'Новая группа';
+
+  @override
+  String get nodeGroupsCreateTooltip => 'Новая группа';
+
+  @override
+  String get nodeGroupsDeleteAction => 'Удалить';
+
+  @override
+  String nodeGroupsDeleteMessage(String name) {
+    return '$name будет удалена, а её узлы откреплены. Это нельзя отменить.';
+  }
+
+  @override
+  String get nodeGroupsDeleteTitle => 'Удалить группу?';
+
+  @override
+  String get nodeGroupsDone => 'Готово';
+
+  @override
+  String get nodeGroupsEditSubtitle =>
+      'Назовите её, затем выберите цвет и значок.';
+
+  @override
+  String get nodeGroupsEditTitle => 'Изменить группу';
+
+  @override
+  String get nodeGroupsEditTooltip => 'Изменить';
+
+  @override
+  String get nodeGroupsEmptyDescription =>
+      'Распределяйте узлы по собственным категориям - ретрансляторы, ваша команда, город, что угодно.';
+
+  @override
+  String get nodeGroupsEmptyTitleKeyword => 'групп';
+
+  @override
+  String get nodeGroupsEmptyTitlePrefix => 'Пока нет ';
+
+  @override
+  String get nodeGroupsEmptyTitleSuffix => '';
+
+  @override
+  String get nodeGroupsFilterAll => 'Все';
+
+  @override
+  String get nodeGroupsIconLabel => 'Значок';
+
+  @override
+  String get nodeGroupsLoadError => 'Не удалось загрузить группы.';
+
+  @override
+  String get nodeGroupsManageChip => 'Управление';
+
+  @override
+  String get nodeGroupsManageTitle => 'Группы узлов';
+
+  @override
+  String get nodeGroupsNameHint => 'напр. Ретрансляторы, Моя команда';
+
+  @override
+  String get nodeGroupsNameLabel => 'Название';
+
+  @override
+  String get nodeGroupsNewGroup => 'Новая группа';
+
+  @override
+  String nodeGroupsNodeCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count узла',
+      many: '$count узлов',
+      few: '$count узла',
+      one: '$count узел',
+      zero: 'Нет узлов',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get nodeGroupsNone => 'Без группы';
+
+  @override
+  String get nodeGroupsSave => 'Сохранить';
+
+  @override
+  String get nodeGroupsSectionTitle => 'Группы';
+
+  @override
   String nodeInfoLatitude(String value) {
     return 'Шир: $value°';
   }
@@ -16451,6 +16560,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get quickActionViewInNodeDex => 'Открыть в NodeDex';
+
+  @override
+  String get quickActionAssignGroups => 'Добавить в группы';
 
   @override
   String get quickActionFavorite => 'Добавить в избранное';

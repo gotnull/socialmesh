@@ -4985,6 +4985,140 @@
             }
         }
     },
+    "nodeGroupsAssignEmptyPrompt": "No groups yet. Create one to start organising your nodes.",
+    "@nodeGroupsAssignEmptyPrompt": {
+        "description": "Prompt in the assign sheet when no groups exist yet."
+    },
+    "nodeGroupsAssignTitle": "Add to Groups",
+    "@nodeGroupsAssignTitle": {
+        "description": "Header title of the sheet for assigning a node to groups."
+    },
+    "nodeGroupsCancel": "Cancel",
+    "@nodeGroupsCancel": {
+        "description": "Cancel button in the node group edit sheet."
+    },
+    "nodeGroupsColorLabel": "Colour",
+    "@nodeGroupsColorLabel": {
+        "description": "Label above the colour picker in the node group edit sheet."
+    },
+    "nodeGroupsCreate": "Create",
+    "@nodeGroupsCreate": {
+        "description": "Confirm button label when creating a new node group."
+    },
+    "nodeGroupsCreateFirst": "Create a group",
+    "@nodeGroupsCreateFirst": {
+        "description": "Empty-state action button to create the first node group."
+    },
+    "nodeGroupsCreateTitle": "New Group",
+    "@nodeGroupsCreateTitle": {
+        "description": "Header title of the node group sheet when creating."
+    },
+    "nodeGroupsCreateTooltip": "New group",
+    "@nodeGroupsCreateTooltip": {
+        "description": "Tooltip for the add button on the Node Groups screen."
+    },
+    "nodeGroupsDeleteAction": "Delete",
+    "@nodeGroupsDeleteAction": {
+        "description": "Confirm/label for deleting a node group."
+    },
+    "nodeGroupsDeleteMessage": "{name} will be removed and its nodes unassigned. This can't be undone.",
+    "@nodeGroupsDeleteMessage": {
+        "description": "Confirmation body when deleting a node group.",
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "nodeGroupsDeleteTitle": "Delete group?",
+    "@nodeGroupsDeleteTitle": {
+        "description": "Confirmation title when deleting a node group."
+    },
+    "nodeGroupsDone": "Done",
+    "@nodeGroupsDone": {
+        "description": "Confirm button that applies group assignments for a node."
+    },
+    "nodeGroupsEditSubtitle": "Name it, then pick a colour and icon.",
+    "@nodeGroupsEditSubtitle": {
+        "description": "Subtitle of the node group edit sheet."
+    },
+    "nodeGroupsEditTitle": "Edit Group",
+    "@nodeGroupsEditTitle": {
+        "description": "Header title of the node group sheet when editing."
+    },
+    "nodeGroupsEditTooltip": "Edit",
+    "@nodeGroupsEditTooltip": {
+        "description": "Tooltip for the edit button on a node group row."
+    },
+    "nodeGroupsEmptyDescription": "Organise nodes into your own categories - repeaters, your team, a city, anything.",
+    "@nodeGroupsEmptyDescription": {
+        "description": "Empty-state description on the Node Groups screen."
+    },
+    "nodeGroupsEmptyTitleKeyword": "groups",
+    "@nodeGroupsEmptyTitleKeyword": {
+        "description": "Gradient-animated keyword in the Node Groups empty-state title (between prefix and suffix)."
+    },
+    "nodeGroupsEmptyTitlePrefix": "No ",
+    "@nodeGroupsEmptyTitlePrefix": {
+        "description": "Leading text of the Node Groups empty-state title, before the keyword."
+    },
+    "nodeGroupsEmptyTitleSuffix": " yet",
+    "@nodeGroupsEmptyTitleSuffix": {
+        "description": "Trailing text of the Node Groups empty-state title, after the keyword."
+    },
+    "nodeGroupsFilterAll": "All",
+    "@nodeGroupsFilterAll": {
+        "description": "Group filter chip that clears the group filter (shows all nodes)."
+    },
+    "nodeGroupsIconLabel": "Icon",
+    "@nodeGroupsIconLabel": {
+        "description": "Label above the icon picker in the node group edit sheet."
+    },
+    "nodeGroupsLoadError": "Couldn't load groups.",
+    "@nodeGroupsLoadError": {
+        "description": "Error message when node groups fail to load."
+    },
+    "nodeGroupsManageChip": "Manage",
+    "@nodeGroupsManageChip": {
+        "description": "Trailing chip in the group filter row that opens the manage groups screen."
+    },
+    "nodeGroupsManageTitle": "Node Groups",
+    "@nodeGroupsManageTitle": {
+        "description": "Title of the manage node groups screen."
+    },
+    "nodeGroupsNameHint": "e.g. Repeaters, My Team",
+    "@nodeGroupsNameHint": {
+        "description": "Hint text for the node group name field."
+    },
+    "nodeGroupsNameLabel": "Name",
+    "@nodeGroupsNameLabel": {
+        "description": "Label for the node group name field."
+    },
+    "nodeGroupsNewGroup": "New group",
+    "@nodeGroupsNewGroup": {
+        "description": "Row in the assign sheet that creates a new group inline."
+    },
+    "nodeGroupsNodeCount": "{count, plural, =0{No nodes} =1{1 node} other{{count} nodes}}",
+    "@nodeGroupsNodeCount": {
+        "description": "Count of nodes assigned to a group.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "nodeGroupsNone": "Not in any group",
+    "@nodeGroupsNone": {
+        "description": "Shown on a node's detail when it belongs to no groups."
+    },
+    "nodeGroupsSave": "Save",
+    "@nodeGroupsSave": {
+        "description": "Save button label when editing a node group."
+    },
+    "nodeGroupsSectionTitle": "Groups",
+    "@nodeGroupsSectionTitle": {
+        "description": "Section title for the groups card on a node's detail."
+    },
     "nodeInfoLatitude": "Lat: {value}°",
     "@nodeInfoLatitude": {
         "description": "Latitude display label.",
@@ -22239,6 +22373,10 @@
     "quickActionViewInNodeDex": "View in NodeDex",
     "@quickActionViewInNodeDex": {
         "description": "Quick-action menu item that opens the NodeDex profile for the node."
+    },
+    "quickActionAssignGroups": "Add to Groups",
+    "@quickActionAssignGroups": {
+        "description": "Quick-action menu item that opens the assign-to-groups sheet for the node."
     },
     "quickActionFavorite": "Add to favorites",
     "@quickActionFavorite": {

@@ -20,6 +20,7 @@ import '../../utils/snackbar.dart';
 import '../incidents/providers/incident_help_trust_provider.dart';
 import '../incidents/screens/help_circle_screen.dart';
 import '../nodedex/screens/nodedex_detail_screen.dart';
+import '../nodedex/widgets/node_group_assign_sheet.dart';
 import 'node_actions.dart';
 import 'node_detail_screen.dart';
 
@@ -31,6 +32,7 @@ import 'node_detail_screen.dart';
 enum NodeQuickAction {
   viewDetails,
   viewInNodeDex,
+  assignGroups,
   favorite,
   mute,
   helpCircle,
@@ -100,6 +102,11 @@ Future<void> showNodeQuickActionsSheet(
       icon: Icons.auto_awesome,
       label: context.l10n.quickActionViewInNodeDex,
       value: NodeQuickAction.viewInNodeDex,
+    ),
+    BottomSheetAction(
+      icon: Icons.category_outlined,
+      label: context.l10n.quickActionAssignGroups,
+      value: NodeQuickAction.assignGroups,
     ),
     BottomSheetAction(
       icon: node.isFavorite ? Icons.star : Icons.star_border,
@@ -182,6 +189,12 @@ Future<void> showNodeQuickActionsSheet(
         MaterialPageRoute<void>(
           builder: (_) => NodeDexDetailScreen(nodeNum: node.nodeNum),
         ),
+      );
+    case NodeQuickAction.assignGroups:
+      await NodeGroupAssignSheet.show(
+        context,
+        nodeNum: node.nodeNum,
+        nodeName: node.displayName,
       );
     case NodeQuickAction.favorite:
       await toggleNodeFavorite(context, ref, node);

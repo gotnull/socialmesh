@@ -3770,6 +3770,113 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get nodeGroupsAssignEmptyPrompt =>
+      'Noch keine Gruppen. Erstelle eine, um deine Knoten zu organisieren.';
+
+  @override
+  String get nodeGroupsAssignTitle => 'Zu Gruppen hinzufügen';
+
+  @override
+  String get nodeGroupsCancel => 'Abbrechen';
+
+  @override
+  String get nodeGroupsColorLabel => 'Farbe';
+
+  @override
+  String get nodeGroupsCreate => 'Erstellen';
+
+  @override
+  String get nodeGroupsCreateFirst => 'Gruppe erstellen';
+
+  @override
+  String get nodeGroupsCreateTitle => 'Neue Gruppe';
+
+  @override
+  String get nodeGroupsCreateTooltip => 'Neue Gruppe';
+
+  @override
+  String get nodeGroupsDeleteAction => 'Löschen';
+
+  @override
+  String nodeGroupsDeleteMessage(String name) {
+    return '$name wird entfernt und die zugehörigen Knoten werden abgemeldet. Das kann nicht rückgängig gemacht werden.';
+  }
+
+  @override
+  String get nodeGroupsDeleteTitle => 'Gruppe löschen?';
+
+  @override
+  String get nodeGroupsDone => 'Fertig';
+
+  @override
+  String get nodeGroupsEditSubtitle =>
+      'Benenne sie und wähle dann eine Farbe und ein Symbol.';
+
+  @override
+  String get nodeGroupsEditTitle => 'Gruppe bearbeiten';
+
+  @override
+  String get nodeGroupsEditTooltip => 'Bearbeiten';
+
+  @override
+  String get nodeGroupsEmptyDescription =>
+      'Ordne Knoten in eigene Kategorien - Repeater, dein Team, eine Stadt, was auch immer.';
+
+  @override
+  String get nodeGroupsEmptyTitleKeyword => 'Gruppen';
+
+  @override
+  String get nodeGroupsEmptyTitlePrefix => 'Noch keine ';
+
+  @override
+  String get nodeGroupsEmptyTitleSuffix => '';
+
+  @override
+  String get nodeGroupsFilterAll => 'Alle';
+
+  @override
+  String get nodeGroupsIconLabel => 'Symbol';
+
+  @override
+  String get nodeGroupsLoadError => 'Gruppen konnten nicht geladen werden.';
+
+  @override
+  String get nodeGroupsManageChip => 'Verwalten';
+
+  @override
+  String get nodeGroupsManageTitle => 'Knotengruppen';
+
+  @override
+  String get nodeGroupsNameHint => 'z. B. Repeater, Mein Team';
+
+  @override
+  String get nodeGroupsNameLabel => 'Name';
+
+  @override
+  String get nodeGroupsNewGroup => 'Neue Gruppe';
+
+  @override
+  String nodeGroupsNodeCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Knoten',
+      one: '1 Knoten',
+      zero: 'Keine Knoten',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get nodeGroupsNone => 'In keiner Gruppe';
+
+  @override
+  String get nodeGroupsSave => 'Speichern';
+
+  @override
+  String get nodeGroupsSectionTitle => 'Gruppen';
+
+  @override
   String nodeInfoLatitude(String value) {
     return 'Br.: $value°';
   }
@@ -16494,6 +16601,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get quickActionViewInNodeDex => 'In NodeDex anzeigen';
+
+  @override
+  String get quickActionAssignGroups => 'Zu Gruppen hinzufügen';
 
   @override
   String get quickActionFavorite => 'Zu Favoriten hinzufügen';
