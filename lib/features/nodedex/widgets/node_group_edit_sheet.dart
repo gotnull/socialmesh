@@ -11,17 +11,26 @@ import '../models/node_group.dart';
 
 /// Bottom sheet to create or edit a node group (name + colour + icon).
 ///
-/// A simple prompt-style sheet (mirrors the Routes new-route sheet), so it uses
-/// the BottomSheet* primitives. It only collects input and reports it through
-/// [onSave]; persistence is the caller's responsibility (the groups provider).
+/// Presented via [AppBottomSheet.showScrollable] (content-heavy: two pickers)
+/// with a pinned header + pinned action buttons and a scrollable form body.
+/// It only collects input and reports it through [onSave]; persistence is the
+/// caller's responsibility (the groups provider).
 class NodeGroupEditSheet extends StatefulWidget {
+  /// Scroll controller supplied by the draggable scrollable sheet.
+  final ScrollController scrollController;
+
   /// The group being edited, or null when creating a new one.
   final NodeGroup? existing;
 
   /// Called with the chosen name (trimmed), colour value and icon key.
   final void Function(String name, int colorValue, String iconKey) onSave;
 
-  const NodeGroupEditSheet({super.key, this.existing, required this.onSave});
+  const NodeGroupEditSheet({
+    super.key,
+    required this.scrollController,
+    this.existing,
+    required this.onSave,
+  });
 
   /// Present the sheet.
   static Future<void> show(
@@ -29,9 +38,16 @@ class NodeGroupEditSheet extends StatefulWidget {
     NodeGroup? existing,
     required void Function(String name, int colorValue, String iconKey) onSave,
   }) {
-    return AppBottomSheet.show<void>(
+    return AppBottomSheet.showScrollable<void>(
       context: context,
-      child: NodeGroupEditSheet(existing: existing, onSave: onSave),
+      initialChildSize: 0.75,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (controller) => NodeGroupEditSheet(
+        scrollController: controller,
+        existing: existing,
+        onSave: onSave,
+      ),
     );
   }
 
@@ -59,81 +75,120 @@ class _NodeGroupEditSheetState extends State<NodeGroupEditSheet> {
     super.dispose();
   }
 
+  void _dismissKeyboard() => FocusScope.of(context).unfocus();
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isEditing = widget.existing != null;
     final selectedColor = Color(_colorValue);
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        BottomSheetHeader(
-          icon: kNodeGroupIcons[_iconKey] ?? kNodeGroupFallbackIcon,
-          iconColor: selectedColor,
-          title: isEditing
-              ? l10n.nodeGroupsEditTitle
-              : l10n.nodeGroupsCreateTitle,
-          subtitle: l10n.nodeGroupsEditSubtitle,
-        ),
-        const SizedBox(height: AppTheme.spacing24),
-        BottomSheetTextField(
-          controller: _nameController,
-          label: l10n.nodeGroupsNameLabel,
-          hint: l10n.nodeGroupsNameHint,
-          maxLength: 40,
-          autofocus: !isEditing,
-          onChanged: (_) => setState(() {}),
-        ),
-        const SizedBox(height: AppTheme.spacing20),
-        _PickerLabel(text: l10n.nodeGroupsColorLabel),
-        const SizedBox(height: AppTheme.spacing12),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: [
-            for (final color in AccentColors.all)
-              _ColorSwatch(
-                color: color,
-                selected: color.toARGB32() == _colorValue,
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  setState(() => _colorValue = color.toARGB32());
-                },
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _dismissKeyboard,
+      child: Column(
+        children: [
+          // Pinned header.
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing24),
+            child: BottomSheetHeader(
+              icon: kNodeGroupIcons[_iconKey] ?? kNodeGroupFallbackIcon,
+              iconColor: selectedColor,
+              title: isEditing
+                  ? l10n.nodeGroupsEditTitle
+                  : l10n.nodeGroupsCreateTitle,
+              subtitle: l10n.nodeGroupsEditSubtitle,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          // Scrollable form body.
+          Expanded(
+            child: SingleChildScrollView(
+              controller: widget.scrollController,
+              padding: const EdgeInsets.fromLTRB(
+                AppTheme.spacing24,
+                0,
+                AppTheme.spacing24,
+                AppTheme.spacing16,
               ),
-          ],
-        ),
-        const SizedBox(height: AppTheme.spacing20),
-        _PickerLabel(text: l10n.nodeGroupsIconLabel),
-        const SizedBox(height: AppTheme.spacing12),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: [
-            for (final entry in kNodeGroupIcons.entries)
-              _IconChoice(
-                icon: entry.value,
-                accent: selectedColor,
-                selected: entry.key == _iconKey,
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  setState(() => _iconKey = entry.key);
-                },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  BottomSheetTextField(
+                    controller: _nameController,
+                    label: l10n.nodeGroupsNameLabel,
+                    hint: l10n.nodeGroupsNameHint,
+                    maxLength: 40,
+                    autofocus: !isEditing,
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  const SizedBox(height: AppTheme.spacing20),
+                  _PickerLabel(text: l10n.nodeGroupsColorLabel),
+                  const SizedBox(height: AppTheme.spacing12),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      for (final color in AccentColors.all)
+                        _ColorSwatch(
+                          color: color,
+                          selected: color.toARGB32() == _colorValue,
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            setState(() => _colorValue = color.toARGB32());
+                          },
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: AppTheme.spacing20),
+                  _PickerLabel(text: l10n.nodeGroupsIconLabel),
+                  const SizedBox(height: AppTheme.spacing12),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      for (final entry in kNodeGroupIcons.entries)
+                        _IconChoice(
+                          icon: entry.value,
+                          accent: selectedColor,
+                          selected: entry.key == _iconKey,
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            setState(() => _iconKey = entry.key);
+                          },
+                        ),
+                    ],
+                  ),
+                ],
               ),
-          ],
-        ),
-        const SizedBox(height: AppTheme.spacing24),
-        BottomSheetButtons(
-          cancelLabel: l10n.nodeGroupsCancel,
-          confirmLabel: isEditing ? l10n.nodeGroupsSave : l10n.nodeGroupsCreate,
-          isConfirmEnabled: _nameController.text.trim().isNotEmpty,
-          onConfirm: () {
-            widget.onSave(_nameController.text.trim(), _colorValue, _iconKey);
-            Navigator.pop(context);
-          },
-        ),
-      ],
+            ),
+          ),
+          // Pinned action buttons.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing24,
+              AppTheme.spacing8,
+              AppTheme.spacing24,
+              AppTheme.spacing16,
+            ),
+            child: BottomSheetButtons(
+              cancelLabel: l10n.nodeGroupsCancel,
+              confirmLabel: isEditing
+                  ? l10n.nodeGroupsSave
+                  : l10n.nodeGroupsCreate,
+              isConfirmEnabled: _nameController.text.trim().isNotEmpty,
+              onConfirm: () {
+                widget.onSave(
+                  _nameController.text.trim(),
+                  _colorValue,
+                  _iconKey,
+                );
+                Navigator.pop(context);
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
