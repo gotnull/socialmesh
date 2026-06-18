@@ -12,6 +12,7 @@ import 'device_metrics_log_screen.dart';
 import 'environment_metrics_log_screen.dart';
 import 'pax_counter_log_screen.dart';
 import 'position_log_screen.dart';
+import 'power_metrics_log_screen.dart';
 import 'traceroute_log_screen.dart';
 
 /// Top-level hub screen that collects every telemetry log screen behind a
@@ -76,6 +77,17 @@ class TelemetryHubScreen extends StatelessWidget {
                 context,
                 MaterialPageRoute<void>(
                   builder: (_) => const AirQualityLogScreen(),
+                ),
+              ),
+            ),
+            _TelemetryHubTile(
+              icon: Icons.bolt,
+              title: l10n.settingsTilePowerMetricsTitle,
+              subtitle: l10n.settingsTilePowerMetricsSubtitle,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => const PowerMetricsLogScreen(),
                 ),
               ),
             ),

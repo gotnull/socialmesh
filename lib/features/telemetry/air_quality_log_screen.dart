@@ -46,10 +46,8 @@ class AirQualityLogScreen extends ConsumerWidget {
           data: (logs) {
             if (logs.isEmpty) {
               return SliverFillRemaining(
-                child: _buildEmptyState(
-                  context,
-                  context.l10n.telemetryAirQualityNoData,
-                ),
+                hasScrollBody: false,
+                child: _buildEmptyState(context),
               );
             }
             final sortedLogs = logs.reversed.toList();
@@ -75,20 +73,40 @@ class AirQualityLogScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, String message) {
+  Widget _buildEmptyState(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.air, size: 64, color: context.textTertiary),
-          const SizedBox(height: AppTheme.spacing16),
-          Text(
-            message,
-            style: context.titleSmallStyle?.copyWith(
-              color: context.textSecondary,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: context.card,
+                borderRadius: BorderRadius.circular(AppTheme.radius16),
+              ),
+              child: Icon(Icons.air, size: 40, color: context.textTertiary),
             ),
-          ),
-        ],
+            const SizedBox(height: AppTheme.spacing24),
+            Text(
+              context.l10n.telemetryAirQualityNoData,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: context.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppTheme.spacing8),
+            Text(
+              context.l10n.telemetryAirQualityNoDataDescription,
+              style: TextStyle(fontSize: 14, color: context.textTertiary),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }

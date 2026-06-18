@@ -19900,6 +19900,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsTilePowerManagementTitle => 'Gestion de l\'alimentation';
 
   @override
+  String get settingsTilePowerMetricsSubtitle =>
+      'Historique des canaux de tension et de courant';
+
+  @override
+  String get settingsTilePowerMetricsTitle => 'Métriques d\'alimentation';
+
+  @override
   String get settingsTilePrivacyPolicySubtitle =>
       'Comment nous traitons vos données';
 
@@ -23319,6 +23326,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucune donnée de qualité de l\'air enregistrée';
 
   @override
+  String get telemetryAirQualityNoDataDescription =>
+      'Les relevés de qualité de l\'air apparaissent lorsqu\'un nœud de votre maillage possède un capteur de qualité de l\'air (PM2.5, PM10, CO2) et le diffuse.';
+
+  @override
   String get telemetryAirQualityParticle03um => '>0,3µm';
 
   @override
@@ -23808,6 +23819,27 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get telemetryPositionTitle => 'Position';
+
+  @override
+  String telemetryPowerChannel(int channel) {
+    return 'Canal $channel';
+  }
+
+  @override
+  String telemetryPowerCurrentValue(String milliamps) {
+    return '$milliamps mA';
+  }
+
+  @override
+  String get telemetryPowerMetricsTitle => 'Métriques d\'alimentation';
+
+  @override
+  String get telemetryPowerNoData =>
+      'Aucune donnée d\'alimentation enregistrée pour le moment';
+
+  @override
+  String get telemetryPowerNoDataDescription =>
+      'Les relevés d\'alimentation apparaissent lorsqu\'un nœud de votre maillage possède un capteur d\'alimentation (tension et courant multicanaux) et le diffuse.';
 
   @override
   String telemetryReadingsCount(int count) {

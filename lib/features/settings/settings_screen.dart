@@ -85,6 +85,7 @@ import '../debug/app_log_screen.dart';
 import '../telemetry/device_metrics_log_screen.dart';
 import '../telemetry/environment_metrics_log_screen.dart';
 import '../telemetry/position_log_screen.dart';
+import '../telemetry/power_metrics_log_screen.dart';
 import '../telemetry/traceroute_log_screen.dart';
 import '../telemetry/air_quality_log_screen.dart';
 import '../telemetry/pax_counter_log_screen.dart';
@@ -1419,6 +1420,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const AirQualityLogScreen()),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.bolt,
+          title: context.l10n.settingsTilePowerMetricsTitle,
+          subtitle: context.l10n.settingsTilePowerMetricsSubtitle,
+          keywords: ['power', 'voltage', 'current', 'channel', 'ina'],
+          section: context.l10n.settingsSectionTelemetryLogs,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const PowerMetricsLogScreen()),
           ),
         ),
         _SearchableSettingItem(
@@ -3522,6 +3534,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               context,
                               MaterialPageRoute(
                                 builder: (_) => const AirQualityLogScreen(),
+                              ),
+                            ),
+                          ),
+                          _SettingsTile(
+                            icon: Icons.bolt,
+                            title: context.l10n.settingsTilePowerMetricsTitle,
+                            subtitle:
+                                context.l10n.settingsTilePowerMetricsSubtitle,
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const PowerMetricsLogScreen(),
                               ),
                             ),
                           ),

@@ -19775,6 +19775,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsTilePowerManagementTitle => 'Gestione energia';
 
   @override
+  String get settingsTilePowerMetricsSubtitle =>
+      'Cronologia dei canali di tensione e corrente';
+
+  @override
+  String get settingsTilePowerMetricsTitle => 'Metriche di alimentazione';
+
+  @override
   String get settingsTilePrivacyPolicySubtitle => 'Come gestiamo i tuoi dati';
 
   @override
@@ -23169,6 +23176,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Nessun dato sulla qualità dell\'aria registrato';
 
   @override
+  String get telemetryAirQualityNoDataDescription =>
+      'Le letture della qualità dell\'aria compaiono quando un nodo della tua mesh ha un sensore di qualità dell\'aria (PM2.5, PM10, CO2) e le trasmette.';
+
+  @override
   String get telemetryAirQualityParticle03um => '>0.3µm';
 
   @override
@@ -23653,6 +23664,27 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get telemetryPositionTitle => 'Posizione';
+
+  @override
+  String telemetryPowerChannel(int channel) {
+    return 'Canale $channel';
+  }
+
+  @override
+  String telemetryPowerCurrentValue(String milliamps) {
+    return '$milliamps mA';
+  }
+
+  @override
+  String get telemetryPowerMetricsTitle => 'Metriche di alimentazione';
+
+  @override
+  String get telemetryPowerNoData =>
+      'Nessun dato di alimentazione ancora registrato';
+
+  @override
+  String get telemetryPowerNoDataDescription =>
+      'Le letture di alimentazione compaiono quando un nodo della tua mesh ha un sensore di alimentazione (tensione e corrente multicanale) e le trasmette.';
 
   @override
   String telemetryReadingsCount(int count) {

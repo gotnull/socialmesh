@@ -19855,6 +19855,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsTilePowerManagementTitle => 'Gestión de energía';
 
   @override
+  String get settingsTilePowerMetricsSubtitle =>
+      'Historial de canales de voltaje y corriente';
+
+  @override
+  String get settingsTilePowerMetricsTitle => 'Métricas de energía';
+
+  @override
   String get settingsTilePrivacyPolicySubtitle => 'Cómo gestionamos sus datos';
 
   @override
@@ -23257,6 +23264,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Aún no se han registrado datos de calidad del aire';
 
   @override
+  String get telemetryAirQualityNoDataDescription =>
+      'Las lecturas de calidad del aire aparecen cuando un nodo de tu malla tiene un sensor de calidad del aire (PM2.5, PM10, CO2) y lo transmite.';
+
+  @override
   String get telemetryAirQualityParticle03um => '>0.3µm';
 
   @override
@@ -23743,6 +23754,27 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get telemetryPositionTitle => 'Posición';
+
+  @override
+  String telemetryPowerChannel(int channel) {
+    return 'Canal $channel';
+  }
+
+  @override
+  String telemetryPowerCurrentValue(String milliamps) {
+    return '$milliamps mA';
+  }
+
+  @override
+  String get telemetryPowerMetricsTitle => 'Métricas de energía';
+
+  @override
+  String get telemetryPowerNoData =>
+      'Aún no se han registrado datos de energía';
+
+  @override
+  String get telemetryPowerNoDataDescription =>
+      'Las lecturas de energía aparecen cuando un nodo de tu malla tiene un sensor de energía (voltaje y corriente multicanal) y lo transmite.';
 
   @override
   String telemetryReadingsCount(int count) {

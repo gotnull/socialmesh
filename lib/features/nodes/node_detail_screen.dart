@@ -51,6 +51,7 @@ import '../telemetry/device_metrics_log_screen.dart';
 import '../telemetry/environment_metrics_log_screen.dart';
 import '../telemetry/pax_counter_log_screen.dart';
 import '../telemetry/position_log_screen.dart';
+import '../telemetry/power_metrics_log_screen.dart';
 import '../telemetry/traceroute_log_screen.dart';
 import 'node_actions.dart';
 import 'widgets/fixed_position_sheet.dart';
@@ -1297,6 +1298,9 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
             .value
             ?.isNotEmpty ??
         false;
+    final hasPower =
+        ref.watch(nodePowerMetricsLogsProvider(nodeNum)).value?.isNotEmpty ??
+        false;
     final hasPosition =
         ref.watch(nodePositionLogsProvider(nodeNum)).value?.isNotEmpty ?? false;
     final hasTraceroute =
@@ -1378,6 +1382,20 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
         ),
       ),
     );
+    if (hasPower) {
+      tiles.add(
+        _TelemetryNavTile(
+          icon: Icons.bolt,
+          label: l10n.settingsTilePowerMetricsTitle,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => PowerMetricsLogScreen(nodeNum: nodeNum),
+            ),
+          ),
+        ),
+      );
+    }
 
     // Position / Traceroute / PAX / Detection are not telemetry-module
     // requests — they keep their existing "shown only when data exists"

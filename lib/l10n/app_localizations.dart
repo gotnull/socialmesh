@@ -33980,6 +33980,18 @@ abstract class AppLocalizations {
   /// **'Power Management'**
   String get settingsTilePowerManagementTitle;
 
+  /// Subtitle of the power metrics telemetry log tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Voltage and current channel history'**
+  String get settingsTilePowerMetricsSubtitle;
+
+  /// Title of the power metrics telemetry log tile.
+  ///
+  /// In en, this message translates to:
+  /// **'Power Metrics'**
+  String get settingsTilePowerMetricsTitle;
+
   /// Subtitle of the Privacy Policy tile in the About section.
   ///
   /// In en, this message translates to:
@@ -39914,6 +39926,12 @@ abstract class AppLocalizations {
   /// **'No air quality data recorded yet'**
   String get telemetryAirQualityNoData;
 
+  /// Empty-state description explaining why the air quality log may be empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Air quality readings appear when a node on your mesh has an air-quality sensor (PM2.5, PM10, CO2) and broadcasts it.'**
+  String get telemetryAirQualityNoDataDescription;
+
   /// Particle size chip label for particles larger than 0.3 micrometres
   ///
   /// In en, this message translates to:
@@ -40753,6 +40771,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Position'**
   String get telemetryPositionTitle;
+
+  /// Label for a power-monitoring channel on a power metrics card.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel {channel}'**
+  String telemetryPowerChannel(int channel);
+
+  /// Power metric chip label showing channel current with mA unit suffix.
+  ///
+  /// In en, this message translates to:
+  /// **'{milliamps} mA'**
+  String telemetryPowerCurrentValue(String milliamps);
+
+  /// Screen title for the power metrics history log.
+  ///
+  /// In en, this message translates to:
+  /// **'Power Metrics'**
+  String get telemetryPowerMetricsTitle;
+
+  /// Empty-state headline when no power metrics have been logged.
+  ///
+  /// In en, this message translates to:
+  /// **'No power data recorded yet'**
+  String get telemetryPowerNoData;
+
+  /// Empty-state description explaining why the power metrics log may be empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Power readings appear when a node on your mesh has a power-monitoring sensor (multi-channel voltage and current) and broadcasts it.'**
+  String get telemetryPowerNoDataDescription;
 
   /// Chart legend label showing total readings count.
   ///

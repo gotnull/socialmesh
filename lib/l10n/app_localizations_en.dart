@@ -19559,6 +19559,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTilePowerManagementTitle => 'Power Management';
 
   @override
+  String get settingsTilePowerMetricsSubtitle =>
+      'Voltage and current channel history';
+
+  @override
+  String get settingsTilePowerMetricsTitle => 'Power Metrics';
+
+  @override
   String get settingsTilePrivacyPolicySubtitle => 'How we handle your data';
 
   @override
@@ -22910,6 +22917,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get telemetryAirQualityNoData => 'No air quality data recorded yet';
 
   @override
+  String get telemetryAirQualityNoDataDescription =>
+      'Air quality readings appear when a node on your mesh has an air-quality sensor (PM2.5, PM10, CO2) and broadcasts it.';
+
+  @override
   String get telemetryAirQualityParticle03um => '>0.3µm';
 
   @override
@@ -23389,6 +23400,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get telemetryPositionTitle => 'Position';
+
+  @override
+  String telemetryPowerChannel(int channel) {
+    return 'Channel $channel';
+  }
+
+  @override
+  String telemetryPowerCurrentValue(String milliamps) {
+    return '$milliamps mA';
+  }
+
+  @override
+  String get telemetryPowerMetricsTitle => 'Power Metrics';
+
+  @override
+  String get telemetryPowerNoData => 'No power data recorded yet';
+
+  @override
+  String get telemetryPowerNoDataDescription =>
+      'Power readings appear when a node on your mesh has a power-monitoring sensor (multi-channel voltage and current) and broadcasts it.';
 
   @override
   String telemetryReadingsCount(int count) {

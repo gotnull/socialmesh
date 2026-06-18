@@ -19813,6 +19813,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsTilePowerManagementTitle => 'Energieverwaltung';
 
   @override
+  String get settingsTilePowerMetricsSubtitle =>
+      'Verlauf der Spannungs- und Stromkanäle';
+
+  @override
+  String get settingsTilePowerMetricsTitle => 'Leistungsmetriken';
+
+  @override
   String get settingsTilePrivacyPolicySubtitle =>
       'Wie wir mit Ihren Daten umgehen';
 
@@ -23219,6 +23226,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Noch keine Luftqualitätsdaten aufgezeichnet';
 
   @override
+  String get telemetryAirQualityNoDataDescription =>
+      'Luftqualitätswerte erscheinen, wenn ein Knoten in deinem Mesh einen Luftqualitätssensor (PM2.5, PM10, CO2) besitzt und diese sendet.';
+
+  @override
   String get telemetryAirQualityParticle03um => '>0,3 µm';
 
   @override
@@ -23703,6 +23714,26 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get telemetryPositionTitle => 'Position';
+
+  @override
+  String telemetryPowerChannel(int channel) {
+    return 'Kanal $channel';
+  }
+
+  @override
+  String telemetryPowerCurrentValue(String milliamps) {
+    return '$milliamps mA';
+  }
+
+  @override
+  String get telemetryPowerMetricsTitle => 'Leistungsmetriken';
+
+  @override
+  String get telemetryPowerNoData => 'Noch keine Leistungsdaten aufgezeichnet';
+
+  @override
+  String get telemetryPowerNoDataDescription =>
+      'Leistungswerte erscheinen, wenn ein Knoten in deinem Mesh einen Leistungssensor (mehrkanalige Spannung und Stromstärke) besitzt und diese sendet.';
 
   @override
   String telemetryReadingsCount(int count) {

@@ -19776,6 +19776,13 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settingsTilePowerManagementTitle => 'Керування живленням';
 
   @override
+  String get settingsTilePowerMetricsSubtitle =>
+      'Історія каналів напруги та струму';
+
+  @override
+  String get settingsTilePowerMetricsTitle => 'Метрики живлення';
+
+  @override
   String get settingsTilePrivacyPolicySubtitle => 'Як ми обробляємо ваші дані';
 
   @override
@@ -23170,6 +23177,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Дані про якість повітря ще не записано';
 
   @override
+  String get telemetryAirQualityNoDataDescription =>
+      'Показники якості повітря з\'являються, коли вузол у вашій мережі має датчик якості повітря (PM2.5, PM10, CO2) і передає їх.';
+
+  @override
   String get telemetryAirQualityParticle03um => '>0.3µm';
 
   @override
@@ -23654,6 +23665,26 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get telemetryPositionTitle => 'Позиція';
+
+  @override
+  String telemetryPowerChannel(int channel) {
+    return 'Канал $channel';
+  }
+
+  @override
+  String telemetryPowerCurrentValue(String milliamps) {
+    return '$milliamps мА';
+  }
+
+  @override
+  String get telemetryPowerMetricsTitle => 'Метрики живлення';
+
+  @override
+  String get telemetryPowerNoData => 'Дані про живлення ще не записано';
+
+  @override
+  String get telemetryPowerNoDataDescription =>
+      'Показники живлення з\'являються, коли вузол у вашій мережі має датчик живлення (багатоканальна напруга та струм) і передає їх.';
 
   @override
   String telemetryReadingsCount(int count) {

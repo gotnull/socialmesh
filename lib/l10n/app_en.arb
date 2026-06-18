@@ -26633,6 +26633,14 @@
     "@settingsTilePowerManagementTitle": {
         "description": "Title of the power management settings tile."
     },
+    "settingsTilePowerMetricsSubtitle": "Voltage and current channel history",
+    "@settingsTilePowerMetricsSubtitle": {
+        "description": "Subtitle of the power metrics telemetry log tile."
+    },
+    "settingsTilePowerMetricsTitle": "Power Metrics",
+    "@settingsTilePowerMetricsTitle": {
+        "description": "Title of the power metrics telemetry log tile."
+    },
     "settingsTilePrivacyPolicySubtitle": "How we handle your data",
     "@settingsTilePrivacyPolicySubtitle": {
         "description": "Subtitle of the Privacy Policy tile in the About section."
@@ -31307,6 +31315,10 @@
     "@telemetryAirQualityNoData": {
         "description": "Empty-state message when no air quality data exists."
     },
+    "telemetryAirQualityNoDataDescription": "Air quality readings appear when a node on your mesh has an air-quality sensor (PM2.5, PM10, CO2) and broadcasts it.",
+    "@telemetryAirQualityNoDataDescription": {
+        "description": "Empty-state description explaining why the air quality log may be empty."
+    },
     "telemetryAirQualityParticle03um": ">0.3µm",
     "@telemetryAirQualityParticle03um": {
         "description": "Particle size chip label for particles larger than 0.3 micrometres"
@@ -31971,6 +31983,36 @@
     "telemetryPositionTitle": "Position",
     "@telemetryPositionTitle": {
         "description": "Screen title for position history log."
+    },
+    "telemetryPowerChannel": "Channel {channel}",
+    "@telemetryPowerChannel": {
+        "description": "Label for a power-monitoring channel on a power metrics card.",
+        "placeholders": {
+            "channel": {
+                "type": "int"
+            }
+        }
+    },
+    "telemetryPowerCurrentValue": "{milliamps} mA",
+    "@telemetryPowerCurrentValue": {
+        "description": "Power metric chip label showing channel current with mA unit suffix.",
+        "placeholders": {
+            "milliamps": {
+                "type": "String"
+            }
+        }
+    },
+    "telemetryPowerMetricsTitle": "Power Metrics",
+    "@telemetryPowerMetricsTitle": {
+        "description": "Screen title for the power metrics history log."
+    },
+    "telemetryPowerNoData": "No power data recorded yet",
+    "@telemetryPowerNoData": {
+        "description": "Empty-state headline when no power metrics have been logged."
+    },
+    "telemetryPowerNoDataDescription": "Power readings appear when a node on your mesh has a power-monitoring sensor (multi-channel voltage and current) and broadcasts it.",
+    "@telemetryPowerNoDataDescription": {
+        "description": "Empty-state description explaining why the power metrics log may be empty."
     },
     "telemetryReadingsCount": "{count} readings",
     "@telemetryReadingsCount": {

@@ -19756,6 +19756,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsTilePowerManagementTitle => 'Управление питанием';
 
   @override
+  String get settingsTilePowerMetricsSubtitle =>
+      'История каналов напряжения и тока';
+
+  @override
+  String get settingsTilePowerMetricsTitle => 'Метрики питания';
+
+  @override
   String get settingsTilePrivacyPolicySubtitle =>
       'Как мы обрабатываем ваши данные';
 
@@ -23155,6 +23162,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Данные о качестве воздуха ещё не записаны';
 
   @override
+  String get telemetryAirQualityNoDataDescription =>
+      'Показания качества воздуха появляются, когда узел в вашей сети имеет датчик качества воздуха (PM2.5, PM10, CO2) и передаёт их.';
+
+  @override
   String get telemetryAirQualityParticle03um => '>0.3µm';
 
   @override
@@ -23642,6 +23653,26 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get telemetryPositionTitle => 'Местоположение';
+
+  @override
+  String telemetryPowerChannel(int channel) {
+    return 'Канал $channel';
+  }
+
+  @override
+  String telemetryPowerCurrentValue(String milliamps) {
+    return '$milliamps мА';
+  }
+
+  @override
+  String get telemetryPowerMetricsTitle => 'Метрики питания';
+
+  @override
+  String get telemetryPowerNoData => 'Данные о питании ещё не записаны';
+
+  @override
+  String get telemetryPowerNoDataDescription =>
+      'Показания питания появляются, когда узел в вашей сети имеет датчик питания (многоканальное напряжение и ток) и передаёт их.';
 
   @override
   String telemetryReadingsCount(int count) {
