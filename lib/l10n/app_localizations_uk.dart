@@ -3700,6 +3700,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String get channelKeyApply => 'Застосувати ключ';
 
   @override
+  String get commonAdd => 'Додати';
+
+  @override
+  String get commonRemove => 'Видалити';
+
+  @override
   String get commonDelete => 'Видалити';
 
   @override
@@ -7561,6 +7567,18 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get mapHideWaypoints => 'Сховати точки маршруту';
+
+  @override
+  String mapNodeTransparency(int percent) {
+    return 'Прозорість вузлів: $percent%';
+  }
+
+  @override
+  String get mapNodeTransparencyTitle => 'Прозорість вузлів';
+
+  @override
+  String get mapNodeTransparencyDescription =>
+      'Зробіть позначки сусідніх вузлів напівпрозорими, щоб карта під ними залишалася видимою. Ваш власний вузол залишається повністю видимим.';
 
   @override
   String get mapShowSatelliteLabels => 'Показати мітки супутника';
@@ -45135,5 +45153,375 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String settingsTelemetryExportError(String error) {
     return 'Не вдалося експортувати телеметрію: $error';
+  }
+
+  @override
+  String get helpModeNeedHelp => 'Потрібна допомога';
+
+  @override
+  String get helpModeAffordanceTooltip =>
+      'Запросити допомогу в довірених вузлів';
+
+  @override
+  String get helpModeCreateTitle => 'Запросити допомогу';
+
+  @override
+  String get helpModeCreateIntro =>
+      'Сповістіть довірені вузли. Доставка за можливості через мережу mesh.';
+
+  @override
+  String get helpModeCreateStatusLabel => 'Як ви? (необов\'язково)';
+
+  @override
+  String get helpModeLocationDisclosure =>
+      'Ваше місцезнаходження буде передане помічникам, поки запит активний.';
+
+  @override
+  String get helpModeSend => 'Надіслати запит про допомогу';
+
+  @override
+  String get helpModeBroadcastingTitle => 'Пошук допомоги';
+
+  @override
+  String get helpModeBroadcastingBody =>
+      'Передавання довіреним вузлам. За можливості через мережу mesh.';
+
+  @override
+  String get helpModeActiveTitle => 'Запит про допомогу активний';
+
+  @override
+  String get helpModeNoResponders => 'Поки немає помічників';
+
+  @override
+  String helpModeResponderCount(int count) {
+    return 'Активних помічників: $count';
+  }
+
+  @override
+  String get helpModeUpdateStatus => 'Оновіть свій статус';
+
+  @override
+  String get helpModeMessages => 'Повідомлення';
+
+  @override
+  String get helpModeImSafe => 'Я в безпеці';
+
+  @override
+  String get helpModeCancelRequest => 'Скасувати запит';
+
+  @override
+  String get helpModeImSafeConfirm =>
+      'Позначити, що ви в безпеці? Помічники припинять виїзд.';
+
+  @override
+  String get helpModeCancelConfirm => 'Скасувати запит як хибну тривогу?';
+
+  @override
+  String helpModeInboundTitle(String name) {
+    return '$name просить про допомогу';
+  }
+
+  @override
+  String get helpModeInboundBody =>
+      'Від довіреного вузла. За можливості через мережу mesh.';
+
+  @override
+  String get helpModeAcknowledge => 'Підтвердити';
+
+  @override
+  String get helpModeRespond => 'Відгукнутися';
+
+  @override
+  String get helpModeOpenMap => 'Відкрити карту';
+
+  @override
+  String get helpModeDismiss => 'Закрити';
+
+  @override
+  String get helpModeRespondingTitle => 'Відгук';
+
+  @override
+  String get helpModeUpdateResponse => 'Оновити для помічників';
+
+  @override
+  String get helpModeLeaveResponse => 'Припинити відгук';
+
+  @override
+  String get helpModeRequesterLocation => 'Місцезнаходження запитувача';
+
+  @override
+  String helpModeLocationAge(String age) {
+    return 'Оновлено $age тому';
+  }
+
+  @override
+  String get helpModeLocationPending => 'Місцезнаходження ще не передано';
+
+  @override
+  String get helpModeLocationSharedTitle => 'Місцезнаходження передано';
+
+  @override
+  String get helpModeLocationSharedBody =>
+      'Передається помічникам, поки запит активний.';
+
+  @override
+  String get helpModeResolvedTitle => 'Все гаразд';
+
+  @override
+  String get helpModeResolvedBody =>
+      'Позначено як безпечно. Помічники припинили виїзд.';
+
+  @override
+  String get helpModeCancelledTitle => 'Запит скасовано';
+
+  @override
+  String get helpModeCancelledBody =>
+      'Хибна тривога. Помічники припинили виїзд.';
+
+  @override
+  String get helpModeExpiredTitle => 'Запит протерміновано';
+
+  @override
+  String get helpModeExpiredBody => 'Відповіді не отримано.';
+
+  @override
+  String get helpModeBannerActiveTitle => 'Запит про допомогу активний';
+
+  @override
+  String get helpModeBannerRespondingTitle => 'Ви відгукнулися';
+
+  @override
+  String get helpModeBannerView => 'Відкрити';
+
+  @override
+  String get helpModeActivityTitle => 'Активність';
+
+  @override
+  String get helpModeTimelineEmpty => 'Поки немає активності';
+
+  @override
+  String get helpModeMessagesEmpty => 'Поки немає повідомлень';
+
+  @override
+  String get helpModeMessageHint => 'Написати помічникам';
+
+  @override
+  String get helpModeGalleryTitle => 'Попередній перегляд Help Mode';
+
+  @override
+  String get helpModeGallerySubtitle =>
+      'Приклади станів для перегляду. Не підключено до мережі mesh.';
+
+  @override
+  String get helpModeStatusImOk => 'Я в порядку';
+
+  @override
+  String get helpModeStatusInjured => 'Травмований';
+
+  @override
+  String get helpModeStatusCantMove => 'Не можу рухатися';
+
+  @override
+  String get helpModeStatusNeedWater => 'Потрібна вода';
+
+  @override
+  String get helpModeStatusNeedMedical => 'Потрібна медична допомога';
+
+  @override
+  String get helpModeStatusFalseAlarm => 'Хибна тривога';
+
+  @override
+  String get helpModeStatusWorse => 'Погіршується';
+
+  @override
+  String get helpModeStatusOnMyWay => 'Вже в дорозі';
+
+  @override
+  String get helpModeStatusArrived => 'На місці';
+
+  @override
+  String get helpModeStatusNeedBackup => 'Потрібне підкріплення';
+
+  @override
+  String get helpModeStatusBlocked => 'Дорогу перекрито';
+
+  @override
+  String get helpModeStatusCantReach => 'Не можу до вас дістатися';
+
+  @override
+  String get helpModeStatusLeaving => 'Залишаю';
+
+  @override
+  String get helpModeEventCreate => 'Запитано допомогу';
+
+  @override
+  String get helpModeEventAck => 'Підтверджено';
+
+  @override
+  String get helpModeEventSeen => 'Переглянуто';
+
+  @override
+  String get helpModeEventResponderAccept => 'Помічник прийняв';
+
+  @override
+  String get helpModeEventResponderLeave => 'Помічник вийшов';
+
+  @override
+  String get helpModeEventRequesterStatus => 'Оновлення статусу';
+
+  @override
+  String get helpModeEventResponderStatus => 'Оновлення від помічника';
+
+  @override
+  String get helpModeEventLocation => 'Оновлення місцезнаходження';
+
+  @override
+  String get helpModeEventMessage => 'Повідомлення';
+
+  @override
+  String get helpModeEventResolve => 'Позначено як безпечно';
+
+  @override
+  String get helpModeEventCancel => 'Скасовано';
+
+  @override
+  String get helpModeEventExpire => 'Протерміновано';
+
+  @override
+  String get helpModeNoEligiblePeers =>
+      'Зараз немає доступних довірених помічників';
+
+  @override
+  String get helpModeKeepRequest => 'Залишити запит';
+
+  @override
+  String get helpModeCreateFailed =>
+      'Не вдалося створити запит про допомогу. Спробуйте ще раз.';
+
+  @override
+  String get helpModeLocationOffTitle =>
+      'Передавання місцезнаходження вимкнено';
+
+  @override
+  String get helpModeLocationOffBody =>
+      'Передавання точного місцезнаходження в цьому режимі mesh вимкнено. Повідомте своє місцезнаходження помічникам у повідомленні інциденту.';
+
+  @override
+  String helpModeLocationAccuracy(int meters) {
+    return 'Точність ~$meters м';
+  }
+
+  @override
+  String get helpModeLocationStale => 'Місцезнаходження може бути застарілим';
+
+  @override
+  String get notificationIncidentHelpRequestTitle => 'Запит про допомогу';
+
+  @override
+  String get notificationIncidentHelpRequestBody =>
+      'Довіреному вузлу потрібна допомога';
+
+  @override
+  String get notificationChannelIncidentHelp =>
+      'Довірені запити про допомогу через мережу mesh';
+
+  @override
+  String helpModeActiveCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count активних запитів про допомогу',
+      many: '$count активних запитів про допомогу',
+      few: '$count активні запити про допомогу',
+      one: '$count активний запит про допомогу',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get helpModeBannerTapToRespond => 'Натисніть, щоб відгукнутися';
+
+  @override
+  String get helpModeInboxTitle => 'Запити про допомогу';
+
+  @override
+  String get helpModeInboxEmpty => 'Немає активних запитів про допомогу';
+
+  @override
+  String get helpModeCircleAdd => 'Додати до кола допомоги';
+
+  @override
+  String get helpModeCircleRemove => 'Прибрати з кола допомоги';
+
+  @override
+  String helpModeCircleAddedSnack(String name) {
+    return '$name додано до вашого кола допомоги';
+  }
+
+  @override
+  String helpModeCircleRemovedSnack(String name) {
+    return '$name прибрано з вашого кола допомоги';
+  }
+
+  @override
+  String get helpModeCircleTitle => 'Коло допомоги';
+
+  @override
+  String get helpModeCircleEmpty => 'Поки немає довірених вузлів';
+
+  @override
+  String get helpModeCircleIntro =>
+      'Лише вузли з вашого кола допомоги можуть обмінюватися з вами запитами про допомогу. Перебування на одному каналі недостатньо.';
+
+  @override
+  String get helpModeCircleManage => 'Керувати колом допомоги';
+
+  @override
+  String get helpModeCircleTrusted => 'У вашому колі допомоги';
+
+  @override
+  String get helpModeCircleAddConfirmTitle => 'Додати до кола допомоги?';
+
+  @override
+  String get helpModeCircleAddConfirmBody =>
+      'Вузли з вашого кола допомоги можуть отримувати ваші запити про допомогу та відповідати на них. Ви самі обираєте, кого додати: перебування на одному каналі не робить вузол довіреним, а надсилання точного місцезнаходження в цьому режимі лишається вимкненим. Для двостороннього обміну допомогою інша людина теж має додати вас до свого кола допомоги.';
+
+  @override
+  String get helpModeCircleMutualNote =>
+      'Для двостороннього обміну допомогою обидві людини додають одне одного до свого кола допомоги.';
+
+  @override
+  String get helpModeCircleInviteTitle => 'Запрошення до кола допомоги';
+
+  @override
+  String helpModeCircleInvitePrompt(String name) {
+    return 'Додати $name до вашого кола допомоги?';
+  }
+
+  @override
+  String get helpModeCircleInviteDisabled =>
+      'Режим допомоги вимкнено. Увімкніть його, щоб користуватися колом допомоги.';
+
+  @override
+  String get helpModeCircleShareAction => 'Поділитися моїм кодом кола допомоги';
+
+  @override
+  String get helpModeCircleShareTitle => 'Мій код кола допомоги';
+
+  @override
+  String get helpModeCircleShareSubtitle =>
+      'Покажіть це довіреному вузлу, щоб він додав вас до свого кола допомоги.';
+
+  @override
+  String helpModeCircleShareInfo(String id) {
+    return 'Вузол $id';
+  }
+
+  @override
+  String get helpModeCircleRemoveConfirmTitle => 'Видалити з кола допомоги?';
+
+  @override
+  String helpModeCircleRemoveConfirmBody(String name) {
+    return '$name більше не зможе надсилати вам запити про допомогу чи отримувати їх від вас. Ви можете додати його знову пізніше.';
   }
 }

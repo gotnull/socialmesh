@@ -4583,6 +4583,9 @@
   "mapHideMeshWaypoints": "Скрыть точки маршрута сети",
   "mapShowWaypoints": "Показать точки маршрута",
   "mapHideWaypoints": "Скрыть точки маршрута",
+  "mapNodeTransparency": "Прозрачность узлов: {percent}%",
+  "mapNodeTransparencyTitle": "Прозрачность узлов",
+  "mapNodeTransparencyDescription": "Сделайте маркеры соседних узлов полупрозрачными, чтобы карта под ними оставалась видимой. Ваш собственный узел остаётся полностью видимым.",
   "mapShowSatelliteLabels": "Показать подписи спутников",
   "mapShowTakEntities": "Показать объекты TAK",
   "mapStyleTooltip": "Стиль карты",
@@ -13310,5 +13313,491 @@
   "settingsTileTelemetryExportSubtitle": "Поделиться сохранённой телеметрией в формате CSV/JSON. Может содержать данные о местоположении.",
   "settingsTelemetryExportEmpty": "Пока нет образцов телеметрии для экспорта.",
   "settingsTelemetryExportDone": "Экспорт телеметрии готов к отправке.",
-  "settingsTelemetryExportError": "Не удалось экспортировать телеметрию: {error}"
+  "settingsTelemetryExportError": "Не удалось экспортировать телеметрию: {error}",
+  "helpModeNeedHelp": "Нужна помощь",
+  "@helpModeNeedHelp": {
+    "description": "Label on the map Need Help button."
+  },
+  "helpModeAffordanceTooltip": "Запросить помощь у доверенных узлов",
+  "@helpModeAffordanceTooltip": {
+    "description": "Tooltip for the map Need Help button."
+  },
+  "helpModeCreateTitle": "Запросить помощь",
+  "@helpModeCreateTitle": {
+    "description": "Title of the help request creation sheet."
+  },
+  "helpModeCreateIntro": "Оповестите доверенные узлы. Доставка по мере возможности через сеть mesh.",
+  "@helpModeCreateIntro": {
+    "description": "Intro copy on the help request creation sheet."
+  },
+  "helpModeCreateStatusLabel": "Как вы? (необязательно)",
+  "@helpModeCreateStatusLabel": {
+    "description": "Label above the optional initial status chips on creation."
+  },
+  "helpModeLocationDisclosure": "Ваше местоположение будет передано помощникам, пока запрос активен.",
+  "@helpModeLocationDisclosure": {
+    "description": "Location sharing disclosure shown on creation and while active."
+  },
+  "helpModeSend": "Отправить запрос о помощи",
+  "@helpModeSend": {
+    "description": "Primary button to raise a help request."
+  },
+  "helpModeBroadcastingTitle": "Поиск помощи",
+  "@helpModeBroadcastingTitle": {
+    "description": "Header while a help request is broadcasting with no responder."
+  },
+  "helpModeBroadcastingBody": "Передача доверенным узлам. По мере возможности через сеть mesh.",
+  "@helpModeBroadcastingBody": {
+    "description": "Body while a help request is broadcasting."
+  },
+  "helpModeActiveTitle": "Запрос о помощи активен",
+  "@helpModeActiveTitle": {
+    "description": "Header of the requester active view."
+  },
+  "helpModeNoResponders": "Пока нет помощников",
+  "@helpModeNoResponders": {
+    "description": "Shown when a help request has no responders."
+  },
+  "helpModeResponderCount": "Активных помощников: {count}",
+  "@helpModeResponderCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    },
+    "description": "Number of active responders."
+  },
+  "helpModeUpdateStatus": "Обновите свой статус",
+  "@helpModeUpdateStatus": {
+    "description": "Label above the requester quick-status chips."
+  },
+  "helpModeMessages": "Сообщения",
+  "@helpModeMessages": {
+    "description": "Action that opens the incident-scoped messages."
+  },
+  "helpModeImSafe": "Я в безопасности",
+  "@helpModeImSafe": {
+    "description": "Action that resolves a help request: the requester is safe."
+  },
+  "helpModeCancelRequest": "Отменить запрос",
+  "@helpModeCancelRequest": {
+    "description": "Action that cancels a help request as a false alarm."
+  },
+  "helpModeImSafeConfirm": "Отметить, что вы в безопасности? Помощники прекратят выезд.",
+  "@helpModeImSafeConfirm": {
+    "description": "Confirmation copy for marking safe."
+  },
+  "helpModeCancelConfirm": "Отменить запрос как ложную тревогу?",
+  "@helpModeCancelConfirm": {
+    "description": "Confirmation copy for cancelling a request."
+  },
+  "helpModeInboundTitle": "{name} просит о помощи",
+  "@helpModeInboundTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    },
+    "description": "Title of the inbound help alert card."
+  },
+  "helpModeInboundBody": "От доверенного узла. По мере возможности через сеть mesh.",
+  "@helpModeInboundBody": {
+    "description": "Body of the inbound help alert card."
+  },
+  "helpModeAcknowledge": "Подтвердить",
+  "@helpModeAcknowledge": {
+    "description": "Primary non-responder action on the inbound alert."
+  },
+  "helpModeRespond": "Откликнуться",
+  "@helpModeRespond": {
+    "description": "Action to become a responder on the inbound alert."
+  },
+  "helpModeOpenMap": "Открыть карту",
+  "@helpModeOpenMap": {
+    "description": "Action to open the map from the inbound alert."
+  },
+  "helpModeDismiss": "Закрыть",
+  "@helpModeDismiss": {
+    "description": "Low-emphasis secondary action on the inbound alert."
+  },
+  "helpModeRespondingTitle": "Отклик",
+  "@helpModeRespondingTitle": {
+    "description": "Header of the responder active view."
+  },
+  "helpModeUpdateResponse": "Обновить для помощников",
+  "@helpModeUpdateResponse": {
+    "description": "Label above the responder quick-status chips."
+  },
+  "helpModeLeaveResponse": "Прекратить отклик",
+  "@helpModeLeaveResponse": {
+    "description": "Action for a responder to stand down."
+  },
+  "helpModeRequesterLocation": "Местоположение запросившего",
+  "@helpModeRequesterLocation": {
+    "description": "Section title for the requester location on the responder view."
+  },
+  "helpModeLocationAge": "Обновлено {age} назад",
+  "@helpModeLocationAge": {
+    "placeholders": {
+      "age": {
+        "type": "String"
+      }
+    },
+    "description": "Age of the last location fix."
+  },
+  "helpModeLocationPending": "Местоположение ещё не передано",
+  "@helpModeLocationPending": {
+    "description": "Shown when no location has been received yet."
+  },
+  "helpModeLocationSharedTitle": "Местоположение передано",
+  "@helpModeLocationSharedTitle": {
+    "description": "Title of the location-shared disclosure banner."
+  },
+  "helpModeLocationSharedBody": "Передаётся помощникам, пока запрос активен.",
+  "@helpModeLocationSharedBody": {
+    "description": "Body of the location-shared disclosure banner."
+  },
+  "helpModeResolvedTitle": "Всё в порядке",
+  "@helpModeResolvedTitle": {
+    "description": "Header when a help request is resolved safe."
+  },
+  "helpModeResolvedBody": "Отмечено как безопасно. Помощники прекратили выезд.",
+  "@helpModeResolvedBody": {
+    "description": "Body when a help request is resolved safe."
+  },
+  "helpModeCancelledTitle": "Запрос отменён",
+  "@helpModeCancelledTitle": {
+    "description": "Header when a help request is cancelled."
+  },
+  "helpModeCancelledBody": "Ложная тревога. Помощники прекратили выезд.",
+  "@helpModeCancelledBody": {
+    "description": "Body when a help request is cancelled."
+  },
+  "helpModeExpiredTitle": "Запрос истёк",
+  "@helpModeExpiredTitle": {
+    "description": "Header when a help request expired with no response."
+  },
+  "helpModeExpiredBody": "Ответ не получен.",
+  "@helpModeExpiredBody": {
+    "description": "Body when a help request expired."
+  },
+  "helpModeBannerActiveTitle": "Запрос о помощи активен",
+  "@helpModeBannerActiveTitle": {
+    "description": "Global banner title when the user has an active help request."
+  },
+  "helpModeBannerRespondingTitle": "Вы откликнулись",
+  "@helpModeBannerRespondingTitle": {
+    "description": "Global banner title when the user is a responder."
+  },
+  "helpModeBannerView": "Открыть",
+  "@helpModeBannerView": {
+    "description": "Global banner action to open the incident."
+  },
+  "helpModeActivityTitle": "Активность",
+  "@helpModeActivityTitle": {
+    "description": "Section title for the incident activity timeline."
+  },
+  "helpModeTimelineEmpty": "Пока нет активности",
+  "@helpModeTimelineEmpty": {
+    "description": "Empty state for the incident timeline."
+  },
+  "helpModeMessagesEmpty": "Пока нет сообщений",
+  "@helpModeMessagesEmpty": {
+    "description": "Empty state for incident messages."
+  },
+  "helpModeMessageHint": "Написать помощникам",
+  "@helpModeMessageHint": {
+    "description": "Hint text for the incident message field."
+  },
+  "helpModeGalleryTitle": "Предпросмотр Help Mode",
+  "@helpModeGalleryTitle": {
+    "description": "Title of the Help Mode fixture gallery screen."
+  },
+  "helpModeGallerySubtitle": "Примерные состояния для проверки. Не подключено к сети mesh.",
+  "@helpModeGallerySubtitle": {
+    "description": "Subtitle of the Help Mode fixture gallery screen."
+  },
+  "helpModeStatusImOk": "Я в порядке",
+  "@helpModeStatusImOk": {
+    "description": "Requester quick status: ok."
+  },
+  "helpModeStatusInjured": "Травмирован",
+  "@helpModeStatusInjured": {
+    "description": "Requester quick status: injured."
+  },
+  "helpModeStatusCantMove": "Не могу двигаться",
+  "@helpModeStatusCantMove": {
+    "description": "Requester quick status: cannot move."
+  },
+  "helpModeStatusNeedWater": "Нужна вода",
+  "@helpModeStatusNeedWater": {
+    "description": "Requester quick status: need water."
+  },
+  "helpModeStatusNeedMedical": "Нужна медпомощь",
+  "@helpModeStatusNeedMedical": {
+    "description": "Requester quick status: need medical."
+  },
+  "helpModeStatusFalseAlarm": "Ложная тревога",
+  "@helpModeStatusFalseAlarm": {
+    "description": "Requester quick status: false alarm."
+  },
+  "helpModeStatusWorse": "Ухудшается",
+  "@helpModeStatusWorse": {
+    "description": "Requester quick status: situation worse."
+  },
+  "helpModeStatusOnMyWay": "Уже в пути",
+  "@helpModeStatusOnMyWay": {
+    "description": "Responder quick status: on my way."
+  },
+  "helpModeStatusArrived": "На месте",
+  "@helpModeStatusArrived": {
+    "description": "Responder quick status: arrived."
+  },
+  "helpModeStatusNeedBackup": "Нужно подкрепление",
+  "@helpModeStatusNeedBackup": {
+    "description": "Responder quick status: need backup."
+  },
+  "helpModeStatusBlocked": "Дорога перекрыта",
+  "@helpModeStatusBlocked": {
+    "description": "Responder quick status: blocked."
+  },
+  "helpModeStatusCantReach": "Не могу до вас добраться",
+  "@helpModeStatusCantReach": {
+    "description": "Responder quick status: cannot reach."
+  },
+  "helpModeStatusLeaving": "Ухожу",
+  "@helpModeStatusLeaving": {
+    "description": "Responder quick status: leaving response."
+  },
+  "helpModeEventCreate": "Запрошена помощь",
+  "@helpModeEventCreate": {
+    "description": "Timeline label for the create event."
+  },
+  "helpModeEventAck": "Подтверждено",
+  "@helpModeEventAck": {
+    "description": "Timeline label for an acknowledgement."
+  },
+  "helpModeEventSeen": "Просмотрено",
+  "@helpModeEventSeen": {
+    "description": "Timeline label for a seen event."
+  },
+  "helpModeEventResponderAccept": "Помощник принял",
+  "@helpModeEventResponderAccept": {
+    "description": "Timeline label when a responder accepts."
+  },
+  "helpModeEventResponderLeave": "Помощник вышел",
+  "@helpModeEventResponderLeave": {
+    "description": "Timeline label when a responder leaves."
+  },
+  "helpModeEventRequesterStatus": "Обновление статуса",
+  "@helpModeEventRequesterStatus": {
+    "description": "Timeline label for a requester status update."
+  },
+  "helpModeEventResponderStatus": "Обновление от помощника",
+  "@helpModeEventResponderStatus": {
+    "description": "Timeline label for a responder status update."
+  },
+  "helpModeEventLocation": "Обновление местоположения",
+  "@helpModeEventLocation": {
+    "description": "Timeline label for a location update."
+  },
+  "helpModeEventMessage": "Сообщение",
+  "@helpModeEventMessage": {
+    "description": "Timeline label for a message."
+  },
+  "helpModeEventResolve": "Отмечено как безопасно",
+  "@helpModeEventResolve": {
+    "description": "Timeline label for a resolve event."
+  },
+  "helpModeEventCancel": "Отменено",
+  "@helpModeEventCancel": {
+    "description": "Timeline label for a cancel event."
+  },
+  "helpModeEventExpire": "Истёк",
+  "@helpModeEventExpire": {
+    "description": "Timeline label for an expire event."
+  },
+  "helpModeNoEligiblePeers": "Сейчас нет доступных доверенных помощников",
+  "@helpModeNoEligiblePeers": {
+    "description": "Honest copy shown when a help request is raised but no Handshake-trusted, capable peers are reachable; the request is still saved locally."
+  },
+  "helpModeKeepRequest": "Оставить запрос",
+  "@helpModeKeepRequest": {
+    "description": "Low-emphasis dismiss action on the resolve/cancel confirmation sheets that keeps the help request active."
+  },
+  "helpModeCreateFailed": "Не удалось создать запрос о помощи. Повторите попытку.",
+  "@helpModeCreateFailed": {
+    "description": "Error snackbar shown when a help request cannot be created locally (e.g. incident id allocation failed)."
+  },
+  "helpModeLocationOffTitle": "Передача местоположения отключена",
+  "@helpModeLocationOffTitle": {
+    "description": "Title of the disclosure banner when precise location sharing is unavailable on the current mesh mode."
+  },
+  "helpModeLocationOffBody": "Передача точного местоположения в этом режиме mesh отключена. Сообщите своё местоположение помощникам в сообщении инцидента.",
+  "@helpModeLocationOffBody": {
+    "description": "Body of the location-off disclosure banner; directs users to describe their location in chat instead."
+  },
+  "helpModeLocationAccuracy": "Точность ~{meters} м",
+  "@helpModeLocationAccuracy": {
+    "placeholders": {
+      "meters": {
+        "type": "int"
+      }
+    },
+    "description": "Responder view accuracy line for a known location fix, in metres."
+  },
+  "helpModeLocationStale": "Местоположение может быть устаревшим",
+  "@helpModeLocationStale": {
+    "description": "Responder view note shown when the last known location fix is stale."
+  },
+  "notificationIncidentHelpRequestTitle": "Запрос о помощи",
+  "@notificationIncidentHelpRequestTitle": {
+    "description": "Title of the local notification shown for a trusted inbound help request. Generic by design: no peer name, message body, or coordinates."
+  },
+  "notificationIncidentHelpRequestBody": "Доверенному узлу нужна помощь",
+  "@notificationIncidentHelpRequestBody": {
+    "description": "Body of the trusted help-request notification. Generic by design; never includes message text or location."
+  },
+  "notificationChannelIncidentHelp": "Доверенные запросы о помощи по сети mesh",
+  "@notificationChannelIncidentHelp": {
+    "description": "Android notification channel description for Help Mode requests."
+  },
+  "helpModeActiveCount": "{count, plural, one{{count} активный запрос о помощи} few{{count} активных запроса о помощи} many{{count} активных запросов о помощи} other{{count} активных запроса о помощи}}",
+  "@helpModeActiveCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    },
+    "description": "Count of active help requests shown in the global banner / inbox."
+  },
+  "helpModeBannerTapToRespond": "Нажмите, чтобы откликнуться",
+  "@helpModeBannerTapToRespond": {
+    "description": "Global help banner subtitle prompting the user to open the responder flow."
+  },
+  "helpModeInboxTitle": "Запросы о помощи",
+  "@helpModeInboxTitle": {
+    "description": "Title of the responder inbox listing active trusted help requests."
+  },
+  "helpModeInboxEmpty": "Нет активных запросов о помощи",
+  "@helpModeInboxEmpty": {
+    "description": "Empty state for the responder inbox."
+  },
+  "helpModeCircleAdd": "Добавить в круг помощи",
+  "@helpModeCircleAdd": {
+      "description": "Node action: add this peer to the Help Circle (trust them for Help Mode)."
+  },
+  "helpModeCircleRemove": "Убрать из круга помощи",
+  "@helpModeCircleRemove": {
+      "description": "Node action / list action: remove this peer from the Help Circle."
+  },
+  "helpModeCircleAddedSnack": "{name} добавлен в ваш круг помощи",
+  "@helpModeCircleAddedSnack": {
+      "placeholders": {
+          "name": {
+              "type": "String"
+          }
+      },
+      "description": "Snackbar confirming a peer was added to the Help Circle."
+  },
+  "helpModeCircleRemovedSnack": "{name} удалён из вашего круга помощи",
+  "@helpModeCircleRemovedSnack": {
+      "placeholders": {
+          "name": {
+              "type": "String"
+          }
+      },
+      "description": "Snackbar confirming a peer was removed from the Help Circle."
+  },
+  "helpModeCircleTitle": "Круг помощи",
+  "@helpModeCircleTitle": {
+      "description": "Title of the Help Circle management screen."
+  },
+  "helpModeCircleEmpty": "Пока нет доверенных узлов",
+  "@helpModeCircleEmpty": {
+      "description": "Empty state of the Help Circle screen."
+  },
+  "helpModeCircleIntro": "Только узлы из вашего круга помощи могут обмениваться с вами запросами о помощи. Нахождения в одном канале недостаточно.",
+  "@helpModeCircleIntro": {
+      "description": "Explainer on the Help Circle screen describing the trust model."
+  },
+  "helpModeCircleManage": "Управление кругом помощи",
+  "@helpModeCircleManage": {
+      "description": "Tooltip/title for opening the Help Circle management screen."
+  },
+  "helpModeCircleTrusted": "В вашем круге помощи",
+  "@helpModeCircleTrusted": {
+      "description": "Status label shown on a node that is in the Help Circle."
+  },
+  "helpModeCircleAddConfirmTitle": "Добавить в круг помощи?",
+  "@helpModeCircleAddConfirmTitle": {
+      "description": "Title of the confirmation sheet shown before adding a node to the Help Circle."
+  },
+  "helpModeCircleAddConfirmBody": "Узлы из круга помощи могут получать ваши запросы о помощи и отвечать на них. Вы сами выбираете, кого добавить: нахождение в одном канале не делает узел доверенным, а передача точного местоположения в этом режиме остаётся отключённой. Для двустороннего обмена помощью другой человек тоже должен добавить вас в свой круг помощи.",
+  "@helpModeCircleAddConfirmBody": {
+      "description": "Body copy of the Help Circle add-confirmation sheet, explaining what trust means (manual, local, not channel-based, no precise location, two-way)."
+  },
+  "helpModeCircleMutualNote": "Для двустороннего обмена помощью оба человека добавляют друг друга в свой круг помощи.",
+  "@helpModeCircleMutualNote": {
+      "description": "Note on the Help Circle screen clarifying that trust is one-directional and both peers must add each other."
+  },
+  "helpModeCircleInviteTitle": "Приглашение в круг помощи",
+  "@helpModeCircleInviteTitle": {
+      "description": "Title of the screen shown when opening/scanning a Help Circle invite."
+  },
+  "helpModeCircleInvitePrompt": "Добавить {name} в ваш круг помощи?",
+  "@helpModeCircleInvitePrompt": {
+      "placeholders": {
+          "name": {
+              "type": "String"
+          }
+      },
+      "description": "Prompt on the Help Circle invite screen asking whether to add the inviting peer."
+  },
+  "helpModeCircleInviteDisabled": "Режим помощи выключен. Включите его, чтобы пользоваться кругом помощи.",
+  "@helpModeCircleInviteDisabled": {
+      "description": "Shown on the Help Circle invite screen when the Incident/Help Mode flags are off."
+  },
+  "helpModeCircleShareAction": "Поделиться моим кодом круга помощи",
+  "@helpModeCircleShareAction": {
+      "description": "Button on the Help Circle screen that shows the user's own invite QR code."
+  },
+  "helpModeCircleShareTitle": "Мой код круга помощи",
+  "@helpModeCircleShareTitle": {
+      "description": "Title of the QR share sheet for the user's own Help Circle invite."
+  },
+  "helpModeCircleShareSubtitle": "Покажите это доверенному узлу, чтобы он добавил вас в свой круг помощи.",
+  "@helpModeCircleShareSubtitle": {
+      "description": "Subtitle of the Help Circle invite QR share sheet."
+  },
+  "helpModeCircleShareInfo": "Узел {id}",
+  "@helpModeCircleShareInfo": {
+      "placeholders": {
+          "id": {
+              "type": "String"
+          }
+      },
+      "description": "Info line under the Help Circle invite QR showing the node id (hex)."
+  },
+  "helpModeCircleRemoveConfirmTitle": "Удалить из круга помощи?",
+  "@helpModeCircleRemoveConfirmTitle": {
+      "description": "Title of the confirmation shown before removing a peer from the Help Circle."
+  },
+  "helpModeCircleRemoveConfirmBody": "{name} больше не сможет отправлять вам запросы о помощи или получать их от вас. Вы можете добавить его снова позже.",
+  "@helpModeCircleRemoveConfirmBody": {
+      "placeholders": {
+          "name": {
+              "type": "String"
+          }
+      },
+      "description": "Body of the confirmation shown before removing a peer from the Help Circle."
+  },
+  "commonAdd": "Добавить",
+  "@commonAdd": {
+      "description": "Short label for an Add confirm button (full context is in the dialog title)."
+  },
+  "commonRemove": "Удалить",
+  "@commonRemove": {
+      "description": "Short label for a Remove confirm button (full context is in the dialog title)."
+  }
 }

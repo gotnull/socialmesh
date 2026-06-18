@@ -107,6 +107,12 @@ class FlightRouteMap extends StatelessWidget {
                 subdomains: MapConfig.isMapboxActive
                     ? const <String>[]
                     : MapTileStyle.dark.subdomains,
+                // Cap requests at the source's native zoom so any deeper
+                // interaction zoom upscales the last real tiles instead of
+                // requesting a non-existent tile.
+                maxNativeZoom: MapConfig.isMapboxActive
+                    ? 18
+                    : MapTileStyle.dark.maxNativeZoom,
                 userAgentPackageName: MapConfig.userAgentPackageName,
                 retinaMode: MapConfig.isMapboxActive,
                 evictErrorTileStrategy: EvictErrorTileStrategy.dispose,

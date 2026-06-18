@@ -262,6 +262,13 @@ final sipDiscoveryProvider = Provider<SipDiscovery?>((ref) {
     // supported by this build; advertise the bit so peers can gate
     // dmSignal sends + show the Signal tab.
     bits |= SipFeatureBits.dmSignalV1;
+    // Incident Mode help_request workflow is advertised only when its
+    // subflag is enabled, so peers gate help_request sends on us. The
+    // hazard_report workflow is unaffected. See
+    // docs/engineering/INCIDENT_MODE_SIP_MRRP_PLAN.md §11.
+    if (AppFeatureFlags.isIncidentHelpRequestEnabled) {
+      bits |= SipFeatureBits.incidentHelpV1;
+    }
     return bits;
   };
 

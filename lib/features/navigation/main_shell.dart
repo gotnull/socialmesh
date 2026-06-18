@@ -4,6 +4,8 @@
 import '../../core/constants.dart';
 import '../../core/logging.dart';
 import '../../core/navigation.dart';
+import '../incidents/providers/mesh_incident_providers.dart';
+import '../incidents/widgets/help_mode/incident_help_banner.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -721,6 +723,16 @@ class _MainShellState extends ConsumerState<MainShell> {
     final showReconnectionBanner =
         hasEverPaired && !isFullyConnected && !userDisconnected;
 
+    // Whether the global Incident Mode help banner is currently showing. Like
+    // the reconnection banner, a visible help banner occupies the top of the
+    // shell and must own the status-bar inset, so the main content below must
+    // NOT also add it (otherwise a gap appears beneath the banner).
+    final showHelpBanner = ref
+        .watch(activeHelpRequestsProvider)
+        .maybeWhen(data: (list) => list.isNotEmpty, orElse: () => false);
+    // Either banner occupying the top means the content drops its own top inset.
+    final topInsetOwnedByBanner = _bannerActuallyVisible || showHelpBanner;
+
     return Scaffold(
       key: _scaffoldKey,
       drawer: const _MainDrawer(),
@@ -782,6 +794,14 @@ class _MainShellState extends ConsumerState<MainShell> {
             deviceState: deviceState,
           ),
 
+          // Incident Mode global help banner. Self-gating: renders nothing
+          // unless there is at least one active trusted help request (and the
+          // Incident Mode flags are on). Tapping opens the responder inbox.
+          // When the reconnection banner is visible it owns the status-bar
+          // inset and the help banner stacks beneath it; otherwise the help
+          // banner is topmost and consumes the inset itself.
+          IncidentHelpBanner(applyTopInset: !_bannerActuallyVisible),
+
           // Main content (fills remaining space below banner)
           // Users can fully interact with cached data while
           // reconnecting — app bars, drawers, and nav all work.
@@ -794,7 +814,7 @@ class _MainShellState extends ConsumerState<MainShell> {
               duration: const Duration(milliseconds: 350),
               curve: Curves.easeOutCubic,
               padding: EdgeInsets.only(
-                top: _bannerActuallyVisible
+                top: topInsetOwnedByBanner
                     ? 0.0
                     : MediaQuery.of(context).padding.top,
               ),

@@ -255,6 +255,10 @@ class DeepLinkManager {
         return link.channelInviteId != null
             ? 'channel-invite:${link.channelInviteId}' // lint-allow: hardcoded-string
             : null;
+      case DeepLinkType.helpCircleInvite:
+        return link.helpCircleInviteNodeNum != null
+            ? 'help-circle-invite:${link.helpCircleInviteNodeNum}' // lint-allow: hardcoded-string
+            : null;
       case DeepLinkType.location:
         final lat = link.locationLatitude;
         final lng = link.locationLongitude;

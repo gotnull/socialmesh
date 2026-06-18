@@ -4895,6 +4895,14 @@
     "@channelKeyApply": {
         "description": "Tooltip for confirming a manually entered channel encryption key."
     },
+    "commonAdd": "Add",
+    "@commonAdd": {
+        "description": "Short label for an Add confirm button (full context is in the dialog title)."
+    },
+    "commonRemove": "Remove",
+    "@commonRemove": {
+        "description": "Short label for a Remove confirm button (full context is in the dialog title)."
+    },
     "commonDelete": "Delete",
     "@commonDelete": {
         "description": "Label for a Delete button."
@@ -10089,6 +10097,24 @@
     "mapHideWaypoints": "Hide waypoints",
     "@mapHideWaypoints": {
         "description": "Map menu action that hides the local dropped-pin waypoint markers."
+    },
+    "mapNodeTransparency": "Node transparency: {percent}%",
+    "@mapNodeTransparency": {
+        "description": "Map menu action label that opens the node overlay transparency slider, showing the current opacity percentage.",
+        "placeholders": {
+            "percent": {
+                "type": "int",
+                "example": "60"
+            }
+        }
+    },
+    "mapNodeTransparencyTitle": "Node transparency",
+    "@mapNodeTransparencyTitle": {
+        "description": "Title of the bottom sheet that adjusts the opacity of node markers on the map."
+    },
+    "mapNodeTransparencyDescription": "Fade peer node markers so the map underneath stays visible. Your own node stays fully visible.",
+    "@mapNodeTransparencyDescription": {
+        "description": "Explanation shown in the node transparency sheet describing what the slider does."
     },
     "mapShowSatelliteLabels": "Show satellite labels",
     "@mapShowSatelliteLabels": {
@@ -59516,5 +59542,483 @@
                 "type": "String"
             }
         }
+    },
+    "helpModeNeedHelp": "Need help",
+    "@helpModeNeedHelp": {
+        "description": "Label on the map Need Help button."
+    },
+    "helpModeAffordanceTooltip": "Request help from trusted peers",
+    "@helpModeAffordanceTooltip": {
+        "description": "Tooltip for the map Need Help button."
+    },
+    "helpModeCreateTitle": "Request help",
+    "@helpModeCreateTitle": {
+        "description": "Title of the help request creation sheet."
+    },
+    "helpModeCreateIntro": "Alert your trusted peers. Delivery is best-effort over the mesh.",
+    "@helpModeCreateIntro": {
+        "description": "Intro copy on the help request creation sheet."
+    },
+    "helpModeCreateStatusLabel": "How are you? (optional)",
+    "@helpModeCreateStatusLabel": {
+        "description": "Label above the optional initial status chips on creation."
+    },
+    "helpModeLocationDisclosure": "Your location will be shared with responders while this request is active.",
+    "@helpModeLocationDisclosure": {
+        "description": "Location sharing disclosure shown on creation and while active."
+    },
+    "helpModeSend": "Send help request",
+    "@helpModeSend": {
+        "description": "Primary button to raise a help request."
+    },
+    "helpModeBroadcastingTitle": "Searching for help",
+    "@helpModeBroadcastingTitle": {
+        "description": "Header while a help request is broadcasting with no responder."
+    },
+    "helpModeBroadcastingBody": "Broadcasting to trusted peers. Best-effort over the mesh.",
+    "@helpModeBroadcastingBody": {
+        "description": "Body while a help request is broadcasting."
+    },
+    "helpModeActiveTitle": "Help request active",
+    "@helpModeActiveTitle": {
+        "description": "Header of the requester active view."
+    },
+    "helpModeNoResponders": "No responders yet",
+    "@helpModeNoResponders": {
+        "description": "Shown when a help request has no responders."
+    },
+    "helpModeResponderCount": "{count} responders active",
+    "@helpModeResponderCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        },
+        "description": "Number of active responders."
+    },
+    "helpModeUpdateStatus": "Update your status",
+    "@helpModeUpdateStatus": {
+        "description": "Label above the requester quick-status chips."
+    },
+    "helpModeMessages": "Messages",
+    "@helpModeMessages": {
+        "description": "Action that opens the incident-scoped messages."
+    },
+    "helpModeImSafe": "I'm safe",
+    "@helpModeImSafe": {
+        "description": "Action that resolves a help request: the requester is safe."
+    },
+    "helpModeCancelRequest": "Cancel request",
+    "@helpModeCancelRequest": {
+        "description": "Action that cancels a help request as a false alarm."
+    },
+    "helpModeImSafeConfirm": "Mark yourself safe? Responders will stand down.",
+    "@helpModeImSafeConfirm": {
+        "description": "Confirmation copy for marking safe."
+    },
+    "helpModeCancelConfirm": "Cancel this request as a false alarm?",
+    "@helpModeCancelConfirm": {
+        "description": "Confirmation copy for cancelling a request."
+    },
+    "helpModeInboundTitle": "{name} needs help",
+    "@helpModeInboundTitle": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        },
+        "description": "Title of the inbound help alert card."
+    },
+    "helpModeInboundBody": "From a trusted peer. Best-effort over the mesh.",
+    "@helpModeInboundBody": {
+        "description": "Body of the inbound help alert card."
+    },
+    "helpModeAcknowledge": "Acknowledge",
+    "@helpModeAcknowledge": {
+        "description": "Primary non-responder action on the inbound alert."
+    },
+    "helpModeRespond": "Respond",
+    "@helpModeRespond": {
+        "description": "Action to become a responder on the inbound alert."
+    },
+    "helpModeOpenMap": "Open map",
+    "@helpModeOpenMap": {
+        "description": "Action to open the map from the inbound alert."
+    },
+    "helpModeDismiss": "Dismiss",
+    "@helpModeDismiss": {
+        "description": "Low-emphasis secondary action on the inbound alert."
+    },
+    "helpModeRespondingTitle": "Responding",
+    "@helpModeRespondingTitle": {
+        "description": "Header of the responder active view."
+    },
+    "helpModeUpdateResponse": "Update responders",
+    "@helpModeUpdateResponse": {
+        "description": "Label above the responder quick-status chips."
+    },
+    "helpModeLeaveResponse": "Leave response",
+    "@helpModeLeaveResponse": {
+        "description": "Action for a responder to stand down."
+    },
+    "helpModeRequesterLocation": "Requester location",
+    "@helpModeRequesterLocation": {
+        "description": "Section title for the requester location on the responder view."
+    },
+    "helpModeLocationAge": "Updated {age} ago",
+    "@helpModeLocationAge": {
+        "placeholders": {
+            "age": {
+                "type": "String"
+            }
+        },
+        "description": "Age of the last location fix."
+    },
+    "helpModeLocationPending": "Location not shared yet",
+    "@helpModeLocationPending": {
+        "description": "Shown when no location has been received yet."
+    },
+    "helpModeLocationSharedTitle": "Location shared",
+    "@helpModeLocationSharedTitle": {
+        "description": "Title of the location-shared disclosure banner."
+    },
+    "helpModeLocationSharedBody": "Shared with responders while this request is active.",
+    "@helpModeLocationSharedBody": {
+        "description": "Body of the location-shared disclosure banner."
+    },
+    "helpModeResolvedTitle": "All clear",
+    "@helpModeResolvedTitle": {
+        "description": "Header when a help request is resolved safe."
+    },
+    "helpModeResolvedBody": "Marked safe. Responders have stood down.",
+    "@helpModeResolvedBody": {
+        "description": "Body when a help request is resolved safe."
+    },
+    "helpModeCancelledTitle": "Request cancelled",
+    "@helpModeCancelledTitle": {
+        "description": "Header when a help request is cancelled."
+    },
+    "helpModeCancelledBody": "False alarm. Responders have stood down.",
+    "@helpModeCancelledBody": {
+        "description": "Body when a help request is cancelled."
+    },
+    "helpModeExpiredTitle": "Request expired",
+    "@helpModeExpiredTitle": {
+        "description": "Header when a help request expired with no response."
+    },
+    "helpModeExpiredBody": "No response was received.",
+    "@helpModeExpiredBody": {
+        "description": "Body when a help request expired."
+    },
+    "helpModeBannerActiveTitle": "Help request active",
+    "@helpModeBannerActiveTitle": {
+        "description": "Global banner title when the user has an active help request."
+    },
+    "helpModeBannerRespondingTitle": "You are responding",
+    "@helpModeBannerRespondingTitle": {
+        "description": "Global banner title when the user is a responder."
+    },
+    "helpModeBannerView": "View",
+    "@helpModeBannerView": {
+        "description": "Global banner action to open the incident."
+    },
+    "helpModeActivityTitle": "Activity",
+    "@helpModeActivityTitle": {
+        "description": "Section title for the incident activity timeline."
+    },
+    "helpModeTimelineEmpty": "No activity yet",
+    "@helpModeTimelineEmpty": {
+        "description": "Empty state for the incident timeline."
+    },
+    "helpModeMessagesEmpty": "No messages yet",
+    "@helpModeMessagesEmpty": {
+        "description": "Empty state for incident messages."
+    },
+    "helpModeMessageHint": "Message responders",
+    "@helpModeMessageHint": {
+        "description": "Hint text for the incident message field."
+    },
+    "helpModeGalleryTitle": "Help Mode preview",
+    "@helpModeGalleryTitle": {
+        "description": "Title of the Help Mode fixture gallery screen."
+    },
+    "helpModeGallerySubtitle": "Fixture states for review. Not connected to the mesh.",
+    "@helpModeGallerySubtitle": {
+        "description": "Subtitle of the Help Mode fixture gallery screen."
+    },
+    "helpModeStatusImOk": "I'm OK",
+    "@helpModeStatusImOk": {
+        "description": "Requester quick status: ok."
+    },
+    "helpModeStatusInjured": "Injured",
+    "@helpModeStatusInjured": {
+        "description": "Requester quick status: injured."
+    },
+    "helpModeStatusCantMove": "Can't move",
+    "@helpModeStatusCantMove": {
+        "description": "Requester quick status: cannot move."
+    },
+    "helpModeStatusNeedWater": "Need water",
+    "@helpModeStatusNeedWater": {
+        "description": "Requester quick status: need water."
+    },
+    "helpModeStatusNeedMedical": "Need medical",
+    "@helpModeStatusNeedMedical": {
+        "description": "Requester quick status: need medical."
+    },
+    "helpModeStatusFalseAlarm": "False alarm",
+    "@helpModeStatusFalseAlarm": {
+        "description": "Requester quick status: false alarm."
+    },
+    "helpModeStatusWorse": "Getting worse",
+    "@helpModeStatusWorse": {
+        "description": "Requester quick status: situation worse."
+    },
+    "helpModeStatusOnMyWay": "On my way",
+    "@helpModeStatusOnMyWay": {
+        "description": "Responder quick status: on my way."
+    },
+    "helpModeStatusArrived": "Arrived",
+    "@helpModeStatusArrived": {
+        "description": "Responder quick status: arrived."
+    },
+    "helpModeStatusNeedBackup": "Need backup",
+    "@helpModeStatusNeedBackup": {
+        "description": "Responder quick status: need backup."
+    },
+    "helpModeStatusBlocked": "Road blocked",
+    "@helpModeStatusBlocked": {
+        "description": "Responder quick status: blocked."
+    },
+    "helpModeStatusCantReach": "Can't reach you",
+    "@helpModeStatusCantReach": {
+        "description": "Responder quick status: cannot reach."
+    },
+    "helpModeStatusLeaving": "Leaving",
+    "@helpModeStatusLeaving": {
+        "description": "Responder quick status: leaving response."
+    },
+    "helpModeEventCreate": "Help requested",
+    "@helpModeEventCreate": {
+        "description": "Timeline label for the create event."
+    },
+    "helpModeEventAck": "Acknowledged",
+    "@helpModeEventAck": {
+        "description": "Timeline label for an acknowledgement."
+    },
+    "helpModeEventSeen": "Seen",
+    "@helpModeEventSeen": {
+        "description": "Timeline label for a seen event."
+    },
+    "helpModeEventResponderAccept": "Responder accepted",
+    "@helpModeEventResponderAccept": {
+        "description": "Timeline label when a responder accepts."
+    },
+    "helpModeEventResponderLeave": "Responder left",
+    "@helpModeEventResponderLeave": {
+        "description": "Timeline label when a responder leaves."
+    },
+    "helpModeEventRequesterStatus": "Status update",
+    "@helpModeEventRequesterStatus": {
+        "description": "Timeline label for a requester status update."
+    },
+    "helpModeEventResponderStatus": "Responder update",
+    "@helpModeEventResponderStatus": {
+        "description": "Timeline label for a responder status update."
+    },
+    "helpModeEventLocation": "Location update",
+    "@helpModeEventLocation": {
+        "description": "Timeline label for a location update."
+    },
+    "helpModeEventMessage": "Message",
+    "@helpModeEventMessage": {
+        "description": "Timeline label for a message."
+    },
+    "helpModeEventResolve": "Marked safe",
+    "@helpModeEventResolve": {
+        "description": "Timeline label for a resolve event."
+    },
+    "helpModeEventCancel": "Cancelled",
+    "@helpModeEventCancel": {
+        "description": "Timeline label for a cancel event."
+    },
+    "helpModeEventExpire": "Expired",
+    "@helpModeEventExpire": {
+        "description": "Timeline label for an expire event."
+    },
+    "helpModeNoEligiblePeers": "No trusted responders currently available",
+    "@helpModeNoEligiblePeers": {
+        "description": "Honest copy shown when a help request is raised but no Handshake-trusted, capable peers are reachable; the request is still saved locally."
+    },
+    "helpModeKeepRequest": "Keep request",
+    "@helpModeKeepRequest": {
+        "description": "Low-emphasis dismiss action on the resolve/cancel confirmation sheets that keeps the help request active."
+    },
+    "helpModeCreateFailed": "Could not start the help request. Please try again.",
+    "@helpModeCreateFailed": {
+        "description": "Error snackbar shown when a help request cannot be created locally (e.g. incident id allocation failed)."
+    },
+    "helpModeLocationOffTitle": "Location sharing off",
+    "@helpModeLocationOffTitle": {
+        "description": "Title of the disclosure banner when precise location sharing is unavailable on the current mesh mode."
+    },
+    "helpModeLocationOffBody": "Precise location sharing is off for this mesh mode. Tell responders your location in the incident message.",
+    "@helpModeLocationOffBody": {
+        "description": "Body of the location-off disclosure banner; directs users to describe their location in chat instead."
+    },
+    "helpModeLocationAccuracy": "Accurate to ~{meters} m",
+    "@helpModeLocationAccuracy": {
+        "placeholders": {
+            "meters": {
+                "type": "int"
+            }
+        },
+        "description": "Responder view accuracy line for a known location fix, in metres."
+    },
+    "helpModeLocationStale": "Location may be out of date",
+    "@helpModeLocationStale": {
+        "description": "Responder view note shown when the last known location fix is stale."
+    },
+    "notificationIncidentHelpRequestTitle": "Help request",
+    "@notificationIncidentHelpRequestTitle": {
+        "description": "Title of the local notification shown for a trusted inbound help request. Generic by design: no peer name, message body, or coordinates."
+    },
+    "notificationIncidentHelpRequestBody": "A trusted peer needs help",
+    "@notificationIncidentHelpRequestBody": {
+        "description": "Body of the trusted help-request notification. Generic by design; never includes message text or location."
+    },
+    "notificationChannelIncidentHelp": "Trusted help requests over the mesh",
+    "@notificationChannelIncidentHelp": {
+        "description": "Android notification channel description for Help Mode requests."
+    },
+    "helpModeActiveCount": "{count, plural, =1{1 active help request} other{{count} active help requests}}",
+    "@helpModeActiveCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        },
+        "description": "Count of active help requests shown in the global banner / inbox."
+    },
+    "helpModeBannerTapToRespond": "Tap to respond",
+    "@helpModeBannerTapToRespond": {
+        "description": "Global help banner subtitle prompting the user to open the responder flow."
+    },
+    "helpModeInboxTitle": "Help requests",
+    "@helpModeInboxTitle": {
+        "description": "Title of the responder inbox listing active trusted help requests."
+    },
+    "helpModeInboxEmpty": "No active help requests",
+    "@helpModeInboxEmpty": {
+        "description": "Empty state for the responder inbox."
+    },
+    "helpModeCircleAdd": "Add to Help Circle",
+    "@helpModeCircleAdd": {
+        "description": "Node action: add this peer to the Help Circle (trust them for Help Mode)."
+    },
+    "helpModeCircleRemove": "Remove from Help Circle",
+    "@helpModeCircleRemove": {
+        "description": "Node action / list action: remove this peer from the Help Circle."
+    },
+    "helpModeCircleAddedSnack": "{name} added to your Help Circle",
+    "@helpModeCircleAddedSnack": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        },
+        "description": "Snackbar confirming a peer was added to the Help Circle."
+    },
+    "helpModeCircleRemovedSnack": "{name} removed from your Help Circle",
+    "@helpModeCircleRemovedSnack": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        },
+        "description": "Snackbar confirming a peer was removed from the Help Circle."
+    },
+    "helpModeCircleTitle": "Help Circle",
+    "@helpModeCircleTitle": {
+        "description": "Title of the Help Circle management screen."
+    },
+    "helpModeCircleEmpty": "No trusted peers yet",
+    "@helpModeCircleEmpty": {
+        "description": "Empty state of the Help Circle screen."
+    },
+    "helpModeCircleIntro": "Only peers in your Help Circle can raise or receive help requests with you. Being on the same channel is not enough.",
+    "@helpModeCircleIntro": {
+        "description": "Explainer on the Help Circle screen describing the trust model."
+    },
+    "helpModeCircleManage": "Manage Help Circle",
+    "@helpModeCircleManage": {
+        "description": "Tooltip/title for opening the Help Circle management screen."
+    },
+    "helpModeCircleTrusted": "In your Help Circle",
+    "@helpModeCircleTrusted": {
+        "description": "Status label shown on a node that is in the Help Circle."
+    },
+    "helpModeCircleAddConfirmTitle": "Add to Help Circle?",
+    "@helpModeCircleAddConfirmTitle": {
+        "description": "Title of the confirmation sheet shown before adding a node to the Help Circle."
+    },
+    "helpModeCircleAddConfirmBody": "Help Circle nodes can receive and respond to your Help Requests. You choose who to add: being on the same channel does not make a node trusted, and precise location sharing stays off in this mode. For a two-way help flow, the other person should add you to their Help Circle too.",
+    "@helpModeCircleAddConfirmBody": {
+        "description": "Body copy of the Help Circle add-confirmation sheet, explaining what trust means (manual, local, not channel-based, no precise location, two-way)."
+    },
+    "helpModeCircleMutualNote": "For a two-way help flow, both people add each other to their Help Circle.",
+    "@helpModeCircleMutualNote": {
+        "description": "Note on the Help Circle screen clarifying that trust is one-directional and both peers must add each other."
+    },
+    "helpModeCircleInviteTitle": "Help Circle invite",
+    "@helpModeCircleInviteTitle": {
+        "description": "Title of the screen shown when opening/scanning a Help Circle invite."
+    },
+    "helpModeCircleInvitePrompt": "Add {name} to your Help Circle?",
+    "@helpModeCircleInvitePrompt": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        },
+        "description": "Prompt on the Help Circle invite screen asking whether to add the inviting peer."
+    },
+    "helpModeCircleInviteDisabled": "Help Mode is turned off. Turn it on to use your Help Circle.",
+    "@helpModeCircleInviteDisabled": {
+        "description": "Shown on the Help Circle invite screen when the Incident/Help Mode flags are off."
+    },
+    "helpModeCircleShareAction": "Share my Help Circle code",
+    "@helpModeCircleShareAction": {
+        "description": "Button on the Help Circle screen that shows the user's own invite QR code."
+    },
+    "helpModeCircleShareTitle": "My Help Circle code",
+    "@helpModeCircleShareTitle": {
+        "description": "Title of the QR share sheet for the user's own Help Circle invite."
+    },
+    "helpModeCircleShareSubtitle": "Have a trusted peer scan this to add you to their Help Circle.",
+    "@helpModeCircleShareSubtitle": {
+        "description": "Subtitle of the Help Circle invite QR share sheet."
+    },
+    "helpModeCircleShareInfo": "Node {id}",
+    "@helpModeCircleShareInfo": {
+        "placeholders": {
+            "id": {
+                "type": "String"
+            }
+        },
+        "description": "Info line under the Help Circle invite QR showing the node id (hex)."
+    },
+    "helpModeCircleRemoveConfirmTitle": "Remove from Help Circle?",
+    "@helpModeCircleRemoveConfirmTitle": {
+        "description": "Title of the confirmation shown before removing a peer from the Help Circle."
+    },
+    "helpModeCircleRemoveConfirmBody": "{name} will no longer send or receive Help Requests with you. You can add them again later.",
+    "@helpModeCircleRemoveConfirmBody": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        },
+        "description": "Body of the confirmation shown before removing a peer from the Help Circle."
     }
 }

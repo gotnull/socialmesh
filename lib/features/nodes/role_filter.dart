@@ -223,7 +223,7 @@ class RoleFilterChipRow extends StatelessWidget {
         fadeColor: context.background,
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12),
+          padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
           child: Row(
             children: [
               for (final role in roles) ...[

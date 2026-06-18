@@ -48,6 +48,7 @@ class DeepLinkRouter {
       DeepLinkType.node => _routeNode(link),
       DeepLinkType.channel => _routeChannel(link),
       DeepLinkType.channelInvite => _routeChannelInvite(link),
+      DeepLinkType.helpCircleInvite => _routeHelpCircleInvite(link),
       DeepLinkType.profile => _routeProfile(link),
       DeepLinkType.widget => _routeWidget(link),
       DeepLinkType.post => _routePost(link),
@@ -132,6 +133,25 @@ class DeepLinkRouter {
       },
       requiresAuth: true,
       fallbackMessage: _l10n.deepLinkSignInToJoinChannel,
+    );
+  }
+
+  /// Route a Help Circle invite deep link. Local-only (no auth/device); the
+  /// target screen gates the actual add behind an explicit user confirm.
+  DeepLinkRouteResult _routeHelpCircleInvite(ParsedDeepLink link) {
+    if (!link.hasHelpCircleInvite) {
+      return DeepLinkRouteResult(
+        routeName: '/main',
+        fallbackMessage: _l10n.deepLinkUnableToOpenLink,
+      );
+    }
+    return DeepLinkRouteResult(
+      routeName: '/help-circle-invite',
+      arguments: {
+        'nodeNum': link.helpCircleInviteNodeNum,
+        'longName': link.helpCircleInviteLongName,
+        'shortName': link.helpCircleInviteShortName,
+      },
     );
   }
 

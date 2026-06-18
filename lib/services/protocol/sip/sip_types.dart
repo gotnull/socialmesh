@@ -209,6 +209,15 @@ abstract final class SipFeatureBits {
   /// advertising this bit.
   static const int dmSignalV1 = 1 << 13;
 
+  /// Incident Mode "Help Request" workflow (incident.v1 / SPP type 0x13)
+  /// supported. When set, the peer can receive and act on help_request
+  /// frames (personal SOS). Senders MUST gate help_request transmission on
+  /// the peer advertising this bit. The hazard_report workflow is unaffected
+  /// by this bit. Advertised only when
+  /// `AppFeatureFlags.isIncidentHelpRequestEnabled` is true.
+  /// Plan: docs/engineering/INCIDENT_MODE_SIP_MRRP_PLAN.md
+  static const int incidentHelpV1 = 1 << 14;
+
   /// All features in v0.1.
   static const int allV01 = sip0 | sip1 | sip3; // 0x000B
 }

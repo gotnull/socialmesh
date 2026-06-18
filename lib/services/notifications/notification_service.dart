@@ -2009,6 +2009,63 @@ class NotificationService {
     );
   }
 
+  /// Show a calm, generic notification for a trusted inbound Help Request.
+  ///
+  /// Privacy: the copy is intentionally generic -- it carries NO peer name,
+  /// message body, or coordinates. Callers MUST only invoke this for events
+  /// that have already passed the Handshake-trust gate and been stored (see the
+  /// Incident Mode inbound wiring). The notification id is stable per incident
+  /// so the OS de-dupes re-shows. Tap opens the app; deep-linking to the
+  /// specific incident is a documented follow-up.
+  /// Tap payload for a Help Request notification. Carries ONLY the routing
+  /// type and the incident id (safe metadata) -- never a peer name, message
+  /// body, or coordinates. Format: `incident_help_request:<incidentId>`.
+  static String incidentHelpPayload(int incidentId) =>
+      'incident_help_request:$incidentId';
+
+  Future<void> showIncidentHelpRequestNotification({
+    required int incidentId,
+  }) async {
+    if (!_initialized) return;
+
+    final androidDetails = AndroidNotificationDetails(
+      'incident_help',
+      'Help Requests', // lint-allow: hardcoded-string
+      channelDescription: _l10n.notificationChannelIncidentHelp,
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      groupKey: 'incident_help',
+      color: AccentColors.red,
+    );
+
+    final iosDetails = const DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+      threadIdentifier: 'incident_help',
+    );
+
+    final notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+      macOS: iosDetails,
+    );
+
+    await _notifications.show(
+      id: (incidentId.abs() % 1000000) + 7000000,
+      title: _l10n.notificationIncidentHelpRequestTitle,
+      body: _l10n.notificationIncidentHelpRequestBody,
+      notificationDetails: notificationDetails,
+      payload: incidentHelpPayload(incidentId),
+    );
+
+    AppLogging.incidents(
+      'Showed help request notification for incident '
+      '$incidentId', // lint-allow: hardcoded-string
+    );
+  }
+
   /// Show notification when a peer declines our SIP handshake request.
   Future<void> showSipHandshakeDeclinedNotification({
     required String peerName,

@@ -609,6 +609,26 @@ class AppFeatureFlags {
     }
   }
 
+  /// Whether the Incident Mode "Help Request" workflow (personal SOS over
+  /// the unified incident.v1 envelope, SPP type 0x13) is enabled.
+  /// Set `INCIDENT_HELP_REQUEST_ENABLED=true` in `.env` to enable.
+  ///
+  /// Workflow subflag beneath the unified incident layer: requires
+  /// [isMeshIncidentsEnabled] (the master flag). Default: false. The
+  /// hazard_report workflow stays on its existing path regardless of this
+  /// flag. See docs/engineering/INCIDENT_MODE_SIP_MRRP_PLAN.md §11.
+  static bool get isIncidentHelpRequestEnabled {
+    if (!isMeshIncidentsEnabled) return false;
+    try {
+      final raw = dotenv.env['INCIDENT_HELP_REQUEST_ENABLED']
+          ?.toLowerCase()
+          .trim();
+      return raw == 'true' || raw == '1';
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// D33: gate the MeshCore reply UI + send path.
   ///
   /// Set `MESHCORE_REPLIES_ENABLED=true` in `.env` to enable.

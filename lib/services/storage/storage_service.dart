@@ -673,6 +673,19 @@ class SettingsService {
   bool get mapShowWaypoints =>
       _preferences.getBool('map_show_waypoints') ?? true;
 
+  // Opacity applied to peer node markers on the map. Defaults to 1.0 (fully
+  // opaque, the pre-setting behaviour). Clamped to a 0.2 floor so a fully
+  // transparent marker can never become invisible yet still swallow taps.
+  Future<void> setMapNodeOverlayOpacity(double opacity) async {
+    await _preferences.setDouble(
+      'map_node_overlay_opacity',
+      opacity.clamp(0.2, 1.0),
+    );
+  }
+
+  double get mapNodeOverlayOpacity =>
+      _preferences.getDouble('map_node_overlay_opacity') ?? 1.0;
+
   // Reference labels overlay above satellite imagery (boundaries + place
   // names from Esri). Defaults to true: directly answers user feedback that
   // village / town / city names should be visible in satellite mode.

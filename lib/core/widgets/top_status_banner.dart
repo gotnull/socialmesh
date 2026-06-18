@@ -454,7 +454,14 @@ class _TopStatusBannerState extends ConsumerState<TopStatusBanner>
     // OR when reconnecting (tapping cancel + navigates to scanner).
     final connectTappable = widget.onGoToScanner != null;
 
-    final topPadding = MediaQuery.of(context).padding.top;
+    final mq = MediaQuery.of(context);
+    // Use viewPadding as a fallback: if an ancestor SafeArea / removePadding
+    // has consumed padding.top (making it 0), viewPadding.top still carries the
+    // real status-bar / dynamic-island inset so the banner never kisses the top.
+    final safeTop = mq.padding.top > 0 ? mq.padding.top : mq.viewPadding.top;
+    // Add a small breathing gap so content does not sit flush against the
+    // dynamic island.
+    final topPadding = safeTop + AppTheme.spacing8;
     const double kTopStatusContentHeight = kToolbarHeight;
     final bannerHeight = topPadding + kTopStatusContentHeight;
 

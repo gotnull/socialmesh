@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
@@ -15,6 +16,9 @@ import '../../models/presence_confidence.dart';
 import '../../providers/countdown_providers.dart';
 import '../../providers/presence_providers.dart';
 import '../../utils/presence_utils.dart';
+import '../../utils/snackbar.dart';
+import '../incidents/providers/incident_help_trust_provider.dart';
+import '../incidents/screens/help_circle_screen.dart';
 import '../nodedex/screens/nodedex_detail_screen.dart';
 import 'node_actions.dart';
 import 'node_detail_screen.dart';
@@ -29,9 +33,27 @@ enum NodeQuickAction {
   viewInNodeDex,
   favorite,
   mute,
+  helpCircle,
+  manageHelpCircle,
   traceroute,
   disconnect,
 }
+
+/// Whether Help Mode is enabled (both Incident Mode flags on).
+bool get _helpModeEnabled =>
+    AppFeatureFlags.isMeshIncidentsEnabled &&
+    AppFeatureFlags.isIncidentHelpRequestEnabled;
+
+/// Whether the Help Circle opt-in action should be offered for a peer.
+/// Gated on Help Mode and never offered for the user's own node.
+bool _helpCircleActionVisible({required bool isMyNode}) =>
+    !isMyNode && _helpModeEnabled;
+
+/// Whether the "Manage Help Circle" entry should be offered. Shown on the
+/// user's own-device sheet so the Help Circle screen (and the share-my-code QR)
+/// is reachable without an active help request.
+bool _manageHelpCircleVisible({required bool isMyNode}) =>
+    isMyNode && _helpModeEnabled;
 
 /// Shows the long-press quick-action sheet for [node].
 ///
@@ -96,6 +118,20 @@ Future<void> showNodeQuickActionsSheet(
           : context.l10n.quickActionMute,
       value: NodeQuickAction.mute,
     ),
+    if (_helpCircleActionVisible(isMyNode: isMyNode))
+      BottomSheetAction(
+        icon: ref.read(incidentHelpTrustedIdsProvider).contains(node.nodeNum)
+            ? Icons.health_and_safety
+            : Icons.health_and_safety_outlined,
+        iconColor:
+            ref.read(incidentHelpTrustedIdsProvider).contains(node.nodeNum)
+            ? AppTheme.successGreen
+            : null,
+        label: ref.read(incidentHelpTrustedIdsProvider).contains(node.nodeNum)
+            ? context.l10n.helpModeCircleRemove
+            : context.l10n.helpModeCircleAdd,
+        value: NodeQuickAction.helpCircle,
+      ),
     BottomSheetAction(
       icon: Icons.route,
       label: context.l10n.quickActionSendTraceroute,
@@ -105,6 +141,12 @@ Future<void> showNodeQuickActionsSheet(
           ? context.l10n.quickActionTracerouteCooldown(cooldownRemaining)
           : null,
     ),
+    if (_manageHelpCircleVisible(isMyNode: isMyNode))
+      BottomSheetAction(
+        icon: Icons.health_and_safety_outlined,
+        label: context.l10n.helpModeCircleManage,
+        value: NodeQuickAction.manageHelpCircle,
+      ),
     if (isMyNode && onDisconnect != null)
       BottomSheetAction(
         icon: Icons.link_off_rounded,
@@ -145,11 +187,69 @@ Future<void> showNodeQuickActionsSheet(
       await toggleNodeFavorite(context, ref, node);
     case NodeQuickAction.mute:
       await toggleNodeMute(context, ref, node);
+    case NodeQuickAction.helpCircle:
+      await _toggleHelpCircle(context, ref, node);
+    case NodeQuickAction.manageHelpCircle:
+      Navigator.push(
+        context,
+        MaterialPageRoute<void>(builder: (_) => const HelpCircleScreen()),
+      );
     case NodeQuickAction.traceroute:
       await sendNodeTraceroute(context, ref, node);
     case NodeQuickAction.disconnect:
       onDisconnect?.call();
   }
+}
+
+/// Adds or removes [node] from the local Help Circle (Help Mode trust source).
+/// Takes effect immediately for the in-memory trust predicate, then persists.
+Future<void> _toggleHelpCircle(
+  BuildContext context,
+  WidgetRef ref,
+  MeshNode node,
+) async {
+  final notifier = ref.read(incidentHelpTrustProvider.notifier);
+  final wasTrusted = ref
+      .read(incidentHelpTrustedIdsProvider)
+      .contains(node.nodeNum);
+  final name = node.displayName;
+
+  if (wasTrusted) {
+    // Removing trust is destructive (the peer can no longer exchange Help
+    // Requests), so confirm before applying.
+    final confirmed = await AppBottomSheet.showConfirm(
+      context: context,
+      title: context.l10n.helpModeCircleRemoveConfirmTitle,
+      message: context.l10n.helpModeCircleRemoveConfirmBody(name),
+      confirmLabel: context.l10n.commonRemove,
+      cancelLabel: context.l10n.commonCancel,
+      isDestructive: true,
+    );
+    if (confirmed != true) return;
+    await notifier.untrust(node.nodeNum);
+    if (!context.mounted) return;
+    showSuccessSnackBar(context, context.l10n.helpModeCircleRemovedSnack(name));
+    return;
+  }
+
+  // Adding grants trust, so confirm first and explain what trust means
+  // (manual, local, not channel-based, no precise location, two-way).
+  final confirmed = await AppBottomSheet.showConfirm(
+    context: context,
+    title: context.l10n.helpModeCircleAddConfirmTitle,
+    message: context.l10n.helpModeCircleAddConfirmBody,
+    confirmLabel: context.l10n.commonAdd,
+    cancelLabel: context.l10n.commonCancel,
+  );
+  if (confirmed != true) return;
+
+  await notifier.trust(
+    node.nodeNum,
+    displayName: name,
+    nowMs: DateTime.now().millisecondsSinceEpoch,
+  );
+  if (!context.mounted) return;
+  showSuccessSnackBar(context, context.l10n.helpModeCircleAddedSnack(name));
 }
 
 /// Header for the node quick-action sheet. Mirrors BottomSheetHeader's

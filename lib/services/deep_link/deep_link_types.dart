@@ -33,6 +33,13 @@ enum DeepLinkType {
   /// or https://socialmesh.app/share/channel/{inviteId}#t={secret}
   channelInvite,
 
+  /// Help Circle invite: socialmesh://help-circle/{base64} or
+  /// https://socialmesh.app/share/help-circle/{base64}. The base64 payload is
+  /// JSON {nodeNum, longName, shortName} identifying the inviter's node. Adding
+  /// the inviter to the local Help Circle is ALWAYS gated behind an explicit
+  /// user confirm (no silent auto-add) - trust is consent-based.
+  helpCircleInvite,
+
   /// Aether flight: socialmesh://aether/flight/{shareId}
   /// or https://socialmesh.app/aether/flight/{shareId}
   aetherFlight,
@@ -87,6 +94,9 @@ class ParsedDeepLink {
     this.automationFirestoreId,
     this.channelInviteId,
     this.channelInviteSecret,
+    this.helpCircleInviteNodeNum,
+    this.helpCircleInviteLongName,
+    this.helpCircleInviteShortName,
     this.aetherFlightShareId,
     this.legalDocument,
     this.legalSectionAnchor,
@@ -148,6 +158,16 @@ class ParsedDeepLink {
   /// Invite secret from the URL fragment (#t=...)
   final String? channelInviteSecret;
 
+  // Help Circle invite fields
+  /// Inviter's node number (Meshtastic nodeNum) from the invite payload.
+  final int? helpCircleInviteNodeNum;
+
+  /// Inviter's long/display name (used as the Help Circle display snapshot).
+  final String? helpCircleInviteLongName;
+
+  /// Inviter's short name (fallback label).
+  final String? helpCircleInviteShortName;
+
   // Aether flight fields
   /// Share ID for the Aether flight (e.g. 'ae_cf31d1ccc6faef3a')
   final String? aetherFlightShareId;
@@ -207,6 +227,10 @@ class ParsedDeepLink {
       type == DeepLinkType.channelInvite &&
       channelInviteId != null &&
       channelInviteSecret != null;
+
+  /// Whether this is a complete Help Circle invite link.
+  bool get hasHelpCircleInvite =>
+      type == DeepLinkType.helpCircleInvite && helpCircleInviteNodeNum != null;
 
   /// Whether this is a valid Aether flight link.
   bool get hasAetherFlightShareId =>

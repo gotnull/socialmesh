@@ -27,7 +27,15 @@ enum SppPayloadType {
   incidentQuery(0x11),
 
   /// Incident state response (reply to query).
-  incidentState(0x12);
+  incidentState(0x12),
+
+  /// Unified Incident Mode envelope (hazard_report + help_request workflows).
+  ///
+  /// Carries an explicit `workflow_kind` and `msg_type` discriminator so the
+  /// incident.v1 layer can express both the field-hazard workflow and the
+  /// personal Help Mode workflow. Codec: `spp_incident_mode_codec.dart`.
+  /// Plan: docs/engineering/INCIDENT_MODE_SIP_MRRP_PLAN.md
+  incidentMode(0x13);
 
   const SppPayloadType(this.code);
 
@@ -152,3 +160,6 @@ const int sppHeaderSize = 2;
 
 /// Current SPP version for incident payloads.
 const int sppIncidentVersion = 1;
+
+/// Current SPP version for the unified Incident Mode envelope.
+const int sppIncidentModeVersion = 1;

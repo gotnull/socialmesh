@@ -8,11 +8,13 @@
 /// [AppFeatureFlags.isMrrpEnabled] and require SIP to also be enabled.
 library;
 
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/constants.dart';
+import '../core/logging.dart';
 import '../services/protocol/sip/mrrp_advert_engine.dart';
 import '../services/protocol/sip/sip_constants.dart';
 import '../services/protocol/sip/mrrp_counters.dart';
@@ -33,7 +35,11 @@ import '../services/protocol/sip/sip_types.dart';
 import 'app_providers.dart';
 import 'peer_safety_providers.dart';
 import 'sip_providers.dart';
+import '../features/incidents/models/incident_mode_models.dart';
+import '../features/incidents/providers/incident_help_trust_provider.dart';
 import '../features/incidents/providers/mesh_incident_providers.dart';
+import '../features/incidents/services/incident_mode_store.dart';
+import '../features/incidents/services/mesh_incident_database.dart';
 import '../features/pet/models/remote_pet_share_status.dart';
 import '../features/pet/providers/pet_providers.dart';
 import '../features/pet/services/pet_public_state_codec.dart';
@@ -132,6 +138,20 @@ final mrrpServiceRegistryProvider = Provider<MrrpServiceRegistry?>((ref) {
         // Return the last known report for the case.
         return null; // Queries delegated to async service layer.
       },
+      // Incident Mode help_request workflow subflag (additive). When off,
+      // the helpEvent action is unadvertised and rejected as unsupported,
+      // leaving the path inert. When on, inbound help events are gated by a
+      // real Handshake-trust check BEFORE any persistence: only a sender that
+      // has completed the SIP Handshake/consent flow is trusted. The trust
+      // predicate and the store sink are wired together (never one without the
+      // other) so an untrusted packet can never reach storage.
+      helpRequestEnabled: AppFeatureFlags.isIncidentHelpRequestEnabled,
+      isSenderTrusted: AppFeatureFlags.isIncidentHelpRequestEnabled
+          ? (senderNodeId) => _isHelpTrusted(ref, senderNodeId)
+          : null,
+      onIncidentEvent: AppFeatureFlags.isIncidentHelpRequestEnabled
+          ? (event) => _persistTrustedHelpEvent(ref, event)
+          : null,
     );
     registry.register(
       incident,
@@ -526,3 +546,63 @@ final mrrpCachedServicesProvider = Provider<Map<int, List<MrrpCachedService>>>((
   final advertEngine = ref.watch(mrrpAdvertEngineProvider);
   return advertEngine?.getAllCachedServices() ?? {};
 });
+
+// ---------------------------------------------------------------------------
+// Incident Mode help_request inbound wiring (PR-7A)
+// ---------------------------------------------------------------------------
+
+/// Whether [senderNodeId] is a trusted peer for inbound help events.
+///
+/// PUBLIC trust source is the user's Help Circle (explicit per-peer opt-in,
+/// persisted). A completed SIP Handshake also counts when Handshake is enabled
+/// (optional/internal), but is not required. "Known", "seen", "same channel",
+/// "same PSK", or "has a public key" are NOT trusted.
+bool _isHelpTrusted(Ref ref, int senderNodeId) {
+  return incidentHelpTrustGate(
+    circle: ref.read(incidentHelpTrustedIdsProvider),
+    handshake: ref.read(sipHandshakeProvider),
+    nodeId: senderNodeId,
+  );
+}
+
+/// Persists an already-trusted, already-decoded help event into the Incident
+/// Mode store. Invoked by [MrrpServiceIncident] ONLY after the feature flag,
+/// decode, workflow, and Handshake-trust gates have all passed -- so this never
+/// runs for an untrusted or malformed packet.
+void _persistTrustedHelpEvent(Ref ref, IncidentEvent event) {
+  final db = ref.read(meshIncidentDatabaseProvider);
+  final store = ref.read(incidentModeStoreProvider);
+  unawaited(_ingestHelpEvent(ref, db, store, event));
+}
+
+Future<void> _ingestHelpEvent(
+  Ref ref,
+  MeshIncidentDatabaseImpl db,
+  IncidentModeStore store,
+  IncidentEvent event,
+) async {
+  try {
+    await db.open();
+    final inserted = await store.ingestEvent(event);
+    AppLogging.incidents(
+      'IncidentMode: help event persisted incident=${event.incidentId} '
+      'type=${event.type.name} from=${event.senderNodeId} '
+      'result=${inserted ? 'inserted' : 'duplicate'}', // lint-allow: hardcoded-string
+    );
+    // Side effects only for genuinely new events (idempotent on duplicates).
+    if (!inserted) return;
+    // Refresh the global banner / inbox.
+    ref.read(incidentModeEpochProvider.notifier).bump();
+    // Notify only on a NEW help request (create). The notifier de-dupes per
+    // incident; copy is generic (no peer name / body / coordinates).
+    if (event.type == IncidentEventType.create) {
+      await ref
+          .read(incidentHelpNotifierProvider)
+          .notifyHelpRequest(incidentId: event.incidentId);
+    }
+  } catch (e) {
+    AppLogging.incidents(
+      'IncidentMode: help event persist failed: $e', // lint-allow: hardcoded-string
+    );
+  }
+}

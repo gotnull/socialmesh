@@ -28,6 +28,7 @@ import '../../core/widgets/emoji_glyph.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../core/widgets/map_controls.dart';
+import 'package:socialmesh/features/incidents/widgets/help_mode/help_request_affordance.dart';
 import '../../core/widgets/map_node_drawer.dart';
 import '../../core/widgets/node_info_card.dart';
 import '../../core/node_color.dart';
@@ -276,6 +277,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   bool _showDistanceLabels = true;
   bool _showMeshWaypoints = true;
   bool _showWaypoints = true;
+  double _nodeOverlayOpacity = 1.0;
 
   /// When true in traceroute mode, only nodes part of the route are shown.
   bool _tracerouteRouteOnly = false;
@@ -415,6 +417,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _showDistanceLabels = settings.mapShowDistanceLabels;
         _showMeshWaypoints = settings.mapShowMeshWaypoints;
         _showWaypoints = settings.mapShowWaypoints;
+        _nodeOverlayOpacity = settings.mapNodeOverlayOpacity;
       });
     }
   }
@@ -439,6 +442,16 @@ class _MapScreenState extends ConsumerState<MapScreen>
     await settings.setMapShowDistanceLabels(_showDistanceLabels);
     await settings.setMapShowMeshWaypoints(_showMeshWaypoints);
     await settings.setMapShowWaypoints(_showWaypoints);
+    await settings.setMapNodeOverlayOpacity(_nodeOverlayOpacity);
+  }
+
+  /// Drops the cached markers so they rebuild with the current overlay opacity.
+  /// `_CachedNodeMarker.matches` does not track opacity, so a slider change
+  /// would otherwise leave stale markers on screen until the next pan/zoom.
+  void _invalidateMarkerCache() {
+    _markerCache.clear();
+    _markerListCache = null;
+    _markerOrderCache = null;
   }
 
   /// Animate camera to a specific location with smooth easing
@@ -1291,6 +1304,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   setState(() => _showWaypoints = !_showWaypoints);
                   unawaited(_saveMapLayerSettings());
                   break;
+                case 'node_transparency':
+                  _showNodeTransparencySheet();
+                  break;
                 case 'measure':
                   setState(() {
                     _measureMode = !_measureMode;
@@ -1664,6 +1680,28 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         _showPositionHistory
                             ? context.l10n.mapHidePositionHistory
                             : context.l10n.mapShowPositionHistory,
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'node_transparency',
+                  child: Row(
+                    children: [
+                      Icon(
+                        _nodeOverlayOpacity < 1.0
+                            ? Icons.opacity
+                            : Icons.opacity_outlined,
+                        size: 18,
+                        color: _nodeOverlayOpacity < 1.0
+                            ? context.accentColor
+                            : context.textSecondary,
+                      ),
+                      SizedBox(width: AppTheme.spacing8),
+                      Text(
+                        context.l10n.mapNodeTransparency(
+                          (_nodeOverlayOpacity * 100).round(),
+                        ),
                       ),
                     ],
                   ),
@@ -2847,6 +2885,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       );
                     },
                   ),
+                  // Incident Mode "Need help" affordance. Self-gates on the
+                  // incident master + help_request subflags; renders nothing
+                  // when disabled. Opens the creation sheet only (no send).
+                  if (!widget.locationOnlyMode && !widget.nodedexMode)
+                    const HelpRequestAffordance(),
                 ],
               ),
       ),
@@ -3446,6 +3489,24 @@ class _MapScreenState extends ConsumerState<MapScreen>
   /// Header (count + interaction hint) followed by a scrollable list
   /// of row tiles. Tapping a row invokes [onNodeSelected].
 
+  Future<void> _showNodeTransparencySheet() async {
+    await AppBottomSheet.show<void>(
+      context: context,
+      child: _NodeTransparencySheet(
+        initialOpacity: _nodeOverlayOpacity,
+        onChanged: (value) {
+          // Live preview: update the map and rebuild markers immediately so
+          // the slider drag is reflected without waiting for a pan/zoom.
+          safeSetState(() {
+            _nodeOverlayOpacity = value;
+            _invalidateMarkerCache();
+          });
+        },
+        onChangeEnd: (_) => unawaited(_saveMapLayerSettings()),
+      ),
+    );
+  }
+
   Widget _buildEmptyState() {
     final nodes = ref.watch(nodesProvider);
     final totalNodes = nodes.length;
@@ -3654,20 +3715,31 @@ class _MapScreenState extends ConsumerState<MapScreen>
             _selectedTakEntity = null;
           });
         },
-        child: widget.nodedexMode
-            ? NodeDexSigilMarker(
-                pin: pin!,
-                isSelected: isSelected,
-                isStale: n.isStale,
-              )
-            : _NodeMarker(
-                node: n.node,
-                isMyNode: isMyNode,
-                isSelected: isSelected,
-                isStale: n.isStale,
-              ),
+        child: _applyOverlayOpacity(
+          isMyNode: isMyNode,
+          child: widget.nodedexMode
+              ? NodeDexSigilMarker(
+                  pin: pin!,
+                  isSelected: isSelected,
+                  isStale: n.isStale,
+                )
+              : _NodeMarker(
+                  node: n.node,
+                  isMyNode: isMyNode,
+                  isSelected: isSelected,
+                  isStale: n.isStale,
+                ),
+        ),
       ),
     );
+  }
+
+  /// Fades peer node markers per the user's transparency setting so the map
+  /// underneath stays visible. The own node is always rendered fully opaque so
+  /// it can never be lost on the map.
+  Widget _applyOverlayOpacity({required bool isMyNode, required Widget child}) {
+    if (isMyNode || _nodeOverlayOpacity >= 1.0) return child;
+    return Opacity(opacity: _nodeOverlayOpacity, child: child);
   }
 
   List<CircleMarker> _rangeCirclesFor(
@@ -4567,6 +4639,101 @@ Color _presenceColor(BuildContext context, PresenceConfidence confidence) {
 /// the mesh map. The sheet itself is presented by [AppBottomSheet.show]
 /// in `_showClusterListSheet`. Tapping a row delegates to
 /// [onNodeSelected] which closes the sheet and selects the node.
+/// Bottom-sheet slider that controls the opacity of peer node markers on the
+/// map. Reports drag updates live via [onChanged] (for a real-time map preview)
+/// and persists on release via [onChangeEnd].
+class _NodeTransparencySheet extends StatefulWidget {
+  final double initialOpacity;
+  final ValueChanged<double> onChanged;
+  final ValueChanged<double> onChangeEnd;
+
+  const _NodeTransparencySheet({
+    required this.initialOpacity,
+    required this.onChanged,
+    required this.onChangeEnd,
+  });
+
+  @override
+  State<_NodeTransparencySheet> createState() => _NodeTransparencySheetState();
+}
+
+class _NodeTransparencySheetState extends State<_NodeTransparencySheet> {
+  late double _value = widget.initialOpacity;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.opacity, size: 22, color: context.accentColor),
+            const SizedBox(width: AppTheme.spacing12),
+            Expanded(
+              child: Text(
+                context.l10n.mapNodeTransparencyTitle,
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  color: context.textPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppTheme.spacing4),
+        Text(
+          context.l10n.mapNodeTransparencyDescription,
+          style: TextStyle(fontSize: 12, color: context.textTertiary),
+        ),
+        const SizedBox(height: AppTheme.spacing16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              context.l10n.mapNodeTransparencyTitle,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: context.textPrimary,
+              ),
+            ),
+            Text(
+              '${(_value * 100).round()}%',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: context.accentColor,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppTheme.spacing8),
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            activeTrackColor: context.accentColor,
+            inactiveTrackColor: context.border,
+            thumbColor: context.accentColor,
+            overlayColor: context.accentColor.withValues(alpha: 0.2),
+          ),
+          child: Slider(
+            value: _value,
+            min: 0.2,
+            max: 1.0,
+            divisions: 16,
+            onChanged: (value) {
+              setState(() => _value = value);
+              widget.onChanged(value);
+            },
+            onChangeEnd: widget.onChangeEnd,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _ClusterListSheet extends StatelessWidget {
   final List<_NodeWithPosition> nodes;
   final ValueChanged<MeshNode> onNodeSelected;

@@ -149,6 +149,8 @@ class _UniversalQrScannerScreenState
           _handleLocationQr(parsed);
         case DeepLinkType.post:
           _handlePostQr(parsed);
+        case DeepLinkType.helpCircleInvite:
+          await _handleHelpCircleInviteQr(parsed);
         case DeepLinkType.channelInvite:
         case DeepLinkType.aetherFlight:
         case DeepLinkType.legal:
@@ -232,6 +234,29 @@ class _UniversalQrScannerScreenState
     }
 
     if (mounted) setState(() => _isProcessing = false);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Help Circle invite QR Handling
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  /// Routes a scanned Help Circle invite to the consent screen, which gates the
+  /// actual add behind an explicit user tap. Replaces the scanner so Back does
+  /// not return to the live camera.
+  Future<void> _handleHelpCircleInviteQr(ParsedDeepLink parsed) async {
+    final nodeNum = parsed.helpCircleInviteNodeNum;
+    if (nodeNum == null) {
+      throw Exception('Invalid help circle invite');
+    }
+    if (!mounted) return;
+    await Navigator.of(context).pushReplacementNamed(
+      '/help-circle-invite',
+      arguments: {
+        'nodeNum': nodeNum,
+        'longName': parsed.helpCircleInviteLongName,
+        'shortName': parsed.helpCircleInviteShortName,
+      },
+    );
   }
 
   Future<bool?> _showNodeExistsDialog(MeshNode existing, String? newName) {

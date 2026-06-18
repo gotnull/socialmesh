@@ -150,6 +150,9 @@ class DeepLinkParser {
       case 'channel-invite':
         AppLogging.qr('🔗 Parser: Processing channel invite link');
         return _parseChannelInviteLink(data, uri.fragment, original);
+      case 'help-circle':
+        AppLogging.qr('🔗 Parser: Processing help circle invite link');
+        return _parseHelpCircleInviteLink(data, original);
       case 'aether':
         AppLogging.qr('🔗 Parser: Processing aether flight link');
         return _parseAetherFlightLink(segments, original);
@@ -335,6 +338,10 @@ class DeepLinkParser {
         AppLogging.qr('🔗 Parser: Processing location from query params');
         return _parseLocationLink(uri.queryParameters, original);
 
+      case 'help-circle':
+        AppLogging.qr('🔗 Parser: Processing help circle invite (web)');
+        return _parseHelpCircleInviteLink(id, original);
+
       case 'channel':
         // Check for invite fragment (#t=secret)
         if (id != null && id.isNotEmpty && uri.fragment.isNotEmpty) {
@@ -503,6 +510,44 @@ class DeepLinkParser {
         originalUri: original,
         nodeFirestoreId: data,
       );
+    }
+  }
+
+  /// Parse a Help Circle invite deep link.
+  ///
+  /// Payload is base64(JSON {nodeNum, longName, shortName}) identifying the
+  /// inviter's node. The actual add to the Help Circle is gated behind an
+  /// explicit user confirm downstream - this only decodes the identity.
+  ParsedDeepLink _parseHelpCircleInviteLink(String? data, String original) {
+    if (data == null || data.isEmpty) {
+      return ParsedDeepLink(
+        type: DeepLinkType.helpCircleInvite,
+        originalUri: original,
+        validationErrors: ['Missing help circle invite data'],
+      );
+    }
+    try {
+      final decoded = utf8.decode(base64Decode(data));
+      final json = jsonDecode(decoded) as Map<String, dynamic>;
+      final nodeNum = json['nodeNum'] as int?;
+      if (nodeNum == null) {
+        return ParsedDeepLink(
+          type: DeepLinkType.helpCircleInvite,
+          originalUri: original,
+          validationErrors: ['Missing nodeNum in help circle invite data'],
+        );
+      }
+      return ParsedDeepLink(
+        type: DeepLinkType.helpCircleInvite,
+        originalUri: original,
+        helpCircleInviteNodeNum: nodeNum,
+        helpCircleInviteLongName: json['longName'] as String?,
+        helpCircleInviteShortName: json['shortName'] as String?,
+      );
+    } catch (e) {
+      return ParsedDeepLink.invalid(original, [
+        'Failed to decode help circle invite data: $e', // lint-allow: hardcoded-string
+      ]);
     }
   }
 

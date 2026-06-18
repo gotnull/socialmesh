@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:socialmesh/services/deep_link/deep_link.dart';
@@ -30,6 +32,41 @@ void main() {
         expect(result.nodeNum, isNull);
         expect(result.needsFirestoreFetch, true);
         expect(result.hasCompleteNodeData, false);
+      });
+
+      test('parses help-circle invite with base64 data (round-trip)', () {
+        final payload = base64Encode(
+          utf8.encode(
+            jsonEncode({
+              'nodeNum': 0xB16F,
+              'longName': 'Bravo',
+              'shortName': 'BR',
+            }),
+          ),
+        );
+        final result = deepLinkParser.parse(
+          'socialmesh://help-circle/$payload',
+        );
+
+        expect(result.type, DeepLinkType.helpCircleInvite);
+        expect(result.isValid, true);
+        expect(result.helpCircleInviteNodeNum, 0xB16F);
+        expect(result.helpCircleInviteLongName, 'Bravo');
+        expect(result.helpCircleInviteShortName, 'BR');
+        expect(result.hasHelpCircleInvite, true);
+      });
+
+      test('help-circle invite with missing nodeNum is invalid', () {
+        final payload = base64Encode(
+          utf8.encode(jsonEncode({'longName': 'X'})),
+        );
+        final result = deepLinkParser.parse(
+          'socialmesh://help-circle/$payload',
+        );
+
+        expect(result.type, DeepLinkType.helpCircleInvite);
+        expect(result.isValid, false);
+        expect(result.hasHelpCircleInvite, false);
       });
 
       test('parses channel link with base64 data', () {

@@ -6528,6 +6528,18 @@ abstract class AppLocalizations {
   /// **'Apply key'**
   String get channelKeyApply;
 
+  /// Short label for an Add confirm button (full context is in the dialog title).
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get commonAdd;
+
+  /// Short label for a Remove confirm button (full context is in the dialog title).
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get commonRemove;
+
   /// Label for a Delete button.
   ///
   /// In en, this message translates to:
@@ -13208,6 +13220,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hide waypoints'**
   String get mapHideWaypoints;
+
+  /// Map menu action label that opens the node overlay transparency slider, showing the current opacity percentage.
+  ///
+  /// In en, this message translates to:
+  /// **'Node transparency: {percent}%'**
+  String mapNodeTransparency(int percent);
+
+  /// Title of the bottom sheet that adjusts the opacity of node markers on the map.
+  ///
+  /// In en, this message translates to:
+  /// **'Node transparency'**
+  String get mapNodeTransparencyTitle;
+
+  /// Explanation shown in the node transparency sheet describing what the slider does.
+  ///
+  /// In en, this message translates to:
+  /// **'Fade peer node markers so the map underneath stays visible. Your own node stays fully visible.'**
+  String get mapNodeTransparencyDescription;
 
   /// Map menu action that overlays village, town and city labels with country and state boundaries above satellite imagery.
   ///
@@ -77890,6 +77920,648 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Telemetry export failed: {error}'**
   String settingsTelemetryExportError(String error);
+
+  /// Label on the map Need Help button.
+  ///
+  /// In en, this message translates to:
+  /// **'Need help'**
+  String get helpModeNeedHelp;
+
+  /// Tooltip for the map Need Help button.
+  ///
+  /// In en, this message translates to:
+  /// **'Request help from trusted peers'**
+  String get helpModeAffordanceTooltip;
+
+  /// Title of the help request creation sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Request help'**
+  String get helpModeCreateTitle;
+
+  /// Intro copy on the help request creation sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert your trusted peers. Delivery is best-effort over the mesh.'**
+  String get helpModeCreateIntro;
+
+  /// Label above the optional initial status chips on creation.
+  ///
+  /// In en, this message translates to:
+  /// **'How are you? (optional)'**
+  String get helpModeCreateStatusLabel;
+
+  /// Location sharing disclosure shown on creation and while active.
+  ///
+  /// In en, this message translates to:
+  /// **'Your location will be shared with responders while this request is active.'**
+  String get helpModeLocationDisclosure;
+
+  /// Primary button to raise a help request.
+  ///
+  /// In en, this message translates to:
+  /// **'Send help request'**
+  String get helpModeSend;
+
+  /// Header while a help request is broadcasting with no responder.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching for help'**
+  String get helpModeBroadcastingTitle;
+
+  /// Body while a help request is broadcasting.
+  ///
+  /// In en, this message translates to:
+  /// **'Broadcasting to trusted peers. Best-effort over the mesh.'**
+  String get helpModeBroadcastingBody;
+
+  /// Header of the requester active view.
+  ///
+  /// In en, this message translates to:
+  /// **'Help request active'**
+  String get helpModeActiveTitle;
+
+  /// Shown when a help request has no responders.
+  ///
+  /// In en, this message translates to:
+  /// **'No responders yet'**
+  String get helpModeNoResponders;
+
+  /// Number of active responders.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} responders active'**
+  String helpModeResponderCount(int count);
+
+  /// Label above the requester quick-status chips.
+  ///
+  /// In en, this message translates to:
+  /// **'Update your status'**
+  String get helpModeUpdateStatus;
+
+  /// Action that opens the incident-scoped messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get helpModeMessages;
+
+  /// Action that resolves a help request: the requester is safe.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m safe'**
+  String get helpModeImSafe;
+
+  /// Action that cancels a help request as a false alarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel request'**
+  String get helpModeCancelRequest;
+
+  /// Confirmation copy for marking safe.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark yourself safe? Responders will stand down.'**
+  String get helpModeImSafeConfirm;
+
+  /// Confirmation copy for cancelling a request.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel this request as a false alarm?'**
+  String get helpModeCancelConfirm;
+
+  /// Title of the inbound help alert card.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} needs help'**
+  String helpModeInboundTitle(String name);
+
+  /// Body of the inbound help alert card.
+  ///
+  /// In en, this message translates to:
+  /// **'From a trusted peer. Best-effort over the mesh.'**
+  String get helpModeInboundBody;
+
+  /// Primary non-responder action on the inbound alert.
+  ///
+  /// In en, this message translates to:
+  /// **'Acknowledge'**
+  String get helpModeAcknowledge;
+
+  /// Action to become a responder on the inbound alert.
+  ///
+  /// In en, this message translates to:
+  /// **'Respond'**
+  String get helpModeRespond;
+
+  /// Action to open the map from the inbound alert.
+  ///
+  /// In en, this message translates to:
+  /// **'Open map'**
+  String get helpModeOpenMap;
+
+  /// Low-emphasis secondary action on the inbound alert.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get helpModeDismiss;
+
+  /// Header of the responder active view.
+  ///
+  /// In en, this message translates to:
+  /// **'Responding'**
+  String get helpModeRespondingTitle;
+
+  /// Label above the responder quick-status chips.
+  ///
+  /// In en, this message translates to:
+  /// **'Update responders'**
+  String get helpModeUpdateResponse;
+
+  /// Action for a responder to stand down.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave response'**
+  String get helpModeLeaveResponse;
+
+  /// Section title for the requester location on the responder view.
+  ///
+  /// In en, this message translates to:
+  /// **'Requester location'**
+  String get helpModeRequesterLocation;
+
+  /// Age of the last location fix.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {age} ago'**
+  String helpModeLocationAge(String age);
+
+  /// Shown when no location has been received yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Location not shared yet'**
+  String get helpModeLocationPending;
+
+  /// Title of the location-shared disclosure banner.
+  ///
+  /// In en, this message translates to:
+  /// **'Location shared'**
+  String get helpModeLocationSharedTitle;
+
+  /// Body of the location-shared disclosure banner.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared with responders while this request is active.'**
+  String get helpModeLocationSharedBody;
+
+  /// Header when a help request is resolved safe.
+  ///
+  /// In en, this message translates to:
+  /// **'All clear'**
+  String get helpModeResolvedTitle;
+
+  /// Body when a help request is resolved safe.
+  ///
+  /// In en, this message translates to:
+  /// **'Marked safe. Responders have stood down.'**
+  String get helpModeResolvedBody;
+
+  /// Header when a help request is cancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Request cancelled'**
+  String get helpModeCancelledTitle;
+
+  /// Body when a help request is cancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'False alarm. Responders have stood down.'**
+  String get helpModeCancelledBody;
+
+  /// Header when a help request expired with no response.
+  ///
+  /// In en, this message translates to:
+  /// **'Request expired'**
+  String get helpModeExpiredTitle;
+
+  /// Body when a help request expired.
+  ///
+  /// In en, this message translates to:
+  /// **'No response was received.'**
+  String get helpModeExpiredBody;
+
+  /// Global banner title when the user has an active help request.
+  ///
+  /// In en, this message translates to:
+  /// **'Help request active'**
+  String get helpModeBannerActiveTitle;
+
+  /// Global banner title when the user is a responder.
+  ///
+  /// In en, this message translates to:
+  /// **'You are responding'**
+  String get helpModeBannerRespondingTitle;
+
+  /// Global banner action to open the incident.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get helpModeBannerView;
+
+  /// Section title for the incident activity timeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get helpModeActivityTitle;
+
+  /// Empty state for the incident timeline.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity yet'**
+  String get helpModeTimelineEmpty;
+
+  /// Empty state for incident messages.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages yet'**
+  String get helpModeMessagesEmpty;
+
+  /// Hint text for the incident message field.
+  ///
+  /// In en, this message translates to:
+  /// **'Message responders'**
+  String get helpModeMessageHint;
+
+  /// Title of the Help Mode fixture gallery screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Help Mode preview'**
+  String get helpModeGalleryTitle;
+
+  /// Subtitle of the Help Mode fixture gallery screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixture states for review. Not connected to the mesh.'**
+  String get helpModeGallerySubtitle;
+
+  /// Requester quick status: ok.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m OK'**
+  String get helpModeStatusImOk;
+
+  /// Requester quick status: injured.
+  ///
+  /// In en, this message translates to:
+  /// **'Injured'**
+  String get helpModeStatusInjured;
+
+  /// Requester quick status: cannot move.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t move'**
+  String get helpModeStatusCantMove;
+
+  /// Requester quick status: need water.
+  ///
+  /// In en, this message translates to:
+  /// **'Need water'**
+  String get helpModeStatusNeedWater;
+
+  /// Requester quick status: need medical.
+  ///
+  /// In en, this message translates to:
+  /// **'Need medical'**
+  String get helpModeStatusNeedMedical;
+
+  /// Requester quick status: false alarm.
+  ///
+  /// In en, this message translates to:
+  /// **'False alarm'**
+  String get helpModeStatusFalseAlarm;
+
+  /// Requester quick status: situation worse.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting worse'**
+  String get helpModeStatusWorse;
+
+  /// Responder quick status: on my way.
+  ///
+  /// In en, this message translates to:
+  /// **'On my way'**
+  String get helpModeStatusOnMyWay;
+
+  /// Responder quick status: arrived.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrived'**
+  String get helpModeStatusArrived;
+
+  /// Responder quick status: need backup.
+  ///
+  /// In en, this message translates to:
+  /// **'Need backup'**
+  String get helpModeStatusNeedBackup;
+
+  /// Responder quick status: blocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Road blocked'**
+  String get helpModeStatusBlocked;
+
+  /// Responder quick status: cannot reach.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t reach you'**
+  String get helpModeStatusCantReach;
+
+  /// Responder quick status: leaving response.
+  ///
+  /// In en, this message translates to:
+  /// **'Leaving'**
+  String get helpModeStatusLeaving;
+
+  /// Timeline label for the create event.
+  ///
+  /// In en, this message translates to:
+  /// **'Help requested'**
+  String get helpModeEventCreate;
+
+  /// Timeline label for an acknowledgement.
+  ///
+  /// In en, this message translates to:
+  /// **'Acknowledged'**
+  String get helpModeEventAck;
+
+  /// Timeline label for a seen event.
+  ///
+  /// In en, this message translates to:
+  /// **'Seen'**
+  String get helpModeEventSeen;
+
+  /// Timeline label when a responder accepts.
+  ///
+  /// In en, this message translates to:
+  /// **'Responder accepted'**
+  String get helpModeEventResponderAccept;
+
+  /// Timeline label when a responder leaves.
+  ///
+  /// In en, this message translates to:
+  /// **'Responder left'**
+  String get helpModeEventResponderLeave;
+
+  /// Timeline label for a requester status update.
+  ///
+  /// In en, this message translates to:
+  /// **'Status update'**
+  String get helpModeEventRequesterStatus;
+
+  /// Timeline label for a responder status update.
+  ///
+  /// In en, this message translates to:
+  /// **'Responder update'**
+  String get helpModeEventResponderStatus;
+
+  /// Timeline label for a location update.
+  ///
+  /// In en, this message translates to:
+  /// **'Location update'**
+  String get helpModeEventLocation;
+
+  /// Timeline label for a message.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get helpModeEventMessage;
+
+  /// Timeline label for a resolve event.
+  ///
+  /// In en, this message translates to:
+  /// **'Marked safe'**
+  String get helpModeEventResolve;
+
+  /// Timeline label for a cancel event.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get helpModeEventCancel;
+
+  /// Timeline label for an expire event.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get helpModeEventExpire;
+
+  /// Honest copy shown when a help request is raised but no Handshake-trusted, capable peers are reachable; the request is still saved locally.
+  ///
+  /// In en, this message translates to:
+  /// **'No trusted responders currently available'**
+  String get helpModeNoEligiblePeers;
+
+  /// Low-emphasis dismiss action on the resolve/cancel confirmation sheets that keeps the help request active.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep request'**
+  String get helpModeKeepRequest;
+
+  /// Error snackbar shown when a help request cannot be created locally (e.g. incident id allocation failed).
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start the help request. Please try again.'**
+  String get helpModeCreateFailed;
+
+  /// Title of the disclosure banner when precise location sharing is unavailable on the current mesh mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Location sharing off'**
+  String get helpModeLocationOffTitle;
+
+  /// Body of the location-off disclosure banner; directs users to describe their location in chat instead.
+  ///
+  /// In en, this message translates to:
+  /// **'Precise location sharing is off for this mesh mode. Tell responders your location in the incident message.'**
+  String get helpModeLocationOffBody;
+
+  /// Responder view accuracy line for a known location fix, in metres.
+  ///
+  /// In en, this message translates to:
+  /// **'Accurate to ~{meters} m'**
+  String helpModeLocationAccuracy(int meters);
+
+  /// Responder view note shown when the last known location fix is stale.
+  ///
+  /// In en, this message translates to:
+  /// **'Location may be out of date'**
+  String get helpModeLocationStale;
+
+  /// Title of the local notification shown for a trusted inbound help request. Generic by design: no peer name, message body, or coordinates.
+  ///
+  /// In en, this message translates to:
+  /// **'Help request'**
+  String get notificationIncidentHelpRequestTitle;
+
+  /// Body of the trusted help-request notification. Generic by design; never includes message text or location.
+  ///
+  /// In en, this message translates to:
+  /// **'A trusted peer needs help'**
+  String get notificationIncidentHelpRequestBody;
+
+  /// Android notification channel description for Help Mode requests.
+  ///
+  /// In en, this message translates to:
+  /// **'Trusted help requests over the mesh'**
+  String get notificationChannelIncidentHelp;
+
+  /// Count of active help requests shown in the global banner / inbox.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 active help request} other{{count} active help requests}}'**
+  String helpModeActiveCount(int count);
+
+  /// Global help banner subtitle prompting the user to open the responder flow.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to respond'**
+  String get helpModeBannerTapToRespond;
+
+  /// Title of the responder inbox listing active trusted help requests.
+  ///
+  /// In en, this message translates to:
+  /// **'Help requests'**
+  String get helpModeInboxTitle;
+
+  /// Empty state for the responder inbox.
+  ///
+  /// In en, this message translates to:
+  /// **'No active help requests'**
+  String get helpModeInboxEmpty;
+
+  /// Node action: add this peer to the Help Circle (trust them for Help Mode).
+  ///
+  /// In en, this message translates to:
+  /// **'Add to Help Circle'**
+  String get helpModeCircleAdd;
+
+  /// Node action / list action: remove this peer from the Help Circle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from Help Circle'**
+  String get helpModeCircleRemove;
+
+  /// Snackbar confirming a peer was added to the Help Circle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} added to your Help Circle'**
+  String helpModeCircleAddedSnack(String name);
+
+  /// Snackbar confirming a peer was removed from the Help Circle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} removed from your Help Circle'**
+  String helpModeCircleRemovedSnack(String name);
+
+  /// Title of the Help Circle management screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Help Circle'**
+  String get helpModeCircleTitle;
+
+  /// Empty state of the Help Circle screen.
+  ///
+  /// In en, this message translates to:
+  /// **'No trusted peers yet'**
+  String get helpModeCircleEmpty;
+
+  /// Explainer on the Help Circle screen describing the trust model.
+  ///
+  /// In en, this message translates to:
+  /// **'Only peers in your Help Circle can raise or receive help requests with you. Being on the same channel is not enough.'**
+  String get helpModeCircleIntro;
+
+  /// Tooltip/title for opening the Help Circle management screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Help Circle'**
+  String get helpModeCircleManage;
+
+  /// Status label shown on a node that is in the Help Circle.
+  ///
+  /// In en, this message translates to:
+  /// **'In your Help Circle'**
+  String get helpModeCircleTrusted;
+
+  /// Title of the confirmation sheet shown before adding a node to the Help Circle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to Help Circle?'**
+  String get helpModeCircleAddConfirmTitle;
+
+  /// Body copy of the Help Circle add-confirmation sheet, explaining what trust means (manual, local, not channel-based, no precise location, two-way).
+  ///
+  /// In en, this message translates to:
+  /// **'Help Circle nodes can receive and respond to your Help Requests. You choose who to add: being on the same channel does not make a node trusted, and precise location sharing stays off in this mode. For a two-way help flow, the other person should add you to their Help Circle too.'**
+  String get helpModeCircleAddConfirmBody;
+
+  /// Note on the Help Circle screen clarifying that trust is one-directional and both peers must add each other.
+  ///
+  /// In en, this message translates to:
+  /// **'For a two-way help flow, both people add each other to their Help Circle.'**
+  String get helpModeCircleMutualNote;
+
+  /// Title of the screen shown when opening/scanning a Help Circle invite.
+  ///
+  /// In en, this message translates to:
+  /// **'Help Circle invite'**
+  String get helpModeCircleInviteTitle;
+
+  /// Prompt on the Help Circle invite screen asking whether to add the inviting peer.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {name} to your Help Circle?'**
+  String helpModeCircleInvitePrompt(String name);
+
+  /// Shown on the Help Circle invite screen when the Incident/Help Mode flags are off.
+  ///
+  /// In en, this message translates to:
+  /// **'Help Mode is turned off. Turn it on to use your Help Circle.'**
+  String get helpModeCircleInviteDisabled;
+
+  /// Button on the Help Circle screen that shows the user's own invite QR code.
+  ///
+  /// In en, this message translates to:
+  /// **'Share my Help Circle code'**
+  String get helpModeCircleShareAction;
+
+  /// Title of the QR share sheet for the user's own Help Circle invite.
+  ///
+  /// In en, this message translates to:
+  /// **'My Help Circle code'**
+  String get helpModeCircleShareTitle;
+
+  /// Subtitle of the Help Circle invite QR share sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Have a trusted peer scan this to add you to their Help Circle.'**
+  String get helpModeCircleShareSubtitle;
+
+  /// Info line under the Help Circle invite QR showing the node id (hex).
+  ///
+  /// In en, this message translates to:
+  /// **'Node {id}'**
+  String helpModeCircleShareInfo(String id);
+
+  /// Title of the confirmation shown before removing a peer from the Help Circle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from Help Circle?'**
+  String get helpModeCircleRemoveConfirmTitle;
+
+  /// Body of the confirmation shown before removing a peer from the Help Circle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} will no longer send or receive Help Requests with you. You can add them again later.'**
+  String helpModeCircleRemoveConfirmBody(String name);
 }
 
 class _AppLocalizationsDelegate

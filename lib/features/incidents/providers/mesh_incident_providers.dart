@@ -18,9 +18,13 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/constants.dart';
 import '../../../services/protocol/sip/spp_types.dart';
 import '../models/incident.dart';
+import '../models/incident_mode_models.dart';
 import '../models/mesh_incident_report.dart';
+import '../services/incident_help_notifier.dart';
+import '../services/incident_mode_store.dart';
 import '../services/mesh_incident_database.dart';
 import '../services/mesh_incident_service.dart';
 
@@ -35,6 +39,68 @@ final meshIncidentDatabaseProvider = Provider<MeshIncidentDatabaseImpl>((ref) {
   final db = MeshIncidentDatabaseImpl();
   ref.onDispose(() => db.close());
   return db;
+});
+
+/// Provides the [IncidentModeStore] over the shared mesh incidents database.
+///
+/// The store persists the unified Incident Mode event log and derives
+/// projections via [IncidentReducer]. Callers must ensure the database is open
+/// before ingest (the inbound help-event wiring does this). It only ever
+/// receives events that have already passed the Handshake-trust gate.
+final incidentModeStoreProvider = Provider<IncidentModeStore>((ref) {
+  final db = ref.watch(meshIncidentDatabaseProvider);
+  return IncidentModeStore(db: db);
+});
+
+/// Loads and projects a single Incident Mode incident from the store.
+///
+/// Returns null if the incident has no stored events. Re-read (invalidate)
+/// after an outbound action to refresh the projected state.
+final incidentModeProjectionProvider =
+    FutureProvider.family<IncidentProjection?, int>((ref, incidentId) async {
+      ref.watch(incidentModeEpochProvider);
+      final db = ref.watch(meshIncidentDatabaseProvider);
+      await db.open();
+      final store = ref.watch(incidentModeStoreProvider);
+      return store.loadIncidentProjection(incidentId);
+    });
+
+/// Bumped whenever a trusted Incident Mode event is persisted, so the active
+/// list / projection providers re-read the store.
+final incidentModeEpochProvider = NotifierProvider<_IncidentModeEpoch, int>(
+  _IncidentModeEpoch.new,
+);
+
+class _IncidentModeEpoch extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void bump() => state++;
+}
+
+/// Injectable Help Mode notifier (de-dupes per incident; fake in tests).
+final incidentHelpNotifierProvider = Provider<IncidentHelpNotifier>(
+  (ref) => DefaultIncidentHelpNotifier(),
+);
+
+/// Active (non-terminal) help_request incidents for the global banner / inbox.
+///
+/// Returns an empty list when Incident Mode or the help_request workflow is
+/// disabled. Excludes resolved/cancelled/expired and never includes
+/// hazard_report workflows (filtered by the store). Re-reads on
+/// [incidentModeEpochProvider] bumps.
+final activeHelpRequestsProvider = FutureProvider<List<IncidentProjection>>((
+  ref,
+) async {
+  if (!AppFeatureFlags.isMeshIncidentsEnabled ||
+      !AppFeatureFlags.isIncidentHelpRequestEnabled) {
+    return const [];
+  }
+  ref.watch(incidentModeEpochProvider);
+  final db = ref.watch(meshIncidentDatabaseProvider);
+  await db.open();
+  final store = ref.watch(incidentModeStoreProvider);
+  return store.getActiveHelpRequests();
 });
 
 // ---------------------------------------------------------------------------

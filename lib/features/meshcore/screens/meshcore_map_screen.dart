@@ -541,6 +541,13 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
                       subdomains: MapConfig.isMapboxActive
                           ? const <String>[]
                           : _mapStyle.subdomains,
+                      // Overzoom past the source's native cap (e.g. OpenTopoMap
+                      // terrain tops out at z17) by upscaling the last real
+                      // tiles instead of requesting a non-existent tile that
+                      // returns a server placeholder image.
+                      maxNativeZoom: MapConfig.isMapboxActive
+                          ? 18
+                          : _mapStyle.maxNativeZoom,
                       userAgentPackageName: MapConfig.userAgentPackageName,
                       retinaMode: MapConfig.isMapboxActive,
                       evictErrorTileStrategy: EvictErrorTileStrategy.dispose,

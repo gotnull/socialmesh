@@ -3724,6 +3724,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get channelKeyApply => 'Aplicar clave';
 
   @override
+  String get commonAdd => 'Añadir';
+
+  @override
+  String get commonRemove => 'Quitar';
+
+  @override
   String get commonDelete => 'Eliminar';
 
   @override
@@ -7593,6 +7599,18 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get mapHideWaypoints => 'Ocultar puntos de referencia';
+
+  @override
+  String mapNodeTransparency(int percent) {
+    return 'Transparencia de nodos: $percent%';
+  }
+
+  @override
+  String get mapNodeTransparencyTitle => 'Transparencia de nodos';
+
+  @override
+  String get mapNodeTransparencyDescription =>
+      'Atenúa los marcadores de los nodos vecinos para que el mapa de debajo siga visible. Tu propio nodo permanece totalmente visible.';
 
   @override
   String get mapShowSatelliteLabels => 'Mostrar etiquetas satelitales';
@@ -45319,5 +45337,374 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String settingsTelemetryExportError(String error) {
     return 'Error al exportar la telemetría: $error';
+  }
+
+  @override
+  String get helpModeNeedHelp => 'Pedir ayuda';
+
+  @override
+  String get helpModeAffordanceTooltip => 'Pedir ayuda a peers de confianza';
+
+  @override
+  String get helpModeCreateTitle => 'Pedir ayuda';
+
+  @override
+  String get helpModeCreateIntro =>
+      'Alerta a tus peers de confianza. La entrega es best-effort por la red mesh.';
+
+  @override
+  String get helpModeCreateStatusLabel => '¿Cómo estás? (opcional)';
+
+  @override
+  String get helpModeLocationDisclosure =>
+      'Tu ubicación se compartirá con los respondedores mientras esta solicitud esté activa.';
+
+  @override
+  String get helpModeSend => 'Enviar solicitud de ayuda';
+
+  @override
+  String get helpModeBroadcastingTitle => 'Buscando ayuda';
+
+  @override
+  String get helpModeBroadcastingBody =>
+      'Transmitiendo a peers de confianza. Best-effort por la red mesh.';
+
+  @override
+  String get helpModeActiveTitle => 'Solicitud de ayuda activa';
+
+  @override
+  String get helpModeNoResponders => 'Aún sin respondedores';
+
+  @override
+  String helpModeResponderCount(int count) {
+    return '$count respondedores activos';
+  }
+
+  @override
+  String get helpModeUpdateStatus => 'Actualiza tu estado';
+
+  @override
+  String get helpModeMessages => 'Mensajes';
+
+  @override
+  String get helpModeImSafe => 'Estoy a salvo';
+
+  @override
+  String get helpModeCancelRequest => 'Cancelar solicitud';
+
+  @override
+  String get helpModeImSafeConfirm =>
+      '¿Marcarte a salvo? Los respondedores se retirarán.';
+
+  @override
+  String get helpModeCancelConfirm =>
+      '¿Cancelar esta solicitud como falsa alarma?';
+
+  @override
+  String helpModeInboundTitle(String name) {
+    return '$name necesita ayuda';
+  }
+
+  @override
+  String get helpModeInboundBody =>
+      'De un peer de confianza. Best-effort por la red mesh.';
+
+  @override
+  String get helpModeAcknowledge => 'Confirmar recepción';
+
+  @override
+  String get helpModeRespond => 'Responder';
+
+  @override
+  String get helpModeOpenMap => 'Abrir mapa';
+
+  @override
+  String get helpModeDismiss => 'Descartar';
+
+  @override
+  String get helpModeRespondingTitle => 'Respondiendo';
+
+  @override
+  String get helpModeUpdateResponse => 'Actualizar respondedores';
+
+  @override
+  String get helpModeLeaveResponse => 'Abandonar la respuesta';
+
+  @override
+  String get helpModeRequesterLocation => 'Ubicación del solicitante';
+
+  @override
+  String helpModeLocationAge(String age) {
+    return 'Actualizado hace $age';
+  }
+
+  @override
+  String get helpModeLocationPending => 'Ubicación aún no compartida';
+
+  @override
+  String get helpModeLocationSharedTitle => 'Ubicación compartida';
+
+  @override
+  String get helpModeLocationSharedBody =>
+      'Compartida con los respondedores mientras esta solicitud esté activa.';
+
+  @override
+  String get helpModeResolvedTitle => 'Todo en orden';
+
+  @override
+  String get helpModeResolvedBody =>
+      'Marcado a salvo. Los respondedores se han retirado.';
+
+  @override
+  String get helpModeCancelledTitle => 'Solicitud cancelada';
+
+  @override
+  String get helpModeCancelledBody =>
+      'Falsa alarma. Los respondedores se han retirado.';
+
+  @override
+  String get helpModeExpiredTitle => 'Solicitud caducada';
+
+  @override
+  String get helpModeExpiredBody => 'No se recibió respuesta.';
+
+  @override
+  String get helpModeBannerActiveTitle => 'Solicitud de ayuda activa';
+
+  @override
+  String get helpModeBannerRespondingTitle => 'Estás respondiendo';
+
+  @override
+  String get helpModeBannerView => 'Ver';
+
+  @override
+  String get helpModeActivityTitle => 'Actividad';
+
+  @override
+  String get helpModeTimelineEmpty => 'Aún sin actividad';
+
+  @override
+  String get helpModeMessagesEmpty => 'Aún sin mensajes';
+
+  @override
+  String get helpModeMessageHint => 'Mensaje a los respondedores';
+
+  @override
+  String get helpModeGalleryTitle => 'Vista previa de Help Mode';
+
+  @override
+  String get helpModeGallerySubtitle =>
+      'Estados de ejemplo para revisión. No conectado a la red mesh.';
+
+  @override
+  String get helpModeStatusImOk => 'Estoy bien';
+
+  @override
+  String get helpModeStatusInjured => 'Herido';
+
+  @override
+  String get helpModeStatusCantMove => 'No puedo moverme';
+
+  @override
+  String get helpModeStatusNeedWater => 'Necesito agua';
+
+  @override
+  String get helpModeStatusNeedMedical => 'Necesito asistencia médica';
+
+  @override
+  String get helpModeStatusFalseAlarm => 'Falsa alarma';
+
+  @override
+  String get helpModeStatusWorse => 'Está empeorando';
+
+  @override
+  String get helpModeStatusOnMyWay => 'Voy en camino';
+
+  @override
+  String get helpModeStatusArrived => 'He llegado';
+
+  @override
+  String get helpModeStatusNeedBackup => 'Necesito refuerzos';
+
+  @override
+  String get helpModeStatusBlocked => 'Camino bloqueado';
+
+  @override
+  String get helpModeStatusCantReach => 'No puedo llegar a ti';
+
+  @override
+  String get helpModeStatusLeaving => 'Me retiro';
+
+  @override
+  String get helpModeEventCreate => 'Ayuda solicitada';
+
+  @override
+  String get helpModeEventAck => 'Confirmado';
+
+  @override
+  String get helpModeEventSeen => 'Visto';
+
+  @override
+  String get helpModeEventResponderAccept => 'Respondedor aceptó';
+
+  @override
+  String get helpModeEventResponderLeave => 'Respondedor se retiró';
+
+  @override
+  String get helpModeEventRequesterStatus => 'Actualización de estado';
+
+  @override
+  String get helpModeEventResponderStatus => 'Actualización del respondedor';
+
+  @override
+  String get helpModeEventLocation => 'Actualización de ubicación';
+
+  @override
+  String get helpModeEventMessage => 'Mensaje';
+
+  @override
+  String get helpModeEventResolve => 'Marcado a salvo';
+
+  @override
+  String get helpModeEventCancel => 'Cancelado';
+
+  @override
+  String get helpModeEventExpire => 'Caducado';
+
+  @override
+  String get helpModeNoEligiblePeers =>
+      'No hay respondedores de confianza disponibles ahora';
+
+  @override
+  String get helpModeKeepRequest => 'Mantener solicitud';
+
+  @override
+  String get helpModeCreateFailed =>
+      'No se pudo iniciar la solicitud de ayuda. Inténtalo de nuevo.';
+
+  @override
+  String get helpModeLocationOffTitle => 'Compartir ubicación desactivado';
+
+  @override
+  String get helpModeLocationOffBody =>
+      'El compartir la ubicación precisa está desactivado en este modo mesh. Indica tu ubicación a los respondedores en el mensaje del incidente.';
+
+  @override
+  String helpModeLocationAccuracy(int meters) {
+    return 'Precisión ~$meters m';
+  }
+
+  @override
+  String get helpModeLocationStale => 'La ubicación puede estar desactualizada';
+
+  @override
+  String get notificationIncidentHelpRequestTitle => 'Solicitud de ayuda';
+
+  @override
+  String get notificationIncidentHelpRequestBody =>
+      'Un peer de confianza necesita ayuda';
+
+  @override
+  String get notificationChannelIncidentHelp =>
+      'Solicitudes de ayuda de confianza por la red mesh';
+
+  @override
+  String helpModeActiveCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count solicitudes de ayuda activas',
+      one: '1 solicitud de ayuda activa',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get helpModeBannerTapToRespond => 'Toca para responder';
+
+  @override
+  String get helpModeInboxTitle => 'Solicitudes de ayuda';
+
+  @override
+  String get helpModeInboxEmpty => 'No hay solicitudes de ayuda activas';
+
+  @override
+  String get helpModeCircleAdd => 'Añadir al círculo de ayuda';
+
+  @override
+  String get helpModeCircleRemove => 'Quitar del círculo de ayuda';
+
+  @override
+  String helpModeCircleAddedSnack(String name) {
+    return '$name añadido a tu círculo de ayuda';
+  }
+
+  @override
+  String helpModeCircleRemovedSnack(String name) {
+    return '$name eliminado de tu círculo de ayuda';
+  }
+
+  @override
+  String get helpModeCircleTitle => 'Círculo de ayuda';
+
+  @override
+  String get helpModeCircleEmpty => 'Aún sin peers de confianza';
+
+  @override
+  String get helpModeCircleIntro =>
+      'Solo los peers de tu círculo de ayuda pueden intercambiar solicitudes de ayuda contigo. Estar en el mismo canal no basta.';
+
+  @override
+  String get helpModeCircleManage => 'Gestionar círculo de ayuda';
+
+  @override
+  String get helpModeCircleTrusted => 'En tu círculo de ayuda';
+
+  @override
+  String get helpModeCircleAddConfirmTitle => '¿Añadir al círculo de ayuda?';
+
+  @override
+  String get helpModeCircleAddConfirmBody =>
+      'Los nodos de tu círculo de ayuda pueden recibir tus solicitudes de ayuda y responder. Tú eliges a quién añadir: estar en el mismo canal no hace que un nodo sea de confianza, y el uso compartido de la ubicación precisa permanece desactivado en este modo. Para un flujo de ayuda bidireccional, la otra persona también debería añadirte a su círculo de ayuda.';
+
+  @override
+  String get helpModeCircleMutualNote =>
+      'Para un flujo de ayuda bidireccional, ambas personas se añaden mutuamente a su círculo de ayuda.';
+
+  @override
+  String get helpModeCircleInviteTitle => 'Invitación al círculo de ayuda';
+
+  @override
+  String helpModeCircleInvitePrompt(String name) {
+    return '¿Añadir a $name a tu círculo de ayuda?';
+  }
+
+  @override
+  String get helpModeCircleInviteDisabled =>
+      'El Modo Ayuda está desactivado. Actívalo para usar tu círculo de ayuda.';
+
+  @override
+  String get helpModeCircleShareAction =>
+      'Compartir mi código del círculo de ayuda';
+
+  @override
+  String get helpModeCircleShareTitle => 'Mi código del círculo de ayuda';
+
+  @override
+  String get helpModeCircleShareSubtitle =>
+      'Pide a un par de confianza que escanee esto para añadirte a su círculo de ayuda.';
+
+  @override
+  String helpModeCircleShareInfo(String id) {
+    return 'Nodo $id';
+  }
+
+  @override
+  String get helpModeCircleRemoveConfirmTitle =>
+      '¿Quitar del círculo de ayuda?';
+
+  @override
+  String helpModeCircleRemoveConfirmBody(String name) {
+    return '$name ya no podrá enviar ni recibir solicitudes de ayuda contigo. Puedes volver a añadirlo más tarde.';
   }
 }

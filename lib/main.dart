@@ -118,6 +118,9 @@ import 'features/reachability/mesh_reachability_screen.dart';
 import 'features/feedback/my_bug_reports_screen.dart';
 import 'features/admin/bug_reports/admin_bug_reports_screen.dart';
 import 'features/mesh_canvas/screens/mesh_canvas_overview_screen.dart';
+import 'features/incidents/providers/incident_help_trust_provider.dart';
+import 'features/incidents/screens/help_circle_invite_screen.dart';
+import 'features/incidents/screens/help_responder_inbox_screen.dart';
 import 'features/sip/sip_hub_screen.dart';
 import 'features/sip/sip_dm_screen.dart';
 import 'providers/sip_providers.dart';
@@ -653,6 +656,15 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
       _loadAccentColor();
       // Set user online presence
       _initializePresence();
+      // Warm the Help Circle trust store at launch so its async load from
+      // SharedPreferences completes before the user can open a node sheet.
+      // Otherwise the first sheet opened right after launch reads an empty
+      // circle (one-shot read + lazy provider init) and shows a stale
+      // "Add to Help Circle" for an already-trusted peer.
+      if (AppFeatureFlags.isMeshIncidentsEnabled &&
+          AppFeatureFlags.isIncidentHelpRequestEnabled) {
+        unawaited(ref.read(incidentHelpTrustProvider.notifier).reload());
+      }
       // Initialize shake-to-report bug listener
       ref.read(bugReportServiceProvider).initialize();
       // Setup App Intents for iOS Shortcuts integration
@@ -1500,6 +1512,28 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
           }
           break;
 
+        case 'incident_help_request':
+          // Help Mode notification tap. Route to the responder inbox (which
+          // lists only active trusted requests, or a calm "no active help
+          // requests" state). The incident id in [nav.targetId] is safe
+          // routing metadata; we intentionally open the inbox rather than a
+          // specific incident so a resolved/cancelled/expired one degrades to
+          // the inbox cleanly. Gated on both flags so a stale tap after disable
+          // surfaces nothing.
+          if (AppFeatureFlags.isMeshIncidentsEnabled &&
+              AppFeatureFlags.isIncidentHelpRequestEnabled &&
+              !_topRouteIsHelpResponderInbox(navigator)) {
+            navigator.push(
+              MaterialPageRoute(
+                builder: (_) => const HelpResponderInboxScreen(),
+                settings: const RouteSettings(
+                  name: _kHelpResponderInboxRouteName,
+                ),
+              ),
+            );
+          }
+          break;
+
         case 'sip_peer_found':
           // Peer-discovery notifications route to whichever surface
           // the operator has enabled. The notification body itself is
@@ -1595,6 +1629,19 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
   static const String _kSipHubRouteName = 'SipHubScreen';
   static const String _kMeshCanvasOverviewRouteName =
       'MeshCanvasOverviewScreen';
+  static const String _kHelpResponderInboxRouteName =
+      'HelpResponderInboxScreen';
+
+  /// Mirror of [_topRouteIsSipHub] for the Help responder inbox, so a repeat
+  /// notification tap doesn't stack duplicate inboxes.
+  bool _topRouteIsHelpResponderInbox(NavigatorState navigator) {
+    var top = false;
+    navigator.popUntil((route) {
+      top = route.settings.name == _kHelpResponderInboxRouteName;
+      return true; // stop iteration immediately, no actual pop
+    });
+    return top;
+  }
 
   /// True if the topmost route on [navigator]'s stack is a
   /// [SipHubScreen] (identified by the [_kSipHubRouteName] tag).
@@ -2215,6 +2262,19 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
                 builder: (context) => WidgetImportScreen(
                   base64Data: base64Data,
                   firestoreId: firestoreId,
+                ),
+              );
+            }
+          }
+          if (settings.name == '/help-circle-invite') {
+            final args = settings.arguments as Map<String, dynamic>?;
+            final nodeNum = args?['nodeNum'] as int?;
+            if (nodeNum != null) {
+              return MaterialPageRoute(
+                builder: (context) => HelpCircleInviteScreen(
+                  nodeNum: nodeNum,
+                  longName: args?['longName'] as String?,
+                  shortName: args?['shortName'] as String?,
                 ),
               );
             }
