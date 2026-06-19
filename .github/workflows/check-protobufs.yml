@@ -123,6 +123,7 @@ jobs:
           - [ ] Spot-check upstream iOS context (mandatory) — run `git -C meshtastic-ios log --oneline --since="3 months ago" --all | grep -iE "proto|hwmodel|hardware|portnum"` and record the outcome; mirror any commit that changes how a field is parsed, defaulted, or bounded before closing
           - [ ] Test with a physical Meshtastic device
           - [ ] Commit and push changes (use `Closes #<issue>` in the commit message to auto-close)
+          - [ ] Close out (mandatory, only when 100% complete) — post a completion comment summarising the wire change, each new-hwModel architecture decision + why, the verification run, and the iOS spot-check outcome; tick only the boxes genuinely done (annotate, don't false-tick); then close the issue
 
           See `CLAUDE.md` → "Meshtastic Protobuf Updates" for the full workflow and rationale.
 
