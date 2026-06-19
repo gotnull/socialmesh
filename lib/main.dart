@@ -41,6 +41,7 @@ import 'services/protocol/protocol_service.dart' show OperationalReadiness;
 import 'services/transport/background_message_processor.dart';
 import 'core/accessibility_theme_adapter.dart';
 import 'l10n/app_localizations.dart';
+import 'l10n/l10n_utils.dart';
 import 'core/l10n/l10n_extension.dart';
 import 'core/logging.dart';
 import 'core/logging/os_log_bridge.dart';
@@ -60,6 +61,7 @@ import 'models/tapback.dart';
 import 'models/user_profile.dart';
 import 'providers/app_providers.dart';
 import 'providers/meshcore_lifecycle_provider.dart';
+import 'providers/meshcore_providers.dart';
 import 'providers/auth_providers.dart';
 import 'providers/profile_providers.dart';
 import 'providers/telemetry_providers.dart';
@@ -93,6 +95,7 @@ import 'services/content_moderation/profanity_checker.dart';
 import 'services/firmware/device_hardware_catalog.dart';
 import 'features/scanner/scanner_screen.dart';
 import 'features/messaging/messaging_screen.dart';
+import 'features/meshcore/screens/meshcore_chat_screen.dart';
 import 'features/channels/channels_screen.dart';
 import 'features/channels/channel_form_screen.dart';
 import 'features/nodes/nodes_screen.dart';
@@ -1570,10 +1573,155 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
           }
           break;
 
+        case 'dm':
+          // Meshtastic direct-message notification. Payload is either
+          // `dm:<nodeNum>` or, when the message is reaction-capable,
+          // `dm:<nodeNum>:<replyPacketId>`. The peer node number is the
+          // first segment of [nav.targetId] in both shapes.
+          _routeToMeshtasticDm(navigator, nav.targetId);
+          break;
+
+        case 'channel':
+          // Meshtastic channel-message notification. Payload is either
+          // `channel:<index>:<nodeNum>` or, when reaction-capable,
+          // `channel:<index>:<nodeNum>:<replyPacketId>`. The channel
+          // index is the first segment of [nav.targetId] in both shapes.
+          _routeToMeshtasticChannel(navigator, nav.targetId);
+          break;
+
+        case 'meshcore-dm':
+          // MeshCore contact DM. Payload is `meshcore-dm:<pubKeyHex>`;
+          // the full pubkey hex is [nav.targetId].
+          _routeToMeshCoreContact(navigator, nav.targetId);
+          break;
+
+        case 'meshcore-channel':
+          // MeshCore channel. Payload is
+          // `meshcore-channel:<index>:<senderPrefixHex>`; only the
+          // channel index (first segment of [nav.targetId]) is needed.
+          _routeToMeshCoreChannel(navigator, nav.targetId);
+          break;
+
         default:
           AppLogging.notifications('🔔 Unknown notification type: ${nav.type}');
       }
     });
+  }
+
+  /// Open the Meshtastic DM thread for the peer encoded in [targetId]
+  /// (a `dm:` notification payload). Falls back to the conversation list
+  /// when the node is unknown or the id cannot be parsed.
+  void _routeToMeshtasticDm(NavigatorState navigator, String? targetId) {
+    final nodeNum = targetId != null
+        ? int.tryParse(targetId.split(':').first)
+        : null;
+    if (nodeNum == null) {
+      navigator.pushNamed('/messages');
+      return;
+    }
+    final node = ref.read(nodesProvider)[nodeNum];
+    if (node == null) {
+      AppLogging.notifications(
+        '🔔 DM tap: node $nodeNum unknown, opening conversation list',
+      );
+      navigator.pushNamed('/messages');
+      return;
+    }
+    navigator.push(
+      MaterialPageRoute(
+        builder: (_) => ChatScreen(
+          type: ConversationType.directMessage,
+          nodeNum: nodeNum,
+          title: node.displayName,
+          avatarColor: node.avatarColor,
+        ),
+      ),
+    );
+  }
+
+  /// Open the Meshtastic channel thread for the index encoded in
+  /// [targetId] (a `channel:` notification payload). Falls back to the
+  /// channel list when the index is unknown or unparseable.
+  void _routeToMeshtasticChannel(NavigatorState navigator, String? targetId) {
+    final channelIndex = targetId != null
+        ? int.tryParse(targetId.split(':').first)
+        : null;
+    if (channelIndex == null) {
+      navigator.pushNamed('/channels');
+      return;
+    }
+    final channels = ref.read(channelsProvider);
+    final matches = channels.where((c) => c.index == channelIndex);
+    final channel = matches.isEmpty ? null : matches.first;
+    if (channel == null) {
+      AppLogging.notifications(
+        '🔔 Channel tap: index $channelIndex unknown, opening channel list',
+      );
+      navigator.pushNamed('/channels');
+      return;
+    }
+    final l10n = safeL10n();
+    final title = channel.name.isEmpty
+        ? (channelIndex == 0
+              ? l10n.channelsPrimaryChannelName
+              : l10n.channelsDefaultChannelName(channelIndex))
+        : channel.name;
+    navigator.push(
+      MaterialPageRoute(
+        builder: (_) => ChatScreen(
+          type: ConversationType.channel,
+          channelIndex: channelIndex,
+          title: title,
+        ),
+      ),
+    );
+  }
+
+  /// Open the MeshCore contact chat for the pubkey encoded in [targetId]
+  /// (a `meshcore-dm:` notification payload). No-op when the contact is
+  /// not in the local store (nothing to open without the contact object).
+  void _routeToMeshCoreContact(NavigatorState navigator, String? targetId) {
+    final pubKeyHex = targetId;
+    if (pubKeyHex == null || pubKeyHex.isEmpty) return;
+    final contacts = ref.read(meshCoreContactsProvider).contacts;
+    final matches = contacts.where((c) => c.publicKeyHex == pubKeyHex);
+    final contact = matches.isEmpty ? null : matches.first;
+    if (contact == null) {
+      AppLogging.notifications(
+        '🔔 MeshCore DM tap: contact not found, skipping navigation',
+      );
+      return;
+    }
+    navigator.push(
+      MaterialPageRoute(
+        builder: (_) => MeshCoreChatScreen.contact(contact: contact),
+      ),
+    );
+  }
+
+  /// Open the MeshCore channel chat for the index encoded in [targetId]
+  /// (a `meshcore-channel:` notification payload). No-op when the channel
+  /// is unknown.
+  void _routeToMeshCoreChannel(NavigatorState navigator, String? targetId) {
+    final channelIndex = targetId != null
+        ? int.tryParse(targetId.split(':').first)
+        : null;
+    if (channelIndex == null) return;
+    final channels = ref.read(meshCoreChannelsProvider).channels;
+    final matches = channels.where((c) => c.index == channelIndex);
+    final channel = matches.isEmpty ? null : matches.first;
+    if (channel == null) {
+      AppLogging.notifications(
+        '🔔 MeshCore channel tap: index $channelIndex unknown, '
+        'skipping navigation',
+      );
+      return;
+    }
+    navigator.push(
+      MaterialPageRoute(
+        builder: (_) => MeshCoreChatScreen.channel(channel: channel),
+      ),
+    );
   }
 
   /// Resolve the SIP DM session for [peerNodeIdStr] and push
