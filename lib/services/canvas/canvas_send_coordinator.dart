@@ -188,17 +188,13 @@ class CanvasSendCoordinator {
   static const String _errorEncodeFailed = 'encode-failed';
 
   CanvasSendCoordinator({
-    required CanvasRepository repository,
-    required CanvasOutboundGovernor governor,
-    required CanvasOutboundChannel outbound,
-    required int? Function() localNodeNumProvider,
+    required this._repository,
+    required this._governor,
+    required this._outbound,
+    required this._localNodeNumProvider,
     bool Function()? canSend,
     int Function()? nowMs,
-  }) : _repository = repository,
-       _governor = governor,
-       _outbound = outbound,
-       _localNodeNumProvider = localNodeNumProvider,
-       _canSend = canSend ?? (() => true),
+  }) : _canSend = canSend ?? (() => true),
        _nowMs = nowMs ?? (() => DateTime.now().millisecondsSinceEpoch);
 
   /// Maximum number of frames to emit in a single drain pass. Caps

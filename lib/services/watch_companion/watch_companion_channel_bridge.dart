@@ -73,12 +73,10 @@ typedef WatchCompanionServiceReader = WatchCompanionService Function();
 
 class WatchCompanionChannelBridge {
   WatchCompanionChannelBridge({
-    required WatchCompanionFlagsReader readFlags,
-    required WatchCompanionServiceReader readService,
+    required this._readFlags,
+    required this._readService,
     MethodChannel? channel,
-  }) : _readFlags = readFlags,
-       _readService = readService,
-       _channel = channel ?? const MethodChannel(kWatchCompanionChannelName);
+  }) : _channel = channel ?? const MethodChannel(kWatchCompanionChannelName);
 
   final WatchCompanionFlagsReader _readFlags;
   final WatchCompanionServiceReader _readService;

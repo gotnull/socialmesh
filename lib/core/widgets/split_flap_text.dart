@@ -119,9 +119,9 @@ class _SplitFlapTextState extends State<SplitFlapText>
 class _LetterAnimationController {
   _LetterAnimationController({
     required this.targetChar,
-    required TickerProvider vsync,
+    required this._vsync,
     required this.random,
-  }) : _vsync = vsync {
+  }) {
     _isUpperCase =
         targetChar == targetChar.toUpperCase() &&
         targetChar != targetChar.toLowerCase();

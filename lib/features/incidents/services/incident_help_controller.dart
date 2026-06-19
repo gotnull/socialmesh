@@ -120,21 +120,15 @@ class IncidentHelpController {
   final int Function() _idGenerator;
 
   IncidentHelpController({
-    required IncidentModeStore store,
-    required Future<void> Function() ensureStoreReady,
-    required int Function() localNodeId,
-    required List<IncidentPeer> Function() discoveredPeers,
-    required bool Function(int nodeId) isTrusted,
-    required SendHelpEvent sendHelpEvent,
+    required this._store,
+    required this._ensureStoreReady,
+    required this._localNodeId,
+    required this._discoveredPeers,
+    required this._isTrusted,
+    required this._sendHelpEvent,
     DateTime Function()? clock,
     int Function()? idGenerator,
-  }) : _store = store,
-       _ensureStoreReady = ensureStoreReady,
-       _localNodeId = localNodeId,
-       _discoveredPeers = discoveredPeers,
-       _isTrusted = isTrusted,
-       _sendHelpEvent = sendHelpEvent,
-       _clock = clock ?? (() => DateTime.now().toUtc()),
+  }) : _clock = clock ?? (() => DateTime.now().toUtc()),
        _idGenerator = idGenerator ?? defaultIncidentIdGenerator;
 
   /// Peers eligible to receive help events: Handshake-trusted AND advertising

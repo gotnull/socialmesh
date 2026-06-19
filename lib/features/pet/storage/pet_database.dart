@@ -75,7 +75,7 @@ class PetDatabase {
   Completer<Database?>? _initCompleter;
   bool _initFailed = false;
 
-  PetDatabase({String? dbPathOverride}) : _dbPathOverride = dbPathOverride;
+  PetDatabase({this._dbPathOverride});
 
   Database get database {
     if (_db == null || !_db!.isOpen) {

@@ -50,8 +50,8 @@ class NodeDexSqliteStore {
 
   NodeDexSqliteStore(
     this._database, {
-    Duration saveDebounceDuration = const Duration(seconds: 2),
-  }) : _saveDebounceDuration = saveDebounceDuration;
+    this._saveDebounceDuration = const Duration(seconds: 2),
+  });
 
   /// The underlying database instance.
   Database get _db => _database.database;

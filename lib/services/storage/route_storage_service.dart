@@ -16,7 +16,7 @@ class RouteStorageService {
   final String? _testDbPath;
 
   /// Constructor with optional test database path
-  RouteStorageService({String? testDbPath}) : _testDbPath = testDbPath;
+  RouteStorageService({this._testDbPath});
 
   /// Initialize the SQLite database
   Future<void> init() async {

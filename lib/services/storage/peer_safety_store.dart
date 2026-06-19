@@ -140,10 +140,10 @@ class PeerSafetyStore {
   Database? _db;
   final String? _testDbPath;
 
-  /// Construct a new store. Pass [testDbPath] (e.g. an in-memory or
+  /// Construct a new store. Pass [_testDbPath] (e.g. an in-memory or
   /// tempfile path) for tests; production opens
   /// `getApplicationDocumentsDirectory()/peer_safety.db`.
-  PeerSafetyStore({String? testDbPath}) : _testDbPath = testDbPath;
+  PeerSafetyStore({this._testDbPath});
 
   /// True when the underlying SQLite handle is open.
   bool get isOpen => _db != null && _db!.isOpen;

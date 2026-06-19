@@ -19,9 +19,8 @@ class MeshCoreNotificationRateLimiter {
 
   MeshCoreNotificationRateLimiter({
     DateTime Function()? clock,
-    Duration defaultCooldown = const Duration(minutes: 5),
-  }) : _now = clock ?? DateTime.now,
-       _defaultCooldown = defaultCooldown;
+    this._defaultCooldown = const Duration(minutes: 5),
+  }) : _now = clock ?? DateTime.now;
 
   /// Attempt to fire a notification on the named [category].
   ///

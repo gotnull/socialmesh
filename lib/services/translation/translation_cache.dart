@@ -17,9 +17,9 @@ class TranslationCache {
   Database? _db;
   final String? _testDbPath;
 
-  /// Creates a cache. Pass [testDbPath] to override the default path
+  /// Creates a cache. Pass [_testDbPath] to override the default path
   /// (e.g. [inMemoryDatabasePath] in tests).
-  TranslationCache({String? testDbPath}) : _testDbPath = testDbPath;
+  TranslationCache({this._testDbPath});
 
   /// Open or create the cache database.
   Future<void> initialize() async {

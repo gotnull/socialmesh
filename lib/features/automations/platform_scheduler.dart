@@ -325,8 +325,7 @@ class IOSBGTaskScheduler implements PlatformScheduler {
 
   bool _initialized = false;
 
-  IOSBGTaskScheduler({FlutterLocalNotificationsPlugin? notifications})
-    : _notifications = notifications;
+  IOSBGTaskScheduler({this._notifications});
 
   /// Set the handler for background fetch events
   ///

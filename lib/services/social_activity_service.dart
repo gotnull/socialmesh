@@ -25,9 +25,7 @@ import '../models/social_activity.dart';
 /// avatarUrl, and isVerified, but the caller-provided nodeNum takes priority
 /// over whatever the profile document contains.
 class SocialActivityService {
-  SocialActivityService({FirebaseFirestore? firestore, FirebaseAuth? auth})
-    : _firestore = firestore,
-      _auth = auth;
+  SocialActivityService({this._firestore, this._auth});
 
   final FirebaseFirestore? _firestore;
   final FirebaseAuth? _auth;

@@ -22,11 +22,8 @@ class NodeBoardApiService {
   final http.Client _client;
   final Future<String?> Function() _getIdToken;
 
-  NodeBoardApiService({
-    http.Client? client,
-    required Future<String?> Function() getIdToken,
-  }) : _client = client ?? http.Client(),
-       _getIdToken = getIdToken;
+  NodeBoardApiService({http.Client? client, required this._getIdToken})
+    : _client = client ?? http.Client();
 
   String get _baseUrl => AppUrls.nodeBoardApiUrl;
 

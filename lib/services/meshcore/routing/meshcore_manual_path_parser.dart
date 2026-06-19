@@ -34,11 +34,11 @@ class MeshCoreManualPathParseResult {
   final int? overflowLength;
 
   const MeshCoreManualPathParseResult._({
-    required _MeshCoreManualPathParseOutcome outcome,
+    required this._outcome,
     this.bytes,
     this.invalidToken,
     this.overflowLength,
-  }) : _outcome = outcome;
+  });
 
   factory MeshCoreManualPathParseResult.ok(Uint8List bytes) =>
       MeshCoreManualPathParseResult._(

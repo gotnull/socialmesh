@@ -115,11 +115,7 @@ class TakIdentityRegistry {
   /// callsign (lowercased) -> TakIdentity
   final _byCallsign = <String, TakIdentity>{};
 
-  TakIdentityRegistry({
-    IdentityPersistCallback? persist,
-    IdentityLoadCallback? load,
-  }) : _persist = persist,
-       _load = load;
+  TakIdentityRegistry({this._persist, this._load});
 
   /// Loads identities from persistence.
   Future<void> loadFromStorage() async {

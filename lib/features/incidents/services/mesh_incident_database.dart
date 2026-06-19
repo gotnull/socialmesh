@@ -94,8 +94,7 @@ class MeshIncidentDatabaseImpl
   Completer<Database?>? _initCompleter;
   bool _initFailed = false;
 
-  MeshIncidentDatabaseImpl({String? dbPathOverride})
-    : _dbPathOverride = dbPathOverride;
+  MeshIncidentDatabaseImpl({this._dbPathOverride});
 
   /// Whether the database is open and ready.
   bool get isOpen => _db != null && _db!.isOpen;

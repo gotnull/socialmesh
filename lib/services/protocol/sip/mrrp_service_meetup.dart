@@ -80,9 +80,8 @@ class MrrpServiceMeetup implements MrrpServiceHandler {
   /// Active meetup tokens, keyed by token_id hex.
   final Map<String, MeetupToken> _tokens = {};
 
-  MrrpServiceMeetup({Random? random, DateTime Function()? clock})
-    : _random = random ?? Random.secure(),
-      _clock = clock;
+  MrrpServiceMeetup({Random? random, this._clock})
+    : _random = random ?? Random.secure();
 
   @override
   int get serviceId => MrrpServiceId.meetupV1;

@@ -70,11 +70,7 @@ class TaskStateMachine {
   final PermissionService _permissions;
   static const _uuid = Uuid();
 
-  TaskStateMachine({
-    required TaskDatabase db,
-    required PermissionService permissions,
-  }) : _db = db,
-       _permissions = permissions;
+  TaskStateMachine({required this._db, required this._permissions});
 
   // -----------------------------------------------------------------------
   // Query helpers

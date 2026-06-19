@@ -40,7 +40,7 @@ class TaskDatabase {
   Completer<Database?>? _initCompleter;
   bool _initFailed = false;
 
-  TaskDatabase({String? dbPathOverride}) : _dbPathOverride = dbPathOverride;
+  TaskDatabase({this._dbPathOverride});
 
   /// The open database instance. Throws if not initialised.
   Database get database {

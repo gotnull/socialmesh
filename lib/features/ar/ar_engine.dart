@@ -962,12 +962,10 @@ class _KalmanFilter1D {
   final double _measurementNoise;
 
   _KalmanFilter1D({
-    required double processNoise,
-    required double measurementNoise,
+    required this._processNoise,
+    required this._measurementNoise,
     required double estimatedError,
-  }) : _processNoise = processNoise,
-       _measurementNoise = measurementNoise,
-       _errorEstimate = estimatedError;
+  }) : _errorEstimate = estimatedError;
 
   double update(double measurement) {
     // Prediction update

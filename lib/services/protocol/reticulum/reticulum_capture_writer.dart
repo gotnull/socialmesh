@@ -31,8 +31,7 @@ import 'reticulum_safe_log.dart';
 /// Schema is locked — any change requires a new version byte and a
 /// matching reader path in the replay engine.
 class ReticulumCaptureWriter {
-  ReticulumCaptureWriter({Directory? captureDirOverride})
-    : _captureDirOverride = captureDirOverride;
+  ReticulumCaptureWriter({this._captureDirOverride});
 
   final Directory? _captureDirOverride;
 

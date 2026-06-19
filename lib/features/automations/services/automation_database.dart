@@ -67,8 +67,7 @@ class AutomationDatabase {
   Completer<Database?>? _initCompleter;
   bool _initFailed = false;
 
-  AutomationDatabase({String? dbPathOverride})
-    : _dbPathOverride = dbPathOverride;
+  AutomationDatabase({this._dbPathOverride});
 
   /// The open database instance. Throws if not initialized.
   Database get database {

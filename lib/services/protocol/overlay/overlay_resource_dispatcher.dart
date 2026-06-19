@@ -113,12 +113,10 @@ class OverlayResourceDispatcher {
   final OverlayFeatureFlags Function() _flags;
 
   OverlayResourceDispatcher({
-    required OverlayResourceEngine engine,
-    required OverlayCapabilityCoordinator capability,
-    required OverlayFeatureFlags Function() flags,
-  }) : _engine = engine,
-       _capability = capability,
-       _flags = flags;
+    required this._engine,
+    required this._capability,
+    required this._flags,
+  });
 
   /// Submit a resource send intent. The dispatcher decides the
   /// routing (overlay, fallback, reject) and returns a typed result

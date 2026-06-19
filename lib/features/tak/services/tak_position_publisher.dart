@@ -34,18 +34,13 @@ class TakPositionPublisher {
   double? _lastLon;
 
   TakPositionPublisher({
-    required TakGatewayClient client,
-    required String? Function() getNodeHex,
-    required double? Function() getLat,
-    required double? Function() getLon,
-    required String Function() getNodeName,
-    TakPublishConfig config = const TakPublishConfig(),
-  }) : _client = client,
-       _getNodeHex = getNodeHex,
-       _getLat = getLat,
-       _getLon = getLon,
-       _getNodeName = getNodeName,
-       _config = config;
+    required this._client,
+    required this._getNodeHex,
+    required this._getLat,
+    required this._getLon,
+    required this._getNodeName,
+    this._config = const TakPublishConfig(),
+  });
 
   /// Current configuration.
   TakPublishConfig get config => _config;

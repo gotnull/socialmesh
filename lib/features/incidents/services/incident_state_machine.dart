@@ -85,11 +85,7 @@ class IncidentStateMachine {
   final PermissionService _permissions;
   static const _uuid = Uuid();
 
-  IncidentStateMachine({
-    required IncidentDatabase db,
-    required PermissionService permissions,
-  }) : _db = db,
-       _permissions = permissions;
+  IncidentStateMachine({required this._db, required this._permissions});
 
   // -----------------------------------------------------------------------
   // Incident creation

@@ -97,8 +97,7 @@ class DeepLinkService {
   /// Stream of parsed deep links
   Stream<DeepLinkData> get linkStream => _linkController.stream;
 
-  DeepLinkService(this._ref, {FirebaseFirestore? firestore})
-    : _firestore = firestore;
+  DeepLinkService(this._ref, {this._firestore});
 
   /// Initialize deep link handling
   Future<void> initialize() async {

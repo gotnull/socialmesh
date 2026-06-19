@@ -84,24 +84,19 @@ class OverlayLinkEngine {
 
   /// Construct a new engine.
   ///
-  /// [acceptPolicy] is consulted for every inbound `LINK_OPEN`; the
+  /// [_acceptPolicy] is consulted for every inbound `LINK_OPEN`; the
   /// default accepts every peer, which is suitable only for unit
   /// tests. Production callers MUST provide a policy.
   OverlayLinkEngine({
-    required OverlayLinkStore store,
-    required OverlayLinkEgress egress,
-    OverlayLinkAcceptPolicy acceptPolicy = overlayLinkAcceptAll,
+    required this._store,
+    required this._egress,
+    this._acceptPolicy = overlayLinkAcceptAll,
     OverlayLinkClock? clock,
     OverlayLinkIdGenerator? linkIdGenerator,
-    OverlayEndpointManager? endpointManager,
-    OverlaySecureSessionManager? secureSessionManager,
-  }) : _store = store,
-       _egress = egress,
-       _acceptPolicy = acceptPolicy,
-       _clock = clock ?? _defaultClock,
-       _linkIdGenerator = linkIdGenerator ?? _defaultLinkIdGenerator,
-       _endpointManager = endpointManager,
-       _secureSessionManager = secureSessionManager;
+    this._endpointManager,
+    this._secureSessionManager,
+  }) : _clock = clock ?? _defaultClock,
+       _linkIdGenerator = linkIdGenerator ?? _defaultLinkIdGenerator;
 
   /// Stream of engine events. Broadcast; late subscribers do not
   /// replay.

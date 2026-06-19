@@ -20,11 +20,7 @@ class NodeBoardRepository {
   final NodeBoardApiService _api;
   final NodeBoardCacheService _cache;
 
-  NodeBoardRepository({
-    required NodeBoardApiService api,
-    required NodeBoardCacheService cache,
-  }) : _api = api,
-       _cache = cache;
+  NodeBoardRepository({required this._api, required this._cache});
 
   // -------------------------------------------------------------------------
   // Board reads

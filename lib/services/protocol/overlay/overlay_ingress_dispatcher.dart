@@ -44,12 +44,8 @@ class OverlayIngressDispatcher {
   int get decodeFailures => _decodeFailures;
   int _decodeFailures = 0;
 
-  /// Construct a dispatcher bound to [engine] and [coordinator].
-  OverlayIngressDispatcher({
-    required OverlayLinkEngine engine,
-    required OverlayCapabilityCoordinator coordinator,
-  }) : _engine = engine,
-       _coordinator = coordinator;
+  /// Construct a dispatcher bound to [_engine] and [_coordinator].
+  OverlayIngressDispatcher({required this._engine, required this._coordinator});
 
   /// Entry point invoked by [ProtocolService] once it has sniffed a
   /// v0.2 link frame.

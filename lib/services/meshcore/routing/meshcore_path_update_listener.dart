@@ -45,11 +45,9 @@ typedef MeshCorePathRecorder =
 class MeshCorePathUpdateListener {
   MeshCorePathUpdateListener({
     required MeshCoreSession session,
-    required MeshCorePathRecorder recorder,
-    Duration getContactTimeout = const Duration(seconds: 5),
-  }) : _session = session,
-       _recorder = recorder,
-       _getContactTimeout = getContactTimeout {
+    required this._recorder,
+    this._getContactTimeout = const Duration(seconds: 5),
+  }) : _session = session {
     _sub = session.frameStream.listen(_onFrame);
   }
 
@@ -63,13 +61,10 @@ class MeshCorePathUpdateListener {
       required Uint8List pubKey,
       required Duration timeout,
     })
-    getContactByKey,
-    required MeshCorePathRecorder recorder,
-    Duration getContactTimeout = const Duration(seconds: 5),
-  }) : _session = null,
-       _getContactByKey = getContactByKey,
-       _recorder = recorder,
-       _getContactTimeout = getContactTimeout {
+    this._getContactByKey,
+    required this._recorder,
+    this._getContactTimeout = const Duration(seconds: 5),
+  }) : _session = null {
     _sub = frameStream.listen(_onFrame);
   }
 

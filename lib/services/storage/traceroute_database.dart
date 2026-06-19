@@ -79,8 +79,7 @@ class TracerouteDatabase {
   Completer<Database?>? _initCompleter;
   bool _initFailed = false;
 
-  TracerouteDatabase({String? dbPathOverride})
-    : _dbPathOverride = dbPathOverride;
+  TracerouteDatabase({this._dbPathOverride});
 
   /// The open database instance. Throws if not initialized.
   Database get database {

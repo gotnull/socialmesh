@@ -46,9 +46,9 @@ class OverlayResourceStore {
   /// True when the underlying handle is open.
   bool get isOpen => _db != null && _db!.isOpen;
 
-  /// Construct a new store. [testDbPath] overrides the on-disk
+  /// Construct a new store. [_testDbPath] overrides the on-disk
   /// location; tests use a tempfile.
-  OverlayResourceStore({String? testDbPath}) : _testDbPath = testDbPath;
+  OverlayResourceStore({this._testDbPath});
 
   /// Open the database, creating tables on first run.
   Future<void> init() async {

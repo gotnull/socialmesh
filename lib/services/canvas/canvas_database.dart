@@ -26,7 +26,7 @@ class CanvasDatabase {
   Database? _db;
   final String? _testDbPath;
 
-  CanvasDatabase({String? testDbPath}) : _testDbPath = testDbPath;
+  CanvasDatabase({this._testDbPath});
 
   /// Open (or create) the database. Idempotent — calling more than once
   /// is a no-op after the first successful open.

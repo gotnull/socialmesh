@@ -46,8 +46,7 @@ class MeshIncidentService {
   /// Local case_id counter for outbound reports.
   int _nextCaseId = 0;
 
-  MeshIncidentService({required MeshIncidentDatabase db, this.onSend})
-    : _db = db;
+  MeshIncidentService({required this._db, this.onSend});
 
   /// Initialise the service and load the next case_id.
   Future<void> init() async {

@@ -80,7 +80,7 @@ class TelemetryDatabase {
   /// Whether the database is open and ready for queries.
   bool get isOpen => _db != null && _db!.isOpen;
 
-  TelemetryDatabase({String? testDbPath}) : _testDbPath = testDbPath;
+  TelemetryDatabase({this._testDbPath});
 
   /// Initialize the database, creating tables if needed and migrating
   /// any legacy SharedPreferences data on first run.

@@ -72,7 +72,7 @@ class MrrpServiceBoard implements MrrpServiceHandler {
   /// Next post ID (wrapping uint32).
   int _nextPostId = 1;
 
-  MrrpServiceBoard({DateTime Function()? clock}) : _clock = clock;
+  MrrpServiceBoard({this._clock});
 
   @override
   int get serviceId => MrrpServiceId.boardV1;

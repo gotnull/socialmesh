@@ -57,17 +57,14 @@ class OverlayResourceEngine {
   bool _disposed = false;
 
   OverlayResourceEngine({
-    required OverlayResourceStore store,
-    required OverlayResourceEgress egress,
+    required this._store,
+    required this._egress,
     OverlayResourceClock? clock,
     OverlayResourceIdGenerator? resourceIdGenerator,
-    int defaultWindow = OverlayResourceConstants.chunksPerAckWindow,
-  }) : _store = store,
-       _egress = egress,
-       _clock = clock ?? _defaultClock,
+    this._defaultWindow = OverlayResourceConstants.chunksPerAckWindow,
+  }) : _clock = clock ?? _defaultClock,
        _resourceIdGenerator =
-           resourceIdGenerator ?? _defaultResourceIdGenerator,
-       _defaultWindow = defaultWindow;
+           resourceIdGenerator ?? _defaultResourceIdGenerator;
 
   /// Stream of engine events. Broadcast; late subscribers do not
   /// replay.

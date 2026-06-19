@@ -130,26 +130,22 @@ class SipOutbound {
 class SipDiscovery {
   /// Creates a discovery engine.
   ///
-  /// [rateLimiter] enforces the byte budget.
-  /// [localNodeId] is this device's Meshtastic node number.
-  /// [clock] is injectable for testing.
+  /// [_rateLimiter] enforces the byte budget.
+  /// [_localNodeId] is this device's Meshtastic node number.
+  /// [_clock] is injectable for testing.
   SipDiscovery({
-    required SipRateLimiter rateLimiter,
-    required int localNodeId,
-    SipCounters? counters,
-    SipReplayCache? replayCache,
-    int? Function()? clock,
+    required this._rateLimiter,
+    required this._localNodeId,
+    this._counters,
+    this._replayCache,
+    this._clock,
     this.maxPeers = 16,
     this.cacheTtlMs = 24 * 60 * 60 * 1000, // 24 hours
     this.beaconIntervalMs = 300 * 1000, // 300s
     this.beaconJitterMs = 30 * 1000, // 0-30s
     this.rollcallCooldownMs = 60 * 1000, // 60s
     this.rollcallRespDelayMaxMs = 3000, // 0-3s
-  }) : _rateLimiter = rateLimiter,
-       _localNodeId = localNodeId,
-       _counters = counters,
-       _replayCache = replayCache,
-       _clock = clock;
+  });
 
   /// Callback to send an encoded SIP frame via the mesh transport.
   ///

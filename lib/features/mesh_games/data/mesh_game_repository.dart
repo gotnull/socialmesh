@@ -27,11 +27,8 @@ class MeshGameRepository {
   final MeshServiceStore _store;
   final DateTime Function() _clock;
 
-  MeshGameRepository({
-    required MeshServiceStore store,
-    DateTime Function()? clock,
-  }) : _store = store,
-       _clock = clock ?? DateTime.now;
+  MeshGameRepository({required this._store, DateTime Function()? clock})
+    : _clock = clock ?? DateTime.now;
 
   Future<void> open() => _store.open();
 

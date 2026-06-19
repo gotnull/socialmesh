@@ -63,14 +63,11 @@ class OverlaySecureSessionManager {
       StreamController<OverlaySecureInboundPayload>.broadcast();
 
   OverlaySecureSessionManager({
-    required OverlayLinkStore store,
-    required OverlayLinkEgress egress,
-    required OverlayEndpointManager endpointManager,
-    required bool Function() enabledFlag,
-  }) : _store = store,
-       _egress = egress,
-       _endpointManager = endpointManager,
-       _enabledFlag = enabledFlag;
+    required this._store,
+    required this._egress,
+    required this._endpointManager,
+    required this._enabledFlag,
+  });
 
   /// Broadcast stream of successfully decrypted secure DATA payloads.
   /// Phase 2 subscribers plug their handlers here.

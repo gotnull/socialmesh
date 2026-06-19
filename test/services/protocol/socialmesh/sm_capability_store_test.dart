@@ -174,11 +174,7 @@ class _TestPersistence implements SmCapabilityPersistence {
   final Future<Map<int, int>> Function() _onLoad;
   final Future<void> Function(Map<int, int>) _onSave;
 
-  _TestPersistence({
-    required Future<Map<int, int>> Function() onLoad,
-    required Future<void> Function(Map<int, int>) onSave,
-  }) : _onLoad = onLoad,
-       _onSave = onSave;
+  _TestPersistence({required this._onLoad, required this._onSave});
 
   @override
   Future<Map<int, int>> load() => _onLoad();

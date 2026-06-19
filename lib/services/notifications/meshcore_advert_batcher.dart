@@ -28,7 +28,7 @@ class MeshCoreAdvertBatcher {
   final int _maxBuffered;
   final List<MeshCoreAdvertBatchEntry> _pending = [];
 
-  MeshCoreAdvertBatcher({int maxBuffered = 20}) : _maxBuffered = maxBuffered;
+  MeshCoreAdvertBatcher({this._maxBuffered = 20});
 
   int get pendingCount => _pending.length;
 

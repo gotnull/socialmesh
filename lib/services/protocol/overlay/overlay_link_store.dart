@@ -42,9 +42,9 @@ class OverlayLinkStore {
   /// True when the underlying SQLite handle is open.
   bool get isOpen => _db != null && _db!.isOpen;
 
-  /// Construct a new store. [testDbPath] overrides the on-disk
+  /// Construct a new store. [_testDbPath] overrides the on-disk
   /// location (use `':memory:'` for in-memory SQLite in tests).
-  OverlayLinkStore({String? testDbPath}) : _testDbPath = testDbPath;
+  OverlayLinkStore({this._testDbPath});
 
   /// Open the database, creating tables on first run.
   Future<void> init() async {

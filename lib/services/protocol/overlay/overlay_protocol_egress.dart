@@ -39,7 +39,7 @@ class OverlayProtocolEgress implements OverlayLinkEgress {
 
   /// Construct a new adapter.
   ///
-  /// [flags] is a getter so the egress can cheaply re-read the flag
+  /// [_flags] is a getter so the egress can cheaply re-read the flag
   /// on each send. P2 expects the provider to supply a constant but
   /// the indirection is there so a runtime toggle in P3 does not
   /// require a new API.
@@ -51,12 +51,10 @@ class OverlayProtocolEgress implements OverlayLinkEgress {
   /// wrapper) before handing off to the sink, mirroring the
   /// `mrrp_providers.dart` accounting path.
   OverlayProtocolEgress({
-    required OverlaySipSink sipSink,
-    required OverlayFeatureFlags Function() flags,
+    required this._sipSink,
+    required this._flags,
     SipRateLimiter? Function()? rateLimiter,
-  }) : _sipSink = sipSink,
-       _flags = flags,
-       _rateLimiter = rateLimiter ?? (() => null);
+  }) : _rateLimiter = rateLimiter ?? (() => null);
 
   @override
   Future<bool> send(OverlayLinkFrame frame, int peerNodeNum) async {

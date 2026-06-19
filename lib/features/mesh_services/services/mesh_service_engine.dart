@@ -60,11 +60,7 @@ class MeshServicesHandler implements MrrpServiceHandler {
   final MeshServiceStore _store;
   final MeshServiceEngine _engine;
 
-  MeshServicesHandler({
-    required MeshServiceStore store,
-    required MeshServiceEngine engine,
-  }) : _store = store,
-       _engine = engine;
+  MeshServicesHandler({required this._store, required this._engine});
 
   @override
   int get serviceId => kMeshServicesInstanceServiceId;
@@ -346,7 +342,7 @@ class MeshServiceEngine {
   /// In-memory checklist state: instanceId -> (itemIndex -> checked).
   final Map<String, Map<int, bool>> _checkStates = {};
 
-  MeshServiceEngine({required MeshServiceStore store}) : _store = store;
+  MeshServiceEngine({required this._store});
 
   /// Start periodic expiry cleanup.
   void start() {

@@ -162,17 +162,14 @@ class _CompletedEntry {
 class SipHandshakeManager {
   /// Creates a handshake manager.
   ///
-  /// [replayCache] is used to reject replayed nonces.
+  /// [_replayCache] is used to reject replayed nonces.
   /// [clock] can be injected for testing.
   SipHandshakeManager({
-    required SipReplayCache replayCache,
-    required int localNodeId,
-    SipCounters? counters,
+    required this._replayCache,
+    required this._localNodeId,
+    this._counters,
     DateTime Function()? clock,
-  }) : _replayCache = replayCache,
-       _localNodeId = localNodeId,
-       _counters = counters,
-       _clock = clock ?? DateTime.now;
+  }) : _clock = clock ?? DateTime.now;
 
   final SipReplayCache _replayCache;
   final int _localNodeId;

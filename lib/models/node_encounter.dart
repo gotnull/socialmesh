@@ -136,11 +136,7 @@ class NodeEncounterService {
   Map<int, NodeEncounter>? _cache;
   bool _dirty = false;
 
-  NodeEncounterService({
-    required Future<String?> Function(String key) read,
-    required Future<bool> Function(String key, String value) write,
-  }) : _read = read,
-       _write = write;
+  NodeEncounterService({required this._read, required this._write});
 
   /// Load encounters from storage into cache.
   Future<void> init() async {

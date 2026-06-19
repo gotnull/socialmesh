@@ -46,10 +46,9 @@ class OverlayResourceIngressDispatcher {
   int emptyPayloadDrops = 0;
 
   OverlayResourceIngressDispatcher({
-    required OverlayLinkEngine linkEngine,
-    required OverlayResourceEngine resourceEngine,
-  }) : _linkEngine = linkEngine,
-       _resourceEngine = resourceEngine;
+    required this._linkEngine,
+    required this._resourceEngine,
+  });
 
   /// Begin listening to `dataDelivered` events. Idempotent.
   void start() {

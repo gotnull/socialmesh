@@ -33,14 +33,13 @@ class OverlayResourceProtocolEgress implements OverlayResourceEgress {
   final OverlayLinkEngine _linkEngine;
   final OverlayFeatureFlags Function() _flags;
 
-  /// Construct the adapter. [flags] is a getter so the adapter re-
+  /// Construct the adapter. [_flags] is a getter so the adapter re-
   /// reads the flag on each send — a runtime toggle (future phase)
   /// takes effect immediately without rebuilding the engine.
   OverlayResourceProtocolEgress({
-    required OverlayLinkEngine linkEngine,
-    required OverlayFeatureFlags Function() flags,
-  }) : _linkEngine = linkEngine,
-       _flags = flags;
+    required this._linkEngine,
+    required this._flags,
+  });
 
   @override
   Future<bool> sendFrame({

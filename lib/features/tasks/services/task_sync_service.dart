@@ -73,10 +73,9 @@ class TaskSyncService {
   final SyncDiagnostics _diagnostics = SyncDiagnostics.instance;
 
   TaskSyncService({
-    required TaskDatabase db,
-    TaskConflictResolver resolver = const TaskConflictResolver(),
-  }) : _db = db,
-       _resolver = resolver;
+    required this._db,
+    this._resolver = const TaskConflictResolver(),
+  });
 
   // -------------------------------------------------------------------------
   // Lifecycle

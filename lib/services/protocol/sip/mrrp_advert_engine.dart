@@ -85,12 +85,11 @@ class MrrpAdvertEngine {
   final Random _random;
 
   MrrpAdvertEngine({
-    required MrrpServiceRegistry registry,
+    required this._registry,
     this.onSend,
     this.onCacheChanged,
     Random? random,
-  }) : _registry = registry,
-       _random = random ?? Random();
+  }) : _random = random ?? Random();
 
   bool _started = false;
 

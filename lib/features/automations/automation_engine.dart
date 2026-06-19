@@ -96,20 +96,16 @@ class AutomationEngine {
   Timer? _silentNodeTimer;
 
   AutomationEngine({
-    required AutomationRepository repository,
-    required IftttService iftttService,
-    FlutterLocalNotificationsPlugin? notifications,
-    AutomationDebugService? debugService,
-    Scheduler? scheduler,
+    required this._repository,
+    required this._iftttService,
+    this._notifications,
+    this._debugService,
+    this._scheduler,
     this.onSendMessage,
     this.onSendToChannel,
     this.onGetMyNodeNum,
     this.onGetPhonePosition,
-  }) : _repository = repository,
-       _iftttService = iftttService,
-       _notifications = notifications,
-       _debugService = debugService,
-       _scheduler = scheduler;
+  });
 
   /// Set the scheduler (can be done after construction for dependency injection)
   void setScheduler(Scheduler scheduler) {

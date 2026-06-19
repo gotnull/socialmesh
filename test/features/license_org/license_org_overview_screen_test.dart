@@ -62,11 +62,10 @@ class _FakeRepo implements LicenseOrgMembershipRepository {
   final Map<String, LicenseOrgMembership?> _memberships;
 
   _FakeRepo({
-    required Set<String> orgIds,
+    required this._orgIds,
     Map<String, LicenseOrg?>? orgs,
     Map<String, LicenseOrgMembership?>? memberships,
-  }) : _orgIds = orgIds,
-       _orgs = orgs ?? const {},
+  }) : _orgs = orgs ?? const {},
        _memberships = memberships ?? const {};
 
   @override

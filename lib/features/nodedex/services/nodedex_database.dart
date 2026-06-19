@@ -214,9 +214,8 @@ class NodeDexDatabase {
   /// [schemaVersionOverride] is a test-only affordance for opening the
   /// database as an older binary would, so downgrade handling can be
   /// exercised against the production callbacks.
-  NodeDexDatabase({String? dbPathOverride, int? schemaVersionOverride})
-    : _dbPathOverride = dbPathOverride,
-      _schemaVersion = schemaVersionOverride ?? nodedexSchemaVersion;
+  NodeDexDatabase({this._dbPathOverride, int? schemaVersionOverride})
+    : _schemaVersion = schemaVersionOverride ?? nodedexSchemaVersion;
 
   /// The open database instance. Throws if not initialized.
   Database get database {

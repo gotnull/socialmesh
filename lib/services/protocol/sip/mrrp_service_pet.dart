@@ -38,8 +38,7 @@ class MrrpServicePet implements MrrpServiceHandler {
   /// the handler is safe to register even when the feature is off.
   bool isPetSharingEnabled = false;
 
-  MrrpServicePet({required PetPublicBytesProvider bytesProvider})
-    : _bytesProvider = bytesProvider;
+  MrrpServicePet({required this._bytesProvider});
 
   @override
   int get serviceId => MrrpServiceId.petV1;

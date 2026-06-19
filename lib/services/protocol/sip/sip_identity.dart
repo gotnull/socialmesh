@@ -52,22 +52,15 @@ class SipIdentityInboundResult {
 class SipIdentityHandler {
   /// Creates a handler with the required dependencies.
   SipIdentityHandler({
-    required SipKeypair keypair,
-    required SipIdentityStore store,
-    int localNodeId = 0,
-    String displayName = '',
-    String status = '',
-    String deviceModel = '',
-    int claimTtlS = 86400,
-    int Function()? clock,
-  }) : _keypair = keypair,
-       _store = store,
-       _localNodeId = localNodeId,
-       _displayName = displayName,
-       _status = status,
-       _deviceModel = deviceModel,
-       _claimTtlS = claimTtlS,
-       _clock = clock;
+    required this._keypair,
+    required this._store,
+    this._localNodeId = 0,
+    this._displayName = '',
+    this._status = '',
+    this._deviceModel = '',
+    this._claimTtlS = 86400,
+    this._clock,
+  });
 
   final SipKeypair _keypair;
   final SipIdentityStore _store;

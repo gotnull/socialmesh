@@ -70,8 +70,7 @@ class MeshPacketDedupeStore {
 
   DateTime _lastCleanup = DateTime.fromMillisecondsSinceEpoch(0);
 
-  MeshPacketDedupeStore({String? dbPathOverride})
-    : _dbPathOverride = dbPathOverride;
+  MeshPacketDedupeStore({this._dbPathOverride});
 
   /// Initialize the underlying SQLite database.
   ///

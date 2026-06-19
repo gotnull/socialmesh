@@ -180,22 +180,16 @@ class MrrpServiceCanvas implements MrrpServiceHandler {
   final CanvasSyncCoordinator? _syncCoordinator;
 
   MrrpServiceCanvas({
-    required CanvasRepository repository,
+    required this._repository,
     CanvasInboundLimiter? limiter,
     int Function()? nowMs,
-    String? Function(int channelIndex)? channelNameForFallback,
-    void Function(int canvasLocalId)? onCellApplied,
-    PresenceCache? presenceCache,
-    void Function(int canvasLocalId)? onPresenceChanged,
-    CanvasSyncCoordinator? syncCoordinator,
-  }) : _repository = repository,
-       _inboundLimiter = limiter ?? CanvasInboundLimiter(nowMs: nowMs),
-       _nowMs = nowMs ?? (() => DateTime.now().millisecondsSinceEpoch),
-       _channelNameForFallback = channelNameForFallback,
-       _onCellApplied = onCellApplied,
-       _presenceCache = presenceCache,
-       _onPresenceChanged = onPresenceChanged,
-       _syncCoordinator = syncCoordinator;
+    this._channelNameForFallback,
+    this._onCellApplied,
+    this._presenceCache,
+    this._onPresenceChanged,
+    this._syncCoordinator,
+  }) : _inboundLimiter = limiter ?? CanvasInboundLimiter(nowMs: nowMs),
+       _nowMs = nowMs ?? (() => DateTime.now().millisecondsSinceEpoch);
 
   @override
   int get serviceId => MrrpServiceId.canvasV1;

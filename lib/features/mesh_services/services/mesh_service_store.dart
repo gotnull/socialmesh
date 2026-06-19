@@ -25,8 +25,8 @@ class MeshServiceStore {
 
   Database? _db;
 
-  /// Create a store. Pass [dbPathOverride] in tests to use an in-memory DB.
-  MeshServiceStore({String? dbPathOverride}) : _dbPathOverride = dbPathOverride;
+  /// Create a store. Pass [_dbPathOverride] in tests to use an in-memory DB.
+  MeshServiceStore({this._dbPathOverride});
 
   /// Open or create the database.
   Future<void> open() async {

@@ -149,13 +149,8 @@ class InAppScheduler implements Scheduler {
   /// Tick interval for timer-based execution
   static const _tickInterval = Duration(seconds: 1);
 
-  InAppScheduler({
-    Clock? clock,
-    SchedulePersistCallback? onPersist,
-    ScheduleLoadCallback? onLoad,
-  }) : _clock = clock ?? const SystemClock(),
-       _onPersist = onPersist,
-       _onLoad = onLoad;
+  InAppScheduler({Clock? clock, this._onPersist, this._onLoad})
+    : _clock = clock ?? const SystemClock();
 
   @override
   Stream<ScheduledFireEvent> get fireEvents => _fireController.stream;

@@ -76,9 +76,7 @@ class TakMeshBridge {
   int _packetsInbound = 0;
   int _packetsOutbound = 0;
 
-  TakMeshBridge({required TakServer server, required MeshSendCallback meshSend})
-    : _server = server,
-      _meshSend = meshSend;
+  TakMeshBridge({required this._server, required this._meshSend});
 
   /// Stream of bridge events for monitoring.
   Stream<TakBridgeEvent> get events => _eventController.stream;

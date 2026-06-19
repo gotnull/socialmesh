@@ -21,7 +21,7 @@ class WaypointDatabase {
   Database? _db;
   final String? _testDbPath;
 
-  WaypointDatabase({String? testDbPath}) : _testDbPath = testDbPath;
+  WaypointDatabase({this._testDbPath});
 
   /// Initialize the database and create tables if needed.
   Future<void> init() async {

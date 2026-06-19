@@ -276,12 +276,10 @@ class FileTransferEngine {
   final List<(String, int)> _sendQueue = [];
 
   FileTransferEngine({
-    required SendPacketCallback sendPacket,
-    required void Function(FileTransferState) onStateChanged,
-    FileTransferDatabase? database,
-  }) : _sendPacket = sendPacket,
-       _onStateChanged = onStateChanged,
-       _database = database;
+    required this._sendPacket,
+    required this._onStateChanged,
+    this._database,
+  });
 
   /// All active transfers.
   Map<String, FileTransferState> get transfers => Map.unmodifiable(_transfers);

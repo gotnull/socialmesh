@@ -76,10 +76,9 @@ class RnsCompanionClient {
   RnsCompanionClient({
     Uri? baseUri,
     http.Client? httpClient,
-    Duration timeout = kRnsCompanionDefaultTimeout,
+    this._timeout = kRnsCompanionDefaultTimeout,
   }) : baseUri = baseUri ?? Uri.parse(kRnsCompanionDefaultBaseUrl),
        _http = httpClient ?? http.Client(),
-       _timeout = timeout,
        _ownsHttp = httpClient == null;
 
   final Uri baseUri;

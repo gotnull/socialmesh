@@ -240,18 +240,13 @@ class CanvasSyncCoordinator {
   static const Duration rawBandReceiveTimeout = Duration(seconds: 30);
 
   CanvasSyncCoordinator({
-    required CanvasRepository repository,
-    required CanvasOutboundChannel outbound,
-    required CanvasOutboundGovernor governor,
-    required bool Function() canEmit,
+    required this._repository,
+    required this._outbound,
+    required this._governor,
+    required this._canEmit,
     int Function()? nowMs,
-    void Function(int canvasLocalId)? onCellApplied,
-  }) : _repository = repository,
-       _outbound = outbound,
-       _governor = governor,
-       _canEmit = canEmit,
-       _nowMs = nowMs ?? (() => DateTime.now().millisecondsSinceEpoch),
-       _onCellApplied = onCellApplied;
+    this._onCellApplied,
+  }) : _nowMs = nowMs ?? (() => DateTime.now().millisecondsSinceEpoch);
 
   /// Stream of canvasLocalIds whose hydration state may have changed.
   /// UI subscribes via `hydrationStateFor` for the snapshot.

@@ -132,14 +132,11 @@ class ExternalPurchaseService {
   String? _pollingSessionId;
 
   ExternalPurchaseService({
-    required SharedPreferences prefs,
-    required ExternalEntitlementCache cache,
+    required this._prefs,
+    required this._cache,
     CallableInvoker? invoker,
-    PollingPolicy pollingPolicy = const PollingPolicy(),
-  }) : _prefs = prefs,
-       _cache = cache,
-       _invoker = invoker ?? CallableInvoker.firebase(),
-       _pollingPolicy = pollingPolicy;
+    this._pollingPolicy = const PollingPolicy(),
+  }) : _invoker = invoker ?? CallableInvoker.firebase();
 
   Stream<ConfirmationState> get confirmationStream =>
       _confirmationController.stream;

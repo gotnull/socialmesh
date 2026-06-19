@@ -2,10 +2,10 @@ name: socialmesh
 description: "A mesh radio companion app for Meshtastic. Connect over BLE or USB, message off-grid, map your nodes, and explore the mesh — no internet required."
 publish_to: "none"
 
-version: 1.51.0+192
+version: 1.52.0+193
 
 environment:
-  sdk: ^3.10.0
+  sdk: ^3.12.0
 
 dependencies:
   flutter:
@@ -14,8 +14,8 @@ dependencies:
     sdk: flutter
 
   # State Management (3.x with updated API)
-  flutter_riverpod: ^3.0.3
-  riverpod_annotation: ^4.0.0
+  flutter_riverpod: ^3.3.2
+  riverpod_annotation: ^4.0.3
 
   # BLE Communication
   flutter_blue_plus: ^2.3.8
@@ -156,7 +156,7 @@ dev_dependencies:
 
   # Code generation (3.x to match riverpod 3.x)
   build_runner: ^2.15.0
-  riverpod_generator: ^4.0.0+1
+  riverpod_generator: ^4.0.4
   json_serializable: ^6.9.5
 
 # For information on the generic Dart part of this file, see the

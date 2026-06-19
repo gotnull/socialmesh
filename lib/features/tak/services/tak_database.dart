@@ -28,7 +28,7 @@ class TakDatabase {
   Database? _db;
   final String? _testDbPath;
 
-  TakDatabase({String? testDbPath}) : _testDbPath = testDbPath;
+  TakDatabase({this._testDbPath});
 
   /// Initialize the database and create tables if needed.
   Future<void> init() async {

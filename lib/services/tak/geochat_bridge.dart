@@ -71,11 +71,7 @@ class GeoChatBridge {
   /// Rate limiter: clientUid -> list of send timestamps.
   final _rateLimits = <String, List<DateTime>>{};
 
-  GeoChatBridge({
-    required MeshTextSendCallback meshSend,
-    CallsignResolver? callsignResolver,
-  }) : _meshSend = meshSend,
-       _callsignResolver = callsignResolver;
+  GeoChatBridge({required this._meshSend, this._callsignResolver});
 
   /// Parses a GeoChat CoT XML event.
   ///

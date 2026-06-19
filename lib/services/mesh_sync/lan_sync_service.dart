@@ -56,9 +56,8 @@ class LanSyncService {
     required this.localNodeNum,
     required this.localDisplayName,
     required MeshFeedRepository feedRepository,
-    required MeshSyncService syncService,
+    required this._syncService,
   }) : _feedRepo = feedRepository,
-       _syncService = syncService,
        _localPeerId = buildLanSyncPeerId(localNodeNum);
 
   /// Local mesh node number — identifies this peer.

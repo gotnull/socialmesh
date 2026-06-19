@@ -71,10 +71,9 @@ class SipReplayCache {
   final int _maxEntriesPerBucket;
 
   SipReplayCache({
-    int maxBuckets = SipConstants.maxTrackedPeers,
-    int maxEntriesPerBucket = SipConstants.replayCacheSize,
-  }) : _maxBuckets = maxBuckets,
-       _maxEntriesPerBucket = maxEntriesPerBucket;
+    this._maxBuckets = SipConstants.maxTrackedPeers,
+    this._maxEntriesPerBucket = SipConstants.replayCacheSize,
+  });
 
   /// Check if a nonce has been seen recently for the given key context.
   ///

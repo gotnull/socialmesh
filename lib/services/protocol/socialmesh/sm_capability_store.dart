@@ -34,9 +34,8 @@ class SmCapabilityStore {
   final SmCapabilityPersistence? _persistence;
   final SmClock _clock;
 
-  SmCapabilityStore({SmCapabilityPersistence? persistence, SmClock? clock})
-    : _persistence = persistence,
-      _clock = clock ?? DateTime.now;
+  SmCapabilityStore({this._persistence, SmClock? clock})
+    : _clock = clock ?? DateTime.now;
 
   /// Load persisted state. Call once at startup.
   Future<void> init() async {

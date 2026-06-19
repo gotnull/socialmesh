@@ -29,6 +29,7 @@
 		718FAB4A4DD5E6A07A32AFB6 /* SearchForMessagesIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EB7EAF5331EC24C655D96BD /* SearchForMessagesIntentHandler.swift */; };
 		723EEA6702A74BE1E601EB01 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 35A8DC3F136572F6A2978C56 /* Foundation.framework */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
+		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
 		7F05738D32C222083FF3B90F /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA79882D1734EA800756471E /* SceneDelegate.swift */; };
 		825D564F5F2F1723A24700C4 /* WatchCompanionCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6E64F927859BB383A71156B /* WatchCompanionCodec.swift */; };
 		84BF2738E0F8C9DDAA1ABEC0 /* IntentMessageConverters.swift in Sources */ = {isa = PBXBuildFile; fileRef = C86AF8AA5F427B965BCDBF3E /* IntentMessageConverters.swift */; };
@@ -154,6 +155,7 @@
 		6C77513A7C0D2613F64C0311 /* WatchCompanionLogger.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchCompanionLogger.swift; sourceTree = "<group>"; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		78E0A7A72DC9AD7400C4905E /* FlutterGeneratedPluginSwiftPackage */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FlutterGeneratedPluginSwiftPackage; path = Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
 		7C0B77ECEB9AB4AF0E5346C0 /* CarPlayIntents.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CarPlayIntents.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		82126BB40327C4B92161BACD /* sip_handshake_request.caf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = sip_handshake_request.caf; sourceTree = "<group>"; };
@@ -256,6 +258,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */,
 				BD01B77A2F32F9D0004EA220 /* AdSupport.framework in Frameworks */,
 				383C04B43512B23878A24034 /* Pods_Runner.framework in Frameworks */,
 			);
@@ -354,6 +357,7 @@
 		9740EEB11CF90186004384FC /* Flutter */ = {
 			isa = PBXGroup;
 			children = (
+				78E0A7A72DC9AD7400C4905E /* FlutterGeneratedPluginSwiftPackage */,
 				3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */,
 				9740EEB21CF90195004384FC /* Debug.xcconfig */,
 				7AFA3C8E1D35360C0083082E /* Release.xcconfig */,
@@ -556,8 +560,8 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 97C147051CF9000F007C117D /* Build configuration list for PBXNativeTarget "Runner" */;
 			buildPhases = (
-				19524F3B8ADAD37DB42CB40F /* [SocialMesh] Check native-assets platform */,
 				7E81E37679984CE1F776D301 /* [CP] Check Pods Manifest.lock */,
+				19524F3B8ADAD37DB42CB40F /* [SocialMesh] Check native-assets platform */,
 				9740EEB61CF901F6004384FC /* Run Script */,
 				97C146EA1CF9000F007C117D /* Sources */,
 				97C146EB1CF9000F007C117D /* Frameworks */,
@@ -577,6 +581,9 @@
 				08097EF6F49AB670F8F6FF13 /* PBXTargetDependency */,
 			);
 			name = Runner;
+			packageProductDependencies = (
+				78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */,
+			);
 			productName = Runner;
 			productReference = 97C146EE1CF9000F007C117D /* Runner.app */;
 			productType = "com.apple.product-type.application";
@@ -654,6 +661,9 @@
 				Base,
 			);
 			mainGroup = 97C146E51CF9000F007C117D;
+			packageReferences = (
+				781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */,
+			);
 			productRefGroup = 97C146EF1CF9000F007C117D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -1797,6 +1807,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FlutterGeneratedPluginSwiftPackage;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 97C146E61CF9000F007C117D /* Project object */;
 }

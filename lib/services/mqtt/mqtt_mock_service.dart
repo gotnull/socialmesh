@@ -267,8 +267,7 @@ class MqttMockService implements MqttService {
   /// Creates a mock service with the given behavior.
   ///
   /// Defaults to [MockBehavior] which simulates a happy path.
-  MqttMockService({MockBehavior behavior = const MockBehavior()})
-    : _behavior = behavior;
+  MqttMockService({this._behavior = const MockBehavior()});
 
   // ---------------------------------------------------------------------------
   // Test control methods

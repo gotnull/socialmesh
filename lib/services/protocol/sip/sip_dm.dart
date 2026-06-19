@@ -234,7 +234,7 @@ enum SipDmSendError {
 class SipDmManager {
   /// Creates a DM manager.
   ///
-  /// [rateLimiter] is used to enforce the SIP airtime budget.
+  /// [_rateLimiter] is used to enforce the SIP airtime budget.
   /// [clock] can be injected for testing (returns ms since epoch).
   /// [safetyGate] is the local Trust + Safety gate consulted on
   /// every inbound and outbound private-DM handler. Defaults to a
@@ -242,13 +242,11 @@ class SipDmManager {
   /// working unchanged. Production wires the
   /// `peerSafetyGateProvider` adapter here.
   SipDmManager({
-    required SipRateLimiter rateLimiter,
-    SipCounters? counters,
+    required this._rateLimiter,
+    this._counters,
     int Function()? clock,
     PeerSafetyGate? safetyGate,
-  }) : _rateLimiter = rateLimiter,
-       _counters = counters,
-       _clock = clock ?? _defaultClock,
+  }) : _clock = clock ?? _defaultClock,
        _safetyGate = safetyGate ?? const NoopPeerSafetyGate();
 
   final SipRateLimiter _rateLimiter;

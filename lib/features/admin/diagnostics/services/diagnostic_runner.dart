@@ -31,13 +31,11 @@ class DiagnosticRunner {
   final List<ProbeSummaryEntry> _results = [];
 
   DiagnosticRunner({
-    required DiagnosticCaptureService capture,
-    required DiagnosticContext context,
-    required List<DiagnosticProbe> probes,
+    required this._capture,
+    required this._context,
+    required this._probes,
     this.onProgress,
-  }) : _capture = capture,
-       _context = context,
-       _probes = probes;
+  });
 
   /// Whether the run has been cancelled.
   bool get isCancelled => _cancelled;

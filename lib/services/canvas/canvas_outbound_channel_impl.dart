@@ -84,10 +84,9 @@ class ProductionCanvasOutboundChannel implements CanvasOutboundChannel {
   int _nextRequestId = 1;
 
   ProductionCanvasOutboundChannel({
-    required CanvasSipSender sender,
-    SipRateLimiter? sipRateLimiter,
-  }) : _sender = sender,
-       _sipRateLimiter = sipRateLimiter;
+    required this._sender,
+    this._sipRateLimiter,
+  });
 
   @override
   Future<CanvasSendResult> sendCanvasPayload({

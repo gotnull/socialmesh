@@ -248,15 +248,14 @@ class GlobalLayerMetrics {
     this.lastPingAt,
     this.lastPingMs,
     this.reconnectCount = 0,
-    List<ThroughputSample> samples = const [],
-    List<ConnectionErrorRecord> recentErrors = const [],
+    this._samples = const [],
+    this._recentErrors = const [],
     this.sessionStartedAt,
     this.totalInbound = 0,
     this.totalOutbound = 0,
     this.totalBytesInbound = 0,
     this.totalBytesOutbound = 0,
-  }) : _samples = samples,
-       _recentErrors = recentErrors;
+  });
 
   /// Empty metrics representing a fresh or disabled state.
   static const GlobalLayerMetrics empty = GlobalLayerMetrics();

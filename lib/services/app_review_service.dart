@@ -19,9 +19,8 @@ class _ReviewKeys {
 /// Uses iOS StoreKit / Android Play In-App Review via the in_app_review plugin.
 /// Tracks install time, session count, and prompt history to avoid spamming users.
 class AppReviewService {
-  AppReviewService({required SharedPreferences prefs, InAppReview? inAppReview})
-    : _prefs = prefs,
-      _inAppReview = inAppReview ?? InAppReview.instance;
+  AppReviewService({required this._prefs, InAppReview? inAppReview})
+    : _inAppReview = inAppReview ?? InAppReview.instance;
 
   final SharedPreferences _prefs;
   final InAppReview _inAppReview;

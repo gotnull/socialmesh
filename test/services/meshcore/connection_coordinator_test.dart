@@ -1520,11 +1520,7 @@ class FakeMeshCoreBleTransportWithHooks implements MeshCoreBleTransport {
   final Future<void> Function()? _onConnect;
   final void Function()? _onDispose;
 
-  FakeMeshCoreBleTransportWithHooks({
-    Future<void> Function()? onConnect,
-    void Function()? onDispose,
-  }) : _onConnect = onConnect,
-       _onDispose = onDispose;
+  FakeMeshCoreBleTransportWithHooks({this._onConnect, this._onDispose});
 
   @override
   TransportType get transportType => TransportType.ble;

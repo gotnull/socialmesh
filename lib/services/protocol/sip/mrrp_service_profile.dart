@@ -85,11 +85,7 @@ class MrrpServiceProfile implements MrrpServiceHandler {
   /// via the provider layer.
   bool isProfileSharingEnabled = false;
 
-  MrrpServiceProfile({
-    required ProfileConfigProvider configProvider,
-    PeerIdentityChecker? identityChecker,
-  }) : _configProvider = configProvider,
-       _identityChecker = identityChecker;
+  MrrpServiceProfile({required this._configProvider, this._identityChecker});
 
   @override
   int get serviceId => MrrpServiceId.profileV1;

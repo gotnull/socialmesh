@@ -86,8 +86,7 @@ class MrrpDispatcher {
   /// Next request ID (wrapping uint16 counter).
   int _nextRequestId = 1;
 
-  MrrpDispatcher({required MrrpServiceRegistry registry})
-    : _registry = registry;
+  MrrpDispatcher({required this._registry});
 
   // ---------------------------------------------------------------------------
   // Inbound REQUEST dispatch

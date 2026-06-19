@@ -17,13 +17,13 @@ import '../utils/cot_affiliation.dart';
 /// re-alert on re-entry.
 class TakProximityMonitor {
   TakProximityMonitor({
-    required NotificationService notificationService,
+    required this._notificationService,
     required this.getEvents,
     required this.getUserLat,
     required this.getUserLon,
     required this.getRadiusKm,
     required this.getAffiliations,
-  }) : _notificationService = notificationService;
+  });
 
   final NotificationService _notificationService;
   final List<TakEvent> Function() getEvents;

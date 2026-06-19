@@ -28,12 +28,10 @@ class TakStaleMonitor {
   final Set<String> _notifiedUids = {};
 
   TakStaleMonitor({
-    required NotificationService notificationService,
-    required Set<String> Function() getTrackedUids,
-    required List<TakEvent> Function() getEvents,
-  }) : _notificationService = notificationService,
-       _getTrackedUids = getTrackedUids,
-       _getEvents = getEvents;
+    required this._notificationService,
+    required this._getTrackedUids,
+    required this._getEvents,
+  });
 
   /// Whether the monitor is running.
   bool get isRunning => _timer != null && _timer!.isActive;

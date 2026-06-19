@@ -28,7 +28,7 @@ const int meshFeedSchemaVersion = 3;
 
 /// Persistence layer for [MeshPost] objects and sync metadata.
 class MeshFeedDatabase {
-  MeshFeedDatabase({String? dbPathOverride}) : _dbPathOverride = dbPathOverride;
+  MeshFeedDatabase({this._dbPathOverride});
 
   final String? _dbPathOverride;
   Database? _db;

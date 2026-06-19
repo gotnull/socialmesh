@@ -67,7 +67,7 @@ class WidgetDatabase {
   Completer<Database?>? _initCompleter;
   bool _initFailed = false;
 
-  WidgetDatabase({String? dbPathOverride}) : _dbPathOverride = dbPathOverride;
+  WidgetDatabase({this._dbPathOverride});
 
   /// The open database instance. Throws if not initialized.
   Database get database {

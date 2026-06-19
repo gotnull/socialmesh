@@ -40,8 +40,7 @@ class MeshGameSendResult {
 class MeshGameTransport {
   final MrrpDeliveryTracker _tracker;
 
-  const MeshGameTransport({required MrrpDeliveryTracker tracker})
-    : _tracker = tracker;
+  const MeshGameTransport({required this._tracker});
 
   Future<MeshGameSendResult> sendMove({
     required MeshGameSession session,

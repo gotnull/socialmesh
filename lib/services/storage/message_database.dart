@@ -38,7 +38,7 @@ class MessageDatabase {
   /// this session.
   bool _migrationAttempted = false;
 
-  MessageDatabase({String? testDbPath}) : _testDbPath = testDbPath;
+  MessageDatabase({this._testDbPath});
 
   /// Initialize the database, creating tables if needed and migrating
   /// any legacy SharedPreferences data on first run.

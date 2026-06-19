@@ -40,9 +40,8 @@ class _FakeCanvasRepository extends CanvasRepository {
 
   _FakeCanvasRepository({
     required List<CanvasCell> cells,
-    required Map<({int x, int y}), List<AppliedCanvasOp>> history,
+    required this._history,
   }) : _cells = {for (final c in cells) (x: c.x, y: c.y): c},
-       _history = history,
        // CanvasRepository(super(db)) requires a CanvasDatabase. We
        // pass a never-opened instance; the only methods the sheet
        // hits are overridden below, so the db is never touched.

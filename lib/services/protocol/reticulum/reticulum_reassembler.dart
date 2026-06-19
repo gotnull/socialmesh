@@ -32,20 +32,14 @@ import 'reticulum_safe_log.dart';
 class ReticulumReassembler {
   ReticulumReassembler({
     DateTime Function()? clock,
-    Duration inactivityTimeout = const Duration(seconds: 10),
-    Duration absoluteTtl = const Duration(seconds: 45),
-    int maxConcurrentBuffers = 64,
-    int maxFragmentsPerBuffer = 64,
-    int maxFrameSizeBytes = 16 * 1024,
-    int globalMemoryCapBytes = 256 * 1024,
+    this._inactivityTimeout = const Duration(seconds: 10),
+    this._absoluteTtl = const Duration(seconds: 45),
+    this._maxConcurrentBuffers = 64,
+    this._maxFragmentsPerBuffer = 64,
+    this._maxFrameSizeBytes = 16 * 1024,
+    this._globalMemoryCapBytes = 256 * 1024,
     ReticulumFragmentParser? parser,
   }) : _clock = clock ?? DateTime.now,
-       _inactivityTimeout = inactivityTimeout,
-       _absoluteTtl = absoluteTtl,
-       _maxConcurrentBuffers = maxConcurrentBuffers,
-       _maxFragmentsPerBuffer = maxFragmentsPerBuffer,
-       _maxFrameSizeBytes = maxFrameSizeBytes,
-       _globalMemoryCapBytes = globalMemoryCapBytes,
        _parser = parser ?? const ReticulumFragmentParser();
 
   final DateTime Function() _clock;

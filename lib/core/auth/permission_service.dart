@@ -34,16 +34,14 @@ class PermissionService {
   /// Creates a [PermissionService] from the current claims and entitlement
   /// state.
   ///
-  /// [role] is null for consumer users (no org membership).
-  /// [orgId] is the user's organisation ID; null for consumers.
-  /// [isEntitlementReadOnly] gates all write permissions when true.
+  /// [_role] is null for consumer users (no org membership).
+  /// [_orgId] is the user's organisation ID; null for consumers.
+  /// [_isEntitlementReadOnly] gates all write permissions when true.
   PermissionService({
-    required Role? role,
-    required String? orgId,
-    bool isEntitlementReadOnly = false,
-  }) : _role = role,
-       _orgId = orgId,
-       _isEntitlementReadOnly = isEntitlementReadOnly;
+    required this._role,
+    required this._orgId,
+    this._isEntitlementReadOnly = false,
+  });
 
   /// The current user's role, or null if not authenticated / no org.
   Role? get currentRole => _role;

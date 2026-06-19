@@ -230,7 +230,7 @@ class MeshPost {
 
   /// Recreate a [MeshPost] with a known ID (e.g. from database load).
   MeshPost._fromDb({
-    required String id,
+    required this._id,
     required this.authorNodeNum,
     required this.createdAtMs,
     required this.content,
@@ -248,7 +248,7 @@ class MeshPost {
     this.syncSeq,
     this.loraRebroadcastAtMs,
     this.updatedAtMs,
-  }) : _id = id;
+  });
 
   /// Create from database row.
   factory MeshPost.fromRow(Map<String, dynamic> row) {

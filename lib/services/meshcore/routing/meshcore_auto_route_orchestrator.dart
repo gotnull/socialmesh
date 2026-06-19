@@ -169,8 +169,8 @@ class MeshCoreAutoRouteOrchestrator {
   /// session needed).
   @visibleForTesting
   MeshCoreAutoRouteOrchestrator.forTest({
-    required MeshCoreAddUpdateContactCall addUpdateContact,
-    required MeshCoreSendTextMessageCall sendTextMessage,
+    required this._addUpdateContact,
+    required this._sendTextMessage,
     required this.pathHistoryStore,
     required this.confirmationRouter,
     required this.settings,
@@ -179,9 +179,7 @@ class MeshCoreAutoRouteOrchestrator {
     required this.contactAdvType,
     required this.contactName,
     DateTime Function()? clock,
-  }) : _addUpdateContact = addUpdateContact,
-       _sendTextMessage = sendTextMessage,
-       _clock = clock ?? DateTime.now;
+  }) : _clock = clock ?? DateTime.now;
 
   final MeshCoreAddUpdateContactCall _addUpdateContact;
   final MeshCoreSendTextMessageCall _sendTextMessage;

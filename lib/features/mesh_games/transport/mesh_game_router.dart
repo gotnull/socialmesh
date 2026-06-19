@@ -58,10 +58,9 @@ class MeshGameRouter {
 
   MeshGameRouter({
     required MeshGameRepository repository,
-    required MeshGameRateLimiter rateLimiter,
+    required this._rateLimiter,
     VoidCallback? onSessionChanged,
   }) : _repo = repository,
-       _rateLimiter = rateLimiter,
        _onSessionChanged = onSessionChanged ?? _noop;
 
   /// Entry point called from [MeshServiceEngine.handleInteraction].

@@ -113,14 +113,11 @@ class PayloadNegotiation {
       _sessions[payloadIdHex]?.state == SppNegotiationState.accepted;
 
   PayloadNegotiation({
-    required SppSendCallback sendPacket,
-    required SppTrustCheck isTrusted,
-    required SppStorageCheck getStorageUsed,
-    SppAutoAcceptConfig autoAcceptConfig = const SppAutoAcceptConfig(),
-  }) : _sendPacket = sendPacket,
-       _isTrusted = isTrusted,
-       _getStorageUsed = getStorageUsed,
-       _autoAcceptConfig = autoAcceptConfig;
+    required this._sendPacket,
+    required this._isTrusted,
+    required this._getStorageUsed,
+    this._autoAcceptConfig = const SppAutoAcceptConfig(),
+  });
 
   /// Update auto-accept configuration.
   void updateAutoAcceptConfig(SppAutoAcceptConfig config) {

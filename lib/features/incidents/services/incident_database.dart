@@ -41,7 +41,7 @@ class IncidentDatabase {
   Completer<Database?>? _initCompleter;
   bool _initFailed = false;
 
-  IncidentDatabase({String? dbPathOverride}) : _dbPathOverride = dbPathOverride;
+  IncidentDatabase({this._dbPathOverride});
 
   /// The open database instance. Throws if not initialised.
   Database get database {

@@ -51,7 +51,7 @@ abstract class IncidentModeDatabase {
 class IncidentModeStore {
   final IncidentModeDatabase _db;
 
-  IncidentModeStore({required IncidentModeDatabase db}) : _db = db;
+  IncidentModeStore({required this._db});
 
   /// Ingests one already-trusted, already-decoded event.
   ///

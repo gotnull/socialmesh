@@ -180,21 +180,15 @@ class _RealBridgeSocket implements BridgeSocket {
 
 class ReticulumBridgeService {
   ReticulumBridgeService({
-    required BridgeSocketFactory socketFactory,
-    Duration backoffStart = kReticulumBridgeBackoffStart,
-    Duration backoffCap = kReticulumBridgeBackoffCap,
-    int outboundQueueDepth = kReticulumBridgeQueueDepth,
-    int autoDisableThreshold = kReticulumBridgeAutoDisableThreshold,
-    int logCapacity = kReticulumBridgeLogCapacity,
+    required this._socketFactory,
+    this._backoffStart = kReticulumBridgeBackoffStart,
+    this._backoffCap = kReticulumBridgeBackoffCap,
+    this._outboundQueueDepth = kReticulumBridgeQueueDepth,
+    this._autoDisableThreshold = kReticulumBridgeAutoDisableThreshold,
+    this._logCapacity = kReticulumBridgeLogCapacity,
     math.Random? random,
     DateTime Function()? clock,
-  }) : _socketFactory = socketFactory,
-       _backoffStart = backoffStart,
-       _backoffCap = backoffCap,
-       _outboundQueueDepth = outboundQueueDepth,
-       _autoDisableThreshold = autoDisableThreshold,
-       _logCapacity = logCapacity,
-       _random = random ?? math.Random(),
+  }) : _random = random ?? math.Random(),
        _clock = clock ?? DateTime.now;
 
   final BridgeSocketFactory _socketFactory;

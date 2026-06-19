@@ -143,17 +143,13 @@ class PresenceEmitCoordinator {
   bool _disposed = false;
 
   PresenceEmitCoordinator({
-    required PresenceCache cache,
-    required CanvasOutboundGovernor governor,
-    required CanvasOutboundChannel outbound,
-    required int? Function() localNodeNumProvider,
+    required this._cache,
+    required this._governor,
+    required this._outbound,
+    required this._localNodeNumProvider,
     bool Function()? canEmit,
     int Function()? nowMs,
-  }) : _cache = cache,
-       _governor = governor,
-       _outbound = outbound,
-       _localNodeNumProvider = localNodeNumProvider,
-       _canEmit = canEmit ?? (() => true),
+  }) : _canEmit = canEmit ?? (() => true),
        _nowMs = nowMs ?? (() => DateTime.now().millisecondsSinceEpoch);
 
   /// Number of currently attached viewer sessions. Test introspection.

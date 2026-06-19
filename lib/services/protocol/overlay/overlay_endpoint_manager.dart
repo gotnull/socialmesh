@@ -37,16 +37,14 @@ class OverlayEndpointManager {
   Uint8List? _cachedLocalEndpointId;
   Uint8List? _cachedLocalPersonaHint;
 
-  /// Construct a manager. The caller owns the lifetimes of [keypair]
-  /// and [store] (and is responsible for disposing them after the
+  /// Construct a manager. The caller owns the lifetimes of [_keypair]
+  /// and [_store] (and is responsible for disposing them after the
   /// manager is disposed).
   OverlayEndpointManager({
-    required OverlayIdentityKeypair keypair,
-    required OverlayEndpointStore store,
+    required this._keypair,
+    required this._store,
     int Function()? clock,
-  }) : _keypair = keypair,
-       _store = store,
-       _clock = clock ?? _defaultClock;
+  }) : _clock = clock ?? _defaultClock;
 
   static int _defaultClock() => DateTime.now().millisecondsSinceEpoch;
 

@@ -40,10 +40,10 @@ class OverlayEndpointStore {
   /// True if the underlying handle is open.
   bool get isOpen => _db != null && _db!.isOpen;
 
-  /// Construct a store. [testDbPath] overrides the on-disk location;
+  /// Construct a store. [_testDbPath] overrides the on-disk location;
   /// tests typically supply a tempfile path so the suite stays
   /// isolated.
-  OverlayEndpointStore({String? testDbPath}) : _testDbPath = testDbPath;
+  OverlayEndpointStore({this._testDbPath});
 
   /// Open the database, creating tables on first run.
   Future<void> init() async {

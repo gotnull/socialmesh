@@ -69,11 +69,10 @@ enum ReticulumCaptureImportRejectionReason {
 ///   * dedupe-by-checksum during imports
 class ReticulumCaptureLibrary {
   ReticulumCaptureLibrary({
-    Directory? captureRootOverride,
+    this._captureRootOverride,
     ReticulumCaptureClassifier? classifier,
     DateTime Function()? clock,
-  }) : _captureRootOverride = captureRootOverride,
-       _classifier = classifier ?? const ReticulumCaptureClassifier(),
+  }) : _classifier = classifier ?? const ReticulumCaptureClassifier(),
        _clock = clock ?? DateTime.now;
 
   final Directory? _captureRootOverride;
