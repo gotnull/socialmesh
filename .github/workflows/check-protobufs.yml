@@ -120,6 +120,7 @@ jobs:
           - [ ] Run `flutter test test/services/firmware/hardware_architecture_test.dart` — if a new `HardwareModel` lacks coverage, add it to `_supplement` in `lib/services/firmware/device_hardware_catalog.dart`; if architecture is unclear, map to `DeviceArchitecture.unknown` (never guess)
           - [ ] Review generated Dart diff in `lib/generated/meshtastic/` for unexpected field reorderings
           - [ ] Update any app code affected by new PortNum / message type changes (search for `default:` in `lib/services/protocol/protocol_service.dart` portnum switch)
+          - [ ] Spot-check upstream iOS context (mandatory) — run `git -C meshtastic-ios log --oneline --since="3 months ago" --all | grep -iE "proto|hwmodel|hardware|portnum"` and record the outcome; mirror any commit that changes how a field is parsed, defaulted, or bounded before closing
           - [ ] Test with a physical Meshtastic device
           - [ ] Commit and push changes (use `Closes #<issue>` in the commit message to auto-close)
 
