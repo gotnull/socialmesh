@@ -723,6 +723,16 @@ class HardwareModel extends $pb.ProtobufEnum {
       HardwareModel._(136, _omitEnumNames ? '' : 'T_ECHO_CARD');
 
   ///
+  ///  Seeed Tracker L2
+  static const HardwareModel SEEED_WIO_TRACKER_L2 =
+      HardwareModel._(137, _omitEnumNames ? '' : 'SEEED_WIO_TRACKER_L2');
+
+  ///
+  ///  Elecrow CrowPanel Advance P4 models, ESP32-P4 and TFT with SX1262 radio plugin
+  static const HardwareModel CROWPANEL_P4 =
+      HardwareModel._(138, _omitEnumNames ? '' : 'CROWPANEL_P4');
+
+  ///
   ///  ------------------------------------------------------------------------------------------------------------------------------------------
   ///  Reserved ID For developing private Ports. These will show up in live traffic sparsely, so we can use a high number. Keep it within 8 bits.
   ///  ------------------------------------------------------------------------------------------------------------------------------------------
@@ -867,6 +877,8 @@ class HardwareModel extends $pb.ProtobufEnum {
     STATION_G3,
     T_IMPULSE_PLUS,
     T_ECHO_CARD,
+    SEEED_WIO_TRACKER_L2,
+    CROWPANEL_P4,
     PRIVATE_HW,
   ];
 

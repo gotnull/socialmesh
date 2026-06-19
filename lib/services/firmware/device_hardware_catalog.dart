@@ -124,6 +124,15 @@ class DeviceHardwareCatalog {
     129: DeviceArchitecture.unknown, // THINKNODE_M7
     130: DeviceArchitecture.unknown, // THINKNODE_M8
     131: DeviceArchitecture.unknown, // THINKNODE_M9
+    // Seeed Tracker L2 — proto comment omits the MCU and the upstream JSON
+    // has not listed it yet, so the chipset is unconfirmed. Mapped to unknown
+    // until verified rather than guessing a DFU path.
+    137: DeviceArchitecture.unknown, // SEEED_WIO_TRACKER_L2
+    // Elecrow CrowPanel Advance P4 — ESP32-P4, an architecture meshtastic
+    // firmware does not yet publish a release asset for. Mapped to unknown so
+    // the update flow reports "not supported" instead of routing to a
+    // nonexistent firmware-esp32p4- archive (404 on OTA).
+    138: DeviceArchitecture.unknown, // CROWPANEL_P4
     255: DeviceArchitecture.unknown, // PRIVATE_HW
   };
 
