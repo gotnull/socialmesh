@@ -9,8 +9,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/logging.dart';
 import '../../features/nodes/node_display_name_resolver.dart';
+import '../../l10n/l10n_utils.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/muted_channels_provider.dart';
 import '../../utils/text_sanitizer.dart';
 import 'carplay_feature_flags.dart';
 
@@ -88,19 +90,51 @@ class CarPlayIntentService {
       );
     }
 
+    // The communication notification posted natively for incoming messages
+    // is the single user-facing banner when CarPlay communication is enabled
+    // (the standard notification path is suppressed in _notifyNewMessage and
+    // the background processor). Gate it on the same settings/mute checks the
+    // standard path uses so muting a channel or disabling a category still
+    // silences it. The interaction donation itself always happens so muted
+    // conversations still appear in CarPlay Messages and Siri.
+    final isIncoming = m.from != myNodeNum;
+    final postNotification =
+        isIncoming && _shouldPostIncomingNotification(m, isChannel);
+
     _channel
         .invokeMethod<void>('donateMessage', {
           'conversationId': conversationId,
           'text': sanitizeExternalText(m.text),
           'senderName': senderName,
-          'direction': m.from == myNodeNum ? 'outgoing' : 'incoming',
+          'direction': isIncoming ? 'incoming' : 'outgoing',
           'messageId': m.id,
           'isChannel': isChannel,
+          'postNotification': postNotification,
         })
         .catchError((Object e) {
           AppLogging.carplay('donateMessage failed: $e');
           return null;
         });
+  }
+
+  /// Whether an incoming message should surface a communication notification.
+  /// Mirrors the gating in `MessagesNotifier._notifyNewMessage`: master
+  /// toggle, per-category toggle, and per-channel mute.
+  bool _shouldPostIncomingNotification(Message m, bool isChannel) {
+    final settings = _ref.read(settingsServiceProvider).value;
+    if (settings == null) return false;
+    if (!settings.notificationsEnabled) return false;
+    if (isChannel) {
+      if (!settings.channelMessageNotificationsEnabled) return false;
+      final channel = m.channel;
+      if (channel != null &&
+          _ref.read(mutedChannelsProvider).contains(channel)) {
+        return false;
+      }
+    } else {
+      if (!settings.directMessageNotificationsEnabled) return false;
+    }
+    return true;
   }
 
   String _channelName(int index) {
@@ -111,7 +145,14 @@ class CarPlayIntentService {
         if (name.isNotEmpty) return name;
       }
     }
-    return index == 0 ? 'Primary Channel' : 'Channel $index';
+    // Unnamed channel: fall back to the localized default so the
+    // communication notification matches the in-app channel label
+    // (a hardcoded English string surfaced wrong copy on non-English
+    // devices).
+    final l10n = safeL10n();
+    return index == 0
+        ? l10n.channelsPrimaryChannelName
+        : l10n.channelsDefaultChannelName(index);
   }
 
   Future<dynamic> _handleMethodCall(MethodCall call) async {

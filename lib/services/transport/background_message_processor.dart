@@ -14,6 +14,7 @@ import '../../features/nodedex/services/nodedex_sqlite_store.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../generated/meshtastic/portnums.pbenum.dart' as pn;
 import '../../models/mesh_models.dart';
+import '../../services/carplay/carplay_feature_flags.dart';
 import '../../services/mesh_packet_dedupe_store.dart';
 import '../../services/notifications/notification_service.dart';
 import '../../services/storage/message_database.dart';
@@ -476,6 +477,22 @@ class BackgroundMessageProcessor {
   }) async {
     // Skip if already notified (e.g. rapid duplicate delivery).
     if (notifiedMessageIds.contains(message.id)) return;
+
+    // When CarPlay communication is enabled, the native communication
+    // notification (posted from the live message stream via
+    // CarPlayIntentService._donateMessage) is the single user-facing banner.
+    // Suppress the standard background notification to avoid a duplicate; the
+    // stream stays alive in the background (both consume transport.dataStream),
+    // so the communication notification still fires.
+    if (CarPlayFeatureFlags.fromEnv().enabled &&
+        message.text.trim().isNotEmpty) {
+      AppLogging.ble(
+        'BackgroundMessageProcessor: CarPlay communication enabled, '
+        'standard notification suppressed for ${message.id}',
+      );
+      notifiedMessageIds.add(message.id);
+      return;
+    }
 
     try {
       final prefs = await SharedPreferences.getInstance();

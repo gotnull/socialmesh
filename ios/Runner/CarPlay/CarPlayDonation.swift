@@ -33,6 +33,12 @@ enum CarPlayDonation {
         let senderName = args["senderName"] as? String ?? "Unknown"
         let isChannel = args["isChannel"] as? Bool ?? false
         let messageId = args["messageId"] as? String ?? conversationId
+        // Dart gates the user-facing communication notification on the app's
+        // notification settings (master/category toggles, per-channel mute) so
+        // it stays in sync with the suppressed standard notification path. The
+        // interaction donation below is unconditional (muted conversations still
+        // appear in CarPlay Messages / Siri).
+        let postNotification = args["postNotification"] as? Bool ?? true
 
         let me = IntentMessageConverters.mePerson()
         let other = personFor(conversationId: conversationId, name: senderName, isChannel: isChannel)
@@ -53,7 +59,7 @@ enum CarPlayDonation {
         interaction.direction = isIncoming ? .incoming : .outgoing
         interaction.donate(completion: nil)
 
-        if isIncoming {
+        if isIncoming && postNotification {
             postCommunicationNotification(
                 intent: intent, conversationId: conversationId,
                 messageId: messageId, body: text)

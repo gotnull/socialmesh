@@ -25,6 +25,7 @@ import '../services/transport/ble_transport.dart';
 import '../services/transport/network_transport.dart';
 import '../services/transport/usb_transport_factory.dart';
 import '../services/backup/device_config_backup_service.dart';
+import '../services/carplay/carplay_feature_flags.dart';
 import '../services/protocol/admin_target.dart';
 import '../services/protocol/meshtastic_readiness_flag.dart';
 import '../services/protocol/protocol_service.dart';
@@ -5083,20 +5084,37 @@ class MessagesNotifier extends Notifier<List<Message>> {
       AppLogging.app('Queueing DM notification from: $senderName');
     }
 
-    // Queue notification for batching (handles flood protection)
-    ref
-        .read(notificationBatchProvider.notifier)
-        .queueMessage(
-          PendingMessageNotification(
-            senderName: senderName,
-            senderShortName: senderShortName,
-            message: notificationBody,
-            fromNodeNum: message.from,
-            replyPacketId: message.packetId,
-            channelIndex: isChannelMessage ? (message.channel ?? 0) : null,
-            channelName: channelName,
-          ),
-        );
+    // When CarPlay communication is enabled, the native communication
+    // notification posted from the same message stream
+    // (CarPlayIntentService._donateMessage) is the single user-facing banner.
+    // Suppress the standard notification here to avoid a duplicate. Emoji-only
+    // and empty-text messages still take the standard path because the CarPlay
+    // donation skips them, so they would otherwise get no notification.
+    final carPlayHandlesNotification =
+        CarPlayFeatureFlags.fromEnv().enabled &&
+        !message.isEmoji &&
+        message.text.trim().isNotEmpty;
+    if (carPlayHandlesNotification) {
+      AppLogging.app(
+        'CarPlay communication enabled; standard notification suppressed '
+        '(communication notification handles message ${message.id})',
+      );
+    } else {
+      // Queue notification for batching (handles flood protection)
+      ref
+          .read(notificationBatchProvider.notifier)
+          .queueMessage(
+            PendingMessageNotification(
+              senderName: senderName,
+              senderShortName: senderShortName,
+              message: notificationBody,
+              fromNodeNum: message.from,
+              replyPacketId: message.packetId,
+              channelIndex: isChannelMessage ? (message.channel ?? 0) : null,
+              channelName: channelName,
+            ),
+          );
+    }
 
     // Canonical tapbacks are metadata, not standalone message events.
     if (message.isCanonicalTapback) return;
