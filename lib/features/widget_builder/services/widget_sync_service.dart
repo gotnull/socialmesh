@@ -21,6 +21,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/logging.dart';
 import '../../../services/sync/sync_contract.dart';
 import '../../../services/sync/sync_diagnostics.dart';
+import '../../../services/sync/sync_error_utils.dart';
 import '../../../services/sync/sync_probe_result.dart';
 import '../models/widget_schema.dart';
 import 'widget_sqlite_store.dart';
@@ -431,6 +432,16 @@ class WidgetSyncService {
           'uploaded to Firestore as $docId', // lint-allow: hardcoded-string
         );
       } catch (e, stack) {
+        if (isCloudSyncPermissionDenied(e)) {
+          // Entitlement lapsed or revoked. Stop the cycle without counting this
+          // toward the retry cap, so the queued upload survives and syncs once
+          // the user is entitled again. Remaining entries would fail identically.
+          _syncLog(
+            'Drain: permission denied (cloud sync entitlement lapsed or ' // lint-allow: hardcoded-string
+            'revoked); stopping cycle, keeping queued uploads', // lint-allow: hardcoded-string
+          );
+          break;
+        }
         _syncLogError(
           'Drain: FAILED outbox[$id] $entityType/$entityId ' // lint-allow: hardcoded-string
           'doc=$docId attempt=${attemptCount + 1}: $e',
