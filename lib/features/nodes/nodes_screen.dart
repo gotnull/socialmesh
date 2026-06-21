@@ -1818,23 +1818,8 @@ class _CompactNodeTile extends StatelessWidget {
     this.onLongPress,
   });
 
-  Color _statusColor(BuildContext context) {
-    if (isMyNode) return context.accentColor;
-    switch (presenceConfidence) {
-      case PresenceConfidence.active:
-        return AccentColors.green;
-      case PresenceConfidence.fading:
-        return AppTheme.warningYellow;
-      case PresenceConfidence.stale:
-        return context.textSecondary;
-      case PresenceConfidence.unknown:
-        return context.textTertiary;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final color = _statusColor(context);
     final statusText = presenceStatusText(presenceConfidence, lastHeardAge);
     final signalBars = _calculateSignalBars(node.rssi);
     final signalColor = _signalColor(node.rssi);
@@ -1847,115 +1832,124 @@ class _CompactNodeTile extends StatelessWidget {
           horizontal: 16,
           vertical: AppTheme.spacing8,
         ),
-        child: Column(
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Row 1: Status dot + full name (no truncation)
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: color,
-                    boxShadow: presenceConfidence.isActive
-                        ? [
-                            BoxShadow(
-                              color: color.withValues(alpha: 0.4),
-                              blurRadius: 4,
-                            ),
-                          ]
-                        : null,
-                  ),
-                ),
-                const SizedBox(width: AppTheme.spacing12),
-                Expanded(
-                  child: Text(
-                    node.displayName,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: context.textPrimary,
+            // Colored short-name circle (matches the Contacts list + expanded
+            // node card). My node uses the accent colour; everyone else gets
+            // their deterministic per-node colour. The online dot marks active
+            // presence; finer presence states are carried by the status text.
+            NodeAvatar(
+              text: node.avatarName,
+              color: isMyNode
+                  ? context.accentColor
+                  : resolveNodeColor(
+                      nodeNum: node.nodeNum,
+                      avatarColor: node.avatarColor,
                     ),
-                  ),
-                ),
-                const SizedBox(width: AppTheme.spacing8),
-                Icon(
-                  Icons.chevron_right,
-                  size: 16,
-                  color: context.textTertiary,
-                ),
-              ],
+              size: 36,
+              showOnlineIndicator: presenceConfidence.isActive,
+              onlineStatus: presenceConfidence.isActive
+                  ? OnlineStatus.online
+                  : null,
             ),
-            const SizedBox(height: AppTheme.spacing4),
-            // Row 2: Metadata with proper spacing
-            Padding(
-              padding: const EdgeInsets.only(left: 22),
-              child: Wrap(
-                spacing: AppTheme.spacing12,
-                runSpacing: AppTheme.spacing4,
-                crossAxisAlignment: WrapCrossAlignment.center,
+            const SizedBox(width: AppTheme.spacing12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Signal bars (mini)
-                  if (node.rssi != null)
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: List.generate(4, (i) {
-                        final isActive = i < signalBars;
-                        return Container(
-                          margin: const EdgeInsets.only(right: 1),
-                          width: 3,
-                          height: 6.0 + (i * 2.0),
-                          decoration: BoxDecoration(
-                            color: isActive
-                                ? signalColor
-                                : context.textTertiary.withValues(alpha: 0.25),
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radius1,
-                            ),
+                  // Row 1: full name (no truncation) + chevron
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          node.displayName,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: context.textPrimary,
                           ),
-                        );
-                      }),
-                    ),
-                  // Hop count — graphical numbered dots
-                  if (node.hopCount != null)
-                    _CompactHopIndicator(hopCount: node.hopCount!),
-                  // Transport badge (RF / MQTT)
-                  Icon(
-                    node.viaMqtt ? Icons.cloud_outlined : Icons.cell_tower,
-                    size: 14,
-                    color: node.viaMqtt
-                        ? AccentColors.sky
-                        : AccentColors.emerald,
-                  ),
-                  // Battery
-                  if (node.batteryLevel != null && node.batteryLevel! <= 100)
-                    Icon(
-                      _batteryIcon(node.batteryLevel!),
-                      size: 16,
-                      color: _batteryColor(node.batteryLevel!),
-                    ),
-                  // Uptime
-                  if (node.uptimeSeconds != null)
-                    Text(
-                      context.l10n.nodesScreenUptimeLabel(
-                        formatUptime(node.uptimeSeconds!),
+                        ),
                       ),
-                      style: TextStyle(
-                        fontSize: 12,
+                      const SizedBox(width: AppTheme.spacing8),
+                      Icon(
+                        Icons.chevron_right,
+                        size: 16,
                         color: context.textTertiary,
                       ),
-                    ),
-                  // Status text
-                  Text(
-                    statusText,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: context.textSecondary,
-                    ),
+                    ],
+                  ),
+                  const SizedBox(height: AppTheme.spacing4),
+                  // Row 2: Metadata with proper spacing
+                  Wrap(
+                    spacing: AppTheme.spacing12,
+                    runSpacing: AppTheme.spacing4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      // Signal bars (mini)
+                      if (node.rssi != null)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: List.generate(4, (i) {
+                            final isActive = i < signalBars;
+                            return Container(
+                              margin: const EdgeInsets.only(right: 1),
+                              width: 3,
+                              height: 6.0 + (i * 2.0),
+                              decoration: BoxDecoration(
+                                color: isActive
+                                    ? signalColor
+                                    : context.textTertiary.withValues(
+                                        alpha: 0.25,
+                                      ),
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radius1,
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                      // Hop count — graphical numbered dots
+                      if (node.hopCount != null)
+                        _CompactHopIndicator(hopCount: node.hopCount!),
+                      // Transport badge (RF / MQTT)
+                      Icon(
+                        node.viaMqtt ? Icons.cloud_outlined : Icons.cell_tower,
+                        size: 14,
+                        color: node.viaMqtt
+                            ? AccentColors.sky
+                            : AccentColors.emerald,
+                      ),
+                      // Battery
+                      if (node.batteryLevel != null &&
+                          node.batteryLevel! <= 100)
+                        Icon(
+                          _batteryIcon(node.batteryLevel!),
+                          size: 16,
+                          color: _batteryColor(node.batteryLevel!),
+                        ),
+                      // Uptime
+                      if (node.uptimeSeconds != null)
+                        Text(
+                          context.l10n.nodesScreenUptimeLabel(
+                            formatUptime(node.uptimeSeconds!),
+                          ),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.textTertiary,
+                          ),
+                        ),
+                      // Status text
+                      Text(
+                        statusText,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
