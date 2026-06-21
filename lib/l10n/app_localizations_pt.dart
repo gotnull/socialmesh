@@ -3821,6 +3821,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nodeGroupsManageTitle => 'Grupos de nós';
 
   @override
+  String get nodeGroupsMembersEmptyKeyword => 'nós';
+
+  @override
+  String get nodeGroupsMembersEmptyTagline =>
+      'Adicione nós a este grupo na tela de detalhes de um nó.';
+
+  @override
   String get nodeGroupsNameHint => 'ex. Repetidores, A minha equipa';
 
   @override
@@ -3843,6 +3850,36 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get nodeGroupsNone => 'Sem grupo';
+
+  @override
+  String get nodeGroupsRemoveAction => 'Remover';
+
+  @override
+  String nodeGroupsRemoveButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Remover $count nós',
+      one: 'Remover 1 nó',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String nodeGroupsRemoveMessage(int count, String group) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count nós serão removidos de $group. Eles permanecem na sua lista de nós.',
+      one:
+          'Este nó será removido de $group. Ele permanece na sua lista de nós.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get nodeGroupsRemoveTitle => 'Remover do grupo?';
 
   @override
   String get nodeGroupsSave => 'Guardar';

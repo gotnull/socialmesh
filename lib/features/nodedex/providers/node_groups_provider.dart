@@ -31,6 +31,12 @@ class NodeGroupsState {
   int nodeCount(String groupId) =>
       membership.values.where((ids) => ids.contains(groupId)).length;
 
+  /// The node numbers assigned to [groupId].
+  List<int> nodesInGroup(String groupId) => [
+    for (final entry in membership.entries)
+      if (entry.value.contains(groupId)) entry.key,
+  ];
+
   /// Whether any group has been created.
   bool get isEmpty => groups.isEmpty;
 }
@@ -141,6 +147,14 @@ class NodeGroupsNotifier extends AsyncNotifier<NodeGroupsState> {
   Future<void> removeNodeFromGroup(int nodeNum, String groupId) async {
     final store = await _storeFuture;
     await store.removeNodeFromGroup(nodeNum, groupId);
+    await _reload();
+  }
+
+  /// Remove multiple nodes from one group.
+  Future<void> removeNodesFromGroup(Set<int> nodeNums, String groupId) async {
+    if (nodeNums.isEmpty) return;
+    final store = await _storeFuture;
+    await store.removeNodesFromGroup(nodeNums, groupId);
     await _reload();
   }
 }

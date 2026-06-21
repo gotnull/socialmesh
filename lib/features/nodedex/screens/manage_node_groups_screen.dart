@@ -15,6 +15,7 @@ import '../../../providers/splash_mesh_provider.dart';
 import '../models/node_group.dart';
 import '../providers/node_groups_provider.dart';
 import '../widgets/node_group_edit_sheet.dart';
+import 'group_nodes_screen.dart';
 
 /// Manage screen for user-defined node groups: create, edit, recolor, delete.
 class ManageNodeGroupsScreen extends ConsumerStatefulWidget {
@@ -36,6 +37,13 @@ class _ManageNodeGroupsScreenState extends ConsumerState<ManageNodeGroupsScreen>
             .read(nodeGroupsProvider.notifier)
             .createGroup(name: name, colorValue: colorValue, iconKey: iconKey);
       },
+    );
+  }
+
+  void _openMembers(NodeGroup group) {
+    HapticFeedback.selectionClick();
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => GroupNodesScreen(group: group)),
     );
   }
 
@@ -136,6 +144,7 @@ class _ManageNodeGroupsScreenState extends ConsumerState<ManageNodeGroupsScreen>
                   return _GroupCard(
                     group: group,
                     nodeCount: state.nodeCount(group.id),
+                    onOpen: () => _openMembers(group),
                     onEdit: () => _openEdit(group),
                     onDelete: () => _confirmDelete(group),
                   );
@@ -152,12 +161,14 @@ class _ManageNodeGroupsScreenState extends ConsumerState<ManageNodeGroupsScreen>
 class _GroupCard extends StatelessWidget {
   final NodeGroup group;
   final int nodeCount;
+  final VoidCallback onOpen;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   const _GroupCard({
     required this.group,
     required this.nodeCount,
+    required this.onOpen,
     required this.onEdit,
     required this.onDelete,
   });
@@ -172,7 +183,7 @@ class _GroupCard extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: onEdit,
+        onTap: onOpen,
         child: Padding(
           padding: const EdgeInsets.all(AppTheme.spacing16),
           child: Row(

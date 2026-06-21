@@ -3847,6 +3847,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get nodeGroupsManageTitle => 'Knotengruppen';
 
   @override
+  String get nodeGroupsMembersEmptyKeyword => 'Knoten';
+
+  @override
+  String get nodeGroupsMembersEmptyTagline =>
+      'Füge dieser Gruppe Knoten über die Detailansicht eines Knotens hinzu.';
+
+  @override
   String get nodeGroupsNameHint => 'z. B. Repeater, Mein Team';
 
   @override
@@ -3869,6 +3876,36 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get nodeGroupsNone => 'In keiner Gruppe';
+
+  @override
+  String get nodeGroupsRemoveAction => 'Entfernen';
+
+  @override
+  String nodeGroupsRemoveButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Knoten entfernen',
+      one: '1 Knoten entfernen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String nodeGroupsRemoveMessage(int count, String group) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count Knoten werden aus $group entfernt. Sie bleiben in deiner Knotenliste.',
+      one:
+          'Dieser Knoten wird aus $group entfernt. Er bleibt in deiner Knotenliste.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get nodeGroupsRemoveTitle => 'Aus Gruppe entfernen?';
 
   @override
   String get nodeGroupsSave => 'Speichern';

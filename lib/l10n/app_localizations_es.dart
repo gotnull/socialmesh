@@ -3858,6 +3858,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get nodeGroupsManageTitle => 'Grupos de nodos';
 
   @override
+  String get nodeGroupsMembersEmptyKeyword => 'nodos';
+
+  @override
+  String get nodeGroupsMembersEmptyTagline =>
+      'Añade nodos a este grupo desde la pantalla de detalles de un nodo.';
+
+  @override
   String get nodeGroupsNameHint => 'p. ej. Repetidores, Mi equipo';
 
   @override
@@ -3880,6 +3887,35 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get nodeGroupsNone => 'Sin grupo';
+
+  @override
+  String get nodeGroupsRemoveAction => 'Quitar';
+
+  @override
+  String nodeGroupsRemoveButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Quitar $count nodos',
+      one: 'Quitar 1 nodo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String nodeGroupsRemoveMessage(int count, String group) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count nodos se quitarán de $group. Permanecen en tu lista de nodos.',
+      one: 'Este nodo se quitará de $group. Permanece en tu lista de nodos.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get nodeGroupsRemoveTitle => '¿Quitar del grupo?';
 
   @override
   String get nodeGroupsSave => 'Guardar';

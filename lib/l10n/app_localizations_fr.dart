@@ -3869,6 +3869,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get nodeGroupsManageTitle => 'Groupes de noeuds';
 
   @override
+  String get nodeGroupsMembersEmptyKeyword => 'noeud';
+
+  @override
+  String get nodeGroupsMembersEmptyTagline =>
+      'Ajoutez des noeuds à ce groupe depuis l\'écran de détail d\'un noeud.';
+
+  @override
   String get nodeGroupsNameHint => 'ex. Répéteurs, Mon équipe';
 
   @override
@@ -3891,6 +3898,36 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get nodeGroupsNone => 'Dans aucun groupe';
+
+  @override
+  String get nodeGroupsRemoveAction => 'Retirer';
+
+  @override
+  String nodeGroupsRemoveButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Retirer $count noeuds',
+      one: 'Retirer 1 noeud',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String nodeGroupsRemoveMessage(int count, String group) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count noeuds seront retirés de $group. Ils restent dans votre liste de noeuds.',
+      one:
+          'Ce noeud sera retiré de $group. Il reste dans votre liste de noeuds.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get nodeGroupsRemoveTitle => 'Retirer du groupe ?';
 
   @override
   String get nodeGroupsSave => 'Enregistrer';

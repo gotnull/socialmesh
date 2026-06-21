@@ -176,12 +176,11 @@ class LicenseOrgOverviewCard extends ConsumerWidget {
                 )
               : null,
         ),
-        // No explicit spacer: SectionTitle internally compensates for
-        // tall trailing widgets (see SizedOverflowBox in
-        // `lib/core/widgets/section_header.dart`), so the IconButton
-        // edit pencil no longer inflates the title row's reported
-        // height. The built-in `bottom: spacing8` is consistent
-        // whether trailing is null or an IconButton.
+        // No explicit spacer: the edit pencil is kept compact (zero padding,
+        // 32x32 constraints) so it barely grows the title row, and
+        // SectionTitle renders trailing at its natural size (it must, or the
+        // pencil is not hit-testable). The built-in `bottom: spacing8` keeps
+        // the gap below the title consistent.
         InfoTable(
           rows: [
             // Status first - the field a user opens this screen TO

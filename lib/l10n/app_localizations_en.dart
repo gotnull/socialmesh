@@ -3785,6 +3785,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nodeGroupsManageTitle => 'Node Groups';
 
   @override
+  String get nodeGroupsMembersEmptyKeyword => 'nodes';
+
+  @override
+  String get nodeGroupsMembersEmptyTagline =>
+      'Add nodes to this group from a node\'s detail screen.';
+
+  @override
   String get nodeGroupsNameHint => 'e.g. Repeaters, My Team';
 
   @override
@@ -3807,6 +3814,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nodeGroupsNone => 'Not in any group';
+
+  @override
+  String get nodeGroupsRemoveAction => 'Remove';
+
+  @override
+  String nodeGroupsRemoveButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Remove $count nodes',
+      one: 'Remove 1 node',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String nodeGroupsRemoveMessage(int count, String group) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count nodes will be removed from $group. They stay in your node list.',
+      one: 'This node will be removed from $group. It stays in your node list.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get nodeGroupsRemoveTitle => 'Remove from group?';
 
   @override
   String get nodeGroupsSave => 'Save';

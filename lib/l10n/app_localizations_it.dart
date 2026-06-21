@@ -3835,6 +3835,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get nodeGroupsManageTitle => 'Gruppi di nodi';
 
   @override
+  String get nodeGroupsMembersEmptyKeyword => 'nodo';
+
+  @override
+  String get nodeGroupsMembersEmptyTagline =>
+      'Aggiungi nodi a questo gruppo dalla schermata dei dettagli di un nodo.';
+
+  @override
   String get nodeGroupsNameHint => 'es. Ripetitori, La mia squadra';
 
   @override
@@ -3857,6 +3864,36 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get nodeGroupsNone => 'In nessun gruppo';
+
+  @override
+  String get nodeGroupsRemoveAction => 'Rimuovi';
+
+  @override
+  String nodeGroupsRemoveButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Rimuovi $count nodi',
+      one: 'Rimuovi 1 nodo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String nodeGroupsRemoveMessage(int count, String group) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count nodi verranno rimossi da $group. Rimangono nel tuo elenco di nodi.',
+      one:
+          'Questo nodo verrà rimosso da $group. Rimane nel tuo elenco di nodi.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get nodeGroupsRemoveTitle => 'Rimuovere dal gruppo?';
 
   @override
   String get nodeGroupsSave => 'Salva';

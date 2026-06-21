@@ -6762,6 +6762,18 @@ abstract class AppLocalizations {
   /// **'Node Groups'**
   String get nodeGroupsManageTitle;
 
+  /// Gradient-animated keyword in the group members empty-state title (between prefix and suffix).
+  ///
+  /// In en, this message translates to:
+  /// **'nodes'**
+  String get nodeGroupsMembersEmptyKeyword;
+
+  /// Empty-state description on the group members screen when a group has no nodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Add nodes to this group from a node\'s detail screen.'**
+  String get nodeGroupsMembersEmptyTagline;
+
   /// Hint text for the node group name field.
   ///
   /// In en, this message translates to:
@@ -6791,6 +6803,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not in any group'**
   String get nodeGroupsNone;
+
+  /// Confirm button that removes the selected nodes from a group.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get nodeGroupsRemoveAction;
+
+  /// Bottom action button on the group members screen that removes the selected nodes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Remove 1 node} other{Remove {count} nodes}}'**
+  String nodeGroupsRemoveButton(int count);
+
+  /// Confirmation body when removing nodes from a group.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{This node will be removed from {group}. It stays in your node list.} other{{count} nodes will be removed from {group}. They stay in your node list.}}'**
+  String nodeGroupsRemoveMessage(int count, String group);
+
+  /// Confirmation title when removing nodes from a group.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from group?'**
+  String get nodeGroupsRemoveTitle;
 
   /// Save button label when editing a node group.
   ///

@@ -120,37 +120,17 @@ class SectionTitle extends StatelessWidget {
               ),
             ),
           ],
-          if (trailing != null)
-            // Align with `widthFactor: 1, heightFactor: 0` reports
-            // `(trailing.naturalWidth, 0)` to the Row — preserving
-            // the trailing's natural horizontal footprint while
-            // contributing zero to the row's cross-axis size. Tall
-            // trailing widgets (e.g. an IconButton's 32x32 hit
-            // area) and wide ones (e.g. a DeviceShopInfoPill) both
-            // work: the row's cross-axis size is determined by the
-            // title text alone, and the trailing renders at its
-            // intrinsic size centered on the title's vertical
-            // mid-line, with any vertical overflow bleeding into the
-            // surrounding spacing (above the title and into the
-            // built-in `bottom: spacing8` padding below).
-            //
-            // Why it matters: before this widget compensated
-            // internally, every caller with a tall trailing had to
-            // hand-tune the surrounding SizedBox spacers to undo the
-            // row inflation — otherwise the gap above the content
-            // ended up larger than the gap below the next section
-            // (e.g. the org overview card needed an explicit
-            // `SizedBox(spacing4)` instead of `spacing12` to undo
-            // the 14px of row inflation introduced by the IconButton
-            // edit pencil). Internal compensation here means callers
-            // can drop their compensation spacers entirely; the
-            // rhythm stays consistent regardless of trailing shape.
-            Align(
-              widthFactor: 1,
-              heightFactor: 0,
-              alignment: Alignment.center,
-              child: trailing!,
-            ),
+          if (trailing != null) ...[
+            const SizedBox(width: AppTheme.spacing4),
+            // Render trailing at its natural size so it stays hit-testable.
+            // A previous version wrapped this in Align(heightFactor: 0),
+            // which reported a zero-height box to the Row. Flutter gates hit
+            // testing on size.contains(position), so taps never reached an
+            // interactive trailing widget (the edit pencil painted but was
+            // dead). Keep trailing compact at the call site (tight
+            // constraints + zero padding) so it does not inflate the row.
+            trailing!,
+          ],
         ],
       ),
     );

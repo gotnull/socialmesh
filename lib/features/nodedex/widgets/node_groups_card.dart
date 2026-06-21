@@ -40,6 +40,8 @@ class NodeGroupsCard extends ConsumerWidget {
         tooltip: l10n.nodeGroupsEditTooltip,
         color: context.textSecondary,
         visualDensity: VisualDensity.compact,
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
         onPressed: () => NodeGroupAssignSheet.show(
           context,
           nodeNum: nodeNum,

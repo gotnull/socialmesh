@@ -3834,6 +3834,13 @@ class AppLocalizationsUk extends AppLocalizations {
   String get nodeGroupsManageTitle => 'Групи вузлів';
 
   @override
+  String get nodeGroupsMembersEmptyKeyword => 'вузлів';
+
+  @override
+  String get nodeGroupsMembersEmptyTagline =>
+      'Додавайте вузли до цієї групи на екрані деталей вузла.';
+
+  @override
   String get nodeGroupsNameHint => 'напр. Ретранслятори, Моя команда';
 
   @override
@@ -3858,6 +3865,42 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get nodeGroupsNone => 'Без групи';
+
+  @override
+  String get nodeGroupsRemoveAction => 'Вилучити';
+
+  @override
+  String nodeGroupsRemoveButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Вилучити $count вузлів',
+      many: 'Вилучити $count вузлів',
+      few: 'Вилучити $count вузли',
+      one: 'Вилучити $count вузол',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String nodeGroupsRemoveMessage(int count, String group) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count вузлів буде вилучено з $group. Вони залишаться у вашому списку вузлів.',
+      many:
+          '$count вузлів буде вилучено з $group. Вони залишаться у вашому списку вузлів.',
+      few:
+          '$count вузли буде вилучено з $group. Вони залишаться у вашому списку вузлів.',
+      one:
+          '$count вузол буде вилучено з $group. Він залишиться у вашому списку вузлів.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get nodeGroupsRemoveTitle => 'Вилучити з групи?';
 
   @override
   String get nodeGroupsSave => 'Зберегти';

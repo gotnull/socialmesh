@@ -5086,6 +5086,14 @@
     "@nodeGroupsManageTitle": {
         "description": "Title of the manage node groups screen."
     },
+    "nodeGroupsMembersEmptyKeyword": "nodes",
+    "@nodeGroupsMembersEmptyKeyword": {
+        "description": "Gradient-animated keyword in the group members empty-state title (between prefix and suffix)."
+    },
+    "nodeGroupsMembersEmptyTagline": "Add nodes to this group from a node's detail screen.",
+    "@nodeGroupsMembersEmptyTagline": {
+        "description": "Empty-state description on the group members screen when a group has no nodes."
+    },
     "nodeGroupsNameHint": "e.g. Repeaters, My Team",
     "@nodeGroupsNameHint": {
         "description": "Hint text for the node group name field."
@@ -5110,6 +5118,35 @@
     "nodeGroupsNone": "Not in any group",
     "@nodeGroupsNone": {
         "description": "Shown on a node's detail when it belongs to no groups."
+    },
+    "nodeGroupsRemoveAction": "Remove",
+    "@nodeGroupsRemoveAction": {
+        "description": "Confirm button that removes the selected nodes from a group."
+    },
+    "nodeGroupsRemoveButton": "{count, plural, =1{Remove 1 node} other{Remove {count} nodes}}",
+    "@nodeGroupsRemoveButton": {
+        "description": "Bottom action button on the group members screen that removes the selected nodes.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "nodeGroupsRemoveMessage": "{count, plural, =1{This node will be removed from {group}. It stays in your node list.} other{{count} nodes will be removed from {group}. They stay in your node list.}}",
+    "@nodeGroupsRemoveMessage": {
+        "description": "Confirmation body when removing nodes from a group.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            },
+            "group": {
+                "type": "String"
+            }
+        }
+    },
+    "nodeGroupsRemoveTitle": "Remove from group?",
+    "@nodeGroupsRemoveTitle": {
+        "description": "Confirmation title when removing nodes from a group."
     },
     "nodeGroupsSave": "Save",
     "@nodeGroupsSave": {

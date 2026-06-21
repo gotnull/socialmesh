@@ -134,6 +134,19 @@ class NodeGroupsStore {
     );
   }
 
+  /// Remove multiple nodes from a single group in one statement.
+  Future<void> removeNodesFromGroup(Set<int> nodeNums, String groupId) async {
+    if (nodeNums.isEmpty) return;
+    final placeholders = List.filled(nodeNums.length, '?').join(', ');
+    await _db.delete(
+      NodeDexTables.nodeGroups,
+      where:
+          '${NodeDexTables.colNgGroupId} = ? AND '
+          '${NodeDexTables.colNodeNum} IN ($placeholders)',
+      whereArgs: [groupId, ...nodeNums],
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // Row mapping
   // ---------------------------------------------------------------------------

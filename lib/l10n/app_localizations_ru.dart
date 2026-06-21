@@ -3825,6 +3825,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get nodeGroupsManageTitle => 'Группы узлов';
 
   @override
+  String get nodeGroupsMembersEmptyKeyword => 'узлов';
+
+  @override
+  String get nodeGroupsMembersEmptyTagline =>
+      'Добавляйте узлы в эту группу на экране сведений об узле.';
+
+  @override
   String get nodeGroupsNameHint => 'напр. Ретрансляторы, Моя команда';
 
   @override
@@ -3849,6 +3856,42 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get nodeGroupsNone => 'Без группы';
+
+  @override
+  String get nodeGroupsRemoveAction => 'Убрать';
+
+  @override
+  String nodeGroupsRemoveButton(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Убрать $count узлов',
+      many: 'Убрать $count узлов',
+      few: 'Убрать $count узла',
+      one: 'Убрать $count узел',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String nodeGroupsRemoveMessage(int count, String group) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count узлов будут убраны из $group. Они останутся в вашем списке узлов.',
+      many:
+          '$count узлов будут убраны из $group. Они останутся в вашем списке узлов.',
+      few:
+          '$count узла будут убраны из $group. Они останутся в вашем списке узлов.',
+      one:
+          '$count узел будет убран из $group. Он останется в вашем списке узлов.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get nodeGroupsRemoveTitle => 'Убрать из группы?';
 
   @override
   String get nodeGroupsSave => 'Сохранить';

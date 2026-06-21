@@ -185,6 +185,33 @@ void main() {
       expect((await store.loadMembership())[100], isNull);
     });
 
+    test('removeNodesFromGroup removes only the named nodes from one '
+        'group', () async {
+      await store.upsertGroup(makeGroup('a'));
+      await store.upsertGroup(makeGroup('b'));
+      // 100 -> {a, b}, 200 -> {a}, 300 -> {a}, 400 -> {b}
+      await store.setNodeGroups(100, {'a', 'b'}, nowMs: 5);
+      await store.setNodeGroups(200, {'a'}, nowMs: 5);
+      await store.setNodeGroups(300, {'a'}, nowMs: 5);
+      await store.setNodeGroups(400, {'b'}, nowMs: 5);
+
+      // Empty set is a no-op.
+      await store.removeNodesFromGroup(<int>{}, 'a');
+      expect((await store.loadMembership())[100], {'a', 'b'});
+
+      await store.removeNodesFromGroup({100, 200}, 'a');
+
+      final membership = await store.loadMembership();
+      // 100 keeps b (only its 'a' membership was cleared).
+      expect(membership[100], {'b'});
+      // 200 had only 'a' and is now gone.
+      expect(membership[200], isNull);
+      // 300 was not in the removal set; its 'a' membership survives.
+      expect(membership[300], {'a'});
+      // 400's membership in the other group is untouched.
+      expect(membership[400], {'b'});
+    });
+
     test('deleting a group clears its membership rows', () async {
       await store.upsertGroup(makeGroup('a'));
       await store.upsertGroup(makeGroup('b'));
