@@ -1567,6 +1567,11 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen>
               _checkForChanges();
             },
           ),
+          const SizedBox(height: AppTheme.spacing8),
+          Text(
+            context.l10n.deviceConfigTimezoneScopeNote,
+            style: TextStyle(fontSize: 12, color: context.textTertiary),
+          ),
         ],
       ),
     );

@@ -2503,6 +2503,7 @@
   "deviceConfigPosixTimezone": "Часовий пояс POSIX",
   "deviceConfigPosixTimezoneExample": "напр. EST5EDT,M3.2.0,M11.1.0",
   "deviceConfigPosixTimezoneHint": "Залиште порожнім для UTC",
+  "deviceConfigTimezoneScopeNote": "Задає часовий пояс, що відображається на екрані та в журналах самого пристрою. Час повідомлень у застосунку завжди відповідає часовому поясу вашого телефону.",
   "deviceConfigRebootWarning": "Зміни в конфігурації пристрою призведуть до його перезавантаження.",
   "deviceConfigRebroadcastAll": "Усі",
   "deviceConfigRebroadcastAllDesc": "Ретранслювати будь-яке виявлене повідомлення. Стандартна поведінка.",

@@ -4383,6 +4383,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get deviceConfigPosixTimezoneHint => 'Оставьте пустым для UTC';
 
   @override
+  String get deviceConfigTimezoneScopeNote =>
+      'Задаёт часовой пояс, отображаемый на экране и в журналах самого устройства. Время сообщений в приложении всегда соответствует часовому поясу вашего телефона.';
+
+  @override
   String get deviceConfigRebootWarning =>
       'Изменения в конфигурации устройства вызовут его перезагрузку.';
 

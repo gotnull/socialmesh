@@ -4422,6 +4422,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get deviceConfigPosixTimezoneHint => 'Laisser vide pour UTC';
 
   @override
+  String get deviceConfigTimezoneScopeNote =>
+      'Définit le fuseau horaire affiché sur l\'écran et dans les journaux de l\'appareil. Les heures des messages dans l\'application suivent toujours le fuseau horaire de votre téléphone.';
+
+  @override
   String get deviceConfigRebootWarning =>
       'Les modifications de la configuration de l\'appareil provoqueront un redémarrage.';
 

@@ -2503,6 +2503,7 @@
   "deviceConfigPosixTimezone": "POSIX-Zeitzone",
   "deviceConfigPosixTimezoneExample": "z.B. EST5EDT,M3.2.0,M11.1.0",
   "deviceConfigPosixTimezoneHint": "Leer lassen für UTC",
+  "deviceConfigTimezoneScopeNote": "Legt die Zeitzone fest, die auf dem Bildschirm und in den Protokollen des Geräts angezeigt wird. Nachrichtenzeiten in der App richten sich immer nach der Zeitzone deines Telefons.",
   "deviceConfigRebootWarning": "Änderungen an der Gerätekonfiguration führen zum Neustart des Geräts.",
   "deviceConfigRebroadcastAll": "Alle",
   "deviceConfigRebroadcastAllDesc": "Alle empfangenen Nachrichten weiterleiten. Standardverhalten.",

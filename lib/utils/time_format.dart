@@ -165,7 +165,7 @@ abstract final class AppTimeFormat {
   // ---------------------------------------------------------------------------
 
   /// Full local date + time for detail surfaces, using calendar-relative
-  /// labels for recent days. Produces, with the device's local timezone:
+  /// labels for recent days. Produces, with the phone's local timezone:
   ///
   /// - "Today, 22:27" when [timestamp] falls on the current local day
   /// - "Yesterday, 22:27" when it falls on the previous local day

@@ -2503,6 +2503,7 @@
   "deviceConfigPosixTimezone": "Fuseau horaire POSIX",
   "deviceConfigPosixTimezoneExample": "ex. EST5EDT,M3.2.0,M11.1.0",
   "deviceConfigPosixTimezoneHint": "Laisser vide pour UTC",
+  "deviceConfigTimezoneScopeNote": "Définit le fuseau horaire affiché sur l'écran et dans les journaux de l'appareil. Les heures des messages dans l'application suivent toujours le fuseau horaire de votre téléphone.",
   "deviceConfigRebootWarning": "Les modifications de la configuration de l'appareil provoqueront un redémarrage.",
   "deviceConfigRebroadcastAll": "Tout",
   "deviceConfigRebroadcastAllDesc": "Rediffuse tout message observé. Comportement par défaut.",

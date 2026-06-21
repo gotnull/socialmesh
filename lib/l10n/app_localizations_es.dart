@@ -4411,6 +4411,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get deviceConfigPosixTimezoneHint => 'Dejar vacío para UTC';
 
   @override
+  String get deviceConfigTimezoneScopeNote =>
+      'Establece la zona horaria que se muestra en la propia pantalla y los registros del dispositivo. Las horas de los mensajes en la aplicación siempre siguen la zona horaria de tu teléfono.';
+
+  @override
   String get deviceConfigRebootWarning =>
       'Los cambios en la configuración del dispositivo provocarán que el dispositivo se reinicie.';
 

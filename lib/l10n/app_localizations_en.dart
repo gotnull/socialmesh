@@ -4328,6 +4328,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deviceConfigPosixTimezoneHint => 'Leave empty for UTC';
 
   @override
+  String get deviceConfigTimezoneScopeNote =>
+      'Sets the time zone shown on the device\'s own screen and logs. Message times in the app always follow your phone\'s time zone.';
+
+  @override
   String get deviceConfigRebootWarning =>
       'Changes to device configuration will cause the device to reboot.';
 

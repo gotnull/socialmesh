@@ -5766,6 +5766,10 @@
     "@deviceConfigPosixTimezoneHint": {
         "description": "Hint text for an input field in developer tools"
     },
+    "deviceConfigTimezoneScopeNote": "Sets the time zone shown on the device's own screen and logs. Message times in the app always follow your phone's time zone.",
+    "@deviceConfigTimezoneScopeNote": {
+        "description": "Footer note clarifying that the device timezone setting only affects the device's own display, not in-app message timestamps which use the phone's timezone"
+    },
     "deviceConfigRebootWarning": "Changes to device configuration will cause the device to reboot.",
     "@deviceConfigRebootWarning": {
         "description": "Text displayed in developer tools"

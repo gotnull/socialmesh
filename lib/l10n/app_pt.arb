@@ -35607,6 +35607,7 @@
   "deviceConfigPosixTimezone": "Fuso horário POSIX",
   "deviceConfigPosixTimezoneExample": "ex. EST5EDT,M3.2.0,M11.1.0",
   "deviceConfigPosixTimezoneHint": "Deixe vazio para UTC",
+  "deviceConfigTimezoneScopeNote": "Define o fuso horário mostrado na própria tela e nos registros do dispositivo. Os horários das mensagens no aplicativo seguem sempre o fuso horário do seu telefone.",
   "deviceConfigRebootWarning": "Alterações na configuração do dispositivo causarão a reinicialização.",
   "deviceConfigRebroadcastAll": "Todos",
   "deviceConfigRebroadcastAllDesc": "Retransmitir qualquer mensagem observada. Comportamento padrão.",

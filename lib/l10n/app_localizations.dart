@@ -7692,6 +7692,12 @@ abstract class AppLocalizations {
   /// **'Leave empty for UTC'**
   String get deviceConfigPosixTimezoneHint;
 
+  /// Footer note clarifying that the device timezone setting only affects the device's own display, not in-app message timestamps which use the phone's timezone
+  ///
+  /// In en, this message translates to:
+  /// **'Sets the time zone shown on the device\'s own screen and logs. Message times in the app always follow your phone\'s time zone.'**
+  String get deviceConfigTimezoneScopeNote;
+
   /// Text displayed in developer tools
   ///
   /// In en, this message translates to:

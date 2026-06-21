@@ -4366,6 +4366,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get deviceConfigPosixTimezoneHint => 'Deixe vazio para UTC';
 
   @override
+  String get deviceConfigTimezoneScopeNote =>
+      'Define o fuso horário mostrado na própria tela e nos registros do dispositivo. Os horários das mensagens no aplicativo seguem sempre o fuso horário do seu telefone.';
+
+  @override
   String get deviceConfigRebootWarning =>
       'Alterações na configuração do dispositivo causarão a reinicialização.';
 
