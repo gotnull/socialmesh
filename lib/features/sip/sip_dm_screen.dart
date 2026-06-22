@@ -2677,7 +2677,10 @@ class _MessageBubble extends ConsumerWidget {
                           // than the Meshtastic inbound bubble it
                           // sits next to in mixed-protocol contexts.
                           style: chatBubbleBodyStyle(
-                            baseFontSize: 14,
+                            baseFontSize: chatBubbleFontSize(
+                              bodyText,
+                              baseFontSize: 14,
+                            ),
                             color: context.textPrimary,
                           ),
                         ),

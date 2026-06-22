@@ -3359,7 +3359,10 @@ class _MessageBubble extends ConsumerWidget {
                             // consistent rhythm. Pre-existing 14/15
                             // split surfaced during D30 live smoke.
                             bodyStyle: chatBubbleBodyStyle(
-                              baseFontSize: 14,
+                              baseFontSize: chatBubbleFontSize(
+                                message.text,
+                                baseFontSize: 14,
+                              ),
                               color: Colors.white,
                             ),
                             fallbackStyle: TextStyle(
@@ -3646,7 +3649,10 @@ class _MessageBubble extends ConsumerWidget {
                           // on 14 across MeshCore + SIP DM + messaging
                           // during the D30 polish pass.
                           bodyStyle: chatBubbleBodyStyle(
-                            baseFontSize: 14,
+                            baseFontSize: chatBubbleFontSize(
+                              message.text,
+                              baseFontSize: 14,
+                            ),
                             color: context.textPrimary,
                           ),
                           fallbackStyle: TextStyle(

@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 import '../../core/logging.dart';
+import '../../utils/emoji_text.dart';
 import 'translation_models.dart';
 
 /// Centralized policy engine for translation decisions.
@@ -112,7 +113,7 @@ class TranslationPolicyService {
     if (_isUrlOnly(trimmed)) return false;
 
     // Emoji-only content
-    if (_isEmojiOnly(trimmed)) return false;
+    if (isEmojiOnly(trimmed)) return false;
 
     return true;
   }
@@ -123,21 +124,5 @@ class TranslationPolicyService {
       caseSensitive: false,
     );
     return urlPattern.hasMatch(text.trim());
-  }
-
-  static bool _isEmojiOnly(String text) {
-    // Remove all emoji and whitespace — if nothing remains, it's emoji-only
-    final withoutEmoji = text.replaceAll(
-      RegExp(
-        r'[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|'
-        r'[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|'
-        r'[\u{FE00}-\u{FE0F}]|[\u{1F900}-\u{1F9FF}]|[\u{1FA00}-\u{1FA6F}]|'
-        r'[\u{1FA70}-\u{1FAFF}]|[\u{200D}]|[\u{20E3}]|[\u{E0020}-\u{E007F}]|'
-        r'\s',
-        unicode: true,
-      ),
-      '',
-    );
-    return withoutEmoji.isEmpty;
   }
 }

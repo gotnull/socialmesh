@@ -522,6 +522,16 @@ class AppTheme {
   static const double radius28 = 28;
   static const double radius30 = 30;
 
+  // -------------------------------------------------------
+  // Jumbomoji font sizes (emoji-only chat bodies)
+  // -------------------------------------------------------
+  // Emoji-only messages render larger than emoji-with-text, shrinking toward
+  // the regular body size as the count grows (1 biggest → baseline at 4+),
+  // matching common messengers. See chatBubbleFontSize in chat_bubble_text.dart.
+  static const double fontSizeEmoji1 = 34; // single emoji
+  static const double fontSizeEmoji2 = 28; // two emoji
+  static const double fontSizeEmoji3 = 22; // three emoji
+
   // Font families
   //
   // `fontFamily` resolves the user's font-mode accessibility preference at
