@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 //
-// SectionTitle trailing-compensation regression: tall trailing
-// widgets (e.g. an IconButton's 32x32 hit area) must NOT inflate
-// the SectionTitle's reported height. Without compensation,
-// callers had to hand-tune the surrounding SizedBox spacers to
-// undo the row inflation — see LICENSE_ORG_OVERVIEW_SCREEN.md §9.3.
+// SectionTitle trailing regressions: an interactive trailing widget
+// (e.g. an edit pencil) must stay hit-testable, and the trailing must
+// keep its natural width and stay pinned to the row's right edge. An
+// earlier version wrapped the trailing in Align(heightFactor: 0) to
+// stop a tall trailing inflating the header height, but that reported a
+// zero-height box to the Row and Flutter's size-gated hit testing then
+// dropped every tap (the pencil painted but was dead). The trailing now
+// renders at its natural size; callers keep it compact at the call
+// site. See section_header.dart for the rationale.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,63 +17,41 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/core/widgets/section_header.dart';
 
 void main() {
-  group('SectionTitle — trailing compensation', () {
-    testWidgets(
-      'tall trailing (IconButton 32x32) does not inflate reported height',
-      (tester) async {
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: Column(
-                children: [
-                  // Baseline: SectionTitle without trailing — reports
-                  // its natural text-row height + built-in bottom
-                  // padding.
-                  const SectionTitle(title: 'baseline'),
-                  // With a tall trailing — should report the SAME
-                  // height as the baseline. Internal compensation
-                  // collapses the trailing's vertical contribution
-                  // to zero via Align(heightFactor: 0).
-                  SectionTitle(
-                    title: 'with trailing',
-                    trailing: IconButton(
-                      icon: const Icon(Icons.edit_outlined, size: 18),
-                      onPressed: () {},
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(
-                        minWidth: 32,
-                        minHeight: 32,
-                      ),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  ),
-                ],
+  group('SectionTitle — trailing', () {
+    testWidgets('interactive trailing stays hit-testable', (tester) async {
+      var taps = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SectionTitle(
+              title: 'with trailing',
+              trailing: IconButton(
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                onPressed: () => taps++,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                visualDensity: VisualDensity.compact,
               ),
             ),
           ),
-        );
+        ),
+      );
 
-        final baselineSize = tester.getSize(find.byType(SectionTitle).first);
-        final withTrailingSize = tester.getSize(
-          find.byType(SectionTitle).at(1),
-        );
+      await tester.tap(find.byIcon(Icons.edit_outlined));
+      await tester.pump();
 
-        // Heights must match: the IconButton's 32px hit area does
-        // not contribute to the SectionTitle's reported height. A
-        // regression to the pre-compensation behavior (Row aligns to
-        // max-child height) would push `withTrailingSize.height` to
-        // ~32+8=40px, leaving baseline at ~18+8=26px and tripping
-        // this expect by a wide margin.
-        expect(
-          withTrailingSize.height,
-          equals(baselineSize.height),
-          reason:
-              'Tall trailing inflated SectionTitle height. Check that '
-              'the trailing is wrapped in Align(heightFactor: 0) in '
-              'lib/core/widgets/section_header.dart.',
-        );
-      },
-    );
+      // A zero-height collapse (Align(heightFactor: 0)) would gate the
+      // tap out via Flutter's size.contains check, so the pencil would
+      // paint but never fire. Rendering at natural size keeps it live.
+      expect(
+        taps,
+        1,
+        reason:
+            'Interactive trailing did not receive the tap. Keep the trailing '
+            'rendered at its natural size (not Align(heightFactor: 0)) in '
+            'lib/core/widgets/section_header.dart.',
+      );
+    });
 
     testWidgets(
       'wide trailing (info pill) preserves its natural width in the row',
