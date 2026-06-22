@@ -215,7 +215,16 @@ class AppBottomSheet extends StatelessWidget {
                         ),
                       ),
                     ),
-                  Expanded(child: builder(scrollController)),
+                  // Transparent Material supplies the Material ancestor that
+                  // ListTile / InkWell rows in the scrollable body require; the
+                  // colored Container above would otherwise be their nearest
+                  // surface and suppress ink + background.
+                  Expanded(
+                    child: Material(
+                      type: MaterialType.transparency,
+                      child: builder(scrollController),
+                    ),
+                  ),
                   // Pinned footer
                   if (footer != null)
                     Padding(
@@ -438,18 +447,25 @@ class AppBottomSheet extends StatelessWidget {
         color: context.background,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (showDragPill) const _DragPill(),
-            Flexible(
-              child: Padding(padding: padding, child: child),
-            ),
-          ],
+      // Transparent Material gives ListTile / InkWell descendants a Material
+      // ancestor without painting over the Container's background. Without it
+      // the colored DecoratedBox above is the nearest surface to any ListTile,
+      // which suppresses its ink + background and is a framework assertion.
+      child: Material(
+        type: MaterialType.transparency,
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (showDragPill) const _DragPill(),
+              Flexible(
+                child: Padding(padding: padding, child: child),
+              ),
+            ],
+          ),
         ),
       ),
     );
