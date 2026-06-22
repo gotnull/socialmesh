@@ -17,13 +17,16 @@ import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/map_controls.dart';
 import '../../core/widgets/mesh_map_widget.dart';
+import '../../core/widgets/waypoint_markers.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
 import '../../utils/presence_utils.dart';
 import '../../models/route.dart' as route_model;
 import '../../providers/app_providers.dart';
+import '../../providers/map_local_waypoints.dart';
 import '../../providers/presence_providers.dart';
 import '../../providers/telemetry_providers.dart';
+import '../waypoints/providers/waypoint_providers.dart';
 import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
 
@@ -124,6 +127,11 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
         .where((node) => node.hasPosition)
         .toList();
 
+    // Same waypoint context as the main Maps screen: shared mesh waypoints and
+    // local "dropped pins", rendered below the node markers and the route line.
+    final meshWaypoints = ref.watch(meshWaypointsProvider);
+    final localWaypoints = ref.watch(mapLocalWaypointsProvider);
+
     // Convert to marker data for shared widget
     final nodeMarkerData = nodesWithPosition
         .map(
@@ -173,6 +181,42 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
                       strokeWidth: 4,
                     ),
                   ],
+                ),
+
+                // Shared mesh waypoints (WAYPOINT_APP) — orange emoji markers,
+                // matching the main Maps screen. Render-only here.
+                MarkerLayer(
+                  rotate: true,
+                  markers: finiteMarkers(
+                    meshWaypoints.map((w) {
+                      final point = safeLatLng(w.latitude, w.longitude);
+                      if (point == null) return null;
+                      return Marker(
+                        point: point,
+                        width: 40,
+                        height: 40,
+                        child: MeshWaypointMarker(
+                          iconCodePoint: w.icon,
+                          hasIcon: w.hasRenderableIcon,
+                        ),
+                      );
+                    }).whereType<Marker>(),
+                  ),
+                ),
+
+                // Local "dropped pin" waypoints (yellow), matching Maps.
+                MarkerLayer(
+                  rotate: true,
+                  markers: finiteMarkers(
+                    localWaypoints.map(
+                      (w) => Marker(
+                        point: w.position,
+                        width: 32,
+                        height: 40,
+                        child: const LocalWaypointMarker(),
+                      ),
+                    ),
+                  ),
                 ),
 
                 // Start/End route markers

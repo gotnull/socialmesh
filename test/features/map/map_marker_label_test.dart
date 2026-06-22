@@ -3,7 +3,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:socialmesh/features/map/map_screen.dart';
+import 'package:socialmesh/core/node_color.dart';
 import 'package:socialmesh/models/mesh_models.dart';
 
 /// Behavioural tests for the Sprint 4 mesh-map node label helper.

@@ -2,6 +2,9 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/widgets.dart';
 
+import '../models/mesh_models.dart';
+import '../utils/text_sanitizer.dart';
+
 // Derives a stable per-node colour from the node number's low three bytes used
 // directly as RGB. This mirrors the official Meshtastic apps so the same node
 // shows the same colour across implementations, and gives 16M buckets instead
@@ -38,3 +41,23 @@ bool isLightNodeColor(Color color) {
 /// dark-glass UI.
 Color nodeContrastColor(Color color) =>
     isLightNodeColor(color) ? const Color(0xFF000000) : const Color(0xFFFFFFFF);
+
+/// The short label rendered inside a node's map marker.
+///
+/// Returns the node's shortName (capped at 4 grapheme clusters per the
+/// Meshtastic spec, sanitized for lone surrogates / control chars) so a node
+/// labelled e.g. "MYSO" reads as itself rather than collapsing to "M". Falls
+/// back to the last 4 hex digits of [MeshNode.nodeNum] when no shortName is set.
+String nodeMarkerLabel(MeshNode node) {
+  final shortName = node.shortName;
+  if (shortName != null && shortName.isNotEmpty) {
+    // safeInitials sanitizes (repairs lone surrogates / strips controls) then
+    // takes up to 4 grapheme clusters — grapheme-aware for emoji + accents.
+    final initials = safeInitials(shortName, 4);
+    if (initials.isNotEmpty) return initials;
+  }
+  // Last 4 hex digits — matches the canonical short-form id used
+  // elsewhere in the app for nodes without a self-reported name.
+  final hex = node.nodeNum.toRadixString(16).padLeft(8, '0');
+  return hex.substring(hex.length - 4).toUpperCase();
+}

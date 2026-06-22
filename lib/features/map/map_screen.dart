@@ -24,10 +24,11 @@ import 'map_session_providers.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
-import '../../core/widgets/emoji_glyph.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../core/widgets/map_controls.dart';
+import '../../core/widgets/mesh_map_widget.dart';
+import '../../core/widgets/waypoint_markers.dart';
 import 'package:socialmesh/features/incidents/widgets/help_mode/help_request_affordance.dart';
 import '../../core/widgets/map_node_drawer.dart';
 import '../../core/widgets/node_info_card.dart';
@@ -43,6 +44,7 @@ import '../../models/presence_confidence.dart';
 import '../../providers/age_eligibility_provider.dart';
 import '../../core/units/distance_format.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/map_local_waypoints.dart';
 import '../../providers/presence_providers.dart';
 import '../../providers/help_providers.dart';
 import '../../services/haptic_service.dart';
@@ -2097,40 +2099,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                 height: 40,
                                 child: GestureDetector(
                                   onTap: () => _showWaypointDetails(w),
-                                  child: Column(
-                                    children: [
-                                      Container(
-                                        width: 24,
-                                        height: 24,
-                                        decoration: BoxDecoration(
-                                          color: AppTheme.warningYellow,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: Colors.white,
-                                            width: 2,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withValues(
-                                                alpha: 0.3,
-                                              ),
-                                              blurRadius: 4,
-                                            ),
-                                          ],
-                                        ),
-                                        child: const Icon(
-                                          Icons.place,
-                                          size: 14,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      Container(
-                                        width: 2,
-                                        height: 12,
-                                        color: AppTheme.warningYellow,
-                                      ),
-                                    ],
-                                  ),
+                                  child: const LocalWaypointMarker(),
                                 ),
                               );
                             }),
@@ -2151,7 +2120,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                 height: 40,
                                 child: GestureDetector(
                                   onTap: () => _showMeshWaypointSheet(w),
-                                  child: _MeshWaypointMarker(waypoint: w),
+                                  child: MeshWaypointMarker(
+                                    iconCodePoint: w.icon,
+                                    hasIcon: w.hasRenderableIcon,
+                                  ),
                                 ),
                               );
                             }).whereType<Marker>(),
@@ -3723,7 +3695,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   isSelected: isSelected,
                   isStale: n.isStale,
                 )
-              : _NodeMarker(
+              : MeshNodeMarker(
                   node: n.node,
                   isMyNode: isMyNode,
                   isSelected: isSelected,
@@ -4579,34 +4551,6 @@ class _TrailPoint {
   });
 }
 
-/// Map marker for a shared mesh waypoint: an orange circle with the waypoint's
-/// emoji glyph (or a pin icon when no emoji is set).
-class _MeshWaypointMarker extends StatelessWidget {
-  final MeshWaypoint waypoint;
-
-  const _MeshWaypointMarker({required this.waypoint});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 34,
-      height: 34,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: AccentColors.orange,
-        shape: BoxShape.circle,
-        border: Border.all(color: SemanticColors.onMarker, width: 2),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 4),
-        ],
-      ),
-      child: waypoint.hasRenderableIcon
-          ? EmojiGlyph(codePoint: waypoint.icon, size: 18)
-          : Icon(Icons.place, size: 18, color: SemanticColors.onMarker),
-    );
-  }
-}
-
 /// Cached position for nodes that lose GPS
 class _CachedPosition {
   final double latitude;
@@ -4978,197 +4922,6 @@ List<({List<LatLng> points, bool dashed})> tracerouteSegmentsFor(
   }
 
   return segments;
-}
-
-String nodeMarkerLabel(MeshNode node) {
-  final shortName = node.shortName;
-  if (shortName != null && shortName.isNotEmpty) {
-    // safeInitials sanitizes (repairs lone surrogates / strips controls) then
-    // takes up to 4 grapheme clusters — grapheme-aware for emoji + accents.
-    final initials = safeInitials(shortName, 4);
-    if (initials.isNotEmpty) return initials;
-  }
-  // Last 4 hex digits — matches the canonical short-form id used
-  // elsewhere in the app for nodes without a self-reported name.
-  final hex = node.nodeNum.toRadixString(16).padLeft(8, '0');
-  return hex.substring(hex.length - 4).toUpperCase();
-}
-
-/// Custom marker widget for nodes
-class _NodeMarker extends StatefulWidget {
-  final MeshNode node;
-  final bool isMyNode;
-  final bool isSelected;
-  final bool isStale;
-
-  const _NodeMarker({
-    required this.node,
-    required this.isMyNode,
-    required this.isSelected,
-    this.isStale = false,
-  });
-
-  @override
-  State<_NodeMarker> createState() => _NodeMarkerState();
-}
-
-class _NodeMarkerState extends State<_NodeMarker>
-    with SingleTickerProviderStateMixin {
-  AnimationController? _pulseController;
-  Animation<double>? _pulseAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.isMyNode) {
-      _pulseController = AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 2000),
-      )..repeat();
-      _pulseAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _pulseController!, curve: Curves.easeOut),
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    _pulseController?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // Per-node colour (low three bytes of nodeNum as RGB, user override
-    // wins) so every node keeps its identity colour on the map and never
-    // ghosts with age. Own node stays on the app accent.
-    final color = widget.isMyNode
-        ? context.accentColor
-        : resolveNodeColor(
-            nodeNum: widget.node.nodeNum,
-            avatarColor: widget.node.avatarColor,
-          );
-    final labelColor = nodeContrastColor(color);
-
-    final marker = AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-        border: widget.isSelected
-            ? Border.all(
-                color: Colors.white,
-                width: 3,
-                strokeAlign: BorderSide.strokeAlignOutside,
-              )
-            : null,
-        boxShadow: [
-          // Coloured glow for selection emphasis.
-          BoxShadow(
-            color: color.withValues(alpha: 0.4),
-            blurRadius: widget.isSelected ? 12 : 6,
-            spreadRadius: widget.isSelected ? 2 : 0,
-          ),
-          // Dark drop shadow defines the circle edge against same-toned
-          // map terrain so the marker never blends into the background.
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Full shortName (Meshtastic spec: <=4 chars) instead of just
-          // the first character, so a node labelled e.g. "MYSO" reads
-          // as itself on the map rather than collapsing to "M".
-          // FittedBox keeps long shortnames or wide grapheme clusters
-          // from overflowing the marker circle on small zooms.
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                nodeMarkerLabel(widget.node),
-                maxLines: 1,
-                style: TextStyle(
-                  fontSize: widget.isSelected ? 16 : 14,
-                  fontWeight: FontWeight.bold,
-                  // Black-or-white by the fill's luminance so the label
-                  // stays legible on any per-node colour.
-                  color: labelColor,
-                ),
-              ),
-            ),
-          ),
-          // Stale indicator (small question mark overlay)
-          if (widget.isStale)
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: Container(
-                width: 14,
-                height: 14,
-                decoration: BoxDecoration(
-                  color: AppTheme.warningYellow,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: context.card, width: 1.5),
-                ),
-                child: const Center(
-                  child: Text(
-                    '?',
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-
-    if (!widget.isMyNode || _pulseAnimation == null) return marker;
-
-    return AnimatedBuilder(
-      animation: _pulseAnimation!,
-      builder: (context, child) {
-        final value = _pulseAnimation!.value;
-        return CustomPaint(
-          painter: _PulseRingPainter(color: color, progress: value),
-          child: child,
-        );
-      },
-      child: marker,
-    );
-  }
-}
-
-class _PulseRingPainter extends CustomPainter {
-  final Color color;
-  final double progress;
-
-  _PulseRingPainter({required this.color, required this.progress});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final maxRadius = size.width / 2 + 10;
-    final radius = size.width / 2 + (maxRadius - size.width / 2) * progress;
-    final paint = Paint()
-      ..color = color.withValues(alpha: 0.5 * (1.0 - progress))
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5 * (1.0 - progress);
-    canvas.drawCircle(center, radius, paint);
-  }
-
-  @override
-  bool shouldRepaint(_PulseRingPainter oldDelegate) =>
-      oldDelegate.progress != progress;
 }
 
 /// Node list panel sliding from left

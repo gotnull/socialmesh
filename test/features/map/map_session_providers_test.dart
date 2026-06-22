@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:socialmesh/features/map/map_session_providers.dart';
+import 'package:socialmesh/providers/map_local_waypoints.dart';
 
 // MapScreen is rebuilt from scratch on every bottom-nav tab switch, so the
 // camera pose and user-dropped pins must live in session-scoped providers to
