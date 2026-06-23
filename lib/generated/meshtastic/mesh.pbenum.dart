@@ -733,6 +733,16 @@ class HardwareModel extends $pb.ProtobufEnum {
       HardwareModel._(138, _omitEnumNames ? '' : 'CROWPANEL_P4');
 
   ///
+  ///  Heltec Mesh Tower V2
+  static const HardwareModel HELTEC_MESH_TOWER_V2 =
+      HardwareModel._(139, _omitEnumNames ? '' : 'HELTEC_MESH_TOWER_V2');
+
+  ///
+  ///  Meshnology W10
+  static const HardwareModel MESHNOLOGY_W10 =
+      HardwareModel._(140, _omitEnumNames ? '' : 'MESHNOLOGY_W10');
+
+  ///
   ///  ------------------------------------------------------------------------------------------------------------------------------------------
   ///  Reserved ID For developing private Ports. These will show up in live traffic sparsely, so we can use a high number. Keep it within 8 bits.
   ///  ------------------------------------------------------------------------------------------------------------------------------------------
@@ -879,6 +889,8 @@ class HardwareModel extends $pb.ProtobufEnum {
     T_ECHO_CARD,
     SEEED_WIO_TRACKER_L2,
     CROWPANEL_P4,
+    HELTEC_MESH_TOWER_V2,
+    MESHNOLOGY_W10,
     PRIVATE_HW,
   ];
 

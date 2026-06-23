@@ -158,6 +158,8 @@ const HardwareModel$json = {
     {'1': 'T_ECHO_CARD', '2': 136},
     {'1': 'SEEED_WIO_TRACKER_L2', '2': 137},
     {'1': 'CROWPANEL_P4', '2': 138},
+    {'1': 'HELTEC_MESH_TOWER_V2', '2': 139},
+    {'1': 'MESHNOLOGY_W10', '2': 140},
     {'1': 'PRIVATE_HW', '2': 255},
   ],
 };
@@ -212,7 +214,8 @@ final $typed_data.Uint8List hardwareModelDescriptor = $convert.base64Decode(
     'gQggESEQoMVEhJTktOT0RFX005EIMBEhEKDEhFTFRFQ19WNF9SOBCEARIYChNIRUxURUNfTUVT'
     'SF9OT0RFX1QxEIUBEg8KClNUQVRJT05fRzMQhgESEwoOVF9JTVBVTFNFX1BMVVMQhwESEAoLVF'
     '9FQ0hPX0NBUkQQiAESGQoUU0VFRURfV0lPX1RSQUNLRVJfTDIQiQESEQoMQ1JPV1BBTkVMX1A0'
-    'EIoBEg8KClBSSVZBVEVfSFcQ/wE=');
+    'EIoBEhkKFEhFTFRFQ19NRVNIX1RPV0VSX1YyEIsBEhMKDk1FU0hOT0xPR1lfVzEwEIwBEg8KCl'
+    'BSSVZBVEVfSFcQ/wE=');
 
 @$core.Deprecated('Use constantsDescriptor instead')
 const Constants$json = {

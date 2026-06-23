@@ -72,6 +72,7 @@ class DeviceHardwareCatalog {
     133: DeviceArchitecture.nrf52840, // HELTEC_MESH_NODE_T1 (proto comment)
     135: DeviceArchitecture.nrf52840, // T_IMPULSE_PLUS
     136: DeviceArchitecture.nrf52840, // T_ECHO_CARD
+    139: DeviceArchitecture.nrf52840, // HELTEC_MESH_TOWER_V2 (firmware variant)
     // esp32
     19: DeviceArchitecture.esp32, // LORA_TYPE
     20: DeviceArchitecture.esp32, // WIPHONE
@@ -133,6 +134,10 @@ class DeviceHardwareCatalog {
     // the update flow reports "not supported" instead of routing to a
     // nonexistent firmware-esp32p4- archive (404 on OTA).
     138: DeviceArchitecture.unknown, // CROWPANEL_P4
+    // Meshnology W10: proto adds the hwModel but the upstream firmware has not
+    // published a variant or board file yet, so the MCU is unconfirmed. Mapped
+    // to unknown until verified rather than guessing a DFU path.
+    140: DeviceArchitecture.unknown, // MESHNOLOGY_W10
     255: DeviceArchitecture.unknown, // PRIVATE_HW
   };
 
