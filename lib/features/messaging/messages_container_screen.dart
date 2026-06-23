@@ -280,8 +280,9 @@ class _MessagesContainerScreenState
   }
 }
 
-/// Tab badge showing the total count plus an optional red unread-count
-/// circle (mirrors the bottom-nav badge style for visual consistency).
+/// A single pill on each tab. Unread takes priority: when there is unread
+/// content the pill is red and shows the unread count; otherwise it is a
+/// muted pill showing the total count. Never two competing numbers.
 class _TabBadge extends StatelessWidget {
   final int count;
   final int unreadCount;
@@ -290,47 +291,27 @@ class _TabBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasUnread = unreadCount > 0;
+    final value = hasUnread
+        ? (unreadCount > 99 ? '99+' : '$unreadCount')
+        : '$count';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      constraints: const BoxConstraints(minWidth: 20),
       decoration: BoxDecoration(
-        color: context.border.withValues(alpha: 0.3),
+        color: hasUnread
+            ? AccentColors.red
+            : context.border.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(AppTheme.radius10),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (unreadCount > 0) ...[
-            Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: unreadCount > 9 ? 4 : 0,
-              ),
-              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-              decoration: BoxDecoration(
-                color: AccentColors.red,
-                borderRadius: BorderRadius.circular(AppTheme.radius8),
-              ),
-              child: Center(
-                child: Text(
-                  unreadCount > 99 ? '99+' : '$unreadCount',
-                  style: const TextStyle(
-                    color: SemanticColors.onAccent,
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: AppTheme.spacing4),
-          ],
-          Text(
-            count.toString(),
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: context.textSecondary,
-            ),
-          ),
-        ],
+      child: Text(
+        value,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: hasUnread ? SemanticColors.onAccent : context.textSecondary,
+        ),
       ),
     );
   }
