@@ -163,9 +163,6 @@ class _MessagesContainerScreenState
       });
     });
 
-    final channels = ref.watch(channelsProvider);
-    final nodes = ref.watch(nodesProvider);
-    final myNodeNum = ref.watch(myNodeNumProvider);
     final unreadDmCount = ref.watch(unreadDmCountProvider);
     final unreadChannelCount = ref.watch(unreadChannelCountProvider);
     final connectionStateAsync = ref.watch(connectionStateProvider);
@@ -176,11 +173,6 @@ class _MessagesContainerScreenState
     );
     final isConnected =
         currentConnectionState == DeviceConnectionState.connected;
-
-    // Count contacts (nodes minus self)
-    final contactsCount = nodes.values
-        .where((n) => n.nodeNum != myNodeNum)
-        .length;
 
     return HelpTourController(
       topicId: 'message_routing',
@@ -234,11 +226,7 @@ class _MessagesContainerScreenState
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(context.l10n.messagesContactsTab),
-                      const SizedBox(width: AppTheme.spacing6),
-                      _TabBadge(
-                        count: contactsCount,
-                        unreadCount: unreadDmCount,
-                      ),
+                      _TabBadge(unreadCount: unreadDmCount),
                     ],
                   ),
                 ),
@@ -247,11 +235,7 @@ class _MessagesContainerScreenState
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(context.l10n.messagesChannelsTab),
-                      const SizedBox(width: AppTheme.spacing6),
-                      _TabBadge(
-                        count: channels.length,
-                        unreadCount: unreadChannelCount,
-                      ),
+                      _TabBadge(unreadCount: unreadChannelCount),
                     ],
                   ),
                 ),
@@ -280,37 +264,35 @@ class _MessagesContainerScreenState
   }
 }
 
-/// A single pill on each tab. Unread takes priority: when there is unread
-/// content the pill is red and shows the unread count; otherwise it is a
-/// muted pill showing the total count. Never two competing numbers.
+/// Unread indicator for a tab: a small red pill with the unread count. It
+/// renders only when there is unread content, so a tab with no badge means
+/// nothing to act on (and the badge clears once the content is read). Owns
+/// its own leading gap so the spacing vanishes with it.
 class _TabBadge extends StatelessWidget {
-  final int count;
   final int unreadCount;
 
-  const _TabBadge({required this.count, this.unreadCount = 0});
+  const _TabBadge({this.unreadCount = 0});
 
   @override
   Widget build(BuildContext context) {
-    final hasUnread = unreadCount > 0;
-    final value = hasUnread
-        ? (unreadCount > 99 ? '99+' : '$unreadCount')
-        : '$count';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      constraints: const BoxConstraints(minWidth: 20),
-      decoration: BoxDecoration(
-        color: hasUnread
-            ? AccentColors.red
-            : context.border.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(AppTheme.radius10),
-      ),
-      child: Text(
-        value,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: hasUnread ? SemanticColors.onAccent : context.textSecondary,
+    if (unreadCount <= 0) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(left: AppTheme.spacing6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        constraints: const BoxConstraints(minWidth: 20),
+        decoration: BoxDecoration(
+          color: AccentColors.red,
+          borderRadius: BorderRadius.circular(AppTheme.radius10),
+        ),
+        child: Text(
+          unreadCount > 99 ? '99+' : '$unreadCount',
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: SemanticColors.onAccent,
+          ),
         ),
       ),
     );
