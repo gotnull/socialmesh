@@ -979,6 +979,17 @@ class _MainShellState extends ConsumerState<MainShell> {
           if (logicalIndex == 2) {
             ref.read(newNodesCountProvider.notifier).reset();
           }
+          if (logicalIndex == 0) {
+            // Tapping Messages with unread jumps straight to the sub-tab
+            // holding it. DMs (Contacts) take priority over channels since
+            // they are addressed to the user personally. Set before
+            // setIndex so a fresh container build sees the pending request.
+            if (ref.read(hasUnreadDmProvider)) {
+              ref.read(messagesSubtabRequestProvider.notifier).request(0);
+            } else if (ref.read(hasUnreadChannelProvider)) {
+              ref.read(messagesSubtabRequestProvider.notifier).request(1);
+            }
+          }
           ref.read(mainShellIndexProvider.notifier).setIndex(logicalIndex);
         },
       );

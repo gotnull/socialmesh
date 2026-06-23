@@ -16,6 +16,23 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../channels/channels_screen.dart';
 import 'messaging_screen.dart';
 
+/// Requests the Messages container open a specific sub-tab
+/// (0 = Contacts, 1 = Channels). Set by the bottom-nav Messages tap when
+/// there is unread; consumed (cleared) by the container once applied.
+class MessagesSubtabRequestNotifier extends Notifier<int?> {
+  @override
+  int? build() => null;
+
+  void request(int index) => state = index;
+
+  void clear() => state = null;
+}
+
+final messagesSubtabRequestProvider =
+    NotifierProvider<MessagesSubtabRequestNotifier, int?>(
+      MessagesSubtabRequestNotifier.new,
+    );
+
 /// Container screen that holds both Contacts and Channels in tabs
 /// Provides a unified "Messages" experience
 class MessagesContainerScreen extends ConsumerStatefulWidget {
@@ -30,6 +47,12 @@ class _MessagesContainerScreenState
     extends ConsumerState<MessagesContainerScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+
+  // Set true while we drive the TabController programmatically (an
+  // auto-switch to the unread sub-tab). Guards `_persistTabIndexIfChanged`
+  // so an auto-switch never overwrites the user's chosen default sub-tab —
+  // only user-driven swipes persist a new default.
+  bool _suppressDefaultPersist = false;
 
   void _showAddChannelScreen(bool isConnected) {
     if (!isConnected) {
@@ -72,19 +95,39 @@ class _MessagesContainerScreenState
     // already-loaded settings service when present; fall back to 0 so
     // first launches stay on Contacts.
     final settings = ref.read(settingsServiceProvider).value;
-    final initialIndex = (settings?.messagesDefaultSubtab ?? 0).clamp(0, 1);
+    // A pending sub-tab request (from the bottom-nav Messages tap when
+    // there is unread) wins over the persisted default on a fresh build.
+    final pending = ref.read(messagesSubtabRequestProvider);
+    final initialIndex = (pending ?? settings?.messagesDefaultSubtab ?? 0)
+        .clamp(0, 1);
     _tabController = TabController(
       length: 2,
       vsync: this,
       initialIndex: initialIndex,
     );
     _tabController.addListener(_persistTabIndexIfChanged);
+    if (pending != null) {
+      // Constructing with `initialIndex` does not fire the listener, so the
+      // persisted default is left untouched. Clear the consumed request after
+      // the first frame (avoid mutating a provider during build/init).
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref.read(messagesSubtabRequestProvider.notifier).clear();
+      });
+    }
   }
 
   void _persistTabIndexIfChanged() {
     // TabController fires the listener on every index/indexIsChanging
     // tick; we only persist when the index stabilises on a new value.
     if (_tabController.indexIsChanging) return;
+    // An auto-switch to the unread sub-tab must not clobber the user's
+    // chosen default; only user-driven swipes persist. Consume the flag
+    // here, at the settle event, so it covers the whole animateTo.
+    if (_suppressDefaultPersist) {
+      _suppressDefaultPersist = false;
+      return;
+    }
     final settings = ref.read(settingsServiceProvider).value;
     if (settings == null) return;
     if (settings.messagesDefaultSubtab == _tabController.index) return;
@@ -100,11 +143,31 @@ class _MessagesContainerScreenState
 
   @override
   Widget build(BuildContext context) {
+    // Handle a sub-tab request that arrives while the container is already
+    // mounted (tapping Messages while already on it does not rebuild, so
+    // initState's pending-request path does not run). Null transitions are
+    // our own clears and are ignored.
+    ref.listen<int?>(messagesSubtabRequestProvider, (prev, next) {
+      if (next == null || !mounted) return;
+      final target = next.clamp(0, 1);
+      if (_tabController.index != target) {
+        // Suppress persistence for this programmatic switch. The flag is
+        // consumed when the animation settles (see _persistTabIndexIfChanged),
+        // not on the next frame, so it outlives the animateTo duration.
+        _suppressDefaultPersist = true;
+        _tabController.animateTo(target);
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref.read(messagesSubtabRequestProvider.notifier).clear();
+      });
+    });
+
     final channels = ref.watch(channelsProvider);
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
-    final hasUnreadDm = ref.watch(hasUnreadDmProvider);
-    final hasUnreadChannel = ref.watch(hasUnreadChannelProvider);
+    final unreadDmCount = ref.watch(unreadDmCountProvider);
+    final unreadChannelCount = ref.watch(unreadChannelCountProvider);
     final connectionStateAsync = ref.watch(connectionStateProvider);
     final currentConnectionState = connectionStateAsync.when(
       data: (state) => state,
@@ -172,7 +235,10 @@ class _MessagesContainerScreenState
                     children: [
                       Text(context.l10n.messagesContactsTab),
                       const SizedBox(width: AppTheme.spacing6),
-                      _TabBadge(count: contactsCount, showDot: hasUnreadDm),
+                      _TabBadge(
+                        count: contactsCount,
+                        unreadCount: unreadDmCount,
+                      ),
                     ],
                   ),
                 ),
@@ -184,7 +250,7 @@ class _MessagesContainerScreenState
                       const SizedBox(width: AppTheme.spacing6),
                       _TabBadge(
                         count: channels.length,
-                        showDot: hasUnreadChannel,
+                        unreadCount: unreadChannelCount,
                       ),
                     ],
                   ),
@@ -214,12 +280,13 @@ class _MessagesContainerScreenState
   }
 }
 
-/// Tab badge showing count and optional unread dot
+/// Tab badge showing the total count plus an optional red unread-count
+/// circle (mirrors the bottom-nav badge style for visual consistency).
 class _TabBadge extends StatelessWidget {
   final int count;
-  final bool showDot;
+  final int unreadCount;
 
-  const _TabBadge({required this.count, this.showDot = false});
+  const _TabBadge({required this.count, this.unreadCount = 0});
 
   @override
   Widget build(BuildContext context) {
@@ -232,13 +299,25 @@ class _TabBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (showDot) ...[
+          if (unreadCount > 0) ...[
             Container(
-              width: 6,
-              height: 6,
+              padding: EdgeInsets.symmetric(
+                horizontal: unreadCount > 9 ? 4 : 0,
+              ),
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
               decoration: BoxDecoration(
                 color: AccentColors.red,
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(AppTheme.radius8),
+              ),
+              child: Center(
+                child: Text(
+                  unreadCount > 99 ? '99+' : '$unreadCount',
+                  style: const TextStyle(
+                    color: SemanticColors.onAccent,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: AppTheme.spacing4),
