@@ -10,6 +10,7 @@ import 'package:sqflite/sqflite.dart';
 import '../../models/mesh_models.dart';
 import '../../core/logging.dart';
 import 'conversation_read_position.dart';
+import 'encrypted_database.dart';
 import '../../utils/text_sanitizer.dart';
 
 /// SQLite-backed message storage service.
@@ -53,7 +54,7 @@ class MessageDatabase {
       dbPath = p.join(documentsDir.path, _dbName);
     }
 
-    _db = await openDatabase(
+    _db = await openEncryptedDatabase(
       dbPath,
       version: _dbVersion,
       onConfigure: (db) async {

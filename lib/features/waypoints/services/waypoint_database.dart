@@ -4,6 +4,8 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../../../services/storage/encrypted_database.dart';
+
 import '../../../core/logging.dart';
 import '../models/mesh_waypoint.dart';
 
@@ -39,7 +41,7 @@ class WaypointDatabase {
     }
     AppLogging.map('Initializing waypoint database: $dbPath');
 
-    _db = await openDatabase(
+    _db = await openEncryptedDatabase(
       dbPath,
       version: _dbVersion,
       onConfigure: (db) async {

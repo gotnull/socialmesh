@@ -16,6 +16,8 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../../../services/storage/encrypted_database.dart';
+
 import '../../../core/logging.dart';
 
 /// Schema version for the NodeDex SQLite database.
@@ -274,7 +276,7 @@ class NodeDexDatabase {
   }
 
   Future<Database> _attemptOpen(String path) async {
-    return openDatabase(
+    return openEncryptedDatabase(
       path,
       version: _schemaVersion,
       onCreate: _onCreate,

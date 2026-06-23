@@ -41,6 +41,7 @@ import share_plus
 import shared_preferences_foundation
 import sign_in_with_apple
 import sqflite_darwin
+import sqflite_sqlcipher
 import url_launcher_macos
 import video_player_avfoundation
 
@@ -81,6 +82,7 @@ func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   SharedPreferencesPlugin.register(with: registry.registrar(forPlugin: "SharedPreferencesPlugin"))
   SignInWithApplePlugin.register(with: registry.registrar(forPlugin: "SignInWithApplePlugin"))
   SqflitePlugin.register(with: registry.registrar(forPlugin: "SqflitePlugin"))
+  SqfliteSqlCipherPlugin.register(with: registry.registrar(forPlugin: "SqfliteSqlCipherPlugin"))
   UrlLauncherPlugin.register(with: registry.registrar(forPlugin: "UrlLauncherPlugin"))
   FVPVideoPlayerPlugin.register(with: registry.registrar(forPlugin: "FVPVideoPlayerPlugin"))
 }

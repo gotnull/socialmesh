@@ -1,14 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Network security config -->
-<!-- Allows cleartext (HTTP) traffic to all hosts. Required for: -->
-<!--   - just_audio StreamAudioSource (localhost audio proxy) -->
-<!--   - User-configured webhooks to private/LAN addresses (Home Assistant, -->
-<!--     Node-RED, n8n, etc.) on 10.x, 192.168.x, 172.16-31.x ranges -->
-<!-- HTTPS is still preferred and used for all first-party network calls. -->
+<!-- Network security config. -->
+<!--                                                                        -->
+<!-- Cleartext (HTTP) is permitted by default ONLY because the app must     -->
+<!-- reach user-configured destinations that legitimately run plain HTTP:   -->
+<!--   1. User webhooks to private/LAN addresses (Home Assistant, Node-RED, -->
+<!--      n8n, etc.) on 10.x / 192.168.x / 172.16-31.x. Android's           -->
+<!--      network_security_config cannot scope by CIDR/wildcard, so an       -->
+<!--      arbitrary user-entered LAN host requires a permissive base.        -->
+<!--   2. RNS companion service on the loopback interface (127.0.0.1:8787).  -->
+<!--   3. Dev-only API override gated by the USE_LOCAL_API .env flag.        -->
+<!--                                                                        -->
+<!-- First-party and key third-party endpoints are pinned HTTPS-only below   -->
+<!-- via per-domain overrides, so an accidental http:// downgrade to those   -->
+<!-- hosts is blocked even though the base permits cleartext. -->
 <network-security-config>
     <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>
     </base-config>
+
+    <!-- HTTPS-only: first-party services + the fixed third-party APIs the   -->
+    <!-- app calls. cleartextTrafficPermitted=false here overrides the        -->
+    <!-- permissive base for these domains. -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">socialmesh.app</domain>
+        <domain includeSubdomains="true">cloudfunctions.net</domain>
+        <domain includeSubdomains="true">googleapis.com</domain>
+        <domain includeSubdomains="true">firebaseio.com</domain>
+        <domain includeSubdomains="true">firebaseapp.com</domain>
+        <domain includeSubdomains="true">gstatic.com</domain>
+        <domain includeSubdomains="true">maker.ifttt.com</domain>
+        <domain includeSubdomains="true">api.opentopodata.org</domain>
+        <domain includeSubdomains="true">api.github.com</domain>
+    </domain-config>
+
+    <!-- Documents the intentional cleartext consumers on the loopback        -->
+    <!-- interface (RNS companion, dev USE_LOCAL_API override). LAN webhook    -->
+    <!-- hosts are arbitrary and stay covered by the permissive base above. -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
 </network-security-config>

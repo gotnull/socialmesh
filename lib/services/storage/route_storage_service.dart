@@ -2,6 +2,8 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
+
+import 'encrypted_database.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import '../../models/route.dart';
@@ -30,7 +32,7 @@ class RouteStorageService {
       dbPath = p.join(documentsDir.path, _dbName);
     }
 
-    _db = await openDatabase(
+    _db = await openEncryptedDatabase(
       dbPath,
       version: 1,
       onCreate: (db, version) async {

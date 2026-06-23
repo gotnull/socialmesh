@@ -2,7 +2,7 @@ name: socialmesh
 description: "A mesh radio companion app for Meshtastic. Connect over BLE or USB, message off-grid, map your nodes, and explore the mesh — no internet required."
 publish_to: "none"
 
-version: 1.52.0+193
+version: 1.52.0+194
 
 environment:
   sdk: ^3.12.0
@@ -37,6 +37,10 @@ dependencies:
   shared_preferences: ^2.5.5
   sqflite: ^2.3.3
   sqflite_common_ffi: ^2.4.0+2
+  # SQLCipher-backed sqflite for at-rest encryption of sensitive databases
+  # (messages, signals, routes, waypoints, peer_safety, nodedex). Coexists
+  # with plain sqflite, which still backs the non-sensitive databases.
+  sqflite_sqlcipher: ^3.4.0
   path_provider: ^2.1.4
   path: ^1.9.0
   file_picker: ^12.0.0-beta.5

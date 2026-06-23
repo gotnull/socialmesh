@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (security hardening)
+
+- Sensitive local databases (direct messages, social signals, saved routes, waypoints, peer-safety state, and the NodeDex journal) are now encrypted at rest with SQLCipher. The key is generated on-device and held in the iOS Keychain / Android Keystore, so message text, locations, and travel history are no longer readable from the raw database files (for example from a device backup, or on a lost or rooted/jailbroken phone). Existing data is migrated in place on first launch with no loss of history; if the one-time migration is ever interrupted it safely retries on the next launch
+- Tightened the Android network security configuration so first-party services and the fixed third-party APIs (socialmesh.app, Firebase/Google) are pinned to HTTPS and can no longer be silently downgraded to plain HTTP, while user-configured private/LAN webhooks continue to work over HTTP as before
+
 ### Added (offline maps)
 
 - The map is now reachable without pairing a device: a new "Explore the map without a device" action on the scanner opens a lightweight, mesh-free map so a user can browse and pre-download an area before they have a node (for example, prepping for an off-grid trip). It carries no protocol state and offers a clear "Pair a node to unlock mesh features" return path

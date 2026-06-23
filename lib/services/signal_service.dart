@@ -14,6 +14,8 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
+
+import 'storage/encrypted_database.dart';
 import 'package:uuid/uuid.dart';
 
 import '../core/logging.dart';
@@ -478,7 +480,7 @@ class SignalService {
       final documentsDir = await getApplicationDocumentsDirectory();
       final dbPath = p.join(documentsDir.path, _dbName);
 
-      _db = await openDatabase(
+      _db = await openEncryptedDatabase(
         dbPath,
         version: 7,
         onConfigure: (db) async {
