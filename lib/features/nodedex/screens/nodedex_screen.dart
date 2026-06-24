@@ -115,13 +115,19 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
 
     // User-defined group filter (nodedex.db) — applied on top of the
     // sort/filter/search already baked into nodeDexSortedEntriesProvider.
+    final groupsState = ref.watch(nodeGroupsProvider).value;
     final groupMembership =
-        ref.watch(nodeGroupsProvider).value?.membership ??
-        const <int, Set<String>>{};
+        groupsState?.membership ?? const <int, Set<String>>{};
+    // Resolve against the live group list so a group deleted from the Manage
+    // screen doesn't leave a stale id filtering out every node.
+    final activeGroupId = resolveGroupFilter(
+      _activeGroupId,
+      groupsState?.groups ?? const [],
+    );
     final visibleEntries = entries
         .where(
           (e) =>
-              matchesGroupFilter(groupMembership, e.$1.nodeNum, _activeGroupId),
+              matchesGroupFilter(groupMembership, e.$1.nodeNum, activeGroupId),
         )
         .toList();
     // Counts on the group chips reflect the full (pre-group-filter) set so
@@ -249,6 +255,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
                   reduceMotion: reduceMotion,
                   searchQuery: searchQuery,
                   groupNodeNums: groupNodeNums,
+                  activeGroupId: activeGroupId,
                 ),
         ),
       ),
@@ -315,6 +322,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
     required bool reduceMotion,
     required String searchQuery,
     required List<int> groupNodeNums,
+    required String activeGroupId,
   }) {
     return [
       // Top padding below glass app bar
@@ -493,7 +501,7 @@ class _NodeDexScreenState extends ConsumerState<NodeDexScreen> {
       SliverToBoxAdapter(
         child: GroupFilterChipRow(
           nodeNums: groupNodeNums,
-          selectedGroupId: _activeGroupId,
+          selectedGroupId: activeGroupId,
           source: 'nodedex',
           onGroupSelected: (id) => setState(() => _activeGroupId = id),
           onManage: () => Navigator.of(context).push(

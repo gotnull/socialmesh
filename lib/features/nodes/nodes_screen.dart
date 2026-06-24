@@ -197,12 +197,18 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
 
     // Apply group filter — user-defined groups (nodedex.db). Orthogonal to
     // presence + role; membership comes from the groups provider.
+    final groupsState = ref.watch(nodeGroupsProvider).value;
     final groupMembership =
-        ref.watch(nodeGroupsProvider).value?.membership ??
-        const <int, Set<String>>{};
+        groupsState?.membership ?? const <int, Set<String>>{};
+    // Resolve against the live group list so a group deleted from the Manage
+    // screen doesn't leave a stale id filtering out every node.
+    final activeGroupId = resolveGroupFilter(
+      _activeGroupId,
+      groupsState?.groups ?? const [],
+    );
     nodesList = nodesList
         .where(
-          (n) => matchesGroupFilter(groupMembership, n.nodeNum, _activeGroupId),
+          (n) => matchesGroupFilter(groupMembership, n.nodeNum, activeGroupId),
         )
         .toList();
 
@@ -492,7 +498,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
             SliverToBoxAdapter(
               child: GroupFilterChipRow(
                 nodeNums: nodes.values.map((n) => n.nodeNum),
-                selectedGroupId: _activeGroupId,
+                selectedGroupId: activeGroupId,
                 source: 'nodes_tab',
                 onGroupSelected: (id) => setState(() => _activeGroupId = id),
                 onManage: () => Navigator.of(context).push(

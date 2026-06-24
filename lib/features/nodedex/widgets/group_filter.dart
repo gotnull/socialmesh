@@ -9,6 +9,7 @@ import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/edge_fade.dart';
 import '../../../core/widgets/status_filter_chip.dart';
+import '../models/node_group.dart';
 import '../providers/node_groups_provider.dart';
 
 // Single-select node-group filter shared by the Nodes tab and the NodeDex
@@ -29,6 +30,23 @@ bool matchesGroupFilter(
 ) {
   if (groupId == groupFilterAll) return true;
   return membership[nodeNum]?.contains(groupId) ?? false;
+}
+
+/// Resolves a stored filter selection against the live [groups] list, falling
+/// back to [groupFilterAll] when the selection no longer exists.
+///
+/// A screen keeps its active group id in local State, but the group can be
+/// deleted from the Manage Groups screen while that id is still held. Without
+/// this guard the stale id matches no node and the list reads as empty (and the
+/// chip row hides when the last group is removed, leaving no way to clear it)
+/// until the screen is rebuilt. Callers feed the result into both the filter
+/// and the chip row so deletion self-heals on the same frame.
+String resolveGroupFilter(String groupId, Iterable<NodeGroup> groups) {
+  if (groupId == groupFilterAll) return groupFilterAll;
+  for (final group in groups) {
+    if (group.id == groupId) return groupId;
+  }
+  return groupFilterAll;
 }
 
 /// Horizontal chip row for filtering a node list by user-defined group.
