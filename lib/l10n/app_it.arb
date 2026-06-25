@@ -35066,6 +35066,7 @@
   "channelsFilterAll": "Tutti",
   "channelsFilterEncrypted": "Crittografati",
   "channelsFilterMqtt": "MQTT",
+  "channelsFilterUnread": "Non letti",
   "channelsFilterPosition": "Posizione",
   "channelsFilterPrimary": "Primario",
   "channelsMenuAddChannel": "Aggiungi canale",

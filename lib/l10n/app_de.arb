@@ -1962,6 +1962,7 @@
   "channelsFilterAll": "Alle",
   "channelsFilterEncrypted": "Verschlüsselt",
   "channelsFilterMqtt": "MQTT",
+  "channelsFilterUnread": "Ungelesen",
   "channelsFilterPosition": "Position",
   "channelsFilterPrimary": "Primär",
   "channelsMenuAddChannel": "Kanal hinzufügen",

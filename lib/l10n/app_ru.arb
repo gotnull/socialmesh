@@ -1996,6 +1996,7 @@
   "channelsFilterAll": "Все",
   "channelsFilterEncrypted": "Зашифрованные",
   "channelsFilterMqtt": "MQTT",
+  "channelsFilterUnread": "Непрочитанные",
   "channelsFilterPosition": "Позиция",
   "channelsFilterPrimary": "Основные",
   "channelsMenuAddChannel": "Добавить канал",

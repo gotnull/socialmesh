@@ -3639,6 +3639,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get channelsFilterMqtt => 'MQTT';
 
   @override
+  String get channelsFilterUnread => 'Непрочитані';
+
+  @override
   String get channelsFilterPosition => 'Позиція';
 
   @override

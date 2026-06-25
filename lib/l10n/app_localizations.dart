@@ -6414,6 +6414,12 @@ abstract class AppLocalizations {
   /// **'MQTT'**
   String get channelsFilterMqtt;
 
+  /// Channel list filter that shows only channels with unread messages
+  ///
+  /// In en, this message translates to:
+  /// **'Unread'**
+  String get channelsFilterUnread;
+
   /// Text displayed in channel configuration
   ///
   /// In en, this message translates to:

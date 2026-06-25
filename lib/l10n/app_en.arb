@@ -4809,6 +4809,10 @@
     "@channelsFilterMqtt": {
         "description": "MQTT = Message Queuing Telemetry Transport, an internet bridging protocol. Filter shows MQTT-enabled channels."
     },
+    "channelsFilterUnread": "Unread",
+    "@channelsFilterUnread": {
+        "description": "Channel list filter that shows only channels with unread messages"
+    },
     "channelsFilterPosition": "Position",
     "@channelsFilterPosition": {
         "description": "Text displayed in channel configuration"

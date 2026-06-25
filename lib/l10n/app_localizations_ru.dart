@@ -3630,6 +3630,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get channelsFilterMqtt => 'MQTT';
 
   @override
+  String get channelsFilterUnread => 'Непрочитанные';
+
+  @override
   String get channelsFilterPosition => 'Позиция';
 
   @override

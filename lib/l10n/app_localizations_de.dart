@@ -3652,6 +3652,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get channelsFilterMqtt => 'MQTT';
 
   @override
+  String get channelsFilterUnread => 'Ungelesen';
+
+  @override
   String get channelsFilterPosition => 'Position';
 
   @override

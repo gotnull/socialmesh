@@ -1962,6 +1962,7 @@
   "channelsFilterAll": "Всі",
   "channelsFilterEncrypted": "Зашифровані",
   "channelsFilterMqtt": "MQTT",
+  "channelsFilterUnread": "Непрочитані",
   "channelsFilterPosition": "Позиція",
   "channelsFilterPrimary": "Основний",
   "channelsMenuAddChannel": "Додати канал",

@@ -31,7 +31,7 @@ class ChannelsScreen extends ConsumerStatefulWidget {
   ConsumerState<ChannelsScreen> createState() => _ChannelsScreenState();
 }
 
-enum ChannelFilter { all, primary, encrypted, position, mqtt }
+enum ChannelFilter { all, unread, primary, encrypted, position, mqtt }
 
 class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
     with LifecycleSafeMixin {
@@ -49,10 +49,15 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
     FocusScope.of(context).unfocus();
   }
 
-  List<ChannelConfig> _applyFilter(List<ChannelConfig> channels) {
+  List<ChannelConfig> _applyFilter(
+    List<ChannelConfig> channels,
+    Map<int, int> unreadCounts,
+  ) {
     switch (_activeFilter) {
       case ChannelFilter.all:
         return channels;
+      case ChannelFilter.unread:
+        return channels.where((c) => (unreadCounts[c.index] ?? 0) > 0).toList();
       case ChannelFilter.primary:
         return channels.where((c) => c.role == 'PRIMARY').toList();
       case ChannelFilter.encrypted:
@@ -67,15 +72,19 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
   @override
   Widget build(BuildContext context) {
     final channels = ref.watch(channelsProvider);
+    final channelUnreads = ref.watch(channelUnreadCountsProvider);
 
     // Count channels by filter for badges
+    final unreadChannelCount = channels
+        .where((c) => (channelUnreads[c.index] ?? 0) > 0)
+        .length;
     final primaryCount = channels.where((c) => c.role == 'PRIMARY').length;
     final encryptedCount = channels.where((c) => c.hasSecureKey).length;
     final positionCount = channels.where((c) => c.positionEnabled).length;
     final mqttCount = channels.where((c) => c.uplink || c.downlink).length;
 
     // Apply filter first
-    var filteredChannels = _applyFilter(channels);
+    var filteredChannels = _applyFilter(channels, channelUnreads);
 
     // Then filter by search
     if (_searchQuery.isNotEmpty) {
@@ -113,6 +122,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
             rebuildKey: Object.hashAll([
               _activeFilter,
               channels.length,
+              unreadChannelCount,
               primaryCount,
               encryptedCount,
               positionCount,
@@ -127,6 +137,15 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen>
                   HapticFeedback.lightImpact();
                   setState(() => _activeFilter = ChannelFilter.all);
                 },
+              ),
+              StatusFilterChip(
+                label: context.l10n.channelsFilterUnread,
+                count: unreadChannelCount,
+                isSelected: _activeFilter == ChannelFilter.unread,
+                icon: Icons.mark_email_unread_outlined,
+                color: AccentColors.red,
+                onTap: () =>
+                    setState(() => _activeFilter = ChannelFilter.unread),
               ),
               StatusFilterChip(
                 label: context.l10n.channelsFilterPrimary,
