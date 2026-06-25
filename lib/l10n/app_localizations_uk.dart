@@ -16826,6 +16826,30 @@ class AppLocalizationsUk extends AppLocalizations {
   String get nodesScreenSortSignal => 'Сигнал';
 
   @override
+  String get nodesScreenSortHops => 'Переходи';
+
+  @override
+  String get nodesScreenSortHopsReversed => 'Переходи ↓';
+
+  @override
+  String get nodesScreenSortMenuHopsDirectFirst => 'Переходи (Спочатку прямі)';
+
+  @override
+  String get nodesScreenSortMenuHopsFarthestFirst =>
+      'Переходи (Спочатку найдальші)';
+
+  @override
+  String get nodesScreenSectionHopsDirect => 'Напряму';
+
+  @override
+  String get nodesScreenSectionHopsOne => '1 перехід';
+
+  @override
+  String nodesScreenSectionHopsMany(int count) {
+    return '$count переходів';
+  }
+
+  @override
   String get nodesScreenThisDevice => 'Цей пристрій';
 
   @override

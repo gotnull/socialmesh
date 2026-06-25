@@ -16873,6 +16873,30 @@ class AppLocalizationsEs extends AppLocalizations {
   String get nodesScreenSortSignal => 'Señal';
 
   @override
+  String get nodesScreenSortHops => 'Saltos';
+
+  @override
+  String get nodesScreenSortHopsReversed => 'Saltos ↓';
+
+  @override
+  String get nodesScreenSortMenuHopsDirectFirst => 'Saltos (Directos primero)';
+
+  @override
+  String get nodesScreenSortMenuHopsFarthestFirst =>
+      'Saltos (Más lejanos primero)';
+
+  @override
+  String get nodesScreenSectionHopsDirect => 'Directo';
+
+  @override
+  String get nodesScreenSectionHopsOne => '1 salto';
+
+  @override
+  String nodesScreenSectionHopsMany(int count) {
+    return '$count saltos';
+  }
+
+  @override
   String get nodesScreenThisDevice => 'Este dispositivo';
 
   @override

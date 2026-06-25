@@ -22695,6 +22695,39 @@
     "@nodesScreenSortSignal": {
         "description": "Sort chip label for signal sort."
     },
+    "nodesScreenSortHops": "Hops",
+    "@nodesScreenSortHops": {
+        "description": "Sort chip label for hop-distance sort, nearest first."
+    },
+    "nodesScreenSortHopsReversed": "Hops ↓",
+    "@nodesScreenSortHopsReversed": {
+        "description": "Sort chip label for hop-distance sort, farthest first."
+    },
+    "nodesScreenSortMenuHopsDirectFirst": "Hops (Direct first)",
+    "@nodesScreenSortMenuHopsDirectFirst": {
+        "description": "Sort menu option ordering nodes by hop count with direct neighbours first."
+    },
+    "nodesScreenSortMenuHopsFarthestFirst": "Hops (Farthest first)",
+    "@nodesScreenSortMenuHopsFarthestFirst": {
+        "description": "Sort menu option ordering nodes by hop count with the most distant nodes first."
+    },
+    "nodesScreenSectionHopsDirect": "Direct",
+    "@nodesScreenSectionHopsDirect": {
+        "description": "Section header for nodes that are direct neighbours (zero hops away)."
+    },
+    "nodesScreenSectionHopsOne": "1 Hop",
+    "@nodesScreenSectionHopsOne": {
+        "description": "Section header for nodes that are one hop away."
+    },
+    "nodesScreenSectionHopsMany": "{count} Hops",
+    "@nodesScreenSectionHopsMany": {
+        "description": "Section header for nodes that are two or more hops away.",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "nodesScreenThisDevice": "This Device",
     "@nodesScreenThisDevice": {
         "description": "Subtitle on the user's own node card."

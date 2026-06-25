@@ -16806,6 +16806,30 @@ class AppLocalizationsRu extends AppLocalizations {
   String get nodesScreenSortSignal => 'Сигнал';
 
   @override
+  String get nodesScreenSortHops => 'Переходы';
+
+  @override
+  String get nodesScreenSortHopsReversed => 'Переходы ↓';
+
+  @override
+  String get nodesScreenSortMenuHopsDirectFirst => 'Переходы (Сначала прямые)';
+
+  @override
+  String get nodesScreenSortMenuHopsFarthestFirst =>
+      'Переходы (Сначала дальние)';
+
+  @override
+  String get nodesScreenSectionHopsDirect => 'Напрямую';
+
+  @override
+  String get nodesScreenSectionHopsOne => '1 переход';
+
+  @override
+  String nodesScreenSectionHopsMany(int count) {
+    return '$count переходов';
+  }
+
+  @override
   String get nodesScreenThisDevice => 'Это устройство';
 
   @override

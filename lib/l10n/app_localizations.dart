@@ -28748,6 +28748,48 @@ abstract class AppLocalizations {
   /// **'Signal'**
   String get nodesScreenSortSignal;
 
+  /// Sort chip label for hop-distance sort, nearest first.
+  ///
+  /// In en, this message translates to:
+  /// **'Hops'**
+  String get nodesScreenSortHops;
+
+  /// Sort chip label for hop-distance sort, farthest first.
+  ///
+  /// In en, this message translates to:
+  /// **'Hops ↓'**
+  String get nodesScreenSortHopsReversed;
+
+  /// Sort menu option ordering nodes by hop count with direct neighbours first.
+  ///
+  /// In en, this message translates to:
+  /// **'Hops (Direct first)'**
+  String get nodesScreenSortMenuHopsDirectFirst;
+
+  /// Sort menu option ordering nodes by hop count with the most distant nodes first.
+  ///
+  /// In en, this message translates to:
+  /// **'Hops (Farthest first)'**
+  String get nodesScreenSortMenuHopsFarthestFirst;
+
+  /// Section header for nodes that are direct neighbours (zero hops away).
+  ///
+  /// In en, this message translates to:
+  /// **'Direct'**
+  String get nodesScreenSectionHopsDirect;
+
+  /// Section header for nodes that are one hop away.
+  ///
+  /// In en, this message translates to:
+  /// **'1 Hop'**
+  String get nodesScreenSectionHopsOne;
+
+  /// Section header for nodes that are two or more hops away.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Hops'**
+  String nodesScreenSectionHopsMany(int count);
+
   /// Subtitle on the user's own node card.
   ///
   /// In en, this message translates to:

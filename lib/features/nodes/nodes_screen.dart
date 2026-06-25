@@ -789,6 +789,22 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
         return _groupBySignal(context, nodes, myNodeNum, linkedNodeIds);
       case NodeSortOrder.batteryLevel:
         return _groupByBattery(context, nodes, myNodeNum, linkedNodeIds);
+      case NodeSortOrder.hopsAscending:
+        return _groupByHops(
+          context,
+          nodes,
+          myNodeNum,
+          linkedNodeIds,
+          descending: false,
+        );
+      case NodeSortOrder.hopsDescending:
+        return _groupByHops(
+          context,
+          nodes,
+          myNodeNum,
+          linkedNodeIds,
+          descending: true,
+        );
     }
   }
 
@@ -987,6 +1003,49 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
     ];
   }
 
+  List<_NodeSection> _groupByHops(
+    BuildContext context,
+    List<MeshNode> nodes,
+    int? myNodeNum,
+    List<int> linkedNodeIds, {
+    required bool descending,
+  }) {
+    final myNode = nodes.where((n) => n.nodeNum == myNodeNum).toList();
+    final others = nodes
+        .where(
+          (n) => n.nodeNum != myNodeNum && !linkedNodeIds.contains(n.nodeNum),
+        )
+        .toList();
+
+    final grouped = <int, List<MeshNode>>{};
+    final unknown = <MeshNode>[];
+    for (final node in others) {
+      final hops = node.hopCount;
+      if (hops == null) {
+        unknown.add(node);
+      } else {
+        grouped.putIfAbsent(hops, () => []).add(node);
+      }
+    }
+
+    final sortedKeys = grouped.keys.toList()
+      ..sort((a, b) => descending ? b.compareTo(a) : a.compareTo(b));
+
+    String hopLabel(int hops) {
+      if (hops == 0) return context.l10n.nodesScreenSectionHopsDirect;
+      if (hops == 1) return context.l10n.nodesScreenSectionHopsOne;
+      return context.l10n.nodesScreenSectionHopsMany(hops);
+    }
+
+    return [
+      if (myNode.isNotEmpty)
+        _NodeSection(context.l10n.nodesScreenSectionYourDevice, myNode),
+      ...sortedKeys.map((key) => _NodeSection(hopLabel(key), grouped[key]!)),
+      // Unknown hop count always sinks to the bottom regardless of direction.
+      _NodeSection(context.l10n.nodesScreenSectionUnknown, unknown),
+    ];
+  }
+
   List<MeshNode> _applyFilter(
     List<MeshNode> nodes,
     int? myNodeNum,
@@ -1045,6 +1104,21 @@ class _NodesScreenState extends ConsumerState<NodesScreen>
           final aBat = a.batteryLevel ?? -1;
           final bBat = b.batteryLevel ?? -1;
           return bBat.compareTo(aBat); // Higher is better
+
+        case NodeSortOrder.hopsAscending:
+          // Direct (0) first; unknown hop count sinks to the bottom.
+          final aHops = a.hopCount ?? 0x7fffffff;
+          final bHops = b.hopCount ?? 0x7fffffff;
+          return aHops.compareTo(bHops);
+
+        case NodeSortOrder.hopsDescending:
+          // Farthest first; unknown hop count still sinks to the bottom.
+          final aHops = a.hopCount;
+          final bHops = b.hopCount;
+          if (aHops == null && bHops == null) return 0;
+          if (aHops == null) return 1;
+          if (bHops == null) return -1;
+          return bHops.compareTo(aHops);
       }
     });
     return sorted;
@@ -1090,7 +1164,14 @@ enum NodeFilter {
 }
 
 /// Sort order options for the nodes list
-enum NodeSortOrder { lastHeard, name, signalStrength, batteryLevel }
+enum NodeSortOrder {
+  lastHeard,
+  name,
+  signalStrength,
+  batteryLevel,
+  hopsAscending,
+  hopsDescending,
+}
 
 /// Sort button with dropdown
 class _SortButton extends StatelessWidget {
@@ -1109,6 +1190,10 @@ class _SortButton extends StatelessWidget {
         return context.l10n.nodesScreenSortSignal;
       case NodeSortOrder.batteryLevel:
         return context.l10n.nodesScreenSortBattery;
+      case NodeSortOrder.hopsAscending:
+        return context.l10n.nodesScreenSortHops;
+      case NodeSortOrder.hopsDescending:
+        return context.l10n.nodesScreenSortHopsReversed;
     }
   }
 
@@ -1198,6 +1283,18 @@ class _SortButton extends StatelessWidget {
           NodeSortOrder.batteryLevel,
           context.l10n.nodesScreenSortMenuBatteryLevel,
           Icons.battery_full,
+          context,
+        ),
+        _buildMenuItem(
+          NodeSortOrder.hopsAscending,
+          context.l10n.nodesScreenSortMenuHopsDirectFirst,
+          Icons.route,
+          context,
+        ),
+        _buildMenuItem(
+          NodeSortOrder.hopsDescending,
+          context.l10n.nodesScreenSortMenuHopsFarthestFirst,
+          Icons.route,
           context,
         ),
       ],
