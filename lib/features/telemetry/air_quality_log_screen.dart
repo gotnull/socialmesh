@@ -121,6 +121,23 @@ class _AirQualityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final timeFormat = AppTimeFormat.dateAndTime(context);
 
+    final hasPmStandard =
+        log.pm10Standard != null ||
+        log.pm25Standard != null ||
+        log.pm100Standard != null;
+    final hasOtherAirQuality =
+        hasPmStandard ||
+        log.pm10Environmental != null ||
+        log.pm25Environmental != null ||
+        log.pm100Environmental != null ||
+        log.particles03um != null ||
+        log.particles05um != null ||
+        log.particles10um != null ||
+        log.particles25um != null ||
+        log.particles50um != null ||
+        log.particles100um != null ||
+        log.co2 != null;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -147,41 +164,43 @@ class _AirQualityCard extends StatelessWidget {
           const SizedBox(height: AppTheme.spacing16),
 
           // PM values
-          Text(
-            context.l10n.telemetryAirQualityPmStandard,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: context.textSecondary,
+          if (hasPmStandard) ...[
+            Text(
+              context.l10n.telemetryAirQualityPmStandard,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: context.textSecondary,
+              ),
             ),
-          ),
-          const SizedBox(height: AppTheme.spacing8),
-          Row(
-            children: [
-              if (log.pm10Standard != null)
-                Expanded(
-                  child: _PmTile(
-                    label: context.l10n.telemetryAirQualityPm10Label,
-                    value: log.pm10Standard!,
+            const SizedBox(height: AppTheme.spacing8),
+            Row(
+              children: [
+                if (log.pm10Standard != null)
+                  Expanded(
+                    child: _PmTile(
+                      label: context.l10n.telemetryAirQualityPm10Label,
+                      value: log.pm10Standard!,
+                    ),
                   ),
-                ),
-              if (log.pm25Standard != null)
-                Expanded(
-                  child: _PmTile(
-                    label: context.l10n.telemetryAirQualityPm25Label,
-                    value: log.pm25Standard!,
-                    highlight: true,
+                if (log.pm25Standard != null)
+                  Expanded(
+                    child: _PmTile(
+                      label: context.l10n.telemetryAirQualityPm25Label,
+                      value: log.pm25Standard!,
+                      highlight: true,
+                    ),
                   ),
-                ),
-              if (log.pm100Standard != null)
-                Expanded(
-                  child: _PmTile(
-                    label: context.l10n.telemetryAirQualityPm100Label,
-                    value: log.pm100Standard!,
+                if (log.pm100Standard != null)
+                  Expanded(
+                    child: _PmTile(
+                      label: context.l10n.telemetryAirQualityPm100Label,
+                      value: log.pm100Standard!,
+                    ),
                   ),
-                ),
-            ],
-          ),
+              ],
+            ),
+          ],
 
           // Environmental PM
           if (log.pm10Environmental != null ||
@@ -281,6 +300,16 @@ class _AirQualityCard extends StatelessWidget {
             const Divider(color: Colors.white12, height: 1),
             const SizedBox(height: AppTheme.spacing12),
             _Co2Indicator(ppm: log.co2!),
+          ],
+
+          // IAQ (Indoor Air Quality index, from the BME680/688 VOC sensor)
+          if (log.iaq != null) ...[
+            if (hasOtherAirQuality) ...[
+              const SizedBox(height: AppTheme.spacing12),
+              const Divider(color: Colors.white12, height: 1),
+            ],
+            const SizedBox(height: AppTheme.spacing12),
+            _IaqIndicator(iaq: log.iaq!),
           ],
         ],
       ),
@@ -449,6 +478,51 @@ class _Co2Indicator extends StatelessWidget {
             ),
             Text(
               context.l10n.telemetryCo2Label(_getCo2Label(context)),
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.white.withValues(alpha: 0.5),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _IaqIndicator extends StatelessWidget {
+  final int iaq;
+
+  const _IaqIndicator({required this.iaq});
+
+  Color _getIaqColor() {
+    if (iaq <= 50) return AccentColors.green;
+    if (iaq <= 100) return AccentColors.lime;
+    if (iaq <= 150) return AppTheme.warningYellow;
+    if (iaq <= 200) return AccentColors.orange;
+    return AppTheme.errorRed;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _getIaqColor();
+    return Row(
+      children: [
+        Icon(Icons.eco, color: color, size: 24),
+        const SizedBox(width: AppTheme.spacing12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.l10n.telemetryEnvIaqValue(iaq.toString()),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+            Text(
+              context.l10n.widgetBuilderBindingIaqIndexDesc,
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.white.withValues(alpha: 0.5),

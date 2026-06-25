@@ -255,6 +255,7 @@ void main() {
         particles50um: 10,
         particles100um: 2,
         co2: 450,
+        iaq: 80,
       );
 
       expect(log.pm10Standard, 10);
@@ -262,6 +263,27 @@ void main() {
       expect(log.pm100Standard, 100);
       expect(log.co2, 450);
       expect(log.particles03um, 1000);
+      expect(log.iaq, 80);
+    });
+
+    test('round-trips an IAQ-only reading through JSON', () {
+      final log = AirQualityMetricsLog(nodeNum: 123, iaq: 80);
+
+      final restored = AirQualityMetricsLog.fromJson(log.toJson());
+
+      expect(restored.iaq, 80);
+      expect(restored.pm25Standard, isNull);
+      expect(restored.co2, isNull);
+    });
+
+    test('defaults iaq to null when absent from JSON', () {
+      final log = AirQualityMetricsLog.fromJson({
+        'nodeNum': 456,
+        'timestamp': DateTime(2024, 1, 1).millisecondsSinceEpoch,
+        'co2': 500,
+      });
+
+      expect(log.iaq, isNull);
     });
 
     test('serializes to JSON', () {

@@ -232,6 +232,7 @@ class AirQualityMetricsLog extends TelemetryLogEntry {
   final int? particles50um;
   final int? particles100um;
   final int? co2;
+  final int? iaq;
 
   AirQualityMetricsLog({
     super.id,
@@ -250,6 +251,7 @@ class AirQualityMetricsLog extends TelemetryLogEntry {
     this.particles50um,
     this.particles100um,
     this.co2,
+    this.iaq,
   });
 
   factory AirQualityMetricsLog.fromJson(Map<String, dynamic> json) {
@@ -272,6 +274,7 @@ class AirQualityMetricsLog extends TelemetryLogEntry {
       particles50um: json['particles50um'] as int?,
       particles100um: json['particles100um'] as int?,
       co2: json['co2'] as int?,
+      iaq: json['iaq'] as int?,
     );
   }
 
@@ -293,6 +296,7 @@ class AirQualityMetricsLog extends TelemetryLogEntry {
     'particles50um': particles50um,
     'particles100um': particles100um,
     'co2': co2,
+    'iaq': iaq,
   };
 }
 

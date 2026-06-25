@@ -553,6 +553,7 @@ class _AirQualityFingerprint {
   final int? particles50um;
   final int? particles100um;
   final int? co2;
+  final int? iaq;
 
   const _AirQualityFingerprint({
     this.pm10Standard,
@@ -568,6 +569,7 @@ class _AirQualityFingerprint {
     this.particles50um,
     this.particles100um,
     this.co2,
+    this.iaq,
   });
 
   bool matches(MeshNode node) =>
@@ -583,7 +585,8 @@ class _AirQualityFingerprint {
       particles25um == node.particles25um &&
       particles50um == node.particles50um &&
       particles100um == node.particles100um &&
-      co2 == node.co2;
+      co2 == node.co2 &&
+      iaq == node.iaq;
 }
 
 /// Fingerprint of the last logged position for a given node.
@@ -828,7 +831,8 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
         // Log air quality only when values actually change
         if (node.pm10Standard != null ||
             node.pm25Standard != null ||
-            node.co2 != null) {
+            node.co2 != null ||
+            node.iaq != null) {
           final cached = _lastAirQuality[id];
           if (cached == null || !cached.matches(node)) {
             _lastAirQuality[id] = _AirQualityFingerprint(
@@ -845,6 +849,7 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
               particles50um: node.particles50um,
               particles100um: node.particles100um,
               co2: node.co2,
+              iaq: node.iaq,
             );
             await storage.addAirQualityMetrics(
               AirQualityMetricsLog(
@@ -862,6 +867,7 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
                 particles50um: node.particles50um,
                 particles100um: node.particles100um,
                 co2: node.co2,
+                iaq: node.iaq,
               ),
             );
             ref.invalidate(airQualityMetricsLogsProvider);
