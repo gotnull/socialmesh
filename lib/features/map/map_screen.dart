@@ -28,6 +28,7 @@ import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/status_banner.dart';
 import '../../core/widgets/map_controls.dart';
 import '../../core/widgets/mesh_map_widget.dart';
+import '../../core/widgets/map_overlay_layers.dart';
 import '../../core/widgets/waypoint_markers.dart';
 import 'package:socialmesh/features/incidents/widgets/help_mode/help_request_affordance.dart';
 import '../../core/widgets/map_node_drawer.dart';
@@ -163,7 +164,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
   int _markersRebuiltLastBuild = 0;
   int _markersReusedLastBuild = 0;
   bool _markerListReusedLastBuild = false;
-  int _connPairsEvaluatedLastBuild = 0;
 
   // ---------------------------------------------------------------
   // Layer caches. Decorative map layers used to be reconstructed
@@ -958,8 +958,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         'nodes=${nodes.length} positioned=${nodesWithPosition.length} '
         'markersReused=$_markersReusedLastBuild '
         'markersRebuilt=$_markersRebuiltLastBuild '
-        'listReused=$_markerListReusedLastBuild '
-        'connPairs=$_connPairsEvaluatedLastBuild',
+        'listReused=$_markerListReusedLastBuild',
       );
     }
     _releaseDisabledLayerCaches();
@@ -3430,26 +3429,24 @@ class _MapScreenState extends ConsumerState<MapScreen>
     List<Marker> clusterMarkers,
     Map<int, _NodeWithPosition> nodesByNum,
   ) async {
-    final nodes = <_NodeWithPosition>[];
+    final nodes = <MeshNode>[];
     for (final m in clusterMarkers) {
       final key = m.key;
       if (key is ValueKey<int>) {
         final node = nodesByNum[key.value];
-        if (node != null) nodes.add(node);
+        if (node != null) nodes.add(node.node);
       }
     }
     if (nodes.isEmpty) return;
     HapticFeedback.selectionClick();
     await AppBottomSheet.show<void>(
       context: context,
-      child: _ClusterListSheet(
+      child: ClusterListSheet(
+        // The shared sheet closes itself via its own build context, then
+        // hands back the tapped node; safeSetState is mounted-checked so a
+        // filter change / position refresh between open and tap is harmless.
         nodes: nodes,
         onNodeSelected: (node) {
-          // The cluster-marker context captured by this closure can
-          // unmount between sheet open and node tap (filter change,
-          // position refresh), so use the State's mounted-checked
-          // pop helper rather than Navigator.of on the stale context.
-          if (!safeNavigatorPop()) return;
           safeSetState(() {
             _selectedNode = node;
             _selectedTakEntity = null;
@@ -3716,6 +3713,15 @@ class _MapScreenState extends ConsumerState<MapScreen>
     return Opacity(opacity: _nodeOverlayOpacity, child: child);
   }
 
+  // Adapts the screen's private positioned-node record to the shared marker
+  // data type the overlay-layer builders consume.
+  MeshNodeMarkerData _toMarkerData(_NodeWithPosition n) => MeshNodeMarkerData(
+    node: n.node,
+    latitude: n.latitude,
+    longitude: n.longitude,
+    isStale: n.isStale,
+  );
+
   List<CircleMarker> _rangeCirclesFor(
     List<_NodeWithPosition> nodes,
     List<_GeomSig> geomSig,
@@ -3731,26 +3737,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
         _geomSigEquals(_rangeCirclesSigNodes, geomSig)) {
       return cached;
     }
-    final circles = nodes
-        .where((n) => n.latitude.isFinite && n.longitude.isFinite)
-        .map((n) {
-          final isMyNode = n.node.nodeNum == myNodeNum;
-          // Per-node colour derived from nodeNum only (no avatar
-          // override): the cache signature is geometry-based, so the
-          // colour must be a pure function of inputs it captures.
-          final circleColor = isMyNode
-              ? accent
-              : nodeColorFromId(n.node.nodeNum);
-          return CircleMarker(
-            point: LatLng(n.latitude, n.longitude),
-            radius: 5000, // 5km range circle
-            useRadiusInMeter: true,
-            color: circleColor.withValues(alpha: 0.08),
-            borderColor: circleColor.withValues(alpha: 0.2),
-            borderStrokeWidth: 1,
-          );
-        })
-        .toList(growable: false);
+    final circles = rangeCircleMarkers(
+      context,
+      nodes: nodes.map(_toMarkerData).toList(growable: false),
+      myNodeNum: myNodeNum,
+    );
     _rangeCirclesSigNodes = geomSig;
     _rangeCirclesSigMyNodeNum = myNodeNum;
     _rangeCirclesSigAccent = accent;
@@ -3894,96 +3885,45 @@ class _MapScreenState extends ConsumerState<MapScreen>
     int? myNodeNum,
     List<PositionLog> positionLogs,
   ) {
-    final trails = <Polyline>[];
-
+    // Persisted position history is the shared, screen-agnostic path.
     if ((_showPositionHistory || _trackNodeNum != null) &&
         positionLogs.isNotEmpty) {
-      // Group persisted position logs by nodeNum
-      final logsByNode = <int, List<PositionLog>>{};
-      for (final log in positionLogs) {
-        logsByNode.putIfAbsent(log.nodeNum, () => []).add(log);
-      }
+      return positionHistoryTrailPolylines(
+        context,
+        nodes: nodes.map(_toMarkerData).toList(growable: false),
+        myNodeNum: myNodeNum,
+        positionLogs: positionLogs,
+      );
+    }
 
-      // Build a polyline per node from persisted history
-      for (final entry in logsByNode.entries) {
-        final nodeNum = entry.key;
-        final logs = entry.value;
-        if (logs.length < 2) continue;
+    // Fall back to ephemeral in-session trails — map-screen-only state, so it
+    // stays here rather than in the shared builder.
+    final trails = <Polyline>[];
+    for (final node in nodes) {
+      final trail = _nodeTrails[node.node.nodeNum];
+      if (trail == null || trail.length < 2) continue;
 
-        // Sort chronologically
-        logs.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+      final isMyNode = node.node.nodeNum == myNodeNum;
+      final points = trail.map((t) => LatLng(t.latitude, t.longitude)).toList();
 
-        // Downsample to avoid GPU stutter from dotted pattern on 1000+ pts
-        final points = _downsamplePoints(
-          logs.map((l) => LatLng(l.latitude, l.longitude)).toList(),
-          maxPoints: 200,
-        );
-        if (points.length < 2) continue;
-
-        // Per-node identity colour (user-set avatar colour wins).
-        final matchingNode = nodes
-            .where((n) => n.node.nodeNum == nodeNum)
-            .firstOrNull;
-        final isMyNode = nodeNum == myNodeNum;
-        final color = isMyNode
-            ? context.accentColor
-            : resolveNodeColor(
-                nodeNum: nodeNum,
-                avatarColor: matchingNode?.node.avatarColor,
-              );
-
-        trails.add(
-          Polyline(
-            points: points,
-            color: color.withValues(alpha: 0.6),
-            strokeWidth: 3,
-            pattern: const StrokePattern.dotted(spacingFactor: 1.5),
-          ),
-        );
-      }
-    } else {
-      // Fall back to ephemeral in-session trails
-      for (final node in nodes) {
-        final trail = _nodeTrails[node.node.nodeNum];
-        if (trail == null || trail.length < 2) continue;
-
-        final isMyNode = node.node.nodeNum == myNodeNum;
-        final points = trail
-            .map((t) => LatLng(t.latitude, t.longitude))
-            .toList();
-
-        trails.add(
-          Polyline(
-            points: points,
-            color:
-                (isMyNode
-                        ? context.accentColor
-                        : resolveNodeColor(
-                            nodeNum: node.node.nodeNum,
-                            avatarColor: node.node.avatarColor,
-                          ))
-                    .withValues(alpha: 0.4),
-            strokeWidth: 2,
-            pattern: const StrokePattern.dotted(spacingFactor: 1.5),
-          ),
-        );
-      }
+      trails.add(
+        Polyline(
+          points: points,
+          color:
+              (isMyNode
+                      ? context.accentColor
+                      : resolveNodeColor(
+                          nodeNum: node.node.nodeNum,
+                          avatarColor: node.node.avatarColor,
+                        ))
+                  .withValues(alpha: 0.4),
+          strokeWidth: 2,
+          pattern: const StrokePattern.dotted(spacingFactor: 1.5),
+        ),
+      );
     }
 
     return trails;
-  }
-
-  /// Reduce a list of [LatLng] points to at most [maxPoints] by evenly
-  /// sampling, always keeping the first and last point for continuity.
-  List<LatLng> _downsamplePoints(List<LatLng> points, {int maxPoints = 200}) {
-    if (points.length <= maxPoints) return points;
-    final result = <LatLng>[points.first];
-    final step = (points.length - 1) / (maxPoints - 1);
-    for (int i = 1; i < maxPoints - 1; i++) {
-      result.add(points[(i * step).round()]);
-    }
-    result.add(points.last);
-    return result;
   }
 
   /// Build connection lines with visual distinction for uncertain connections
@@ -3991,70 +3931,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
     List<_NodeWithPosition> nodes,
     int? myNodeNum,
   ) {
-    final lines = <Polyline>[];
-    final maxDistanceKm = _connectionMaxDistance;
-    var vincentyCalls = 0;
-
-    for (int i = 0; i < nodes.length; i++) {
-      for (int j = i + 1; j < nodes.length; j++) {
-        final node1 = nodes[i];
-        final node2 = nodes[j];
-
-        // Cheap conservative prefilter; Vincenty stays the sole
-        // decision function for pairs that pass, so the emitted line
-        // set is identical to the unfiltered loop.
-        if (!connectionPrefilterMayBeWithin(
-          node1.latitude,
-          node1.longitude,
-          node2.latitude,
-          node2.longitude,
-          maxDistanceKm,
-        )) {
-          continue;
-        }
-
-        vincentyCalls++;
-        final distance = _calculateDistance(
-          node1.latitude,
-          node1.longitude,
-          node2.latitude,
-          node2.longitude,
-        );
-
-        if (distance <= maxDistanceKm) {
-          final isMyConnection =
-              node1.node.nodeNum == myNodeNum ||
-              node2.node.nodeNum == myNodeNum;
-          final hasStaleNode = node1.isStale || node2.isStale;
-
-          // Always use dotted pattern, with different spacing for stale nodes
-          final pattern = hasStaleNode
-              ? const StrokePattern.dotted(spacingFactor: 3.0)
-              : const StrokePattern.dotted(spacingFactor: 1.5);
-
-          lines.add(
-            Polyline(
-              points: [
-                LatLng(node1.latitude, node1.longitude),
-                LatLng(node2.latitude, node2.longitude),
-              ],
-              color: isMyConnection
-                  ? context.accentColor.withValues(
-                      alpha: hasStaleNode ? 0.25 : 0.5,
-                    )
-                  : AppTheme.primaryPurple.withValues(
-                      alpha: hasStaleNode ? 0.2 : 0.35,
-                    ),
-              strokeWidth: isMyConnection ? 2.0 : 1.5,
-              pattern: pattern,
-            ),
-          );
-        }
-      }
-    }
-
-    _connPairsEvaluatedLastBuild = vincentyCalls;
-    return lines;
+    return connectionLinePolylines(
+      context,
+      nodes: nodes.map(_toMarkerData).toList(growable: false),
+      myNodeNum: myNodeNum,
+      maxDistanceKm: _connectionMaxDistance,
+    );
   }
 
   /// Build polylines for a traceroute route overlay.
@@ -4393,58 +4275,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
     List<_NodeWithPosition> nodes,
     int? myNodeNum,
   ) {
-    if (myNodeNum == null || _currentZoom < 10) return [];
-
-    final myNode = nodes.where((n) => n.node.nodeNum == myNodeNum).firstOrNull;
-    if (myNode == null) return [];
-
-    final labels = <Marker>[];
-    const maxDistanceKm = 15.0;
-
-    for (final node in nodes) {
-      if (node.node.nodeNum == myNodeNum) continue;
-
-      final distance = _calculateDistance(
-        myNode.latitude,
-        myNode.longitude,
-        node.latitude,
-        node.longitude,
-      );
-
-      if (distance <= maxDistanceKm) {
-        final midLat = (myNode.latitude + node.latitude) / 2;
-        final midLng = (myNode.longitude + node.longitude) / 2;
-
-        labels.add(
-          Marker(
-            point: LatLng(midLat, midLng),
-            width: 60,
-            height: 20,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: context.card.withValues(alpha: 0.85),
-                borderRadius: BorderRadius.circular(AppTheme.radius10),
-                border: Border.all(
-                  color: context.accentColor.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Text(
-                _formatDistance(distance),
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: context.accentColor,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-        );
-      }
-    }
-
-    return labels;
+    return distanceLabelMarkers(
+      context,
+      nodes: nodes.map(_toMarkerData).toList(growable: false),
+      myNodeNum: myNodeNum,
+      zoomedIn: _currentZoom >= 10,
+      formatDistance: _formatDistance,
+    );
   }
 
   void _centerOnMyNode(List<_NodeWithPosition> nodes, int? myNodeNum) {
@@ -4680,96 +4517,6 @@ class _NodeTransparencySheetState extends State<_NodeTransparencySheet> {
   }
 }
 
-class _ClusterListSheet extends StatelessWidget {
-  final List<_NodeWithPosition> nodes;
-  final ValueChanged<MeshNode> onNodeSelected;
-
-  const _ClusterListSheet({required this.nodes, required this.onNodeSelected});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.bubble_chart, size: 22, color: context.accentColor),
-            const SizedBox(width: AppTheme.spacing12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    context.l10n.mapClusterTapToListTitle(nodes.length),
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      color: context.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spacing4),
-                  Text(
-                    context.l10n.mapClusterTapToListSubtitle,
-                    style: TextStyle(fontSize: 12, color: context.textTertiary),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppTheme.spacing16),
-        ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.6,
-          ),
-          child: ListView.separated(
-            shrinkWrap: true,
-            itemCount: nodes.length,
-            separatorBuilder: (_, _) => Divider(
-              height: 1,
-              color: context.border.withValues(alpha: 0.3),
-            ),
-            itemBuilder: (context, index) {
-              final node = nodes[index].node;
-              return ListTile(
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-                leading: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: context.accentColor.withValues(alpha: 0.15),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    nodeMarkerLabel(node),
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: context.accentColor,
-                    ),
-                  ),
-                ),
-                title: Text(
-                  node.displayName,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: context.textPrimary,
-                  ),
-                ),
-                onTap: () => onNodeSelected(node),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 /// Node with resolved position (current or cached)
 class _NodeWithPosition {
   final MeshNode node;
@@ -4783,49 +4530,6 @@ class _NodeWithPosition {
     required this.longitude,
     required this.isStale,
   });
-}
-
-/// Conservative spherical (haversine) distance in km.
-///
-/// Top-level so tests can pin the prefilter's correctness contract
-/// without spinning up the full map.
-double haversineKm(double lat1, double lng1, double lat2, double lng2) {
-  const earthRadiusKm = 6371.0;
-  const degToRad = math.pi / 180.0;
-  final dLat = (lat2 - lat1) * degToRad;
-  final dLng = (lng2 - lng1) * degToRad;
-  final sinHalfLat = math.sin(dLat / 2);
-  final sinHalfLng = math.sin(dLng / 2);
-  final a =
-      sinHalfLat * sinHalfLat +
-      math.cos(lat1 * degToRad) *
-          math.cos(lat2 * degToRad) *
-          sinHalfLng *
-          sinHalfLng;
-  return 2 * earthRadiusKm * math.asin(math.min(1.0, math.sqrt(a)));
-}
-
-/// Cheap conservative screen for the connection-lines pair loop.
-///
-/// Returns false ONLY when the production decision function provably
-/// rejects the pair. That decision is `Distance().as(Kilometer, ...)`,
-/// which ROUNDS to whole kilometers, so a pair up to maxDistanceKm + 0.5
-/// of true distance still renders a line. The screen therefore widens
-/// the threshold by the rounding half-step plus a 1% margin for the
-/// haversine-vs-Vincenty (Earth flattening) difference; the latitude
-/// screen uses the same widened bound (one degree of latitude is never
-/// less than ~110.567 km).
-bool connectionPrefilterMayBeWithin(
-  double lat1,
-  double lng1,
-  double lat2,
-  double lng2,
-  double maxDistanceKm,
-) {
-  const minKmPerDegLat = 110.567;
-  final screenKm = (maxDistanceKm + 0.5) * 1.01;
-  if ((lat2 - lat1).abs() * minKmPerDegLat > screenKm) return false;
-  return haversineKm(lat1, lng1, lat2, lng2) <= screenKm;
 }
 
 /// Exact per-node geometry signature for the map layer caches. Record

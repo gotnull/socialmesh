@@ -15,11 +15,14 @@ import '../../core/safe_lat_lng.dart';
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/safety/lifecycle_mixin.dart';
 import '../../core/theme.dart';
+import '../../core/units/distance_format.dart';
 import '../../core/widgets/map_controls.dart';
+import '../../core/widgets/map_overlay_layers.dart';
 import '../../core/widgets/mesh_map_widget.dart';
 import '../../core/widgets/waypoint_markers.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
+import '../../models/telemetry_log.dart';
 import '../../utils/presence_utils.dart';
 import '../../models/route.dart' as route_model;
 import '../../providers/app_providers.dart';
@@ -50,10 +53,24 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
   AnimationController? _animationController;
   double _currentZoom = 13.0;
 
+  // Mirror the main Maps screen's persisted layer toggles so the route map
+  // renders identically. Loaded in [_loadMapSettings]; initial values match
+  // the map screen's defaults until the load completes.
+  bool _clusterMarkers = false;
+  bool _showWaypoints = true;
+  bool _showMeshWaypoints = true;
+  bool _showRangeCircles = false;
+  bool _showConnectionLines = false;
+  bool _showPositionHistory = false;
+  bool _showSatelliteLabels = true;
+  bool _showDistanceLabels = true;
+  double _connectionMaxDistance = 15.0;
+  double _nodeOverlayOpacity = 1.0;
+
   @override
   void initState() {
     super.initState();
-    _loadMapStyle();
+    _loadMapSettings();
   }
 
   @override
@@ -63,14 +80,26 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
     super.dispose();
   }
 
-  Future<void> _loadMapStyle() async {
+  Future<void> _loadMapSettings() async {
     final settingsFuture = ref.read(settingsServiceProvider.future);
     final settings = await settingsFuture;
-    final index = settings.mapTileStyleIndex;
     if (!mounted) return;
-    if (index >= 0 && index < MapTileStyle.values.length) {
-      safeSetState(() => _mapStyle = MapTileStyle.values[index]);
-    }
+    final index = settings.mapTileStyleIndex;
+    safeSetState(() {
+      if (index >= 0 && index < MapTileStyle.values.length) {
+        _mapStyle = MapTileStyle.values[index];
+      }
+      _clusterMarkers = settings.mapClusterMarkers;
+      _showWaypoints = settings.mapShowWaypoints;
+      _showMeshWaypoints = settings.mapShowMeshWaypoints;
+      _showRangeCircles = settings.mapShowRangeCircles;
+      _showConnectionLines = settings.mapShowConnectionLines;
+      _showPositionHistory = settings.mapShowPositionHistory;
+      _showSatelliteLabels = settings.satelliteLabelsEnabled;
+      _showDistanceLabels = settings.mapShowDistanceLabels;
+      _connectionMaxDistance = settings.mapConnectionMaxDistance;
+      _nodeOverlayOpacity = settings.mapNodeOverlayOpacity;
+    });
   }
 
   /// Animate camera to a specific location with smooth easing
@@ -123,6 +152,7 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
     // Get mesh nodes with positions
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
+    final units = ref.watch(measurementUnitsProvider);
     final nodesWithPosition = nodes.values
         .where((node) => node.hasPosition)
         .toList();
@@ -132,7 +162,11 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
     final meshWaypoints = ref.watch(meshWaypointsProvider);
     final localWaypoints = ref.watch(mapLocalWaypointsProvider);
 
-    // Convert to marker data for shared widget
+    // Persisted position history feeds the movement-trail layer, matching Maps.
+    final positionLogs =
+        ref.watch(positionLogsProvider).asData?.value ?? <PositionLog>[];
+
+    // Convert to marker data for the shared widget + overlay-layer builders.
     final nodeMarkerData = nodesWithPosition
         .map(
           (node) => MeshNodeMarkerData.fromNode(
@@ -169,8 +203,43 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
               selectedNodeNum: _selectedNode?.nodeNum,
               myNodeNum: myNodeNum,
               onNodeTap: (node) => setState(() => _selectedNode = node),
+              showSatelliteLabels: _showSatelliteLabels,
+              enableClustering: _clusterMarkers,
+              disableClusteringAtZoom: MapConfig.clusterDisableZoom(_mapStyle),
+              clusterRadius: 80,
+              nodeOverlayOpacity: _nodeOverlayOpacity,
               additionalLayers: [
-                // Route polyline
+                // Overlay geometry first, matching the main Maps z-order:
+                // range circles, movement trails, then connection lines.
+                if (_showRangeCircles)
+                  CircleLayer(
+                    circles: rangeCircleMarkers(
+                      context,
+                      nodes: nodeMarkerData,
+                      myNodeNum: myNodeNum,
+                    ),
+                  ),
+                if (_showPositionHistory)
+                  PolylineLayer(
+                    polylines: positionHistoryTrailPolylines(
+                      context,
+                      nodes: nodeMarkerData,
+                      myNodeNum: myNodeNum,
+                      positionLogs: positionLogs,
+                    ),
+                  ),
+                if (_showConnectionLines)
+                  PolylineLayer(
+                    polylines: connectionLinePolylines(
+                      context,
+                      nodes: nodeMarkerData,
+                      myNodeNum: myNodeNum,
+                      maxDistanceKm: _connectionMaxDistance,
+                    ),
+                  ),
+
+                // The route line sits above the overlay geometry but below all
+                // point markers (waypoints, nodes, start/end).
                 PolylineLayer(
                   polylines: [
                     Polyline(
@@ -185,39 +254,57 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
 
                 // Shared mesh waypoints (WAYPOINT_APP) — orange emoji markers,
                 // matching the main Maps screen. Render-only here.
-                MarkerLayer(
-                  rotate: true,
-                  markers: finiteMarkers(
-                    meshWaypoints.map((w) {
-                      final point = safeLatLng(w.latitude, w.longitude);
-                      if (point == null) return null;
-                      return Marker(
-                        point: point,
-                        width: 40,
-                        height: 40,
-                        child: MeshWaypointMarker(
-                          iconCodePoint: w.icon,
-                          hasIcon: w.hasRenderableIcon,
-                        ),
-                      );
-                    }).whereType<Marker>(),
+                if (_showMeshWaypoints)
+                  MarkerLayer(
+                    rotate: true,
+                    markers: finiteMarkers(
+                      meshWaypoints.map((w) {
+                        final point = safeLatLng(w.latitude, w.longitude);
+                        if (point == null) return null;
+                        return Marker(
+                          point: point,
+                          width: 40,
+                          height: 40,
+                          child: MeshWaypointMarker(
+                            iconCodePoint: w.icon,
+                            hasIcon: w.hasRenderableIcon,
+                          ),
+                        );
+                      }).whereType<Marker>(),
+                    ),
                   ),
-                ),
 
                 // Local "dropped pin" waypoints (yellow), matching Maps.
-                MarkerLayer(
-                  rotate: true,
-                  markers: finiteMarkers(
-                    localWaypoints.map(
-                      (w) => Marker(
-                        point: w.position,
-                        width: 32,
-                        height: 40,
-                        child: const LocalWaypointMarker(),
+                if (_showWaypoints)
+                  MarkerLayer(
+                    rotate: true,
+                    markers: finiteMarkers(
+                      localWaypoints.map(
+                        (w) => Marker(
+                          point: w.position,
+                          width: 32,
+                          height: 40,
+                          child: const LocalWaypointMarker(),
+                        ),
                       ),
                     ),
                   ),
-                ),
+
+                // Distance labels between the own node and nearby peers.
+                if (_showDistanceLabels)
+                  MarkerLayer(
+                    rotate: true,
+                    markers: finiteMarkers(
+                      distanceLabelMarkers(
+                        context,
+                        nodes: nodeMarkerData,
+                        myNodeNum: myNodeNum,
+                        zoomedIn: _currentZoom >= 10,
+                        formatDistance: (km) =>
+                            formatDistanceKm(km, units, context.l10n),
+                      ),
+                    ),
+                  ),
 
                 // Start/End route markers
                 if (route.locations.isNotEmpty)

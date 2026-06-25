@@ -11,7 +11,7 @@ import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:socialmesh/features/map/map_screen.dart';
+import 'package:socialmesh/core/widgets/map_overlay_layers.dart';
 
 // Mirrors _MapScreenState._calculateDistance exactly: latlong2's
 // Distance() ROUNDS to whole kilometers by default, and that rounded

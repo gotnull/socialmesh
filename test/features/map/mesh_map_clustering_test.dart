@@ -15,7 +15,8 @@ import 'package:socialmesh/services/storage/storage_service.dart';
 ///   [SettingsService].
 /// - Source pins on `map_screen.dart` for the cluster wiring: the
 ///   `MarkerClusterLayerWidget` import, the menu toggle, the
-///   `_buildClusterLayer` helper, and the `_ClusterListSheet` widget.
+///   `_buildClusterLayer` helper, and the shared `ClusterListSheet` widget
+///   (now in `mesh_map_widget.dart` so the route map reuses it).
 void main() {
   group('SettingsService — mapClusterMarkers', () {
     setUp(() {
@@ -163,11 +164,25 @@ void main() {
         reason: 'The cluster builder must wire its onTap to the list sheet.',
       );
       expect(
-        source.contains('class _ClusterListSheet extends StatelessWidget'),
+        source.contains('child: ClusterListSheet('),
         true,
         reason:
-            'The list sheet widget must exist as a private class in this '
-            'file.',
+            'The cluster sheet was promoted to the shared ClusterListSheet in '
+            'mesh_map_widget.dart so the route map reuses it; map_screen must '
+            'present that shared widget.',
+      );
+    });
+
+    test('shared ClusterListSheet lives in mesh_map_widget for reuse', () {
+      final widgetFile = File('lib/core/widgets/mesh_map_widget.dart');
+      expect(widgetFile.existsSync(), true);
+      final widgetSource = widgetFile.readAsStringSync();
+      expect(
+        widgetSource.contains('class ClusterListSheet extends StatelessWidget'),
+        true,
+        reason:
+            'The tap-to-list sheet must be a shared public widget so both the '
+            'main map and the route detail map render an identical sheet.',
       );
     });
 

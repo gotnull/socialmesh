@@ -8,12 +8,14 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../l10n/l10n_extension.dart';
 import '../map_config.dart';
 import '../node_color.dart';
 import '../safe_lat_lng.dart';
 import '../theme.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
+import 'app_bottom_sheet.dart';
 
 /// A shared, configurable map widget for displaying mesh nodes.
 ///
@@ -70,6 +72,11 @@ class MeshMapWidget extends StatefulWidget {
   /// Callback when a node marker is tapped
   final void Function(MeshNode)? onNodeTap;
 
+  /// Opacity applied to peer node markers (0.2-1.0) so the map underneath stays
+  /// visible. The own node is always fully opaque. Mirrors the main map
+  /// screen's overlay-transparency setting.
+  final double nodeOverlayOpacity;
+
   /// Whether to animate tile loading
   final bool animateTiles;
 
@@ -88,11 +95,11 @@ class MeshMapWidget extends StatefulWidget {
   /// Max cluster radius (controls how aggressively markers cluster)
   final double clusterRadius;
 
-  /// Popup controller for clustered markers
-  final PopupController? popupController;
-
-  /// Popup builder for clustered markers
-  final Widget Function(BuildContext, Marker)? popupBuilder;
+  /// Zoom level at and beyond which clustering stops and every marker renders
+  /// individually. Mirrors the main map screen; pass
+  /// `MapConfig.clusterDisableZoom(style)` to match it. Null keeps the
+  /// package default (never disables until z20).
+  final int? disableClusteringAtZoom;
 
   /// Show attribution widget
   final bool showAttribution;
@@ -123,6 +130,7 @@ class MeshMapWidget extends StatefulWidget {
     this.selectedNodeNum,
     this.myNodeNum,
     this.onNodeTap,
+    this.nodeOverlayOpacity = 1.0,
     this.animateTiles = true,
     this.backgroundColor,
     // Clustering options
@@ -130,8 +138,7 @@ class MeshMapWidget extends StatefulWidget {
     this.clusteredMarkers,
     this.clusterBuilder,
     this.clusterRadius = 45,
-    this.popupController,
-    this.popupBuilder,
+    this.disableClusteringAtZoom,
     this.showAttribution = true,
     this.attributions,
     this.showSatelliteLabels = true,
@@ -258,64 +265,39 @@ class _MeshMapWidgetState extends State<MeshMapWidget> {
           // Additional layers (polylines, circles, etc.)
           ...widget.additionalLayers,
 
-          // Clustered markers (when enabled)
-          if (widget.enableClustering &&
-              widget.clusteredMarkers != null &&
-              widget.clusteredMarkers!.isNotEmpty)
-            MarkerClusterLayerWidget(
-              options: MarkerClusterLayerOptions(
-                maxClusterRadius: widget.clusterRadius.toInt(),
-                size: const Size(48, 48),
-                padding: const EdgeInsets.all(AppTheme.spacing50),
-                markers: finiteMarkers(widget.clusteredMarkers!),
-                popupOptions:
-                    widget.popupController != null &&
-                        widget.popupBuilder != null
-                    ? PopupOptions(
-                        popupSnap: PopupSnap.markerTop,
-                        popupController: widget.popupController!,
-                        popupBuilder: widget.popupBuilder!,
-                      )
-                    : PopupOptions(
-                        popupBuilder: (_, _) => const SizedBox.shrink(),
-                      ),
-                builder: widget.clusterBuilder ?? _defaultClusterBuilder,
-              ),
-            ),
-
-          // Non-clustered node markers (standard mode)
-          if (!widget.enableClustering &&
-              widget.nodeMarkers != null &&
-              widget.nodeMarkers!.isNotEmpty)
-            MarkerLayer(
-              rotate: true,
-              markers: finiteMarkers(
-                widget.nodeMarkers!.map((data) {
-                  final isMyNode = data.node.nodeNum == widget.myNodeNum;
-                  final isSelected =
-                      data.node.nodeNum == widget.selectedNodeNum;
-                  return Marker(
-                    point: LatLng(data.latitude, data.longitude),
-                    width: (isMyNode || isSelected) ? 56 : 44,
-                    height: (isMyNode || isSelected) ? 56 : 44,
-                    child: GestureDetector(
-                      onTap: widget.onNodeTap != null
-                          ? () {
-                              HapticFeedback.selectionClick();
-                              widget.onNodeTap!(data.node);
-                            }
-                          : null,
-                      child: MeshNodeMarker(
-                        node: data.node,
-                        isMyNode: isMyNode,
-                        isSelected: isSelected,
-                        isStale: data.isStale,
-                      ),
-                    ),
-                  );
-                }),
-              ),
-            ),
+          // Node markers — built once from `nodeMarkers` (or an explicit
+          // `clusteredMarkers` override) and rendered either plain or in a
+          // cluster layer, mirroring the main map screen. Each marker keys on
+          // its nodeNum so the cluster tap-to-list sheet can recover the node.
+          Builder(
+            builder: (context) {
+              final markers = widget.clusteredMarkers != null
+                  ? finiteMarkers(widget.clusteredMarkers!)
+                  : _buildNodeMarkers();
+              if (markers.isEmpty) return const SizedBox.shrink();
+              if (!widget.enableClustering) {
+                return MarkerLayer(rotate: true, markers: markers);
+              }
+              return MarkerClusterLayerWidget(
+                options: MarkerClusterLayerOptions(
+                  maxClusterRadius: widget.clusterRadius.toInt(),
+                  size: const Size(44, 44),
+                  alignment: Alignment.center,
+                  padding: EdgeInsets.zero,
+                  disableClusteringAtZoom: widget.disableClusteringAtZoom ?? 20,
+                  zoomToBoundsOnClick: false,
+                  animationsOptions: const AnimationsOptions(
+                    zoom: Duration.zero,
+                    fitBound: Duration(milliseconds: 300),
+                    centerMarker: Duration.zero,
+                    spiderfy: Duration(milliseconds: 200),
+                  ),
+                  markers: markers,
+                  builder: widget.clusterBuilder ?? _defaultClusterBuilder,
+                ),
+              );
+            },
+          ),
 
           // Attribution (matches world mesh style). Mapbox TOS requires
           // their attribution line and tap-through. Centered horizontally so
@@ -371,69 +353,218 @@ class _MeshMapWidgetState extends State<MeshMapWidget> {
     );
   }
 
-  /// Default cluster marker builder
+  // Build the node markers once from `nodeMarkers`, keyed on nodeNum so the
+  // cluster tap-to-list sheet can recover each underlying node. Shared by the
+  // plain and clustered render paths.
+  List<Marker> _buildNodeMarkers() {
+    final data = widget.nodeMarkers;
+    if (data == null || data.isEmpty) return const [];
+    return finiteMarkers(
+      data.map((d) {
+        final isMyNode = d.node.nodeNum == widget.myNodeNum;
+        final isSelected = d.node.nodeNum == widget.selectedNodeNum;
+        return Marker(
+          key: ValueKey<int>(d.node.nodeNum),
+          point: LatLng(d.latitude, d.longitude),
+          width: (isMyNode || isSelected) ? 56 : 44,
+          height: (isMyNode || isSelected) ? 56 : 44,
+          child: GestureDetector(
+            onTap: widget.onNodeTap != null
+                ? () {
+                    HapticFeedback.selectionClick();
+                    widget.onNodeTap!(d.node);
+                  }
+                : null,
+            child: _applyOverlayOpacity(
+              isMyNode: isMyNode,
+              child: MeshNodeMarker(
+                node: d.node,
+                isMyNode: isMyNode,
+                isSelected: isSelected,
+                isStale: d.isStale,
+              ),
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  // Fades peer node markers per the overlay-opacity setting so the map
+  // underneath stays visible. The own node is always fully opaque so it can
+  // never be lost on the map.
+  Widget _applyOverlayOpacity({required bool isMyNode, required Widget child}) {
+    if (isMyNode || widget.nodeOverlayOpacity >= 1.0) return child;
+    return Opacity(opacity: widget.nodeOverlayOpacity, child: child);
+  }
+
+  // Open the tap-to-list sheet for a tapped cluster, recovering the nodes from
+  // the cluster's marker keys. Selecting a row routes through [onNodeTap], the
+  // same callback the individual markers use.
+  Future<void> _showClusterSheet(
+    BuildContext context,
+    List<Marker> clusterMarkers,
+  ) async {
+    final byNum = <int, MeshNode>{
+      for (final d in widget.nodeMarkers ?? const <MeshNodeMarkerData>[])
+        d.node.nodeNum: d.node,
+    };
+    final nodes = <MeshNode>[];
+    for (final m in clusterMarkers) {
+      final key = m.key;
+      if (key is ValueKey<int>) {
+        final node = byNum[key.value];
+        if (node != null) nodes.add(node);
+      }
+    }
+    if (nodes.isEmpty) return;
+    HapticFeedback.selectionClick();
+    await AppBottomSheet.show<void>(
+      context: context,
+      child: ClusterListSheet(
+        nodes: nodes,
+        onNodeSelected: (node) => widget.onNodeTap?.call(node),
+      ),
+    );
+  }
+
+  // Cluster bubble matching the main map screen: solid accent circle, white
+  // border, count (or "x.xk"), sized by member count. Tapping opens the
+  // tap-to-list sheet.
   Widget _defaultClusterBuilder(BuildContext context, List<Marker> markers) {
     final count = markers.length;
-    final theme = Theme.of(context);
-    final accentColor = theme.colorScheme.primary;
-
-    // Gradient colors based on cluster size
-    final Color baseColor;
-    final double size;
-    if (count < 10) {
-      baseColor = accentColor;
-      size = 40;
-    } else if (count < 100) {
-      baseColor = AccentColors.orange;
-      size = 44;
-    } else if (count < 1000) {
-      baseColor = AccentColors.coral;
-      size = 48;
-    } else {
-      baseColor = AppTheme.errorRed;
-      size = 52;
-    }
-
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(
-          colors: [
-            baseColor.withValues(alpha: 0.9),
-            baseColor.withValues(alpha: 0.6),
+    final size = count > 100 ? 48.0 : (count > 50 ? 44.0 : 40.0);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => unawaited(_showClusterSheet(context, markers)),
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: context.accentColor.withValues(alpha: 0.9),
+          border: Border.all(color: Colors.white, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
           ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: baseColor.withValues(alpha: 0.4),
-            blurRadius: 8,
-            spreadRadius: 2,
-          ),
-        ],
-        border: Border.all(
-          color: SemanticColors.onMarker.withValues(alpha: 0.8),
-          width: 2,
-        ),
-      ),
-      child: Center(
-        child: Text(
-          _formatClusterCount(count),
-          style: const TextStyle(
-            color: SemanticColors.onMarker,
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
+        child: Center(
+          child: Text(
+            count > 999 ? '${(count / 1000).toStringAsFixed(1)}k' : '$count',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
           ),
         ),
       ),
     );
   }
+}
 
-  String _formatClusterCount(int count) {
-    if (count < 1000) return count.toString();
-    if (count < 10000) return '${(count / 1000).toStringAsFixed(1)}k';
-    return '${count ~/ 1000}k';
+/// Bottom-sheet content listing the nodes inside a tapped map cluster. The
+/// sheet is presented via [AppBottomSheet.show]; tapping a row closes the sheet
+/// (via its own build context) and invokes [onNodeSelected]. Shared by the main
+/// map screen and the route detail map so cluster taps behave identically.
+class ClusterListSheet extends StatelessWidget {
+  final List<MeshNode> nodes;
+  final ValueChanged<MeshNode> onNodeSelected;
+
+  const ClusterListSheet({
+    super.key,
+    required this.nodes,
+    required this.onNodeSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.bubble_chart, size: 22, color: context.accentColor),
+            const SizedBox(width: AppTheme.spacing12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.l10n.mapClusterTapToListTitle(nodes.length),
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: context.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spacing4),
+                  Text(
+                    context.l10n.mapClusterTapToListSubtitle,
+                    style: TextStyle(fontSize: 12, color: context.textTertiary),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppTheme.spacing16),
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.6,
+          ),
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: nodes.length,
+            separatorBuilder: (_, _) => Divider(
+              height: 1,
+              color: context.border.withValues(alpha: 0.3),
+            ),
+            itemBuilder: (context, index) {
+              final node = nodes[index];
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                leading: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: context.accentColor.withValues(alpha: 0.15),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    nodeMarkerLabel(node),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: context.accentColor,
+                    ),
+                  ),
+                ),
+                title: Text(
+                  node.displayName,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: context.textPrimary,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  onNodeSelected(node);
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
   }
 }
 
