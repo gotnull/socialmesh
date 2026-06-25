@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
+import 'dart:math' show min;
+
 import 'package:flutter_map/flutter_map.dart';
 
 import 'constants.dart';
@@ -24,6 +26,26 @@ class MapConfig {
   static const double defaultZoom = 13.0;
   static const double minZoom = 3.0;
   static const double maxZoom = 18.0;
+
+  /// Zoom at or below which marker clusters stay merged; above it markers
+  /// render individually. Wired into [MarkerClusterLayerOptions.disableClusteringAtZoom]
+  /// (NOT `maxZoom`, which only governs the disabled tap-to-zoom path).
+  static const int defaultClusterDisableZoom = 15;
+
+  /// Unclustered-zoom headroom kept below a style's usable ceiling, so clusters
+  /// fully separate a few levels before the tiles run out.
+  static const int clusterDisableHeadroom = 3;
+
+  /// Per-style zoom above which marker clustering is disabled. Styles whose
+  /// tiles top out early (e.g. terrain at native z17) separate earlier so
+  /// clusters open before the user runs out of usable zoom.
+  static int clusterDisableZoom(MapTileStyle style) {
+    final usableCeiling = min(maxZoom.floor(), style.maxNativeZoom);
+    return min(
+      defaultClusterDisableZoom,
+      usableCeiling - clusterDisableHeadroom,
+    );
+  }
 
   // Esri's transparent reference tile service that publishes country / state /
   // province boundaries and populated-place labels (cities, towns, villages)

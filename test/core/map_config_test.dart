@@ -33,6 +33,38 @@ void main() {
       expect(MapConfig.defaultZoom, lessThan(MapConfig.maxZoom));
     });
 
+    group('clusterDisableZoom', () {
+      test('terrain separates one level earlier than other styles', () {
+        // Terrain tiles top out at native z17, so clusters disable at z14 —
+        // a level earlier than the z15 the higher-zoom styles use, giving
+        // clusters room to open before the user runs out of usable zoom.
+        expect(MapConfig.clusterDisableZoom(MapTileStyle.terrain), 14);
+        expect(MapConfig.clusterDisableZoom(MapTileStyle.satellite), 15);
+        expect(MapConfig.clusterDisableZoom(MapTileStyle.dark), 15);
+        expect(MapConfig.clusterDisableZoom(MapTileStyle.light), 15);
+      });
+
+      test('never reaches the interactive ceiling or the tile ceiling', () {
+        for (final style in MapTileStyle.values) {
+          final z = MapConfig.clusterDisableZoom(style);
+          // Clusters must be able to disable below the deepest reachable zoom.
+          expect(z, lessThan(MapConfig.maxZoom));
+          // And at least one unclustered level must exist before the tiles
+          // stop, so clusters never cling past where the map can refine.
+          expect(z, lessThan(style.maxNativeZoom));
+        }
+      });
+
+      test('caps at the intended default for high-zoom styles', () {
+        for (final style in MapTileStyle.values) {
+          expect(
+            MapConfig.clusterDisableZoom(style),
+            lessThanOrEqualTo(MapConfig.defaultClusterDisableZoom),
+          );
+        }
+      });
+    });
+
     test('darkTileLayer returns TileLayer', () {
       final layer = MapConfig.darkTileLayer();
       expect(layer, isNotNull);

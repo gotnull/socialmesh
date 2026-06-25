@@ -836,7 +836,9 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                   size: const Size(40, 40),
                   alignment: Alignment.center,
                   padding: EdgeInsets.zero,
-                  maxZoom: 15,
+                  disableClusteringAtZoom: MapConfig.clusterDisableZoom(
+                    _mapStyle,
+                  ),
                   // Disable animations for performance with 10k+ nodes
                   animationsOptions: const AnimationsOptions(
                     zoom: Duration.zero,

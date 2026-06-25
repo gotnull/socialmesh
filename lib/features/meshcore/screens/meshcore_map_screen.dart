@@ -691,6 +691,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
                             for (final c in contactsWithLocation)
                               c.publicKeyHex: c,
                           },
+                          mapStyle: _mapStyle,
                         );
                       },
                     ),
@@ -999,6 +1000,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
     required BuildContext context,
     required List<Marker> markers,
     required Map<String, MeshCoreContact> contactsByPubKeyHex,
+    required MapTileStyle mapStyle,
   }) {
     final accentColor = context.accentColor;
     return MarkerClusterLayerWidget(
@@ -1007,7 +1009,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
         size: const Size(44, 44),
         alignment: Alignment.center,
         padding: EdgeInsets.zero,
-        maxZoom: 15,
+        disableClusteringAtZoom: MapConfig.clusterDisableZoom(mapStyle),
         zoomToBoundsOnClick: false,
         animationsOptions: const AnimationsOptions(
           zoom: Duration.zero,

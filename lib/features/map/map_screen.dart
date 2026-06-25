@@ -2172,6 +2172,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               nodesByNum: {
                                 for (final n in orderedNodes) n.node.nodeNum: n,
                               },
+                              mapStyle: _mapStyle,
                             );
                           },
                         ),
@@ -3358,6 +3359,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     required BuildContext context,
     required List<Marker> markers,
     required Map<int, _NodeWithPosition> nodesByNum,
+    required MapTileStyle mapStyle,
   }) {
     final accentColor = context.accentColor;
     return MarkerClusterLayerWidget(
@@ -3366,7 +3368,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         size: const Size(44, 44),
         alignment: Alignment.center,
         padding: EdgeInsets.zero,
-        maxZoom: 15,
+        disableClusteringAtZoom: MapConfig.clusterDisableZoom(mapStyle),
         zoomToBoundsOnClick: false,
         animationsOptions: const AnimationsOptions(
           zoom: Duration.zero,

@@ -107,14 +107,16 @@ void main() {
           '    required BuildContext context,\n'
           '    required List<Marker> markers,\n'
           '    required Map<int, _NodeWithPosition> nodesByNum,\n'
+          '    required MapTileStyle mapStyle,\n'
           '  })',
         ),
         true,
         reason:
-            '_buildClusterLayer must take the markers list AND a lookup '
+            '_buildClusterLayer must take the markers list, a lookup '
             'map (nodeNum → _NodeWithPosition) so the cluster-list sheet '
             'can recover the underlying nodes from each marker via '
-            'ValueKey<int>.',
+            'ValueKey<int>, AND the current MapTileStyle so the cluster '
+            'disable-zoom can vary per style.',
       );
       expect(source.contains('MarkerClusterLayerWidget('), true);
       expect(
@@ -123,6 +125,27 @@ void main() {
         reason:
             'The marker render must dispatch to _buildClusterLayer when '
             '_clusterMarkers is true.',
+      );
+    });
+
+    test('cluster disable-zoom is per-style and correctly wired', () {
+      expect(
+        source.contains(
+          'disableClusteringAtZoom: MapConfig.clusterDisableZoom(mapStyle)',
+        ),
+        true,
+        reason:
+            'Clustering must disable above a per-style zoom via the package '
+            "parameter that actually drives it — `disableClusteringAtZoom`. "
+            'The old `maxZoom:` only affected the disabled tap-to-zoom path '
+            '(zoomToBoundsOnClick: false) and was dead.',
+      );
+      expect(
+        source.contains('maxZoom: 15'),
+        false,
+        reason:
+            'The dead `maxZoom: 15` (no-op while zoomToBoundsOnClick is false) '
+            'must be gone so future readers are not misled.',
       );
     });
 
