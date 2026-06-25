@@ -3891,6 +3891,10 @@
     "@automationVariableDescSensorState": {
         "description": "Description for the {{sensor.state}} variable"
     },
+    "automationVariableDescHops": "Hops the message travelled to reach you",
+    "@automationVariableDescHops": {
+        "description": "Description for the {{hops}} variable"
+    },
     "automationVariableDescSignalThreshold": "Signal threshold in dB (SNR)",
     "@automationVariableDescSignalThreshold": {
         "description": "Description for the {{signal.threshold}} variable"
@@ -48585,6 +48589,14 @@
     },
     "automationTemplateDeadManDesc": "Alert if no activity from node for 30 minutes",
     "@automationTemplateDeadManDesc": {
+        "description": "Description text in automations"
+    },
+    "automationTemplateFarMessageTitle": "Hop Distance Alert",
+    "@automationTemplateFarMessageTitle": {
+        "description": "Title text in automations"
+    },
+    "automationTemplateFarMessageDesc": "Show how many hops a message travelled",
+    "@automationTemplateFarMessageDesc": {
         "description": "Description text in automations"
     },
     "automationScheduledTitle": "Scheduled Automation",

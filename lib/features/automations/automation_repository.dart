@@ -663,6 +663,24 @@ class AutomationRepository extends ChangeNotifier {
           ],
         );
 
+      case 'far_message_alert':
+        return Automation(
+          name: 'Hop Distance Alert', // lint-allow: hardcoded-string
+          description:
+              'Show how many hops each incoming message travelled', // lint-allow: hardcoded-string
+          trigger: const AutomationTrigger(type: TriggerType.messageReceived),
+          actions: const [
+            AutomationAction(
+              type: ActionType.pushNotification,
+              config: {
+                'notificationTitle': 'New mesh message',
+                'notificationBody':
+                    '{{node.name}} reached you {{hops}}: {{message}}',
+              },
+            ),
+          ],
+        );
+
       default:
         return Automation(
           name: 'New Automation', // lint-allow: hardcoded-string
@@ -695,6 +713,8 @@ class AutomationRepository extends ChangeNotifier {
         return TriggerType.channelActivity;
       case 'emergency_beacon':
         return TriggerType.messageContains;
+      case 'far_message_alert':
+        return TriggerType.messageReceived;
       default:
         return null;
     }
@@ -739,6 +759,13 @@ class AutomationRepository extends ChangeNotifier {
             'Alert if node silent too long', // lint-allow: hardcoded-string
         icon: Icons.timer_off,
       ),
+      (
+        id: 'far_message_alert',
+        name: 'Hop Distance Alert', // lint-allow: hardcoded-string
+        description:
+            'Show how many hops a message travelled', // lint-allow: hardcoded-string
+        icon: Icons.route,
+      ),
     ];
   }
 
@@ -755,6 +782,7 @@ class AutomationRepository extends ChangeNotifier {
       'weather_report' => l10n.automationTemplateWeatherReportTitle,
       'channel_monitor' => l10n.automationTemplateChannelMonitorTitle,
       'emergency_beacon' => l10n.automationTemplateEmergencyBeaconTitle,
+      'far_message_alert' => l10n.automationTemplateFarMessageTitle,
       _ => id,
     };
   }
@@ -772,6 +800,7 @@ class AutomationRepository extends ChangeNotifier {
       'weather_report' => l10n.automationTemplateWeatherReportDescription,
       'channel_monitor' => l10n.automationTemplateChannelMonitorDescription,
       'emergency_beacon' => l10n.automationTemplateEmergencyBeaconDescription,
+      'far_message_alert' => l10n.automationTemplateFarMessageDesc,
       _ => id,
     };
   }

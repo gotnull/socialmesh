@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'dm_channel_resolver.dart';
 import 'dm_contacts_provider.dart';
 import 'widgets/chat_composer.dart';
+import 'widgets/hop_count_chip.dart';
 import 'widgets/message_bubble_body.dart';
 import 'widgets/messaging_unread_divider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -3696,6 +3697,14 @@ class _MessageBubble extends ConsumerWidget {
                     ),
                   ),
                 ),
+                if (message.hopCount != null)
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      top: AppTheme.spacing2,
+                      left: AppTheme.spacing4,
+                    ),
+                    child: HopCountChip(hopCount: message.hopCount!),
+                  ),
                 Padding(
                   padding: const EdgeInsets.only(top: 2, left: 4),
                   child: TapbackDisplay(tapbacks: tapbacks),
@@ -3856,9 +3865,7 @@ class _MessageBubble extends ConsumerWidget {
           if (message.hopCount != null)
             _TechInfoChip(
               icon: Icons.route,
-              label: message.hopCount == 0
-                  ? l10n.messagingTechInfoDirectHop
-                  : l10n.messagingTechInfoHops(message.hopCount!),
+              label: hopCountLabel(l10n, message.hopCount!),
               iconSize: iconSize,
               color: color,
               textStyle: textStyle,

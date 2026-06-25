@@ -16,6 +16,7 @@ import '../../../services/haptic_service.dart';
 import '../../../core/logging.dart';
 import '../../../utils/snackbar.dart';
 import '../../../utils/time_format.dart';
+import 'hop_count_chip.dart';
 
 /// Shows a context menu for a message with tapback, reply, copy, details, and delete options
 class MessageContextMenu extends ConsumerStatefulWidget {
@@ -447,9 +448,10 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu>
                   if (widget.message.hopCount != null)
                     _DetailChip(
                       icon: Icons.route,
-                      label:
-                          '${widget.message.hopCount} ' // lint-allow: hardcoded-string
-                          '${widget.message.hopCount == 1 ? 'hop' : 'hops'}',
+                      label: hopCountLabel(
+                        context.l10n,
+                        widget.message.hopCount!,
+                      ),
                     ),
                   if (widget.message.rxSnr != null)
                     _DetailChip(

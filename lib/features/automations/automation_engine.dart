@@ -37,7 +37,17 @@ class AutomationMessage {
   final String text;
   final int? channel;
 
-  AutomationMessage({required this.from, required this.text, this.channel});
+  // Hops the message travelled to reach us: 0 = direct (no relay),
+  // null = unknown (sent messages, or transports like MeshCore that don't
+  // expose a Meshtastic-style hop count here).
+  final int? hopCount;
+
+  AutomationMessage({
+    required this.from,
+    required this.text,
+    this.channel,
+    this.hopCount,
+  });
 }
 
 /// Engine that evaluates triggers and executes automation actions
@@ -537,6 +547,7 @@ class AutomationEngine {
         batteryLevel: msgBattery,
         latitude: msgPos?.$1,
         longitude: msgPos?.$2,
+        hopCount: message.hopCount,
         protocol: protocol,
       ),
     );
@@ -552,6 +563,7 @@ class AutomationEngine {
         batteryLevel: msgBattery,
         latitude: msgPos?.$1,
         longitude: msgPos?.$2,
+        hopCount: message.hopCount,
         protocol: protocol,
       ),
     );
@@ -568,6 +580,7 @@ class AutomationEngine {
           batteryLevel: msgBattery,
           latitude: msgPos?.$1,
           longitude: msgPos?.$2,
+          hopCount: message.hopCount,
           protocol: protocol,
         ),
       );
@@ -1658,6 +1671,17 @@ class AutomationEngine {
       ? DateFormat('MMM d, HH:mm')
       : DateFormat('MMM d, h:mm a');
 
+  /// Self-contained phrase for the {{hops}} variable so template text like
+  /// "reached you {{hops}}" reads naturally across every case: "directly"
+  /// for a direct (0-hop) message, "1 hop" / "N hops" for relayed ones, and
+  /// "unknown hops" when the count isn't available (non-message triggers,
+  /// sent messages, or MeshCore).
+  static String _formatHops(int? hops) {
+    if (hops == null) return 'unknown hops';
+    if (hops == 0) return 'directly';
+    return hops == 1 ? '1 hop' : '$hops hops';
+  }
+
   /// Build the runtime variable map from an [AutomationEvent].
   ///
   /// This is the single source of truth for variable resolution, shared
@@ -1683,6 +1707,7 @@ class AutomationEngine {
       'time': _notificationTimeFormat.format(DateTime.now()),
       'sensor.name': event.sensorName ?? '',
       'sensor.state': event.sensorDetected == true ? 'detected' : 'clear',
+      'hops': _formatHops(event.hopCount),
     };
 
     if (trigger != null) {
@@ -1722,7 +1747,8 @@ class AutomationEngine {
         .replaceAll(
           '{{sensor.state}}',
           event.sensorDetected == true ? 'detected' : 'clear',
-        );
+        )
+        .replaceAll('{{hops}}', _formatHops(event.hopCount));
 
     // Trigger-specific context variables
     if (trigger != null) {

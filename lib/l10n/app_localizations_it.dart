@@ -2935,6 +2935,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Stato del sensore (rilevato / libero)';
 
   @override
+  String get automationVariableDescHops =>
+      'Hop compiuti dal messaggio per raggiungerti';
+
+  @override
   String get automationVariableDescSignalThreshold =>
       'Soglia del segnale in dB (SNR)';
 
@@ -36714,6 +36718,13 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get automationTemplateDeadManDesc =>
       'Allerta se nessuna attività dal nodo per 30 minuti';
+
+  @override
+  String get automationTemplateFarMessageTitle => 'Avviso distanza in hop';
+
+  @override
+  String get automationTemplateFarMessageDesc =>
+      'Mostra quanti hop ha compiuto un messaggio';
 
   @override
   String get automationScheduledTitle => 'Automazione programmata';

@@ -2929,6 +2929,10 @@ class AppLocalizationsUk extends AppLocalizations {
       'Стан датчика (виявлено / відсутність виявлення)';
 
   @override
+  String get automationVariableDescHops =>
+      'Скільки стрибків подолало повідомлення до вас';
+
+  @override
   String get automationVariableDescSignalThreshold =>
       'Порогове значення сигналу в дБ (SNR)';
 
@@ -36732,6 +36736,14 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get automationTemplateDeadManDesc =>
       'Сповіщення, якщо немає активності від вузла впродовж 30 хвилин';
+
+  @override
+  String get automationTemplateFarMessageTitle =>
+      'Сповіщення про відстань у стрибках';
+
+  @override
+  String get automationTemplateFarMessageDesc =>
+      'Показує, скільки стрибків подолало повідомлення';
 
   @override
   String get automationScheduledTitle => 'Запланована автоматизація';

@@ -5148,6 +5148,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       from: message.from,
       text: message.text,
       channel: message.channel,
+      hopCount: message.hopCount,
     );
 
     engine.processMessage(

@@ -22,12 +22,13 @@ const _universalVariables = [
 const _triggerVariables = <TriggerType, List<String>>{
   TriggerType.batteryLow: ['{{threshold}}'],
   TriggerType.batteryFull: ['{{threshold}}'],
-  TriggerType.messageContains: ['{{keyword}}'],
+  TriggerType.messageReceived: ['{{hops}}'],
+  TriggerType.messageContains: ['{{keyword}}', '{{hops}}'],
   TriggerType.geofenceEnter: ['{{zone.radius}}'],
   TriggerType.geofenceExit: ['{{zone.radius}}'],
   TriggerType.nodeSilent: ['{{silent.duration}}'],
   TriggerType.signalWeak: ['{{signal.threshold}}'],
-  TriggerType.channelActivity: ['{{channel.name}}'],
+  TriggerType.channelActivity: ['{{channel.name}}', '{{hops}}'],
   TriggerType.detectionSensor: ['{{sensor.name}}', '{{sensor.state}}'],
 };
 
@@ -56,6 +57,7 @@ const _variableDisplayNames = {
   '{{channel.name}}': 'channel.name',
   '{{sensor.name}}': 'sensor.name',
   '{{sensor.state}}': 'sensor.state',
+  '{{hops}}': 'hops',
 };
 
 /// Variable descriptions for tooltips
@@ -74,6 +76,7 @@ Map<String, String> _variableDescriptions(BuildContext context) => {
   '{{channel.name}}': context.l10n.automationVariableDescChannelName,
   '{{sensor.name}}': context.l10n.automationVariableDescSensorName,
   '{{sensor.state}}': context.l10n.automationVariableDescSensorState,
+  '{{hops}}': context.l10n.automationVariableDescHops,
 };
 
 /// Variable category icons for the picker sheet
@@ -92,11 +95,12 @@ const _variableIcons = {
   '{{channel.name}}': Icons.forum_outlined,
   '{{sensor.name}}': Icons.sensors,
   '{{sensor.state}}': Icons.toggle_on_outlined,
+  '{{hops}}': Icons.route,
 };
 
 /// Regex to match all valid variables (universal + trigger-specific)
 final _variableRegex = RegExp(
-  r'\{\{(node\.name|node\.num|battery|location|message|time|threshold|keyword|zone\.radius|silent\.duration|signal\.threshold|channel\.name|sensor\.name|sensor\.state)\}\}',
+  r'\{\{(node\.name|node\.num|battery|location|message|time|threshold|keyword|zone\.radius|silent\.duration|signal\.threshold|channel\.name|sensor\.name|sensor\.state|hops)\}\}',
 );
 
 /// Legacy export for backwards compatibility
@@ -227,6 +231,7 @@ const _allTriggerVariableNames = [
   '{{channel.name}}',
   '{{sensor.name}}',
   '{{sensor.state}}',
+  '{{hops}}',
 ];
 
 /// Custom controller that styles variables with colored text.

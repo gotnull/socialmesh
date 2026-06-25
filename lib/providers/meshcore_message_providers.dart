@@ -1121,6 +1121,8 @@ class MeshCoreConversationsNotifier
     required int? channelIndex,
   }) {
     final from = meshCoreSenderIdFromKey(senderKey);
+    // MeshCore frames don't expose a Meshtastic-style hop count here, so
+    // hopCount stays null (the engine renders the "unknown" fallback).
     final automationMessage = AutomationMessage(
       from: from,
       text: text,

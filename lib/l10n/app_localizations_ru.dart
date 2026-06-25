@@ -2921,6 +2921,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Состояние датчика (обнаружено / очищено)';
 
   @override
+  String get automationVariableDescHops =>
+      'Сколько прыжков сообщение прошло до вас';
+
+  @override
   String get automationVariableDescSignalThreshold =>
       'Порог сигнала в дБ (SNR)';
 
@@ -36721,6 +36725,14 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get automationTemplateDeadManDesc =>
       'Оповещение, если нет активности от узла в течение 30 минут';
+
+  @override
+  String get automationTemplateFarMessageTitle =>
+      'Оповещение о расстоянии в прыжках';
+
+  @override
+  String get automationTemplateFarMessageDesc =>
+      'Показывает, сколько прыжков прошло сообщение';
 
   @override
   String get automationScheduledTitle => 'Запланированная автоматизация';

@@ -2962,6 +2962,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'État du capteur (détecté / dégagé)';
 
   @override
+  String get automationVariableDescHops =>
+      'Sauts parcourus par le message pour vous parvenir';
+
+  @override
   String get automationVariableDescSignalThreshold =>
       'Seuil de signal en dB (SNR)';
 
@@ -36981,6 +36985,13 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get automationTemplateDeadManDesc =>
       'Alerte si aucune activité du nœud pendant 30 minutes';
+
+  @override
+  String get automationTemplateFarMessageTitle => 'Alerte de distance en sauts';
+
+  @override
+  String get automationTemplateFarMessageDesc =>
+      'Affiche le nombre de sauts parcourus par un message';
 
   @override
   String get automationScheduledTitle => 'Automatisation planifiée';

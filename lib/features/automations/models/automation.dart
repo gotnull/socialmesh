@@ -1045,6 +1045,12 @@ class AutomationEvent {
   final int? snr;
   final String? sensorName;
   final bool? sensorDetected;
+
+  // Hops the triggering message travelled: 0 = direct, null = unknown
+  // (non-message triggers, sent messages, or MeshCore where it isn't
+  // exposed). Sourced from `Message.hopCount` for message triggers.
+  final int? hopCount;
+
   final DateTime timestamp;
 
   // Scheduled trigger fields
@@ -1079,6 +1085,7 @@ class AutomationEvent {
     this.snr,
     this.sensorName,
     this.sensorDetected,
+    this.hopCount,
     DateTime? timestamp,
     this.scheduleId,
     this.slotKey,

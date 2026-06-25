@@ -5166,6 +5166,12 @@ abstract class AppLocalizations {
   /// **'Sensor state (detected / clear)'**
   String get automationVariableDescSensorState;
 
+  /// Description for the {{hops}} variable
+  ///
+  /// In en, this message translates to:
+  /// **'Hops the message travelled to reach you'**
+  String get automationVariableDescHops;
+
   /// Description for the {{signal.threshold}} variable
   ///
   /// In en, this message translates to:
@@ -63418,6 +63424,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Alert if no activity from node for 30 minutes'**
   String get automationTemplateDeadManDesc;
+
+  /// Title text in automations
+  ///
+  /// In en, this message translates to:
+  /// **'Hop Distance Alert'**
+  String get automationTemplateFarMessageTitle;
+
+  /// Description text in automations
+  ///
+  /// In en, this message translates to:
+  /// **'Show how many hops a message travelled'**
+  String get automationTemplateFarMessageDesc;
 
   /// Title for the automations screen
   ///

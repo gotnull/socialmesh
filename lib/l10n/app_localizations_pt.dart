@@ -2917,6 +2917,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Estado do sensor (detectado / livre)';
 
   @override
+  String get automationVariableDescHops =>
+      'Saltos que a mensagem percorreu até você';
+
+  @override
   String get automationVariableDescSignalThreshold =>
       'Limiar do sinal em dB (SNR)';
 
@@ -36685,6 +36689,14 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get automationTemplateDeadManDesc =>
       'Alertar se nenhuma atividade do nó por 30 minutos';
+
+  @override
+  String get automationTemplateFarMessageTitle =>
+      'Alerta de distância em saltos';
+
+  @override
+  String get automationTemplateFarMessageDesc =>
+      'Mostra quantos saltos uma mensagem percorreu';
 
   @override
   String get automationScheduledTitle => 'Automação agendada';

@@ -2892,6 +2892,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sensor state (detected / clear)';
 
   @override
+  String get automationVariableDescHops =>
+      'Hops the message travelled to reach you';
+
+  @override
   String get automationVariableDescSignalThreshold =>
       'Signal threshold in dB (SNR)';
 
@@ -36294,6 +36298,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get automationTemplateDeadManDesc =>
       'Alert if no activity from node for 30 minutes';
+
+  @override
+  String get automationTemplateFarMessageTitle => 'Hop Distance Alert';
+
+  @override
+  String get automationTemplateFarMessageDesc =>
+      'Show how many hops a message travelled';
 
   @override
   String get automationScheduledTitle => 'Scheduled Automation';

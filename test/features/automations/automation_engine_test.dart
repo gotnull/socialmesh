@@ -754,6 +754,55 @@ void main() {
       expect(sentMessages.first.$2, contains('Hello'));
     });
 
+    test('interpolates {{hops}} from the triggering message', () async {
+      final automation = Automation(
+        id: 'test-hops',
+        name: 'Hops Test',
+        trigger: const AutomationTrigger(type: TriggerType.messageReceived),
+        actions: const [
+          AutomationAction(
+            type: ActionType.sendMessage,
+            config: {
+              'targetNodeNum': 999,
+              'messageText': 'reached you {{hops}}',
+            },
+          ),
+        ],
+      );
+      mockRepository.addTestAutomation(automation);
+
+      // Distinct sender node-nums per case so the engine's per-sender
+      // message dedupe doesn't coalesce the rapid-fire sends.
+      // 3-hop relayed message -> "3 hops".
+      await engine.processMessage(
+        AutomationMessage(from: 101, text: 'Hi', hopCount: 3),
+        senderName: 'TestNode',
+      );
+      expect(sentMessages, isNotEmpty);
+      expect(sentMessages.last.$2, 'reached you 3 hops');
+
+      // Direct (0-hop) message -> "directly".
+      await engine.processMessage(
+        AutomationMessage(from: 102, text: 'Hi', hopCount: 0),
+        senderName: 'TestNode',
+      );
+      expect(sentMessages.last.$2, 'reached you directly');
+
+      // Single hop -> "1 hop".
+      await engine.processMessage(
+        AutomationMessage(from: 103, text: 'Hi', hopCount: 1),
+        senderName: 'TestNode',
+      );
+      expect(sentMessages.last.$2, 'reached you 1 hop');
+
+      // Unknown (null) hop count -> "unknown hops".
+      await engine.processMessage(
+        AutomationMessage(from: 104, text: 'Hi'),
+        senderName: 'TestNode',
+      );
+      expect(sentMessages.last.$2, 'reached you unknown hops');
+    });
+
     test('sendToChannel action works', () async {
       final automation = Automation(
         id: 'test-channel-send',

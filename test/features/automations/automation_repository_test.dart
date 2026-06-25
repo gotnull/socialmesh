@@ -515,6 +515,23 @@ void main() {
       expect(automation.trigger.silentMinutes, 30);
     });
 
+    test('createTemplate returns valid far_message_alert', () {
+      final automation = AutomationRepository.createTemplate(
+        'far_message_alert',
+      );
+
+      expect(automation.name, contains('Hop'));
+      expect(automation.trigger.type, TriggerType.messageReceived);
+      expect(
+        automation.actions.first.config['notificationBody'],
+        contains('{{hops}}'),
+      );
+      expect(
+        AutomationRepository.templateTriggerType('far_message_alert'),
+        TriggerType.messageReceived,
+      );
+    });
+
     test('createTemplate returns default for unknown template', () {
       final automation = AutomationRepository.createTemplate('unknown');
 
@@ -525,12 +542,13 @@ void main() {
     test('templates list has correct entries', () {
       final templates = AutomationRepository.templates;
 
-      expect(templates.length, 5);
+      expect(templates.length, 6);
       expect(templates.any((t) => t.id == 'low_battery_alert'), true);
       expect(templates.any((t) => t.id == 'node_offline_alert'), true);
       expect(templates.any((t) => t.id == 'geofence_exit'), true);
       expect(templates.any((t) => t.id == 'sos_response'), true);
       expect(templates.any((t) => t.id == 'dead_mans_switch'), true);
+      expect(templates.any((t) => t.id == 'far_message_alert'), true);
     });
 
     test('all templates have required fields', () {
