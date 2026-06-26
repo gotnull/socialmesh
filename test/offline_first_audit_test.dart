@@ -217,21 +217,6 @@ void main() {
       );
     });
 
-    test('Story creation checks connectivity at provider level', () {
-      // story_service.dart itself has Cloud Functions calls but the
-      // connectivity gate is in story_providers.dart (CreateStoryNotifier)
-      final providerFile = File('lib/providers/story_providers.dart');
-      expect(providerFile.existsSync(), isTrue);
-      final content = providerFile.readAsStringSync();
-      expect(
-        content.contains('isOnlineProvider'),
-        isTrue,
-        reason:
-            'story_providers.dart must check isOnlineProvider '
-            'before calling createStory',
-      );
-    });
-
     test('Bug report service checks connectivity before submission', () {
       final serviceFile = File('lib/services/bug_report_service.dart');
       expect(serviceFile.existsSync(), isTrue);

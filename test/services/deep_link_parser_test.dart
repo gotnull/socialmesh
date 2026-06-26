@@ -460,7 +460,7 @@ void main() {
       expect(result.fallbackMessage, 'Invalid channel data');
     });
 
-    test('routes profile link to /profile', () {
+    test('routes profile link to /main (social profile removed)', () {
       final link = ParsedDeepLink(
         type: DeepLinkType.profile,
         originalUri: 'socialmesh://profile/user1',
@@ -469,8 +469,7 @@ void main() {
 
       final result = deepLinkRouter.route(link);
 
-      expect(result.routeName, '/profile');
-      expect(result.arguments?['displayName'], 'user1');
+      expect(result.routeName, '/main');
     });
 
     test('routes widget link to /widget-detail', () {
@@ -514,7 +513,7 @@ void main() {
       expect(result.requiresDevice, false);
     });
 
-    test('routes post link to /post-detail', () {
+    test('routes post link to /main (social post removed)', () {
       final link = ParsedDeepLink(
         type: DeepLinkType.post,
         originalUri: 'socialmesh://post/p1',
@@ -523,8 +522,7 @@ void main() {
 
       final result = deepLinkRouter.route(link);
 
-      expect(result.routeName, '/post-detail');
-      expect(result.arguments?['postId'], 'p1');
+      expect(result.routeName, '/main');
     });
 
     test('routes location link to /map with coordinates', () {

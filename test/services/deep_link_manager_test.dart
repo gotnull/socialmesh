@@ -111,7 +111,7 @@ void main() {
         profileDisplayName: 'user1',
       );
       final profileResult = deepLinkRouter.route(profileLink);
-      expect(profileResult.routeName, '/profile');
+      expect(profileResult.routeName, '/main');
     });
   });
 }
