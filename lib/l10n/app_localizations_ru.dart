@@ -6356,36 +6356,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get firmwareDfuConfirmStart => 'Начать обновление';
 
   @override
-  String get globeEmptyDescription =>
-      'Здесь появятся узлы с данными о местоположении';
-
-  @override
-  String get globeEmptyTitle => 'Нет узлов с GPS';
-
-  @override
-  String get globeHelp => 'Справка';
-
-  @override
-  String get globeHideConnections => 'Скрыть связи';
-
-  @override
-  String globeNodeCount(int count) {
-    return '$count узлов';
-  }
-
-  @override
-  String get globeResetView => 'Сбросить вид';
-
-  @override
-  String get globeScreenTitle => 'Глобус mesh';
-
-  @override
-  String get globeSelectNode => 'Выбрать узел';
-
-  @override
-  String get globeShowConnections => 'Показать связи';
-
-  @override
   String get gpsStatusAccuracy => 'Точность';
 
   @override
@@ -6648,9 +6618,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get helpCenterScreenDeviceShop => 'Магазин устройств';
-
-  @override
-  String get helpCenterScreenGlobe => 'Глобус';
 
   @override
   String get helpCenterScreenMap => 'Карта';
@@ -7418,9 +7385,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get mapFilterWithGps => 'С GPS';
-
-  @override
-  String get mapGlobeView => '3D-вид глобуса';
 
   @override
   String get mapHelp => 'Справка';
@@ -18551,6 +18515,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String routeDetailShareText(String name) {
     return 'Маршрут: $name';
   }
+
+  @override
+  String get routeDetailShareTooltip => 'Поделиться маршрутом в GPX';
 
   @override
   String get routeDetailStorageUnavailable => 'Хранилище недоступно';
@@ -33166,9 +33133,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get adminBroadcastLinkWorldMap => 'Карта мира';
 
   @override
-  String get adminBroadcastLinkGlobe => '3D-глобус';
-
-  @override
   String get adminBroadcastLinkReachability => 'Доступность';
 
   @override
@@ -34808,12 +34772,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Визуализация топологии сети в 3D';
 
   @override
-  String get helpGlobeOverviewTitle => 'Вид глобуса';
-
-  @override
-  String get helpGlobeOverviewDescription => '3D-глобус с вашей меш-сетью';
-
-  @override
   String get helpTimelineOverviewTitle => 'Хронология';
 
   @override
@@ -35407,18 +35365,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get helpMesh3dTapBubble =>
       '**Нажмите на любой узел**, чтобы выбрать его и просмотреть детали. Отлично для понимания топологии сети!';
-
-  @override
-  String get helpGlobeIntroBubble =>
-      'Вращайте **Глобус**, чтобы увидеть вашу меш-сеть из космоса! Каждая светящаяся точка - узел с координатами GPS.';
-
-  @override
-  String get helpGlobeInteractBubble =>
-      '**Перетаскивайте для вращения**, щипайте для масштабирования. Нажмите на узел, чтобы переместиться к его расположению и увидеть детали!';
-
-  @override
-  String get helpGlobeArcsBubble =>
-      'Следите за **дугами соединений** - они показывают пути сообщений в вашей меш-сети в режиме реального времени!';
 
   @override
   String get helpTimelineIntroBubble =>

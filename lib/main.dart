@@ -113,7 +113,6 @@ import 'features/timeline/timeline_screen.dart';
 import 'features/presence/presence_screen.dart';
 import 'features/discovery/node_discovery_overlay.dart';
 import 'features/routes/route_detail_screen.dart';
-import 'features/globe/globe_screen.dart';
 import 'features/reachability/mesh_reachability_screen.dart';
 import 'features/feedback/my_bug_reports_screen.dart';
 import 'features/mesh_canvas/screens/mesh_canvas_overview_screen.dart';
@@ -2119,7 +2118,6 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
           '/nodes': (context) => const NodesScreen(),
           '/qr-scanner': (context) => const UniversalQrScannerScreen(),
           '/map': (context) => const MapScreen(),
-          '/globe': (context) => const GlobeScreen(),
           '/settings': (context) => const SettingsScreen(),
           '/account': (context) => const AccountSubscriptionsScreen(),
           '/device-config': (context) => _buildProtectedRoute(

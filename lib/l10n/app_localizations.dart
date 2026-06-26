@@ -11086,60 +11086,6 @@ abstract class AppLocalizations {
   /// **'Start Update'**
   String get firmwareDfuConfirmStart;
 
-  /// Empty state message
-  ///
-  /// In en, this message translates to:
-  /// **'Nodes with position data will appear here'**
-  String get globeEmptyDescription;
-
-  /// Screen or section title
-  ///
-  /// In en, this message translates to:
-  /// **'No nodes with GPS'**
-  String get globeEmptyTitle;
-
-  /// UI text: globe help
-  ///
-  /// In en, this message translates to:
-  /// **'Help'**
-  String get globeHelp;
-
-  /// UI text: globe hide connections
-  ///
-  /// In en, this message translates to:
-  /// **'Hide connections'**
-  String get globeHideConnections;
-
-  /// UI text: globe node count Parameters: {count} = numeric count.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} nodes'**
-  String globeNodeCount(int count);
-
-  /// UI text: globe reset view
-  ///
-  /// In en, this message translates to:
-  /// **'Reset view'**
-  String get globeResetView;
-
-  /// Screen or section title
-  ///
-  /// In en, this message translates to:
-  /// **'Mesh Globe'**
-  String get globeScreenTitle;
-
-  /// UI text: globe select node
-  ///
-  /// In en, this message translates to:
-  /// **'Select Node'**
-  String get globeSelectNode;
-
-  /// UI text: globe show connections
-  ///
-  /// In en, this message translates to:
-  /// **'Show connections'**
-  String get globeShowConnections;
-
   /// UI text: gps status accuracy
   ///
   /// In en, this message translates to:
@@ -11595,12 +11541,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Device Shop'**
   String get helpCenterScreenDeviceShop;
-
-  /// Screen name shown in help article topic chips for the Globe screen.
-  ///
-  /// In en, this message translates to:
-  /// **'Globe'**
-  String get helpCenterScreenGlobe;
 
   /// Screen name shown in help article topic chips for the Map screen.
   ///
@@ -12945,12 +12885,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'With GPS'**
   String get mapFilterWithGps;
-
-  /// Text displayed in map view
-  ///
-  /// In en, this message translates to:
-  /// **'3D Globe View'**
-  String get mapGlobeView;
 
   /// Text displayed in map view
   ///
@@ -31879,6 +31813,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Route: {name}'**
   String routeDetailShareText(String name);
+
+  /// Tooltip for the share-route button on the route map
+  ///
+  /// In en, this message translates to:
+  /// **'Share route as GPX'**
+  String get routeDetailShareTooltip;
 
   /// Text displayed in routes
   ///
@@ -57466,12 +57406,6 @@ abstract class AppLocalizations {
   /// Text displayed in admin panel
   ///
   /// In en, this message translates to:
-  /// **'3D Globe'**
-  String get adminBroadcastLinkGlobe;
-
-  /// Text displayed in admin panel
-  ///
-  /// In en, this message translates to:
   /// **'Reachability'**
   String get adminBroadcastLinkReachability;
 
@@ -60385,18 +60319,6 @@ abstract class AppLocalizations {
   /// **'3D network topology visualization'**
   String get helpMesh3dOverviewDescription;
 
-  /// Title for globe_overview help topic
-  ///
-  /// In en, this message translates to:
-  /// **'Globe View'**
-  String get helpGlobeOverviewTitle;
-
-  /// Description for globe_overview help topic
-  ///
-  /// In en, this message translates to:
-  /// **'3D globe with your mesh'**
-  String get helpGlobeOverviewDescription;
-
   /// Title for timeline_overview help topic
   ///
   /// In en, this message translates to:
@@ -61320,24 +61242,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'**Tap any node** to select it and see details. Great for understanding your network topology!'**
   String get helpMesh3dTapBubble;
-
-  /// Help bubble text for step globe_intro
-  ///
-  /// In en, this message translates to:
-  /// **'Spin the **Globe** to see your mesh from space! Every glowing point is a node with GPS coordinates.'**
-  String get helpGlobeIntroBubble;
-
-  /// Help bubble text for step globe_interact
-  ///
-  /// In en, this message translates to:
-  /// **'**Drag to spin**, pinch to zoom. Tap a node to fly to its location and see details!'**
-  String get helpGlobeInteractBubble;
-
-  /// Help bubble text for step globe_arcs
-  ///
-  /// In en, this message translates to:
-  /// **'Watch the **connection arcs** - they show message paths traveling across your mesh in real-time!'**
-  String get helpGlobeArcsBubble;
 
   /// Help bubble text for step timeline_intro
   ///

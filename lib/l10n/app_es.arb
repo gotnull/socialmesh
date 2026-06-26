@@ -236,7 +236,6 @@
   "adminBroadcastLinkAether": "Aether",
   "adminBroadcastLinkAutomations": "Automatizaciones",
   "adminBroadcastLinkChannels": "Canales",
-  "adminBroadcastLinkGlobe": "Globo 3D",
   "adminBroadcastLinkIfttt": "Integración con IFTTT",
   "adminBroadcastLinkMap": "Mapa",
   "adminBroadcastLinkMessages": "Mensajes",
@@ -3519,15 +3518,6 @@
   "globalLayerWizardSubscribeVerified": "Permisos de suscripción verificados.",
   "globalLayerWizardTcpReachable": "La conexión TCP a {host}:{port} parece accesible.",
   "globalLayerWizardTlsAccepted": "Parámetros de negociación TLS aceptados.",
-  "globeEmptyDescription": "Los nodos con datos de posición aparecerán aquí",
-  "globeEmptyTitle": "Sin nodos con GPS",
-  "globeHelp": "Ayuda",
-  "globeHideConnections": "Ocultar conexiones",
-  "globeNodeCount": "{count} nodos",
-  "globeResetView": "Restablecer vista",
-  "globeScreenTitle": "Globo de malla",
-  "globeSelectNode": "Seleccionar nodo",
-  "globeShowConnections": "Mostrar conexiones",
   "goBack": "Volver",
   "googlePlayUnavailable": "Google Play no está disponible en este dispositivo. Intente con un método de pago alternativo.",
   "gpsStatusAccuracy": "Precisión",
@@ -3655,7 +3645,6 @@
   "helpCenterScreenChannels": "Canales",
   "helpCenterScreenCreateSignal": "Crear señal",
   "helpCenterScreenDeviceShop": "Tienda de dispositivos",
-  "helpCenterScreenGlobe": "Globo",
   "helpCenterScreenMap": "Mapa",
   "helpCenterScreenMesh3d": "Malla 3D",
   "helpCenterScreenMeshHealth": "Salud de la malla",
@@ -3766,11 +3755,6 @@
   "helpFtlSharedBubble": "Los canales LoRa son **compartidos y lentos**. Cada byte que envía es tiempo de aire que se le quita a todos los demás nodos en rango. Trátelo como una frecuencia de walkie-talkie, no como Wi-Fi.",
   "helpFtlToaBubble": "El **tiempo en el aire** por fragmento depende del Factor de propagación (SF). SF7 (rápido, corto alcance): ~30 ms/fragmento. SF12 (lento, largo alcance): ~1.500 ms/fragmento.",
   "helpFtlUsbBubble": "Las transferencias por BLE y USB no conllevan riesgo de ciclo de trabajo de radio. En una versión futura, se habilitarán límites más altos para conexiones cableadas directas.",
-  "helpGlobeArcsBubble": "Observe los **arcos de conexión**: muestran las rutas de mensajes que viajan por su malla en tiempo real.",
-  "helpGlobeInteractBubble": "**Arrastre para girar**, pellizque para hacer zoom. ¡Toque un nodo para volar a su ubicación y ver los detalles!",
-  "helpGlobeIntroBubble": "¡Gire el **Globo** para ver su malla desde el espacio! Cada punto luminoso es un nodo con coordenadas GPS.",
-  "helpGlobeOverviewDescription": "Globo 3D con su malla",
-  "helpGlobeOverviewTitle": "Vista de globo",
   "helpGpsBatteryBubble": "¡El GPS usa **batería**! Intervalos de actualización más largos equivalen a mejor duración de batería. ¡Equilibre privacidad y utilidad!",
   "helpGpsBroadcastBubble": "Su dispositivo transmite **actualizaciones de posición** cada pocos minutos. ¡Otros nodos lo ven aparecer en su mapa!",
   "helpGpsIntroBubble": "¡El **GPS** permite que otros vean dónde está en el mapa! Déjeme explicarle cómo funciona.",
@@ -4466,7 +4450,6 @@
   "mapFilterNodesTitle": "Filtrar nodos",
   "mapFilterNodesTooltip": "Filtrar nodos",
   "mapFilterWithGps": "Con GPS",
-  "mapGlobeView": "Vista de globo 3D",
   "mapHelp": "Ayuda",
   "mapHideConnectionLines": "Ocultar líneas de conexión",
   "mapHideHeatmap": "Ocultar halos de nodos",
@@ -12842,6 +12825,10 @@
   "@licenseOrgOverviewRecentActivityTitle": {
     "description": "Section title for the recent-audit-events preview rendered on the License Org Overview screen."
   },
+    "routeDetailShareTooltip": "Compartir ruta como GPX",
+    "@routeDetailShareTooltip": {
+        "description": "Tooltip for the share-route button on the route map"
+    },
   "licenseOrgAuditActionSeatCodeMinted": "Código de licencia creado",
   "@licenseOrgAuditActionSeatCodeMinted": {
     "description": "Human-readable label for the seat_code_minted audit action on the License Org Overview screen's Recent activity row."

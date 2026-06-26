@@ -236,7 +236,6 @@
   "adminBroadcastLinkAether": "Aether",
   "adminBroadcastLinkAutomations": "Automatisierungen",
   "adminBroadcastLinkChannels": "Kanäle",
-  "adminBroadcastLinkGlobe": "3D-Globus",
   "adminBroadcastLinkIfttt": "IFTTT-Integration",
   "adminBroadcastLinkMap": "Karte",
   "adminBroadcastLinkMessages": "Nachrichten",
@@ -3519,15 +3518,6 @@
   "globalLayerWizardSubscribeVerified": "Abonnementberechtigungen verifiziert.",
   "globalLayerWizardTcpReachable": "TCP-Verbindung zu {host}:{port} scheint erreichbar.",
   "globalLayerWizardTlsAccepted": "TLS-Handshake-Parameter akzeptiert.",
-  "globeEmptyDescription": "Nodes mit Positionsdaten erscheinen hier",
-  "globeEmptyTitle": "Keine Nodes mit GPS",
-  "globeHelp": "Hilfe",
-  "globeHideConnections": "Verbindungen ausblenden",
-  "globeNodeCount": "{count} Nodes",
-  "globeResetView": "Ansicht zurücksetzen",
-  "globeScreenTitle": "Mesh-Globus",
-  "globeSelectNode": "Node auswählen",
-  "globeShowConnections": "Verbindungen anzeigen",
   "goBack": "Zurück",
   "googlePlayUnavailable": "Google Play auf diesem Gerät nicht verfügbar - versuchen Sie eine alternative Zahlungsmethode.",
   "gpsStatusAccuracy": "Genauigkeit",
@@ -3655,7 +3645,6 @@
   "helpCenterScreenChannels": "Kanäle",
   "helpCenterScreenCreateSignal": "Signal erstellen",
   "helpCenterScreenDeviceShop": "Geräteshop",
-  "helpCenterScreenGlobe": "Globus",
   "helpCenterScreenMap": "Karte",
   "helpCenterScreenMesh3d": "Mesh 3D",
   "helpCenterScreenMeshHealth": "Mesh-Gesundheit",
@@ -3766,11 +3755,6 @@
   "helpFtlSharedBubble": "LoRa-Kanäle sind **geteilt und langsam**. Jedes Byte, das Sie senden, ist Sendezeit, die von jedem anderen Knoten in Reichweite gestohlen wird. Behandeln Sie es wie eine Walkie-Talkie-Frequenz, nicht wie Wi-Fi.",
   "helpFtlToaBubble": "**Zeit in der Luft** pro Block hängt vom Spreizfaktor (SF) ab. SF7 (schnell, Kurzstrecke): ca. 30 ms/Block. SF12 (langsam, Langstrecke): ca. 1.500 ms/Block.",
   "helpFtlUsbBubble": "BLE- und USB-verbundene Übertragungen tragen kein Funk-Tastverhältnisrisiko. In einer zukünftigen Version werden höhere Limits für direkte Kabelverbindungen freigeschaltet.",
-  "helpGlobeArcsBubble": "Beobachten Sie die **Verbindungsbögen** - sie zeigen Nachrichtenpfade, die in Echtzeit durch Ihr Mesh reisen!",
-  "helpGlobeInteractBubble": "**Ziehen zum Drehen**, Kneifen zum Zoomen. Tippen Sie auf einen Knoten, um zu seinem Standort zu fliegen und Details zu sehen!",
-  "helpGlobeIntroBubble": "Drehen Sie den **Globus**, um Ihr Mesh aus dem Weltraum zu sehen! Jeder leuchtende Punkt ist ein Knoten mit GPS-Koordinaten.",
-  "helpGlobeOverviewDescription": "3D-Globus mit Ihrem Mesh",
-  "helpGlobeOverviewTitle": "Globus-Ansicht",
   "helpGpsBatteryBubble": "GPS verbraucht **Akku**! Längere Aktualisierungsintervalle = bessere Akkulaufzeit. Finden Sie die Balance zwischen Datenschutz und Nützlichkeit!",
   "helpGpsBroadcastBubble": "Ihr Gerät sendet alle paar Minuten **Positionsaktualisierungen**. Andere Knoten sehen Sie auf ihrer Karte erscheinen!",
   "helpGpsIntroBubble": "**GPS** ermöglicht es anderen, Sie auf der Karte zu sehen! Lassen Sie mich erklären, wie es funktioniert.",
@@ -4466,7 +4450,6 @@
   "mapFilterNodesTitle": "Knoten filtern",
   "mapFilterNodesTooltip": "Knoten filtern",
   "mapFilterWithGps": "Mit GPS",
-  "mapGlobeView": "3D-Globusansicht",
   "mapHelp": "Hilfe",
   "mapHideConnectionLines": "Verbindungslinien ausblenden",
   "mapHideHeatmap": "Knoten-Halos ausblenden",
@@ -12842,6 +12825,10 @@
   "@licenseOrgOverviewRecentActivityTitle": {
     "description": "Section title for the recent-audit-events preview rendered on the License Org Overview screen."
   },
+    "routeDetailShareTooltip": "Route als GPX teilen",
+    "@routeDetailShareTooltip": {
+        "description": "Tooltip for the share-route button on the route map"
+    },
   "licenseOrgAuditActionSeatCodeMinted": "Lizenz-Code erstellt",
   "@licenseOrgAuditActionSeatCodeMinted": {
     "description": "Human-readable label for the seat_code_minted audit action on the License Org Overview screen's Recent activity row."

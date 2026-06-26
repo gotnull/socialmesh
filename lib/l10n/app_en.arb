@@ -8406,47 +8406,6 @@
     "@firmwareDfuConfirmStart": {
         "description": "Button in confirmation sheet to begin DFU"
     },
-    "globeEmptyDescription": "Nodes with position data will appear here",
-    "@globeEmptyDescription": {
-        "description": "Empty state message"
-    },
-    "globeEmptyTitle": "No nodes with GPS",
-    "@globeEmptyTitle": {
-        "description": "Screen or section title"
-    },
-    "globeHelp": "Help",
-    "@globeHelp": {
-        "description": "UI text: globe help"
-    },
-    "globeHideConnections": "Hide connections",
-    "@globeHideConnections": {
-        "description": "UI text: globe hide connections"
-    },
-    "globeNodeCount": "{count} nodes",
-    "@globeNodeCount": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        },
-        "description": "UI text: globe node count Parameters: {count} = numeric count."
-    },
-    "globeResetView": "Reset view",
-    "@globeResetView": {
-        "description": "UI text: globe reset view"
-    },
-    "globeScreenTitle": "Mesh Globe",
-    "@globeScreenTitle": {
-        "description": "Screen or section title"
-    },
-    "globeSelectNode": "Select Node",
-    "@globeSelectNode": {
-        "description": "UI text: globe select node"
-    },
-    "globeShowConnections": "Show connections",
-    "@globeShowConnections": {
-        "description": "UI text: globe show connections"
-    },
     "gpsStatusAccuracy": "Accuracy",
     "@gpsStatusAccuracy": {
         "description": "UI text: gps status accuracy"
@@ -8836,10 +8795,6 @@
     "helpCenterScreenDeviceShop": "Device Shop",
     "@helpCenterScreenDeviceShop": {
         "description": "Screen name shown in help article topic chips for the Device Shop screen."
-    },
-    "helpCenterScreenGlobe": "Globe",
-    "@helpCenterScreenGlobe": {
-        "description": "Screen name shown in help article topic chips for the Globe screen."
     },
     "helpCenterScreenMap": "Map",
     "@helpCenterScreenMap": {
@@ -9887,10 +9842,6 @@
     },
     "mapFilterWithGps": "With GPS",
     "@mapFilterWithGps": {
-        "description": "Text displayed in map view"
-    },
-    "mapGlobeView": "3D Globe View",
-    "@mapGlobeView": {
         "description": "Text displayed in map view"
     },
     "mapHelp": "Help",
@@ -25027,6 +24978,10 @@
             }
         },
         "description": "Text in routes Parameters: {name} = display name."
+    },
+    "routeDetailShareTooltip": "Share route as GPX",
+    "@routeDetailShareTooltip": {
+        "description": "Tooltip for the share-route button on the route map"
     },
     "routeDetailStorageUnavailable": "Storage not available",
     "@routeDetailStorageUnavailable": {
@@ -44178,10 +44133,6 @@
     "@adminBroadcastLinkWorldMap": {
         "description": "Text displayed in admin panel"
     },
-    "adminBroadcastLinkGlobe": "3D Globe",
-    "@adminBroadcastLinkGlobe": {
-        "description": "Text displayed in admin panel"
-    },
     "adminBroadcastLinkReachability": "Reachability",
     "@adminBroadcastLinkReachability": {
         "description": "Text displayed in admin panel"
@@ -46423,14 +46374,6 @@
     "@helpMesh3dOverviewDescription": {
         "description": "Description for mesh_3d_overview help topic"
     },
-    "helpGlobeOverviewTitle": "Globe View",
-    "@helpGlobeOverviewTitle": {
-        "description": "Title for globe_overview help topic"
-    },
-    "helpGlobeOverviewDescription": "3D globe with your mesh",
-    "@helpGlobeOverviewDescription": {
-        "description": "Description for globe_overview help topic"
-    },
     "helpTimelineOverviewTitle": "Timeline",
     "@helpTimelineOverviewTitle": {
         "description": "Title for timeline_overview help topic"
@@ -47046,18 +46989,6 @@
     "helpMesh3dTapBubble": "**Tap any node** to select it and see details. Great for understanding your network topology!",
     "@helpMesh3dTapBubble": {
         "description": "Help bubble text for step mesh3d_tap"
-    },
-    "helpGlobeIntroBubble": "Spin the **Globe** to see your mesh from space! Every glowing point is a node with GPS coordinates.",
-    "@helpGlobeIntroBubble": {
-        "description": "Help bubble text for step globe_intro"
-    },
-    "helpGlobeInteractBubble": "**Drag to spin**, pinch to zoom. Tap a node to fly to its location and see details!",
-    "@helpGlobeInteractBubble": {
-        "description": "Help bubble text for step globe_interact"
-    },
-    "helpGlobeArcsBubble": "Watch the **connection arcs** - they show message paths traveling across your mesh in real-time!",
-    "@helpGlobeArcsBubble": {
-        "description": "Help bubble text for step globe_arcs"
     },
     "helpTimelineIntroBubble": "The **Timeline** shows everything happening on your mesh. Messages, node changes, telemetry - all in order!",
     "@helpTimelineIntroBubble": {

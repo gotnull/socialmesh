@@ -6276,36 +6276,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get firmwareDfuConfirmStart => 'Start Update';
 
   @override
-  String get globeEmptyDescription =>
-      'Nodes with position data will appear here';
-
-  @override
-  String get globeEmptyTitle => 'No nodes with GPS';
-
-  @override
-  String get globeHelp => 'Help';
-
-  @override
-  String get globeHideConnections => 'Hide connections';
-
-  @override
-  String globeNodeCount(int count) {
-    return '$count nodes';
-  }
-
-  @override
-  String get globeResetView => 'Reset view';
-
-  @override
-  String get globeScreenTitle => 'Mesh Globe';
-
-  @override
-  String get globeSelectNode => 'Select Node';
-
-  @override
-  String get globeShowConnections => 'Show connections';
-
-  @override
   String get gpsStatusAccuracy => 'Accuracy';
 
   @override
@@ -6568,9 +6538,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get helpCenterScreenDeviceShop => 'Device Shop';
-
-  @override
-  String get helpCenterScreenGlobe => 'Globe';
 
   @override
   String get helpCenterScreenMap => 'Map';
@@ -7327,9 +7294,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mapFilterWithGps => 'With GPS';
-
-  @override
-  String get mapGlobeView => '3D Globe View';
 
   @override
   String get mapHelp => 'Help';
@@ -18362,6 +18326,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String routeDetailShareText(String name) {
     return 'Route: $name';
   }
+
+  @override
+  String get routeDetailShareTooltip => 'Share route as GPX';
 
   @override
   String get routeDetailStorageUnavailable => 'Storage not available';
@@ -32760,9 +32727,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminBroadcastLinkWorldMap => 'World Map';
 
   @override
-  String get adminBroadcastLinkGlobe => '3D Globe';
-
-  @override
   String get adminBroadcastLinkReachability => 'Reachability';
 
   @override
@@ -34389,12 +34353,6 @@ class AppLocalizationsEn extends AppLocalizations {
       '3D network topology visualization';
 
   @override
-  String get helpGlobeOverviewTitle => 'Globe View';
-
-  @override
-  String get helpGlobeOverviewDescription => '3D globe with your mesh';
-
-  @override
   String get helpTimelineOverviewTitle => 'Timeline';
 
   @override
@@ -34986,18 +34944,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get helpMesh3dTapBubble =>
       '**Tap any node** to select it and see details. Great for understanding your network topology!';
-
-  @override
-  String get helpGlobeIntroBubble =>
-      'Spin the **Globe** to see your mesh from space! Every glowing point is a node with GPS coordinates.';
-
-  @override
-  String get helpGlobeInteractBubble =>
-      '**Drag to spin**, pinch to zoom. Tap a node to fly to its location and see details!';
-
-  @override
-  String get helpGlobeArcsBubble =>
-      'Watch the **connection arcs** - they show message paths traveling across your mesh in real-time!';
 
   @override
   String get helpTimelineIntroBubble =>

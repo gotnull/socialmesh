@@ -200,7 +200,6 @@ flutter:
     - assets/lottie/
     - assets/email_apps/
     - assets/models/
-    - assets/globe/
     - assets/terrain/
     - assets/meshtastic_powered_landscape.png
     # SIP Play + Handshake sound effects (Pixabay Content License —

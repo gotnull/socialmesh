@@ -217,7 +217,6 @@ Full control over your Meshtastic device:
 | ---------------- | ------------------------------------------------------------ |
 | **3D Mesh View** | Interactive 3D visualization of your mesh network topology   |
 | **World Map**    | Global view of Meshtastic nodes from the public MQTT network |
-| **Globe View**   | 3D rotating globe with node positions plotted worldwide      |
 | **Timeline**     | Chronological feed of all mesh activity and events           |
 
 #### Extras
@@ -313,7 +312,6 @@ lib/
 │   ├── channels/   # Channel messaging
 │   ├── dashboard/  # Custom widget dashboard
 │   ├── device/     # Device configuration
-│   ├── globe/      # 3D globe visualization
 │   ├── map/        # Interactive node map
 │   ├── mesh3d/     # 3D mesh topology view
 │   ├── mesh_health/# Network health analytics

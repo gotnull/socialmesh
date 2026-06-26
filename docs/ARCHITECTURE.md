@@ -60,7 +60,6 @@ Each feature in `lib/features/` is self-contained:
 | `channels/`       | Channel management                                             |
 | `dashboard/`      | Custom widget dashboard                                        |
 | `device/`         | Device configuration screens                                   |
-| `globe/`          | 3D globe visualization                                         |
 | `map/`            | Interactive node map with waypoints                            |
 | `mesh3d/`         | 3D mesh network topology view                                  |
 | `mesh_health/`    | Network health analytics dashboard                             |

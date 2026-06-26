@@ -1172,40 +1172,6 @@ class HelpContent {
   );
 
   // ============================================================================
-  // GLOBE HELP
-  // ============================================================================
-
-  static final HelpTopic globeOverview = HelpTopic(
-    id: 'globe_overview',
-    title: 'Globe View',
-    description: '3D globe with your mesh',
-    icon: Icons.language,
-    category: catNetwork,
-    priority: 14,
-    steps: [
-      HelpStep(
-        id: 'globe_intro',
-        bubbleText:
-            "Spin the **Globe** to see your mesh from space! Every glowing point is a node with GPS coordinates.",
-        icoMood: MeshBrainMood.excited,
-        canGoBack: false,
-      ),
-      HelpStep(
-        id: 'globe_interact',
-        bubbleText:
-            "**Drag to spin**, pinch to zoom. Tap a node to fly to its location and see details!",
-        icoMood: MeshBrainMood.speaking,
-      ),
-      HelpStep(
-        id: 'globe_arcs',
-        bubbleText:
-            "Watch the **connection arcs** - they show message paths traveling across your mesh in real-time!",
-        icoMood: MeshBrainMood.curious,
-      ),
-    ],
-  );
-
-  // ============================================================================
   // TIMELINE HELP
   // ============================================================================
 
@@ -2596,7 +2562,6 @@ class HelpContent {
     settingsOverview,
     profileOverview,
     mesh3dOverview,
-    globeOverview,
     timelineOverview,
     deviceShopOverview,
     offlineMapsOverview,
@@ -2676,7 +2641,6 @@ class HelpContent {
         'settings_overview' => l10n.helpSettingsOverviewTitle,
         'profile_overview' => l10n.helpProfileOverviewTitle,
         'mesh_3d_overview' => l10n.helpMesh3dOverviewTitle,
-        'globe_overview' => l10n.helpGlobeOverviewTitle,
         'timeline_overview' => l10n.helpTimelineOverviewTitle,
         'device_shop_overview' => l10n.helpDeviceShopOverviewTitle,
         'offline_maps_overview' => l10n.helpOfflineMapsOverviewTitle,
@@ -2729,7 +2693,6 @@ class HelpContent {
         'settings_overview' => l10n.helpSettingsOverviewDescription,
         'profile_overview' => l10n.helpProfileOverviewDescription,
         'mesh_3d_overview' => l10n.helpMesh3dOverviewDescription,
-        'globe_overview' => l10n.helpGlobeOverviewDescription,
         'timeline_overview' => l10n.helpTimelineOverviewDescription,
         'device_shop_overview' => l10n.helpDeviceShopOverviewDescription,
         'offline_maps_overview' => l10n.helpOfflineMapsOverviewDescription,
@@ -2874,9 +2837,6 @@ class HelpContent {
     'mesh3d_nodes' => l10n.helpMesh3dNodesBubble,
     'mesh3d_colors' => l10n.helpMesh3dColorsBubble,
     'mesh3d_tap' => l10n.helpMesh3dTapBubble,
-    'globe_intro' => l10n.helpGlobeIntroBubble,
-    'globe_interact' => l10n.helpGlobeInteractBubble,
-    'globe_arcs' => l10n.helpGlobeArcsBubble,
     'timeline_intro' => l10n.helpTimelineIntroBubble,
     'timeline_filter' => l10n.helpTimelineFilterBubble,
     'timeline_tap' => l10n.helpTimelineTapBubble,

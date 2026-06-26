@@ -236,7 +236,6 @@
   "adminBroadcastLinkAether": "Aether",
   "adminBroadcastLinkAutomations": "Automatisations",
   "adminBroadcastLinkChannels": "Canaux",
-  "adminBroadcastLinkGlobe": "Globe 3D",
   "adminBroadcastLinkIfttt": "Intégration IFTTT",
   "adminBroadcastLinkMap": "Carte",
   "adminBroadcastLinkMessages": "Messages",
@@ -3519,15 +3518,6 @@
   "globalLayerWizardSubscribeVerified": "Droits d'abonnement vérifiés.",
   "globalLayerWizardTcpReachable": "La connexion TCP à {host}:{port} semble accessible.",
   "globalLayerWizardTlsAccepted": "Paramètres du handshake TLS acceptés.",
-  "globeEmptyDescription": "Les nœuds avec des données de position apparaîtront ici",
-  "globeEmptyTitle": "Aucun nœud avec GPS",
-  "globeHelp": "Aide",
-  "globeHideConnections": "Masquer les connexions",
-  "globeNodeCount": "{count} nœuds",
-  "globeResetView": "Réinitialiser la vue",
-  "globeScreenTitle": "Globe du réseau maillé",
-  "globeSelectNode": "Sélectionner un nœud",
-  "globeShowConnections": "Afficher les connexions",
   "goBack": "Retour",
   "googlePlayUnavailable": "Google Play n'est pas disponible sur cet appareil - essayez un mode de paiement alternatif.",
   "gpsStatusAccuracy": "Précision",
@@ -3655,7 +3645,6 @@
   "helpCenterScreenChannels": "Canaux",
   "helpCenterScreenCreateSignal": "Créer un signal",
   "helpCenterScreenDeviceShop": "Boutique d'appareils",
-  "helpCenterScreenGlobe": "Globe",
   "helpCenterScreenMap": "Carte",
   "helpCenterScreenMesh3d": "Mesh 3D",
   "helpCenterScreenMeshHealth": "Santé du mesh",
@@ -3766,11 +3755,6 @@
   "helpFtlSharedBubble": "Les canaux LoRa sont **partagés et lents**. Chaque octet que vous envoyez est du temps d'antenne pris à chaque autre noeud à portée. Traitez-le comme une fréquence de talkie-walkie, pas comme le Wi-Fi.",
   "helpFtlToaBubble": "Le **temps d'antenne** par morceau dépend du facteur d'étalement (SF). SF7 (rapide, courte portée) : environ 30 ms/morceau. SF12 (lent, longue portée) : environ 1 500 ms/morceau.",
   "helpFtlUsbBubble": "Les transferts via BLE et USB ne présentent aucun risque de cycle de service radio. Dans une prochaine version, des limites plus élevées seront disponibles pour les connexions filaires directes.",
-  "helpGlobeArcsBubble": "Regardez les **arcs de connexion** - ils montrent les chemins des messages traversant votre mesh en temps réel !",
-  "helpGlobeInteractBubble": "**Faites glisser pour faire pivoter**, pincez pour zoomer. Appuyez sur un noeud pour voler vers son emplacement et voir les détails !",
-  "helpGlobeIntroBubble": "Faites tourner le **Globe** pour voir votre mesh depuis l'espace ! Chaque point lumineux est un noeud avec des coordonnées GPS.",
-  "helpGlobeOverviewDescription": "Globe 3D avec votre mesh",
-  "helpGlobeOverviewTitle": "Vue globe",
   "helpGpsBatteryBubble": "Le GPS consomme de la **batterie** ! Des intervalles de mise à jour plus longs = une meilleure autonomie. Trouvez le bon équilibre entre confidentialité et utilité !",
   "helpGpsBroadcastBubble": "Votre appareil diffuse des **mises à jour de position** toutes les quelques minutes. Les autres noeuds vous voient apparaître sur leur carte !",
   "helpGpsIntroBubble": "Le **GPS** permet aux autres de voir où vous êtes sur la carte ! Laissez-moi vous expliquer comment cela fonctionne.",
@@ -4466,7 +4450,6 @@
   "mapFilterNodesTitle": "Filtrer les noeuds",
   "mapFilterNodesTooltip": "Filtrer les noeuds",
   "mapFilterWithGps": "Avec GPS",
-  "mapGlobeView": "Vue globe 3D",
   "mapHelp": "Aide",
   "mapHideConnectionLines": "Masquer les lignes de connexion",
   "mapHideHeatmap": "Masquer les halos des nœuds",
@@ -12842,6 +12825,10 @@
   "@licenseOrgOverviewRecentActivityTitle": {
     "description": "Section title for the recent-audit-events preview rendered on the License Org Overview screen."
   },
+    "routeDetailShareTooltip": "Partager l'itinéraire en GPX",
+    "@routeDetailShareTooltip": {
+        "description": "Tooltip for the share-route button on the route map"
+    },
   "licenseOrgAuditActionSeatCodeMinted": "Code de licence créé",
   "@licenseOrgAuditActionSeatCodeMinted": {
     "description": "Human-readable label for the seat_code_minted audit action on the License Org Overview screen's Recent activity row."

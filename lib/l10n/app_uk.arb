@@ -236,7 +236,6 @@
   "adminBroadcastLinkAether": "Aether",
   "adminBroadcastLinkAutomations": "Автоматизації",
   "adminBroadcastLinkChannels": "Канали",
-  "adminBroadcastLinkGlobe": "3D-глобус",
   "adminBroadcastLinkIfttt": "Інтеграція IFTTT",
   "adminBroadcastLinkMap": "Карта",
   "adminBroadcastLinkMessages": "Повідомлення",
@@ -3519,15 +3518,6 @@
   "globalLayerWizardSubscribeVerified": "Дозволи на підписку підтверджено.",
   "globalLayerWizardTcpReachable": "TCP-з'єднання з {host}:{port} доступне.",
   "globalLayerWizardTlsAccepted": "Параметри TLS-рукостискання прийнято.",
-  "globeEmptyDescription": "Тут з'являться вузли з даними про місцезнаходження",
-  "globeEmptyTitle": "Немає вузлів з GPS",
-  "globeHelp": "Довідка",
-  "globeHideConnections": "Приховати з'єднання",
-  "globeNodeCount": "{count} вузлів",
-  "globeResetView": "Скинути вигляд",
-  "globeScreenTitle": "Меш-глобус",
-  "globeSelectNode": "Вибрати вузол",
-  "globeShowConnections": "Показати з'єднання",
   "goBack": "Назад",
   "googlePlayUnavailable": "Google Play недоступний на цьому пристрої - спробуйте альтернативний спосіб оплати.",
   "gpsStatusAccuracy": "Точність",
@@ -3655,7 +3645,6 @@
   "helpCenterScreenChannels": "Канали",
   "helpCenterScreenCreateSignal": "Створити сигнал",
   "helpCenterScreenDeviceShop": "Магазин пристроїв",
-  "helpCenterScreenGlobe": "Глобус",
   "helpCenterScreenMap": "Карта",
   "helpCenterScreenMesh3d": "Mesh 3D",
   "helpCenterScreenMeshHealth": "Стан мережі",
@@ -3766,11 +3755,6 @@
   "helpFtlSharedBubble": "Канали LoRa **спільні та повільні**. Кожен байт, який ви надсилаєте - це ефірний час, забраний у кожного іншого вузла в радіусі дії. Ставтесь до цього як до частоти рації, а не Wi-Fi.",
   "helpFtlToaBubble": "**Час у ефірі** на фрагмент залежить від коефіцієнта розширення (SF). SF7 (швидко, коротка дальність): ~30 мс/фрагмент. SF12 (повільно, далека дальність): ~1 500 мс/фрагмент.",
   "helpFtlUsbBubble": "Передачі через BLE та USB не несуть ризику порушення радіоробочого циклу. У майбутніх версіях вищі ліміти будуть розблоковані для прямих дротових з'єднань.",
-  "helpGlobeArcsBubble": "Спостерігайте за **дугами з'єднань** - вони показують шляхи повідомлень у вашій мережі в реальному часі!",
-  "helpGlobeInteractBubble": "**Перетягуйте для обертання**, зводьте пальці для масштабування. Торкніться вузла, щоб перейти до його місцеположення та переглянути деталі!",
-  "helpGlobeIntroBubble": "Обертайте **Глобус**, щоб побачити вашу мережу з космосу! Кожна світлова точка - вузол з координатами GPS.",
-  "helpGlobeOverviewDescription": "3D-глобус з вашою мережею",
-  "helpGlobeOverviewTitle": "Вигляд глобуса",
   "helpGpsBatteryBubble": "GPS споживає **батарею**! Більші інтервали оновлення = кращий заряд батареї. Знайдіть баланс між конфіденційністю та зручністю!",
   "helpGpsBroadcastBubble": "Ваш пристрій транслює **оновлення позиції** кожні кілька хвилин. Інші вузли бачать вас на своїй карті!",
   "helpGpsIntroBubble": "**GPS** дає змогу іншим бачити, де ви знаходитеся на карті! Дозвольте пояснити, як це працює.",
@@ -4466,7 +4450,6 @@
   "mapFilterNodesTitle": "Фільтрувати вузли",
   "mapFilterNodesTooltip": "Фільтрувати вузли",
   "mapFilterWithGps": "З GPS",
-  "mapGlobeView": "3D-вигляд глобуса",
   "mapHelp": "Довідка",
   "mapHideConnectionLines": "Сховати лінії з'єднань",
   "mapHideHeatmap": "Сховати ореоли вузлів",
@@ -12842,6 +12825,10 @@
   "@licenseOrgOverviewRecentActivityTitle": {
     "description": "Section title for the recent-audit-events preview rendered on the License Org Overview screen."
   },
+    "routeDetailShareTooltip": "Поділитися маршрутом у GPX",
+    "@routeDetailShareTooltip": {
+        "description": "Tooltip for the share-route button on the route map"
+    },
   "licenseOrgAuditActionSeatCodeMinted": "Ліцензійний код створено",
   "@licenseOrgAuditActionSeatCodeMinted": {
     "description": "Human-readable label for the seat_code_minted audit action on the License Org Overview screen's Recent activity row."

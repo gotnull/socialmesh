@@ -800,9 +800,6 @@
   "@adminBroadcastLinkChannels": {
     "description": "Text displayed in admin panel"
   },
-  "@adminBroadcastLinkGlobe": {
-    "description": "Text displayed in admin panel"
-  },
   "@adminBroadcastLinkIfttt": {
     "description": "Text displayed in admin panel"
   },
@@ -10948,38 +10945,6 @@
   "@globalLayerWizardTlsAccepted": {
     "description": "Text displayed in global layer / MQTT"
   },
-  "@globeEmptyDescription": {
-    "description": "Empty state message"
-  },
-  "@globeEmptyTitle": {
-    "description": "Screen or section title"
-  },
-  "@globeHelp": {
-    "description": "UI text: globe help"
-  },
-  "@globeHideConnections": {
-    "description": "UI text: globe hide connections"
-  },
-  "@globeNodeCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    },
-    "description": "UI text: globe node count Parameters: {count} = numeric count."
-  },
-  "@globeResetView": {
-    "description": "UI text: globe reset view"
-  },
-  "@globeScreenTitle": {
-    "description": "Screen or section title"
-  },
-  "@globeSelectNode": {
-    "description": "UI text: globe select node"
-  },
-  "@globeShowConnections": {
-    "description": "UI text: globe show connections"
-  },
   "@goBack": {
     "description": "Generic go back button label"
   },
@@ -11444,9 +11409,6 @@
   "@helpCenterScreenDeviceShop": {
     "description": "Screen name shown in help article topic chips for the Device Shop screen."
   },
-  "@helpCenterScreenGlobe": {
-    "description": "Screen name shown in help article topic chips for the Globe screen."
-  },
   "@helpCenterScreenMap": {
     "description": "Screen name shown in help article topic chips for the Map screen."
   },
@@ -11791,21 +11753,6 @@
   },
   "@helpFtlUsbBubble": {
     "description": "Help bubble text for step ftl_usb"
-  },
-  "@helpGlobeArcsBubble": {
-    "description": "Help bubble text for step globe_arcs"
-  },
-  "@helpGlobeInteractBubble": {
-    "description": "Help bubble text for step globe_interact"
-  },
-  "@helpGlobeIntroBubble": {
-    "description": "Help bubble text for step globe_intro"
-  },
-  "@helpGlobeOverviewDescription": {
-    "description": "Description for globe_overview help topic"
-  },
-  "@helpGlobeOverviewTitle": {
-    "description": "Title for globe_overview help topic"
   },
   "@helpGpsBatteryBubble": {
     "description": "Help bubble text for step gps_battery"
@@ -13712,9 +13659,6 @@
     "description": "Tooltip in map view"
   },
   "@mapFilterWithGps": {
-    "description": "Text displayed in map view"
-  },
-  "@mapGlobeView": {
     "description": "Text displayed in map view"
   },
   "@mapHelp": {
@@ -33314,7 +33258,6 @@
   "adminBroadcastLinkAether": "Aether",
   "adminBroadcastLinkAutomations": "Automações",
   "adminBroadcastLinkChannels": "Canais",
-  "adminBroadcastLinkGlobe": "Globo 3D",
   "adminBroadcastLinkIfttt": "Integração IFTTT",
   "adminBroadcastLinkMap": "Mapa",
   "adminBroadcastLinkMessages": "Mensagens",
@@ -36625,15 +36568,6 @@
   "globalLayerWizardSubscribeVerified": "Permissões de assinatura verificadas.",
   "globalLayerWizardTcpReachable": "Conexão TCP com {host}:{port} acessível.",
   "globalLayerWizardTlsAccepted": "Parâmetros de handshake TLS aceitos.",
-  "globeEmptyDescription": "Nós com dados de posição aparecerão aqui",
-  "globeEmptyTitle": "Nenhum nó com GPS",
-  "globeHelp": "Ajuda",
-  "globeHideConnections": "Ocultar conexões",
-  "globeNodeCount": "{count} nós",
-  "globeResetView": "Redefinir vista",
-  "globeScreenTitle": "Globo mesh",
-  "globeSelectNode": "Selecionar nó",
-  "globeShowConnections": "Mostrar conexões",
   "goBack": "Voltar",
   "googlePlayUnavailable": "Google Play indisponível neste dispositivo - tente o pagamento alternativo.",
   "gpsStatusAccuracy": "Precisão",
@@ -36761,7 +36695,6 @@
   "helpCenterScreenChannels": "Canais",
   "helpCenterScreenCreateSignal": "Criar sinal",
   "helpCenterScreenDeviceShop": "Loja de dispositivos",
-  "helpCenterScreenGlobe": "Globo",
   "helpCenterScreenMap": "Mapa",
   "helpCenterScreenMesh3d": "Mesh 3D",
   "helpCenterScreenMeshHealth": "Saúde da mesh",
@@ -36872,11 +36805,6 @@
   "helpFtlSharedBubble": "Os canais LoRa são **compartilhados e lentos**. Cada byte que você envia é tempo de ar tirado de todos os outros nós no alcance. Trate como uma frequência de walkie-talkie, não como WiFi.",
   "helpFtlToaBubble": "O **tempo no ar** por bloco depende do Spreading Factor (SF). SF7 (rápido, curto alcance): ~30 ms/bloco. SF12 (lento, longo alcance): ~1.500 ms/bloco.",
   "helpFtlUsbBubble": "Transferências por BLE e USB não implicam risco de duty cycle de rádio. Em uma versão futura, limites maiores serão desbloqueados para conexões cabeadas diretas.",
-  "helpGlobeArcsBubble": "Observe os **arcos de conexão** - eles mostram caminhos de mensagens viajando pela mesh em tempo real!",
-  "helpGlobeInteractBubble": "**Arraste para girar**, belisque para dar zoom. Toque em um nó para voar até sua localização e ver detalhes!",
-  "helpGlobeIntroBubble": "Gire o **Globo** para ver sua mesh do espaço! Cada ponto brilhante é um nó com coordenadas GPS.",
-  "helpGlobeOverviewDescription": "Globo 3D com sua rede mesh",
-  "helpGlobeOverviewTitle": "Visão do globo",
   "helpGpsBatteryBubble": "O GPS consome **bateria**! Intervalos de atualização maiores = melhor vida útil da bateria. Equilibre privacidade e utilidade!",
   "helpGpsBroadcastBubble": "Seu dispositivo transmite **atualizações de posição** a cada poucos minutos. Outros nós veem você aparecer no mapa deles!",
   "helpGpsIntroBubble": "O **GPS** permite que outros vejam você no mapa! Deixe-me explicar como funciona.",
@@ -37572,7 +37500,6 @@
   "mapFilterNodesTitle": "Filtrar nós",
   "mapFilterNodesTooltip": "Filtrar nós",
   "mapFilterWithGps": "Com GPS",
-  "mapGlobeView": "Vista 3D do globo",
   "mapHelp": "Ajuda",
   "mapHideConnectionLines": "Ocultar linhas de conexão",
   "mapHideHeatmap": "Ocultar halos dos nós",
@@ -45912,6 +45839,10 @@
   "@licenseOrgOverviewRecentActivityTitle": {
     "description": "Section title for the recent-audit-events preview rendered on the License Org Overview screen."
   },
+    "routeDetailShareTooltip": "Compartilhar rota como GPX",
+    "@routeDetailShareTooltip": {
+        "description": "Tooltip for the share-route button on the route map"
+    },
   "licenseOrgAuditActionSeatCodeMinted": "Código de licença criado",
   "@licenseOrgAuditActionSeatCodeMinted": {
     "description": "Human-readable label for the seat_code_minted audit action on the License Org Overview screen's Recent activity row."

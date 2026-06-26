@@ -467,7 +467,6 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen>
       'traceroute_overview' => context.l10n.helpCenterScreenTraceRouteLog,
       'map_overview' => context.l10n.helpCenterScreenMap,
       'world_mesh_overview' => context.l10n.helpCenterScreenWorldMesh,
-      'globe_overview' => context.l10n.helpCenterScreenGlobe,
       'mesh_3d_overview' => context.l10n.helpCenterScreenMesh3d,
       'routes_overview' => context.l10n.helpCenterScreenRoutes,
       'timeline_overview' => context.l10n.helpCenterScreenTimeline,

@@ -42,6 +42,7 @@ import '../nodedex/map/nodedex_map_pin.dart';
 import '../nodedex/map/nodedex_map_pins_provider.dart';
 import '../nodedex/map/widgets/nodedex_sigil_marker.dart';
 import '../../models/presence_confidence.dart';
+import '../../models/route.dart' as route_model;
 import '../../providers/age_eligibility_provider.dart';
 import '../../core/units/distance_format.dart';
 import '../../providers/app_providers.dart';
@@ -130,6 +131,18 @@ class MapScreen extends ConsumerStatefulWidget {
   /// they're looking at.
   final bool nodedexMode;
 
+  /// When provided, the map draws this saved GPS route as a polyline with
+  /// start/end markers and frames the camera to it, while keeping every other
+  /// map feature (nodes, waypoints, layers, controls, style switcher) intact.
+  /// This is how the Routes feature reuses the canonical map instead of a
+  /// stripped-down clone. The title swaps to the route name.
+  final route_model.Route? routeOverlay;
+
+  /// Optional widget pinned to the bottom of the map (above attribution) when
+  /// [routeOverlay] is set — used by the Routes feature for the compact
+  /// distance / duration / elevation / points strip and the share action.
+  final Widget? routeBottomOverlay;
+
   const MapScreen({
     super.key,
     this.initialNodeNum,
@@ -139,6 +152,8 @@ class MapScreen extends ConsumerStatefulWidget {
     this.locationOnlyMode = false,
     this.tracerouteLog,
     this.nodedexMode = false,
+    this.routeOverlay,
+    this.routeBottomOverlay,
   });
 
   @override
@@ -1074,6 +1089,50 @@ class _MapScreenState extends ConsumerState<MapScreen>
       }
     }
 
+    // Route overlay: frame the camera to the saved GPS route. Rough bounds
+    // here for the first build; a precise fitCamera runs post-frame below.
+    if (!centerResolved && widget.routeOverlay != null) {
+      final routePoints = _routeOverlayPoints();
+      final bounds = safeLatLngBounds(routePoints);
+      if (bounds != null) {
+        center =
+            safeLatLng(
+              (bounds.southWest.latitude + bounds.northEast.latitude) / 2,
+              (bounds.southWest.longitude + bounds.northEast.longitude) / 2,
+            ) ??
+            center;
+        final span = math.max(
+          bounds.northEast.latitude - bounds.southWest.latitude,
+          bounds.northEast.longitude - bounds.southWest.longitude,
+        );
+        zoom = span < 0.01
+            ? 15.0
+            : span < 0.1
+            ? 12.0
+            : span < 1.0
+            ? 9.0
+            : 6.0;
+        centerResolved = true;
+      }
+    }
+
+    // One-shot precise framing of the route once the map is laid out.
+    if (!_didInitialAutoFit && widget.routeOverlay != null) {
+      _didInitialAutoFit = true;
+      final routePoints = _routeOverlayPoints();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final bounds = safeLatLngBounds(routePoints);
+        if (bounds == null) return;
+        _mapController.fitCamera(
+          CameraFit.bounds(
+            bounds: bounds,
+            padding: const EdgeInsets.all(AppTheme.spacing50),
+          ),
+        );
+      });
+    }
+
     // True when the screen was opened from a traceroute card but the
     // route has no usable GPS data (every hop reports 0,0 or has no
     // position). Drives the persistent banner below — without it, the
@@ -1200,7 +1259,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
         leading: canPop ? const BackButton() : const HamburgerMenuButton(),
         centerTitle: true,
         titleWidget: Text(
-          widget.tracerouteLog != null
+          widget.routeOverlay != null
+              ? widget.routeOverlay!.name
+              : widget.tracerouteLog != null
               ? context.l10n.tracerouteMapTitle
               : widget.locationOnlyMode
               ? (widget.initialLocationLabel ?? context.l10n.mapLocationTitle)
@@ -1329,9 +1390,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       builder: (_) => const TakDashboardScreen(),
                     ),
                   );
-                  break;
-                case 'globe':
-                  Navigator.of(context).pushNamed('/globe');
                   break;
                 case 'help':
                   ref.read(helpProvider.notifier).startTour('map_overview');
@@ -1770,17 +1828,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   ],
                 ),
               ),
-              const PopupMenuDivider(),
-              PopupMenuItem(
-                value: 'globe',
-                child: Row(
-                  children: [
-                    Icon(Icons.public, size: 18, color: context.textSecondary),
-                    SizedBox(width: AppTheme.spacing8),
-                    Text(context.l10n.mapGlobeView),
-                  ],
-                ),
-              ),
               if (AppFeatureFlags.isTakGatewayEnabled &&
                   !widget.locationOnlyMode) ...[
                 PopupMenuItem(
@@ -1852,7 +1899,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
             ],
           ),
         ],
-        body: (!widget.locationOnlyMode && allNodesWithPosition.isEmpty)
+        body:
+            (!widget.locationOnlyMode &&
+                widget.routeOverlay == null &&
+                allNodesWithPosition.isEmpty)
             ? _buildEmptyState()
             : Stack(
                 children: [
@@ -2086,6 +2136,23 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             ),
                           ),
                         ),
+                      // Route overlay polyline + start/end markers (Routes
+                      // feature). Drawn below waypoints and node markers so
+                      // points of interest stay on top of the ride line.
+                      if (widget.routeOverlay != null) ...[
+                        PolylineLayer(
+                          polylines: [
+                            Polyline(
+                              points: _routeOverlayPoints(),
+                              color: Color(widget.routeOverlay!.color),
+                              strokeWidth: 4,
+                            ),
+                          ],
+                        ),
+                        MarkerLayer(
+                          markers: finiteMarkers(_routeEndpointMarkers()),
+                        ),
+                      ],
                       // Waypoint markers
                       if (_showWaypoints)
                         MarkerLayer(
@@ -2862,6 +2929,14 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   // when disabled. Opens the creation sheet only (no send).
                   if (!widget.locationOnlyMode && !widget.nodedexMode)
                     const HelpRequestAffordance(),
+                  // Route-overlay bottom strip (Routes feature): stats + share.
+                  if (widget.routeBottomOverlay != null)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: widget.routeBottomOverlay!,
+                    ),
                 ],
               ),
       ),
@@ -3306,6 +3381,48 @@ class _MapScreenState extends ConsumerState<MapScreen>
   // Frames every node in [nodes] without firing haptics — shared by the
   // fit-all button (via [_fitAllNodes]) and the one-shot auto-fit on a
   // plain Map-tab open, where a haptic on load would be wrong.
+  // Route-overlay polyline points (empty when no route is attached).
+  List<LatLng> _routeOverlayPoints() {
+    final route = widget.routeOverlay;
+    if (route == null) return const [];
+    return route.locations
+        .map((l) => LatLng(l.latitude, l.longitude))
+        .toList(growable: false);
+  }
+
+  // Start (green) and end (red) markers for the route overlay.
+  List<Marker> _routeEndpointMarkers() {
+    final route = widget.routeOverlay;
+    if (route == null || route.locations.isEmpty) return const [];
+    Marker endpoint(route_model.RouteLocation loc, Color color, IconData icon) {
+      return Marker(
+        point: LatLng(loc.latitude, loc.longitude),
+        width: 32,
+        height: 32,
+        child: Container(
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 4,
+              ),
+            ],
+          ),
+          child: Icon(icon, size: 18, color: Colors.white),
+        ),
+      );
+    }
+
+    return [
+      endpoint(route.locations.first, AccentColors.green, Icons.play_arrow),
+      if (route.locations.length > 1)
+        endpoint(route.locations.last, AppTheme.errorRed, Icons.stop),
+    ];
+  }
+
   void _fitNodesCamera(List<_NodeWithPosition> nodes) {
     // Single-pass min/max with strict WGS-84 range filter. The mesh-observer
     // / NodeDex feed contains a small fraction of nodes with garbage
