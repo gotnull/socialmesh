@@ -28,7 +28,6 @@ import '../../providers/auth_providers.dart';
 import '../../providers/connection_providers.dart';
 import '../../providers/connectivity_providers.dart';
 import '../../providers/profile_providers.dart';
-import '../../providers/social_providers.dart';
 import '../../providers/subscription_providers.dart';
 import '../../services/haptic_service.dart';
 import '../../services/notifications/notification_service.dart';
@@ -57,19 +56,14 @@ import '../settings/subscription_screen.dart';
 import '../settings/translation_settings_screen.dart';
 import '../widget_builder/widget_builder_screen.dart';
 import '../reachability/mesh_reachability_screen.dart';
-import '../device_shop/providers/admin_shop_providers.dart';
 import '../device_shop/screens/device_shop_screen.dart';
-import '../admin/bug_reports/admin_bug_report_watcher.dart';
 import '../mesh_health/widgets/mesh_health_dashboard.dart';
-import '../signals/signals.dart';
 import '../profile/profile_screen.dart';
 import '../debug/device_logs_screen.dart';
 import '../mesh_canvas/screens/mesh_canvas_overview_screen.dart';
 import '../nodedex/map/nodedex_map_screen.dart';
 import '../nodedex/screens/nodedex_screen.dart';
 import '../operations/presentation/operations_screen.dart';
-import '../social/screens/activity_timeline_screen.dart';
-import '../social/screens/social_hub_screen.dart';
 import '../aether/screens/aether_screen.dart';
 import '../file_transfer/screens/file_transfers_container_screen.dart';
 import '../aether/providers/aether_flight_matcher_provider.dart';
@@ -84,12 +78,10 @@ import '../mesh_feed/screens/mesh_feed_screen.dart';
 import '../nodeboard/screens/nodeboard_list_screen.dart';
 import '../incidents/screens/mesh_incident_list_screen.dart';
 import '../tak/screens/tak_screen.dart';
-import '../../providers/activity_providers.dart';
 import '../../providers/mesh_explorer_providers.dart';
 import '../../providers/whats_new_providers.dart';
 import '../../core/whats_new/whats_new_sheet.dart';
 import '../legal/privacy_choice_sheet.dart';
-import 'widgets/drawer_admin_section.dart';
 import 'widgets/drawer_enterprise_section.dart';
 import 'providers/bottom_tab_providers.dart';
 import 'providers/drawer_customization_providers.dart';
@@ -98,28 +90,6 @@ import 'widgets/drawer_menu_tile.dart';
 import 'widgets/drawer_node_header.dart';
 import 'widgets/drawer_sticky_header.dart';
 import 'widgets/nav_bar_item.dart';
-
-/// Combined admin notification count provider
-/// Uses FutureProvider to properly handle the async stream states
-final adminNotificationCountProvider = Provider<int>((ref) {
-  // Watch both providers - this creates proper dependency tracking
-  final reviewAsync = ref.watch(pendingReviewCountProvider);
-  final reportAsync = ref.watch(pendingReportCountProvider);
-
-  // Extract counts, defaulting to 0 for loading/error states
-  final reviewCount = reviewAsync.when(
-    data: (count) => count,
-    loading: () => 0,
-    error: (_, _) => 0,
-  );
-  final reportCount = reportAsync.when(
-    data: (count) => count,
-    loading: () => 0,
-    error: (_, _) => 0,
-  );
-
-  return reviewCount + reportCount;
-});
 
 /// Notifier to expose the main shell's scaffold key for drawer access
 class MainShellScaffoldKeyNotifier extends Notifier<GlobalKey<ScaffoldState>?> {
@@ -189,14 +159,11 @@ class HamburgerMenuButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scaffoldKey = ref.watch(mainShellScaffoldKeyProvider);
     final theme = Theme.of(context);
-    final adminNotificationCount = ref.watch(adminNotificationCountProvider);
-    final activityCount = ref.watch(unreadActivityCountProvider);
     final newPeerCount = ref.watch(newMeshPeerCountProvider);
     final hasUnseenWhatsNew = ref.watch(whatsNewHasUnseenProvider);
 
-    // Combine admin, activity, and new-peer counts for hamburger badge
-    final totalBadgeCount =
-        adminNotificationCount + activityCount + newPeerCount;
+    // New-peer count for hamburger badge
+    final totalBadgeCount = newPeerCount;
 
     // Determine which badge to show on the icon itself
     Widget menuIcon = Icon(
@@ -350,11 +317,6 @@ void navigateFromDrawer(
 }
 
 /// Main navigation shell with bottom navigation bar
-// Global key to reference the existing SignalFeedScreen instance when it's
-// part of the MainShell. This allows other widgets to instruct the signal
-// feed screen to focus a specific signal without pushing additional routes.
-final GlobalKey signalFeedScreenKey = GlobalKey();
-
 class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
 
@@ -516,10 +478,6 @@ class _MainShellState extends ConsumerState<MainShell> {
     // Watch Firestore config for real-time updates (premium upsell, etc.)
     // This keeps the stream alive and syncs remote changes to local storage
     ref.watch(firestoreConfigWatcherProvider);
-
-    // Watch for new bug reports and fire local notifications (admin only).
-    // Non-admins get an inert stream that never emits.
-    ref.watch(adminBugReportWatcherProvider);
 
     // Auto-reconnect and live activity managers are now watched at app level in main.dart
 
@@ -1375,18 +1333,11 @@ class _MainDrawerState extends ConsumerState<_MainDrawer>
 
   List<DrawerMenuItem> _buildDrawerMenuItems(AppLocalizations l10n) => [
     DrawerMenuItem(
-      id: 'signals',
-      icon: Icons.sensors,
-      label: l10n.navigationSignals,
-      screen: SignalFeedScreen(key: signalFeedScreenKey),
-      sectionHeader: l10n.navigationSectionDiscover,
-      iconColor: AccentColors.lavender,
-    ),
-    DrawerMenuItem(
       id: 'nodedex',
       icon: Icons.auto_stories_outlined,
       label: l10n.navigationNodeDex,
       screen: const NodeDexScreen(),
+      sectionHeader: l10n.navigationSectionDiscover,
       iconColor: AccentColors.yellow,
       requiresConnection: false,
       whatsNewBadgeKey: 'nodedex',
@@ -1475,28 +1426,6 @@ class _MainDrawerState extends ConsumerState<_MainDrawer>
         iconColor: AccentColors.orange,
         requiresConnection: false,
       ),
-    if (AppFeatureFlags.isSocialEnabled)
-      DrawerMenuItem(
-        id: 'social',
-        icon: Icons.forum_outlined,
-        label: l10n.navigationSocial,
-        screen: const SocialHubScreen(),
-        sectionHeader: l10n.navigationSectionIdentity,
-        iconColor: AccentColors.pink,
-        requiresConnection: false,
-      ),
-    DrawerMenuItem(
-      id: 'activity',
-      icon: Icons.favorite_border,
-      label: l10n.navigationActivity,
-      screen: const ActivityTimelineScreen(),
-      sectionHeader: AppFeatureFlags.isSocialEnabled
-          ? null
-          : l10n.navigationSectionIdentity,
-      iconColor: AccentColors.red,
-      requiresConnection: false,
-      badgeProviderKey: 'activity',
-    ),
     DrawerMenuItem(
       id: 'telemetry',
       icon: Icons.insights_outlined,
@@ -1713,9 +1642,7 @@ class _MainDrawerState extends ConsumerState<_MainDrawer>
     final needsConnection = item.requiresConnection && !isConnected;
 
     int? badgeCount;
-    if (item.badgeProviderKey == 'activity') {
-      badgeCount = ref.watch(unreadActivityCountProvider);
-    } else if (item.badgeProviderKey == 'mesh_explorer') {
+    if (item.badgeProviderKey == 'mesh_explorer') {
       badgeCount = ref.watch(newMeshPeerCountProvider);
       if (badgeCount == 0) badgeCount = null;
     }
@@ -2220,13 +2147,6 @@ class _MainDrawerState extends ConsumerState<_MainDrawer>
                   ..._buildDrawerMenuSlivers(context, theme),
                   SliverToBoxAdapter(
                     child: DrawerEnterpriseSection(
-                      onNavigate: (screen) {
-                        navigateFromDrawer(context, screen);
-                      },
-                    ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: DrawerAdminSection(
                       onNavigate: (screen) {
                         navigateFromDrawer(context, screen);
                       },

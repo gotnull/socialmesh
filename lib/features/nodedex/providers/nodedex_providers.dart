@@ -34,7 +34,6 @@ import '../../../utils/text_sanitizer.dart';
 import '../../../models/presence_confidence.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/cloud_sync_entitlement_providers.dart';
-import '../../../providers/signal_providers.dart';
 import '../models/import_preview.dart';
 import '../models/node_activity_event.dart';
 import '../models/nodedex_entry.dart';
@@ -1932,7 +1931,6 @@ Future<List<NodeActivityEvent>> _buildTimeline(Ref ref, int nodeNum) async {
   final entry = ref.watch(nodeDexEntryProvider(nodeNum));
   final myNodeNum = ref.watch(myNodeNumProvider);
   final messages = ref.watch(messagesProvider);
-  final signals = ref.watch(signalsFromNodeProvider(nodeNum));
   final storeAsync = ref.watch(nodeDexStoreProvider);
 
   // 1. Encounters from the NodeDex entry — grouped into sessions.
@@ -1981,18 +1979,7 @@ Future<List<NodeActivityEvent>> _buildTimeline(Ref ref, int nodeNum) async {
     }
   }
 
-  // 4. Signals from this node.
-  for (final signal in signals) {
-    events.add(
-      SignalActivityEvent(
-        timestamp: signal.createdAt,
-        content: signal.content,
-        signalId: signal.id,
-      ),
-    );
-  }
-
-  // 5. Presence transitions from SQLite.
+  // 4. Presence transitions from SQLite.
   final store = storeAsync.asData?.value;
   if (store != null) {
     final rows = await store.loadPresenceTransitions(nodeNum: nodeNum);

@@ -32,12 +32,6 @@ DrawerHiddenItemDescriptor? drawerHiddenItemDescriptor(
   AppLocalizations l10n,
 ) {
   switch (id) {
-    case 'signals':
-      return DrawerHiddenItemDescriptor(
-        icon: Icons.sensors,
-        label: l10n.navigationSignals,
-        iconColor: AccentColors.lavender,
-      );
     case 'nodedex':
       return DrawerHiddenItemDescriptor(
         icon: Icons.auto_stories_outlined,
@@ -91,18 +85,6 @@ DrawerHiddenItemDescriptor? drawerHiddenItemDescriptor(
         icon: Icons.dynamic_feed_outlined,
         label: l10n.meshFeedDrawerLabel,
         iconColor: AccentColors.orange,
-      );
-    case 'social':
-      return DrawerHiddenItemDescriptor(
-        icon: Icons.forum_outlined,
-        label: l10n.navigationSocial,
-        iconColor: AccentColors.pink,
-      );
-    case 'activity':
-      return DrawerHiddenItemDescriptor(
-        icon: Icons.favorite_border,
-        label: l10n.navigationActivity,
-        iconColor: AccentColors.red,
       );
     case 'telemetry':
       return DrawerHiddenItemDescriptor(

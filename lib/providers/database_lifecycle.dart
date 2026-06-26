@@ -8,7 +8,6 @@ import '../features/nodedex/providers/nodedex_providers.dart';
 import '../features/tak/providers/tak_providers.dart';
 import '../features/widget_builder/widget_sync_providers.dart';
 import '../providers/app_providers.dart';
-import '../providers/signal_providers.dart';
 import '../providers/telemetry_providers.dart';
 
 /// Close every open SQLite database connection held by Riverpod providers.
@@ -30,15 +29,6 @@ Future<void> closeAllDatabases(WidgetRef ref) async {
     AppLogging.auth('closeAllDatabases: messages.db closed');
   } catch (e) {
     AppLogging.debug('closeAllDatabases: messages.db close error: $e');
-  }
-
-  // signals.db
-  try {
-    final signalService = ref.read(signalServiceProvider);
-    await signalService.close();
-    AppLogging.auth('closeAllDatabases: signals.db closed');
-  } catch (e) {
-    AppLogging.debug('closeAllDatabases: signals.db close error: $e');
   }
 
   // telemetry.db
@@ -134,7 +124,6 @@ Future<void> closeAllDatabases(WidgetRef ref) async {
 /// same files — which then get unlinked while in use.
 void invalidateAllDatabaseProviders(WidgetRef ref) {
   ref.invalidate(messageStorageProvider);
-  ref.invalidate(signalServiceProvider);
   ref.invalidate(telemetryStorageProvider);
   ref.invalidate(routeStorageProvider);
   ref.invalidate(nodeDexDatabaseProvider);

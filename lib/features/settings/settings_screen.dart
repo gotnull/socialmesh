@@ -23,8 +23,6 @@ import '../../providers/profile_providers.dart';
 // import '../../providers/social_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/subscription_providers.dart';
-import '../../providers/signal_bookmark_provider.dart';
-import '../../providers/signal_providers.dart';
 import '../../models/subscription_models.dart';
 import '../../services/storage/storage_service.dart';
 import '../../services/notifications/push_notification_service.dart';
@@ -4011,10 +4009,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     final messagesNotifier = ref.read(messagesProvider.notifier);
     final nodesNotifier = ref.read(nodesProvider.notifier);
     final channelsNotifier = ref.read(channelsProvider.notifier);
-    final hiddenSignalsNotifier = ref.read(hiddenSignalsProvider.notifier);
     final automationsNotifier = ref.read(automationsProvider.notifier);
     final automations = ref.read(automationsProvider).value ?? [];
-    final signalService = ref.read(signalServiceProvider);
     final confirmed = await AppBottomSheet.showConfirm(
       context: context,
       title: context.l10n.settingsClearAllDataTitle,
@@ -4038,9 +4034,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         nodesNotifier.clearNodes();
         channelsNotifier.clearChannels();
 
-        // Hidden signals (local only)
-        await hiddenSignalsNotifier.clearAll();
-
         // Automations - delete all one by one
         try {
           for (final automation in automations) {
@@ -4050,17 +4043,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           AppLogging.app('Failed to clear automations: $e');
         }
 
-        // SharedPreferences (all other cached data including hidden signals, bookmarks)
+        // SharedPreferences (all other cached data)
         final prefs = await SharedPreferences.getInstance();
         await prefs.clear();
-
-        // Signal database - close and delete
-        try {
-          await signalService.close();
-          // Database will be recreated on next use
-        } catch (e) {
-          AppLogging.app('Failed to close signal database: $e');
-        }
 
         if (context.mounted) {
           showSuccessSnackBar(

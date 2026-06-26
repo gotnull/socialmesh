@@ -21,7 +21,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:socialmesh/services/transport/background_ble_service.dart';
 import 'package:socialmesh/services/watch_companion/watch_companion_providers.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector3;
@@ -68,7 +67,6 @@ import 'providers/telemetry_providers.dart';
 import 'providers/subscription_providers.dart';
 import 'providers/cloud_sync_entitlement_providers.dart';
 import 'providers/analytics_providers.dart';
-import 'providers/signal_providers.dart';
 import 'providers/app_lifecycle_provider.dart';
 import 'providers/connectivity_providers.dart';
 import 'providers/presence_providers.dart';
@@ -81,7 +79,6 @@ import 'features/map/offline_tiles/offline_tile_cache.dart';
 import 'features/license_org/invite_accept_screen.dart';
 import 'features/widget_builder/widget_import_screen.dart';
 import 'models/mesh_models.dart';
-import 'models/social.dart';
 import 'services/app_intents/app_intents_service.dart';
 import 'services/carplay/carplay_intent_service.dart';
 import 'services/deep_link_manager.dart';
@@ -119,7 +116,6 @@ import 'features/routes/route_detail_screen.dart';
 import 'features/globe/globe_screen.dart';
 import 'features/reachability/mesh_reachability_screen.dart';
 import 'features/feedback/my_bug_reports_screen.dart';
-import 'features/admin/bug_reports/admin_bug_reports_screen.dart';
 import 'features/mesh_canvas/screens/mesh_canvas_overview_screen.dart';
 import 'features/incidents/providers/incident_help_trust_provider.dart';
 import 'features/incidents/screens/help_circle_invite_screen.dart';
@@ -128,9 +124,6 @@ import 'features/sip/sip_hub_screen.dart';
 import 'features/sip/sip_dm_screen.dart';
 import 'providers/sip_providers.dart';
 import 'services/protocol/sip/sip_dm.dart';
-import 'features/social/screens/post_detail_screen.dart';
-import 'features/social/screens/profile_social_screen.dart';
-import 'features/signals/screens/signal_detail_screen.dart';
 import 'features/widget_builder/marketplace/widget_marketplace_screen.dart';
 import 'features/widget_builder/marketplace/widget_marketplace_service.dart';
 import 'features/widget_builder/marketplace/marketplace_providers.dart';
@@ -594,37 +587,6 @@ Future<void> _initializeFirebaseServices() async {
     await PushNotificationService().initialize();
   } catch (e) {
     AppLogging.notifications('Push notification init failed: $e');
-  }
-
-  // Listen for connectivity changes and attempt to resolve pending images
-  try {
-    final connectivity = Connectivity();
-    connectivity.onConnectivityChanged.listen((results) {
-      AppLogging.social('CONNECTIVITY_CHANGE: $results');
-      if (!results.contains(ConnectivityResult.none) && results.isNotEmpty) {
-        // Try resolving any pending images now that connectivity may be restored
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          try {
-            final ctx = navigatorKey.currentContext;
-            if (ctx == null) {
-              AppLogging.social(
-                'CONNECTIVITY_CHANGE: navigator context not ready',
-              );
-              return;
-            }
-            final container = ProviderScope.containerOf(ctx, listen: false);
-            final sigService = container.read(signalServiceProvider);
-            sigService.attemptResolveAllPendingImages();
-          } catch (e) {
-            AppLogging.social(
-              'CONNECTIVITY_CHANGE: resolver invocation failed: $e',
-            );
-          }
-        });
-      }
-    });
-  } catch (e) {
-    AppLogging.social('Connectivity listener not available: $e');
   }
 }
 
@@ -1423,52 +1385,12 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     // Small delay to ensure app is fully loaded after cold start
     Future.delayed(const Duration(milliseconds: 500), () {
       switch (nav.type) {
-        case 'new_follower':
-        case 'follow_request':
-        case 'follow_request_accepted':
-          // Navigate to the user's profile
-          if (nav.targetId != null) {
-            navigator.pushNamed(
-              '/profile',
-              arguments: {'userId': nav.targetId},
-            );
-          }
-          break;
-
-        case 'new_like':
-        case 'new_comment':
-        case 'new_reply':
-        case 'mention':
-          // Navigate to the post
-          if (nav.targetId != null) {
-            navigator.pushNamed(
-              '/post-detail',
-              arguments: {'postId': nav.targetId},
-            );
-          }
-          break;
-
-        case 'new_signal':
-          // Navigate to the signal detail screen
-          if (nav.targetId != null) {
-            navigator.pushNamed(
-              '/signal-detail',
-              arguments: {'signalId': nav.targetId},
-            );
-          }
-          break;
-
         case 'bug_report_response':
           // Navigate to My Bug Reports screen
           navigator.pushNamed(
             '/my-bug-reports',
             arguments: nav.targetId != null ? {'reportId': nav.targetId} : null,
           );
-          break;
-
-        case 'bug_report':
-          // Navigate to Admin Bug Reports screen (admin tapped notification)
-          navigator.pushNamed('/admin-bug-reports');
           break;
 
         case 'announcement':
@@ -2248,11 +2170,6 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
               ),
             );
           }
-          if (settings.name == '/admin-bug-reports') {
-            return MaterialPageRoute(
-              builder: (context) => const AdminBugReportsScreen(),
-            );
-          }
           // Device-free offline map (reached from the scanner). Pushed by name
           // so the scanner feature does not import the map feature directly.
           if (settings.name == '/offline-map') {
@@ -2307,58 +2224,6 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
                 initialLocationLabel: args?['label'] as String?,
               ),
             );
-          }
-          if (settings.name == '/post-detail') {
-            final args = settings.arguments as Map<String, dynamic>?;
-            final postId = args?['postId'] as String?;
-            if (postId != null) {
-              return MaterialPageRoute(
-                builder: (context) => PostDetailScreen(postId: postId),
-              );
-            }
-          }
-          if (settings.name == '/profile') {
-            final args = settings.arguments as Map<String, dynamic>?;
-            final userId = args?['userId'] as String?;
-            final displayName = args?['displayName'] as String?;
-
-            AppLogging.qr(
-              '🔗 RouteGenerator: /profile - userId=$userId, displayName=$displayName, args=$args',
-            );
-
-            // Direct userId takes precedence (internal navigation)
-            if (userId != null) {
-              AppLogging.qr(
-                'QR - 🔗 RouteGenerator: Using direct userId=$userId',
-              );
-              return MaterialPageRoute(
-                builder: (context) => ProfileSocialScreen(userId: userId),
-              );
-            }
-
-            // Display name lookup (from deep links)
-            if (displayName != null) {
-              AppLogging.qr(
-                '🔗 RouteGenerator: Using displayName lookup for $displayName',
-              );
-              return MaterialPageRoute(
-                builder: (context) =>
-                    _ProfileDisplayNameLoader(displayName: displayName),
-              );
-            }
-
-            AppLogging.qr(
-              '🔗 RouteGenerator: ERROR - /profile route has no userId or displayName!',
-            );
-          }
-          if (settings.name == '/signal-detail') {
-            final args = settings.arguments as Map<String, dynamic>?;
-            final signalId = args?['signalId'] as String?;
-            if (signalId != null) {
-              return MaterialPageRoute(
-                builder: (context) => _SignalDetailLoader(signalId: signalId),
-              );
-            }
           }
           if (settings.name == '/widget-detail') {
             final args = settings.arguments as Map<String, dynamic>?;
@@ -2524,91 +2389,6 @@ class _ProtectedRouteHostState extends ConsumerState<_ProtectedRouteHost> {
       Navigator.of(context).popUntil((route) => route.isFirst);
     });
     return const SizedBox.shrink();
-  }
-}
-
-/// Loader widget that fetches signal data and navigates to SignalDetailScreen
-class _SignalDetailLoader extends ConsumerWidget {
-  final String signalId;
-
-  const _SignalDetailLoader({required this.signalId});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.deepLinkLoadingSignal)),
-      body: FutureBuilder<Post?>(
-        future: ref.read(signalServiceProvider).getSignalById(signalId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.error_outline,
-                    size: 48,
-                    color: AppTheme.errorRed,
-                  ),
-                  const SizedBox(height: AppTheme.spacing16),
-                  Text(
-                    context.l10n.deepLinkErrorLoadingSignal(
-                      '${snapshot.error}',
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spacing16),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text(context.l10n.commonGoBack),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          final signal = snapshot.data;
-          if (signal == null) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.signal_wifi_off, size: 48),
-                  const SizedBox(height: AppTheme.spacing16),
-                  Text(context.l10n.deepLinkSignalNotFound),
-                  const SizedBox(height: AppTheme.spacing16),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text(context.l10n.commonGoBack),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          // Navigate to signal detail screen with the loaded signal
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            // Use global navigatorKey to avoid "Navigator.of() called with
-            // a context that does not contain a Navigator" crash when
-            // the widget is disposed before the callback runs
-            final navigator = navigatorKey.currentState;
-            if (navigator == null) {
-              return;
-            }
-            navigator.pushReplacement(
-              MaterialPageRoute(
-                builder: (context) => SignalDetailScreen(signal: signal),
-              ),
-            );
-          });
-
-          return const Center(child: CircularProgressIndicator());
-        },
-      ),
-    );
   }
 }
 
@@ -3147,136 +2927,6 @@ class _WidgetDetailLoaderState extends ConsumerState<_WidgetDetailLoader>
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.deepLinkLoadingWidget)),
       body: Center(child: Text(context.l10n.deepLinkSomethingWentWrong)),
-    );
-  }
-}
-
-/// Loader widget that looks up a user by display name and navigates to their profile
-class _ProfileDisplayNameLoader extends ConsumerWidget {
-  final String displayName;
-
-  const _ProfileDisplayNameLoader({required this.displayName});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    AppLogging.qr(
-      'QR - 🔗 ProfileLoader: Building for displayName=$displayName',
-    );
-    final profileSyncService = ref.watch(profileCloudSyncServiceProvider);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(context.l10n.deepLinkProfileTitle(displayName)),
-      ),
-      body: profileSyncService == null
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.cloud_off_outlined, size: 48),
-                  const SizedBox(height: AppTheme.spacing16),
-                  Text(context.l10n.deepLinkCloudServicesNotAvailable),
-                  const SizedBox(height: AppTheme.spacing16),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text(context.l10n.commonGoBack),
-                  ),
-                ],
-              ),
-            )
-          : FutureBuilder<String?>(
-              future: profileSyncService.getUserIdByDisplayName(displayName),
-              builder: (context, snapshot) {
-                AppLogging.qr(
-                  '🔗 ProfileLoader: FutureBuilder state=${snapshot.connectionState}, '
-                  'hasError=${snapshot.hasError}, data=${snapshot.data}',
-                );
-
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  AppLogging.qr(
-                    'QR - 🔗 ProfileLoader: Waiting for userId lookup...',
-                  );
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (snapshot.hasError) {
-                  AppLogging.qr(
-                    '🔗 ProfileLoader: ERROR looking up user: ${snapshot.error}',
-                  );
-                  return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.error_outline,
-                          size: 48,
-                          color: AppTheme.errorRed,
-                        ),
-                        const SizedBox(height: AppTheme.spacing16),
-                        Text(
-                          context.l10n.deepLinkErrorLookingUpUser(
-                            '${snapshot.error}',
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.spacing16),
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: Text(context.l10n.commonGoBack),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                final userId = snapshot.data;
-                if (userId == null) {
-                  AppLogging.qr(
-                    '🔗 ProfileLoader: User "@$displayName" NOT FOUND in Firestore',
-                  );
-                  return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.person_off, size: 48),
-                        const SizedBox(height: AppTheme.spacing16),
-                        Text(context.l10n.deepLinkUserNotFound(displayName)),
-                        const SizedBox(height: AppTheme.spacing16),
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: Text(context.l10n.commonGoBack),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                // Navigate to profile screen with the looked up userId
-                AppLogging.qr(
-                  '🔗 ProfileLoader: Found userId=$userId for displayName=$displayName, '
-                  'navigating to ProfileSocialScreen',
-                );
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  AppLogging.qr('🔗 ProfileLoader: Executing pushReplacement');
-                  // Use global navigatorKey to avoid "Navigator.of() called with
-                  // a context that does not contain a Navigator" crash when
-                  // the widget is disposed before the callback runs
-                  final navigator = navigatorKey.currentState;
-                  if (navigator == null) {
-                    AppLogging.qr(
-                      '🔗 ProfileLoader: Navigator not available, skipping navigation',
-                    );
-                    return;
-                  }
-                  navigator.pushReplacement(
-                    MaterialPageRoute(
-                      builder: (context) => ProfileSocialScreen(userId: userId),
-                    ),
-                  );
-                });
-
-                return const Center(child: CircularProgressIndicator());
-              },
-            ),
     );
   }
 }

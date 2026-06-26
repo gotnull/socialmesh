@@ -141,16 +141,14 @@ class _UniversalQrScannerScreenState
           await _handleChannelQr(code);
         case DeepLinkType.automation:
           _handleAutomationQr(parsed);
-        case DeepLinkType.profile:
-          _handleProfileQr(parsed);
         case DeepLinkType.widget:
           _handleWidgetQr(parsed);
         case DeepLinkType.location:
           _handleLocationQr(parsed);
-        case DeepLinkType.post:
-          _handlePostQr(parsed);
         case DeepLinkType.helpCircleInvite:
           await _handleHelpCircleInviteQr(parsed);
+        case DeepLinkType.profile:
+        case DeepLinkType.post:
         case DeepLinkType.channelInvite:
         case DeepLinkType.aetherFlight:
         case DeepLinkType.legal:
@@ -1018,17 +1016,6 @@ class _UniversalQrScannerScreenState
   // Other QR Types (delegate to deep link routes)
   // ─────────────────────────────────────────────────────────────────────────────
 
-  void _handleProfileQr(ParsedDeepLink parsed) {
-    if (mounted) {
-      Navigator.pop(context);
-      Navigator.pushNamed(
-        context,
-        '/profile',
-        arguments: {'displayName': parsed.profileDisplayName},
-      );
-    }
-  }
-
   void _handleWidgetQr(ParsedDeepLink parsed) {
     if (mounted) {
       Navigator.pop(context);
@@ -1068,17 +1055,6 @@ class _UniversalQrScannerScreenState
           'longitude': parsed.locationLongitude,
           'label': parsed.locationLabel,
         },
-      );
-    }
-  }
-
-  void _handlePostQr(ParsedDeepLink parsed) {
-    if (mounted) {
-      Navigator.pop(context);
-      Navigator.pushNamed(
-        context,
-        '/post-detail',
-        arguments: {'postId': parsed.postId},
       );
     }
   }

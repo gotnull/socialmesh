@@ -284,8 +284,8 @@ void main() {
     test('drawerItemOrder round-trips, then clears to null on reset', () async {
       final s = SettingsService();
       await s.init();
-      await s.setDrawerItemOrder(const ['nodedex', 'signals']);
-      expect(s.drawerItemOrder, ['nodedex', 'signals']);
+      await s.setDrawerItemOrder(const ['nodedex', 'telemetry']);
+      expect(s.drawerItemOrder, ['nodedex', 'telemetry']);
 
       await s.setDrawerItemOrder(null);
       expect(s.drawerItemOrder, isNull);
@@ -343,11 +343,11 @@ void main() {
 
       await container.read(drawerCustomizationProvider.future);
       final notifier = container.read(drawerCustomizationProvider.notifier);
-      await notifier.setOrder(const ['nodedex', 'signals']);
+      await notifier.setOrder(const ['nodedex', 'telemetry']);
       await notifier.hide('routes');
 
       final pre = container.read(drawerCustomizationProvider).value!;
-      expect(pre.customOrder, ['nodedex', 'signals']);
+      expect(pre.customOrder, ['nodedex', 'telemetry']);
       expect(pre.hiddenIds, contains('routes'));
       expect(pre.isModified, true);
 
@@ -375,7 +375,6 @@ void main() {
     // lockstep.
     test('all customizable top-level items have stable IDs', () {
       const expectedIds = [
-        'signals',
         'nodedex',
         'nodedex_map',
         'nodeboard',
@@ -385,8 +384,6 @@ void main() {
         'mesh_explorer',
         'mesh_capacity',
         'mesh_feed',
-        'social',
-        'activity',
         'telemetry',
         'device_shop',
         'file_transfers',
@@ -429,7 +426,6 @@ void main() {
     // icon + accent + localized label for every customizable id.
     test('every customizable id resolves to a hidden-item descriptor', () {
       const expectedIds = [
-        'signals',
         'nodedex',
         'nodedex_map',
         'nodeboard',
@@ -439,8 +435,6 @@ void main() {
         'mesh_explorer',
         'mesh_capacity',
         'mesh_feed',
-        'social',
-        'activity',
         'telemetry',
         'device_shop',
         'file_transfers',

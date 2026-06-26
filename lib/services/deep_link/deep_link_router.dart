@@ -169,12 +169,10 @@ class DeepLinkRouter {
       );
     }
 
-    AppLogging.qr(
-      '🔗 Router: Routing to /profile with displayName=${link.profileDisplayName}',
-    );
+    // Social profile screens were removed; route to home with a notice.
     return DeepLinkRouteResult(
-      routeName: '/profile',
-      arguments: {'displayName': link.profileDisplayName},
+      routeName: '/main',
+      fallbackMessage: _l10n.deepLinkInvalidProfileLink,
     );
   }
 
@@ -222,9 +220,10 @@ class DeepLinkRouter {
       );
     }
 
+    // Social post screens were removed; route to home with a notice.
     return DeepLinkRouteResult(
-      routeName: '/post-detail',
-      arguments: {'postId': link.postId},
+      routeName: '/main',
+      fallbackMessage: _l10n.deepLinkInvalidPostLink,
     );
   }
 

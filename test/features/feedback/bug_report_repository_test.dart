@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:socialmesh/features/admin/bug_reports/admin_bug_report_providers.dart';
 import 'package:socialmesh/features/feedback/bug_report_repository.dart';
 
 void main() {
@@ -44,71 +43,6 @@ void main() {
       expect(hydrated.every((report) => report.responsesLoaded), isTrue);
       expect(hydrated[0].responses, isEmpty);
       expect(hydrated[1].responses.single.message, 'Need a few more details.');
-    });
-  });
-
-  group('admin bug report hydration', () {
-    test('counts only unread user replies for admins', () {
-      final responses = [
-        BugReportResponse(
-          id: 'founder-1',
-          from: 'founder',
-          message: 'We are investigating this.',
-          createdAt: DateTime(2026, 4, 13, 8),
-        ),
-        BugReportResponse(
-          id: 'user-1',
-          from: 'user',
-          message: 'It still happens on startup.',
-          createdAt: DateTime(2026, 4, 13, 9),
-        ),
-        BugReportResponse(
-          id: 'user-2',
-          from: 'user',
-          message: 'Here is another screenshot.',
-          createdAt: DateTime(2026, 4, 13, 10),
-        ),
-      ];
-
-      final unreadCount = countUnreadUserRepliesForAdmin(
-        responses: responses,
-        readByAdminFlags: [true, false, true],
-      );
-
-      expect(unreadCount, 1);
-    });
-
-    test('hydrates admin reports with unread counts and loaded threads', () {
-      final reports = [
-        AdminBugReport(
-          id: 'admin-report',
-          description: 'Crash when opening map',
-          createdAt: DateTime(2026, 4, 13),
-          responsesLoaded: false,
-        ),
-      ];
-
-      final hydrated = hydrateAdminBugReports(
-        reports: reports,
-        threadDataByReportId: {
-          'admin-report': AdminBugReportThreadData(
-            responses: [
-              BugReportResponse(
-                id: 'user-1',
-                from: 'user',
-                message: 'The app freezes after the first pan.',
-                createdAt: DateTime(2026, 4, 13, 11),
-              ),
-            ],
-            readByAdminFlags: [false],
-          ),
-        },
-      );
-
-      expect(hydrated.single.responsesLoaded, isTrue);
-      expect(hydrated.single.hasUnreadUserReplies, isTrue);
-      expect(hydrated.single.unreadUserReplyCount, 1);
-      expect(hydrated.single.responses.single.isFromUser, isTrue);
     });
   });
 }

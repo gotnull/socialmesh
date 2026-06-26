@@ -45,8 +45,6 @@ class RouteRegistry {
     '/settings': RouteMetadata(path: '/settings'),
     '/onboarding': RouteMetadata(path: '/onboarding'),
     '/scanner': RouteMetadata(path: '/scanner'),
-    '/profile': RouteMetadata(path: '/profile'),
-    '/post-detail': RouteMetadata(path: '/post-detail'),
 
     // Device-required routes
     '/device-config': RouteMetadata(
