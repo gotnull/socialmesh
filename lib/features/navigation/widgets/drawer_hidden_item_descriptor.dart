@@ -146,12 +146,6 @@ DrawerHiddenItemDescriptor? drawerHiddenItemDescriptor(
         label: l10n.navigationTimeline,
         iconColor: AccentColors.indigo,
       );
-    case 'mesh_3d_view':
-      return DrawerHiddenItemDescriptor(
-        icon: Icons.view_in_ar,
-        label: l10n.navigationMesh3dView,
-        iconColor: AccentColors.cyan,
-      );
     case 'routes':
       return DrawerHiddenItemDescriptor(
         icon: Icons.route,

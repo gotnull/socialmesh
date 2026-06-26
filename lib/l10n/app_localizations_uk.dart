@@ -6635,9 +6635,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get helpCenterScreenMap => 'Карта';
 
   @override
-  String get helpCenterScreenMesh3d => 'Mesh 3D';
-
-  @override
   String get helpCenterScreenMeshHealth => 'Стан мережі';
 
   @override
@@ -7749,100 +7746,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get mapYouBadge => 'ВИ';
-
-  @override
-  String get mesh3dAutoRotate => 'Автообертання';
-
-  @override
-  String get mesh3dChangeViewTooltip => 'Змінити вигляд';
-
-  @override
-  String mesh3dFilteredNodeCount(int filtered, int total) {
-    return '$filtered/$total вузлів';
-  }
-
-  @override
-  String get mesh3dHelp => 'Довідка';
-
-  @override
-  String get mesh3dHideConnections => 'Приховати з\'єднання';
-
-  @override
-  String get mesh3dLegendActive => 'Активний';
-
-  @override
-  String get mesh3dLegendActiveNow => 'Активний зараз';
-
-  @override
-  String get mesh3dLegendActivePeer => 'Активний пір';
-
-  @override
-  String get mesh3dLegendFading => 'Затухає';
-
-  @override
-  String get mesh3dLegendFadingPeer => 'Пір затухає';
-
-  @override
-  String get mesh3dLegendFairSignal => 'Задовільний сигнал';
-
-  @override
-  String get mesh3dLegendGoodSignal => 'Хороший сигнал';
-
-  @override
-  String get mesh3dLegendHighAltitude => 'Велика висота';
-
-  @override
-  String get mesh3dLegendLowAltitude => 'Мала висота';
-
-  @override
-  String get mesh3dLegendOffline => 'Офлайн';
-
-  @override
-  String get mesh3dLegendPoorSignal => 'Слабкий сигнал';
-
-  @override
-  String get mesh3dLegendSnrBar => 'Смуга SNR';
-
-  @override
-  String get mesh3dLegendStaleIdle => 'Застарілий / неактивний';
-
-  @override
-  String get mesh3dLegendYourNode => 'Ваш вузол';
-
-  @override
-  String get mesh3dMyNodeBadge => 'Я';
-
-  @override
-  String mesh3dNodeCount(int count) {
-    return '$count вузлів';
-  }
-
-  @override
-  String get mesh3dNodesDrawerTitle => 'Вузли';
-
-  @override
-  String get mesh3dShowConnections => 'Показати з\'єднання';
-
-  @override
-  String get mesh3dStatOnline => 'Онлайн';
-
-  @override
-  String get mesh3dStatChUtil => 'Завант. каналу';
-
-  @override
-  String get mesh3dStatGps => 'GPS';
-
-  @override
-  String get mesh3dStatSnr => 'SNR';
-
-  @override
-  String get mesh3dStatTotal => 'Всього';
-
-  @override
-  String get mesh3dStopRotation => 'Зупинити обертання';
-
-  @override
-  String get mesh3dViewModeTitle => 'Режим перегляду';
 
   @override
   String meshHealthActiveNodesPackets(int activeNodeCount, int totalPackets) {
@@ -12636,9 +12539,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get navigationMenuTooltip => 'Меню';
-
-  @override
-  String get navigationMesh3dView => '3D-перегляд Mesh';
 
   @override
   String get navigationMeshHealth => 'Стан Mesh';
@@ -34773,13 +34673,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Управління вашою ідентичністю в мережі';
 
   @override
-  String get helpMesh3dOverviewTitle => 'Mesh 3D';
-
-  @override
-  String get helpMesh3dOverviewDescription =>
-      '3D-візуалізація топології мережі';
-
-  @override
   String get helpTimelineOverviewTitle => 'Хронологія';
 
   @override
@@ -35360,22 +35253,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get helpProfileCloudBubble =>
       '**Cloud Sync** - преміум-функція, що резервує ваш профіль, NodeDex, автоматизації та віджети до хмари. Вона захищає ваші дані - якщо ви видалите застосунок або придбаєте новий телефон, все **відновлюється автоматично** після повторного входу. Без неї ваші дані існують лише на цьому пристрої.';
-
-  @override
-  String get helpMesh3dIntroBubble =>
-      'Ласкаво просимо до **Mesh 3D**! Перегляньте всю вашу мережу у тривимірному просторі. Перетягуйте для обертання, зводьте пальці для масштабування!';
-
-  @override
-  String get helpMesh3dNodesBubble =>
-      'Кожна куля - це **вузол**. Лінії показують з\'єднання на основі потужності сигналу. Ближче = сильніший сигнал!';
-
-  @override
-  String get helpMesh3dColorsBubble =>
-      'Кольори відображають **стан вузла**. Зелений = активний, жовтий = згасає, сірий = неактивний. Статус визначається на основі останнього сигналу.';
-
-  @override
-  String get helpMesh3dTapBubble =>
-      '**Торкніться будь-якого вузла**, щоб вибрати його та переглянути деталі. Відмінно для розуміння топології вашої мережі!';
 
   @override
   String get helpTimelineIntroBubble =>

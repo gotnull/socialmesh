@@ -50,7 +50,6 @@ import '../settings/ringtone_screen.dart';
 import '../settings/ifttt_config_screen.dart';
 import '../settings/account_subscriptions_screen.dart';
 import '../presence/presence_screen.dart';
-import '../mesh3d/mesh_3d_screen.dart';
 import '../world_mesh/world_mesh_screen.dart';
 import '../settings/subscription_screen.dart';
 import '../settings/translation_settings_screen.dart';
@@ -1526,13 +1525,6 @@ class _MainDrawerState extends ConsumerState<_MainDrawer>
       screen: const TimelineScreen(),
       sectionHeader: l10n.navigationSectionAdvanced,
       iconColor: AccentColors.indigo,
-    ),
-    DrawerMenuItem(
-      id: 'mesh_3d_view',
-      icon: Icons.view_in_ar,
-      label: l10n.navigationMesh3dView,
-      screen: const Mesh3DScreen(),
-      iconColor: AccentColors.cyan,
     ),
     DrawerMenuItem(
       id: 'routes',

@@ -8800,10 +8800,6 @@
     "@helpCenterScreenMap": {
         "description": "Screen name shown in help article topic chips for the Map screen."
     },
-    "helpCenterScreenMesh3d": "Mesh 3D",
-    "@helpCenterScreenMesh3d": {
-        "description": "Screen name shown in help article topic chips for the Mesh 3D screen."
-    },
     "helpCenterScreenMeshHealth": "Mesh Health",
     "@helpCenterScreenMeshHealth": {
         "description": "Screen name shown in help article topic chips for the Mesh Health screen."
@@ -10311,139 +10307,6 @@
     "mapYouBadge": "YOU",
     "@mapYouBadge": {
         "description": "Text displayed in map view"
-    },
-    "mesh3dAutoRotate": "Auto Rotate",
-    "@mesh3dAutoRotate": {
-        "description": "Menu item to start auto-rotation"
-    },
-    "mesh3dChangeViewTooltip": "Change View",
-    "@mesh3dChangeViewTooltip": {
-        "description": "Tooltip for view selector button"
-    },
-    "mesh3dFilteredNodeCount": "{filtered}/{total} nodes",
-    "@mesh3dFilteredNodeCount": {
-        "description": "Node count badge when filter is active",
-        "placeholders": {
-            "filtered": {
-                "type": "int"
-            },
-            "total": {
-                "type": "int"
-            }
-        }
-    },
-    "mesh3dHelp": "Help",
-    "@mesh3dHelp": {
-        "description": "Menu item for help"
-    },
-    "mesh3dHideConnections": "Hide Connections",
-    "@mesh3dHideConnections": {
-        "description": "Menu item to hide connection lines"
-    },
-    "mesh3dLegendActive": "Active",
-    "@mesh3dLegendActive": {
-        "description": "Terrain legend: active node"
-    },
-    "mesh3dLegendActiveNow": "Active now",
-    "@mesh3dLegendActiveNow": {
-        "description": "Activity legend: active"
-    },
-    "mesh3dLegendActivePeer": "Active peer",
-    "@mesh3dLegendActivePeer": {
-        "description": "Topology legend: active peer node"
-    },
-    "mesh3dLegendFading": "Fading",
-    "@mesh3dLegendFading": {
-        "description": "Terrain legend: fading node"
-    },
-    "mesh3dLegendFadingPeer": "Fading peer",
-    "@mesh3dLegendFadingPeer": {
-        "description": "Topology legend: fading peer node"
-    },
-    "mesh3dLegendFairSignal": "Fair signal",
-    "@mesh3dLegendFairSignal": {
-        "description": "Signal strength legend: fair"
-    },
-    "mesh3dLegendGoodSignal": "Good signal",
-    "@mesh3dLegendGoodSignal": {
-        "description": "Signal strength legend: good"
-    },
-    "mesh3dLegendHighAltitude": "High altitude",
-    "@mesh3dLegendHighAltitude": {
-        "description": "Terrain legend: high altitude"
-    },
-    "mesh3dLegendLowAltitude": "Low altitude",
-    "@mesh3dLegendLowAltitude": {
-        "description": "Terrain legend: low altitude"
-    },
-    "mesh3dLegendOffline": "Offline",
-    "@mesh3dLegendOffline": {
-        "description": "Topology/terrain legend: offline node"
-    },
-    "mesh3dLegendPoorSignal": "Poor signal",
-    "@mesh3dLegendPoorSignal": {
-        "description": "Signal strength legend: poor"
-    },
-    "mesh3dLegendSnrBar": "SNR bar",
-    "@mesh3dLegendSnrBar": {
-        "description": "Signal strength legend: SNR bar"
-    },
-    "mesh3dLegendStaleIdle": "Stale / idle",
-    "@mesh3dLegendStaleIdle": {
-        "description": "Activity legend: stale or idle"
-    },
-    "mesh3dLegendYourNode": "Your node",
-    "@mesh3dLegendYourNode": {
-        "description": "Topology/terrain legend: user's own node"
-    },
-    "mesh3dMyNodeBadge": "ME",
-    "@mesh3dMyNodeBadge": {
-        "description": "Badge label for user's own node"
-    },
-    "mesh3dNodeCount": "{count} nodes",
-    "@mesh3dNodeCount": {
-        "description": "Node count badge showing total",
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        }
-    },
-    "mesh3dNodesDrawerTitle": "Nodes",
-    "@mesh3dNodesDrawerTitle": {
-        "description": "Node panel drawer title"
-    },
-    "mesh3dShowConnections": "Show Connections",
-    "@mesh3dShowConnections": {
-        "description": "Menu item to show connection lines"
-    },
-    "mesh3dStatOnline": "Online",
-    "@mesh3dStatOnline": {
-        "description": "Stats card label: online node count"
-    },
-    "mesh3dStatChUtil": "Ch Util",
-    "@mesh3dStatChUtil": {
-        "description": "Stats card label: channel utilization"
-    },
-    "mesh3dStatGps": "GPS",
-    "@mesh3dStatGps": {
-        "description": "Stats card label: GPS node count"
-    },
-    "mesh3dStatSnr": "SNR",
-    "@mesh3dStatSnr": {
-        "description": "Stats card label: average SNR"
-    },
-    "mesh3dStatTotal": "Total",
-    "@mesh3dStatTotal": {
-        "description": "Stats card label: total node count"
-    },
-    "mesh3dStopRotation": "Stop Rotation",
-    "@mesh3dStopRotation": {
-        "description": "Menu item to stop auto-rotation"
-    },
-    "mesh3dViewModeTitle": "View Mode",
-    "@mesh3dViewModeTitle": {
-        "description": "View mode selector bottom sheet title"
     },
     "meshHealthActiveNodesPackets": "{activeNodeCount} active nodes • {totalPackets} packets",
     "@meshHealthActiveNodesPackets": {
@@ -16809,10 +16672,6 @@
     "navigationMenuTooltip": "Menu",
     "@navigationMenuTooltip": {
         "description": "Tooltip for the hamburger menu button."
-    },
-    "navigationMesh3dView": "3D Mesh View",
-    "@navigationMesh3dView": {
-        "description": "Label for the 3D Mesh View drawer item."
     },
     "navigationMeshHealth": "Mesh Health",
     "@navigationMeshHealth": {
@@ -46366,14 +46225,6 @@
     "@helpProfileOverviewDescription": {
         "description": "Description for profile_overview help topic"
     },
-    "helpMesh3dOverviewTitle": "Mesh 3D",
-    "@helpMesh3dOverviewTitle": {
-        "description": "Title for mesh_3d_overview help topic"
-    },
-    "helpMesh3dOverviewDescription": "3D network topology visualization",
-    "@helpMesh3dOverviewDescription": {
-        "description": "Description for mesh_3d_overview help topic"
-    },
     "helpTimelineOverviewTitle": "Timeline",
     "@helpTimelineOverviewTitle": {
         "description": "Title for timeline_overview help topic"
@@ -46973,22 +46824,6 @@
     "helpProfileCloudBubble": "**Cloud Sync** is a premium feature that backs up your profile, NodeDex, automations, and widgets to the cloud. It protects your data - if you delete the app or get a new phone, everything **restores automatically** when you sign back in. Without it, your data exists only on this device.",
     "@helpProfileCloudBubble": {
         "description": "Help bubble text for step profile_cloud"
-    },
-    "helpMesh3dIntroBubble": "Welcome to **Mesh 3D**! See your entire network in three dimensions. Drag to rotate, pinch to zoom!",
-    "@helpMesh3dIntroBubble": {
-        "description": "Help bubble text for step mesh3d_intro"
-    },
-    "helpMesh3dNodesBubble": "Each sphere is a **node**. Lines show connections based on signal strength. Closer = stronger signal!",
-    "@helpMesh3dNodesBubble": {
-        "description": "Help bubble text for step mesh3d_nodes"
-    },
-    "helpMesh3dColorsBubble": "Colors show **node health**. Green = active, yellow = fading, gray = inactive. Status is inferred from last heard.",
-    "@helpMesh3dColorsBubble": {
-        "description": "Help bubble text for step mesh3d_colors"
-    },
-    "helpMesh3dTapBubble": "**Tap any node** to select it and see details. Great for understanding your network topology!",
-    "@helpMesh3dTapBubble": {
-        "description": "Help bubble text for step mesh3d_tap"
     },
     "helpTimelineIntroBubble": "The **Timeline** shows everything happening on your mesh. Messages, node changes, telemetry - all in order!",
     "@helpTimelineIntroBubble": {

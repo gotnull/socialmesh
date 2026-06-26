@@ -11412,9 +11412,6 @@
   "@helpCenterScreenMap": {
     "description": "Screen name shown in help article topic chips for the Map screen."
   },
-  "@helpCenterScreenMesh3d": {
-    "description": "Screen name shown in help article topic chips for the Mesh 3D screen."
-  },
   "@helpCenterScreenMeshHealth": {
     "description": "Screen name shown in help article topic chips for the Mesh Health screen."
   },
@@ -11828,24 +11825,6 @@
   },
   "@helpMarketplaceShareBubble": {
     "description": "Help bubble text for step marketplace_share"
-  },
-  "@helpMesh3dColorsBubble": {
-    "description": "Help bubble text for step mesh3d_colors"
-  },
-  "@helpMesh3dIntroBubble": {
-    "description": "Help bubble text for step mesh3d_intro"
-  },
-  "@helpMesh3dNodesBubble": {
-    "description": "Help bubble text for step mesh3d_nodes"
-  },
-  "@helpMesh3dOverviewDescription": {
-    "description": "Description for mesh_3d_overview help topic"
-  },
-  "@helpMesh3dOverviewTitle": {
-    "description": "Title for mesh_3d_overview help topic"
-  },
-  "@helpMesh3dTapBubble": {
-    "description": "Help bubble text for step mesh3d_tap"
   },
   "@helpMeshHealthOverviewDescription": {
     "description": "Description for mesh_health_overview help topic"
@@ -13911,109 +13890,6 @@
   },
   "@mapYouBadge": {
     "description": "Text displayed in map view"
-  },
-  "@mesh3dAutoRotate": {
-    "description": "Menu item to start auto-rotation"
-  },
-  "@mesh3dChangeViewTooltip": {
-    "description": "Tooltip for view selector button"
-  },
-  "@mesh3dFilteredNodeCount": {
-    "description": "Node count badge when filter is active",
-    "placeholders": {
-      "filtered": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "@mesh3dHelp": {
-    "description": "Menu item for help"
-  },
-  "@mesh3dHideConnections": {
-    "description": "Menu item to hide connection lines"
-  },
-  "@mesh3dLegendActive": {
-    "description": "Terrain legend: active node"
-  },
-  "@mesh3dLegendActiveNow": {
-    "description": "Activity legend: active"
-  },
-  "@mesh3dLegendActivePeer": {
-    "description": "Topology legend: active peer node"
-  },
-  "@mesh3dLegendFading": {
-    "description": "Terrain legend: fading node"
-  },
-  "@mesh3dLegendFadingPeer": {
-    "description": "Topology legend: fading peer node"
-  },
-  "@mesh3dLegendFairSignal": {
-    "description": "Signal strength legend: fair"
-  },
-  "@mesh3dLegendGoodSignal": {
-    "description": "Signal strength legend: good"
-  },
-  "@mesh3dLegendHighAltitude": {
-    "description": "Terrain legend: high altitude"
-  },
-  "@mesh3dLegendLowAltitude": {
-    "description": "Terrain legend: low altitude"
-  },
-  "@mesh3dLegendOffline": {
-    "description": "Topology/terrain legend: offline node"
-  },
-  "@mesh3dLegendPoorSignal": {
-    "description": "Signal strength legend: poor"
-  },
-  "@mesh3dLegendSnrBar": {
-    "description": "Signal strength legend: SNR bar"
-  },
-  "@mesh3dLegendStaleIdle": {
-    "description": "Activity legend: stale or idle"
-  },
-  "@mesh3dLegendYourNode": {
-    "description": "Topology/terrain legend: user's own node"
-  },
-  "@mesh3dMyNodeBadge": {
-    "description": "Badge label for user's own node"
-  },
-  "@mesh3dNodeCount": {
-    "description": "Node count badge showing total",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "@mesh3dNodesDrawerTitle": {
-    "description": "Node panel drawer title"
-  },
-  "@mesh3dShowConnections": {
-    "description": "Menu item to show connection lines"
-  },
-  "@mesh3dStatChUtil": {
-    "description": "Stats card label: channel utilization"
-  },
-  "@mesh3dStatGps": {
-    "description": "Stats card label: GPS node count"
-  },
-  "@mesh3dStatOnline": {
-    "description": "Stats card label: online node count"
-  },
-  "@mesh3dStatSnr": {
-    "description": "Stats card label: average SNR"
-  },
-  "@mesh3dStatTotal": {
-    "description": "Stats card label: total node count"
-  },
-  "@mesh3dStopRotation": {
-    "description": "Menu item to stop auto-rotation"
-  },
-  "@mesh3dViewModeTitle": {
-    "description": "View mode selector bottom sheet title"
   },
   "@meshHealthActiveNodesPackets": {
     "description": "Status subtitle showing active nodes and packet count",
@@ -17360,9 +17236,6 @@
   },
   "@navigationMenuTooltip": {
     "description": "Tooltip for the hamburger menu button."
-  },
-  "@navigationMesh3dView": {
-    "description": "Label for the 3D Mesh View drawer item."
   },
   "@navigationMeshHealth": {
     "description": "Label for the Mesh Health drawer item."
@@ -36696,7 +36569,6 @@
   "helpCenterScreenCreateSignal": "Criar sinal",
   "helpCenterScreenDeviceShop": "Loja de dispositivos",
   "helpCenterScreenMap": "Mapa",
-  "helpCenterScreenMesh3d": "Mesh 3D",
   "helpCenterScreenMeshHealth": "Saúde da mesh",
   "helpCenterScreenMessages": "Mensagens",
   "helpCenterScreenNodeDex": "NodeDex",
@@ -36830,12 +36702,6 @@
   "helpMarketplaceOverviewDescription": "Descubra widgets feitos pela comunidade",
   "helpMarketplaceOverviewTitle": "Marketplace de widgets",
   "helpMarketplaceShareBubble": "Criou algo legal? **Compartilhe seus widgets** no marketplace e ajude a comunidade!",
-  "helpMesh3dColorsBubble": "As cores mostram a **saúde do nó**. Verde = ativo, amarelo = enfraquecendo, cinza = inativo. O status é inferido do último contato.",
-  "helpMesh3dIntroBubble": "Bem-vindo ao **Mesh 3D**! Veja toda a sua rede em três dimensões. Arraste para girar, belisque para dar zoom!",
-  "helpMesh3dNodesBubble": "Cada esfera é um **nó**. As linhas mostram conexões baseadas na intensidade do sinal. Mais perto = sinal mais forte!",
-  "helpMesh3dOverviewDescription": "Visualização 3D da topologia de rede",
-  "helpMesh3dOverviewTitle": "Mesh 3D",
-  "helpMesh3dTapBubble": "**Toque em qualquer nó** para selecioná-lo e ver detalhes. Ótimo para entender a topologia da sua rede!",
   "helpMeshExplorerIntroBubble": "Bem-vindo ao **Mesh Explorer**! Aqui são mostrados todos os pares com capacidade SocialMesh atualmente ao alcance do rádio. Pares anónimos aparecem instantaneamente - sem necessidade de handshake.",
   "helpMeshExplorerOverviewDescription": "Explore pares próximos e serviços mesh",
   "helpMeshExplorerOverviewTitle": "Mesh Explorer",
@@ -37632,36 +37498,6 @@
   "mdnsNoDevicesFound": "Nenhum rádio Wi-Fi encontrado",
   "mdnsScanning": "A pesquisar…",
   "mdnsTransportTcp": "TCP",
-  "mesh3dAutoRotate": "Rotação automática",
-  "mesh3dChangeViewTooltip": "Alterar vista",
-  "mesh3dFilteredNodeCount": "{filtered}/{total} nós",
-  "mesh3dHelp": "Ajuda",
-  "mesh3dHideConnections": "Ocultar conexões",
-  "mesh3dLegendActive": "Ativo",
-  "mesh3dLegendActiveNow": "Ativo agora",
-  "mesh3dLegendActivePeer": "Peer ativo",
-  "mesh3dLegendFading": "Esmaecendo",
-  "mesh3dLegendFadingPeer": "Peer esmaecendo",
-  "mesh3dLegendFairSignal": "Sinal razoável",
-  "mesh3dLegendGoodSignal": "Sinal bom",
-  "mesh3dLegendHighAltitude": "Alta altitude",
-  "mesh3dLegendLowAltitude": "Baixa altitude",
-  "mesh3dLegendOffline": "Offline",
-  "mesh3dLegendPoorSignal": "Sinal fraco",
-  "mesh3dLegendSnrBar": "Barra SNR",
-  "mesh3dLegendStaleIdle": "Obsoleto / inativo",
-  "mesh3dLegendYourNode": "Seu nó",
-  "mesh3dMyNodeBadge": "EU",
-  "mesh3dNodeCount": "{count} nós",
-  "mesh3dNodesDrawerTitle": "Nós",
-  "mesh3dShowConnections": "Mostrar conexões",
-  "mesh3dStatChUtil": "Util. canal",
-  "mesh3dStatGps": "GPS",
-  "mesh3dStatOnline": "Online",
-  "mesh3dStatSnr": "SNR",
-  "mesh3dStatTotal": "Total",
-  "mesh3dStopRotation": "Parar rotação",
-  "mesh3dViewModeTitle": "Modo de vista",
   "meshCanvasDrawerLabel": "MeshCanvas",
   "meshCanvasPlaceholderSubtitle": "Em breve: tela de pixels colaborativa sobre a malha",
   "meshCanvasPlaceholderTitle": "MeshCanvas",
@@ -39820,7 +39656,6 @@
   "navigationIftttIntegration": "Integração IFTTT",
   "navigationMap": "Mapa",
   "navigationMenuTooltip": "Menu",
-  "navigationMesh3dView": "Visualização 3D da mesh",
   "navigationMeshHealth": "Saúde da mesh",
   "navigationMeshIncidents": "Incidentes na mesh",
   "navigationMessages": "Mensagens",

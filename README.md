@@ -215,7 +215,6 @@ Full control over your Meshtastic device:
 
 | Feature          | Description                                                  |
 | ---------------- | ------------------------------------------------------------ |
-| **3D Mesh View** | Interactive 3D visualization of your mesh network topology   |
 | **World Map**    | Global view of Meshtastic nodes from the public MQTT network |
 | **Timeline**     | Chronological feed of all mesh activity and events           |
 
@@ -313,7 +312,6 @@ lib/
 │   ├── dashboard/  # Custom widget dashboard
 │   ├── device/     # Device configuration
 │   ├── map/        # Interactive node map
-│   ├── mesh3d/     # 3D mesh topology view
 │   ├── mesh_health/# Network health analytics
 │   ├── messaging/  # Direct and channel messaging
 │   ├── nodedex/    # Mesh node registry (sigils, classifications, patina)

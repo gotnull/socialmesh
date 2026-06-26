@@ -6614,9 +6614,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get helpCenterScreenMap => 'Mapa';
 
   @override
-  String get helpCenterScreenMesh3d => 'Mesh 3D';
-
-  @override
   String get helpCenterScreenMeshHealth => 'Saúde da mesh';
 
   @override
@@ -7722,100 +7719,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get mapYouBadge => 'VOCÊ';
-
-  @override
-  String get mesh3dAutoRotate => 'Rotação automática';
-
-  @override
-  String get mesh3dChangeViewTooltip => 'Alterar vista';
-
-  @override
-  String mesh3dFilteredNodeCount(int filtered, int total) {
-    return '$filtered/$total nós';
-  }
-
-  @override
-  String get mesh3dHelp => 'Ajuda';
-
-  @override
-  String get mesh3dHideConnections => 'Ocultar conexões';
-
-  @override
-  String get mesh3dLegendActive => 'Ativo';
-
-  @override
-  String get mesh3dLegendActiveNow => 'Ativo agora';
-
-  @override
-  String get mesh3dLegendActivePeer => 'Peer ativo';
-
-  @override
-  String get mesh3dLegendFading => 'Esmaecendo';
-
-  @override
-  String get mesh3dLegendFadingPeer => 'Peer esmaecendo';
-
-  @override
-  String get mesh3dLegendFairSignal => 'Sinal razoável';
-
-  @override
-  String get mesh3dLegendGoodSignal => 'Sinal bom';
-
-  @override
-  String get mesh3dLegendHighAltitude => 'Alta altitude';
-
-  @override
-  String get mesh3dLegendLowAltitude => 'Baixa altitude';
-
-  @override
-  String get mesh3dLegendOffline => 'Offline';
-
-  @override
-  String get mesh3dLegendPoorSignal => 'Sinal fraco';
-
-  @override
-  String get mesh3dLegendSnrBar => 'Barra SNR';
-
-  @override
-  String get mesh3dLegendStaleIdle => 'Obsoleto / inativo';
-
-  @override
-  String get mesh3dLegendYourNode => 'Seu nó';
-
-  @override
-  String get mesh3dMyNodeBadge => 'EU';
-
-  @override
-  String mesh3dNodeCount(int count) {
-    return '$count nós';
-  }
-
-  @override
-  String get mesh3dNodesDrawerTitle => 'Nós';
-
-  @override
-  String get mesh3dShowConnections => 'Mostrar conexões';
-
-  @override
-  String get mesh3dStatOnline => 'Online';
-
-  @override
-  String get mesh3dStatChUtil => 'Util. canal';
-
-  @override
-  String get mesh3dStatGps => 'GPS';
-
-  @override
-  String get mesh3dStatSnr => 'SNR';
-
-  @override
-  String get mesh3dStatTotal => 'Total';
-
-  @override
-  String get mesh3dStopRotation => 'Parar rotação';
-
-  @override
-  String get mesh3dViewModeTitle => 'Modo de vista';
 
   @override
   String meshHealthActiveNodesPackets(int activeNodeCount, int totalPackets) {
@@ -12617,9 +12520,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get navigationMenuTooltip => 'Menu';
-
-  @override
-  String get navigationMesh3dView => 'Visualização 3D da mesh';
 
   @override
   String get navigationMeshHealth => 'Saúde da mesh';
@@ -34728,13 +34628,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get helpProfileOverviewDescription => 'Gerencie sua identidade mesh';
 
   @override
-  String get helpMesh3dOverviewTitle => 'Mesh 3D';
-
-  @override
-  String get helpMesh3dOverviewDescription =>
-      'Visualização 3D da topologia de rede';
-
-  @override
   String get helpTimelineOverviewTitle => 'Linha do Tempo';
 
   @override
@@ -35311,22 +35204,6 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get helpProfileCloudBubble =>
       '**Cloud Sync** é um recurso premium que faz backup do seu perfil, NodeDex, automações e widgets na nuvem. Protege seus dados - se você apagar o app ou trocar de celular, tudo é **restaurado automaticamente** quando você fizer login novamente. Sem ele, seus dados existem apenas neste dispositivo.';
-
-  @override
-  String get helpMesh3dIntroBubble =>
-      'Bem-vindo ao **Mesh 3D**! Veja toda a sua rede em três dimensões. Arraste para girar, belisque para dar zoom!';
-
-  @override
-  String get helpMesh3dNodesBubble =>
-      'Cada esfera é um **nó**. As linhas mostram conexões baseadas na intensidade do sinal. Mais perto = sinal mais forte!';
-
-  @override
-  String get helpMesh3dColorsBubble =>
-      'As cores mostram a **saúde do nó**. Verde = ativo, amarelo = enfraquecendo, cinza = inativo. O status é inferido do último contato.';
-
-  @override
-  String get helpMesh3dTapBubble =>
-      '**Toque em qualquer nó** para selecioná-lo e ver detalhes. Ótimo para entender a topologia da sua rede!';
 
   @override
   String get helpTimelineIntroBubble =>

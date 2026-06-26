@@ -1132,46 +1132,6 @@ class HelpContent {
   );
 
   // ============================================================================
-  // MESH 3D HELP
-  // ============================================================================
-
-  static final HelpTopic mesh3dOverview = HelpTopic(
-    id: 'mesh_3d_overview',
-    title: 'Mesh 3D',
-    description: '3D network topology visualization',
-    icon: Icons.view_in_ar,
-    category: catNetwork,
-    priority: 13,
-    steps: [
-      HelpStep(
-        id: 'mesh3d_intro',
-        bubbleText:
-            "Welcome to **Mesh 3D**! See your entire network in three dimensions. Drag to rotate, pinch to zoom!",
-        icoMood: MeshBrainMood.excited,
-        canGoBack: false,
-      ),
-      HelpStep(
-        id: 'mesh3d_nodes',
-        bubbleText:
-            "Each sphere is a **node**. Lines show connections based on signal strength. Closer = stronger signal!",
-        icoMood: MeshBrainMood.speaking,
-      ),
-      HelpStep(
-        id: 'mesh3d_colors',
-        bubbleText:
-            "Colors show **node health**. Green = active, yellow = fading, gray = inactive. Status is inferred from last heard.",
-        icoMood: MeshBrainMood.curious,
-      ),
-      HelpStep(
-        id: 'mesh3d_tap',
-        bubbleText:
-            "**Tap any node** to select it and see details. Great for understanding your network topology!",
-        icoMood: MeshBrainMood.approving,
-      ),
-    ],
-  );
-
-  // ============================================================================
   // TIMELINE HELP
   // ============================================================================
 
@@ -2561,7 +2521,6 @@ class HelpContent {
     positionOverview,
     settingsOverview,
     profileOverview,
-    mesh3dOverview,
     timelineOverview,
     deviceShopOverview,
     offlineMapsOverview,
@@ -2640,7 +2599,6 @@ class HelpContent {
         'position_overview' => l10n.helpPositionOverviewTitle,
         'settings_overview' => l10n.helpSettingsOverviewTitle,
         'profile_overview' => l10n.helpProfileOverviewTitle,
-        'mesh_3d_overview' => l10n.helpMesh3dOverviewTitle,
         'timeline_overview' => l10n.helpTimelineOverviewTitle,
         'device_shop_overview' => l10n.helpDeviceShopOverviewTitle,
         'offline_maps_overview' => l10n.helpOfflineMapsOverviewTitle,
@@ -2692,7 +2650,6 @@ class HelpContent {
         'position_overview' => l10n.helpPositionOverviewDescription,
         'settings_overview' => l10n.helpSettingsOverviewDescription,
         'profile_overview' => l10n.helpProfileOverviewDescription,
-        'mesh_3d_overview' => l10n.helpMesh3dOverviewDescription,
         'timeline_overview' => l10n.helpTimelineOverviewDescription,
         'device_shop_overview' => l10n.helpDeviceShopOverviewDescription,
         'offline_maps_overview' => l10n.helpOfflineMapsOverviewDescription,
@@ -2833,10 +2790,6 @@ class HelpContent {
     'profile_customize' => l10n.helpProfileCustomizeBubble,
     'profile_share' => l10n.helpProfileShareBubble,
     'profile_cloud' => l10n.helpProfileCloudBubble,
-    'mesh3d_intro' => l10n.helpMesh3dIntroBubble,
-    'mesh3d_nodes' => l10n.helpMesh3dNodesBubble,
-    'mesh3d_colors' => l10n.helpMesh3dColorsBubble,
-    'mesh3d_tap' => l10n.helpMesh3dTapBubble,
     'timeline_intro' => l10n.helpTimelineIntroBubble,
     'timeline_filter' => l10n.helpTimelineFilterBubble,
     'timeline_tap' => l10n.helpTimelineTapBubble,

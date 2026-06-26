@@ -11548,12 +11548,6 @@ abstract class AppLocalizations {
   /// **'Map'**
   String get helpCenterScreenMap;
 
-  /// Screen name shown in help article topic chips for the Mesh 3D screen.
-  ///
-  /// In en, this message translates to:
-  /// **'Mesh 3D'**
-  String get helpCenterScreenMesh3d;
-
   /// Screen name shown in help article topic chips for the Mesh Health screen.
   ///
   /// In en, this message translates to:
@@ -13490,186 +13484,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'YOU'**
   String get mapYouBadge;
-
-  /// Menu item to start auto-rotation
-  ///
-  /// In en, this message translates to:
-  /// **'Auto Rotate'**
-  String get mesh3dAutoRotate;
-
-  /// Tooltip for view selector button
-  ///
-  /// In en, this message translates to:
-  /// **'Change View'**
-  String get mesh3dChangeViewTooltip;
-
-  /// Node count badge when filter is active
-  ///
-  /// In en, this message translates to:
-  /// **'{filtered}/{total} nodes'**
-  String mesh3dFilteredNodeCount(int filtered, int total);
-
-  /// Menu item for help
-  ///
-  /// In en, this message translates to:
-  /// **'Help'**
-  String get mesh3dHelp;
-
-  /// Menu item to hide connection lines
-  ///
-  /// In en, this message translates to:
-  /// **'Hide Connections'**
-  String get mesh3dHideConnections;
-
-  /// Terrain legend: active node
-  ///
-  /// In en, this message translates to:
-  /// **'Active'**
-  String get mesh3dLegendActive;
-
-  /// Activity legend: active
-  ///
-  /// In en, this message translates to:
-  /// **'Active now'**
-  String get mesh3dLegendActiveNow;
-
-  /// Topology legend: active peer node
-  ///
-  /// In en, this message translates to:
-  /// **'Active peer'**
-  String get mesh3dLegendActivePeer;
-
-  /// Terrain legend: fading node
-  ///
-  /// In en, this message translates to:
-  /// **'Fading'**
-  String get mesh3dLegendFading;
-
-  /// Topology legend: fading peer node
-  ///
-  /// In en, this message translates to:
-  /// **'Fading peer'**
-  String get mesh3dLegendFadingPeer;
-
-  /// Signal strength legend: fair
-  ///
-  /// In en, this message translates to:
-  /// **'Fair signal'**
-  String get mesh3dLegendFairSignal;
-
-  /// Signal strength legend: good
-  ///
-  /// In en, this message translates to:
-  /// **'Good signal'**
-  String get mesh3dLegendGoodSignal;
-
-  /// Terrain legend: high altitude
-  ///
-  /// In en, this message translates to:
-  /// **'High altitude'**
-  String get mesh3dLegendHighAltitude;
-
-  /// Terrain legend: low altitude
-  ///
-  /// In en, this message translates to:
-  /// **'Low altitude'**
-  String get mesh3dLegendLowAltitude;
-
-  /// Topology/terrain legend: offline node
-  ///
-  /// In en, this message translates to:
-  /// **'Offline'**
-  String get mesh3dLegendOffline;
-
-  /// Signal strength legend: poor
-  ///
-  /// In en, this message translates to:
-  /// **'Poor signal'**
-  String get mesh3dLegendPoorSignal;
-
-  /// Signal strength legend: SNR bar
-  ///
-  /// In en, this message translates to:
-  /// **'SNR bar'**
-  String get mesh3dLegendSnrBar;
-
-  /// Activity legend: stale or idle
-  ///
-  /// In en, this message translates to:
-  /// **'Stale / idle'**
-  String get mesh3dLegendStaleIdle;
-
-  /// Topology/terrain legend: user's own node
-  ///
-  /// In en, this message translates to:
-  /// **'Your node'**
-  String get mesh3dLegendYourNode;
-
-  /// Badge label for user's own node
-  ///
-  /// In en, this message translates to:
-  /// **'ME'**
-  String get mesh3dMyNodeBadge;
-
-  /// Node count badge showing total
-  ///
-  /// In en, this message translates to:
-  /// **'{count} nodes'**
-  String mesh3dNodeCount(int count);
-
-  /// Node panel drawer title
-  ///
-  /// In en, this message translates to:
-  /// **'Nodes'**
-  String get mesh3dNodesDrawerTitle;
-
-  /// Menu item to show connection lines
-  ///
-  /// In en, this message translates to:
-  /// **'Show Connections'**
-  String get mesh3dShowConnections;
-
-  /// Stats card label: online node count
-  ///
-  /// In en, this message translates to:
-  /// **'Online'**
-  String get mesh3dStatOnline;
-
-  /// Stats card label: channel utilization
-  ///
-  /// In en, this message translates to:
-  /// **'Ch Util'**
-  String get mesh3dStatChUtil;
-
-  /// Stats card label: GPS node count
-  ///
-  /// In en, this message translates to:
-  /// **'GPS'**
-  String get mesh3dStatGps;
-
-  /// Stats card label: average SNR
-  ///
-  /// In en, this message translates to:
-  /// **'SNR'**
-  String get mesh3dStatSnr;
-
-  /// Stats card label: total node count
-  ///
-  /// In en, this message translates to:
-  /// **'Total'**
-  String get mesh3dStatTotal;
-
-  /// Menu item to stop auto-rotation
-  ///
-  /// In en, this message translates to:
-  /// **'Stop Rotation'**
-  String get mesh3dStopRotation;
-
-  /// View mode selector bottom sheet title
-  ///
-  /// In en, this message translates to:
-  /// **'View Mode'**
-  String get mesh3dViewModeTitle;
 
   /// Status subtitle showing active nodes and packet count
   ///
@@ -21813,12 +21627,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Menu'**
   String get navigationMenuTooltip;
-
-  /// Label for the 3D Mesh View drawer item.
-  ///
-  /// In en, this message translates to:
-  /// **'3D Mesh View'**
-  String get navigationMesh3dView;
 
   /// Label for the Mesh Health drawer item.
   ///
@@ -60307,18 +60115,6 @@ abstract class AppLocalizations {
   /// **'Manage your mesh identity'**
   String get helpProfileOverviewDescription;
 
-  /// Title for mesh_3d_overview help topic
-  ///
-  /// In en, this message translates to:
-  /// **'Mesh 3D'**
-  String get helpMesh3dOverviewTitle;
-
-  /// Description for mesh_3d_overview help topic
-  ///
-  /// In en, this message translates to:
-  /// **'3D network topology visualization'**
-  String get helpMesh3dOverviewDescription;
-
   /// Title for timeline_overview help topic
   ///
   /// In en, this message translates to:
@@ -61218,30 +61014,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'**Cloud Sync** is a premium feature that backs up your profile, NodeDex, automations, and widgets to the cloud. It protects your data - if you delete the app or get a new phone, everything **restores automatically** when you sign back in. Without it, your data exists only on this device.'**
   String get helpProfileCloudBubble;
-
-  /// Help bubble text for step mesh3d_intro
-  ///
-  /// In en, this message translates to:
-  /// **'Welcome to **Mesh 3D**! See your entire network in three dimensions. Drag to rotate, pinch to zoom!'**
-  String get helpMesh3dIntroBubble;
-
-  /// Help bubble text for step mesh3d_nodes
-  ///
-  /// In en, this message translates to:
-  /// **'Each sphere is a **node**. Lines show connections based on signal strength. Closer = stronger signal!'**
-  String get helpMesh3dNodesBubble;
-
-  /// Help bubble text for step mesh3d_colors
-  ///
-  /// In en, this message translates to:
-  /// **'Colors show **node health**. Green = active, yellow = fading, gray = inactive. Status is inferred from last heard.'**
-  String get helpMesh3dColorsBubble;
-
-  /// Help bubble text for step mesh3d_tap
-  ///
-  /// In en, this message translates to:
-  /// **'**Tap any node** to select it and see details. Great for understanding your network topology!'**
-  String get helpMesh3dTapBubble;
 
   /// Help bubble text for step timeline_intro
   ///

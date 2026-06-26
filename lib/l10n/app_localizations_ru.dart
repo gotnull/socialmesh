@@ -6623,9 +6623,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get helpCenterScreenMap => 'Карта';
 
   @override
-  String get helpCenterScreenMesh3d => 'Mesh 3D';
-
-  @override
   String get helpCenterScreenMeshHealth => 'Состояние меш-сети';
 
   @override
@@ -7736,100 +7733,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get mapYouBadge => 'ВЫ';
-
-  @override
-  String get mesh3dAutoRotate => 'Автоповорот';
-
-  @override
-  String get mesh3dChangeViewTooltip => 'Изменить вид';
-
-  @override
-  String mesh3dFilteredNodeCount(int filtered, int total) {
-    return '$filtered/$total узлов';
-  }
-
-  @override
-  String get mesh3dHelp => 'Справка';
-
-  @override
-  String get mesh3dHideConnections => 'Скрыть связи';
-
-  @override
-  String get mesh3dLegendActive => 'Активен';
-
-  @override
-  String get mesh3dLegendActiveNow => 'Активен сейчас';
-
-  @override
-  String get mesh3dLegendActivePeer => 'Активный узел';
-
-  @override
-  String get mesh3dLegendFading => 'Угасающий';
-
-  @override
-  String get mesh3dLegendFadingPeer => 'Угасающий узел';
-
-  @override
-  String get mesh3dLegendFairSignal => 'Средний сигнал';
-
-  @override
-  String get mesh3dLegendGoodSignal => 'Хороший сигнал';
-
-  @override
-  String get mesh3dLegendHighAltitude => 'Большая высота';
-
-  @override
-  String get mesh3dLegendLowAltitude => 'Малая высота';
-
-  @override
-  String get mesh3dLegendOffline => 'Не в сети';
-
-  @override
-  String get mesh3dLegendPoorSignal => 'Слабый сигнал';
-
-  @override
-  String get mesh3dLegendSnrBar => 'Столбец SNR';
-
-  @override
-  String get mesh3dLegendStaleIdle => 'Устаревший / неактивный';
-
-  @override
-  String get mesh3dLegendYourNode => 'Ваш узел';
-
-  @override
-  String get mesh3dMyNodeBadge => 'Я';
-
-  @override
-  String mesh3dNodeCount(int count) {
-    return '$count узлов';
-  }
-
-  @override
-  String get mesh3dNodesDrawerTitle => 'Узлы';
-
-  @override
-  String get mesh3dShowConnections => 'Показать связи';
-
-  @override
-  String get mesh3dStatOnline => 'В сети';
-
-  @override
-  String get mesh3dStatChUtil => 'Загрузка канала';
-
-  @override
-  String get mesh3dStatGps => 'GPS';
-
-  @override
-  String get mesh3dStatSnr => 'SNR';
-
-  @override
-  String get mesh3dStatTotal => 'Всего';
-
-  @override
-  String get mesh3dStopRotation => 'Остановить вращение';
-
-  @override
-  String get mesh3dViewModeTitle => 'Режим просмотра';
 
   @override
   String meshHealthActiveNodesPackets(int activeNodeCount, int totalPackets) {
@@ -12622,9 +12525,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get navigationMenuTooltip => 'Меню';
-
-  @override
-  String get navigationMesh3dView => '3D-вид сети';
 
   @override
   String get navigationMeshHealth => 'Состояние сети';
@@ -34765,13 +34665,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Управление вашей меш-идентичностью';
 
   @override
-  String get helpMesh3dOverviewTitle => 'Mesh 3D';
-
-  @override
-  String get helpMesh3dOverviewDescription =>
-      'Визуализация топологии сети в 3D';
-
-  @override
   String get helpTimelineOverviewTitle => 'Хронология';
 
   @override
@@ -35349,22 +35242,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get helpProfileCloudBubble =>
       '**Cloud Sync** - это премиум-функция, создающая резервные копии вашего профиля, NodeDex, автоматизаций и виджетов в облаке. Она защищает ваши данные: если вы удалите приложение или смените телефон, всё **восстановится автоматически** при повторном входе. Без неё данные существуют только на этом устройстве.';
-
-  @override
-  String get helpMesh3dIntroBubble =>
-      'Добро пожаловать в **Mesh 3D**! Видите всю сеть в трёх измерениях. Перетаскивайте для поворота, щипайте для масштабирования!';
-
-  @override
-  String get helpMesh3dNodesBubble =>
-      'Каждая сфера - это **узел**. Линии показывают соединения на основе уровня сигнала. Ближе = сильнее сигнал!';
-
-  @override
-  String get helpMesh3dColorsBubble =>
-      'Цвета показывают **состояние узла**. Зелёный - активный, жёлтый - затухающий, серый - неактивный. Статус определяется по времени последнего отклика.';
-
-  @override
-  String get helpMesh3dTapBubble =>
-      '**Нажмите на любой узел**, чтобы выбрать его и просмотреть детали. Отлично для понимания топологии сети!';
 
   @override
   String get helpTimelineIntroBubble =>

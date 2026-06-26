@@ -29,7 +29,6 @@ These features are fully functional with only a Meshtastic radio:
 - Mesh Health — network health metrics and utilization graphs
 - Reachability — probabilistic node reachability assessment
 - Route analysis — discovered routes and packet paths
-- 3D Mesh View — interactive network topology visualization
 - Automations — local rule-based event triggers and actions
 
 ### Requires Backend Services

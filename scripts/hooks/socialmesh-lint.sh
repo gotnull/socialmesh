@@ -444,7 +444,6 @@ check_file() {
   local is_visual_flow=false
   local is_ar=false
   local is_intro_anim=false
-  local is_mesh3d=false
   local is_whats_new=false
   local is_splash=false
 
@@ -471,9 +470,6 @@ check_file() {
   esac
   case "$file" in
     lib/features/intro/*) is_intro_anim=true ;;
-  esac
-  case "$file" in
-    lib/features/mesh3d/*) is_mesh3d=true ;;
   esac
   case "$file" in
     lib/core/whats_new/*) is_whats_new=true ;;
@@ -1131,7 +1127,7 @@ check_file() {
   #
   # Exempt files: theme.dart (defines constants), painters, onboarding
   # (pre-theme), help system overlay, visual flow engine, AR overlays,
-  # intro animations, mesh3d, whats_new, splash provider, accessibility
+  # intro animations, whats_new, splash provider, accessibility
   # adapter, admin screens, mesh_node_brain.
   # Contributors can add // lint-allow: hardcoded-color for edge cases.
   # ------------------------------------------------------------------
@@ -1139,7 +1135,7 @@ check_file() {
      && [ "$in_theme" = false ] && [ "$is_painter" = false ] \
      && [ "$is_onboarding" = false ] && [ "$is_help_system" = false ] \
      && [ "$is_visual_flow" = false ] && [ "$is_ar" = false ] \
-     && [ "$is_intro_anim" = false ] && [ "$is_mesh3d" = false ] \
+     && [ "$is_intro_anim" = false ] \
      && [ "$is_whats_new" = false ] && [ "$is_splash" = false ] \
      && [[ "$file" != *"accessibility_theme_adapter"* ]] \
      && [[ "$file" != *"admin/"* ]] \

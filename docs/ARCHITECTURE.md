@@ -61,7 +61,6 @@ Each feature in `lib/features/` is self-contained:
 | `dashboard/`      | Custom widget dashboard                                        |
 | `device/`         | Device configuration screens                                   |
 | `map/`            | Interactive node map with waypoints                            |
-| `mesh3d/`         | 3D mesh network topology view                                  |
 | `mesh_health/`    | Network health analytics dashboard                             |
 | `messaging/`      | Channel and direct messages                                    |
 | `nodedex/`        | Mesh asset registry (sigils, classifications, patina, co-seen) |

@@ -268,11 +268,11 @@ void main() {
     test('drawerHiddenItems round-trips across instances', () async {
       final a = SettingsService();
       await a.init();
-      await a.setDrawerHiddenItems(const ['world_map', 'mesh_3d_view']);
+      await a.setDrawerHiddenItems(const ['world_map', 'routes']);
 
       final b = SettingsService();
       await b.init();
-      expect(b.drawerHiddenItems, ['world_map', 'mesh_3d_view']);
+      expect(b.drawerHiddenItems, ['world_map', 'routes']);
     });
 
     test('drawerItemOrder defaults to null', () async {
@@ -394,7 +394,6 @@ void main() {
         'mrrp_harness',
         'mesh_incidents',
         'timeline',
-        'mesh_3d_view',
         'routes',
         'reachability',
         'mesh_health',
@@ -445,7 +444,6 @@ void main() {
         'mrrp_harness',
         'mesh_incidents',
         'timeline',
-        'mesh_3d_view',
         'routes',
         'reachability',
         'mesh_health',

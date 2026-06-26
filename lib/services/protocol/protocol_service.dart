@@ -5057,7 +5057,7 @@ class ProtocolService {
   /// ([isDirectRf] false) the metrics belong to the next hop, not this node,
   /// so rssi/snr are cleared to avoid showing a meaningless value. Storing
   /// them on [MeshNode] makes per-node signal strength available to
-  /// node cards, node detail, nearby nodes, AR, 3D mesh, and NodeDex.
+  /// node cards, node detail, nearby nodes, AR, and NodeDex.
   ///
   /// On a direct reception that lacks a particular metric (null [rxRssi] /
   /// [rxSnr]) the prior direct value is preserved.

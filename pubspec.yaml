@@ -116,7 +116,6 @@ dependencies:
   crypto: ^3.0.6
   flutter_box_transform: ^0.4.7
   flutter_inappwebview: ^6.1.5
-  ditredi: ^2.0.2
   vector_math: ^2.2.0
   cryptography: ^2.9.0
   pointycastle: ^4.0.0
