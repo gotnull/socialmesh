@@ -188,6 +188,97 @@ void main() {
     });
   });
 
+  group('scannerShouldDisplayDevice', () {
+    DeviceInfo createDevice(String name, {List<String>? serviceUuids}) {
+      return DeviceInfo(
+        id: 'test-id',
+        name: name,
+        type: TransportType.ble,
+        serviceUuids: serviceUuids ?? [],
+      );
+    }
+
+    test(
+      'hides MeshCore radio detected by name only (Android leak regression)',
+      () {
+        // The reporter's Elecrow Thinknode M1 on MeshCore: no advertised
+        // service UUID captured, name ends in the shared "<name> <4hex>"
+        // convention, so the detector falls back to a Meshtastic name guess.
+        // It must NOT be displayed — that is the bug being fixed.
+        final detection = createDevice('ThinkNode d88b').detectProtocol();
+
+        expect(detection.protocolType, equals(MeshProtocolType.meshtastic));
+        expect(detection.confidence, equals(0.7));
+        expect(
+          scannerShouldDisplayDevice(detection, meshCoreEnabled: false),
+          isFalse,
+        );
+      },
+    );
+
+    test('shows Meshtastic radio identified by service UUID', () {
+      final detection = createDevice(
+        'Meshtastic f4a8',
+        serviceUuids: ['6ba1b218-15a8-461f-9fa8-5dcae273eafd'],
+      ).detectProtocol();
+
+      expect(detection.confidence, equals(1.0));
+      expect(
+        scannerShouldDisplayDevice(detection, meshCoreEnabled: false),
+        isTrue,
+      );
+    });
+
+    test('hides name-only Meshtastic guess (iOS parity trade-off)', () {
+      // A radio with no advertised service UUID, recognised only by name,
+      // is excluded from the production list. It would already be invisible
+      // on iOS (OS-level filter), so this is parity, not a new restriction.
+      final detection = createDevice('Meshtastic Device').detectProtocol();
+
+      expect(detection.confidence, equals(0.7));
+      expect(
+        scannerShouldDisplayDevice(detection, meshCoreEnabled: false),
+        isFalse,
+      );
+    });
+
+    test('hides MeshCore radio by service UUID while gated off', () {
+      final detection = createDevice(
+        'MeshCore Device',
+        serviceUuids: [MeshCoreBleUuids.serviceUuid],
+      ).detectProtocol();
+
+      expect(detection.protocolType, equals(MeshProtocolType.meshcore));
+      expect(detection.confidence, equals(1.0));
+      expect(
+        scannerShouldDisplayDevice(detection, meshCoreEnabled: false),
+        isFalse,
+      );
+    });
+
+    test('shows MeshCore radio by service UUID when enabled', () {
+      final detection = createDevice(
+        'MeshCore Device',
+        serviceUuids: [MeshCoreBleUuids.serviceUuid],
+      ).detectProtocol();
+
+      expect(
+        scannerShouldDisplayDevice(detection, meshCoreEnabled: true),
+        isTrue,
+      );
+    });
+
+    test('hides unknown device', () {
+      final detection = createDevice('Random BLE Device').detectProtocol();
+
+      expect(detection.protocolType, equals(MeshProtocolType.unknown));
+      expect(
+        scannerShouldDisplayDevice(detection, meshCoreEnabled: true),
+        isFalse,
+      );
+    });
+  });
+
   group('MeshCoreDevicePatterns', () {
     group('matchesDeviceName()', () {
       test('returns true for "MeshCore" prefix', () {

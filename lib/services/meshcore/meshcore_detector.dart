@@ -26,6 +26,31 @@ class ProtocolDetectionResult {
       'ProtocolDetectionResult($protocolType, confidence: $confidence, $reason)';
 }
 
+/// Whether a scanned device should appear in the scanner's production list.
+///
+/// Production (non dev "show all") shows a radio only when its advertised
+/// service UUID positively identifies an enabled protocol. Name-only guesses
+/// are excluded because a MeshCore and a Meshtastic radio share the
+/// `<name> <4hex>` naming convention and cannot be told apart by name; trusting
+/// the name there mislabels a MeshCore radio as Meshtastic. A confidence of 1.0
+/// is produced only by an advertised-service-UUID match, so this gate mirrors
+/// the OS-level `withServices` scan filter and makes Android behave like iOS,
+/// which enforces that filter at the CoreBluetooth layer.
+bool scannerShouldDisplayDevice(
+  ProtocolDetectionResult detection, {
+  required bool meshCoreEnabled,
+}) {
+  final byServiceUuid = detection.confidence >= 1.0;
+  switch (detection.protocolType) {
+    case MeshProtocolType.meshtastic:
+      return byServiceUuid;
+    case MeshProtocolType.meshcore:
+      return meshCoreEnabled && byServiceUuid;
+    case MeshProtocolType.unknown:
+      return false;
+  }
+}
+
 /// Detects mesh protocol type from BLE scan advertisement data.
 ///
 /// This class analyzes BLE scan results to determine whether a device

@@ -1259,10 +1259,13 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
   /// Build the list of devices to display in the scanner.
   ///
-  /// By default, only shows devices with recognized protocols. MeshCore is
-  /// included alongside Meshtastic when `MESHCORE_ENABLED=true` in `.env`.
-  /// Unknown devices are only shown when "Show all BLE devices" dev mode
-  /// is enabled. Within the result, devices are grouped by protocol
+  /// By default, only shows radios positively identified by their advertised
+  /// service UUID (see [scannerShouldDisplayDevice]) — name-only guesses are
+  /// excluded so this matches the OS-level scan filter on every platform.
+  /// MeshCore is included alongside Meshtastic when `MESHCORE_ENABLED=true`
+  /// in `.env`. All scanned devices, including name-only and unknown ones, are
+  /// shown only when "Show all BLE devices" dev mode is enabled. Within the
+  /// result, devices are grouped by protocol
   /// (Meshtastic → MeshCore → unknown) and sorted by id within each
   /// group so a new arrival or drop doesn't shuffle unrelated devices.
   List<DeviceInfo> _buildDisplayDevices({bool showAllDevices = false}) {
@@ -1274,12 +1277,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       devices = [..._devices];
     } else {
       devices = _devices.where((device) {
-        final protocol = device.detectProtocol().protocolType;
-        if (protocol == MeshProtocolType.meshtastic) return true;
-        if (protocol == MeshProtocolType.meshcore && meshCoreEnabled) {
-          return true;
-        }
-        return false;
+        return scannerShouldDisplayDevice(
+          device.detectProtocol(),
+          meshCoreEnabled: meshCoreEnabled,
+        );
       }).toList();
     }
 
