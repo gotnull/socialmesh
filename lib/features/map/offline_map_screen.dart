@@ -112,7 +112,9 @@ class _OfflineMapScreenState extends ConsumerState<OfflineMapScreen>
       final first = results.first;
       final target = safeLatLng(first.latitude, first.longitude);
       if (target == null) return;
-      const zoom = 12.0;
+      // Land at street level so the searched place reads as a destination,
+      // not a district. Clamped to _maxZoom for safety.
+      const zoom = 16.0;
       _mapController.safeMove(target, zoom);
       _currentZoom = zoom;
     } catch (e) {
