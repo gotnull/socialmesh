@@ -30,13 +30,13 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/logging.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../core/units/distance_format.dart';
 import '../../../providers/app_providers.dart';
+import '../../../utils/time_format.dart';
 import '../../../utils/timestamp_validation.dart';
 import '../models/nodedex_entry.dart';
 import '../services/patina_score.dart';
@@ -549,7 +549,7 @@ class _StatsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dateFormat = DateFormat('dd MMM yyyy');
+    final dateFormat = AppTimeFormat.fullDate(context);
     final units = ref.watch(measurementUnitsProvider);
 
     // Prefer the live MeshNode.lastHeard when the device still knows

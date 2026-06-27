@@ -182,6 +182,28 @@ enum TimeFormatMode {
   const TimeFormatMode(this.displayName, this.description);
 }
 
+/// Date format preference for displaying calendar dates throughout the app.
+///
+/// Governs the day/month/year ordering. Month names (when shown) still follow
+/// the active locale; this only controls the order the components appear in.
+enum DateFormatMode {
+  /// Follow the device's regional setting (locale-derived ordering)
+  system('System Default', 'Follow device region'),
+
+  /// Month-first ordering — e.g. Jan 3, 2026 / 01/03/2026 (US style)
+  monthDayYear('MM/DD/YYYY', 'Jan 3, 2026'),
+
+  /// Day-first ordering — e.g. 3 Jan 2026 / 03/01/2026
+  dayMonthYear('DD/MM/YYYY', '3 Jan 2026'),
+
+  /// Year-first ISO ordering — e.g. 2026-01-03
+  yearMonthDay('YYYY-MM-DD', '2026-01-03');
+
+  final String displayName;
+  final String description;
+  const DateFormatMode(this.displayName, this.description);
+}
+
 /// Complete user accessibility preferences state
 class AccessibilityPreferences {
   final FontMode fontMode;
@@ -190,6 +212,7 @@ class AccessibilityPreferences {
   final ContrastMode contrastMode;
   final ReduceMotionMode reduceMotionMode;
   final TimeFormatMode timeFormatMode;
+  final DateFormatMode dateFormatMode;
 
   const AccessibilityPreferences({
     this.fontMode = FontMode.branded,
@@ -198,6 +221,7 @@ class AccessibilityPreferences {
     this.contrastMode = ContrastMode.normal,
     this.reduceMotionMode = ReduceMotionMode.off,
     this.timeFormatMode = TimeFormatMode.system,
+    this.dateFormatMode = DateFormatMode.system,
   });
 
   /// Default preferences (safe, branded defaults)
@@ -211,6 +235,7 @@ class AccessibilityPreferences {
     ContrastMode? contrastMode,
     ReduceMotionMode? reduceMotionMode,
     TimeFormatMode? timeFormatMode,
+    DateFormatMode? dateFormatMode,
   }) {
     return AccessibilityPreferences(
       fontMode: fontMode ?? this.fontMode,
@@ -219,6 +244,7 @@ class AccessibilityPreferences {
       contrastMode: contrastMode ?? this.contrastMode,
       reduceMotionMode: reduceMotionMode ?? this.reduceMotionMode,
       timeFormatMode: timeFormatMode ?? this.timeFormatMode,
+      dateFormatMode: dateFormatMode ?? this.dateFormatMode,
     );
   }
 
@@ -229,7 +255,8 @@ class AccessibilityPreferences {
       densityMode != DensityMode.comfortable ||
       contrastMode != ContrastMode.normal ||
       reduceMotionMode != ReduceMotionMode.off ||
-      timeFormatMode != TimeFormatMode.system;
+      timeFormatMode != TimeFormatMode.system ||
+      dateFormatMode != DateFormatMode.system;
 
   /// Serialize to JSON for persistence
   Map<String, dynamic> toJson() {
@@ -240,7 +267,8 @@ class AccessibilityPreferences {
       'contrastMode': contrastMode.name,
       'reduceMotionMode': reduceMotionMode.name,
       'timeFormatMode': timeFormatMode.name,
-      'version': 2, // For future migrations
+      'dateFormatMode': dateFormatMode.name,
+      'version': 3, // For future migrations
     };
   }
 
@@ -279,6 +307,11 @@ class AccessibilityPreferences {
         json['timeFormatMode'] as String?,
         TimeFormatMode.values,
         TimeFormatMode.system,
+      ),
+      dateFormatMode: _parseEnum(
+        json['dateFormatMode'] as String?,
+        DateFormatMode.values,
+        DateFormatMode.system,
       ),
     );
   }
@@ -322,7 +355,8 @@ class AccessibilityPreferences {
         other.densityMode == densityMode &&
         other.contrastMode == contrastMode &&
         other.reduceMotionMode == reduceMotionMode &&
-        other.timeFormatMode == timeFormatMode;
+        other.timeFormatMode == timeFormatMode &&
+        other.dateFormatMode == dateFormatMode;
   }
 
   @override
@@ -334,6 +368,7 @@ class AccessibilityPreferences {
       contrastMode,
       reduceMotionMode,
       timeFormatMode,
+      dateFormatMode,
     );
   }
 
@@ -345,6 +380,7 @@ class AccessibilityPreferences {
         'densityMode: $densityMode, '
         'contrastMode: $contrastMode, '
         'reduceMotionMode: $reduceMotionMode, '
-        'timeFormatMode: $timeFormatMode)';
+        'timeFormatMode: $timeFormatMode, '
+        'dateFormatMode: $dateFormatMode)';
   }
 }

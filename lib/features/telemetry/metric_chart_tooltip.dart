@@ -38,7 +38,7 @@ LineTouchTooltipData metricTouchTooltipData(
             if (i == spots.length - 1)
               TextSpan(
                 text:
-                    '\n${AppTimeFormat.withDatePrefix(context, 'MMM d').format(timestampOf(spot))}',
+                    '\n${AppTimeFormat.withDatePrefix(context, AppTimeFormat.monthDayPattern(context)).format(timestampOf(spot))}',
                 style: TextStyle(
                   color: context.textSecondary,
                   fontWeight: FontWeight.w400,

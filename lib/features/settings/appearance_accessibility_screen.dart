@@ -186,6 +186,34 @@ extension TimeFormatModeL10n on TimeFormatMode {
   }
 }
 
+extension DateFormatModeL10n on DateFormatMode {
+  String localizedName(BuildContext context) {
+    switch (this) {
+      case DateFormatMode.system:
+        return context.l10n.appearanceDateFormatSystem;
+      case DateFormatMode.monthDayYear:
+        return context.l10n.appearanceDateFormatMdy;
+      case DateFormatMode.dayMonthYear:
+        return context.l10n.appearanceDateFormatDmy;
+      case DateFormatMode.yearMonthDay:
+        return context.l10n.appearanceDateFormatYmd;
+    }
+  }
+
+  String localizedDescription(BuildContext context) {
+    switch (this) {
+      case DateFormatMode.system:
+        return context.l10n.appearanceDateFormatSystemDesc;
+      case DateFormatMode.monthDayYear:
+        return context.l10n.appearanceDateFormatMdyDesc;
+      case DateFormatMode.dayMonthYear:
+        return context.l10n.appearanceDateFormatDmyDesc;
+      case DateFormatMode.yearMonthDay:
+        return context.l10n.appearanceDateFormatYmdDesc;
+    }
+  }
+}
+
 /// Appearance & Accessibility settings screen
 ///
 /// Allows users to customize font, text size, density, contrast, and motion
@@ -288,6 +316,19 @@ class _AppearanceAccessibilityScreenState
               _TimeFormatSelector(
                 currentMode: prefs.timeFormatMode,
                 onChanged: (mode) => _updateTimeFormat(mode),
+              ),
+
+              const SizedBox(height: AppTheme.spacing24),
+
+              // Date Format Section
+              _SectionHeader(
+                title: context.l10n.appearanceDateFormat,
+                icon: Icons.calendar_today_rounded,
+              ),
+              const SizedBox(height: AppTheme.spacing8),
+              _DateFormatSelector(
+                currentMode: prefs.dateFormatMode,
+                onChanged: (mode) => _updateDateFormat(mode),
               ),
 
               const SizedBox(height: AppTheme.spacing24),
@@ -395,6 +436,13 @@ class _AppearanceAccessibilityScreenState
     if (!mounted) return;
     final notifier = ref.read(accessibilityPreferencesProvider.notifier);
     await notifier.setTimeFormatMode(mode);
+  }
+
+  Future<void> _updateDateFormat(DateFormatMode mode) async {
+    HapticFeedback.selectionClick();
+    if (!mounted) return;
+    final notifier = ref.read(accessibilityPreferencesProvider.notifier);
+    await notifier.setDateFormatMode(mode);
   }
 
   Future<void> _updateReduceMotion(bool enabled) async {
@@ -963,6 +1011,86 @@ class _TimeFormatSelector extends StatelessWidget {
                         ),
                       ),
                       Radio<TimeFormatMode>(
+                        value: mode,
+                        groupValue: currentMode,
+                        onChanged: (value) {
+                          if (value != null) onChanged(value);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (!isLast) Divider(height: 1, color: context.border),
+            ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+class _DateFormatSelector extends StatelessWidget {
+  const _DateFormatSelector({
+    required this.currentMode,
+    required this.onChanged,
+  });
+
+  final DateFormatMode currentMode;
+  final ValueChanged<DateFormatMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(AppTheme.radius12),
+        border: Border.all(color: context.border),
+      ),
+      child: Column(
+        children: DateFormatMode.values.map((mode) {
+          final isSelected = mode == currentMode;
+          final isLast = mode == DateFormatMode.values.last;
+
+          return Column(
+            children: [
+              InkWell(
+                onTap: () => onChanged(mode),
+                borderRadius: BorderRadius.vertical(
+                  top: mode == DateFormatMode.values.first
+                      ? const Radius.circular(12)
+                      : Radius.zero,
+                  bottom: isLast ? const Radius.circular(12) : Radius.zero,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              mode.localizedName(context),
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(
+                                    fontWeight: isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.w500,
+                                  ),
+                            ),
+                            const SizedBox(height: AppTheme.spacing2),
+                            Text(
+                              mode.localizedDescription(context),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Radio<DateFormatMode>(
                         value: mode,
                         groupValue: currentMode,
                         onChanged: (value) {

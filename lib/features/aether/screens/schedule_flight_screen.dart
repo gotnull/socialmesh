@@ -731,7 +731,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen>
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('MMM d, yyyy');
+    final dateFormat = AppTimeFormat.fullDate(context);
     final timeFormat = AppTimeFormat.timeOnly(context);
     final myNode = _getMyNode();
     final gradientColors = AccentColors.gradientFor(context.accentColor);

@@ -19,10 +19,10 @@ import 'dart:math' as math;
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
+import '../../../utils/time_format.dart';
 import '../models/nodedex_entry.dart';
 import '../services/sigil_generator.dart';
 import '../services/trait_engine.dart';
@@ -1252,7 +1252,7 @@ class _BrandFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateStr = DateFormat('MMM d, yyyy').format(entry.firstSeen);
+    final dateStr = AppTimeFormat.fullDate(context).format(entry.firstSeen);
 
     return Container(
       width: double.infinity,

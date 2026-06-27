@@ -1750,7 +1750,7 @@ class _PositionInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final timeFormat = AppTimeFormat.timeWithSeconds(context);
-    final dateFormat = DateFormat('MMM d, yyyy');
+    final dateFormat = AppTimeFormat.fullDate(context);
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing12),
@@ -1932,7 +1932,7 @@ class _PositionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final timeFormat = AppTimeFormat.timeWithSeconds(context);
-    final dateFormat = DateFormat('MMM d');
+    final dateFormat = AppTimeFormat.monthDay(context);
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,

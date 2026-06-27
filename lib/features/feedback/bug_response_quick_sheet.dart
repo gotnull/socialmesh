@@ -262,7 +262,7 @@ class _BugResponseQuickSheetState extends ConsumerState<BugResponseQuickSheet>
                   context.l10n.bugResponseSheetReportedOn(
                     AppTimeFormat.withDatePrefix(
                       context,
-                      'd MMM yyyy,',
+                      '${AppTimeFormat.fullDatePattern(context)},',
                     ).format(report.createdAt),
                   ),
                   style: TextStyle(fontSize: 11, color: context.textTertiary),
@@ -319,7 +319,7 @@ class _BugResponseQuickSheetState extends ConsumerState<BugResponseQuickSheet>
               Text(
                 AppTimeFormat.withDatePrefix(
                   context,
-                  'd MMM,',
+                  '${AppTimeFormat.monthDayPattern(context)},',
                 ).format(response.createdAt),
                 style: TextStyle(fontSize: 11, color: context.textTertiary),
               ),

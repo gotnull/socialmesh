@@ -407,6 +407,11 @@ class _MockAccessibilityNotifier extends Notifier<AccessibilityPreferences>
   }
 
   @override
+  Future<void> setDateFormatMode(DateFormatMode mode) async {
+    state = state.copyWith(dateFormatMode: mode);
+  }
+
+  @override
   Future<void> resetToDefaults() async {
     state = AccessibilityPreferences.defaults;
   }

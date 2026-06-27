@@ -201,7 +201,7 @@ class _IncidentTile extends ConsumerWidget {
                     Text(
                       AppTimeFormat.withDatePrefix(
                         context,
-                        'd MMM yyyy',
+                        AppTimeFormat.fullDatePattern(context),
                       ).format(incident.createdAt),
                       style: context.captionMutedStyle,
                     ),

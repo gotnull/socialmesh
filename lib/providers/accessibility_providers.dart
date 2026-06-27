@@ -74,6 +74,14 @@ class AccessibilityPreferencesNotifier
     AppLogging.settings('Accessibility: time format changed to ${mode.name}');
   }
 
+  /// Update the date format mode
+  Future<void> setDateFormatMode(DateFormatMode mode) async {
+    final service = ref.read(accessibilityPreferencesServiceProvider);
+    state = state.copyWith(dateFormatMode: mode);
+    await service.updateDateFormatMode(mode);
+    AppLogging.settings('Accessibility: date format changed to ${mode.name}');
+  }
+
   /// Reset all preferences to defaults
   Future<void> resetToDefaults() async {
     final service = ref.read(accessibilityPreferencesServiceProvider);
@@ -170,6 +178,12 @@ final spacingMultiplierProvider = Provider<double>((ref) {
 final timeFormatModeProvider = Provider<TimeFormatMode>((ref) {
   final prefs = ref.watch(accessibilityPreferencesProvider);
   return prefs.timeFormatMode;
+});
+
+/// Provider for the user's date format preference
+final dateFormatModeProvider = Provider<DateFormatMode>((ref) {
+  final prefs = ref.watch(accessibilityPreferencesProvider);
+  return prefs.dateFormatMode;
 });
 
 /// Provider that indicates if any custom accessibility settings are active

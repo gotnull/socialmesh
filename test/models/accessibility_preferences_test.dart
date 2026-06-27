@@ -111,6 +111,13 @@ void main() {
         );
         expect(prefs.hasCustomSettings, true);
       });
+
+      test('returns true when dateFormatMode is changed', () {
+        final prefs = AccessibilityPreferences.defaults.copyWith(
+          dateFormatMode: DateFormatMode.monthDayYear,
+        );
+        expect(prefs.hasCustomSettings, true);
+      });
     });
 
     group('serialization', () {
@@ -122,6 +129,7 @@ void main() {
           contrastMode: ContrastMode.high,
           reduceMotionMode: ReduceMotionMode.on,
           timeFormatMode: TimeFormatMode.twentyFourHour,
+          dateFormatMode: DateFormatMode.dayMonthYear,
         );
 
         final json = prefs.toJson();
@@ -132,7 +140,8 @@ void main() {
         expect(json['contrastMode'], 'high');
         expect(json['reduceMotionMode'], 'on');
         expect(json['timeFormatMode'], 'twentyFourHour');
-        expect(json['version'], 2);
+        expect(json['dateFormatMode'], 'dayMonthYear');
+        expect(json['version'], 3);
       });
 
       test('toJsonString produces valid JSON', () {

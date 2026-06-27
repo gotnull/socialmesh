@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../utils/time_format.dart';
 import 'package:share_plus/share_plus.dart';
@@ -43,8 +42,6 @@ class AetherFlightDetailScreen extends ConsumerStatefulWidget {
 class _AetherFlightDetailScreenState
     extends ConsumerState<AetherFlightDetailScreen>
     with LifecycleSafeMixin<AetherFlightDetailScreen> {
-  final _dateFormat = DateFormat('EEEE, MMM d, yyyy');
-
   bool _isSharing = false;
   String? _shareId;
 
@@ -484,14 +481,14 @@ class _AetherFlightDetailScreenState
           _buildDetailRow(
             Icons.schedule,
             context.l10n.aetherDetailDeparture,
-            '${_dateFormat.format(widget.flight.scheduledDeparture.toLocal())}\n${AppTimeFormat.timeOnly(context).format(widget.flight.scheduledDeparture.toLocal())}',
+            '${AppTimeFormat.weekdayDate(context).format(widget.flight.scheduledDeparture.toLocal())}\n${AppTimeFormat.timeOnly(context).format(widget.flight.scheduledDeparture.toLocal())}',
           ),
           if (widget.flight.scheduledArrival != null) ...[
             const SizedBox(height: AppTheme.spacing12),
             _buildDetailRow(
               Icons.flight_land,
               context.l10n.aetherDetailArrival,
-              '${_dateFormat.format(widget.flight.scheduledArrival!.toLocal())}\n${AppTimeFormat.timeOnly(context).format(widget.flight.scheduledArrival!.toLocal())}',
+              '${AppTimeFormat.weekdayDate(context).format(widget.flight.scheduledArrival!.toLocal())}\n${AppTimeFormat.timeOnly(context).format(widget.flight.scheduledArrival!.toLocal())}',
             ),
           ],
           const SizedBox(height: AppTheme.spacing12),

@@ -49258,6 +49258,60 @@ abstract class AppLocalizations {
   /// **'13:30'**
   String get appearanceTimeFormat24hDesc;
 
+  /// Section header for date format in appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'Date Format'**
+  String get appearanceDateFormat;
+
+  /// Date format option name in appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'System Default'**
+  String get appearanceDateFormatSystem;
+
+  /// Date format option description in appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'Follow your device\'s region setting'**
+  String get appearanceDateFormatSystemDesc;
+
+  /// Date format option name for month/day/year ordering in appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'MM/DD/YYYY'**
+  String get appearanceDateFormatMdy;
+
+  /// Date format option example for month/day/year ordering in appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'Jan 3, 2026'**
+  String get appearanceDateFormatMdyDesc;
+
+  /// Date format option name for day/month/year ordering in appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'DD/MM/YYYY'**
+  String get appearanceDateFormatDmy;
+
+  /// Date format option example for day/month/year ordering in appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'3 Jan 2026'**
+  String get appearanceDateFormatDmyDesc;
+
+  /// Date format option name for year/month/day ISO ordering in appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'YYYY-MM-DD'**
+  String get appearanceDateFormatYmd;
+
+  /// Date format option example for year/month/day ISO ordering in appearance settings
+  ///
+  /// In en, this message translates to:
+  /// **'2026-01-03'**
+  String get appearanceDateFormatYmdDesc;
+
   /// Text displayed in settings
   ///
   /// In en, this message translates to:

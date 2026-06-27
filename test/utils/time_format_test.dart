@@ -27,6 +27,14 @@ void main() {
       );
     }
 
+    /// Update the date-ordering preference, preserving the time mode.
+    Future<void> setDateFormatMode(DateFormatMode mode) async {
+      final service = AccessibilityPreferencesService();
+      await service.updatePreferences(
+        service.current.copyWith(dateFormatMode: mode),
+      );
+    }
+
     Widget buildTestHarness({
       required bool alwaysUse24HourFormat,
       required void Function(BuildContext context) onBuild,
@@ -342,6 +350,7 @@ void main() {
     group('numericDateAndTimeWithSeconds', () {
       testWidgets('formats numeric date with 12-hour seconds', (tester) async {
         await setTimeFormatMode(TimeFormatMode.twelveHour);
+        await setDateFormatMode(DateFormatMode.dayMonthYear);
         late String formatted;
         await tester.pumpWidget(
           buildTestHarness(
@@ -353,11 +362,12 @@ void main() {
             },
           ),
         );
-        expect(formatted, DateFormat('dd/MM/yy, h:mm:ss a').format(testDate));
+        expect(formatted, DateFormat('dd/MM/yyyy, h:mm:ss a').format(testDate));
       });
 
       testWidgets('formats numeric date with 24-hour seconds', (tester) async {
         await setTimeFormatMode(TimeFormatMode.twentyFourHour);
+        await setDateFormatMode(DateFormatMode.dayMonthYear);
         late String formatted;
         await tester.pumpWidget(
           buildTestHarness(
@@ -369,7 +379,7 @@ void main() {
             },
           ),
         );
-        expect(formatted, DateFormat('dd/MM/yy, HH:mm:ss').format(testDate));
+        expect(formatted, DateFormat('dd/MM/yyyy, HH:mm:ss').format(testDate));
       });
     });
 
@@ -382,6 +392,7 @@ void main() {
         tester,
       ) async {
         await setTimeFormatMode(TimeFormatMode.twelveHour);
+        await setDateFormatMode(DateFormatMode.dayMonthYear);
         late String formatted;
         await tester.pumpWidget(
           buildTestHarness(
@@ -398,6 +409,7 @@ void main() {
 
       testWidgets('formats numeric date with 24-hour', (tester) async {
         await setTimeFormatMode(TimeFormatMode.twentyFourHour);
+        await setDateFormatMode(DateFormatMode.dayMonthYear);
         late String formatted;
         await tester.pumpWidget(
           buildTestHarness(
@@ -689,6 +701,71 @@ void main() {
     // relativeDateTime — calendar-relative date + time for detail surfaces
     // =========================================================================
 
+    // =========================================================================
+    // Date helpers honour the date format preference
+    // =========================================================================
+
+    group('date format preference', () {
+      final d = DateTime(2026, 1, 3, 9, 5); // 3 January 2026
+
+      testWidgets('fullDate uses month-first order for monthDayYear', (
+        tester,
+      ) async {
+        await setDateFormatMode(DateFormatMode.monthDayYear);
+        late String formatted;
+        await tester.pumpWidget(
+          buildTestHarness(
+            alwaysUse24HourFormat: true,
+            onBuild: (ctx) => formatted = AppTimeFormat.fullDate(ctx).format(d),
+          ),
+        );
+        expect(formatted, 'Jan 3, 2026');
+      });
+
+      testWidgets('fullDate uses day-first order for dayMonthYear', (
+        tester,
+      ) async {
+        await setDateFormatMode(DateFormatMode.dayMonthYear);
+        late String formatted;
+        await tester.pumpWidget(
+          buildTestHarness(
+            alwaysUse24HourFormat: true,
+            onBuild: (ctx) => formatted = AppTimeFormat.fullDate(ctx).format(d),
+          ),
+        );
+        expect(formatted, '3 Jan 2026');
+      });
+
+      testWidgets('numericDate uses ISO order for yearMonthDay', (
+        tester,
+      ) async {
+        await setDateFormatMode(DateFormatMode.yearMonthDay);
+        late String formatted;
+        await tester.pumpWidget(
+          buildTestHarness(
+            alwaysUse24HourFormat: true,
+            onBuild: (ctx) =>
+                formatted = AppTimeFormat.numericDate(ctx).format(d),
+          ),
+        );
+        expect(formatted, '2026-01-03');
+      });
+
+      testWidgets('monthDay drops the year and honours day-first order', (
+        tester,
+      ) async {
+        await setDateFormatMode(DateFormatMode.dayMonthYear);
+        late String formatted;
+        await tester.pumpWidget(
+          buildTestHarness(
+            alwaysUse24HourFormat: true,
+            onBuild: (ctx) => formatted = AppTimeFormat.monthDay(ctx).format(d),
+          ),
+        );
+        expect(formatted, '3 Jan');
+      });
+    });
+
     group('relativeDateTime', () {
       // Fixed "now" so day-delta arithmetic is deterministic.
       final now = DateTime(2026, 6, 3, 9, 0);
@@ -755,6 +832,7 @@ void main() {
 
       testWidgets('older date renders "d MMM yyyy, HH:mm"', (tester) async {
         await setTimeFormatMode(TimeFormatMode.twentyFourHour);
+        await setDateFormatMode(DateFormatMode.dayMonthYear);
         late String formatted;
         await tester.pumpWidget(
           buildTestHarness(
@@ -777,6 +855,7 @@ void main() {
         tester,
       ) async {
         await setTimeFormatMode(TimeFormatMode.twentyFourHour);
+        await setDateFormatMode(DateFormatMode.dayMonthYear);
         late String formatted;
         await tester.pumpWidget(
           buildTestHarness(

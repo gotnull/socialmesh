@@ -6,7 +6,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../core/l10n/l10n_extension.dart';
 import '../../core/logging.dart';
@@ -605,7 +604,7 @@ class _NodeDetailScreenState extends ConsumerState<NodeDetailScreen>
     if (diff.inDays < 7) {
       return context.l10n.nodeDetailLastHeardDaysAgo(diff.inDays);
     }
-    return DateFormat('MMM d').format(validated);
+    return AppTimeFormat.monthDay(context).format(validated);
   }
 
   /// Signal quality label from SNR value.

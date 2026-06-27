@@ -28491,6 +28491,34 @@ class AppLocalizationsUk extends AppLocalizations {
   String get appearanceTimeFormat24hDesc => '13:30';
 
   @override
+  String get appearanceDateFormat => 'Формат дати';
+
+  @override
+  String get appearanceDateFormatSystem => 'Системний';
+
+  @override
+  String get appearanceDateFormatSystemDesc =>
+      'Відповідає регіональним налаштуванням пристрою';
+
+  @override
+  String get appearanceDateFormatMdy => 'ММ/ДД/РРРР';
+
+  @override
+  String get appearanceDateFormatMdyDesc => 'січ. 3, 2026';
+
+  @override
+  String get appearanceDateFormatDmy => 'ДД/ММ/РРРР';
+
+  @override
+  String get appearanceDateFormatDmyDesc => '3 січ. 2026';
+
+  @override
+  String get appearanceDateFormatYmd => 'РРРР-ММ-ДД';
+
+  @override
+  String get appearanceDateFormatYmdDesc => '2026-01-03';
+
+  @override
   String get settingsSectionProfile => 'ПРОФІЛЬ';
 
   @override

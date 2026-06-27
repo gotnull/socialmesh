@@ -5,7 +5,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import '../../utils/time_format.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../core/l10n/l10n_extension.dart';
@@ -537,7 +536,7 @@ class _EnvironmentMetricsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('MMM d, yyyy');
+    final dateFormat = AppTimeFormat.fullDate(context);
     final timeFormat = AppTimeFormat.timeWithSeconds(context);
 
     return Card(

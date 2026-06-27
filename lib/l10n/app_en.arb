@@ -38231,6 +38231,42 @@
     "@appearanceTimeFormat24hDesc": {
         "description": "Time format option description in appearance settings"
     },
+    "appearanceDateFormat": "Date Format",
+    "@appearanceDateFormat": {
+        "description": "Section header for date format in appearance settings"
+    },
+    "appearanceDateFormatSystem": "System Default",
+    "@appearanceDateFormatSystem": {
+        "description": "Date format option name in appearance settings"
+    },
+    "appearanceDateFormatSystemDesc": "Follow your device's region setting",
+    "@appearanceDateFormatSystemDesc": {
+        "description": "Date format option description in appearance settings"
+    },
+    "appearanceDateFormatMdy": "MM/DD/YYYY",
+    "@appearanceDateFormatMdy": {
+        "description": "Date format option name for month/day/year ordering in appearance settings"
+    },
+    "appearanceDateFormatMdyDesc": "Jan 3, 2026",
+    "@appearanceDateFormatMdyDesc": {
+        "description": "Date format option example for month/day/year ordering in appearance settings"
+    },
+    "appearanceDateFormatDmy": "DD/MM/YYYY",
+    "@appearanceDateFormatDmy": {
+        "description": "Date format option name for day/month/year ordering in appearance settings"
+    },
+    "appearanceDateFormatDmyDesc": "3 Jan 2026",
+    "@appearanceDateFormatDmyDesc": {
+        "description": "Date format option example for day/month/year ordering in appearance settings"
+    },
+    "appearanceDateFormatYmd": "YYYY-MM-DD",
+    "@appearanceDateFormatYmd": {
+        "description": "Date format option name for year/month/day ISO ordering in appearance settings"
+    },
+    "appearanceDateFormatYmdDesc": "2026-01-03",
+    "@appearanceDateFormatYmdDesc": {
+        "description": "Date format option example for year/month/day ISO ordering in appearance settings"
+    },
     "settingsSectionProfile": "PROFILE",
     "@settingsSectionProfile": {
         "description": "Text displayed in settings"

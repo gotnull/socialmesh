@@ -511,7 +511,10 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
   @override
   Widget build(BuildContext context) {
     final report = widget.report;
-    final dateFormat = AppTimeFormat.withDatePrefix(context, 'd MMM yyyy,');
+    final dateFormat = AppTimeFormat.withDatePrefix(
+      context,
+      '${AppTimeFormat.fullDatePattern(context)},',
+    );
     final hasResponses = report.responses.isNotEmpty;
     final responsesLoaded = report.responsesLoaded;
     final hasUnread = report.hasUnreadResponses;
@@ -959,7 +962,10 @@ class _ResponseBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isFounder = response.isFromFounder;
-    final timeFormat = AppTimeFormat.withDatePrefix(context, 'd MMM,');
+    final timeFormat = AppTimeFormat.withDatePrefix(
+      context,
+      '${AppTimeFormat.monthDayPattern(context)},',
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

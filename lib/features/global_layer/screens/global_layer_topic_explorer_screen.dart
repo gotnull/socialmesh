@@ -32,6 +32,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../providers/accessibility_providers.dart';
 import '../../../providers/mqtt_providers.dart';
 import '../../../services/haptic_service.dart';
+import '../../../utils/time_format.dart';
 import '../widgets/portal_view.dart';
 
 /// Topic Explorer screen for managing Global Layer topic subscriptions.
@@ -774,7 +775,11 @@ class _TopicMetricsRow extends StatelessWidget {
         if (subscription.lastMessageAt != null) ...[
           _MetricChip(
             icon: Icons.access_time,
-            value: _formatTimestamp(subscription.lastMessageAt!, context.l10n),
+            value: _formatTimestamp(
+              context,
+              subscription.lastMessageAt!,
+              context.l10n,
+            ),
             color: context.textTertiary,
           ),
           const SizedBox(width: AppTheme.spacing8),
@@ -803,7 +808,11 @@ class _TopicMetricsRow extends StatelessWidget {
     );
   }
 
-  String _formatTimestamp(DateTime timestamp, AppLocalizations l10n) {
+  String _formatTimestamp(
+    BuildContext context,
+    DateTime timestamp,
+    AppLocalizations l10n,
+  ) {
     final now = DateTime.now();
     final diff = now.difference(timestamp);
 
@@ -811,7 +820,7 @@ class _TopicMetricsRow extends StatelessWidget {
     if (diff.inMinutes < 60) return l10n.globalLayerMinutesAgo(diff.inMinutes);
     if (diff.inHours < 24) return l10n.globalLayerHoursAgo(diff.inHours);
     if (diff.inDays < 7) return l10n.globalLayerDaysAgo(diff.inDays);
-    return l10n.globalLayerShortDateFormat(timestamp.month, timestamp.day);
+    return AppTimeFormat.monthDay(context).format(timestamp);
   }
 }
 

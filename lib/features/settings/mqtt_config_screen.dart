@@ -871,7 +871,10 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
     final diag = ref.watch(mqttProxyDiagnosticsProvider);
     final l10n = context.l10n;
     final none = l10n.mqttProxyNoneLabel;
-    final dateFmt = AppTimeFormat.withDatePrefix(context, 'd MMM,');
+    final dateFmt = AppTimeFormat.withDatePrefix(
+      context,
+      '${AppTimeFormat.monthDayPattern(context)},',
+    );
 
     final phaseLabel = _phaseLabel(l10n, diag.phase);
     final reasonLabel = _failureReasonLabel(l10n, diag.failureReason);
@@ -1098,7 +1101,9 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen>
   void _copyProxyDiagnostics(MqttProxyDiagnostics diag) {
     HapticFeedback.selectionClick();
     final timePart = AppTimeFormat.timeWithSecondsPattern(context);
-    final dateFmt = DateFormat('d MMM, $timePart');
+    final dateFmt = DateFormat(
+      '${AppTimeFormat.monthDayPattern(context)}, $timePart',
+    );
     final status = _phaseLabel(context.l10n, diag.phase);
     final reason = diag.failureReason == MqttProxyFailureReason.none
         ? null

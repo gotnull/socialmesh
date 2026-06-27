@@ -694,7 +694,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
     final recentCoSeenLinks = ref.read(
       nodeDexRecentCoSeenLinksProvider(entry.nodeNum),
     );
-    final dateFormat = DateFormat('d MMM yyyy');
+    final dateFormat = AppTimeFormat.fullDate(context);
     final navigator = Navigator.of(context);
 
     AppBottomSheet.showScrollable<void>(
@@ -1483,7 +1483,7 @@ class _DiscoveryStatsCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dateFormat = DateFormat('MMM d, yyyy');
+    final dateFormat = AppTimeFormat.fullDate(context);
     final timeFormat = AppTimeFormat.timeOnly(context);
     final firstSeen = dateFormat.format(entry.firstSeen);
     final lastSeen = dateFormat.format(entry.lastSeen);
@@ -1947,7 +1947,7 @@ class _RegionListCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final sorted = List<SeenRegion>.from(regions)
       ..sort((a, b) => b.lastSeen.compareTo(a.lastSeen));
-    final dateFormat = DateFormat('MMM d');
+    final dateFormat = AppTimeFormat.monthDay(context);
 
     return NodeDexCard(
       title: title,
@@ -2158,8 +2158,8 @@ class _EncounterActivityCardState extends State<_EncounterActivityCard> {
               Flexible(
                 child: Text(
                   _selectedDate != null
-                      ? DateFormat(
-                          'MMM d, yyyy', // lint-allow: hardcoded-string
+                      ? AppTimeFormat.fullDate(
+                          context,
                         ).format(_selectedDate!).toUpperCase()
                       : context.l10n.nodedexRecentLabel,
                   maxLines: 1,
@@ -2373,7 +2373,7 @@ class _EncounterBarChart extends StatelessWidget {
     }
 
     final barChartHeight = 80.0;
-    final dayFormat = DateFormat('MMM d');
+    final dayFormat = AppTimeFormat.monthDay(context);
 
     // Label positions — show first, last, and middle.
     final labelIndices = <int>{};
@@ -2550,7 +2550,7 @@ class _SingleDaySummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dayFormat = DateFormat('EEEE, MMM d');
+    final dayFormat = AppTimeFormat.weekdayDate(context, withYear: false);
     final count = encounters.length;
 
     // Signal quality breakdown.
@@ -3040,7 +3040,7 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
   Widget build(BuildContext context) {
     final nodes = ref.watch(nodesProvider);
     final pageSize = NodeDexConfig.coSeenPageSize;
-    final dateFormat = DateFormat('d MMM yyyy');
+    final dateFormat = AppTimeFormat.fullDate(context);
     final coSeenSorted = ref.watch(
       nodeDexRecentCoSeenLinksProvider(widget.entry.nodeNum),
     );

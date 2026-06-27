@@ -28471,6 +28471,34 @@ class AppLocalizationsIt extends AppLocalizations {
   String get appearanceTimeFormat24hDesc => '13:30';
 
   @override
+  String get appearanceDateFormat => 'Formato data';
+
+  @override
+  String get appearanceDateFormatSystem => 'Predefinito di sistema';
+
+  @override
+  String get appearanceDateFormatSystemDesc =>
+      'Segui le impostazioni internazionali del dispositivo';
+
+  @override
+  String get appearanceDateFormatMdy => 'MM/GG/AAAA';
+
+  @override
+  String get appearanceDateFormatMdyDesc => 'gen 3, 2026';
+
+  @override
+  String get appearanceDateFormatDmy => 'GG/MM/AAAA';
+
+  @override
+  String get appearanceDateFormatDmyDesc => '3 gen 2026';
+
+  @override
+  String get appearanceDateFormatYmd => 'AAAA-MM-GG';
+
+  @override
+  String get appearanceDateFormatYmdDesc => '2026-01-03';
+
+  @override
   String get settingsSectionProfile => 'PROFILO';
 
   @override

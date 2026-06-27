@@ -225,7 +225,10 @@ class _TimelineEntry extends StatelessWidget {
   }
 
   static String _formatTimestamp(BuildContext context, DateTime ts) {
-    return AppTimeFormat.withDatePrefix(context, 'd MMM yyyy').format(ts);
+    return AppTimeFormat.withDatePrefix(
+      context,
+      AppTimeFormat.fullDatePattern(context),
+    ).format(ts);
   }
 }
 

@@ -131,6 +131,13 @@ class AccessibilityPreferencesService {
     );
   }
 
+  /// Update date format mode
+  Future<bool> updateDateFormatMode(DateFormatMode mode) async {
+    return await updatePreferences(
+      _cachedPreferences.copyWith(dateFormatMode: mode),
+    );
+  }
+
   /// Reset all preferences to defaults
   Future<bool> resetToDefaults() async {
     return await updatePreferences(AccessibilityPreferences.defaults);
@@ -164,6 +171,9 @@ class AccessibilityPreferencesService {
     }
     if (_cachedPreferences.timeFormatMode != TimeFormatMode.system) {
       active.add('${_cachedPreferences.timeFormatMode.displayName} time');
+    }
+    if (_cachedPreferences.dateFormatMode != DateFormatMode.system) {
+      active.add('${_cachedPreferences.dateFormatMode.displayName} dates');
     }
 
     return active.join(', ');

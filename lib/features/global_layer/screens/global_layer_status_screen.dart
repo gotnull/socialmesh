@@ -29,6 +29,7 @@ import '../../../core/widgets/glass_scaffold.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../providers/mqtt_providers.dart';
 import '../../../services/haptic_service.dart';
+import '../../../utils/time_format.dart';
 
 import 'global_layer_diagnostics_screen.dart';
 import 'global_layer_setup_wizard.dart';
@@ -522,7 +523,11 @@ class _BrokerInfoCard extends StatelessWidget {
               const SizedBox(height: AppTheme.spacing6),
               _InfoRow(
                 label: context.l10n.globalLayerLastConnectedLabel,
-                value: _formatTimestamp(config.lastConnectedAt!, context.l10n),
+                value: _formatTimestamp(
+                  context,
+                  config.lastConnectedAt!,
+                  context.l10n,
+                ),
               ),
             ],
             const SizedBox(height: AppTheme.spacing6),
@@ -538,7 +543,11 @@ class _BrokerInfoCard extends StatelessWidget {
     );
   }
 
-  String _formatTimestamp(DateTime dt, AppLocalizations l10n) {
+  String _formatTimestamp(
+    BuildContext context,
+    DateTime dt,
+    AppLocalizations l10n,
+  ) {
     final now = DateTime.now();
     final diff = now.difference(dt);
 
@@ -547,7 +556,7 @@ class _BrokerInfoCard extends StatelessWidget {
     if (diff.inHours < 24) return l10n.globalLayerHoursAgo(diff.inHours);
     if (diff.inDays < 7) return l10n.globalLayerDaysAgo(diff.inDays);
 
-    return l10n.globalLayerDateFormat(dt.day, dt.month, dt.year);
+    return AppTimeFormat.fullDate(context).format(dt);
   }
 }
 

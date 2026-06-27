@@ -19,7 +19,6 @@
 //   - Fully deterministic rendering from NodeDexEntry data
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../utils/time_format.dart';
@@ -125,7 +124,7 @@ class ObservationTimeline extends StatelessWidget {
   }
 
   Widget _buildDateRow(BuildContext context) {
-    final dateFormat = DateFormat('d MMM yy');
+    final dateFormat = AppTimeFormat.fullDate(context);
     final timeFormat = AppTimeFormat.timeOnly(context);
 
     final firstDate = dateFormat.format(entry.firstSeen);
@@ -419,7 +418,7 @@ class ObservationSummary extends StatelessWidget {
     final parts = <String>[];
 
     // First seen
-    final dateFormat = DateFormat('d MMM');
+    final dateFormat = AppTimeFormat.monthDay(context);
     parts.add(
       context.l10n.nodedexObservedDate(dateFormat.format(entry.firstSeen)),
     );
