@@ -46,6 +46,7 @@ import '../../models/route.dart' as route_model;
 import '../../providers/age_eligibility_provider.dart';
 import '../../core/units/distance_format.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/dm_recency_provider.dart';
 import '../../providers/map_local_waypoints.dart';
 import '../../providers/presence_providers.dart';
 import '../../providers/help_providers.dart';
@@ -90,7 +91,10 @@ enum NodeFilter {
   active,
   inactive,
   withGps,
-  inRange;
+  inRange,
+  favorites,
+  messagedMe,
+  iMessaged;
 
   String label(AppLocalizations l10n) {
     switch (this) {
@@ -104,6 +108,12 @@ enum NodeFilter {
         return l10n.mapFilterWithGps;
       case NodeFilter.inRange:
         return l10n.mapFilterInRange;
+      case NodeFilter.favorites:
+        return l10n.mapFilterFavorites;
+      case NodeFilter.messagedMe:
+        return l10n.mapFilterMessagedMe;
+      case NodeFilter.iMessaged:
+        return l10n.mapFilterIMessaged;
     }
   }
 }
@@ -689,6 +699,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     List<_NodeWithPosition> nodes,
     int? myNodeNum,
     Map<int, NodePresence> presenceMap,
+    Map<int, DmContactDirection> dmDirection,
   ) {
     final hasQuery = _searchQuery.isNotEmpty;
     final lowerQuery = hasQuery ? _searchQuery.toLowerCase() : '';
@@ -725,6 +736,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
             );
             if (dist > 15.0) continue;
           }
+        case NodeFilter.favorites:
+          if (!n.node.isFavorite) continue;
+        case NodeFilter.messagedMe:
+          if (dmDirection[n.node.nodeNum]?.messagedMe != true) continue;
+        case NodeFilter.iMessaged:
+          if (dmDirection[n.node.nodeNum]?.iMessaged != true) continue;
       }
       result.add(n);
     }
@@ -958,12 +975,22 @@ class _MapScreenState extends ConsumerState<MapScreen>
       positionLogs = <PositionLog>[];
     }
 
+    // Direction-of-contact map only feeds the message-based filters, so we
+    // subscribe to it only when one is active — otherwise the map would
+    // rebuild on every DM regardless of the selected filter.
+    final dmDirection =
+        (_nodeFilter == NodeFilter.messagedMe ||
+            _nodeFilter == NodeFilter.iMessaged)
+        ? ref.watch(dmContactDirectionProvider)
+        : const <int, DmContactDirection>{};
+
     // Get nodes with positions (current or cached)
     final allNodesWithPosition = _getNodesWithPositions(nodes, presenceMap);
     var nodesWithPosition = _filterNodes(
       allNodesWithPosition,
       myNodeNum,
       presenceMap,
+      dmDirection,
     );
 
     _buildProfileCount++;

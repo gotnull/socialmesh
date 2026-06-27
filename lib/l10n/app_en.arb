@@ -9808,6 +9808,18 @@
     "@mapFilterAll": {
         "description": "Text displayed in map view"
     },
+    "mapFilterFavorites": "Favorites",
+    "@mapFilterFavorites": {
+        "description": "Map node filter chip - shows only nodes the user marked as favorite"
+    },
+    "mapFilterMessagedMe": "Messaged Me",
+    "@mapFilterMessagedMe": {
+        "description": "Map node filter chip - shows only nodes that have sent the user a direct message"
+    },
+    "mapFilterIMessaged": "I Messaged",
+    "@mapFilterIMessaged": {
+        "description": "Map node filter chip - shows only nodes the user has sent a direct message to"
+    },
     "mapFilterInRange": "In Range",
     "@mapFilterInRange": {
         "description": "Text displayed in map view"

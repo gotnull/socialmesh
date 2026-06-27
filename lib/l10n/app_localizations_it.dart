@@ -7362,6 +7362,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get mapFilterAll => 'Tutti';
 
   @override
+  String get mapFilterFavorites => 'Preferiti';
+
+  @override
+  String get mapFilterMessagedMe => 'Mi hanno scritto';
+
+  @override
+  String get mapFilterIMessaged => 'Ho scritto';
+
+  @override
   String get mapFilterInRange => 'Nel raggio';
 
   @override

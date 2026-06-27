@@ -7373,6 +7373,15 @@ class AppLocalizationsUk extends AppLocalizations {
   String get mapFilterAll => 'Усі';
 
   @override
+  String get mapFilterFavorites => 'Обране';
+
+  @override
+  String get mapFilterMessagedMe => 'Написали мені';
+
+  @override
+  String get mapFilterIMessaged => 'Я написав';
+
+  @override
   String get mapFilterInRange => 'У зоні дії';
 
   @override

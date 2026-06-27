@@ -7383,6 +7383,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get mapFilterAll => 'Alle';
 
   @override
+  String get mapFilterFavorites => 'Favoriten';
+
+  @override
+  String get mapFilterMessagedMe => 'Hat mir geschrieben';
+
+  @override
+  String get mapFilterIMessaged => 'Habe geschrieben';
+
+  @override
   String get mapFilterInRange => 'In Reichweite';
 
   @override

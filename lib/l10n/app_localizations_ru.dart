@@ -7360,6 +7360,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get mapFilterAll => 'Все';
 
   @override
+  String get mapFilterFavorites => 'Избранное';
+
+  @override
+  String get mapFilterMessagedMe => 'Написали мне';
+
+  @override
+  String get mapFilterIMessaged => 'Я написал';
+
+  @override
   String get mapFilterInRange => 'В зоне доступности';
 
   @override

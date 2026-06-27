@@ -12832,6 +12832,24 @@ abstract class AppLocalizations {
   /// **'All'**
   String get mapFilterAll;
 
+  /// Map node filter chip - shows only nodes the user marked as favorite
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get mapFilterFavorites;
+
+  /// Map node filter chip - shows only nodes that have sent the user a direct message
+  ///
+  /// In en, this message translates to:
+  /// **'Messaged Me'**
+  String get mapFilterMessagedMe;
+
+  /// Map node filter chip - shows only nodes the user has sent a direct message to
+  ///
+  /// In en, this message translates to:
+  /// **'I Messaged'**
+  String get mapFilterIMessaged;
+
   /// Text displayed in map view
   ///
   /// In en, this message translates to:

@@ -7348,6 +7348,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get mapFilterAll => 'Todos';
 
   @override
+  String get mapFilterFavorites => 'Favoritos';
+
+  @override
+  String get mapFilterMessagedMe => 'Me escreveram';
+
+  @override
+  String get mapFilterIMessaged => 'Eu escrevi';
+
+  @override
   String get mapFilterInRange => 'No alcance';
 
   @override

@@ -7423,6 +7423,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mapFilterAll => 'Tout';
 
   @override
+  String get mapFilterFavorites => 'Favoris';
+
+  @override
+  String get mapFilterMessagedMe => 'M\'ont écrit';
+
+  @override
+  String get mapFilterIMessaged => 'J\'ai écrit';
+
+  @override
   String get mapFilterInRange => 'À portée';
 
   @override

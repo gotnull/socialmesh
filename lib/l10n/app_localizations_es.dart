@@ -7398,6 +7398,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get mapFilterAll => 'Todos';
 
   @override
+  String get mapFilterFavorites => 'Favoritos';
+
+  @override
+  String get mapFilterMessagedMe => 'Me escribieron';
+
+  @override
+  String get mapFilterIMessaged => 'Les escribí';
+
+  @override
   String get mapFilterInRange => 'En rango';
 
   @override
