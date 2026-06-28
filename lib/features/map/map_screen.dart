@@ -1938,7 +1938,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     options: MapOptions(
                       initialCenter: center,
                       initialZoom: zoom,
-                      minZoom: 4,
+                      minZoom: MapConfig.liveMapMinZoom,
                       maxZoom: 18,
                       backgroundColor: context.background,
                       interactionOptions: InteractionOptions(
@@ -2907,18 +2907,24 @@ class _MapScreenState extends ConsumerState<MapScreen>
                     builder: (context, rotation, _) {
                       return MapControlsOverlay(
                         currentZoom: _currentZoom,
-                        minZoom: 4,
+                        minZoom: MapConfig.liveMapMinZoom,
                         maxZoom: 18,
                         mapRotation: rotation,
                         isHeadingUp: _headingUpMode,
                         compassMode: _compassMode,
                         onZoomIn: () {
-                          final newZoom = (_currentZoom + 1).clamp(4.0, 18.0);
+                          final newZoom = (_currentZoom + 1).clamp(
+                            MapConfig.liveMapMinZoom,
+                            18.0,
+                          );
                           _animatedMove(_mapController.camera.center, newZoom);
                           HapticFeedback.selectionClick();
                         },
                         onZoomOut: () {
-                          final newZoom = (_currentZoom - 1).clamp(4.0, 18.0);
+                          final newZoom = (_currentZoom - 1).clamp(
+                            MapConfig.liveMapMinZoom,
+                            18.0,
+                          );
                           _animatedMove(_mapController.camera.center, newZoom);
                           HapticFeedback.selectionClick();
                         },
@@ -3487,7 +3493,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
     );
 
     final camera = cameraFit.fit(_mapController.camera);
-    _animatedMove(camera.center, camera.zoom.clamp(4.0, 16.0));
+    _animatedMove(
+      camera.center,
+      camera.zoom.clamp(MapConfig.liveMapMinZoom, 16.0),
+    );
   }
 
   /// Wraps the mesh-map node markers in a [MarkerClusterLayerWidget]

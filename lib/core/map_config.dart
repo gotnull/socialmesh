@@ -27,6 +27,15 @@ class MapConfig {
   static const double minZoom = 3.0;
   static const double maxZoom = 18.0;
 
+  /// Minimum interactive zoom for the live mesh map. Kept low enough that
+  /// "fit all" can zoom out to frame globally-distributed nodes: a radio with
+  /// an MQTT uplink learns positions worldwide, so the bounding box of all
+  /// nodes can span continents. flutter_map's `CameraFit.fit` clamps its
+  /// computed zoom up to the camera's minimum, so a higher floor here strands
+  /// the camera on the empty centroid of that box with every node off-screen.
+  /// Distinct from [minZoom], which scopes the offline-tile download range.
+  static const double liveMapMinZoom = 2.0;
+
   /// Zoom at or below which marker clusters stay merged; above it markers
   /// render individually. Wired into [MarkerClusterLayerOptions.disableClusteringAtZoom]
   /// (NOT `maxZoom`, which only governs the disabled tap-to-zoom path).
