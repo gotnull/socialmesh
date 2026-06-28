@@ -98,6 +98,8 @@ import 'features/channels/channel_form_screen.dart';
 import 'features/nodes/nodes_screen.dart';
 import 'features/qr_scanner/universal_qr_scanner_screen.dart';
 import 'features/map/map_screen.dart';
+import 'features/waypoints/waypoint_form_screen.dart';
+import 'core/safe_lat_lng.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/settings/account_subscriptions_screen.dart';
 import 'features/device/device_config_screen.dart';
@@ -2225,6 +2227,18 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
                 initialLocationLabel: args?['label'] as String?,
               ),
             );
+          }
+          if (settings.name == '/waypoint-form') {
+            final args = settings.arguments as Map<String, dynamic>?;
+            final point = safeLatLng(
+              args?['latitude'] as double?,
+              args?['longitude'] as double?,
+            );
+            if (point != null) {
+              return MaterialPageRoute(
+                builder: (context) => WaypointFormScreen(location: point),
+              );
+            }
           }
           if (settings.name == '/widget-detail') {
             final args = settings.arguments as Map<String, dynamic>?;

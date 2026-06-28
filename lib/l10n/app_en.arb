@@ -9656,6 +9656,26 @@
         },
         "description": "Text in map view Parameters: {seconds} = time duration."
     },
+    "coordinateActionCopy": "Copy coordinates",
+    "@coordinateActionCopy": {
+        "description": "Action to copy a GPS coordinate from a chat message to the clipboard"
+    },
+    "coordinateActionCreateWaypoint": "Create waypoint here",
+    "@coordinateActionCreateWaypoint": {
+        "description": "Action to create a mesh waypoint at a GPS coordinate tapped in a chat message"
+    },
+    "coordinateActionShowOnMap": "Show on map",
+    "@coordinateActionShowOnMap": {
+        "description": "Action to open the map centered on a GPS coordinate tapped in a chat message"
+    },
+    "coordinateMapLabel": "Shared location",
+    "@coordinateMapLabel": {
+        "description": "Marker label for a GPS coordinate opened on the map from a chat message"
+    },
+    "coordinateSheetTitle": "Location",
+    "@coordinateSheetTitle": {
+        "description": "Title of the action sheet shown when tapping a GPS coordinate in a chat message"
+    },
     "mapCoordinatesCopied": "Coordinates copied to clipboard",
     "@mapCoordinatesCopied": {
         "description": "Text displayed in map view"

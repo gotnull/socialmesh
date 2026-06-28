@@ -12664,6 +12664,36 @@ abstract class AppLocalizations {
   /// **'{seconds}s ago'**
   String mapAgeSeconds(String seconds);
 
+  /// Action to copy a GPS coordinate from a chat message to the clipboard
+  ///
+  /// In en, this message translates to:
+  /// **'Copy coordinates'**
+  String get coordinateActionCopy;
+
+  /// Action to create a mesh waypoint at a GPS coordinate tapped in a chat message
+  ///
+  /// In en, this message translates to:
+  /// **'Create waypoint here'**
+  String get coordinateActionCreateWaypoint;
+
+  /// Action to open the map centered on a GPS coordinate tapped in a chat message
+  ///
+  /// In en, this message translates to:
+  /// **'Show on map'**
+  String get coordinateActionShowOnMap;
+
+  /// Marker label for a GPS coordinate opened on the map from a chat message
+  ///
+  /// In en, this message translates to:
+  /// **'Shared location'**
+  String get coordinateMapLabel;
+
+  /// Title of the action sheet shown when tapping a GPS coordinate in a chat message
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get coordinateSheetTitle;
+
   /// Text displayed in map view
   ///
   /// In en, this message translates to:

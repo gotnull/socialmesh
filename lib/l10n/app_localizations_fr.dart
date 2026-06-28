@@ -7321,6 +7321,21 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get coordinateActionCopy => 'Copier les coordonnées';
+
+  @override
+  String get coordinateActionCreateWaypoint => 'Créer un point de passage ici';
+
+  @override
+  String get coordinateActionShowOnMap => 'Afficher sur la carte';
+
+  @override
+  String get coordinateMapLabel => 'Position partagée';
+
+  @override
+  String get coordinateSheetTitle => 'Position';
+
+  @override
   String get mapCoordinatesCopied =>
       'Coordonnées copiées dans le presse-papiers';
 

@@ -7259,6 +7259,21 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get coordinateActionCopy => 'Копировать координаты';
+
+  @override
+  String get coordinateActionCreateWaypoint => 'Создать точку маршрута здесь';
+
+  @override
+  String get coordinateActionShowOnMap => 'Показать на карте';
+
+  @override
+  String get coordinateMapLabel => 'Полученное местоположение';
+
+  @override
+  String get coordinateSheetTitle => 'Местоположение';
+
+  @override
   String get mapCoordinatesCopied => 'Координаты скопированы в буфер обмена';
 
   @override

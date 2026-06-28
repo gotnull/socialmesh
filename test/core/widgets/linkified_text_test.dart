@@ -91,6 +91,62 @@ void main() {
     });
   });
 
+  group('detectCoordinates', () {
+    test('finds a high-precision SOS coordinate pair', () {
+      final matches = detectCoordinates(
+        'Location: 52.51208018193974, 13.459232576466599',
+      );
+      expect(matches, hasLength(1));
+      expect(matches.first.latitude, closeTo(52.51208, 0.00001));
+      expect(matches.first.longitude, closeTo(13.45923, 0.00001));
+    });
+
+    test('reports start and end indices that slice back to the pair', () {
+      const input = 'here 52.51208, 13.45923 ok';
+      final match = detectCoordinates(input).first;
+      expect(input.substring(match.start, match.end), '52.51208, 13.45923');
+    });
+
+    test('handles a negative longitude', () {
+      final matches = detectCoordinates('37.77493, -122.41942');
+      expect(matches, hasLength(1));
+      expect(matches.first.longitude, closeTo(-122.41942, 0.00001));
+    });
+
+    test('tolerates no space after the comma', () {
+      expect(detectCoordinates('52.51208,13.45923'), hasLength(1));
+    });
+
+    test('rejects low-precision casual decimal pairs', () {
+      expect(detectCoordinates('rated 4.5, 3.2 stars'), isEmpty);
+    });
+
+    test('rejects out-of-range latitude', () {
+      expect(detectCoordinates('99.12345, 13.45923'), isEmpty);
+    });
+
+    test('rejects out-of-range longitude', () {
+      expect(detectCoordinates('52.51208, 200.45923'), isEmpty);
+    });
+
+    test('ignores plain prose with no coordinates', () {
+      expect(detectCoordinates('meeting at the zoo tomorrow'), isEmpty);
+    });
+
+    test('accepts a pair where only one number is high precision', () {
+      expect(detectCoordinates('52.51208018, 13.4'), hasLength(1));
+    });
+  });
+
+  group('formatCoordinatePair', () {
+    test('rounds to five decimal places', () {
+      expect(
+        formatCoordinatePair(52.51208018193974, 13.459232576466599),
+        '52.51208, 13.45923',
+      );
+    });
+  });
+
   group('LinkifiedText widget', () {
     Widget wrap(Widget child) => MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -118,6 +174,24 @@ void main() {
       expect(root.children!.length, 3);
       expect((root.children![1] as TextSpan).text, 'https://example.com');
       expect((root.children![1] as TextSpan).recognizer, isNotNull);
+    });
+
+    testWidgets('renders a tappable span for a GPS coordinate', (tester) async {
+      await tester.pumpWidget(
+        wrap(const LinkifiedText(text: 'Location: 52.51208, 13.45923')),
+      );
+      final richFinder = find.byWidgetPredicate(
+        (w) => w is Text && w.textSpan != null,
+      );
+      expect(richFinder, findsOneWidget);
+      final text = tester.widget<Text>(richFinder);
+      final root = text.textSpan! as TextSpan;
+      final coordSpan =
+          root.children!.firstWhere(
+                (s) => s is TextSpan && s.text == '52.51208, 13.45923',
+              )
+              as TextSpan;
+      expect(coordSpan.recognizer, isNotNull);
     });
   });
 }

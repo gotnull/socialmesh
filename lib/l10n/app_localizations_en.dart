@@ -7168,6 +7168,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get coordinateActionCopy => 'Copy coordinates';
+
+  @override
+  String get coordinateActionCreateWaypoint => 'Create waypoint here';
+
+  @override
+  String get coordinateActionShowOnMap => 'Show on map';
+
+  @override
+  String get coordinateMapLabel => 'Shared location';
+
+  @override
+  String get coordinateSheetTitle => 'Location';
+
+  @override
   String get mapCoordinatesCopied => 'Coordinates copied to clipboard';
 
   @override

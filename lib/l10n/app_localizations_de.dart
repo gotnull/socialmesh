@@ -7281,6 +7281,21 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get coordinateActionCopy => 'Koordinaten kopieren';
+
+  @override
+  String get coordinateActionCreateWaypoint => 'Wegpunkt hier erstellen';
+
+  @override
+  String get coordinateActionShowOnMap => 'Auf Karte anzeigen';
+
+  @override
+  String get coordinateMapLabel => 'Geteilter Standort';
+
+  @override
+  String get coordinateSheetTitle => 'Standort';
+
+  @override
   String get mapCoordinatesCopied =>
       'Koordinaten in die Zwischenablage kopiert';
 

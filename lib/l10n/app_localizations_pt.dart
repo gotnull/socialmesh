@@ -7246,6 +7246,21 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get coordinateActionCopy => 'Copiar coordenadas';
+
+  @override
+  String get coordinateActionCreateWaypoint => 'Criar waypoint aqui';
+
+  @override
+  String get coordinateActionShowOnMap => 'Mostrar no mapa';
+
+  @override
+  String get coordinateMapLabel => 'Localização compartilhada';
+
+  @override
+  String get coordinateSheetTitle => 'Localização';
+
+  @override
   String get mapCoordinatesCopied =>
       'Coordenadas copiadas para a área de transferência';
 

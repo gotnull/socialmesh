@@ -7272,6 +7272,21 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get coordinateActionCopy => 'Копіювати координати';
+
+  @override
+  String get coordinateActionCreateWaypoint => 'Створити точку маршруту тут';
+
+  @override
+  String get coordinateActionShowOnMap => 'Показати на карті';
+
+  @override
+  String get coordinateMapLabel => 'Отримане місцезнаходження';
+
+  @override
+  String get coordinateSheetTitle => 'Місцезнаходження';
+
+  @override
   String get mapCoordinatesCopied => 'Координати скопійовано до буфера обміну';
 
   @override
