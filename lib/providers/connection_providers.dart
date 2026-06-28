@@ -3133,3 +3133,70 @@ final isBackgroundServiceRunningProvider = Provider<bool>((ref) {
   if (!deviceState.isConnected) return false;
   return BackgroundBleService.instance.isRunning;
 });
+
+/// Keeps the Android foreground-service notification's "Detailed" content
+/// (node count + last message time) in sync with live mesh state.
+///
+/// [BackgroundBleService] owns the notification text but is Riverpod-free by
+/// design, so it cannot read the node set or message history itself. This
+/// notifier watches those providers and pushes the stats to the service,
+/// debounced to coalesce the NodeInfo burst the radio dumps on connect.
+///
+/// No-op on iOS (the foreground service is Android-only) — kept alive at app
+/// level via a `ref.watch` in the root widget.
+class BackgroundNotificationUpdaterNotifier extends Notifier<bool> {
+  Timer? _debounce;
+  static const _debounceDelay = Duration(milliseconds: 750);
+
+  @override
+  bool build() {
+    if (!Platform.isAndroid) return false;
+
+    ref.onDispose(() => _debounce?.cancel());
+
+    // Re-render when the node set changes or a new message arrives. Both are
+    // debounced so the connect-time NodeInfo storm coalesces into one update.
+    ref.listen(nodesProvider, (_, _) => _scheduleRefresh());
+    ref.listen(messagesProvider, (_, _) => _scheduleRefresh());
+
+    // Push immediately when the service starts so Detailed isn't left on the
+    // minimal fallback until the next mesh event.
+    ref.listen(isBackgroundServiceRunningProvider, (previous, running) {
+      if (running && previous != true) refreshNow();
+    });
+
+    return false;
+  }
+
+  void _scheduleRefresh() {
+    _debounce?.cancel();
+    _debounce = Timer(_debounceDelay, refreshNow);
+  }
+
+  /// Compute the current mesh stats and push them to the foreground service.
+  /// Safe to call when the service is stopped — it no-ops internally.
+  void refreshNow() {
+    if (!Platform.isAndroid) return;
+    if (!BackgroundBleService.instance.isRunning) return;
+
+    final nodes = ref.read(nodesProvider);
+    final messages = ref.read(messagesProvider);
+
+    DateTime? lastMessageAt;
+    for (final message in messages) {
+      if (lastMessageAt == null || message.timestamp.isAfter(lastMessageAt)) {
+        lastMessageAt = message.timestamp;
+      }
+    }
+
+    BackgroundBleService.instance.updateMeshStats(
+      nodeCount: nodes.length,
+      lastMessageAt: lastMessageAt,
+    );
+  }
+}
+
+final backgroundNotificationUpdaterProvider =
+    NotifierProvider<BackgroundNotificationUpdaterNotifier, bool>(
+      BackgroundNotificationUpdaterNotifier.new,
+    );

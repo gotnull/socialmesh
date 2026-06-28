@@ -1995,6 +1995,9 @@ class _SocialMeshAppState extends ConsumerState<SocialMeshApp>
     // which bails on `lastDeviceProtocol == 'meshcore'`.
     ref.watch(meshCoreLifecycleProvider);
     ref.watch(liveActivityManagerProvider);
+    // Keeps the Android foreground-service "Detailed" notification (node
+    // count + last message time) synced with live mesh state. No-op on iOS.
+    ref.watch(conn.backgroundNotificationUpdaterProvider);
 
     // Watch telemetry logger to automatically save telemetry data
     ref.watch(telemetryLoggerProvider);

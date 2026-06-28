@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:io' show Platform;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -16,6 +17,11 @@ const String _kBatteryPromptShown = 'bg_battery_prompt_shown';
 
 /// SharedPreferences key for the user-level background BLE toggle.
 const String kBgBleEnabled = 'bg_ble_enabled';
+
+/// SharedPreferences key for the Android persistent notification style
+/// (0 = minimal, 1 = detailed). Owned here so the Riverpod-free service can
+/// read the user's choice directly; the settings screen imports this key.
+const String kBgNotifStyle = 'bg_notif_style';
 
 /// Manages the Android foreground service that keeps the Dart isolate and BLE
 /// connection alive when the app is backgrounded.
@@ -38,6 +44,19 @@ class BackgroundBleService {
 
   /// Whether the foreground service is currently active.
   bool get isRunning => _isRunning;
+
+  /// Style value for the "detailed" notification (mirrors
+  /// `NotificationStyle.detailed.value` in the settings screen).
+  static const int _styleDetailed = 1;
+
+  // Notification content state. The persistent notification text is rebuilt
+  // from these fields. This service is Riverpod-free, so the provider layer
+  // feeds the detailed-style stats via [updateMeshStats] and the settings
+  // screen pushes style changes via [setNotificationStyle].
+  String _deviceName = '';
+  int _notifStyleValue = 0;
+  int? _nodeCount;
+  DateTime? _lastMessageAt;
 
   /// The reconnect manager handles exponential-backoff reconnection when BLE
   /// drops while the app is backgrounded.
@@ -125,11 +144,12 @@ class BackgroundBleService {
       messageProcessor.start(transport);
     }
 
+    _deviceName = deviceName;
+    await _loadNotifStyle();
+
     final result = await FlutterForegroundTask.startService(
-      notificationTitle:
-          'Connected to $deviceName', // lint-allow: hardcoded-string
-      notificationText:
-          'Mesh radio connection active', // lint-allow: hardcoded-string
+      notificationTitle: _notificationTitle(),
+      notificationText: _notificationBody(),
       serviceId: 500,
       callback: _foregroundTaskCallback,
     );
@@ -148,13 +168,99 @@ class BackgroundBleService {
   /// different device).
   Future<void> updateNotification({required String deviceName}) async {
     if (!Platform.isAndroid || !_isRunning) return;
+    _deviceName = deviceName;
+    await _applyNotification();
+  }
 
+  /// Update the cached notification style (0 = minimal, 1 = detailed) and
+  /// re-render the live notification immediately. Called by the settings
+  /// screen when the user picks Minimal / Detailed.
+  Future<void> setNotificationStyle(int styleValue) async {
+    _notifStyleValue = styleValue;
+    await _applyNotification();
+  }
+
+  /// Feed the latest mesh stats consumed by the "detailed" notification style.
+  /// Re-renders only when the detailed style is active (the minimal text is
+  /// static). Called by the provider layer as node / message state changes.
+  Future<void> updateMeshStats({
+    int? nodeCount,
+    DateTime? lastMessageAt,
+  }) async {
+    _nodeCount = nodeCount;
+    _lastMessageAt = lastMessageAt;
+    if (_notifStyleValue != _styleDetailed) return;
+    await _applyNotification();
+  }
+
+  /// Re-render the persistent notification from the current cached state.
+  Future<void> _applyNotification() async {
+    if (!Platform.isAndroid || !_isRunning) return;
     await FlutterForegroundTask.updateService(
-      notificationTitle:
-          'Connected to $deviceName', // lint-allow: hardcoded-string
-      notificationText:
-          'Mesh radio connection active', // lint-allow: hardcoded-string
+      notificationTitle: _notificationTitle(),
+      notificationText: _notificationBody(),
     );
+  }
+
+  /// Load the persisted notification style into the cache. Defaults to
+  /// minimal (0) when the user has not chosen one.
+  Future<void> _loadNotifStyle() async {
+    final prefs = await SharedPreferences.getInstance();
+    _notifStyleValue = prefs.getInt(kBgNotifStyle) ?? 0;
+  }
+
+  String _notificationTitle() =>
+      'Connected to $_deviceName'; // lint-allow: hardcoded-string
+
+  String _notificationBody() => buildNotificationBody(
+    styleValue: _notifStyleValue,
+    nodeCount: _nodeCount,
+    lastMessageAt: _lastMessageAt,
+    now: DateTime.now(),
+  );
+
+  /// Build the notification body for the given style and stats. Detailed
+  /// shows node count and last-message age; it falls back to the minimal text
+  /// until the provider layer has fed at least one stat. Pure and clock-
+  /// injectable so the format is unit-testable without the platform plugin.
+  @visibleForTesting
+  static String buildNotificationBody({
+    required int styleValue,
+    required int? nodeCount,
+    required DateTime? lastMessageAt,
+    required DateTime now,
+  }) {
+    const minimal =
+        'Mesh radio connection active'; // lint-allow: hardcoded-string
+    if (styleValue != _styleDetailed) return minimal;
+
+    final parts = <String>[];
+    if (nodeCount != null) {
+      parts.add(
+        nodeCount == 1
+            ? '1 node heard' // lint-allow: hardcoded-string
+            : '$nodeCount nodes heard', // lint-allow: hardcoded-string
+      );
+    }
+    if (lastMessageAt != null) {
+      // lint-allow: hardcoded-string
+      parts.add('last message ${_relativeAgo(lastMessageAt, now)}');
+    }
+    return parts.isEmpty ? minimal : parts.join(', ');
+  }
+
+  /// Compact "time ago" label for the detailed notification (e.g. "3m ago").
+  static String _relativeAgo(DateTime time, DateTime now) {
+    final seconds = now.difference(time).inSeconds;
+    if (seconds < 5) return 'just now'; // lint-allow: hardcoded-string
+    if (seconds < 60) return '${seconds}s ago'; // lint-allow: hardcoded-string
+    if (seconds < 3600) {
+      return '${seconds ~/ 60}m ago'; // lint-allow: hardcoded-string
+    }
+    if (seconds < 86400) {
+      return '${seconds ~/ 3600}h ago'; // lint-allow: hardcoded-string
+    }
+    return '${seconds ~/ 86400}d ago'; // lint-allow: hardcoded-string
   }
 
   /// Show a "Disconnected" notification after auto-reconnect exhaustion.

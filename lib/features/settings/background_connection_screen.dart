@@ -27,9 +27,6 @@ const String kLiveActivityEnabled = 'live_activity_enabled';
 /// SharedPreferences key for the Live Activity destination mode.
 const String kLiveActivityDestination = 'live_activity_destination';
 
-/// SharedPreferences key for the Android persistent notification style.
-const String kBgNotifStyle = 'bg_notif_style';
-
 /// Notification style for the persistent Android foreground notification.
 enum NotificationStyle {
   /// "Connected to [device name]"
@@ -195,11 +192,13 @@ class _BackgroundConnectionScreenState
     await prefs.setInt(kBgNotifStyle, style.value);
     safeSetState(() => _notifStyle = style);
 
-    // Update the visible notification immediately if the service is running.
+    // Apply to the live notification immediately if the service is running.
     if (Platform.isAndroid && _bgBleEnabled) {
-      // Refresh notification content to reflect the new style. The actual
-      // device name is managed by BackgroundBleService, but we can trigger
-      // a refresh by re-reading the current state.
+      // Cache the current mesh stats first (a no-op render while the style is
+      // still minimal), then switch the style so the detailed text renders
+      // already populated rather than flashing the minimal fallback.
+      ref.read(backgroundNotificationUpdaterProvider.notifier).refreshNow();
+      await BackgroundBleService.instance.setNotificationStyle(style.value);
       AppLogging.ble(
         'BackgroundConnectionScreen: notification style → ${style.name}',
       );
