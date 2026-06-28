@@ -783,45 +783,6 @@ class _PulseRingPainter extends CustomPainter {
       oldDelegate.progress != progress;
 }
 
-/// Mini node marker for compact displays (dashboard widget, etc.)
-class MiniMeshNodeMarker extends StatelessWidget {
-  final MeshNode node;
-  final bool isMyNode;
-  final PresenceConfidence? presence;
-
-  const MiniMeshNodeMarker({
-    super.key,
-    required this.node,
-    this.isMyNode = false,
-    this.presence,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final resolvedPresence = presence ?? node.presenceConfidence;
-    final color = isMyNode
-        ? context.accentColor
-        : (resolvedPresence.isActive
-              ? context.accentColor
-              : context.textTertiary);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-        border: Border.all(color: SemanticColors.onMarker, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.4),
-            blurRadius: 4,
-            spreadRadius: 0,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 /// Helper to calculate the center of multiple nodes
 LatLng calculateNodesCenter(List<MeshNodeMarkerData> nodes) {
   const fallback = LatLng(MapConfig.defaultLat, MapConfig.defaultLon);

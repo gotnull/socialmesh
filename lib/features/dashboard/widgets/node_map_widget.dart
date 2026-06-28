@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../core/map_config.dart';
@@ -80,7 +79,11 @@ class NodeMapContent extends ConsumerWidget {
             borderRadius: BorderRadius.circular(AppTheme.radius12),
             child: Stack(
               children: [
-                // Use shared MeshMapWidget with mini node markers
+                // Render the shared identity-coloured, short-name node markers
+                // (the same MeshNodeMarker the full map uses) so the preview
+                // reads as the real map instead of anonymous grey and magenta
+                // dots. Clustering stays off so every node shows individually;
+                // taps fall through to the overlay below to open the full map.
                 MeshMapWidget(
                   mapStyle: mapStyle,
                   initialCenter: center,
@@ -90,29 +93,8 @@ class NodeMapContent extends ConsumerWidget {
                   interactive: false,
                   animateTiles: false,
                   onTap: (_, _) => _openFullMap(context),
-                  additionalLayers: [
-                    // Mini node markers
-                    MarkerLayer(
-                      markers: finiteMarkers(
-                        nodesWithPosition.map((node) {
-                          final isMyNode = node.nodeNum == myNodeNum;
-                          return Marker(
-                            point: LatLng(node.latitude!, node.longitude!),
-                            width: 24,
-                            height: 24,
-                            child: MiniMeshNodeMarker(
-                              node: node,
-                              isMyNode: isMyNode,
-                              presence: presenceConfidenceFor(
-                                presenceMap,
-                                node,
-                              ),
-                            ),
-                          );
-                        }),
-                      ),
-                    ),
-                  ],
+                  myNodeNum: myNodeNum,
+                  nodeMarkers: markerData,
                 ),
                 // Tap overlay with node count
                 Positioned(
