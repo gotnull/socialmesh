@@ -292,6 +292,32 @@ class _ConnectArgs {
 }
 
 // ---------------------------------------------------------------------------
+// Pending publish: buffered device→broker frame awaiting a healthy socket
+// ---------------------------------------------------------------------------
+
+/// A device→broker publish captured while the proxy was not in a publishable
+/// state (reconnect in flight, or a stale `connected` phase masking a dead
+/// socket). Replayed in FIFO order once the socket is healthy again so a
+/// message sent during a reconnect window is delivered instead of silently
+/// dropped. The enqueue timestamp lets the flush drop frames that have aged
+/// out rather than deliver them long after they were relevant.
+class _PendingPublish {
+  _PendingPublish({
+    required this.topic,
+    required this.data,
+    required this.text,
+    required this.retained,
+    required this.enqueuedAt,
+  });
+
+  final String topic;
+  final List<int>? data;
+  final String? text;
+  final bool retained;
+  final DateTime enqueuedAt;
+}
+
+// ---------------------------------------------------------------------------
 // Callback for sending ToRadio messages back to the device
 // ---------------------------------------------------------------------------
 
@@ -357,6 +383,24 @@ class MqttClientProxyService {
   int _messagesRelayed = 0;
   int _reconnectAttempts = 0;
 
+  // Outbound publish queue. Holds device→broker frames that arrive while the
+  // socket is not publishable (reconnect in flight, or a stale `connected`
+  // phase masking a dead socket) and replays them in order on the next
+  // healthy (re)connect. Bounded (drop-oldest) and TTL-expired so a sustained
+  // outage can neither grow it without bound nor deliver ancient frames.
+  final List<_PendingPublish> _pendingPublishes = [];
+  static const int _maxPendingPublishes = 32;
+  static const Duration _pendingPublishTtl = Duration(minutes: 2);
+
+  // Proactive reconnect request. Fired when a publish detects that the live
+  // socket has died while the phase still reads `connected`: the package's
+  // own disconnect callback has not fired, so its auto-reconnect is blind to
+  // the drop. Debounced so a burst of device publishes cannot storm the
+  // reconnect path.
+  void Function()? _onReconnectNeeded;
+  DateTime? _lastReconnectRequestAt;
+  static const Duration _reconnectRequestDebounce = Duration(seconds: 3);
+
   // Publish suppression dedupe — collapse repeated identical warnings on
   // the same (phase, reason, topic-family) tuple to avoid log spam when
   // the device fires bursts during an outage.
@@ -407,6 +451,27 @@ class MqttClientProxyService {
   @visibleForTesting
   int get debugConnectAttemptsStarted => _debugConnectAttemptsStarted;
 
+  /// Test-only: number of device publishes currently buffered awaiting a
+  /// healthy socket.
+  @visibleForTesting
+  int get debugPendingPublishCount => _pendingPublishes.length;
+
+  /// Test-only: drives the service into the field-reported failure mode where
+  /// the phase reads `connected` but the underlying socket is dead. Creates a
+  /// never-connected client (so `connectionStatus.state` is not `connected`)
+  /// so a following [handleDevicePublish] exercises the stale-socket
+  /// reconcile + queue + reconnect-request path without a live broker.
+  @visibleForTesting
+  void debugSimulateStaleConnectedSocket() {
+    _phase = MqttProxyConnectionPhase.connected;
+    _failureReason = MqttProxyFailureReason.none;
+    _client = MqttServerClient.withPort(
+      '127.0.0.1', // lint-allow: hardcoded-string
+      'stale-socket-test', // lint-allow: hardcoded-string
+      1,
+    );
+  }
+
   /// Test-only: primes the service into a "settled connected" state
   /// without holding a real [MqttServerClient]. Lets unit tests verify
   /// that an immediately-following [connect] call with matching args
@@ -443,6 +508,14 @@ class MqttClientProxyService {
   /// Sets the callback for forwarding broker messages to the device.
   void setOnBrokerMessage(OnBrokerMessageFn fn) {
     _onBrokerMessage = fn;
+  }
+
+  /// Sets the callback invoked when a publish detects that the live socket
+  /// has died while the phase still reads `connected`. The provider wires
+  /// this to a config-driven reconnect so recovery does not have to wait for
+  /// the MQTT keep-alive timer to notice the dead socket on its own.
+  void setOnReconnectNeeded(void Function() fn) {
+    _onReconnectNeeded = fn;
   }
 
   /// Connects to the broker.
@@ -678,6 +751,11 @@ class MqttClientProxyService {
               _subscription = client.updates?.listen(_handleInboundMessage);
 
               _emitDiagnostics();
+
+              // Replay any device publishes buffered while the socket was
+              // down so a message sent during the reconnect window is not
+              // lost.
+              _flushPendingPublishes();
             } else {
               final stateName = status?.state.name ?? 'unknown';
               final reason = _mapNoConnectionStatus(status);
@@ -808,10 +886,30 @@ class MqttClientProxyService {
       return;
     }
 
+    // A payload-less message can never be published, so drop it before any
+    // queueing so an empty frame never occupies a buffer slot.
+    if (data == null && text == null) {
+      AppLogging.mqttProxy(
+        'Ignoring proxy message with no payload '
+        '(topic: $topic)',
+      );
+      return;
+    }
+
     // Reason-aware gating: surface the actual phase/reason instead of a
     // bare "not connected" so support can distinguish disabled vs missing
-    // config vs in-flight vs failed-with-reason.
+    // config vs in-flight vs failed-with-reason. When the phase is one we
+    // expect to recover from, buffer the frame for replay instead of
+    // dropping it.
     if (_phase != MqttProxyConnectionPhase.connected || _client == null) {
+      if (_shouldQueueForPhase(_phase)) {
+        _enqueuePending(
+          topic: topic,
+          data: data,
+          text: text,
+          retained: retained,
+        );
+      }
       _logSuppressedPublish(
         topic: topic,
         phase: _phase,
@@ -823,12 +921,19 @@ class MqttClientProxyService {
       return;
     }
 
-    // Guard against race where phase is `connected` but the MQTT client's
-    // internal state is still 'connecting' (e.g. reconnect in progress).
-    // Publishing in this state throws a ConnectionException.
+    // Phase says `connected` but the live socket disagrees: a stale phase
+    // masking a dead socket (iOS background teardown / half-open TCP where no
+    // FIN arrived, so the package's disconnect callback never fired and its
+    // auto-reconnect is blind to the drop). Reconcile the phase so the
+    // diagnostics surface stops reporting a false `Connected`, buffer the
+    // frame, and proactively request a reconnect instead of waiting for the
+    // keep-alive timer to notice.
     final clientState =
         _client!.connectionStatus?.state ?? MqttConnectionState.disconnected;
     if (clientState != MqttConnectionState.connected) {
+      _phase = MqttProxyConnectionPhase.connecting;
+      _failureReason = MqttProxyFailureReason.none;
+      _enqueuePending(topic: topic, data: data, text: text, retained: retained);
       _logSuppressedPublish(
         topic: topic,
         phase: MqttProxyConnectionPhase.connecting,
@@ -836,17 +941,23 @@ class MqttClientProxyService {
         kind: 'deferred',
         clientStateLabel: clientState.name,
       );
+      _requestReconnect();
+      _emitDiagnostics();
       return;
     }
 
-    if (data == null && text == null) {
-      AppLogging.mqttProxy(
-        'Ignoring proxy message with no payload '
-        '(topic: $topic)',
-      );
-      return;
-    }
+    _publishToClient(topic: topic, data: data, text: text, retained: retained);
+  }
 
+  /// Publishes a single frame to the live broker socket and counts it. The
+  /// caller must have verified the phase is `connected` and the client socket
+  /// is healthy. Shared by the live publish path and the queue flush.
+  void _publishToClient({
+    required String topic,
+    List<int>? data,
+    String? text,
+    bool retained = false,
+  }) {
     final builder = MqttClientPayloadBuilder();
 
     if (data != null) {
@@ -873,6 +984,104 @@ class MqttClientProxyService {
     _emitDiagnostics();
   }
 
+  /// Whether a publish arriving in [phase] should be buffered for replay
+  /// rather than dropped. Only phases where a (re)connect is in flight or
+  /// expected imminently are queueable; intentional-off and
+  /// no-valid-config phases drop (queuing would deliver stale frames much
+  /// later, or never).
+  bool _shouldQueueForPhase(MqttProxyConnectionPhase phase) {
+    switch (phase) {
+      case MqttProxyConnectionPhase.idle:
+      case MqttProxyConnectionPhase.connecting:
+      case MqttProxyConnectionPhase.failed:
+        return true;
+      case MqttProxyConnectionPhase.connected:
+      case MqttProxyConnectionPhase.disconnected:
+      case MqttProxyConnectionPhase.disabled:
+      case MqttProxyConnectionPhase.missingConfig:
+        return false;
+    }
+  }
+
+  /// Buffers a device→broker frame for replay on the next healthy connect.
+  /// Drops the oldest frame when at capacity so the buffer is bounded.
+  void _enqueuePending({
+    required String topic,
+    List<int>? data,
+    String? text,
+    required bool retained,
+  }) {
+    if (_pendingPublishes.length >= _maxPendingPublishes) {
+      _pendingPublishes.removeAt(0);
+      AppLogging.mqttProxyWarning(
+        'Publish queue full ($_maxPendingPublishes); dropped oldest frame',
+      );
+    }
+    _pendingPublishes.add(
+      _PendingPublish(
+        topic: topic,
+        // Copy the payload so a later mutation of the caller's list cannot
+        // corrupt the buffered frame.
+        data: data == null ? null : List<int>.from(data),
+        text: text,
+        retained: retained,
+        enqueuedAt: DateTime.now(),
+      ),
+    );
+  }
+
+  /// Asks the wired reconnect handler (the provider's config-driven evaluator)
+  /// to rebuild the connection. No-op if disposed, already connecting, or
+  /// fired within the debounce window of the last request.
+  void _requestReconnect() {
+    if (_disposed || _isConnecting || _onReconnectNeeded == null) return;
+    final now = DateTime.now();
+    if (_lastReconnectRequestAt != null &&
+        now.difference(_lastReconnectRequestAt!) < _reconnectRequestDebounce) {
+      return;
+    }
+    _lastReconnectRequestAt = now;
+    AppLogging.mqttProxy('Requesting reconnect (stale socket detected)');
+    _onReconnectNeeded!.call();
+  }
+
+  /// Replays buffered device publishes in FIFO order once the socket is
+  /// healthy. Frames older than [_pendingPublishTtl] are dropped instead of
+  /// delivered late. No-op unless the phase and live socket both agree the
+  /// connection is up.
+  void _flushPendingPublishes() {
+    if (_disposed || _pendingPublishes.isEmpty) return;
+    if (_phase != MqttProxyConnectionPhase.connected || _client == null) return;
+    final clientState =
+        _client!.connectionStatus?.state ?? MqttConnectionState.disconnected;
+    if (clientState != MqttConnectionState.connected) return;
+
+    final queued = List<_PendingPublish>.of(_pendingPublishes);
+    _pendingPublishes.clear();
+
+    final cutoff = DateTime.now().subtract(_pendingPublishTtl);
+    var flushed = 0;
+    var expired = 0;
+    for (final pending in queued) {
+      if (pending.enqueuedAt.isBefore(cutoff)) {
+        expired++;
+        continue;
+      }
+      _publishToClient(
+        topic: pending.topic,
+        data: pending.data,
+        text: pending.text,
+        retained: pending.retained,
+      );
+      flushed++;
+    }
+    if (flushed > 0 || expired > 0) {
+      AppLogging.mqttProxy(
+        'Flushed publish queue: $flushed sent, $expired expired',
+      );
+    }
+  }
+
   /// Disconnects from the broker.
   Future<void> disconnect() async {
     _intentionalDisconnect = true;
@@ -884,6 +1093,8 @@ class MqttClientProxyService {
     _subscribedTopic = null;
     _lastConnectArgs = null;
     _debugSimulateLiveSocket = false;
+    // Intentional disconnect: the buffered frames are no longer wanted.
+    _pendingPublishes.clear();
     AppLogging.mqttProxy('Disconnected from broker');
     _emitDiagnostics();
   }
@@ -900,6 +1111,8 @@ class MqttClientProxyService {
     _subscribedTopic = null;
     _lastConnectArgs = null;
     _debugSimulateLiveSocket = false;
+    // Proxy turned off: discard any buffered frames.
+    _pendingPublishes.clear();
     _emitDiagnostics();
   }
 
@@ -920,6 +1133,7 @@ class MqttClientProxyService {
     _intentionalDisconnect = true;
     _reconnectTimer?.cancel();
     _subscription?.cancel();
+    _pendingPublishes.clear();
     _client?.disconnect();
     _phase = MqttProxyConnectionPhase.disconnected;
     _failureReason = MqttProxyFailureReason.clientDisposed;
@@ -976,6 +1190,7 @@ class MqttClientProxyService {
     _lastConnectedAt = DateTime.now();
     _lastError = null;
     _emitDiagnostics();
+    _flushPendingPublishes();
   }
 
   void _onDisconnected() {
@@ -1015,6 +1230,7 @@ class MqttClientProxyService {
     _lastConnectedAt = DateTime.now();
     _lastError = null;
     _emitDiagnostics();
+    _flushPendingPublishes();
   }
 
   // ---------------------------------------------------------------------------

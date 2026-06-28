@@ -47,6 +47,14 @@ final mqttClientProxyServiceProvider = Provider<MqttClientProxyService>((ref) {
     }
   });
 
+  // When a publish detects a dead socket behind a stale `connected` phase,
+  // rebuild the connection from the cached config (the service cannot do this
+  // itself, as it deliberately never retains the password). Reuses the same
+  // idempotent evaluator the auto-connect triggers use.
+  service.setOnReconnectNeeded(() {
+    unawaited(_evaluateProxyState(ref, 'publish-stale-socket'));
+  });
+
   ref.onDispose(() {
     service.dispose();
     AppLogging.mqttProxy('MqttClientProxyService provider disposed');

@@ -662,6 +662,133 @@ void main() {
     });
   });
 
+  group('MqttClientProxyService publish queue', () {
+    const validTopic = 'msh/US/OVMesh/2/e/LongFast/!aaaa';
+
+    test('buffers a publish while idle (pre-connect) instead of dropping', () {
+      final service = MqttClientProxyService();
+      addTearDown(service.dispose);
+
+      // Initial phase is idle: a connect is expected imminently, so the
+      // frame is queued for replay rather than lost.
+      expect(service.phase, MqttProxyConnectionPhase.idle);
+      service.handleDevicePublish(topic: validTopic, data: [1, 2, 3]);
+
+      expect(service.debugPendingPublishCount, 1);
+      expect(service.diagnostics.messagesPublished, 0);
+    });
+
+    test('queue is bounded, drops oldest beyond cap', () {
+      final service = MqttClientProxyService();
+      addTearDown(service.dispose);
+
+      for (var i = 0; i < 50; i++) {
+        service.handleDevicePublish(topic: validTopic, data: [i]);
+      }
+
+      // Capacity is 32; the buffer must never exceed it.
+      expect(service.debugPendingPublishCount, 32);
+      expect(service.diagnostics.messagesPublished, 0);
+    });
+
+    test('does not queue while disabled (proxy off)', () {
+      final service = MqttClientProxyService();
+      addTearDown(service.dispose);
+
+      service.markDisabled();
+      service.handleDevicePublish(topic: validTopic, data: [1]);
+
+      expect(service.debugPendingPublishCount, 0);
+    });
+
+    test('does not queue while missingConfig', () {
+      final service = MqttClientProxyService();
+      addTearDown(service.dispose);
+
+      service.markMissingConfig(MqttProxyFailureReason.missingHost);
+      service.handleDevicePublish(topic: validTopic, data: [1]);
+
+      expect(service.debugPendingPublishCount, 0);
+    });
+
+    test('disconnect clears the buffered frames', () async {
+      final service = MqttClientProxyService();
+      addTearDown(service.dispose);
+
+      service.handleDevicePublish(topic: validTopic, data: [1]);
+      expect(service.debugPendingPublishCount, 1);
+
+      await service.disconnect();
+      expect(service.debugPendingPublishCount, 0);
+    });
+
+    test('invalid (wildcard) topic is rejected before the queue', () {
+      final service = MqttClientProxyService();
+      addTearDown(service.dispose);
+
+      service.handleDevicePublish(topic: 'a/b/#', data: [1]);
+      service.handleDevicePublish(topic: 'a/+/c', data: [1]);
+
+      expect(service.debugPendingPublishCount, 0);
+    });
+
+    test('payload-less message is dropped before the queue', () {
+      final service = MqttClientProxyService();
+      addTearDown(service.dispose);
+
+      service.handleDevicePublish(topic: validTopic);
+
+      expect(service.debugPendingPublishCount, 0);
+    });
+
+    test(
+      'stale connected socket reconciles phase, queues, and requests reconnect',
+      () {
+        final service = MqttClientProxyService();
+        addTearDown(service.dispose);
+
+        var reconnectRequests = 0;
+        service.setOnReconnectNeeded(() => reconnectRequests++);
+
+        // Drive into the field-reported state: phase reads connected, socket
+        // is dead.
+        service.debugSimulateStaleConnectedSocket();
+        expect(service.phase, MqttProxyConnectionPhase.connected);
+
+        service.handleDevicePublish(topic: validTopic, data: [1, 2, 3]);
+
+        // Phase reconciled away from the false "Connected".
+        expect(service.phase, MqttProxyConnectionPhase.connecting);
+        // Frame buffered, not lost, not counted as published.
+        expect(service.debugPendingPublishCount, 1);
+        expect(service.diagnostics.messagesPublished, 0);
+        // Reconnect proactively requested rather than waiting for keep-alive.
+        expect(reconnectRequests, 1);
+      },
+    );
+
+    test('reconnect requests are debounced within the window', () {
+      final service = MqttClientProxyService();
+      addTearDown(service.dispose);
+
+      var reconnectRequests = 0;
+      service.setOnReconnectNeeded(() => reconnectRequests++);
+
+      service.debugSimulateStaleConnectedSocket();
+
+      // Two stale-socket publishes in quick succession. The first reconciles
+      // the phase to connecting (so the second takes the not-connected branch
+      // and never re-requests); even if both reached the request path, the
+      // debounce collapses them. Either way: exactly one request.
+      service.handleDevicePublish(topic: validTopic, data: [1]);
+      service.handleDevicePublish(topic: validTopic, data: [2]);
+
+      expect(reconnectRequests, 1);
+      // Both frames are buffered for replay.
+      expect(service.debugPendingPublishCount, 2);
+    });
+  });
+
   group('MqttClientProxyService NoConnectionException reason mapping', () {
     // Pinned against the actual mqtt_client package strings observed in the
     // field. Strict brokers (ovmesh.com) silently TCP-close a malformed
