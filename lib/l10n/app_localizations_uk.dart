@@ -29868,10 +29868,10 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get powerConfigAdcMultiplierHint =>
-      'Коефіцієнт подільника напруги (2.0 - 6.0)';
+      'Коефіцієнт подільника напруги, напр. 3.2';
 
   @override
-  String get powerConfigAdcMultiplierRangeError => 'Має бути від 2,0 до 6,0';
+  String get powerConfigAdcMultiplierRangeError => 'Має бути більше 0';
 
   @override
   String get powerConfigSectionSleep => 'НАЛАШТУВАННЯ СНУ';

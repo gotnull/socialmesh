@@ -31,11 +31,11 @@ class PowerConfigScreen extends ConsumerStatefulWidget {
 
 class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
     with LifecycleSafeMixin {
-  // Firmware-documented range for adcMultiplierOverride. Values outside this
-  // range are rejected by Meshtastic firmware; the protobuf comment at
-  // config.pb.dart explicitly states "between 2 and 6".
-  static const double _adcMultiplierMin = 2.0;
-  static const double _adcMultiplierMax = 6.0;
+  // adcMultiplierOverride is an unbounded float. 0 means "use the firmware's
+  // built-in default for the board"; any positive value is an explicit override
+  // of the voltage-divider ratio. The field accepts any value > 0 so DIY nodes
+  // with non-standard dividers are not blocked. 3.2 is a common ratio used to
+  // seed the field when the override toggle is first switched on.
   static const double _adcMultiplierDefault = 3.2;
 
   void _dismissKeyboard() {
@@ -84,11 +84,11 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
   }
 
   // Live validation: keep _adcMultiplier in sync with the field and flip an
-  // invalid flag when the typed value is outside the firmware-supported
-  // range, so the user sees why Save is blocked instead of silently writing
-  // a stale value to the device. The localized error string is resolved at
-  // render time; this listener runs synchronously during initState's async
-  // load chain, so it must not touch InheritedWidget lookups.
+  // invalid flag when the typed value is not a positive number, so the user
+  // sees why Save is blocked instead of silently writing a stale value to the
+  // device. The localized error string is resolved at render time; this
+  // listener runs synchronously during initState's async load chain, so it
+  // must not touch InheritedWidget lookups.
   void _onAdcTextChanged() {
     final raw = _adcController.text;
     final bool invalid;
@@ -97,12 +97,9 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen>
       invalid = false;
     } else {
       final parsed = NumberFormatUtils.tryParseLocaleDouble(raw);
-      final inRange =
-          parsed != null &&
-          parsed >= _adcMultiplierMin &&
-          parsed <= _adcMultiplierMax;
-      invalid = !inRange;
-      if (inRange) committed = parsed;
+      final valid = parsed != null && parsed > 0;
+      invalid = !valid;
+      if (valid) committed = parsed;
     }
     if (invalid == _adcMultiplierInvalid && committed == null) return;
     setState(() {

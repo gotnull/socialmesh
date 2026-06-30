@@ -29859,10 +29859,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get powerConfigAdcMultiplierHint =>
-      'Коэффициент делителя напряжения (2.0 - 6.0)';
+      'Коэффициент делителя напряжения, напр. 3.2';
 
   @override
-  String get powerConfigAdcMultiplierRangeError => 'Должно быть от 2,0 до 6,0';
+  String get powerConfigAdcMultiplierRangeError => 'Должно быть больше 0';
 
   @override
   String get powerConfigSectionSleep => 'НАСТРОЙКИ СНА';

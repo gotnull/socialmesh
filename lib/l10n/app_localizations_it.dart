@@ -29849,11 +29849,10 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get powerConfigAdcMultiplierHint =>
-      'Rapporto divisore di tensione (2.0 - 6.0)';
+      'Rapporto divisore di tensione, es. 3.2';
 
   @override
-  String get powerConfigAdcMultiplierRangeError =>
-      'Deve essere compreso tra 2,0 e 6,0';
+  String get powerConfigAdcMultiplierRangeError => 'Deve essere maggiore di 0';
 
   @override
   String get powerConfigSectionSleep => 'IMPOSTAZIONI SOSPENSIONE';

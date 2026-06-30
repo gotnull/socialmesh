@@ -39984,13 +39984,13 @@
     "@powerConfigAdcMultiplier": {
         "description": "UI text: power config adc multiplier"
     },
-    "powerConfigAdcMultiplierHint": "Voltage divider ratio (2.0 - 6.0)",
+    "powerConfigAdcMultiplierHint": "Voltage divider ratio, e.g. 3.2",
     "@powerConfigAdcMultiplierHint": {
         "description": "Input field hint text"
     },
-    "powerConfigAdcMultiplierRangeError": "Must be between 2.0 and 6.0",
+    "powerConfigAdcMultiplierRangeError": "Must be greater than 0",
     "@powerConfigAdcMultiplierRangeError": {
-        "description": "Inline validation error shown under the ADC multiplier field when the typed value is outside the firmware-supported range of 2.0 to 6.0."
+        "description": "Inline validation error shown under the ADC multiplier field when the typed value is not greater than 0."
     },
     "powerConfigSectionSleep": "SLEEP SETTINGS",
     "@powerConfigSectionSleep": {
