@@ -149,92 +149,67 @@ void main() {
     expect(find.text(_l10n.powerConfigAdcMultiplierRangeError), findsNothing);
   });
 
-  testWidgets(
-    'device-reported out-of-range value (firmware drift) surfaces error on load',
-    (tester) async {
-      tester.view.physicalSize = const Size(1080, 4000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-
-      // Device echoes a value we couldn't have written from this UI (firmware
-      // drift / older value pre-validation). UI should mark it invalid rather
-      // than silently clamp.
-      final protocol = _FakeProtocolService(
-        cachedConfig: config_pb.Config_PowerConfig()
-          ..adcMultiplierOverride = 7.0,
-      );
-      addTearDown(protocol.closeStreams);
-
-      await tester.pumpWidget(_wrap(protocol: protocol));
-      await _settle(tester);
-
-      final field = tester.widget<TextFormField>(find.byType(TextFormField));
-      expect(field.controller!.text, '7.00');
-      expect(
-        find.text(_l10n.powerConfigAdcMultiplierRangeError),
-        findsOneWidget,
-      );
-    },
-  );
-
-  testWidgets(
-    'typing below-range value (1.73) surfaces inline error and blocks save',
-    (tester) async {
-      tester.view.physicalSize = const Size(1080, 4000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-
-      // Start with override already enabled and a valid value so the field
-      // is mounted from first frame.
-      final protocol = _FakeProtocolService(
-        cachedConfig: config_pb.Config_PowerConfig()
-          ..adcMultiplierOverride = 3.2,
-      );
-      addTearDown(protocol.closeStreams);
-
-      await tester.pumpWidget(_wrap(protocol: protocol));
-      await _settle(tester);
-
-      // Enter below-range value.
-      await tester.enterText(find.byType(TextFormField), '1.73');
-      await _settle(tester);
-
-      // Error visible, hint replaced.
-      expect(
-        find.text(_l10n.powerConfigAdcMultiplierRangeError),
-        findsOneWidget,
-      );
-      expect(find.text(_l10n.powerConfigAdcMultiplierHint), findsNothing);
-
-      // Tap Save — should be a silent no-op because button is disabled.
-      await tester.tap(find.text(_l10n.powerConfigSave));
-      await _settle(tester);
-      expect(protocol.savedConfigs, isEmpty);
-    },
-  );
-
-  testWidgets('typing above-range value (7.0) also surfaces inline error', (
+  testWidgets('DIY below-2.0 value (1.72) loads cleanly with no error', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1080, 4000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
 
+    // A DIY node with a non-standard voltage divider reports a ratio below the
+    // old 2.0-6.0 recommendation. The firmware accepts any positive value, so
+    // the UI must show it without an error.
     final protocol = _FakeProtocolService(
-      cachedConfig: config_pb.Config_PowerConfig()..adcMultiplierOverride = 3.2,
+      cachedConfig: config_pb.Config_PowerConfig()
+        ..adcMultiplierOverride = 1.72,
     );
     addTearDown(protocol.closeStreams);
 
     await tester.pumpWidget(_wrap(protocol: protocol));
     await _settle(tester);
 
-    await tester.enterText(find.byType(TextFormField), '7.0');
-    await _settle(tester);
-
-    expect(find.text(_l10n.powerConfigAdcMultiplierRangeError), findsOneWidget);
+    final field = tester.widget<TextFormField>(find.byType(TextFormField));
+    expect(field.controller!.text, '1.72');
+    expect(find.text(_l10n.powerConfigAdcMultiplierRangeError), findsNothing);
+    expect(find.text(_l10n.powerConfigAdcMultiplierHint), findsOneWidget);
   });
 
-  testWidgets('correcting to in-range value clears error and allows save', (
+  testWidgets('typing a DIY value (1.73) is accepted and saves', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    // Start with override already enabled and a valid value so the field
+    // is mounted from first frame.
+    final protocol = _FakeProtocolService(
+      cachedConfig: config_pb.Config_PowerConfig()..adcMultiplierOverride = 3.2,
+    );
+    addTearDown(protocol.closeStreams);
+
+    await tester.pumpWidget(_wrap(protocol: protocol));
+    await _settle(tester);
+
+    // Enter the reporter's below-2.0 DIY ratio.
+    await tester.enterText(find.byType(TextFormField), '1.73');
+    await _settle(tester);
+
+    // No error, hint stays visible.
+    expect(find.text(_l10n.powerConfigAdcMultiplierRangeError), findsNothing);
+    expect(find.text(_l10n.powerConfigAdcMultiplierHint), findsOneWidget);
+
+    // Save persists the value.
+    await tester.tap(find.text(_l10n.powerConfigSave));
+    await _settle(tester);
+    expect(protocol.savedConfigs, hasLength(1));
+    expect(
+      protocol.savedConfigs.first.adcMultiplierOverride,
+      closeTo(1.73, 1e-5),
+    );
+  });
+
+  testWidgets('typing zero surfaces inline error and blocks save', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1080, 4000);
@@ -249,13 +224,41 @@ void main() {
     await tester.pumpWidget(_wrap(protocol: protocol));
     await _settle(tester);
 
-    // Bad value first.
-    await tester.enterText(find.byType(TextFormField), '1.5');
+    // 0 means "use the firmware default", which contradicts override-on, so it
+    // is rejected while the override is enabled.
+    await tester.enterText(find.byType(TextFormField), '0');
+    await _settle(tester);
+
+    expect(find.text(_l10n.powerConfigAdcMultiplierRangeError), findsOneWidget);
+
+    // Tap Save — should be a silent no-op because the button is disabled.
+    await tester.tap(find.text(_l10n.powerConfigSave));
+    await _settle(tester);
+    expect(protocol.savedConfigs, isEmpty);
+  });
+
+  testWidgets('correcting an invalid value clears error and allows save', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    final protocol = _FakeProtocolService(
+      cachedConfig: config_pb.Config_PowerConfig()..adcMultiplierOverride = 3.2,
+    );
+    addTearDown(protocol.closeStreams);
+
+    await tester.pumpWidget(_wrap(protocol: protocol));
+    await _settle(tester);
+
+    // Invalid (not > 0) first.
+    await tester.enterText(find.byType(TextFormField), '0');
     await _settle(tester);
     expect(find.text(_l10n.powerConfigAdcMultiplierRangeError), findsOneWidget);
 
-    // Correct it.
-    await tester.enterText(find.byType(TextFormField), '4.5');
+    // Correct it to a valid DIY ratio.
+    await tester.enterText(find.byType(TextFormField), '1.72');
     await _settle(tester);
 
     expect(find.text(_l10n.powerConfigAdcMultiplierRangeError), findsNothing);
@@ -266,7 +269,10 @@ void main() {
     await _settle(tester);
 
     expect(protocol.savedConfigs, hasLength(1));
-    expect(protocol.savedConfigs.first.adcMultiplierOverride, 4.5);
+    expect(
+      protocol.savedConfigs.first.adcMultiplierOverride,
+      closeTo(1.72, 1e-5),
+    );
   });
 
   testWidgets('locale-aware: comma decimal "3,75" is accepted as 3.75', (
@@ -312,8 +318,8 @@ void main() {
       await tester.pumpWidget(_wrap(protocol: protocol));
       await _settle(tester);
 
-      // Type bad value, then clear.
-      await tester.enterText(find.byType(TextFormField), '9.0');
+      // Type invalid value, then clear.
+      await tester.enterText(find.byType(TextFormField), '0');
       await _settle(tester);
       expect(
         find.text(_l10n.powerConfigAdcMultiplierRangeError),
