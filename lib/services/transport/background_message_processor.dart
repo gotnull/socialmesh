@@ -16,6 +16,7 @@ import '../../generated/meshtastic/portnums.pbenum.dart' as pn;
 import '../../models/mesh_models.dart';
 import '../../services/carplay/carplay_feature_flags.dart';
 import '../../services/mesh_packet_dedupe_store.dart';
+import '../../services/notifications/channel_mute_prefs.dart';
 import '../../services/notifications/notification_service.dart';
 import '../../services/storage/message_database.dart';
 import '../../utils/text_sanitizer.dart';
@@ -463,7 +464,6 @@ class BackgroundMessageProcessor {
   static const String _kMasterToggle = 'notifications_enabled';
   static const String _kChannelToggle = 'channel_notifications_enabled';
   static const String _kDmToggle = 'dm_notifications_enabled';
-  static const String _kMutedChannels = 'muted_channel_indices';
 
   /// Fire a local notification for a received text message.
   ///
@@ -500,23 +500,18 @@ class BackgroundMessageProcessor {
       // Master toggle.
       if (!(prefs.getBool(_kMasterToggle) ?? true)) return;
 
-      // Respect per-channel mute (same SharedPreferences key used by
-      // MutedChannelsNotifier on the foreground side).
-      if (message.channel != null) {
-        final mutedRaw = prefs.getStringList(_kMutedChannels);
-        if (mutedRaw != null) {
-          final mutedSet = mutedRaw
-              .map((s) => int.tryParse(s))
-              .whereType<int>()
-              .toSet();
-          if (mutedSet.contains(message.channel)) {
-            AppLogging.ble(
-              'BackgroundMessageProcessor: channel ${message.channel} is '
-              'muted, skipping notification',
-            );
-            return;
-          }
-        }
+      // Respect per-channel mute. A broadcast with an unresolved channel
+      // index is treated as the primary channel (0), matching the foreground
+      // path.
+      final muteChannelIndex =
+          message.channel ?? (message.isBroadcast ? 0 : null);
+      if (muteChannelIndex != null &&
+          isChannelMutedInPrefs(prefs, muteChannelIndex)) {
+        AppLogging.ble(
+          'BackgroundMessageProcessor: channel $muteChannelIndex is '
+          'muted, skipping notification',
+        );
+        return;
       }
 
       // Channel messages are broadcasts (to == 0xFFFFFFFF). This includes

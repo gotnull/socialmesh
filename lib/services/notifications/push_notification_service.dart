@@ -23,6 +23,7 @@ import '../../utils/snackbar.dart';
 
 import '../storage/message_database.dart';
 import '../messaging/message_utils.dart';
+import 'channel_mute_prefs.dart';
 
 /// Background message handler - must be a top-level function
 @pragma('vm:entry-point')
@@ -80,7 +81,6 @@ class PushNotificationService {
   static const _kMasterToggle = 'notifications_enabled';
   static const _kChannelToggle = 'channel_notifications_enabled';
   static const _kDmToggle = 'dm_notifications_enabled';
-  static const _kMutedChannels = 'muted_channel_indices';
 
   /// Notification channel for Android
   static const AndroidNotificationChannel
@@ -349,15 +349,8 @@ class PushNotificationService {
       // muting channel 0 has no effect for push notifications.
       final channelStr = message.data['channel'] as String?;
       final channelIndex = channelStr != null ? int.tryParse(channelStr) : null;
-      if (channelIndex != null) {
-        final mutedRaw = prefs.getStringList(_kMutedChannels);
-        if (mutedRaw != null) {
-          final mutedSet = mutedRaw
-              .map((s) => int.tryParse(s))
-              .whereType<int>()
-              .toSet();
-          if (mutedSet.contains(channelIndex)) return;
-        }
+      if (channelIndex != null && isChannelMutedInPrefs(prefs, channelIndex)) {
+        return;
       }
 
       if (pushType == 'channel_message') {

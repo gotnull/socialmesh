@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/logging.dart';
+import '../services/notifications/channel_mute_prefs.dart';
 
 /// Persists the set of channel indices whose notifications are muted.
 ///
@@ -12,7 +13,7 @@ import '../core/logging.dart';
 /// populated from SharedPreferences on first build, so callers never
 /// have to await anything.
 class MutedChannelsNotifier extends Notifier<Set<int>> {
-  static const _prefKey = 'muted_channel_indices';
+  static const _prefKey = mutedChannelsPrefKey;
 
   @override
   Set<int> build() {

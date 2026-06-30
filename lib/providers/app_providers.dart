@@ -66,9 +66,9 @@ import 'connection_providers.dart';
 import 'age_eligibility_provider.dart';
 import 'file_transfer_providers.dart';
 import 'mqtt_client_proxy_providers.dart';
-import 'muted_channels_provider.dart';
 import 'peer_safety_providers.dart';
 import '../services/messaging/dm_retry_coordinator.dart';
+import '../services/notifications/channel_mute_prefs.dart';
 import '../features/settings/background_connection_screen.dart'
     show
         kLiveActivityEnabled,
@@ -5025,15 +5025,22 @@ class MessagesNotifier extends Notifier<List<Message>> {
       return;
     }
 
-    // Suppress notification if the user has muted this channel.
-    if (message.channel != null) {
-      final mutedChannels = ref.read(mutedChannelsProvider);
-      if (mutedChannels.contains(message.channel)) {
-        AppLogging.app(
-          'Channel ${message.channel} is muted, skipping notification',
-        );
-        return;
-      }
+    // Suppress notification if the user has muted this channel. Read the
+    // persisted mute set directly from settings.prefs (the same
+    // SharedPreferences instance MutedChannelsNotifier writes to) rather than
+    // mutedChannelsProvider, whose state is an empty set until its async
+    // hydration finishes. During a reconnect message flood the provider can
+    // still be empty, so reading it would let a muted channel notify. A
+    // broadcast with an unresolved channel index is treated as the primary
+    // channel (0), matching the background path's `channel ?? 0` convention.
+    final muteChannelIndex =
+        message.channel ?? (message.isBroadcast ? 0 : null);
+    if (muteChannelIndex != null &&
+        isChannelMutedInPrefs(settings.prefs, muteChannelIndex)) {
+      AppLogging.app(
+        'Channel $muteChannelIndex is muted, skipping notification',
+      );
+      return;
     }
 
     // Get sender name - prefer node lookup, fallback to message's cached sender info

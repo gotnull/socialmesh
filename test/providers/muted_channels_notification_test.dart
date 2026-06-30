@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/providers/muted_channels_provider.dart';
+import 'package:socialmesh/services/notifications/channel_mute_prefs.dart';
 import 'package:socialmesh/services/notifications/notification_service.dart';
 
 void main() {
@@ -536,6 +537,120 @@ void main() {
 
       final muted = container2.read(mutedChannelsProvider);
       expect(muted, containsAll([0, 3]));
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Shared authoritative helper: isChannelMutedInPrefs (channel_mute_prefs.dart)
+  // ---------------------------------------------------------------------------
+
+  group('isChannelMutedInPrefs (shared helper)', () {
+    test('missing key returns false', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      expect(isChannelMutedInPrefs(prefs, 0), isFalse);
+    });
+
+    test('channel present in persisted set returns true', () async {
+      SharedPreferences.setMockInitialValues({
+        mutedChannelsPrefKey: ['0', '3', '7'],
+      });
+      final prefs = await SharedPreferences.getInstance();
+      expect(isChannelMutedInPrefs(prefs, 3), isTrue);
+      expect(isChannelMutedInPrefs(prefs, 7), isTrue);
+    });
+
+    test('channel absent from persisted set returns false', () async {
+      SharedPreferences.setMockInitialValues({
+        mutedChannelsPrefKey: ['2', '5'],
+      });
+      final prefs = await SharedPreferences.getInstance();
+      expect(isChannelMutedInPrefs(prefs, 0), isFalse);
+      expect(isChannelMutedInPrefs(prefs, 1), isFalse);
+    });
+
+    test('malformed entries are ignored', () async {
+      SharedPreferences.setMockInitialValues({
+        mutedChannelsPrefKey: ['', 'x', '4'],
+      });
+      final prefs = await SharedPreferences.getInstance();
+      expect(isChannelMutedInPrefs(prefs, 4), isTrue);
+      expect(isChannelMutedInPrefs(prefs, 0), isFalse);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Regression: foreground gate must suppress during provider hydration window
+  // ---------------------------------------------------------------------------
+
+  group('Foreground gate is authoritative before provider hydration', () {
+    // The bug (report LvXeEp86d66orJse1bpi): the foreground in-app gate read
+    // mutedChannelsProvider, whose Notifier.build() returns an EMPTY set and
+    // hydrates from SharedPreferences asynchronously. A channel message
+    // arriving in that window (e.g. the BLE reconnect replay flood) saw an
+    // empty mute set and notified a muted channel anyway. The fix reads the
+    // persisted value via isChannelMutedInPrefs(settings.prefs, ...), which is
+    // correct even before the provider hydrates.
+
+    test(
+      'provider is still empty in the hydration window but prefs is muted',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          mutedChannelsPrefKey: ['3'],
+        });
+
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+
+        // First synchronous read kicks off the async _loadFromPrefs and returns
+        // the optimistic empty set — this is the race window.
+        final providerState = container.read(mutedChannelsProvider);
+        expect(
+          providerState,
+          isEmpty,
+          reason:
+              'provider has not hydrated yet — reading it would under-report',
+        );
+
+        // The fixed gate reads prefs directly and correctly suppresses.
+        final prefs = await SharedPreferences.getInstance();
+        expect(
+          isChannelMutedInPrefs(prefs, 3),
+          isTrue,
+          reason:
+              'authoritative read suppresses the muted channel in the hydration '
+              'window',
+        );
+      },
+    );
+
+    // Mirrors the gate: message.channel ?? (isBroadcast ? 0 : null).
+    int? muteIndexFor(int? messageChannel, {required bool isBroadcast}) =>
+        messageChannel ?? (isBroadcast ? 0 : null);
+
+    test(
+      'broadcast with null channel is treated as primary (channel 0)',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          mutedChannelsPrefKey: ['0'],
+        });
+        final prefs = await SharedPreferences.getInstance();
+
+        final muteChannelIndex = muteIndexFor(null, isBroadcast: true);
+
+        expect(muteChannelIndex, 0);
+        expect(isChannelMutedInPrefs(prefs, muteChannelIndex!), isTrue);
+      },
+    );
+
+    test('DM with null channel is not coerced to a channel index', () {
+      final muteChannelIndex = muteIndexFor(null, isBroadcast: false);
+
+      expect(
+        muteChannelIndex,
+        isNull,
+        reason: 'a DM with no channel must not be mute-checked against ch 0',
+      );
     });
   });
 }
