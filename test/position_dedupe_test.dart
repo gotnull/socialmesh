@@ -291,6 +291,105 @@ void main() {
       await db.close();
     });
   });
+
+  // -------------------------------------------------------------------------
+  // Durable dedupe seeding — cold cache after reconnect must reuse the last
+  // stored position so an unchanged fix is not re-logged as a new row.
+  // -------------------------------------------------------------------------
+
+  group('Dedupe fingerprint seeded from stored position', () {
+    late TelemetryDatabase db;
+
+    setUp(() async {
+      db = TelemetryDatabase(testDbPath: inMemoryDatabasePath);
+      await db.init();
+    });
+
+    tearDown(() async {
+      await db.close();
+    });
+
+    // Mirrors TelemetryLoggerNotifier._seedPositionFingerprint: seed from the
+    // newest stored fix (getPositionLogs returns timestamp ASC, so .last).
+    Future<PositionLog?> seedLatest(int nodeNum) async {
+      final stored = await db.getPositionLogs(nodeNum);
+      if (stored.isEmpty) return null;
+      return stored.last;
+    }
+
+    test('unchanged position after a cold cache is a near-duplicate', () async {
+      const lat = 52.769553;
+      const lng = -2.156431;
+      await db.addPositionLog(
+        PositionLog(
+          nodeNum: 1,
+          timestamp: DateTime.utc(2024, 6, 1, 8),
+          latitude: lat,
+          longitude: lng,
+          altitude: 163,
+          precisionBits: 32,
+        ),
+      );
+
+      final seed = await seedLatest(1);
+      expect(seed, isNotNull);
+      // Identical coordinates -> 0 m -> under the 9 m dedupe threshold.
+      final d = haversineMeters(seed!.latitude, seed.longitude, lat, lng);
+      expect(d, lessThan(9.0));
+    });
+
+    test('moved position after a cold cache is not a near-duplicate', () async {
+      const lat = 52.769553;
+      const lng = -2.156431;
+      await db.addPositionLog(
+        PositionLog(
+          nodeNum: 1,
+          timestamp: DateTime.utc(2024, 6, 1, 8),
+          latitude: lat,
+          longitude: lng,
+          precisionBits: 32,
+        ),
+      );
+
+      final seed = await seedLatest(1);
+      final movedLat = offsetLatByMeters(lat, 15.0); // 15 m north
+      final d = haversineMeters(seed!.latitude, seed.longitude, movedLat, lng);
+      expect(d, greaterThan(9.0));
+    });
+
+    test('seed picks the newest fix when several are stored', () async {
+      await db.addPositionLog(
+        PositionLog(
+          nodeNum: 1,
+          timestamp: DateTime.utc(2024, 6, 1, 8),
+          latitude: 10.0,
+          longitude: 20.0,
+          precisionBits: 32,
+        ),
+      );
+      await db.addPositionLog(
+        PositionLog(
+          nodeNum: 1,
+          timestamp: DateTime.utc(2024, 6, 2, 8),
+          latitude: 11.0,
+          longitude: 21.0,
+          precisionBits: 32,
+        ),
+      );
+
+      final seed = await seedLatest(1);
+      expect(seed!.latitude, 11.0);
+      expect(seed.longitude, 21.0);
+    });
+
+    test(
+      'no stored history yields a null seed (first sighting logs)',
+      () async {
+        final seed = await seedLatest(99);
+        expect(seed, isNull);
+      },
+    );
+  });
 }
 
 /// Mirror of the production precision classification logic.

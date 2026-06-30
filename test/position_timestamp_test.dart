@@ -7,7 +7,9 @@
 // the standard Meshtastic timestamp fallback order:
 //   1. position.timestamp (GPS solution time)
 //   2. position.time (phone-provided time)
-//   3. DateTime.now() (local processing time — final fallback)
+//   3. the packet heard-time fallback (rx_time / monotonic last-heard) — NOT
+//      the local wall clock, so a stale or relayed fix with no embedded GPS
+//      time cannot masquerade as a fresh position stamped "now".
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/generated/meshtastic/mesh.pb.dart' as pb;
@@ -31,8 +33,11 @@ const int _maxFutureSlack = 86400;
 /// Follows the standard Meshtastic timestamp fallback order:
 ///   1. position.timestamp (GPS solution time, field 7)
 ///   2. position.time (phone-provided time, field 4)
-///   3. DateTime.now() (local fallback)
-DateTime positionSourceTimestamp(pb.Position position) {
+///   3. [fallback] (the packet heard-time — rx_time / monotonic last-heard)
+DateTime positionSourceTimestamp(
+  pb.Position position, {
+  required DateTime fallback,
+}) {
   final nowEpoch = DateTime.now().millisecondsSinceEpoch ~/ 1000;
 
   if (position.hasTimestamp() && position.timestamp > 0) {
@@ -49,7 +54,7 @@ DateTime positionSourceTimestamp(pb.Position position) {
     }
   }
 
-  return DateTime.now();
+  return fallback;
 }
 
 void main() {
@@ -60,13 +65,21 @@ void main() {
   // Timestamp selection logic
   // -------------------------------------------------------------------------
 
+  // A fixed "weeks ago" heard-time stands in for the resolved packet rx_time
+  // that production passes as the fallback. Any test exercising the fallback
+  // branch must come back with exactly this value — never a fresh "now".
+  final weeksAgoFallback = DateTime.utc(2024, 6, 1, 8, 0);
+
   group('positionSourceTimestamp — timestamp selection', () {
     test('uses position.timestamp when valid', () {
       // 2024-06-15 12:00:00 UTC
       const gpsEpoch = 1718452800;
       final position = pb.Position(timestamp: gpsEpoch);
 
-      final result = positionSourceTimestamp(position);
+      final result = positionSourceTimestamp(
+        position,
+        fallback: weeksAgoFallback,
+      );
       expect(result, DateTime.fromMillisecondsSinceEpoch(gpsEpoch * 1000));
     });
 
@@ -74,7 +87,10 @@ void main() {
       const phoneEpoch = 1718452800;
       final position = pb.Position(time: phoneEpoch);
 
-      final result = positionSourceTimestamp(position);
+      final result = positionSourceTimestamp(
+        position,
+        fallback: weeksAgoFallback,
+      );
       expect(result, DateTime.fromMillisecondsSinceEpoch(phoneEpoch * 1000));
     });
 
@@ -83,7 +99,10 @@ void main() {
       const phoneEpoch = 1718400000; // earlier
       final position = pb.Position(timestamp: gpsEpoch, time: phoneEpoch);
 
-      final result = positionSourceTimestamp(position);
+      final result = positionSourceTimestamp(
+        position,
+        fallback: weeksAgoFallback,
+      );
       expect(result, DateTime.fromMillisecondsSinceEpoch(gpsEpoch * 1000));
     });
 
@@ -91,24 +110,31 @@ void main() {
       const phoneEpoch = 1718452800;
       final position = pb.Position(timestamp: 0, time: phoneEpoch);
 
-      final result = positionSourceTimestamp(position);
+      final result = positionSourceTimestamp(
+        position,
+        fallback: weeksAgoFallback,
+      );
       expect(result, DateTime.fromMillisecondsSinceEpoch(phoneEpoch * 1000));
     });
 
-    test('falls back to now when both fields are zero', () {
+    test('returns the heard-time fallback when both fields are zero', () {
       final position = pb.Position(timestamp: 0, time: 0);
-      final before = DateTime.now().subtract(const Duration(seconds: 2));
 
-      final result = positionSourceTimestamp(position);
-      expect(result.isAfter(before), isTrue);
+      final result = positionSourceTimestamp(
+        position,
+        fallback: weeksAgoFallback,
+      );
+      expect(result, weeksAgoFallback);
     });
 
-    test('falls back to now when both fields are absent', () {
+    test('returns the heard-time fallback when both fields are absent', () {
       final position = pb.Position();
-      final before = DateTime.now().subtract(const Duration(seconds: 2));
 
-      final result = positionSourceTimestamp(position);
-      expect(result.isAfter(before), isTrue);
+      final result = positionSourceTimestamp(
+        position,
+        fallback: weeksAgoFallback,
+      );
+      expect(result, weeksAgoFallback);
     });
 
     test('rejects timestamp before 2020 — falls back to time', () {
@@ -116,16 +142,21 @@ void main() {
       const phoneEpoch = 1718452800;
       final position = pb.Position(timestamp: oldEpoch, time: phoneEpoch);
 
-      final result = positionSourceTimestamp(position);
+      final result = positionSourceTimestamp(
+        position,
+        fallback: weeksAgoFallback,
+      );
       expect(result, DateTime.fromMillisecondsSinceEpoch(phoneEpoch * 1000));
     });
 
-    test('rejects both before 2020 — falls back to now', () {
+    test('rejects both before 2020 — returns heard-time fallback', () {
       final position = pb.Position(timestamp: 100, time: 200);
-      final before = DateTime.now().subtract(const Duration(seconds: 2));
 
-      final result = positionSourceTimestamp(position);
-      expect(result.isAfter(before), isTrue);
+      final result = positionSourceTimestamp(
+        position,
+        fallback: weeksAgoFallback,
+      );
+      expect(result, weeksAgoFallback);
     });
 
     test('rejects future timestamp beyond tolerance', () {
@@ -134,28 +165,58 @@ void main() {
       const phoneEpoch = 1718452800;
       final position = pb.Position(timestamp: farFuture, time: phoneEpoch);
 
-      final result = positionSourceTimestamp(position);
+      final result = positionSourceTimestamp(
+        position,
+        fallback: weeksAgoFallback,
+      );
       expect(result, DateTime.fromMillisecondsSinceEpoch(phoneEpoch * 1000));
     });
 
-    test('rejects both future beyond tolerance — falls back to now', () {
-      final farFuture =
-          (DateTime.now().millisecondsSinceEpoch ~/ 1000) + 172800;
-      final position = pb.Position(timestamp: farFuture, time: farFuture);
-      final before = DateTime.now().subtract(const Duration(seconds: 2));
+    test(
+      'rejects both future beyond tolerance — returns heard-time fallback',
+      () {
+        final farFuture =
+            (DateTime.now().millisecondsSinceEpoch ~/ 1000) + 172800;
+        final position = pb.Position(timestamp: farFuture, time: farFuture);
 
-      final result = positionSourceTimestamp(position);
-      expect(result.isAfter(before), isTrue);
-    });
+        final result = positionSourceTimestamp(
+          position,
+          fallback: weeksAgoFallback,
+        );
+        expect(result, weeksAgoFallback);
+      },
+    );
 
     test('accepts timestamp within 1-day future tolerance', () {
       final nearFuture =
           (DateTime.now().millisecondsSinceEpoch ~/ 1000) + 3600; // +1h
       final position = pb.Position(timestamp: nearFuture);
 
-      final result = positionSourceTimestamp(position);
+      final result = positionSourceTimestamp(
+        position,
+        fallback: weeksAgoFallback,
+      );
       expect(result, DateTime.fromMillisecondsSinceEpoch(nearFuture * 1000));
     });
+
+    test(
+      'stale fix with no embedded time keeps the weeks-ago heard-time, never now',
+      () {
+        // The headline regression: a stationary node that lost GPS lock sends
+        // a Position with both time fields zero. With a heard-time of 21 days
+        // ago, the entry must carry that old time — not a fresh "now" stamp
+        // that would make it appear in Today / This Week.
+        final heardAt = DateTime.now().subtract(const Duration(days: 21));
+        final position = pb.Position(timestamp: 0, time: 0);
+
+        final result = positionSourceTimestamp(position, fallback: heardAt);
+        expect(result, heardAt);
+        expect(
+          DateTime.now().difference(result).inDays,
+          greaterThanOrEqualTo(20),
+        );
+      },
+    );
   });
 
   // -------------------------------------------------------------------------

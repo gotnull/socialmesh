@@ -4783,11 +4783,21 @@ class ProtocolService {
   /// Follows the standard Meshtastic timestamp fallback order:
   ///   1. `position.timestamp` — actual GPS solution time (epoch seconds)
   ///   2. `position.time` — phone-provided time (epoch seconds)
-  ///   3. [DateTime.now] — local processing time as final fallback
+  ///   3. [fallback] — the time the radio actually heard the frame (packet
+  ///      rx_time via the monotonic last-heard path), NOT the local wall
+  ///      clock. A stationary node that has lost GPS lock, or a fix replayed
+  ///      from the firmware buffer or relayed over MQTT, sends a Position with
+  ///      both time fields zero. Stamping that with [DateTime.now] would make
+  ///      a weeks-stale position masquerade as a fresh fix and diverge from the
+  ///      node's "Last Heard". Inheriting the heard-time keeps the two
+  ///      consistent.
   ///
   /// All candidate values are validated against [_minPlausibleEpoch] and
   /// [_maxFutureSlack] before acceptance.
-  static DateTime _positionSourceTimestamp(pb.Position position) {
+  static DateTime _positionSourceTimestamp(
+    pb.Position position, {
+    required DateTime fallback,
+  }) {
     final nowEpoch = DateTime.now().millisecondsSinceEpoch ~/ 1000;
 
     // Prefer GPS solution timestamp (field 7)
@@ -4806,8 +4816,8 @@ class ProtocolService {
       }
     }
 
-    // Final fallback
-    return DateTime.now();
+    // Final fallback: the resolved packet heard-time, not the wall clock.
+    return fallback;
   }
 
   /// Handle position update
@@ -4823,8 +4833,18 @@ class ProtocolService {
       final hasValidPosition =
           (position.latitudeI != 0 && position.longitudeI != 0) && !isApplePark;
 
+      final node = _nodes[packet.from];
+
+      // Resolve the packet heard-time once and reuse it for both lastHeard and
+      // the position timestamp fallback, so the position log and the node's
+      // "Last Heard" share a single source of truth and can never diverge.
+      final heardAt = _resolvePacketLastHeard(
+        packet,
+        existing: node?.lastHeard,
+      );
+
       // Select canonical source timestamp per the standard fallback order
-      final posTime = _positionSourceTimestamp(position);
+      final posTime = _positionSourceTimestamp(position, fallback: heardAt);
       final String tsSource;
       if (position.hasTimestamp() &&
           position.timestamp > 0 &&
@@ -4835,7 +4855,7 @@ class ProtocolService {
           posTime.millisecondsSinceEpoch == position.time * 1000) {
         tsSource = 'position_time';
       } else {
-        tsSource = 'fallback_now';
+        tsSource = 'fallback_rxtime';
       }
 
       if (ProtocolDebugFlags.logPosition) {
@@ -4848,7 +4868,6 @@ class ProtocolService {
         );
       }
 
-      final node = _nodes[packet.from];
       if (node != null && hasValidPosition) {
         AppLogging.protocol(
           '✅ UPDATING NODE ${node.displayName} (!${packet.from.toRadixString(16)}) WITH VALID POSITION: '
@@ -4858,7 +4877,7 @@ class ProtocolService {
           latitude: position.latitudeI / 1e7,
           longitude: position.longitudeI / 1e7,
           altitude: position.hasAltitude() ? position.altitude : node.altitude,
-          lastHeard: _resolvePacketLastHeard(packet, existing: node.lastHeard),
+          lastHeard: heardAt,
           positionTimestamp: posTime,
           // GPS extended fields
           satsInView: position.hasSatsInView()
@@ -4884,9 +4903,7 @@ class ProtocolService {
         );
       } else if (node != null) {
         // Update lastHeard even if position is invalid
-        final updatedNode = node.copyWith(
-          lastHeard: _resolvePacketLastHeard(packet, existing: node.lastHeard),
-        );
+        final updatedNode = node.copyWith(lastHeard: heardAt);
         _nodes[packet.from] = updatedNode;
         _nodeController.add(updatedNode);
       } else if (hasValidPosition) {
@@ -4908,8 +4925,8 @@ class ProtocolService {
           altitude: position.hasAltitude() ? position.altitude : null,
           rssi: _directRxRssi(packet),
           snr: _directRxSnr(packet),
-          lastHeard: _resolvePacketLastHeard(packet),
-          firstHeard: _resolvePacketLastHeard(packet),
+          lastHeard: heardAt,
+          firstHeard: heardAt,
           hopCount: _computeHopCount(packet),
           viaMqtt: packet.hasViaMqtt() ? packet.viaMqtt : false,
           avatarColor: null,

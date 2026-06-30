@@ -887,8 +887,13 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
           final isHighPrecision = bits == null || bits == 0 || bits == 32;
 
           if (isHighPrecision) {
-            // High-precision: distance-based dedupe
-            final cached = _lastPosition[id];
+            // High-precision: distance-based dedupe. Seed the in-memory
+            // fingerprint from the last stored fix on a cold cache (first touch
+            // after reconnect / app launch) so an unchanged position is not
+            // re-logged as a new row every session.
+            final cached =
+                _lastPosition[id] ??
+                await _seedPositionFingerprint(storage, id);
             if (cached != null && cached.isNearDuplicate(node)) {
               // Within 9 m — skip (no new row)
             } else {
@@ -962,6 +967,29 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
         );
       }
     });
+  }
+
+  /// Seed the in-memory dedupe fingerprint for [id] from the most recent
+  /// stored position. Runs at most once per node per session (a cache miss);
+  /// every later emission hits the warm `_lastPosition` entry. Without this,
+  /// the cold cache after each reconnect / app launch treats an unchanged
+  /// position as new and appends a duplicate row.
+  Future<_PositionFingerprint?> _seedPositionFingerprint(
+    TelemetryDatabase storage,
+    int id,
+  ) async {
+    final stored = await storage.getPositionLogs(id);
+    if (stored.isEmpty) return null;
+    // getPositionLogs returns timestamp ASC, so the newest fix is last.
+    final latest = stored.last;
+    final fingerprint = _PositionFingerprint(
+      latitude: latest.latitude,
+      longitude: latest.longitude,
+      altitude: latest.altitude,
+      satsInView: latest.satsInView,
+    );
+    _lastPosition[id] = fingerprint;
+    return fingerprint;
   }
 }
 
