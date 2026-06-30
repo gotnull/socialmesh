@@ -272,6 +272,59 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
+  // Position-log timestamp resolution — telemetry logger write rule
+  //
+  // The telemetry logger writes
+  //   PositionLog(timestamp: node.positionTimestamp ?? node.lastHeard)
+  // and PositionLog only defaults to now() when BOTH are null. A NodeDB-dump
+  // position whose node still carries a stale lastHeard must therefore be
+  // stamped with that heard-time, never the local wall clock.
+  // -------------------------------------------------------------------------
+
+  group('Position-log timestamp resolution (logger write rule)', () {
+    // Mirrors lib/providers/telemetry_providers.dart write sites:
+    //   timestamp: node.positionTimestamp ?? node.lastHeard
+    PositionLog logFor({DateTime? positionTimestamp, DateTime? lastHeard}) {
+      return PositionLog(
+        nodeNum: 7,
+        timestamp: positionTimestamp ?? lastHeard,
+        latitude: 52.79,
+        longitude: -2.11,
+      );
+    }
+
+    test('uses positionTimestamp when present', () {
+      final posTs = DateTime(2026, 6, 13, 9, 12);
+      final log = logFor(
+        positionTimestamp: posTs,
+        lastHeard: DateTime(2026, 6, 30),
+      );
+      expect(log.timestamp, posTs);
+    });
+
+    test(
+      'falls back to lastHeard, not now, when positionTimestamp is null',
+      () {
+        final heard = DateTime(2026, 6, 13, 9, 12);
+        final before = DateTime.now().subtract(const Duration(seconds: 1));
+        final log = logFor(positionTimestamp: null, lastHeard: heard);
+        expect(log.timestamp, heard);
+        expect(
+          log.timestamp.isAfter(before),
+          isFalse,
+          reason: 'A stale node must not be re-stamped with the wall clock.',
+        );
+      },
+    );
+
+    test('defaults to now only when both are null', () {
+      final before = DateTime.now().subtract(const Duration(seconds: 1));
+      final log = logFor();
+      expect(log.timestamp.isAfter(before), isTrue);
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // Database round-trip with explicit timestamp
   // -------------------------------------------------------------------------
 

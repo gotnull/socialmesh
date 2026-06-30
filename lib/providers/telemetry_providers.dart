@@ -912,7 +912,7 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
               await storage.addPositionLog(
                 PositionLog(
                   nodeNum: id,
-                  timestamp: node.positionTimestamp,
+                  timestamp: node.positionTimestamp ?? node.lastHeard,
                   latitude: node.latitude!,
                   longitude: node.longitude!,
                   altitude: node.altitude,
@@ -943,7 +943,7 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
             await storage.addPositionLog(
               PositionLog(
                 nodeNum: id,
-                timestamp: node.positionTimestamp,
+                timestamp: node.positionTimestamp ?? node.lastHeard,
                 latitude: node.latitude!,
                 longitude: node.longitude!,
                 altitude: node.altitude,

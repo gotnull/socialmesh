@@ -5431,6 +5431,22 @@ class ProtocolService {
       );
     }
 
+    // Resolve the position's source time the same way the live position-packet
+    // path does. A NodeDB-dump NodeInfo typically carries no embedded GPS time,
+    // so the fallback decides the stamp: inherit the node's heard-time, never
+    // the local wall clock. Without this the position log would be stamped
+    // "now" on every reconnect / launch and diverge from "Last Heard". When
+    // there is genuinely no heard-time, sink to the plausible-epoch sentinel
+    // rather than "now" so a clock-less fix cannot masquerade as fresh.
+    final DateTime? positionTimestamp = hasValidPosition
+        ? _positionSourceTimestamp(
+            nodeInfo.position,
+            fallback:
+                deviceLastHeard ??
+                DateTime.fromMillisecondsSinceEpoch(_minPlausibleEpoch * 1000),
+          )
+        : null;
+
     if (existingNode != null) {
       // Preserve existing names if new ones are empty, sanitize to prevent UTF-16 crashes.
       // BUT: don't preserve hex placeholder names (e.g. "!db2f10e0") that were
@@ -5499,6 +5515,7 @@ class ProtocolService {
         lastHeardChannel: nodeInfo.hasChannel()
             ? nodeInfo.channel
             : existingNode.lastHeardChannel,
+        positionTimestamp: positionTimestamp ?? existingNode.positionTimestamp,
       );
     } else {
       // Use null for empty strings to trigger fallback display logic, sanitize to prevent UTF-16 crashes
@@ -5545,6 +5562,7 @@ class ProtocolService {
         viaMqtt: nodeInfo.hasViaMqtt() ? nodeInfo.viaMqtt : false,
         hopCount: nodeInfo.hasHopsAway() ? nodeInfo.hopsAway : null,
         lastHeardChannel: nodeInfo.hasChannel() ? nodeInfo.channel : null,
+        positionTimestamp: positionTimestamp,
       );
     }
 
