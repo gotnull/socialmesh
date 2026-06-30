@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
-import 'dart:math' show min;
-
 import 'package:flutter_map/flutter_map.dart';
 
 import 'constants.dart';
@@ -36,25 +34,19 @@ class MapConfig {
   /// Distinct from [minZoom], which scopes the offline-tile download range.
   static const double liveMapMinZoom = 2.0;
 
-  /// Zoom at or below which marker clusters stay merged; above it markers
-  /// render individually. Wired into [MarkerClusterLayerOptions.disableClusteringAtZoom]
-  /// (NOT `maxZoom`, which only governs the disabled tap-to-zoom path).
-  static const int defaultClusterDisableZoom = 15;
-
-  /// Unclustered-zoom headroom kept below a style's usable ceiling, so clusters
-  /// fully separate a few levels before the tiles run out.
-  static const int clusterDisableHeadroom = 3;
-
-  /// Per-style zoom above which marker clustering is disabled. Styles whose
-  /// tiles top out early (e.g. terrain at native z17) separate earlier so
-  /// clusters open before the user runs out of usable zoom.
-  static int clusterDisableZoom(MapTileStyle style) {
-    final usableCeiling = min(maxZoom.floor(), style.maxNativeZoom);
-    return min(
-      defaultClusterDisableZoom,
-      usableCeiling - clusterDisableHeadroom,
-    );
-  }
+  /// Zoom at or below which marker clusters stay merged. Wired into
+  /// [MarkerClusterLayerOptions.disableClusteringAtZoom].
+  ///
+  /// flutter_map_marker_cluster builds its cluster tree down to the camera's
+  /// max zoom and asserts that no cluster node deeper than this value is ever
+  /// traversed — so this MUST be at least the camera's max zoom. (Its own
+  /// defaults encode the same contract: disableClusteringAtZoom 20 vs maxZoom
+  /// 17.) Co-located nodes share identical coordinates and therefore cluster at
+  /// every level up to the max, so any value below the camera ceiling crashes
+  /// the moment the user zooms past it onto a stacked marker. Returning the
+  /// camera max keeps clusters intact for genuinely co-located nodes while
+  /// markers that exceed `maxClusterRadius` still separate naturally.
+  static int clusterDisableZoom(MapTileStyle style) => maxZoom.floor();
 
   // Esri's transparent reference tile service that publishes country / state /
   // province boundaries and populated-place labels (cities, towns, villages)
@@ -173,6 +165,113 @@ class MapConfig {
   static const String mapboxAttributionLabel = '© Mapbox © OpenStreetMap';
   static const String mapboxAttributionUrl =
       'https://www.mapbox.com/about/maps/';
+
+  /// True when a MapTiler key is present. Gates the terrain basemap onto
+  /// MapTiler Outdoor (real `@2x` tiles) instead of OpenTopoMap (1x only).
+  /// No feature flag — presence of the key is the switch.
+  static bool get isMaptilerActive => AppUrls.maptilerToken.isNotEmpty;
+
+  /// MapTiler Outdoor raster URL for the terrain style, or null when no key is
+  /// configured. The `{r}` placeholder makes flutter_map request true `@2x`
+  /// tiles via its server-retina path (coordinates unchanged), so offline-cache
+  /// parity holds. 256-tile path matches flutter_map's default `tileSize`.
+  static String? maptilerTerrainUrl() {
+    if (!isMaptilerActive) return null;
+    final key = AppUrls.maptilerToken;
+    return 'https://api.maptiler.com/maps/outdoor-v2/256/{z}/{x}/{y}{r}.png?key=$key';
+  }
+
+  // MapTiler TOS requires the © MapTiler + © OpenStreetMap line plus a link to
+  // the copyright page.
+  static const String maptilerAttributionLabel =
+      '© MapTiler © OpenStreetMap contributors';
+  static const String maptilerAttributionUrl =
+      'https://www.maptiler.com/copyright/';
+
+  /// Resolved tile URL for a style: Mapbox when active, else MapTiler for
+  /// terrain when active, else the style's own template. Single source of truth
+  /// so map widgets stop hand-writing `mapboxUrlForStyle(...) ?? style.url`.
+  static String urlForStyle(
+    MapTileStyle style, {
+    required bool satelliteLabelsOn,
+  }) {
+    final mapbox = mapboxUrlForStyle(
+      style,
+      satelliteLabelsOn: satelliteLabelsOn,
+    );
+    if (mapbox != null) return mapbox;
+    if (style == MapTileStyle.terrain) {
+      final maptiler = maptilerTerrainUrl();
+      if (maptiler != null) return maptiler;
+    }
+    return style.url;
+  }
+
+  /// Subdomains for the resolved URL. Mapbox and MapTiler URLs carry no `{s}`
+  /// placeholder, so they must be served subdomain-less.
+  static List<String> subdomainsForStyle(MapTileStyle style) {
+    if (isMapboxActive) return const <String>[];
+    if (style == MapTileStyle.terrain && isMaptilerActive) {
+      return const <String>[];
+    }
+    return style.subdomains;
+  }
+
+  /// Whether the resolved URL serves real `@2x` tiles (carries `{r}`). True for
+  /// Mapbox, CARTO dark/light, and MapTiler terrain; false for raw OpenTopoMap
+  /// and Esri satellite. Replaces the inline `isMapboxActive ? true : ...`.
+  static bool resolvedRetinaMode(
+    MapTileStyle style, {
+    required bool satelliteLabelsOn,
+  }) =>
+      urlForStyle(style, satelliteLabelsOn: satelliteLabelsOn).contains('{r}');
+
+  /// Highest zoom the resolved source actually serves. Mapbox styles serve
+  /// deeper than the interaction cap; MapTiler Outdoor serves to z22 so its
+  /// terrain no longer overzooms at the old z17 native cap.
+  static int maxNativeZoomForStyle(MapTileStyle style) {
+    if (isMapboxActive) return 18;
+    if (style == MapTileStyle.terrain && isMaptilerActive) return 20;
+    return style.maxNativeZoom;
+  }
+
+  /// Attribution label for the resolved source.
+  static String attributionLabel(
+    MapTileStyle style, {
+    required bool satelliteLabelsOn,
+  }) {
+    if (isMapboxActive) return mapboxAttributionLabel;
+    switch (style) {
+      case MapTileStyle.satellite:
+        return '© Esri';
+      case MapTileStyle.terrain:
+        return isMaptilerActive
+            ? maptilerAttributionLabel
+            : '© OpenTopoMap © OSM';
+      case MapTileStyle.dark:
+      case MapTileStyle.light:
+        return '© OSM © CARTO';
+    }
+  }
+
+  /// Attribution link for the resolved source.
+  static String attributionUrl(
+    MapTileStyle style, {
+    required bool satelliteLabelsOn,
+  }) {
+    if (isMapboxActive) return mapboxAttributionUrl;
+    switch (style) {
+      case MapTileStyle.satellite:
+        return 'https://www.esri.com';
+      case MapTileStyle.terrain:
+        return isMaptilerActive
+            ? maptilerAttributionUrl
+            : 'https://opentopomap.org';
+      case MapTileStyle.dark:
+      case MapTileStyle.light:
+        return 'https://carto.com/attributions';
+    }
+  }
 }
 
 /// Map tile style options.

@@ -372,6 +372,10 @@ void main() {
             }
             if ((line.contains('127.0.0.1') || line.contains('localhost')) &&
                 !line.trimLeft().startsWith('//') &&
+                // Honour the repo's canonical inline exemption (e.g. a
+                // @visibleForTesting helper that needs a loopback address to
+                // drive a stale-socket path without a live broker).
+                !line.contains('lint-allow') &&
                 !inDebugBlock) {
               violations.add('${file.path}:${i + 1}');
             }

@@ -223,27 +223,23 @@ class _MeshMapWidgetState extends State<MeshMapWidget> {
         children: [
           // Map tiles. Routes to Mapbox when its flag + token are set.
           TileLayer(
-            urlTemplate:
-                MapConfig.mapboxUrlForStyle(
-                  widget.mapStyle,
-                  satelliteLabelsOn: widget.showSatelliteLabels,
-                ) ??
-                widget.mapStyle.url,
-            subdomains: MapConfig.isMapboxActive
-                ? const <String>[]
-                : widget.mapStyle.subdomains,
-            // Overzoom past the source's native cap (e.g. terrain tops out at
-            // z17) instead of requesting a non-existent tile. Mapbox styles
-            // serve deeper, so keep them at the interaction cap when active.
-            maxNativeZoom: MapConfig.isMapboxActive
-                ? 18
-                : widget.mapStyle.maxNativeZoom,
+            urlTemplate: MapConfig.urlForStyle(
+              widget.mapStyle,
+              satelliteLabelsOn: widget.showSatelliteLabels,
+            ),
+            subdomains: MapConfig.subdomainsForStyle(widget.mapStyle),
+            // Overzoom past the source's native cap (e.g. raw OpenTopoMap
+            // terrain tops out at z17) instead of requesting a non-existent
+            // tile. Mapbox / MapTiler serve deeper, so they keep a higher cap
+            // when active.
+            maxNativeZoom: MapConfig.maxNativeZoomForStyle(widget.mapStyle),
             userAgentPackageName: MapConfig.userAgentPackageName,
-            // Retina only for sources serving real @2x tiles (URL has {r});
-            // simulated retina would desync the offline tile cache.
-            retinaMode: MapConfig.isMapboxActive
-                ? true
-                : MapConfig.styleSupportsRetina(widget.mapStyle),
+            // Retina only for sources serving real @2x tiles (resolved URL has
+            // {r}); simulated retina would desync the offline tile cache.
+            retinaMode: MapConfig.resolvedRetinaMode(
+              widget.mapStyle,
+              satelliteLabelsOn: widget.showSatelliteLabels,
+            ),
             evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
             tileUpdateTransformer: finiteCameraTileUpdateTransformer,
             // Disable tile animation for better performance
@@ -313,13 +309,10 @@ class _MeshMapWidgetState extends State<MeshMapWidget> {
                 child: GestureDetector(
                   onTap: () => launchUrl(
                     Uri.parse(
-                      MapConfig.isMapboxActive
-                          ? MapConfig.mapboxAttributionUrl
-                          : widget.mapStyle == MapTileStyle.satellite
-                          ? 'https://www.esri.com'
-                          : widget.mapStyle == MapTileStyle.terrain
-                          ? 'https://opentopomap.org'
-                          : 'https://carto.com/attributions',
+                      MapConfig.attributionUrl(
+                        widget.mapStyle,
+                        satelliteLabelsOn: widget.showSatelliteLabels,
+                      ),
                     ),
                   ),
                   child: Container(
@@ -332,13 +325,10 @@ class _MeshMapWidgetState extends State<MeshMapWidget> {
                       borderRadius: BorderRadius.circular(AppTheme.radius4),
                     ),
                     child: Text(
-                      MapConfig.isMapboxActive
-                          ? MapConfig.mapboxAttributionLabel
-                          : widget.mapStyle == MapTileStyle.satellite
-                          ? '© Esri'
-                          : widget.mapStyle == MapTileStyle.terrain
-                          ? '© OpenTopoMap © OSM'
-                          : '© OSM © CARTO',
+                      MapConfig.attributionLabel(
+                        widget.mapStyle,
+                        satelliteLabelsOn: widget.showSatelliteLabels,
+                      ),
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 9,

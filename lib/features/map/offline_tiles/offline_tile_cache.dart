@@ -85,9 +85,13 @@ class OfflineTileCache {
   TileLayer _refLayer(MapTileStyle style) => _refLayers.putIfAbsent(
     style,
     () => TileLayer(
-      urlTemplate: style.url,
-      subdomains: style.subdomains,
-      retinaMode: MapConfig.styleSupportsRetina(style),
+      // Resolve through MapConfig so the cache-key URL matches the live map
+      // byte-for-byte (Mapbox / MapTiler terrain when active, else the raw
+      // source). MapTiler retina is the server path, so coordinates are
+      // unchanged and the only delta is the @2x suffix in the cache key.
+      urlTemplate: MapConfig.urlForStyle(style, satelliteLabelsOn: false),
+      subdomains: MapConfig.subdomainsForStyle(style),
+      retinaMode: MapConfig.resolvedRetinaMode(style, satelliteLabelsOn: false),
       // This layer is never rendered — it exists only so flutter_map's own
       // resolver generates cache-parity URLs. The transformer satisfies the
       // lint and is harmless on an unrendered layer.

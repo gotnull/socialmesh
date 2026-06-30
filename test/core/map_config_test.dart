@@ -34,32 +34,25 @@ void main() {
     });
 
     group('clusterDisableZoom', () {
-      test('terrain separates one level earlier than other styles', () {
-        // Terrain tiles top out at native z17, so clusters disable at z14 —
-        // a level earlier than the z15 the higher-zoom styles use, giving
-        // clusters room to open before the user runs out of usable zoom.
-        expect(MapConfig.clusterDisableZoom(MapTileStyle.terrain), 14);
-        expect(MapConfig.clusterDisableZoom(MapTileStyle.satellite), 15);
-        expect(MapConfig.clusterDisableZoom(MapTileStyle.dark), 15);
-        expect(MapConfig.clusterDisableZoom(MapTileStyle.light), 15);
-      });
-
-      test('never reaches the interactive ceiling or the tile ceiling', () {
-        for (final style in MapTileStyle.values) {
-          final z = MapConfig.clusterDisableZoom(style);
-          // Clusters must be able to disable below the deepest reachable zoom.
-          expect(z, lessThan(MapConfig.maxZoom));
-          // And at least one unclustered level must exist before the tiles
-          // stop, so clusters never cling past where the map can refine.
-          expect(z, lessThan(style.maxNativeZoom));
-        }
-      });
-
-      test('caps at the intended default for high-zoom styles', () {
+      test('is at least the camera max zoom for every style', () {
+        // flutter_map_marker_cluster builds its tree to the camera max zoom and
+        // asserts no cluster node deeper than disableClusteringAtZoom is
+        // traversed. Co-located nodes cluster at every level, so a value below
+        // the camera ceiling crashes when zooming onto a stacked marker. Every
+        // style must therefore disable at or above MapConfig.maxZoom.
         for (final style in MapTileStyle.values) {
           expect(
             MapConfig.clusterDisableZoom(style),
-            lessThanOrEqualTo(MapConfig.defaultClusterDisableZoom),
+            greaterThanOrEqualTo(MapConfig.maxZoom.floor()),
+          );
+        }
+      });
+
+      test('matches the camera max zoom regardless of style', () {
+        for (final style in MapTileStyle.values) {
+          expect(
+            MapConfig.clusterDisableZoom(style),
+            MapConfig.maxZoom.floor(),
           );
         }
       });
@@ -106,6 +99,122 @@ void main() {
         expect(
           MapConfig.mapboxAttributionUrl,
           startsWith('https://www.mapbox.com/'),
+        );
+      });
+    });
+
+    group('MapTiler terrain provider', () {
+      // dotenv is not loaded in unit tests, so AppUrls.maptilerToken is empty —
+      // MapTiler is inactive and terrain falls back to OpenTopoMap. These tests
+      // pin that contract and the resolver/attribution wiring.
+      test('inactive by default in tests (no dotenv loaded)', () {
+        expect(MapConfig.isMaptilerActive, isFalse);
+      });
+
+      test('maptilerTerrainUrl returns null when inactive', () {
+        expect(MapConfig.maptilerTerrainUrl(), isNull);
+      });
+
+      test('attribution short form matches MapTiler + OSM TOS', () {
+        expect(
+          MapConfig.maptilerAttributionLabel,
+          '© MapTiler © OpenStreetMap contributors',
+        );
+        expect(
+          MapConfig.maptilerAttributionUrl,
+          startsWith('https://www.maptiler.com/'),
+        );
+      });
+    });
+
+    group('resolved style helpers (MapTiler + Mapbox inactive in tests)', () {
+      test('urlForStyle falls back to the raw style url', () {
+        for (final style in MapTileStyle.values) {
+          expect(
+            MapConfig.urlForStyle(style, satelliteLabelsOn: false),
+            style.url,
+          );
+        }
+        // Terrain specifically stays on OpenTopoMap without a MapTiler key.
+        expect(
+          MapConfig.urlForStyle(MapTileStyle.terrain, satelliteLabelsOn: false),
+          contains('opentopomap.org'),
+        );
+      });
+
+      test('subdomainsForStyle returns the raw subdomains', () {
+        for (final style in MapTileStyle.values) {
+          expect(MapConfig.subdomainsForStyle(style), style.subdomains);
+        }
+      });
+
+      test('resolvedRetinaMode tracks the {r} placeholder', () {
+        // CARTO dark/light carry {r}; OpenTopoMap terrain and Esri satellite
+        // do not (until a MapTiler key flips terrain on).
+        expect(
+          MapConfig.resolvedRetinaMode(
+            MapTileStyle.dark,
+            satelliteLabelsOn: false,
+          ),
+          isTrue,
+        );
+        expect(
+          MapConfig.resolvedRetinaMode(
+            MapTileStyle.light,
+            satelliteLabelsOn: false,
+          ),
+          isTrue,
+        );
+        expect(
+          MapConfig.resolvedRetinaMode(
+            MapTileStyle.terrain,
+            satelliteLabelsOn: false,
+          ),
+          isFalse,
+        );
+        expect(
+          MapConfig.resolvedRetinaMode(
+            MapTileStyle.satellite,
+            satelliteLabelsOn: false,
+          ),
+          isFalse,
+        );
+      });
+
+      test('maxNativeZoomForStyle returns the raw native cap', () {
+        for (final style in MapTileStyle.values) {
+          expect(MapConfig.maxNativeZoomForStyle(style), style.maxNativeZoom);
+        }
+      });
+
+      test('attribution helpers map each style to its source', () {
+        expect(
+          MapConfig.attributionLabel(
+            MapTileStyle.terrain,
+            satelliteLabelsOn: false,
+          ),
+          '© OpenTopoMap © OSM',
+        );
+        expect(
+          MapConfig.attributionUrl(
+            MapTileStyle.terrain,
+            satelliteLabelsOn: false,
+          ),
+          'https://opentopomap.org',
+        );
+        expect(
+          MapConfig.attributionLabel(
+            MapTileStyle.satellite,
+            satelliteLabelsOn: false,
+          ),
+          '© Esri',
+        );
+        expect(
+          MapConfig.attributionLabel(
+            MapTileStyle.dark,
+            satelliteLabelsOn: false,
+          ),
+          '© OSM © CARTO',
         );
       });
     });

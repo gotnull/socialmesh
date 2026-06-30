@@ -57,6 +57,14 @@ class AppUrls {
   /// requests. Empty when not configured; callers must check before using.
   static String get mapboxToken => dotenv.env['MAPBOX_TOKEN'] ?? '';
 
+  /// MapTiler API key used for the terrain basemap's `@2x` raster tiles.
+  /// Empty when not configured; callers fall back to OpenTopoMap. Guarded on
+  /// `isInitialized` because `MapConfig.isMaptilerActive` reads this directly
+  /// (no feature-flag short-circuit) and would otherwise throw in unit tests
+  /// where dotenv is never loaded.
+  static String get maptilerToken =>
+      dotenv.isInitialized ? (dotenv.env['MAPTILER_TOKEN'] ?? '') : '';
+
   // Legal & Documentation URLs
   static String get termsUrl => '$baseUrl/terms';
   static String get privacyUrl => '$baseUrl/privacy';

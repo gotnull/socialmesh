@@ -796,26 +796,21 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
             children: [
               // Tile layer. Routes to Mapbox when its flag + token are set.
               TileLayer(
-                urlTemplate:
-                    MapConfig.mapboxUrlForStyle(
-                      _mapStyle,
-                      satelliteLabelsOn: _showSatelliteLabels,
-                    ) ??
-                    _mapStyle.url,
-                subdomains: MapConfig.isMapboxActive
-                    ? const <String>[]
-                    : _mapStyle.subdomains,
-                // Overzoom past the source's native cap (e.g. OpenTopoMap
+                urlTemplate: MapConfig.urlForStyle(
+                  _mapStyle,
+                  satelliteLabelsOn: _showSatelliteLabels,
+                ),
+                subdomains: MapConfig.subdomainsForStyle(_mapStyle),
+                // Overzoom past the source's native cap (e.g. raw OpenTopoMap
                 // terrain tops out at z17) by upscaling the last real tiles
                 // instead of requesting a non-existent tile that returns a
-                // server placeholder image.
-                maxNativeZoom: MapConfig.isMapboxActive
-                    ? 18
-                    : _mapStyle.maxNativeZoom,
+                // server placeholder image. Mapbox / MapTiler serve deeper.
+                maxNativeZoom: MapConfig.maxNativeZoomForStyle(_mapStyle),
                 userAgentPackageName: MapConfig.userAgentPackageName,
-                retinaMode: MapConfig.isMapboxActive
-                    ? true
-                    : _mapStyle != MapTileStyle.satellite,
+                retinaMode: MapConfig.resolvedRetinaMode(
+                  _mapStyle,
+                  satelliteLabelsOn: _showSatelliteLabels,
+                ),
                 evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
                 tileUpdateTransformer: finiteCameraTileUpdateTransformer,
               ),
@@ -1199,20 +1194,14 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     int visibleCount,
     bool hasFilters,
   ) {
-    final attributionUrl = MapConfig.isMapboxActive
-        ? MapConfig.mapboxAttributionUrl
-        : _mapStyle == MapTileStyle.satellite
-        ? 'https://www.esri.com'
-        : _mapStyle == MapTileStyle.terrain
-        ? 'https://opentopomap.org'
-        : 'https://carto.com/attributions';
-    final attributionLabel = MapConfig.isMapboxActive
-        ? MapConfig.mapboxAttributionLabel
-        : _mapStyle == MapTileStyle.satellite
-        ? '© Esri'
-        : _mapStyle == MapTileStyle.terrain
-        ? '© OpenTopoMap © OSM'
-        : '© OSM © CARTO';
+    final attributionUrl = MapConfig.attributionUrl(
+      _mapStyle,
+      satelliteLabelsOn: _showSatelliteLabels,
+    );
+    final attributionLabel = MapConfig.attributionLabel(
+      _mapStyle,
+      satelliteLabelsOn: _showSatelliteLabels,
+    );
     final accentColor = theme.colorScheme.primary;
     final filterColor = hasFilters
         ? AppTheme.primaryMagenta

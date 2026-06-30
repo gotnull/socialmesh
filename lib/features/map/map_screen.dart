@@ -2037,36 +2037,33 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         // layer and loads the new tiles immediately, instead of
                         // showing blue until the user pans or pinches.
                         key: ValueKey(
-                          MapConfig.mapboxUrlForStyle(
-                                _mapStyle,
-                                satelliteLabelsOn: _showSatelliteLabels,
-                              ) ??
-                              _mapStyle.url,
+                          MapConfig.urlForStyle(
+                            _mapStyle,
+                            satelliteLabelsOn: _showSatelliteLabels,
+                          ),
                         ),
-                        urlTemplate:
-                            MapConfig.mapboxUrlForStyle(
-                              _mapStyle,
-                              satelliteLabelsOn: _showSatelliteLabels,
-                            ) ??
-                            _mapStyle.url,
-                        subdomains: MapConfig.isMapboxActive
-                            ? const <String>[]
-                            : _mapStyle.subdomains,
-                        // Overzoom past the source's native cap (e.g. terrain
-                        // tops out at z17) by upscaling the last real tiles
-                        // instead of requesting a non-existent tile. Mapbox
-                        // styles serve deeper, so keep them at the interaction
-                        // cap when active.
-                        maxNativeZoom: MapConfig.isMapboxActive
-                            ? 18
-                            : _mapStyle.maxNativeZoom,
+                        urlTemplate: MapConfig.urlForStyle(
+                          _mapStyle,
+                          satelliteLabelsOn: _showSatelliteLabels,
+                        ),
+                        subdomains: MapConfig.subdomainsForStyle(_mapStyle),
+                        // Overzoom past the source's native cap (e.g. raw
+                        // OpenTopoMap terrain tops out at z17) by upscaling the
+                        // last real tiles instead of requesting a non-existent
+                        // tile. Mapbox / MapTiler serve deeper, so they keep a
+                        // higher cap when active.
+                        maxNativeZoom: MapConfig.maxNativeZoomForStyle(
+                          _mapStyle,
+                        ),
                         userAgentPackageName: MapConfig.userAgentPackageName,
                         // Retina only for sources that serve real @2x tiles
-                        // (URL has {r}). Simulated retina shifts requested
-                        // tile coords and would desync the offline cache.
-                        retinaMode: MapConfig.isMapboxActive
-                            ? true
-                            : MapConfig.styleSupportsRetina(_mapStyle),
+                        // (resolved URL has {r}). Simulated retina shifts
+                        // requested tile coords and would desync the offline
+                        // cache, so it is never used.
+                        retinaMode: MapConfig.resolvedRetinaMode(
+                          _mapStyle,
+                          satelliteLabelsOn: _showSatelliteLabels,
+                        ),
                         evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
                         // No tileBuilder — AnimatedOpacity at constant 1.0
                         // created unnecessary animation controllers per tile,
@@ -2391,13 +2388,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         child: GestureDetector(
                           onTap: () => launchUrl(
                             Uri.parse(
-                              MapConfig.isMapboxActive
-                                  ? MapConfig.mapboxAttributionUrl
-                                  : _mapStyle == MapTileStyle.satellite
-                                  ? 'https://www.esri.com'
-                                  : _mapStyle == MapTileStyle.terrain
-                                  ? 'https://opentopomap.org'
-                                  : 'https://carto.com/attributions',
+                              MapConfig.attributionUrl(
+                                _mapStyle,
+                                satelliteLabelsOn: _showSatelliteLabels,
+                              ),
                             ),
                           ),
                           child: Container(
@@ -2412,13 +2406,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               ),
                             ),
                             child: Text(
-                              MapConfig.isMapboxActive
-                                  ? MapConfig.mapboxAttributionLabel
-                                  : _mapStyle == MapTileStyle.satellite
-                                  ? '© Esri'
-                                  : _mapStyle == MapTileStyle.terrain
-                                  ? '© OpenTopoMap © OSM'
-                                  : '© OSM © CARTO',
+                              MapConfig.attributionLabel(
+                                _mapStyle,
+                                satelliteLabelsOn: _showSatelliteLabels,
+                              ),
                               style: const TextStyle(
                                 color: Colors.white70,
                                 fontSize: 9,

@@ -532,24 +532,22 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
                     // back to the OpenStreetMap-style URL for the
                     // selected MapTileStyle otherwise.
                     TileLayer(
-                      urlTemplate:
-                          MapConfig.mapboxUrlForStyle(
-                            _mapStyle,
-                            satelliteLabelsOn: false,
-                          ) ??
-                          _mapStyle.url,
-                      subdomains: MapConfig.isMapboxActive
-                          ? const <String>[]
-                          : _mapStyle.subdomains,
-                      // Overzoom past the source's native cap (e.g. OpenTopoMap
-                      // terrain tops out at z17) by upscaling the last real
-                      // tiles instead of requesting a non-existent tile that
-                      // returns a server placeholder image.
-                      maxNativeZoom: MapConfig.isMapboxActive
-                          ? 18
-                          : _mapStyle.maxNativeZoom,
+                      urlTemplate: MapConfig.urlForStyle(
+                        _mapStyle,
+                        satelliteLabelsOn: false,
+                      ),
+                      subdomains: MapConfig.subdomainsForStyle(_mapStyle),
+                      // Overzoom past the source's native cap (e.g. raw
+                      // OpenTopoMap terrain tops out at z17) by upscaling the
+                      // last real tiles instead of requesting a non-existent
+                      // tile that returns a server placeholder image.
+                      // Mapbox / MapTiler serve deeper.
+                      maxNativeZoom: MapConfig.maxNativeZoomForStyle(_mapStyle),
                       userAgentPackageName: MapConfig.userAgentPackageName,
-                      retinaMode: MapConfig.isMapboxActive,
+                      retinaMode: MapConfig.resolvedRetinaMode(
+                        _mapStyle,
+                        satelliteLabelsOn: false,
+                      ),
                       evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
                       tileUpdateTransformer: finiteCameraTileUpdateTransformer,
                     ),
