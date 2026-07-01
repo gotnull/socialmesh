@@ -1036,4 +1036,26 @@ void main() {
       expect(service.diagnostics.messagesPublished, 1);
     });
   });
+
+  group('MqttClientProxyService client id', () {
+    test('carries the node id and a unique per-connection suffix', () {
+      final a = MqttClientProxyService.debugBuildClientId('!a6960864');
+      final b = MqttClientProxyService.debugBuildClientId('!a6960864');
+
+      // Prefix + node id are stable so the broker/logs stay recognisable.
+      expect(a, startsWith('SocialMeshMqttProxy-!a6960864-'));
+      expect(b, startsWith('SocialMeshMqttProxy-!a6960864-'));
+      // The suffix differs each build so a reconnect never reuses the id of a
+      // lingering session (which the broker would reject as a duplicate).
+      expect(a, isNot(b));
+    });
+
+    test('falls back to a unique id when the node id is unknown', () {
+      final a = MqttClientProxyService.debugBuildClientId(null);
+      final b = MqttClientProxyService.debugBuildClientId(null);
+
+      expect(a, startsWith('SocialMeshMqttProxy-'));
+      expect(a, isNot(b));
+    });
+  });
 }

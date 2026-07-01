@@ -17,6 +17,7 @@ import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 import 'package:typed_data/typed_data.dart' show Uint8Buffer;
+import 'package:uuid/uuid.dart';
 
 import '../../core/constants.dart';
 import '../../core/logging.dart';
@@ -551,6 +552,22 @@ class MqttClientProxyService {
   @visibleForTesting
   void debugConfirmPublish() => _recordConfirmedPublish();
 
+  /// Builds the MQTT client identifier. A per-connection UUID suffix keeps the
+  /// id unique across reconnects. A deterministic (node-scoped) id collides
+  /// with a lingering broker session on reconnect: the broker rejects the
+  /// duplicate (`identifierRejected`) rather than taking it over, so a fast
+  /// reconnect can be refused. The connection always uses a clean session, so
+  /// a changing id discards no state.
+  static String _buildClientId(String? nodeUserId) {
+    final base = nodeUserId ?? DateTime.now().millisecondsSinceEpoch.toString();
+    return 'SocialMeshMqttProxy-$base-${const Uuid().v4()}'; // lint-allow: hardcoded-string
+  }
+
+  /// Test-only: exposes [_buildClientId] to verify per-connection uniqueness.
+  @visibleForTesting
+  static String debugBuildClientId(String? nodeUserId) =>
+      _buildClientId(nodeUserId);
+
   /// Test-only: drives the service into the field-reported failure mode where
   /// the phase reads `connected` but the underlying socket is dead. Creates a
   /// never-connected client (so `connectionStatus.state` is not `connected`)
@@ -740,8 +757,7 @@ class MqttClientProxyService {
     await _disconnectClient();
 
     // Create MQTT client
-    final clientId =
-        'SocialMeshMqttProxy-${nodeUserId ?? DateTime.now().millisecondsSinceEpoch}'; // lint-allow: hardcoded-string
+    final clientId = _buildClientId(nodeUserId);
     final client = MqttServerClient.withPort(host, clientId, port);
 
     client.keepAlivePeriod = 60;
