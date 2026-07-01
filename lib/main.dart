@@ -204,6 +204,23 @@ Future<void> main() async {
   });
 
   if (platformCapabilities.supportsBle) {
+    // Opt into Core Bluetooth state restoration BEFORE any other
+    // flutter_blue_plus call - the plugin only attaches the restore
+    // identifier if the option is set before its CBCentralManager exists.
+    // With this on, iOS relaunches the app headless in the background when
+    // the connected radio delivers a BLE event after a memory-pressure
+    // kill, and RestoreSessionCoordinator re-attaches the session instead
+    // of the user seeing a cold reconnect on return. No effect on Android.
+    if (AppFeatureFlags.isBleStateRestorationEnabled) {
+      try {
+        await FlutterBluePlus.setOptions(restoreState: true);
+        AppLogging.ble('boot: Core Bluetooth state restoration enabled');
+      } catch (e) {
+        // Never block boot on the opt-in; the app still works with
+        // foreground-only reconnects.
+        AppLogging.ble('boot: BLE state restoration opt-in failed: $e');
+      }
+    }
     FlutterBluePlus.setLogLevel(LogLevel.none);
     // Initialize Android foreground service configuration for background BLE.
     // Must be called before any FlutterForegroundTask.start() call.

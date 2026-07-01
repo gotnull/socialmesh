@@ -244,6 +244,32 @@ void main() {
         expect(AppFeatureFlags.isMrrpEnabled, isTrue);
       },
     );
+
+    test('BLE state restoration defaults to enabled', () {
+      dotenv.loadFromString(envString: 'TEST_MODE=true');
+      expect(AppFeatureFlags.isBleStateRestorationEnabled, isTrue);
+    });
+
+    test('BLE state restoration stays enabled when explicitly true', () {
+      dotenv.loadFromString(
+        envString: 'TEST_MODE=true\nBLE_STATE_RESTORATION_ENABLED=true',
+      );
+      expect(AppFeatureFlags.isBleStateRestorationEnabled, isTrue);
+    });
+
+    test('BLE state restoration disables via false', () {
+      dotenv.loadFromString(
+        envString: 'TEST_MODE=true\nBLE_STATE_RESTORATION_ENABLED=false',
+      );
+      expect(AppFeatureFlags.isBleStateRestorationEnabled, isFalse);
+    });
+
+    test('BLE state restoration disables via 0', () {
+      dotenv.loadFromString(
+        envString: 'TEST_MODE=true\nBLE_STATE_RESTORATION_ENABLED=0',
+      );
+      expect(AppFeatureFlags.isBleStateRestorationEnabled, isFalse);
+    });
   });
 
   group('IdentityConstants', () {

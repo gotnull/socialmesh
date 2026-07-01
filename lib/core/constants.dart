@@ -335,6 +335,25 @@ class AppFeatureFlags {
     }
   }
 
+  /// Whether Core Bluetooth state restoration is requested at boot (iOS and
+  /// macOS; no effect on Android). When on, the OS relaunches the app in the
+  /// background after a memory-pressure kill as soon as the connected radio
+  /// delivers a BLE event, so the session re-attaches before the user
+  /// returns to the app. Read once at boot before the first
+  /// flutter_blue_plus call; changing it takes effect on the next launch.
+  /// Default: true. Set `BLE_STATE_RESTORATION_ENABLED=false` in `.env` to
+  /// fall back to foreground-only reconnects.
+  static bool get isBleStateRestorationEnabled {
+    try {
+      final raw = dotenv.env['BLE_STATE_RESTORATION_ENABLED']
+          ?.toLowerCase()
+          .trim();
+      return raw != 'false' && raw != '0';
+    } catch (_) {
+      return true;
+    }
+  }
+
   /// Whether the message timeline / week view is enabled.
   /// Set `MESSAGE_TIMELINE_ENABLED=true` in `.env` to enable.
   /// Default: false — the experimental message timeline is hidden.
