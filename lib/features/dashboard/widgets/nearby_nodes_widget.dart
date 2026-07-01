@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/presence_providers.dart';
 import '../../../models/mesh_models.dart';
-import '../../../utils/timestamp_validation.dart';
+import '../../../models/presence_confidence.dart';
+import '../../../utils/presence_utils.dart';
 import '../../nodes/node_detail_screen.dart';
 import 'dashboard_widget.dart';
 
@@ -18,15 +20,27 @@ class NearbyNodesContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
+    // Watching presence gives a lifecycle-aware periodic rebuild so the
+    // relative-time labels advance even when no new packets arrive, and it
+    // supplies the last-heard age used for the recency cap below.
+    final presenceMap = ref.watch(presenceMapProvider);
 
-    // Filter out our own node and sort by RSSI (strongest first)
-    final nearbyNodes =
+    // "Nearby" = heard directly (RSSI survives only for direct RF) within the
+    // recency window, strongest signal first. Nodes not heard within the
+    // window fall off so the list reflects who is actually around now.
+    final nearby =
         nodes.values
             .where((n) => n.nodeNum != myNodeNum && n.rssi != null)
+            .map((n) => (node: n, age: lastHeardAgeFor(presenceMap, n)))
+            .where(
+              (e) => e.age != null && e.age! <= PresenceThresholds.staleWindow,
+            )
             .toList()
-          ..sort((a, b) => (b.rssi ?? -999).compareTo(a.rssi ?? -999));
+          ..sort(
+            (a, b) => (b.node.rssi ?? -999).compareTo(a.node.rssi ?? -999),
+          );
 
-    final topNodes = nearbyNodes.take(5).toList();
+    final topNodes = nearby.take(5).toList();
 
     if (topNodes.isEmpty) {
       return WidgetEmptyState(
@@ -46,8 +60,13 @@ class NearbyNodesContent extends ConsumerWidget {
         indent: 56,
       ),
       itemBuilder: (context, index) {
-        final node = topNodes[index];
-        return _NodeTile(node: node, myNodeNum: myNodeNum);
+        final entry = topNodes[index];
+        return _NodeTile(
+          node: entry.node,
+          myNodeNum: myNodeNum,
+          age: entry.age!,
+          confidence: presenceConfidenceFor(presenceMap, entry.node),
+        );
       },
     );
   }
@@ -56,17 +75,21 @@ class NearbyNodesContent extends ConsumerWidget {
 class _NodeTile extends StatelessWidget {
   final MeshNode node;
   final int? myNodeNum;
+  final Duration age;
+  final PresenceConfidence confidence;
 
-  const _NodeTile({required this.node, required this.myNodeNum});
+  const _NodeTile({
+    required this.node,
+    required this.myNodeNum,
+    required this.age,
+    required this.confidence,
+  });
 
   @override
   Widget build(BuildContext context) {
     final rssi = node.rssi ?? -100;
     final signalColor = _getSignalColor(rssi);
-    final validatedLastHeard = TimestampValidation.validated(node.lastHeard);
-    final lastSeen = validatedLastHeard != null
-        ? _formatLastSeen(validatedLastHeard)
-        : 'Unknown';
+    final lastSeen = presenceStatusText(confidence, age);
 
     return InkWell(
       onTap: () => showNodeDetails(context, node, node.nodeNum == myNodeNum),
@@ -161,14 +184,6 @@ class _NodeTile extends StatelessWidget {
     if (rssi >= -60) return AccentColors.green;
     if (rssi >= -75) return AppTheme.warningYellow;
     return AppTheme.errorRed;
-  }
-
-  String _formatLastSeen(DateTime time) {
-    final diff = DateTime.now().difference(time);
-    if (diff.inMinutes < 1) return 'now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return '${diff.inDays}d ago';
   }
 }
 
